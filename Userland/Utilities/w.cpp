@@ -65,7 +65,7 @@ int main()
 
     outln("\033[1m{:10} {:12} {:16} {:6} {}\033[0m", "USER", "TTY", "LOGIN@", "IDLE", "WHAT");
     json.value().as_object().for_each_member([&](auto& tty, auto& value) {
-        const JsonObject& entry = value.as_object();
+        JsonObject const& entry = value.as_object();
         auto uid = entry.get("uid").to_u32();
         [[maybe_unused]] auto pid = entry.get("pid").to_i32();
 

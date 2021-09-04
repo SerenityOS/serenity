@@ -28,7 +28,7 @@ public:
     ~CSSStyleRule();
 
     const NonnullRefPtrVector<Selector>& selectors() const { return m_selectors; }
-    const CSSStyleDeclaration& declaration() const { return m_declaration; }
+    CSSStyleDeclaration const& declaration() const { return m_declaration; }
 
     virtual StringView class_name() const { return "CSSStyleRule"; };
     virtual Type type() const { return Type::Style; };

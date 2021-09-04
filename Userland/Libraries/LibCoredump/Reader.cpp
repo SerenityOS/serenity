@@ -13,7 +13,7 @@
 
 namespace Coredump {
 
-OwnPtr<Reader> Reader::create(const String& path)
+OwnPtr<Reader> Reader::create(String const& path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
@@ -37,7 +37,7 @@ Reader::Reader(ReadonlyBytes coredump_bytes)
     VERIFY(m_notes_segment_index != -1);
 }
 
-ByteBuffer Reader::decompress_coredump(const ReadonlyBytes& raw_coredump)
+ByteBuffer Reader::decompress_coredump(ReadonlyBytes const& raw_coredump)
 {
     if (!Compress::GzipDecompressor::is_likely_compressed(raw_coredump))
         return ByteBuffer::copy(raw_coredump); // handle old format coredumps (uncompressed)
@@ -51,7 +51,7 @@ Reader::~Reader()
 {
 }
 
-Reader::NotesEntryIterator::NotesEntryIterator(const u8* notes_data)
+Reader::NotesEntryIterator::NotesEntryIterator(u8 const* notes_data)
     : m_current((const ELF::Core::NotesEntry*)notes_data)
     , start(notes_data)
 {
@@ -77,22 +77,22 @@ void Reader::NotesEntryIterator::next()
     VERIFY(!at_end());
     switch (type()) {
     case ELF::Core::NotesEntryHeader::Type::ProcessInfo: {
-        const auto* current = reinterpret_cast<const ELF::Core::ProcessInfo*>(m_current);
+        auto const* current = reinterpret_cast<const ELF::Core::ProcessInfo*>(m_current);
         m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current->json_data + strlen(current->json_data) + 1);
         break;
     }
     case ELF::Core::NotesEntryHeader::Type::ThreadInfo: {
-        const auto* current = reinterpret_cast<const ELF::Core::ThreadInfo*>(m_current);
+        auto const* current = reinterpret_cast<const ELF::Core::ThreadInfo*>(m_current);
         m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current + 1);
         break;
     }
     case ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo: {
-        const auto* current = reinterpret_cast<const ELF::Core::MemoryRegionInfo*>(m_current);
+        auto const* current = reinterpret_cast<const ELF::Core::MemoryRegionInfo*>(m_current);
         m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current->region_name + strlen(current->region_name) + 1);
         break;
     }
     case ELF::Core::NotesEntryHeader::Type::Metadata: {
-        const auto* current = reinterpret_cast<const ELF::Core::Metadata*>(m_current);
+        auto const* current = reinterpret_cast<const ELF::Core::Metadata*>(m_current);
         m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current->json_data + strlen(current->json_data) + 1);
         break;
     }
@@ -108,19 +108,19 @@ bool Reader::NotesEntryIterator::at_end() const
 
 Optional<FlatPtr> Reader::peek_memory(FlatPtr address) const
 {
-    const auto* region = region_containing(address);
+    auto const* region = region_containing(address);
     if (!region)
         return {};
 
     FlatPtr offset_in_region = address - region->region_start;
-    const char* region_data = image().program_header(region->program_header_index).raw_data();
-    return *(const FlatPtr*)(&region_data[offset_in_region]);
+    char const* region_data = image().program_header(region->program_header_index).raw_data();
+    return *(FlatPtr const*)(&region_data[offset_in_region]);
 }
 
 const JsonObject Reader::process_info() const
 {
     const ELF::Core::ProcessInfo* process_info_notes_entry = nullptr;
-    for (NotesEntryIterator it((const u8*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
+    for (NotesEntryIterator it((u8 const*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::ProcessInfo)
             continue;
         process_info_notes_entry = reinterpret_cast<const ELF::Core::ProcessInfo*>(it.current());
@@ -218,7 +218,7 @@ Vector<String> Reader::process_environment() const
 HashMap<String, String> Reader::metadata() const
 {
     const ELF::Core::Metadata* metadata_notes_entry = nullptr;
-    for (NotesEntryIterator it((const u8*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
+    for (NotesEntryIterator it((u8 const*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::Metadata)
             continue;
         metadata_notes_entry = reinterpret_cast<const ELF::Core::Metadata*>(it.current());

@@ -27,7 +27,7 @@ RemoteProcess::RemoteProcess(pid_t pid)
     m_client = InspectorServerClient::construct();
 }
 
-void RemoteProcess::handle_identify_response(const JsonObject& response)
+void RemoteProcess::handle_identify_response(JsonObject const& response)
 {
     int pid = response.get("pid").to_int();
     VERIFY(pid == m_pid);
@@ -38,7 +38,7 @@ void RemoteProcess::handle_identify_response(const JsonObject& response)
         on_update();
 }
 
-void RemoteProcess::handle_get_all_objects_response(const JsonObject& response)
+void RemoteProcess::handle_get_all_objects_response(JsonObject const& response)
 {
     // FIXME: It would be good if we didn't have to make a local copy of the array value here!
     auto objects = response.get("objects");
@@ -82,7 +82,7 @@ void RemoteProcess::set_inspected_object(FlatPtr address)
     m_client->async_set_inspected_object(m_pid, address);
 }
 
-void RemoteProcess::set_property(FlatPtr object, const StringView& name, const JsonValue& value)
+void RemoteProcess::set_property(FlatPtr object, StringView const& name, JsonValue const& value)
 {
     m_client->async_set_object_property(m_pid, object, name, value.to_string());
 }

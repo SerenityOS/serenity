@@ -31,7 +31,7 @@ public:
     ~Page();
 
     PageClient& client() { return m_client; }
-    const PageClient& client() const { return m_client; }
+    PageClient const& client() const { return m_client; }
 
     Web::BrowsingContext& top_level_browsing_context() { return *m_top_level_browsing_context; }
     const Web::BrowsingContext& top_level_browsing_context() const { return *m_top_level_browsing_context; }
@@ -41,10 +41,10 @@ public:
 
     void set_focused_browsing_context(Badge<EventHandler>, BrowsingContext&);
 
-    void load(const URL&);
-    void load(const LoadRequest&);
+    void load(URL const&);
+    void load(LoadRequest const&);
 
-    void load_html(const StringView&, const URL&);
+    void load_html(StringView const&, URL const&);
 
     bool handle_mouseup(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
     bool handle_mousedown(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
@@ -69,30 +69,30 @@ public:
     virtual Gfx::Palette palette() const = 0;
     virtual Gfx::IntRect screen_rect() const = 0;
     virtual void page_did_set_document_in_top_level_browsing_context(DOM::Document*) { }
-    virtual void page_did_change_title(const String&) { }
-    virtual void page_did_start_loading(const URL&) { }
-    virtual void page_did_finish_loading(const URL&) { }
+    virtual void page_did_change_title(String const&) { }
+    virtual void page_did_start_loading(URL const&) { }
+    virtual void page_did_finish_loading(URL const&) { }
     virtual void page_did_change_selection() { }
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) { }
     virtual void page_did_request_context_menu(const Gfx::IntPoint&) { }
-    virtual void page_did_request_link_context_menu(const Gfx::IntPoint&, const URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }
-    virtual void page_did_request_image_context_menu(const Gfx::IntPoint&, const URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers, const Gfx::Bitmap*) { }
-    virtual void page_did_click_link(const URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }
-    virtual void page_did_middle_click_link(const URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }
-    virtual void page_did_enter_tooltip_area(const Gfx::IntPoint&, const String&) { }
+    virtual void page_did_request_link_context_menu(const Gfx::IntPoint&, URL const&, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers) { }
+    virtual void page_did_request_image_context_menu(const Gfx::IntPoint&, URL const&, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers, const Gfx::Bitmap*) { }
+    virtual void page_did_click_link(URL const&, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers) { }
+    virtual void page_did_middle_click_link(URL const&, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers) { }
+    virtual void page_did_enter_tooltip_area(const Gfx::IntPoint&, String const&) { }
     virtual void page_did_leave_tooltip_area() { }
-    virtual void page_did_hover_link(const URL&) { }
+    virtual void page_did_hover_link(URL const&) { }
     virtual void page_did_unhover_link() { }
     virtual void page_did_invalidate(const Gfx::IntRect&) { }
     virtual void page_did_change_favicon(const Gfx::Bitmap&) { }
     virtual void page_did_layout() { }
     virtual void page_did_request_scroll(int) { }
     virtual void page_did_request_scroll_into_view(const Gfx::IntRect&) { }
-    virtual void page_did_request_alert(const String&) { }
-    virtual bool page_did_request_confirm(const String&) { return false; }
-    virtual String page_did_request_prompt(const String&, const String&) { return {}; }
-    virtual String page_did_request_cookie(const URL&, Cookie::Source) { return {}; }
-    virtual void page_did_set_cookie(const URL&, const Cookie::ParsedCookie&, Cookie::Source) { }
+    virtual void page_did_request_alert(String const&) { }
+    virtual bool page_did_request_confirm(String const&) { return false; }
+    virtual String page_did_request_prompt(String const&, String const&) { return {}; }
+    virtual String page_did_request_cookie(URL const&, Cookie::Source) { return {}; }
+    virtual void page_did_set_cookie(URL const&, const Cookie::ParsedCookie&, Cookie::Source) { }
 
 protected:
     virtual ~PageClient() = default;

@@ -32,12 +32,12 @@ typedef struct fenv_t {
     uint32_t __mxcsr;
 } fenv_t;
 
-#define FE_DFL_ENV ((const fenv_t*)-1)
+#define FE_DFL_ENV ((fenv_t const*)-1)
 
 int fegetenv(fenv_t*);
-int fesetenv(const fenv_t*);
+int fesetenv(fenv_t const*);
 int feholdexcept(fenv_t*);
-int feupdateenv(const fenv_t*);
+int feupdateenv(fenv_t const*);
 
 #define FE_INVALID 1u << 0
 #define FE_DIVBYZERO 1u << 2
@@ -48,7 +48,7 @@ int feupdateenv(const fenv_t*);
 
 typedef uint16_t fexcept_t;
 int fegetexceptflag(fexcept_t*, int exceptions);
-int fesetexceptflag(const fexcept_t*, int exceptions);
+int fesetexceptflag(fexcept_t const*, int exceptions);
 
 int feclearexcept(int exceptions);
 int fetestexcept(int exceptions);

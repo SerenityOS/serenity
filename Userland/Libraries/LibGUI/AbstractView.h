@@ -55,10 +55,10 @@ public:
 
     void set_model(RefPtr<Model>);
     Model* model() { return m_model.ptr(); }
-    const Model* model() const { return m_model.ptr(); }
+    Model const* model() const { return m_model.ptr(); }
 
     ModelSelection& selection() { return m_selection; }
-    const ModelSelection& selection() const { return m_selection; }
+    ModelSelection const& selection() const { return m_selection; }
     virtual void select_all() { }
 
     bool is_editable() const { return m_editable; }
@@ -88,37 +88,37 @@ public:
     virtual void model_did_update(unsigned flags) override;
     virtual void did_update_selection();
 
-    virtual Gfx::IntRect content_rect(const ModelIndex&) const { return {}; }
+    virtual Gfx::IntRect content_rect(ModelIndex const&) const { return {}; }
     virtual Gfx::IntRect editing_rect(ModelIndex const& index) const { return content_rect(index); }
     virtual Gfx::IntRect paint_invalidation_rect(ModelIndex const& index) const { return content_rect(index); }
 
     virtual ModelIndex index_at_event_position(const Gfx::IntPoint&) const { return {}; }
-    void begin_editing(const ModelIndex&);
+    void begin_editing(ModelIndex const&);
     void stop_editing();
 
     void set_activates_on_selection(bool b) { m_activates_on_selection = b; }
     bool activates_on_selection() const { return m_activates_on_selection; }
 
     Function<void()> on_selection_change;
-    Function<void(const ModelIndex&)> on_activation;
-    Function<void(const ModelIndex&, const ContextMenuEvent&)> on_context_menu_request;
-    Function<void(const ModelIndex&, const DropEvent&)> on_drop;
+    Function<void(ModelIndex const&)> on_activation;
+    Function<void(ModelIndex const&, ContextMenuEvent const&)> on_context_menu_request;
+    Function<void(ModelIndex const&, DropEvent const&)> on_drop;
 
-    Function<OwnPtr<ModelEditingDelegate>(const ModelIndex&)> aid_create_editing_delegate;
+    Function<OwnPtr<ModelEditingDelegate>(ModelIndex const&)> aid_create_editing_delegate;
 
     void notify_selection_changed(Badge<ModelSelection>);
 
-    NonnullRefPtr<Gfx::Font> font_for_index(const ModelIndex&) const;
+    NonnullRefPtr<Gfx::Font> font_for_index(ModelIndex const&) const;
 
     void set_key_column_and_sort_order(int column, SortOrder);
 
     int key_column() const { return m_key_column; }
     SortOrder sort_order() const { return m_sort_order; }
 
-    virtual void scroll_into_view(const ModelIndex&, [[maybe_unused]] bool scroll_horizontally = true, [[maybe_unused]] bool scroll_vertically = true) { }
+    virtual void scroll_into_view(ModelIndex const&, [[maybe_unused]] bool scroll_horizontally = true, [[maybe_unused]] bool scroll_vertically = true) { }
 
-    const ModelIndex& cursor_index() const { return m_cursor_index; }
-    const ModelIndex& selection_start_index() const { return m_selection_start_index; }
+    ModelIndex const& cursor_index() const { return m_cursor_index; }
+    ModelIndex const& selection_start_index() const { return m_selection_start_index; }
     void set_cursor(ModelIndex, SelectionUpdate, bool scroll_cursor_into_view = true);
 
     bool is_tab_key_navigation_enabled() const { return m_tab_key_navigation_enabled; }
@@ -145,21 +145,21 @@ protected:
     virtual void focusin_event(FocusEvent&) override;
 
     virtual void clear_selection();
-    virtual void set_selection(const ModelIndex&);
-    virtual void set_selection_start_index(const ModelIndex&);
-    virtual void add_selection(const ModelIndex&);
-    virtual void remove_selection(const ModelIndex&);
-    virtual void toggle_selection(const ModelIndex&);
-    virtual void did_change_hovered_index([[maybe_unused]] const ModelIndex& old_index, [[maybe_unused]] const ModelIndex& new_index) { }
-    virtual void did_change_cursor_index([[maybe_unused]] const ModelIndex& old_index, [[maybe_unused]] const ModelIndex& new_index) { }
+    virtual void set_selection(ModelIndex const&);
+    virtual void set_selection_start_index(ModelIndex const&);
+    virtual void add_selection(ModelIndex const&);
+    virtual void remove_selection(ModelIndex const&);
+    virtual void toggle_selection(ModelIndex const&);
+    virtual void did_change_hovered_index([[maybe_unused]] ModelIndex const& old_index, [[maybe_unused]] ModelIndex const& new_index) { }
+    virtual void did_change_cursor_index([[maybe_unused]] ModelIndex const& old_index, [[maybe_unused]] ModelIndex const& new_index) { }
 
-    void draw_item_text(Gfx::Painter&, const ModelIndex&, bool, const Gfx::IntRect&, const StringView&, const Gfx::Font&, Gfx::TextAlignment, Gfx::TextElision, size_t search_highlighting_offset = 0);
+    void draw_item_text(Gfx::Painter&, ModelIndex const&, bool, const Gfx::IntRect&, StringView const&, const Gfx::Font&, Gfx::TextAlignment, Gfx::TextElision, size_t search_highlighting_offset = 0);
 
     void set_suppress_update_on_selection_change(bool value) { m_suppress_update_on_selection_change = value; }
 
     virtual void did_scroll() override;
-    void set_hovered_index(const ModelIndex&);
-    void activate(const ModelIndex&);
+    void set_hovered_index(ModelIndex const&);
+    void activate(ModelIndex const&);
     void activate_selected();
     void update_edit_widget_position();
 
@@ -167,7 +167,7 @@ protected:
     void cancel_searching();
     void start_searching_timer();
     void do_search(String&&);
-    bool is_highlighting_searching(const ModelIndex&) const;
+    bool is_highlighting_searching(ModelIndex const&) const;
 
     ModelIndex drop_candidate_index() const { return m_drop_candidate_index; }
 

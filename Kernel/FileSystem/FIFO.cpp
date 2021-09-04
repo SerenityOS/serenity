@@ -105,12 +105,12 @@ void FIFO::detach(Direction direction)
     evaluate_block_conditions();
 }
 
-bool FIFO::can_read(const FileDescription&, size_t) const
+bool FIFO::can_read(FileDescription const&, size_t) const
 {
     return !m_buffer->is_empty() || !m_writers;
 }
 
-bool FIFO::can_write(const FileDescription&, size_t) const
+bool FIFO::can_write(FileDescription const&, size_t) const
 {
     return m_buffer->space_for_writing() || !m_readers;
 }
@@ -126,7 +126,7 @@ KResultOr<size_t> FIFO::read(FileDescription& fd, u64, UserOrKernelBuffer& buffe
     return m_buffer->read(buffer, size);
 }
 
-KResultOr<size_t> FIFO::write(FileDescription& fd, u64, const UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> FIFO::write(FileDescription& fd, u64, UserOrKernelBuffer const& buffer, size_t size)
 {
     if (!m_readers) {
         Thread::current()->send_signal(SIGPIPE, &Process::current());
@@ -138,7 +138,7 @@ KResultOr<size_t> FIFO::write(FileDescription& fd, u64, const UserOrKernelBuffer
     return m_buffer->write(buffer, size);
 }
 
-String FIFO::absolute_path(const FileDescription&) const
+String FIFO::absolute_path(FileDescription const&) const
 {
     return String::formatted("fifo:{}", m_fifo_id);
 }

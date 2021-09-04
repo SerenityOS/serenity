@@ -41,7 +41,7 @@ SpiceAgent::SpiceAgent(int fd, ClipboardServerConnection& connection)
     send_message(buffer);
 }
 
-Optional<SpiceAgent::ClipboardType> SpiceAgent::mime_type_to_clipboard_type(const String& mime)
+Optional<SpiceAgent::ClipboardType> SpiceAgent::mime_type_to_clipboard_type(String const& mime)
 {
     if (mime == "text/plain")
         return ClipboardType::Text;

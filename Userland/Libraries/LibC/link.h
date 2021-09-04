@@ -18,7 +18,7 @@ __BEGIN_DECLS
 
 struct dl_phdr_info {
     ElfW(Addr) dlpi_addr;
-    const char* dlpi_name;
+    char const* dlpi_name;
     const ElfW(Phdr) * dlpi_phdr;
     ElfW(Half) dlpi_phnum;
 };

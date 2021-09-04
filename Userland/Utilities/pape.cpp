@@ -32,7 +32,7 @@ static int handle_show_current()
     return 0;
 }
 
-static int handle_set_pape(const String& name)
+static int handle_set_pape(String const& name)
 {
     StringBuilder builder;
     builder.append("/res/wallpapers/");
@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 {
     bool show_all = false;
     bool show_current = false;
-    const char* name = nullptr;
+    char const* name = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(show_all, "Show all wallpapers", "show-all", 'a');

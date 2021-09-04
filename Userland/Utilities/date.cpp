@@ -22,7 +22,7 @@ int main(int argc, char** argv)
     bool print_iso_8601 = false;
     bool print_rfc_3339 = false;
     bool print_rfc_5322 = false;
-    const char* set_date = nullptr;
+    char const* set_date = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(set_date, "Set system date and time", "set", 's', "date");

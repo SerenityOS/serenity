@@ -14,7 +14,7 @@ REGISTER_WIDGET(GUI, GroupBox)
 
 namespace GUI {
 
-GroupBox::GroupBox(const StringView& title)
+GroupBox::GroupBox(StringView const& title)
     : m_title(title)
 {
     REGISTER_STRING_PROPERTY("title", title, set_title);
@@ -42,7 +42,7 @@ void GroupBox::paint_event(PaintEvent& event)
     }
 }
 
-void GroupBox::set_title(const StringView& title)
+void GroupBox::set_title(StringView const& title)
 {
     if (m_title == title)
         return;

@@ -7,7 +7,7 @@ readlink - get symlink target
 ```**c++
 #include <unistd.h>
 
-ssize_t readlink(const char* path, char* buffer, size_t size)
+ssize_t readlink(char const* path, char* buffer, size_t size)
 ```
 
 ## Description

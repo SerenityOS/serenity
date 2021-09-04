@@ -38,8 +38,8 @@ public:
     virtual void initialize(GlobalObject&) override;
     virtual ~RegExpObject() override;
 
-    const String& pattern() const { return m_pattern; }
-    const String& flags() const { return m_flags; }
+    String const& pattern() const { return m_pattern; }
+    String const& flags() const { return m_flags; }
     const Regex<ECMA262>& regex() { return *m_regex; }
     const Regex<ECMA262>& regex() const { return *m_regex; }
 

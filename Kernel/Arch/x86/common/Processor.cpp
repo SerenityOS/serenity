@@ -221,7 +221,7 @@ String Processor::features_string() const
 {
     StringBuilder builder;
     auto feature_to_str =
-        [](CPUFeature f) -> const char* {
+        [](CPUFeature f) -> char const* {
         switch (f) {
         case CPUFeature::NX:
             return "nx";
@@ -454,7 +454,7 @@ void Processor::flush_gdt()
                  : "memory");
 }
 
-const DescriptorTablePointer& Processor::get_gdtr()
+DescriptorTablePointer const& Processor::get_gdtr()
 {
     return m_gdtr;
 }

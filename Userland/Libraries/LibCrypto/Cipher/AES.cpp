@@ -194,13 +194,13 @@ void AESCipherKey::expand_decrypt_key(ReadonlyBytes user_key, size_t bits)
     }
 }
 
-void AESCipher::encrypt_block(const AESCipherBlock& in, AESCipherBlock& out)
+void AESCipher::encrypt_block(AESCipherBlock const& in, AESCipherBlock& out)
 {
     u32 s0, s1, s2, s3, t0, t1, t2, t3;
     size_t r { 0 };
 
-    const auto& dec_key = key();
-    const auto* round_keys = dec_key.round_keys();
+    auto const& dec_key = key();
+    auto const* round_keys = dec_key.round_keys();
 
     s0 = get_key(in.bytes().offset_pointer(0)) ^ round_keys[0];
     s1 = get_key(in.bytes().offset_pointer(4)) ^ round_keys[1];
@@ -286,13 +286,13 @@ void AESCipher::encrypt_block(const AESCipherBlock& in, AESCipherBlock& out)
     // clang-format on
 }
 
-void AESCipher::decrypt_block(const AESCipherBlock& in, AESCipherBlock& out)
+void AESCipher::decrypt_block(AESCipherBlock const& in, AESCipherBlock& out)
 {
     u32 s0, s1, s2, s3, t0, t1, t2, t3;
     size_t r { 0 };
 
-    const auto& dec_key = key();
-    const auto* round_keys = dec_key.round_keys();
+    auto const& dec_key = key();
+    auto const* round_keys = dec_key.round_keys();
 
     s0 = get_key(in.bytes().offset_pointer(0)) ^ round_keys[0];
     s1 = get_key(in.bytes().offset_pointer(4)) ^ round_keys[1];

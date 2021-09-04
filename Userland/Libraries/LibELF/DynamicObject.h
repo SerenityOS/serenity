@@ -19,7 +19,7 @@ namespace ELF {
 
 class DynamicObject : public RefCounted<DynamicObject> {
 public:
-    static NonnullRefPtr<DynamicObject> create(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address);
+    static NonnullRefPtr<DynamicObject> create(String const& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address);
 
     ~DynamicObject();
     void dump() const;
@@ -50,7 +50,7 @@ public:
 
     class Symbol {
     public:
-        Symbol(const DynamicObject& dynamic, unsigned index, const ElfW(Sym) & sym)
+        Symbol(DynamicObject const& dynamic, unsigned index, const ElfW(Sym) & sym)
             : m_dynamic(dynamic)
             , m_sym(sym)
             , m_index(index)
@@ -58,7 +58,7 @@ public:
         }
 
         StringView name() const { return m_dynamic.symbol_string_table_string(m_sym.st_name); }
-        const char* raw_name() const { return m_dynamic.raw_symbol_string_table_string(m_sym.st_name); }
+        char const* raw_name() const { return m_dynamic.raw_symbol_string_table_string(m_sym.st_name); }
         unsigned section_index() const { return m_sym.st_shndx; }
         FlatPtr value() const { return m_sym.st_value; }
         size_t size() const { return m_sym.st_size; }
@@ -88,17 +88,17 @@ public:
                 return m_dynamic.base_address().offset(value());
             return VirtualAddress { value() };
         }
-        const DynamicObject& object() const { return m_dynamic; }
+        DynamicObject const& object() const { return m_dynamic; }
 
     private:
-        const DynamicObject& m_dynamic;
+        DynamicObject const& m_dynamic;
         const ElfW(Sym) & m_sym;
         const unsigned m_index;
     };
 
     class Section {
     public:
-        Section(const DynamicObject& dynamic, unsigned section_offset, unsigned section_size_bytes, unsigned entry_size, const StringView& name)
+        Section(DynamicObject const& dynamic, unsigned section_offset, unsigned section_size_bytes, unsigned entry_size, StringView const& name)
             : m_dynamic(dynamic)
             , m_section_offset(section_offset)
             , m_section_size_bytes(section_size_bytes)
@@ -124,7 +124,7 @@ public:
     protected:
         friend class RelocationSection;
         friend class HashSection;
-        const DynamicObject& m_dynamic;
+        DynamicObject const& m_dynamic;
         unsigned m_section_offset;
         unsigned m_section_size_bytes;
         unsigned m_entry_size;
@@ -133,7 +133,7 @@ public:
 
     class RelocationSection : public Section {
     public:
-        explicit RelocationSection(const Section& section, bool addend_used)
+        explicit RelocationSection(Section const& section, bool addend_used)
             : Section(section.m_dynamic, section.m_section_offset, section.m_section_size_bytes, section.m_entry_size, section.m_name)
             , m_addend_used(addend_used)
         {
@@ -153,7 +153,7 @@ public:
 
     class Relocation {
     public:
-        Relocation(const DynamicObject& dynamic, const ElfW(Rela) & rel, unsigned offset_in_section, bool addend_used)
+        Relocation(DynamicObject const& dynamic, const ElfW(Rela) & rel, unsigned offset_in_section, bool addend_used)
             : m_dynamic(dynamic)
             , m_rel(rel)
             , m_offset_in_section(offset_in_section)
@@ -198,7 +198,7 @@ public:
         [[nodiscard]] DynamicObject const& dynamic_object() const { return m_dynamic; }
 
     private:
-        const DynamicObject& m_dynamic;
+        DynamicObject const& m_dynamic;
         const ElfW(Rela) & m_rel;
         const unsigned m_offset_in_section;
         const bool m_addend_used;
@@ -211,7 +211,7 @@ public:
 
     class HashSymbol {
     public:
-        HashSymbol(const StringView& name)
+        HashSymbol(StringView const& name)
             : m_name(name)
         {
         }
@@ -228,13 +228,13 @@ public:
 
     class HashSection : public Section {
     public:
-        HashSection(const Section& section, HashType hash_type)
+        HashSection(Section const& section, HashType hash_type)
             : Section(section.m_dynamic, section.m_section_offset, section.m_section_size_bytes, section.m_entry_size, section.m_name)
             , m_hash_type(hash_type)
         {
         }
 
-        Optional<Symbol> lookup_symbol(const HashSymbol& symbol) const
+        Optional<Symbol> lookup_symbol(HashSymbol const& symbol) const
         {
             if (m_hash_type == HashType::SYSV)
                 return lookup_sysv_symbol(symbol.name(), symbol.sysv_hash());
@@ -242,8 +242,8 @@ public:
         }
 
     private:
-        Optional<Symbol> lookup_sysv_symbol(const StringView& name, u32 hash_value) const;
-        Optional<Symbol> lookup_gnu_symbol(const StringView& name, u32 hash) const;
+        Optional<Symbol> lookup_sysv_symbol(StringView const& name, u32 hash_value) const;
+        Optional<Symbol> lookup_gnu_symbol(StringView const& name, u32 hash) const;
 
         HashType m_hash_type {};
     };
@@ -283,7 +283,7 @@ public:
     VirtualAddress plt_got_base_address() const { return m_base_address.offset(m_procedure_linkage_table_offset.value()); }
     VirtualAddress base_address() const { return m_base_address; }
 
-    const String& filename() const { return m_filename; }
+    String const& filename() const { return m_filename; }
 
     StringView rpath() const { return m_has_rpath ? symbol_string_table_string(m_rpath_index) : StringView {}; }
     StringView runpath() const { return m_has_runpath ? symbol_string_table_string(m_runpath_index) : StringView {}; }
@@ -319,21 +319,21 @@ public:
         const ELF::DynamicObject* dynamic_object { nullptr }; // The object in which the symbol is defined
     };
 
-    Optional<SymbolLookupResult> lookup_symbol(const StringView& name) const;
-    Optional<SymbolLookupResult> lookup_symbol(const HashSymbol& symbol) const;
+    Optional<SymbolLookupResult> lookup_symbol(StringView const& name) const;
+    Optional<SymbolLookupResult> lookup_symbol(HashSymbol const& symbol) const;
 
     // Will be called from _fixup_plt_entry, as part of the PLT trampoline
     VirtualAddress patch_plt_entry(u32 relocation_offset);
 
     bool elf_is_dynamic() const { return m_is_elf_dynamic; }
 
-    void* symbol_for_name(const StringView& name);
+    void* symbol_for_name(StringView const& name);
 
 private:
-    explicit DynamicObject(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address);
+    explicit DynamicObject(String const& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address);
 
     StringView symbol_string_table_string(ElfW(Word)) const;
-    const char* raw_symbol_string_table_string(ElfW(Word)) const;
+    char const* raw_symbol_string_table_string(ElfW(Word)) const;
     void parse();
 
     String m_filename;
@@ -448,7 +448,7 @@ inline void DynamicObject::for_each_needed_library(F func) const
         if (entry.tag() != DT_NEEDED)
             return;
         ElfW(Word) offset = entry.val();
-        StringView name { (const char*)(m_base_address.offset(m_string_table_offset).offset(offset)).as_ptr() };
+        StringView name { (char const*)(m_base_address.offset(m_string_table_offset).offset(offset)).as_ptr() };
         func(name);
     });
 }

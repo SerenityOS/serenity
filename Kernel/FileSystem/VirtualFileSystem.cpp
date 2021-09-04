@@ -628,7 +628,7 @@ KResult VirtualFileSystem::chown(StringView path, UserID a_uid, GroupID a_gid, C
     return chown(custody, a_uid, a_gid);
 }
 
-static bool hard_link_allowed(const Inode& inode)
+static bool hard_link_allowed(Inode const& inode)
 {
     auto metadata = inode.metadata();
 
@@ -740,7 +740,7 @@ KResult VirtualFileSystem::symlink(StringView target, StringView linkpath, Custo
     if (inode_or_error.is_error())
         return inode_or_error.error();
     auto& inode = inode_or_error.value();
-    auto target_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((const u8*)target.characters_without_null_termination()));
+    auto target_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((u8 const*)target.characters_without_null_termination()));
     auto result = inode->write_bytes(0, target.length(), target_buffer, nullptr);
     if (result.is_error())
         return result.error();
@@ -918,7 +918,7 @@ KResultOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path(StringView pat
     return custody;
 }
 
-static bool safe_to_follow_symlink(const Inode& inode, const InodeMetadata& parent_metadata)
+static bool safe_to_follow_symlink(Inode const& inode, InodeMetadata const& parent_metadata)
 {
     auto metadata = inode.metadata();
     if (Process::current().euid() == metadata.uid)

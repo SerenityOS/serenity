@@ -46,7 +46,7 @@ class CommandLine {
     AK_MAKE_ETERNAL;
 
 public:
-    static void early_initialize(const char* cmd_line);
+    static void early_initialize(char const* cmd_line);
     static void initialize();
 
     enum class Validate {
@@ -54,9 +54,9 @@ public:
         No,
     };
 
-    [[nodiscard]] const String& string() const { return m_string; }
-    Optional<StringView> lookup(const StringView& key) const;
-    [[nodiscard]] bool contains(const StringView& key) const;
+    [[nodiscard]] String const& string() const { return m_string; }
+    Optional<StringView> lookup(StringView const& key) const;
+    [[nodiscard]] bool contains(StringView const& key) const;
 
     [[nodiscard]] bool is_boot_profiling_enabled() const;
     [[nodiscard]] bool is_ide_enabled() const;
@@ -82,15 +82,15 @@ public:
     [[nodiscard]] size_t switch_to_tty() const;
 
 private:
-    CommandLine(const String&);
+    CommandLine(String const&);
 
     void add_arguments(const Vector<StringView>& args);
-    void build_commandline(const String& cmdline_from_bootloader);
+    void build_commandline(String const& cmdline_from_bootloader);
 
     String m_string;
     HashMap<StringView, StringView> m_params;
 };
 
-const CommandLine& kernel_command_line();
+CommandLine const& kernel_command_line();
 
 }

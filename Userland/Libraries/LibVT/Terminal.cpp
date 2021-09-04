@@ -1262,15 +1262,15 @@ void Terminal::execute_dcs_sequence()
 {
 }
 
-void Terminal::inject_string(const StringView& str)
+void Terminal::inject_string(StringView const& str)
 {
     for (size_t i = 0; i < str.length(); ++i)
         on_input(str[i]);
 }
 
-void Terminal::emit_string(const StringView& string)
+void Terminal::emit_string(StringView const& string)
 {
-    m_client.emit((const u8*)string.characters_without_null_termination(), string.length());
+    m_client.emit((u8 const*)string.characters_without_null_termination(), string.length());
 }
 
 void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
@@ -1576,7 +1576,7 @@ void Terminal::invalidate_cursor()
         active_buffer()[cursor_row()].set_dirty(true);
 }
 
-Attribute Terminal::attribute_at(const Position& position) const
+Attribute Terminal::attribute_at(Position const& position) const
 {
     if (!position.is_valid())
         return {};

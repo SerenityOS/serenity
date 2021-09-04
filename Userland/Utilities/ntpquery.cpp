@@ -53,7 +53,7 @@ static_assert(sizeof(NtpPacket) == 48);
 // Overflows a 32-bit signed int, but not a 32-bit unsigned int.
 const unsigned SecondsFrom1900To1970 = (70u * 365u + 70u / 4u) * 24u * 60u * 60u;
 
-static NtpTimestamp ntp_timestamp_from_timeval(const timeval& t)
+static NtpTimestamp ntp_timestamp_from_timeval(timeval const& t)
 {
     VERIFY(t.tv_usec >= 0 && t.tv_usec < 1'000'000); // Fits in 20 bits when normalized.
 
@@ -66,7 +66,7 @@ static NtpTimestamp ntp_timestamp_from_timeval(const timeval& t)
     return (static_cast<NtpTimestamp>(seconds) << 32) | fractional_bits;
 }
 
-static timeval timeval_from_ntp_timestamp(const NtpTimestamp& ntp_timestamp)
+static timeval timeval_from_ntp_timestamp(NtpTimestamp const& ntp_timestamp)
 {
     timeval t;
     t.tv_sec = static_cast<time_t>(ntp_timestamp >> 32) - SecondsFrom1900To1970;
@@ -111,7 +111,7 @@ int main(int argc, char** argv)
     // Leap seconds smearing NTP servers:
     // - time.facebook.com , https://engineering.fb.com/production-engineering/ntp-service/ , sine-smears over 18 hours
     // - time.google.com , https://developers.google.com/time/smear , linear-smears over 24 hours
-    const char* host = "time.google.com";
+    char const* host = "time.google.com";
     Core::ArgsParser args_parser;
     args_parser.add_option(adjust_time, "Gradually adjust system time (requires root)", "adjust", 'a');
     args_parser.add_option(set_time, "Immediately set system time (requires root)", "set", 's');
@@ -171,7 +171,7 @@ int main(int argc, char** argv)
     memset(&peer_address, 0, sizeof(peer_address));
     peer_address.sin_family = AF_INET;
     peer_address.sin_port = htons(123);
-    peer_address.sin_addr.s_addr = *(const in_addr_t*)hostent->h_addr_list[0];
+    peer_address.sin_addr.s_addr = *(in_addr_t const*)hostent->h_addr_list[0];
 
     NtpPacket packet;
     memset(&packet, 0, sizeof(packet));

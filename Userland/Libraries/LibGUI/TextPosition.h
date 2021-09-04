@@ -27,9 +27,9 @@ public:
     void set_line(size_t line) { m_line = line; }
     void set_column(size_t column) { m_column = column; }
 
-    bool operator==(const TextPosition& other) const { return m_line == other.m_line && m_column == other.m_column; }
-    bool operator!=(const TextPosition& other) const { return m_line != other.m_line || m_column != other.m_column; }
-    bool operator<(const TextPosition& other) const { return m_line < other.m_line || (m_line == other.m_line && m_column < other.m_column); }
+    bool operator==(TextPosition const& other) const { return m_line == other.m_line && m_column == other.m_column; }
+    bool operator!=(TextPosition const& other) const { return m_line != other.m_line || m_column != other.m_column; }
+    bool operator<(TextPosition const& other) const { return m_line < other.m_line || (m_line == other.m_line && m_column < other.m_column); }
 
 private:
     size_t m_line { 0xffffffff };

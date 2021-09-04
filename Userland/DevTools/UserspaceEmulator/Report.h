@@ -11,7 +11,7 @@
 extern bool g_report_to_debug;
 
 template<typename... Ts>
-void reportln(const StringView& format, Ts... args)
+void reportln(StringView const& format, Ts... args)
 {
     if (g_report_to_debug) {
         AK::VariadicFormatParams variadic_format_params { args... };

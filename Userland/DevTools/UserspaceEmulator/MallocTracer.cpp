@@ -25,7 +25,7 @@ template<typename Callback>
 inline void MallocTracer::for_each_mallocation(Callback callback) const
 {
     m_emulator.mmu().for_each_region([&](auto& region) {
-        if (is<MmapRegion>(region) && static_cast<const MmapRegion&>(region).is_malloc_block()) {
+        if (is<MmapRegion>(region) && static_cast<MmapRegion const&>(region).is_malloc_block()) {
             auto* malloc_data = static_cast<MmapRegion&>(region).malloc_metadata();
             for (auto& mallocation : malloc_data->mallocations) {
                 if (mallocation.used && callback(mallocation) == IterationDecision::Break)
@@ -208,7 +208,7 @@ Mallocation* MallocTracer::find_mallocation_after(FlatPtr address)
     return found_mallocation;
 }
 
-void MallocTracer::audit_read(const Region& region, FlatPtr address, size_t size)
+void MallocTracer::audit_read(Region const& region, FlatPtr address, size_t size)
 {
     if (!m_auditing_enabled)
         return;
@@ -259,7 +259,7 @@ void MallocTracer::audit_read(const Region& region, FlatPtr address, size_t size
     }
 }
 
-void MallocTracer::audit_write(const Region& region, FlatPtr address, size_t size)
+void MallocTracer::audit_write(Region const& region, FlatPtr address, size_t size)
 {
     if (!m_auditing_enabled)
         return;
@@ -347,7 +347,7 @@ void MallocTracer::populate_memory_graph()
         if (!region.is_readable())
             return IterationDecision::Continue;
         // Skip malloc blocks
-        if (is<MmapRegion>(region) && static_cast<const MmapRegion&>(region).is_malloc_block())
+        if (is<MmapRegion>(region) && static_cast<MmapRegion const&>(region).is_malloc_block())
             return IterationDecision::Continue;
 
         size_t pointers_in_region = region.size() / sizeof(u32);

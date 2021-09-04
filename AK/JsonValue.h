@@ -30,15 +30,15 @@ public:
         Object,
     };
 
-    static Optional<JsonValue> from_string(const StringView&);
+    static Optional<JsonValue> from_string(StringView const&);
 
     explicit JsonValue(Type = Type::Null);
     ~JsonValue() { clear(); }
 
-    JsonValue(const JsonValue&);
+    JsonValue(JsonValue const&);
     JsonValue(JsonValue&&);
 
-    JsonValue& operator=(const JsonValue&);
+    JsonValue& operator=(JsonValue const&);
     JsonValue& operator=(JsonValue&&);
 
     JsonValue(int);
@@ -52,10 +52,10 @@ public:
     JsonValue(double);
 #endif
     JsonValue(bool);
-    JsonValue(const char*);
-    JsonValue(const String&);
-    JsonValue(const JsonArray&);
-    JsonValue(const JsonObject&);
+    JsonValue(char const*);
+    JsonValue(String const&);
+    JsonValue(JsonArray const&);
+    JsonValue(JsonObject const&);
 
     JsonValue(JsonArray&&);
     JsonValue(JsonObject&&);
@@ -143,13 +143,13 @@ public:
         return *m_value.as_string;
     }
 
-    const JsonObject& as_object() const
+    JsonObject const& as_object() const
     {
         VERIFY(is_object());
         return *m_value.as_object;
     }
 
-    const JsonArray& as_array() const
+    JsonArray const& as_array() const
     {
         VERIFY(is_array());
         return *m_value.as_array;
@@ -220,11 +220,11 @@ public:
         return default_value;
     }
 
-    bool equals(const JsonValue& other) const;
+    bool equals(JsonValue const& other) const;
 
 private:
     void clear();
-    void copy_from(const JsonValue&);
+    void copy_from(JsonValue const&);
 
     Type m_type { Type::Null };
 
@@ -245,7 +245,7 @@ private:
 
 template<>
 struct Formatter<JsonValue> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const JsonValue& value)
+    void format(FormatBuilder& builder, JsonValue const& value)
     {
         Formatter<StringView>::format(builder, value.to_string());
     }

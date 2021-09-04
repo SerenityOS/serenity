@@ -78,7 +78,7 @@ void ClientConnection::update_screen_rects(const Vector<Gfx::IntRect>& rects, u3
     m_page_host->set_screen_rects(rects, main_screen);
 }
 
-void ClientConnection::load_url(const URL& url)
+void ClientConnection::load_url(URL const& url)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadURL: url={}", url);
 
@@ -93,7 +93,7 @@ void ClientConnection::load_url(const URL& url)
     page().load(url);
 }
 
-void ClientConnection::load_html(const String& html, const URL& url)
+void ClientConnection::load_html(String const& html, URL const& url)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadHTML: html={}, url={}", html, url);
     page().load_html(html, url);
@@ -169,7 +169,7 @@ void ClientConnection::key_down(i32 key, unsigned int modifiers, u32 code_point)
     page().handle_keydown((KeyCode)key, modifiers, code_point);
 }
 
-void ClientConnection::debug_request(const String& request, const String& argument)
+void ClientConnection::debug_request(String const& request, String const& argument)
 {
     if (request == "dump-dom-tree") {
         if (auto* doc = page().top_level_browsing_context().document())
@@ -284,7 +284,7 @@ void ClientConnection::js_console_initialize()
     }
 }
 
-void ClientConnection::js_console_input(const String& js_source)
+void ClientConnection::js_console_input(String const& js_source)
 {
     if (m_console_client)
         m_console_client->handle_input(js_source);

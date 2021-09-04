@@ -58,7 +58,7 @@ void DNSServer::handle_client()
         response.set_code(DNSPacket::Code::NOERROR);
 
     buffer = response.to_byte_buffer();
-    sendto(fd(), buffer.data(), buffer.size(), 0, (const sockaddr*)&client_address, sizeof(client_address));
+    sendto(fd(), buffer.data(), buffer.size(), 0, (sockaddr const*)&client_address, sizeof(client_address));
 }
 
 }

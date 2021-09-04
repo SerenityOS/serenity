@@ -16,20 +16,20 @@ class OrdinaryFunctionObject final : public FunctionObject {
     JS_OBJECT(OrdinaryFunctionObject, FunctionObject);
 
 public:
-    static OrdinaryFunctionObject* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind, bool is_strict, bool is_arrow_function = false);
+    static OrdinaryFunctionObject* create(GlobalObject&, FlyString const& name, Statement const& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind, bool is_strict, bool is_arrow_function = false);
 
-    OrdinaryFunctionObject(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, Object& prototype, FunctionKind, bool is_strict, bool is_arrow_function = false);
+    OrdinaryFunctionObject(GlobalObject&, FlyString const& name, Statement const& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, Object& prototype, FunctionKind, bool is_strict, bool is_arrow_function = false);
     virtual void initialize(GlobalObject&) override;
     virtual ~OrdinaryFunctionObject();
 
-    const Statement& body() const { return m_body; }
+    Statement const& body() const { return m_body; }
     const Vector<FunctionNode::Parameter>& parameters() const { return m_parameters; };
 
     virtual Value call() override;
     virtual Value construct(FunctionObject& new_target) override;
 
-    virtual const FlyString& name() const override { return m_name; };
-    void set_name(const FlyString& name);
+    virtual FlyString const& name() const override { return m_name; };
+    void set_name(FlyString const& name);
 
     void set_is_class_constructor() { m_is_class_constructor = true; };
 

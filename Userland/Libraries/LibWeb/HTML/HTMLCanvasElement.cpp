@@ -54,7 +54,7 @@ CanvasRenderingContext2D* HTMLCanvasElement::get_context(String type)
     return m_context;
 }
 
-static Gfx::IntSize bitmap_size_for_canvas(const HTMLCanvasElement& canvas)
+static Gfx::IntSize bitmap_size_for_canvas(HTMLCanvasElement const& canvas)
 {
     auto width = canvas.width();
     auto height = canvas.height();
@@ -85,7 +85,7 @@ bool HTMLCanvasElement::create_bitmap()
     return m_bitmap;
 }
 
-String HTMLCanvasElement::to_data_url(const String& type, [[maybe_unused]] Optional<double> quality) const
+String HTMLCanvasElement::to_data_url(String const& type, [[maybe_unused]] Optional<double> quality) const
 {
     if (!m_bitmap)
         return {};

@@ -86,9 +86,9 @@ UNMAP_AFTER_INIT void Process::initialize()
 NonnullRefPtrVector<Process> Process::all_processes()
 {
     NonnullRefPtrVector<Process> output;
-    processes().with([&](const auto& list) {
+    processes().with([&](auto const& list) {
         output.ensure_capacity(list.size_slow());
-        for (const auto& process : list)
+        for (auto const& process : list)
             output.append(NonnullRefPtr<Process>(process));
     });
     return output;
@@ -143,7 +143,7 @@ void Process::register_new(Process& process)
     });
 }
 
-RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const String& path, UserID uid, GroupID gid, ProcessID parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
+RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, String const& path, UserID uid, GroupID gid, ProcessID parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
 {
     auto parts = path.split('/');
     if (arguments.is_empty()) {
@@ -225,7 +225,7 @@ void Process::unprotect_data()
     });
 }
 
-RefPtr<Process> Process::create(RefPtr<Thread>& first_thread, const String& name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
+RefPtr<Process> Process::create(RefPtr<Thread>& first_thread, String const& name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
 {
     auto space = Memory::AddressSpace::try_create(fork_parent ? &fork_parent->address_space() : nullptr);
     if (!space)
@@ -239,7 +239,7 @@ RefPtr<Process> Process::create(RefPtr<Thread>& first_thread, const String& name
     return process;
 }
 
-Process::Process(const String& name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty)
+Process::Process(String const& name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty)
     : m_name(move(name))
     , m_is_kernel_process(is_kernel_process)
     , m_executable(move(executable))
@@ -418,7 +418,7 @@ void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
 
 RefPtr<Process> Process::from_pid(ProcessID pid)
 {
-    return processes().with([&](const auto& list) -> RefPtr<Process> {
+    return processes().with([&](auto const& list) -> RefPtr<Process> {
         for (auto& process : list) {
             if (process.pid() == pid)
                 return &process;
@@ -473,7 +473,7 @@ RefPtr<FileDescription> Process::FileDescriptions::file_description(int fd) cons
     return nullptr;
 }
 
-void Process::FileDescriptions::enumerate(Function<void(const FileDescriptionAndFlags&)> callback) const
+void Process::FileDescriptions::enumerate(Function<void(FileDescriptionAndFlags const&)> callback) const
 {
     SpinlockLocker lock(m_fds_lock);
     for (auto& file_description_metadata : m_fds_metadatas) {
@@ -696,7 +696,7 @@ void Process::die()
         m_threads_for_coredump.append(thread);
     });
 
-    processes().with([&](const auto& list) {
+    processes().with([&](auto const& list) {
         for (auto it = list.begin(); it != list.end();) {
             auto& process = *it;
             ++it;
@@ -809,7 +809,7 @@ void Process::stop_tracing()
     m_tracer = nullptr;
 }
 
-void Process::tracer_trap(Thread& thread, const RegisterState& regs)
+void Process::tracer_trap(Thread& thread, RegisterState const& regs)
 {
     VERIFY(m_tracer.ptr());
     m_tracer->set_regs(regs);

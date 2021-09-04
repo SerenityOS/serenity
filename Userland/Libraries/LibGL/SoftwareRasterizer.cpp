@@ -17,24 +17,24 @@ using IntVector3 = Gfx::Vector3<int>;
 
 static constexpr int RASTERIZER_BLOCK_SIZE = 16;
 
-constexpr static int edge_function(const IntVector2& a, const IntVector2& b, const IntVector2& c)
+constexpr static int edge_function(IntVector2 const& a, IntVector2 const& b, IntVector2 const& c)
 {
     return ((c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x()));
 }
 
 template<typename T>
-constexpr static T interpolate(const T& v0, const T& v1, const T& v2, const FloatVector3& barycentric_coords)
+constexpr static T interpolate(T const& v0, T const& v1, T const& v2, FloatVector3 const& barycentric_coords)
 {
     return v0 * barycentric_coords.x() + v1 * barycentric_coords.y() + v2 * barycentric_coords.z();
 }
 
 template<typename T>
-constexpr static T mix(const T& x, const T& y, float interp)
+constexpr static T mix(T const& x, T const& y, float interp)
 {
     return x * (1 - interp) + y * interp;
 }
 
-static Gfx::RGBA32 to_rgba32(const FloatVector4& v)
+static Gfx::RGBA32 to_rgba32(FloatVector4 const& v)
 {
     auto clamped = v.clamped(0, 1);
     u8 r = clamped.x() * 255;
@@ -105,7 +105,7 @@ static constexpr void setup_blend_factors(GLenum mode, FloatVector4& constant, f
 }
 
 template<typename PS>
-static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& render_target, DepthBuffer& depth_buffer, const GLTriangle& triangle, PS pixel_shader)
+static void rasterize_triangle(RasterizerOptions const& options, Gfx::Bitmap& render_target, DepthBuffer& depth_buffer, GLTriangle const& triangle, PS pixel_shader)
 {
     // Since the algorithm is based on blocks of uniform size, we need
     // to ensure that our render_target size is actually a multiple of the block size
@@ -167,7 +167,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
         zero.set_y(0);
 
     // This function calculates the 3 edge values for the pixel relative to the triangle.
-    auto calculate_edge_values = [v0, v1, v2](const IntVector2& p) -> IntVector3 {
+    auto calculate_edge_values = [v0, v1, v2](IntVector2 const& p) -> IntVector3 {
         return {
             edge_function(v1, v2, p),
             edge_function(v2, v0, p),
@@ -176,7 +176,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     };
 
     // This function tests whether a point as identified by its 3 edge values lies within the triangle
-    auto test_point = [zero](const IntVector3& edges) -> bool {
+    auto test_point = [zero](IntVector3 const& edges) -> bool {
         return edges.x() >= zero.x()
             && edges.y() >= zero.y()
             && edges.z() >= zero.z();
@@ -483,12 +483,12 @@ SoftwareRasterizer::SoftwareRasterizer(const Gfx::IntSize& min_size)
 {
 }
 
-void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle, const Array<TextureUnit, 32>& texture_units)
+void SoftwareRasterizer::submit_triangle(GLTriangle const& triangle, const Array<TextureUnit, 32>& texture_units)
 {
-    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &texture_units](const FloatVector2& uv, const FloatVector4& color, float z) -> FloatVector4 {
+    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &texture_units](FloatVector2 const& uv, FloatVector4 const& color, float z) -> FloatVector4 {
         FloatVector4 fragment = color;
 
-        for (const auto& texture_unit : texture_units) {
+        for (auto const& texture_unit : texture_units) {
 
             // No texture is bound to this texture unit
             if (!texture_unit.is_bound())
@@ -551,7 +551,7 @@ void SoftwareRasterizer::resize(const Gfx::IntSize& min_size)
     m_depth_buffer = adopt_own(*new DepthBuffer(m_render_target->size()));
 }
 
-void SoftwareRasterizer::clear_color(const FloatVector4& color)
+void SoftwareRasterizer::clear_color(FloatVector4 const& color)
 {
     wait_for_all_threads();
 
@@ -583,7 +583,7 @@ void SoftwareRasterizer::wait_for_all_threads() const
     // FIXME: Wait for all render threads to finish when multithreading is being implemented
 }
 
-void SoftwareRasterizer::set_options(const RasterizerOptions& options)
+void SoftwareRasterizer::set_options(RasterizerOptions const& options)
 {
     wait_for_all_threads();
 

@@ -23,7 +23,7 @@ public:
         m_builder.append('{');
     }
 
-    JsonObjectSerializer(const JsonObjectSerializer&) = delete;
+    JsonObjectSerializer(JsonObjectSerializer const&) = delete;
     JsonObjectSerializer(JsonObjectSerializer&&) = delete;
 
     ~JsonObjectSerializer()
@@ -33,14 +33,14 @@ public:
     }
 
 #ifndef KERNEL
-    void add(const StringView& key, const JsonValue& value)
+    void add(StringView const& key, JsonValue const& value)
     {
         begin_item(key);
         value.serialize(m_builder);
     }
 #endif
 
-    void add(const StringView& key, const StringView& value)
+    void add(StringView const& key, StringView const& value)
     {
         begin_item(key);
         m_builder.append('"');
@@ -48,7 +48,7 @@ public:
         m_builder.append('"');
     }
 
-    void add(const StringView& key, const String& value)
+    void add(StringView const& key, String const& value)
     {
         begin_item(key);
         m_builder.append('"');
@@ -56,7 +56,7 @@ public:
         m_builder.append('"');
     }
 
-    void add(const StringView& key, const char* value)
+    void add(StringView const& key, char const* value)
     {
         begin_item(key);
         m_builder.append('"');
@@ -64,63 +64,63 @@ public:
         m_builder.append('"');
     }
 
-    void add(const StringView& key, bool value)
+    void add(StringView const& key, bool value)
     {
         begin_item(key);
         m_builder.append(value ? "true" : "false");
     }
 
-    void add(const StringView& key, int value)
+    void add(StringView const& key, int value)
     {
         begin_item(key);
         m_builder.appendff("{}", value);
     }
 
-    void add(const StringView& key, unsigned value)
+    void add(StringView const& key, unsigned value)
     {
         begin_item(key);
         m_builder.appendff("{}", value);
     }
 
-    void add(const StringView& key, long value)
+    void add(StringView const& key, long value)
     {
         begin_item(key);
         m_builder.appendff("{}", value);
     }
 
-    void add(const StringView& key, long unsigned value)
+    void add(StringView const& key, long unsigned value)
     {
         begin_item(key);
         m_builder.appendff("{}", value);
     }
 
-    void add(const StringView& key, long long value)
+    void add(StringView const& key, long long value)
     {
         begin_item(key);
         m_builder.appendff("{}", value);
     }
 
-    void add(const StringView& key, long long unsigned value)
+    void add(StringView const& key, long long unsigned value)
     {
         begin_item(key);
         m_builder.appendff("{}", value);
     }
 
 #ifndef KERNEL
-    void add(const StringView& key, double value)
+    void add(StringView const& key, double value)
     {
         begin_item(key);
         m_builder.appendff("{}", value);
     }
 #endif
 
-    JsonArraySerializer<Builder> add_array(const StringView& key)
+    JsonArraySerializer<Builder> add_array(StringView const& key)
     {
         begin_item(key);
         return JsonArraySerializer(m_builder);
     }
 
-    JsonObjectSerializer<Builder> add_object(const StringView& key)
+    JsonObjectSerializer<Builder> add_object(StringView const& key)
     {
         begin_item(key);
         return JsonObjectSerializer(m_builder);
@@ -134,7 +134,7 @@ public:
     }
 
 private:
-    void begin_item(const StringView& key)
+    void begin_item(StringView const& key)
     {
         if (!m_empty)
             m_builder.append(',');

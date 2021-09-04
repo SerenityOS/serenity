@@ -126,7 +126,7 @@ TarOutputStream::TarOutputStream(OutputStream& stream)
 {
 }
 
-void TarOutputStream::add_directory(const String& path, mode_t mode)
+void TarOutputStream::add_directory(String const& path, mode_t mode)
 {
     VERIFY(!m_finished);
     TarFileHeader header;
@@ -143,7 +143,7 @@ void TarOutputStream::add_directory(const String& path, mode_t mode)
     VERIFY(m_stream.write_or_error(Bytes { &padding, block_size - sizeof(header) }));
 }
 
-void TarOutputStream::add_file(const String& path, mode_t mode, const ReadonlyBytes& bytes)
+void TarOutputStream::add_file(String const& path, mode_t mode, ReadonlyBytes const& bytes)
 {
     VERIFY(!m_finished);
     TarFileHeader header;

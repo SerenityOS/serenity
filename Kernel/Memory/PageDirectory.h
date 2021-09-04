@@ -40,7 +40,7 @@ public:
     VirtualRangeAllocator const& range_allocator() const { return m_range_allocator; }
 
     AddressSpace* address_space() { return m_space; }
-    const AddressSpace* address_space() const { return m_space; }
+    AddressSpace const* address_space() const { return m_space; }
 
     void set_space(Badge<AddressSpace>, AddressSpace& space) { m_space = &space; }
 

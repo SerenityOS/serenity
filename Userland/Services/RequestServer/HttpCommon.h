@@ -53,7 +53,7 @@ void init(TSelf* self, TJob job)
 }
 
 template<typename TBadgedProtocol, typename TPipeResult>
-OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ClientConnection& client, const String& method, const URL& url, const HashMap<String, String>& headers, ReadonlyBytes body, TPipeResult&& pipe_result)
+OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ClientConnection& client, String const& method, URL const& url, const HashMap<String, String>& headers, ReadonlyBytes body, TPipeResult&& pipe_result)
 {
     using TJob = typename TBadgedProtocol::Type::JobType;
     using TRequest = typename TBadgedProtocol::Type::RequestType;

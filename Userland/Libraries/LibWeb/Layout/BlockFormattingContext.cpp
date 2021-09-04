@@ -93,7 +93,7 @@ void BlockFormattingContext::compute_width(Box& box)
     const auto padding_left = computed_values.padding().left.resolved_or_zero(box, width_of_containing_block);
     const auto padding_right = computed_values.padding().right.resolved_or_zero(box, width_of_containing_block);
 
-    auto try_compute_width = [&](const auto& a_width) {
+    auto try_compute_width = [&](auto const& a_width) {
         CSS::Length width = a_width;
         margin_left = computed_values.margin().left.resolved_or_zero(box, width_of_containing_block);
         margin_right = computed_values.margin().right.resolved_or_zero(box, width_of_containing_block);
@@ -253,7 +253,7 @@ void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_n
     box.set_width(compute_width_for_replaced_element(box));
 }
 
-static float compute_auto_height_for_block_level_element(const Box& box)
+static float compute_auto_height_for_block_level_element(Box const& box)
 {
     Optional<float> top;
     Optional<float> bottom;
@@ -296,7 +296,7 @@ static float compute_auto_height_for_block_level_element(const Box& box)
     return bottom.value_or(0) - top.value_or(0);
 }
 
-float BlockFormattingContext::compute_theoretical_height(const Box& box)
+float BlockFormattingContext::compute_theoretical_height(Box const& box)
 {
     auto& computed_values = box.computed_values();
     auto& containing_block = *box.containing_block();
@@ -546,7 +546,7 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     icb.set_height(max(static_cast<float>(viewport_rect.height()), lowest_bottom));
 }
 
-static Gfx::FloatRect rect_in_coordinate_space(const Box& box, const Box& context_box)
+static Gfx::FloatRect rect_in_coordinate_space(Box const& box, Box const& context_box)
 {
     Gfx::FloatRect rect = box.margin_box_as_relative_rect();
     for (auto* ancestor = box.parent(); ancestor; ancestor = ancestor->parent()) {

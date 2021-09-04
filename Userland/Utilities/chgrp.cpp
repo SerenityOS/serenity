@@ -18,8 +18,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* gid_arg = nullptr;
-    const char* path = nullptr;
+    char const* gid_arg = nullptr;
+    char const* path = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Change the owning group for a file or directory.");

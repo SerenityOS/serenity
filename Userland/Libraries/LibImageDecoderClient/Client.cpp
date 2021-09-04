@@ -20,7 +20,7 @@ void Client::die()
         on_death();
 }
 
-Optional<DecodedImage> Client::decode_image(const ByteBuffer& encoded_data)
+Optional<DecodedImage> Client::decode_image(ByteBuffer const& encoded_data)
 {
     if (encoded_data.is_empty())
         return {};

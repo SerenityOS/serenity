@@ -24,7 +24,7 @@ public:
     const Vector<Box*>& left_floating_boxes() const { return m_left_floating_boxes; }
     const Vector<Box*>& right_floating_boxes() const { return m_right_floating_boxes; }
 
-    static float compute_theoretical_height(const Box&);
+    static float compute_theoretical_height(Box const&);
     void compute_width(Box&);
 
 protected:

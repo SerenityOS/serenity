@@ -120,7 +120,7 @@ union Extractor {
     };
     double d;
 
-    bool operator==(const Extractor& other) const
+    bool operator==(Extractor const& other) const
     {
         return other.sign == sign && other.exponent == exponent && other.mantissa == mantissa;
     }
@@ -128,7 +128,7 @@ union Extractor {
 namespace AK {
 template<>
 struct Formatter<Extractor> : StandardFormatter {
-    void format(FormatBuilder& builder, const Extractor& value)
+    void format(FormatBuilder& builder, Extractor const& value)
     {
         builder.put_literal("{");
         builder.put_u64(value.sign);

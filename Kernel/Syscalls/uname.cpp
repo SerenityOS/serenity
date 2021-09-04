@@ -23,7 +23,7 @@ KResultOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
     memcpy(buf.machine, "x86_64", 7);
 #endif
 
-    hostname().with_shared([&](const auto& name) {
+    hostname().with_shared([&](auto const& name) {
         memcpy(buf.nodename, name.characters(), name.length() + 1);
     });
 

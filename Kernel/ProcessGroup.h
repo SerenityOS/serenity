@@ -28,7 +28,7 @@ public:
     static RefPtr<ProcessGroup> find_or_create(ProcessGroupID);
     static RefPtr<ProcessGroup> from_pgid(ProcessGroupID);
 
-    const ProcessGroupID& pgid() const { return m_pgid; }
+    ProcessGroupID const& pgid() const { return m_pgid; }
 
 private:
     ProcessGroup(ProcessGroupID pgid)

@@ -44,7 +44,7 @@ public:
         size_t line { 0 };
         size_t column { 0 };
 
-        bool operator==(const ProjectLocation&) const;
+        bool operator==(ProjectLocation const&) const;
     };
 
     enum class DeclarationType {
@@ -63,7 +63,7 @@ public:
         DeclarationType type;
         String scope;
 
-        bool operator==(const Declaration&) const;
+        bool operator==(Declaration const&) const;
     };
 
     virtual void provide_completions(Function<void(Vector<Entry>)>) = 0;

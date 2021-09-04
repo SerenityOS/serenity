@@ -48,7 +48,7 @@ private:
     UNMAP_AFTER_INIT AHCIPortHandler(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
 
     //^ IRQHandler
-    virtual bool handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(RegisterState const&) override;
 
     enum class Direction : u8 {
         Read,
@@ -60,7 +60,7 @@ private:
     void start_request(AsyncBlockDeviceRequest&, bool, bool, u16);
     void complete_current_request(AsyncDeviceRequest::RequestResult);
 
-    void enumerate_ports(Function<void(const AHCIPort&)> callback) const;
+    void enumerate_ports(Function<void(AHCIPort const&)> callback) const;
     RefPtr<AHCIPort> port_at_index(u32 port_index) const;
 
     // Data members

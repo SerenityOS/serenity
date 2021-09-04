@@ -29,12 +29,12 @@ DebugSession::~DebugSession()
     if (m_is_debuggee_dead)
         return;
 
-    for (const auto& bp : m_breakpoints) {
+    for (auto const& bp : m_breakpoints) {
         disable_breakpoint(bp.key);
     }
     m_breakpoints.clear();
 
-    for (const auto& wp : m_watchpoints) {
+    for (auto const& wp : m_watchpoints) {
         disable_watchpoint(wp.key);
     }
     m_watchpoints.clear();
@@ -61,11 +61,11 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(String const& command, String
 
         auto parts = command.split(' ');
         VERIFY(!parts.is_empty());
-        const char** args = (const char**)calloc(parts.size() + 1, sizeof(const char*));
+        char const** args = (char const**)calloc(parts.size() + 1, sizeof(char const*));
         for (size_t i = 0; i < parts.size(); i++) {
             args[i] = parts[i].characters();
         }
-        const char** envp = (const char**)calloc(2, sizeof(const char*));
+        char const** envp = (char const**)calloc(2, sizeof(char const*));
         // This causes loader to stop on a breakpoint before jumping to the entry point of the program.
         envp[0] = "_LOADER_BREAKPOINT=1";
         int rc = execvpe(args[0], const_cast<char**>(args), const_cast<char**>(envp));
@@ -459,8 +459,8 @@ void DebugSession::update_loaded_libs()
 
 const DebugSession::LoadedLibrary* DebugSession::library_at(FlatPtr address) const
 {
-    const LoadedLibrary* result = nullptr;
-    for_each_loaded_library([&result, address](const auto& lib) {
+    LoadedLibrary const* result = nullptr;
+    for_each_loaded_library([&result, address](auto const& lib) {
         if (address >= lib.base_address && address < lib.base_address + lib.debug_info->elf().size()) {
             result = &lib;
             return IterationDecision::Break;

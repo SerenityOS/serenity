@@ -15,7 +15,7 @@ namespace Kernel {
 #define EBR_CHS_CONTAINER 0x05
 #define EBR_LBA_CONTAINER 0x0F
 
-Result<NonnullOwnPtr<MBRPartitionTable>, PartitionTable::Error> MBRPartitionTable::try_to_initialize(const StorageDevice& device)
+Result<NonnullOwnPtr<MBRPartitionTable>, PartitionTable::Error> MBRPartitionTable::try_to_initialize(StorageDevice const& device)
 {
     auto table = make<MBRPartitionTable>(device);
     if (table->contains_ebr())
@@ -27,7 +27,7 @@ Result<NonnullOwnPtr<MBRPartitionTable>, PartitionTable::Error> MBRPartitionTabl
     return table;
 }
 
-OwnPtr<MBRPartitionTable> MBRPartitionTable::try_to_initialize(const StorageDevice& device, u32 start_lba)
+OwnPtr<MBRPartitionTable> MBRPartitionTable::try_to_initialize(StorageDevice const& device, u32 start_lba)
 {
     auto table = make<MBRPartitionTable>(device, start_lba);
     if (!table->is_valid())
@@ -44,7 +44,7 @@ bool MBRPartitionTable::read_boot_record()
     return m_header_valid;
 }
 
-MBRPartitionTable::MBRPartitionTable(const StorageDevice& device, u32 start_lba)
+MBRPartitionTable::MBRPartitionTable(StorageDevice const& device, u32 start_lba)
     : PartitionTable(device)
     , m_start_lba(start_lba)
     , m_cached_header(ByteBuffer::create_zeroed(m_device->block_size()))
@@ -65,7 +65,7 @@ MBRPartitionTable::MBRPartitionTable(const StorageDevice& device, u32 start_lba)
     m_valid = true;
 }
 
-MBRPartitionTable::MBRPartitionTable(const StorageDevice& device)
+MBRPartitionTable::MBRPartitionTable(StorageDevice const& device)
     : PartitionTable(device)
     , m_start_lba(0)
     , m_cached_header(ByteBuffer::create_zeroed(m_device->block_size()))

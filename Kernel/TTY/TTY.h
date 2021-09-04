@@ -22,11 +22,11 @@ public:
     virtual ~TTY() override;
 
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual bool can_read(const FileDescription&, size_t) const override;
-    virtual bool can_write(const FileDescription&, size_t) const override;
+    virtual KResultOr<size_t> write(FileDescription&, u64, UserOrKernelBuffer const&, size_t) override;
+    virtual bool can_read(FileDescription const&, size_t) const override;
+    virtual bool can_write(FileDescription const&, size_t) const override;
     virtual KResult ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override final;
-    virtual String absolute_path(const FileDescription&) const override { return tty_name(); }
+    virtual String absolute_path(FileDescription const&) const override { return tty_name(); }
 
     virtual String const& tty_name() const = 0;
 
@@ -40,7 +40,7 @@ public:
         return 0;
     }
 
-    KResult set_termios(const termios&);
+    KResult set_termios(termios const&);
     bool should_generate_signals() const { return m_termios.c_lflag & ISIG; }
     bool should_flush_on_signal() const { return !(m_termios.c_lflag & NOFLSH); }
     bool should_echo_input() const { return m_termios.c_lflag & ECHO; }
@@ -53,7 +53,7 @@ public:
     virtual mode_t required_mode() const override { return 0620; }
 
 protected:
-    virtual KResultOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) = 0;
+    virtual KResultOr<size_t> on_tty_write(UserOrKernelBuffer const&, size_t) = 0;
     void set_size(unsigned short columns, unsigned short rows);
 
     TTY(unsigned major, unsigned minor);

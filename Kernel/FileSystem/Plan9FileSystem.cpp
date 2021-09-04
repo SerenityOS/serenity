@@ -112,7 +112,7 @@ public:
 
     class Decoder {
     public:
-        explicit Decoder(const StringView& data)
+        explicit Decoder(StringView const& data)
             : m_data(data)
         {
         }
@@ -144,8 +144,8 @@ public:
     Message& operator<<(u16);
     Message& operator<<(u32);
     Message& operator<<(u64);
-    Message& operator<<(const StringView&);
-    void append_data(const StringView&);
+    Message& operator<<(StringView const&);
+    void append_data(StringView const&);
 
     template<typename T>
     Message& operator>>(T& t)
@@ -169,7 +169,7 @@ public:
     ~Message();
     Message& operator=(Message&&);
 
-    const KBuffer& build();
+    KBuffer const& build();
 
     static constexpr size_t max_header_size = 24;
 
@@ -178,7 +178,7 @@ private:
     Message& append_number(N number)
     {
         VERIFY(!m_have_been_built);
-        m_builder.append(reinterpret_cast<const char*>(&number), sizeof(number));
+        m_builder.append(reinterpret_cast<char const*>(&number), sizeof(number));
         return *this;
     }
 
@@ -236,7 +236,7 @@ KResult Plan9FS::initialize()
     return KSuccess;
 }
 
-Plan9FS::ProtocolVersion Plan9FS::parse_protocol_version(const StringView& s) const
+Plan9FS::ProtocolVersion Plan9FS::parse_protocol_version(StringView const& s) const
 {
     if (s == "9P2000.L")
         return ProtocolVersion::v9P2000L;
@@ -270,14 +270,14 @@ Plan9FS::Message& Plan9FS::Message::operator<<(u64 number)
     return append_number(number);
 }
 
-Plan9FS::Message& Plan9FS::Message::operator<<(const StringView& string)
+Plan9FS::Message& Plan9FS::Message::operator<<(StringView const& string)
 {
     *this << static_cast<u16>(string.length());
     m_builder.append(string);
     return *this;
 }
 
-void Plan9FS::Message::append_data(const StringView& data)
+void Plan9FS::Message::append_data(StringView const& data)
 {
     *this << static_cast<u32>(data.length());
     m_builder.append(data);
@@ -381,7 +381,7 @@ Plan9FS::Message& Plan9FS::Message::operator=(Message&& message)
     return *this;
 }
 
-const KBuffer& Plan9FS::Message::build()
+KBuffer const& Plan9FS::Message::build()
 {
     VERIFY(!m_have_been_built);
 
@@ -480,7 +480,7 @@ void Plan9FS::Plan9FSBlockerSet::try_unblock(Plan9FS::Blocker& blocker)
     }
 }
 
-bool Plan9FS::is_complete(const ReceiveCompletion& completion)
+bool Plan9FS::is_complete(ReceiveCompletion const& completion)
 {
     MutexLocker locker(m_lock);
     if (m_completions.contains(completion.tag)) {
@@ -498,7 +498,7 @@ bool Plan9FS::is_complete(const ReceiveCompletion& completion)
 KResult Plan9FS::post_message(Message& message, RefPtr<ReceiveCompletion> completion)
 {
     auto& buffer = message.build();
-    const u8* data = buffer.data();
+    u8 const* data = buffer.data();
     size_t size = buffer.size();
     auto& description = file_description();
 
@@ -774,7 +774,7 @@ KResultOr<size_t> Plan9FSInode::read_bytes(off_t offset, size_t size, UserOrKern
     return nread;
 }
 
-KResultOr<size_t> Plan9FSInode::write_bytes(off_t offset, size_t size, const UserOrKernelBuffer& data, FileDescription*)
+KResultOr<size_t> Plan9FSInode::write_bytes(off_t offset, size_t size, UserOrKernelBuffer const& data, FileDescription*)
 {
     auto result = ensure_open_for_mode(O_WRONLY);
     if (result.is_error())
@@ -940,13 +940,13 @@ KResultOr<NonnullRefPtr<Inode>> Plan9FSInode::create_child(StringView, mode_t, d
     return ENOTIMPL;
 }
 
-KResult Plan9FSInode::add_child(Inode&, const StringView&, mode_t)
+KResult Plan9FSInode::add_child(Inode&, StringView const&, mode_t)
 {
     // TODO
     return ENOTIMPL;
 }
 
-KResult Plan9FSInode::remove_child(const StringView&)
+KResult Plan9FSInode::remove_child(StringView const&)
 {
     // TODO
     return ENOTIMPL;

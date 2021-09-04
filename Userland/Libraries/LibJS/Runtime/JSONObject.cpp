@@ -143,7 +143,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
 }
 
 // 25.5.2.1 SerializeJSONProperty ( state, key, holder ), https://tc39.es/ecma262/#sec-serializejsonproperty
-String JSONObject::serialize_json_property(GlobalObject& global_object, StringifyState& state, const PropertyName& key, Object* holder)
+String JSONObject::serialize_json_property(GlobalObject& global_object, StringifyState& state, PropertyName const& key, Object* holder)
 {
     auto& vm = global_object.vm();
     auto value = holder->get(key);
@@ -233,7 +233,7 @@ String JSONObject::serialize_json_object(GlobalObject& global_object, StringifyS
     state.indent = String::formatted("{}{}", state.indent, state.gap);
     Vector<String> property_strings;
 
-    auto process_property = [&](const PropertyName& key) {
+    auto process_property = [&](PropertyName const& key) {
         if (key.is_symbol())
             return;
         auto serialized_property_string = serialize_json_property(global_object, state, key, &object);
@@ -437,7 +437,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
     return unfiltered;
 }
 
-Value JSONObject::parse_json_value(GlobalObject& global_object, const JsonValue& value)
+Value JSONObject::parse_json_value(GlobalObject& global_object, JsonValue const& value)
 {
     if (value.is_object())
         return Value(parse_json_object(global_object, value.as_object()));
@@ -456,7 +456,7 @@ Value JSONObject::parse_json_value(GlobalObject& global_object, const JsonValue&
     VERIFY_NOT_REACHED();
 }
 
-Object* JSONObject::parse_json_object(GlobalObject& global_object, const JsonObject& json_object)
+Object* JSONObject::parse_json_object(GlobalObject& global_object, JsonObject const& json_object)
 {
     auto* object = Object::create(global_object, global_object.object_prototype());
     json_object.for_each_member([&](auto& key, auto& value) {
@@ -465,7 +465,7 @@ Object* JSONObject::parse_json_object(GlobalObject& global_object, const JsonObj
     return object;
 }
 
-Array* JSONObject::parse_json_array(GlobalObject& global_object, const JsonArray& json_array)
+Array* JSONObject::parse_json_array(GlobalObject& global_object, JsonArray const& json_array)
 {
     auto* array = Array::create(global_object, 0);
     size_t index = 0;
@@ -488,7 +488,7 @@ Value JSONObject::internalize_json_property(GlobalObject& global_object, Object*
             return {};
 
         auto& value_object = value.as_object();
-        auto process_property = [&](const PropertyName& key) {
+        auto process_property = [&](PropertyName const& key) {
             auto element = internalize_json_property(global_object, &value_object, key, reviver);
             if (vm.exception())
                 return;

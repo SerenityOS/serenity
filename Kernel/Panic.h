@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-[[noreturn]] void __panic(const char* file, unsigned int line, const char* function);
+[[noreturn]] void __panic(char const* file, unsigned int line, char const* function);
 
 #define PANIC(...)                                        \
     do {                                                  \

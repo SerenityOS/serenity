@@ -56,7 +56,7 @@ int pthread_cond_broadcast(pthread_cond_t* cond)
     return s_pthread_functions.pthread_cond_broadcast(cond);
 }
 
-int pthread_cond_init(pthread_cond_t* cond, const pthread_condattr_t* attr)
+int pthread_cond_init(pthread_cond_t* cond, pthread_condattr_t const* attr)
 {
     VERIFY(s_pthread_functions.pthread_cond_init);
     return s_pthread_functions.pthread_cond_init(cond, attr);

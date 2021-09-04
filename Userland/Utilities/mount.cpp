@@ -16,7 +16,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static int parse_options(const StringView& options)
+static int parse_options(StringView const& options)
 {
     int flags = 0;
     Vector<StringView> parts = options.split_view(',');
@@ -41,12 +41,12 @@ static int parse_options(const StringView& options)
     return flags;
 }
 
-static bool is_source_none(const char* source)
+static bool is_source_none(char const* source)
 {
     return !strcmp("none", source);
 }
 
-static int get_source_fd(const char* source)
+static int get_source_fd(char const* source)
 {
     if (is_source_none(source))
         return -1;
@@ -88,8 +88,8 @@ static bool mount_all()
             continue;
         }
 
-        const char* mountpoint = parts[1].characters();
-        const char* fstype = parts[2].characters();
+        char const* mountpoint = parts[1].characters();
+        char const* fstype = parts[2].characters();
         int flags = parts.size() >= 4 ? parse_options(parts[3]) : 0;
 
         if (strcmp(mountpoint, "/") == 0) {
@@ -97,7 +97,7 @@ static bool mount_all()
             continue;
         }
 
-        const char* filename = parts[0].characters();
+        char const* filename = parts[0].characters();
 
         int fd = get_source_fd(filename);
 
@@ -159,10 +159,10 @@ static bool print_mounts()
 
 int main(int argc, char** argv)
 {
-    const char* source = nullptr;
-    const char* mountpoint = nullptr;
-    const char* fs_type = nullptr;
-    const char* options = nullptr;
+    char const* source = nullptr;
+    char const* mountpoint = nullptr;
+    char const* fs_type = nullptr;
+    char const* options = nullptr;
     bool should_mount_all = false;
 
     Core::ArgsParser args_parser;

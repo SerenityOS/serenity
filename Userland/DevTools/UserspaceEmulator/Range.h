@@ -30,7 +30,7 @@ public:
 
     VirtualAddress end() const { return m_base.offset(m_size); }
 
-    bool operator==(const Range& other) const
+    bool operator==(Range const& other) const
     {
         return m_base == other.m_base && m_size == other.m_size;
     }
@@ -42,12 +42,12 @@ public:
         return base >= m_base && base.offset(size) <= end();
     }
 
-    bool contains(const Range& other) const
+    bool contains(Range const& other) const
     {
         return contains(other.base(), other.size());
     }
 
-    Vector<Range, 2> carve(const Range&) const;
+    Vector<Range, 2> carve(Range const&) const;
 
     Range split_at(VirtualAddress address)
     {

@@ -20,9 +20,9 @@ struct TrapFrame {
     RegisterState* regs; // must be last
 
     TrapFrame() = delete;
-    TrapFrame(const TrapFrame&) = delete;
+    TrapFrame(TrapFrame const&) = delete;
     TrapFrame(TrapFrame&&) = delete;
-    TrapFrame& operator=(const TrapFrame&) = delete;
+    TrapFrame& operator=(TrapFrame const&) = delete;
     TrapFrame& operator=(TrapFrame&&) = delete;
 };
 

@@ -26,7 +26,7 @@ public:
     DeviceConfigurationSpaceMapping(Address, const MMIOAccess::MMIOSegment&);
     VirtualAddress vaddr() const { return m_mapped_region->vaddr(); };
     PhysicalAddress paddr() const { return m_mapped_region->physical_page(0)->paddr(); }
-    const Address& address() const { return m_device_address; };
+    Address const& address() const { return m_device_address; };
 
 private:
     Address m_device_address;

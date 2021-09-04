@@ -23,10 +23,10 @@
 
 int main(int argc, char** argv)
 {
-    const char* value_ipv4 = nullptr;
-    const char* value_adapter = nullptr;
-    const char* value_gateway = nullptr;
-    const char* value_mask = nullptr;
+    char const* value_ipv4 = nullptr;
+    char const* value_adapter = nullptr;
+    char const* value_gateway = nullptr;
+    char const* value_mask = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display or modify the configuration of each network interface.");

@@ -517,7 +517,7 @@ void UHCIController::spawn_port_proc()
     });
 }
 
-bool UHCIController::handle_irq(const RegisterState&)
+bool UHCIController::handle_irq(RegisterState const&)
 {
     u32 status = read_usbsts();
 

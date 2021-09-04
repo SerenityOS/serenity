@@ -40,7 +40,7 @@ void XMLHttpRequest::set_ready_state(ReadyState ready_state)
     dispatch_event(DOM::Event::create(EventNames::readystatechange));
 }
 
-void XMLHttpRequest::fire_progress_event(const String& event_name, u64 transmitted, u64 length)
+void XMLHttpRequest::fire_progress_event(String const& event_name, u64 transmitted, u64 length)
 {
     dispatch_event(ProgressEvent::create(event_name, transmitted, length));
 }
@@ -53,7 +53,7 @@ String XMLHttpRequest::response_text() const
 }
 
 // https://fetch.spec.whatwg.org/#forbidden-header-name
-static bool is_forbidden_header_name(const String& header_name)
+static bool is_forbidden_header_name(String const& header_name)
 {
     if (header_name.starts_with("Proxy-", CaseSensitivity::CaseInsensitive) || header_name.starts_with("Sec-", CaseSensitivity::CaseInsensitive))
         return true;
@@ -63,14 +63,14 @@ static bool is_forbidden_header_name(const String& header_name)
 }
 
 // https://fetch.spec.whatwg.org/#forbidden-method
-static bool is_forbidden_method(const String& method)
+static bool is_forbidden_method(String const& method)
 {
     auto lowercase_method = method.to_lowercase();
     return lowercase_method.is_one_of("connect", "trace", "track");
 }
 
 // https://fetch.spec.whatwg.org/#concept-method-normalize
-static String normalize_method(const String& method)
+static String normalize_method(String const& method)
 {
     auto lowercase_method = method.to_lowercase();
     if (lowercase_method.is_one_of("delete", "get", "head", "options", "post", "put"))
@@ -79,14 +79,14 @@ static String normalize_method(const String& method)
 }
 
 // https://fetch.spec.whatwg.org/#concept-header-value-normalize
-static String normalize_header_value(const String& header_value)
+static String normalize_header_value(String const& header_value)
 {
     // FIXME: I'm not sure if this is the right trim, it should only be HTML whitespace bytes.
     return header_value.trim_whitespace();
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-setrequestheader
-DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(const String& header, const String& value)
+DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& header, String const& value)
 {
     if (m_ready_state != ReadyState::Opened)
         return DOM::InvalidStateError::create("XHR readyState is not OPENED");
@@ -106,7 +106,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(const String& header, 
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-open
-DOM::ExceptionOr<void> XMLHttpRequest::open(const String& method, const String& url)
+DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& url)
 {
     // FIXME: Let settingsObject be this’s relevant settings object.
 

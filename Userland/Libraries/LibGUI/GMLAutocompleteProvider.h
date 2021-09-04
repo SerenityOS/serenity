@@ -16,7 +16,7 @@ public:
     virtual ~GMLAutocompleteProvider() override { }
 
 private:
-    static bool can_have_declared_layout(const StringView& class_name)
+    static bool can_have_declared_layout(StringView const& class_name)
     {
         return class_name.is_one_of("GUI::Widget", "GUI::Frame");
     }

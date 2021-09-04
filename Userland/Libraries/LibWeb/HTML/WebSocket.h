@@ -35,7 +35,7 @@ class WebSocketClientManager : public Core::Object {
 public:
     static WebSocketClientManager& the();
 
-    RefPtr<Protocol::WebSocket> connect(const URL&);
+    RefPtr<Protocol::WebSocket> connect(URL const&);
 
 private:
     WebSocketClientManager();
@@ -62,7 +62,7 @@ public:
         return adopt_ref(*new WebSocket(window, url));
     }
 
-    static DOM::ExceptionOr<NonnullRefPtr<WebSocket>> create_with_global_object(Bindings::WindowObject& window, const String& url);
+    static DOM::ExceptionOr<NonnullRefPtr<WebSocket>> create_with_global_object(Bindings::WindowObject& window, String const& url);
 
     virtual ~WebSocket() override;
 
@@ -78,18 +78,18 @@ public:
     ENUMERATE_WEBSOCKET_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
 
-    void set_event_handler_attribute(const FlyString& name, HTML::EventHandler);
-    HTML::EventHandler get_event_handler_attribute(const FlyString& name);
+    void set_event_handler_attribute(FlyString const& name, HTML::EventHandler);
+    HTML::EventHandler get_event_handler_attribute(FlyString const& name);
 
     ReadyState ready_state() const;
     String extensions() const;
     String protocol() const;
 
-    const String& binary_type() { return m_binary_type; };
-    void set_binary_type(const String& type) { m_binary_type = type; };
+    String const& binary_type() { return m_binary_type; };
+    void set_binary_type(String const& type) { m_binary_type = type; };
 
-    DOM::ExceptionOr<void> close(u16 code, const String& reason);
-    DOM::ExceptionOr<void> send(const String& data);
+    DOM::ExceptionOr<void> close(u16 code, String const& reason);
+    DOM::ExceptionOr<void> send(String const& data);
 
 private:
     virtual void ref_event_target() override { ref(); }

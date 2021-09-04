@@ -19,7 +19,7 @@ class ClientConnection final : public LanguageServers::ClientConnection {
         : LanguageServers::ClientConnection(move(socket), client_id)
     {
         m_autocomplete_engine = make<ShellComprehensionEngine>(m_filedb);
-        m_autocomplete_engine->set_declarations_of_document_callback = [this](const String& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations) {
+        m_autocomplete_engine->set_declarations_of_document_callback = [this](String const& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations) {
             async_declarations_in_document(filename, move(declarations));
         };
         m_autocomplete_engine->set_todo_entries_of_document_callback = [this](String const& filename, Vector<Cpp::Parser::TodoEntry>&& todo_entries) {

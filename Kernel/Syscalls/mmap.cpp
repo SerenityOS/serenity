@@ -102,7 +102,7 @@ static bool validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, Mem
     return true;
 }
 
-static bool validate_inode_mmap_prot(const Process& process, int prot, const Inode& inode, bool map_shared)
+static bool validate_inode_mmap_prot(Process const& process, int prot, Inode const& inode, bool map_shared)
 {
     auto metadata = inode.metadata();
     if ((prot & PROT_READ) && !metadata.may_read(process))
@@ -377,10 +377,10 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
         return 0;
     }
 
-    if (const auto& regions = address_space().find_regions_intersecting(range_to_mprotect); regions.size()) {
+    if (auto const& regions = address_space().find_regions_intersecting(range_to_mprotect); regions.size()) {
         size_t full_size_found = 0;
         // first check before doing anything
-        for (const auto* region : regions) {
+        for (auto const* region : regions) {
             if (!region->is_mmap())
                 return EPERM;
             if (!validate_mmap_prot(prot, region->is_stack(), region->vmobject().is_anonymous(), region))
@@ -588,7 +588,7 @@ KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params
     return ENOTIMPL;
 }
 
-KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data, size_t size)
+KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<char const*> initial_data, size_t size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);

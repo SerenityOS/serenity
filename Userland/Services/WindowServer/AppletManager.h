@@ -24,19 +24,19 @@ public:
     void add_applet(Window& applet);
     void remove_applet(Window& applet);
     void draw();
-    void invalidate_applet(const Window& applet, const Gfx::IntRect& rect);
+    void invalidate_applet(Window const& applet, const Gfx::IntRect& rect);
     void relayout();
 
     void set_position(const Gfx::IntPoint&);
 
     Window* window() { return m_window; }
-    const Window* window() const { return m_window; }
+    Window const* window() const { return m_window; }
 
     void did_change_theme();
 
 private:
     void repaint();
-    void draw_applet(const Window& applet);
+    void draw_applet(Window const& applet);
     void set_hovered_applet(Window*);
 
     Vector<WeakPtr<Window>> m_applets;

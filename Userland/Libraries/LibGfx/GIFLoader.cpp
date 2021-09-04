@@ -71,7 +71,7 @@ struct GIFLoadingContext {
         FailedToLoadFrameDescriptors,
     };
     ErrorState error_state { NoError };
-    const u8* data { nullptr };
+    u8 const* data { nullptr };
     size_t data_size { 0 };
     LogicalScreen logical_screen {};
     u8 background_color_index { 0 };
@@ -87,14 +87,14 @@ RefPtr<Gfx::Bitmap> load_gif(String const& path)
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
         return nullptr;
-    GIFImageDecoderPlugin gif_decoder((const u8*)file_or_error.value()->data(), file_or_error.value()->size());
+    GIFImageDecoderPlugin gif_decoder((u8 const*)file_or_error.value()->data(), file_or_error.value()->size());
     auto bitmap = gif_decoder.bitmap();
     if (bitmap)
         bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded GIF: {}", bitmap->size(), LexicalPath::canonicalized_path(path)));
     return bitmap;
 }
 
-RefPtr<Gfx::Bitmap> load_gif_from_memory(const u8* data, size_t length)
+RefPtr<Gfx::Bitmap> load_gif_from_memory(u8 const* data, size_t length)
 {
     GIFImageDecoderPlugin gif_decoder(data, length);
     auto bitmap = gif_decoder.bitmap();
@@ -182,7 +182,7 @@ public:
             for (int i = 0; current_byte_index + i < m_lzw_bytes.size(); ++i) {
                 padded_last_bytes[i] = m_lzw_bytes[current_byte_index + i];
             }
-            const u32* addr = (const u32*)&padded_last_bytes;
+            u32 const* addr = (u32 const*)&padded_last_bytes;
             m_current_code = (*addr & mask) >> current_bit_offset;
         } else {
             u32 tmp_word;
@@ -262,13 +262,13 @@ private:
     Vector<u8> m_output {};
 };
 
-static void copy_frame_buffer(Bitmap& dest, const Bitmap& src)
+static void copy_frame_buffer(Bitmap& dest, Bitmap const& src)
 {
     VERIFY(dest.size_in_bytes() == src.size_in_bytes());
     memcpy(dest.scanline(0), src.scanline(0), dest.size_in_bytes());
 }
 
-static void clear_rect(Bitmap& bitmap, const IntRect& rect, Color color)
+static void clear_rect(Bitmap& bitmap, IntRect const& rect, Color color)
 {
     if (rect.is_empty())
         return;
@@ -341,7 +341,7 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
         const int clear_code = decoder.add_control_code();
         const int end_of_information_code = decoder.add_control_code();
 
-        const auto& color_map = image.use_global_color_map ? context.logical_screen.color_map : image.color_map;
+        auto const& color_map = image.use_global_color_map ? context.logical_screen.color_map : image.color_map;
 
         int pixel_index = 0;
         int row = 0;
@@ -363,7 +363,7 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
                 continue;
 
             auto colors = decoder.get_output();
-            for (const auto& color : colors) {
+            for (auto const& color : colors) {
                 auto c = color_map[color];
 
                 int x = pixel_index % image.width + image.x;
@@ -613,7 +613,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
     return true;
 }
 
-GIFImageDecoderPlugin::GIFImageDecoderPlugin(const u8* data, size_t size)
+GIFImageDecoderPlugin::GIFImageDecoderPlugin(u8 const* data, size_t size)
 {
     m_context = make<GIFLoadingContext>();
     m_context->data = data;

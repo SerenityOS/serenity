@@ -55,10 +55,10 @@ public:
 #endif
     }
 
-    NonnullOwnPtr(const NonnullOwnPtr&) = delete;
+    NonnullOwnPtr(NonnullOwnPtr const&) = delete;
     template<typename U>
     NonnullOwnPtr(const NonnullOwnPtr<U>&) = delete;
-    NonnullOwnPtr& operator=(const NonnullOwnPtr&) = delete;
+    NonnullOwnPtr& operator=(NonnullOwnPtr const&) = delete;
     template<typename U>
     NonnullOwnPtr& operator=(const NonnullOwnPtr<U>&) = delete;
 
@@ -101,19 +101,19 @@ public:
         return m_ptr;
     }
 
-    ALWAYS_INLINE RETURNS_NONNULL const T* ptr() const
+    ALWAYS_INLINE RETURNS_NONNULL T const* ptr() const
     {
         VERIFY(m_ptr);
         return m_ptr;
     }
 
     ALWAYS_INLINE RETURNS_NONNULL T* operator->() { return ptr(); }
-    ALWAYS_INLINE RETURNS_NONNULL const T* operator->() const { return ptr(); }
+    ALWAYS_INLINE RETURNS_NONNULL T const* operator->() const { return ptr(); }
 
     ALWAYS_INLINE T& operator*() { return *ptr(); }
-    ALWAYS_INLINE const T& operator*() const { return *ptr(); }
+    ALWAYS_INLINE T const& operator*() const { return *ptr(); }
 
-    ALWAYS_INLINE RETURNS_NONNULL operator const T*() const { return ptr(); }
+    ALWAYS_INLINE RETURNS_NONNULL operator T const*() const { return ptr(); }
     ALWAYS_INLINE RETURNS_NONNULL operator T*() { return ptr(); }
 
     operator bool() const = delete;
@@ -175,7 +175,7 @@ inline NonnullOwnPtr<T> make(Args&&... args)
 template<typename T>
 struct Traits<NonnullOwnPtr<T>> : public GenericTraits<NonnullOwnPtr<T>> {
     using PeekType = T*;
-    using ConstPeekType = const T*;
+    using ConstPeekType = T const*;
     static unsigned hash(const NonnullOwnPtr<T>& p) { return int_hash((u32)p.ptr()); }
     static bool equals(const NonnullOwnPtr<T>& a, const NonnullOwnPtr<T>& b) { return a.ptr() == b.ptr(); }
 };
@@ -187,10 +187,10 @@ inline void swap(NonnullOwnPtr<T>& a, NonnullOwnPtr<U>& b)
 }
 
 template<typename T>
-struct Formatter<NonnullOwnPtr<T>> : Formatter<const T*> {
+struct Formatter<NonnullOwnPtr<T>> : Formatter<T const*> {
     void format(FormatBuilder& builder, const NonnullOwnPtr<T>& value)
     {
-        Formatter<const T*>::format(builder, value.ptr());
+        Formatter<T const*>::format(builder, value.ptr());
     }
 };
 

@@ -50,7 +50,7 @@ public:
 
     virtual StringView class_name() const = 0;
 
-    const String& name() const { return m_name; }
+    String const& name() const { return m_name; }
     MACAddress mac_address() { return m_mac_address; }
     IPv4Address ipv4_address() const { return m_ipv4_address; }
     IPv4Address ipv4_netmask() const { return m_ipv4_netmask; }
@@ -64,11 +64,11 @@ public:
     }
     virtual bool link_full_duplex() { return false; }
 
-    void set_ipv4_address(const IPv4Address&);
-    void set_ipv4_netmask(const IPv4Address&);
-    void set_ipv4_gateway(const IPv4Address&);
+    void set_ipv4_address(IPv4Address const&);
+    void set_ipv4_netmask(IPv4Address const&);
+    void set_ipv4_gateway(IPv4Address const&);
 
-    void send(const MACAddress&, const ARPPacket&);
+    void send(MACAddress const&, ARPPacket const&);
     void fill_in_ipv4_header(PacketWithTimestamp&, IPv4Address const&, MACAddress const&, IPv4Address const&, IPv4Protocol, size_t, u8);
 
     size_t dequeue_packet(u8* buffer, size_t buffer_size, Time& packet_timestamp);
@@ -96,7 +96,7 @@ public:
 protected:
     NetworkAdapter();
     void set_interface_name(const PCI::Address&);
-    void set_mac_address(const MACAddress& mac_address) { m_mac_address = mac_address; }
+    void set_mac_address(MACAddress const& mac_address) { m_mac_address = mac_address; }
     void did_receive(ReadonlyBytes);
     virtual void send_raw(ReadonlyBytes) = 0;
 

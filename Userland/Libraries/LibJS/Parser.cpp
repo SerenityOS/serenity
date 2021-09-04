@@ -25,7 +25,7 @@ static bool statement_is_use_strict_directive(NonnullRefPtr<Statement> statement
     auto& expression = expression_statement.expression();
     if (!is<StringLiteral>(expression))
         return false;
-    return static_cast<const StringLiteral&>(expression).is_use_strict_directive();
+    return static_cast<StringLiteral const&>(expression).is_use_strict_directive();
 }
 
 class ScopePusher {
@@ -1217,7 +1217,7 @@ NonnullRefPtr<ArrayExpression> Parser::parse_array_expression()
     return create_ast_node<ArrayExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(elements));
 }
 
-NonnullRefPtr<StringLiteral> Parser::parse_string_literal(const Token& token, bool in_template_literal)
+NonnullRefPtr<StringLiteral> Parser::parse_string_literal(Token const& token, bool in_template_literal)
 {
     auto rule_start = push_start();
     auto status = Token::StringValueStatus::Ok;
@@ -1578,7 +1578,7 @@ NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(Assignme
     if (!is<Identifier>(*lhs) && !is<MemberExpression>(*lhs) && !is<CallExpression>(*lhs)) {
         syntax_error("Invalid left-hand side in assignment");
     } else if (m_state.strict_mode && is<Identifier>(*lhs)) {
-        auto name = static_cast<const Identifier&>(*lhs).string();
+        auto name = static_cast<Identifier const&>(*lhs).string();
         check_identifier_name_for_assignment_validity(name);
     } else if (m_state.strict_mode && is<CallExpression>(*lhs)) {
         syntax_error("Cannot assign to function call");
@@ -2276,7 +2276,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
                     m_state.current_scope->lexical_declarations.set(id->string());
                 },
                 [&](const NonnullRefPtr<BindingPattern>& binding) {
-                    binding->for_each_bound_name([&](const auto& name) {
+                    binding->for_each_bound_name([&](auto const& name) {
                         m_state.current_scope->lexical_declarations.set(name);
                     });
                 });
@@ -3003,7 +3003,7 @@ Token Parser::consume(TokenType expected_type)
 
 Token Parser::consume_and_validate_numeric_literal()
 {
-    auto is_unprefixed_octal_number = [](const StringView& value) {
+    auto is_unprefixed_octal_number = [](StringView const& value) {
         return value.length() > 1 && value[0] == '0' && is_ascii_digit(value[1]);
     };
     auto literal_start = position();
@@ -3015,7 +3015,7 @@ Token Parser::consume_and_validate_numeric_literal()
     return token;
 }
 
-void Parser::expected(const char* what)
+void Parser::expected(char const* what)
 {
     auto message = m_state.current_token.message();
     if (message.is_empty())
@@ -3032,7 +3032,7 @@ Position Parser::position() const
     };
 }
 
-bool Parser::try_parse_arrow_function_expression_failed_at_position(const Position& position) const
+bool Parser::try_parse_arrow_function_expression_failed_at_position(Position const& position) const
 {
     auto it = m_token_memoizations.find(position);
     if (it == m_token_memoizations.end())
@@ -3041,12 +3041,12 @@ bool Parser::try_parse_arrow_function_expression_failed_at_position(const Positi
     return (*it).value.try_parse_arrow_function_expression_failed;
 }
 
-void Parser::set_try_parse_arrow_function_expression_failed_at_position(const Position& position, bool failed)
+void Parser::set_try_parse_arrow_function_expression_failed_at_position(Position const& position, bool failed)
 {
     m_token_memoizations.set(position, { failed });
 }
 
-void Parser::syntax_error(const String& message, Optional<Position> position)
+void Parser::syntax_error(String const& message, Optional<Position> position)
 {
     if (!position.has_value())
         position = this->position();

@@ -101,17 +101,17 @@ public:
 
     void screen_resolution_changed();
 
-    bool set_background_color(const String& background_color);
+    bool set_background_color(String const& background_color);
 
-    bool set_wallpaper_mode(const String& mode);
+    bool set_wallpaper_mode(String const& mode);
 
-    bool set_wallpaper(const String& path, Function<void(bool)>&& callback);
+    bool set_wallpaper(String const& path, Function<void(bool)>&& callback);
     String wallpaper_path() const { return m_wallpaper_path; }
 
     void invalidate_cursor(bool = false);
     Gfx::IntRect current_cursor_rect() const;
-    const Cursor* current_cursor() const { return m_current_cursor; }
-    void current_cursor_was_reloaded(const Cursor* new_cursor) { m_current_cursor = new_cursor; }
+    Cursor const* current_cursor() const { return m_current_cursor; }
+    void current_cursor_was_reloaded(Cursor const* new_cursor) { m_current_cursor = new_cursor; }
 
     void increment_display_link_count(Badge<ClientConnection>);
     void decrement_display_link_count(Badge<ClientConnection>);
@@ -201,7 +201,7 @@ private:
     void start_compose_async_timer();
     void recompute_overlay_rects();
     void recompute_occlusions();
-    void change_cursor(const Cursor*);
+    void change_cursor(Cursor const*);
     void flush(Screen&);
     Gfx::IntPoint window_transition_offset(Window&);
     void update_animations(Screen&, Gfx::DisjointRectSet& flush_rects);
@@ -230,7 +230,7 @@ private:
     WallpaperMode m_wallpaper_mode { WallpaperMode::Unchecked };
     RefPtr<Gfx::Bitmap> m_wallpaper;
 
-    const Cursor* m_current_cursor { nullptr };
+    Cursor const* m_current_cursor { nullptr };
     Screen* m_current_cursor_screen { nullptr };
     unsigned m_current_cursor_frame { 0 };
     RefPtr<Core::Timer> m_cursor_timer;

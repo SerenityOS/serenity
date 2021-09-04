@@ -18,7 +18,7 @@ template<typename ListType, typename ElementType>
 class SinglyLinkedListIterator {
 public:
     SinglyLinkedListIterator() = default;
-    bool operator!=(const SinglyLinkedListIterator& other) const { return m_node != other.m_node; }
+    bool operator!=(SinglyLinkedListIterator const& other) const { return m_node != other.m_node; }
     SinglyLinkedListIterator& operator++()
     {
         if (m_removed)
@@ -70,7 +70,7 @@ private:
             : value(move(v))
         {
         }
-        explicit Node(const T& v)
+        explicit Node(T const& v)
             : value(v)
         {
         }
@@ -108,7 +108,7 @@ public:
         VERIFY(head());
         return head()->value;
     }
-    const T& first() const
+    T const& first() const
     {
         VERIFY(head());
         return head()->value;
@@ -118,7 +118,7 @@ public:
         VERIFY(head());
         return tail()->value;
     }
-    const T& last() const
+    T const& last() const
     {
         VERIFY(head());
         return tail()->value;
@@ -149,7 +149,7 @@ public:
         m_tail = node;
     }
 
-    bool contains_slow(const T& value) const
+    bool contains_slow(T const& value) const
     {
         return find(value) != end();
     }
@@ -176,12 +176,12 @@ public:
         return AK::find_if(begin(), end(), forward<TUnaryPredicate>(pred));
     }
 
-    ConstIterator find(const T& value) const
+    ConstIterator find(T const& value) const
     {
         return find_if([&](auto& other) { return Traits<T>::equals(value, other); });
     }
 
-    Iterator find(const T& value)
+    Iterator find(T const& value)
     {
         return find_if([&](auto& other) { return Traits<T>::equals(value, other); });
     }
@@ -228,10 +228,10 @@ public:
 
 private:
     Node* head() { return m_head; }
-    const Node* head() const { return m_head; }
+    Node const* head() const { return m_head; }
 
     Node* tail() { return m_tail; }
-    const Node* tail() const { return m_tail; }
+    Node const* tail() const { return m_tail; }
 
     Node* m_head { nullptr };
     Node* m_tail { nullptr };

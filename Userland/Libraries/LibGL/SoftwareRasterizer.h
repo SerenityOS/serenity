@@ -53,14 +53,14 @@ class SoftwareRasterizer final {
 public:
     SoftwareRasterizer(const Gfx::IntSize& min_size);
 
-    void submit_triangle(const GLTriangle& triangle, const Array<TextureUnit, 32>& texture_units);
-    void submit_triangle(const GLTriangle& triangle);
+    void submit_triangle(GLTriangle const& triangle, const Array<TextureUnit, 32>& texture_units);
+    void submit_triangle(GLTriangle const& triangle);
     void resize(const Gfx::IntSize& min_size);
-    void clear_color(const FloatVector4&);
+    void clear_color(FloatVector4 const&);
     void clear_depth(float);
     void blit_to(Gfx::Bitmap&);
     void wait_for_all_threads() const;
-    void set_options(const RasterizerOptions&);
+    void set_options(RasterizerOptions const&);
     RasterizerOptions options() const { return m_options; }
     Gfx::RGBA32 get_backbuffer_pixel(int x, int y);
     float get_depthbuffer_value(int x, int y);

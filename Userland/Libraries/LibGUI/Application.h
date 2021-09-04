@@ -30,13 +30,13 @@ public:
     int exec();
     void quit(int = 0);
 
-    Action* action_for_key_event(const KeyEvent&);
+    Action* action_for_key_event(KeyEvent const&);
 
     void register_global_shortcut_action(Badge<Action>, Action&);
     void unregister_global_shortcut_action(Badge<Action>, Action&);
 
-    void show_tooltip(String, const Widget* tooltip_source_widget);
-    void show_tooltip_immediately(String, const Widget* tooltip_source_widget);
+    void show_tooltip(String, Widget const* tooltip_source_widget);
+    void show_tooltip_immediately(String, Widget const* tooltip_source_widget);
     void hide_tooltip();
     Widget* tooltip_source_widget() { return m_tooltip_source_widget; };
 
@@ -46,7 +46,7 @@ public:
     void did_create_window(Badge<Window>);
     void did_delete_last_window(Badge<Window>);
 
-    const String& invoked_as() const { return m_invoked_as; }
+    String const& invoked_as() const { return m_invoked_as; }
     const Vector<String>& args() const { return m_args; }
 
     Gfx::Palette palette() const;
@@ -61,16 +61,16 @@ public:
     Core::EventLoop& event_loop() { return *m_event_loop; }
 
     Window* active_window() { return m_active_window; }
-    const Window* active_window() const { return m_active_window; }
+    Window const* active_window() const { return m_active_window; }
 
     void window_did_become_active(Badge<Window>, Window&);
     void window_did_become_inactive(Badge<Window>, Window&);
 
     Widget* drag_hovered_widget() { return m_drag_hovered_widget.ptr(); }
-    const Widget* drag_hovered_widget() const { return m_drag_hovered_widget.ptr(); }
+    Widget const* drag_hovered_widget() const { return m_drag_hovered_widget.ptr(); }
 
     Widget* pending_drop_widget() { return m_pending_drop_widget.ptr(); }
-    const Widget* pending_drop_widget() const { return m_pending_drop_widget.ptr(); }
+    Widget const* pending_drop_widget() const { return m_pending_drop_widget.ptr(); }
 
     void set_drag_hovered_widget(Badge<Window>, Widget* widget, const Gfx::IntPoint& position = {}, Vector<String> mime_types = {})
     {

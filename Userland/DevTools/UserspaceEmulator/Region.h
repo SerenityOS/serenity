@@ -20,7 +20,7 @@ class Region {
 public:
     virtual ~Region() { }
 
-    const Range& range() const { return m_range; }
+    Range const& range() const { return m_range; }
 
     u32 base() const { return m_range.base().get(); }
     u32 size() const { return m_range.size(); }
@@ -62,7 +62,7 @@ public:
     virtual u8* shadow_data() = 0;
 
     Emulator& emulator() { return m_emulator; }
-    const Emulator& emulator() const { return m_emulator; }
+    Emulator const& emulator() const { return m_emulator; }
 
     template<typename T>
     bool fast_is() const = delete;

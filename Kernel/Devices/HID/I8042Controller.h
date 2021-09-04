@@ -32,7 +32,7 @@ public:
     virtual void irq_handle_byte_read(u8 byte) = 0;
 
 protected:
-    explicit I8042Device(const I8042Controller& ps2_controller)
+    explicit I8042Device(I8042Controller const& ps2_controller)
         : m_i8042_controller(ps2_controller)
     {
     }

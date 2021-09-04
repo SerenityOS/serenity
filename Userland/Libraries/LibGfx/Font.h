@@ -20,13 +20,13 @@ namespace Gfx {
 class GlyphBitmap {
 public:
     GlyphBitmap() = default;
-    GlyphBitmap(const unsigned* rows, IntSize size)
+    GlyphBitmap(unsigned const* rows, IntSize size)
         : m_rows(rows)
         , m_size(size)
     {
     }
 
-    const unsigned* rows() const { return m_rows; }
+    unsigned const* rows() const { return m_rows; }
     unsigned row(unsigned index) const { return m_rows[index]; }
 
     bool bit_at(int x, int y) const { return row(y) & (1 << x); }
@@ -44,13 +44,13 @@ public:
     int height() const { return m_size.height(); }
 
 private:
-    const unsigned* m_rows { nullptr };
+    unsigned const* m_rows { nullptr };
     IntSize m_size { 0, 0 };
 };
 
 class Glyph {
 public:
-    Glyph(const GlyphBitmap& glyph_bitmap, int left_bearing, int advance, int ascent)
+    Glyph(GlyphBitmap const& glyph_bitmap, int left_bearing, int advance, int ascent)
         : m_glyph_bitmap(glyph_bitmap)
         , m_left_bearing(left_bearing)
         , m_advance(advance)
@@ -104,9 +104,9 @@ public:
     virtual u8 baseline() const = 0;
     virtual u8 mean_line() const = 0;
 
-    virtual int width(const StringView&) const = 0;
-    virtual int width(const Utf8View&) const = 0;
-    virtual int width(const Utf32View&) const = 0;
+    virtual int width(StringView const&) const = 0;
+    virtual int width(Utf8View const&) const = 0;
+    virtual int width(Utf32View const&) const = 0;
 
     virtual String name() const = 0;
 

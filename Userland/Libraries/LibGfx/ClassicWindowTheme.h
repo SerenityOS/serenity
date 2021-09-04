@@ -16,22 +16,22 @@ public:
     ClassicWindowTheme();
     virtual ~ClassicWindowTheme() override;
 
-    virtual void paint_normal_frame(Painter& painter, WindowState window_state, const IntRect& window_rect, const StringView& window_title, const Bitmap& icon, const Palette& palette, const IntRect& leftmost_button_rect, int menu_row_count, bool window_modified) const override;
-    virtual void paint_tool_window_frame(Painter&, WindowState, const IntRect& window_rect, const StringView& title, const Palette&, const IntRect& leftmost_button_rect) const override;
-    virtual void paint_notification_frame(Painter&, const IntRect& window_rect, const Palette&, const IntRect& close_button_rect) const override;
+    virtual void paint_normal_frame(Painter& painter, WindowState window_state, IntRect const& window_rect, StringView const& window_title, Bitmap const& icon, Palette const& palette, IntRect const& leftmost_button_rect, int menu_row_count, bool window_modified) const override;
+    virtual void paint_tool_window_frame(Painter&, WindowState, IntRect const& window_rect, StringView const& title, Palette const&, IntRect const& leftmost_button_rect) const override;
+    virtual void paint_notification_frame(Painter&, IntRect const& window_rect, Palette const&, IntRect const& close_button_rect) const override;
 
-    virtual int titlebar_height(WindowType, const Palette&) const override;
-    virtual IntRect titlebar_rect(WindowType, const IntRect& window_rect, const Palette&) const override;
-    virtual IntRect titlebar_icon_rect(WindowType, const IntRect& window_rect, const Palette&) const override;
-    virtual IntRect titlebar_text_rect(WindowType, const IntRect& window_rect, const Palette&) const override;
+    virtual int titlebar_height(WindowType, Palette const&) const override;
+    virtual IntRect titlebar_rect(WindowType, IntRect const& window_rect, Palette const&) const override;
+    virtual IntRect titlebar_icon_rect(WindowType, IntRect const& window_rect, Palette const&) const override;
+    virtual IntRect titlebar_text_rect(WindowType, IntRect const& window_rect, Palette const&) const override;
 
-    virtual IntRect menubar_rect(WindowType, const IntRect& window_rect, const Palette&, int menu_row_count) const override;
+    virtual IntRect menubar_rect(WindowType, IntRect const& window_rect, Palette const&, int menu_row_count) const override;
 
-    virtual IntRect frame_rect_for_window(WindowType, const IntRect& window_rect, const Palette&, int menu_row_count) const override;
+    virtual IntRect frame_rect_for_window(WindowType, IntRect const& window_rect, Palette const&, int menu_row_count) const override;
 
-    virtual Vector<IntRect> layout_buttons(WindowType, const IntRect& window_rect, const Palette&, size_t buttons) const override;
+    virtual Vector<IntRect> layout_buttons(WindowType, IntRect const& window_rect, Palette const&, size_t buttons) const override;
     virtual bool is_simple_rect_frame() const override { return true; }
-    virtual bool frame_uses_alpha(WindowState state, const Palette& palette) const override
+    virtual bool frame_uses_alpha(WindowState state, Palette const& palette) const override
     {
         return compute_frame_colors(state, palette).uses_alpha();
     }
@@ -54,7 +54,7 @@ private:
         }
     };
 
-    FrameColors compute_frame_colors(WindowState, const Palette&) const;
+    FrameColors compute_frame_colors(WindowState, Palette const&) const;
 };
 
 }

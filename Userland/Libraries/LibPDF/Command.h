@@ -113,7 +113,7 @@ public:
         VERIFY_NOT_REACHED();
     }
 
-    static const char* command_name(CommandType command_name)
+    static char const* command_name(CommandType command_name)
     {
 #define V(name, snake_name, symbol)        \
     if (command_name == CommandType::name) \
@@ -129,7 +129,7 @@ public:
         VERIFY_NOT_REACHED();
     }
 
-    static const char* command_symbol(CommandType command_name)
+    static char const* command_symbol(CommandType command_name)
     {
 #define V(name, snake_name, symbol)        \
     if (command_name == CommandType::name) \

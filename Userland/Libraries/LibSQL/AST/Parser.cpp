@@ -783,7 +783,7 @@ RefPtr<Expression> Parser::parse_between_expression(NonnullRefPtr<Expression> ex
         return create_ast_node<ErrorExpression>();
     }
 
-    const auto& binary_expression = static_cast<const BinaryOperatorExpression&>(*nested);
+    auto const& binary_expression = static_cast<BinaryOperatorExpression const&>(*nested);
     if (binary_expression.type() != BinaryOperator::And) {
         expected("AND Expression");
         return create_ast_node<ErrorExpression>();
@@ -1004,7 +1004,7 @@ NonnullRefPtr<OrderingTerm> Parser::parse_ordering_term()
 
     String collation_name;
     if (is<CollateExpression>(*expression)) {
-        const auto& collate = static_cast<const CollateExpression&>(*expression);
+        auto const& collate = static_cast<CollateExpression const&>(*expression);
         collation_name = collate.collation_name();
         expression = collate.expression();
     } else if (consume_if(TokenType::Collate)) {

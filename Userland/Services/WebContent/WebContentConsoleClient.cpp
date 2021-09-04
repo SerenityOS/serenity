@@ -13,7 +13,7 @@
 
 namespace WebContent {
 
-void WebContentConsoleClient::handle_input(const String& js_source)
+void WebContentConsoleClient::handle_input(String const& js_source)
 {
     auto parser = JS::Parser(JS::Lexer(js_source));
     auto program = parser.parse_program();
@@ -45,7 +45,7 @@ void WebContentConsoleClient::handle_input(const String& js_source)
     print_html(JS::MarkupGenerator::html_from_value(m_interpreter->vm().last_value()));
 }
 
-void WebContentConsoleClient::print_html(const String& line)
+void WebContentConsoleClient::print_html(String const& line)
 {
     m_client.async_did_js_console_output("html", line);
 }

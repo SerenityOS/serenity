@@ -10,7 +10,7 @@
 
 extern "C" {
 
-size_t wcslen(const wchar_t* str)
+size_t wcslen(wchar_t const* str)
 {
     size_t len = 0;
     while (*(str++))
@@ -18,7 +18,7 @@ size_t wcslen(const wchar_t* str)
     return len;
 }
 
-wchar_t* wcscpy(wchar_t* dest, const wchar_t* src)
+wchar_t* wcscpy(wchar_t* dest, wchar_t const* src)
 {
     wchar_t* original_dest = dest;
     while ((*dest++ = *src++) != '\0')
@@ -26,7 +26,7 @@ wchar_t* wcscpy(wchar_t* dest, const wchar_t* src)
     return original_dest;
 }
 
-wchar_t* wcsncpy(wchar_t* dest, const wchar_t* src, size_t num)
+wchar_t* wcsncpy(wchar_t* dest, wchar_t const* src, size_t num)
 {
     wchar_t* original_dest = dest;
     while (((*dest++ = *src++) != '\0') && ((size_t)(dest - original_dest) < num))
@@ -34,28 +34,28 @@ wchar_t* wcsncpy(wchar_t* dest, const wchar_t* src, size_t num)
     return original_dest;
 }
 
-int wcscmp(const wchar_t* s1, const wchar_t* s2)
+int wcscmp(wchar_t const* s1, wchar_t const* s2)
 {
     while (*s1 == *s2++)
         if (*s1++ == 0)
             return 0;
-    return *(const wchar_t*)s1 - *(const wchar_t*)--s2;
+    return *(wchar_t const*)s1 - *(wchar_t const*)--s2;
 }
 
-int wcsncmp(const wchar_t* s1, const wchar_t* s2, size_t n)
+int wcsncmp(wchar_t const* s1, wchar_t const* s2, size_t n)
 {
     if (!n)
         return 0;
     do {
         if (*s1 != *s2++)
-            return *(const wchar_t*)s1 - *(const wchar_t*)--s2;
+            return *(wchar_t const*)s1 - *(wchar_t const*)--s2;
         if (*s1++ == 0)
             break;
     } while (--n);
     return 0;
 }
 
-wchar_t* wcschr(const wchar_t* str, int c)
+wchar_t* wcschr(wchar_t const* str, int c)
 {
     wchar_t ch = c;
     for (;; ++str) {
@@ -66,7 +66,7 @@ wchar_t* wcschr(const wchar_t* str, int c)
     }
 }
 
-const wchar_t* wcsrchr(const wchar_t* str, wchar_t wc)
+wchar_t const* wcsrchr(wchar_t const* str, wchar_t wc)
 {
     wchar_t* last = nullptr;
     wchar_t c;
@@ -77,7 +77,7 @@ const wchar_t* wcsrchr(const wchar_t* str, wchar_t wc)
     return last;
 }
 
-wchar_t* wcscat(wchar_t* dest, const wchar_t* src)
+wchar_t* wcscat(wchar_t* dest, wchar_t const* src)
 {
     size_t dest_length = wcslen(dest);
     size_t i;
@@ -87,7 +87,7 @@ wchar_t* wcscat(wchar_t* dest, const wchar_t* src)
     return dest;
 }
 
-wchar_t* wcsncat(wchar_t* dest, const wchar_t* src, size_t n)
+wchar_t* wcsncat(wchar_t* dest, wchar_t const* src, size_t n)
 {
     size_t dest_length = wcslen(dest);
     size_t i;
@@ -97,7 +97,7 @@ wchar_t* wcsncat(wchar_t* dest, const wchar_t* src, size_t n)
     return dest;
 }
 
-wchar_t* wcstok(wchar_t* str, const wchar_t* delim, wchar_t** ptr)
+wchar_t* wcstok(wchar_t* str, wchar_t const* delim, wchar_t** ptr)
 {
     wchar_t* used_str = str;
     if (!used_str) {
@@ -142,13 +142,13 @@ wchar_t* wcstok(wchar_t* str, const wchar_t* delim, wchar_t** ptr)
     return &used_str[token_start];
 }
 
-long wcstol(const wchar_t*, wchar_t**, int)
+long wcstol(wchar_t const*, wchar_t**, int)
 {
     dbgln("FIXME: Implement wcstol()");
     TODO();
 }
 
-long long wcstoll(const wchar_t*, wchar_t**, int)
+long long wcstoll(wchar_t const*, wchar_t**, int)
 {
     dbgln("FIXME: Implement wcstoll()");
     TODO();

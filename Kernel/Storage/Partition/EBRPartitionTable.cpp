@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-Result<NonnullOwnPtr<EBRPartitionTable>, PartitionTable::Error> EBRPartitionTable::try_to_initialize(const StorageDevice& device)
+Result<NonnullOwnPtr<EBRPartitionTable>, PartitionTable::Error> EBRPartitionTable::try_to_initialize(StorageDevice const& device)
 {
     auto table = make<EBRPartitionTable>(device);
     if (table->is_protective_mbr())
@@ -19,7 +19,7 @@ Result<NonnullOwnPtr<EBRPartitionTable>, PartitionTable::Error> EBRPartitionTabl
     return table;
 }
 
-void EBRPartitionTable::search_extended_partition(const StorageDevice& device, MBRPartitionTable& checked_ebr, u64 current_block_offset, size_t limit)
+void EBRPartitionTable::search_extended_partition(StorageDevice const& device, MBRPartitionTable& checked_ebr, u64 current_block_offset, size_t limit)
 {
     if (limit == 0)
         return;
@@ -39,7 +39,7 @@ void EBRPartitionTable::search_extended_partition(const StorageDevice& device, M
     search_extended_partition(device, *next_ebr, current_block_offset, (limit - 1));
 }
 
-EBRPartitionTable::EBRPartitionTable(const StorageDevice& device)
+EBRPartitionTable::EBRPartitionTable(StorageDevice const& device)
     : MBRPartitionTable(device)
 {
     if (!is_header_valid())

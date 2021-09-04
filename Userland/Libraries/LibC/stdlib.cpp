@@ -30,7 +30,7 @@
 #include <syscall.h>
 #include <unistd.h>
 
-static void strtons(const char* str, char** endptr)
+static void strtons(char const* str, char** endptr)
 {
     assert(endptr);
     char* ptr = const_cast<char*>(str);
@@ -45,7 +45,7 @@ enum Sign {
     Positive,
 };
 
-static Sign strtosign(const char* str, char** endptr)
+static Sign strtosign(char const* str, char** endptr)
 {
     assert(endptr);
     if (*str == '+') {
@@ -237,9 +237,9 @@ void abort()
     _abort();
 }
 
-static HashTable<const char*> s_malloced_environment_variables;
+static HashTable<char const*> s_malloced_environment_variables;
 
-static void free_environment_variable_if_needed(const char* var)
+static void free_environment_variable_if_needed(char const* var)
 {
     if (!s_malloced_environment_variables.contains(var))
         return;
@@ -247,11 +247,11 @@ static void free_environment_variable_if_needed(const char* var)
     s_malloced_environment_variables.remove(var);
 }
 
-char* getenv(const char* name)
+char* getenv(char const* name)
 {
     size_t vl = strlen(name);
     for (size_t i = 0; environ[i]; ++i) {
-        const char* decl = environ[i];
+        char const* decl = environ[i];
         char* eq = strchr(decl, '=');
         if (!eq)
             continue;
@@ -265,14 +265,14 @@ char* getenv(const char* name)
     return nullptr;
 }
 
-char* secure_getenv(const char* name)
+char* secure_getenv(char const* name)
 {
     if (getauxval(AT_SECURE))
         return nullptr;
     return getenv(name);
 }
 
-int unsetenv(const char* name)
+int unsetenv(char const* name)
 {
     auto new_var_len = strlen(name);
     size_t environ_size = 0;
@@ -312,7 +312,7 @@ int clearenv()
     return 0;
 }
 
-int setenv(const char* name, const char* value, int overwrite)
+int setenv(char const* name, char const* value, int overwrite)
 {
     if (!overwrite && getenv(name))
         return 0;
@@ -373,14 +373,14 @@ int putenv(char* new_var)
     return 0;
 }
 
-static const char* __progname = NULL;
+static char const* __progname = NULL;
 
-const char* getprogname()
+char const* getprogname()
 {
     return __progname;
 }
 
-void setprogname(const char* progname)
+void setprogname(char const* progname)
 {
     for (int i = strlen(progname) - 1; i >= 0; i--) {
         if (progname[i] == '/') {
@@ -392,7 +392,7 @@ void setprogname(const char* progname)
     __progname = progname;
 }
 
-double strtod(const char* str, char** endptr)
+double strtod(char const* str, char** endptr)
 {
     // Parse spaces, sign, and base
     char* parse_ptr = const_cast<char*>(str);
@@ -673,23 +673,23 @@ double strtod(const char* str, char** endptr)
     return value;
 }
 
-long double strtold(const char* str, char** endptr)
+long double strtold(char const* str, char** endptr)
 {
     assert(sizeof(double) == sizeof(long double));
     return strtod(str, endptr);
 }
 
-float strtof(const char* str, char** endptr)
+float strtof(char const* str, char** endptr)
 {
     return strtod(str, endptr);
 }
 
-double atof(const char* str)
+double atof(char const* str)
 {
     return strtod(str, nullptr);
 }
 
-int atoi(const char* str)
+int atoi(char const* str)
 {
     long value = strtol(str, nullptr, 10);
     if (value > INT_MAX) {
@@ -698,12 +698,12 @@ int atoi(const char* str)
     return value;
 }
 
-long atol(const char* str)
+long atol(char const* str)
 {
     return strtol(str, nullptr, 10);
 }
 
-long long atoll(const char* str)
+long long atoll(char const* str)
 {
     return strtoll(str, nullptr, 10);
 }
@@ -755,13 +755,13 @@ void srandom(unsigned seed)
     srand(seed);
 }
 
-int system(const char* command)
+int system(char const* command)
 {
     if (!command)
         return 1;
 
     pid_t child;
-    const char* argv[] = { "sh", "-c", command, nullptr };
+    char const* argv[] = { "sh", "-c", command, nullptr };
     if ((errno = posix_spawn(&child, "/bin/sh", nullptr, nullptr, const_cast<char**>(argv), environ)))
         return -1;
     int wstatus;
@@ -815,7 +815,7 @@ char* mkdtemp(char* pattern)
     return pattern;
 }
 
-void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*))
+void* bsearch(void const* key, void const* base, size_t nmemb, size_t size, int (*compar)(void const*, void const*))
 {
     char* start = static_cast<char*>(const_cast<void*>(base));
     while (nmemb > 0) {
@@ -880,13 +880,13 @@ int mblen(char const* s, size_t n)
     return (MB_CUR_MAX > n) ? n : MB_CUR_MAX;
 }
 
-size_t mbstowcs(wchar_t*, const char*, size_t)
+size_t mbstowcs(wchar_t*, char const*, size_t)
 {
     dbgln("FIXME: Implement mbstowcs()");
     TODO();
 }
 
-int mbtowc(wchar_t* wch, const char* data, [[maybe_unused]] size_t data_size)
+int mbtowc(wchar_t* wch, char const* data, [[maybe_unused]] size_t data_size)
 {
     // FIXME: This needs a real implementation.
     if (wch && data) {
@@ -907,11 +907,11 @@ int wctomb(char*, wchar_t)
     TODO();
 }
 
-size_t wcstombs(char* dest, const wchar_t* src, size_t max)
+size_t wcstombs(char* dest, wchar_t const* src, size_t max)
 {
     char* original_dest = dest;
     while ((size_t)(dest - original_dest) < max) {
-        StringView v { (const char*)src, sizeof(wchar_t) };
+        StringView v { (char const*)src, sizeof(wchar_t) };
 
         // FIXME: dependent on locale, for now utf-8 is supported.
         Utf8View utf8 { v };
@@ -929,7 +929,7 @@ size_t wcstombs(char* dest, const wchar_t* src, size_t max)
     return max;
 }
 
-long strtol(const char* str, char** endptr, int base)
+long strtol(char const* str, char** endptr, int base)
 {
     long long value = strtoll(str, endptr, base);
     if (value < LONG_MIN) {
@@ -942,7 +942,7 @@ long strtol(const char* str, char** endptr, int base)
     return value;
 }
 
-unsigned long strtoul(const char* str, char** endptr, int base)
+unsigned long strtoul(char const* str, char** endptr, int base)
 {
     unsigned long long value = strtoull(str, endptr, base);
     if (value > ULONG_MAX) {
@@ -952,7 +952,7 @@ unsigned long strtoul(const char* str, char** endptr, int base)
     return value;
 }
 
-long long strtoll(const char* str, char** endptr, int base)
+long long strtoll(char const* str, char** endptr, int base)
 {
     // Parse spaces and sign
     char* parse_ptr = const_cast<char*>(str);
@@ -1029,7 +1029,7 @@ long long strtoll(const char* str, char** endptr, int base)
     return digits.number();
 }
 
-unsigned long long strtoull(const char* str, char** endptr, int base)
+unsigned long long strtoull(char const* str, char** endptr, int base)
 {
     // Parse spaces and sign
     char* parse_ptr = const_cast<char*>(str);
@@ -1131,7 +1131,7 @@ uint32_t arc4random_uniform(uint32_t max_bounds)
     return AK::get_random_uniform(max_bounds);
 }
 
-char* realpath(const char* pathname, char* buffer)
+char* realpath(char const* pathname, char* buffer)
 {
     if (!pathname) {
         errno = EFAULT;

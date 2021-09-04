@@ -15,8 +15,8 @@ class ContentFilter {
 public:
     static ContentFilter& the();
 
-    bool is_filtered(const URL&) const;
-    void add_pattern(const String&);
+    bool is_filtered(URL const&) const;
+    void add_pattern(String const&);
 
 private:
     ContentFilter();

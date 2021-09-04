@@ -32,7 +32,7 @@ public:
     virtual size_t devices_count() const = 0;
 
 protected:
-    virtual void start_request(const StorageDevice&, AsyncBlockDeviceRequest&) = 0;
+    virtual void start_request(StorageDevice const&, AsyncBlockDeviceRequest&) = 0;
 
 protected:
     virtual bool reset() = 0;

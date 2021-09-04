@@ -13,7 +13,7 @@ namespace JS {
 struct AlreadyResolved final : public Cell {
     bool value { false };
 
-    virtual const char* class_name() const override { return "AlreadyResolved"; }
+    virtual char const* class_name() const override { return "AlreadyResolved"; }
 
 protected:
     // Allocated cells must be >= sizeof(FreelistEntry), which is 24 bytes -

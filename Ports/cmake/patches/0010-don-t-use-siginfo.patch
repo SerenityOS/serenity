@@ -25,7 +25,7 @@ diff --git a/Source/kwsys/SystemInformation.cxx b/Source/kwsys/SystemInformation
 index 1384dbe..18f03fb 100644
 --- a/Source/kwsys/SystemInformation.cxx
 +++ b/Source/kwsys/SystemInformation.cxx
-@@ -990,7 +990,7 @@ int GetFieldsFromCommand(const char* command, const char** fieldNames,
+@@ -990,7 +990,7 @@ int GetFieldsFromCommand(char const* command, char const** fieldNames,
  #endif
  
  // ****************************************************************************

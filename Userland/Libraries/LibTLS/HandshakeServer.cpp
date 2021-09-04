@@ -127,7 +127,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
                 // Exactly one ServerName should be present
                 if (buffer.size() - res < 3)
                     return (i8)Error::NeedMoreData;
-                auto sni_name_type = (NameType)(*(const u8*)buffer.offset_pointer(res++));
+                auto sni_name_type = (NameType)(*(u8 const*)buffer.offset_pointer(res++));
                 auto sni_name_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res += 2)));
 
                 if (sni_name_type != NameType::HostName)
@@ -139,7 +139,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
                 // Read out the host_name
                 if (buffer.size() - res < sni_name_length)
                     return (i8)Error::NeedMoreData;
-                m_context.extensions.SNI = String { (const char*)buffer.offset_pointer(res), sni_name_length };
+                m_context.extensions.SNI = String { (char const*)buffer.offset_pointer(res), sni_name_length };
                 res += sni_name_length;
                 dbgln("SNI host_name: {}", m_context.extensions.SNI);
             }
@@ -147,13 +147,13 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
             if (buffer.size() - res > 2) {
                 auto alpn_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res)));
                 if (alpn_length && alpn_length <= extension_length - 2) {
-                    const u8* alpn = buffer.offset_pointer(res + 2);
+                    u8 const* alpn = buffer.offset_pointer(res + 2);
                     size_t alpn_position = 0;
                     while (alpn_position < alpn_length) {
                         u8 alpn_size = alpn[alpn_position++];
                         if (alpn_size + alpn_position >= extension_length)
                             break;
-                        String alpn_str { (const char*)alpn + alpn_position, alpn_length };
+                        String alpn_str { (char const*)alpn + alpn_position, alpn_length };
                         if (alpn_size && m_context.alpn.contains_slow(alpn_str)) {
                             m_context.negotiated_alpn = alpn_str;
                             dbgln("negotiated alpn: {}", alpn_str);

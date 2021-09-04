@@ -11,12 +11,12 @@
 
 namespace Kernel::Graphics {
 
-UNMAP_AFTER_INIT NonnullRefPtr<TextModeConsole> TextModeConsole::initialize(const VGACompatibleAdapter& adapter)
+UNMAP_AFTER_INIT NonnullRefPtr<TextModeConsole> TextModeConsole::initialize(VGACompatibleAdapter const& adapter)
 {
     return adopt_ref(*new TextModeConsole(adapter));
 }
 
-UNMAP_AFTER_INIT TextModeConsole::TextModeConsole(const VGACompatibleAdapter& adapter)
+UNMAP_AFTER_INIT TextModeConsole::TextModeConsole(VGACompatibleAdapter const& adapter)
     : VGAConsole(adapter, VGAConsole::Mode::TextMode, 80, 25)
     , m_current_vga_window(m_vga_region->vaddr().offset(0x18000).as_ptr())
 {

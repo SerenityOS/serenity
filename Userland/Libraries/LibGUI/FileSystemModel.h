@@ -67,7 +67,7 @@ public:
 
         bool has_error() const { return m_error != 0; }
         int error() const { return m_error; }
-        const char* error_string() const { return strerror(m_error); }
+        char const* error_string() const { return strerror(m_error); }
 
         String full_path() const;
 
@@ -106,33 +106,33 @@ public:
 
     String root_path() const { return m_root_path; }
     void set_root_path(String);
-    String full_path(const ModelIndex&) const;
+    String full_path(ModelIndex const&) const;
     ModelIndex index(String path, int column) const;
 
-    void update_node_on_selection(const ModelIndex&, const bool);
+    void update_node_on_selection(ModelIndex const&, const bool);
     ModelIndex m_previously_selected_index {};
 
-    const Node& node(const ModelIndex& index) const;
+    Node const& node(ModelIndex const& index) const;
 
     Function<void(int done, int total)> on_thumbnail_progress;
     Function<void()> on_complete;
-    Function<void(int error, const char* error_string)> on_directory_change_error;
-    Function<void(int error, const char* error_string)> on_rename_error;
+    Function<void(int error, char const* error_string)> on_directory_change_error;
+    Function<void(int error, char const* error_string)> on_rename_error;
 
     virtual int tree_column() const override { return Column::Name; }
-    virtual int row_count(const ModelIndex& = ModelIndex()) const override;
-    virtual int column_count(const ModelIndex& = ModelIndex()) const override;
+    virtual int row_count(ModelIndex const& = ModelIndex()) const override;
+    virtual int column_count(ModelIndex const& = ModelIndex()) const override;
     virtual String column_name(int column) const override;
-    virtual Variant data(const ModelIndex&, ModelRole = ModelRole::Display) const override;
-    virtual ModelIndex parent_index(const ModelIndex&) const override;
-    virtual ModelIndex index(int row, int column = 0, const ModelIndex& parent = ModelIndex()) const override;
+    virtual Variant data(ModelIndex const&, ModelRole = ModelRole::Display) const override;
+    virtual ModelIndex parent_index(ModelIndex const&) const override;
+    virtual ModelIndex index(int row, int column = 0, ModelIndex const& parent = ModelIndex()) const override;
     virtual StringView drag_data_type() const override { return "text/uri-list"; }
-    virtual bool accepts_drag(const ModelIndex&, const Vector<String>& mime_types) const override;
+    virtual bool accepts_drag(ModelIndex const&, const Vector<String>& mime_types) const override;
     virtual bool is_column_sortable(int column_index) const override { return column_index != Column::Icon; }
-    virtual bool is_editable(const ModelIndex&) const override;
+    virtual bool is_editable(ModelIndex const&) const override;
     virtual bool is_searchable() const override { return true; }
-    virtual void set_data(const ModelIndex&, const Variant&) override;
-    virtual Vector<ModelIndex, 1> matches(const StringView&, unsigned = MatchesFlag::AllMatching, const ModelIndex& = ModelIndex()) override;
+    virtual void set_data(ModelIndex const&, Variant const&) override;
+    virtual Vector<ModelIndex, 1> matches(StringView const&, unsigned = MatchesFlag::AllMatching, ModelIndex const& = ModelIndex()) override;
     virtual void invalidate() override;
 
     static String timestamp_string(time_t timestamp)
@@ -154,8 +154,8 @@ private:
     HashMap<uid_t, String> m_user_names;
     HashMap<gid_t, String> m_group_names;
 
-    bool fetch_thumbnail_for(const Node& node);
-    GUI::Icon icon_for(const Node& node) const;
+    bool fetch_thumbnail_for(Node const& node);
+    GUI::Icon icon_for(Node const& node) const;
 
     void handle_file_event(Core::FileWatcherEvent const& event);
 

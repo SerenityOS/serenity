@@ -72,7 +72,7 @@ RefPtr<Inode> TmpFS::get_inode(InodeIdentifier identifier) const
     return it->value;
 }
 
-TmpFSInode::TmpFSInode(TmpFS& fs, const InodeMetadata& metadata, InodeIdentifier parent)
+TmpFSInode::TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, InodeIdentifier parent)
     : Inode(fs, fs.next_inode_index())
     , m_metadata(metadata)
     , m_parent(parent)
@@ -84,7 +84,7 @@ TmpFSInode::~TmpFSInode()
 {
 }
 
-RefPtr<TmpFSInode> TmpFSInode::create(TmpFS& fs, const InodeMetadata& metadata, InodeIdentifier parent)
+RefPtr<TmpFSInode> TmpFSInode::create(TmpFS& fs, InodeMetadata const& metadata, InodeIdentifier parent)
 {
     auto inode = adopt_ref_if_nonnull(new (nothrow) TmpFSInode(fs, metadata, parent));
     if (inode)
@@ -146,7 +146,7 @@ KResultOr<size_t> TmpFSInode::read_bytes(off_t offset, size_t size, UserOrKernel
     return size;
 }
 
-KResultOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserOrKernelBuffer& buffer, FileDescription*)
+KResultOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, UserOrKernelBuffer const& buffer, FileDescription*)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!is_directory());

@@ -58,7 +58,7 @@ TESTJS_GLOBAL_FUNCTION(get_weak_map_size, getWeakMapSize)
     return JS::Value(weak_map->values().size());
 }
 
-TESTJS_RUN_FILE_FUNCTION(const String& test_file, JS::Interpreter&)
+TESTJS_RUN_FILE_FUNCTION(String const& test_file, JS::Interpreter&)
 {
     if (!test262_parser_tests)
         return Test::JS::RunFileHookResult::RunAsNormal;

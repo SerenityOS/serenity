@@ -15,16 +15,16 @@
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 
 struct Testcase {
-    const char* dest;
+    char const* dest;
     size_t dest_n;
-    const char* fmt;
-    const char* arg;
+    char const* fmt;
+    char const* arg;
     int expected_return;
-    const char* dest_expected;
+    char const* dest_expected;
     size_t dest_expected_n; // == dest_n
 };
 
-static String show(const ByteBuffer& buf)
+static String show(ByteBuffer const& buf)
 {
     StringBuilder builder;
     for (size_t i = 0; i < buf.size(); ++i) {
@@ -42,7 +42,7 @@ static String show(const ByteBuffer& buf)
     return builder.build();
 }
 
-static bool test_single(const Testcase& testcase)
+static bool test_single(Testcase const& testcase)
 {
     constexpr size_t SANDBOX_CANARY_SIZE = 8;
 
@@ -105,7 +105,7 @@ static bool test_single(const Testcase& testcase)
 // Drop the NUL terminator added by the C++ compiler.
 #define LITERAL(x) x, (sizeof(x) - 1)
 
-static const char* const POISON = (const char*)1;
+static char const* const POISON = (char const*)1;
 
 TEST_CASE(golden_path)
 {

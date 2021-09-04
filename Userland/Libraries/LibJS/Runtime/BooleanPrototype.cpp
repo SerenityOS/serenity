@@ -41,7 +41,7 @@ JS_DEFINE_NATIVE_FUNCTION(BooleanPrototype::to_string)
         return {};
     }
 
-    bool bool_value = static_cast<const BooleanObject&>(this_value.as_object()).value_of().as_bool();
+    bool bool_value = static_cast<BooleanObject const&>(this_value.as_object()).value_of().as_bool();
     return js_string(vm, bool_value ? "true" : "false");
 }
 
@@ -56,6 +56,6 @@ JS_DEFINE_NATIVE_FUNCTION(BooleanPrototype::value_of)
         return {};
     }
 
-    return static_cast<const BooleanObject&>(this_value.as_object()).value_of();
+    return static_cast<BooleanObject const&>(this_value.as_object()).value_of();
 }
 }

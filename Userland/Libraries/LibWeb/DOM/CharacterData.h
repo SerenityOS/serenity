@@ -20,7 +20,7 @@ public:
 
     virtual ~CharacterData() override;
 
-    const String& data() const { return m_data; }
+    String const& data() const { return m_data; }
     void set_data(String);
 
     unsigned length() const { return m_data.length(); }
@@ -28,7 +28,7 @@ public:
     virtual String text_content() const override { return m_data; }
 
 protected:
-    explicit CharacterData(Document&, NodeType, const String&);
+    explicit CharacterData(Document&, NodeType, String const&);
 
 private:
     String m_data;

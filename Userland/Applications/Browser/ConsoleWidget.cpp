@@ -65,7 +65,7 @@ ConsoleWidget::~ConsoleWidget()
 {
 }
 
-void ConsoleWidget::handle_js_console_output(const String& method, const String& line)
+void ConsoleWidget::handle_js_console_output(String const& method, String const& line)
 {
     if (method == "html") {
         print_html(line);
@@ -74,7 +74,7 @@ void ConsoleWidget::handle_js_console_output(const String& method, const String&
     }
 }
 
-void ConsoleWidget::print_source_line(const StringView& source)
+void ConsoleWidget::print_source_line(StringView const& source)
 {
     StringBuilder html;
     html.append("<span class=\"repl-indicator\">");

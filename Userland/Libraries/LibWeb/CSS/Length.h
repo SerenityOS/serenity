@@ -50,7 +50,7 @@ public:
     static Length make_auto() { return Length(0, Type::Auto); }
     static Length make_px(float value) { return Length(value, Type::Px); }
 
-    Length resolved(const Length& fallback_for_undefined, const Layout::Node& layout_node, float reference_for_percent) const
+    Length resolved(Length const& fallback_for_undefined, const Layout::Node& layout_node, float reference_for_percent) const
     {
         if (is_undefined())
             return fallback_for_undefined;
@@ -141,12 +141,12 @@ public:
         return String::formatted("[{} {}]", m_value, unit_name());
     }
 
-    bool operator==(const Length& other) const
+    bool operator==(Length const& other) const
     {
         return m_type == other.m_type && m_value == other.m_value;
     }
 
-    bool operator!=(const Length& other) const
+    bool operator!=(Length const& other) const
     {
         return !(*this == other);
     }
@@ -157,7 +157,7 @@ private:
     float relative_length_to_px(const Layout::Node&) const;
     float resolve_calculated_value(const Layout::Node& layout_node, float reference_for_percent) const;
 
-    const char* unit_name() const;
+    char const* unit_name() const;
 
     Type m_type { Type::Undefined };
     float m_value { 0 };

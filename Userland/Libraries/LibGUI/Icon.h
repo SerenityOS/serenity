@@ -39,13 +39,13 @@ public:
     Icon();
     explicit Icon(RefPtr<Gfx::Bitmap>&&);
     explicit Icon(RefPtr<Gfx::Bitmap>&&, RefPtr<Gfx::Bitmap>&&);
-    explicit Icon(const IconImpl&);
-    Icon(const Icon&);
+    explicit Icon(IconImpl const&);
+    Icon(Icon const&);
     ~Icon() { }
 
-    static Icon default_icon(const StringView&);
+    static Icon default_icon(StringView const&);
 
-    Icon& operator=(const Icon& other)
+    Icon& operator=(Icon const& other)
     {
         if (this != &other)
             m_impl = other.m_impl;
@@ -55,7 +55,7 @@ public:
     const Gfx::Bitmap* bitmap_for_size(int size) const { return m_impl->bitmap_for_size(size); }
     void set_bitmap_for_size(int size, RefPtr<Gfx::Bitmap>&& bitmap) { m_impl->set_bitmap_for_size(size, move(bitmap)); }
 
-    const IconImpl& impl() const { return *m_impl; }
+    IconImpl const& impl() const { return *m_impl; }
 
     Vector<int> sizes() const { return m_impl->sizes(); }
 

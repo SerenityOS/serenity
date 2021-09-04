@@ -20,7 +20,7 @@
 namespace JS {
 
 // 21.4.3.2 Date.parse ( string ), https://tc39.es/ecma262/#sec-date.parse
-static Value parse_simplified_iso8601(const String& iso_8601)
+static Value parse_simplified_iso8601(String const& iso_8601)
 {
     // Date.parse() is allowed to accept many formats. We strictly only accept things matching
     // 21.4.1.15 Date Time String Format, https://tc39.es/ecma262/#sec-date-time-string-format

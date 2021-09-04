@@ -15,7 +15,7 @@ public:
     SharpenFilter() { }
     virtual ~SharpenFilter() { }
 
-    virtual const char* class_name() const override { return "SharpenFilter"; }
+    virtual char const* class_name() const override { return "SharpenFilter"; }
 };
 
 }

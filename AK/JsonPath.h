@@ -27,14 +27,14 @@ public:
     {
     }
 
-    JsonPathElement(const StringView& key)
+    JsonPathElement(StringView const& key)
         : m_kind(Kind::Key)
         , m_key(key)
     {
     }
 
     Kind kind() const { return m_kind; }
-    const String& key() const
+    String const& key() const
     {
         VERIFY(m_kind == Kind::Key);
         return m_key;
@@ -61,7 +61,7 @@ public:
     static JsonPathElement any_array_element;
     static JsonPathElement any_object_element;
 
-    bool operator==(const JsonPathElement& other) const
+    bool operator==(JsonPathElement const& other) const
     {
         switch (other.kind()) {
         case Kind::Key:
@@ -75,7 +75,7 @@ public:
         }
         return false;
     }
-    bool operator!=(const JsonPathElement& other) const
+    bool operator!=(JsonPathElement const& other) const
     {
         return !(*this == other);
     }
@@ -93,7 +93,7 @@ private:
 
 class JsonPath : public Vector<JsonPathElement> {
 public:
-    JsonValue resolve(const JsonValue&) const;
+    JsonValue resolve(JsonValue const&) const;
     String to_string() const;
 };
 

@@ -33,7 +33,7 @@ class GLContextWidget final : public GUI::Frame {
     C_OBJECT(GLContextWidget);
 
 public:
-    bool load(const String& fname);
+    bool load(String const& fname);
     void toggle_rotate_x() { m_rotate_x = !m_rotate_x; }
     void toggle_rotate_y() { m_rotate_y = !m_rotate_y; }
     void toggle_rotate_z() { m_rotate_z = !m_rotate_z; }
@@ -191,7 +191,7 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     m_cycles++;
 }
 
-bool GLContextWidget::load(const String& filename)
+bool GLContextWidget::load(String const& filename)
 {
     auto file = Core::File::construct(filename);
 

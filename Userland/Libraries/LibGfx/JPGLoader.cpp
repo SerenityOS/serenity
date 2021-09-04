@@ -178,7 +178,7 @@ struct JPGLoadingContext {
     };
 
     State state { State::NotDecoded };
-    const u8* data { nullptr };
+    u8 const* data { nullptr };
     size_t data_size { 0 };
     u32 luma_table[64] = { 0 };
     u32 chroma_table[64] = { 0 };
@@ -230,7 +230,7 @@ static Optional<size_t> read_huffman_bits(HuffmanStreamState& hstream, size_t co
     return value;
 }
 
-static Optional<u8> get_next_symbol(HuffmanStreamState& hstream, const HuffmanTableSpec& table)
+static Optional<u8> get_next_symbol(HuffmanStreamState& hstream, HuffmanTableSpec const& table)
 {
     unsigned code = 0;
     size_t code_cursor = 0;
@@ -655,7 +655,7 @@ static bool read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& con
     return true;
 }
 
-static inline bool validate_luma_and_modify_context(const ComponentSpec& luma, JPGLoadingContext& context)
+static inline bool validate_luma_and_modify_context(ComponentSpec const& luma, JPGLoadingContext& context)
 {
     if ((luma.hsample_factor == 1 || luma.hsample_factor == 2) && (luma.vsample_factor == 1 || luma.vsample_factor == 2)) {
         context.mblock_meta.hpadded_count += luma.hsample_factor == 1 ? 0 : context.mblock_meta.hcount % 2;
@@ -847,7 +847,7 @@ static void dequantize(JPGLoadingContext& context, Vector<Macroblock>& macrobloc
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
             for (u32 i = 0; i < context.component_count; i++) {
                 auto& component = context.components[i];
-                const u32* table = component.qtable_id == 0 ? context.luma_table : context.chroma_table;
+                u32 const* table = component.qtable_id == 0 ? context.luma_table : context.chroma_table;
                 for (u32 vfactor_i = 0; vfactor_i < component.vsample_factor; vfactor_i++) {
                     for (u32 hfactor_i = 0; hfactor_i < component.hsample_factor; hfactor_i++) {
                         u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
@@ -862,7 +862,7 @@ static void dequantize(JPGLoadingContext& context, Vector<Macroblock>& macrobloc
     }
 }
 
-static void inverse_dct(const JPGLoadingContext& context, Vector<Macroblock>& macroblocks)
+static void inverse_dct(JPGLoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
     static const float m0 = 2.0 * AK::cos(1.0 / 16.0 * 2.0 * AK::Pi<double>);
     static const float m1 = 2.0 * AK::cos(2.0 / 16.0 * 2.0 * AK::Pi<double>);
@@ -1029,12 +1029,12 @@ static void inverse_dct(const JPGLoadingContext& context, Vector<Macroblock>& ma
     }
 }
 
-static void ycbcr_to_rgb(const JPGLoadingContext& context, Vector<Macroblock>& macroblocks)
+static void ycbcr_to_rgb(JPGLoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
             const u32 chroma_block_index = vcursor * context.mblock_meta.hpadded_count + hcursor;
-            const Macroblock& chroma = macroblocks[chroma_block_index];
+            Macroblock const& chroma = macroblocks[chroma_block_index];
             // Overflows are intentional.
             for (u8 vfactor_i = context.vsample_factor - 1; vfactor_i < context.vsample_factor; --vfactor_i) {
                 for (u8 hfactor_i = context.hsample_factor - 1; hfactor_i < context.hsample_factor; --hfactor_i) {
@@ -1221,7 +1221,7 @@ static bool decode_jpg(JPGLoadingContext& context)
     return true;
 }
 
-static RefPtr<Gfx::Bitmap> load_jpg_impl(const u8* data, size_t data_size)
+static RefPtr<Gfx::Bitmap> load_jpg_impl(u8 const* data, size_t data_size)
 {
     JPGLoadingContext context;
     context.data = data;
@@ -1238,13 +1238,13 @@ RefPtr<Gfx::Bitmap> load_jpg(String const& path)
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
         return nullptr;
-    auto bitmap = load_jpg_impl((const u8*)file_or_error.value()->data(), file_or_error.value()->size());
+    auto bitmap = load_jpg_impl((u8 const*)file_or_error.value()->data(), file_or_error.value()->size());
     if (bitmap)
         bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded JPG: {}", bitmap->size(), LexicalPath::canonicalized_path(path)));
     return bitmap;
 }
 
-RefPtr<Gfx::Bitmap> load_jpg_from_memory(const u8* data, size_t length)
+RefPtr<Gfx::Bitmap> load_jpg_from_memory(u8 const* data, size_t length)
 {
     auto bitmap = load_jpg_impl(data, length);
     if (bitmap)
@@ -1252,7 +1252,7 @@ RefPtr<Gfx::Bitmap> load_jpg_from_memory(const u8* data, size_t length)
     return bitmap;
 }
 
-JPGImageDecoderPlugin::JPGImageDecoderPlugin(const u8* data, size_t size)
+JPGImageDecoderPlugin::JPGImageDecoderPlugin(u8 const* data, size_t size)
 {
     m_context = make<JPGLoadingContext>();
     m_context->data = data;

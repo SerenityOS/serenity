@@ -45,7 +45,7 @@ public:
     static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> try_create(int fd, String filename);
     ~DynamicLoader();
 
-    const String& filename() const { return m_filename; }
+    String const& filename() const { return m_filename; }
 
     bool is_valid() const { return m_valid; }
 
@@ -107,7 +107,7 @@ private:
         ElfW(Phdr) m_program_header; // Explicitly a copy of the PHDR in the image
     };
 
-    const DynamicObject& dynamic_object() const;
+    DynamicObject const& dynamic_object() const;
 
     // Stage 1
     void load_program_headers();

@@ -15,7 +15,7 @@ CursorWidth RegularEditingEngine::cursor_width() const
     return CursorWidth::NARROW;
 }
 
-bool RegularEditingEngine::on_key(const KeyEvent& event)
+bool RegularEditingEngine::on_key(KeyEvent const& event)
 {
     if (EditingEngine::on_key(event))
         return true;
@@ -34,7 +34,7 @@ bool RegularEditingEngine::on_key(const KeyEvent& event)
     return false;
 }
 
-static int strcmp_utf32(const u32* s1, const u32* s2, size_t n)
+static int strcmp_utf32(u32 const* s1, u32 const* s2, size_t n)
 {
     while (n-- > 0) {
         if (*s1++ != *s2++)

@@ -16,12 +16,12 @@ typedef void* ValueHandle;
 
 class SourceLocation {
 public:
-    const char* filename() const { return m_filename; }
+    char const* filename() const { return m_filename; }
     u32 line() const { return m_line; }
     u32 column() const { return m_column; }
 
 private:
-    const char* m_filename;
+    char const* m_filename;
     u32 m_line;
     u32 m_column;
 };
@@ -34,7 +34,7 @@ enum TypeKind : u16 {
 
 class TypeDescriptor {
 public:
-    const char* name() const { return m_name; }
+    char const* name() const { return m_name; }
     TypeKind kind() const { return (TypeKind)m_kind; }
     bool is_integer() const { return kind() == TypeKind::Integer; }
     bool is_signed() const { return m_info & 1; }
@@ -49,7 +49,7 @@ private:
 
 struct InvalidValueData {
     SourceLocation location;
-    const TypeDescriptor& type;
+    TypeDescriptor const& type;
 };
 
 struct NonnullArgData {
@@ -64,29 +64,29 @@ struct NonnullReturnData {
 
 struct OverflowData {
     SourceLocation location;
-    const TypeDescriptor& type;
+    TypeDescriptor const& type;
 };
 
 struct VLABoundData {
     SourceLocation location;
-    const TypeDescriptor& type;
+    TypeDescriptor const& type;
 };
 
 struct ShiftOutOfBoundsData {
     SourceLocation location;
-    const TypeDescriptor& lhs_type;
-    const TypeDescriptor& rhs_type;
+    TypeDescriptor const& lhs_type;
+    TypeDescriptor const& rhs_type;
 };
 
 struct OutOfBoundsData {
     SourceLocation location;
-    const TypeDescriptor& array_type;
-    const TypeDescriptor& index_type;
+    TypeDescriptor const& array_type;
+    TypeDescriptor const& index_type;
 };
 
 struct TypeMismatchData {
     SourceLocation location;
-    const TypeDescriptor& type;
+    TypeDescriptor const& type;
     u8 log_alignment;
     u8 type_check_kind;
 };
@@ -94,7 +94,7 @@ struct TypeMismatchData {
 struct AlignmentAssumptionData {
     SourceLocation location;
     SourceLocation assumption_location;
-    const TypeDescriptor& type;
+    TypeDescriptor const& type;
 };
 
 struct UnreachableData {
@@ -103,8 +103,8 @@ struct UnreachableData {
 
 struct ImplicitConversionData {
     SourceLocation location;
-    const TypeDescriptor& from_type;
-    const TypeDescriptor& to_type;
+    TypeDescriptor const& from_type;
+    TypeDescriptor const& to_type;
     /* ImplicitConversionCheckKind */ unsigned char kind;
 };
 

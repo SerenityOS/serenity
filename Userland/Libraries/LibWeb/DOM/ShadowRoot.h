@@ -23,7 +23,7 @@ public:
     void set_available_to_element_internals(bool available_to_element_internals) { m_available_to_element_internals = available_to_element_internals; }
 
     // ^EventTarget
-    virtual EventTarget* get_parent(const Event&) override;
+    virtual EventTarget* get_parent(Event const&) override;
 
     // NOTE: This is intended for the JS bindings.
     String mode() const { return m_closed ? "closed" : "open"; }

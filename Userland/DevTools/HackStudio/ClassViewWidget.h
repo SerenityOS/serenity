@@ -35,7 +35,7 @@ struct ClassViewNode {
     NonnullOwnPtrVector<ClassViewNode> children;
     ClassViewNode* parent { nullptr };
 
-    explicit ClassViewNode(const StringView& name)
+    explicit ClassViewNode(StringView const& name)
         : name(name) {};
 };
 

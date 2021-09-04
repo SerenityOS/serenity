@@ -38,7 +38,7 @@ public:
             if (rule.type() == CSSRule::Type::Style) {
                 callback(verify_cast<CSSStyleRule>(rule));
             } else if (rule.type() == CSSRule::Type::Import) {
-                const auto& import_rule = verify_cast<CSSImportRule>(rule);
+                auto const& import_rule = verify_cast<CSSImportRule>(rule);
                 if (import_rule.has_import_result())
                     import_rule.loaded_style_sheet()->for_each_effective_style_rule(callback);
             }

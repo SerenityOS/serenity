@@ -39,11 +39,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Vector<const char*> files;
+    Vector<char const*> files;
 
     bool recursive { false };
     bool use_ere { false };
-    const char* pattern = nullptr;
+    char const* pattern = nullptr;
     BinaryFileMode binary_mode { BinaryFileMode::Binary };
     bool case_insensitive = false;
     bool invert_match = false;

@@ -22,7 +22,7 @@
 
 namespace HackStudio {
 
-void TerminalWrapper::run_command(const String& command)
+void TerminalWrapper::run_command(String const& command)
 {
     if (m_pid != -1) {
         GUI::MessageBox::show(window(),
@@ -77,7 +77,7 @@ void TerminalWrapper::run_command(const String& command)
         // Create a new process group.
         setsid();
 
-        const char* tty_name = ptsname(ptm_fd);
+        char const* tty_name = ptsname(ptm_fd);
         if (!tty_name) {
             perror("ptsname");
             exit(1);
@@ -128,7 +128,7 @@ void TerminalWrapper::run_command(const String& command)
 
         auto parts = command.split(' ');
         VERIFY(!parts.is_empty());
-        const char** args = (const char**)calloc(parts.size() + 1, sizeof(const char*));
+        char const** args = (char const**)calloc(parts.size() + 1, sizeof(char const*));
         for (size_t i = 0; i < parts.size(); i++) {
             args[i] = parts[i].characters();
         }

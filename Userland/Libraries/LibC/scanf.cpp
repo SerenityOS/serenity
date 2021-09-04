@@ -376,7 +376,7 @@ private:
     size_t count { 0 };
 };
 
-extern "C" int vsscanf(const char* input, const char* format, va_list ap)
+extern "C" int vsscanf(char const* input, char const* format, va_list ap)
 {
     GenericLexer format_lexer { format };
     GenericLexer input_lexer { input };

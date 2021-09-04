@@ -28,7 +28,7 @@ void GraphWidget::add_value(Vector<int, 1>&& value)
 
 void GraphWidget::paint_event(GUI::PaintEvent& event)
 {
-    const auto& system_palette = GUI::Application::the()->palette();
+    auto const& system_palette = GUI::Application::the()->palette();
 
     GUI::Frame::paint_event(event);
     GUI::Painter painter(*this);
@@ -42,18 +42,18 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
     if (!m_values.is_empty()) {
         // Draw one set of values at a time
         for (size_t k = 0; k < m_value_format.size(); k++) {
-            const auto& format = m_value_format[k];
+            auto const& format = m_value_format[k];
             if (format.graph_color_role == ColorRole::Base) {
                 continue;
             }
-            const auto& line_color = system_palette.color(format.graph_color_role);
-            const auto& background_color = line_color.with_alpha(0x7f);
+            auto const& line_color = system_palette.color(format.graph_color_role);
+            auto const& background_color = line_color.with_alpha(0x7f);
             m_calculated_points.clear_with_capacity();
             for (size_t i = 0; i < m_values.size(); i++) {
                 int x = inner_rect.right() - (i * 2) + 1;
                 if (x < 0)
                     break;
-                const auto& current_values = m_values.at(m_values.size() - i - 1);
+                auto const& current_values = m_values.at(m_values.size() - i - 1);
                 if (current_values.size() <= k) {
                     // Don't have a data point
                     m_calculated_points.append({ -1, -1 });
@@ -118,7 +118,7 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
                 // Draw the line for the data points we have
                 const Gfx::IntPoint* previous_point = nullptr;
                 for (size_t i = 0; i < m_calculated_points.size(); i++) {
-                    const auto& current_point = m_calculated_points[i];
+                    auto const& current_point = m_calculated_points[i];
                     if (current_point.x() < 0) {
                         previous_point = nullptr;
                         continue;
@@ -132,11 +132,11 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
     }
 
     if (!m_values.is_empty() && !m_value_format.is_empty()) {
-        const auto& current_values = m_values.last();
+        auto const& current_values = m_values.last();
         int y = 0;
         for (size_t i = 0; i < min(m_value_format.size(), current_values.size()); i++) {
-            const auto& format = m_value_format[i];
-            const auto& graph_color = system_palette.color(format.graph_color_role);
+            auto const& format = m_value_format[i];
+            auto const& graph_color = system_palette.color(format.graph_color_role);
             if (!format.text_formatter)
                 continue;
             auto constrain_rect = inner_rect.shrunken(8, 8);

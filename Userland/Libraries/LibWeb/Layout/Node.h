@@ -65,10 +65,10 @@ public:
     DOM::Document& document() { return m_document; }
     const DOM::Document& document() const { return m_document; }
 
-    const BrowsingContext& browsing_context() const;
+    BrowsingContext const& browsing_context() const;
     BrowsingContext& browsing_context();
 
-    const InitialContainingBlockBox& root() const;
+    InitialContainingBlockBox const& root() const;
     InitialContainingBlockBox& root();
 
     bool is_root_element() const;
@@ -93,7 +93,7 @@ public:
 
     virtual void before_children_paint(PaintContext&, PaintPhase) {};
     virtual void paint(PaintContext&, PaintPhase);
-    virtual void paint_fragment(PaintContext&, const LineBoxFragment&, PaintPhase) const { }
+    virtual void paint_fragment(PaintContext&, LineBoxFragment const&, PaintPhase) const { }
     virtual void after_children_paint(PaintContext&, PaintPhase) {};
 
     // These are used to optimize hot is<T> variants for some classes where dynamic_cast is too slow.
@@ -113,8 +113,8 @@ public:
     bool is_flex_item() const { return m_is_flex_item; }
     void set_flex_item(bool b) { m_is_flex_item = b; }
 
-    const BlockBox* containing_block() const;
-    BlockBox* containing_block() { return const_cast<BlockBox*>(const_cast<const Node*>(this)->containing_block()); }
+    BlockBox const* containing_block() const;
+    BlockBox* containing_block() { return const_cast<BlockBox*>(const_cast<Node const*>(this)->containing_block()); }
 
     bool establishes_stacking_context() const;
 
@@ -124,7 +124,7 @@ public:
     const CSS::ImmutableComputedValues& computed_values() const;
 
     NodeWithStyle* parent();
-    const NodeWithStyle* parent() const;
+    NodeWithStyle const* parent() const;
 
     void inserted_into(Node&) { }
     void removed_from(Node&) { }
@@ -228,7 +228,7 @@ private:
 class NodeWithStyleAndBoxModelMetrics : public NodeWithStyle {
 public:
     BoxModelMetrics& box_model() { return m_box_model; }
-    const BoxModelMetrics& box_model() const { return m_box_model; }
+    BoxModelMetrics const& box_model() const { return m_box_model; }
 
 protected:
     NodeWithStyleAndBoxModelMetrics(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
@@ -248,27 +248,27 @@ private:
 inline const Gfx::Font& Node::font() const
 {
     if (m_has_style)
-        return static_cast<const NodeWithStyle*>(this)->font();
+        return static_cast<NodeWithStyle const*>(this)->font();
     return parent()->font();
 }
 
 inline float Node::font_size() const
 {
     if (m_has_style)
-        return static_cast<const NodeWithStyle*>(this)->font_size();
+        return static_cast<NodeWithStyle const*>(this)->font_size();
     return parent()->font_size();
 }
 
 inline const CSS::ImmutableComputedValues& Node::computed_values() const
 {
     if (m_has_style)
-        return static_cast<const NodeWithStyle*>(this)->computed_values();
+        return static_cast<NodeWithStyle const*>(this)->computed_values();
     return parent()->computed_values();
 }
 
-inline const NodeWithStyle* Node::parent() const
+inline NodeWithStyle const* Node::parent() const
 {
-    return static_cast<const NodeWithStyle*>(TreeNode<Node>::parent());
+    return static_cast<NodeWithStyle const*>(TreeNode<Node>::parent());
 }
 
 inline NodeWithStyle* Node::parent()

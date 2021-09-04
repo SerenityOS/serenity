@@ -12,7 +12,7 @@
 
 namespace WindowServer {
 
-MenuItem::MenuItem(Menu& menu, unsigned identifier, const String& text, const String& shortcut_text, bool enabled, bool checkable, bool checked, const Gfx::Bitmap* icon)
+MenuItem::MenuItem(Menu& menu, unsigned identifier, String const& text, String const& shortcut_text, bool enabled, bool checkable, bool checked, const Gfx::Bitmap* icon)
     : m_menu(menu)
     , m_type(Text)
     , m_enabled(enabled)
@@ -66,7 +66,7 @@ Menu* MenuItem::submenu()
     return m_menu.client()->find_menu_by_id(m_submenu_id);
 }
 
-const Menu* MenuItem::submenu() const
+Menu const* MenuItem::submenu() const
 {
     VERIFY(is_submenu());
     VERIFY(m_menu.client());

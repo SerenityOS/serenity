@@ -87,7 +87,7 @@ void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float 
     did_draw(rect);
 }
 
-void CanvasRenderingContext2D::draw_image(const HTMLImageElement& image_element, float x, float y)
+void CanvasRenderingContext2D::draw_image(HTMLImageElement const& image_element, float x, float y)
 {
     if (!image_element.bitmap())
         return;
@@ -144,7 +144,7 @@ OwnPtr<Gfx::Painter> CanvasRenderingContext2D::painter()
     return make<Gfx::Painter>(*m_element->bitmap());
 }
 
-void CanvasRenderingContext2D::fill_text(const String& text, float x, float y, Optional<double> max_width)
+void CanvasRenderingContext2D::fill_text(String const& text, float x, float y, Optional<double> max_width)
 {
     if (max_width.has_value() && max_width.value() <= 0)
         return;
@@ -286,7 +286,7 @@ void CanvasRenderingContext2D::fill(Gfx::Painter::WindingRule winding)
     did_draw(m_path.bounding_box());
 }
 
-void CanvasRenderingContext2D::fill(const String& fill_rule)
+void CanvasRenderingContext2D::fill(String const& fill_rule)
 {
     if (fill_rule == "evenodd")
         return fill(Gfx::Painter::WindingRule::EvenOdd);
@@ -302,7 +302,7 @@ RefPtr<ImageData> CanvasRenderingContext2D::create_image_data(int width, int hei
     return ImageData::create_with_size(wrapper()->global_object(), width, height);
 }
 
-void CanvasRenderingContext2D::put_image_data(const ImageData& image_data, float x, float y)
+void CanvasRenderingContext2D::put_image_data(ImageData const& image_data, float x, float y)
 {
     auto painter = this->painter();
     if (!painter)

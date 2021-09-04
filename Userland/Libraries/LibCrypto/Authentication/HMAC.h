@@ -36,23 +36,23 @@ public:
         reset();
     }
 
-    TagType process(const u8* message, size_t length)
+    TagType process(u8 const* message, size_t length)
     {
         reset();
         update(message, length);
         return digest();
     }
 
-    void update(const u8* message, size_t length)
+    void update(u8 const* message, size_t length)
     {
         m_inner_hasher.update(message, length);
     }
 
     TagType process(ReadonlyBytes span) { return process(span.data(), span.size()); }
-    TagType process(const StringView& string) { return process((const u8*)string.characters_without_null_termination(), string.length()); }
+    TagType process(StringView const& string) { return process((u8 const*)string.characters_without_null_termination(), string.length()); }
 
     void update(ReadonlyBytes span) { return update(span.data(), span.size()); }
-    void update(const StringView& string) { return update((const u8*)string.characters_without_null_termination(), string.length()); }
+    void update(StringView const& string) { return update((u8 const*)string.characters_without_null_termination(), string.length()); }
 
     TagType digest()
     {
@@ -79,7 +79,7 @@ public:
     }
 
 private:
-    void derive_key(const u8* key, size_t length)
+    void derive_key(u8 const* key, size_t length)
     {
         auto block_size = m_inner_hasher.block_size();
         // Note: The block size of all the current hash functions is 512 bits.
@@ -110,7 +110,7 @@ private:
     }
 
     void derive_key(ReadonlyBytes key) { derive_key(key.data(), key.size()); }
-    void derive_key(const StringView& key) { derive_key(key.bytes()); }
+    void derive_key(StringView const& key) { derive_key(key.bytes()); }
 
     HashType m_inner_hasher, m_outer_hasher;
     u8 m_key_data[2048];

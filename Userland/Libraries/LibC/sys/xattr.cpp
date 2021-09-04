@@ -7,49 +7,49 @@
 #include <AK/Format.h>
 #include <sys/xattr.h>
 
-ssize_t getxattr(const char*, const char*, void*, size_t)
+ssize_t getxattr(char const*, char const*, void*, size_t)
 {
     dbgln("FIXME: Implement getxattr()");
     return 0;
 }
 
-ssize_t lgetxattr(const char*, const char*, void*, size_t)
+ssize_t lgetxattr(char const*, char const*, void*, size_t)
 {
     dbgln("FIXME: Implement lgetxattr()");
     return 0;
 }
 
-ssize_t fgetxattr(int, const char*, void*, size_t)
+ssize_t fgetxattr(int, char const*, void*, size_t)
 {
     dbgln("FIXME: Implement fgetxattr()");
     return 0;
 }
 
-int setxattr(const char*, const char*, const void*, size_t, int)
+int setxattr(char const*, char const*, void const*, size_t, int)
 {
     dbgln("FIXME: Implement setxattr()");
     return 0;
 }
 
-int lsetxattr(const char*, const char*, const void*, size_t, int)
+int lsetxattr(char const*, char const*, void const*, size_t, int)
 {
     dbgln("FIXME: Implement lsetxattr()");
     return 0;
 }
 
-int fsetxattr(int, const char*, const void*, size_t, int)
+int fsetxattr(int, char const*, void const*, size_t, int)
 {
     dbgln("FIXME: Implement fsetxattr()");
     return 0;
 }
 
-ssize_t listxattr(const char*, char*, size_t)
+ssize_t listxattr(char const*, char*, size_t)
 {
     dbgln("FIXME: Implement listxattr()");
     return 0;
 }
 
-ssize_t llistxattr(const char*, char*, size_t)
+ssize_t llistxattr(char const*, char*, size_t)
 {
     dbgln("FIXME: Implement llistxattr()");
     return 0;

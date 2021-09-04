@@ -39,7 +39,7 @@ void Mesh::draw(float uv_scale)
     const FloatVector4 mesh_diffuse_color(0.6f, 0.6f, 0.6f, 1.f);
 
     for (u32 i = 0; i < m_triangle_list.size(); i++) {
-        const auto& triangle = m_triangle_list[i];
+        auto const& triangle = m_triangle_list[i];
 
         const FloatVector3 vertex_a(
             m_vertex_list.at(triangle.a).x,

@@ -180,11 +180,11 @@ public:
     u32 bit_mask() const { return m_bit_mask; };
 
     // Disable default implementations that would use surprising integer promotion.
-    bool operator==(const MaskedBitField&) const = delete;
-    bool operator<=(const MaskedBitField&) const = delete;
-    bool operator>=(const MaskedBitField&) const = delete;
-    bool operator<(const MaskedBitField&) const = delete;
-    bool operator>(const MaskedBitField&) const = delete;
+    bool operator==(MaskedBitField const&) const = delete;
+    bool operator<=(MaskedBitField const&) const = delete;
+    bool operator>=(MaskedBitField const&) const = delete;
+    bool operator<(MaskedBitField const&) const = delete;
+    bool operator>(MaskedBitField const&) const = delete;
 
 private:
     volatile u32& m_bitfield;
@@ -331,11 +331,11 @@ public:
     void clear() { m_bitfield = 0xffffffff; }
 
     // Disable default implementations that would use surprising integer promotion.
-    bool operator==(const MaskedBitField&) const = delete;
-    bool operator<=(const MaskedBitField&) const = delete;
-    bool operator>=(const MaskedBitField&) const = delete;
-    bool operator<(const MaskedBitField&) const = delete;
-    bool operator>(const MaskedBitField&) const = delete;
+    bool operator==(MaskedBitField const&) const = delete;
+    bool operator<=(MaskedBitField const&) const = delete;
+    bool operator>=(MaskedBitField const&) const = delete;
+    bool operator<(MaskedBitField const&) const = delete;
+    bool operator>(MaskedBitField const&) const = delete;
 
 private:
     volatile u32& m_bitfield;
@@ -357,11 +357,11 @@ public:
     void set_all() { m_bitfield = 0xffffffff; }
 
     // Disable default implementations that would use surprising integer promotion.
-    bool operator==(const MaskedBitField&) const = delete;
-    bool operator<=(const MaskedBitField&) const = delete;
-    bool operator>=(const MaskedBitField&) const = delete;
-    bool operator<(const MaskedBitField&) const = delete;
-    bool operator>(const MaskedBitField&) const = delete;
+    bool operator==(MaskedBitField const&) const = delete;
+    bool operator<=(MaskedBitField const&) const = delete;
+    bool operator>=(MaskedBitField const&) const = delete;
+    bool operator<(MaskedBitField const&) const = delete;
+    bool operator>(MaskedBitField const&) const = delete;
 
 private:
     volatile u32& m_bitfield;

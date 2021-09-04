@@ -27,7 +27,7 @@ public:
     HttpProtocol();
     ~HttpProtocol() override = default;
 
-    virtual OwnPtr<Request> start_request(ClientConnection&, const String& method, const URL&, const HashMap<String, String>& headers, ReadonlyBytes body) override;
+    virtual OwnPtr<Request> start_request(ClientConnection&, String const& method, URL const&, const HashMap<String, String>& headers, ReadonlyBytes body) override;
 };
 
 }

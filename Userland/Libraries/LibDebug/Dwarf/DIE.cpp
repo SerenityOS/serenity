@@ -48,7 +48,7 @@ Optional<AttributeValue> DIE::get_attribute(Attribute const& attribute) const
     auto abbreviation_info = m_compilation_unit.abbreviations_map().get(m_abbreviation_code);
     VERIFY(abbreviation_info.has_value());
 
-    for (const auto& attribute_spec : abbreviation_info.value().attribute_specifications) {
+    for (auto const& attribute_spec : abbreviation_info.value().attribute_specifications) {
         auto value = m_compilation_unit.dwarf_info().get_attribute_value(attribute_spec.form, attribute_spec.value, stream, &m_compilation_unit);
         if (attribute_spec.attribute == attribute) {
             return value;

@@ -22,10 +22,10 @@ public:
     void refresh();
 
     Function<void()> on_selection_change;
-    Function<void(const ModelIndex&)> on_activation;
-    Function<void(const ModelIndex&)> on_selection;
-    Function<void(const ModelIndex&, const ContextMenuEvent&)> on_context_menu_request;
-    Function<void(const ModelIndex&, const DropEvent&)> on_drop;
+    Function<void(ModelIndex const&)> on_activation;
+    Function<void(ModelIndex const&)> on_selection;
+    Function<void(ModelIndex const&, ContextMenuEvent const&)> on_context_menu_request;
+    Function<void(ModelIndex const&, DropEvent const&)> on_drop;
 
     enum ViewMode {
         Invalid,
@@ -57,7 +57,7 @@ public:
         }
     }
 
-    const ModelSelection& selection() const { return const_cast<MultiView&>(*this).current_view().selection(); }
+    ModelSelection const& selection() const { return const_cast<MultiView&>(*this).current_view().selection(); }
     ModelSelection& selection() { return current_view().selection(); }
 
     template<typename Callback>
@@ -69,7 +69,7 @@ public:
     }
 
     Model* model() { return m_model; }
-    const Model* model() const { return m_model; }
+    Model const* model() const { return m_model; }
 
     void set_model(RefPtr<Model>);
 

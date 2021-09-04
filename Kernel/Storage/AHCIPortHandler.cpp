@@ -46,7 +46,7 @@ AHCIPortHandler::AHCIPortHandler(AHCIController& controller, u8 irq, AHCI::Maske
     }
 }
 
-void AHCIPortHandler::enumerate_ports(Function<void(const AHCIPort&)> callback) const
+void AHCIPortHandler::enumerate_ports(Function<void(AHCIPort const&)> callback) const
 {
     for (auto& port : m_handled_ports) {
         callback(*port.value);
@@ -82,7 +82,7 @@ AHCIPortHandler::~AHCIPortHandler()
 {
 }
 
-bool AHCIPortHandler::handle_irq(const RegisterState&)
+bool AHCIPortHandler::handle_irq(RegisterState const&)
 {
     dbgln_if(AHCI_DEBUG, "AHCI Port Handler: IRQ received");
     if (m_pending_ports_interrupts.is_zeroed())

@@ -42,7 +42,7 @@ UNMAP_AFTER_INIT WindowedMMIOAccess::WindowedMMIOAccess(PhysicalAddress p_mcfg)
 
     InterruptDisabler disabler;
 
-    enumerate_hardware([&](const Address& address, ID) {
+    enumerate_hardware([&](Address const& address, ID) {
         m_mapped_device_regions.append(make<DeviceConfigurationSpaceMapping>(address, m_segments.get(address.seg()).value()));
     });
 }

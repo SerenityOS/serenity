@@ -64,7 +64,7 @@ void MulticastDNS::handle_packet()
         handle_query(packet);
 }
 
-void MulticastDNS::handle_query(const DNSPacket& packet)
+void MulticastDNS::handle_query(DNSPacket const& packet)
 {
     bool should_reply = false;
 
@@ -94,7 +94,7 @@ void MulticastDNS::announce()
             DNSRecordType::A,
             DNSRecordClass::IN,
             120,
-            String { (const char*)&raw_addr, sizeof(raw_addr) },
+            String { (char const*)&raw_addr, sizeof(raw_addr) },
             true,
         };
         response.add_answer(answer);
@@ -104,12 +104,12 @@ void MulticastDNS::announce()
         perror("Failed to emit response packet");
 }
 
-ssize_t MulticastDNS::emit_packet(const DNSPacket& packet, const sockaddr_in* destination)
+ssize_t MulticastDNS::emit_packet(DNSPacket const& packet, sockaddr_in const* destination)
 {
     auto buffer = packet.to_byte_buffer();
     if (!destination)
         destination = &mdns_addr;
-    return sendto(fd(), buffer.data(), buffer.size(), 0, (const sockaddr*)destination, sizeof(*destination));
+    return sendto(fd(), buffer.data(), buffer.size(), 0, (sockaddr const*)destination, sizeof(*destination));
 }
 
 Vector<IPv4Address> MulticastDNS::local_addresses() const
@@ -142,7 +142,7 @@ Vector<IPv4Address> MulticastDNS::local_addresses() const
     return addresses;
 }
 
-Vector<DNSAnswer> MulticastDNS::lookup(const DNSName& name, DNSRecordType record_type)
+Vector<DNSAnswer> MulticastDNS::lookup(DNSName const& name, DNSRecordType record_type)
 {
     DNSPacket request;
     request.set_is_query();

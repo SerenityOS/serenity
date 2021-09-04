@@ -91,7 +91,7 @@ UNMAP_AFTER_INIT HIDManagement::HIDManagement()
 {
 }
 
-void HIDManagement::set_maps(const Keyboard::CharacterMapData& character_map_data, const String& character_map_name)
+void HIDManagement::set_maps(const Keyboard::CharacterMapData& character_map_data, String const& character_map_name)
 {
     m_character_map.set_character_map_data(character_map_data);
     m_character_map.set_character_map_name(character_map_name);

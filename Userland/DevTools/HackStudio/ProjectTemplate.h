@@ -20,15 +20,15 @@ class ProjectTemplate : public RefCounted<ProjectTemplate> {
 public:
     static String templates_path() { return "/res/devel/templates"; }
 
-    static RefPtr<ProjectTemplate> load_from_manifest(const String& manifest_path);
+    static RefPtr<ProjectTemplate> load_from_manifest(String const& manifest_path);
 
-    explicit ProjectTemplate(const String& id, const String& name, const String& description, const GUI::Icon& icon, int priority);
+    explicit ProjectTemplate(String const& id, String const& name, String const& description, const GUI::Icon& icon, int priority);
 
-    Result<void, String> create_project(const String& name, const String& path);
+    Result<void, String> create_project(String const& name, String const& path);
 
-    const String& id() const { return m_id; }
-    const String& name() const { return m_name; }
-    const String& description() const { return m_description; }
+    String const& id() const { return m_id; }
+    String const& name() const { return m_name; }
+    String const& description() const { return m_description; }
     const GUI::Icon& icon() const { return m_icon; }
     const String content_path() const
     {

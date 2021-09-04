@@ -19,7 +19,7 @@ public:
 
     void set_wrapper(Wrapper&);
     Wrapper* wrapper() { return m_wrapper; }
-    const Wrapper* wrapper() const { return m_wrapper; }
+    Wrapper const* wrapper() const { return m_wrapper; }
 
 private:
     WeakPtr<Wrapper> m_wrapper;

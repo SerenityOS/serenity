@@ -13,11 +13,11 @@ namespace Kernel::Memory {
 
 template<typename T>
 struct TypedMapping {
-    const T* ptr() const { return reinterpret_cast<const T*>(region->vaddr().offset(offset).as_ptr()); }
+    T const* ptr() const { return reinterpret_cast<T const*>(region->vaddr().offset(offset).as_ptr()); }
     T* ptr() { return reinterpret_cast<T*>(region->vaddr().offset(offset).as_ptr()); }
-    const T* operator->() const { return ptr(); }
+    T const* operator->() const { return ptr(); }
     T* operator->() { return ptr(); }
-    const T& operator*() const { return *ptr(); }
+    T const& operator*() const { return *ptr(); }
     T& operator*() { return *ptr(); }
     OwnPtr<Region> region;
     size_t offset { 0 };

@@ -78,7 +78,7 @@ static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
     }
 
     Vector<OpenFile> files;
-    result.value().as_array().for_each([pid, &files](const JsonValue& object) {
+    result.value().as_array().for_each([pid, &files](JsonValue const& object) {
         OpenFile open_file;
         open_file.pid = pid;
         open_file.fd = object.as_object().get("fd").to_int();
@@ -92,7 +92,7 @@ static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
     return files;
 }
 
-static void display_entry(const OpenFile& file, const Core::ProcessStatistics& statistics)
+static void display_entry(OpenFile const& file, const Core::ProcessStatistics& statistics)
 {
     outln("{:28} {:>4} {:>4} {:10} {:>4} {}", statistics.name, file.pid, statistics.pgid, statistics.username, file.fd, file.full_name);
 }
@@ -119,11 +119,11 @@ int main(int argc, char* argv[])
 
     bool arg_all_processes { false };
     int arg_fd { -1 };
-    const char* arg_uid { nullptr };
+    char const* arg_uid { nullptr };
     int arg_uid_int = -1;
     int arg_pgid { -1 };
     pid_t arg_pid { -1 };
-    const char* arg_filename { nullptr };
+    char const* arg_filename { nullptr };
 
     if (argc == 1)
         arg_all_processes = true;

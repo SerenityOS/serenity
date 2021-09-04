@@ -7,7 +7,7 @@ mount - mount a filesystem
 ```**c++
 #include <unistd.h>
 
-int mount(int source_fd, const char* target, const char* fs_type, int flags);
+int mount(int source_fd, char const* target, char const* fs_type, int flags);
 ```
 
 ## Description

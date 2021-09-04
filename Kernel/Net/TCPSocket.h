@@ -18,7 +18,7 @@ namespace Kernel {
 
 class TCPSocket final : public IPv4Socket {
 public:
-    static void for_each(Function<void(const TCPSocket&)>);
+    static void for_each(Function<void(TCPSocket const&)>);
     static KResultOr<NonnullRefPtr<TCPSocket>> create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual ~TCPSocket() override;
 
@@ -137,17 +137,17 @@ public:
     u32 duplicate_acks() const { return m_duplicate_acks; }
 
     KResult send_ack(bool allow_duplicate = false);
-    KResult send_tcp_packet(u16 flags, const UserOrKernelBuffer* = nullptr, size_t = 0, RoutingDecision* = nullptr);
-    void receive_tcp_packet(const TCPPacket&, u16 size);
+    KResult send_tcp_packet(u16 flags, UserOrKernelBuffer const* = nullptr, size_t = 0, RoutingDecision* = nullptr);
+    void receive_tcp_packet(TCPPacket const&, u16 size);
 
     bool should_delay_next_ack() const;
 
     static MutexProtected<HashMap<IPv4SocketTuple, TCPSocket*>>& sockets_by_tuple();
-    static RefPtr<TCPSocket> from_tuple(const IPv4SocketTuple& tuple);
+    static RefPtr<TCPSocket> from_tuple(IPv4SocketTuple const& tuple);
 
     static MutexProtected<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& closing_sockets();
 
-    RefPtr<TCPSocket> create_client(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
+    RefPtr<TCPSocket> create_client(IPv4Address const& local_address, u16 local_port, IPv4Address const& peer_address, u16 peer_port);
     void set_originator(TCPSocket& originator) { m_originator = originator; }
     bool has_originator() { return !!m_originator; }
     void release_to_originator();
@@ -157,7 +157,7 @@ public:
 
     virtual KResult close() override;
 
-    virtual bool can_write(const FileDescription&, size_t) const override;
+    virtual bool can_write(FileDescription const&, size_t) const override;
 
     static NetworkOrdered<u16> compute_tcp_checksum(IPv4Address const& source, IPv4Address const& destination, TCPPacket const&, u16 payload_size);
 
@@ -171,7 +171,7 @@ private:
     virtual void shut_down_for_writing() override;
 
     virtual KResultOr<size_t> protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, int flags) override;
-    virtual KResultOr<size_t> protocol_send(const UserOrKernelBuffer&, size_t) override;
+    virtual KResultOr<size_t> protocol_send(UserOrKernelBuffer const&, size_t) override;
     virtual KResult protocol_connect(FileDescription&, ShouldBlock) override;
     virtual KResultOr<u16> protocol_allocate_local_port() override;
     virtual bool protocol_is_disconnected() const override;

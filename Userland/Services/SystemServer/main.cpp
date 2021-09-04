@@ -75,7 +75,7 @@ static void parse_boot_mode()
     dbgln("Booting in {} mode", g_boot_mode);
 }
 
-static void chown_wrapper(const char* path, uid_t uid, gid_t gid)
+static void chown_wrapper(char const* path, uid_t uid, gid_t gid)
 {
     int rc = chown(path, uid, gid);
     if (rc < 0 && errno != ENOENT) {

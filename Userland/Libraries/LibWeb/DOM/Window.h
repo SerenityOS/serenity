@@ -33,12 +33,12 @@ public:
     virtual bool dispatch_event(NonnullRefPtr<Event>) override;
     virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
 
-    const Document& document() const { return m_document; }
+    Document const& document() const { return m_document; }
     Document& document() { return m_document; }
 
-    void alert(const String&);
-    bool confirm(const String&);
-    String prompt(const String&, const String&);
+    void alert(String const&);
+    bool confirm(String const&);
+    String prompt(String const&, String const&);
     i32 request_animation_frame(JS::FunctionObject&);
     void cancel_animation_frame(i32);
 
@@ -50,7 +50,7 @@ public:
     int inner_width() const;
     int inner_height() const;
 
-    void did_set_location_href(Badge<Bindings::LocationObject>, const URL& new_href);
+    void did_set_location_href(Badge<Bindings::LocationObject>, URL const& new_href);
     void did_call_location_reload(Badge<Bindings::LocationObject>);
 
     Bindings::WindowObject* wrapper() { return m_wrapper; }
@@ -66,7 +66,7 @@ public:
 
     CSS::Screen& screen() { return *m_screen; }
 
-    const Event* current_event() const { return m_current_event; }
+    Event const* current_event() const { return m_current_event; }
     void set_current_event(Event* event) { m_current_event = event; }
 
 private:

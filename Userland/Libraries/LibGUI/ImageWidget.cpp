@@ -14,7 +14,7 @@ REGISTER_WIDGET(GUI, ImageWidget)
 
 namespace GUI {
 
-ImageWidget::ImageWidget(const StringView&)
+ImageWidget::ImageWidget(StringView const&)
     : m_timer(Core::Timer::construct())
 
 {
@@ -56,7 +56,7 @@ void ImageWidget::animate()
 {
     m_current_frame_index = (m_current_frame_index + 1) % m_image_decoder->frame_count();
 
-    const auto& current_frame = m_image_decoder->frame(m_current_frame_index);
+    auto const& current_frame = m_image_decoder->frame(m_current_frame_index);
     set_bitmap(current_frame.image);
 
     if (current_frame.duration != m_timer->interval()) {
@@ -71,7 +71,7 @@ void ImageWidget::animate()
     }
 }
 
-void ImageWidget::load_from_file(const StringView& path)
+void ImageWidget::load_from_file(StringView const& path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
@@ -88,7 +88,7 @@ void ImageWidget::load_from_file(const StringView& path)
     set_bitmap(bitmap);
 
     if (m_image_decoder->is_animated() && m_image_decoder->frame_count() > 1) {
-        const auto& first_frame = m_image_decoder->frame(0);
+        auto const& first_frame = m_image_decoder->frame(0);
         m_timer->set_interval(first_frame.duration);
         m_timer->on_timeout = [this] { animate(); };
         m_timer->start();

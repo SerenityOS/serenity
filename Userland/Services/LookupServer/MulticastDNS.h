@@ -18,16 +18,16 @@ namespace LookupServer {
 class MulticastDNS : public Core::UDPServer {
     C_OBJECT(MulticastDNS)
 public:
-    Vector<DNSAnswer> lookup(const DNSName&, DNSRecordType record_type);
+    Vector<DNSAnswer> lookup(DNSName const&, DNSRecordType record_type);
 
 private:
     explicit MulticastDNS(Object* parent = nullptr);
 
     void announce();
-    ssize_t emit_packet(const DNSPacket&, const sockaddr_in* destination = nullptr);
+    ssize_t emit_packet(DNSPacket const&, sockaddr_in const* destination = nullptr);
 
     void handle_packet();
-    void handle_query(const DNSPacket&);
+    void handle_query(DNSPacket const&);
 
     Vector<IPv4Address> local_addresses() const;
 

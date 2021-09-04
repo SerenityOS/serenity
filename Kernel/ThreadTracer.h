@@ -25,10 +25,10 @@ public:
     bool is_tracing_syscalls() const { return m_trace_syscalls; }
     void set_trace_syscalls(bool val) { m_trace_syscalls = val; }
 
-    void set_regs(const RegisterState& regs);
-    void set_regs(const PtraceRegisters& regs) { m_regs = regs; }
+    void set_regs(RegisterState const& regs);
+    void set_regs(PtraceRegisters const& regs) { m_regs = regs; }
     bool has_regs() const { return m_regs.has_value(); }
-    const PtraceRegisters& regs() const
+    PtraceRegisters const& regs() const
     {
         VERIFY(m_regs.has_value());
         return m_regs.value();

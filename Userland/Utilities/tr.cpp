@@ -92,8 +92,8 @@ int main(int argc, char** argv)
 {
     bool complement_flag = false;
     bool delete_flag = false;
-    const char* from_chars = nullptr;
-    const char* to_chars = nullptr;
+    char const* from_chars = nullptr;
+    char const* to_chars = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(complement_flag, "Take the complement of the first set", "complement", 'c');

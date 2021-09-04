@@ -102,7 +102,7 @@ index eb17fb4..93b457b 100644
    req->gid = gid;
 @@ -2196,7 +2216,9 @@ int uv_fs_statfs(uv_loop_t* loop,
                   uv_fs_t* req,
-                  const char* path,
+                  char const* path,
                   uv_fs_cb cb) {
 +#ifndef __serenity__
    INIT(STATFS);

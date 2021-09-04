@@ -24,7 +24,7 @@ String g_currently_running_test;
 HashMap<String, FunctionWithLength> s_exposed_global_functions;
 Function<void()> g_main_hook;
 HashMap<bool*, Tuple<String, String, char>> g_extra_args;
-IntermediateRunFileResult (*g_run_file)(const String&, JS::Interpreter&) = nullptr;
+IntermediateRunFileResult (*g_run_file)(String const&, JS::Interpreter&) = nullptr;
 String g_test_root;
 int g_test_argc;
 char** g_test_argv;
@@ -86,7 +86,7 @@ int main(int argc, char** argv)
         false;
 #endif
     bool print_json = false;
-    const char* specified_test_root = nullptr;
+    char const* specified_test_root = nullptr;
     String common_path;
     String test_glob;
 

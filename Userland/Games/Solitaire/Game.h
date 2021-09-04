@@ -139,7 +139,7 @@ private:
     static constexpr Array piles = { Pile1, Pile2, Pile3, Pile4, Pile5, Pile6, Pile7 };
     static constexpr Array foundations = { Foundation1, Foundation2, Foundation3, Foundation4 };
 
-    ALWAYS_INLINE const WasteRecycleRules& recycle_rules()
+    ALWAYS_INLINE WasteRecycleRules const& recycle_rules()
     {
         static constexpr Array<WasteRecycleRules, 2> rules { {
             { 0, -100 },

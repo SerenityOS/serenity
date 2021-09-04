@@ -32,7 +32,7 @@ public:
     virtual bool reset() override;
     virtual bool shutdown() override;
     virtual size_t devices_count() const override;
-    virtual void start_request(const StorageDevice&, AsyncBlockDeviceRequest&) override;
+    virtual void start_request(StorageDevice const&, AsyncBlockDeviceRequest&) override;
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
 
     const AHCI::HBADefinedCapabilities& hba_capabilities() const { return m_capabilities; };

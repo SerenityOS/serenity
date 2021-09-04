@@ -67,7 +67,7 @@ public:
 
     Heap& heap() { return m_heap; }
 
-    static HeapBlock* from_cell(const Cell* cell)
+    static HeapBlock* from_cell(Cell const* cell)
     {
         return reinterpret_cast<HeapBlock*>((FlatPtr)cell & ~(block_size - 1));
     }
@@ -83,7 +83,7 @@ public:
         return cell(cell_index);
     }
 
-    bool is_valid_cell_pointer(const Cell* cell)
+    bool is_valid_cell_pointer(Cell const* cell)
     {
         return cell_from_possible_pointer((FlatPtr)cell);
     }
@@ -98,7 +98,7 @@ private:
     struct FreelistEntry final : public Cell {
         FreelistEntry* next { nullptr };
 
-        virtual const char* class_name() const override { return "FreelistEntry"; }
+        virtual char const* class_name() const override { return "FreelistEntry"; }
     };
 
     Cell* cell(size_t index)

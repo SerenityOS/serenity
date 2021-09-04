@@ -33,7 +33,7 @@ bool ListOfActiveFormattingElements::contains(const DOM::Element& element) const
     return false;
 }
 
-DOM::Element* ListOfActiveFormattingElements::last_element_with_tag_name_before_marker(const FlyString& tag_name)
+DOM::Element* ListOfActiveFormattingElements::last_element_with_tag_name_before_marker(FlyString const& tag_name)
 {
     for (ssize_t i = m_entries.size() - 1; i >= 0; --i) {
         auto& entry = m_entries[i];

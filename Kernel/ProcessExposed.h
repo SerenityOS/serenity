@@ -69,7 +69,7 @@ public:
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const { VERIFY_NOT_REACHED(); }
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
     virtual KResultOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView) { VERIFY_NOT_REACHED(); };
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer&, FileDescription*) { return KResult(EROFS); }
+    virtual KResultOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, FileDescription*) { return KResult(EROFS); }
 
     virtual mode_t required_mode() const { return 0444; }
     virtual UserID owner_user() const { return 0; }
@@ -82,7 +82,7 @@ public:
         return KSuccess;
     }
 
-    virtual KResultOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const;
+    virtual KResultOr<NonnullRefPtr<Inode>> to_inode(ProcFS const& procfs_instance) const;
 
     virtual InodeIndex component_index() const { return m_component_index; }
 
@@ -105,7 +105,7 @@ class ProcFSExposedDirectory
 public:
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView name) override;
-    void add_component(const ProcFSExposedComponent&);
+    void add_component(ProcFSExposedComponent const&);
 
     virtual void prepare_for_deletion() override
     {
@@ -115,18 +115,18 @@ public:
     }
     virtual mode_t required_mode() const override { return 0555; }
 
-    virtual KResultOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const override final;
+    virtual KResultOr<NonnullRefPtr<Inode>> to_inode(ProcFS const& procfs_instance) const override final;
 
 protected:
     explicit ProcFSExposedDirectory(StringView name);
-    ProcFSExposedDirectory(StringView name, const ProcFSExposedDirectory& parent_directory);
+    ProcFSExposedDirectory(StringView name, ProcFSExposedDirectory const& parent_directory);
     NonnullRefPtrVector<ProcFSExposedComponent> m_components;
     WeakPtr<ProcFSExposedDirectory> m_parent_directory;
 };
 
 class ProcFSExposedLink : public ProcFSExposedComponent {
 public:
-    virtual KResultOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const override final;
+    virtual KResultOr<NonnullRefPtr<Inode>> to_inode(ProcFS const& procfs_instance) const override final;
 
     virtual KResultOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const override;
 

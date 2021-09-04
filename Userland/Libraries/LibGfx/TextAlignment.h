@@ -50,7 +50,7 @@ inline bool is_vertically_centered_text_alignment(TextAlignment alignment)
     }
 }
 
-inline Optional<TextAlignment> text_alignment_from_string(const StringView& string)
+inline Optional<TextAlignment> text_alignment_from_string(StringView const& string)
 {
 #define __ENUMERATE(x) \
     if (string == #x)  \
@@ -60,7 +60,7 @@ inline Optional<TextAlignment> text_alignment_from_string(const StringView& stri
     return {};
 }
 
-inline const char* to_string(TextAlignment text_alignment)
+inline char const* to_string(TextAlignment text_alignment)
 {
 #define __ENUMERATE(x)                      \
     if (text_alignment == TextAlignment::x) \

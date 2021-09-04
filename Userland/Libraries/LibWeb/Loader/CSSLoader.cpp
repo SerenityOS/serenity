@@ -19,7 +19,7 @@ CSSLoader::CSSLoader(DOM::Element& owner_element)
 {
 }
 
-void CSSLoader::load_from_text(const String& text)
+void CSSLoader::load_from_text(String const& text)
 {
     m_style_sheet = parse_css(CSS::ParsingContext(m_owner_element.document()), text);
     if (!m_style_sheet) {
@@ -30,7 +30,7 @@ void CSSLoader::load_from_text(const String& text)
     load_next_import_if_needed();
 }
 
-void CSSLoader::load_from_url(const URL& url)
+void CSSLoader::load_from_url(URL const& url)
 {
     m_style_sheet = CSS::CSSStyleSheet::create({});
     m_style_sheet->set_owner_node(&m_owner_element);

@@ -19,9 +19,9 @@ enum TruncateOperation {
 
 int main(int argc, char** argv)
 {
-    const char* resize = nullptr;
-    const char* reference = nullptr;
-    const char* file = nullptr;
+    char const* resize = nullptr;
+    char const* reference = nullptr;
+    char const* file = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(resize, "Resize the target file to (or by) this size. Prefix with + or - to expand or shrink the file, or a bare number to set the size exactly", "size", 's', "size");

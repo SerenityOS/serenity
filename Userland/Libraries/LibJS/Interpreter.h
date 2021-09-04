@@ -26,7 +26,7 @@ namespace JS {
 
 struct ExecutingASTNodeChain {
     ExecutingASTNodeChain* previous { nullptr };
-    const ASTNode& node;
+    ASTNode const& node;
 };
 
 class Interpreter : public Weakable<Interpreter> {
@@ -46,13 +46,13 @@ public:
 
     ~Interpreter();
 
-    void run(GlobalObject&, const Program&);
+    void run(GlobalObject&, Program const&);
 
     GlobalObject& global_object();
-    const GlobalObject& global_object() const;
+    GlobalObject const& global_object() const;
 
     ALWAYS_INLINE VM& vm() { return *m_vm; }
-    ALWAYS_INLINE const VM& vm() const { return *m_vm; }
+    ALWAYS_INLINE VM const& vm() const { return *m_vm; }
     ALWAYS_INLINE Heap& heap() { return vm().heap(); }
     ALWAYS_INLINE Exception* exception() { return vm().exception(); }
 
@@ -60,8 +60,8 @@ public:
 
     FunctionEnvironment* current_function_environment();
 
-    void enter_scope(const ScopeNode&, ScopeType, GlobalObject&);
-    void exit_scope(const ScopeNode&);
+    void enter_scope(ScopeNode const&, ScopeType, GlobalObject&);
+    void exit_scope(ScopeNode const&);
 
     void push_ast_node(ExecutingASTNodeChain& chain_node)
     {
@@ -75,11 +75,11 @@ public:
         m_ast_node_chain = m_ast_node_chain->previous;
     }
 
-    const ASTNode* current_node() const { return m_ast_node_chain ? &m_ast_node_chain->node : nullptr; }
+    ASTNode const* current_node() const { return m_ast_node_chain ? &m_ast_node_chain->node : nullptr; }
     ExecutingASTNodeChain* executing_ast_node_chain() { return m_ast_node_chain; }
-    const ExecutingASTNodeChain* executing_ast_node_chain() const { return m_ast_node_chain; }
+    ExecutingASTNodeChain const* executing_ast_node_chain() const { return m_ast_node_chain; }
 
-    Value execute_statement(GlobalObject&, const Statement&, ScopeType = ScopeType::Block);
+    Value execute_statement(GlobalObject&, Statement const&, ScopeType = ScopeType::Block);
 
 private:
     explicit Interpreter(VM&);

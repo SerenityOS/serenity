@@ -143,7 +143,7 @@ void Profile::rebuild_tree()
             ProfileNode* node = nullptr;
             auto& process_node = find_or_create_process_node(event.pid, event.serial);
             process_node.increment_event_count();
-            for_each_frame([&](const Frame& frame, bool is_innermost_frame) {
+            for_each_frame([&](Frame const& frame, bool is_innermost_frame) {
                 auto& object_name = frame.object_name;
                 auto& symbol = frame.symbol;
                 auto& address = frame.address;
@@ -211,7 +211,7 @@ void Profile::rebuild_tree()
     m_model->invalidate();
 }
 
-Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const StringView& path)
+Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(StringView const& path)
 {
     auto file = Core::File::construct(path);
     if (!file->open(Core::OpenMode::ReadOnly))
@@ -557,7 +557,7 @@ ProfileNode::ProfileNode(Process const& process)
 {
 }
 
-ProfileNode::ProfileNode(Process const& process, const String& object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
+ProfileNode::ProfileNode(Process const& process, String const& object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
     : m_process(process)
     , m_symbol(move(symbol))
     , m_pid(pid)

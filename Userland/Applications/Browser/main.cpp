@@ -44,7 +44,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* specified_url = nullptr;
+    char const* specified_url = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(specified_url, "URL to open", "url", Core::ArgsParser::Required::No);

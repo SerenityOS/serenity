@@ -9,9 +9,9 @@
 #include <LibGUI/GMLFormatter.h>
 #include <unistd.h>
 
-bool format_file(const StringView&, bool);
+bool format_file(StringView const&, bool);
 
-bool format_file(const StringView& path, bool inplace)
+bool format_file(StringView const& path, bool inplace)
 {
     auto read_from_stdin = path == "-";
     RefPtr<Core::File> file;
@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 #endif
 
     bool inplace = false;
-    Vector<const char*> files;
+    Vector<char const*> files;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Format GML files.");

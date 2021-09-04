@@ -33,7 +33,7 @@ void RangeAllocator::dump() const
     }
 }
 
-void RangeAllocator::carve_at_index(int index, const Range& range)
+void RangeAllocator::carve_at_index(int index, Range const& range)
 {
     auto remaining_parts = m_available_ranges[index].carve(range);
     VERIFY(remaining_parts.size() >= 1);
@@ -142,7 +142,7 @@ Optional<Range> RangeAllocator::allocate_specific(VirtualAddress base, size_t si
     return {};
 }
 
-void RangeAllocator::deallocate(const Range& range)
+void RangeAllocator::deallocate(Range const& range)
 {
     VERIFY(m_total_range.contains(range));
     VERIFY(range.size());

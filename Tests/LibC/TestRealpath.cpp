@@ -20,7 +20,7 @@ static constexpr char PATH_LOREM_250[] = "This-is-an-annoyingly-long-name-that-s
 
 static constexpr size_t ITERATION_DEPTH = 17;
 
-static void check_result(const char* what, const String& expected, const char* actual)
+static void check_result(char const* what, String const& expected, char const* actual)
 {
     if (expected != actual)
         FAIL(String::formatted("Expected {} to be \"{}\" ({} characters)", what, actual, actual ? strlen(actual) : 0));

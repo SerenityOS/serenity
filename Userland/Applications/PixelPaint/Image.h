@@ -50,7 +50,7 @@ public:
     static Result<NonnullRefPtr<Image>, String> try_create_from_pixel_paint_json(JsonObject const&);
     static RefPtr<Image> try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap>);
 
-    static RefPtr<Gfx::Bitmap> try_decode_bitmap(const ByteBuffer& bitmap_data);
+    static RefPtr<Gfx::Bitmap> try_decode_bitmap(ByteBuffer const& bitmap_data);
 
     // This generates a new Bitmap with the final image (all layers composed according to their attributes.)
     RefPtr<Gfx::Bitmap> try_compose_bitmap(Gfx::BitmapFormat format) const;

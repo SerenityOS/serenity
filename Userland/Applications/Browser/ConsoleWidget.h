@@ -18,12 +18,12 @@ class ConsoleWidget final : public GUI::Widget {
 public:
     virtual ~ConsoleWidget();
 
-    void handle_js_console_output(const String& method, const String& line);
-    void print_source_line(const StringView&);
-    void print_html(const StringView&);
+    void handle_js_console_output(String const& method, String const& line);
+    void print_source_line(StringView const&);
+    void print_html(StringView const&);
     void clear_output();
 
-    Function<void(const String&)> on_js_input;
+    Function<void(String const&)> on_js_input;
 
 private:
     ConsoleWidget();

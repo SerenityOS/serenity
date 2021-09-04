@@ -21,27 +21,27 @@ public:
     int row() const { return m_row; }
     int column() const { return m_column; }
 
-    bool operator<(const Position& other) const
+    bool operator<(Position const& other) const
     {
         return m_row < other.m_row || (m_row == other.m_row && m_column < other.m_column);
     }
 
-    bool operator<=(const Position& other) const
+    bool operator<=(Position const& other) const
     {
         return *this < other || *this == other;
     }
 
-    bool operator>=(const Position& other) const
+    bool operator>=(Position const& other) const
     {
         return !(*this < other);
     }
 
-    bool operator==(const Position& other) const
+    bool operator==(Position const& other) const
     {
         return m_row == other.m_row && m_column == other.m_column;
     }
 
-    bool operator!=(const Position& other) const
+    bool operator!=(Position const& other) const
     {
         return !(*this == other);
     }

@@ -23,7 +23,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         return {};
 
     if (role == GUI::ModelRole::Display) {
-        const auto* cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
+        auto const* cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
         if (!cell)
             return String::empty();
 
@@ -56,7 +56,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         return Position { (size_t)index.column(), (size_t)index.row() }.to_url(m_sheet).to_string();
 
     if (role == GUI::ModelRole::TextAlignment) {
-        const auto* cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
+        auto const* cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
         if (!cell)
             return {};
 
@@ -64,7 +64,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
     }
 
     if (role == GUI::ModelRole::ForegroundColor) {
-        const auto* cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
+        auto const* cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
         if (!cell)
             return {};
 
@@ -83,7 +83,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
     }
 
     if (role == GUI::ModelRole::BackgroundColor) {
-        const auto* cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
+        auto const* cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
         if (!cell)
             return {};
 

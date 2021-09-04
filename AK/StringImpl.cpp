@@ -48,7 +48,7 @@ NonnullRefPtr<StringImpl> StringImpl::create_uninitialized(size_t length, char*&
     return new_stringimpl;
 }
 
-RefPtr<StringImpl> StringImpl::create(const char* cstring, size_t length, ShouldChomp should_chomp)
+RefPtr<StringImpl> StringImpl::create(char const* cstring, size_t length, ShouldChomp should_chomp)
 {
     if (!cstring)
         return nullptr;
@@ -73,7 +73,7 @@ RefPtr<StringImpl> StringImpl::create(const char* cstring, size_t length, Should
     return new_stringimpl;
 }
 
-RefPtr<StringImpl> StringImpl::create(const char* cstring, ShouldChomp shouldChomp)
+RefPtr<StringImpl> StringImpl::create(char const* cstring, ShouldChomp shouldChomp)
 {
     if (!cstring)
         return nullptr;
@@ -83,7 +83,7 @@ RefPtr<StringImpl> StringImpl::create(const char* cstring, ShouldChomp shouldCho
 
 RefPtr<StringImpl> StringImpl::create(ReadonlyBytes bytes, ShouldChomp shouldChomp)
 {
-    return StringImpl::create(reinterpret_cast<const char*>(bytes.data()), bytes.size(), shouldChomp);
+    return StringImpl::create(reinterpret_cast<char const*>(bytes.data()), bytes.size(), shouldChomp);
 }
 
 RefPtr<StringImpl> StringImpl::create_lowercased(char const* cstring, size_t length)

@@ -16,17 +16,17 @@ class TreeView : public AbstractTableView {
 public:
     virtual ~TreeView() override;
 
-    virtual void scroll_into_view(const ModelIndex&, bool scroll_horizontally, bool scroll_vertically) override;
+    virtual void scroll_into_view(ModelIndex const&, bool scroll_horizontally, bool scroll_vertically) override;
 
     virtual int item_count() const override;
-    virtual void toggle_index(const ModelIndex&) override;
+    virtual void toggle_index(ModelIndex const&) override;
 
-    void expand_tree(const ModelIndex& root = {});
-    void collapse_tree(const ModelIndex& root = {});
+    void expand_tree(ModelIndex const& root = {});
+    void collapse_tree(ModelIndex const& root = {});
 
-    void expand_all_parents_of(const ModelIndex&);
+    void expand_all_parents_of(ModelIndex const&);
 
-    Function<void(const ModelIndex&, const bool)> on_toggle;
+    Function<void(ModelIndex const&, const bool)> on_toggle;
 
     void set_should_fill_selected_rows(bool fill) { m_should_fill_selected_rows = fill; }
     bool should_fill_selected_rows() const { return m_should_fill_selected_rows; }
@@ -68,8 +68,8 @@ private:
 
     struct MetadataForIndex;
 
-    MetadataForIndex& ensure_metadata_for_index(const ModelIndex&) const;
-    void set_open_state_of_all_in_subtree(const ModelIndex& root, bool open);
+    MetadataForIndex& ensure_metadata_for_index(ModelIndex const&) const;
+    void set_open_state_of_all_in_subtree(ModelIndex const& root, bool open);
 
     mutable HashMap<void*, NonnullOwnPtr<MetadataForIndex>> m_view_metadata;
 

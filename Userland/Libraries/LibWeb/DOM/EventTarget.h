@@ -26,8 +26,8 @@ public:
     void ref() { ref_event_target(); }
     void unref() { unref_event_target(); }
 
-    void add_event_listener(const FlyString& event_name, RefPtr<EventListener>);
-    void remove_event_listener(const FlyString& event_name, RefPtr<EventListener>);
+    void add_event_listener(FlyString const& event_name, RefPtr<EventListener>);
+    void remove_event_listener(FlyString const& event_name, RefPtr<EventListener>);
 
     void remove_from_event_listener_list(NonnullRefPtr<EventListener>);
 
@@ -37,7 +37,7 @@ public:
     virtual JS::Object* create_wrapper(JS::GlobalObject&) = 0;
     Bindings::ScriptExecutionContext* script_execution_context() { return m_script_execution_context; }
 
-    virtual EventTarget* get_parent(const Event&) { return nullptr; }
+    virtual EventTarget* get_parent(Event const&) { return nullptr; }
 
     struct EventListenerRegistration {
         FlyString event_name;
@@ -47,7 +47,7 @@ public:
     Vector<EventListenerRegistration>& listeners() { return m_listeners; }
     const Vector<EventListenerRegistration>& listeners() const { return m_listeners; }
 
-    Function<void(const Event&)> activation_behaviour;
+    Function<void(Event const&)> activation_behaviour;
 
     // NOTE: These only exist for checkbox and radio input elements.
     Function<void()> legacy_pre_activation_behaviour;

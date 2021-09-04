@@ -26,13 +26,13 @@ public:
     Transfer(Pipe& pipe, u16 len, NonnullOwnPtr<Memory::Region>);
     ~Transfer();
 
-    void set_setup_packet(const USBRequestData& request);
+    void set_setup_packet(USBRequestData const& request);
     void set_complete() { m_complete = true; }
     void set_error_occurred() { m_error_occurred = true; }
 
     // `const` here makes sure we don't blow up by writing to a physical address
-    const USBRequestData& request() const { return m_request; }
-    const Pipe& pipe() const { return m_pipe; }
+    USBRequestData const& request() const { return m_request; }
+    Pipe const& pipe() const { return m_pipe; }
     Pipe& pipe() { return m_pipe; }
     VirtualAddress buffer() const { return m_data_buffer->vaddr(); }
     PhysicalAddress buffer_physical() const { return m_data_buffer->physical_page(0)->paddr(); }

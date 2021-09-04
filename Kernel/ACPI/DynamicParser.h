@@ -35,7 +35,7 @@ protected:
 private:
     void build_namespace();
     // ^IRQHandler
-    virtual bool handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(RegisterState const&) override;
 
     OwnPtr<Memory::Region> m_acpi_namespace;
 };

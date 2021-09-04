@@ -66,7 +66,7 @@ public:
 class Tokenizer {
 
 public:
-    explicit Tokenizer(const StringView& input, const String& encoding);
+    explicit Tokenizer(StringView const& input, String const& encoding);
 
     [[nodiscard]] Vector<Token> parse();
 

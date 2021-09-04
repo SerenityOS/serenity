@@ -18,7 +18,7 @@ public:
     void clear_taskbar_rect();
 
 private:
-    explicit TaskbarButton(const WindowIdentifier&);
+    explicit TaskbarButton(WindowIdentifier const&);
 
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;

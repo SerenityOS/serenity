@@ -109,7 +109,7 @@ public:
     void resize(const Gfx::IntSize& size) { set_rect({ position(), size }); }
 
     void center_on_screen();
-    void center_within(const Window&);
+    void center_within(Window const&);
 
     virtual void event(Core::Event&) override;
 
@@ -128,7 +128,7 @@ public:
     void start_interactive_resize();
 
     Widget* main_widget() { return m_main_widget; }
-    const Widget* main_widget() const { return m_main_widget; }
+    Widget const* main_widget() const { return m_main_widget; }
     void set_main_widget(Widget*);
 
     template<class T, class... Args>
@@ -140,7 +140,7 @@ public:
     }
 
     Widget* focused_widget() { return m_focused_widget; }
-    const Widget* focused_widget() const { return m_focused_widget; }
+    Widget const* focused_widget() const { return m_focused_widget; }
     void set_focused_widget(Widget*, FocusSource = FocusSource::Programmatic);
 
     void update();
@@ -148,14 +148,14 @@ public:
 
     void set_global_cursor_tracking_widget(Widget*);
     Widget* global_cursor_tracking_widget() { return m_global_cursor_tracking_widget.ptr(); }
-    const Widget* global_cursor_tracking_widget() const { return m_global_cursor_tracking_widget.ptr(); }
+    Widget const* global_cursor_tracking_widget() const { return m_global_cursor_tracking_widget.ptr(); }
 
     void set_automatic_cursor_tracking_widget(Widget*);
     Widget* automatic_cursor_tracking_widget() { return m_automatic_cursor_tracking_widget.ptr(); }
-    const Widget* automatic_cursor_tracking_widget() const { return m_automatic_cursor_tracking_widget.ptr(); }
+    Widget const* automatic_cursor_tracking_widget() const { return m_automatic_cursor_tracking_widget.ptr(); }
 
     Widget* hovered_widget() { return m_hovered_widget.ptr(); }
-    const Widget* hovered_widget() const { return m_hovered_widget.ptr(); }
+    Widget const* hovered_widget() const { return m_hovered_widget.ptr(); }
     void set_hovered_widget(Widget*);
 
     Gfx::Bitmap* back_bitmap();
@@ -188,7 +188,7 @@ public:
 
     virtual bool is_visible_for_timer_purposes() const override { return m_visible_for_timer_purposes; }
 
-    Action* action_for_key_event(const KeyEvent&);
+    Action* action_for_key_event(KeyEvent const&);
 
     void did_add_widget(Badge<Widget>, Widget&);
     void did_remove_widget(Badge<Widget>, Widget&);

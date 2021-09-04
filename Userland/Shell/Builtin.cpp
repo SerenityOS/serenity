@@ -25,7 +25,7 @@ extern char** environ;
 
 namespace Shell {
 
-int Shell::builtin_dump(int argc, const char** argv)
+int Shell::builtin_dump(int argc, char const** argv)
 {
     if (argc != 2)
         return 1;
@@ -34,9 +34,9 @@ int Shell::builtin_dump(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_alias(int argc, const char** argv)
+int Shell::builtin_alias(int argc, char const** argv)
 {
-    Vector<const char*> arguments;
+    Vector<char const*> arguments;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(arguments, "List of name[=values]'s", "name[=value]", Core::ArgsParser::Required::No);
@@ -69,10 +69,10 @@ int Shell::builtin_alias(int argc, const char** argv)
     return fail ? 1 : 0;
 }
 
-int Shell::builtin_unalias(int argc, const char** argv)
+int Shell::builtin_unalias(int argc, char const** argv)
 {
     bool remove_all { false };
-    Vector<const char*> arguments;
+    Vector<char const*> arguments;
 
     Core::ArgsParser parser;
     parser.set_general_help("Remove alias from the list of aliases");
@@ -108,7 +108,7 @@ int Shell::builtin_unalias(int argc, const char** argv)
     return failed ? 1 : 0;
 }
 
-int Shell::builtin_bg(int argc, const char** argv)
+int Shell::builtin_bg(int argc, char const** argv)
 {
     int job_id = -1;
     bool is_pid = false;
@@ -119,7 +119,7 @@ int Shell::builtin_bg(int argc, const char** argv)
         .name = "job-id",
         .min_values = 0,
         .max_values = 1,
-        .accept_value = [&](const String& value) -> bool {
+        .accept_value = [&](String const& value) -> bool {
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_id = number.value();
@@ -172,9 +172,9 @@ int Shell::builtin_bg(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_type(int argc, const char** argv)
+int Shell::builtin_type(int argc, char const** argv)
 {
-    Vector<const char*> commands;
+    Vector<char const*> commands;
     bool dont_show_function_source = false;
 
     Core::ArgsParser parser;
@@ -241,9 +241,9 @@ int Shell::builtin_type(int argc, const char** argv)
         return 0;
 }
 
-int Shell::builtin_cd(int argc, const char** argv)
+int Shell::builtin_cd(int argc, char const** argv)
 {
-    const char* arg_path = nullptr;
+    char const* arg_path = nullptr;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(arg_path, "Path to change to", "path", Core::ArgsParser::Required::No);
@@ -278,7 +278,7 @@ int Shell::builtin_cd(int argc, const char** argv)
     auto path_relative_to_current_directory = LexicalPath::relative_path(real_path, cwd);
     if (path_relative_to_current_directory.is_empty())
         path_relative_to_current_directory = real_path;
-    const char* path = path_relative_to_current_directory.characters();
+    char const* path = path_relative_to_current_directory.characters();
 
     int rc = chdir(path);
     if (rc < 0) {
@@ -295,7 +295,7 @@ int Shell::builtin_cd(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_cdh(int argc, const char** argv)
+int Shell::builtin_cdh(int argc, char const** argv)
 {
     int index = -1;
 
@@ -321,12 +321,12 @@ int Shell::builtin_cdh(int argc, const char** argv)
         return 1;
     }
 
-    const char* path = cd_history.at(cd_history.size() - index).characters();
-    const char* cd_args[] = { "cd", path, nullptr };
+    char const* path = cd_history.at(cd_history.size() - index).characters();
+    char const* cd_args[] = { "cd", path, nullptr };
     return Shell::builtin_cd(2, cd_args);
 }
 
-int Shell::builtin_dirs(int argc, const char** argv)
+int Shell::builtin_dirs(int argc, char const** argv)
 {
     // The first directory in the stack is ALWAYS the current directory
     directory_stack.at(0) = cwd.characters();
@@ -336,7 +336,7 @@ int Shell::builtin_dirs(int argc, const char** argv)
     bool number_when_printing = false;
     char separator = ' ';
 
-    Vector<const char*> paths;
+    Vector<char const*> paths;
 
     Core::ArgsParser parser;
     parser.add_option(clear, "Clear the directory stack", "clear", 'c');
@@ -379,21 +379,21 @@ int Shell::builtin_dirs(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_exec(int argc, const char** argv)
+int Shell::builtin_exec(int argc, char const** argv)
 {
     if (argc < 2) {
         warnln("Shell: No command given to exec");
         return 1;
     }
 
-    Vector<const char*> argv_vector;
+    Vector<char const*> argv_vector;
     argv_vector.append(argv + 1, argc - 1);
     argv_vector.append(nullptr);
 
     execute_process(move(argv_vector));
 }
 
-int Shell::builtin_exit(int argc, const char** argv)
+int Shell::builtin_exit(int argc, char const** argv)
 {
     int exit_code = 0;
     Core::ArgsParser parser;
@@ -419,9 +419,9 @@ int Shell::builtin_exit(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_export(int argc, const char** argv)
+int Shell::builtin_export(int argc, char const** argv)
 {
-    Vector<const char*> vars;
+    Vector<char const*> vars;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(vars, "List of variable[=value]'s", "values", Core::ArgsParser::Required::No);
@@ -465,9 +465,9 @@ int Shell::builtin_export(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_glob(int argc, const char** argv)
+int Shell::builtin_glob(int argc, char const** argv)
 {
-    Vector<const char*> globs;
+    Vector<char const*> globs;
     Core::ArgsParser parser;
     parser.add_positional_argument(globs, "Globs to resolve", "glob");
 
@@ -482,7 +482,7 @@ int Shell::builtin_glob(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_fg(int argc, const char** argv)
+int Shell::builtin_fg(int argc, char const** argv)
 {
     int job_id = -1;
     bool is_pid = false;
@@ -493,7 +493,7 @@ int Shell::builtin_fg(int argc, const char** argv)
         .name = "job-id",
         .min_values = 0,
         .max_values = 1,
-        .accept_value = [&](const String& value) -> bool {
+        .accept_value = [&](String const& value) -> bool {
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_id = number.value();
@@ -553,7 +553,7 @@ int Shell::builtin_fg(int argc, const char** argv)
         return 0;
 }
 
-int Shell::builtin_disown(int argc, const char** argv)
+int Shell::builtin_disown(int argc, char const** argv)
 {
     Vector<int> job_ids;
     Vector<bool> id_is_pid;
@@ -564,7 +564,7 @@ int Shell::builtin_disown(int argc, const char** argv)
         .name = "job-id",
         .min_values = 0,
         .max_values = INT_MAX,
-        .accept_value = [&](const String& value) -> bool {
+        .accept_value = [&](String const& value) -> bool {
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_ids.append(number.value());
@@ -590,7 +590,7 @@ int Shell::builtin_disown(int argc, const char** argv)
         id_is_pid.append(false);
     }
 
-    Vector<const Job*> jobs_to_disown;
+    Vector<Job const*> jobs_to_disown;
 
     for (size_t i = 0; i < job_ids.size(); ++i) {
         auto id = job_ids[i];
@@ -621,7 +621,7 @@ int Shell::builtin_disown(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_history(int, const char**)
+int Shell::builtin_history(int, char const**)
 {
     for (size_t i = 0; i < m_editor->history().size(); ++i) {
         printf("%6zu  %s\n", i, m_editor->history()[i].entry.characters());
@@ -629,7 +629,7 @@ int Shell::builtin_history(int, const char**)
     return 0;
 }
 
-int Shell::builtin_jobs(int argc, const char** argv)
+int Shell::builtin_jobs(int argc, char const** argv)
 {
     bool list = false, show_pid = false;
 
@@ -656,7 +656,7 @@ int Shell::builtin_jobs(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_popd(int argc, const char** argv)
+int Shell::builtin_popd(int argc, char const** argv)
 {
     if (directory_stack.size() <= 1) {
         warnln("Shell: popd: directory stack empty");
@@ -684,7 +684,7 @@ int Shell::builtin_popd(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_pushd(int argc, const char** argv)
+int Shell::builtin_pushd(int argc, char const** argv)
 {
     StringBuilder path_builder;
     bool should_switch = true;
@@ -724,7 +724,7 @@ int Shell::builtin_pushd(int argc, const char** argv)
     } else if (argc == 3) {
         directory_stack.append(cwd.characters());
         for (int i = 1; i < argc; i++) {
-            const char* arg = argv[i];
+            char const* arg = argv[i];
 
             if (arg[0] != '-') {
                 if (arg[0] == '/') {
@@ -765,14 +765,14 @@ int Shell::builtin_pushd(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_pwd(int, const char**)
+int Shell::builtin_pwd(int, char const**)
 {
     print_path(cwd);
     fputc('\n', stdout);
     return 0;
 }
 
-int Shell::builtin_setopt(int argc, const char** argv)
+int Shell::builtin_setopt(int argc, char const** argv)
 {
     if (argc == 1) {
 #define __ENUMERATE_SHELL_OPTION(name, default_, description) \
@@ -811,7 +811,7 @@ int Shell::builtin_setopt(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_shift(int argc, const char** argv)
+int Shell::builtin_shift(int argc, char const** argv)
 {
     int count = 1;
 
@@ -845,10 +845,10 @@ int Shell::builtin_shift(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_source(int argc, const char** argv)
+int Shell::builtin_source(int argc, char const** argv)
 {
-    const char* file_to_source = nullptr;
-    Vector<const char*> args;
+    char const* file_to_source = nullptr;
+    Vector<char const*> args;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(file_to_source, "File to read commands from", "path");
@@ -876,9 +876,9 @@ int Shell::builtin_source(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_time(int argc, const char** argv)
+int Shell::builtin_time(int argc, char const** argv)
 {
-    Vector<const char*> args;
+    Vector<char const*> args;
 
     int number_of_iterations = 1;
 
@@ -929,9 +929,9 @@ int Shell::builtin_time(int argc, const char** argv)
     return exit_code;
 }
 
-int Shell::builtin_umask(int argc, const char** argv)
+int Shell::builtin_umask(int argc, char const** argv)
 {
-    const char* mask_text = nullptr;
+    char const* mask_text = nullptr;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(mask_text, "New mask (omit to get current mask)", "octal-mask", Core::ArgsParser::Required::No);
@@ -957,7 +957,7 @@ int Shell::builtin_umask(int argc, const char** argv)
     return 1;
 }
 
-int Shell::builtin_wait(int argc, const char** argv)
+int Shell::builtin_wait(int argc, char const** argv)
 {
     Vector<int> job_ids;
     Vector<bool> id_is_pid;
@@ -968,7 +968,7 @@ int Shell::builtin_wait(int argc, const char** argv)
         .name = "job-id",
         .min_values = 0,
         .max_values = INT_MAX,
-        .accept_value = [&](const String& value) -> bool {
+        .accept_value = [&](String const& value) -> bool {
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_ids.append(number.value());
@@ -1002,7 +1002,7 @@ int Shell::builtin_wait(int argc, const char** argv)
     }
 
     if (job_ids.is_empty()) {
-        for (const auto& it : jobs)
+        for (auto const& it : jobs)
             jobs_to_wait_for.append(it.value);
     }
 
@@ -1014,9 +1014,9 @@ int Shell::builtin_wait(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_unset(int argc, const char** argv)
+int Shell::builtin_unset(int argc, char const** argv)
 {
-    Vector<const char*> vars;
+    Vector<char const*> vars;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(vars, "List of variables", "variables", Core::ArgsParser::Required::Yes);
@@ -1035,7 +1035,7 @@ int Shell::builtin_unset(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_not(int argc, const char** argv)
+int Shell::builtin_not(int argc, char const** argv)
 {
     // FIXME: Use ArgsParser when it can collect unrelated -arguments too.
     if (argc == 1)
@@ -1059,7 +1059,7 @@ int Shell::builtin_not(int argc, const char** argv)
     return exit_code == 0 ? 1 : 0;
 }
 
-int Shell::builtin_kill(int argc, const char** argv)
+int Shell::builtin_kill(int argc, char const** argv)
 {
     // Simply translate the arguments and pass them to `kill'
     Vector<String> replaced_values;
@@ -1104,7 +1104,7 @@ bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<A
     if (!has_builtin(command.argv.first()))
         return false;
 
-    Vector<const char*> argv;
+    Vector<char const*> argv;
     for (auto& arg : command.argv)
         argv.append(arg.characters());
 
@@ -1141,7 +1141,7 @@ bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<A
     return false;
 }
 
-bool Shell::has_builtin(const StringView& name) const
+bool Shell::has_builtin(StringView const& name) const
 {
 #define __ENUMERATE_SHELL_BUILTIN(builtin) \
     if (name == #builtin) {                \

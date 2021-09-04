@@ -18,12 +18,12 @@ public:
     GeminiRequest();
     ~GeminiRequest();
 
-    const URL& url() const { return m_url; }
-    void set_url(const URL& url) { m_url = url; }
+    URL const& url() const { return m_url; }
+    void set_url(URL const& url) { m_url = url; }
 
     ByteBuffer to_raw_request() const;
 
-    static Optional<GeminiRequest> from_raw_request(const ByteBuffer&);
+    static Optional<GeminiRequest> from_raw_request(ByteBuffer const&);
 
 private:
     URL m_url;

@@ -17,14 +17,14 @@ int main(int argc, char** argv)
     }
 
     bool no_newline = false;
-    Vector<const char*> paths;
+    Vector<char const*> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(no_newline, "Do not append a newline", "no-newline", 'n');
     args_parser.add_positional_argument(paths, "Symlink path", "path");
     args_parser.parse(argc, argv);
 
-    for (const char* path : paths) {
+    for (char const* path : paths) {
         auto destination = Core::File::read_link(path);
         if (destination.is_null()) {
             perror(path);

@@ -221,7 +221,7 @@ public:
 
     Descriptor& get_gdt_entry(u16 selector);
     void flush_gdt();
-    const DescriptorTablePointer& get_gdtr();
+    DescriptorTablePointer const& get_gdtr();
 
     static size_t processor_count() { return processors().size(); }
 

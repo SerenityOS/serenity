@@ -932,13 +932,13 @@ void Game::dump_state() const
             auto& player = m_players[i];
             dbgln("Player {}", player.name);
             dbgln("Hand:");
-            for (const auto& card : player.hand)
+            for (auto const& card : player.hand)
                 if (card.is_null())
                     dbgln("  <empty>");
                 else
                     dbgln("  {}", *card);
             dbgln("Taken:");
-            for (const auto& card : player.cards_taken)
+            for (auto const& card : player.cards_taken)
                 dbgln("  {}", card);
         }
     }

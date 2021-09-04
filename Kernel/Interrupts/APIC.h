@@ -99,13 +99,13 @@ private:
     APICTimer* m_apic_timer { nullptr };
 
     static PhysicalAddress get_base();
-    static void set_base(const PhysicalAddress& base);
+    static void set_base(PhysicalAddress const& base);
     void write_register(u32 offset, u32 value);
     u32 read_register(u32 offset);
     void set_lvt(u32 offset, u8 interrupt);
     void set_siv(u32 offset, u8 interrupt);
     void wait_for_pending_icr();
-    void write_icr(const ICRReg& icr);
+    void write_icr(ICRReg const& icr);
     void do_boot_aps();
 };
 

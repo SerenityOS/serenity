@@ -41,8 +41,8 @@ public:
 
     Optional<u64> special_attributes() const;
     Optional<String> name() const;
-    const PartitionType& type() const;
-    const UUID& unique_guid() const;
+    PartitionType const& type() const;
+    UUID const& unique_guid() const;
 
 private:
     u64 m_start_block;

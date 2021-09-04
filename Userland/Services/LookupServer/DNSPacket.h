@@ -24,7 +24,7 @@ class DNSPacket {
 public:
     DNSPacket() { }
 
-    static Optional<DNSPacket> from_raw_packet(const u8*, size_t);
+    static Optional<DNSPacket> from_raw_packet(u8 const*, size_t);
     ByteBuffer to_byte_buffer() const;
 
     bool is_query() const { return !m_query_or_response; }
@@ -56,8 +56,8 @@ public:
         return m_answers.size();
     }
 
-    void add_question(const DNSQuestion&);
-    void add_answer(const DNSAnswer&);
+    void add_question(DNSQuestion const&);
+    void add_answer(DNSAnswer const&);
 
     enum class Code : u8 {
         NOERROR = 0,

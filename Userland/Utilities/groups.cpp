@@ -53,7 +53,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Vector<const char*> usernames;
+    Vector<char const*> usernames;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Print group memberships for each username or, if no username is specified, for the current process.");

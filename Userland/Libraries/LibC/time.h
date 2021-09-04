@@ -30,13 +30,13 @@ extern int daylight;
 typedef uint32_t clock_t;
 typedef int64_t time_t;
 
-struct tm* localtime(const time_t*);
-struct tm* gmtime(const time_t*);
+struct tm* localtime(time_t const*);
+struct tm* gmtime(time_t const*);
 time_t mktime(struct tm*);
 time_t timegm(struct tm*);
 time_t time(time_t*);
-char* ctime(const time_t*);
-char* ctime_r(const time_t* tm, char* buf);
+char* ctime(time_t const*);
+char* ctime_r(time_t const* tm, char* buf);
 void tzset();
 char* asctime(const struct tm*);
 char* asctime_r(const struct tm*, char* buf);
@@ -48,10 +48,10 @@ int clock_settime(clockid_t, struct timespec*);
 int clock_nanosleep(clockid_t, int flags, const struct timespec* requested_sleep, struct timespec* remaining_sleep);
 int clock_getres(clockid_t, struct timespec* result);
 int nanosleep(const struct timespec* requested_sleep, struct timespec* remaining_sleep);
-struct tm* gmtime_r(const time_t* timep, struct tm* result);
-struct tm* localtime_r(const time_t* timep, struct tm* result);
+struct tm* gmtime_r(time_t const* timep, struct tm* result);
+struct tm* localtime_r(time_t const* timep, struct tm* result);
 
 double difftime(time_t, time_t);
-size_t strftime(char* s, size_t max, const char* format, const struct tm*) __attribute__((format(strftime, 3, 0)));
+size_t strftime(char* s, size_t max, char const* format, const struct tm*) __attribute__((format(strftime, 3, 0)));
 
 __END_DECLS

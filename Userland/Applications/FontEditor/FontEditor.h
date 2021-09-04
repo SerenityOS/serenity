@@ -20,13 +20,13 @@ class FontEditorWidget final : public GUI::Widget {
 public:
     virtual ~FontEditorWidget() override;
 
-    bool save_as(const String&);
+    bool save_as(String const&);
     bool request_close();
     void update_title();
 
-    const String& path() { return m_path; }
+    String const& path() { return m_path; }
     const Gfx::BitmapFont& edited_font() { return *m_edited_font; }
-    void initialize(const String& path, RefPtr<Gfx::BitmapFont>&&);
+    void initialize(String const& path, RefPtr<Gfx::BitmapFont>&&);
     void initialize_menubar(GUI::Window&);
 
     bool is_showing_font_metadata() { return m_font_metadata; }
@@ -35,7 +35,7 @@ public:
     Function<void()> on_initialize;
 
 private:
-    FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&);
+    FontEditorWidget(String const& path, RefPtr<Gfx::BitmapFont>&&);
 
     void undo();
     void redo();

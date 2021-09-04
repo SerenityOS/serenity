@@ -102,7 +102,7 @@ void DevFSInode::flush_metadata()
 {
 }
 
-KResultOr<size_t> DevFSInode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, FileDescription*)
+KResultOr<size_t> DevFSInode::write_bytes(off_t, size_t, UserOrKernelBuffer const&, FileDescription*)
 {
     VERIFY_NOT_REACHED();
 }
@@ -112,12 +112,12 @@ KResultOr<NonnullRefPtr<Inode>> DevFSInode::create_child(StringView, mode_t, dev
     return EROFS;
 }
 
-KResult DevFSInode::add_child(Inode&, const StringView&, mode_t)
+KResult DevFSInode::add_child(Inode&, StringView const&, mode_t)
 {
     return EROFS;
 }
 
-KResult DevFSInode::remove_child(const StringView&)
+KResult DevFSInode::remove_child(StringView const&)
 {
     return EROFS;
 }
@@ -364,7 +364,7 @@ InodeMetadata DevFSDeviceInode::metadata() const
     metadata.minor_device = m_attached_device->minor();
     return metadata;
 }
-KResultOr<size_t> DevFSDeviceInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, FileDescription* description)
+KResultOr<size_t> DevFSDeviceInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, FileDescription* description)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!!description);

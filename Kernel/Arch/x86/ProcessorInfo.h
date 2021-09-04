@@ -27,9 +27,9 @@ class ProcessorInfo {
 public:
     ProcessorInfo(Processor& processor);
 
-    const String& cpuid() const { return m_cpuid; }
-    const String& brandstr() const { return m_brandstr; }
-    const String& features() const { return m_features; }
+    String const& cpuid() const { return m_cpuid; }
+    String const& brandstr() const { return m_brandstr; }
+    String const& features() const { return m_features; }
     u32 display_model() const { return m_display_model; }
     u32 display_family() const { return m_display_family; }
     u32 stepping() const { return m_stepping; }

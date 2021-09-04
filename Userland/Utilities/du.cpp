@@ -36,7 +36,7 @@ struct DuOption {
 };
 
 static int parse_args(int argc, char** argv, Vector<String>& files, DuOption& du_option, int& max_depth);
-static int print_space_usage(const String& path, const DuOption& du_option, int max_depth);
+static int print_space_usage(String const& path, DuOption const& du_option, int max_depth);
 
 int main(int argc, char** argv)
 {
@@ -47,7 +47,7 @@ int main(int argc, char** argv)
     if (parse_args(argc, argv, files, du_option, max_depth))
         return 1;
 
-    for (const auto& file : files) {
+    for (auto const& file : files) {
         if (print_space_usage(file, du_option, max_depth))
             return 1;
     }
@@ -58,9 +58,9 @@ int main(int argc, char** argv)
 int parse_args(int argc, char** argv, Vector<String>& files, DuOption& du_option, int& max_depth)
 {
     bool summarize = false;
-    const char* pattern = nullptr;
-    const char* exclude_from = nullptr;
-    Vector<const char*> files_to_process;
+    char const* pattern = nullptr;
+    char const* exclude_from = nullptr;
+    Vector<char const*> files_to_process;
 
     Core::ArgsParser::Option time_option {
         true,
@@ -69,7 +69,7 @@ int parse_args(int argc, char** argv, Vector<String>& files, DuOption& du_option
         "time",
         0,
         "time-type",
-        [&du_option](const char* s) {
+        [&du_option](char const* s) {
             if (!strcmp(s, "mtime") || !strcmp(s, "modification"))
                 du_option.time_type = DuOption::TimeType::Modification;
             else if (!strcmp(s, "ctime") || !strcmp(s, "status") || !strcmp(s, "use"))
@@ -124,7 +124,7 @@ int parse_args(int argc, char** argv, Vector<String>& files, DuOption& du_option
     return 0;
 }
 
-int print_space_usage(const String& path, const DuOption& du_option, int max_depth)
+int print_space_usage(String const& path, DuOption const& du_option, int max_depth)
 {
     struct stat path_stat;
     if (lstat(path.characters(), &path_stat) < 0) {
@@ -150,7 +150,7 @@ int print_space_usage(const String& path, const DuOption& du_option, int max_dep
     }
 
     const auto basename = LexicalPath::basename(path);
-    for (const auto& pattern : du_option.excluded_patterns) {
+    for (auto const& pattern : du_option.excluded_patterns) {
         if (basename.matches(pattern, CaseSensitivity::CaseSensitive))
             return 0;
     }

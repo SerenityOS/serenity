@@ -11,7 +11,7 @@
 #include <LibCore/File.h>
 #include <ctype.h>
 
-static String title_casify(const String& dashy_name)
+static String title_casify(String const& dashy_name)
 {
     auto parts = dashy_name.split('-');
     StringBuilder builder;
@@ -66,8 +66,8 @@ enum class ValueID {
     generator.append(R"~~~(
 };
 
-ValueID value_id_from_string(const StringView&);
-const char* string_from_value_id(ValueID);
+ValueID value_id_from_string(StringView const&);
+char const* string_from_value_id(ValueID);
 
 }
 

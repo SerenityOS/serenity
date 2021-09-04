@@ -59,7 +59,7 @@ private:
             set_text(action.text());
         set_button_style(Gfx::ButtonStyle::Coolbar);
     }
-    String tooltip(const Action& action) const
+    String tooltip(Action const& action) const
     {
         StringBuilder builder;
         builder.append(action.text());

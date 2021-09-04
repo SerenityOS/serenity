@@ -72,7 +72,7 @@ TEST_CASE(maximum_stack_depth)
             : max_depth(max_depth)
         {
         }
-        DepthMeasurer(const DepthMeasurer& obj)
+        DepthMeasurer(DepthMeasurer const& obj)
             : max_depth(obj.max_depth)
         {
             depth = obj.depth + 1;

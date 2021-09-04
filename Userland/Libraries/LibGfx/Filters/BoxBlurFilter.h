@@ -16,7 +16,7 @@ public:
     BoxBlurFilter() { }
     virtual ~BoxBlurFilter() { }
 
-    virtual const char* class_name() const override { return "BoxBlurFilter"; }
+    virtual char const* class_name() const override { return "BoxBlurFilter"; }
 };
 
 }

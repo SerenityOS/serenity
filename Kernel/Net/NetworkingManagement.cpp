@@ -48,7 +48,7 @@ void NetworkingManagement::for_each(Function<void(NetworkAdapter&)> callback)
         callback(it);
 }
 
-RefPtr<NetworkAdapter> NetworkingManagement::from_ipv4_address(const IPv4Address& address) const
+RefPtr<NetworkAdapter> NetworkingManagement::from_ipv4_address(IPv4Address const& address) const
 {
     MutexLocker locker(m_lock);
     for (auto& adapter : m_adapters) {
@@ -61,7 +61,7 @@ RefPtr<NetworkAdapter> NetworkingManagement::from_ipv4_address(const IPv4Address
         return m_loopback_adapter;
     return {};
 }
-RefPtr<NetworkAdapter> NetworkingManagement::lookup_by_name(const StringView& name) const
+RefPtr<NetworkAdapter> NetworkingManagement::lookup_by_name(StringView const& name) const
 {
     MutexLocker locker(m_lock);
     RefPtr<NetworkAdapter> found_adapter;

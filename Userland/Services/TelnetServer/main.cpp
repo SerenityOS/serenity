@@ -21,7 +21,7 @@ static void run_command(int ptm_fd, String command)
 {
     pid_t pid = fork();
     if (pid == 0) {
-        const char* tty_name = ptsname(ptm_fd);
+        char const* tty_name = ptsname(ptm_fd);
         if (!tty_name) {
             perror("ptsname");
             exit(1);
@@ -65,12 +65,12 @@ static void run_command(int ptm_fd, String command)
             perror("ioctl(TIOCSCTTY)");
             exit(1);
         }
-        const char* args[4] = { "/bin/Shell", nullptr, nullptr, nullptr };
+        char const* args[4] = { "/bin/Shell", nullptr, nullptr, nullptr };
         if (!command.is_empty()) {
             args[1] = "-c";
             args[2] = command.characters();
         }
-        const char* envs[] = { "TERM=xterm", "PATH=/usr/local/bin:/usr/bin:/bin", nullptr };
+        char const* envs[] = { "TERM=xterm", "PATH=/usr/local/bin:/usr/bin:/bin", nullptr };
         rc = execve("/bin/Shell", const_cast<char**>(args), const_cast<char**>(envs));
         if (rc < 0) {
             perror("execve");
@@ -83,7 +83,7 @@ static void run_command(int ptm_fd, String command)
 int main(int argc, char** argv)
 {
     int port = 23;
-    const char* command = "";
+    char const* command = "";
 
     Core::ArgsParser args_parser;
     args_parser.add_option(port, "Port to listen on", nullptr, 'p', "port");

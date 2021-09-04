@@ -11,14 +11,14 @@
 
 namespace Gfx {
 
-RefPtr<Gfx::Bitmap> load_ppm(const StringView& path);
-RefPtr<Gfx::Bitmap> load_ppm_from_memory(const u8*, size_t);
+RefPtr<Gfx::Bitmap> load_ppm(StringView const& path);
+RefPtr<Gfx::Bitmap> load_ppm_from_memory(u8 const*, size_t);
 
 struct PPMLoadingContext;
 
 class PPMImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
-    PPMImageDecoderPlugin(const u8*, size_t);
+    PPMImageDecoderPlugin(u8 const*, size_t);
     virtual ~PPMImageDecoderPlugin() override;
 
     virtual IntSize size() override;

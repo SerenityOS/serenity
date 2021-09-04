@@ -27,17 +27,17 @@ public:
 
     static void initialize(
         String source_root,
-        Function<HasControlPassedToUser(const PtraceRegisters&)> on_stop_callback,
+        Function<HasControlPassedToUser(PtraceRegisters const&)> on_stop_callback,
         Function<void()> on_continue_callback,
         Function<void()> on_exit_callback);
 
     static bool is_initialized();
 
-    void on_breakpoint_change(const String& file, size_t line, BreakpointChange change_type);
-    bool set_execution_position(const String& file, size_t line);
+    void on_breakpoint_change(String const& file, size_t line, BreakpointChange change_type);
+    bool set_execution_position(String const& file, size_t line);
 
-    void set_executable_path(const String& path) { m_executable_path = path; }
-    void set_source_root(const String& source_root) { m_source_root = source_root; }
+    void set_executable_path(String const& path) { m_executable_path = path; }
+    void set_source_root(String const& source_root) { m_source_root = source_root; }
 
     Debug::DebugSession* session() { return m_debug_session.ptr(); }
 
@@ -89,20 +89,20 @@ private:
 
     explicit Debugger(
         String source_root,
-        Function<HasControlPassedToUser(const PtraceRegisters&)> on_stop_callback,
+        Function<HasControlPassedToUser(PtraceRegisters const&)> on_stop_callback,
         Function<void()> on_continue_callback,
         Function<void()> on_exit_callback);
 
-    Debug::DebugInfo::SourcePosition create_source_position(const String& file, size_t line);
+    Debug::DebugInfo::SourcePosition create_source_position(String const& file, size_t line);
 
     void start();
     int debugger_loop();
 
     void remove_temporary_breakpoints();
-    void do_step_out(const PtraceRegisters&);
-    void do_step_over(const PtraceRegisters&);
+    void do_step_out(PtraceRegisters const&);
+    void do_step_over(PtraceRegisters const&);
     void insert_temporary_breakpoint(FlatPtr address);
-    void insert_temporary_breakpoint_at_return_address(const PtraceRegisters&);
+    void insert_temporary_breakpoint_at_return_address(PtraceRegisters const&);
 
     OwnPtr<Debug::DebugSession> m_debug_session;
     String m_source_root;
@@ -116,7 +116,7 @@ private:
 
     String m_executable_path;
 
-    Function<HasControlPassedToUser(const PtraceRegisters&)> m_on_stopped_callback;
+    Function<HasControlPassedToUser(PtraceRegisters const&)> m_on_stopped_callback;
     Function<void()> m_on_continue_callback;
     Function<void()> m_on_exit_callback;
 };

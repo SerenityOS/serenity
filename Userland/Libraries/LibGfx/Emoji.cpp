@@ -13,7 +13,7 @@ namespace Gfx {
 
 static HashMap<u32, RefPtr<Gfx::Bitmap>> s_emojis;
 
-const Bitmap* Emoji::emoji_for_code_point(u32 code_point)
+Bitmap const* Emoji::emoji_for_code_point(u32 code_point)
 {
     auto it = s_emojis.find(code_point);
     if (it != s_emojis.end())

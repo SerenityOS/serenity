@@ -90,7 +90,7 @@ LookupServer::LookupServer()
 void LookupServer::load_etc_hosts()
 {
     m_etc_hosts.clear();
-    auto add_answer = [this](const DNSName& name, DNSRecordType record_type, String data) {
+    auto add_answer = [this](DNSName const& name, DNSRecordType record_type, String data) {
         auto it = m_etc_hosts.find(name);
         if (it == m_etc_hosts.end()) {
             m_etc_hosts.set(name, {});
@@ -131,7 +131,7 @@ void LookupServer::load_etc_hosts()
         auto raw_addr = maybe_address->to_in_addr_t();
 
         DNSName name { fields[1] };
-        add_answer(name, DNSRecordType::A, String { (const char*)&raw_addr, sizeof(raw_addr) });
+        add_answer(name, DNSRecordType::A, String { (char const*)&raw_addr, sizeof(raw_addr) });
 
         StringBuilder builder;
         builder.append(maybe_address->to_string_reversed());
@@ -147,12 +147,12 @@ static String get_hostname()
     return buffer;
 }
 
-Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record_type)
+Vector<DNSAnswer> LookupServer::lookup(DNSName const& name, DNSRecordType record_type)
 {
     dbgln_if(LOOKUPSERVER_DEBUG, "Got request for '{}'", name.as_string());
 
     Vector<DNSAnswer> answers;
-    auto add_answer = [&](const DNSAnswer& answer) {
+    auto add_answer = [&](DNSAnswer const& answer) {
         DNSAnswer answer_with_original_case {
             name,
             answer.type(),
@@ -179,7 +179,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record
     if (record_type == DNSRecordType::A && get_hostname() == name) {
         IPv4Address address = { 127, 0, 0, 1 };
         auto raw_address = address.to_in_addr_t();
-        DNSAnswer answer { name, DNSRecordType::A, DNSRecordClass::IN, s_static_ttl, String { (const char*)&raw_address, sizeof(raw_address) }, false };
+        DNSAnswer answer { name, DNSRecordType::A, DNSRecordClass::IN, s_static_ttl, String { (char const*)&raw_address, sizeof(raw_address) }, false };
         answers.append(move(answer));
         return answers;
     }
@@ -237,7 +237,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record
     return answers;
 }
 
-Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, const String& nameserver, bool& did_get_response, DNSRecordType record_type, ShouldRandomizeCase should_randomize_case)
+Vector<DNSAnswer> LookupServer::lookup(DNSName const& name, String const& nameserver, bool& did_get_response, DNSRecordType record_type, ShouldRandomizeCase should_randomize_case)
 {
     DNSPacket request;
     request.set_is_query();
@@ -330,7 +330,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, const String& namese
     return answers;
 }
 
-void LookupServer::put_in_cache(const DNSAnswer& answer)
+void LookupServer::put_in_cache(DNSAnswer const& answer)
 {
     if (answer.has_expired())
         return;

@@ -10,12 +10,12 @@
 
 TEST_CASE(test_decode)
 {
-    auto decode_equal = [](const char* input, const char* expected) {
+    auto decode_equal = [](char const* input, char const* expected) {
         auto decoded = IMAP::decode_quoted_printable(StringView(input));
         EXPECT(String::copy(decoded) == String(expected));
     };
 
-    auto decode_equal_byte_buffer = [](const char* input, const char* expected, size_t expected_length) {
+    auto decode_equal_byte_buffer = [](char const* input, char const* expected, size_t expected_length) {
         auto decoded = IMAP::decode_quoted_printable(StringView(input));
         EXPECT(decoded == ByteBuffer::copy(expected, expected_length));
     };

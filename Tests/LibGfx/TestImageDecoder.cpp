@@ -23,7 +23,7 @@
 TEST_CASE(test_bmp)
 {
     auto image = Gfx::load_bmp("/res/html/misc/bmpsuite_files/rgba32-1.bmp");
-    auto bmp = Gfx::BMPImageDecoderPlugin((const u8*)&image, sizeof(*image));
+    auto bmp = Gfx::BMPImageDecoderPlugin((u8 const*)&image, sizeof(*image));
     EXPECT(bmp.frame_count());
 
     EXPECT(!bmp.sniff());
@@ -37,7 +37,7 @@ TEST_CASE(test_bmp)
 TEST_CASE(test_gif)
 {
     auto image = Gfx::load_gif("/res/graphics/download-animation.gif");
-    auto gif = Gfx::GIFImageDecoderPlugin((const u8*)&image, sizeof(*image));
+    auto gif = Gfx::GIFImageDecoderPlugin((u8 const*)&image, sizeof(*image));
     EXPECT(gif.frame_count());
 
     EXPECT(!gif.sniff());
@@ -54,7 +54,7 @@ TEST_CASE(test_ico)
 {
     // FIXME: Use an ico file
     auto image = Gfx::load_ico("/res/graphics/buggie.png");
-    auto ico = Gfx::ICOImageDecoderPlugin((const u8*)&image, sizeof(*image));
+    auto ico = Gfx::ICOImageDecoderPlugin((u8 const*)&image, sizeof(*image));
     EXPECT(ico.frame_count());
 
     EXPECT(!ico.sniff());
@@ -68,7 +68,7 @@ TEST_CASE(test_ico)
 TEST_CASE(test_jpg)
 {
     auto image = Gfx::load_jpg("/res/html/misc/bmpsuite_files/rgb24.jpg");
-    auto jpg = Gfx::JPGImageDecoderPlugin((const u8*)&image, sizeof(*image));
+    auto jpg = Gfx::JPGImageDecoderPlugin((u8 const*)&image, sizeof(*image));
     EXPECT(jpg.frame_count());
 
     EXPECT(!jpg.sniff());
@@ -82,7 +82,7 @@ TEST_CASE(test_jpg)
 TEST_CASE(test_pbm)
 {
     auto image = Gfx::load_pbm("/res/html/misc/pbmsuite_files/buggie-raw.pbm");
-    auto pbm = Gfx::PBMImageDecoderPlugin((const u8*)&image, sizeof(*image));
+    auto pbm = Gfx::PBMImageDecoderPlugin((u8 const*)&image, sizeof(*image));
     EXPECT(pbm.frame_count());
 
     EXPECT(!pbm.sniff());
@@ -96,7 +96,7 @@ TEST_CASE(test_pbm)
 TEST_CASE(test_pgm)
 {
     auto image = Gfx::load_pbm("/res/html/misc/pbmsuite_files/buggie-raw.pbm");
-    auto pgm = Gfx::PGMImageDecoderPlugin((const u8*)&image, sizeof(*image));
+    auto pgm = Gfx::PGMImageDecoderPlugin((u8 const*)&image, sizeof(*image));
     EXPECT(pgm.frame_count());
 
     EXPECT(!pgm.sniff());
@@ -110,7 +110,7 @@ TEST_CASE(test_pgm)
 TEST_CASE(test_png)
 {
     auto image = Gfx::load_png("/res/graphics/buggie.png");
-    auto png = Gfx::PNGImageDecoderPlugin((const u8*)&image, sizeof(*image));
+    auto png = Gfx::PNGImageDecoderPlugin((u8 const*)&image, sizeof(*image));
     EXPECT(png.frame_count());
 
     EXPECT(!png.sniff());
@@ -124,7 +124,7 @@ TEST_CASE(test_png)
 TEST_CASE(test_ppm)
 {
     auto image = Gfx::load_ppm("/res/html/misc/ppmsuite_files/buggie-raw.ppm");
-    auto ppm = Gfx::PPMImageDecoderPlugin((const u8*)&image, sizeof(*image));
+    auto ppm = Gfx::PPMImageDecoderPlugin((u8 const*)&image, sizeof(*image));
     EXPECT(ppm.frame_count());
 
     EXPECT(!ppm.sniff());

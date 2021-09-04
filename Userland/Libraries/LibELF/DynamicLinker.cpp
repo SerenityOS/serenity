@@ -54,11 +54,11 @@ static bool s_allowed_to_check_environment_variables { false };
 static bool s_do_breakpoint_trap_before_entry { false };
 
 static Result<void, DlErrorMessage> __dlclose(void* handle);
-static Result<void*, DlErrorMessage> __dlopen(const char* filename, int flags);
-static Result<void*, DlErrorMessage> __dlsym(void* handle, const char* symbol_name);
+static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags);
+static Result<void*, DlErrorMessage> __dlsym(void* handle, char const* symbol_name);
 static Result<void, DlErrorMessage> __dladdr(void* addr, Dl_info* info);
 
-Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(const StringView& name)
+Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(StringView const& name)
 {
     Optional<DynamicObject::SymbolLookupResult> weak_result;
 
@@ -82,7 +82,7 @@ static String get_library_name(String path)
     return LexicalPath::basename(move(path));
 }
 
-static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const String& filename, int fd)
+static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String const& filename, int fd)
 {
     auto result = ELF::DynamicLoader::try_create(fd, filename);
     if (result.is_error()) {
@@ -99,7 +99,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const St
     return loader;
 }
 
-static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const String& name)
+static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String const& name)
 {
     if (name.contains("/"sv)) {
         int fd = open(name.characters(), O_RDONLY);
@@ -109,7 +109,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const St
     }
 
     // TODO: Do we want to also look for libs in other paths too?
-    const char* search_paths[] = { "/usr/lib/{}", "/usr/local/lib/{}" };
+    char const* search_paths[] = { "/usr/lib/{}", "/usr/local/lib/{}" };
     for (auto& search_path : search_paths) {
         auto path = String::formatted(search_path, name);
         int fd = open(path.characters(), O_RDONLY);
@@ -121,7 +121,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const St
     return DlErrorMessage { String::formatted("Could not find required shared library: {}", name) };
 }
 
-static Vector<String> get_dependencies(const String& name)
+static Vector<String> get_dependencies(String const& name)
 {
     auto lib = s_loaders.get(name).value();
     Vector<String> dependencies;
@@ -134,11 +134,11 @@ static Vector<String> get_dependencies(const String& name)
     return dependencies;
 }
 
-static Result<void, DlErrorMessage> map_dependencies(const String& name)
+static Result<void, DlErrorMessage> map_dependencies(String const& name)
 {
     dbgln_if(DYNAMIC_LOAD_DEBUG, "mapping dependencies for: {}", name);
 
-    for (const auto& needed_name : get_dependencies(name)) {
+    for (auto const& needed_name : get_dependencies(name)) {
         dbgln_if(DYNAMIC_LOAD_DEBUG, "needed library: {}", needed_name.characters());
         String library_name = get_library_name(needed_name);
 
@@ -160,7 +160,7 @@ static Result<void, DlErrorMessage> map_dependencies(const String& name)
 static void allocate_tls()
 {
     s_total_tls_size = 0;
-    for (const auto& data : s_loaders) {
+    for (auto const& data : s_loaders) {
         dbgln_if(DYNAMIC_LOAD_DEBUG, "{}: TLS Size: {}", data.key, data.value->tls_size_of_current_object());
         s_total_tls_size += data.value->tls_size_of_current_object();
     }
@@ -172,7 +172,7 @@ static void allocate_tls()
     ByteBuffer initial_tls_data = ByteBuffer::create_zeroed(page_aligned_size);
 
     // Initialize TLS data
-    for (const auto& entry : s_loaders) {
+    for (auto const& entry : s_loaders) {
         entry.value->copy_initial_tls_data_into(initial_tls_data);
     }
 
@@ -251,7 +251,7 @@ static void initialize_libc(DynamicObject& libc)
 }
 
 template<typename Callback>
-static void for_each_unfinished_dependency_of(const String& name, HashTable<String>& seen_names, Callback callback)
+static void for_each_unfinished_dependency_of(String const& name, HashTable<String>& seen_names, Callback callback)
 {
     if (!s_loaders.contains(name))
         return;
@@ -260,13 +260,13 @@ static void for_each_unfinished_dependency_of(const String& name, HashTable<Stri
         return;
     seen_names.set(name);
 
-    for (const auto& needed_name : get_dependencies(name))
+    for (auto const& needed_name : get_dependencies(name))
         for_each_unfinished_dependency_of(get_library_name(needed_name), seen_names, callback);
 
     callback(*s_loaders.get(name).value());
 }
 
-static NonnullRefPtrVector<DynamicLoader> collect_loaders_for_library(const String& name)
+static NonnullRefPtrVector<DynamicLoader> collect_loaders_for_library(String const& name)
 {
     HashTable<String> seen_names;
     NonnullRefPtrVector<DynamicLoader> loaders;
@@ -276,7 +276,7 @@ static NonnullRefPtrVector<DynamicLoader> collect_loaders_for_library(const Stri
     return loaders;
 }
 
-static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> load_main_library(const String& name, int flags)
+static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> load_main_library(String const& name, int flags)
 {
     auto main_library_loader = *s_loaders.get(name);
     auto main_library_object = main_library_loader->map();
@@ -304,7 +304,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> load_main_library(co
 
         if (loader.filename() == "libsystem.so"sv) {
             VERIFY(!loader.text_segments().is_empty());
-            for (const auto& segment : loader.text_segments()) {
+            for (auto const& segment : loader.text_segments()) {
                 if (syscall(SC_msyscall, segment.address().get())) {
                     VERIFY_NOT_REACHED();
                 }
@@ -338,7 +338,7 @@ static Result<void, DlErrorMessage> __dlclose(void* handle)
     return {};
 }
 
-static Optional<DlErrorMessage> verify_tls_for_dlopen(const DynamicLoader& loader)
+static Optional<DlErrorMessage> verify_tls_for_dlopen(DynamicLoader const& loader)
 {
     if (loader.tls_size_of_current_object() == 0)
         return {};
@@ -351,7 +351,7 @@ static Optional<DlErrorMessage> verify_tls_for_dlopen(const DynamicLoader& loade
         if (program_header.type() != PT_TLS)
             return IterationDecision::Continue;
 
-        auto* tls_data = (const u8*)loader.image().base_address() + program_header.offset();
+        auto* tls_data = (u8 const*)loader.image().base_address() + program_header.offset();
         for (size_t i = 0; i < program_header.size_in_image(); ++i) {
             if (tls_data[i] != 0) {
                 tls_data_is_all_zero = false;
@@ -367,7 +367,7 @@ static Optional<DlErrorMessage> verify_tls_for_dlopen(const DynamicLoader& loade
     return DlErrorMessage("Using dlopen() with libraries that have non-zeroed TLS is currently not supported");
 }
 
-static Result<void*, DlErrorMessage> __dlopen(const char* filename, int flags)
+static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
 {
     // FIXME: RTLD_NOW and RTLD_LOCAL are not supported
     flags &= ~RTLD_NOW;
@@ -420,7 +420,7 @@ static Result<void*, DlErrorMessage> __dlopen(const char* filename, int flags)
     return *object;
 }
 
-static Result<void*, DlErrorMessage> __dlsym(void* handle, const char* symbol_name)
+static Result<void*, DlErrorMessage> __dlsym(void* handle, char const* symbol_name)
 {
     dbgln_if(DYNAMIC_LOAD_DEBUG, "__dlsym: {}, {}", handle, symbol_name);
 

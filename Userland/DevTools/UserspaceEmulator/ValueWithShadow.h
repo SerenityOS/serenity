@@ -105,8 +105,8 @@ public:
     T& value() { return m_value; }
     T& shadow() { return m_shadow; }
 
-    const T& value() const { return m_value; }
-    const T& shadow() const { return m_shadow; }
+    T const& value() const { return m_value; }
+    T const& shadow() const { return m_shadow; }
 
 private:
     T& m_value;
@@ -131,7 +131,7 @@ ALWAYS_INLINE ValueWithShadow<T> shadow_wrap_as_initialized(T value)
 }
 
 template<typename T, typename U>
-ALWAYS_INLINE ValueWithShadow<T> shadow_wrap_with_taint_from(T value, const U& taint_a)
+ALWAYS_INLINE ValueWithShadow<T> shadow_wrap_with_taint_from(T value, U const& taint_a)
 {
     if (taint_a.is_uninitialized())
         return { value, 0 };
@@ -139,7 +139,7 @@ ALWAYS_INLINE ValueWithShadow<T> shadow_wrap_with_taint_from(T value, const U& t
 }
 
 template<typename T, typename U, typename V>
-ALWAYS_INLINE ValueWithShadow<T> shadow_wrap_with_taint_from(T value, const U& taint_a, const V& taint_b)
+ALWAYS_INLINE ValueWithShadow<T> shadow_wrap_with_taint_from(T value, U const& taint_a, V const& taint_b)
 {
     if (taint_a.is_uninitialized() || taint_b.is_uninitialized())
         return { value, 0 };
@@ -147,7 +147,7 @@ ALWAYS_INLINE ValueWithShadow<T> shadow_wrap_with_taint_from(T value, const U& t
 }
 
 template<typename T, typename U, typename V, typename X>
-ALWAYS_INLINE ValueWithShadow<T> shadow_wrap_with_taint_from(T value, const U& taint_a, const V& taint_b, const X& taint_c)
+ALWAYS_INLINE ValueWithShadow<T> shadow_wrap_with_taint_from(T value, U const& taint_a, V const& taint_b, X const& taint_c)
 {
     if (taint_a.is_uninitialized() || taint_b.is_uninitialized() || taint_c.is_uninitialized())
         return { value, 0 };

@@ -14,18 +14,18 @@ class MessageEvent : public DOM::Event {
 public:
     using WrapperType = Bindings::MessageEventWrapper;
 
-    static NonnullRefPtr<MessageEvent> create(const FlyString& event_name, const String& data, const String& origin)
+    static NonnullRefPtr<MessageEvent> create(FlyString const& event_name, String const& data, String const& origin)
     {
         return adopt_ref(*new MessageEvent(event_name, data, origin));
     }
 
     virtual ~MessageEvent() override = default;
 
-    const String& data() const { return m_data; }
-    const String& origin() const { return m_origin; }
+    String const& data() const { return m_data; }
+    String const& origin() const { return m_origin; }
 
 protected:
-    MessageEvent(const FlyString& event_name, const String& data, const String& origin)
+    MessageEvent(FlyString const& event_name, String const& data, String const& origin)
         : DOM::Event(event_name)
         , m_data(data)
         , m_origin(origin)

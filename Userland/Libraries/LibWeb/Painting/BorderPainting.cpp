@@ -12,7 +12,7 @@ namespace Web::Painting {
 
 void paint_border(PaintContext& context, BorderEdge edge, const Gfx::FloatRect& rect, const CSS::ComputedValues& style)
 {
-    const auto& border_data = [&] {
+    auto const& border_data = [&] {
         switch (edge) {
         case BorderEdge::Top:
             return style.border_top();

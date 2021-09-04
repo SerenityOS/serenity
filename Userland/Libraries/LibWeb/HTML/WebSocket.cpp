@@ -41,13 +41,13 @@ WebSocketClientManager::WebSocketClientManager()
 {
 }
 
-RefPtr<Protocol::WebSocket> WebSocketClientManager::connect(const URL& url)
+RefPtr<Protocol::WebSocket> WebSocketClientManager::connect(URL const& url)
 {
     return m_websocket_client->connect(url);
 }
 
 // https://html.spec.whatwg.org/multipage/web-sockets.html#the-websocket-interface
-DOM::ExceptionOr<NonnullRefPtr<WebSocket>> WebSocket::create_with_global_object(Bindings::WindowObject& window, const String& url)
+DOM::ExceptionOr<NonnullRefPtr<WebSocket>> WebSocket::create_with_global_object(Bindings::WindowObject& window, String const& url)
 {
     URL url_record(url);
     if (!url_record.is_valid())
@@ -137,7 +137,7 @@ String WebSocket::protocol() const
 }
 
 // https://html.spec.whatwg.org/multipage/web-sockets.html#the-websocket-interface
-DOM::ExceptionOr<void> WebSocket::close(u16 code, const String& reason)
+DOM::ExceptionOr<void> WebSocket::close(u16 code, String const& reason)
 {
     // HACK : we should have an Optional<u16>
     if (code == 0)
@@ -157,7 +157,7 @@ DOM::ExceptionOr<void> WebSocket::close(u16 code, const String& reason)
 }
 
 // https://html.spec.whatwg.org/multipage/web-sockets.html#the-websocket-interface
-DOM::ExceptionOr<void> WebSocket::send(const String& data)
+DOM::ExceptionOr<void> WebSocket::send(String const& data)
 {
     auto state = ready_state();
     if (state == WebSocket::ReadyState::Connecting)
@@ -232,7 +232,7 @@ ENUMERATE_WEBSOCKET_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
 
 // FIXME: This is copied from GlobalEventHandlers.cpp. Find a way to deduplicate it.
-void WebSocket::set_event_handler_attribute(const FlyString& name, HTML::EventHandler value)
+void WebSocket::set_event_handler_attribute(FlyString const& name, HTML::EventHandler value)
 {
     RefPtr<DOM::EventListener> listener;
     if (!value.callback.is_null()) {
@@ -261,7 +261,7 @@ void WebSocket::set_event_handler_attribute(const FlyString& name, HTML::EventHa
     }
 }
 
-HTML::EventHandler WebSocket::get_event_handler_attribute(const FlyString& name)
+HTML::EventHandler WebSocket::get_event_handler_attribute(FlyString const& name)
 {
     for (auto& listener : listeners()) {
         if (listener.event_name == name && listener.listener->is_attribute())

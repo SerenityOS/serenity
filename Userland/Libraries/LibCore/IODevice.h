@@ -20,7 +20,7 @@ class LineIterator {
 public:
     explicit LineIterator(IODevice&, bool is_end = false);
 
-    bool operator==(const LineIterator& other) const { return &other == this || (at_end() && other.is_end()) || (other.at_end() && is_end()); }
+    bool operator==(LineIterator const& other) const { return &other == this || (at_end() && other.is_end()) || (other.at_end() && is_end()); }
     bool is_end() const { return m_is_end; }
     bool at_end() const;
 
@@ -64,7 +64,7 @@ public:
     bool eof() const { return m_eof; }
 
     int error() const { return m_error; }
-    const char* error_string() const;
+    char const* error_string() const;
 
     bool has_error() const { return m_error != 0; }
 
@@ -74,8 +74,8 @@ public:
     ByteBuffer read_all();
     String read_line(size_t max_size = 16384);
 
-    bool write(const u8*, int size);
-    bool write(const StringView&);
+    bool write(u8 const*, int size);
+    bool write(StringView const&);
 
     bool truncate(off_t);
 

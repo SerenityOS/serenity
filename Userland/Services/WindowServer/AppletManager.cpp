@@ -173,7 +173,7 @@ void AppletManager::draw()
     }
 }
 
-void AppletManager::draw_applet(const Window& applet)
+void AppletManager::draw_applet(Window const& applet)
 {
     if (!applet.backing_store())
         return;
@@ -185,7 +185,7 @@ void AppletManager::draw_applet(const Window& applet)
     painter.blit(applet.rect_in_applet_area().location(), *applet.backing_store(), applet.backing_store()->rect());
 }
 
-void AppletManager::invalidate_applet(const Window& applet, const Gfx::IntRect&)
+void AppletManager::invalidate_applet(Window const& applet, const Gfx::IntRect&)
 {
     draw_applet(applet);
     draw();

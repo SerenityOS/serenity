@@ -48,7 +48,7 @@ public:
 
     KResultOr<off_t> seek(off_t, int whence);
     KResultOr<size_t> read(UserOrKernelBuffer&, size_t);
-    KResultOr<size_t> write(const UserOrKernelBuffer& data, size_t);
+    KResultOr<size_t> write(UserOrKernelBuffer const& data, size_t);
     KResult stat(::stat&);
 
     // NOTE: These ignore the current offset of this file description.
@@ -71,30 +71,30 @@ public:
     bool is_directory() const { return m_is_directory; }
 
     File& file() { return *m_file; }
-    const File& file() const { return *m_file; }
+    File const& file() const { return *m_file; }
 
     bool is_device() const;
-    const Device* device() const;
+    Device const* device() const;
     Device* device();
 
     bool is_tty() const;
-    const TTY* tty() const;
+    TTY const* tty() const;
     TTY* tty();
 
     bool is_inode_watcher() const;
-    const InodeWatcher* inode_watcher() const;
+    InodeWatcher const* inode_watcher() const;
     InodeWatcher* inode_watcher();
 
     bool is_master_pty() const;
-    const MasterPTY* master_pty() const;
+    MasterPTY const* master_pty() const;
     MasterPTY* master_pty();
 
     InodeMetadata metadata() const;
     Inode* inode() { return m_inode.ptr(); }
-    const Inode* inode() const { return m_inode.ptr(); }
+    Inode const* inode() const { return m_inode.ptr(); }
 
     Custody* custody() { return m_custody.ptr(); }
-    const Custody* custody() const { return m_custody.ptr(); }
+    Custody const* custody() const { return m_custody.ptr(); }
 
     KResultOr<Memory::Region*> mmap(Process&, Memory::VirtualRange const&, u64 offset, int prot, bool shared);
 
@@ -108,7 +108,7 @@ public:
 
     bool is_socket() const;
     Socket* socket();
-    const Socket* socket() const;
+    Socket const* socket() const;
 
     bool is_fifo() const;
     FIFO* fifo();

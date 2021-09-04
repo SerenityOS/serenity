@@ -28,7 +28,7 @@ public:
             return { location, { resolution.width() / scale_factor, resolution.height() / scale_factor } };
         }
 
-        bool operator==(const Screen&) const = default;
+        bool operator==(Screen const&) const = default;
     };
 
     Vector<Screen> screens;
@@ -41,8 +41,8 @@ public:
     bool try_auto_add_framebuffer(String const&);
 
     // TODO: spaceship operator
-    bool operator!=(const ScreenLayout& other) const;
-    bool operator==(const ScreenLayout& other) const
+    bool operator!=(ScreenLayout const& other) const;
+    bool operator==(ScreenLayout const& other) const
     {
         return !(*this != other);
     }

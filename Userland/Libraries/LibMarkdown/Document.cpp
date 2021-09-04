@@ -69,7 +69,7 @@ static bool helper(Vector<StringView>::ConstIterator& lines, NonnullOwnPtrVector
     return true;
 }
 
-OwnPtr<Document> Document::parse(const StringView& str)
+OwnPtr<Document> Document::parse(StringView const& str)
 {
     const Vector<StringView> lines_vec = str.lines();
     auto lines = lines_vec.begin();

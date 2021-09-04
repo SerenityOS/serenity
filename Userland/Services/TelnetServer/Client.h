@@ -29,8 +29,8 @@ protected:
 
     void drain_socket();
     void drain_pty();
-    void handle_data(const StringView&);
-    void handle_command(const Command& command);
+    void handle_data(StringView const&);
+    void handle_command(Command const& command);
     void handle_error();
     void send_data(StringView str);
     void send_command(Command command);

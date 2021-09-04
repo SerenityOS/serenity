@@ -88,7 +88,7 @@ static KResultOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]
         return copy_to_user(stack_ptr, &value);
     };
 
-    auto push_string_on_new_stack = [&new_sp](const String& string) {
+    auto push_string_on_new_stack = [&new_sp](String const& string) {
         new_sp -= round_up_to_power_of_two(string.length() + 1, sizeof(FlatPtr));
         Userspace<FlatPtr*> stack_ptr = new_sp;
         return copy_to_user(stack_ptr, string.characters(), string.length() + 1);
@@ -182,7 +182,7 @@ static KResultOr<RequiredLoadRange> get_required_load_range(FileDescription& pro
     }
 
     RequiredLoadRange range {};
-    elf_image.for_each_program_header([&range](const auto& pheader) {
+    elf_image.for_each_program_header([&range](auto const& pheader) {
         if (pheader.type() != PT_LOAD)
             return;
 
@@ -771,11 +771,11 @@ static KResultOr<Vector<String>> find_shebang_interpreter_for_executable(const c
     return ENOEXEC;
 }
 
-KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(const String& path, const ElfW(Ehdr) & main_program_header, int nread, size_t file_size)
+KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(String const& path, const ElfW(Ehdr) & main_program_header, int nread, size_t file_size)
 {
     // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
     String interpreter_path;
-    if (!ELF::validate_program_headers(main_program_header, file_size, (const u8*)&main_program_header, nread, &interpreter_path)) {
+    if (!ELF::validate_program_headers(main_program_header, file_size, (u8 const*)&main_program_header, nread, &interpreter_path)) {
         dbgln("exec({}): File has invalid ELF Program headers", path);
         return ENOEXEC;
     }
@@ -964,7 +964,7 @@ KResultOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params
         path = path_arg.value()->view();
     }
 
-    auto copy_user_strings = [](const auto& list, auto& output) {
+    auto copy_user_strings = [](auto const& list, auto& output) {
         if (!list.length)
             return true;
         Checked<size_t> size = sizeof(*list.strings);

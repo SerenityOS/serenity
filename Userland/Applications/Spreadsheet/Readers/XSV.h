@@ -124,7 +124,7 @@ public:
     template<bool const_>
     class RowIterator {
     public:
-        explicit RowIterator(const XSV& xsv, size_t init_index = 0) requires(const_)
+        explicit RowIterator(XSV const& xsv, size_t init_index = 0) requires(const_)
             : m_xsv(const_cast<XSV&>(xsv))
             , m_index(init_index)
         {
@@ -146,7 +146,7 @@ public:
         }
 
         bool is_end() const { return m_index == m_xsv.m_rows.size(); }
-        bool operator==(const RowIterator& other) const
+        bool operator==(RowIterator const& other) const
         {
             return m_index == other.m_index && &m_xsv == &other.m_xsv;
         }

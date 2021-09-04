@@ -385,7 +385,7 @@ template<typename TreeType, typename ElementType>
 class RedBlackTreeIterator {
 public:
     RedBlackTreeIterator() = default;
-    bool operator!=(const RedBlackTreeIterator& other) const { return m_node != other.m_node; }
+    bool operator!=(RedBlackTreeIterator const& other) const { return m_node != other.m_node; }
     RedBlackTreeIterator& operator++()
     {
         if (!m_node)
@@ -448,7 +448,7 @@ public:
         return &node->value;
     }
 
-    void insert(K key, const V& value)
+    void insert(K key, V const& value)
     {
         insert(key, V(value));
     }

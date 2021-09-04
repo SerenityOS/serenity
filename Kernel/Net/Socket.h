@@ -68,7 +68,7 @@ public:
     SetupState setup_state() const { return m_setup_state; }
     void set_setup_state(SetupState setup_state);
 
-    virtual Role role(const FileDescription&) const { return m_role; }
+    virtual Role role(FileDescription const&) const { return m_role; }
 
     bool is_connected() const { return m_connected; }
     void set_connected(bool);
@@ -78,17 +78,17 @@ public:
 
     KResult shutdown(int how);
 
-    virtual KResult bind(Userspace<const sockaddr*>, socklen_t) = 0;
-    virtual KResult connect(FileDescription&, Userspace<const sockaddr*>, socklen_t, ShouldBlock) = 0;
+    virtual KResult bind(Userspace<sockaddr const*>, socklen_t) = 0;
+    virtual KResult connect(FileDescription&, Userspace<sockaddr const*>, socklen_t, ShouldBlock) = 0;
     virtual KResult listen(size_t) = 0;
     virtual void get_local_address(sockaddr*, socklen_t*) = 0;
     virtual void get_peer_address(sockaddr*, socklen_t*) = 0;
     virtual bool is_local() const { return false; }
     virtual bool is_ipv4() const { return false; }
-    virtual KResultOr<size_t> sendto(FileDescription&, const UserOrKernelBuffer&, size_t, int flags, Userspace<const sockaddr*>, socklen_t) = 0;
+    virtual KResultOr<size_t> sendto(FileDescription&, UserOrKernelBuffer const&, size_t, int flags, Userspace<sockaddr const*>, socklen_t) = 0;
     virtual KResultOr<size_t> recvfrom(FileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) = 0;
 
-    virtual KResult setsockopt(int level, int option, Userspace<const void*>, socklen_t);
+    virtual KResult setsockopt(int level, int option, Userspace<void const*>, socklen_t);
     virtual KResult getsockopt(FileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>);
 
     ProcessID origin_pid() const { return m_origin.pid; }
@@ -103,15 +103,15 @@ public:
 
     // ^File
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override final;
-    virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override final;
+    virtual KResultOr<size_t> write(FileDescription&, u64, UserOrKernelBuffer const&, size_t) override final;
     virtual KResult stat(::stat&) const override;
-    virtual String absolute_path(const FileDescription&) const override = 0;
+    virtual String absolute_path(FileDescription const&) const override = 0;
 
     bool has_receive_timeout() const { return m_receive_timeout != Time::zero(); }
-    const Time& receive_timeout() const { return m_receive_timeout; }
+    Time const& receive_timeout() const { return m_receive_timeout; }
 
     bool has_send_timeout() const { return m_send_timeout != Time::zero(); }
-    const Time& send_timeout() const { return m_send_timeout; }
+    Time const& send_timeout() const { return m_send_timeout; }
 
     bool wants_timestamp() const { return m_timestamp; }
 
@@ -194,16 +194,16 @@ public:
             m_socket->mutex().unlock();
     }
 
-    SocketHandle(const SocketHandle&) = delete;
-    SocketHandle& operator=(const SocketHandle&) = delete;
+    SocketHandle(SocketHandle const&) = delete;
+    SocketHandle& operator=(SocketHandle const&) = delete;
 
     operator bool() const { return m_socket; }
 
     SocketType* operator->() { return &socket(); }
-    const SocketType* operator->() const { return &socket(); }
+    SocketType const* operator->() const { return &socket(); }
 
     SocketType& socket() { return *m_socket; }
-    const SocketType& socket() const { return *m_socket; }
+    SocketType const& socket() const { return *m_socket; }
 
 private:
     RefPtr<SocketType> m_socket;

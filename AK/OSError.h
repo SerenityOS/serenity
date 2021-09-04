@@ -20,7 +20,7 @@ public:
     }
 
     int error() const { return m_error; }
-    const char* string() const { return strerror(m_error); }
+    char const* string() const { return strerror(m_error); }
 
 private:
     int m_error { 0 };
@@ -28,7 +28,7 @@ private:
 
 template<>
 struct Formatter<OSError> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const OSError& value)
+    void format(FormatBuilder& builder, OSError const& value)
     {
         Formatter<StringView>::format(builder, value.string());
     }

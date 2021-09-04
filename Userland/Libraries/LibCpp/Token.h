@@ -83,10 +83,10 @@ struct Position {
     size_t line { 0 };
     size_t column { 0 };
 
-    bool operator<(const Position&) const;
-    bool operator<=(const Position&) const;
-    bool operator>(const Position&) const;
-    bool operator==(const Position&) const;
+    bool operator<(Position const&) const;
+    bool operator<=(Position const&) const;
+    bool operator>(Position const&) const;
+    bool operator==(Position const&) const;
 };
 
 struct Token {
@@ -96,7 +96,7 @@ struct Token {
 #undef __TOKEN
     };
 
-    Token(Type type, const Position& start, const Position& end, const StringView& text)
+    Token(Type type, Position const& start, Position const& end, StringView const& text)
         : m_type(type)
         , m_start(start)
         , m_end(end)
@@ -104,7 +104,7 @@ struct Token {
     {
     }
 
-    static const char* type_to_string(Type t)
+    static char const* type_to_string(Type t)
     {
         switch (t) {
 #define __TOKEN(x) \
@@ -119,13 +119,13 @@ struct Token {
     String to_string() const;
     String type_as_string() const;
 
-    const Position& start() const { return m_start; }
-    const Position& end() const { return m_end; }
+    Position const& start() const { return m_start; }
+    Position const& end() const { return m_end; }
 
-    void set_start(const Position& other) { m_start = other; }
-    void set_end(const Position& other) { m_end = other; }
+    void set_start(Position const& other) { m_start = other; }
+    void set_end(Position const& other) { m_end = other; }
     Type type() const { return m_type; }
-    const StringView& text() const { return m_text; }
+    StringView const& text() const { return m_text; }
 
 private:
     Type m_type { Type::Unknown };

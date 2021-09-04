@@ -40,7 +40,7 @@ Element::~Element()
 {
 }
 
-Attribute* Element::find_attribute(const FlyString& name)
+Attribute* Element::find_attribute(FlyString const& name)
 {
     for (auto& attribute : m_attributes) {
         if (attribute.name() == name)
@@ -49,7 +49,7 @@ Attribute* Element::find_attribute(const FlyString& name)
     return nullptr;
 }
 
-const Attribute* Element::find_attribute(const FlyString& name) const
+Attribute const* Element::find_attribute(FlyString const& name) const
 {
     for (auto& attribute : m_attributes) {
         if (attribute.name() == name)
@@ -58,14 +58,14 @@ const Attribute* Element::find_attribute(const FlyString& name) const
     return nullptr;
 }
 
-String Element::attribute(const FlyString& name) const
+String Element::attribute(FlyString const& name) const
 {
     if (auto* attribute = find_attribute(name))
         return attribute->value();
     return {};
 }
 
-ExceptionOr<void> Element::set_attribute(const FlyString& name, const String& value)
+ExceptionOr<void> Element::set_attribute(FlyString const& name, String const& value)
 {
     // FIXME: Proper name validation
     if (name.is_empty())
@@ -82,14 +82,14 @@ ExceptionOr<void> Element::set_attribute(const FlyString& name, const String& va
     return {};
 }
 
-void Element::remove_attribute(const FlyString& name)
+void Element::remove_attribute(FlyString const& name)
 {
     CSS::StyleInvalidator style_invalidator(document());
 
     m_attributes.remove_first_matching([&](auto& attribute) { return attribute.name() == name; });
 }
 
-bool Element::has_class(const FlyString& class_name, CaseSensitivity case_sensitivity) const
+bool Element::has_class(FlyString const& class_name, CaseSensitivity case_sensitivity) const
 {
     return any_of(m_classes, [&](auto& it) {
         return case_sensitivity == CaseSensitivity::CaseSensitive
@@ -148,7 +148,7 @@ RefPtr<Layout::Node> Element::create_layout_node()
     VERIFY_NOT_REACHED();
 }
 
-void Element::parse_attribute(const FlyString& name, const String& value)
+void Element::parse_attribute(FlyString const& name, String const& value)
 {
     if (name == HTML::AttributeNames::class_) {
         auto new_classes = value.split_view(' ');
@@ -172,7 +172,7 @@ enum class StyleDifference {
     NeedsRelayout,
 };
 
-static StyleDifference compute_style_difference(const CSS::StyleProperties& old_style, const CSS::StyleProperties& new_style, const Document& document)
+static StyleDifference compute_style_difference(const CSS::StyleProperties& old_style, const CSS::StyleProperties& new_style, Document const& document)
 {
     if (old_style == new_style)
         return StyleDifference::None;
@@ -268,7 +268,7 @@ void Element::set_inner_html(StringView markup)
 
 String Element::inner_html() const
 {
-    auto escape_string = [](const StringView& string, bool attribute_mode) -> String {
+    auto escape_string = [](StringView const& string, bool attribute_mode) -> String {
         // https://html.spec.whatwg.org/multipage/parsing.html#escapingString
         StringBuilder builder;
         for (auto& ch : string) {
@@ -289,7 +289,7 @@ String Element::inner_html() const
 
     StringBuilder builder;
 
-    Function<void(const Node&)> recurse = [&](auto& node) {
+    Function<void(Node const&)> recurse = [&](auto& node) {
         for (auto* child = node.first_child(); child; child = child->next_sibling()) {
             if (child->is_element()) {
                 auto& element = verify_cast<Element>(*child);

@@ -9,7 +9,7 @@
 
 namespace HackStudio {
 
-ProjectFile::ProjectFile(const String& name)
+ProjectFile::ProjectFile(String const& name)
     : m_name(name)
 {
 }

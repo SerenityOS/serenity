@@ -87,11 +87,11 @@ int main(int argc, char** argv)
         };
     };
 
-    const char* command_to_run = nullptr;
-    const char* file_to_read_from = nullptr;
-    Vector<const char*> script_args;
+    char const* command_to_run = nullptr;
+    char const* file_to_read_from = nullptr;
+    Vector<char const*> script_args;
     bool skip_rc_files = false;
-    const char* format = nullptr;
+    char const* format = nullptr;
     bool should_format_live = false;
     bool keep_open = false;
 

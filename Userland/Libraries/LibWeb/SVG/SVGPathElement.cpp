@@ -17,7 +17,7 @@
 
 namespace Web::SVG {
 
-[[maybe_unused]] static void print_instruction(const PathInstruction& instruction)
+[[maybe_unused]] static void print_instruction(PathInstruction const& instruction)
 {
     VERIFY(PATH_DEBUG);
 
@@ -85,7 +85,7 @@ namespace Web::SVG {
     }
 }
 
-PathDataParser::PathDataParser(const String& source)
+PathDataParser::PathDataParser(String const& source)
     : m_source(source)
 {
 }
@@ -451,7 +451,7 @@ RefPtr<Layout::Node> SVGPathElement::create_layout_node()
     return adopt_ref(*new Layout::SVGPathBox(document(), *this, move(style)));
 }
 
-void SVGPathElement::parse_attribute(const FlyString& name, const String& value)
+void SVGPathElement::parse_attribute(FlyString const& name, String const& value)
 {
     SVGGeometryElement::parse_attribute(name, value);
 

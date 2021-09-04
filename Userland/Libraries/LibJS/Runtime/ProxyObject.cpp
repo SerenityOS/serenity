@@ -269,7 +269,7 @@ bool ProxyObject::internal_prevent_extensions()
 }
 
 // 10.5.5 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p
-Optional<PropertyDescriptor> ProxyObject::internal_get_own_property(const PropertyName& property_name) const
+Optional<PropertyDescriptor> ProxyObject::internal_get_own_property(PropertyName const& property_name) const
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -1010,7 +1010,7 @@ void ProxyObject::visit_edges(Cell::Visitor& visitor)
     visitor.visit(&m_handler);
 }
 
-const FlyString& ProxyObject::name() const
+FlyString const& ProxyObject::name() const
 {
     VERIFY(is_function());
     return static_cast<FunctionObject&>(m_target).name();

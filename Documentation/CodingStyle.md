@@ -595,5 +595,5 @@ Salt const& m_salt;
 ###### Wrong:
 
 ```cpp
-const Salt& m_salt;
+Salt const& m_salt;
 ```

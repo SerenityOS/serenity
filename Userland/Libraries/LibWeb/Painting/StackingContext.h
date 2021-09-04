@@ -16,7 +16,7 @@ public:
     StackingContext(Box&, StackingContext* parent);
 
     StackingContext* parent() { return m_parent; }
-    const StackingContext* parent() const { return m_parent; }
+    StackingContext const* parent() const { return m_parent; }
 
     enum class StackingContextPaintPhase {
         BackgroundAndBorders,

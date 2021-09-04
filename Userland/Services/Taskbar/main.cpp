@@ -154,14 +154,14 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         app_category_menus.set(category, category_menu);
     };
 
-    for (const auto& category : sorted_app_categories) {
+    for (auto const& category : sorted_app_categories) {
         if (category != "Settings"sv)
             create_category_menu(category);
     }
 
     // Then we create and insert all the app menu items into the right place.
     int app_identifier = 0;
-    for (const auto& app : g_apps) {
+    for (auto const& app : g_apps) {
         if (app.category == "Settings"sv) {
             ++app_identifier;
             continue;
@@ -256,7 +256,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         posix_spawn_file_actions_addchdir(&spawn_actions, home_directory.characters());
 
         pid_t child_pid;
-        const char* argv[] = { "/bin/Run", nullptr };
+        char const* argv[] = { "/bin/Run", nullptr };
         if ((errno = posix_spawn(&child_pid, "/bin/Run", &spawn_actions, nullptr, const_cast<char**>(argv), environ))) {
             perror("posix_spawn");
         } else {

@@ -436,7 +436,7 @@ Model* HeaderView::model()
     return m_table_view.model();
 }
 
-const Model* HeaderView::model() const
+Model const* HeaderView::model() const
 {
     return m_table_view.model();
 }

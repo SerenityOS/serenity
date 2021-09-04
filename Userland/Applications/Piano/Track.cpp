@@ -13,7 +13,7 @@
 #include <LibDSP/Music.h>
 #include <math.h>
 
-Track::Track(const u32& time)
+Track::Track(u32 const& time)
     : m_time(time)
     , m_temporary_transport(make_ref_counted<LibDSP::Transport>(120, 4))
     , m_delay(make_ref_counted<LibDSP::Effects::Delay>(m_temporary_transport))
@@ -120,7 +120,7 @@ void Track::reset()
         m_roll_iterators[note] = m_roll_notes[note].begin();
 }
 
-String Track::set_recorded_sample(const StringView& path)
+String Track::set_recorded_sample(StringView const& path)
 {
     NonnullRefPtr<Audio::Loader> loader = Audio::Loader::create(path);
     if (loader->has_error())

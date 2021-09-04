@@ -31,7 +31,7 @@
     T(URL)
 
 #undef __ENUMERATE_TARGET
-#define __ENUMERATE_TARGET(x) extern "C" int Test##x(const uint8_t*, size_t);
+#define __ENUMERATE_TARGET(x) extern "C" int Test##x(uint8_t const*, size_t);
 ENUMERATE_TARGETS(__ENUMERATE_TARGET)
 #undef __ENUMERATE_TARGET
 
@@ -107,7 +107,7 @@ ENUMERATE_TARGETS(__ENUMERATE_TARGET)
 #include <Meta/Lagom/Fuzzers/FuzzURL.cpp>
 #undef LLVMFuzzerTestOneInput
 
-static auto parse_target_name(const String& name)
+static auto parse_target_name(String const& name)
 {
     if (name == "list") {
         outln("The following targets are included:");
@@ -131,8 +131,8 @@ static auto parse_target_name(const String& name)
 
 int main(int argc, char** argv)
 {
-    const char* type;
-    const char* filename;
+    char const* type;
+    char const* filename;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(type, "Type of fuzzing target to run (use \"list\" to list all existing)", "target-kind");

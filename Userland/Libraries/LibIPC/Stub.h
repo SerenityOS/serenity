@@ -24,7 +24,7 @@ public:
 
     virtual u32 magic() const = 0;
     virtual String name() const = 0;
-    virtual OwnPtr<MessageBuffer> handle(const Message&) = 0;
+    virtual OwnPtr<MessageBuffer> handle(Message const&) = 0;
 
 protected:
     Stub();

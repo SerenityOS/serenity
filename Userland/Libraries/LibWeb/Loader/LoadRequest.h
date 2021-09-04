@@ -19,26 +19,26 @@ public:
     {
     }
 
-    static LoadRequest create_for_url_on_page(const URL& url, Page* page);
+    static LoadRequest create_for_url_on_page(URL const& url, Page* page);
 
     bool is_valid() const { return m_url.is_valid(); }
 
-    const URL& url() const { return m_url; }
-    void set_url(const URL& url) { m_url = url; }
+    URL const& url() const { return m_url; }
+    void set_url(URL const& url) { m_url = url; }
 
-    const String& method() const { return m_method; }
-    void set_method(const String& method) { m_method = method; }
+    String const& method() const { return m_method; }
+    void set_method(String const& method) { m_method = method; }
 
-    const ByteBuffer& body() const { return m_body; }
-    void set_body(const ByteBuffer& body) { m_body = body; }
+    ByteBuffer const& body() const { return m_body; }
+    void set_body(ByteBuffer const& body) { m_body = body; }
 
     unsigned hash() const
     {
         // FIXME: Include headers in the hash as well
-        return pair_int_hash(pair_int_hash(m_url.to_string().hash(), m_method.hash()), string_hash((const char*)m_body.data(), m_body.size()));
+        return pair_int_hash(pair_int_hash(m_url.to_string().hash(), m_method.hash()), string_hash((char const*)m_body.data(), m_body.size()));
     }
 
-    bool operator==(const LoadRequest& other) const
+    bool operator==(LoadRequest const& other) const
     {
         if (m_headers.size() != other.m_headers.size())
             return false;
@@ -52,8 +52,8 @@ public:
         return m_url == other.m_url && m_method == other.m_method && m_body == other.m_body;
     }
 
-    void set_header(const String& name, const String& value) { m_headers.set(name, value); }
-    String header(const String& name) const { return m_headers.get(name).value_or({}); }
+    void set_header(String const& name, String const& value) { m_headers.set(name, value); }
+    String header(String const& name) const { return m_headers.get(name).value_or({}); }
 
     const HashMap<String, String>& headers() const { return m_headers; }
 

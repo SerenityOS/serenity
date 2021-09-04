@@ -27,9 +27,9 @@ static MutexProtected<LocalSocket::List>& all_sockets()
     return *s_list;
 }
 
-void LocalSocket::for_each(Function<void(const LocalSocket&)> callback)
+void LocalSocket::for_each(Function<void(LocalSocket const&)> callback)
 {
-    all_sockets().for_each_shared([&](const auto& socket) {
+    all_sockets().for_each_shared([&](auto const& socket) {
         callback(socket);
     });
 }
@@ -123,7 +123,7 @@ void LocalSocket::get_peer_address(sockaddr* address, socklen_t* address_size)
     get_local_address(address, address_size);
 }
 
-KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t address_size)
+KResult LocalSocket::bind(Userspace<sockaddr const*> user_address, socklen_t address_size)
 {
     VERIFY(setup_state() == SetupState::Unstarted);
     if (address_size != sizeof(sockaddr_un))
@@ -164,13 +164,13 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
     return KSuccess;
 }
 
-KResult LocalSocket::connect(FileDescription& description, Userspace<const sockaddr*> address, socklen_t address_size, ShouldBlock)
+KResult LocalSocket::connect(FileDescription& description, Userspace<sockaddr const*> address, socklen_t address_size, ShouldBlock)
 {
     VERIFY(!m_bound);
     if (address_size != sizeof(sockaddr_un))
         return set_so_error(EINVAL);
     u16 sa_family_copy;
-    auto* user_address = reinterpret_cast<const sockaddr*>(address.unsafe_userspace_ptr());
+    auto* user_address = reinterpret_cast<sockaddr const*>(address.unsafe_userspace_ptr());
     if (!copy_from_user(&sa_family_copy, &user_address->sa_family, sizeof(u16)))
         return set_so_error(EFAULT);
     if (sa_family_copy != AF_LOCAL)
@@ -278,7 +278,7 @@ void LocalSocket::detach(FileDescription& description)
     evaluate_block_conditions();
 }
 
-bool LocalSocket::can_read(const FileDescription& description, size_t) const
+bool LocalSocket::can_read(FileDescription const& description, size_t) const
 {
     auto role = this->role(description);
     if (role == Role::Listener)
@@ -290,7 +290,7 @@ bool LocalSocket::can_read(const FileDescription& description, size_t) const
     return false;
 }
 
-bool LocalSocket::has_attached_peer(const FileDescription& description) const
+bool LocalSocket::has_attached_peer(FileDescription const& description) const
 {
     auto role = this->role(description);
     if (role == Role::Accepted)
@@ -300,7 +300,7 @@ bool LocalSocket::has_attached_peer(const FileDescription& description) const
     return false;
 }
 
-bool LocalSocket::can_write(const FileDescription& description, size_t) const
+bool LocalSocket::can_write(FileDescription const& description, size_t) const
 {
     auto role = this->role(description);
     if (role == Role::Accepted)
@@ -310,7 +310,7 @@ bool LocalSocket::can_write(const FileDescription& description, size_t) const
     return false;
 }
 
-KResultOr<size_t> LocalSocket::sendto(FileDescription& description, const UserOrKernelBuffer& data, size_t data_size, int, Userspace<const sockaddr*>, socklen_t)
+KResultOr<size_t> LocalSocket::sendto(FileDescription& description, UserOrKernelBuffer const& data, size_t data_size, int, Userspace<sockaddr const*>, socklen_t)
 {
     if (!has_attached_peer(description))
         return set_so_error(EPIPE);
@@ -375,7 +375,7 @@ StringView LocalSocket::socket_path() const
     return m_path->view();
 }
 
-String LocalSocket::absolute_path(const FileDescription& description) const
+String LocalSocket::absolute_path(FileDescription const& description) const
 {
     StringBuilder builder;
     builder.append("socket:");
@@ -483,7 +483,7 @@ KResult LocalSocket::chown(FileDescription&, UserID uid, GroupID gid)
     return KSuccess;
 }
 
-NonnullRefPtrVector<FileDescription>& LocalSocket::recvfd_queue_for(const FileDescription& description)
+NonnullRefPtrVector<FileDescription>& LocalSocket::recvfd_queue_for(FileDescription const& description)
 {
     auto role = this->role(description);
     if (role == Role::Connected)
@@ -493,7 +493,7 @@ NonnullRefPtrVector<FileDescription>& LocalSocket::recvfd_queue_for(const FileDe
     VERIFY_NOT_REACHED();
 }
 
-NonnullRefPtrVector<FileDescription>& LocalSocket::sendfd_queue_for(const FileDescription& description)
+NonnullRefPtrVector<FileDescription>& LocalSocket::sendfd_queue_for(FileDescription const& description)
 {
     auto role = this->role(description);
     if (role == Role::Connected)
@@ -503,7 +503,7 @@ NonnullRefPtrVector<FileDescription>& LocalSocket::sendfd_queue_for(const FileDe
     VERIFY_NOT_REACHED();
 }
 
-KResult LocalSocket::sendfd(const FileDescription& socket_description, FileDescription& passing_description)
+KResult LocalSocket::sendfd(FileDescription const& socket_description, FileDescription& passing_description)
 {
     MutexLocker locker(mutex());
     auto role = this->role(socket_description);
@@ -518,7 +518,7 @@ KResult LocalSocket::sendfd(const FileDescription& socket_description, FileDescr
     return KSuccess;
 }
 
-KResultOr<NonnullRefPtr<FileDescription>> LocalSocket::recvfd(const FileDescription& socket_description)
+KResultOr<NonnullRefPtr<FileDescription>> LocalSocket::recvfd(FileDescription const& socket_description)
 {
     MutexLocker locker(mutex());
     auto role = this->role(socket_description);

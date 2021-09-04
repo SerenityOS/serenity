@@ -1078,7 +1078,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::search)
 }
 
 // B.2.3.2.1 CreateHTML ( string, tag, attribute, value ), https://tc39.es/ecma262/#sec-createhtml
-static Value create_html(GlobalObject& global_object, Value string, const String& tag, const String& attribute, Value value)
+static Value create_html(GlobalObject& global_object, Value string, String const& tag, String const& attribute, Value value)
 {
     auto& vm = global_object.vm();
     require_object_coercible(global_object, string);

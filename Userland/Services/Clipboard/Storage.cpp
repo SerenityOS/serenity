@@ -24,7 +24,7 @@ Storage::~Storage()
 {
 }
 
-void Storage::set_data(Core::AnonymousBuffer data, const String& mime_type, const HashMap<String, String>& metadata)
+void Storage::set_data(Core::AnonymousBuffer data, String const& mime_type, const HashMap<String, String>& metadata)
 {
     m_buffer = move(data);
     m_data_size = data.size();

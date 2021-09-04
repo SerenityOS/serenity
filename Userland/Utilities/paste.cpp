@@ -15,7 +15,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-static void spawn_command(const Vector<const char*>& command, const ByteBuffer& data, const char* state)
+static void spawn_command(const Vector<char const*>& command, ByteBuffer const& data, char const* state)
 {
     int pipefd[2];
     if (pipe(pipefd) < 0) {
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
     bool print_type = false;
     bool no_newline = false;
     bool watch = false;
-    Vector<const char*> watch_command;
+    Vector<char const*> watch_command;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Paste from the clipboard to stdout.");
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     if (watch) {
         watch_command.append(nullptr);
 
-        clipboard.on_change = [&](const String&) {
+        clipboard.on_change = [&](String const&) {
             // Technically there's a race here...
             auto data_and_type = clipboard.data_and_type();
             if (data_and_type.mime_type.is_null()) {

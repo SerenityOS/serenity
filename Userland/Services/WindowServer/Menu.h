@@ -32,7 +32,7 @@ public:
     virtual ~Menu() override;
 
     ClientConnection* client() { return m_client; }
-    const ClientConnection* client() const { return m_client; }
+    ClientConnection const* client() const { return m_client; }
     int menu_id() const { return m_menu_id; }
 
     bool is_open() const;
@@ -41,7 +41,7 @@ public:
 
     bool is_empty() const { return m_items.is_empty(); }
     size_t item_count() const { return m_items.size(); }
-    const MenuItem& item(size_t index) const { return m_items.at(index); }
+    MenuItem const& item(size_t index) const { return m_items.at(index); }
     MenuItem& item(size_t index) { return m_items.at(index); }
 
     MenuItem* item_by_identifier(unsigned identifier)
@@ -116,7 +116,7 @@ public:
     void popup(const Gfx::IntPoint&);
     void do_popup(const Gfx::IntPoint&, bool make_input, bool as_submenu = false);
 
-    bool is_menu_ancestor_of(const Menu&) const;
+    bool is_menu_ancestor_of(Menu const&) const;
 
     void redraw_if_theme_changed();
 
@@ -131,7 +131,7 @@ public:
 private:
     virtual void event(Core::Event&) override;
 
-    void handle_mouse_move_event(const MouseEvent&);
+    void handle_mouse_move_event(MouseEvent const&);
     size_t visible_item_count() const;
     Gfx::IntRect stripe_rect();
 
@@ -163,6 +163,6 @@ private:
     HashMap<u32, Vector<size_t>> m_alt_shortcut_character_to_item_indices;
 };
 
-u32 find_ampersand_shortcut_character(const StringView&);
+u32 find_ampersand_shortcut_character(StringView const&);
 
 }

@@ -2040,12 +2040,12 @@ WindowStack& WindowManager::get_rendering_window_stacks(WindowStack*& transition
     return Compositor::the().get_rendering_window_stacks(transitioning_window_stack);
 }
 
-void WindowManager::apply_cursor_theme(const String& theme_name)
+void WindowManager::apply_cursor_theme(String const& theme_name)
 {
     auto cursor_theme_config = Core::ConfigFile::open(String::formatted("/res/cursor-themes/{}/{}", theme_name, "Config.ini"));
 
     auto* current_cursor = Compositor::the().current_cursor();
-    auto reload_cursor = [&](RefPtr<Cursor>& cursor, const String& name) {
+    auto reload_cursor = [&](RefPtr<Cursor>& cursor, String const& name) {
         bool is_current_cursor = current_cursor && current_cursor == cursor.ptr();
 
         static auto const s_default_cursor_path = "/res/cursor-themes/Default/arrow.x2y2.png";

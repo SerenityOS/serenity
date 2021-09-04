@@ -83,10 +83,10 @@ public:
     const CSS::LengthBox& margin() const { return m_noninherited.margin; }
     const CSS::LengthBox& padding() const { return m_noninherited.padding; }
 
-    const BorderData& border_left() const { return m_noninherited.border_left; }
-    const BorderData& border_top() const { return m_noninherited.border_top; }
-    const BorderData& border_right() const { return m_noninherited.border_right; }
-    const BorderData& border_bottom() const { return m_noninherited.border_bottom; }
+    BorderData const& border_left() const { return m_noninherited.border_left; }
+    BorderData const& border_top() const { return m_noninherited.border_top; }
+    BorderData const& border_right() const { return m_noninherited.border_right; }
+    BorderData const& border_bottom() const { return m_noninherited.border_bottom; }
 
     const CSS::Length& border_bottom_left_radius() const { return m_noninherited.border_bottom_left_radius; }
     const CSS::Length& border_bottom_right_radius() const { return m_noninherited.border_bottom_right_radius; }
@@ -165,9 +165,9 @@ class ImmutableComputedValues final : public ComputedValues {
 
 class MutableComputedValues final : public ComputedValues {
 public:
-    void set_color(const Color& color) { m_inherited.color = color; }
+    void set_color(Color const& color) { m_inherited.color = color; }
     void set_cursor(CSS::Cursor cursor) { m_inherited.cursor = cursor; }
-    void set_background_color(const Color& color) { m_noninherited.background_color = color; }
+    void set_background_color(Color const& color) { m_noninherited.background_color = color; }
     void set_background_repeat_x(CSS::Repeat repeat) { m_noninherited.background_repeat_x = repeat; }
     void set_background_repeat_y(CSS::Repeat repeat) { m_noninherited.background_repeat_y = repeat; }
     void set_float(CSS::Float value) { m_noninherited.float_ = value; }

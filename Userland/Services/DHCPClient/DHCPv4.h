@@ -160,7 +160,7 @@ struct ParsedDHCPv4Options {
         for (auto& opt : options) {
             builder.appendff("\toption {} ({} bytes):", (u8)opt.key, (u8)opt.value.length);
             for (auto i = 0; i < opt.value.length; ++i)
-                builder.appendff(" {} ", ((const u8*)opt.value.value)[i]);
+                builder.appendff(" {} ", ((u8 const*)opt.value.value)[i]);
             builder.append('\n');
         }
         return builder.build();
@@ -168,7 +168,7 @@ struct ParsedDHCPv4Options {
 
     struct DHCPOptionValue {
         u8 length;
-        const void* value;
+        void const* value;
     };
 
     HashMap<DHCPOption, DHCPOptionValue> options;
@@ -199,10 +199,10 @@ public:
     u16 flags() const { return m_flags; }
     void set_flags(DHCPv4Flags flags) { m_flags = (u16)flags; }
 
-    const IPv4Address& ciaddr() const { return m_ciaddr; }
-    const IPv4Address& yiaddr() const { return m_yiaddr; }
-    const IPv4Address& siaddr() const { return m_siaddr; }
-    const IPv4Address& giaddr() const { return m_giaddr; }
+    IPv4Address const& ciaddr() const { return m_ciaddr; }
+    IPv4Address const& yiaddr() const { return m_yiaddr; }
+    IPv4Address const& siaddr() const { return m_siaddr; }
+    IPv4Address const& giaddr() const { return m_giaddr; }
 
     IPv4Address& ciaddr() { return m_ciaddr; }
     IPv4Address& yiaddr() { return m_yiaddr; }
@@ -212,11 +212,11 @@ public:
     u8* options() { return m_options; }
     ParsedDHCPv4Options parse_options() const;
 
-    const MACAddress& chaddr() const { return *(const MACAddress*)&m_chaddr[0]; }
-    void set_chaddr(const MACAddress& mac) { *(MACAddress*)&m_chaddr[0] = mac; }
+    MACAddress const& chaddr() const { return *(MACAddress const*)&m_chaddr[0]; }
+    void set_chaddr(MACAddress const& mac) { *(MACAddress*)&m_chaddr[0] = mac; }
 
-    StringView sname() const { return { (const char*)&m_sname[0] }; }
-    StringView file() const { return { (const char*)&m_file[0] }; }
+    StringView sname() const { return { (char const*)&m_sname[0] }; }
+    StringView file() const { return { (char const*)&m_file[0] }; }
 
 private:
     NetworkOrdered<u8> m_op;
@@ -249,7 +249,7 @@ public:
         options[3] = 99;
     }
 
-    void add_option(DHCPOption option, u8 length, const void* data)
+    void add_option(DHCPOption option, u8 length, void const* data)
     {
         VERIFY(m_can_add);
         // we need enough space to fit the option value, its length, and its data

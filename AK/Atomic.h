@@ -145,9 +145,9 @@ class Atomic {
 
 public:
     Atomic() noexcept = default;
-    Atomic& operator=(const Atomic&) volatile = delete;
+    Atomic& operator=(Atomic const&) volatile = delete;
     Atomic& operator=(Atomic&&) volatile = delete;
-    Atomic(const Atomic&) = delete;
+    Atomic(Atomic const&) = delete;
     Atomic(Atomic&&) = delete;
 
     constexpr Atomic(T val) noexcept
@@ -214,9 +214,9 @@ class Atomic<T, DefaultMemoryOrder> {
 
 public:
     Atomic() noexcept = default;
-    Atomic& operator=(const Atomic&) volatile = delete;
+    Atomic& operator=(Atomic const&) volatile = delete;
     Atomic& operator=(Atomic&&) volatile = delete;
-    Atomic(const Atomic&) = delete;
+    Atomic(Atomic const&) = delete;
     Atomic(Atomic&&) = delete;
 
     constexpr Atomic(T val) noexcept
@@ -345,9 +345,9 @@ class Atomic<T*, DefaultMemoryOrder> {
 
 public:
     Atomic() noexcept = default;
-    Atomic& operator=(const Atomic&) volatile = delete;
+    Atomic& operator=(Atomic const&) volatile = delete;
     Atomic& operator=(Atomic&&) volatile = delete;
-    Atomic(const Atomic&) = delete;
+    Atomic(Atomic const&) = delete;
     Atomic(Atomic&&) = delete;
 
     constexpr Atomic(T* val) noexcept

@@ -220,7 +220,7 @@ void BrowserWindow::build_menus()
                 tab.m_console_window->set_main_widget<ConsoleWidget>();
             }
             auto* console_widget = static_cast<ConsoleWidget*>(tab.m_console_window->main_widget());
-            console_widget->on_js_input = [&tab](const String& js_source) {
+            console_widget->on_js_input = [&tab](String const& js_source) {
                 tab.m_web_content_view->js_console_input(js_source);
             };
             console_widget->clear_output();

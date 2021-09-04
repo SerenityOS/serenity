@@ -41,7 +41,7 @@ private:
     void determine_boot_device();
     void determine_boot_device_with_partition_uuid();
 
-    OwnPtr<PartitionTable> try_to_initialize_partition_table(const StorageDevice&) const;
+    OwnPtr<PartitionTable> try_to_initialize_partition_table(StorageDevice const&) const;
 
     RefPtr<BlockDevice> boot_block_device() const;
 

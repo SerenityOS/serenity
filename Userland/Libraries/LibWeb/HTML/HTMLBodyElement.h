@@ -17,7 +17,7 @@ public:
     HTMLBodyElement(DOM::Document&, QualifiedName);
     virtual ~HTMLBodyElement() override;
 
-    virtual void parse_attribute(const FlyString&, const String&) override;
+    virtual void parse_attribute(FlyString const&, String const&) override;
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
 private:

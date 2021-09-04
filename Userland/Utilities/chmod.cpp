@@ -36,7 +36,7 @@ public:
     {
     }
 
-    Mask& operator|=(const Mask& other)
+    Mask& operator|=(Mask const& other)
     {
         removal_mask |= other.removal_mask;
         applying_mask |= other.applying_mask;
@@ -48,7 +48,7 @@ public:
     mode_t& get_applying_mask() { return applying_mask; }
 };
 
-Optional<Mask> string_to_mode(char access_scope, const char*& access_string);
+Optional<Mask> string_to_mode(char access_scope, char const*& access_string);
 Optional<Mask> apply_permission(char access_scope, char permission, char operation);
 
 int main(int argc, char** argv)
@@ -74,7 +74,7 @@ int main(int argc, char** argv)
         }
         mask.get_removal_mask() = ~mask.get_applying_mask();
     } else {
-        const char* access_string = argv[1];
+        char const* access_string = argv[1];
 
         while (*access_string != '\0') {
             Optional<Mask> tmp_mask;
@@ -127,7 +127,7 @@ int main(int argc, char** argv)
     return 0;
 }
 
-Optional<Mask> string_to_mode(char access_scope, const char*& access_string)
+Optional<Mask> string_to_mode(char access_scope, char const*& access_string)
 {
     char operation = *access_string;
 

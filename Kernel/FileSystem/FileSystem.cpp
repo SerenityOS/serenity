@@ -42,7 +42,7 @@ FileSystem* FileSystem::from_fsid(u32 id)
     return nullptr;
 }
 
-FileSystem::DirectoryEntryView::DirectoryEntryView(const StringView& n, InodeIdentifier i, u8 ft)
+FileSystem::DirectoryEntryView::DirectoryEntryView(StringView const& n, InodeIdentifier i, u8 ft)
     : name(n)
     , inode(i)
     , file_type(ft)

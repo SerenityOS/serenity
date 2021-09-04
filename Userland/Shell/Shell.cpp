@@ -63,7 +63,7 @@ void Shell::setup_signals()
     }
 }
 
-void Shell::print_path(const String& path)
+void Shell::print_path(String const& path)
 {
     if (s_disable_hyperlinks || !m_is_interactive) {
         printf("%s", path.characters());
@@ -133,7 +133,7 @@ String Shell::prompt() const
     return build_prompt();
 }
 
-String Shell::expand_tilde(const String& expression)
+String Shell::expand_tilde(String const& expression)
 {
     VERIFY(expression.starts_with('~'));
 
@@ -152,7 +152,7 @@ String Shell::expand_tilde(const String& expression)
         path.append(expression[i]);
 
     if (login_name.is_empty()) {
-        const char* home = getenv("HOME");
+        char const* home = getenv("HOME");
         if (!home) {
             auto passwd = getpwuid(getuid());
             VERIFY(passwd && passwd->pw_dir);
@@ -169,7 +169,7 @@ String Shell::expand_tilde(const String& expression)
     return String::formatted("{}/{}", passwd->pw_dir, path.to_string());
 }
 
-bool Shell::is_glob(const StringView& s)
+bool Shell::is_glob(StringView const& s)
 {
     for (size_t i = 0; i < s.length(); i++) {
         char c = s.characters_without_null_termination()[i];
@@ -179,7 +179,7 @@ bool Shell::is_glob(const StringView& s)
     return false;
 }
 
-Vector<StringView> Shell::split_path(const StringView& path)
+Vector<StringView> Shell::split_path(StringView const& path)
 {
     Vector<StringView> parts;
 
@@ -201,7 +201,7 @@ Vector<StringView> Shell::split_path(const StringView& path)
     return parts;
 }
 
-Vector<String> Shell::expand_globs(const StringView& path, StringView base)
+Vector<String> Shell::expand_globs(StringView const& path, StringView base)
 {
     auto explicitly_set_base = false;
     if (path.starts_with('/')) {
@@ -239,7 +239,7 @@ Vector<String> Shell::expand_globs(const StringView& path, StringView base)
     return results;
 }
 
-Vector<String> Shell::expand_globs(Vector<StringView> path_segments, const StringView& base)
+Vector<String> Shell::expand_globs(Vector<StringView> path_segments, StringView const& base)
 {
     if (path_segments.is_empty()) {
         String base_str = base;
@@ -337,7 +337,7 @@ String Shell::resolve_path(String path) const
     return Core::File::real_path_for(path);
 }
 
-Shell::LocalFrame* Shell::find_frame_containing_local_variable(const String& name)
+Shell::LocalFrame* Shell::find_frame_containing_local_variable(String const& name)
 {
     for (size_t i = m_local_frames.size(); i > 0; --i) {
         auto& frame = m_local_frames[i - 1];
@@ -347,7 +347,7 @@ Shell::LocalFrame* Shell::find_frame_containing_local_variable(const String& nam
     return nullptr;
 }
 
-RefPtr<AST::Value> Shell::lookup_local_variable(const String& name) const
+RefPtr<AST::Value> Shell::lookup_local_variable(String const& name) const
 {
     if (auto* frame = find_frame_containing_local_variable(name))
         return frame->local_variables.get(name).value();
@@ -382,7 +382,7 @@ RefPtr<AST::Value> Shell::get_argument(size_t index) const
     return nullptr;
 }
 
-String Shell::local_variable_or(const String& name, const String& replacement) const
+String Shell::local_variable_or(String const& name, String const& replacement) const
 {
     auto value = lookup_local_variable(name);
     if (value) {
@@ -393,7 +393,7 @@ String Shell::local_variable_or(const String& name, const String& replacement) c
     return replacement;
 }
 
-void Shell::set_local_variable(const String& name, RefPtr<AST::Value> value, bool only_in_current_frame)
+void Shell::set_local_variable(String const& name, RefPtr<AST::Value> value, bool only_in_current_frame)
 {
     if (!only_in_current_frame) {
         if (auto* frame = find_frame_containing_local_variable(name)) {
@@ -405,7 +405,7 @@ void Shell::set_local_variable(const String& name, RefPtr<AST::Value> value, boo
     m_local_frames.last().local_variables.set(name, move(value));
 }
 
-void Shell::unset_local_variable(const String& name, bool only_in_current_frame)
+void Shell::unset_local_variable(String const& name, bool only_in_current_frame)
 {
     if (!only_in_current_frame) {
         if (auto* frame = find_frame_containing_local_variable(name))
@@ -422,7 +422,7 @@ void Shell::define_function(String name, Vector<String> argnames, RefPtr<AST::No
     m_functions.set(name, { name, move(argnames), move(body) });
 }
 
-bool Shell::has_function(const String& name)
+bool Shell::has_function(String const& name)
 {
     return m_functions.contains(name);
 }
@@ -473,7 +473,7 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
     return true;
 }
 
-String Shell::format(const StringView& source, ssize_t& cursor) const
+String Shell::format(StringView const& source, ssize_t& cursor) const
 {
     Formatter formatter(source, cursor);
     auto result = formatter.format();
@@ -509,12 +509,12 @@ Shell::Frame::~Frame()
     frames.take_last();
 }
 
-String Shell::resolve_alias(const String& name) const
+String Shell::resolve_alias(String const& name) const
 {
     return m_aliases.get(name).value_or({});
 }
 
-bool Shell::is_runnable(const StringView& name)
+bool Shell::is_runnable(StringView const& name)
 {
     auto parts = name.split_view('/');
     auto path = name.to_string();
@@ -528,7 +528,7 @@ bool Shell::is_runnable(const StringView& name)
         [](auto& name, auto& program) { return strcmp(name.characters(), program.characters()); });
 }
 
-int Shell::run_command(const StringView& cmd, Optional<SourcePosition> source_position_override)
+int Shell::run_command(StringView const& cmd, Optional<SourcePosition> source_position_override)
 {
     // The default-constructed mode of the shell
     // should not be used for execution!
@@ -721,7 +721,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         return nullptr;
     }
 
-    Vector<const char*> argv;
+    Vector<char const*> argv;
     Vector<String> copy_argv = command.argv;
     argv.ensure_capacity(command.argv.size() + 1);
 
@@ -868,7 +868,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     return *job;
 }
 
-void Shell::execute_process(Vector<const char*>&& argv)
+void Shell::execute_process(Vector<char const*>&& argv)
 {
     int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
     if (rc < 0) {
@@ -1020,7 +1020,7 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
     return spawned_jobs;
 }
 
-bool Shell::run_file(const String& filename, bool explicitly_invoked)
+bool Shell::run_file(String const& filename, bool explicitly_invoked)
 {
     TemporaryChange script_change { current_script, filename };
     TemporaryChange interactive_change { m_is_interactive, false };
@@ -1074,7 +1074,7 @@ void Shell::block_on_pipeline(RefPtr<AST::Pipeline> pipeline)
 
 void Shell::block_on_job(RefPtr<Job> job)
 {
-    TemporaryChange<const Job*> current_job { m_current_job, job.ptr() };
+    TemporaryChange<Job const*> current_job { m_current_job, job.ptr() };
 
     if (!job)
         return;
@@ -1113,7 +1113,7 @@ String Shell::get_history_path()
     return String::formatted("{}/.history", home);
 }
 
-String Shell::escape_token_for_single_quotes(const String& token)
+String Shell::escape_token_for_single_quotes(String const& token)
 {
     // `foo bar \n '` -> `'foo bar \n '"'"`
 
@@ -1143,7 +1143,7 @@ String Shell::escape_token_for_single_quotes(const String& token)
     return builder.build();
 }
 
-String Shell::escape_token_for_double_quotes(const String& token)
+String Shell::escape_token_for_double_quotes(String const& token)
 {
     // `foo bar \n $x 'blah "hello` -> `"foo bar \\n $x 'blah \"hello"`
 
@@ -1199,7 +1199,7 @@ Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_
     }
 }
 
-String Shell::escape_token(const String& token)
+String Shell::escape_token(String const& token)
 {
     auto do_escape = [](auto& token) {
         StringBuilder builder;
@@ -1249,7 +1249,7 @@ String Shell::escape_token(const String& token)
     return do_escape(token);
 }
 
-String Shell::unescape_token(const String& token)
+String Shell::unescape_token(String const& token)
 {
     StringBuilder builder;
 
@@ -1279,12 +1279,12 @@ String Shell::unescape_token(const String& token)
     return builder.build();
 }
 
-String Shell::find_in_path(const StringView& program_name)
+String Shell::find_in_path(StringView const& program_name)
 {
     String path = getenv("PATH");
     if (!path.is_empty()) {
         auto directories = path.split(':');
-        for (const auto& directory : directories) {
+        for (auto const& directory : directories) {
             Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
             while (programs.has_next()) {
                 auto program = programs.next_path();
@@ -1309,7 +1309,7 @@ void Shell::cache_path()
         cached_path.clear_with_capacity();
 
     // Add shell builtins to the cache.
-    for (const auto& builtin_name : builtin_names)
+    for (auto const& builtin_name : builtin_names)
         cached_path.append(escape_token(builtin_name));
 
     // Add functions to the cache.
@@ -1321,7 +1321,7 @@ void Shell::cache_path()
     }
 
     // Add aliases to the cache.
-    for (const auto& alias : m_aliases) {
+    for (auto const& alias : m_aliases) {
         auto name = escape_token(alias.key);
         if (cached_path.contains_slow(name))
             continue;
@@ -1331,7 +1331,7 @@ void Shell::cache_path()
     String path = getenv("PATH");
     if (!path.is_empty()) {
         auto directories = path.split(':');
-        for (const auto& directory : directories) {
+        for (auto const& directory : directories) {
             Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
             while (programs.has_next()) {
                 auto program = programs.next_path();
@@ -1348,7 +1348,7 @@ void Shell::cache_path()
     quick_sort(cached_path);
 }
 
-void Shell::add_entry_to_cache(const String& entry)
+void Shell::add_entry_to_cache(String const& entry)
 {
     size_t index = 0;
     auto match = binary_search(
@@ -1366,14 +1366,14 @@ void Shell::add_entry_to_cache(const String& entry)
     cached_path.insert(index, entry);
 }
 
-void Shell::remove_entry_from_cache(const String& entry)
+void Shell::remove_entry_from_cache(String const& entry)
 {
     size_t index { 0 };
     auto match = binary_search(
         cached_path.span(),
         entry,
         &index,
-        [](const auto& a, const auto& b) { return strcmp(a.characters(), b.characters()); });
+        [](auto const& a, auto const& b) { return strcmp(a.characters(), b.characters()); });
 
     if (match)
         cached_path.remove(index);
@@ -1403,8 +1403,8 @@ Vector<Line::CompletionSuggestion> Shell::complete()
     return ast->complete_for_editor(*this, line.length());
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base,
-    const String& part, size_t offset, ExecutableOnly executable_only)
+Vector<Line::CompletionSuggestion> Shell::complete_path(String const& base,
+    String const& part, size_t offset, ExecutableOnly executable_only)
 {
     auto token = offset ? part.substring_view(0, offset) : "";
     String path;
@@ -1478,7 +1478,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base,
     return suggestions;
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_program_name(const String& name, size_t offset)
+Vector<Line::CompletionSuggestion> Shell::complete_program_name(String const& name, size_t offset)
 {
     auto match = binary_search(
         cached_path.span(),
@@ -1515,7 +1515,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(const String& na
     return suggestions;
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_variable(const String& name, size_t offset)
+Vector<Line::CompletionSuggestion> Shell::complete_variable(String const& name, size_t offset)
 {
     Vector<Line::CompletionSuggestion> suggestions;
     auto pattern = offset ? name.substring_view(0, offset) : "";
@@ -1549,7 +1549,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(const String& name, 
     return suggestions;
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_user(const String& name, size_t offset)
+Vector<Line::CompletionSuggestion> Shell::complete_user(String const& name, size_t offset)
 {
     Vector<Line::CompletionSuggestion> suggestions;
     auto pattern = offset ? name.substring_view(0, offset) : "";
@@ -1573,7 +1573,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_user(const String& name, size
     return suggestions;
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_name, const String& option, size_t offset)
+Vector<Line::CompletionSuggestion> Shell::complete_option(String const& program_name, String const& option, size_t offset)
 {
     size_t start = 0;
     while (start < option.length() && option[start] == '-' && start < 2)
@@ -1595,7 +1595,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_
                 negate = true;
                 option_pattern = option_pattern.substring_view(3, option_pattern.length() - 3);
             }
-            auto maybe_negate = [&](const StringView& view) {
+            auto maybe_negate = [&](StringView const& view) {
                 static StringBuilder builder;
                 builder.clear();
                 builder.append("--");
@@ -1618,7 +1618,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_
     return suggestions;
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_immediate_function_name(const String& name, size_t offset)
+Vector<Line::CompletionSuggestion> Shell::complete_immediate_function_name(String const& name, size_t offset)
 {
     Vector<Line::CompletionSuggestion> suggestions;
 
@@ -1934,7 +1934,7 @@ u64 Shell::find_last_job_id() const
     return job_id;
 }
 
-const Job* Shell::find_job(u64 id, bool is_pid)
+Job const* Shell::find_job(u64 id, bool is_pid)
 {
     for (auto& entry : jobs) {
         if (is_pid) {
@@ -1948,7 +1948,7 @@ const Job* Shell::find_job(u64 id, bool is_pid)
     return nullptr;
 }
 
-void Shell::kill_job(const Job* job, int sig)
+void Shell::kill_job(Job const* job, int sig)
 {
     if (!job)
         return;
@@ -2074,7 +2074,7 @@ void Shell::possibly_print_error() const
     warnln();
 }
 
-Optional<int> Shell::resolve_job_spec(const String& str)
+Optional<int> Shell::resolve_job_spec(String const& str)
 {
     if (!str.starts_with('%'))
         return {};

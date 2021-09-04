@@ -186,7 +186,7 @@ UNMAP_AFTER_INIT NE2000NetworkAdapter::~NE2000NetworkAdapter()
 {
 }
 
-bool NE2000NetworkAdapter::handle_irq(const RegisterState&)
+bool NE2000NetworkAdapter::handle_irq(RegisterState const&)
 {
     u8 status = in8(REG_RW_INTERRUPTSTATUS);
 

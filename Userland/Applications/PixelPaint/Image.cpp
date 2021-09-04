@@ -132,7 +132,7 @@ void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
     json.add("height", m_size.height());
     {
         auto json_layers = json.add_array("layers");
-        for (const auto& layer : m_layers) {
+        for (auto const& layer : m_layers) {
             Gfx::BMPWriter bmp_dumber;
             auto json_layer = json_layers.add_object();
             json_layer.add("width", layer.size().width());
@@ -148,7 +148,7 @@ void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
     }
 }
 
-Result<void, String> Image::write_to_file(const String& file_path) const
+Result<void, String> Image::write_to_file(String const& file_path) const
 {
     StringBuilder builder;
     JsonObjectSerializer json(builder);
@@ -246,7 +246,7 @@ RefPtr<Image> Image::take_snapshot() const
     auto snapshot = try_create_with_size(m_size);
     if (!snapshot)
         return nullptr;
-    for (const auto& layer : m_layers) {
+    for (auto const& layer : m_layers) {
         auto layer_snapshot = Layer::try_create_snapshot(*snapshot, layer);
         if (!layer_snapshot)
             return nullptr;
@@ -259,7 +259,7 @@ void Image::restore_snapshot(Image const& snapshot)
 {
     m_layers.clear();
     select_layer(nullptr);
-    for (const auto& snapshot_layer : snapshot.m_layers) {
+    for (auto const& snapshot_layer : snapshot.m_layers) {
         auto layer = Layer::try_create_snapshot(*this, snapshot_layer);
         VERIFY(layer);
         if (layer->is_selected())

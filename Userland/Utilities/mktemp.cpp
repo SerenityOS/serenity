@@ -14,9 +14,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-constexpr const char* default_template = "tmp.XXXXXXXXXX";
+constexpr char const* default_template = "tmp.XXXXXXXXXX";
 
-static char* generate_random_filename(const char* pattern)
+static char* generate_random_filename(char const* pattern)
 {
     char* new_filename = strdup(pattern);
     int pattern_length = strlen(pattern);
@@ -31,7 +31,7 @@ static char* generate_random_filename(const char* pattern)
     return new_filename;
 }
 
-static char* make_temp(const char* pattern, bool directory, bool dry_run)
+static char* make_temp(char const* pattern, bool directory, bool dry_run)
 {
     for (int i = 0; i < 100; ++i) {
         char* path = generate_random_filename(pattern);
@@ -62,11 +62,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* file_template = nullptr;
+    char const* file_template = nullptr;
     bool create_directory = false;
     bool dry_run = false;
     bool quiet = false;
-    const char* target_directory = nullptr;
+    char const* target_directory = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Create a temporary file or directory, safely, and print its name.");
@@ -82,7 +82,7 @@ int main(int argc, char** argv)
             target_directory = getcwd(nullptr, 0);
         } else {
             LexicalPath template_path(file_template);
-            const char* env_directory = getenv("TMPDIR");
+            char const* env_directory = getenv("TMPDIR");
             target_directory = env_directory && *env_directory ? env_directory : "/tmp";
         }
     }

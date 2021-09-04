@@ -18,7 +18,7 @@ public:
     virtual ~TCPServer() override;
 
     bool is_listening() const { return m_listening; }
-    bool listen(const IPv4Address& address, u16 port);
+    bool listen(IPv4Address const& address, u16 port);
     void set_blocking(bool blocking);
 
     RefPtr<TCPSocket> accept();

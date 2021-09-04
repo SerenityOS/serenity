@@ -11,7 +11,7 @@
 #include <LibCore/File.h>
 #include <ctype.h>
 
-static String title_casify(const String& dashy_name)
+static String title_casify(String const& dashy_name)
 {
     auto parts = dashy_name.split('-');
     StringBuilder builder;
@@ -70,8 +70,8 @@ enum class PropertyID {
     generator.append(R"~~~(
 };
 
-PropertyID property_id_from_string(const StringView&);
-const char* string_from_property_id(PropertyID);
+PropertyID property_id_from_string(StringView const&);
+char const* string_from_property_id(PropertyID);
 bool is_inherited_property(PropertyID);
 bool is_pseudo_property(PropertyID);
 RefPtr<StyleValue> property_initial_value(PropertyID);

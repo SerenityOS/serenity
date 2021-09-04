@@ -130,12 +130,12 @@ public:
     }
 
     WindowFrame& frame() { return m_frame; }
-    const WindowFrame& frame() const { return m_frame; }
+    WindowFrame const& frame() const { return m_frame; }
 
     Window* blocking_modal_window();
 
     ClientConnection* client() { return m_client; }
-    const ClientConnection* client() const { return m_client; }
+    ClientConnection const* client() const { return m_client; }
 
     WindowType type() const { return m_type; }
     int window_id() const { return m_window_id; }
@@ -144,7 +144,7 @@ public:
     i32 client_id() const { return m_client_id; }
 
     String title() const { return m_title; }
-    void set_title(const String&);
+    void set_title(String const&);
 
     String computed_title() const;
 
@@ -270,7 +270,7 @@ public:
 
     void set_default_icon();
 
-    const Cursor* cursor() const { return (m_cursor_override ? m_cursor_override : m_cursor).ptr(); }
+    Cursor const* cursor() const { return (m_cursor_override ? m_cursor_override : m_cursor).ptr(); }
     void set_cursor(RefPtr<Cursor> cursor) { m_cursor = move(cursor); }
     void set_cursor_override(RefPtr<Cursor> cursor) { m_cursor_override = move(cursor); }
     void remove_cursor_override() { m_cursor_override = nullptr; }
@@ -291,7 +291,7 @@ public:
     void detach_client(Badge<ClientConnection>);
 
     Window* parent_window() { return m_parent_window; }
-    const Window* parent_window() const { return m_parent_window; }
+    Window const* parent_window() const { return m_parent_window; }
 
     void set_parent_window(Window&);
 
@@ -382,8 +382,8 @@ private:
     Window(Core::Object&, WindowType);
 
     virtual void event(Core::Event&) override;
-    void handle_mouse_event(const MouseEvent&);
-    void handle_keydown_event(const KeyEvent&);
+    void handle_mouse_event(MouseEvent const&);
+    void handle_keydown_event(KeyEvent const&);
     void add_child_window(Window&);
     void add_accessory_window(Window&);
     void ensure_window_menu();

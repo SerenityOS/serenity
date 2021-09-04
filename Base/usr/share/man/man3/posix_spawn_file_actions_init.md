@@ -12,11 +12,11 @@ typedef struct posix_spawn_file_actions_t;
 int posix_spawn_file_actions_init(posix_spawn_file_actions_t*);
 int posix_spawn_file_actions_destroy(posix_spawn_file_actions_t*);
 
-int posix_spawn_file_actions_addchdir(posix_spawn_file_actions_t*, const char*);
+int posix_spawn_file_actions_addchdir(posix_spawn_file_actions_t*, char const*);
 int posix_spawn_file_actions_addfchdir(posix_spawn_file_actions_t*, int);
 int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t*, int);
 int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t*, int old_fd, int new_fd);
-int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t*, int fd, const char*, int flags, mode_t);
+int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t*, int fd, char const*, int flags, mode_t);
 ```
 
 ## Description

@@ -25,5 +25,5 @@ index 74a18d9..acc37f5 100644
 -    wint_t			a_wide_char;
 +    int  			a_wide_char;
  #endif
-     const char*			a_string;
+     char const*			a_string;
  #if HAVE_WCHAR_T

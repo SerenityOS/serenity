@@ -79,7 +79,7 @@ namespace Web::DOM {
     __ENUMERATE(OperationError)                      \
     __ENUMERATE(NotAllowedError)
 
-static u16 get_legacy_code_for_name(const FlyString& name)
+static u16 get_legacy_code_for_name(FlyString const& name)
 {
 #define __ENUMERATE(ErrorName, code) \
     if (name == #ErrorName)          \
@@ -96,23 +96,23 @@ class DOMException final
 public:
     using WrapperType = Bindings::DOMExceptionWrapper;
 
-    static NonnullRefPtr<DOMException> create(const FlyString& name, const FlyString& message)
+    static NonnullRefPtr<DOMException> create(FlyString const& name, FlyString const& message)
     {
         return adopt_ref(*new DOMException(name, message));
     }
 
     // JS constructor has message first, name second
-    static NonnullRefPtr<DOMException> create_with_global_object(Bindings::WindowObject&, const FlyString& message, const FlyString& name)
+    static NonnullRefPtr<DOMException> create_with_global_object(Bindings::WindowObject&, FlyString const& message, FlyString const& name)
     {
         return adopt_ref(*new DOMException(name, message));
     }
 
-    const FlyString& name() const { return m_name; }
-    const FlyString& message() const { return m_message; }
+    FlyString const& name() const { return m_name; }
+    FlyString const& message() const { return m_message; }
     u16 code() const { return get_legacy_code_for_name(m_name); }
 
 protected:
-    DOMException(const FlyString& name, const FlyString& message)
+    DOMException(FlyString const& name, FlyString const& message)
         : m_name(name)
         , m_message(message)
     {
@@ -126,7 +126,7 @@ private:
 #define __ENUMERATE(ErrorName)                                              \
     class ErrorName final {                                                 \
     public:                                                                 \
-        static NonnullRefPtr<DOMException> create(const FlyString& message) \
+        static NonnullRefPtr<DOMException> create(FlyString const& message) \
         {                                                                   \
             return DOMException::create(#ErrorName, message);               \
         }                                                                   \

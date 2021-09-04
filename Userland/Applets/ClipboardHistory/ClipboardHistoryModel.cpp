@@ -31,7 +31,7 @@ String ClipboardHistoryModel::column_name(int column) const
     }
 }
 
-static const char* bpp_for_format_resilient(String format)
+static char const* bpp_for_format_resilient(String format)
 {
     unsigned format_uint = format.to_uint().value_or(static_cast<unsigned>(Gfx::BitmapFormat::Invalid));
     // Cannot use Gfx::Bitmap::bpp_for_format here, as we have to accept invalid enum values.

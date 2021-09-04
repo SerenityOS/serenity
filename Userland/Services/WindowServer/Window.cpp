@@ -126,7 +126,7 @@ void Window::destroy()
     set_visible(false);
 }
 
-void Window::set_title(const String& title)
+void Window::set_title(String const& title)
 {
     if (m_title == title)
         return;
@@ -246,7 +246,7 @@ void Window::set_minimum_size(const Gfx::IntSize& size)
     m_minimum_size = size;
 }
 
-void Window::handle_mouse_event(const MouseEvent& event)
+void Window::handle_mouse_event(MouseEvent const& event)
 {
     set_automatic_cursor_tracking_enabled(event.buttons() != 0);
 
@@ -528,7 +528,7 @@ void Window::event(Core::Event& event)
     }
 
     if (static_cast<Event&>(event).is_mouse_event())
-        return handle_mouse_event(static_cast<const MouseEvent&>(event));
+        return handle_mouse_event(static_cast<MouseEvent const&>(event));
 
     switch (event.type()) {
     case Event::WindowEntered:
@@ -538,14 +538,14 @@ void Window::event(Core::Event& event)
         m_client->async_window_left(m_window_id);
         break;
     case Event::KeyDown:
-        handle_keydown_event(static_cast<const KeyEvent&>(event));
+        handle_keydown_event(static_cast<KeyEvent const&>(event));
         break;
     case Event::KeyUp:
         m_client->async_key_up(m_window_id,
-            (u32) static_cast<const KeyEvent&>(event).code_point(),
-            (u32) static_cast<const KeyEvent&>(event).key(),
-            static_cast<const KeyEvent&>(event).modifiers(),
-            (u32) static_cast<const KeyEvent&>(event).scancode());
+            (u32) static_cast<KeyEvent const&>(event).code_point(),
+            (u32) static_cast<KeyEvent const&>(event).key(),
+            static_cast<KeyEvent const&>(event).modifiers(),
+            (u32) static_cast<KeyEvent const&>(event).scancode());
         break;
     case Event::WindowActivated:
         m_client->async_window_activated(m_window_id);
@@ -563,14 +563,14 @@ void Window::event(Core::Event& event)
         m_client->async_window_close_request(m_window_id);
         break;
     case Event::WindowResized:
-        m_client->async_window_resized(m_window_id, static_cast<const ResizeEvent&>(event).rect());
+        m_client->async_window_resized(m_window_id, static_cast<ResizeEvent const&>(event).rect());
         break;
     default:
         break;
     }
 }
 
-void Window::handle_keydown_event(const KeyEvent& event)
+void Window::handle_keydown_event(KeyEvent const& event)
 {
     if (event.modifiers() == Mod_Alt && event.key() == Key_Space && type() == WindowType::Normal && !is_frameless()) {
         auto position = frame().titlebar_rect().bottom_left().translated(frame().rect().location());

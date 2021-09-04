@@ -41,17 +41,17 @@ public:
 public:
     ~MBRPartitionTable();
 
-    static Result<NonnullOwnPtr<MBRPartitionTable>, PartitionTable::Error> try_to_initialize(const StorageDevice&);
-    static OwnPtr<MBRPartitionTable> try_to_initialize(const StorageDevice&, u32 start_lba);
-    explicit MBRPartitionTable(const StorageDevice&);
-    MBRPartitionTable(const StorageDevice&, u32 start_lba);
+    static Result<NonnullOwnPtr<MBRPartitionTable>, PartitionTable::Error> try_to_initialize(StorageDevice const&);
+    static OwnPtr<MBRPartitionTable> try_to_initialize(StorageDevice const&, u32 start_lba);
+    explicit MBRPartitionTable(StorageDevice const&);
+    MBRPartitionTable(StorageDevice const&, u32 start_lba);
 
     bool is_protective_mbr() const;
     bool contains_ebr() const;
     virtual bool is_valid() const override { return m_valid; };
 
 protected:
-    const Header& header() const;
+    Header const& header() const;
     bool is_header_valid() const { return m_header_valid; };
 
 private:

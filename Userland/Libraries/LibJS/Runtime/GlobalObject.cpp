@@ -433,7 +433,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
 }
 
 // 19.2.6.1.1 Encode ( string, unescapedSet ), https://tc39.es/ecma262/#sec-encode
-static String encode([[maybe_unused]] JS::GlobalObject& global_object, const String& string, StringView unescaped_set)
+static String encode([[maybe_unused]] JS::GlobalObject& global_object, String const& string, StringView unescaped_set)
 {
     StringBuilder encoded_builder;
     for (unsigned char code_unit : string) {
@@ -448,7 +448,7 @@ static String encode([[maybe_unused]] JS::GlobalObject& global_object, const Str
 }
 
 // 19.2.6.1.2 Decode ( string, reservedSet ), https://tc39.es/ecma262/#sec-decode
-static String decode(JS::GlobalObject& global_object, const String& string, StringView reserved_set)
+static String decode(JS::GlobalObject& global_object, String const& string, StringView reserved_set)
 {
     StringBuilder decoded_builder;
     auto expected_continuation_bytes = 0;

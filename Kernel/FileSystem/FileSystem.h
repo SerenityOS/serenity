@@ -46,7 +46,7 @@ public:
     virtual KResult prepare_to_unmount() { return KSuccess; }
 
     struct DirectoryEntryView {
-        DirectoryEntryView(const StringView& name, InodeIdentifier, u8 file_type);
+        DirectoryEntryView(StringView const& name, InodeIdentifier, u8 file_type);
 
         StringView name;
         InodeIdentifier inode;
@@ -61,7 +61,7 @@ public:
     virtual bool is_file_backed() const { return false; }
 
     // Converts file types that are used internally by the filesystem to DT_* types
-    virtual u8 internal_file_type_to_directory_entry_type(const DirectoryEntryView& entry) const { return entry.file_type; }
+    virtual u8 internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const { return entry.file_type; }
 
 protected:
     FileSystem();
@@ -83,7 +83,7 @@ inline FileSystem* InodeIdentifier::fs()
     return FileSystem::from_fsid(m_fsid);
 }
 
-inline const FileSystem* InodeIdentifier::fs() const
+inline FileSystem const* InodeIdentifier::fs() const
 {
     return FileSystem::from_fsid(m_fsid);
 }

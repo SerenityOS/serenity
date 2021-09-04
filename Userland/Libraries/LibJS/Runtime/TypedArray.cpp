@@ -162,7 +162,7 @@ static void initialize_typed_array_from_typed_array(GlobalObject& global_object,
 
 // 23.2.5.1.5 InitializeTypedArrayFromArrayLike, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraylike
 template<typename T>
-static void initialize_typed_array_from_array_like(GlobalObject& global_object, TypedArray<T>& typed_array, const Object& array_like)
+static void initialize_typed_array_from_array_like(GlobalObject& global_object, TypedArray<T>& typed_array, Object const& array_like)
 {
     auto& vm = global_object.vm();
     auto length = length_of_array_like(global_object, array_like);
@@ -199,7 +199,7 @@ static void initialize_typed_array_from_array_like(GlobalObject& global_object, 
 
 // 23.2.5.1.4 InitializeTypedArrayFromList, https://tc39.es/ecma262/#sec-initializetypedarrayfromlist
 template<typename T>
-static void initialize_typed_array_from_list(GlobalObject& global_object, TypedArray<T>& typed_array, const MarkedValueList& list)
+static void initialize_typed_array_from_list(GlobalObject& global_object, TypedArray<T>& typed_array, MarkedValueList const& list)
 {
     auto& vm = global_object.vm();
     // Enforce 2GB "Excessive Length" limit

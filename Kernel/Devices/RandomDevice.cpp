@@ -24,7 +24,7 @@ UNMAP_AFTER_INIT RandomDevice::~RandomDevice()
 {
 }
 
-bool RandomDevice::can_read(const FileDescription&, size_t) const
+bool RandomDevice::can_read(FileDescription const&, size_t) const
 {
     return true;
 }
@@ -37,7 +37,7 @@ KResultOr<size_t> RandomDevice::read(FileDescription&, u64, UserOrKernelBuffer& 
     });
 }
 
-KResultOr<size_t> RandomDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t size)
+KResultOr<size_t> RandomDevice::write(FileDescription&, u64, UserOrKernelBuffer const&, size_t size)
 {
     // FIXME: Use input for entropy? I guess that could be a neat feature?
     return size;

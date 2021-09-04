@@ -10,7 +10,7 @@
 namespace Web {
 namespace HTML {
 
-Optional<EntityMatch> code_points_from_entity(const StringView& entity)
+Optional<EntityMatch> code_points_from_entity(StringView const& entity)
 {
     constexpr struct {
         StringView entity;

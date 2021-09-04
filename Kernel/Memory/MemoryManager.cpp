@@ -638,7 +638,7 @@ void MemoryManager::validate_syscall_preconditions(AddressSpace& space, Register
     // to avoid excessive spinlock recursion in this extemely common path.
     SpinlockLocker lock(space.get_lock());
 
-    auto unlock_and_handle_crash = [&lock, &regs](const char* description, int signal) {
+    auto unlock_and_handle_crash = [&lock, &regs](char const* description, int signal) {
         lock.unlock();
         handle_crash(regs, description, signal);
     };

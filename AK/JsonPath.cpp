@@ -13,7 +13,7 @@ namespace AK {
 JsonPathElement JsonPathElement::any_array_element { Kind::AnyIndex };
 JsonPathElement JsonPathElement::any_object_element { Kind::AnyKey };
 
-JsonValue JsonPath::resolve(const JsonValue& top_root) const
+JsonValue JsonPath::resolve(JsonValue const& top_root) const
 {
     auto root = top_root;
     for (auto& element : *this) {

@@ -273,7 +273,7 @@ UNMAP_AFTER_INIT KeyboardDevice::~KeyboardDevice()
 {
 }
 
-bool KeyboardDevice::can_read(const FileDescription&, size_t) const
+bool KeyboardDevice::can_read(FileDescription const&, size_t) const
 {
     return !m_queue.is_empty();
 }
@@ -306,7 +306,7 @@ KResultOr<size_t> KeyboardDevice::read(FileDescription&, u64, UserOrKernelBuffer
     return nread;
 }
 
-KResultOr<size_t> KeyboardDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t)
+KResultOr<size_t> KeyboardDevice::write(FileDescription&, u64, UserOrKernelBuffer const&, size_t)
 {
     return 0;
 }

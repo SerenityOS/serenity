@@ -99,9 +99,9 @@ enum __RegexAllFlags {
 //static_assert (sizeof(FlagsUnderlyingType) * 8 >= regex::POSIXFlags::Last << 1), "flags type too small")
 #define REG_SEARCH __Regex_Last << 1
 
-int regcomp(regex_t*, const char*, int);
-int regexec(const regex_t*, const char*, size_t, regmatch_t[], int);
-size_t regerror(int, const regex_t*, char*, size_t);
+int regcomp(regex_t*, char const*, int);
+int regexec(regex_t const*, char const*, size_t, regmatch_t[], int);
+size_t regerror(int, regex_t const*, char*, size_t);
 void regfree(regex_t*);
 
 __END_DECLS

@@ -72,7 +72,7 @@ public:
         handler->register_interrupt_handler();
     }
 
-    virtual bool handle_interrupt(const RegisterState&) override;
+    virtual bool handle_interrupt(RegisterState const&) override;
 
     virtual bool eoi() override;
 
@@ -103,7 +103,7 @@ public:
         handler->register_interrupt_handler();
     }
 
-    virtual bool handle_interrupt(const RegisterState&) override;
+    virtual bool handle_interrupt(RegisterState const&) override;
 
     virtual bool eoi() override;
 
@@ -142,7 +142,7 @@ PhysicalAddress APIC::get_base()
     return PhysicalAddress(base & 0xfffff000);
 }
 
-void APIC::set_base(const PhysicalAddress& base)
+void APIC::set_base(PhysicalAddress const& base)
 {
     MSR msr(APIC_BASE_MSR);
     msr.set(base.get() | 0x800);
@@ -175,7 +175,7 @@ void APIC::wait_for_pending_icr()
     }
 }
 
-void APIC::write_icr(const ICRReg& icr)
+void APIC::write_icr(ICRReg const& icr)
 {
     write_register(APIC_REG_ICR_HIGH, icr.high());
     write_register(APIC_REG_ICR_LOW, icr.low());
@@ -300,7 +300,7 @@ UNMAP_AFTER_INIT void APIC::do_boot_aps()
     // * aps_to_enable u32 values for ap_cpu_init_stacks
     // * aps_to_enable u32 values for ap_cpu_init_processor_info_array
     auto apic_startup_region = create_identity_mapped_region(PhysicalAddress(0x8000), Memory::page_round_up(apic_ap_start_size + (2 * aps_to_enable * sizeof(u32))));
-    memcpy(apic_startup_region->vaddr().as_ptr(), reinterpret_cast<const void*>(apic_ap_start), apic_ap_start_size);
+    memcpy(apic_startup_region->vaddr().as_ptr(), reinterpret_cast<void const*>(apic_ap_start), apic_ap_start_size);
 
     // Allocate enough stacks for all APs
     Vector<OwnPtr<Memory::Region>> apic_ap_stacks;
@@ -337,9 +337,9 @@ UNMAP_AFTER_INIT void APIC::do_boot_aps()
     *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_cr3) = MM.kernel_page_directory().cr3();
 
     // Store the BSP's GDT and IDT for the APs to use
-    const auto& gdtr = Processor::current().get_gdtr();
+    auto const& gdtr = Processor::current().get_gdtr();
     *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_gdtr) = FlatPtr(&gdtr);
-    const auto& idtr = get_idtr();
+    auto const& idtr = get_idtr();
     *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_idtr) = FlatPtr(&idtr);
 
     // Store the BSP's CR0 and CR4 values for the APs to use
@@ -573,7 +573,7 @@ u32 APIC::get_timer_divisor()
     return 16;
 }
 
-bool APICIPIInterruptHandler::handle_interrupt(const RegisterState&)
+bool APICIPIInterruptHandler::handle_interrupt(RegisterState const&)
 {
     dbgln_if(APIC_SMP_DEBUG, "APIC IPI on CPU #{}", Processor::current_id());
     return true;
@@ -586,7 +586,7 @@ bool APICIPIInterruptHandler::eoi()
     return true;
 }
 
-bool APICErrInterruptHandler::handle_interrupt(const RegisterState&)
+bool APICErrInterruptHandler::handle_interrupt(RegisterState const&)
 {
     dbgln("APIC: SMP error on CPU #{}", Processor::current_id());
     return true;

@@ -17,7 +17,7 @@ public:
     HTMLFieldSetElement(DOM::Document&, QualifiedName);
     virtual ~HTMLFieldSetElement() override;
 
-    const String& type() const
+    String const& type() const
     {
         static String fieldset = "fieldset";
         return fieldset;

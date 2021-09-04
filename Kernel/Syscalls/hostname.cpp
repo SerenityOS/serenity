@@ -14,7 +14,7 @@ KResultOr<FlatPtr> Process::sys$gethostname(Userspace<char*> buffer, size_t size
     REQUIRE_PROMISE(stdio);
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
-    return hostname().with_shared([&](const auto& name) -> KResultOr<FlatPtr> {
+    return hostname().with_shared([&](auto const& name) -> KResultOr<FlatPtr> {
         if (size < (name.length() + 1))
             return ENAMETOOLONG;
         if (!copy_to_user(buffer, name.characters(), name.length() + 1))
@@ -23,7 +23,7 @@ KResultOr<FlatPtr> Process::sys$gethostname(Userspace<char*> buffer, size_t size
     });
 }
 
-KResultOr<FlatPtr> Process::sys$sethostname(Userspace<const char*> buffer, size_t length)
+KResultOr<FlatPtr> Process::sys$sethostname(Userspace<char const*> buffer, size_t length)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this)
     REQUIRE_NO_PROMISES;

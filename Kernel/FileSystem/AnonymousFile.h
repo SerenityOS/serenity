@@ -24,11 +24,11 @@ public:
 
 private:
     virtual StringView class_name() const override { return "AnonymousFile"; }
-    virtual String absolute_path(const FileDescription&) const override { return ":anonymous-file:"; }
-    virtual bool can_read(const FileDescription&, size_t) const override { return false; }
-    virtual bool can_write(const FileDescription&, size_t) const override { return false; }
+    virtual String absolute_path(FileDescription const&) const override { return ":anonymous-file:"; }
+    virtual bool can_read(FileDescription const&, size_t) const override { return false; }
+    virtual bool can_write(FileDescription const&, size_t) const override { return false; }
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override { return ENOTSUP; }
-    virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return ENOTSUP; }
+    virtual KResultOr<size_t> write(FileDescription&, u64, UserOrKernelBuffer const&, size_t) override { return ENOTSUP; }
 
     explicit AnonymousFile(NonnullRefPtr<Memory::AnonymousVMObject>);
 

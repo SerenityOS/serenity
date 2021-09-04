@@ -43,7 +43,7 @@ Screen& ScreenInput::cursor_location_screen()
     return *screen;
 }
 
-const Screen& ScreenInput::cursor_location_screen() const
+Screen const& ScreenInput::cursor_location_screen() const
 {
     auto* screen = Screen::find_by_location(m_cursor_location);
     VERIFY(screen);
@@ -405,7 +405,7 @@ void ScreenInput::set_scroll_step_size(unsigned step_size)
     m_scroll_step_size = step_size;
 }
 
-void ScreenInput::on_receive_mouse_data(const MousePacket& packet)
+void ScreenInput::on_receive_mouse_data(MousePacket const& packet)
 {
     auto& current_screen = cursor_location_screen();
     auto prev_location = m_cursor_location;

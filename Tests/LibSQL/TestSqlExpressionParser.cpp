@@ -64,7 +64,7 @@ TEST_CASE(numeric_literal)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::NumericLiteral>(*expression));
 
-        const auto& literal = static_cast<const SQL::AST::NumericLiteral&>(*expression);
+        auto const& literal = static_cast<const SQL::AST::NumericLiteral&>(*expression);
         EXPECT_EQ(literal.value(), expected_value);
     };
 
@@ -88,7 +88,7 @@ TEST_CASE(string_literal)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::StringLiteral>(*expression));
 
-        const auto& literal = static_cast<const SQL::AST::StringLiteral&>(*expression);
+        auto const& literal = static_cast<const SQL::AST::StringLiteral&>(*expression);
         EXPECT_EQ(literal.value(), expected_value);
     };
 
@@ -110,7 +110,7 @@ TEST_CASE(blob_literal)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::BlobLiteral>(*expression));
 
-        const auto& literal = static_cast<const SQL::AST::BlobLiteral&>(*expression);
+        auto const& literal = static_cast<const SQL::AST::BlobLiteral&>(*expression);
         EXPECT_EQ(literal.value(), expected_value);
     };
 
@@ -145,7 +145,7 @@ TEST_CASE(column_name)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::ColumnNameExpression>(*expression));
 
-        const auto& column = static_cast<const SQL::AST::ColumnNameExpression&>(*expression);
+        auto const& column = static_cast<const SQL::AST::ColumnNameExpression&>(*expression);
         EXPECT_EQ(column.schema_name(), expected_schema);
         EXPECT_EQ(column.table_name(), expected_table);
         EXPECT_EQ(column.column_name(), expected_column);
@@ -175,10 +175,10 @@ TEST_CASE(unary_operator)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::UnaryOperatorExpression>(*expression));
 
-        const auto& unary = static_cast<const SQL::AST::UnaryOperatorExpression&>(*expression);
+        auto const& unary = static_cast<const SQL::AST::UnaryOperatorExpression&>(*expression);
         EXPECT_EQ(unary.type(), expected_operator);
 
-        const auto& secondary_expression = unary.expression();
+        auto const& secondary_expression = unary.expression();
         EXPECT(!is<SQL::AST::ErrorExpression>(*secondary_expression));
     };
 
@@ -237,7 +237,7 @@ TEST_CASE(binary_operator)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::BinaryOperatorExpression>(*expression));
 
-        const auto& binary = static_cast<const SQL::AST::BinaryOperatorExpression&>(*expression);
+        auto const& binary = static_cast<const SQL::AST::BinaryOperatorExpression&>(*expression);
         EXPECT(!is<SQL::AST::ErrorExpression>(*binary.lhs()));
         EXPECT(!is<SQL::AST::ErrorExpression>(*binary.rhs()));
         EXPECT_EQ(binary.type(), expected_operator);
@@ -265,10 +265,10 @@ TEST_CASE(chained_expression)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::ChainedExpression>(*expression));
 
-        const auto& chain = static_cast<const SQL::AST::ChainedExpression&>(*expression).expressions();
+        auto const& chain = static_cast<const SQL::AST::ChainedExpression&>(*expression).expressions();
         EXPECT_EQ(chain.size(), expected_chain_size);
 
-        for (const auto& chained_expression : chain)
+        for (auto const& chained_expression : chain)
             EXPECT(!is<SQL::AST::ErrorExpression>(chained_expression));
     };
 
@@ -296,10 +296,10 @@ TEST_CASE(cast_expression)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::CastExpression>(*expression));
 
-        const auto& cast = static_cast<const SQL::AST::CastExpression&>(*expression);
+        auto const& cast = static_cast<const SQL::AST::CastExpression&>(*expression);
         EXPECT(!is<SQL::AST::ErrorExpression>(*cast.expression()));
 
-        const auto& type_name = cast.type_name();
+        auto const& type_name = cast.type_name();
         EXPECT_EQ(type_name->name(), expected_type_name);
     };
 
@@ -330,21 +330,21 @@ TEST_CASE(case_expression)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::CaseExpression>(*expression));
 
-        const auto& case_ = static_cast<const SQL::AST::CaseExpression&>(*expression);
+        auto const& case_ = static_cast<const SQL::AST::CaseExpression&>(*expression);
 
-        const auto& case_expression = case_.case_expression();
+        auto const& case_expression = case_.case_expression();
         EXPECT_EQ(case_expression.is_null(), !expect_case_expression);
         if (case_expression)
             EXPECT(!is<SQL::AST::ErrorExpression>(*case_expression));
 
-        const auto& when_then_clauses = case_.when_then_clauses();
+        auto const& when_then_clauses = case_.when_then_clauses();
         EXPECT_EQ(when_then_clauses.size(), expected_when_then_size);
-        for (const auto& when_then_clause : when_then_clauses) {
+        for (auto const& when_then_clause : when_then_clauses) {
             EXPECT(!is<SQL::AST::ErrorExpression>(*when_then_clause.when));
             EXPECT(!is<SQL::AST::ErrorExpression>(*when_then_clause.then));
         }
 
-        const auto& else_expression = case_.else_expression();
+        auto const& else_expression = case_.else_expression();
         EXPECT_EQ(else_expression.is_null(), !expect_else_expression);
         if (else_expression)
             EXPECT(!is<SQL::AST::ErrorExpression>(*else_expression));
@@ -383,7 +383,7 @@ TEST_CASE(exists_expression)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::ExistsExpression>(*expression));
 
-        const auto& exists = static_cast<const SQL::AST::ExistsExpression&>(*expression);
+        auto const& exists = static_cast<const SQL::AST::ExistsExpression&>(*expression);
         EXPECT_EQ(exists.invert_expression(), expected_invert_expression);
     };
 
@@ -405,7 +405,7 @@ TEST_CASE(collate_expression)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::CollateExpression>(*expression));
 
-        const auto& collate = static_cast<const SQL::AST::CollateExpression&>(*expression);
+        auto const& collate = static_cast<const SQL::AST::CollateExpression&>(*expression);
         EXPECT(!is<SQL::AST::ErrorExpression>(*collate.expression()));
         EXPECT_EQ(collate.collation_name(), expected_collation_name);
     };
@@ -430,7 +430,7 @@ TEST_CASE(is_expression)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::IsExpression>(*expression));
 
-        const auto& is_ = static_cast<const SQL::AST::IsExpression&>(*expression);
+        auto const& is_ = static_cast<const SQL::AST::IsExpression&>(*expression);
         EXPECT(!is<SQL::AST::ErrorExpression>(*is_.lhs()));
         EXPECT(!is<SQL::AST::ErrorExpression>(*is_.rhs()));
         EXPECT_EQ(is_.invert_expression(), expected_invert_expression);
@@ -470,7 +470,7 @@ TEST_CASE(match_expression)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::MatchExpression>(*expression));
 
-        const auto& match = static_cast<const SQL::AST::MatchExpression&>(*expression);
+        auto const& match = static_cast<const SQL::AST::MatchExpression&>(*expression);
         EXPECT(!is<SQL::AST::ErrorExpression>(*match.lhs()));
         EXPECT(!is<SQL::AST::ErrorExpression>(*match.rhs()));
         EXPECT_EQ(match.type(), expected_operator);
@@ -505,7 +505,7 @@ TEST_CASE(null_expression)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::NullExpression>(*expression));
 
-        const auto& null = static_cast<const SQL::AST::NullExpression&>(*expression);
+        auto const& null = static_cast<const SQL::AST::NullExpression&>(*expression);
         EXPECT_EQ(null.invert_expression(), expected_invert_expression);
     };
 
@@ -532,7 +532,7 @@ TEST_CASE(between_expression)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::BetweenExpression>(*expression));
 
-        const auto& between = static_cast<const SQL::AST::BetweenExpression&>(*expression);
+        auto const& between = static_cast<const SQL::AST::BetweenExpression&>(*expression);
         EXPECT(!is<SQL::AST::ErrorExpression>(*between.expression()));
         EXPECT(!is<SQL::AST::ErrorExpression>(*between.lhs()));
         EXPECT(!is<SQL::AST::ErrorExpression>(*between.rhs()));
@@ -557,7 +557,7 @@ TEST_CASE(in_table_expression)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::InTableExpression>(*expression));
 
-        const auto& in = static_cast<const SQL::AST::InTableExpression&>(*expression);
+        auto const& in = static_cast<const SQL::AST::InTableExpression&>(*expression);
         EXPECT(!is<SQL::AST::ErrorExpression>(*in.expression()));
         EXPECT_EQ(in.schema_name(), expected_schema);
         EXPECT_EQ(in.table_name(), expected_table);
@@ -583,12 +583,12 @@ TEST_CASE(in_chained_expression)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::InChainedExpression>(*expression));
 
-        const auto& in = static_cast<const SQL::AST::InChainedExpression&>(*expression);
+        auto const& in = static_cast<const SQL::AST::InChainedExpression&>(*expression);
         EXPECT(!is<SQL::AST::ErrorExpression>(*in.expression()));
         EXPECT_EQ(in.expression_chain()->expressions().size(), expected_chain_size);
         EXPECT_EQ(in.invert_expression(), expected_invert_expression);
 
-        for (const auto& chained_expression : in.expression_chain()->expressions())
+        for (auto const& chained_expression : in.expression_chain()->expressions())
             EXPECT(!is<SQL::AST::ErrorExpression>(chained_expression));
     };
 
@@ -615,7 +615,7 @@ TEST_CASE(in_selection_expression)
         auto expression = result.release_value();
         EXPECT(is<SQL::AST::InSelectionExpression>(*expression));
 
-        const auto& in = static_cast<const SQL::AST::InSelectionExpression&>(*expression);
+        auto const& in = static_cast<const SQL::AST::InSelectionExpression&>(*expression);
         EXPECT(!is<SQL::AST::ErrorExpression>(*in.expression()));
         EXPECT_EQ(in.invert_expression(), expected_invert_expression);
     };

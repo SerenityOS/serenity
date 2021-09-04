@@ -34,7 +34,7 @@ public:
     const Vector<Entry>& entries() const { return m_entries; }
     Vector<Entry>& entries() { return m_entries; }
 
-    DOM::Element* last_element_with_tag_name_before_marker(const FlyString& tag_name);
+    DOM::Element* last_element_with_tag_name_before_marker(FlyString const& tag_name);
 
     void clear_up_to_the_last_marker();
 

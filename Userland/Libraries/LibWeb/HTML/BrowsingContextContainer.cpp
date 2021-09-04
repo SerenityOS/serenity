@@ -40,7 +40,7 @@ Origin BrowsingContextContainer::content_origin() const
     return m_nested_browsing_context->document()->origin();
 }
 
-bool BrowsingContextContainer::may_access_from_origin(const Origin& origin) const
+bool BrowsingContextContainer::may_access_from_origin(Origin const& origin) const
 {
     return origin.is_same(content_origin());
 }

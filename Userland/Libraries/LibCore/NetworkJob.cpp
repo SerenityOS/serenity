@@ -63,7 +63,7 @@ void NetworkJob::did_progress(Optional<u32> total_size, u32 downloaded)
         on_progress(total_size, downloaded);
 }
 
-const char* to_string(NetworkJob::Error error)
+char const* to_string(NetworkJob::Error error)
 {
     switch (error) {
     case NetworkJob::Error::ProtocolFailed:

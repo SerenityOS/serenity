@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 {
     bool list = false;
     bool search = false;
-    const char* keyword = nullptr;
+    char const* keyword = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(keyword, "Error number or string to search", "keyword", Core::ArgsParser::Required::No);

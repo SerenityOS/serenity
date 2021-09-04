@@ -12,7 +12,7 @@
 
 namespace GUI {
 
-static const char* s_resize_corner_shadows_data = {
+static char const* s_resize_corner_shadows_data = {
     "                "
     "             ## "
     "             #  "
@@ -31,7 +31,7 @@ static const char* s_resize_corner_shadows_data = {
     "                "
 };
 
-static const char* s_resize_corner_highlights_data = {
+static char const* s_resize_corner_highlights_data = {
     "                "
     "                "
     "              # "

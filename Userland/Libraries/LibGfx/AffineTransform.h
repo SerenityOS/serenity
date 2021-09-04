@@ -52,15 +52,15 @@ public:
     [[nodiscard]] FloatPoint translation() const;
 
     AffineTransform& scale(float sx, float sy);
-    AffineTransform& scale(const FloatPoint& s);
+    AffineTransform& scale(FloatPoint const& s);
     AffineTransform& set_scale(float sx, float sy);
-    AffineTransform& set_scale(const FloatPoint& s);
+    AffineTransform& set_scale(FloatPoint const& s);
     AffineTransform& translate(float tx, float ty);
-    AffineTransform& translate(const FloatPoint& t);
+    AffineTransform& translate(FloatPoint const& t);
     AffineTransform& set_translation(float tx, float ty);
-    AffineTransform& set_translation(const FloatPoint& t);
+    AffineTransform& set_translation(FloatPoint const& t);
     AffineTransform& rotate_radians(float);
-    AffineTransform& multiply(const AffineTransform&);
+    AffineTransform& multiply(AffineTransform const&);
 
 private:
     float m_values[6] { 0 };

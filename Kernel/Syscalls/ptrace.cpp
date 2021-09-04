@@ -104,7 +104,7 @@ static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& par
             return EINVAL;
 
         PtraceRegisters regs {};
-        if (!copy_from_user(&regs, (const PtraceRegisters*)params.addr))
+        if (!copy_from_user(&regs, (PtraceRegisters const*)params.addr))
             return EFAULT;
 
         auto& peer_saved_registers = peer->get_register_dump_from_stack();
@@ -123,7 +123,7 @@ static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& par
             return EFAULT;
         if (!Memory::is_user_address(VirtualAddress { peek_params.address }))
             return EFAULT;
-        auto result = peer->process().peek_user_data(Userspace<const u32*> { (FlatPtr)peek_params.address });
+        auto result = peer->process().peek_user_data(Userspace<u32 const*> { (FlatPtr)peek_params.address });
         if (result.is_error())
             return result.error();
         if (!copy_to_user(peek_params.out_data, &result.value()))
@@ -177,7 +177,7 @@ bool Process::has_tracee_thread(ProcessID tracer_pid)
     return false;
 }
 
-KResultOr<u32> Process::peek_user_data(Userspace<const u32*> address)
+KResultOr<u32> Process::peek_user_data(Userspace<u32 const*> address)
 {
     uint32_t result;
 

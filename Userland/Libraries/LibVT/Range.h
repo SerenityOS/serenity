@@ -48,7 +48,7 @@ public:
         m_end = Position(m_end.row() + delta, m_end.column());
     }
 
-    bool operator==(const Range& other) const
+    bool operator==(Range const& other) const
     {
         return m_start == other.m_start && m_end == other.m_end;
     }

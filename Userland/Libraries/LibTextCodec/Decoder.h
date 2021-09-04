@@ -63,6 +63,6 @@ public:
 };
 
 Decoder* decoder_for(String const& encoding);
-Optional<String> get_standardized_encoding(const String& encoding);
+Optional<String> get_standardized_encoding(String const& encoding);
 
 }

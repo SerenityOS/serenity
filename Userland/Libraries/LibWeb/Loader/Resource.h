@@ -32,7 +32,7 @@ public:
         Image,
     };
 
-    static NonnullRefPtr<Resource> create(Badge<ResourceLoader>, Type, const LoadRequest&);
+    static NonnullRefPtr<Resource> create(Badge<ResourceLoader>, Type, LoadRequest const&);
     virtual ~Resource();
 
     Type type() const { return m_type; }
@@ -40,12 +40,12 @@ public:
     bool is_loaded() const { return m_loaded; }
 
     bool is_failed() const { return m_failed; }
-    const String& error() const { return m_error; }
+    String const& error() const { return m_error; }
 
     bool has_encoded_data() const { return !m_encoded_data.is_empty(); }
 
-    const URL& url() const { return m_request.url(); }
-    const ByteBuffer& encoded_data() const { return m_encoded_data; }
+    URL const& url() const { return m_request.url(); }
+    ByteBuffer const& encoded_data() const { return m_encoded_data; }
 
     const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers() const { return m_response_headers; }
 
@@ -54,15 +54,15 @@ public:
 
     bool has_encoding() const { return m_encoding.has_value(); }
     const Optional<String>& encoding() const { return m_encoding; }
-    const String& mime_type() const { return m_mime_type; }
+    String const& mime_type() const { return m_mime_type; }
 
     void for_each_client(Function<void(ResourceClient&)>);
 
     void did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers, Optional<u32> status_code);
-    void did_fail(Badge<ResourceLoader>, const String& error, Optional<u32> status_code);
+    void did_fail(Badge<ResourceLoader>, String const& error, Optional<u32> status_code);
 
 protected:
-    explicit Resource(Type, const LoadRequest&);
+    explicit Resource(Type, LoadRequest const&);
 
 private:
     LoadRequest m_request;
@@ -90,7 +90,7 @@ protected:
     virtual Resource::Type client_type() const { return Resource::Type::Generic; }
 
     Resource* resource() { return m_resource; }
-    const Resource* resource() const { return m_resource; }
+    Resource const* resource() const { return m_resource; }
     void set_resource(Resource*);
 
 private:

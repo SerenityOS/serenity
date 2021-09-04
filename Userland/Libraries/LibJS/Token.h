@@ -209,12 +209,12 @@ public:
     TokenType type() const { return m_type; }
     TokenCategory category() const;
     static TokenCategory category(TokenType);
-    const char* name() const;
-    static const char* name(TokenType);
+    char const* name() const;
+    static char const* name(TokenType);
 
-    const String& message() const { return m_message; }
-    const StringView& trivia() const { return m_trivia; }
-    const StringView& original_value() const { return m_original_value; }
+    String const& message() const { return m_message; }
+    StringView const& trivia() const { return m_trivia; }
+    StringView const& original_value() const { return m_original_value; }
     StringView value() const
     {
         return m_value.visit(
@@ -222,7 +222,7 @@ public:
             [](FlyString const& identifier) { return identifier.view(); },
             [](Empty) -> StringView { VERIFY_NOT_REACHED(); });
     }
-    const StringView& filename() const { return m_filename; }
+    StringView const& filename() const { return m_filename; }
     size_t line_number() const { return m_line_number; }
     size_t line_column() const { return m_line_column; }
     size_t offset() const { return m_offset; }

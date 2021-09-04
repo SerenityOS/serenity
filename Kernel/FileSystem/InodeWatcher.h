@@ -46,14 +46,14 @@ public:
     static KResultOr<NonnullRefPtr<InodeWatcher>> create();
     virtual ~InodeWatcher() override;
 
-    virtual bool can_read(const FileDescription&, size_t) const override;
+    virtual bool can_read(FileDescription const&, size_t) const override;
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     // Can't write to an inode watcher.
-    virtual bool can_write(const FileDescription&, size_t) const override { return true; }
-    virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return EIO; }
+    virtual bool can_write(FileDescription const&, size_t) const override { return true; }
+    virtual KResultOr<size_t> write(FileDescription&, u64, UserOrKernelBuffer const&, size_t) override { return EIO; }
     virtual KResult close() override;
 
-    virtual String absolute_path(const FileDescription&) const override;
+    virtual String absolute_path(FileDescription const&) const override;
     virtual StringView class_name() const override { return "InodeWatcher"; };
     virtual bool is_inode_watcher() const override { return true; }
 

@@ -30,7 +30,7 @@ class Client final
     C_OBJECT(Client);
 
 public:
-    Optional<DecodedImage> decode_image(const ByteBuffer&);
+    Optional<DecodedImage> decode_image(ByteBuffer const&);
 
     Function<void()> on_death;
 

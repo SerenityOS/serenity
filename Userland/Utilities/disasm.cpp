@@ -17,7 +17,7 @@
 
 int main(int argc, char** argv)
 {
-    const char* path = nullptr;
+    char const* path = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(
@@ -46,13 +46,13 @@ int main(int argc, char** argv)
     };
     Vector<Symbol> symbols;
 
-    const u8* asm_data = (const u8*)file.data();
+    u8 const* asm_data = (u8 const*)file.data();
     size_t asm_size = file.size();
     size_t file_offset = 0;
     Vector<Symbol>::Iterator current_symbol = symbols.begin();
     OwnPtr<X86::ELFSymbolProvider> symbol_provider; // nullptr for non-ELF disassembly.
     OwnPtr<ELF::Image> elf;
-    if (asm_size >= 4 && strncmp((const char*)asm_data, "\u007fELF", 4) == 0) {
+    if (asm_size >= 4 && strncmp((char const*)asm_data, "\u007fELF", 4) == 0) {
         elf = make<ELF::Image>(asm_data, asm_size);
         if (elf->is_valid()) {
             symbol_provider = make<X86::ELFSymbolProvider>(*elf);
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
                 // FIXME: Disassemble all SHT_PROGBITS sections, not just .text.
                 if (section.name() != ".text")
                     return IterationDecision::Continue;
-                asm_data = (const u8*)section.raw_data();
+                asm_data = (u8 const*)section.raw_data();
                 asm_size = section.size();
                 file_offset = section.address();
                 return IterationDecision::Break;

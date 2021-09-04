@@ -14,7 +14,7 @@ WebSocketClient::WebSocketClient()
 {
 }
 
-RefPtr<WebSocket> WebSocketClient::connect(const URL& url, const String& origin, const Vector<String>& protocols, const Vector<String>& extensions, const HashMap<String, String>& request_headers)
+RefPtr<WebSocket> WebSocketClient::connect(URL const& url, String const& origin, const Vector<String>& protocols, const Vector<String>& extensions, const HashMap<String, String>& request_headers)
 {
     IPC::Dictionary header_dictionary;
     for (auto& it : request_headers)

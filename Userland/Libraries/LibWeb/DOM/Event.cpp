@@ -36,7 +36,7 @@ void Event::set_cancelled_flag()
 }
 
 // https://dom.spec.whatwg.org/#concept-event-initialize
-void Event::initialize(const String& type, bool bubbles, bool cancelable)
+void Event::initialize(String const& type, bool bubbles, bool cancelable)
 {
     m_initialized = true;
     m_stop_propagation = false;
@@ -50,7 +50,7 @@ void Event::initialize(const String& type, bool bubbles, bool cancelable)
 }
 
 // https://dom.spec.whatwg.org/#dom-event-initevent
-void Event::init_event(const String& type, bool bubbles, bool cancelable)
+void Event::init_event(String const& type, bool bubbles, bool cancelable)
 {
     if (m_dispatch)
         return;

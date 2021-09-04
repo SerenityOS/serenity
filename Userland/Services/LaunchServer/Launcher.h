@@ -27,8 +27,8 @@ struct Handler {
     HashTable<String> file_types {};
     HashTable<String> protocols {};
 
-    static String name_from_executable(const StringView&);
-    void from_executable(Type, const String&);
+    static String name_from_executable(StringView const&);
+    void from_executable(Type, String const&);
     String to_details_str() const;
 };
 
@@ -37,22 +37,22 @@ public:
     Launcher();
     static Launcher& the();
 
-    void load_handlers(const String& af_dir = Desktop::AppFile::APP_FILES_DIRECTORY);
+    void load_handlers(String const& af_dir = Desktop::AppFile::APP_FILES_DIRECTORY);
     void load_config(const Core::ConfigFile&);
-    bool open_url(const URL&, const String& handler_name);
-    Vector<String> handlers_for_url(const URL&);
-    Vector<String> handlers_with_details_for_url(const URL&);
+    bool open_url(URL const&, String const& handler_name);
+    Vector<String> handlers_for_url(URL const&);
+    Vector<String> handlers_with_details_for_url(URL const&);
 
 private:
     HashMap<String, Handler> m_handlers;
     HashMap<String, String> m_protocol_handlers;
     HashMap<String, String> m_file_handlers;
 
-    Handler get_handler_for_executable(Handler::Type, const String&) const;
-    void for_each_handler(const String& key, HashMap<String, String>& user_preferences, Function<bool(const Handler&)> f);
-    void for_each_handler_for_path(const String&, Function<bool(const Handler&)> f);
-    bool open_file_url(const URL&);
-    bool open_with_user_preferences(const HashMap<String, String>& user_preferences, const String& key, const Vector<String>& arguments, const String& default_program = {});
-    bool open_with_handler_name(const URL&, const String& handler_name);
+    Handler get_handler_for_executable(Handler::Type, String const&) const;
+    void for_each_handler(String const& key, HashMap<String, String>& user_preferences, Function<bool(Handler const&)> f);
+    void for_each_handler_for_path(String const&, Function<bool(Handler const&)> f);
+    bool open_file_url(URL const&);
+    bool open_with_user_preferences(const HashMap<String, String>& user_preferences, String const& key, const Vector<String>& arguments, String const& default_program = {});
+    bool open_with_handler_name(URL const&, String const& handler_name);
 };
 }

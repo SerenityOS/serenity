@@ -24,7 +24,7 @@ int pthread_join(pthread_t, void**);
 int pthread_mutex_lock(pthread_mutex_t*);
 int pthread_mutex_trylock(pthread_mutex_t* mutex);
 int pthread_mutex_unlock(pthread_mutex_t*);
-int pthread_mutex_init(pthread_mutex_t*, const pthread_mutexattr_t*);
+int pthread_mutex_init(pthread_mutex_t*, pthread_mutexattr_t const*);
 int pthread_mutex_destroy(pthread_mutex_t*);
 
 int pthread_attr_init(pthread_attr_t*);
@@ -33,31 +33,31 @@ int pthread_attr_destroy(pthread_attr_t*);
 #define PTHREAD_CREATE_JOINABLE 0
 #define PTHREAD_CREATE_DETACHED 1
 
-int pthread_attr_getdetachstate(const pthread_attr_t*, int*);
+int pthread_attr_getdetachstate(pthread_attr_t const*, int*);
 int pthread_attr_setdetachstate(pthread_attr_t*, int);
 
-int pthread_attr_getguardsize(const pthread_attr_t*, size_t*);
+int pthread_attr_getguardsize(pthread_attr_t const*, size_t*);
 int pthread_attr_setguardsize(pthread_attr_t*, size_t);
 
-int pthread_attr_getschedparam(const pthread_attr_t*, struct sched_param*);
+int pthread_attr_getschedparam(pthread_attr_t const*, struct sched_param*);
 int pthread_attr_setschedparam(pthread_attr_t*, const struct sched_param*);
 
-int pthread_attr_getstack(const pthread_attr_t*, void**, size_t*);
+int pthread_attr_getstack(pthread_attr_t const*, void**, size_t*);
 int pthread_attr_setstack(pthread_attr_t* attr, void*, size_t);
 
-int pthread_attr_getstacksize(const pthread_attr_t*, size_t*);
+int pthread_attr_getstacksize(pthread_attr_t const*, size_t*);
 int pthread_attr_setstacksize(pthread_attr_t*, size_t);
 
 #define PTHREAD_SCOPE_SYSTEM 0
 #define PTHREAD_SCOPE_PROCESS 1
 
-int pthread_attr_getscope(const pthread_attr_t*, int*);
+int pthread_attr_getscope(pthread_attr_t const*, int*);
 int pthread_attr_setscope(pthread_attr_t*, int);
 
 int pthread_once(pthread_once_t*, void (*)(void));
 #define PTHREAD_ONCE_INIT 0
 void* pthread_getspecific(pthread_key_t key);
-int pthread_setspecific(pthread_key_t key, const void* value);
+int pthread_setspecific(pthread_key_t key, void const* value);
 
 int pthread_getschedparam(pthread_t thread, int* policy, struct sched_param* param);
 int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param* param);
@@ -86,7 +86,7 @@ int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param
 int pthread_key_create(pthread_key_t* key, void (*destructor)(void*));
 int pthread_key_delete(pthread_key_t key);
 int pthread_cond_broadcast(pthread_cond_t*);
-int pthread_cond_init(pthread_cond_t*, const pthread_condattr_t*);
+int pthread_cond_init(pthread_cond_t*, pthread_condattr_t const*);
 int pthread_cond_signal(pthread_cond_t*);
 int pthread_cond_wait(pthread_cond_t*, pthread_mutex_t*);
 int pthread_condattr_init(pthread_condattr_t*);
@@ -119,13 +119,13 @@ int pthread_mutexattr_settype(pthread_mutexattr_t*, int);
 int pthread_mutexattr_gettype(pthread_mutexattr_t*, int*);
 int pthread_mutexattr_destroy(pthread_mutexattr_t*);
 
-int pthread_setname_np(pthread_t, const char*);
+int pthread_setname_np(pthread_t, char const*);
 int pthread_getname_np(pthread_t, char*, size_t);
 
 int pthread_equal(pthread_t t1, pthread_t t2);
 
 int pthread_rwlock_destroy(pthread_rwlock_t*);
-int pthread_rwlock_init(pthread_rwlock_t* __restrict, const pthread_rwlockattr_t* __restrict);
+int pthread_rwlock_init(pthread_rwlock_t* __restrict, pthread_rwlockattr_t const* __restrict);
 int pthread_rwlock_rdlock(pthread_rwlock_t*);
 int pthread_rwlock_timedrdlock(pthread_rwlock_t* __restrict, const struct timespec* __restrict);
 int pthread_rwlock_timedwrlock(pthread_rwlock_t* __restrict, const struct timespec* __restrict);
@@ -134,7 +134,7 @@ int pthread_rwlock_trywrlock(pthread_rwlock_t*);
 int pthread_rwlock_unlock(pthread_rwlock_t*);
 int pthread_rwlock_wrlock(pthread_rwlock_t*);
 int pthread_rwlockattr_destroy(pthread_rwlockattr_t*);
-int pthread_rwlockattr_getpshared(const pthread_rwlockattr_t* __restrict, int* __restrict);
+int pthread_rwlockattr_getpshared(pthread_rwlockattr_t const* __restrict, int* __restrict);
 int pthread_rwlockattr_init(pthread_rwlockattr_t*);
 int pthread_rwlockattr_setpshared(pthread_rwlockattr_t*, int);
 

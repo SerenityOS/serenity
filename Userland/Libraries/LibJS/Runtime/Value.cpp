@@ -37,7 +37,7 @@ namespace JS {
 // Used in various abstract operations to make it obvious when a non-optional return value must be discarded.
 static constexpr double INVALID { 0 };
 
-static inline bool same_type_for_equality(const Value& lhs, const Value& rhs)
+static inline bool same_type_for_equality(Value const& lhs, Value const& rhs)
 {
     if (lhs.type() == rhs.type())
         return true;
@@ -56,12 +56,12 @@ static bool is_valid_bigint_value(StringView string)
     return all_of(string, [](auto ch) { return isdigit(ch); });
 }
 
-ALWAYS_INLINE bool both_number(const Value& lhs, const Value& rhs)
+ALWAYS_INLINE bool both_number(Value const& lhs, Value const& rhs)
 {
     return lhs.is_number() && rhs.is_number();
 }
 
-ALWAYS_INLINE bool both_bigint(const Value& lhs, const Value& rhs)
+ALWAYS_INLINE bool both_bigint(Value const& lhs, Value const& rhs)
 {
     return lhs.is_bigint() && rhs.is_bigint();
 }
@@ -238,9 +238,9 @@ bool Value::is_constructor() const
     if (!is_function())
         return false;
     if (is<NativeFunction>(as_object()))
-        return static_cast<const NativeFunction&>(as_object()).has_constructor();
+        return static_cast<NativeFunction const&>(as_object()).has_constructor();
     if (is<BoundFunction>(as_object()))
-        return Value(&static_cast<const BoundFunction&>(as_object()).target_function()).is_constructor();
+        return Value(&static_cast<BoundFunction const&>(as_object()).target_function()).is_constructor();
     // OrdinaryFunctionObject
     return true;
 }
@@ -1323,7 +1323,7 @@ Value ordinary_has_instance(GlobalObject& global_object, Value lhs, Value rhs)
     auto& rhs_function = rhs.as_function();
 
     if (is<BoundFunction>(rhs_function)) {
-        auto& bound_target = static_cast<const BoundFunction&>(rhs_function);
+        auto& bound_target = static_cast<BoundFunction const&>(rhs_function);
         return instance_of(global_object, lhs, Value(&bound_target.target_function()));
     }
 

@@ -53,7 +53,7 @@ struct Class {
 
 class Database : public RefCounted<Database> {
 public:
-    static RefPtr<Database> open(const String& filename);
+    static RefPtr<Database> open(String const& filename);
     static RefPtr<Database> open() { return open("/res/pci.ids"); };
 
     const StringView get_vendor(u16 vendor_id) const;

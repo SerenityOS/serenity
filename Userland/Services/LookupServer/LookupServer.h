@@ -22,15 +22,15 @@ class LookupServer final : public Core::Object {
 
 public:
     static LookupServer& the();
-    Vector<DNSAnswer> lookup(const DNSName& name, DNSRecordType record_type);
+    Vector<DNSAnswer> lookup(DNSName const& name, DNSRecordType record_type);
 
 private:
     LookupServer();
 
     void load_etc_hosts();
-    void put_in_cache(const DNSAnswer&);
+    void put_in_cache(DNSAnswer const&);
 
-    Vector<DNSAnswer> lookup(const DNSName& hostname, const String& nameserver, bool& did_get_response, DNSRecordType record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
+    Vector<DNSAnswer> lookup(DNSName const& hostname, String const& nameserver, bool& did_get_response, DNSRecordType record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
 
     RefPtr<Core::LocalServer> m_local_server;
     RefPtr<DNSServer> m_dns_server;

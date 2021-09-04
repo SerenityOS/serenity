@@ -20,7 +20,7 @@ namespace AK {
 class StringView {
 public:
     ALWAYS_INLINE constexpr StringView() = default;
-    ALWAYS_INLINE constexpr StringView(const char* characters, size_t length)
+    ALWAYS_INLINE constexpr StringView(char const* characters, size_t length)
         : m_characters(characters)
         , m_length(length)
     {
@@ -28,25 +28,25 @@ public:
             VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
     }
     ALWAYS_INLINE StringView(const unsigned char* characters, size_t length)
-        : m_characters((const char*)characters)
+        : m_characters((char const*)characters)
         , m_length(length)
     {
         VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
     }
-    ALWAYS_INLINE constexpr StringView(const char* cstring)
+    ALWAYS_INLINE constexpr StringView(char const* cstring)
         : m_characters(cstring)
         , m_length(cstring ? __builtin_strlen(cstring) : 0)
     {
     }
     ALWAYS_INLINE StringView(ReadonlyBytes bytes)
-        : m_characters(reinterpret_cast<const char*>(bytes.data()))
+        : m_characters(reinterpret_cast<char const*>(bytes.data()))
         , m_length(bytes.size())
     {
     }
 
-    StringView(const ByteBuffer&);
-    StringView(const String&);
-    StringView(const FlyString&);
+    StringView(ByteBuffer const&);
+    StringView(String const&);
+    StringView(FlyString const&);
 
     [[nodiscard]] constexpr bool is_null() const { return !m_characters; }
     [[nodiscard]] constexpr bool is_empty() const { return m_length == 0; }
@@ -56,7 +56,7 @@ public:
 
     [[nodiscard]] ReadonlyBytes bytes() const { return { m_characters, m_length }; }
 
-    constexpr const char& operator[](size_t index) const { return m_characters[index]; }
+    constexpr char const& operator[](size_t index) const { return m_characters[index]; }
 
     using ConstIterator = SimpleIterator<const StringView, const char>;
 
@@ -70,17 +70,17 @@ public:
         return string_hash(characters_without_null_termination(), length());
     }
 
-    [[nodiscard]] bool starts_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    [[nodiscard]] bool ends_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool starts_with(StringView const&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool ends_with(StringView const&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     [[nodiscard]] bool starts_with(char) const;
     [[nodiscard]] bool ends_with(char) const;
-    [[nodiscard]] bool matches(const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
-    [[nodiscard]] bool matches(const StringView& mask, Vector<MaskSpan>&, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
+    [[nodiscard]] bool matches(StringView const& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
+    [[nodiscard]] bool matches(StringView const& mask, Vector<MaskSpan>&, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
     [[nodiscard]] bool contains(char) const;
-    [[nodiscard]] bool contains(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    [[nodiscard]] bool equals_ignoring_case(const StringView& other) const;
+    [[nodiscard]] bool contains(StringView const&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool equals_ignoring_case(StringView const& other) const;
 
-    [[nodiscard]] StringView trim(const StringView& characters, TrimMode mode = TrimMode::Both) const { return StringUtils::trim(*this, characters, mode); }
+    [[nodiscard]] StringView trim(StringView const& characters, TrimMode mode = TrimMode::Both) const { return StringUtils::trim(*this, characters, mode); }
     [[nodiscard]] StringView trim_whitespace(TrimMode mode = TrimMode::Both) const { return StringUtils::trim_whitespace(*this, mode); }
 
     [[nodiscard]] String to_lowercase_string() const;
@@ -110,7 +110,7 @@ public:
     }
 
     [[nodiscard]] Vector<StringView> split_view(char, bool keep_empty = false) const;
-    [[nodiscard]] Vector<StringView> split_view(const StringView&, bool keep_empty = false) const;
+    [[nodiscard]] Vector<StringView> split_view(StringView const&, bool keep_empty = false) const;
 
     template<typename UnaryPredicate>
     [[nodiscard]] Vector<StringView> split_view_if(UnaryPredicate&& predicate, bool keep_empty = false) const
@@ -162,17 +162,17 @@ public:
     //     StringView substr { "oo" };
     //
     // would not work.
-    [[nodiscard]] StringView substring_view_starting_from_substring(const StringView& substring) const;
-    [[nodiscard]] StringView substring_view_starting_after_substring(const StringView& substring) const;
+    [[nodiscard]] StringView substring_view_starting_from_substring(StringView const& substring) const;
+    [[nodiscard]] StringView substring_view_starting_after_substring(StringView const& substring) const;
 
-    constexpr bool operator==(const char* cstring) const
+    constexpr bool operator==(char const* cstring) const
     {
         if (is_null())
             return !cstring;
         if (!cstring)
             return false;
         // NOTE: `m_characters` is not guaranteed to be null-terminated, but `cstring` is.
-        const char* cp = cstring;
+        char const* cp = cstring;
         for (size_t i = 0; i < m_length; ++i) {
             if (!*cp)
                 return false;
@@ -182,14 +182,14 @@ public:
         return !*cp;
     }
 
-    constexpr bool operator!=(const char* cstring) const
+    constexpr bool operator!=(char const* cstring) const
     {
         return !(*this == cstring);
     }
 
-    bool operator==(const String&) const;
+    bool operator==(String const&) const;
 
-    constexpr bool operator==(const StringView& other) const
+    constexpr bool operator==(StringView const& other) const
     {
         if (is_null())
             return other.is_null();
@@ -200,12 +200,12 @@ public:
         return !__builtin_memcmp(m_characters, other.m_characters, m_length);
     }
 
-    constexpr bool operator!=(const StringView& other) const
+    constexpr bool operator!=(StringView const& other) const
     {
         return !(*this == other);
     }
 
-    bool operator<(const StringView& other) const
+    bool operator<(StringView const& other) const
     {
         if (int c = __builtin_memcmp(m_characters, other.m_characters, min(m_length, other.m_length)))
             return c < 0;
@@ -224,18 +224,18 @@ public:
 
 private:
     friend class String;
-    const char* m_characters { nullptr };
+    char const* m_characters { nullptr };
     size_t m_length { 0 };
 };
 
 template<>
 struct Traits<StringView> : public GenericTraits<StringView> {
-    static unsigned hash(const StringView& s) { return s.hash(); }
+    static unsigned hash(StringView const& s) { return s.hash(); }
 };
 
 }
 
-[[nodiscard]] ALWAYS_INLINE constexpr AK::StringView operator"" sv(const char* cstring, size_t length)
+[[nodiscard]] ALWAYS_INLINE constexpr AK::StringView operator"" sv(char const* cstring, size_t length)
 {
     return AK::StringView(cstring, length);
 }

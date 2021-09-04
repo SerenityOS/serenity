@@ -11,12 +11,12 @@
 #include <LibTLS/TLSv12.h>
 #include <LibTest/TestCase.h>
 
-static const char* ca_certs_file = "./ca_certs.ini";
+static char const* ca_certs_file = "./ca_certs.ini";
 static int port = 443;
 
-constexpr const char* DEFAULT_SERVER { "www.google.com" };
+constexpr char const* DEFAULT_SERVER { "www.google.com" };
 
-static ByteBuffer operator""_b(const char* string, size_t length)
+static ByteBuffer operator""_b(char const* string, size_t length)
 {
     return ByteBuffer::copy(string, length);
 }

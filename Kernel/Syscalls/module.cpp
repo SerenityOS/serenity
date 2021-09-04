@@ -15,7 +15,7 @@ namespace Kernel {
 
 extern HashMap<String, OwnPtr<Module>>* g_modules;
 
-KResultOr<FlatPtr> Process::sys$module_load(Userspace<const char*> user_path, size_t path_length)
+KResultOr<FlatPtr> Process::sys$module_load(Userspace<char const*> user_path, size_t path_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     if (!is_superuser())
@@ -125,9 +125,9 @@ KResultOr<FlatPtr> Process::sys$module_load(Userspace<const char*> user_path, si
         } else if (symbol.name() == "module_fini") {
             module->module_fini = (ModuleFiniPtr)(text_base + symbol.value());
         } else if (symbol.name() == "module_name") {
-            const u8* storage = section_storage_by_name.get(symbol.section().name()).value_or(nullptr);
+            u8 const* storage = section_storage_by_name.get(symbol.section().name()).value_or(nullptr);
             if (storage)
-                module->name = String((const char*)(storage + symbol.value()));
+                module->name = String((char const*)(storage + symbol.value()));
         }
     });
 
@@ -147,7 +147,7 @@ KResultOr<FlatPtr> Process::sys$module_load(Userspace<const char*> user_path, si
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$module_unload(Userspace<const char*> user_name, size_t name_length)
+KResultOr<FlatPtr> Process::sys$module_unload(Userspace<char const*> user_name, size_t name_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     if (!is_superuser())

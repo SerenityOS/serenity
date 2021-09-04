@@ -119,7 +119,7 @@ public:
         And,
         Or,
     };
-    static BooleanOperator op_from(const StringView& sv)
+    static BooleanOperator op_from(StringView const& sv)
     {
         if (sv == "&")
             return BooleanOperator::And;
@@ -204,7 +204,7 @@ public:
         Greater,
     };
 
-    static ComparisonOperation op_from(const StringView& sv)
+    static ComparisonOperation op_from(StringView const& sv)
     {
         if (sv == "<")
             return ComparisonOperation::Less;
@@ -228,7 +228,7 @@ public:
 
 private:
     template<typename T>
-    bool compare(const T& left, const T& right) const
+    bool compare(T const& left, T const& right) const
     {
         switch (m_op) {
         case ComparisonOperation::Less:
@@ -274,7 +274,7 @@ public:
         Quotient,
         Remainder,
     };
-    static ArithmeticOperation op_from(const StringView& sv)
+    static ArithmeticOperation op_from(StringView const& sv)
     {
         if (sv == "+")
             return ArithmeticOperation::Sum;
@@ -386,7 +386,7 @@ private:
 
         VERIFY_NOT_REACHED();
     }
-    static auto safe_substring(const String& str, int start, int length)
+    static auto safe_substring(String const& str, int start, int length)
     {
         if (start < 1 || (size_t)start > str.length())
             fail("Index out of range");

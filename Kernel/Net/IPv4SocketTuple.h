@@ -52,7 +52,7 @@ namespace AK {
 
 template<>
 struct Traits<IPv4SocketTuple> : public GenericTraits<IPv4SocketTuple> {
-    static unsigned hash(const IPv4SocketTuple& tuple)
+    static unsigned hash(IPv4SocketTuple const& tuple)
     {
         auto h1 = pair_int_hash(tuple.local_address().to_u32(), tuple.local_port());
         auto h2 = pair_int_hash(tuple.peer_address().to_u32(), tuple.peer_port());

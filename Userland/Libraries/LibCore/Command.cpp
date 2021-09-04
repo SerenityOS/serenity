@@ -18,7 +18,7 @@ namespace Core {
 // Only supported in serenity mode because we use `posix_spawn_file_actions_addchdir`
 #ifdef __serenity__
 
-String command(const String& command_string, Optional<LexicalPath> chdir)
+String command(String const& command_string, Optional<LexicalPath> chdir)
 {
     auto parts = command_string.split(' ');
     if (parts.is_empty())
@@ -28,7 +28,7 @@ String command(const String& command_string, Optional<LexicalPath> chdir)
     return command(program, parts, chdir);
 }
 
-String command(const String& program, const Vector<String>& arguments, Optional<LexicalPath> chdir)
+String command(String const& program, const Vector<String>& arguments, Optional<LexicalPath> chdir)
 {
     int stdout_pipe[2] = {};
     int stderr_pipe[2] = {};
@@ -47,13 +47,13 @@ String command(const String& program, const Vector<String>& arguments, Optional<
         close(stderr_pipe[0]);
     });
 
-    Vector<const char*> parts = { program.characters() };
-    for (const auto& part : arguments) {
+    Vector<char const*> parts = { program.characters() };
+    for (auto const& part : arguments) {
         parts.append(part.characters());
     }
     parts.append(nullptr);
 
-    const char** argv = parts.data();
+    char const** argv = parts.data();
 
     posix_spawn_file_actions_t action;
     posix_spawn_file_actions_init(&action);

@@ -102,7 +102,7 @@ enum class ColorRole {
     DisabledText = ThreedShadow1,
 };
 
-inline const char* to_string(ColorRole role)
+inline char const* to_string(ColorRole role)
 {
     switch (role) {
     case ColorRole::NoRole:
@@ -145,7 +145,7 @@ struct SystemTheme {
 
 Core::AnonymousBuffer& current_system_theme_buffer();
 void set_system_theme(Core::AnonymousBuffer);
-Core::AnonymousBuffer load_system_theme(const String& path);
+Core::AnonymousBuffer load_system_theme(String const& path);
 
 }
 

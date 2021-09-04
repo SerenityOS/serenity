@@ -23,10 +23,10 @@ struct group {
 struct group* getgrent();
 void setgrent();
 void endgrent();
-struct group* getgrnam(const char* name);
+struct group* getgrnam(char const* name);
 struct group* getgrgid(gid_t);
 int putgrent(const struct group*, FILE*);
 
-int initgroups(const char* user, gid_t);
+int initgroups(char const* user, gid_t);
 
 __END_DECLS

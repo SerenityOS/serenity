@@ -120,9 +120,9 @@ private:
     ClipboardServerConnection& m_clipboard_connection;
 
     void on_message_received();
-    void send_message(const ByteBuffer& buffer);
+    void send_message(ByteBuffer const& buffer);
     bool m_just_set_clip { false };
     void read_n(void* dest, size_t n);
     static Message* initialize_headers(u8* data, size_t additional_data_size, MessageType type);
-    static Optional<ClipboardType> mime_type_to_clipboard_type(const String& mime);
+    static Optional<ClipboardType> mime_type_to_clipboard_type(String const& mime);
 };

@@ -20,7 +20,7 @@ class WorkQueue {
 public:
     static void initialize();
 
-    WorkQueue(const char*);
+    WorkQueue(char const*);
 
     void queue(void (*function)(void*), void* data = nullptr, void (*free_data)(void*) = nullptr)
     {

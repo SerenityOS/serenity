@@ -28,17 +28,17 @@ public:
         String executable;
         LauncherType launcher_type { LauncherType::Default };
 
-        static NonnullRefPtr<Details> from_details_str(const String&);
+        static NonnullRefPtr<Details> from_details_str(String const&);
     };
 
-    [[nodiscard]] static bool add_allowed_url(const URL&);
-    [[nodiscard]] static bool add_allowed_handler_with_any_url(const String& handler);
-    [[nodiscard]] static bool add_allowed_handler_with_only_specific_urls(const String& handler, const Vector<URL>&);
+    [[nodiscard]] static bool add_allowed_url(URL const&);
+    [[nodiscard]] static bool add_allowed_handler_with_any_url(String const& handler);
+    [[nodiscard]] static bool add_allowed_handler_with_only_specific_urls(String const& handler, const Vector<URL>&);
     [[nodiscard]] static bool seal_allowlist();
-    static bool open(const URL&, const String& handler_name = {});
-    static bool open(const URL&, const Details& details);
-    static Vector<String> get_handlers_for_url(const URL&);
-    static NonnullRefPtrVector<Details> get_handlers_with_details_for_url(const URL&);
+    static bool open(URL const&, String const& handler_name = {});
+    static bool open(URL const&, Details const& details);
+    static Vector<String> get_handlers_for_url(URL const&);
+    static NonnullRefPtrVector<Details> get_handlers_with_details_for_url(URL const&);
 };
 
 }

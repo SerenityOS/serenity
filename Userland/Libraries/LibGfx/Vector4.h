@@ -32,7 +32,7 @@ public:
     constexpr void set_z(T value) { m_z = value; }
     constexpr void set_w(T value) { m_w = value; }
 
-    constexpr Vector4& operator+=(const Vector4& other)
+    constexpr Vector4& operator+=(Vector4 const& other)
     {
         m_x += other.m_x;
         m_y += other.m_y;
@@ -41,7 +41,7 @@ public:
         return *this;
     }
 
-    constexpr Vector4& operator-=(const Vector4& other)
+    constexpr Vector4& operator-=(Vector4 const& other)
     {
         m_x -= other.m_x;
         m_y -= other.m_y;
@@ -50,22 +50,22 @@ public:
         return *this;
     }
 
-    constexpr Vector4 operator+(const Vector4& other) const
+    constexpr Vector4 operator+(Vector4 const& other) const
     {
         return Vector4(m_x + other.m_x, m_y + other.m_y, m_z + other.m_z, m_w + other.m_w);
     }
 
-    constexpr Vector4 operator-(const Vector4& other) const
+    constexpr Vector4 operator-(Vector4 const& other) const
     {
         return Vector4(m_x - other.m_x, m_y - other.m_y, m_z - other.m_z, m_w - other.m_w);
     }
 
-    constexpr Vector4 operator*(const Vector4& other) const
+    constexpr Vector4 operator*(Vector4 const& other) const
     {
         return Vector4(m_x * other.m_x, m_y * other.m_y, m_z * other.m_z, m_w * other.m_w);
     }
 
-    constexpr Vector4 operator/(const Vector4& other) const
+    constexpr Vector4 operator/(Vector4 const& other) const
     {
         return Vector4(m_x / other.m_x, m_y / other.m_y, m_z / other.m_z, m_w / other.m_w);
     }
@@ -80,7 +80,7 @@ public:
         return Vector4(m_x / f, m_y / f, m_z / f, m_w / f);
     }
 
-    constexpr T dot(const Vector4& other) const
+    constexpr T dot(Vector4 const& other) const
     {
         return m_x * other.m_x + m_y * other.m_y + m_z * other.m_z + m_w * other.m_w;
     }

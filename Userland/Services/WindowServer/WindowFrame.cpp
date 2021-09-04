@@ -140,7 +140,7 @@ void WindowFrame::reload_config()
     reload_icon(s_close_icon, "window-close.png", "/res/icons/16x16/window-close.png");
     reload_icon(s_close_modified_icon, "window-close-modified.png", "/res/icons/16x16/window-close-modified.png");
 
-    auto load_shadow = [](const String& path, String& last_path, RefPtr<MultiScaleBitmaps>& shadow_bitmap) {
+    auto load_shadow = [](String const& path, String& last_path, RefPtr<MultiScaleBitmaps>& shadow_bitmap) {
         if (path.is_empty()) {
             last_path = String::empty();
             shadow_bitmap = nullptr;
@@ -779,7 +779,7 @@ void WindowFrame::handle_mouse_event(MouseEvent const& event)
     handle_border_mouse_event(event);
 }
 
-void WindowFrame::handle_border_mouse_event(const MouseEvent& event)
+void WindowFrame::handle_border_mouse_event(MouseEvent const& event)
 {
     if (!m_window.is_resizable())
         return;
@@ -807,7 +807,7 @@ void WindowFrame::handle_border_mouse_event(const MouseEvent& event)
         wm.start_window_resize(m_window, event.translated(rect().location()));
 }
 
-void WindowFrame::handle_menubar_mouse_event(const MouseEvent& event)
+void WindowFrame::handle_menubar_mouse_event(MouseEvent const& event)
 {
     Menu* hovered_menu = nullptr;
     auto menubar_rect = this->menubar_rect();
@@ -838,7 +838,7 @@ void WindowFrame::open_menubar_menu(Menu& menu)
     invalidate(menubar_rect);
 }
 
-void WindowFrame::handle_menu_mouse_event(Menu& menu, const MouseEvent& event)
+void WindowFrame::handle_menu_mouse_event(Menu& menu, MouseEvent const& event)
 {
     auto menubar_rect = this->menubar_rect();
     bool is_hover_with_any_menu_open = event.type() == MouseEvent::MouseMove && &m_window == WindowManager::the().window_with_active_menu();

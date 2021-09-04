@@ -37,7 +37,7 @@ public:
     };
 
 public:
-    static NonnullRefPtr<PATADiskDevice> create(const IDEController&, IDEChannel&, DriveType, InterfaceType, u16, u64);
+    static NonnullRefPtr<PATADiskDevice> create(IDEController const&, IDEChannel&, DriveType, InterfaceType, u16, u64);
     virtual ~PATADiskDevice() override;
 
     // ^BlockDevice
@@ -45,7 +45,7 @@ public:
     virtual String device_name() const override;
 
 private:
-    PATADiskDevice(const IDEController&, IDEChannel&, DriveType, InterfaceType, u16, u64);
+    PATADiskDevice(IDEController const&, IDEChannel&, DriveType, InterfaceType, u16, u64);
 
     // ^DiskDevice
     virtual StringView class_name() const override;

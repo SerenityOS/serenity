@@ -56,8 +56,8 @@ public:
             m_bits &= ~Attribute::Configurable;
     }
 
-    bool operator==(const PropertyAttributes& other) const { return m_bits == other.m_bits; }
-    bool operator!=(const PropertyAttributes& other) const { return m_bits != other.m_bits; }
+    bool operator==(PropertyAttributes const& other) const { return m_bits == other.m_bits; }
+    bool operator!=(PropertyAttributes const& other) const { return m_bits != other.m_bits; }
 
     [[nodiscard]] u8 bits() const { return m_bits; }
 

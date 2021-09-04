@@ -72,9 +72,9 @@ int main(int argc, char* argv[])
 
     unveil(nullptr, nullptr);
 
-    const char* section = nullptr;
-    const char* name = nullptr;
-    const char* pager = nullptr;
+    char const* section = nullptr;
+    char const* name = nullptr;
+    char const* pager = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Read manual pages. Try 'man man' to get started.");
@@ -84,11 +84,11 @@ int main(int argc, char* argv[])
 
     args_parser.parse(argc, argv);
 
-    auto make_path = [name](const char* section) {
+    auto make_path = [name](char const* section) {
         return String::formatted("/usr/share/man/man{}/{}.md", section, name);
     };
     if (!section) {
-        const char* sections[] = {
+        char const* sections[] = {
             "1",
             "2",
             "3",

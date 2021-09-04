@@ -17,36 +17,36 @@ class ClientConnection;
 
 class CodeComprehensionEngine {
 public:
-    CodeComprehensionEngine(const FileDB& filedb, bool store_all_declarations = false);
+    CodeComprehensionEngine(FileDB const& filedb, bool store_all_declarations = false);
     virtual ~CodeComprehensionEngine();
 
-    virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position) = 0;
+    virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(String const& file, const GUI::TextPosition& autocomplete_position) = 0;
 
     // TODO: In the future we can pass the range that was edited and only re-parse what we have to.
-    virtual void on_edit([[maybe_unused]] const String& file) {};
-    virtual void file_opened([[maybe_unused]] const String& file) {};
+    virtual void on_edit([[maybe_unused]] String const& file) {};
+    virtual void file_opened([[maybe_unused]] String const& file) {};
 
-    virtual Optional<GUI::AutocompleteProvider::ProjectLocation> find_declaration_of(const String&, const GUI::TextPosition&) { return {}; }
+    virtual Optional<GUI::AutocompleteProvider::ProjectLocation> find_declaration_of(String const&, const GUI::TextPosition&) { return {}; }
 
     struct FunctionParamsHint {
         Vector<String> params;
         size_t current_index { 0 };
     };
-    virtual Optional<FunctionParamsHint> get_function_params_hint(const String&, const GUI::TextPosition&) { return {}; }
+    virtual Optional<FunctionParamsHint> get_function_params_hint(String const&, const GUI::TextPosition&) { return {}; }
 
 public:
-    Function<void(const String&, Vector<GUI::AutocompleteProvider::Declaration>&&)> set_declarations_of_document_callback;
+    Function<void(String const&, Vector<GUI::AutocompleteProvider::Declaration>&&)> set_declarations_of_document_callback;
     Function<void(String const&, Vector<Cpp::Parser::TodoEntry>&&)> set_todo_entries_of_document_callback;
 
 protected:
-    const FileDB& filedb() const { return m_filedb; }
-    void set_declarations_of_document(const String&, Vector<GUI::AutocompleteProvider::Declaration>&&);
+    FileDB const& filedb() const { return m_filedb; }
+    void set_declarations_of_document(String const&, Vector<GUI::AutocompleteProvider::Declaration>&&);
     void set_todo_entries_of_document(String const&, Vector<Cpp::Parser::TodoEntry>&&);
     const HashMap<String, Vector<GUI::AutocompleteProvider::Declaration>>& all_declarations() const { return m_all_declarations; }
 
 private:
     HashMap<String, Vector<GUI::AutocompleteProvider::Declaration>> m_all_declarations;
-    const FileDB& m_filedb;
+    FileDB const& m_filedb;
     bool m_store_all_declarations { false };
 };
 }

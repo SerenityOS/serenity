@@ -17,7 +17,7 @@ public:
     using ValueType = ValueT;
     using ErrorType = ErrorT;
 
-    Result(const ValueType& res)
+    Result(ValueType const& res)
         : m_result(res)
     {
     }
@@ -27,7 +27,7 @@ public:
     {
     }
 
-    Result(const ErrorType& error)
+    Result(ErrorType const& error)
         : m_error(error)
     {
     }
@@ -38,7 +38,7 @@ public:
     }
 
     Result(Result&& other) = default;
-    Result(const Result& other) = default;
+    Result(Result const& other) = default;
     ~Result() = default;
 
     ValueType& value()
@@ -78,7 +78,7 @@ public:
     using ValueType = void;
     using ErrorType = ErrorT;
 
-    Result(const ErrorType& error)
+    Result(ErrorType const& error)
         : m_error(error)
     {
     }
@@ -90,7 +90,7 @@ public:
 
     Result() = default;
     Result(Result&& other) = default;
-    Result(const Result& other) = default;
+    Result(Result const& other) = default;
     ~Result() = default;
 
     ErrorType& error()

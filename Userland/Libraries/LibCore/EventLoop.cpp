@@ -46,8 +46,8 @@ struct EventLoopTimer {
     TimerShouldFireWhenNotVisible fire_when_not_visible { TimerShouldFireWhenNotVisible::No };
     WeakPtr<Object> owner;
 
-    void reload(const Time& now);
-    bool has_expired(const Time& now) const;
+    void reload(Time const& now);
+    bool has_expired(Time const& now) const;
 };
 
 struct EventLoop::Private {
@@ -162,15 +162,15 @@ public:
             inspected_object->decrement_inspector_count({});
     }
 
-    void send_response(const JsonObject& response)
+    void send_response(JsonObject const& response)
     {
         auto serialized = response.to_string();
         u32 length = serialized.length();
-        m_socket->write((const u8*)&length, sizeof(length));
+        m_socket->write((u8 const*)&length, sizeof(length));
         m_socket->write(serialized);
     }
 
-    void handle_request(const JsonObject& request)
+    void handle_request(JsonObject const& request)
     {
         auto type = request.get("type").as_string_or({});
 
@@ -694,12 +694,12 @@ try_select_again:
     }
 }
 
-bool EventLoopTimer::has_expired(const Time& now) const
+bool EventLoopTimer::has_expired(Time const& now) const
 {
     return now > fire_time;
 }
 
-void EventLoopTimer::reload(const Time& now)
+void EventLoopTimer::reload(Time const& now)
 {
     fire_time = now + interval;
 }

@@ -56,7 +56,7 @@ public:
     {
     }
 
-    static UCICommand from_string(const StringView& command);
+    static UCICommand from_string(StringView const& command);
 
     virtual String to_string() const;
 };
@@ -74,7 +74,7 @@ public:
     {
     }
 
-    static DebugCommand from_string(const StringView& command);
+    static DebugCommand from_string(StringView const& command);
 
     virtual String to_string() const;
 
@@ -91,25 +91,25 @@ public:
     {
     }
 
-    static IsReadyCommand from_string(const StringView& command);
+    static IsReadyCommand from_string(StringView const& command);
 
     virtual String to_string() const;
 };
 
 class SetOptionCommand : public Command {
 public:
-    explicit SetOptionCommand(const StringView& name, Optional<String> value = {})
+    explicit SetOptionCommand(StringView const& name, Optional<String> value = {})
         : Command(Command::Type::SetOption)
         , m_name(name)
         , m_value(value)
     {
     }
 
-    static SetOptionCommand from_string(const StringView& command);
+    static SetOptionCommand from_string(StringView const& command);
 
     virtual String to_string() const;
 
-    const String& name() const { return m_name; }
+    String const& name() const { return m_name; }
     const Optional<String>& value() const { return m_value; }
 
 private:
@@ -126,7 +126,7 @@ public:
     {
     }
 
-    static PositionCommand from_string(const StringView& command);
+    static PositionCommand from_string(StringView const& command);
 
     virtual String to_string() const;
 
@@ -145,7 +145,7 @@ public:
     {
     }
 
-    static GoCommand from_string(const StringView& command);
+    static GoCommand from_string(StringView const& command);
 
     virtual String to_string() const;
 
@@ -170,7 +170,7 @@ public:
     {
     }
 
-    static StopCommand from_string(const StringView& command);
+    static StopCommand from_string(StringView const& command);
 
     virtual String to_string() const;
 };
@@ -182,19 +182,19 @@ public:
         Author,
     };
 
-    explicit IdCommand(Type field_type, const StringView& value)
+    explicit IdCommand(Type field_type, StringView const& value)
         : Command(Command::Type::Id)
         , m_field_type(field_type)
         , m_value(value)
     {
     }
 
-    static IdCommand from_string(const StringView& command);
+    static IdCommand from_string(StringView const& command);
 
     virtual String to_string() const;
 
     Type field_type() const { return m_field_type; }
-    const String& value() const { return m_value; }
+    String const& value() const { return m_value; }
 
 private:
     Type m_field_type;
@@ -208,7 +208,7 @@ public:
     {
     }
 
-    static UCIOkCommand from_string(const StringView& command);
+    static UCIOkCommand from_string(StringView const& command);
 
     virtual String to_string() const;
 };
@@ -220,7 +220,7 @@ public:
     {
     }
 
-    static ReadyOkCommand from_string(const StringView& command);
+    static ReadyOkCommand from_string(StringView const& command);
 
     virtual String to_string() const;
 };
@@ -233,7 +233,7 @@ public:
     {
     }
 
-    static BestMoveCommand from_string(const StringView& command);
+    static BestMoveCommand from_string(StringView const& command);
 
     virtual String to_string() const;
 
@@ -250,7 +250,7 @@ public:
     {
     }
 
-    static InfoCommand from_string(const StringView& command);
+    static InfoCommand from_string(StringView const& command);
 
     virtual String to_string() const;
 

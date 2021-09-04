@@ -11,7 +11,7 @@
 
 namespace GL {
 
-bool Clipper::point_within_clip_plane(const FloatVector4& vertex, ClipPlane plane)
+bool Clipper::point_within_clip_plane(FloatVector4 const& vertex, ClipPlane plane)
 {
     switch (plane) {
     case ClipPlane::LEFT:
@@ -31,7 +31,7 @@ bool Clipper::point_within_clip_plane(const FloatVector4& vertex, ClipPlane plan
     return false;
 }
 
-GLVertex Clipper::clip_intersection_point(const GLVertex& p1, const GLVertex& p2, ClipPlane plane_index)
+GLVertex Clipper::clip_intersection_point(GLVertex const& p1, GLVertex const& p2, ClipPlane plane_index)
 {
     // See https://www.microsoft.com/en-us/research/wp-content/uploads/1978/01/p245-blinn.pdf
     // "Clipping Using Homogenous Coordinates" Blinn/Newell, 1978
@@ -61,8 +61,8 @@ void Clipper::clip_triangle_against_frustum(Vector<GLVertex>& input_verts)
         write_to->clear_with_capacity();
         // Save me, C++23
         for (size_t i = 0; i < read_from->size(); i++) {
-            const auto& curr_vec = read_from->at((i + 1) % read_from->size());
-            const auto& prev_vec = read_from->at(i);
+            auto const& curr_vec = read_from->at((i + 1) % read_from->size());
+            auto const& prev_vec = read_from->at(i);
 
             if (point_within_clip_plane(curr_vec.position, static_cast<ClipPlane>(plane))) {
                 if (!point_within_clip_plane(prev_vec.position, static_cast<ClipPlane>(plane))) {

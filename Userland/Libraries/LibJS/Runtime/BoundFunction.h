@@ -26,7 +26,7 @@ public:
 
     virtual void visit_edges(Visitor&) override;
 
-    virtual const FlyString& name() const override
+    virtual FlyString const& name() const override
     {
         return m_name;
     }

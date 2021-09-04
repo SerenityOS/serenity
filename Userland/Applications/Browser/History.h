@@ -19,8 +19,8 @@ public:
     };
     void dump() const;
 
-    void push(const URL& url, const String& title);
-    void update_title(const String& title);
+    void push(URL const& url, String const& title);
+    void update_title(String const& title);
     URLTitlePair current() const;
 
     const Vector<StringView> get_back_title_history();

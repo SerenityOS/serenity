@@ -6,7 +6,7 @@ diff -Naur gettext-0.21/gettext-tools/gnulib-lib/fnmatch.c gettext-0.21.serenity
  #endif
  
 +#ifdef __serenity__
-+wctype_t wctype(const char*)
++wctype_t wctype(char const*)
 +{
 +    asm("int3");
 +}

@@ -85,7 +85,7 @@ static_assert(__builtin_offsetof(HPETRegistersBlock, timers[1]) == 0x120);
 // MMIO space has to be 1280 bytes and not 1024 bytes.
 static_assert(sizeof(HPETRegistersBlock) == 0x500);
 
-static u64 read_register_safe64(const HPETRegister& reg)
+static u64 read_register_safe64(HPETRegister const& reg)
 {
     // As per 2.4.7 this reads the 64 bit value in a consistent manner
     // using only 32 bit reads
@@ -219,7 +219,7 @@ void HPET::update_periodic_comparator_value()
     global_enable();
 }
 
-void HPET::update_non_periodic_comparator_value(const HPETComparator& comparator)
+void HPET::update_non_periodic_comparator_value(HPETComparator const& comparator)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(!comparator.is_periodic());
@@ -287,7 +287,7 @@ u64 HPET::read_main_counter() const
     return ((u64)wraps << 32) | (u64)current_value;
 }
 
-void HPET::enable_periodic_interrupt(const HPETComparator& comparator)
+void HPET::enable_periodic_interrupt(HPETComparator const& comparator)
 {
     dbgln_if(HPET_DEBUG, "HPET: Set comparator {} to be periodic.", comparator.comparator_number());
     disable(comparator);
@@ -299,7 +299,7 @@ void HPET::enable_periodic_interrupt(const HPETComparator& comparator)
     if (comparator.is_enabled())
         enable(comparator);
 }
-void HPET::disable_periodic_interrupt(const HPETComparator& comparator)
+void HPET::disable_periodic_interrupt(HPETComparator const& comparator)
 {
     dbgln_if(HPET_DEBUG, "HPET: Disable periodic interrupt in comparator {}", comparator.comparator_number());
     disable(comparator);
@@ -312,14 +312,14 @@ void HPET::disable_periodic_interrupt(const HPETComparator& comparator)
         enable(comparator);
 }
 
-void HPET::disable(const HPETComparator& comparator)
+void HPET::disable(HPETComparator const& comparator)
 {
     dbgln_if(HPET_DEBUG, "HPET: Disable comparator {}", comparator.comparator_number());
     VERIFY(comparator.comparator_number() <= m_comparators.size());
     auto& timer = registers().timers[comparator.comparator_number()];
     timer.capabilities = timer.capabilities & ~(u32)HPETFlags::TimerConfiguration::InterruptEnable;
 }
-void HPET::enable(const HPETComparator& comparator)
+void HPET::enable(HPETComparator const& comparator)
 {
     dbgln_if(HPET_DEBUG, "HPET: Enable comparator {}", comparator.comparator_number());
     VERIFY(comparator.comparator_number() <= m_comparators.size());
@@ -327,7 +327,7 @@ void HPET::enable(const HPETComparator& comparator)
     timer.capabilities = timer.capabilities | (u32)HPETFlags::TimerConfiguration::InterruptEnable;
 }
 
-Vector<unsigned> HPET::capable_interrupt_numbers(const HPETComparator& comparator)
+Vector<unsigned> HPET::capable_interrupt_numbers(HPETComparator const& comparator)
 {
     VERIFY(comparator.comparator_number() <= m_comparators.size());
     Vector<unsigned> capable_interrupts;
@@ -389,9 +389,9 @@ PhysicalAddress HPET::find_acpi_hpet_registers_block()
     return PhysicalAddress(sdt->event_timer_block.address);
 }
 
-const HPETRegistersBlock& HPET::registers() const
+HPETRegistersBlock const& HPET::registers() const
 {
-    return *(const HPETRegistersBlock*)m_hpet_mmio_region->vaddr().offset(m_physical_acpi_hpet_registers.offset_in_page()).as_ptr();
+    return *(HPETRegistersBlock const*)m_hpet_mmio_region->vaddr().offset(m_physical_acpi_hpet_registers.offset_in_page()).as_ptr();
 }
 
 HPETRegistersBlock& HPET::registers()

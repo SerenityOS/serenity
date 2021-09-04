@@ -12,12 +12,12 @@
 
 namespace Kernel {
 
-NonnullRefPtr<SATADiskDevice> SATADiskDevice::create(const AHCIController& controller, const AHCIPort& port, size_t sector_size, u64 max_addressable_block)
+NonnullRefPtr<SATADiskDevice> SATADiskDevice::create(AHCIController const& controller, AHCIPort const& port, size_t sector_size, u64 max_addressable_block)
 {
     return adopt_ref(*new SATADiskDevice(controller, port, sector_size, max_addressable_block));
 }
 
-SATADiskDevice::SATADiskDevice(const AHCIController& controller, const AHCIPort& port, size_t sector_size, u64 max_addressable_block)
+SATADiskDevice::SATADiskDevice(AHCIController const& controller, AHCIPort const& port, size_t sector_size, u64 max_addressable_block)
     : StorageDevice(controller, sector_size, max_addressable_block)
     , m_port(port)
 {

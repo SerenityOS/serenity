@@ -19,12 +19,12 @@
 
 namespace Kernel {
 
-NonnullRefPtr<AHCIPort> AHCIPort::create(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
+NonnullRefPtr<AHCIPort> AHCIPort::create(AHCIPortHandler const& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
 {
     return adopt_ref(*new AHCIPort(handler, registers, port_index));
 }
 
-AHCIPort::AHCIPort(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
+AHCIPort::AHCIPort(AHCIPortHandler const& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
     : m_port_index(port_index)
     , m_port_registers(registers)
     , m_parent_handler(handler)
@@ -301,7 +301,7 @@ bool AHCIPort::initialize(SpinlockLocker<Spinlock<u8>>& main_lock)
     return true;
 }
 
-const char* AHCIPort::try_disambiguate_sata_status()
+char const* AHCIPort::try_disambiguate_sata_status()
 {
     switch (m_port_registers.ssts & 0xf) {
     case 0:

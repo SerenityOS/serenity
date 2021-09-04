@@ -254,14 +254,14 @@ void SpreadsheetWidget::try_generate_tip_for_input_expression(StringView source,
     }
 }
 
-void SpreadsheetWidget::save(const StringView& filename)
+void SpreadsheetWidget::save(StringView const& filename)
 {
     auto result = m_workbook->save(filename);
     if (result.is_error())
         GUI::MessageBox::show_error(window(), result.error());
 }
 
-void SpreadsheetWidget::load(const StringView& filename)
+void SpreadsheetWidget::load(StringView const& filename)
 {
     auto result = m_workbook->load(filename);
     if (result.is_error()) {
@@ -328,7 +328,7 @@ void SpreadsheetWidget::add_sheet(NonnullRefPtr<Sheet>&& sheet)
     setup_tabs(new_sheets);
 }
 
-void SpreadsheetWidget::set_filename(const String& filename)
+void SpreadsheetWidget::set_filename(String const& filename)
 {
     if (m_workbook->set_filename(filename)) {
         StringBuilder builder;

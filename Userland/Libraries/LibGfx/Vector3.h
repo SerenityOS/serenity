@@ -29,7 +29,7 @@ public:
     constexpr void set_y(T value) { m_y = value; }
     constexpr void set_z(T value) { m_z = value; }
 
-    constexpr Vector3& operator+=(const Vector3& other)
+    constexpr Vector3& operator+=(Vector3 const& other)
     {
         m_x += other.m_x;
         m_y += other.m_y;
@@ -37,7 +37,7 @@ public:
         return *this;
     }
 
-    constexpr Vector3& operator-=(const Vector3& other)
+    constexpr Vector3& operator-=(Vector3 const& other)
     {
         m_x -= other.m_x;
         m_y -= other.m_y;
@@ -45,22 +45,22 @@ public:
         return *this;
     }
 
-    constexpr Vector3 operator+(const Vector3& other) const
+    constexpr Vector3 operator+(Vector3 const& other) const
     {
         return Vector3(m_x + other.m_x, m_y + other.m_y, m_z + other.m_z);
     }
 
-    constexpr Vector3 operator-(const Vector3& other) const
+    constexpr Vector3 operator-(Vector3 const& other) const
     {
         return Vector3(m_x - other.m_x, m_y - other.m_y, m_z - other.m_z);
     }
 
-    constexpr Vector3 operator*(const Vector3& other) const
+    constexpr Vector3 operator*(Vector3 const& other) const
     {
         return Vector3(m_x * other.m_x, m_y * other.m_y, m_z * other.m_z);
     }
 
-    constexpr Vector3 operator/(const Vector3& other) const
+    constexpr Vector3 operator/(Vector3 const& other) const
     {
         return Vector3(m_x / other.m_x, m_y / other.m_y, m_z / other.m_z);
     }
@@ -75,12 +75,12 @@ public:
         return Vector3(m_x / f, m_y / f, m_z / f);
     }
 
-    constexpr T dot(const Vector3& other) const
+    constexpr T dot(Vector3 const& other) const
     {
         return m_x * other.m_x + m_y * other.m_y + m_z * other.m_z;
     }
 
-    constexpr Vector3 cross(const Vector3& other) const
+    constexpr Vector3 cross(Vector3 const& other) const
     {
         return Vector3(
             m_y * other.m_z - m_z * other.m_y,

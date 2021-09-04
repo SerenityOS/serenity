@@ -36,7 +36,7 @@ static String get_salt()
     return builder.build();
 }
 
-static Vector<gid_t> get_extra_gids(const passwd& pwd)
+static Vector<gid_t> get_extra_gids(passwd const& pwd)
 {
     StringView username { pwd.pw_name };
     Vector<gid_t> extra_gids;
@@ -55,7 +55,7 @@ static Vector<gid_t> get_extra_gids(const passwd& pwd)
     return extra_gids;
 }
 
-Result<Account, String> Account::from_passwd(const passwd& pwd, const spwd& spwd)
+Result<Account, String> Account::from_passwd(passwd const& pwd, spwd const& spwd)
 {
     Account account(pwd, spwd, get_extra_gids(pwd));
     endpwent();
@@ -107,7 +107,7 @@ Account Account::self(Read options)
     return Account(*pwd, *spwd, extra_gids);
 }
 
-Result<Account, String> Account::from_name(const char* username, Read options)
+Result<Account, String> Account::from_name(char const* username, Read options)
 {
     errno = 0;
     auto* pwd = getpwnam(username);
@@ -159,7 +159,7 @@ Result<Account, String> Account::from_uid(uid_t uid, Read options)
     return from_passwd(*pwd, *spwd);
 }
 
-bool Account::authenticate(const char* password) const
+bool Account::authenticate(char const* password) const
 {
     // If there was no shadow entry for this account, authentication always fails.
     if (m_password_hash.is_null())
@@ -188,7 +188,7 @@ bool Account::login() const
     return true;
 }
 
-void Account::set_password(const char* password)
+void Account::set_password(char const* password)
 {
     m_password_hash = crypt(password, get_salt().characters());
 }
@@ -210,7 +210,7 @@ void Account::delete_password()
     m_password_hash = "";
 }
 
-Account::Account(const passwd& pwd, const spwd& spwd, Vector<gid_t> extra_gids)
+Account::Account(passwd const& pwd, spwd const& spwd, Vector<gid_t> extra_gids)
     : m_username(pwd.pw_name)
     , m_password_hash(spwd.sp_pwdp)
     , m_uid(pwd.pw_uid)

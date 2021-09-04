@@ -41,17 +41,17 @@ public:
     int ref_count() const { return m_ref_count; }
 
     T* parent() { return m_parent; }
-    const T* parent() const { return m_parent; }
+    T const* parent() const { return m_parent; }
 
     bool has_children() const { return m_first_child; }
     T* next_sibling() { return m_next_sibling; }
     T* previous_sibling() { return m_previous_sibling; }
     T* first_child() { return m_first_child; }
     T* last_child() { return m_last_child; }
-    const T* next_sibling() const { return m_next_sibling; }
-    const T* previous_sibling() const { return m_previous_sibling; }
-    const T* first_child() const { return m_first_child; }
-    const T* last_child() const { return m_last_child; }
+    T const* next_sibling() const { return m_next_sibling; }
+    T const* previous_sibling() const { return m_previous_sibling; }
+    T const* first_child() const { return m_first_child; }
+    T const* last_child() const { return m_last_child; }
 
     int child_count() const
     {
@@ -72,12 +72,12 @@ public:
         return nullptr;
     }
 
-    const T* child_at_index(int index) const
+    T const* child_at_index(int index) const
     {
         return const_cast<TreeNode*>(this)->child_at_index(index);
     }
 
-    Optional<size_t> index_of_child(const T& search_child)
+    Optional<size_t> index_of_child(T const& search_child)
     {
         VERIFY(search_child.parent() == this);
         size_t index = 0;
@@ -93,7 +93,7 @@ public:
     }
 
     template<typename ChildType>
-    Optional<size_t> index_of_child(const T& search_child)
+    Optional<size_t> index_of_child(T const& search_child)
     {
         VERIFY(search_child.parent() == this);
         size_t index = 0;
@@ -110,17 +110,17 @@ public:
         return {};
     }
 
-    bool is_ancestor_of(const TreeNode&) const;
-    bool is_inclusive_ancestor_of(const TreeNode&) const;
-    bool is_descendant_of(const TreeNode&) const;
-    bool is_inclusive_descendant_of(const TreeNode&) const;
+    bool is_ancestor_of(TreeNode const&) const;
+    bool is_inclusive_ancestor_of(TreeNode const&) const;
+    bool is_descendant_of(TreeNode const&) const;
+    bool is_inclusive_descendant_of(TreeNode const&) const;
 
     void append_child(NonnullRefPtr<T> node);
     void prepend_child(NonnullRefPtr<T> node);
     void insert_before(NonnullRefPtr<T> node, RefPtr<T> child);
     void remove_child(NonnullRefPtr<T> node);
 
-    bool is_child_allowed(const T&) const { return true; }
+    bool is_child_allowed(T const&) const { return true; }
 
     T* next_in_pre_order()
     {
@@ -137,12 +137,12 @@ public:
         return node;
     }
 
-    const T* next_in_pre_order() const
+    T const* next_in_pre_order() const
     {
         return const_cast<TreeNode*>(this)->next_in_pre_order();
     }
 
-    bool is_before(const T& other) const
+    bool is_before(T const& other) const
     {
         if (this == &other)
             return false;
@@ -156,7 +156,7 @@ public:
     template<typename Callback>
     IterationDecision for_each_in_inclusive_subtree(Callback callback) const
     {
-        if (callback(static_cast<const T&>(*this)) == IterationDecision::Break)
+        if (callback(static_cast<T const&>(*this)) == IterationDecision::Break)
             return IterationDecision::Break;
         for (auto* child = first_child(); child; child = child->next_sibling()) {
             if (child->for_each_in_inclusive_subtree(callback) == IterationDecision::Break)
@@ -180,7 +180,7 @@ public:
     template<typename U, typename Callback>
     IterationDecision for_each_in_inclusive_subtree_of_type(Callback callback)
     {
-        if (is<U>(static_cast<const T&>(*this))) {
+        if (is<U>(static_cast<T const&>(*this))) {
             if (callback(static_cast<U&>(*this)) == IterationDecision::Break)
                 return IterationDecision::Break;
         }
@@ -194,8 +194,8 @@ public:
     template<typename U, typename Callback>
     IterationDecision for_each_in_inclusive_subtree_of_type(Callback callback) const
     {
-        if (is<U>(static_cast<const T&>(*this))) {
-            if (callback(static_cast<const U&>(*this)) == IterationDecision::Break)
+        if (is<U>(static_cast<T const&>(*this))) {
+            if (callback(static_cast<U const&>(*this)) == IterationDecision::Break)
                 return IterationDecision::Break;
         }
         for (auto* child = first_child(); child; child = child->next_sibling()) {
@@ -274,7 +274,7 @@ public:
     }
 
     template<typename U>
-    const U* next_sibling_of_type() const
+    U const* next_sibling_of_type() const
     {
         return const_cast<TreeNode*>(this)->template next_sibling_of_type<U>();
     }
@@ -290,7 +290,7 @@ public:
     }
 
     template<typename U>
-    const U* previous_sibling_of_type() const
+    U const* previous_sibling_of_type() const
     {
         return const_cast<TreeNode*>(this)->template previous_sibling_of_type<U>();
     }
@@ -306,13 +306,13 @@ public:
     }
 
     template<typename U>
-    const U* first_child_of_type() const
+    U const* first_child_of_type() const
     {
         return const_cast<TreeNode*>(this)->template first_child_of_type<U>();
     }
 
     template<typename U>
-    const U* last_child_of_type() const
+    U const* last_child_of_type() const
     {
         return const_cast<TreeNode*>(this)->template last_child_of_type<U>();
     }
@@ -344,7 +344,7 @@ public:
     }
 
     template<typename U>
-    const U* first_ancestor_of_type() const
+    U const* first_ancestor_of_type() const
     {
         return const_cast<TreeNode*>(this)->template first_ancestor_of_type<U>();
     }

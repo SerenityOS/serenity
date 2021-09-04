@@ -59,7 +59,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto process_file = [](const String& path, auto& file, int file_number) {
+    auto process_file = [](String const& path, auto& file, int file_number) {
         if (path == "-") {
             file = Core::File::standard_input();
         } else {
@@ -91,14 +91,14 @@ int main(int argc, char** argv)
     if (!suppress_col3)
         col3_fmt = String::formatted("{}{}", String::repeated(tab, tab_count++), print_color ? COL3_COLOR : "{}");
 
-    auto cmp = [&](const String& str1, const String& str2) {
+    auto cmp = [&](String const& str1, String const& str2) {
         if (case_insensitive)
             return strcasecmp(str1.characters(), str2.characters());
         else
             return strcmp(str1.characters(), str2.characters());
     };
 
-    auto process_remaining = [](const String& fmt, auto& file, int& count, bool print) {
+    auto process_remaining = [](String const& fmt, auto& file, int& count, bool print) {
         while (file->can_read_line()) {
             ++count;
             auto line = file->read_line();

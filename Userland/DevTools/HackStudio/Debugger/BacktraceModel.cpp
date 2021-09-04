@@ -10,7 +10,7 @@
 
 namespace HackStudio {
 
-NonnullRefPtr<BacktraceModel> BacktraceModel::create(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
+NonnullRefPtr<BacktraceModel> BacktraceModel::create(const Debug::DebugSession& debug_session, PtraceRegisters const& regs)
 {
     return adopt_ref(*new BacktraceModel(create_backtrace(debug_session, regs)));
 }
@@ -31,7 +31,7 @@ GUI::ModelIndex BacktraceModel::index(int row, int column, const GUI::ModelIndex
     return create_index(row, column, &m_frames.at(row));
 }
 
-Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
+Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const Debug::DebugSession& debug_session, PtraceRegisters const& regs)
 {
     FlatPtr current_ebp = regs.bp();
     FlatPtr current_instruction = regs.ip();

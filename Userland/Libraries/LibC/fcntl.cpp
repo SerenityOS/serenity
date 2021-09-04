@@ -30,7 +30,7 @@ int create_inode_watcher(unsigned flags)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int inode_watcher_add_watch(int fd, const char* path, size_t path_length, unsigned event_mask)
+int inode_watcher_add_watch(int fd, char const* path, size_t path_length, unsigned event_mask)
 {
     Syscall::SC_inode_watcher_add_watch_params params { fd, { path, path_length }, event_mask };
     int rc = syscall(SC_inode_watcher_add_watch, &params);
@@ -43,12 +43,12 @@ int inode_watcher_remove_watch(int fd, int wd)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int creat(const char* path, mode_t mode)
+int creat(char const* path, mode_t mode)
 {
     return open(path, O_CREAT | O_WRONLY | O_TRUNC, mode);
 }
 
-int open(const char* path, int options, ...)
+int open(char const* path, int options, ...)
 {
     if (!path) {
         errno = EFAULT;
@@ -68,7 +68,7 @@ int open(const char* path, int options, ...)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int openat(int dirfd, const char* path, int options, ...)
+int openat(int dirfd, char const* path, int options, ...)
 {
     if (!path) {
         errno = EFAULT;

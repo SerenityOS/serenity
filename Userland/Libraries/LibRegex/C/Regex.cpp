@@ -36,14 +36,14 @@ static internal_regex_t* impl_from(regex_t* re)
     return reinterpret_cast<internal_regex_t*>(re->__data);
 }
 
-static const internal_regex_t* impl_from(const regex_t* re)
+static internal_regex_t const* impl_from(regex_t const* re)
 {
     return impl_from(const_cast<regex_t*>(re));
 }
 
 extern "C" {
 
-int regcomp(regex_t* reg, const char* pattern, int cflags)
+int regcomp(regex_t* reg, char const* pattern, int cflags)
 {
     if (!reg)
         return REG_ESPACE;
@@ -80,7 +80,7 @@ int regcomp(regex_t* reg, const char* pattern, int cflags)
     return REG_NOERR;
 }
 
-int regexec(const regex_t* reg, const char* string, size_t nmatch, regmatch_t pmatch[], int eflags)
+int regexec(regex_t const* reg, char const* string, size_t nmatch, regmatch_t pmatch[], int eflags)
 {
     auto preg = impl_from(reg);
 
@@ -210,7 +210,7 @@ inline static String get_error(ReError errcode)
     return error;
 }
 
-size_t regerror(int errcode, const regex_t* reg, char* errbuf, size_t errbuf_size)
+size_t regerror(int errcode, regex_t const* reg, char* errbuf, size_t errbuf_size)
 {
     String error;
     auto preg = impl_from(reg);

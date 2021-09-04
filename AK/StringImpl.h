@@ -25,8 +25,8 @@ size_t allocation_size_for_stringimpl(size_t length);
 class StringImpl : public RefCounted<StringImpl> {
 public:
     static NonnullRefPtr<StringImpl> create_uninitialized(size_t length, char*& buffer);
-    static RefPtr<StringImpl> create(const char* cstring, ShouldChomp = NoChomp);
-    static RefPtr<StringImpl> create(const char* cstring, size_t length, ShouldChomp = NoChomp);
+    static RefPtr<StringImpl> create(char const* cstring, ShouldChomp = NoChomp);
+    static RefPtr<StringImpl> create(char const* cstring, size_t length, ShouldChomp = NoChomp);
     static RefPtr<StringImpl> create(ReadonlyBytes, ShouldChomp = NoChomp);
     static RefPtr<StringImpl> create_lowercased(char const* cstring, size_t length);
     static RefPtr<StringImpl> create_uppercased(char const* cstring, size_t length);
@@ -45,18 +45,18 @@ public:
 
     size_t length() const { return m_length; }
     // Includes NUL-terminator.
-    const char* characters() const { return &m_inline_buffer[0]; }
+    char const* characters() const { return &m_inline_buffer[0]; }
 
     ALWAYS_INLINE ReadonlyBytes bytes() const { return { characters(), length() }; }
     ALWAYS_INLINE StringView view() const { return { characters(), length() }; }
 
-    const char& operator[](size_t i) const
+    char const& operator[](size_t i) const
     {
         VERIFY(i < m_length);
         return characters()[i];
     }
 
-    bool operator==(const StringImpl& other) const
+    bool operator==(StringImpl const& other) const
     {
         if (length() != other.length())
             return false;
@@ -109,7 +109,7 @@ inline size_t allocation_size_for_stringimpl(size_t length)
 
 template<>
 struct Formatter<StringImpl> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const StringImpl& value)
+    void format(FormatBuilder& builder, StringImpl const& value)
     {
         Formatter<StringView>::format(builder, { value.characters(), value.length() });
     }

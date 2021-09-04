@@ -51,12 +51,12 @@ public:
     unsigned status() const { return m_status; };
     String response_text() const;
 
-    DOM::ExceptionOr<void> open(const String& method, const String& url);
+    DOM::ExceptionOr<void> open(String const& method, String const& url);
     DOM::ExceptionOr<void> send();
 
-    DOM::ExceptionOr<void> set_request_header(const String& header, const String& value);
+    DOM::ExceptionOr<void> set_request_header(String const& header, String const& value);
 
-    String get_response_header(const String& name) { return m_response_headers.get(name).value_or({}); }
+    String get_response_header(String const& name) { return m_response_headers.get(name).value_or({}); }
 
 private:
     virtual void ref_event_target() override { ref(); }
@@ -66,7 +66,7 @@ private:
 
     void set_ready_state(ReadyState);
     void set_status(unsigned status) { m_status = status; }
-    void fire_progress_event(const String&, u64, u64);
+    void fire_progress_event(String const&, u64, u64);
 
     explicit XMLHttpRequest(DOM::Window&);
 

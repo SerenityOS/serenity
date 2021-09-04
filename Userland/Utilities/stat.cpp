@@ -17,7 +17,7 @@
 #include <time.h>
 #include <unistd.h>
 
-static int stat(const char* file, bool should_follow_links)
+static int stat(char const* file, bool should_follow_links)
 {
     struct stat st;
     int rc = should_follow_links ? stat(file, &st) : lstat(file, &st);
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
     }
 
     bool should_follow_links = false;
-    Vector<const char*> files;
+    Vector<char const*> files;
 
     auto args_parser = Core::ArgsParser();
     args_parser.add_option(should_follow_links, "Follow links to files", nullptr, 'L');

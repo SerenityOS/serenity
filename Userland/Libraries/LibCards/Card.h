@@ -58,8 +58,8 @@ public:
     void save_old_position();
 
     void draw(GUI::Painter&) const;
-    void clear(GUI::Painter&, const Color& background_color) const;
-    void clear_and_draw(GUI::Painter&, const Color& background_color);
+    void clear(GUI::Painter&, Color const& background_color) const;
+    void clear_and_draw(GUI::Painter&, Color const& background_color);
 
 private:
     Card(Type type, uint8_t value);

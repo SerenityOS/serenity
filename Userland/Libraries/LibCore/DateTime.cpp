@@ -83,7 +83,7 @@ void DateTime::set_time(int year, int month, int day, int hour, int minute, int 
     m_second = tm.tm_sec;
 }
 
-String DateTime::to_string(const String& format) const
+String DateTime::to_string(String const& format) const
 {
     const char wday_short_names[7][4] = {
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
@@ -229,7 +229,7 @@ String DateTime::to_string(const String& format) const
     return builder.build();
 }
 
-Optional<DateTime> DateTime::parse(const String& format, const String& string)
+Optional<DateTime> DateTime::parse(String const& format, String const& string)
 {
     unsigned format_pos = 0;
     unsigned string_pos = 0;

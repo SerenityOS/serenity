@@ -28,7 +28,7 @@ static int count;
 static uint32_t total_ms;
 static int min_ms;
 static int max_ms;
-static const char* host;
+static char const* host;
 static int payload_size = -1;
 
 static void closing_statistics()
@@ -113,7 +113,7 @@ int main(int argc, char** argv)
     peer_address.sin_family = AF_INET;
     peer_address.sin_port = 0;
 
-    peer_address.sin_addr.s_addr = *(const in_addr_t*)hostent->h_addr_list[0];
+    peer_address.sin_addr.s_addr = *(in_addr_t const*)hostent->h_addr_list[0];
 
     uint16_t seq = 1;
 

@@ -14,14 +14,14 @@ class SubmitEvent final : public DOM::Event {
 public:
     using WrapperType = Bindings::SubmitEventWrapper;
 
-    static NonnullRefPtr<SubmitEvent> create(const FlyString& event_name, RefPtr<HTMLElement> submitter);
+    static NonnullRefPtr<SubmitEvent> create(FlyString const& event_name, RefPtr<HTMLElement> submitter);
 
     virtual ~SubmitEvent() override;
 
     RefPtr<HTMLElement> submitter() const;
 
 private:
-    SubmitEvent(const FlyString& event_name, RefPtr<HTMLElement> submitter);
+    SubmitEvent(FlyString const& event_name, RefPtr<HTMLElement> submitter);
 
     RefPtr<HTMLElement> m_submitter;
 };

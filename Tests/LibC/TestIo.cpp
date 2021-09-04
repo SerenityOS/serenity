@@ -345,9 +345,9 @@ TEST_CASE(writev)
     EXPECT(rc == 0);
 
     iovec iov[2];
-    iov[0].iov_base = const_cast<void*>((const void*)"Hello");
+    iov[0].iov_base = const_cast<void*>((void const*)"Hello");
     iov[0].iov_len = 5;
-    iov[1].iov_base = const_cast<void*>((const void*)"Friends");
+    iov[1].iov_base = const_cast<void*>((void const*)"Friends");
     iov[1].iov_len = 7;
     int nwritten = writev(pipefds[1], iov, 2);
     EXPECT_EQ(nwritten, 12);

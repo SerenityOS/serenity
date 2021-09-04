@@ -20,12 +20,12 @@ class EBRPartitionTable : public MBRPartitionTable {
 public:
     ~EBRPartitionTable();
 
-    static Result<NonnullOwnPtr<EBRPartitionTable>, PartitionTable::Error> try_to_initialize(const StorageDevice&);
-    explicit EBRPartitionTable(const StorageDevice&);
+    static Result<NonnullOwnPtr<EBRPartitionTable>, PartitionTable::Error> try_to_initialize(StorageDevice const&);
+    explicit EBRPartitionTable(StorageDevice const&);
     virtual bool is_valid() const override { return m_valid; };
 
 private:
-    void search_extended_partition(const StorageDevice&, MBRPartitionTable&, u64, size_t limit);
+    void search_extended_partition(StorageDevice const&, MBRPartitionTable&, u64, size_t limit);
 
     bool m_valid { false };
 };

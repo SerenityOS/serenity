@@ -39,7 +39,7 @@ struct PPMLoadingContext {
 
     Type type { Type::Unknown };
     State state { State::NotDecoded };
-    const u8* data { nullptr };
+    u8 const* data { nullptr };
     size_t data_size { 0 };
     u16 width { 0 };
     u16 height { 0 };
@@ -101,12 +101,12 @@ static bool read_image_data(PPMLoadingContext& context, Streamer& streamer)
     return true;
 }
 
-RefPtr<Gfx::Bitmap> load_ppm(const StringView& path)
+RefPtr<Gfx::Bitmap> load_ppm(StringView const& path)
 {
     return load<PPMLoadingContext>(path);
 }
 
-RefPtr<Gfx::Bitmap> load_ppm_from_memory(const u8* data, size_t length)
+RefPtr<Gfx::Bitmap> load_ppm_from_memory(u8 const* data, size_t length)
 {
     auto bitmap = load_impl<PPMLoadingContext>(data, length);
     if (bitmap)
@@ -114,7 +114,7 @@ RefPtr<Gfx::Bitmap> load_ppm_from_memory(const u8* data, size_t length)
     return bitmap;
 }
 
-PPMImageDecoderPlugin::PPMImageDecoderPlugin(const u8* data, size_t size)
+PPMImageDecoderPlugin::PPMImageDecoderPlugin(u8 const* data, size_t size)
 {
     m_context = make<PPMLoadingContext>();
     m_context->data = data;

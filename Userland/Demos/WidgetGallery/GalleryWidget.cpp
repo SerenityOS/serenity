@@ -54,7 +54,7 @@ GalleryWidget::GalleryWidget()
     m_frame_shape_combobox = basics_tab.find_descendant_of_type_named<GUI::ComboBox>("frame_shape_combobox");
     m_frame_shape_combobox->set_model(*GUI::ItemListModel<String>::create(m_frame_shapes));
 
-    m_frame_shape_combobox->on_change = [&](auto&, const auto& index) {
+    m_frame_shape_combobox->on_change = [&](auto&, auto const& index) {
         m_label_frame->set_frame_shape(static_cast<Gfx::FrameShape>((index.row() - 1) % 3 + 1));
         m_label_frame->set_frame_shadow(static_cast<Gfx::FrameShadow>((index.row() - 1) / 3));
         m_label_frame->update();
@@ -151,7 +151,7 @@ GalleryWidget::GalleryWidget()
     m_msgbox_icon_combobox->set_model(*GUI::ItemListModel<String>::create(m_msgbox_icons));
     m_msgbox_icon_combobox->set_selected_index(0);
 
-    m_msgbox_icon_combobox->on_change = [&](auto&, const auto& index) {
+    m_msgbox_icon_combobox->on_change = [&](auto&, auto const& index) {
         m_msgbox_type = static_cast<GUI::MessageBox::Type>(index.row());
     };
 
@@ -159,7 +159,7 @@ GalleryWidget::GalleryWidget()
     m_msgbox_buttons_combobox->set_model(*GUI::ItemListModel<String>::create(m_msgbox_buttons));
     m_msgbox_buttons_combobox->set_selected_index(0);
 
-    m_msgbox_buttons_combobox->on_change = [&](auto&, const auto& index) {
+    m_msgbox_buttons_combobox->on_change = [&](auto&, auto const& index) {
         m_msgbox_input_type = static_cast<GUI::MessageBox::InputType>(index.row());
     };
 
@@ -226,7 +226,7 @@ GalleryWidget::GalleryWidget()
     m_wizard_output = wizards_tab.find_descendant_of_type_named<GUI::TextEditor>("wizard_output");
     m_wizard_output->set_should_hide_unnecessary_scrollbars(true);
 
-    const char* serenityos_ascii = {
+    char const* serenityos_ascii = {
         "   ____                 _ __       ____  ____\n"
         "  / __/__ _______ ___  (_) /___ __/ __ \\/ __/\n"
         " _\\ \\/ -_) __/ -_) _ \\/ / __/ // / /_/ /\\ \\\n"
@@ -234,7 +234,7 @@ GalleryWidget::GalleryWidget()
         "                           /___/\n"
     };
 
-    const char* wizard_ascii = {
+    char const* wizard_ascii = {
         "              _,-'|\n"
         "           ,-'._  |\n"
         " .||,      |####\\ |\n"

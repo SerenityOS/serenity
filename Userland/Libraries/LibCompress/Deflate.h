@@ -22,8 +22,8 @@ public:
     u32 read_symbol(InputBitStream&) const;
     void write_symbol(OutputBitStream&, u32) const;
 
-    static const CanonicalCode& fixed_literal_codes();
-    static const CanonicalCode& fixed_distance_codes();
+    static CanonicalCode const& fixed_literal_codes();
+    static CanonicalCode const& fixed_distance_codes();
 
     static Optional<CanonicalCode> from_bytes(ReadonlyBytes);
 
@@ -151,13 +151,13 @@ public:
     bool write_or_error(ReadonlyBytes) override;
     void final_flush();
 
-    static Optional<ByteBuffer> compress_all(const ReadonlyBytes& bytes, CompressionLevel = CompressionLevel::GOOD);
+    static Optional<ByteBuffer> compress_all(ReadonlyBytes const& bytes, CompressionLevel = CompressionLevel::GOOD);
 
 private:
     Bytes pending_block() { return { m_rolling_window + block_size, block_size }; }
 
     // LZ77 Compression
-    static u16 hash_sequence(const u8* bytes);
+    static u16 hash_sequence(u8 const* bytes);
     size_t compare_match_candidate(size_t start, size_t candidate, size_t prev_match_length, size_t max_match_length);
     size_t find_back_match(size_t start, u16 hash, size_t previous_match_length, size_t max_match_length, size_t& match_position);
     void lz77_compress_block();
@@ -171,10 +171,10 @@ private:
     template<size_t Size>
     static void generate_huffman_lengths(Array<u8, Size>& lengths, const Array<u16, Size>& frequencies, size_t max_bit_length, u16 frequency_cap = UINT16_MAX);
     size_t huffman_block_length(const Array<u8, max_huffman_literals>& literal_bit_lengths, const Array<u8, max_huffman_distances>& distance_bit_lengths);
-    void write_huffman(const CanonicalCode& literal_code, const Optional<CanonicalCode>& distance_code);
+    void write_huffman(CanonicalCode const& literal_code, const Optional<CanonicalCode>& distance_code);
     static size_t encode_huffman_lengths(const Array<u8, max_huffman_literals + max_huffman_distances>& lengths, size_t lengths_count, Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths);
     size_t encode_block_lengths(const Array<u8, max_huffman_literals>& literal_bit_lengths, const Array<u8, max_huffman_distances>& distance_bit_lengths, Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths, size_t& literal_code_count, size_t& distance_code_count);
-    void write_dynamic_huffman(const CanonicalCode& literal_code, size_t literal_code_count, const Optional<CanonicalCode>& distance_code, size_t distance_code_count, const Array<u8, 19>& code_lengths_bit_lengths, size_t code_length_count, const Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths, size_t encoded_lengths_count);
+    void write_dynamic_huffman(CanonicalCode const& literal_code, size_t literal_code_count, const Optional<CanonicalCode>& distance_code, size_t distance_code_count, const Array<u8, 19>& code_lengths_bit_lengths, size_t code_length_count, const Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths, size_t encoded_lengths_count);
 
     size_t uncompressed_block_length();
     size_t fixed_block_length();

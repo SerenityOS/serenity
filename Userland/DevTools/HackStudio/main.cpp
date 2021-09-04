@@ -50,7 +50,7 @@ int main(int argc, char** argv)
         notify_make_not_available();
     }
 
-    const char* path_argument = nullptr;
+    char const* path_argument = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path_argument, "Path to a workspace or a file", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
 static bool make_is_available()
 {
     pid_t pid;
-    const char* argv[] = { "make", "--version", nullptr };
+    char const* argv[] = { "make", "--version", nullptr };
     posix_spawn_file_actions_t action;
     posix_spawn_file_actions_init(&action);
     posix_spawn_file_actions_addopen(&action, STDOUT_FILENO, "/dev/null", O_WRONLY, 0);
@@ -125,12 +125,12 @@ GUI::TextEditor& current_editor()
     return s_hack_studio_widget->current_editor();
 }
 
-void open_file(const String& filename)
+void open_file(String const& filename)
 {
     s_hack_studio_widget->open_file(filename);
 }
 
-void open_file(const String& filename, size_t line, size_t column)
+void open_file(String const& filename, size_t line, size_t column)
 {
     s_hack_studio_widget->open_file(filename, line, column);
 }

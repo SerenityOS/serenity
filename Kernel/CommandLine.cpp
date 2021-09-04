@@ -16,7 +16,7 @@ static char s_cmd_line[1024];
 static constexpr StringView s_embedded_cmd_line = "";
 static CommandLine* s_the;
 
-UNMAP_AFTER_INIT void CommandLine::early_initialize(const char* cmd_line)
+UNMAP_AFTER_INIT void CommandLine::early_initialize(char const* cmd_line)
 {
     if (!cmd_line)
         return;
@@ -27,7 +27,7 @@ UNMAP_AFTER_INIT void CommandLine::early_initialize(const char* cmd_line)
     s_cmd_line[length] = '\0';
 }
 
-const CommandLine& kernel_command_line()
+CommandLine const& kernel_command_line()
 {
     VERIFY(s_the);
     return *s_the;
@@ -42,7 +42,7 @@ UNMAP_AFTER_INIT void CommandLine::initialize()
     (void)s_the->boot_mode(Validate::Yes);
 }
 
-UNMAP_AFTER_INIT void CommandLine::build_commandline(const String& cmdline_from_bootloader)
+UNMAP_AFTER_INIT void CommandLine::build_commandline(String const& cmdline_from_bootloader)
 {
     StringBuilder builder;
     builder.append(cmdline_from_bootloader);
@@ -71,21 +71,21 @@ UNMAP_AFTER_INIT void CommandLine::add_arguments(const Vector<StringView>& args)
     }
 }
 
-UNMAP_AFTER_INIT CommandLine::CommandLine(const String& cmdline_from_bootloader)
+UNMAP_AFTER_INIT CommandLine::CommandLine(String const& cmdline_from_bootloader)
 {
     s_the = this;
     build_commandline(cmdline_from_bootloader);
-    const auto& args = m_string.split_view(' ');
+    auto const& args = m_string.split_view(' ');
     m_params.ensure_capacity(args.size());
     add_arguments(args);
 }
 
-Optional<StringView> CommandLine::lookup(const StringView& key) const
+Optional<StringView> CommandLine::lookup(StringView const& key) const
 {
     return m_params.get(key);
 }
 
-bool CommandLine::contains(const StringView& key) const
+bool CommandLine::contains(StringView const& key) const
 {
     return m_params.contains(key);
 }

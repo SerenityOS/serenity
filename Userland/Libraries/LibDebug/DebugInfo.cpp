@@ -143,7 +143,7 @@ Optional<DebugInfo::SourcePositionAndAddress> DebugInfo::get_address_from_source
     }
 
     Optional<SourcePositionAndAddress> result;
-    for (const auto& line_entry : m_sorted_lines) {
+    for (auto const& line_entry : m_sorted_lines) {
         if (!line_entry.file.ends_with(file_path))
             continue;
 
@@ -160,12 +160,12 @@ Optional<DebugInfo::SourcePositionAndAddress> DebugInfo::get_address_from_source
     return result;
 }
 
-NonnullOwnPtrVector<DebugInfo::VariableInfo> DebugInfo::get_variables_in_current_scope(const PtraceRegisters& regs) const
+NonnullOwnPtrVector<DebugInfo::VariableInfo> DebugInfo::get_variables_in_current_scope(PtraceRegisters const& regs) const
 {
     NonnullOwnPtrVector<DebugInfo::VariableInfo> variables;
 
     // TODO: We can store the scopes in a better data structure
-    for (const auto& scope : m_scopes) {
+    for (auto const& scope : m_scopes) {
         FlatPtr ip;
 #if ARCH(I386)
         ip = regs.eip;
@@ -175,7 +175,7 @@ NonnullOwnPtrVector<DebugInfo::VariableInfo> DebugInfo::get_variables_in_current
         if (ip - m_base_address < scope.address_low || ip - m_base_address >= scope.address_high)
             continue;
 
-        for (const auto& die_entry : scope.dies_of_variables) {
+        for (auto const& die_entry : scope.dies_of_variables) {
             auto variable_info = create_variable_info(die_entry, regs);
             if (!variable_info)
                 continue;
@@ -358,7 +358,7 @@ String DebugInfo::name_of_containing_function(FlatPtr address) const
 
 Optional<DebugInfo::VariablesScope> DebugInfo::get_containing_function(FlatPtr address) const
 {
-    for (const auto& scope : m_scopes) {
+    for (auto const& scope : m_scopes) {
         if (!scope.is_function || address < scope.address_low || address >= scope.address_high)
             continue;
         return scope;
@@ -369,7 +369,7 @@ Optional<DebugInfo::VariablesScope> DebugInfo::get_containing_function(FlatPtr a
 Vector<DebugInfo::SourcePosition> DebugInfo::source_lines_in_scope(VariablesScope const& scope) const
 {
     Vector<DebugInfo::SourcePosition> source_lines;
-    for (const auto& line : m_sorted_lines) {
+    for (auto const& line : m_sorted_lines) {
         if (line.address < scope.address_low)
             continue;
 

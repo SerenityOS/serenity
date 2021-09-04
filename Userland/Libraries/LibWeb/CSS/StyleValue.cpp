@@ -152,7 +152,7 @@ Color IdentifierStyleValue::to_color(const DOM::Document& document) const
     }
 }
 
-ImageStyleValue::ImageStyleValue(const URL& url, DOM::Document& document)
+ImageStyleValue::ImageStyleValue(URL const& url, DOM::Document& document)
     : StyleValue(Type::Image)
     , m_url(url)
     , m_document(document)

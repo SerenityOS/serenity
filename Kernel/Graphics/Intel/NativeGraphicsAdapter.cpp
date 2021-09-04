@@ -147,7 +147,7 @@ static size_t find_absolute_difference(u64 target_frequency, u64 checked_frequen
     return checked_frequency - target_frequency;
 }
 
-Optional<IntelNativeGraphicsAdapter::PLLSettings> IntelNativeGraphicsAdapter::create_pll_settings(u64 target_frequency, u64 reference_clock, const PLLMaxSettings& limits)
+Optional<IntelNativeGraphicsAdapter::PLLSettings> IntelNativeGraphicsAdapter::create_pll_settings(u64 target_frequency, u64 reference_clock, PLLMaxSettings const& limits)
 {
     IntelNativeGraphicsAdapter::PLLSettings settings;
     IntelNativeGraphicsAdapter::PLLSettings best_settings;
@@ -568,7 +568,7 @@ void IntelNativeGraphicsAdapter::enable_primary_plane(PhysicalAddress fb_address
     write_to_register(IntelGraphics::RegisterIndex::DisplayPlaneAControl, (read_from_register(IntelGraphics::RegisterIndex::DisplayPlaneAControl) & (~(0b1111 << 26))) | (0b0110 << 26) | (1 << 31));
 }
 
-void IntelNativeGraphicsAdapter::set_dpll_registers(const PLLSettings& settings)
+void IntelNativeGraphicsAdapter::set_dpll_registers(PLLSettings const& settings)
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());
@@ -578,7 +578,7 @@ void IntelNativeGraphicsAdapter::set_dpll_registers(const PLLSettings& settings)
     write_to_register(IntelGraphics::RegisterIndex::DPLLControlA, read_from_register(IntelGraphics::RegisterIndex::DPLLControlA) & ~0x80000000);
 }
 
-void IntelNativeGraphicsAdapter::enable_dpll_without_vga(const PLLSettings& settings, size_t dac_multiplier)
+void IntelNativeGraphicsAdapter::enable_dpll_without_vga(PLLSettings const& settings, size_t dac_multiplier)
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());

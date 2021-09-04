@@ -82,7 +82,7 @@ void ConsolePort::handle_queue_update(Badge<VirtIO::Console>, u16 queue_index)
     }
 }
 
-bool ConsolePort::can_read(const FileDescription&, size_t) const
+bool ConsolePort::can_read(FileDescription const&, size_t) const
 {
     return m_receive_buffer->used_bytes() > 0;
 }
@@ -112,12 +112,12 @@ KResultOr<size_t> ConsolePort::read(FileDescription& desc, u64, UserOrKernelBuff
     return bytes_copied;
 }
 
-bool ConsolePort::can_write(const FileDescription&, size_t) const
+bool ConsolePort::can_write(FileDescription const&, size_t) const
 {
     return m_console.get_queue(m_transmit_queue).has_free_slots() && m_transmit_buffer->has_space();
 }
 
-KResultOr<size_t> ConsolePort::write(FileDescription& desc, u64, const UserOrKernelBuffer& data, size_t size)
+KResultOr<size_t> ConsolePort::write(FileDescription& desc, u64, UserOrKernelBuffer const& data, size_t size)
 {
     if (!size)
         return 0;

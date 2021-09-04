@@ -22,9 +22,9 @@
 
 namespace Kernel {
 
-void TCPSocket::for_each(Function<void(const TCPSocket&)> callback)
+void TCPSocket::for_each(Function<void(TCPSocket const&)> callback)
 {
-    sockets_by_tuple().for_each_shared([&](const auto& it) {
+    sockets_by_tuple().for_each_shared([&](auto const& it) {
         callback(*it.value);
     });
 }
@@ -70,9 +70,9 @@ MutexProtected<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tupl
     return *s_socket_tuples;
 }
 
-RefPtr<TCPSocket> TCPSocket::from_tuple(const IPv4SocketTuple& tuple)
+RefPtr<TCPSocket> TCPSocket::from_tuple(IPv4SocketTuple const& tuple)
 {
-    return sockets_by_tuple().with_shared([&](const auto& table) -> RefPtr<TCPSocket> {
+    return sockets_by_tuple().with_shared([&](auto const& table) -> RefPtr<TCPSocket> {
         auto exact_match = table.get(tuple);
         if (exact_match.has_value())
             return { *exact_match.value() };
@@ -90,7 +90,7 @@ RefPtr<TCPSocket> TCPSocket::from_tuple(const IPv4SocketTuple& tuple)
         return {};
     });
 }
-RefPtr<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address, u16 new_local_port, const IPv4Address& new_peer_address, u16 new_peer_port)
+RefPtr<TCPSocket> TCPSocket::create_client(IPv4Address const& new_local_address, u16 new_local_port, IPv4Address const& new_peer_address, u16 new_peer_port)
 {
     auto tuple = IPv4SocketTuple(new_local_address, new_local_port, new_peer_address, new_peer_port);
     return sockets_by_tuple().with_exclusive([&](auto& table) -> RefPtr<TCPSocket> {
@@ -167,8 +167,8 @@ KResultOr<NonnullRefPtr<TCPSocket>> TCPSocket::create(int protocol, NonnullOwnPt
 
 KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)
 {
-    auto& ipv4_packet = *reinterpret_cast<const IPv4Packet*>(raw_ipv4_packet.data());
-    auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
+    auto& ipv4_packet = *reinterpret_cast<IPv4Packet const*>(raw_ipv4_packet.data());
+    auto& tcp_packet = *static_cast<TCPPacket const*>(ipv4_packet.payload());
     size_t payload_size = raw_ipv4_packet.size() - sizeof(IPv4Packet) - tcp_packet.header_size();
     dbgln_if(TCP_SOCKET_DEBUG, "payload_size {}, will it fit in {}?", payload_size, buffer_size);
     VERIFY(buffer_size >= payload_size);
@@ -177,7 +177,7 @@ KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
     return payload_size;
 }
 
-KResultOr<size_t> TCPSocket::protocol_send(const UserOrKernelBuffer& data, size_t data_length)
+KResultOr<size_t> TCPSocket::protocol_send(UserOrKernelBuffer const& data, size_t data_length)
 {
     RoutingDecision routing_decision = route_to(peer_address(), local_address(), bound_interface());
     if (routing_decision.is_zero())
@@ -196,7 +196,7 @@ KResult TCPSocket::send_ack(bool allow_duplicate)
     return send_tcp_packet(TCPFlags::ACK);
 }
 
-KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, size_t payload_size, RoutingDecision* user_routing_decision)
+KResult TCPSocket::send_tcp_packet(u16 flags, UserOrKernelBuffer const* payload, size_t payload_size, RoutingDecision* user_routing_decision)
 {
     RoutingDecision routing_decision = user_routing_decision ? *user_routing_decision : route_to(peer_address(), local_address(), bound_interface());
     if (routing_decision.is_zero())
@@ -267,7 +267,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
     return KSuccess;
 }
 
-void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
+void TCPSocket::receive_tcp_packet(TCPPacket const& packet, u16 size)
 {
     if (packet.has_ack()) {
         u32 ack_number = packet.ack_number();
@@ -325,7 +325,7 @@ bool TCPSocket::should_delay_next_ack() const
     return true;
 }
 
-NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket& packet, u16 payload_size)
+NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(IPv4Address const& source, IPv4Address const& destination, TCPPacket const& packet, u16 payload_size)
 {
     struct [[gnu::packed]] PseudoHeader {
         IPv4Address source;
@@ -358,7 +358,7 @@ NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, c
             checksum = (checksum >> 16) + (checksum & 0xffff);
     }
     if (payload_size & 1) {
-        u16 expanded_byte = ((const u8*)packet.payload())[payload_size - 1] << 8;
+        u16 expanded_byte = ((u8 const*)packet.payload())[payload_size - 1] << 8;
         checksum += expanded_byte;
         if (checksum > 0xffff)
             checksum = (checksum >> 16) + (checksum & 0xffff);
@@ -567,7 +567,7 @@ void TCPSocket::retransmit_packets()
             packet.tx_counter++;
 
             if constexpr (TCP_SOCKET_DEBUG) {
-                auto& tcp_packet = *(const TCPPacket*)(packet.buffer->buffer->data() + packet.ipv4_payload_offset);
+                auto& tcp_packet = *(TCPPacket const*)(packet.buffer->buffer->data() + packet.ipv4_payload_offset);
                 dbgln("Sending TCP packet from {}:{} to {}:{} with ({}{}{}{}) seq_no={}, ack_no={}, tx_counter={}",
                     local_address(), local_port(),
                     peer_address(), peer_port(),
@@ -600,7 +600,7 @@ void TCPSocket::retransmit_packets()
     });
 }
 
-bool TCPSocket::can_write(const FileDescription& file_description, size_t size) const
+bool TCPSocket::can_write(FileDescription const& file_description, size_t size) const
 {
     if (!IPv4Socket::can_write(file_description, size))
         return false;

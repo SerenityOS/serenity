@@ -102,7 +102,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Vector<const char*> text;
+    Vector<char const*> text;
     bool no_trailing_newline = false;
     bool should_interpret_backslash_escapes = false;
 

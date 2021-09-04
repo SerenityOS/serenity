@@ -164,7 +164,7 @@ void KeyboardMapperWidget::save()
     save_to_file(m_filename);
 }
 
-void KeyboardMapperWidget::save_to_file(const StringView& filename)
+void KeyboardMapperWidget::save_to_file(StringView const& filename)
 {
     JsonObject map_json;
 

@@ -117,7 +117,7 @@ void TaskbarWindow::create_quick_launch_bar()
     quick_launch_bar.set_frame_thickness(0);
 
     auto config = Core::ConfigFile::open_for_app("Taskbar");
-    constexpr const char* quick_launch = "QuickLaunch";
+    constexpr char const* quick_launch = "QuickLaunch";
 
     // FIXME: Core::ConfigFile does not keep the order of the entries.
     for (auto& name : config->keys(quick_launch)) {
@@ -160,7 +160,7 @@ void TaskbarWindow::create_quick_launch_bar()
 
 void TaskbarWindow::on_screen_rects_change(const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index)
 {
-    const auto& rect = rects[main_screen_index];
+    auto const& rect = rects[main_screen_index];
     Gfx::IntRect new_rect { rect.x(), rect.bottom() - taskbar_height() + 1, rect.width(), taskbar_height() };
     set_rect(new_rect);
     update_applet_area();
@@ -177,7 +177,7 @@ void TaskbarWindow::update_applet_area()
     GUI::WindowManagerServerConnection::the().async_set_applet_area_position(new_rect.location());
 }
 
-NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& identifier)
+NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(WindowIdentifier const& identifier)
 {
     auto& button = m_task_button_container->add<TaskbarButton>(identifier);
     button.set_min_size(20, 21);
@@ -187,7 +187,7 @@ NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& 
     return button;
 }
 
-void TaskbarWindow::add_window_button(::Window& window, const WindowIdentifier& identifier)
+void TaskbarWindow::add_window_button(::Window& window, WindowIdentifier const& identifier)
 {
     if (window.button())
         return;

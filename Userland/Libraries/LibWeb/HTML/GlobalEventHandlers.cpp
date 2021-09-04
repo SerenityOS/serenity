@@ -33,7 +33,7 @@ GlobalEventHandlers::~GlobalEventHandlers()
 {
 }
 
-void GlobalEventHandlers::set_event_handler_attribute(const FlyString& name, HTML::EventHandler value)
+void GlobalEventHandlers::set_event_handler_attribute(FlyString const& name, HTML::EventHandler value)
 {
     auto& self = global_event_handlers_to_event_target();
 
@@ -64,7 +64,7 @@ void GlobalEventHandlers::set_event_handler_attribute(const FlyString& name, HTM
     }
 }
 
-HTML::EventHandler GlobalEventHandlers::get_event_handler_attribute(const FlyString& name)
+HTML::EventHandler GlobalEventHandlers::get_event_handler_attribute(FlyString const& name)
 {
     auto& self = global_event_handlers_to_event_target();
     for (auto& listener : self.listeners()) {

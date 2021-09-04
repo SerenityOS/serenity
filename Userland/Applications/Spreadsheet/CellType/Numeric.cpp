@@ -21,7 +21,7 @@ NumericCell::~NumericCell()
 {
 }
 
-String NumericCell::display(Cell& cell, const CellTypeMetadata& metadata) const
+String NumericCell::display(Cell& cell, CellTypeMetadata const& metadata) const
 {
     ScopeGuard propagate_exception { [&cell] {
         if (auto exc = cell.sheet().interpreter().exception()) {
@@ -42,7 +42,7 @@ String NumericCell::display(Cell& cell, const CellTypeMetadata& metadata) const
     return string;
 }
 
-JS::Value NumericCell::js_value(Cell& cell, const CellTypeMetadata&) const
+JS::Value NumericCell::js_value(Cell& cell, CellTypeMetadata const&) const
 {
     ScopeGuard propagate_exception { [&cell] {
         if (auto exc = cell.sheet().interpreter().exception()) {

@@ -53,7 +53,7 @@ size_t Bitmap::minimum_pitch(size_t physical_width, BitmapFormat format)
     return physical_width * element_size;
 }
 
-static bool size_would_overflow(BitmapFormat format, const IntSize& size, int scale_factor)
+static bool size_would_overflow(BitmapFormat format, IntSize const& size, int scale_factor)
 {
     if (size.width() < 0 || size.height() < 0)
         return true;
@@ -65,7 +65,7 @@ static bool size_would_overflow(BitmapFormat format, const IntSize& size, int sc
     return Checked<size_t>::multiplication_would_overflow(pitch, size.height() * scale_factor);
 }
 
-RefPtr<Bitmap> Bitmap::try_create(BitmapFormat format, const IntSize& size, int scale_factor)
+RefPtr<Bitmap> Bitmap::try_create(BitmapFormat format, IntSize const& size, int scale_factor)
 {
     auto backing_store = Bitmap::try_allocate_backing_store(format, size, scale_factor);
     if (!backing_store.has_value())
@@ -73,7 +73,7 @@ RefPtr<Bitmap> Bitmap::try_create(BitmapFormat format, const IntSize& size, int 
     return adopt_ref(*new Bitmap(format, size, scale_factor, backing_store.value()));
 }
 
-RefPtr<Bitmap> Bitmap::try_create_shareable(BitmapFormat format, const IntSize& size, int scale_factor)
+RefPtr<Bitmap> Bitmap::try_create_shareable(BitmapFormat format, IntSize const& size, int scale_factor)
 {
     if (size_would_overflow(format, size, scale_factor))
         return nullptr;
@@ -87,7 +87,7 @@ RefPtr<Bitmap> Bitmap::try_create_shareable(BitmapFormat format, const IntSize& 
     return Bitmap::try_create_with_anonymous_buffer(format, buffer, size, scale_factor, {});
 }
 
-Bitmap::Bitmap(BitmapFormat format, const IntSize& size, int scale_factor, const BackingStore& backing_store)
+Bitmap::Bitmap(BitmapFormat format, IntSize const& size, int scale_factor, BackingStore const& backing_store)
     : m_size(size)
     , m_scale(scale_factor)
     , m_data(backing_store.data)
@@ -102,7 +102,7 @@ Bitmap::Bitmap(BitmapFormat format, const IntSize& size, int scale_factor, const
     m_needs_munmap = true;
 }
 
-RefPtr<Bitmap> Bitmap::try_create_wrapper(BitmapFormat format, const IntSize& size, int scale_factor, size_t pitch, void* data)
+RefPtr<Bitmap> Bitmap::try_create_wrapper(BitmapFormat format, IntSize const& size, int scale_factor, size_t pitch, void* data)
 {
     if (size_would_overflow(format, size, scale_factor))
         return nullptr;
@@ -145,7 +145,7 @@ RefPtr<Bitmap> Bitmap::try_load_from_file(String const& path, int scale_factor)
     return nullptr;
 }
 
-Bitmap::Bitmap(BitmapFormat format, const IntSize& size, int scale_factor, size_t pitch, void* data)
+Bitmap::Bitmap(BitmapFormat format, IntSize const& size, int scale_factor, size_t pitch, void* data)
     : m_size(size)
     , m_scale(scale_factor)
     , m_data(data)
@@ -159,7 +159,7 @@ Bitmap::Bitmap(BitmapFormat format, const IntSize& size, int scale_factor, size_
     allocate_palette_from_format(format, {});
 }
 
-static bool check_size(const IntSize& size, int scale_factor, BitmapFormat format, unsigned actual_size)
+static bool check_size(IntSize const& size, int scale_factor, BitmapFormat format, unsigned actual_size)
 {
     // FIXME: Code duplication of size_in_bytes() and m_pitch
     unsigned expected_size_min = Bitmap::minimum_pitch(size.width() * scale_factor, format) * size.height() * scale_factor;
@@ -179,7 +179,7 @@ static bool check_size(const IntSize& size, int scale_factor, BitmapFormat forma
     return true;
 }
 
-RefPtr<Bitmap> Bitmap::try_create_with_anonymous_buffer(BitmapFormat format, Core::AnonymousBuffer buffer, const IntSize& size, int scale_factor, const Vector<RGBA32>& palette)
+RefPtr<Bitmap> Bitmap::try_create_with_anonymous_buffer(BitmapFormat format, Core::AnonymousBuffer buffer, IntSize const& size, int scale_factor, const Vector<RGBA32>& palette)
 {
     if (size_would_overflow(format, size, scale_factor))
         return nullptr;
@@ -274,7 +274,7 @@ ByteBuffer Bitmap::serialize_to_byte_buffer() const
     return buffer;
 }
 
-Bitmap::Bitmap(BitmapFormat format, Core::AnonymousBuffer buffer, const IntSize& size, int scale_factor, const Vector<RGBA32>& palette)
+Bitmap::Bitmap(BitmapFormat format, Core::AnonymousBuffer buffer, IntSize const& size, int scale_factor, const Vector<RGBA32>& palette)
     : m_size(size)
     , m_scale(scale_factor)
     , m_data(buffer.data<void>())

@@ -188,7 +188,7 @@ KResultOr<size_t> FileDescription::read(UserOrKernelBuffer& buffer, size_t count
     return nread_or_error;
 }
 
-KResultOr<size_t> FileDescription::write(const UserOrKernelBuffer& data, size_t size)
+KResultOr<size_t> FileDescription::write(UserOrKernelBuffer const& data, size_t size)
 {
     MutexLocker locker(m_lock);
     if (Checked<off_t>::addition_would_overflow(m_current_offset, size))
@@ -287,11 +287,11 @@ bool FileDescription::is_device() const
     return m_file->is_device();
 }
 
-const Device* FileDescription::device() const
+Device const* FileDescription::device() const
 {
     if (!is_device())
         return nullptr;
-    return static_cast<const Device*>(m_file.ptr());
+    return static_cast<Device const*>(m_file.ptr());
 }
 
 Device* FileDescription::device()
@@ -306,11 +306,11 @@ bool FileDescription::is_tty() const
     return m_file->is_tty();
 }
 
-const TTY* FileDescription::tty() const
+TTY const* FileDescription::tty() const
 {
     if (!is_tty())
         return nullptr;
-    return static_cast<const TTY*>(m_file.ptr());
+    return static_cast<TTY const*>(m_file.ptr());
 }
 
 TTY* FileDescription::tty()
@@ -325,11 +325,11 @@ bool FileDescription::is_inode_watcher() const
     return m_file->is_inode_watcher();
 }
 
-const InodeWatcher* FileDescription::inode_watcher() const
+InodeWatcher const* FileDescription::inode_watcher() const
 {
     if (!is_inode_watcher())
         return nullptr;
-    return static_cast<const InodeWatcher*>(m_file.ptr());
+    return static_cast<InodeWatcher const*>(m_file.ptr());
 }
 
 InodeWatcher* FileDescription::inode_watcher()
@@ -344,11 +344,11 @@ bool FileDescription::is_master_pty() const
     return m_file->is_master_pty();
 }
 
-const MasterPTY* FileDescription::master_pty() const
+MasterPTY const* FileDescription::master_pty() const
 {
     if (!is_master_pty())
         return nullptr;
-    return static_cast<const MasterPTY*>(m_file.ptr());
+    return static_cast<MasterPTY const*>(m_file.ptr());
 }
 
 MasterPTY* FileDescription::master_pty()
@@ -415,11 +415,11 @@ Socket* FileDescription::socket()
     return static_cast<Socket*>(m_file.ptr());
 }
 
-const Socket* FileDescription::socket() const
+Socket const* FileDescription::socket() const
 {
     if (!is_socket())
         return nullptr;
-    return static_cast<const Socket*>(m_file.ptr());
+    return static_cast<Socket const*>(m_file.ptr());
 }
 
 void FileDescription::set_file_flags(u32 flags)

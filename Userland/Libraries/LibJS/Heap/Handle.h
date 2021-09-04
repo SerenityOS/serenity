@@ -23,7 +23,7 @@ public:
     ~HandleImpl();
 
     Cell* cell() { return m_cell; }
-    const Cell* cell() const { return m_cell; }
+    Cell const* cell() const { return m_cell; }
 
 private:
     template<class T>
@@ -49,7 +49,7 @@ public:
     }
 
     T* cell() { return static_cast<T*>(m_impl->cell()); }
-    const T* cell() const { return static_cast<const T*>(m_impl->cell()); }
+    T const* cell() const { return static_cast<T const*>(m_impl->cell()); }
 
     bool is_null() const { return m_impl.is_null(); }
 

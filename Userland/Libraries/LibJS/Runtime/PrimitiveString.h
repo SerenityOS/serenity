@@ -29,7 +29,7 @@ public:
     bool has_utf16_string() const { return m_has_utf16_string; }
 
 private:
-    virtual const char* class_name() const override { return "PrimitiveString"; }
+    virtual char const* class_name() const override { return "PrimitiveString"; }
 
     mutable String m_utf8_string;
     mutable bool m_has_utf8_string { false };

@@ -18,7 +18,7 @@ public:
     ~InlineFormattingContext();
 
     Box& containing_block() { return context_box(); }
-    const Box& containing_block() const { return context_box(); }
+    Box const& containing_block() const { return context_box(); }
 
     virtual void run(Box&, LayoutMode) override;
 

@@ -19,11 +19,11 @@ ClassViewWidget::ClassViewWidget()
     m_class_tree = add<GUI::TreeView>();
 
     m_class_tree->on_selection_change = [this] {
-        const auto& index = m_class_tree->selection().first();
+        auto const& index = m_class_tree->selection().first();
         if (!index.is_valid())
             return;
 
-        auto* node = static_cast<const ClassViewNode*>(index.internal_data());
+        auto* node = static_cast<ClassViewNode const*>(index.internal_data());
         if (!node->declaration)
             return;
 
@@ -46,7 +46,7 @@ int ClassViewModel::row_count(const GUI::ModelIndex& index) const
 
 GUI::Variant ClassViewModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    auto* node = static_cast<const ClassViewNode*>(index.internal_data());
+    auto* node = static_cast<ClassViewNode const*>(index.internal_data());
     switch (role) {
     case GUI::ModelRole::Display: {
         return node->name;
@@ -68,7 +68,7 @@ GUI::ModelIndex ClassViewModel::parent_index(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
-    auto* child = static_cast<const ClassViewNode*>(index.internal_data());
+    auto* child = static_cast<ClassViewNode const*>(index.internal_data());
     auto* parent = child->parent;
     if (parent == nullptr)
         return {};
@@ -92,7 +92,7 @@ GUI::ModelIndex ClassViewModel::index(int row, int column, const GUI::ModelIndex
 {
     if (!parent_index.is_valid())
         return create_index(row, column, &m_root_scope[row]);
-    auto* parent = static_cast<const ClassViewNode*>(parent_index.internal_data());
+    auto* parent = static_cast<ClassViewNode const*>(parent_index.internal_data());
     auto* child = &parent->children[row];
     return create_index(row, column, child);
 }

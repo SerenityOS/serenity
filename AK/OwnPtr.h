@@ -47,10 +47,10 @@ public:
 #endif
     }
 
-    OwnPtr(const OwnPtr&) = delete;
+    OwnPtr(OwnPtr const&) = delete;
     template<typename U>
     OwnPtr(const OwnPtr<U>&) = delete;
-    OwnPtr& operator=(const OwnPtr&) = delete;
+    OwnPtr& operator=(OwnPtr const&) = delete;
     template<typename U>
     OwnPtr& operator=(const OwnPtr<U>&) = delete;
 
@@ -132,7 +132,7 @@ public:
     }
 
     T* ptr() { return m_ptr; }
-    const T* ptr() const { return m_ptr; }
+    T const* ptr() const { return m_ptr; }
 
     T* operator->()
     {
@@ -140,7 +140,7 @@ public:
         return m_ptr;
     }
 
-    const T* operator->() const
+    T const* operator->() const
     {
         VERIFY(m_ptr);
         return m_ptr;
@@ -152,13 +152,13 @@ public:
         return *m_ptr;
     }
 
-    const T& operator*() const
+    T const& operator*() const
     {
         VERIFY(m_ptr);
         return *m_ptr;
     }
 
-    operator const T*() const { return m_ptr; }
+    operator T const*() const { return m_ptr; }
     operator T*() { return m_ptr; }
 
     operator bool() { return !!m_ptr; }
@@ -233,7 +233,7 @@ inline OwnPtr<T> try_make(Args&&... args)
 template<typename T>
 struct Traits<OwnPtr<T>> : public GenericTraits<OwnPtr<T>> {
     using PeekType = T*;
-    using ConstPeekType = const T*;
+    using ConstPeekType = T const*;
     static unsigned hash(const OwnPtr<T>& p) { return ptr_hash(p.ptr()); }
     static bool equals(const OwnPtr<T>& a, const OwnPtr<T>& b) { return a.ptr() == b.ptr(); }
 };

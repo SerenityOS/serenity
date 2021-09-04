@@ -18,13 +18,13 @@ int disown(pid_t pid)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int module_load(const char* path, size_t path_length)
+int module_load(char const* path, size_t path_length)
 {
     int rc = syscall(SC_module_load, path, path_length);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int module_unload(const char* name, size_t name_length)
+int module_unload(char const* name, size_t name_length)
 {
     int rc = syscall(SC_module_unload, name, name_length);
     __RETURN_WITH_ERRNO(rc, rc, -1);
@@ -113,7 +113,7 @@ int anon_create(size_t size, int options)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int serenity_readlink(const char* path, size_t path_length, char* buffer, size_t buffer_size)
+int serenity_readlink(char const* path, size_t path_length, char* buffer, size_t buffer_size)
 {
     Syscall::SC_readlink_params small_params {
         { path, path_length },
@@ -123,7 +123,7 @@ int serenity_readlink(const char* path, size_t path_length, char* buffer, size_t
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int setkeymap(const char* name, const u32* map, u32* const shift_map, const u32* alt_map, const u32* altgr_map, const u32* shift_altgr_map)
+int setkeymap(char const* name, u32 const* map, u32* const shift_map, u32 const* alt_map, u32 const* altgr_map, u32 const* shift_altgr_map)
 {
     Syscall::SC_setkeymap_params params { map, shift_map, alt_map, altgr_map, shift_altgr_map, { name, strlen(name) } };
     return syscall(SC_setkeymap, &params);
@@ -143,10 +143,10 @@ int getkeymap(char* name_buffer, size_t name_buffer_size, u32* map, u32* shift_m
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-u16 internet_checksum(const void* ptr, size_t count)
+u16 internet_checksum(void const* ptr, size_t count)
 {
     u32 checksum = 0;
-    auto* w = (const u16*)ptr;
+    auto* w = (u16 const*)ptr;
     while (count > 1) {
         checksum += ntohs(*w++);
         if (checksum & 0x80000000)

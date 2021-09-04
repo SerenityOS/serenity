@@ -45,7 +45,7 @@ public:
     Optional<Board::RowAndColumn> get_row_and_column_for_point(int x, int y) const;
 
     void resize_board(size_t rows, size_t columns);
-    const Board* board() const { return m_board.ptr(); }
+    Board const* board() const { return m_board.ptr(); }
 
     bool is_running() const { return m_running; }
     void set_running(bool r);

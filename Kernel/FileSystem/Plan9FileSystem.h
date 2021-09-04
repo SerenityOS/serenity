@@ -115,14 +115,14 @@ private:
 
     virtual StringView class_name() const override { return "Plan9FS"sv; }
 
-    bool is_complete(const ReceiveCompletion&);
+    bool is_complete(ReceiveCompletion const&);
     KResult post_message(Message&, RefPtr<ReceiveCompletion>);
     KResult do_read(u8* buffer, size_t);
     KResult read_and_dispatch_one_message();
     KResult post_message_and_wait_for_a_reply(Message&);
     KResult post_message_and_explicitly_ignore_reply(Message&);
 
-    ProtocolVersion parse_protocol_version(const StringView&) const;
+    ProtocolVersion parse_protocol_version(StringView const&) const;
     size_t adjust_buffer_size(size_t size) const;
 
     void thread_main();
@@ -157,12 +157,12 @@ public:
     virtual InodeMetadata metadata() const override;
     virtual void flush_metadata() override;
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, FileDescription*) override;
+    virtual KResultOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& data, FileDescription*) override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
-    virtual KResult add_child(Inode&, const StringView& name, mode_t) override;
-    virtual KResult remove_child(const StringView& name) override;
+    virtual KResult add_child(Inode&, StringView const& name, mode_t) override;
+    virtual KResult remove_child(StringView const& name) override;
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(UserID, GroupID) override;
     virtual KResult truncate(u64) override;
@@ -211,7 +211,7 @@ private:
     Plan9FS& fs() { return reinterpret_cast<Plan9FS&>(Inode::fs()); }
     Plan9FS& fs() const
     {
-        return const_cast<Plan9FS&>(reinterpret_cast<const Plan9FS&>(Inode::fs()));
+        return const_cast<Plan9FS&>(reinterpret_cast<Plan9FS const&>(Inode::fs()));
     }
 };
 

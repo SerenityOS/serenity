@@ -68,7 +68,7 @@ private:
         size_t m_nread { 0 };
     };
 
-    const Member& current_member() const { return m_current_member.value(); }
+    Member const& current_member() const { return m_current_member.value(); }
     Member& current_member() { return m_current_member.value(); }
 
     InputStream& m_input_stream;
@@ -87,7 +87,7 @@ public:
     size_t write(ReadonlyBytes) override;
     bool write_or_error(ReadonlyBytes) override;
 
-    static Optional<ByteBuffer> compress_all(const ReadonlyBytes& bytes);
+    static Optional<ByteBuffer> compress_all(ReadonlyBytes const& bytes);
 
 private:
     OutputStream& m_output_stream;

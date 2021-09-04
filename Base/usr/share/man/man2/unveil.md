@@ -7,7 +7,7 @@ unveil - restrict filesystem access
 ```**c++
 #include <unistd.h>
 
-int unveil(const char* path, const char* permissions);
+int unveil(char const* path, char const* permissions);
 ```
 
 ## Description

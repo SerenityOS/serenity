@@ -21,11 +21,11 @@ public:
     Utf32CodePointIterator() = default;
     ~Utf32CodePointIterator() = default;
 
-    bool operator==(const Utf32CodePointIterator& other) const
+    bool operator==(Utf32CodePointIterator const& other) const
     {
         return m_ptr == other.m_ptr && m_length == other.m_length;
     }
-    bool operator!=(const Utf32CodePointIterator& other) const
+    bool operator!=(Utf32CodePointIterator const& other) const
     {
         return !(*this == other);
     }
@@ -36,7 +36,7 @@ public:
         m_length--;
         return *this;
     }
-    ssize_t operator-(const Utf32CodePointIterator& other) const
+    ssize_t operator-(Utf32CodePointIterator const& other) const
     {
         return m_ptr - other.m_ptr;
     }
@@ -50,12 +50,12 @@ public:
     bool done() const { return !m_length; }
 
 private:
-    Utf32CodePointIterator(const u32* ptr, size_t length)
+    Utf32CodePointIterator(u32 const* ptr, size_t length)
         : m_ptr(ptr)
         , m_length((ssize_t)length)
     {
     }
-    const u32* m_ptr { nullptr };
+    u32 const* m_ptr { nullptr };
     ssize_t m_length { -1 };
 };
 
@@ -64,7 +64,7 @@ public:
     using Iterator = Utf32CodePointIterator;
 
     Utf32View() = default;
-    Utf32View(const u32* code_points, size_t length)
+    Utf32View(u32 const* code_points, size_t length)
         : m_code_points(code_points)
         , m_length(length)
     {
@@ -89,12 +89,12 @@ public:
 
     u32 operator[](size_t index) const { return at(index); }
 
-    const u32* code_points() const { return m_code_points; }
+    u32 const* code_points() const { return m_code_points; }
     bool is_empty() const { return m_length == 0; }
     bool is_null() const { return !m_code_points; }
     size_t length() const { return m_length; }
 
-    size_t iterator_offset(const Utf32CodePointIterator& it) const
+    size_t iterator_offset(Utf32CodePointIterator const& it) const
     {
         VERIFY(it.m_ptr >= m_code_points);
         VERIFY(it.m_ptr < m_code_points + m_length);
@@ -110,16 +110,16 @@ public:
     }
 
 private:
-    const u32* begin_ptr() const
+    u32 const* begin_ptr() const
     {
         return m_code_points;
     }
-    const u32* end_ptr() const
+    u32 const* end_ptr() const
     {
         return m_code_points + m_length;
     }
 
-    const u32* m_code_points { nullptr };
+    u32 const* m_code_points { nullptr };
     size_t m_length { 0 };
 };
 

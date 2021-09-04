@@ -40,7 +40,7 @@ void InlineNode::split_into_lines(InlineFormattingContext& context, LayoutMode l
     }
 }
 
-void InlineNode::paint_fragment(PaintContext& context, const LineBoxFragment& fragment, PaintPhase phase) const
+void InlineNode::paint_fragment(PaintContext& context, LineBoxFragment const& fragment, PaintPhase phase) const
 {
     auto& painter = context.painter();
 

@@ -30,7 +30,7 @@ MenuManager::~MenuManager()
 {
 }
 
-bool MenuManager::is_open(const Menu& menu) const
+bool MenuManager::is_open(Menu const& menu) const
 {
     for (size_t i = 0; i < m_open_menu_stack.size(); ++i) {
         if (&menu == m_open_menu_stack[i].ptr())
@@ -59,7 +59,7 @@ void MenuManager::event(Core::Event& event)
     }
 
     if (static_cast<Event&>(event).is_key_event()) {
-        auto& key_event = static_cast<const KeyEvent&>(event);
+        auto& key_event = static_cast<KeyEvent const&>(event);
 
         if (key_event.type() == Event::KeyUp && key_event.key() == Key_Escape) {
             close_everyone();
@@ -89,7 +89,7 @@ void MenuManager::event(Core::Event& event)
         if (event.type() == Event::KeyDown) {
 
             if (key_event.key() == Key_Left) {
-                auto it = m_open_menu_stack.find_if([&](const auto& other) { return m_current_menu == other.ptr(); });
+                auto it = m_open_menu_stack.find_if([&](auto const& other) { return m_current_menu == other.ptr(); });
                 VERIFY(!it.is_end());
 
                 // Going "back" a menu should be the previous menu in the stack

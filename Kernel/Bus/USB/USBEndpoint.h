@@ -42,7 +42,7 @@ public:
     static constexpr u8 ENDPOINT_ATTRIBUTES_ISO_MODE_SYNC_TYPE = 0x0c;
     static constexpr u8 ENDPOINT_ATTRIBUTES_ISO_MODE_USAGE_TYPE = 0x30;
 
-    const USBEndpointDescriptor& descriptor() const { return m_descriptor; }
+    USBEndpointDescriptor const& descriptor() const { return m_descriptor; }
 
     bool is_control() const { return (m_descriptor.endpoint_attributes_bitmap & ENDPOINT_ATTRIBUTES_TRANSFER_TYPE_MASK) == ENDPOINT_ATTRIBUTES_TRANSFER_TYPE_CONTROL; }
     bool is_isochronous() const { return (m_descriptor.endpoint_attributes_bitmap & ENDPOINT_ATTRIBUTES_TRANSFER_TYPE_MASK) == ENDPOINT_ATTRIBUTES_TRANSFER_TYPE_ISOCHRONOUS; }

@@ -27,7 +27,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* path = nullptr;
+    char const* path = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "The mapping file to be used", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);

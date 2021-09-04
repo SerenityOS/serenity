@@ -12,7 +12,7 @@
 __BEGIN_DECLS
 
 struct syslog_data {
-    const char* ident;
+    char const* ident;
     int logopt;
     int facility;
     int maskpri;
@@ -93,9 +93,9 @@ struct syslog_data {
 typedef struct _code {
     /*
      * Most Unices define this as char*, but in C++, we have to define it as a
-     * const char* if we want to use string constants.
+     * char const* if we want to use string constants.
      */
-    const char* c_name;
+    char const* c_name;
     int c_val;
 } CODE;
 
@@ -146,12 +146,12 @@ CODE facilitynames[] = {
 #endif
 
 /* The re-entrant versions are an OpenBSD extension we also implement. */
-void syslog(int, const char*, ...);
-void syslog_r(int, struct syslog_data*, const char*, ...);
-void vsyslog(int, const char* message, va_list);
-void vsyslog_r(int, struct syslog_data* data, const char* message, va_list);
-void openlog(const char*, int, int);
-void openlog_r(const char*, int, int, struct syslog_data*);
+void syslog(int, char const*, ...);
+void syslog_r(int, struct syslog_data*, char const*, ...);
+void vsyslog(int, char const* message, va_list);
+void vsyslog_r(int, struct syslog_data* data, char const* message, va_list);
+void openlog(char const*, int, int);
+void openlog_r(char const*, int, int, struct syslog_data*);
 void closelog(void);
 void closelog_r(struct syslog_data*);
 int setlogmask(int);

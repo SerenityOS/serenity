@@ -43,7 +43,7 @@ public:
     const Optional<JobCallback>& handler() const { return m_handler; }
 
 private:
-    virtual const char* class_name() const override { return "PromiseReaction"; }
+    virtual char const* class_name() const override { return "PromiseReaction"; }
     virtual void visit_edges(Visitor&) override;
 
     Type m_type;

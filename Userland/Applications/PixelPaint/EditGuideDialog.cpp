@@ -75,7 +75,7 @@ EditGuideDialog::EditGuideDialog(GUI::Window* parent_window, String const& offse
     };
 }
 
-Optional<float> EditGuideDialog::offset_as_pixel(const ImageEditor& editor)
+Optional<float> EditGuideDialog::offset_as_pixel(ImageEditor const& editor)
 {
     float offset = 0;
     if (m_offset.ends_with('%')) {

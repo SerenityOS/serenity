@@ -30,7 +30,7 @@ Compositor& Compositor::the()
     return s_the;
 }
 
-static WallpaperMode mode_to_enum(const String& name)
+static WallpaperMode mode_to_enum(String const& name)
 {
     if (name == "tile")
         return WallpaperMode::Tile;
@@ -693,7 +693,7 @@ void Compositor::flush(Screen& screen)
 
         for (int y = 0; y < scaled_rect.height(); ++y) {
             fast_u32_copy(to_ptr, from_ptr, scaled_rect.width());
-            from_ptr = (const Gfx::RGBA32*)((const u8*)from_ptr + pitch);
+            from_ptr = (const Gfx::RGBA32*)((u8 const*)from_ptr + pitch);
             to_ptr = (Gfx::RGBA32*)((u8*)to_ptr + pitch);
         }
         if (device_can_flush_buffers) {
@@ -768,7 +768,7 @@ void Compositor::start_compose_async_timer()
     }
 }
 
-bool Compositor::set_background_color(const String& background_color)
+bool Compositor::set_background_color(String const& background_color)
 {
     auto color = Color::from_string(background_color);
     if (!color.has_value())
@@ -786,7 +786,7 @@ bool Compositor::set_background_color(const String& background_color)
     return ret_val;
 }
 
-bool Compositor::set_wallpaper_mode(const String& mode)
+bool Compositor::set_wallpaper_mode(String const& mode)
 {
     auto& wm = WindowManager::the();
     wm.config()->write_entry("Background", "Mode", mode);
@@ -800,7 +800,7 @@ bool Compositor::set_wallpaper_mode(const String& mode)
     return ret_val;
 }
 
-bool Compositor::set_wallpaper(const String& path, Function<void(bool)>&& callback)
+bool Compositor::set_wallpaper(String const& path, Function<void(bool)>&& callback)
 {
     Threading::BackgroundAction<RefPtr<Gfx::Bitmap>>::create(
         [path](auto&) {
@@ -856,7 +856,7 @@ void Compositor::invalidate_cursor(bool compose_immediately)
         start_compose_async_timer();
 }
 
-void Compositor::change_cursor(const Cursor* cursor)
+void Compositor::change_cursor(Cursor const* cursor)
 {
     if (m_current_cursor == cursor)
         return;

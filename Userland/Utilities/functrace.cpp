@@ -46,8 +46,8 @@ static void print_syscall(PtraceRegisters& regs, size_t depth)
     for (size_t i = 0; i < depth; ++i) {
         out("  ");
     }
-    const char* begin_color = g_should_output_color ? "\033[34;1m" : "";
-    const char* end_color = g_should_output_color ? "\033[0m" : "";
+    char const* begin_color = g_should_output_color ? "\033[34;1m" : "";
+    char const* end_color = g_should_output_color ? "\033[0m" : "";
 #if ARCH(I386)
     outln("=> {}SC_{}({:#x}, {:#x}, {:#x}){}",
         begin_color,
@@ -75,7 +75,7 @@ static NonnullOwnPtr<HashMap<void*, X86::Instruction>> instrument_code()
             if (section.name() != ".text")
                 return IterationDecision::Continue;
 
-            X86::SimpleInstructionStream stream((const u8*)((uintptr_t)lib.file->data() + section.offset()), section.size());
+            X86::SimpleInstructionStream stream((u8 const*)((uintptr_t)lib.file->data() + section.offset()), section.size());
             X86::Disassembler disassembler(stream);
             for (;;) {
                 auto offset = stream.offset();
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
     if (isatty(STDOUT_FILENO))
         g_should_output_color = true;
 
-    const char* command = nullptr;
+    char const* command = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(command,
         "The program to be traced, along with its arguments",

@@ -44,7 +44,7 @@ class Document
 public:
     using WrapperType = Bindings::DocumentWrapper;
 
-    static NonnullRefPtr<Document> create(const URL& url = "about:blank")
+    static NonnullRefPtr<Document> create(URL const& url = "about:blank")
     {
         return adopt_ref(*new Document(url));
     }
@@ -61,15 +61,15 @@ public:
     bool should_invalidate_styles_on_attribute_changes() const { return m_should_invalidate_styles_on_attribute_changes; }
     void set_should_invalidate_styles_on_attribute_changes(bool b) { m_should_invalidate_styles_on_attribute_changes = b; }
 
-    void set_url(const URL& url) { m_url = url; }
+    void set_url(URL const& url) { m_url = url; }
     URL url() const { return m_url; }
 
     Origin origin() const;
-    void set_origin(const Origin& origin);
+    void set_origin(Origin const& origin);
 
     bool is_scripting_enabled() const { return true; }
 
-    URL complete_url(const String&) const;
+    URL complete_url(String const&) const;
 
     CSS::StyleResolver& style_resolver() { return *m_style_resolver; }
     const CSS::StyleResolver& style_resolver() const { return *m_style_resolver; }
@@ -83,14 +83,14 @@ public:
 
     void set_hovered_node(Node*);
     Node* hovered_node() { return m_hovered_node; }
-    const Node* hovered_node() const { return m_hovered_node; }
+    Node const* hovered_node() const { return m_hovered_node; }
 
     void set_inspected_node(Node*);
     Node* inspected_node() { return m_inspected_node; }
-    const Node* inspected_node() const { return m_inspected_node; }
+    Node const* inspected_node() const { return m_inspected_node; }
 
     Element* document_element();
-    const Element* document_element() const;
+    Element const* document_element() const;
 
     HTML::HTMLHtmlElement* html_element();
     HTML::HTMLHeadElement* head();
@@ -114,16 +114,16 @@ public:
     ExceptionOr<void> set_body(HTML::HTMLElement* new_body);
 
     String title() const;
-    void set_title(const String&);
+    void set_title(String const&);
 
     void attach_to_browsing_context(Badge<BrowsingContext>, BrowsingContext&);
     void detach_from_browsing_context(Badge<BrowsingContext>, BrowsingContext&);
 
     BrowsingContext* browsing_context() { return m_browsing_context.ptr(); }
-    const BrowsingContext* browsing_context() const { return m_browsing_context.ptr(); }
+    BrowsingContext const* browsing_context() const { return m_browsing_context.ptr(); }
 
     Page* page();
-    const Page* page() const;
+    Page const* page() const;
 
     Color background_color(const Gfx::Palette&) const;
     RefPtr<Gfx::Bitmap> background_image() const;
@@ -145,7 +145,7 @@ public:
     void update_style();
     void update_layout();
 
-    virtual bool is_child_allowed(const Node&) const override;
+    virtual bool is_child_allowed(Node const&) const override;
 
     const Layout::InitialContainingBlockBox* layout_node() const;
     Layout::InitialContainingBlockBox* layout_node();
@@ -166,20 +166,20 @@ public:
     NonnullRefPtr<HTMLCollection> forms();
     NonnullRefPtr<HTMLCollection> scripts();
 
-    const String& source() const { return m_source; }
-    void set_source(const String& source) { m_source = source; }
+    String const& source() const { return m_source; }
+    void set_source(String const& source) { m_source = source; }
 
     virtual JS::Interpreter& interpreter() override;
 
-    JS::Value run_javascript(const StringView& source, const StringView& filename = "(unknown)");
+    JS::Value run_javascript(StringView const& source, StringView const& filename = "(unknown)");
 
-    NonnullRefPtr<Element> create_element(const String& tag_name);
-    NonnullRefPtr<Element> create_element_ns(const String& namespace_, const String& qualifed_name);
+    NonnullRefPtr<Element> create_element(String const& tag_name);
+    NonnullRefPtr<Element> create_element_ns(String const& namespace_, String const& qualifed_name);
     NonnullRefPtr<DocumentFragment> create_document_fragment();
-    NonnullRefPtr<Text> create_text_node(const String& data);
-    NonnullRefPtr<Comment> create_comment(const String& data);
+    NonnullRefPtr<Text> create_text_node(String const& data);
+    NonnullRefPtr<Comment> create_comment(String const& data);
     NonnullRefPtr<Range> create_range();
-    NonnullRefPtr<Event> create_event(const String& interface);
+    NonnullRefPtr<Event> create_event(String const& interface);
 
     void set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement*);
     HTML::HTMLScriptElement* pending_parsing_blocking_script() { return m_pending_parsing_blocking_script; }
@@ -198,18 +198,18 @@ public:
     void adopt_node(Node&);
     ExceptionOr<NonnullRefPtr<Node>> adopt_node_binding(NonnullRefPtr<Node>);
 
-    const DocumentType* doctype() const;
-    const String& compat_mode() const;
+    DocumentType const* doctype() const;
+    String const& compat_mode() const;
 
     void set_editable(bool editable) { m_editable = editable; }
     virtual bool is_editable() const final;
 
     Element* focused_element() { return m_focused_element; }
-    const Element* focused_element() const { return m_focused_element; }
+    Element const* focused_element() const { return m_focused_element; }
 
     void set_focused_element(Element*);
 
-    const Element* active_element() const { return m_active_element; }
+    Element const* active_element() const { return m_active_element; }
 
     void set_active_element(Element*);
 
@@ -217,11 +217,11 @@ public:
     void set_created_for_appropriate_template_contents(bool value) { m_created_for_appropriate_template_contents = value; }
 
     Document* associated_inert_template_document() { return m_associated_inert_template_document; }
-    const Document* associated_inert_template_document() const { return m_associated_inert_template_document; }
+    Document const* associated_inert_template_document() const { return m_associated_inert_template_document; }
     void set_associated_inert_template_document(Document& document) { m_associated_inert_template_document = document; }
 
-    const String& ready_state() const { return m_ready_state; }
-    void set_ready_state(const String&);
+    String const& ready_state() const { return m_ready_state; }
+    void set_ready_state(String const&);
 
     void ref_from_node(Badge<Node>)
     {
@@ -239,8 +239,8 @@ public:
 
     Window* default_view() { return m_window; }
 
-    const String& content_type() const { return m_content_type; }
-    void set_content_type(const String& content_type) { m_content_type = content_type; }
+    String const& content_type() const { return m_content_type; }
+    void set_content_type(String const& content_type) { m_content_type = content_type; }
 
     bool has_encoding() const { return m_encoding.has_value(); }
     const Optional<String>& encoding() const { return m_encoding; }
@@ -266,12 +266,12 @@ public:
     void increment_ignore_destructive_writes_counter() { m_ignore_destructive_writes_counter++; }
     void decrement_ignore_destructive_writes_counter() { m_ignore_destructive_writes_counter--; }
 
-    virtual EventTarget* get_parent(const Event&) override;
+    virtual EventTarget* get_parent(Event const&) override;
 
     String dump_dom_tree_as_json() const;
 
 private:
-    explicit Document(const URL&);
+    explicit Document(URL const&);
 
     // ^DOM::Node
     virtual RefPtr<Layout::Node> create_layout_node() override;

@@ -12,7 +12,7 @@
 #include <ctype.h>
 
 namespace Cpp {
-Preprocessor::Preprocessor(const String& filename, const StringView& program)
+Preprocessor::Preprocessor(String const& filename, StringView const& program)
     : m_filename(filename)
     , m_program(program)
 {
@@ -109,7 +109,7 @@ void Preprocessor::handle_include_statement(StringView const& include_path)
     }
 }
 
-void Preprocessor::handle_preprocessor_keyword(const StringView& keyword, GenericLexer& line_lexer)
+void Preprocessor::handle_preprocessor_keyword(StringView const& keyword, GenericLexer& line_lexer)
 {
     if (keyword == "include") {
         // Should have called 'handle_include_statement'.

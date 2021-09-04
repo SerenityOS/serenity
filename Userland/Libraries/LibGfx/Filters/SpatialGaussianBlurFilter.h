@@ -17,7 +17,7 @@ public:
     SpatialGaussianBlurFilter() { }
     virtual ~SpatialGaussianBlurFilter() { }
 
-    virtual const char* class_name() const override { return "SpatialGaussianBlurFilter"; }
+    virtual char const* class_name() const override { return "SpatialGaussianBlurFilter"; }
 };
 
 }

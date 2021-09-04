@@ -16,14 +16,14 @@
 
 namespace LookupServer {
 
-void DNSPacket::add_question(const DNSQuestion& question)
+void DNSPacket::add_question(DNSQuestion const& question)
 {
     m_questions.empend(question);
 
     VERIFY(m_questions.size() <= UINT16_MAX);
 }
 
-void DNSPacket::add_answer(const DNSAnswer& answer)
+void DNSPacket::add_answer(DNSAnswer const& answer)
 {
     m_answers.empend(answer);
 
@@ -85,7 +85,7 @@ public:
     u16 data_length() const { return m_data_length; }
 
     void* data() { return this + 1; }
-    const void* data() const { return this + 1; }
+    void const* data() const { return this + 1; }
 
 private:
     NetworkOrdered<u16> m_type;
@@ -96,14 +96,14 @@ private:
 
 static_assert(sizeof(DNSRecordWithoutName) == 10);
 
-Optional<DNSPacket> DNSPacket::from_raw_packet(const u8* raw_data, size_t raw_size)
+Optional<DNSPacket> DNSPacket::from_raw_packet(u8 const* raw_data, size_t raw_size)
 {
     if (raw_size < sizeof(DNSPacketHeader)) {
         dbgln("DNS response not large enough ({} out of {}) to be a DNS packet.", raw_size, sizeof(DNSPacketHeader));
         return {};
     }
 
-    auto& header = *(const DNSPacketHeader*)(raw_data);
+    auto& header = *(DNSPacketHeader const*)(raw_data);
     dbgln_if(LOOKUPSERVER_DEBUG, "Got packet (ID: {})", header.id());
     dbgln_if(LOOKUPSERVER_DEBUG, "  Question count: {}", header.question_count());
     dbgln_if(LOOKUPSERVER_DEBUG, "    Answer count: {}", header.answer_count());
@@ -127,7 +127,7 @@ Optional<DNSPacket> DNSPacket::from_raw_packet(const u8* raw_data, size_t raw_si
             NetworkOrdered<u16> record_type;
             NetworkOrdered<u16> class_code;
         };
-        auto& record_and_class = *(const RawDNSAnswerQuestion*)&raw_data[offset];
+        auto& record_and_class = *(RawDNSAnswerQuestion const*)&raw_data[offset];
         u16 class_code = record_and_class.class_code & ~MDNS_WANTS_UNICAST_RESPONSE;
         bool mdns_wants_unicast_response = record_and_class.class_code & MDNS_WANTS_UNICAST_RESPONSE;
         packet.m_questions.empend(name, (DNSRecordType)(u16)record_and_class.record_type, (DNSRecordClass)class_code, mdns_wants_unicast_response);
@@ -139,7 +139,7 @@ Optional<DNSPacket> DNSPacket::from_raw_packet(const u8* raw_data, size_t raw_si
     for (u16 i = 0; i < header.answer_count(); ++i) {
         auto name = DNSName::parse(raw_data, offset, raw_size);
 
-        auto& record = *(const DNSRecordWithoutName*)(&raw_data[offset]);
+        auto& record = *(DNSRecordWithoutName const*)(&raw_data[offset]);
 
         String data;
 

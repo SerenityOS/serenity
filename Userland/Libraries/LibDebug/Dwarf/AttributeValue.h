@@ -27,11 +27,11 @@ struct AttributeValue {
         FlatPtr as_addr;
         u64 as_unsigned;
         i64 as_signed;
-        const char* as_string; // points to bytes in the memory mapped elf image
+        char const* as_string; // points to bytes in the memory mapped elf image
         bool as_bool;
         struct {
             u32 length;
-            const u8* bytes; // points to bytes in the memory mapped elf image
+            u8 const* bytes; // points to bytes in the memory mapped elf image
         } as_raw_bytes;
     } data {};
 

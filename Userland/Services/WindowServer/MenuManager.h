@@ -23,7 +23,7 @@ public:
     MenuManager();
     virtual ~MenuManager() override;
 
-    bool is_open(const Menu&) const;
+    bool is_open(Menu const&) const;
     bool has_open_menu() const { return !m_open_menu_stack.is_empty(); }
 
     Menu* current_menu() { return m_current_menu.ptr(); }

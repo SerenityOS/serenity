@@ -37,7 +37,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
             return nullptr;
         }
 
-        const auto& mode_name = static_cast<const AST::BarewordLiteral&>(mode_arg).text();
+        auto const& mode_name = static_cast<const AST::BarewordLiteral&>(mode_arg).text();
         if (mode_name == "list") {
             mode = List;
         } else if (mode_name == "string") {
@@ -310,7 +310,7 @@ RefPtr<AST::Node> Shell::immediate_split(AST::ImmediateExpression& invoking_node
 
     auto delimiter_str = delimiter->resolve_as_list(this)[0];
 
-    auto transform = [&](const auto& values) {
+    auto transform = [&](auto const& values) {
         // Translate to a list of applications of `split <delimiter>`
         Vector<NonnullRefPtr<AST::Node>> resulting_nodes;
         resulting_nodes.ensure_capacity(values.size());
@@ -396,7 +396,7 @@ RefPtr<AST::Node> Shell::run_immediate_function(StringView str, AST::ImmediateEx
     return nullptr;
 }
 
-bool Shell::has_immediate_function(const StringView& str)
+bool Shell::has_immediate_function(StringView const& str)
 {
 #define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(name) \
     if (str == #name)                              \

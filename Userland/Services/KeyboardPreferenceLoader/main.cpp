@@ -45,7 +45,7 @@ int main()
     auto keymap = mapper_config->read_entry("Mapping", "Keymap", "");
 
     pid_t child_pid;
-    const char* argv[] = { "/bin/keymap", keymap.characters(), nullptr };
+    char const* argv[] = { "/bin/keymap", keymap.characters(), nullptr };
     if ((errno = posix_spawn(&child_pid, "/bin/keymap", nullptr, nullptr, const_cast<char**>(argv), environ))) {
         perror("posix_spawn");
         exit(1);

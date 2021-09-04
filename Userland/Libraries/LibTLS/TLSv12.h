@@ -27,12 +27,12 @@ inline void print_buffer(ReadonlyBytes buffer)
     dbgln("{:hex-dump}", buffer);
 }
 
-inline void print_buffer(const ByteBuffer& buffer)
+inline void print_buffer(ByteBuffer const& buffer)
 {
     print_buffer(buffer.bytes());
 }
 
-inline void print_buffer(const u8* buffer, size_t size)
+inline void print_buffer(u8 const* buffer, size_t size)
 {
     print_buffer(ReadonlyBytes { buffer, size });
 }
@@ -74,7 +74,7 @@ enum class AlertDescription : u8 {
 #undef ENUMERATE_ALERT_DESCRIPTION
 };
 
-constexpr static const char* alert_name(AlertDescription descriptor)
+constexpr static char const* alert_name(AlertDescription descriptor)
 {
 #define ENUMERATE_ALERT_DESCRIPTION(name, value) \
     case AlertDescription::name:                 \
@@ -236,7 +236,7 @@ struct Context {
     bool verify() const;
     bool verify_chain() const;
 
-    static void print_file(const StringView& fname);
+    static void print_file(StringView const& fname);
 
     Options options;
 
@@ -315,9 +315,9 @@ class TLSv12 : public Core::Socket {
 public:
     ByteBuffer& write_buffer() { return m_context.tls_buffer; }
     bool is_established() const { return m_context.connection_status == ConnectionStatus::Established; }
-    virtual bool connect(const String&, int) override;
+    virtual bool connect(String const&, int) override;
 
-    void set_sni(const StringView& sni)
+    void set_sni(StringView const& sni)
     {
         if (m_context.is_server || m_context.critical_error || m_context.connection_status != ConnectionStatus::Disconnected) {
             dbgln("invalid state for set_sni");
@@ -340,9 +340,9 @@ public:
 
     ByteBuffer finish_build();
 
-    const StringView& alpn() const { return m_context.negotiated_alpn; }
-    void add_alpn(const StringView& alpn);
-    bool has_alpn(const StringView& alpn) const;
+    StringView const& alpn() const { return m_context.negotiated_alpn; }
+    void add_alpn(StringView const& alpn);
+    bool has_alpn(StringView const& alpn) const;
 
     bool supports_cipher(CipherSuite suite) const
     {
@@ -386,7 +386,7 @@ private:
 
     void consume(ReadonlyBytes record);
 
-    ByteBuffer hmac_message(const ReadonlyBytes& buf, const Optional<ReadonlyBytes> buf2, size_t mac_length, bool local = false);
+    ByteBuffer hmac_message(ReadonlyBytes const& buf, const Optional<ReadonlyBytes> buf2, size_t mac_length, bool local = false);
     void ensure_hmac(size_t digest_size, bool local);
 
     void update_packet(ByteBuffer& packet);
@@ -426,7 +426,7 @@ private:
 
     size_t asn1_length(ReadonlyBytes, size_t* octets);
 
-    void pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b);
+    void pseudorandom_function(Bytes output, ReadonlyBytes secret, u8 const* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b);
 
     size_t key_length() const
     {
@@ -498,7 +498,7 @@ private:
 
     bool compute_master_secret_from_pre_master_secret(size_t length);
 
-    Optional<size_t> verify_chain_and_get_matching_certificate(const StringView& host) const;
+    Optional<size_t> verify_chain_and_get_matching_certificate(StringView const& host) const;
 
     void try_disambiguate_error() const;
 

@@ -62,7 +62,7 @@ constexpr WriterBehaviour default_behaviours()
 template<typename ContainerType, typename HeaderType = Vector<StringView>>
 class XSV {
 public:
-    XSV(OutputStream& output, const ContainerType& data, const WriterTraits& traits, const HeaderType& headers = {}, WriterBehaviour behaviours = default_behaviours())
+    XSV(OutputStream& output, ContainerType const& data, WriterTraits const& traits, HeaderType const& headers = {}, WriterBehaviour behaviours = default_behaviours())
         : m_data(data)
         , m_traits(traits)
         , m_behaviours(behaviours)
@@ -188,10 +188,10 @@ private:
             set_error(WriteError::InternalError);
     }
 
-    const ContainerType& m_data;
-    const WriterTraits& m_traits;
+    ContainerType const& m_data;
+    WriterTraits const& m_traits;
     WriterBehaviour m_behaviours;
-    const HeaderType& m_names;
+    HeaderType const& m_names;
     WriteError m_error { WriteError::None };
     OutputStream& m_output;
 };

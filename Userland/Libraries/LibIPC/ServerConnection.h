@@ -18,7 +18,7 @@ public:
     using ClientStub = typename ClientEndpoint::Stub;
     using IPCProxy = typename ServerEndpoint::template Proxy<ClientEndpoint>;
 
-    ServerConnection(ClientStub& local_endpoint, const StringView& address)
+    ServerConnection(ClientStub& local_endpoint, StringView const& address)
         : Connection<ClientEndpoint, ServerEndpoint>(local_endpoint, Core::LocalSocket::construct())
         , ServerEndpoint::template Proxy<ClientEndpoint>(*this, {})
     {

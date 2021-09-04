@@ -39,7 +39,7 @@ DisassemblyWidget::DisassemblyWidget()
     hide_disassembly("Program isn't running");
 }
 
-void DisassemblyWidget::update_state(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
+void DisassemblyWidget::update_state(const Debug::DebugSession& debug_session, PtraceRegisters const& regs)
 {
     m_disassembly_view->set_model(DisassemblyModel::create(debug_session, regs));
 
@@ -73,7 +73,7 @@ void DisassemblyWidget::show_disassembly()
     m_unavailable_disassembly_widget->set_visible(false);
 }
 
-void DisassemblyWidget::hide_disassembly(const String& reason)
+void DisassemblyWidget::hide_disassembly(String const& reason)
 {
     m_top_container->set_visible(false);
     m_disassembly_view->set_visible(false);

@@ -23,13 +23,13 @@ using namespace ::Cpp;
 
 class CppComprehensionEngine : public CodeComprehensionEngine {
 public:
-    CppComprehensionEngine(const FileDB& filedb);
+    CppComprehensionEngine(FileDB const& filedb);
 
-    virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position) override;
-    virtual void on_edit(const String& file) override;
-    virtual void file_opened([[maybe_unused]] const String& file) override;
-    virtual Optional<GUI::AutocompleteProvider::ProjectLocation> find_declaration_of(const String& filename, const GUI::TextPosition& identifier_position) override;
-    virtual Optional<FunctionParamsHint> get_function_params_hint(const String&, const GUI::TextPosition&) override;
+    virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(String const& file, const GUI::TextPosition& autocomplete_position) override;
+    virtual void on_edit(String const& file) override;
+    virtual void file_opened([[maybe_unused]] String const& file) override;
+    virtual Optional<GUI::AutocompleteProvider::ProjectLocation> find_declaration_of(String const& filename, const GUI::TextPosition& identifier_position) override;
+    virtual Optional<FunctionParamsHint> get_function_params_hint(String const&, const GUI::TextPosition&) override;
 
 private:
     struct SymbolName {
@@ -41,7 +41,7 @@ private:
         String scope_as_string() const;
         String to_string() const;
 
-        bool operator==(const SymbolName&) const = default;
+        bool operator==(SymbolName const&) const = default;
     };
 
     struct Symbol {
@@ -62,9 +62,9 @@ private:
     friend Traits<SymbolName>;
 
     struct DocumentData {
-        const String& filename() const { return m_filename; }
-        const String& text() const { return m_text; }
-        const Preprocessor& preprocessor() const
+        String const& filename() const { return m_filename; }
+        String const& text() const { return m_text; }
+        Preprocessor const& preprocessor() const
         {
             VERIFY(m_preprocessor);
             return *m_preprocessor;
@@ -74,7 +74,7 @@ private:
             VERIFY(m_preprocessor);
             return *m_preprocessor;
         }
-        const Parser& parser() const
+        Parser const& parser() const
         {
             VERIFY(m_parser);
             return *m_parser;
@@ -94,50 +94,50 @@ private:
         HashTable<String> m_available_headers;
     };
 
-    Vector<GUI::AutocompleteProvider::Entry> autocomplete_property(const DocumentData&, const MemberExpression&, const String partial_text) const;
-    Vector<GUI::AutocompleteProvider::Entry> autocomplete_name(const DocumentData&, const ASTNode&, const String& partial_text) const;
-    String type_of(const DocumentData&, const Expression&) const;
-    String type_of_property(const DocumentData&, const Identifier&) const;
-    String type_of_variable(const Identifier&) const;
-    bool is_property(const ASTNode&) const;
-    RefPtr<Declaration> find_declaration_of(const DocumentData&, const ASTNode&) const;
-    RefPtr<Declaration> find_declaration_of(const DocumentData&, const SymbolName&) const;
+    Vector<GUI::AutocompleteProvider::Entry> autocomplete_property(DocumentData const&, MemberExpression const&, const String partial_text) const;
+    Vector<GUI::AutocompleteProvider::Entry> autocomplete_name(DocumentData const&, ASTNode const&, String const& partial_text) const;
+    String type_of(DocumentData const&, Expression const&) const;
+    String type_of_property(DocumentData const&, Identifier const&) const;
+    String type_of_variable(Identifier const&) const;
+    bool is_property(ASTNode const&) const;
+    RefPtr<Declaration> find_declaration_of(DocumentData const&, ASTNode const&) const;
+    RefPtr<Declaration> find_declaration_of(DocumentData const&, SymbolName const&) const;
 
     enum class RecurseIntoScopes {
         No,
         Yes
     };
 
-    Vector<Symbol> properties_of_type(const DocumentData& document, const String& type) const;
-    Vector<Symbol> get_child_symbols(const ASTNode&) const;
-    Vector<Symbol> get_child_symbols(const ASTNode&, const Vector<StringView>& scope, Symbol::IsLocal) const;
+    Vector<Symbol> properties_of_type(DocumentData const& document, String const& type) const;
+    Vector<Symbol> get_child_symbols(ASTNode const&) const;
+    Vector<Symbol> get_child_symbols(ASTNode const&, const Vector<StringView>& scope, Symbol::IsLocal) const;
 
-    const DocumentData* get_document_data(const String& file) const;
-    const DocumentData* get_or_create_document_data(const String& file);
-    void set_document_data(const String& file, OwnPtr<DocumentData>&& data);
+    DocumentData const* get_document_data(String const& file) const;
+    DocumentData const* get_or_create_document_data(String const& file);
+    void set_document_data(String const& file, OwnPtr<DocumentData>&& data);
 
-    OwnPtr<DocumentData> create_document_data_for(const String& file);
-    String document_path_from_include_path(const StringView& include_path) const;
+    OwnPtr<DocumentData> create_document_data_for(String const& file);
+    String document_path_from_include_path(StringView const& include_path) const;
     void update_declared_symbols(DocumentData&);
     void update_todo_entries(DocumentData&);
-    GUI::AutocompleteProvider::DeclarationType type_of_declaration(const Declaration&);
-    Vector<StringView> scope_of_node(const ASTNode&) const;
-    Vector<StringView> scope_of_reference_to_symbol(const ASTNode&) const;
+    GUI::AutocompleteProvider::DeclarationType type_of_declaration(Declaration const&);
+    Vector<StringView> scope_of_node(ASTNode const&) const;
+    Vector<StringView> scope_of_reference_to_symbol(ASTNode const&) const;
 
-    Optional<GUI::AutocompleteProvider::ProjectLocation> find_preprocessor_definition(const DocumentData&, const GUI::TextPosition&);
+    Optional<GUI::AutocompleteProvider::ProjectLocation> find_preprocessor_definition(DocumentData const&, const GUI::TextPosition&);
 
-    OwnPtr<DocumentData> create_document_data(String&& text, const String& filename);
-    Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_property(const DocumentData&, const ASTNode&, Optional<Token> containing_token) const;
-    Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_name(const DocumentData&, const ASTNode&, Optional<Token> containing_token) const;
-    Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_include(const DocumentData&, Token include_path_token);
-    static bool is_symbol_available(const Symbol&, const Vector<StringView>& current_scope, const Vector<StringView>& reference_scope);
+    OwnPtr<DocumentData> create_document_data(String&& text, String const& filename);
+    Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_property(DocumentData const&, ASTNode const&, Optional<Token> containing_token) const;
+    Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_name(DocumentData const&, ASTNode const&, Optional<Token> containing_token) const;
+    Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_include(DocumentData const&, Token include_path_token);
+    static bool is_symbol_available(Symbol const&, const Vector<StringView>& current_scope, const Vector<StringView>& reference_scope);
     Optional<FunctionParamsHint> get_function_params_hint(DocumentData const&, FunctionCall&, size_t argument_index);
 
     template<typename Func>
-    void for_each_available_symbol(const DocumentData&, Func) const;
+    void for_each_available_symbol(DocumentData const&, Func) const;
 
     template<typename Func>
-    void for_each_included_document_recursive(const DocumentData&, Func) const;
+    void for_each_included_document_recursive(DocumentData const&, Func) const;
 
     HashMap<String, OwnPtr<DocumentData>> m_documents;
 
@@ -148,7 +148,7 @@ private:
 };
 
 template<typename Func>
-void CppComprehensionEngine::for_each_available_symbol(const DocumentData& document, Func func) const
+void CppComprehensionEngine::for_each_available_symbol(DocumentData const& document, Func func) const
 {
     for (auto& item : document.m_symbols) {
         auto decision = func(item.value);
@@ -156,7 +156,7 @@ void CppComprehensionEngine::for_each_available_symbol(const DocumentData& docum
             return;
     }
 
-    for_each_included_document_recursive(document, [&](const DocumentData& document) {
+    for_each_included_document_recursive(document, [&](DocumentData const& document) {
         for (auto& item : document.m_symbols) {
             auto decision = func(item.value);
             if (decision == IterationDecision::Break)
@@ -167,7 +167,7 @@ void CppComprehensionEngine::for_each_available_symbol(const DocumentData& docum
 }
 
 template<typename Func>
-void CppComprehensionEngine::for_each_included_document_recursive(const DocumentData& document, Func func) const
+void CppComprehensionEngine::for_each_included_document_recursive(DocumentData const& document, Func func) const
 {
     for (auto& included_path : document.m_available_headers) {
         auto* included_document = get_document_data(included_path);

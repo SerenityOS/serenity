@@ -16,7 +16,7 @@ namespace Web {
 
 class PaintContext {
 public:
-    explicit PaintContext(Gfx::Painter& painter, const Palette& palette, const Gfx::IntPoint& scroll_offset)
+    explicit PaintContext(Gfx::Painter& painter, Palette const& palette, const Gfx::IntPoint& scroll_offset)
         : m_painter(painter)
         , m_palette(palette)
         , m_scroll_offset(scroll_offset)
@@ -24,7 +24,7 @@ public:
     }
 
     Gfx::Painter& painter() const { return m_painter; }
-    const Palette& palette() const { return m_palette; }
+    Palette const& palette() const { return m_palette; }
 
     bool has_svg_context() const { return m_svg_context.has_value(); }
     SVGContext& svg_context() { return m_svg_context.value(); }

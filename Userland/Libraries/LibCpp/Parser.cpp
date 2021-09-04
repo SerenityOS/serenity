@@ -629,7 +629,7 @@ Optional<Parser::DeclarationType> Parser::match_declaration_in_translation_unit(
     return {};
 }
 
-Optional<Parser::DeclarationType> Parser::match_class_member(const StringView& class_name)
+Optional<Parser::DeclarationType> Parser::match_class_member(StringView const& class_name)
 {
     if (match_function_declaration())
         return DeclarationType::Function;
@@ -872,7 +872,7 @@ StringView Parser::text_of_token(const Cpp::Token& token) const
     return token.text();
 }
 
-String Parser::text_of_node(const ASTNode& node) const
+String Parser::text_of_node(ASTNode const& node) const
 {
     return text_in_range(node.start(), node.end());
 }
@@ -965,7 +965,7 @@ Optional<size_t> Parser::index_of_node_at(Position pos) const
     VERIFY(m_saved_states.is_empty());
     Optional<size_t> match_node_index;
 
-    auto node_span = [](const ASTNode& node) {
+    auto node_span = [](ASTNode const& node) {
         VERIFY(node.end().line >= node.start().line);
         VERIFY((node.end().line > node.start().line) || (node.end().column >= node.start().column));
         return Position { node.end().line - node.start().line, node.start().line != node.end().line ? 0 : node.end().column - node.start().column };
@@ -1102,7 +1102,7 @@ NonnullRefPtr<EnumDeclaration> Parser::parse_enum_declaration(ASTNode& parent)
     return enum_decl;
 }
 
-Token Parser::consume_keyword(const String& keyword)
+Token Parser::consume_keyword(String const& keyword)
 {
     auto token = consume();
     if (token.type() != Token::Type::Keyword) {
@@ -1116,7 +1116,7 @@ Token Parser::consume_keyword(const String& keyword)
     return token;
 }
 
-bool Parser::match_keyword(const String& keyword)
+bool Parser::match_keyword(String const& keyword)
 {
     auto token = peek();
     if (token.type() != Token::Type::Keyword) {
@@ -1589,7 +1589,7 @@ void Parser::consume_access_specifier()
     consume(Token::Type::Colon);
 }
 
-bool Parser::match_constructor(const StringView& class_name)
+bool Parser::match_constructor(StringView const& class_name)
 {
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };
@@ -1607,7 +1607,7 @@ bool Parser::match_constructor(const StringView& class_name)
     return (peek(Token::Type::Semicolon).has_value() || peek(Token::Type::LeftCurly).has_value());
 }
 
-bool Parser::match_destructor(const StringView& class_name)
+bool Parser::match_destructor(StringView const& class_name)
 {
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };

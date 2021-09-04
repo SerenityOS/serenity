@@ -53,7 +53,7 @@ TEST_CASE(vector_strings)
     strings.append("cat");
     strings.append("dog");
 
-    auto string_compare = [](const String& a, const String& b) -> int {
+    auto string_compare = [](String const& a, String const& b) -> int {
         return strcmp(a.characters(), b.characters());
     };
     auto test1 = *binary_search(strings, String("bat"), nullptr, string_compare);

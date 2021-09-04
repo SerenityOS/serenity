@@ -38,7 +38,7 @@ void DiffViewer::paint_event(GUI::PaintEvent& event)
 
     size_t y_offset = 10;
     size_t current_original_line_index = 0;
-    for (const auto& hunk : m_hunks) {
+    for (auto const& hunk : m_hunks) {
         for (size_t i = current_original_line_index; i < hunk.original_start_line; ++i) {
             draw_line(painter, m_original_lines[i], y_offset, LinePosition::Both, LineType::Normal);
             y_offset += line_height();
@@ -46,7 +46,7 @@ void DiffViewer::paint_event(GUI::PaintEvent& event)
         current_original_line_index = hunk.original_start_line + hunk.removed_lines.size();
 
         size_t left_y_offset = y_offset;
-        for (const auto& removed_line : hunk.removed_lines) {
+        for (auto const& removed_line : hunk.removed_lines) {
             draw_line(painter, removed_line, left_y_offset, LinePosition::Left, LineType::Diff);
             left_y_offset += line_height();
         }
@@ -56,7 +56,7 @@ void DiffViewer::paint_event(GUI::PaintEvent& event)
         }
 
         size_t right_y_offset = y_offset;
-        for (const auto& added_line : hunk.added_lines) {
+        for (auto const& added_line : hunk.added_lines) {
             draw_line(painter, added_line, right_y_offset, LinePosition::Right, LineType::Diff);
             right_y_offset += line_height();
         }
@@ -74,7 +74,7 @@ void DiffViewer::paint_event(GUI::PaintEvent& event)
     }
 }
 
-void DiffViewer::draw_line(GUI::Painter& painter, const String& line, size_t y_offset, LinePosition line_position, LineType line_type)
+void DiffViewer::draw_line(GUI::Painter& painter, String const& line, size_t y_offset, LinePosition line_position, LineType line_type)
 {
     size_t line_width = font().width(line);
 
@@ -134,7 +134,7 @@ Gfx::IntRect DiffViewer::separator_rect() const
         frame_inner_rect().height() };
 }
 
-void DiffViewer::set_content(const String& original, const String& diff)
+void DiffViewer::set_content(String const& original, String const& diff)
 {
     m_original_lines = split_to_lines(original);
     m_hunks = Diff::parse_hunks(diff);
@@ -150,7 +150,7 @@ DiffViewer::DiffViewer()
     setup_properties();
 }
 
-DiffViewer::DiffViewer(const String& original, const String& diff)
+DiffViewer::DiffViewer(String const& original, String const& diff)
     : m_original_lines(split_to_lines(original))
     , m_hunks(Diff::parse_hunks(diff))
 {
@@ -164,7 +164,7 @@ void DiffViewer::setup_properties()
     set_foreground_role(ColorRole::BaseText);
 }
 
-Vector<String> DiffViewer::split_to_lines(const String& text)
+Vector<String> DiffViewer::split_to_lines(String const& text)
 {
     // NOTE: This is slightly different than text.split('\n')
     Vector<String> lines;
@@ -207,7 +207,7 @@ void DiffViewer::update_content_size()
 
     size_t num_lines = 0;
     size_t current_original_line_index = 0;
-    for (const auto& hunk : m_hunks) {
+    for (auto const& hunk : m_hunks) {
         num_lines += ((int)hunk.original_start_line - (int)current_original_line_index);
 
         num_lines += hunk.removed_lines.size();

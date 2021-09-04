@@ -27,7 +27,7 @@ public:
 
     int size() const { return m_indices.size(); }
     bool is_empty() const { return m_indices.is_empty(); }
-    bool contains(const ModelIndex& index) const { return m_indices.contains(index); }
+    bool contains(ModelIndex const& index) const { return m_indices.contains(index); }
     bool contains_row(int row) const
     {
         for (auto& index : m_indices) {
@@ -37,11 +37,11 @@ public:
         return false;
     }
 
-    void set(const ModelIndex&);
-    void add(const ModelIndex&);
+    void set(ModelIndex const&);
+    void add(ModelIndex const&);
     void add_all(const Vector<ModelIndex>&);
-    void toggle(const ModelIndex&);
-    bool remove(const ModelIndex&);
+    void toggle(ModelIndex const&);
+    bool remove(ModelIndex const&);
     void clear();
 
     template<typename Callback>
@@ -76,7 +76,7 @@ public:
         return *m_indices.begin();
     }
 
-    void remove_matching(Function<bool(const ModelIndex&)>);
+    void remove_matching(Function<bool(ModelIndex const&)>);
 
     template<typename Function>
     void change_from_model(Badge<SortingProxyModel>, Function f)

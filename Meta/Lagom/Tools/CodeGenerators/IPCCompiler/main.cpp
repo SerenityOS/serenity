@@ -328,7 +328,7 @@ enum class MessageID : i32 {
 };
 )~~~");
 
-        auto constructor_for_message = [&](const String& name, const Vector<Parameter>& parameters) {
+        auto constructor_for_message = [&](String const& name, const Vector<Parameter>& parameters) {
             StringBuilder builder;
             builder.append(name);
 
@@ -361,7 +361,7 @@ enum class MessageID : i32 {
             return builder.to_string();
         };
 
-        auto do_message = [&](const String& name, const Vector<Parameter>& parameters, const String& response_type = {}) {
+        auto do_message = [&](String const& name, const Vector<Parameter>& parameters, String const& response_type = {}) {
             auto message_generator = endpoint_generator.fork();
             auto pascal_name = pascal_case(name);
             message_generator.set("message.name", name);
@@ -390,7 +390,7 @@ public:
     virtual u32 endpoint_magic() const override { return @endpoint.magic@; }
     virtual i32 message_id() const override { return (int)MessageID::@message.pascal_name@; }
     static i32 static_message_id() { return (int)MessageID::@message.pascal_name@; }
-    virtual const char* message_name() const override { return "@endpoint.name@::@message.pascal_name@"; }
+    virtual char const* message_name() const override { return "@endpoint.name@::@message.pascal_name@"; }
 
     static OwnPtr<@message.pascal_name@> decode(InputMemoryStream& stream, [[maybe_unused]] int sockfd)
     {
@@ -700,7 +700,7 @@ public:
 )~~~");
 
         for (auto& message : endpoint.messages) {
-            auto do_decode_message = [&](const String& name) {
+            auto do_decode_message = [&](String const& name) {
                 auto message_generator = endpoint_generator.fork();
 
                 message_generator.set("message.name", name);

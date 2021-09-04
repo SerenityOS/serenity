@@ -15,7 +15,7 @@
 
 namespace AK {
 
-inline String demangle(const StringView& name)
+inline String demangle(StringView const& name)
 {
 #ifdef BUILDING_SERENITY_TOOLCHAIN
     return name;

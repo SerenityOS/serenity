@@ -24,7 +24,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* user = nullptr;
+    char const* user = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(user, "User to switch to (defaults to user with UID 0)", "user", Core::ArgsParser::Required::No);
@@ -48,7 +48,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const auto& account = account_or_error.value();
+    auto const& account = account_or_error.value();
 
     if (getuid() != 0 && account.has_password()) {
         auto password = Core::get_password();

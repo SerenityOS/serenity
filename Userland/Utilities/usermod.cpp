@@ -38,11 +38,11 @@ int main(int argc, char** argv)
     int gid = 0;
     bool lock = false;
     bool unlock = false;
-    const char* new_home_directory = nullptr;
+    char const* new_home_directory = nullptr;
     bool move_home = false;
-    const char* shell = nullptr;
-    const char* gecos = nullptr;
-    const char* username = nullptr;
+    char const* shell = nullptr;
+    char const* gecos = nullptr;
+    char const* username = nullptr;
 
     auto args_parser = Core::ArgsParser();
     args_parser.set_general_help("Modify a user account");

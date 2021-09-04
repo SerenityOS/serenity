@@ -15,7 +15,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* string = "yes";
+    char const* string = "yes";
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(string, "String to output (defaults to 'yes')", "string", Core::ArgsParser::Required::No);

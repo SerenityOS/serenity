@@ -85,41 +85,41 @@ public:
         Optional<AST::Position> position;
     };
 
-    int run_command(const StringView&, Optional<SourcePosition> = {});
-    bool is_runnable(const StringView&);
+    int run_command(StringView const&, Optional<SourcePosition> = {});
+    bool is_runnable(StringView const&);
     RefPtr<Job> run_command(const AST::Command&);
     NonnullRefPtrVector<Job> run_commands(Vector<AST::Command>&);
-    bool run_file(const String&, bool explicitly_invoked = true);
+    bool run_file(String const&, bool explicitly_invoked = true);
     bool run_builtin(const AST::Command&, const NonnullRefPtrVector<AST::Rewiring>&, int& retval);
-    bool has_builtin(const StringView&) const;
+    bool has_builtin(StringView const&) const;
     RefPtr<AST::Node> run_immediate_function(StringView name, AST::ImmediateExpression& invoking_node, const NonnullRefPtrVector<AST::Node>&);
-    static bool has_immediate_function(const StringView&);
+    static bool has_immediate_function(StringView const&);
     void block_on_job(RefPtr<Job>);
     void block_on_pipeline(RefPtr<AST::Pipeline>);
     String prompt() const;
 
-    static String expand_tilde(const String&);
-    static Vector<String> expand_globs(const StringView& path, StringView base);
-    static Vector<String> expand_globs(Vector<StringView> path_segments, const StringView& base);
+    static String expand_tilde(String const&);
+    static Vector<String> expand_globs(StringView const& path, StringView base);
+    static Vector<String> expand_globs(Vector<StringView> path_segments, StringView const& base);
     Vector<AST::Command> expand_aliases(Vector<AST::Command>);
     String resolve_path(String) const;
-    String resolve_alias(const String&) const;
+    String resolve_alias(String const&) const;
 
-    static String find_in_path(const StringView& program_name);
+    static String find_in_path(StringView const& program_name);
 
     static bool has_history_event(StringView);
 
     RefPtr<AST::Value> get_argument(size_t) const;
-    RefPtr<AST::Value> lookup_local_variable(const String&) const;
-    String local_variable_or(const String&, const String&) const;
-    void set_local_variable(const String&, RefPtr<AST::Value>, bool only_in_current_frame = false);
-    void unset_local_variable(const String&, bool only_in_current_frame = false);
+    RefPtr<AST::Value> lookup_local_variable(String const&) const;
+    String local_variable_or(String const&, String const&) const;
+    void set_local_variable(String const&, RefPtr<AST::Value>, bool only_in_current_frame = false);
+    void unset_local_variable(String const&, bool only_in_current_frame = false);
 
     void define_function(String name, Vector<String> argnames, RefPtr<AST::Node> body);
-    bool has_function(const String&);
+    bool has_function(String const&);
     bool invoke_function(const AST::Command&, int& retval);
 
-    String format(const StringView&, ssize_t& cursor) const;
+    String format(StringView const&, ssize_t& cursor) const;
 
     RefPtr<Line::Editor> editor() const { return m_editor; }
 
@@ -135,7 +135,7 @@ public:
     };
 
     struct Frame {
-        Frame(NonnullOwnPtrVector<LocalFrame>& frames, const LocalFrame& frame)
+        Frame(NonnullOwnPtrVector<LocalFrame>& frames, LocalFrame const& frame)
             : frames(frames)
             , frame(frame)
         {
@@ -146,17 +146,17 @@ public:
 
     private:
         NonnullOwnPtrVector<LocalFrame>& frames;
-        const LocalFrame& frame;
+        LocalFrame const& frame;
         bool should_destroy_frame { true };
     };
 
     [[nodiscard]] Frame push_frame(String name);
     void pop_frame();
 
-    static String escape_token_for_double_quotes(const String& token);
-    static String escape_token_for_single_quotes(const String& token);
-    static String escape_token(const String& token);
-    static String unescape_token(const String& token);
+    static String escape_token_for_double_quotes(String const& token);
+    static String escape_token_for_single_quotes(String const& token);
+    static String escape_token(String const& token);
+    static String unescape_token(String const& token);
     enum class SpecialCharacterEscapeMode {
         Untouched,
         Escaped,
@@ -165,8 +165,8 @@ public:
     };
     static SpecialCharacterEscapeMode special_character_escape_mode(u32 c);
 
-    static bool is_glob(const StringView&);
-    static Vector<StringView> split_path(const StringView&);
+    static bool is_glob(StringView const&);
+    static Vector<StringView> split_path(StringView const&);
 
     enum class ExecutableOnly {
         Yes,
@@ -175,22 +175,22 @@ public:
 
     void highlight(Line::Editor&) const;
     Vector<Line::CompletionSuggestion> complete();
-    Vector<Line::CompletionSuggestion> complete_path(const String& base, const String&, size_t offset, ExecutableOnly executable_only);
-    Vector<Line::CompletionSuggestion> complete_program_name(const String&, size_t offset);
-    Vector<Line::CompletionSuggestion> complete_variable(const String&, size_t offset);
-    Vector<Line::CompletionSuggestion> complete_user(const String&, size_t offset);
-    Vector<Line::CompletionSuggestion> complete_option(const String&, const String&, size_t offset);
-    Vector<Line::CompletionSuggestion> complete_immediate_function_name(const String&, size_t offset);
+    Vector<Line::CompletionSuggestion> complete_path(String const& base, String const&, size_t offset, ExecutableOnly executable_only);
+    Vector<Line::CompletionSuggestion> complete_program_name(String const&, size_t offset);
+    Vector<Line::CompletionSuggestion> complete_variable(String const&, size_t offset);
+    Vector<Line::CompletionSuggestion> complete_user(String const&, size_t offset);
+    Vector<Line::CompletionSuggestion> complete_option(String const&, String const&, size_t offset);
+    Vector<Line::CompletionSuggestion> complete_immediate_function_name(String const&, size_t offset);
 
     void restore_ios();
 
     u64 find_last_job_id() const;
-    const Job* find_job(u64 id, bool is_pid = false);
-    const Job* current_job() const { return m_current_job; }
-    void kill_job(const Job*, int sig);
+    Job const* find_job(u64 id, bool is_pid = false);
+    Job const* current_job() const { return m_current_job; }
+    void kill_job(Job const*, int sig);
 
     String get_history_path();
-    void print_path(const String& path);
+    void print_path(String const& path);
 
     bool read_single_line();
 
@@ -243,7 +243,7 @@ public:
             m_source_position.value().position = position.release_value();
     }
     bool has_error(ShellError err) const { return m_error == err; }
-    const String& error_description() const { return m_error_description; }
+    String const& error_description() const { return m_error_description; }
     ShellError take_error()
     {
         auto err = m_error;
@@ -285,14 +285,14 @@ private:
     void save_to(JsonObject&);
     void bring_cursor_to_beginning_of_a_line() const;
 
-    Optional<int> resolve_job_spec(const String&);
+    Optional<int> resolve_job_spec(String const&);
     void cache_path();
-    void add_entry_to_cache(const String&);
-    void remove_entry_from_cache(const String&);
+    void add_entry_to_cache(String const&);
+    void remove_entry_from_cache(String const&);
     void stop_all_jobs();
-    const Job* m_current_job { nullptr };
-    LocalFrame* find_frame_containing_local_variable(const String& name);
-    const LocalFrame* find_frame_containing_local_variable(const String& name) const
+    Job const* m_current_job { nullptr };
+    LocalFrame* find_frame_containing_local_variable(String const& name);
+    LocalFrame const* find_frame_containing_local_variable(String const& name) const
     {
         return const_cast<Shell*>(this)->find_frame_containing_local_variable(name);
     }
@@ -300,7 +300,7 @@ private:
     void run_tail(RefPtr<Job>);
     void run_tail(const AST::Command&, const AST::NodeWithAction&, int head_exit_code);
 
-    [[noreturn]] void execute_process(Vector<const char*>&& argv);
+    [[noreturn]] void execute_process(Vector<char const*>&& argv);
 
     virtual void custom_event(Core::CustomEvent&) override;
 
@@ -314,13 +314,13 @@ private:
     RefPtr<AST::Node> immediate_length_impl(AST::ImmediateExpression& invoking_node, const NonnullRefPtrVector<AST::Node>&, bool across);
 
 #define __ENUMERATE_SHELL_BUILTIN(builtin) \
-    int builtin_##builtin(int argc, const char** argv);
+    int builtin_##builtin(int argc, char const** argv);
 
     ENUMERATE_SHELL_BUILTINS();
 
 #undef __ENUMERATE_SHELL_BUILTIN
 
-    constexpr static const char* builtin_names[] = {
+    constexpr static char const* builtin_names[] = {
 #define __ENUMERATE_SHELL_BUILTIN(builtin) #builtin,
 
         ENUMERATE_SHELL_BUILTINS()
@@ -366,7 +366,7 @@ private:
     return c == '_' || (c <= 'Z' && c >= 'A') || (c <= 'z' && c >= 'a') || (c <= '9' && c >= '0');
 }
 
-inline size_t find_offset_into_node(const String& unescaped_text, size_t escaped_offset)
+inline size_t find_offset_into_node(String const& unescaped_text, size_t escaped_offset)
 {
     size_t unescaped_offset = 0;
     size_t offset = 0;

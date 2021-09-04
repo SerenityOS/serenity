@@ -38,7 +38,7 @@
 
 namespace Browser {
 
-URL url_from_user_input(const String& input)
+URL url_from_user_input(String const& input)
 {
     if (input.starts_with("?") && !g_search_engine.is_null()) {
         auto url = g_search_engine;
@@ -56,7 +56,7 @@ URL url_from_user_input(const String& input)
     return URL(builder.build());
 }
 
-void Tab::start_download(const URL& url)
+void Tab::start_download(URL const& url)
 {
     auto window = GUI::Window::construct(&this->window());
     window->resize(300, 170);
@@ -66,7 +66,7 @@ void Tab::start_download(const URL& url)
     window->show();
 }
 
-void Tab::view_source(const URL& url, const String& source)
+void Tab::view_source(URL const& url, String const& source)
 {
     auto window = GUI::Window::construct(&this->window());
     auto& editor = window->set_main_widget<GUI::TextEditor>();
@@ -354,7 +354,7 @@ Tab::~Tab()
 {
 }
 
-void Tab::load(const URL& url, LoadType load_type)
+void Tab::load(URL const& url, LoadType load_type)
 {
     m_is_history_navigation = (load_type == LoadType::HistoryNavigation);
     m_web_content_view->load(url);
@@ -405,7 +405,7 @@ void Tab::bookmark_current_url()
     update_bookmark_button(url);
 }
 
-void Tab::update_bookmark_button(const String& url)
+void Tab::update_bookmark_button(String const& url)
 {
     if (BookmarksBarWidget::the().contains_bookmark(url)) {
         m_bookmark_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/bookmark-filled.png"));

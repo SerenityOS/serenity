@@ -83,7 +83,7 @@ TEST_CASE(case_insensitive)
 TEST_CASE(hashmap_of_nonnullownptr_get)
 {
     struct Object {
-        Object(const String& s)
+        Object(String const& s)
             : string(s)
         {
         }

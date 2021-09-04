@@ -77,7 +77,7 @@ bool ScreenLayout::is_valid(String* error_msg) const
             *error_msg = "Screen layout has not been normalized";
         return false;
     }
-    Vector<const Screen*, 16> reachable_screens { &screens[main_screen_index] };
+    Vector<Screen const*, 16> reachable_screens { &screens[main_screen_index] };
     bool did_reach_another_screen;
     do {
         did_reach_another_screen = false;
@@ -275,7 +275,7 @@ bool ScreenLayout::save_config(Core::ConfigFile& config_file, bool sync) const
     return true;
 }
 
-bool ScreenLayout::operator!=(const ScreenLayout& other) const
+bool ScreenLayout::operator!=(ScreenLayout const& other) const
 {
     if (this == &other)
         return false;

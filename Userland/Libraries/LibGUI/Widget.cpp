@@ -734,7 +734,7 @@ void Widget::set_font(const Gfx::Font* font)
     update();
 }
 
-void Widget::set_font_family(const String& family)
+void Widget::set_font_family(String const& family)
 {
     set_font(Gfx::FontDatabase::the().get(family, m_font->presentation_size(), m_font->weight()));
 }
@@ -897,7 +897,7 @@ bool Widget::is_backmost() const
     return &parent->children().first() == this;
 }
 
-Action* Widget::action_for_key_event(const KeyEvent& event)
+Action* Widget::action_for_key_event(KeyEvent const& event)
 {
     Shortcut shortcut(event.modifiers(), (KeyCode)event.key());
 
@@ -966,7 +966,7 @@ Vector<Widget&> Widget::child_widgets() const
     return widgets;
 }
 
-void Widget::set_palette(const Palette& palette)
+void Widget::set_palette(Palette const& palette)
 {
     m_palette = palette.impl();
     update();
@@ -999,7 +999,7 @@ void Widget::did_end_inspection()
     update();
 }
 
-void Widget::set_content_margins(const Margins& margins)
+void Widget::set_content_margins(Margins const& margins)
 {
     if (m_content_margins == margins)
         return;
@@ -1046,15 +1046,15 @@ void Widget::set_override_cursor(Gfx::StandardCursor cursor)
         window->update_cursor({});
 }
 
-bool Widget::load_from_gml(const StringView& gml_string)
+bool Widget::load_from_gml(StringView const& gml_string)
 {
-    return load_from_gml(gml_string, [](const String& class_name) -> RefPtr<Core::Object> {
+    return load_from_gml(gml_string, [](String const& class_name) -> RefPtr<Core::Object> {
         dbgln("Class '{}' not registered", class_name);
         return nullptr;
     });
 }
 
-bool Widget::load_from_gml(const StringView& gml_string, RefPtr<Core::Object> (*unregistered_child_handler)(const String&))
+bool Widget::load_from_gml(StringView const& gml_string, RefPtr<Core::Object> (*unregistered_child_handler)(String const&))
 {
     auto value = parse_gml(gml_string);
     if (!value.is_object())
@@ -1062,7 +1062,7 @@ bool Widget::load_from_gml(const StringView& gml_string, RefPtr<Core::Object> (*
     return load_from_json(value.as_object(), unregistered_child_handler);
 }
 
-bool Widget::load_from_json(const JsonObject& json, RefPtr<Core::Object> (*unregistered_child_handler)(const String&))
+bool Widget::load_from_json(JsonObject const& json, RefPtr<Core::Object> (*unregistered_child_handler)(String const&))
 {
     json.for_each_member([&](auto& key, auto& value) {
         set_property(key, value);

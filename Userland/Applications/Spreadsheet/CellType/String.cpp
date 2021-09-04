@@ -19,7 +19,7 @@ StringCell::~StringCell()
 {
 }
 
-String StringCell::display(Cell& cell, const CellTypeMetadata& metadata) const
+String StringCell::display(Cell& cell, CellTypeMetadata const& metadata) const
 {
     auto string = cell.js_data().to_string_without_side_effects();
     if (metadata.length >= 0)
@@ -28,7 +28,7 @@ String StringCell::display(Cell& cell, const CellTypeMetadata& metadata) const
     return string;
 }
 
-JS::Value StringCell::js_value(Cell& cell, const CellTypeMetadata& metadata) const
+JS::Value StringCell::js_value(Cell& cell, CellTypeMetadata const& metadata) const
 {
     auto string = display(cell, metadata);
     return JS::js_string(cell.sheet().interpreter().heap(), string);

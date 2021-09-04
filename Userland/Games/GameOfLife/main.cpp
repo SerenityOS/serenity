@@ -20,7 +20,7 @@
 #include <LibGUI/Window.h>
 #include <unistd.h>
 
-const char* click_tip = "Tip: click the board to toggle individual cells, or click+drag to toggle multiple cells";
+char const* click_tip = "Tip: click the board to toggle individual cells, or click+drag to toggle multiple cells";
 
 int main(int argc, char** argv)
 {

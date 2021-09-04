@@ -187,7 +187,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)
         return {};
     }
 
-    const auto* cell = sheet_object->m_sheet.at(position.value());
+    auto const* cell = sheet_object->m_sheet.at(position.value());
     if (!cell)
         return JS::js_undefined();
 

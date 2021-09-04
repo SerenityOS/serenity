@@ -94,7 +94,7 @@ ProcFSExposedDirectory::ProcFSExposedDirectory(StringView name)
 {
 }
 
-ProcFSExposedDirectory::ProcFSExposedDirectory(StringView name, const ProcFSExposedDirectory& parent_directory)
+ProcFSExposedDirectory::ProcFSExposedDirectory(StringView name, ProcFSExposedDirectory const& parent_directory)
     : ProcFSExposedComponent(name)
     , m_parent_directory(parent_directory)
 {
@@ -170,7 +170,7 @@ KResultOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, User
     return nread;
 }
 
-KResultOr<NonnullRefPtr<Inode>> ProcFSExposedLink::to_inode(const ProcFS& procfs_instance) const
+KResultOr<NonnullRefPtr<Inode>> ProcFSExposedLink::to_inode(ProcFS const& procfs_instance) const
 {
     auto maybe_inode = ProcFSLinkInode::try_create(procfs_instance, *this);
     if (maybe_inode.is_error())
@@ -179,7 +179,7 @@ KResultOr<NonnullRefPtr<Inode>> ProcFSExposedLink::to_inode(const ProcFS& procfs
     return maybe_inode.release_value();
 }
 
-KResultOr<NonnullRefPtr<Inode>> ProcFSExposedComponent::to_inode(const ProcFS& procfs_instance) const
+KResultOr<NonnullRefPtr<Inode>> ProcFSExposedComponent::to_inode(ProcFS const& procfs_instance) const
 {
     auto maybe_inode = ProcFSGlobalInode::try_create(procfs_instance, *this);
     if (maybe_inode.is_error())
@@ -188,7 +188,7 @@ KResultOr<NonnullRefPtr<Inode>> ProcFSExposedComponent::to_inode(const ProcFS& p
     return maybe_inode.release_value();
 }
 
-KResultOr<NonnullRefPtr<Inode>> ProcFSExposedDirectory::to_inode(const ProcFS& procfs_instance) const
+KResultOr<NonnullRefPtr<Inode>> ProcFSExposedDirectory::to_inode(ProcFS const& procfs_instance) const
 {
     auto maybe_inode = ProcFSDirectoryInode::try_create(procfs_instance, *this);
     if (maybe_inode.is_error())
@@ -197,7 +197,7 @@ KResultOr<NonnullRefPtr<Inode>> ProcFSExposedDirectory::to_inode(const ProcFS& p
     return maybe_inode.release_value();
 }
 
-void ProcFSExposedDirectory::add_component(const ProcFSExposedComponent&)
+void ProcFSExposedDirectory::add_component(ProcFSExposedComponent const&)
 {
     TODO();
 }

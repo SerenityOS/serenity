@@ -39,7 +39,7 @@ public:
     Type type() const { return m_type; }
     const NonnullRefPtrVector<Card>& stack() const { return m_stack; }
     size_t count() const { return m_stack.size(); }
-    const Card& peek() const { return m_stack.last(); }
+    Card const& peek() const { return m_stack.last(); }
     Card& peek() { return m_stack.last(); }
     const Gfx::IntRect& bounding_box() const { return m_bounding_box; }
 
@@ -50,7 +50,7 @@ public:
     void move_to_stack(CardStack&);
     void rebound_cards();
 
-    bool is_allowed_to_push(const Card&, size_t stack_size = 1, MovementRule movement_rule = Alternating) const;
+    bool is_allowed_to_push(Card const&, size_t stack_size = 1, MovementRule movement_rule = Alternating) const;
     void add_all_grabbed_cards(const Gfx::IntPoint& click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule = Alternating);
     void draw(GUI::Painter&, const Gfx::Color& background_color);
     void clear();
@@ -125,7 +125,7 @@ struct AK::Formatter<Cards::CardStack> : Formatter<FormatString> {
         StringBuilder cards;
         bool first_card = true;
 
-        for (const auto& card : stack.stack()) {
+        for (auto const& card : stack.stack()) {
             cards.appendff("{}{}", (first_card ? "" : " "), card);
             first_card = false;
         }

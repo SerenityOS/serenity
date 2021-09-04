@@ -25,7 +25,7 @@ static void on_secure_attribute(ParsedCookie& parsed_cookie);
 static void on_http_only_attribute(ParsedCookie& parsed_cookie);
 static Optional<Core::DateTime> parse_date_time(StringView date_string);
 
-Optional<ParsedCookie> parse_cookie(const String& cookie_string)
+Optional<ParsedCookie> parse_cookie(String const& cookie_string)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.2
 
@@ -247,7 +247,7 @@ Optional<Core::DateTime> parse_date_time(StringView date_string)
         if (parts.size() != 3)
             return false;
 
-        for (const auto& part : parts) {
+        for (auto const& part : parts) {
             if (part.is_empty() || part.length() > 2)
                 return false;
         }
@@ -262,7 +262,7 @@ Optional<Core::DateTime> parse_date_time(StringView date_string)
     };
 
     auto parse_month = [&](StringView token) {
-        static const char* months[] { "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec" };
+        static char const* months[] { "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec" };
 
         for (unsigned i = 0; i < 12; ++i) {
             if (token.equals_ignoring_case(months[i])) {
@@ -293,7 +293,7 @@ Optional<Core::DateTime> parse_date_time(StringView date_string)
     bool found_month = false;
     bool found_year = false;
 
-    for (const auto& date_token : date_tokens) {
+    for (auto const& date_token : date_tokens) {
         if (!found_time && parse_time(date_token)) {
             found_time = true;
         } else if (!found_day_of_month && parse_day_of_month(date_token)) {

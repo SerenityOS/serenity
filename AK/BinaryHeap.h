@@ -50,13 +50,13 @@ public:
         return m_elements[index].value;
     }
 
-    const V& peek_min() const
+    V const& peek_min() const
     {
         VERIFY(!is_empty());
         return m_elements[0].value;
     }
 
-    const K& peek_min_key() const
+    K const& peek_min_key() const
     {
         VERIFY(!is_empty());
         return m_elements[0].key;

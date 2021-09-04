@@ -24,7 +24,7 @@ static struct group s_group;
 static String s_name;
 static String s_passwd;
 static Vector<String> s_members;
-static Vector<const char*> s_members_ptrs;
+static Vector<char const*> s_members_ptrs;
 
 void setgrent()
 {
@@ -65,7 +65,7 @@ struct group* getgrgid(gid_t gid)
     return nullptr;
 }
 
-struct group* getgrnam(const char* name)
+struct group* getgrnam(char const* name)
 {
     setgrent();
     while (auto* gr = getgrent()) {
@@ -75,7 +75,7 @@ struct group* getgrnam(const char* name)
     return nullptr;
 }
 
-static bool parse_grpdb_entry(const String& line)
+static bool parse_grpdb_entry(String const& line)
 {
     auto parts = line.split_view(':', true);
     if (parts.size() != 4) {
@@ -140,7 +140,7 @@ struct group* getgrent()
     }
 }
 
-int initgroups(const char* user, gid_t extra_gid)
+int initgroups(char const* user, gid_t extra_gid)
 {
     size_t count = 0;
     gid_t gids[32];
@@ -169,7 +169,7 @@ int putgrent(const struct group* group, FILE* stream)
         return -1;
     }
 
-    auto is_valid_field = [](const char* str) {
+    auto is_valid_field = [](char const* str) {
         return str && !strpbrk(str, ":\n");
     };
 

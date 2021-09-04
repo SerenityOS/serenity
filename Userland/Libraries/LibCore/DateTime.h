@@ -30,14 +30,14 @@ public:
     bool is_leap_year() const;
 
     void set_time(int year, int month = 1, int day = 0, int hour = 0, int minute = 0, int second = 0);
-    String to_string(const String& format = "%Y-%m-%d %H:%M:%S") const;
+    String to_string(String const& format = "%Y-%m-%d %H:%M:%S") const;
 
     static DateTime create(int year, int month = 1, int day = 0, int hour = 0, int minute = 0, int second = 0);
     static DateTime now();
     static DateTime from_timestamp(time_t);
-    static Optional<DateTime> parse(const String& format, const String& string);
+    static Optional<DateTime> parse(String const& format, String const& string);
 
-    bool operator<(const DateTime& other) const { return m_timestamp < other.m_timestamp; }
+    bool operator<(DateTime const& other) const { return m_timestamp < other.m_timestamp; }
 
 private:
     time_t m_timestamp { 0 };

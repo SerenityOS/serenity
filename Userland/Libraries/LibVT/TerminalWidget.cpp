@@ -458,7 +458,7 @@ void TerminalWidget::set_window_progress(int value, int max)
     window()->set_progress((int)roundf(progress));
 }
 
-void TerminalWidget::set_window_title(const StringView& title)
+void TerminalWidget::set_window_title(StringView const& title)
 {
     if (!Utf8View(title).validate()) {
         dbgln("TerminalWidget: Attempted to set window title to invalid UTF-8 string");
@@ -649,7 +649,7 @@ static u32 to_lowercase_code_point(u32 code_point)
     return code_point;
 }
 
-VT::Range TerminalWidget::find_next(const StringView& needle, const VT::Position& start, bool case_sensitivity, bool should_wrap)
+VT::Range TerminalWidget::find_next(StringView const& needle, const VT::Position& start, bool case_sensitivity, bool should_wrap)
 {
     if (needle.is_empty())
         return {};
@@ -681,7 +681,7 @@ VT::Range TerminalWidget::find_next(const StringView& needle, const VT::Position
     return {};
 }
 
-VT::Range TerminalWidget::find_previous(const StringView& needle, const VT::Position& start, bool case_sensitivity, bool should_wrap)
+VT::Range TerminalWidget::find_previous(StringView const& needle, const VT::Position& start, bool case_sensitivity, bool should_wrap)
 {
     if (needle.is_empty())
         return {};
@@ -1004,7 +1004,7 @@ void TerminalWidget::beep()
     update();
 }
 
-void TerminalWidget::emit(const u8* data, size_t size)
+void TerminalWidget::emit(u8 const* data, size_t size)
 {
     if (write(m_ptm_fd, data, size) < 0) {
         perror("TerminalWidget::emit: write");
@@ -1146,7 +1146,7 @@ void TerminalWidget::update_paste_action()
     m_paste_action->set_enabled(GUI::Clipboard::the().mime_type().starts_with("text/") && !GUI::Clipboard::the().data().is_empty());
 }
 
-void TerminalWidget::set_color_scheme(const StringView& name)
+void TerminalWidget::set_color_scheme(StringView const& name)
 {
     if (name.contains('/')) {
         dbgln("Shenanigans! Color scheme names can't contain slashes.");
@@ -1235,7 +1235,7 @@ void TerminalWidget::set_font_and_resize_to_fit(const Gfx::Font& font)
 
 // Used for sending data that was not directly typed by the user.
 // This basically wraps the code that handles sending the escape sequence in bracketed paste mode.
-void TerminalWidget::send_non_user_input(const ReadonlyBytes& bytes)
+void TerminalWidget::send_non_user_input(ReadonlyBytes const& bytes)
 {
     constexpr StringView leading_control_sequence = "\e[200~";
     constexpr StringView trailing_control_sequence = "\e[201~";

@@ -12,7 +12,7 @@
 int main(int argc, char** argv)
 {
     Core::ArgsParser args_parser;
-    const char* path = nullptr;
+    char const* path = nullptr;
     args_parser.add_positional_argument(path, "Input", "input", Core::ArgsParser::Required::No);
 
     args_parser.parse(argc, argv);

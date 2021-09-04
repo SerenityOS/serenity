@@ -14,7 +14,7 @@ struct Counter {
 
     ~Counter() { ++num_destroys; }
 
-    Counter(const Counter&)
+    Counter(Counter const&)
     {
         ++num_copies;
     }

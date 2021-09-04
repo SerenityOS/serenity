@@ -59,7 +59,7 @@ public:
         {
         }
 
-        IOAddressGroup(const IOAddressGroup& other, IOAddress bus_master_base)
+        IOAddressGroup(IOAddressGroup const& other, IOAddress bus_master_base)
             : m_io_base(other.io_base())
             , m_control_base(other.control_base())
             , m_bus_master_base(bus_master_base)
@@ -67,17 +67,17 @@ public:
         }
 
         // Disable default implementations that would use surprising integer promotion.
-        bool operator==(const IOAddressGroup&) const = delete;
-        bool operator<=(const IOAddressGroup&) const = delete;
-        bool operator>=(const IOAddressGroup&) const = delete;
-        bool operator<(const IOAddressGroup&) const = delete;
-        bool operator>(const IOAddressGroup&) const = delete;
+        bool operator==(IOAddressGroup const&) const = delete;
+        bool operator<=(IOAddressGroup const&) const = delete;
+        bool operator>=(IOAddressGroup const&) const = delete;
+        bool operator<(IOAddressGroup const&) const = delete;
+        bool operator>(IOAddressGroup const&) const = delete;
 
         IOAddress io_base() const { return m_io_base; };
         IOAddress control_base() const { return m_control_base; }
         Optional<IOAddress> bus_master_base() const { return m_bus_master_base; }
 
-        const IOAddressGroup& operator=(const IOAddressGroup& group)
+        IOAddressGroup const& operator=(IOAddressGroup const& group)
         {
             m_io_base = group.io_base();
             m_control_base = group.control_base();
@@ -92,8 +92,8 @@ public:
     };
 
 public:
-    static NonnullRefPtr<IDEChannel> create(const IDEController&, IOAddressGroup, ChannelType type);
-    static NonnullRefPtr<IDEChannel> create(const IDEController&, u8 irq, IOAddressGroup, ChannelType type);
+    static NonnullRefPtr<IDEChannel> create(IDEController const&, IOAddressGroup, ChannelType type);
+    static NonnullRefPtr<IDEChannel> create(IDEController const&, u8 irq, IOAddressGroup, ChannelType type);
     virtual ~IDEChannel() override;
 
     RefPtr<StorageDevice> master_device() const;
@@ -119,10 +119,10 @@ protected:
         Write,
     };
 
-    IDEChannel(const IDEController&, IOAddressGroup, ChannelType type);
-    IDEChannel(const IDEController&, u8 irq, IOAddressGroup, ChannelType type);
+    IDEChannel(IDEController const&, IOAddressGroup, ChannelType type);
+    IDEChannel(IDEController const&, u8 irq, IOAddressGroup, ChannelType type);
     //^ IRQHandler
-    virtual bool handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(RegisterState const&) override;
 
     virtual void send_ata_io_command(LBAMode lba_mode, Direction direction) const;
 

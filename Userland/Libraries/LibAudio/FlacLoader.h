@@ -69,8 +69,8 @@ ALWAYS_INLINE i32 decode_unsigned_exp_golomb(u8 order, InputBitStream& bit_input
 
 class FlacLoaderPlugin : public LoaderPlugin {
 public:
-    FlacLoaderPlugin(const StringView& path);
-    FlacLoaderPlugin(const ByteBuffer& buffer);
+    FlacLoaderPlugin(StringView const& path);
+    FlacLoaderPlugin(ByteBuffer const& buffer);
     ~FlacLoaderPlugin()
     {
         if (m_stream)
@@ -80,7 +80,7 @@ public:
     virtual bool sniff() override;
 
     virtual bool has_error() override { return !m_error_string.is_null(); }
-    virtual const String& error_string() override { return m_error_string; }
+    virtual String const& error_string() override { return m_error_string; }
 
     virtual RefPtr<Buffer> get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) override;
 

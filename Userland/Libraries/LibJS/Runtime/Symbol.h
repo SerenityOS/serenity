@@ -25,7 +25,7 @@ public:
     String to_string() const { return String::formatted("Symbol({})", description()); }
 
 private:
-    virtual const char* class_name() const override { return "Symbol"; }
+    virtual char const* class_name() const override { return "Symbol"; }
 
     Optional<String> m_description;
     bool m_is_global;

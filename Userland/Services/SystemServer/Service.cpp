@@ -66,7 +66,7 @@ void Service::setup_socket(SocketDescriptor& socket)
         VERIFY_NOT_REACHED();
     }
     auto un = un_optional.value();
-    int rc = bind(socket_fd, (const sockaddr*)&un, sizeof(un));
+    int rc = bind(socket_fd, (sockaddr const*)&un, sizeof(un));
     if (rc < 0) {
         perror("bind");
         VERIFY_NOT_REACHED();
@@ -280,7 +280,7 @@ void Service::did_exit(int exit_code)
     activate();
 }
 
-Service::Service(const Core::ConfigFile& config, const StringView& name)
+Service::Service(const Core::ConfigFile& config, StringView const& name)
     : Core::Object(nullptr)
 {
     VERIFY(config.has_group(name));

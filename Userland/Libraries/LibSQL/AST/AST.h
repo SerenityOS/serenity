@@ -59,7 +59,7 @@ public:
         VERIFY(m_signed_numbers.size() <= 2);
     }
 
-    const String& name() const { return m_name; }
+    String const& name() const { return m_name; }
     const NonnullRefPtrVector<SignedNumber>& signed_numbers() const { return m_signed_numbers; }
 
 private:
@@ -75,7 +75,7 @@ public:
     {
     }
 
-    const String& name() const { return m_name; }
+    String const& name() const { return m_name; }
     const NonnullRefPtr<TypeName>& type_name() const { return m_type_name; }
 
 private:
@@ -92,7 +92,7 @@ public:
     {
     }
 
-    const String& table_name() const { return m_table_name; }
+    String const& table_name() const { return m_table_name; }
     const Vector<String>& column_names() const { return m_column_names; }
     const NonnullRefPtr<Select>& select_statement() const { return m_select_statement; }
 
@@ -128,9 +128,9 @@ public:
     {
     }
 
-    const String& schema_name() const { return m_schema_name; }
-    const String& table_name() const { return m_table_name; }
-    const String& alias() const { return m_alias; }
+    String const& schema_name() const { return m_schema_name; }
+    String const& table_name() const { return m_table_name; }
+    String const& alias() const { return m_alias; }
 
 private:
     String m_schema_name;
@@ -185,11 +185,11 @@ public:
     ResultType type() const { return m_type; }
 
     bool select_from_table() const { return !m_table_name.is_null(); }
-    const String& table_name() const { return m_table_name; }
+    String const& table_name() const { return m_table_name; }
 
     bool select_from_expression() const { return !m_expression.is_null(); }
     const RefPtr<Expression>& expression() const { return m_expression; }
-    const String& column_alias() const { return m_column_alias; }
+    String const& column_alias() const { return m_column_alias; }
 
 private:
     ResultType m_type { ResultType::All };
@@ -236,9 +236,9 @@ public:
     }
 
     bool is_table() const { return m_is_table; }
-    const String& schema_name() const { return m_schema_name; }
-    const String& table_name() const { return m_table_name; }
-    const String& table_alias() const { return m_table_alias; }
+    String const& schema_name() const { return m_schema_name; }
+    String const& table_name() const { return m_table_name; }
+    String const& table_alias() const { return m_table_alias; }
 
     bool is_subquery() const { return m_is_subquery; }
     const NonnullRefPtrVector<TableOrSubquery>& subqueries() const { return m_subqueries; }
@@ -264,7 +264,7 @@ public:
     }
 
     const NonnullRefPtr<Expression>& expression() const { return m_expression; }
-    const String& collation_name() const { return m_collation_name; }
+    String const& collation_name() const { return m_collation_name; }
     Order order() const { return m_order; }
     Nulls nulls() const { return m_nulls; }
 
@@ -330,7 +330,7 @@ public:
     {
     }
 
-    const String& value() const { return m_value; }
+    String const& value() const { return m_value; }
     virtual Value evaluate(ExecutionContext&) const override;
 
 private:
@@ -344,7 +344,7 @@ public:
     {
     }
 
-    const String& value() const { return m_value; }
+    String const& value() const { return m_value; }
 
 private:
     String m_value;
@@ -426,9 +426,9 @@ public:
     {
     }
 
-    const String& schema_name() const { return m_schema_name; }
-    const String& table_name() const { return m_table_name; }
-    const String& column_name() const { return m_column_name; }
+    String const& schema_name() const { return m_schema_name; }
+    String const& table_name() const { return m_table_name; }
+    String const& column_name() const { return m_column_name; }
 
 private:
     String m_schema_name;
@@ -571,7 +571,7 @@ public:
     {
     }
 
-    const String& collation_name() const { return m_collation_name; }
+    String const& collation_name() const { return m_collation_name; }
 
 private:
     String m_collation_name;
@@ -668,8 +668,8 @@ public:
     {
     }
 
-    const String& schema_name() const { return m_schema_name; }
-    const String& table_name() const { return m_table_name; }
+    String const& schema_name() const { return m_schema_name; }
+    String const& table_name() const { return m_table_name; }
 
 private:
     String m_schema_name;
@@ -696,7 +696,7 @@ public:
     {
     }
 
-    const String& schema_name() const { return m_schema_name; }
+    String const& schema_name() const { return m_schema_name; }
     bool is_error_if_schema_exists() const { return m_is_error_if_schema_exists; }
 
     RefPtr<SQLResult> execute(ExecutionContext&) const override;
@@ -726,8 +726,8 @@ public:
     {
     }
 
-    const String& schema_name() const { return m_schema_name; }
-    const String& table_name() const { return m_table_name; }
+    String const& schema_name() const { return m_schema_name; }
+    String const& table_name() const { return m_table_name; }
 
     bool has_selection() const { return !m_select_statement.is_null(); }
     const RefPtr<Select>& select_statement() const { return m_select_statement; }
@@ -751,8 +751,8 @@ private:
 
 class AlterTable : public Statement {
 public:
-    const String& schema_name() const { return m_schema_name; }
-    const String& table_name() const { return m_table_name; }
+    String const& schema_name() const { return m_schema_name; }
+    String const& table_name() const { return m_table_name; }
 
 protected:
     AlterTable(String schema_name, String table_name)
@@ -774,7 +774,7 @@ public:
     {
     }
 
-    const String& new_table_name() const { return m_new_table_name; }
+    String const& new_table_name() const { return m_new_table_name; }
 
 private:
     String m_new_table_name;
@@ -789,8 +789,8 @@ public:
     {
     }
 
-    const String& column_name() const { return m_column_name; }
-    const String& new_column_name() const { return m_new_column_name; }
+    String const& column_name() const { return m_column_name; }
+    String const& new_column_name() const { return m_new_column_name; }
 
 private:
     String m_column_name;
@@ -819,7 +819,7 @@ public:
     {
     }
 
-    const String& column_name() const { return m_column_name; }
+    String const& column_name() const { return m_column_name; }
 
 private:
     String m_column_name;
@@ -834,8 +834,8 @@ public:
     {
     }
 
-    const String& schema_name() const { return m_schema_name; }
-    const String& table_name() const { return m_table_name; }
+    String const& schema_name() const { return m_schema_name; }
+    String const& table_name() const { return m_table_name; }
     bool is_error_if_table_does_not_exist() const { return m_is_error_if_table_does_not_exist; }
 
 private:
@@ -888,9 +888,9 @@ public:
 
     const RefPtr<CommonTableExpressionList>& common_table_expression_list() const { return m_common_table_expression_list; }
     ConflictResolution conflict_resolution() const { return m_conflict_resolution; }
-    const String& schema_name() const { return m_schema_name; }
-    const String& table_name() const { return m_table_name; }
-    const String& alias() const { return m_alias; }
+    String const& schema_name() const { return m_schema_name; }
+    String const& table_name() const { return m_table_name; }
+    String const& alias() const { return m_alias; }
     const Vector<String>& column_names() const { return m_column_names; }
 
     bool default_values() const { return !has_expressions() && !has_selection(); };

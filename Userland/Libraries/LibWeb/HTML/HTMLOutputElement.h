@@ -17,7 +17,7 @@ public:
     HTMLOutputElement(DOM::Document&, QualifiedName);
     virtual ~HTMLOutputElement() override;
 
-    const String& type() const
+    String const& type() const
     {
         static String output = "output";
         return output;

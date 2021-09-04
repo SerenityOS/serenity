@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    const char* filename = nullptr;
+    char const* filename = nullptr;
     bool html = false;
     int view_width = 0;
 

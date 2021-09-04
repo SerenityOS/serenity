@@ -24,7 +24,7 @@ UNMAP_AFTER_INIT ZeroDevice::~ZeroDevice()
 {
 }
 
-bool ZeroDevice::can_read(const FileDescription&, size_t) const
+bool ZeroDevice::can_read(FileDescription const&, size_t) const
 {
     return true;
 }
@@ -36,7 +36,7 @@ KResultOr<size_t> ZeroDevice::read(FileDescription&, u64, UserOrKernelBuffer& bu
     return size;
 }
 
-KResultOr<size_t> ZeroDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t size)
+KResultOr<size_t> ZeroDevice::write(FileDescription&, u64, UserOrKernelBuffer const&, size_t size)
 {
     return size;
 }

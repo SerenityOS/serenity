@@ -9,7 +9,7 @@
 #include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 
-void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func)
+void __assertion_failed(char const* msg, char const* file, unsigned line, char const* func)
 {
     asm volatile("cli");
     critical_dmesgln("ASSERTION FAILED: {}", msg);

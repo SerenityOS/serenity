@@ -404,13 +404,13 @@ Optional<Parser::PageOffsetHintTable> Parser::parse_page_offset_hint_table(Reado
     size_t offset = 0;
 
     auto read_u32 = [&] {
-        u32 data = reinterpret_cast<const u32*>(hint_stream_bytes.data() + offset)[0];
+        u32 data = reinterpret_cast<u32 const*>(hint_stream_bytes.data() + offset)[0];
         offset += 4;
         return AK::convert_between_host_and_big_endian(data);
     };
 
     auto read_u16 = [&] {
-        u16 data = reinterpret_cast<const u16*>(hint_stream_bytes.data() + offset)[0];
+        u16 data = reinterpret_cast<u16 const*>(hint_stream_bytes.data() + offset)[0];
         offset += 2;
         return AK::convert_between_host_and_big_endian(data);
     };

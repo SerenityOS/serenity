@@ -142,7 +142,7 @@ void Game::paint_event(GUI::PaintEvent& event)
     painter.draw_text(lives_left_rect(), String::formatted("Lives: {}", m_lives), Gfx::TextAlignment::Center, Color::White);
 
     if (m_paused) {
-        const char* msg = m_cheater ? "C H E A T E R" : "P A U S E D";
+        char const* msg = m_cheater ? "C H E A T E R" : "P A U S E D";
         painter.draw_text(pause_rect(), msg, Gfx::TextAlignment::Center, Color::White);
     }
 }

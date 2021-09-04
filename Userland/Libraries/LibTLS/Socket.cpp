@@ -70,7 +70,7 @@ bool TLSv12::write(ReadonlyBytes buffer)
     return true;
 }
 
-bool TLSv12::connect(const String& hostname, int port)
+bool TLSv12::connect(String const& hostname, int port)
 {
     set_sni(hostname);
     return Core::Socket::connect(hostname, port);

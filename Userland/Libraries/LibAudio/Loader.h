@@ -25,7 +25,7 @@ public:
     virtual bool sniff() = 0;
 
     virtual bool has_error() { return false; }
-    virtual const String& error_string() { return empty_string; }
+    virtual String const& error_string() { return empty_string; }
 
     virtual RefPtr<Buffer> get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) = 0;
 
@@ -51,11 +51,11 @@ public:
 
 class Loader : public RefCounted<Loader> {
 public:
-    static NonnullRefPtr<Loader> create(const StringView& path) { return adopt_ref(*new Loader(path)); }
-    static NonnullRefPtr<Loader> create(const ByteBuffer& buffer) { return adopt_ref(*new Loader(buffer)); }
+    static NonnullRefPtr<Loader> create(StringView const& path) { return adopt_ref(*new Loader(path)); }
+    static NonnullRefPtr<Loader> create(ByteBuffer const& buffer) { return adopt_ref(*new Loader(buffer)); }
 
     bool has_error() const { return m_plugin ? m_plugin->has_error() : true; }
-    const String& error_string() const { return m_plugin ? m_plugin->error_string() : no_plugin_error; }
+    String const& error_string() const { return m_plugin ? m_plugin->error_string() : no_plugin_error; }
 
     RefPtr<Buffer> get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) const { return m_plugin ? m_plugin->get_more_samples(max_bytes_to_read_from_input) : nullptr; }
 
@@ -78,8 +78,8 @@ public:
     RefPtr<Core::File> file() const { return m_plugin ? m_plugin->file() : nullptr; }
 
 private:
-    Loader(const StringView& path);
-    Loader(const ByteBuffer& buffer);
+    Loader(StringView const& path);
+    Loader(ByteBuffer const& buffer);
 
     mutable OwnPtr<LoaderPlugin> m_plugin;
 };

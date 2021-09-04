@@ -26,7 +26,7 @@ public:
     static Menu* from_menu_id(int);
     int menu_id() const { return m_menu_id; }
 
-    const String& name() const { return m_name; }
+    String const& name() const { return m_name; }
     const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
     void set_icon(const Gfx::Bitmap*);
 
@@ -34,7 +34,7 @@ public:
 
     void add_action(NonnullRefPtr<Action>);
     void add_separator();
-    Menu& add_submenu(const String& name);
+    Menu& add_submenu(String const& name);
 
     void popup(const Gfx::IntPoint& screen_position, const RefPtr<Action>& default_action = nullptr);
     void dismiss();

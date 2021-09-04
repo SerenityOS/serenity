@@ -23,7 +23,7 @@ public:
 
     void initialize_menubar(GUI::Window&);
     void create_toolbar();
-    void open_file(int fd, const String& path);
+    void open_file(int fd, String const& path);
 
 private:
     PDFViewerWidget();

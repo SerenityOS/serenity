@@ -94,7 +94,7 @@ const DiskPartitionMetadata::PartitionType& DiskPartitionMetadata::type() const
 {
     return m_type;
 }
-const UUID& DiskPartitionMetadata::unique_guid() const
+UUID const& DiskPartitionMetadata::unique_guid() const
 {
     return m_unique_guid;
 }

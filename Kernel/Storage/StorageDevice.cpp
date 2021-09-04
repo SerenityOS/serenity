@@ -13,14 +13,14 @@
 
 namespace Kernel {
 
-StorageDevice::StorageDevice(const StorageController& controller, size_t sector_size, u64 max_addressable_block)
+StorageDevice::StorageDevice(StorageController const& controller, size_t sector_size, u64 max_addressable_block)
     : BlockDevice(StorageManagement::major_number(), StorageManagement::minor_number(), sector_size)
     , m_storage_controller(controller)
     , m_max_addressable_block(max_addressable_block)
 {
 }
 
-StorageDevice::StorageDevice(const StorageController& controller, int major, int minor, size_t sector_size, u64 max_addressable_block)
+StorageDevice::StorageDevice(StorageController const& controller, int major, int minor, size_t sector_size, u64 max_addressable_block)
     : BlockDevice(major, minor, sector_size)
     , m_storage_controller(controller)
     , m_max_addressable_block(max_addressable_block)
@@ -97,12 +97,12 @@ KResultOr<size_t> StorageDevice::read(FileDescription&, u64 offset, UserOrKernel
     return pos + remaining;
 }
 
-bool StorageDevice::can_read(const FileDescription&, size_t offset) const
+bool StorageDevice::can_read(FileDescription const&, size_t offset) const
 {
     return offset < (max_addressable_block() * block_size());
 }
 
-KResultOr<size_t> StorageDevice::write(FileDescription&, u64 offset, const UserOrKernelBuffer& inbuf, size_t len)
+KResultOr<size_t> StorageDevice::write(FileDescription&, u64 offset, UserOrKernelBuffer const& inbuf, size_t len)
 {
     unsigned index = offset / block_size();
     u16 whole_blocks = len / block_size();
@@ -187,7 +187,7 @@ KResultOr<size_t> StorageDevice::write(FileDescription&, u64 offset, const UserO
     return pos + remaining;
 }
 
-bool StorageDevice::can_write(const FileDescription&, size_t offset) const
+bool StorageDevice::can_write(FileDescription const&, size_t offset) const
 {
     return offset < (max_addressable_block() * block_size());
 }

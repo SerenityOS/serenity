@@ -27,21 +27,21 @@ public:
     const DOM::Element& current_node() const { return m_elements.last(); }
     DOM::Element& current_node() { return m_elements.last(); }
 
-    bool has_in_scope(const FlyString& tag_name) const;
-    bool has_in_button_scope(const FlyString& tag_name) const;
-    bool has_in_table_scope(const FlyString& tag_name) const;
-    bool has_in_list_item_scope(const FlyString& tag_name) const;
-    bool has_in_select_scope(const FlyString& tag_name) const;
+    bool has_in_scope(FlyString const& tag_name) const;
+    bool has_in_button_scope(FlyString const& tag_name) const;
+    bool has_in_table_scope(FlyString const& tag_name) const;
+    bool has_in_list_item_scope(FlyString const& tag_name) const;
+    bool has_in_select_scope(FlyString const& tag_name) const;
 
     bool has_in_scope(const DOM::Element&) const;
 
     bool contains(const DOM::Element&) const;
-    bool contains(const FlyString& tag_name) const;
+    bool contains(FlyString const& tag_name) const;
 
     const NonnullRefPtrVector<DOM::Element>& elements() const { return m_elements; }
     NonnullRefPtrVector<DOM::Element>& elements() { return m_elements; }
 
-    void pop_until_an_element_with_tag_name_has_been_popped(const FlyString&);
+    void pop_until_an_element_with_tag_name_has_been_popped(FlyString const&);
 
     DOM::Element* topmost_special_node_below(const DOM::Element&);
 
@@ -49,11 +49,11 @@ public:
         DOM::Element* element;
         ssize_t index;
     };
-    LastElementResult last_element_with_tag_name(const FlyString&);
+    LastElementResult last_element_with_tag_name(FlyString const&);
     DOM::Element* element_before(const DOM::Element&);
 
 private:
-    bool has_in_scope_impl(const FlyString& tag_name, const Vector<FlyString>&) const;
+    bool has_in_scope_impl(FlyString const& tag_name, const Vector<FlyString>&) const;
     bool has_in_scope_impl(const DOM::Element& target_node, const Vector<FlyString>&) const;
 
     NonnullRefPtrVector<DOM::Element> m_elements;

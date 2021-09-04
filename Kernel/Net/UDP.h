@@ -27,7 +27,7 @@ public:
     u16 checksum() const { return m_checksum; }
     void set_checksum(u16 checksum) { m_checksum = checksum; }
 
-    const void* payload() const { return this + 1; }
+    void const* payload() const { return this + 1; }
     void* payload() { return this + 1; }
 
 private:

@@ -174,7 +174,7 @@ KResultOr<FlatPtr> Process::sys$kill_thread(pid_t tid, int signal)
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$set_thread_name(pid_t tid, Userspace<const char*> user_name, size_t user_name_length)
+KResultOr<FlatPtr> Process::sys$set_thread_name(pid_t tid, Userspace<char const*> user_name, size_t user_name_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);

@@ -13,7 +13,7 @@
 
 int main(int argc, char** argv)
 {
-    const char* target = nullptr;
+    char const* target = nullptr;
     int max_file_size = 1024 * 1024;
     int count = 1024;
 

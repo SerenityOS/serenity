@@ -26,8 +26,8 @@ public:
 
     JS::FunctionObject& function();
 
-    const FlyString& type() const { return m_type; }
-    void set_type(const FlyString& type) { m_type = type; }
+    FlyString const& type() const { return m_type; }
+    void set_type(FlyString const& type) { m_type = type; }
 
     bool capture() const { return m_capture; }
     void set_capture(bool capture) { m_capture = capture; }

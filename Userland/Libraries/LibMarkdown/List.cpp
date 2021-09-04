@@ -13,7 +13,7 @@ String List::render_to_html() const
 {
     StringBuilder builder;
 
-    const char* tag = m_is_ordered ? "ol" : "ul";
+    char const* tag = m_is_ordered ? "ol" : "ul";
     builder.appendff("<{}>\n", tag);
 
     for (auto& item : m_items) {
@@ -71,7 +71,7 @@ OwnPtr<List> List::parse(Vector<StringView>::ConstIterator& lines)
     while (true) {
         if (lines.is_end())
             break;
-        const StringView& line = *lines;
+        StringView const& line = *lines;
         if (line.is_empty())
             break;
 

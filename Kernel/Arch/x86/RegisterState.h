@@ -123,7 +123,7 @@ struct [[gnu::packed]] RegisterState {
 #endif
 static_assert(REGISTER_STATE_SIZE == sizeof(RegisterState));
 
-inline void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_regs, const RegisterState& kernel_regs)
+inline void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_regs, RegisterState const& kernel_regs)
 {
 #if ARCH(I386)
     ptrace_regs.eax = kernel_regs.eax,
@@ -164,7 +164,7 @@ inline void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_
     ptrace_regs.gs = 0;
 }
 
-inline void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_regs, const PtraceRegisters& ptrace_regs)
+inline void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_regs, PtraceRegisters const& ptrace_regs)
 {
 #if ARCH(I386)
     kernel_regs.eax = ptrace_regs.eax;
@@ -219,7 +219,7 @@ inline void read_debug_registers_into(DebugRegisterState& state)
     state.dr7 = read_dr7();
 }
 
-inline void write_debug_registers_from(const DebugRegisterState& state)
+inline void write_debug_registers_from(DebugRegisterState const& state)
 {
     write_dr0(state.dr0);
     write_dr1(state.dr1);

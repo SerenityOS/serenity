@@ -78,7 +78,7 @@ bool Ext2FS::flush_super_block()
     return true;
 }
 
-const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const
+ext2_group_desc const& Ext2FS::group_descriptor(GroupIndex group_index) const
 {
     // FIXME: Should this fail gracefully somehow?
     VERIFY(group_index <= m_block_group_count);
@@ -554,7 +554,7 @@ Vector<Ext2FS::BlockIndex> Ext2FSInode::compute_block_list_impl(bool include_blo
     return block_list;
 }
 
-Vector<Ext2FS::BlockIndex> Ext2FSInode::compute_block_list_impl_internal(const ext2_inode& e2inode, bool include_block_list_blocks) const
+Vector<Ext2FS::BlockIndex> Ext2FSInode::compute_block_list_impl_internal(ext2_inode const& e2inode, bool include_block_list_blocks) const
 {
     unsigned entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
 
@@ -854,7 +854,7 @@ KResultOr<size_t> Ext2FSInode::read_bytes(off_t offset, size_t count, UserOrKern
     if (is_symlink() && size() < max_inline_symlink_length) {
         VERIFY(offset == 0);
         size_t nread = min((off_t)size() - offset, static_cast<off_t>(count));
-        if (!buffer.write(((const u8*)m_raw_inode.i_block) + offset, nread))
+        if (!buffer.write(((u8 const*)m_raw_inode.i_block) + offset, nread))
             return EFAULT;
         return nread;
     }
@@ -984,7 +984,7 @@ KResult Ext2FSInode::resize(u64 new_size)
     return KSuccess;
 }
 
-KResultOr<size_t> Ext2FSInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& data, FileDescription* description)
+KResultOr<size_t> Ext2FSInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& data, FileDescription* description)
 {
     VERIFY(offset >= 0);
 
@@ -1055,7 +1055,7 @@ KResultOr<size_t> Ext2FSInode::write_bytes(off_t offset, size_t count, const Use
     return nwritten;
 }
 
-u8 Ext2FS::internal_file_type_to_directory_entry_type(const DirectoryEntryView& entry) const
+u8 Ext2FS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const
 {
     switch (entry.file_type) {
     case EXT2_FT_REG_FILE:
@@ -1183,7 +1183,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FSInode::create_child(StringView name, mode_
     return fs().create_inode(*this, name, mode, dev, uid, gid);
 }
 
-KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode)
+KResult Ext2FSInode::add_child(Inode& child, StringView const& name, mode_t mode)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(is_directory());
@@ -1229,7 +1229,7 @@ KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode
     return KSuccess;
 }
 
-KResult Ext2FSInode::remove_child(const StringView& name)
+KResult Ext2FSInode::remove_child(StringView const& name)
 {
     MutexLocker locker(m_inode_lock);
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::remove_child(): Removing '{}'", identifier(), name);
@@ -1288,13 +1288,13 @@ u64 Ext2FS::blocks_per_group() const
     return EXT2_BLOCKS_PER_GROUP(&super_block());
 }
 
-bool Ext2FS::write_ext2_inode(InodeIndex inode, const ext2_inode& e2inode)
+bool Ext2FS::write_ext2_inode(InodeIndex inode, ext2_inode const& e2inode)
 {
     BlockIndex block_index;
     unsigned offset;
     if (!find_block_containing_inode(inode, block_index, offset))
         return false;
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((const u8*)&e2inode));
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((u8 const*)&e2inode));
     if (auto result = write_block(block_index, buffer, inode_size(), offset); result.is_error()) {
         // FIXME: Propagate errors.
         return false;

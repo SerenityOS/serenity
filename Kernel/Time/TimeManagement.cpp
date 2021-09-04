@@ -65,7 +65,7 @@ Time TimeManagement::current_time(clockid_t clock_id) const
     }
 }
 
-bool TimeManagement::is_system_timer(const HardwareTimerBase& timer) const
+bool TimeManagement::is_system_timer(HardwareTimerBase const& timer) const
 {
     return &timer == m_system_timer.ptr();
 }
@@ -277,7 +277,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
         taken_non_periodic_timers_count += 1;
     }
 
-    m_system_timer->set_callback([this](const RegisterState& regs) {
+    m_system_timer->set_callback([this](RegisterState const& regs) {
         // Update the time. We don't really care too much about the
         // frequency of the interrupt because we'll query the main
         // counter to get an accurate time.
@@ -338,7 +338,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_legacy_hardware_timers()
     return true;
 }
 
-void TimeManagement::update_time(const RegisterState&)
+void TimeManagement::update_time(RegisterState const&)
 {
     TimeManagement::the().increment_time_since_boot();
 }
@@ -401,7 +401,7 @@ void TimeManagement::increment_time_since_boot()
     update_time_page();
 }
 
-void TimeManagement::system_timer_tick(const RegisterState& regs)
+void TimeManagement::system_timer_tick(RegisterState const& regs)
 {
     if (Processor::current_in_irq() <= 1) {
         // Don't expire timers while handling IRQs

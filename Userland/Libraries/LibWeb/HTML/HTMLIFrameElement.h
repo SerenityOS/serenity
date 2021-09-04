@@ -21,9 +21,9 @@ public:
 
 private:
     virtual void inserted() override;
-    virtual void parse_attribute(const FlyString& name, const String& value) override;
+    virtual void parse_attribute(FlyString const& name, String const& value) override;
 
-    void load_src(const String&);
+    void load_src(String const&);
 };
 
 }

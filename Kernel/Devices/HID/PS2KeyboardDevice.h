@@ -22,7 +22,7 @@ class PS2KeyboardDevice final : public IRQHandler
     , public KeyboardDevice
     , public I8042Device {
 public:
-    static RefPtr<PS2KeyboardDevice> try_to_initialize(const I8042Controller&);
+    static RefPtr<PS2KeyboardDevice> try_to_initialize(I8042Controller const&);
     virtual ~PS2KeyboardDevice() override;
     bool initialize();
 
@@ -36,10 +36,10 @@ public:
     }
 
 private:
-    explicit PS2KeyboardDevice(const I8042Controller&);
+    explicit PS2KeyboardDevice(I8042Controller const&);
 
     // ^IRQHandler
-    virtual bool handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(RegisterState const&) override;
 
     // ^CharacterDevice
     virtual StringView class_name() const override { return "KeyboardDevice"; }

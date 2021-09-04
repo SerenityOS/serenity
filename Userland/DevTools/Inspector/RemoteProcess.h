@@ -23,24 +23,24 @@ public:
     void update();
 
     pid_t pid() const { return m_pid; }
-    const String& process_name() const { return m_process_name; }
+    String const& process_name() const { return m_process_name; }
 
     RemoteObjectGraphModel& object_graph_model() { return *m_object_graph_model; }
     const NonnullOwnPtrVector<RemoteObject>& roots() const { return m_roots; }
 
     void set_inspected_object(FlatPtr);
 
-    void set_property(FlatPtr object, const StringView& name, const JsonValue& value);
+    void set_property(FlatPtr object, StringView const& name, JsonValue const& value);
 
     bool is_inspectable();
 
     Function<void()> on_update;
 
 private:
-    void handle_get_all_objects_response(const JsonObject&);
-    void handle_identify_response(const JsonObject&);
+    void handle_get_all_objects_response(JsonObject const&);
+    void handle_identify_response(JsonObject const&);
 
-    void send_request(const JsonObject&);
+    void send_request(JsonObject const&);
 
     pid_t m_pid { -1 };
     String m_process_name;

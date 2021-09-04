@@ -85,7 +85,7 @@ void _entry(int argc, char** argv, char** envp)
             main_program_fd = auxvp->a_un.a_val;
         }
         if (auxvp->a_type == ELF::AuxiliaryValue::ExecFilename) {
-            main_program_name = (const char*)auxvp->a_un.a_ptr;
+            main_program_name = (char const*)auxvp->a_un.a_ptr;
         }
         if (auxvp->a_type == ELF::AuxiliaryValue::Secure) {
             is_secure = auxvp->a_un.a_val == 1;

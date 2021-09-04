@@ -28,11 +28,11 @@
 #include <stdio.h>
 #include <time.h>
 
-static const char* secret_key = "WellHelloFreinds";
-static const char* suite = nullptr;
-static const char* filename = nullptr;
-static const char* server = nullptr;
-static const char* ca_certs_file = "/etc/ca_certs.ini";
+static char const* secret_key = "WellHelloFreinds";
+static char const* suite = nullptr;
+static char const* filename = nullptr;
+static char const* server = nullptr;
+static char const* ca_certs_file = "/etc/ca_certs.ini";
 static int key_bits = 128;
 static bool binary = false;
 static bool interactive = false;
@@ -46,11 +46,11 @@ static struct timeval start_time {
 static bool g_some_test_failed = false;
 static bool encrypting = true;
 
-constexpr const char* DEFAULT_DIGEST_SUITE { "HMAC-SHA256" };
-constexpr const char* DEFAULT_CHECKSUM_SUITE { "CRC32" };
-constexpr const char* DEFAULT_HASH_SUITE { "SHA256" };
-constexpr const char* DEFAULT_CIPHER_SUITE { "AES_CBC" };
-constexpr const char* DEFAULT_SERVER { "www.google.com" };
+constexpr char const* DEFAULT_DIGEST_SUITE { "HMAC-SHA256" };
+constexpr char const* DEFAULT_CHECKSUM_SUITE { "CRC32" };
+constexpr char const* DEFAULT_HASH_SUITE { "SHA256" };
+constexpr char const* DEFAULT_CIPHER_SUITE { "AES_CBC" };
+constexpr char const* DEFAULT_SERVER { "www.google.com" };
 
 static Vector<Certificate> s_root_ca_certificates;
 
@@ -99,7 +99,7 @@ static void print_buffer(ReadonlyBytes buffer, int split)
 
 static Core::EventLoop g_loop;
 
-static int run(Function<void(const char*, size_t)> fn)
+static int run(Function<void(char const*, size_t)> fn)
 {
     if (interactive) {
         auto editor = Line::Editor::construct();
@@ -133,13 +133,13 @@ static int run(Function<void(const char*, size_t)> fn)
             return 1;
         }
         auto buffer = file.value()->read_all();
-        fn((const char*)buffer.data(), buffer.size());
+        fn((char const*)buffer.data(), buffer.size());
         g_loop.exec();
     }
     return 0;
 }
 
-static void tls(const char* message, size_t len)
+static void tls(char const* message, size_t len)
 {
     static RefPtr<TLS::TLSv12> tls;
     static ByteBuffer write {};
@@ -169,7 +169,7 @@ static void tls(const char* message, size_t len)
     write.append("\r\n", 2);
 }
 
-static void aes_cbc(const char* message, size_t len)
+static void aes_cbc(char const* message, size_t len)
 {
     ReadonlyBytes buffer { message, len };
     // FIXME: Take iv as an optional parameter
@@ -201,87 +201,87 @@ static void aes_cbc(const char* message, size_t len)
     }
 }
 
-static void adler32(const char* message, size_t len)
+static void adler32(char const* message, size_t len)
 {
-    auto checksum = Crypto::Checksum::Adler32({ (const u8*)message, len });
+    auto checksum = Crypto::Checksum::Adler32({ (u8 const*)message, len });
     outln("{:#10X}", checksum.digest());
 }
 
-static void crc32(const char* message, size_t len)
+static void crc32(char const* message, size_t len)
 {
-    auto checksum = Crypto::Checksum::CRC32({ (const u8*)message, len });
+    auto checksum = Crypto::Checksum::CRC32({ (u8 const*)message, len });
     outln("{:#10X}", checksum.digest());
 }
 
-static void md5(const char* message, size_t len)
+static void md5(char const* message, size_t len)
 {
-    auto digest = Crypto::Hash::MD5::hash((const u8*)message, len);
+    auto digest = Crypto::Hash::MD5::hash((u8 const*)message, len);
     if (binary)
         out("{}", StringView { digest.data, Crypto::Hash::MD5::digest_size() });
     else
         print_buffer({ digest.data, Crypto::Hash::MD5::digest_size() }, -1);
 }
 
-static void hmac_md5(const char* message, size_t len)
+static void hmac_md5(char const* message, size_t len)
 {
     Crypto::Authentication::HMAC<Crypto::Hash::MD5> hmac(secret_key);
-    auto mac = hmac.process((const u8*)message, len);
+    auto mac = hmac.process((u8 const*)message, len);
     if (binary)
         out("{}", StringView { mac.data, hmac.digest_size() });
     else
         print_buffer({ mac.data, hmac.digest_size() }, -1);
 }
 
-static void sha1(const char* message, size_t len)
+static void sha1(char const* message, size_t len)
 {
-    auto digest = Crypto::Hash::SHA1::hash((const u8*)message, len);
+    auto digest = Crypto::Hash::SHA1::hash((u8 const*)message, len);
     if (binary)
         out("{}", StringView { digest.data, Crypto::Hash::SHA1::digest_size() });
     else
         print_buffer({ digest.data, Crypto::Hash::SHA1::digest_size() }, -1);
 }
 
-static void sha256(const char* message, size_t len)
+static void sha256(char const* message, size_t len)
 {
-    auto digest = Crypto::Hash::SHA256::hash((const u8*)message, len);
+    auto digest = Crypto::Hash::SHA256::hash((u8 const*)message, len);
     if (binary)
         out("{}", StringView { digest.data, Crypto::Hash::SHA256::digest_size() });
     else
         print_buffer({ digest.data, Crypto::Hash::SHA256::digest_size() }, -1);
 }
 
-static void hmac_sha256(const char* message, size_t len)
+static void hmac_sha256(char const* message, size_t len)
 {
     Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac(secret_key);
-    auto mac = hmac.process((const u8*)message, len);
+    auto mac = hmac.process((u8 const*)message, len);
     if (binary)
         out("{}", StringView { mac.data, hmac.digest_size() });
     else
         print_buffer({ mac.data, hmac.digest_size() }, -1);
 }
 
-static void sha384(const char* message, size_t len)
+static void sha384(char const* message, size_t len)
 {
-    auto digest = Crypto::Hash::SHA384::hash((const u8*)message, len);
+    auto digest = Crypto::Hash::SHA384::hash((u8 const*)message, len);
     if (binary)
         out("{}", StringView { digest.data, Crypto::Hash::SHA384::digest_size() });
     else
         print_buffer({ digest.data, Crypto::Hash::SHA384::digest_size() }, -1);
 }
 
-static void sha512(const char* message, size_t len)
+static void sha512(char const* message, size_t len)
 {
-    auto digest = Crypto::Hash::SHA512::hash((const u8*)message, len);
+    auto digest = Crypto::Hash::SHA512::hash((u8 const*)message, len);
     if (binary)
         out("{}", StringView { digest.data, Crypto::Hash::SHA512::digest_size() });
     else
         print_buffer({ digest.data, Crypto::Hash::SHA512::digest_size() }, -1);
 }
 
-static void hmac_sha512(const char* message, size_t len)
+static void hmac_sha512(char const* message, size_t len)
 {
     Crypto::Authentication::HMAC<Crypto::Hash::SHA512> hmac(secret_key);
-    auto mac = hmac.process((const u8*)message, len);
+    auto mac = hmac.process((u8 const*)message, len);
     if (binary)
         out("{}", StringView { mac.data, hmac.digest_size() });
     else
@@ -290,7 +290,7 @@ static void hmac_sha512(const char* message, size_t len)
 
 auto main(int argc, char** argv) -> int
 {
-    const char* mode = nullptr;
+    char const* mode = nullptr;
     Core::ArgsParser parser;
     parser.add_positional_argument(mode, "mode to operate in ('list' to see modes and descriptions)", "mode");
 
@@ -547,7 +547,7 @@ auto main(int argc, char** argv) -> int
         g_some_test_failed = true; \
     } while (0)
 
-static ByteBuffer operator""_b(const char* string, size_t length)
+static ByteBuffer operator""_b(char const* string, size_t length)
 {
     return ByteBuffer::copy(string, length);
 }

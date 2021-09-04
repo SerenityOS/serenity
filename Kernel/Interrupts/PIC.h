@@ -13,13 +13,13 @@ namespace Kernel {
 class PIC final : public IRQController {
 public:
     PIC();
-    virtual void enable(const GenericInterruptHandler&) override;
-    virtual void disable(const GenericInterruptHandler&) override;
+    virtual void enable(GenericInterruptHandler const&) override;
+    virtual void disable(GenericInterruptHandler const&) override;
     virtual void hard_disable() override;
-    virtual void eoi(const GenericInterruptHandler&) const override;
+    virtual void eoi(GenericInterruptHandler const&) const override;
     virtual bool is_vector_enabled(u8 number) const override;
     virtual bool is_enabled() const override;
-    virtual void spurious_eoi(const GenericInterruptHandler&) const override;
+    virtual void spurious_eoi(GenericInterruptHandler const&) const override;
     virtual u16 get_isr() const override;
     virtual u16 get_irr() const override;
     virtual u32 gsi_base() const override { return 0; }

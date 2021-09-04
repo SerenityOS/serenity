@@ -25,7 +25,7 @@ public:
     void set_client(ConsoleClient& client) { m_client = &client; }
 
     GlobalObject& global_object() { return m_global_object; }
-    const GlobalObject& global_object() const { return m_global_object; }
+    GlobalObject const& global_object() const { return m_global_object; }
 
     VM& vm();
 
@@ -77,7 +77,7 @@ protected:
     VM& vm();
 
     GlobalObject& global_object() { return m_console.global_object(); }
-    const GlobalObject& global_object() const { return m_console.global_object(); }
+    GlobalObject const& global_object() const { return m_console.global_object(); }
 
     Vector<String> get_trace() const;
 

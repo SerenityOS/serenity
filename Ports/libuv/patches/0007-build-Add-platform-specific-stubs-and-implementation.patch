@@ -62,7 +62,7 @@ index 0000000..821cf37
 +  uv__free(addresses);
 +}
 +
-+static int uv__slurp(const char* filename, char* buf, size_t len) {
++static int uv__slurp(char const* filename, char* buf, size_t len) {
 +  ssize_t n;
 +  int fd;
 +
@@ -88,7 +88,7 @@ index 0000000..821cf37
 +}
 +
 +
-+static uint64_t uv__read_proc_memstat(const char* what) {
++static uint64_t uv__read_proc_memstat(char const* what) {
 +  uint64_t rc;
 +  char* p;
 +  char buf[4096];  /* Large enough to hold all of /proc/memstat. */

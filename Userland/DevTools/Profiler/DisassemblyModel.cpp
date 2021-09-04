@@ -49,7 +49,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
                 return;
             m_kernel_file = file_or_error.release_value();
         }
-        kernel_elf = make<ELF::Image>((const u8*)m_kernel_file->data(), m_kernel_file->size());
+        kernel_elf = make<ELF::Image>((u8 const*)m_kernel_file->data(), m_kernel_file->size());
         elf = kernel_elf.ptr();
     } else {
         auto& process = node.process();
@@ -87,7 +87,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     auto view = symbol.value().raw_data().substring_view(symbol_offset_from_function_start);
 
     X86::ELFSymbolProvider symbol_provider(*elf);
-    X86::SimpleInstructionStream stream((const u8*)view.characters_without_null_termination(), view.length());
+    X86::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
     X86::Disassembler disassembler(stream);
 
     size_t offset_into_symbol = 0;
@@ -152,7 +152,7 @@ struct ColorPair {
     Color foreground;
 };
 
-static Optional<ColorPair> color_pair_for(const InstructionData& insn)
+static Optional<ColorPair> color_pair_for(InstructionData const& insn)
 {
     if (insn.percent == 0)
         return {};

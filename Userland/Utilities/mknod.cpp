@@ -39,7 +39,7 @@ int main(int argc, char** argv)
         return usage();
     }
 
-    const char* name = argv[1];
+    char const* name = argv[1];
     mode_t mode = 0666;
     switch (argv[2][0]) {
     case 'c':

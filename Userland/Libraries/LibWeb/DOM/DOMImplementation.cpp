@@ -20,7 +20,7 @@ DOMImplementation::DOMImplementation(Document& document)
 }
 
 // https://dom.spec.whatwg.org/#dom-domimplementation-createdocument
-NonnullRefPtr<Document> DOMImplementation::create_document(const String& namespace_, const String& qualified_name) const
+NonnullRefPtr<Document> DOMImplementation::create_document(String const& namespace_, String const& qualified_name) const
 {
     // FIXME: This should specifically be an XML document.
     auto xml_document = Document::create();
@@ -50,7 +50,7 @@ NonnullRefPtr<Document> DOMImplementation::create_document(const String& namespa
 }
 
 // https://dom.spec.whatwg.org/#dom-domimplementation-createhtmldocument
-NonnullRefPtr<Document> DOMImplementation::create_html_document(const String& title) const
+NonnullRefPtr<Document> DOMImplementation::create_html_document(String const& title) const
 {
     // FIXME: This should specifically be a HTML document.
     auto html_document = Document::create();
@@ -85,7 +85,7 @@ NonnullRefPtr<Document> DOMImplementation::create_html_document(const String& ti
 }
 
 // https://dom.spec.whatwg.org/#dom-domimplementation-createdocumenttype
-NonnullRefPtr<DocumentType> DOMImplementation::create_document_type(const String& qualified_name, const String& public_id, const String& system_id) const
+NonnullRefPtr<DocumentType> DOMImplementation::create_document_type(String const& qualified_name, String const& public_id, String const& system_id) const
 {
     // FIXME: Validate qualified_name.
     auto document_type = DocumentType::create(m_document);

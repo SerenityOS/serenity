@@ -197,7 +197,7 @@ bool AutocompleteProvider::Declaration::operator==(const AutocompleteProvider::D
     return name == other.name && position == other.position && type == other.type && scope == other.scope;
 }
 
-bool AutocompleteProvider::ProjectLocation::operator==(const ProjectLocation& other) const
+bool AutocompleteProvider::ProjectLocation::operator==(ProjectLocation const& other) const
 {
     return file == other.file && line == other.line && column == other.column;
 }

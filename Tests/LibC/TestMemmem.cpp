@@ -10,19 +10,19 @@
 #include <string.h>
 
 struct TestCase {
-    const u8* haystack;
+    u8 const* haystack;
     size_t haystack_length;
-    const u8* needle;
+    u8 const* needle;
     size_t needle_length;
     ssize_t matching_offset { -1 };
 };
 
 const static TestCase g_test_cases[] = {
-    { (const u8*) {}, 0u, (const u8*) {}, 0u, 0 },
+    { (u8 const*) {}, 0u, (u8 const*) {}, 0u, 0 },
     { (const u8[]) { 1, 2, 3 }, 3u, (const u8[]) { 1, 2, 3 }, 3u, 0 },
     { (const u8[]) { 1, 2, 4 }, 3u, (const u8[]) { 1, 2, 3 }, 3u, -1 },
-    { (const u8*)"abcdef", 6u, (const u8[]) {}, 0u, 0 },
-    { (const u8*)"abcdef", 6u, (const u8*)"de", 2u, 3 },
+    { (u8 const*)"abcdef", 6u, (const u8[]) {}, 0u, 0 },
+    { (u8 const*)"abcdef", 6u, (u8 const*)"de", 2u, 3 },
     { (const u8[]) { 0, 1, 2, 5, 2, 5 }, 6u, (const u8[]) { 1 }, 1u, 1 },
     { (const u8[]) { 0, 1, 2, 5, 2, 5 }, 6u, (const u8[]) { 1, 2 }, 2u, 1 },
     { (const u8[]) { 0, 1, 1, 2 }, 4u, (const u8[]) { 1, 5 }, 2u, -1 },
@@ -33,7 +33,7 @@ const static TestCase g_test_cases[] = {
 TEST_CASE(memmem_search)
 {
     size_t i = 0;
-    for (const auto& test_case : g_test_cases) {
+    for (auto const& test_case : g_test_cases) {
         auto expected = test_case.matching_offset >= 0 ? test_case.haystack + test_case.matching_offset : nullptr;
         auto result = memmem(test_case.haystack, test_case.haystack_length, test_case.needle, test_case.needle_length);
         if (result != expected) {

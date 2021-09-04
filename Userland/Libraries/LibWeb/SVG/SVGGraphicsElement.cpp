@@ -13,7 +13,7 @@ SVGGraphicsElement::SVGGraphicsElement(DOM::Document& document, QualifiedName qu
 {
 }
 
-void SVGGraphicsElement::parse_attribute(const FlyString& name, const String& value)
+void SVGGraphicsElement::parse_attribute(FlyString const& name, String const& value)
 {
     SVGElement::parse_attribute(name, value);
 

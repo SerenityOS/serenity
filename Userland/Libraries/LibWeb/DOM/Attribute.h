@@ -12,16 +12,16 @@ namespace Web {
 
 class Attribute {
 public:
-    Attribute(const FlyString& name, const String& value)
+    Attribute(FlyString const& name, String const& value)
         : m_name(name)
         , m_value(value)
     {
     }
 
-    const FlyString& name() const { return m_name; }
-    const String& value() const { return m_value; }
+    FlyString const& name() const { return m_name; }
+    String const& value() const { return m_value; }
 
-    void set_value(const String& value) { m_value = value; }
+    void set_value(String const& value) { m_value = value; }
 
 private:
     FlyString m_name;

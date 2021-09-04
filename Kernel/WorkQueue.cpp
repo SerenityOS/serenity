@@ -19,7 +19,7 @@ UNMAP_AFTER_INIT void WorkQueue::initialize()
     g_io_work = new WorkQueue("IO WorkQueue");
 }
 
-UNMAP_AFTER_INIT WorkQueue::WorkQueue(const char* name)
+UNMAP_AFTER_INIT WorkQueue::WorkQueue(char const* name)
 {
     RefPtr<Thread> thread;
     Process::create_kernel_process(thread, name, [this] {

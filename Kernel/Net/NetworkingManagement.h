@@ -30,8 +30,8 @@ public:
 
     void for_each(Function<void(NetworkAdapter&)>);
 
-    RefPtr<NetworkAdapter> from_ipv4_address(const IPv4Address&) const;
-    RefPtr<NetworkAdapter> lookup_by_name(const StringView&) const;
+    RefPtr<NetworkAdapter> from_ipv4_address(IPv4Address const&) const;
+    RefPtr<NetworkAdapter> lookup_by_name(StringView const&) const;
 
     NonnullRefPtr<NetworkAdapter> loopback_adapter() const;
 

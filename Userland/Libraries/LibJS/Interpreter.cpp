@@ -36,7 +36,7 @@ Interpreter::~Interpreter()
 {
 }
 
-void Interpreter::run(GlobalObject& global_object, const Program& program)
+void Interpreter::run(GlobalObject& global_object, Program const& program)
 {
     auto& vm = this->vm();
     VERIFY(!vm.exception());
@@ -75,12 +75,12 @@ GlobalObject& Interpreter::global_object()
     return static_cast<GlobalObject&>(*m_global_object.cell());
 }
 
-const GlobalObject& Interpreter::global_object() const
+GlobalObject const& Interpreter::global_object() const
 {
-    return static_cast<const GlobalObject&>(*m_global_object.cell());
+    return static_cast<GlobalObject const&>(*m_global_object.cell());
 }
 
-void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type, GlobalObject& global_object)
+void Interpreter::enter_scope(ScopeNode const& scope_node, ScopeType scope_type, GlobalObject& global_object)
 {
     ScopeGuard guard([&] {
         for (auto& declaration : scope_node.hoisted_functions()) {
@@ -112,7 +112,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
                         global_object.define_direct_property(id->string(), js_undefined(), JS::Attribute::Writable | JS::Attribute::Enumerable);
                     },
                     [&](const NonnullRefPtr<BindingPattern>& binding) {
-                        binding->for_each_bound_name([&](const auto& name) {
+                        binding->for_each_bound_name([&](auto const& name) {
                             global_object.define_direct_property(name, js_undefined(), JS::Attribute::Writable | JS::Attribute::Enumerable);
                         });
                     });
@@ -124,7 +124,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
                         scope_variables_with_declaration_kind.set(id->string(), { js_undefined(), declaration.declaration_kind() });
                     },
                     [&](const NonnullRefPtr<BindingPattern>& binding) {
-                        binding->for_each_bound_name([&](const auto& name) {
+                        binding->for_each_bound_name([&](auto const& name) {
                             scope_variables_with_declaration_kind.set(name, { js_undefined(), declaration.declaration_kind() });
                         });
                     });
@@ -144,7 +144,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
     push_scope({ scope_type, scope_node, pushed_environment });
 }
 
-void Interpreter::exit_scope(const ScopeNode& scope_node)
+void Interpreter::exit_scope(ScopeNode const& scope_node)
 {
     while (!m_scope_stack.is_empty()) {
         auto popped_scope = m_scope_stack.take_last();
@@ -166,12 +166,12 @@ void Interpreter::push_scope(ScopeFrame frame)
     m_scope_stack.append(move(frame));
 }
 
-Value Interpreter::execute_statement(GlobalObject& global_object, const Statement& statement, ScopeType scope_type)
+Value Interpreter::execute_statement(GlobalObject& global_object, Statement const& statement, ScopeType scope_type)
 {
     if (!is<ScopeNode>(statement))
         return statement.execute(*this, global_object);
 
-    auto& block = static_cast<const ScopeNode&>(statement);
+    auto& block = static_cast<ScopeNode const&>(statement);
     enter_scope(block, scope_type, global_object);
 
     Value last_value;

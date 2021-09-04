@@ -27,8 +27,8 @@ struct __Dl_info;
 typedef struct __Dl_info Dl_info;
 
 typedef Result<void, DlErrorMessage> (*DlCloseFunction)(void*);
-typedef Result<void*, DlErrorMessage> (*DlOpenFunction)(const char*, int);
-typedef Result<void*, DlErrorMessage> (*DlSymFunction)(void*, const char*);
+typedef Result<void*, DlErrorMessage> (*DlOpenFunction)(char const*, int);
+typedef Result<void*, DlErrorMessage> (*DlSymFunction)(void*, char const*);
 typedef Result<void, DlErrorMessage> (*DlAddrFunction)(void*, Dl_info*);
 
 extern "C" {

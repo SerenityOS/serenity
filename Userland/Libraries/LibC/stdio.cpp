@@ -52,7 +52,7 @@ public:
     void clear_err() { m_error = 0; }
 
     size_t read(u8*, size_t);
-    size_t write(const u8*, size_t);
+    size_t write(u8 const*, size_t);
 
     bool gets(u8*, size_t);
     bool ungetc(u8 byte) { return m_buffer.enqueue_front(byte); }
@@ -88,7 +88,7 @@ private:
         bool is_not_empty() const { return m_ungotten || !m_empty; }
         size_t buffered_size() const;
 
-        const u8* begin_dequeue(size_t& available_size) const;
+        u8 const* begin_dequeue(size_t& available_size) const;
         void did_dequeue(size_t actual_size);
 
         u8* begin_enqueue(size_t& available_size) const;
@@ -115,7 +115,7 @@ private:
 
     // Read or write using the underlying fd, bypassing the buffer.
     ssize_t do_read(u8*, size_t);
-    ssize_t do_write(const u8*, size_t);
+    ssize_t do_write(u8 const*, size_t);
 
     // Read some data into the buffer.
     bool read_into_buffer();
@@ -210,7 +210,7 @@ ssize_t FILE::do_read(u8* data, size_t size)
     return nread;
 }
 
-ssize_t FILE::do_write(const u8* data, size_t size)
+ssize_t FILE::do_write(u8 const* data, size_t size)
 {
     int nwritten = ::write(m_fd, data, size);
 
@@ -240,7 +240,7 @@ bool FILE::read_into_buffer()
 bool FILE::write_from_buffer()
 {
     size_t size;
-    const u8* data = m_buffer.begin_dequeue(size);
+    u8 const* data = m_buffer.begin_dequeue(size);
     // If we want to write, the buffer must have something in it!
     VERIFY(size);
 
@@ -266,7 +266,7 @@ size_t FILE::read(u8* data, size_t size)
         if (m_buffer.may_use()) {
             // Let's see if the buffer has something queued for us.
             size_t queued_size;
-            const u8* queued_data = m_buffer.begin_dequeue(queued_size);
+            u8 const* queued_data = m_buffer.begin_dequeue(queued_size);
             if (queued_size == 0) {
                 // Nothing buffered; we're going to have to read some.
                 bool read_some_more = read_into_buffer();
@@ -295,7 +295,7 @@ size_t FILE::read(u8* data, size_t size)
     return total_read;
 }
 
-size_t FILE::write(const u8* data, size_t size)
+size_t FILE::write(u8 const* data, size_t size)
 {
     size_t total_written = 0;
 
@@ -361,7 +361,7 @@ bool FILE::gets(u8* data, size_t size)
         if (m_buffer.may_use()) {
             // Let's see if the buffer has something queued for us.
             size_t queued_size;
-            const u8* queued_data = m_buffer.begin_dequeue(queued_size);
+            u8 const* queued_data = m_buffer.begin_dequeue(queued_size);
             if (queued_size == 0) {
                 // Nothing buffered; we're going to have to read some.
                 bool read_some_more = read_into_buffer();
@@ -499,7 +499,7 @@ size_t FILE::Buffer::buffered_size() const
         return m_capacity - (m_begin - m_end);
 }
 
-const u8* FILE::Buffer::begin_dequeue(size_t& available_size) const
+u8 const* FILE::Buffer::begin_dequeue(size_t& available_size) const
 {
     if (m_ungotten) {
         available_size = 1;
@@ -798,18 +798,18 @@ int putchar(int ch)
     return putc(ch, stdout);
 }
 
-int fputs(const char* s, FILE* stream)
+int fputs(char const* s, FILE* stream)
 {
     VERIFY(stream);
     size_t len = strlen(s);
     ScopedFileLock lock(stream);
-    size_t nwritten = stream->write(reinterpret_cast<const u8*>(s), len);
+    size_t nwritten = stream->write(reinterpret_cast<u8 const*>(s), len);
     if (nwritten < len)
         return EOF;
     return 1;
 }
 
-int puts(const char* s)
+int puts(char const* s)
 {
     int rc = fputs(s, stdout);
     if (rc == EOF)
@@ -849,13 +849,13 @@ size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
     return fread_unlocked(ptr, size, nmemb, stream);
 }
 
-size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
+size_t fwrite(void const* ptr, size_t size, size_t nmemb, FILE* stream)
 {
     VERIFY(stream);
     VERIFY(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
 
     ScopedFileLock lock(stream);
-    size_t nwritten = stream->write(reinterpret_cast<const u8*>(ptr), size * nmemb);
+    size_t nwritten = stream->write(reinterpret_cast<u8 const*>(ptr), size * nmemb);
     if (!nwritten)
         return 0;
     return nwritten / size;
@@ -903,7 +903,7 @@ int fgetpos(FILE* stream, fpos_t* pos)
     return 0;
 }
 
-int fsetpos(FILE* stream, const fpos_t* pos)
+int fsetpos(FILE* stream, fpos_t const* pos)
 {
     VERIFY(stream);
     VERIFY(pos);
@@ -929,13 +929,13 @@ ALWAYS_INLINE static void stream_putch(char*&, char ch)
     fputc(ch, __current_stream);
 }
 
-int vfprintf(FILE* stream, const char* fmt, va_list ap)
+int vfprintf(FILE* stream, char const* fmt, va_list ap)
 {
     __current_stream = stream;
     return printf_internal(stream_putch, nullptr, fmt, ap);
 }
 
-int fprintf(FILE* stream, const char* fmt, ...)
+int fprintf(FILE* stream, char const* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -944,12 +944,12 @@ int fprintf(FILE* stream, const char* fmt, ...)
     return ret;
 }
 
-int vprintf(const char* fmt, va_list ap)
+int vprintf(char const* fmt, va_list ap)
 {
     return printf_internal(stdout_putch, nullptr, fmt, ap);
 }
 
-int printf(const char* fmt, ...)
+int printf(char const* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -958,7 +958,7 @@ int printf(const char* fmt, ...)
     return ret;
 }
 
-int vasprintf(char** strp, const char* fmt, va_list ap)
+int vasprintf(char** strp, char const* fmt, va_list ap)
 {
     StringBuilder builder;
     builder.appendvf(fmt, ap);
@@ -968,7 +968,7 @@ int vasprintf(char** strp, const char* fmt, va_list ap)
     return length;
 }
 
-int asprintf(char** strp, const char* fmt, ...)
+int asprintf(char** strp, char const* fmt, ...)
 {
     StringBuilder builder;
     va_list ap;
@@ -986,14 +986,14 @@ static void buffer_putch(char*& bufptr, char ch)
     *bufptr++ = ch;
 }
 
-int vsprintf(char* buffer, const char* fmt, va_list ap)
+int vsprintf(char* buffer, char const* fmt, va_list ap)
 {
     int ret = printf_internal(buffer_putch, buffer, fmt, ap);
     buffer[ret] = '\0';
     return ret;
 }
 
-int sprintf(char* buffer, const char* fmt, ...)
+int sprintf(char* buffer, char const* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -1011,7 +1011,7 @@ ALWAYS_INLINE void sized_buffer_putch(char*& bufptr, char ch)
     }
 }
 
-int vsnprintf(char* buffer, size_t size, const char* fmt, va_list ap)
+int vsnprintf(char* buffer, size_t size, char const* fmt, va_list ap)
 {
     if (size) {
         __vsnprintf_space_remaining = size - 1;
@@ -1027,7 +1027,7 @@ int vsnprintf(char* buffer, size_t size, const char* fmt, va_list ap)
     return ret;
 }
 
-int snprintf(char* buffer, size_t size, const char* fmt, ...)
+int snprintf(char* buffer, size_t size, char const* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -1036,14 +1036,14 @@ int snprintf(char* buffer, size_t size, const char* fmt, ...)
     return ret;
 }
 
-void perror(const char* s)
+void perror(char const* s)
 {
     int saved_errno = errno;
     dbgln("perror(): {}: {}", s, strerror(saved_errno));
     warnln("{}: {}", s, strerror(saved_errno));
 }
 
-static int parse_mode(const char* mode)
+static int parse_mode(char const* mode)
 {
     int flags = 0;
 
@@ -1080,7 +1080,7 @@ static int parse_mode(const char* mode)
     return flags;
 }
 
-FILE* fopen(const char* pathname, const char* mode)
+FILE* fopen(char const* pathname, char const* mode)
 {
     int flags = parse_mode(mode);
     int fd = open(pathname, flags, 0666);
@@ -1089,7 +1089,7 @@ FILE* fopen(const char* pathname, const char* mode)
     return FILE::create(fd, flags);
 }
 
-FILE* freopen(const char* pathname, const char* mode, FILE* stream)
+FILE* freopen(char const* pathname, char const* mode, FILE* stream)
 {
     VERIFY(stream);
     if (!pathname) {
@@ -1106,7 +1106,7 @@ FILE* freopen(const char* pathname, const char* mode, FILE* stream)
     return stream;
 }
 
-FILE* fdopen(int fd, const char* mode)
+FILE* fdopen(int fd, char const* mode)
 {
     int flags = parse_mode(mode);
     // FIXME: Verify that the mode matches how fd is already open.
@@ -1138,7 +1138,7 @@ int fclose(FILE* stream)
     return ok ? 0 : EOF;
 }
 
-int rename(const char* oldpath, const char* newpath)
+int rename(char const* oldpath, char const* newpath)
 {
     if (!oldpath || !newpath) {
         errno = EFAULT;
@@ -1154,7 +1154,7 @@ void dbgputch(char ch)
     syscall(SC_dbgputch, ch);
 }
 
-void dbgputstr(const char* characters, size_t length)
+void dbgputstr(char const* characters, size_t length)
 {
     syscall(SC_dbgputstr, characters, length);
 }
@@ -1165,7 +1165,7 @@ char* tmpnam(char*)
     TODO();
 }
 
-FILE* popen(const char* command, const char* type)
+FILE* popen(char const* command, char const* type)
 {
     if (!type || (*type != 'r' && *type != 'w')) {
         errno = EINVAL;
@@ -1239,7 +1239,7 @@ int pclose(FILE* stream)
     return wstatus;
 }
 
-int remove(const char* pathname)
+int remove(char const* pathname)
 {
     int rc = unlink(pathname);
     if (rc < 0 && errno == EISDIR)
@@ -1247,7 +1247,7 @@ int remove(const char* pathname)
     return rc;
 }
 
-int scanf(const char* fmt, ...)
+int scanf(char const* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -1256,7 +1256,7 @@ int scanf(const char* fmt, ...)
     return count;
 }
 
-int fscanf(FILE* stream, const char* fmt, ...)
+int fscanf(FILE* stream, char const* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -1265,7 +1265,7 @@ int fscanf(FILE* stream, const char* fmt, ...)
     return count;
 }
 
-int sscanf(const char* buffer, const char* fmt, ...)
+int sscanf(char const* buffer, char const* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -1274,7 +1274,7 @@ int sscanf(const char* buffer, const char* fmt, ...)
     return count;
 }
 
-int vfscanf(FILE* stream, const char* fmt, va_list ap)
+int vfscanf(FILE* stream, char const* fmt, va_list ap)
 {
     char buffer[BUFSIZ];
     if (!fgets(buffer, sizeof(buffer) - 1, stream))
@@ -1282,7 +1282,7 @@ int vfscanf(FILE* stream, const char* fmt, va_list ap)
     return vsscanf(buffer, fmt, ap);
 }
 
-int vscanf(const char* fmt, va_list ap)
+int vscanf(char const* fmt, va_list ap)
 {
     return vfscanf(stdin, fmt, ap);
 }

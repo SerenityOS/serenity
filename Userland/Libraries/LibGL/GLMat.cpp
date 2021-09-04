@@ -35,7 +35,7 @@ void glPopMatrix()
     g_gl_context->gl_pop_matrix();
 }
 
-void glLoadMatrixf(const GLfloat* matrix)
+void glLoadMatrixf(GLfloat const* matrix)
 {
     // Transpose the matrix here because glLoadMatrix expects elements
     // in column major order but out Matrix class stores elements in

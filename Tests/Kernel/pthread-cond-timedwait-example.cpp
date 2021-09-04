@@ -14,7 +14,7 @@
 #include <unistd.h>
 
 struct worker_t {
-    const char* name;
+    char const* name;
     int count;
     pthread_t thread;
     pthread_mutex_t lock;
@@ -45,7 +45,7 @@ static void* run_worker(void* args)
     return nullptr;
 }
 
-static void init_worker(worker_t* worker, const char* name, long int wait_time)
+static void init_worker(worker_t* worker, char const* name, long int wait_time)
 {
     worker->name = name;
     worker->wait_time = wait_time;

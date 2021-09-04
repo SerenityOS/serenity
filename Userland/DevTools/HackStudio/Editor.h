@@ -29,7 +29,7 @@ public:
     Function<void(String)> on_open;
 
     EditorWrapper& wrapper();
-    const EditorWrapper& wrapper() const;
+    EditorWrapper const& wrapper() const;
 
     const Vector<size_t>& breakpoint_lines() const { return code_document().breakpoint_lines(); }
     Vector<size_t>& breakpoint_lines() { return code_document().breakpoint_lines(); }
@@ -39,7 +39,7 @@ public:
     void clear_execution_position();
     void set_debug_mode(bool);
 
-    const CodeDocument& code_document() const;
+    CodeDocument const& code_document() const;
     CodeDocument& code_document();
 
     virtual void set_document(GUI::TextDocument&) override;
@@ -66,7 +66,7 @@ private:
     virtual void leave_event(Core::Event&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
 
-    void show_documentation_tooltip_if_available(const String&, const Gfx::IntPoint& screen_location);
+    void show_documentation_tooltip_if_available(String const&, const Gfx::IntPoint& screen_location);
     void navigate_to_include_if_available(String);
     void on_navigatable_link_click(const GUI::TextDocumentSpan&);
     void on_identifier_click(const GUI::TextDocumentSpan&);
@@ -95,8 +95,8 @@ private:
     Optional<AutoCompleteRequestData> get_autocomplete_request_data();
 
     void flush_file_content_to_langauge_server();
-    void set_syntax_highlighter_for(const CodeDocument&);
-    void set_language_client_for(const CodeDocument&);
+    void set_syntax_highlighter_for(CodeDocument const&);
+    void set_language_client_for(CodeDocument const&);
     void set_autocomplete_provider_for(CodeDocument const&);
     void handle_function_parameters_hint_request();
 

@@ -35,7 +35,7 @@ public:
     static ScreenInput& the();
 
     Screen& cursor_location_screen();
-    const Screen& cursor_location_screen() const;
+    Screen const& cursor_location_screen() const;
     unsigned mouse_button_state() const { return m_mouse_button_state; }
 
     double acceleration_factor() const { return m_acceleration_factor; }
@@ -44,7 +44,7 @@ public:
     unsigned scroll_step_size() const { return m_scroll_step_size; }
     void set_scroll_step_size(unsigned);
 
-    void on_receive_mouse_data(const MousePacket&);
+    void on_receive_mouse_data(MousePacket const&);
     void on_receive_keyboard_data(::KeyEvent);
 
     Gfx::IntPoint cursor_location() const { return m_cursor_location; }
@@ -81,7 +81,7 @@ public:
     ~Screen();
 
     static bool apply_layout(ScreenLayout&&, String&);
-    static const ScreenLayout& layout() { return s_layout; }
+    static ScreenLayout const& layout() { return s_layout; }
 
     static Screen& main()
     {

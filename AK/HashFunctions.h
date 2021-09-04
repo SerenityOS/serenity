@@ -49,7 +49,7 @@ constexpr unsigned ptr_hash(FlatPtr ptr)
         return int_hash(ptr);
 }
 
-inline unsigned ptr_hash(const void* ptr)
+inline unsigned ptr_hash(void const* ptr)
 {
     return ptr_hash(FlatPtr(ptr));
 }

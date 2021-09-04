@@ -72,7 +72,7 @@ String HTMLElement::content_editable() const
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#contenteditable
-DOM::ExceptionOr<void> HTMLElement::set_content_editable(const String& content_editable)
+DOM::ExceptionOr<void> HTMLElement::set_content_editable(String const& content_editable)
 {
     if (content_editable.equals_ignoring_case("inherit")) {
         remove_attribute(HTML::AttributeNames::contenteditable);
@@ -145,7 +145,7 @@ bool HTMLElement::cannot_navigate() const
     return !is<HTML::HTMLAnchorElement>(this) && !is_connected();
 }
 
-void HTMLElement::parse_attribute(const FlyString& name, const String& value)
+void HTMLElement::parse_attribute(FlyString const& name, String const& value)
 {
     Element::parse_attribute(name, value);
 

@@ -19,20 +19,20 @@
 
 extern "C" {
 
-size_t strspn(const char* s, const char* accept)
+size_t strspn(char const* s, char const* accept)
 {
-    const char* p = s;
+    char const* p = s;
 cont:
     char ch = *p++;
     char ac;
-    for (const char* ap = accept; (ac = *ap++) != '\0';) {
+    for (char const* ap = accept; (ac = *ap++) != '\0';) {
         if (ac == ch)
             goto cont;
     }
     return p - 1 - s;
 }
 
-size_t strcspn(const char* s, const char* reject)
+size_t strcspn(char const* s, char const* reject)
 {
     for (auto* p = s;;) {
         char c = *p++;
@@ -45,7 +45,7 @@ size_t strcspn(const char* s, const char* reject)
     }
 }
 
-size_t strlen(const char* str)
+size_t strlen(char const* str)
 {
     size_t len = 0;
     while (*(str++))
@@ -53,7 +53,7 @@ size_t strlen(const char* str)
     return len;
 }
 
-size_t strnlen(const char* str, size_t maxlen)
+size_t strnlen(char const* str, size_t maxlen)
 {
     size_t len = 0;
     for (; len < maxlen && *str; str++)
@@ -61,7 +61,7 @@ size_t strnlen(const char* str, size_t maxlen)
     return len;
 }
 
-char* strdup(const char* str)
+char* strdup(char const* str)
 {
     size_t len = strlen(str);
     char* new_str = (char*)malloc(len + 1);
@@ -70,7 +70,7 @@ char* strdup(const char* str)
     return new_str;
 }
 
-char* strndup(const char* str, size_t maxlen)
+char* strndup(char const* str, size_t maxlen)
 {
     size_t len = strnlen(str, maxlen);
     char* new_str = (char*)malloc(len + 1);
@@ -79,7 +79,7 @@ char* strndup(const char* str, size_t maxlen)
     return new_str;
 }
 
-int strcmp(const char* s1, const char* s2)
+int strcmp(char const* s1, char const* s2)
 {
     while (*s1 == *s2++)
         if (*s1++ == 0)
@@ -87,7 +87,7 @@ int strcmp(const char* s1, const char* s2)
     return *(const unsigned char*)s1 - *(const unsigned char*)--s2;
 }
 
-int strncmp(const char* s1, const char* s2, size_t n)
+int strncmp(char const* s1, char const* s2, size_t n)
 {
     if (!n)
         return 0;
@@ -100,10 +100,10 @@ int strncmp(const char* s1, const char* s2, size_t n)
     return 0;
 }
 
-int memcmp(const void* v1, const void* v2, size_t n)
+int memcmp(void const* v1, void const* v2, size_t n)
 {
-    auto* s1 = (const uint8_t*)v1;
-    auto* s2 = (const uint8_t*)v2;
+    auto* s1 = (uint8_t const*)v1;
+    auto* s2 = (uint8_t const*)v2;
     while (n-- > 0) {
         if (*s1++ != *s2++)
             return s1[-1] < s2[-1] ? -1 : 1;
@@ -111,7 +111,7 @@ int memcmp(const void* v1, const void* v2, size_t n)
     return 0;
 }
 
-void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
+void* memcpy(void* dest_ptr, void const* src_ptr, size_t n)
 {
     void* original_dest = dest_ptr;
     asm volatile(
@@ -152,24 +152,24 @@ void* memset(void* dest_ptr, int c, size_t n)
     return dest_ptr;
 }
 
-void* memmove(void* dest, const void* src, size_t n)
+void* memmove(void* dest, void const* src, size_t n)
 {
     if (dest < src)
         return memcpy(dest, src, n);
 
     u8* pd = (u8*)dest;
-    const u8* ps = (const u8*)src;
+    u8 const* ps = (u8 const*)src;
     for (pd += n, ps += n; n--;)
         *--pd = *--ps;
     return dest;
 }
 
-const void* memmem(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
+void const* memmem(void const* haystack, size_t haystack_length, void const* needle, size_t needle_length)
 {
     return AK::memmem(haystack, haystack_length, needle, needle_length);
 }
 
-char* strcpy(char* dest, const char* src)
+char* strcpy(char* dest, char const* src)
 {
     char* original_dest = dest;
     while ((*dest++ = *src++) != '\0')
@@ -177,7 +177,7 @@ char* strcpy(char* dest, const char* src)
     return original_dest;
 }
 
-char* strncpy(char* dest, const char* src, size_t n)
+char* strncpy(char* dest, char const* src, size_t n)
 {
     size_t i;
     for (i = 0; i < n && src[i] != '\0'; ++i)
@@ -187,7 +187,7 @@ char* strncpy(char* dest, const char* src, size_t n)
     return dest;
 }
 
-size_t strlcpy(char* dest, const char* src, size_t n)
+size_t strlcpy(char* dest, char const* src, size_t n)
 {
     size_t i;
     // Would like to test i < n - 1 here, but n might be 0.
@@ -200,7 +200,7 @@ size_t strlcpy(char* dest, const char* src, size_t n)
     return i;
 }
 
-char* strchr(const char* str, int c)
+char* strchr(char const* str, int c)
 {
     char ch = c;
     for (;; ++str) {
@@ -211,7 +211,7 @@ char* strchr(const char* str, int c)
     }
 }
 
-char* strchrnul(const char* str, int c)
+char* strchrnul(char const* str, int c)
 {
     char ch = c;
     for (;; ++str) {
@@ -220,10 +220,10 @@ char* strchrnul(const char* str, int c)
     }
 }
 
-void* memchr(const void* ptr, int c, size_t size)
+void* memchr(void const* ptr, int c, size_t size)
 {
     char ch = c;
-    auto* cptr = (const char*)ptr;
+    auto* cptr = (char const*)ptr;
     for (size_t i = 0; i < size; ++i) {
         if (cptr[i] == ch)
             return const_cast<char*>(cptr + i);
@@ -231,7 +231,7 @@ void* memchr(const void* ptr, int c, size_t size)
     return nullptr;
 }
 
-char* strrchr(const char* str, int ch)
+char* strrchr(char const* str, int ch)
 {
     char* last = nullptr;
     char c;
@@ -242,7 +242,7 @@ char* strrchr(const char* str, int ch)
     return last;
 }
 
-char* strcat(char* dest, const char* src)
+char* strcat(char* dest, char const* src)
 {
     size_t dest_length = strlen(dest);
     size_t i;
@@ -252,7 +252,7 @@ char* strcat(char* dest, const char* src)
     return dest;
 }
 
-char* strncat(char* dest, const char* src, size_t n)
+char* strncat(char* dest, char const* src, size_t n)
 {
     size_t dest_length = strlen(dest);
     size_t i;
@@ -262,7 +262,7 @@ char* strncat(char* dest, const char* src, size_t n)
     return dest;
 }
 
-const char* const sys_errlist[] = {
+char const* const sys_errlist[] = {
     "Success (not an error)",
     "Operation not permitted",
     "No such file or directory",
@@ -380,7 +380,7 @@ char* strsignal(int signum)
     return const_cast<char*>(sys_siglist[signum]);
 }
 
-char* strstr(const char* haystack, const char* needle)
+char* strstr(char const* haystack, char const* needle)
 {
     char nch;
     char hch;
@@ -398,7 +398,7 @@ char* strstr(const char* haystack, const char* needle)
     return const_cast<char*>(haystack);
 }
 
-char* strpbrk(const char* s, const char* accept)
+char* strpbrk(char const* s, char const* accept)
 {
     while (*s)
         if (strchr(accept, *s++))
@@ -406,7 +406,7 @@ char* strpbrk(const char* s, const char* accept)
     return nullptr;
 }
 
-char* strtok_r(char* str, const char* delim, char** saved_str)
+char* strtok_r(char* str, char const* delim, char** saved_str)
 {
     if (!str) {
         if (!saved_str)
@@ -458,18 +458,18 @@ char* strtok_r(char* str, const char* delim, char** saved_str)
     return &str[token_start];
 }
 
-char* strtok(char* str, const char* delim)
+char* strtok(char* str, char const* delim)
 {
     static char* saved_str;
     return strtok_r(str, delim, &saved_str);
 }
 
-int strcoll(const char* s1, const char* s2)
+int strcoll(char const* s1, char const* s2)
 {
     return strcmp(s1, s2);
 }
 
-size_t strxfrm(char* dest, const char* src, size_t n)
+size_t strxfrm(char* dest, char const* src, size_t n)
 {
     size_t i;
     for (i = 0; i < n && src[i] != '\0'; ++i)

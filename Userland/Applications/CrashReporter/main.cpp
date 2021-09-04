@@ -110,7 +110,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* coredump_path = nullptr;
+    char const* coredump_path = nullptr;
     bool unlink_after_use = false;
 
     Core::ArgsParser args_parser;

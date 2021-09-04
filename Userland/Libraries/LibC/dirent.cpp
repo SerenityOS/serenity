@@ -21,7 +21,7 @@
 
 extern "C" {
 
-DIR* opendir(const char* name)
+DIR* opendir(char const* name)
 {
     int fd = open(name, O_RDONLY | O_DIRECTORY);
     if (fd == -1)
@@ -215,7 +215,7 @@ int dirfd(DIR* dirp)
     return dirp->fd;
 }
 
-int scandir(const char* dir_name,
+int scandir(char const* dir_name,
     struct dirent*** namelist,
     int (*select)(const struct dirent*),
     int (*compare)(const struct dirent**, const struct dirent**))
@@ -259,7 +259,7 @@ int scandir(const char* dir_name,
 
     // Sort the entries if the user provided a comparator.
     if (compare) {
-        qsort(tmp_names.data(), tmp_names.size(), sizeof(struct dirent*), (int (*)(const void*, const void*))compare);
+        qsort(tmp_names.data(), tmp_names.size(), sizeof(struct dirent*), (int (*)(void const*, void const*))compare);
     }
 
     const int size = tmp_names.size();

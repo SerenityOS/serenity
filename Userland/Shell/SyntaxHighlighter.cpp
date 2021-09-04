@@ -534,7 +534,7 @@ bool SyntaxHighlighter::is_navigatable(u64) const
     return false;
 }
 
-void SyntaxHighlighter::rehighlight(const Palette& palette)
+void SyntaxHighlighter::rehighlight(Palette const& palette)
 {
     auto text = m_client->get_text();
 

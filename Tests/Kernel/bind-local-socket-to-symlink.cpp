@@ -13,7 +13,7 @@
 
 int main(int, char**)
 {
-    constexpr const char* path = "/tmp/foo";
+    constexpr char const* path = "/tmp/foo";
     int rc = symlink("bar", path);
     if (rc < 0) {
         perror("symlink");

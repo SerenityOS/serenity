@@ -56,11 +56,11 @@ struct Attribute {
     // exposed bit ops for class enums...
     u8 flags { Flags::NoAttributes };
 
-    constexpr bool operator==(const Attribute& other) const
+    constexpr bool operator==(Attribute const& other) const
     {
         return foreground_color == other.foreground_color && background_color == other.background_color && flags == other.flags;
     }
-    constexpr bool operator!=(const Attribute& other) const
+    constexpr bool operator!=(Attribute const& other) const
     {
         return !(*this == other);
     }

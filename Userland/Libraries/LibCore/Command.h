@@ -14,7 +14,7 @@
 namespace Core {
 
 // If the executed command fails, the returned String will be in the null state.
-String command(const String& program, const Vector<String>& arguments, Optional<LexicalPath> chdir);
-String command(const String& command_string, Optional<LexicalPath> chdir);
+String command(String const& program, const Vector<String>& arguments, Optional<LexicalPath> chdir);
+String command(String const& command_string, Optional<LexicalPath> chdir);
 
 }

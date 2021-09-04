@@ -9,7 +9,7 @@
 
 namespace Web::DOM {
 
-Text::Text(Document& document, const String& data)
+Text::Text(Document& document, String const& data)
     : CharacterData(document, NodeType::TEXT_NODE, data)
 {
 }

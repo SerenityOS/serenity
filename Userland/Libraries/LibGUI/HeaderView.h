@@ -20,7 +20,7 @@ public:
     Gfx::Orientation orientation() const { return m_orientation; }
 
     Model* model();
-    const Model* model() const;
+    Model const* model() const;
 
     void set_section_size(int section, int size);
     int section_size(int section) const;

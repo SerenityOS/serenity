@@ -51,18 +51,18 @@ public:
 
     enum AdoptTag { Adopt };
 
-    ALWAYS_INLINE NonnullRefPtr(const T& object)
+    ALWAYS_INLINE NonnullRefPtr(T const& object)
         : m_bits((FlatPtr)&object)
     {
         VERIFY(!(m_bits & 1));
         const_cast<T&>(object).ref();
     }
     template<typename U>
-    ALWAYS_INLINE NonnullRefPtr(const U& object) requires(IsConvertible<U*, T*>)
-        : m_bits((FlatPtr) static_cast<const T*>(&object))
+    ALWAYS_INLINE NonnullRefPtr(U const& object) requires(IsConvertible<U*, T*>)
+        : m_bits((FlatPtr) static_cast<T const*>(&object))
     {
         VERIFY(!(m_bits & 1));
-        const_cast<T&>(static_cast<const T&>(object)).ref();
+        const_cast<T&>(static_cast<T const&>(object)).ref();
     }
     ALWAYS_INLINE NonnullRefPtr(AdoptTag, T& object)
         : m_bits((FlatPtr)&object)
@@ -80,7 +80,7 @@ public:
     {
         VERIFY(!(m_bits & 1));
     }
-    ALWAYS_INLINE NonnullRefPtr(const NonnullRefPtr& other)
+    ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr const& other)
         : m_bits((FlatPtr)other.add_ref())
     {
         VERIFY(!(m_bits & 1));
@@ -111,7 +111,7 @@ public:
     NonnullRefPtr(const RefPtr<T>&) = delete;
     NonnullRefPtr& operator=(const RefPtr<T>&) = delete;
 
-    NonnullRefPtr& operator=(const NonnullRefPtr& other)
+    NonnullRefPtr& operator=(NonnullRefPtr const& other)
     {
         if (this != &other)
             assign(other.add_ref());
@@ -139,7 +139,7 @@ public:
         return *this;
     }
 
-    NonnullRefPtr& operator=(const T& object)
+    NonnullRefPtr& operator=(T const& object)
     {
         const_cast<T&>(object).ref();
         assign(const_cast<T*>(&object));
@@ -157,7 +157,7 @@ public:
     {
         return as_nonnull_ptr();
     }
-    ALWAYS_INLINE RETURNS_NONNULL const T* ptr() const
+    ALWAYS_INLINE RETURNS_NONNULL T const* ptr() const
     {
         return as_nonnull_ptr();
     }
@@ -166,7 +166,7 @@ public:
     {
         return as_nonnull_ptr();
     }
-    ALWAYS_INLINE RETURNS_NONNULL const T* operator->() const
+    ALWAYS_INLINE RETURNS_NONNULL T const* operator->() const
     {
         return as_nonnull_ptr();
     }
@@ -175,7 +175,7 @@ public:
     {
         return *as_nonnull_ptr();
     }
-    ALWAYS_INLINE const T& operator*() const
+    ALWAYS_INLINE T const& operator*() const
     {
         return *as_nonnull_ptr();
     }
@@ -184,7 +184,7 @@ public:
     {
         return as_nonnull_ptr();
     }
-    ALWAYS_INLINE RETURNS_NONNULL operator const T*() const
+    ALWAYS_INLINE RETURNS_NONNULL operator T const*() const
     {
         return as_nonnull_ptr();
     }
@@ -193,7 +193,7 @@ public:
     {
         return *as_nonnull_ptr();
     }
-    ALWAYS_INLINE operator const T&() const
+    ALWAYS_INLINE operator T const&() const
     {
         return *as_nonnull_ptr();
     }
@@ -319,10 +319,10 @@ inline NonnullRefPtr<T> adopt_ref(T& object)
 }
 
 template<typename T>
-struct Formatter<NonnullRefPtr<T>> : Formatter<const T*> {
+struct Formatter<NonnullRefPtr<T>> : Formatter<T const*> {
     void format(FormatBuilder& builder, const NonnullRefPtr<T>& value)
     {
-        Formatter<const T*>::format(builder, value.ptr());
+        Formatter<T const*>::format(builder, value.ptr());
     }
 };
 
@@ -349,7 +349,7 @@ inline NonnullRefPtr<T> make_ref_counted(Args&&... args)
 template<typename T>
 struct Traits<NonnullRefPtr<T>> : public GenericTraits<NonnullRefPtr<T>> {
     using PeekType = T*;
-    using ConstPeekType = const T*;
+    using ConstPeekType = T const*;
     static unsigned hash(const NonnullRefPtr<T>& p) { return ptr_hash(p.ptr()); }
     static bool equals(const NonnullRefPtr<T>& a, const NonnullRefPtr<T>& b) { return a.ptr() == b.ptr(); }
 };

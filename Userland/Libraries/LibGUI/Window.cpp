@@ -289,7 +289,7 @@ void Window::center_on_screen()
     set_rect(rect().centered_within(Desktop::the().rect()));
 }
 
-void Window::center_within(const Window& other)
+void Window::center_within(Window const& other)
 {
     if (this == &other)
         return;
@@ -1084,7 +1084,7 @@ void Window::notify_state_changed(Badge<WindowServerConnection>, bool minimized,
     }
 }
 
-Action* Window::action_for_key_event(const KeyEvent& event)
+Action* Window::action_for_key_event(KeyEvent const& event)
 {
     Shortcut shortcut(event.modifiers(), (KeyCode)event.key());
     Action* found_action = nullptr;

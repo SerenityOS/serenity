@@ -15,12 +15,12 @@ class ProcessingInstruction final : public CharacterData {
 public:
     using WrapperType = Bindings::ProcessingInstructionWrapper;
 
-    ProcessingInstruction(Document&, const String& data, const String& target);
+    ProcessingInstruction(Document&, String const& data, String const& target);
     virtual ~ProcessingInstruction() override;
 
     virtual FlyString node_name() const override { return m_target; }
 
-    const String& target() const { return m_target; }
+    String const& target() const { return m_target; }
 
 private:
     String m_target;

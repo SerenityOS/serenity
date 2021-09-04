@@ -43,10 +43,10 @@ public:
     explicit DHCPv4Client();
     virtual ~DHCPv4Client() override;
 
-    void dhcp_discover(const InterfaceDescriptor& ifname);
-    void dhcp_request(DHCPv4Transaction& transaction, const DHCPv4Packet& packet);
+    void dhcp_discover(InterfaceDescriptor const& ifname);
+    void dhcp_request(DHCPv4Transaction& transaction, DHCPv4Packet const& packet);
 
-    void process_incoming(const DHCPv4Packet& packet);
+    void process_incoming(DHCPv4Packet const& packet);
 
     bool id_is_registered(u32 id) { return m_ongoing_transactions.contains(id); }
 
@@ -64,7 +64,7 @@ private:
     RefPtr<Core::Timer> m_check_timer;
     int m_max_timer_backoff_interval { 600000 }; // 10 minutes
 
-    void handle_offer(const DHCPv4Packet&, const ParsedDHCPv4Options&);
-    void handle_ack(const DHCPv4Packet&, const ParsedDHCPv4Options&);
-    void handle_nak(const DHCPv4Packet&, const ParsedDHCPv4Options&);
+    void handle_offer(DHCPv4Packet const&, ParsedDHCPv4Options const&);
+    void handle_ack(DHCPv4Packet const&, ParsedDHCPv4Options const&);
+    void handle_nak(DHCPv4Packet const&, ParsedDHCPv4Options const&);
 };

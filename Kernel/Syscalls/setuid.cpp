@@ -155,7 +155,7 @@ KResultOr<FlatPtr> Process::sys$setresgid(GroupID new_rgid, GroupID new_egid, Gr
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<const gid_t*> user_gids)
+KResultOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<gid_t const*> user_gids)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);

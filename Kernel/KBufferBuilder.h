@@ -20,15 +20,15 @@ public:
     KBufferBuilder(KBufferBuilder&&) = default;
     ~KBufferBuilder() = default;
 
-    void append(const StringView&);
+    void append(StringView const&);
     void append(char);
-    void append(const char*, int);
+    void append(char const*, int);
 
-    void append_escaped_for_json(const StringView&);
+    void append_escaped_for_json(StringView const&);
     void append_bytes(ReadonlyBytes);
 
     template<typename... Parameters>
-    void appendff(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+    void appendff(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
     {
         // FIXME: This really not ideal, but vformat expects StringBuilder.
         StringBuilder builder;

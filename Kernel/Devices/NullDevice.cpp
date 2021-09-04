@@ -31,7 +31,7 @@ UNMAP_AFTER_INIT NullDevice::~NullDevice()
 {
 }
 
-bool NullDevice::can_read(const FileDescription&, size_t) const
+bool NullDevice::can_read(FileDescription const&, size_t) const
 {
     return true;
 }
@@ -41,7 +41,7 @@ KResultOr<size_t> NullDevice::read(FileDescription&, u64, UserOrKernelBuffer&, s
     return 0;
 }
 
-KResultOr<size_t> NullDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t buffer_size)
+KResultOr<size_t> NullDevice::write(FileDescription&, u64, UserOrKernelBuffer const&, size_t buffer_size)
 {
     return buffer_size;
 }

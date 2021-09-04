@@ -13,7 +13,7 @@ namespace AK {
 
 class GenericLexer {
 public:
-    constexpr explicit GenericLexer(const StringView& input)
+    constexpr explicit GenericLexer(StringView const& input)
         : m_input(input)
     {
     }
@@ -43,7 +43,7 @@ public:
         return true;
     }
 
-    constexpr bool next_is(const char* expected) const
+    constexpr bool next_is(char const* expected) const
     {
         for (size_t i = 0; expected[i] != '\0'; ++i)
             if (peek(i) != expected[i])
@@ -70,7 +70,7 @@ public:
     }
 
     template<typename T>
-    constexpr bool consume_specific(const T& next)
+    constexpr bool consume_specific(T const& next)
     {
         if (!next_is(next))
             return false;
@@ -83,17 +83,17 @@ public:
         return true;
     }
 
-    bool consume_specific(const String& next)
+    bool consume_specific(String const& next)
     {
         return consume_specific(StringView { next });
     }
 
-    constexpr bool consume_specific(const char* next)
+    constexpr bool consume_specific(char const* next)
     {
         return consume_specific(StringView { next });
     }
 
-    constexpr char consume_escaped_character(char escape_char = '\\', const StringView& escape_map = "n\nr\rt\tb\bf\f")
+    constexpr char consume_escaped_character(char escape_char = '\\', StringView const& escape_map = "n\nr\rt\tb\bf\f")
     {
         if (!consume_specific(escape_char))
             return consume();
@@ -112,7 +112,7 @@ public:
     StringView consume_all();
     StringView consume_line();
     StringView consume_until(char);
-    StringView consume_until(const char*);
+    StringView consume_until(char const*);
     StringView consume_quoted_string(char escape_char = 0);
     String consume_and_unescape_string(char escape_char = '\\');
 
@@ -137,7 +137,7 @@ public:
         ignore();
     }
 
-    constexpr void ignore_until(const char* stop)
+    constexpr void ignore_until(char const* stop)
     {
         while (!is_eof() && !next_is(stop)) {
             ++m_index;
@@ -215,7 +215,7 @@ private:
     Result<u32, UnicodeEscapeError> decode_single_or_paired_surrogate(bool combine_surrogate_pairs);
 };
 
-constexpr auto is_any_of(const StringView& values)
+constexpr auto is_any_of(StringView const& values)
 {
     return [values](auto c) { return values.contains(c); };
 }

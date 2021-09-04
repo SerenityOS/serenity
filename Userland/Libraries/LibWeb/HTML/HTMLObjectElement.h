@@ -20,7 +20,7 @@ public:
     HTMLObjectElement(DOM::Document&, QualifiedName);
     virtual ~HTMLObjectElement() override;
 
-    virtual void parse_attribute(const FlyString& name, const String& value) override;
+    virtual void parse_attribute(FlyString const& name, String const& value) override;
 
     String data() const { return attribute(HTML::AttributeNames::data); }
     String type() const { return attribute(HTML::AttributeNames::type); }

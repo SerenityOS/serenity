@@ -45,7 +45,7 @@ KResult Process::traverse_stacks_directory(unsigned fsid, Function<bool(FileSyst
     callback({ ".", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property(pid(), SegmentedProcFSIndex::ProcessSubDirectory::Stacks, SegmentedProcFSIndex::MainProcessProperty::Reserved) }, 0 });
     callback({ "..", { fsid, m_procfs_traits->component_index() }, 0 });
 
-    for_each_thread([&](const Thread& thread) {
+    for_each_thread([&](Thread const& thread) {
         int tid = thread.tid().value();
         InodeIdentifier identifier = { fsid, SegmentedProcFSIndex::build_segmented_index_for_thread_stack(pid(), thread.tid()) };
         callback({ String::number(tid), identifier, 0 });
@@ -53,12 +53,12 @@ KResult Process::traverse_stacks_directory(unsigned fsid, Function<bool(FileSyst
     return KSuccess;
 }
 
-KResultOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(const ProcFS& procfs, StringView name) const
+KResultOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(ProcFS const& procfs, StringView name) const
 {
     KResultOr<NonnullRefPtr<ProcFSProcessPropertyInode>> thread_stack_inode { ENOENT };
 
     // FIXME: Try to exit the loop earlier
-    for_each_thread([&](const Thread& thread) {
+    for_each_thread([&](Thread const& thread) {
         int tid = thread.tid().value();
         VERIFY(!(tid < 0));
         if (name.to_int() == tid) {
@@ -105,7 +105,7 @@ KResult Process::traverse_file_descriptions_directory(unsigned fsid, Function<bo
     return KSuccess;
 }
 
-KResultOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(const ProcFS& procfs, StringView name) const
+KResultOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(ProcFS const& procfs, StringView name) const
 {
     auto maybe_index = name.to_uint();
     if (!maybe_index.has_value())

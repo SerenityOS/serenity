@@ -35,7 +35,7 @@ public:
     void disable_local_timer();
 
 private:
-    explicit APICTimer(u8, Function<void(const RegisterState&)>);
+    explicit APICTimer(u8, Function<void(RegisterState const&)>);
 
     bool calibrate(HardwareTimerBase&);
 

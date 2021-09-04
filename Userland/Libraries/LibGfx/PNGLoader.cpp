@@ -86,7 +86,7 @@ struct PNGLoadingContext {
         BitmapDecoded,
     };
     State state { State::NotDecoded };
-    const u8* data { nullptr };
+    u8 const* data { nullptr };
     size_t data_size { 0 };
     int width { -1 };
     int height { -1 };
@@ -122,7 +122,7 @@ struct PNGLoadingContext {
 
 class Streamer {
 public:
-    Streamer(const u8* data, size_t size)
+    Streamer(u8 const* data, size_t size)
         : m_data_ptr(data)
         , m_size_remaining(size)
     {
@@ -162,11 +162,11 @@ public:
     bool at_end() const { return !m_size_remaining; }
 
 private:
-    const u8* m_data_ptr { nullptr };
+    u8 const* m_data_ptr { nullptr };
     size_t m_size_remaining { 0 };
 };
 
-static RefPtr<Gfx::Bitmap> load_png_impl(const u8*, size_t);
+static RefPtr<Gfx::Bitmap> load_png_impl(u8 const*, size_t);
 static bool process_chunk(Streamer&, PNGLoadingContext& context);
 
 RefPtr<Gfx::Bitmap> load_png(String const& path)
@@ -174,13 +174,13 @@ RefPtr<Gfx::Bitmap> load_png(String const& path)
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
         return nullptr;
-    auto bitmap = load_png_impl((const u8*)file_or_error.value()->data(), file_or_error.value()->size());
+    auto bitmap = load_png_impl((u8 const*)file_or_error.value()->data(), file_or_error.value()->size());
     if (bitmap)
         bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded PNG: {}", bitmap->size(), LexicalPath::canonicalized_path(path)));
     return bitmap;
 }
 
-RefPtr<Gfx::Bitmap> load_png_from_memory(const u8* data, size_t length)
+RefPtr<Gfx::Bitmap> load_png_from_memory(u8 const* data, size_t length)
 {
     auto bitmap = load_png_impl(data, length);
     if (bitmap)
@@ -214,9 +214,9 @@ union [[gnu::packed]] Pixel {
 static_assert(sizeof(Pixel) == 4);
 
 template<bool has_alpha, u8 filter_type>
-ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, const void* dummy_scanline_data)
+ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, void const* dummy_scanline_data)
 {
-    auto* dummy_scanline = (const Pixel*)dummy_scanline_data;
+    auto* dummy_scanline = (Pixel const*)dummy_scanline_data;
     if constexpr (filter_type == 0) {
         auto* pixels = (Pixel*)bitmap.scanline(y);
         for (int i = 0; i < bitmap.width(); ++i) {
@@ -231,7 +231,7 @@ ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, const void* 
         for (int i = 1; i < bitmap.width(); ++i) {
             auto& x = pixels[i];
             swap(x.r, x.b);
-            auto& a = (const Pixel&)pixels[i - 1];
+            auto& a = (Pixel const&)pixels[i - 1];
             x.v[0] += a.v[0];
             x.v[1] += a.v[1];
             x.v[2] += a.v[2];
@@ -242,11 +242,11 @@ ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, const void* 
     }
     if constexpr (filter_type == 2) {
         auto* pixels = (Pixel*)bitmap.scanline(y);
-        auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (const Pixel*)bitmap.scanline(y - 1);
+        auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (Pixel const*)bitmap.scanline(y - 1);
         for (int i = 0; i < bitmap.width(); ++i) {
             auto& x = pixels[i];
             swap(x.r, x.b);
-            const Pixel& b = pixels_y_minus_1[i];
+            Pixel const& b = pixels_y_minus_1[i];
             x.v[0] += b.v[0];
             x.v[1] += b.v[1];
             x.v[2] += b.v[2];
@@ -257,14 +257,14 @@ ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, const void* 
     }
     if constexpr (filter_type == 3) {
         auto* pixels = (Pixel*)bitmap.scanline(y);
-        auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (const Pixel*)bitmap.scanline(y - 1);
+        auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (Pixel const*)bitmap.scanline(y - 1);
         for (int i = 0; i < bitmap.width(); ++i) {
             auto& x = pixels[i];
             swap(x.r, x.b);
             Pixel a;
             if (i != 0)
                 a = pixels[i - 1];
-            const Pixel& b = pixels_y_minus_1[i];
+            Pixel const& b = pixels_y_minus_1[i];
             x.v[0] = x.v[0] + ((a.v[0] + b.v[0]) / 2);
             x.v[1] = x.v[1] + ((a.v[1] + b.v[1]) / 2);
             x.v[2] = x.v[2] + ((a.v[2] + b.v[2]) / 2);
@@ -280,7 +280,7 @@ ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, const void* 
             auto& x = pixels[i];
             swap(x.r, x.b);
             Pixel a;
-            const Pixel& b = pixels_y_minus_1[i];
+            Pixel const& b = pixels_y_minus_1[i];
             Pixel c;
             if (i != 0) {
                 a = pixels[i - 1];
@@ -299,7 +299,7 @@ template<typename T>
 ALWAYS_INLINE static void unpack_grayscale_without_alpha(PNGLoadingContext& context)
 {
     for (int y = 0; y < context.height; ++y) {
-        auto* gray_values = reinterpret_cast<const T*>(context.scanlines[y].data.data());
+        auto* gray_values = reinterpret_cast<T const*>(context.scanlines[y].data.data());
         for (int i = 0; i < context.width; ++i) {
             auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
             pixel.r = gray_values[i];
@@ -531,7 +531,7 @@ static bool decode_png_size(PNGLoadingContext& context)
             return false;
     }
 
-    const u8* data_ptr = context.data + sizeof(png_header);
+    u8 const* data_ptr = context.data + sizeof(png_header);
     size_t data_remaining = context.data_size - sizeof(png_header);
 
     Streamer streamer(data_ptr, data_remaining);
@@ -559,7 +559,7 @@ static bool decode_png_chunks(PNGLoadingContext& context)
             return false;
     }
 
-    const u8* data_ptr = context.data + sizeof(png_header);
+    u8 const* data_ptr = context.data + sizeof(png_header);
     int data_remaining = context.data_size - sizeof(png_header);
 
     context.compressed_data.ensure_capacity(context.data_size);
@@ -782,7 +782,7 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
     return true;
 }
 
-static RefPtr<Gfx::Bitmap> load_png_impl(const u8* data, size_t data_size)
+static RefPtr<Gfx::Bitmap> load_png_impl(u8 const* data, size_t data_size)
 {
     PNGLoadingContext context;
     context.data = data;
@@ -811,7 +811,7 @@ static bool process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
 {
     if (data.size() < (int)sizeof(PNG_IHDR))
         return false;
-    auto& ihdr = *(const PNG_IHDR*)data.data();
+    auto& ihdr = *(PNG_IHDR const*)data.data();
 
     if (ihdr.width > maximum_width_for_decoded_images || ihdr.height > maximum_height_for_decoded_images) {
         dbgln("This PNG is too large for comfort: {}x{}", (u32)ihdr.width, (u32)ihdr.height);
@@ -887,7 +887,7 @@ static bool process_IDAT(ReadonlyBytes data, PNGLoadingContext& context)
 
 static bool process_PLTE(ReadonlyBytes data, PNGLoadingContext& context)
 {
-    context.palette_data.append((const PaletteEntry*)data.data(), data.size() / 3);
+    context.palette_data.append((PaletteEntry const*)data.data(), data.size() / 3);
     return true;
 }
 
@@ -926,18 +926,18 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
     }
     dbgln_if(PNG_DEBUG, "Chunk type: '{}', size: {}, crc: {:x}", chunk_type, chunk_size, chunk_crc);
 
-    if (!strcmp((const char*)chunk_type, "IHDR"))
+    if (!strcmp((char const*)chunk_type, "IHDR"))
         return process_IHDR(chunk_data, context);
-    if (!strcmp((const char*)chunk_type, "IDAT"))
+    if (!strcmp((char const*)chunk_type, "IDAT"))
         return process_IDAT(chunk_data, context);
-    if (!strcmp((const char*)chunk_type, "PLTE"))
+    if (!strcmp((char const*)chunk_type, "PLTE"))
         return process_PLTE(chunk_data, context);
-    if (!strcmp((const char*)chunk_type, "tRNS"))
+    if (!strcmp((char const*)chunk_type, "tRNS"))
         return process_tRNS(chunk_data, context);
     return true;
 }
 
-PNGImageDecoderPlugin::PNGImageDecoderPlugin(const u8* data, size_t size)
+PNGImageDecoderPlugin::PNGImageDecoderPlugin(u8 const* data, size_t size)
 {
     m_context = make<PNGLoadingContext>();
     m_context->data = data;

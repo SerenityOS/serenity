@@ -17,7 +17,7 @@ RemoteObjectPropertyModel::RemoteObjectPropertyModel(RemoteObject& object)
 
 int RemoteObjectPropertyModel::row_count(const GUI::ModelIndex& index) const
 {
-    Function<int(const JsonValue&)> do_count = [&](const JsonValue& value) {
+    Function<int(JsonValue const&)> do_count = [&](JsonValue const& value) {
         if (value.is_array())
             return value.as_array().size();
         else if (value.is_object())
@@ -26,7 +26,7 @@ int RemoteObjectPropertyModel::row_count(const GUI::ModelIndex& index) const
     };
 
     if (index.is_valid()) {
-        auto* path = static_cast<const JsonPath*>(index.internal_data());
+        auto* path = static_cast<JsonPath const*>(index.internal_data());
         return do_count(path->resolve(m_object.json));
     } else {
         return do_count(m_object.json);
@@ -46,7 +46,7 @@ String RemoteObjectPropertyModel::column_name(int column) const
 
 GUI::Variant RemoteObjectPropertyModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    auto* path = static_cast<const JsonPath*>(index.internal_data());
+    auto* path = static_cast<JsonPath const*>(index.internal_data());
     if (!path)
         return {};
 
@@ -72,7 +72,7 @@ void RemoteObjectPropertyModel::set_data(const GUI::ModelIndex& index, const GUI
     if (!index.is_valid())
         return;
 
-    auto* path = static_cast<const JsonPath*>(index.internal_data());
+    auto* path = static_cast<JsonPath const*>(index.internal_data());
     if (path->size() != 1)
         return;
 
@@ -83,9 +83,9 @@ void RemoteObjectPropertyModel::set_data(const GUI::ModelIndex& index, const GUI
 
 GUI::ModelIndex RemoteObjectPropertyModel::index(int row, int column, const GUI::ModelIndex& parent) const
 {
-    const auto& parent_path = parent.is_valid() ? *static_cast<const JsonPath*>(parent.internal_data()) : JsonPath {};
+    auto const& parent_path = parent.is_valid() ? *static_cast<JsonPath const*>(parent.internal_data()) : JsonPath {};
 
-    auto nth_child = [&](int n, const JsonValue& value) -> const JsonPath* {
+    auto nth_child = [&](int n, JsonValue const& value) -> JsonPath const* {
         auto path = make<JsonPath>();
         path->extend(parent_path);
         int row_index = n;
@@ -135,7 +135,7 @@ GUI::ModelIndex RemoteObjectPropertyModel::parent_index(const GUI::ModelIndex& i
     if (!index.is_valid())
         return index;
 
-    auto path = *static_cast<const JsonPath*>(index.internal_data());
+    auto path = *static_cast<JsonPath const*>(index.internal_data());
     if (path.is_empty())
         return {};
 
@@ -168,12 +168,12 @@ GUI::ModelIndex RemoteObjectPropertyModel::parent_index(const GUI::ModelIndex& i
     return {};
 }
 
-const JsonPath* RemoteObjectPropertyModel::cached_path_at(int n, const Vector<JsonPathElement>& prefix) const
+JsonPath const* RemoteObjectPropertyModel::cached_path_at(int n, const Vector<JsonPathElement>& prefix) const
 {
     // FIXME: ModelIndex wants a void*, so we have to keep these
     //        indices alive, but allocating a new path every time
     //        we're asked for an index is silly, so we have to look for existing ones first.
-    const JsonPath* index_path = nullptr;
+    JsonPath const* index_path = nullptr;
     int row_index = n;
     for (auto& path : m_paths) {
         if (path.size() != prefix.size() + 1)
@@ -195,7 +195,7 @@ const JsonPath* RemoteObjectPropertyModel::cached_path_at(int n, const Vector<Js
     return index_path;
 };
 
-const JsonPath* RemoteObjectPropertyModel::find_cached_path(const Vector<JsonPathElement>& path) const
+JsonPath const* RemoteObjectPropertyModel::find_cached_path(const Vector<JsonPathElement>& path) const
 {
     for (auto& cpath : m_paths) {
         if (cpath.size() != path.size())

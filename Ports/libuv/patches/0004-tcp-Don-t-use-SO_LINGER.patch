@@ -11,7 +11,7 @@ diff --git a/src/unix/tcp.c b/src/unix/tcp.c
 index bc0fb66..e78259a 100644
 --- a/src/unix/tcp.c
 +++ b/src/unix/tcp.c
-@@ -313,15 +313,19 @@ int uv_tcp_getpeername(const uv_tcp_t* handle,
+@@ -313,15 +313,19 @@ int uv_tcp_getpeername(uv_tcp_t const* handle,
  
  int uv_tcp_close_reset(uv_tcp_t* handle, uv_close_cb close_cb) {
    int fd;

@@ -23,7 +23,7 @@ public:
 
     ~CSSImportRule();
 
-    const URL& url() const { return m_url; }
+    URL const& url() const { return m_url; }
 
     bool has_import_result() const { return !m_style_sheet.is_null(); }
     RefPtr<CSSStyleSheet> loaded_style_sheet() { return m_style_sheet; }

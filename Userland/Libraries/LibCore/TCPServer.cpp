@@ -38,14 +38,14 @@ TCPServer::~TCPServer()
     ::close(m_fd);
 }
 
-bool TCPServer::listen(const IPv4Address& address, u16 port)
+bool TCPServer::listen(IPv4Address const& address, u16 port)
 {
     if (m_listening)
         return false;
 
     auto socket_address = SocketAddress(address, port);
     auto in = socket_address.to_sockaddr_in();
-    if (::bind(m_fd, (const sockaddr*)&in, sizeof(in)) < 0) {
+    if (::bind(m_fd, (sockaddr const*)&in, sizeof(in)) < 0) {
         perror("TCPServer::listen: bind");
         return false;
     }

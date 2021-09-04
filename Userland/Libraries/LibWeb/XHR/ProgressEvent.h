@@ -17,7 +17,7 @@ class ProgressEvent : public DOM::Event {
 public:
     using WrapperType = Bindings::ProgressEventWrapper;
 
-    static NonnullRefPtr<ProgressEvent> create(const FlyString& event_name, u32 transmitted, u32 length)
+    static NonnullRefPtr<ProgressEvent> create(FlyString const& event_name, u32 transmitted, u32 length)
     {
         return adopt_ref(*new ProgressEvent(event_name, transmitted, length));
     }
@@ -29,7 +29,7 @@ public:
     u32 total() const { return m_total; }
 
 protected:
-    ProgressEvent(const FlyString& event_name, u32 transmitted, u32 length)
+    ProgressEvent(FlyString const& event_name, u32 transmitted, u32 length)
         : Event(event_name)
         , m_length_computable(length != 0)
         , m_loaded(transmitted)

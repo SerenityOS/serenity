@@ -9,12 +9,12 @@
 
 namespace Web::HTML {
 
-NonnullRefPtr<SubmitEvent> SubmitEvent::create(const FlyString& event_name, RefPtr<HTMLElement> submitter)
+NonnullRefPtr<SubmitEvent> SubmitEvent::create(FlyString const& event_name, RefPtr<HTMLElement> submitter)
 {
     return adopt_ref(*new SubmitEvent(event_name, move(submitter)));
 }
 
-SubmitEvent::SubmitEvent(const FlyString& event_name, RefPtr<HTMLElement> submitter)
+SubmitEvent::SubmitEvent(FlyString const& event_name, RefPtr<HTMLElement> submitter)
     : DOM::Event(event_name)
     , m_submitter(submitter)
 {

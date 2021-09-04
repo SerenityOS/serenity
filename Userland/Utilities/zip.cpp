@@ -15,7 +15,7 @@
 
 int main(int argc, char** argv)
 {
-    const char* zip_path;
+    char const* zip_path;
     Vector<String> source_paths;
     bool recurse = false;
     bool force = false;

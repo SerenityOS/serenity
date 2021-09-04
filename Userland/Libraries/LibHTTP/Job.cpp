@@ -16,7 +16,7 @@
 
 namespace HTTP {
 
-static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& content_encoding)
+static ByteBuffer handle_content_encoding(ByteBuffer const& buf, String const& content_encoding)
 {
     dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: buf has content_encoding={}", content_encoding);
 
@@ -71,7 +71,7 @@ static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& c
     return buf;
 }
 
-Job::Job(const HttpRequest& request, OutputStream& output_stream)
+Job::Job(HttpRequest const& request, OutputStream& output_stream)
     : Core::NetworkJob(output_stream)
     , m_request(request)
 {

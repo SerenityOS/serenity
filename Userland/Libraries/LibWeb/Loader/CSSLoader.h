@@ -16,8 +16,8 @@ class CSSLoader : public ResourceClient {
 public:
     explicit CSSLoader(DOM::Element& owner_element);
 
-    void load_from_text(const String&);
-    void load_from_url(const URL&);
+    void load_from_text(String const&);
+    void load_from_url(URL const&);
 
     void load_next_import_if_needed();
 

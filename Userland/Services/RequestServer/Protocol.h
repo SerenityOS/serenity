@@ -17,13 +17,13 @@ class Protocol {
 public:
     virtual ~Protocol();
 
-    const String& name() const { return m_name; }
-    virtual OwnPtr<Request> start_request(ClientConnection&, const String& method, const URL&, const HashMap<String, String>& headers, ReadonlyBytes body) = 0;
+    String const& name() const { return m_name; }
+    virtual OwnPtr<Request> start_request(ClientConnection&, String const& method, URL const&, const HashMap<String, String>& headers, ReadonlyBytes body) = 0;
 
-    static Protocol* find_by_name(const String&);
+    static Protocol* find_by_name(String const&);
 
 protected:
-    explicit Protocol(const String& name);
+    explicit Protocol(String const& name);
     struct Pipe {
         int read_fd { -1 };
         int write_fd { -1 };

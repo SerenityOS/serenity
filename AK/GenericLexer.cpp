@@ -70,7 +70,7 @@ StringView GenericLexer::consume_until(char stop)
 
 // Consume and return characters until the string `stop` is found
 // The `stop` string is ignored, as it is user-defined
-StringView GenericLexer::consume_until(const char* stop)
+StringView GenericLexer::consume_until(char const* stop)
 {
     size_t start = m_index;
     while (!is_eof() && !next_is(stop))

@@ -138,7 +138,7 @@ public:
 
 class WMWindowStateChangedEvent : public WMEvent {
 public:
-    WMWindowStateChangedEvent(int client_id, int window_id, int parent_client_id, int parent_window_id, const StringView& title, const Gfx::IntRect& rect, unsigned virtual_desktop_row, unsigned virtual_desktop_column, bool is_active, bool is_modal, WindowType window_type, bool is_minimized, bool is_frameless, Optional<int> progress)
+    WMWindowStateChangedEvent(int client_id, int window_id, int parent_client_id, int parent_window_id, StringView const& title, const Gfx::IntRect& rect, unsigned virtual_desktop_row, unsigned virtual_desktop_column, bool is_active, bool is_modal, WindowType window_type, bool is_minimized, bool is_frameless, Optional<int> progress)
         : WMEvent(Event::Type::WM_WindowStateChanged, client_id, window_id)
         , m_parent_client_id(parent_client_id)
         , m_parent_window_id(parent_window_id)
@@ -157,7 +157,7 @@ public:
 
     int parent_client_id() const { return m_parent_client_id; }
     int parent_window_id() const { return m_parent_window_id; }
-    const String& title() const { return m_title; }
+    String const& title() const { return m_title; }
     const Gfx::IntRect& rect() const { return m_rect; }
     bool is_active() const { return m_active; }
     bool is_modal() const { return m_modal; }
@@ -405,12 +405,12 @@ private:
 
 class DropEvent final : public Event {
 public:
-    DropEvent(const Gfx::IntPoint&, const String& text, NonnullRefPtr<Core::MimeData> mime_data);
+    DropEvent(const Gfx::IntPoint&, String const& text, NonnullRefPtr<Core::MimeData> mime_data);
 
     ~DropEvent();
 
     const Gfx::IntPoint& position() const { return m_position; }
-    const String& text() const { return m_text; }
+    String const& text() const { return m_text; }
     const Core::MimeData& mime_data() const { return m_mime_data; }
 
 private:

@@ -14,20 +14,20 @@ class ManualPageNode : public ManualNode {
 public:
     virtual ~ManualPageNode() override { }
 
-    ManualPageNode(const ManualSectionNode& section, const StringView& page)
+    ManualPageNode(ManualSectionNode const& section, StringView const& page)
         : m_section(section)
         , m_page(page)
     {
     }
 
     virtual NonnullOwnPtrVector<ManualNode>& children() const override;
-    virtual const ManualNode* parent() const override;
+    virtual ManualNode const* parent() const override;
     virtual String name() const override { return m_page; };
     virtual bool is_page() const override { return true; }
 
     String path() const;
 
 private:
-    const ManualSectionNode& m_section;
+    ManualSectionNode const& m_section;
     String m_page;
 };

@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-AsyncBlockDeviceRequest::AsyncBlockDeviceRequest(Device& block_device, RequestType request_type, u64 block_index, u32 block_count, const UserOrKernelBuffer& buffer, size_t buffer_size)
+AsyncBlockDeviceRequest::AsyncBlockDeviceRequest(Device& block_device, RequestType request_type, u64 block_index, u32 block_count, UserOrKernelBuffer const& buffer, size_t buffer_size)
     : AsyncDeviceRequest(block_device)
     , m_block_device(static_cast<BlockDevice&>(block_device))
     , m_request_type(request_type)
@@ -49,7 +49,7 @@ bool BlockDevice::read_block(u64 index, UserOrKernelBuffer& buffer)
     return false;
 }
 
-bool BlockDevice::write_block(u64 index, const UserOrKernelBuffer& buffer)
+bool BlockDevice::write_block(u64 index, UserOrKernelBuffer const& buffer)
 {
     auto write_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Write, index, 1, buffer, 512);
     switch (write_request->wait().request_result()) {

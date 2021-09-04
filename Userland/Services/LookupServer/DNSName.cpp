@@ -11,7 +11,7 @@
 
 namespace LookupServer {
 
-DNSName::DNSName(const String& name)
+DNSName::DNSName(String const& name)
 {
     if (name.ends_with('.'))
         m_name = name.substring(0, name.length() - 1);
@@ -19,7 +19,7 @@ DNSName::DNSName(const String& name)
         m_name = name;
 }
 
-DNSName DNSName::parse(const u8* data, size_t& offset, size_t max_offset, size_t recursion_level)
+DNSName DNSName::parse(u8 const* data, size_t& offset, size_t max_offset, size_t recursion_level)
 {
     if (recursion_level > 4)
         return DNSName({});
@@ -44,7 +44,7 @@ DNSName DNSName::parse(const u8* data, size_t& offset, size_t max_offset, size_t
             // This is the length of a part.
             if (offset + b >= max_offset)
                 return DNSName({});
-            builder.append((const char*)&data[offset], (size_t)b);
+            builder.append((char const*)&data[offset], (size_t)b);
             builder.append('.');
             offset += b;
         }
@@ -74,7 +74,7 @@ void DNSName::randomize_case()
     m_name = builder.to_string();
 }
 
-OutputStream& operator<<(OutputStream& stream, const DNSName& name)
+OutputStream& operator<<(OutputStream& stream, DNSName const& name)
 {
     auto parts = name.as_string().split_view('.');
     for (auto& part : parts) {
@@ -85,12 +85,12 @@ OutputStream& operator<<(OutputStream& stream, const DNSName& name)
     return stream;
 }
 
-unsigned DNSName::Traits::hash(const DNSName& name)
+unsigned DNSName::Traits::hash(DNSName const& name)
 {
     return CaseInsensitiveStringTraits::hash(name.as_string());
 }
 
-bool DNSName::Traits::equals(const DNSName& a, const DNSName& b)
+bool DNSName::Traits::equals(DNSName const& a, DNSName const& b)
 {
     return CaseInsensitiveStringTraits::equals(a.as_string(), b.as_string());
 }

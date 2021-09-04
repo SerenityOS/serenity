@@ -26,9 +26,9 @@ public:
 
     Type type() const { return m_type; }
 
-    virtual bool connect(const String& hostname, int port);
-    bool connect(const SocketAddress&, int port);
-    bool connect(const SocketAddress&);
+    virtual bool connect(String const& hostname, int port);
+    bool connect(SocketAddress const&, int port);
+    bool connect(SocketAddress const&);
 
     ByteBuffer receive(int max_size);
     bool send(ReadonlyBytes);

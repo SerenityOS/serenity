@@ -271,7 +271,7 @@ void AbstractTableView::move_cursor_relative(int vertical_steps, int horizontal_
     }
 }
 
-void AbstractTableView::scroll_into_view(const ModelIndex& index, bool scroll_horizontally, bool scroll_vertically)
+void AbstractTableView::scroll_into_view(ModelIndex const& index, bool scroll_horizontally, bool scroll_vertically)
 {
     Gfx::IntRect rect;
     switch (selection_behavior()) {
@@ -319,7 +319,7 @@ Gfx::IntRect AbstractTableView::content_rect(int row, int column) const
     return { row_rect.x() + x, row_rect.y(), column_width(column) + horizontal_padding() * 2, row_height() };
 }
 
-Gfx::IntRect AbstractTableView::content_rect(const ModelIndex& index) const
+Gfx::IntRect AbstractTableView::content_rect(ModelIndex const& index) const
 {
     return content_rect(index.row(), index.column());
 }

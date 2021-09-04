@@ -25,7 +25,7 @@
 
 namespace Browser {
 
-DownloadWidget::DownloadWidget(const URL& url)
+DownloadWidget::DownloadWidget(URL const& url)
     : m_url(url)
 {
     {

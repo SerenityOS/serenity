@@ -14,7 +14,7 @@
 
 namespace Gfx {
 
-void ClassicStylePainter::paint_tab_button(Painter& painter, const IntRect& rect, const Palette& palette, bool active, bool hovered, bool enabled, bool top, bool in_active_window)
+void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect, Palette const& palette, bool active, bool hovered, bool enabled, bool top, bool in_active_window)
 {
     Color base_color = palette.button();
     Color highlight_color2 = palette.threed_highlight();
@@ -164,7 +164,7 @@ static void paint_button_new(Painter& painter, IntRect const& a_rect, Palette co
     }
 }
 
-void ClassicStylePainter::paint_button(Painter& painter, const IntRect& rect, const Palette& palette, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled, bool focused)
+void ClassicStylePainter::paint_button(Painter& painter, IntRect const& rect, Palette const& palette, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled, bool focused)
 {
     if (button_style == ButtonStyle::Normal || button_style == ButtonStyle::ThickCap)
         return paint_button_new(painter, rect, palette, button_style, pressed, checked, hovered, enabled, focused);
@@ -213,7 +213,7 @@ void ClassicStylePainter::paint_button(Painter& painter, const IntRect& rect, co
     }
 }
 
-void ClassicStylePainter::paint_frame(Painter& painter, const IntRect& rect, const Palette& palette, FrameShape shape, FrameShadow shadow, int thickness, bool skip_vertical_lines)
+void ClassicStylePainter::paint_frame(Painter& painter, IntRect const& rect, Palette const& palette, FrameShape shape, FrameShadow shadow, int thickness, bool skip_vertical_lines)
 {
     Color top_left_color;
     Color bottom_right_color;
@@ -280,7 +280,7 @@ void ClassicStylePainter::paint_frame(Painter& painter, const IntRect& rect, con
     }
 }
 
-void ClassicStylePainter::paint_window_frame(Painter& painter, const IntRect& rect, const Palette& palette)
+void ClassicStylePainter::paint_window_frame(Painter& painter, IntRect const& rect, Palette const& palette)
 {
     Color base_color = palette.button();
     Color dark_shade = palette.threed_shadow2();
@@ -306,7 +306,7 @@ void ClassicStylePainter::paint_window_frame(Painter& painter, const IntRect& re
     painter.draw_line(rect.bottom_left().translated(3, -3), rect.bottom_right().translated(-3, -3), base_color);
 }
 
-void ClassicStylePainter::paint_progressbar(Painter& painter, const IntRect& rect, const Palette& palette, int min, int max, int value, const StringView& text, Orientation orientation)
+void ClassicStylePainter::paint_progressbar(Painter& painter, IntRect const& rect, Palette const& palette, int min, int max, int value, StringView const& text, Orientation orientation)
 {
     // First we fill the entire widget with the gradient. This incurs a bit of
     // overdraw but ensures a consistent look throughout the progression.
@@ -354,7 +354,7 @@ static const Gfx::Bitmap& circle_bitmap(bool checked, bool changing)
     return checked ? *s_filled_circle_bitmap : *s_unfilled_circle_bitmap;
 }
 
-void ClassicStylePainter::paint_radio_button(Painter& painter, const IntRect& rect, const Palette&, bool is_checked, bool is_being_pressed)
+void ClassicStylePainter::paint_radio_button(Painter& painter, IntRect const& rect, Palette const&, bool is_checked, bool is_being_pressed)
 {
     if (!s_unfilled_circle_bitmap) {
         s_unfilled_circle_bitmap = Bitmap::try_load_from_file("/res/icons/serenity/unfilled-radio-circle.png");
@@ -367,7 +367,7 @@ void ClassicStylePainter::paint_radio_button(Painter& painter, const IntRect& re
     painter.blit(rect.location(), bitmap, bitmap.rect());
 }
 
-static const char* s_checked_bitmap_data = {
+static char const* s_checked_bitmap_data = {
     "         "
     "       # "
     "      ## "
@@ -383,7 +383,7 @@ static Gfx::CharacterBitmap* s_checked_bitmap;
 static const int s_checked_bitmap_width = 9;
 static const int s_checked_bitmap_height = 9;
 
-void ClassicStylePainter::paint_check_box(Painter& painter, const IntRect& rect, const Palette& palette, bool is_enabled, bool is_checked, bool is_being_pressed)
+void ClassicStylePainter::paint_check_box(Painter& painter, IntRect const& rect, Palette const& palette, bool is_enabled, bool is_checked, bool is_being_pressed)
 {
     painter.fill_rect(rect, is_enabled ? palette.base() : palette.window());
     paint_frame(painter, rect, palette, Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
@@ -400,7 +400,7 @@ void ClassicStylePainter::paint_check_box(Painter& painter, const IntRect& rect,
     }
 }
 
-void ClassicStylePainter::paint_transparency_grid(Painter& painter, const IntRect& rect, const Palette& palette)
+void ClassicStylePainter::paint_transparency_grid(Painter& painter, IntRect const& rect, Palette const& palette)
 {
     painter.fill_rect_with_checkerboard(rect, { 8, 8 }, palette.base().darkened(0.9), palette.base());
 }

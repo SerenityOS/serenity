@@ -53,7 +53,7 @@ public:
     void set_bottom(int value) { m_bottom = value; }
     void set_left(int value) { m_left = value; }
 
-    bool operator==(const Margins& other) const
+    bool operator==(Margins const& other) const
     {
         return m_left == other.m_left
             && m_top == other.m_top

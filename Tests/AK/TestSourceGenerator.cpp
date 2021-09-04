@@ -24,9 +24,9 @@ TEST_CASE(generate_c_code)
     SourceGenerator generator { builder };
     generator.set("name", "foo");
 
-    generator.append("const char* @name@ (void) { return \"@name@\"; }");
+    generator.append("char const* @name@ (void) { return \"@name@\"; }");
 
-    EXPECT_EQ(generator.as_string_view(), "const char* foo (void) { return \"foo\"; }");
+    EXPECT_EQ(generator.as_string_view(), "char const* foo (void) { return \"foo\"; }");
 }
 
 TEST_CASE(scoped)

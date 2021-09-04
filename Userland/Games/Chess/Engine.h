@@ -15,10 +15,10 @@ class Engine : public Chess::UCI::Endpoint {
 public:
     virtual ~Engine() override;
 
-    Engine(const StringView& command);
+    Engine(StringView const& command);
 
-    Engine(const Engine&) = delete;
-    Engine& operator=(const Engine&) = delete;
+    Engine(Engine const&) = delete;
+    Engine& operator=(Engine const&) = delete;
 
     virtual void handle_bestmove(const Chess::UCI::BestMoveCommand&);
 

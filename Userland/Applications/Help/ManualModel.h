@@ -21,11 +21,11 @@ public:
 
     virtual ~ManualModel() override {};
 
-    Optional<GUI::ModelIndex> index_from_path(const StringView&) const;
+    Optional<GUI::ModelIndex> index_from_path(StringView const&) const;
 
     String page_path(const GUI::ModelIndex&) const;
     String page_and_section(const GUI::ModelIndex&) const;
-    Result<StringView, OSError> page_view(const String& path) const;
+    Result<StringView, OSError> page_view(String const& path) const;
 
     void update_section_node_on_toggle(const GUI::ModelIndex&, const bool);
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;

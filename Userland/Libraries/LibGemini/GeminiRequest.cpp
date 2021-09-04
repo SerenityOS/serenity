@@ -27,7 +27,7 @@ ByteBuffer GeminiRequest::to_raw_request() const
     return builder.to_byte_buffer();
 }
 
-Optional<GeminiRequest> GeminiRequest::from_raw_request(const ByteBuffer& raw_request)
+Optional<GeminiRequest> GeminiRequest::from_raw_request(ByteBuffer const& raw_request)
 {
     URL url = StringView(raw_request);
     if (!url.is_valid())

@@ -30,7 +30,7 @@ public:
     KeyCode key() const { return m_key; }
     String to_string() const;
 
-    bool operator==(const Shortcut& other) const
+    bool operator==(Shortcut const& other) const
     {
         return m_modifiers == other.m_modifiers
             && m_key == other.m_key;

@@ -69,7 +69,7 @@ KResultOr<size_t> MasterPTY::read(FileDescription&, u64, UserOrKernelBuffer& buf
     return m_buffer->read(buffer, size);
 }
 
-KResultOr<size_t> MasterPTY::write(FileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> MasterPTY::write(FileDescription&, u64, UserOrKernelBuffer const& buffer, size_t size)
 {
     if (!m_slave)
         return EIO;
@@ -77,14 +77,14 @@ KResultOr<size_t> MasterPTY::write(FileDescription&, u64, const UserOrKernelBuff
     return size;
 }
 
-bool MasterPTY::can_read(const FileDescription&, size_t) const
+bool MasterPTY::can_read(FileDescription const&, size_t) const
 {
     if (!m_slave)
         return true;
     return !m_buffer->is_empty();
 }
 
-bool MasterPTY::can_write(const FileDescription&, size_t) const
+bool MasterPTY::can_write(FileDescription const&, size_t) const
 {
     return true;
 }
@@ -98,7 +98,7 @@ void MasterPTY::notify_slave_closed(Badge<SlavePTY>)
         m_slave = nullptr;
 }
 
-KResultOr<size_t> MasterPTY::on_slave_write(const UserOrKernelBuffer& data, size_t size)
+KResultOr<size_t> MasterPTY::on_slave_write(UserOrKernelBuffer const& data, size_t size)
 {
     if (m_closed)
         return EIO;
@@ -135,7 +135,7 @@ KResult MasterPTY::ioctl(FileDescription& description, unsigned request, Userspa
     return EINVAL;
 }
 
-String MasterPTY::absolute_path(const FileDescription&) const
+String MasterPTY::absolute_path(FileDescription const&) const
 {
     return String::formatted("ptm:{}", m_pts_name);
 }

@@ -11,7 +11,7 @@
 
 namespace UserspaceEmulator {
 
-static void* mmap_initialized(size_t bytes, char initial_value, const char* name)
+static void* mmap_initialized(size_t bytes, char initial_value, char const* name)
 {
     auto* ptr = mmap_with_name(nullptr, bytes, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, name);
     VERIFY(ptr != MAP_FAILED);

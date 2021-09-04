@@ -29,12 +29,12 @@ enum class TarFileType : char {
 };
 
 constexpr size_t block_size = 512;
-constexpr const char* gnu_magic = "ustar ";    // gnu format magic
-constexpr const char* gnu_version = " ";       // gnu format version
-constexpr const char* ustar_magic = "ustar";   // ustar format magic
-constexpr const char* ustar_version = "00";    // ustar format version
-constexpr const char* posix1_tar_magic = "";   // POSIX.1-1988 format magic
-constexpr const char* posix1_tar_version = ""; // POSIX.1-1988 format version
+constexpr char const* gnu_magic = "ustar ";    // gnu format magic
+constexpr char const* gnu_version = " ";       // gnu format version
+constexpr char const* ustar_magic = "ustar";   // ustar format magic
+constexpr char const* ustar_version = "00";    // ustar format version
+constexpr char const* posix1_tar_magic = "";   // POSIX.1-1988 format magic
+constexpr char const* posix1_tar_version = ""; // POSIX.1-1988 format version
 
 class [[gnu::packed]] TarFileHeader {
 public:
@@ -57,21 +57,21 @@ public:
     // FIXME: support ustar filename prefix
     const StringView prefix() const { return m_prefix; }
 
-    void set_filename(const String& filename) { VERIFY(filename.copy_characters_to_buffer(m_filename, sizeof(m_filename))); }
+    void set_filename(String const& filename) { VERIFY(filename.copy_characters_to_buffer(m_filename, sizeof(m_filename))); }
     void set_mode(mode_t mode) { VERIFY(String::formatted("{:o}", mode).copy_characters_to_buffer(m_mode, sizeof(m_mode))); }
     void set_uid(uid_t uid) { VERIFY(String::formatted("{:o}", uid).copy_characters_to_buffer(m_uid, sizeof(m_uid))); }
     void set_gid(gid_t gid) { VERIFY(String::formatted("{:o}", gid).copy_characters_to_buffer(m_gid, sizeof(m_gid))); }
     void set_size(size_t size) { VERIFY(String::formatted("{:o}", size).copy_characters_to_buffer(m_size, sizeof(m_size))); }
     void set_timestamp(time_t timestamp) { VERIFY(String::formatted("{:o}", timestamp).copy_characters_to_buffer(m_timestamp, sizeof(m_timestamp))); }
     void set_type_flag(TarFileType type) { m_type_flag = static_cast<char>(type); }
-    void set_link_name(const String& link_name) { VERIFY(link_name.copy_characters_to_buffer(m_link_name, sizeof(m_link_name))); }
-    void set_magic(const char* magic) { memcpy(m_magic, magic, sizeof(m_magic)); }           // magic doesn't necessarily include a null byte
-    void set_version(const char* version) { memcpy(m_version, version, sizeof(m_version)); } // version doesn't necessarily include a null byte
-    void set_owner_name(const String& owner_name) { VERIFY(owner_name.copy_characters_to_buffer(m_owner_name, sizeof(m_owner_name))); }
-    void set_group_name(const String& group_name) { VERIFY(group_name.copy_characters_to_buffer(m_group_name, sizeof(m_group_name))); }
+    void set_link_name(String const& link_name) { VERIFY(link_name.copy_characters_to_buffer(m_link_name, sizeof(m_link_name))); }
+    void set_magic(char const* magic) { memcpy(m_magic, magic, sizeof(m_magic)); }           // magic doesn't necessarily include a null byte
+    void set_version(char const* version) { memcpy(m_version, version, sizeof(m_version)); } // version doesn't necessarily include a null byte
+    void set_owner_name(String const& owner_name) { VERIFY(owner_name.copy_characters_to_buffer(m_owner_name, sizeof(m_owner_name))); }
+    void set_group_name(String const& group_name) { VERIFY(group_name.copy_characters_to_buffer(m_group_name, sizeof(m_group_name))); }
     void set_major(int major) { VERIFY(String::formatted("{:o}", major).copy_characters_to_buffer(m_major, sizeof(m_major))); }
     void set_minor(int minor) { VERIFY(String::formatted("{:o}", minor).copy_characters_to_buffer(m_minor, sizeof(m_minor))); }
-    void set_prefix(const String& prefix) { VERIFY(prefix.copy_characters_to_buffer(m_prefix, sizeof(m_prefix))); }
+    void set_prefix(String const& prefix) { VERIFY(prefix.copy_characters_to_buffer(m_prefix, sizeof(m_prefix))); }
 
     unsigned expected_checksum() const;
     void calculate_checksum();

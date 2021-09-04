@@ -44,7 +44,7 @@ public:
     void set_document(DOM::Document*);
 
     Page* page() { return m_page; }
-    const Page* page() const { return m_page; }
+    Page const* page() const { return m_page; }
 
     const Gfx::IntSize& size() const { return m_size; }
     void set_size(const Gfx::IntSize&);
@@ -56,12 +56,12 @@ public:
     void set_viewport_rect(const Gfx::IntRect&);
 
     FrameLoader& loader() { return m_loader; }
-    const FrameLoader& loader() const { return m_loader; }
+    FrameLoader const& loader() const { return m_loader; }
 
     EventHandler& event_handler() { return m_event_handler; }
-    const EventHandler& event_handler() const { return m_event_handler; }
+    EventHandler const& event_handler() const { return m_event_handler; }
 
-    void scroll_to_anchor(const String&);
+    void scroll_to_anchor(String const&);
 
     BrowsingContext& top_level_browsing_context() { return m_top_level_browsing_context; }
     BrowsingContext const& top_level_browsing_context() const { return m_top_level_browsing_context; }

@@ -86,7 +86,7 @@ void LocalSocket::parse_sockets_from_system_server()
     VERIFY(!s_overtaken_sockets_parsed);
 
     constexpr auto socket_takeover = "SOCKET_TAKEOVER";
-    const char* sockets = getenv(socket_takeover);
+    char const* sockets = getenv(socket_takeover);
     if (!sockets) {
         s_overtaken_sockets_parsed = true;
         return;

@@ -67,7 +67,7 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr Complex<T>& operator=(const U& x)
+    constexpr Complex<T>& operator=(U const& x)
     {
         m_real = x;
         m_imag = 0;
@@ -83,7 +83,7 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr Complex<T> operator+=(const U& x)
+    constexpr Complex<T> operator+=(U const& x)
     {
         m_real += x.real();
         return *this;
@@ -98,7 +98,7 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr Complex<T> operator-=(const U& x)
+    constexpr Complex<T> operator-=(U const& x)
     {
         m_real -= x.real();
         return *this;
@@ -114,7 +114,7 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr Complex<T> operator*=(const U& x)
+    constexpr Complex<T> operator*=(U const& x)
     {
         m_real *= x;
         m_imag *= x;
@@ -132,7 +132,7 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr Complex<T> operator/=(const U& x)
+    constexpr Complex<T> operator/=(U const& x)
     {
         m_real /= x;
         m_imag /= x;
@@ -148,7 +148,7 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr Complex<T> operator+(const U& a)
+    constexpr Complex<T> operator+(U const& a)
     {
         Complex<T> x = *this;
         x += a;
@@ -164,7 +164,7 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr Complex<T> operator-(const U& a)
+    constexpr Complex<T> operator-(U const& a)
     {
         Complex<T> x = *this;
         x -= a;
@@ -180,7 +180,7 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr Complex<T> operator*(const U& a)
+    constexpr Complex<T> operator*(U const& a)
     {
         Complex<T> x = *this;
         x *= a;
@@ -196,7 +196,7 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr Complex<T> operator/(const U& a)
+    constexpr Complex<T> operator/(U const& a)
     {
         Complex<T> x = *this;
         x /= a;
@@ -232,7 +232,7 @@ private:
 
 // reverse associativity operators for scalars
 template<AK::Concepts::Arithmetic T, AK::Concepts::Arithmetic U>
-constexpr Complex<T> operator+(const U& b, const Complex<T>& a)
+constexpr Complex<T> operator+(U const& b, const Complex<T>& a)
 {
     Complex<T> x = a;
     x += b;
@@ -240,7 +240,7 @@ constexpr Complex<T> operator+(const U& b, const Complex<T>& a)
 }
 
 template<AK::Concepts::Arithmetic T, AK::Concepts::Arithmetic U>
-constexpr Complex<T> operator-(const U& b, const Complex<T>& a)
+constexpr Complex<T> operator-(U const& b, const Complex<T>& a)
 {
     Complex<T> x = a;
     x -= b;
@@ -248,7 +248,7 @@ constexpr Complex<T> operator-(const U& b, const Complex<T>& a)
 }
 
 template<AK::Concepts::Arithmetic T, AK::Concepts::Arithmetic U>
-constexpr Complex<T> operator*(const U& b, const Complex<T>& a)
+constexpr Complex<T> operator*(U const& b, const Complex<T>& a)
 {
     Complex<T> x = a;
     x *= b;
@@ -256,7 +256,7 @@ constexpr Complex<T> operator*(const U& b, const Complex<T>& a)
 }
 
 template<AK::Concepts::Arithmetic T, AK::Concepts::Arithmetic U>
-constexpr Complex<T> operator/(const U& b, const Complex<T>& a)
+constexpr Complex<T> operator/(U const& b, const Complex<T>& a)
 {
     Complex<T> x = a;
     x /= b;

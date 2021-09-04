@@ -28,7 +28,7 @@ public:
 
     int horizontal_padding() const { return m_horizontal_padding; }
 
-    virtual void scroll_into_view(const ModelIndex&, bool scroll_horizontally = true, bool scroll_vertically = true) override;
+    virtual void scroll_into_view(ModelIndex const&, bool scroll_horizontally = true, bool scroll_vertically = true) override;
 
     Gfx::IntSize effective_item_size() const { return m_effective_item_size; }
 
@@ -39,7 +39,7 @@ public:
     void set_model_column(int column) { m_model_column = column; }
 
     virtual ModelIndex index_at_event_position(const Gfx::IntPoint&) const override;
-    virtual Gfx::IntRect content_rect(const ModelIndex&) const override;
+    virtual Gfx::IntRect content_rect(ModelIndex const&) const override;
     virtual Gfx::IntRect editing_rect(ModelIndex const&) const override;
     virtual Gfx::IntRect paint_invalidation_rect(ModelIndex const&) const override;
 
@@ -55,8 +55,8 @@ private:
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
     virtual void mouseup_event(MouseEvent&) override;
-    virtual void did_change_hovered_index(const ModelIndex& old_index, const ModelIndex& new_index) override;
-    virtual void did_change_cursor_index(const ModelIndex& old_index, const ModelIndex& new_index) override;
+    virtual void did_change_hovered_index(ModelIndex const& old_index, ModelIndex const& new_index) override;
+    virtual void did_change_cursor_index(ModelIndex const& old_index, ModelIndex const& new_index) override;
 
     virtual void move_cursor(CursorMovement, SelectionUpdate) override;
 
@@ -125,7 +125,7 @@ private:
     int items_per_page() const;
 
     void rebuild_item_cache() const;
-    int model_index_to_item_index(const ModelIndex& model_index) const
+    int model_index_to_item_index(ModelIndex const& model_index) const
     {
         VERIFY(model_index.row() < item_count());
         return model_index.row();
@@ -133,9 +133,9 @@ private:
 
     virtual void did_update_selection() override;
     virtual void clear_selection() override;
-    virtual void add_selection(const ModelIndex& new_index) override;
-    virtual void set_selection(const ModelIndex& new_index) override;
-    virtual void toggle_selection(const ModelIndex& new_index) override;
+    virtual void add_selection(ModelIndex const& new_index) override;
+    virtual void set_selection(ModelIndex const& new_index) override;
+    virtual void toggle_selection(ModelIndex const& new_index) override;
 
     ItemData& get_item_data(int) const;
     ItemData* item_data_from_content_position(const Gfx::IntPoint&) const;

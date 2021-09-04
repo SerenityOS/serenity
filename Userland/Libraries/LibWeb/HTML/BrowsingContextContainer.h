@@ -16,12 +16,12 @@ public:
     virtual ~BrowsingContextContainer() override;
 
     BrowsingContext* nested_browsing_context() { return m_nested_browsing_context; }
-    const BrowsingContext* nested_browsing_context() const { return m_nested_browsing_context; }
+    BrowsingContext const* nested_browsing_context() const { return m_nested_browsing_context; }
 
     const DOM::Document* content_document() const;
 
     Origin content_origin() const;
-    bool may_access_from_origin(const Origin&) const;
+    bool may_access_from_origin(Origin const&) const;
 
     void nested_browsing_context_did_load(Badge<FrameLoader>);
 

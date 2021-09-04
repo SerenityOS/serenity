@@ -216,7 +216,7 @@ TEST_CASE(count_in_range)
             bitmap.set(i, true);
     }
 
-    auto count_bits_slow = [](const Bitmap& b, size_t start, size_t len, bool value) -> size_t {
+    auto count_bits_slow = [](Bitmap const& b, size_t start, size_t len, bool value) -> size_t {
         size_t count = 0;
         for (size_t i = start; i < start + len; i++) {
             if (b.get(i) == value)

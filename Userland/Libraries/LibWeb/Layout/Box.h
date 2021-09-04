@@ -105,7 +105,7 @@ public:
     void set_containing_line_box_fragment(LineBoxFragment&);
 
     StackingContext* stacking_context() { return m_stacking_context; }
-    const StackingContext* stacking_context() const { return m_stacking_context; }
+    StackingContext const* stacking_context() const { return m_stacking_context; }
     void set_stacking_context(NonnullOwnPtr<StackingContext> context) { m_stacking_context = move(context); }
     StackingContext* enclosing_stacking_context();
 

@@ -95,7 +95,7 @@ inline void kfree_aligned(void* ptr)
 {
     if (ptr == nullptr)
         return;
-    kfree((u8*)ptr - ((const ptrdiff_t*)ptr)[-1]);
+    kfree((u8*)ptr - ((ptrdiff_t const*)ptr)[-1]);
 }
 
 size_t kmalloc_good_size(size_t);

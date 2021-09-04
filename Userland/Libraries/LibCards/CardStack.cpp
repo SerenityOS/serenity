@@ -46,7 +46,7 @@ void CardStack::draw(GUI::Painter& painter, const Gfx::Color& background_color)
 {
     auto draw_background_if_empty = [&]() {
         size_t number_of_moving_cards = 0;
-        for (const auto& card : m_stack)
+        for (auto const& card : m_stack)
             number_of_moving_cards += card.is_moving();
 
         if (m_associated_stack && !m_associated_stack->is_empty())
@@ -187,7 +187,7 @@ void CardStack::add_all_grabbed_cards(const Gfx::IntPoint& click_location, Nonnu
     }
 }
 
-bool CardStack::is_allowed_to_push(const Card& card, size_t stack_size, MovementRule movement_rule) const
+bool CardStack::is_allowed_to_push(Card const& card, size_t stack_size, MovementRule movement_rule) const
 {
     if (m_type == Stock || m_type == Waste || m_type == Play)
         return false;

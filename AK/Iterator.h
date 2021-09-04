@@ -52,18 +52,18 @@ public:
         return SimpleIterator { m_container, m_index + 1 };
     }
 
-    ALWAYS_INLINE constexpr const ValueType& operator*() const { return m_container[m_index]; }
+    ALWAYS_INLINE constexpr ValueType const& operator*() const { return m_container[m_index]; }
     ALWAYS_INLINE constexpr ValueType& operator*() { return m_container[m_index]; }
 
     constexpr auto operator->() const { return &m_container[m_index]; }
     constexpr auto operator->() { return &m_container[m_index]; }
 
-    SimpleIterator& operator=(const SimpleIterator& other)
+    SimpleIterator& operator=(SimpleIterator const& other)
     {
         m_index = other.m_index;
         return *this;
     }
-    SimpleIterator(const SimpleIterator& obj) = default;
+    SimpleIterator(SimpleIterator const& obj) = default;
 
 private:
     static constexpr SimpleIterator begin(Container& container) { return { container, 0 }; }

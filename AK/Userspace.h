@@ -24,11 +24,11 @@ public:
     operator FlatPtr() const { return (FlatPtr)m_ptr; }
 
     // Disable default implementations that would use surprising integer promotion.
-    bool operator==(const Userspace&) const = delete;
-    bool operator<=(const Userspace&) const = delete;
-    bool operator>=(const Userspace&) const = delete;
-    bool operator<(const Userspace&) const = delete;
-    bool operator>(const Userspace&) const = delete;
+    bool operator==(Userspace const&) const = delete;
+    bool operator<=(Userspace const&) const = delete;
+    bool operator>=(Userspace const&) const = delete;
+    bool operator<(Userspace const&) const = delete;
+    bool operator>(Userspace const&) const = delete;
 
 #ifdef KERNEL
     Userspace(FlatPtr ptr)

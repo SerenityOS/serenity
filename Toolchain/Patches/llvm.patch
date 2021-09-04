@@ -440,7 +440,7 @@ diff --git a/libcxx/include/__string b/libcxx/include/__string
 index d8b672e4c..638cf1698 100644
 --- a/libcxx/include/__string
 +++ b/libcxx/include/__string
-@@ -451,6 +451,7 @@ char_traits<char>::find(const char_type* __s, size_t __n, const char_type& __a)
+@@ -451,6 +451,7 @@ char_traits<char>::find(char_type const* __s, size_t __n, char_type const& __a)
  }
  
  
@@ -448,7 +448,7 @@ index d8b672e4c..638cf1698 100644
  // char_traits<wchar_t>
  
  template <>
-@@ -531,6 +532,7 @@ char_traits<wchar_t>::compare(const char_type* __s1, const char_type* __s2, size
+@@ -531,6 +532,7 @@ char_traits<wchar_t>::compare(char_type const* __s1, char_type const* __s2, size
  #endif
  }
  
@@ -463,8 +463,8 @@ index d8b672e4c..638cf1698 100644
 +#ifndef __serenity__
  inline _LIBCPP_CONSTEXPR_AFTER_CXX14
  size_t
- char_traits<wchar_t>::length(const char_type* __s) _NOEXCEPT
-@@ -579,6 +582,7 @@ char_traits<wchar_t>::find(const char_type* __s, size_t __n, const char_type& __
+ char_traits<wchar_t>::length(char_type const* __s) _NOEXCEPT
+@@ -579,6 +582,7 @@ char_traits<wchar_t>::find(char_type const* __s, size_t __n, char_type const& __
      return nullptr;
  #endif
  }
@@ -476,7 +476,7 @@ diff --git a/libcxx/include/cwchar b/libcxx/include/cwchar
 index 451c621f9..1e83b8e60 100644
 --- a/libcxx/include/cwchar
 +++ b/libcxx/include/cwchar
-@@ -112,11 +112,13 @@ size_t wcsrtombs(char* restrict dst, const wchar_t** restrict src, size_t len,
+@@ -112,11 +112,13 @@ size_t wcsrtombs(char* restrict dst, wchar_t const** restrict src, size_t len,
  
  _LIBCPP_BEGIN_NAMESPACE_STD
  
@@ -504,7 +504,7 @@ diff --git a/libcxx/include/cwctype b/libcxx/include/cwctype
 index 575fd5661..c401b6cf0 100644
 --- a/libcxx/include/cwctype
 +++ b/libcxx/include/cwctype
-@@ -59,6 +59,7 @@ wctrans_t wctrans(const char* property);
+@@ -59,6 +59,7 @@ wctrans_t wctrans(char const* property);
  
  _LIBCPP_BEGIN_NAMESPACE_STD
  
@@ -524,7 +524,7 @@ diff --git a/libcxx/include/initializer_list b/libcxx/include/initializer_list
 index 893736f57..70a0d1ccf 100644
 --- a/libcxx/include/initializer_list
 +++ b/libcxx/include/initializer_list
-@@ -43,7 +43,9 @@ template<class E> const E* end(initializer_list<E> il) noexcept; // constexpr in
+@@ -43,7 +43,9 @@ template<class E> E const* end(initializer_list<E> il) noexcept; // constexpr in
  */
  
  #include <__config>
@@ -644,14 +644,14 @@ diff --git a/libcxx/include/wchar.h b/libcxx/include/wchar.h
 index b21a78968..ae20183ed 100644
 --- a/libcxx/include/wchar.h
 +++ b/libcxx/include/wchar.h
-@@ -132,6 +132,7 @@ size_t wcsrtombs(char* restrict dst, const wchar_t** restrict src, size_t len,
+@@ -132,6 +132,7 @@ size_t wcsrtombs(char* restrict dst, wchar_t const** restrict src, size_t len,
  #endif
  
  #if defined(__cplusplus) && !defined(_LIBCPP_WCHAR_H_HAS_CONST_OVERLOADS) && defined(_LIBCPP_PREFERRED_OVERLOAD)
 +#ifndef __serenity__
  extern "C++" {
  inline _LIBCPP_INLINE_VISIBILITY
- wchar_t* __libcpp_wcschr(const wchar_t* __s, wchar_t __c) {return (wchar_t*)wcschr(__s, __c);}
+ wchar_t* __libcpp_wcschr(wchar_t const* __s, wchar_t __c) {return (wchar_t*)wcschr(__s, __c);}
 @@ -178,5 +179,6 @@ size_t wcsnrtombs(char *__restrict dst, const wchar_t **__restrict src,
                    size_t nwc, size_t len, mbstate_t *__restrict ps);
  }  // extern "C++"
@@ -663,7 +663,7 @@ diff --git a/libcxx/src/string.cpp b/libcxx/src/string.cpp
 index 5105594cf..ca85269db 100644
 --- a/libcxx/src/string.cpp
 +++ b/libcxx/src/string.cpp
-@@ -131,6 +131,7 @@ as_integer( const string& func, const string& s, size_t* idx, int base )
+@@ -131,6 +131,7 @@ as_integer( string const& func, string const& s, size_t* idx, int base )
      return as_integer_helper<unsigned long long>( func, s, idx, base, strtoull );
  }
  
@@ -671,7 +671,7 @@ index 5105594cf..ca85269db 100644
  // wstring
  template<>
  inline
-@@ -175,6 +176,7 @@ as_integer( const string& func, const wstring& s, size_t* idx, int base )
+@@ -175,6 +176,7 @@ as_integer( string const& func, wstring const& s, size_t* idx, int base )
  {
      return as_integer_helper<unsigned long long>( func, s, idx, base, wcstoull );
  }
@@ -679,7 +679,7 @@ index 5105594cf..ca85269db 100644
  
  // as_float
  
-@@ -226,6 +228,8 @@ as_float( const string& func, const string& s, size_t* idx )
+@@ -226,6 +228,8 @@ as_float( string const& func, string const& s, size_t* idx )
      return as_float_helper<long double>( func, s, idx, strtold );
  }
  
@@ -688,7 +688,7 @@ index 5105594cf..ca85269db 100644
  template<>
  inline
  float
-@@ -249,6 +253,7 @@ as_float( const string& func, const wstring& s, size_t* idx )
+@@ -249,6 +253,7 @@ as_float( string const& func, wstring const& s, size_t* idx )
  {
      return as_float_helper<long double>( func, s, idx, wcstold );
  }
@@ -696,111 +696,111 @@ index 5105594cf..ca85269db 100644
  
  }  // unnamed namespace
  
-@@ -258,11 +263,13 @@ stoi(const string& str, size_t* idx, int base)
+@@ -258,11 +263,13 @@ stoi(string const& str, size_t* idx, int base)
      return as_integer<int>( "stoi", str, idx, base );
  }
  
 +#ifndef __serenity__
  int
- stoi(const wstring& str, size_t* idx, int base)
+ stoi(wstring const& str, size_t* idx, int base)
  {
      return as_integer<int>( "stoi", str, idx, base );
  }
 +#endif
  
  long
- stol(const string& str, size_t* idx, int base)
-@@ -270,11 +277,13 @@ stol(const string& str, size_t* idx, int base)
+ stol(string const& str, size_t* idx, int base)
+@@ -270,11 +277,13 @@ stol(string const& str, size_t* idx, int base)
      return as_integer<long>( "stol", str, idx, base );
  }
  
 +#ifndef __serenity__
  long
- stol(const wstring& str, size_t* idx, int base)
+ stol(wstring const& str, size_t* idx, int base)
  {
      return as_integer<long>( "stol", str, idx, base );
  }
 +#endif
  
  unsigned long
- stoul(const string& str, size_t* idx, int base)
-@@ -282,11 +291,13 @@ stoul(const string& str, size_t* idx, int base)
+ stoul(string const& str, size_t* idx, int base)
+@@ -282,11 +291,13 @@ stoul(string const& str, size_t* idx, int base)
      return as_integer<unsigned long>( "stoul", str, idx, base );
  }
  
 +#ifndef __serenity__
  unsigned long
- stoul(const wstring& str, size_t* idx, int base)
+ stoul(wstring const& str, size_t* idx, int base)
  {
      return as_integer<unsigned long>( "stoul", str, idx, base );
  }
 +#endif
  
  long long
- stoll(const string& str, size_t* idx, int base)
-@@ -294,11 +305,13 @@ stoll(const string& str, size_t* idx, int base)
+ stoll(string const& str, size_t* idx, int base)
+@@ -294,11 +305,13 @@ stoll(string const& str, size_t* idx, int base)
      return as_integer<long long>( "stoll", str, idx, base );
  }
  
 +#ifndef __serenity__
  long long
- stoll(const wstring& str, size_t* idx, int base)
+ stoll(wstring const& str, size_t* idx, int base)
  {
      return as_integer<long long>( "stoll", str, idx, base );
  }
 +#endif
  
  unsigned long long
- stoull(const string& str, size_t* idx, int base)
-@@ -306,11 +319,13 @@ stoull(const string& str, size_t* idx, int base)
+ stoull(string const& str, size_t* idx, int base)
+@@ -306,11 +319,13 @@ stoull(string const& str, size_t* idx, int base)
      return as_integer<unsigned long long>( "stoull", str, idx, base );
  }
  
 +#ifndef __serenity__
  unsigned long long
- stoull(const wstring& str, size_t* idx, int base)
+ stoull(wstring const& str, size_t* idx, int base)
  {
      return as_integer<unsigned long long>( "stoull", str, idx, base );
  }
 +#endif
  
  float
- stof(const string& str, size_t* idx)
-@@ -318,11 +333,13 @@ stof(const string& str, size_t* idx)
+ stof(string const& str, size_t* idx)
+@@ -318,11 +333,13 @@ stof(string const& str, size_t* idx)
      return as_float<float>( "stof", str, idx );
  }
  
 +#ifndef __serenity__
  float
- stof(const wstring& str, size_t* idx)
+ stof(wstring const& str, size_t* idx)
  {
      return as_float<float>( "stof", str, idx );
  }
 +#endif
  
  double
- stod(const string& str, size_t* idx)
-@@ -330,11 +347,13 @@ stod(const string& str, size_t* idx)
+ stod(string const& str, size_t* idx)
+@@ -330,11 +347,13 @@ stod(string const& str, size_t* idx)
      return as_float<double>( "stod", str, idx );
  }
  
 +#ifndef __serenity__
  double
- stod(const wstring& str, size_t* idx)
+ stod(wstring const& str, size_t* idx)
  {
      return as_float<double>( "stod", str, idx );
  }
 +#endif
  
  long double
- stold(const string& str, size_t* idx)
-@@ -342,11 +361,13 @@ stold(const string& str, size_t* idx)
+ stold(string const& str, size_t* idx)
+@@ -342,11 +361,13 @@ stold(string const& str, size_t* idx)
      return as_float<long double>( "stold", str, idx );
  }
  
 +#ifndef __serenity__
  long double
- stold(const wstring& str, size_t* idx)
+ stold(wstring const& str, size_t* idx)
  {
      return as_float<long double>( "stold", str, idx );
  }
@@ -823,11 +823,11 @@ index 5105594cf..ca85269db 100644
 +#endif
  
 +#ifndef __serenity__
- typedef int (*wide_printf)(wchar_t* __restrict, size_t, const wchar_t*__restrict, ...);
+ typedef int (*wide_printf)(wchar_t* __restrict, size_t, wchar_t const*__restrict, ...);
  
  inline
 @@ -421,6 +445,7 @@ get_swprintf()
-     return static_cast<int (__cdecl*)(wchar_t* __restrict, size_t, const wchar_t*__restrict, ...)>(_snwprintf);
+     return static_cast<int (__cdecl*)(wchar_t* __restrict, size_t, wchar_t const*__restrict, ...)>(_snwprintf);
  #endif
  }
 +#endif

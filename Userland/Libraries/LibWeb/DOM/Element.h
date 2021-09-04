@@ -31,26 +31,26 @@ public:
     Element(Document&, QualifiedName);
     virtual ~Element() override;
 
-    const String& qualified_name() const { return m_qualified_name.as_string(); }
-    const String& html_uppercased_qualified_name() const { return m_html_uppercased_qualified_name; }
+    String const& qualified_name() const { return m_qualified_name.as_string(); }
+    String const& html_uppercased_qualified_name() const { return m_html_uppercased_qualified_name; }
     virtual FlyString node_name() const final { return html_uppercased_qualified_name(); }
-    const FlyString& local_name() const { return m_qualified_name.local_name(); }
+    FlyString const& local_name() const { return m_qualified_name.local_name(); }
 
     // NOTE: This is for the JS bindings
-    const String& tag_name() const { return html_uppercased_qualified_name(); }
+    String const& tag_name() const { return html_uppercased_qualified_name(); }
 
-    const FlyString& prefix() const { return m_qualified_name.prefix(); }
-    const FlyString& namespace_() const { return m_qualified_name.namespace_(); }
+    FlyString const& prefix() const { return m_qualified_name.prefix(); }
+    FlyString const& namespace_() const { return m_qualified_name.namespace_(); }
 
     // NOTE: This is for the JS bindings
-    const FlyString& namespace_uri() const { return namespace_(); }
+    FlyString const& namespace_uri() const { return namespace_(); }
 
-    bool has_attribute(const FlyString& name) const { return find_attribute(name) != nullptr; }
+    bool has_attribute(FlyString const& name) const { return find_attribute(name) != nullptr; }
     bool has_attributes() const { return !m_attributes.is_empty(); }
-    String attribute(const FlyString& name) const;
-    String get_attribute(const FlyString& name) const { return attribute(name); }
-    ExceptionOr<void> set_attribute(const FlyString& name, const String& value);
-    void remove_attribute(const FlyString& name);
+    String attribute(FlyString const& name) const;
+    String get_attribute(FlyString const& name) const { return attribute(name); }
+    ExceptionOr<void> set_attribute(FlyString const& name, String const& value);
+    void remove_attribute(FlyString const& name);
 
     template<typename Callback>
     void for_each_attribute(Callback callback) const
@@ -59,11 +59,11 @@ public:
             callback(attribute.name(), attribute.value());
     }
 
-    bool has_class(const FlyString&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    bool has_class(FlyString const&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     const Vector<FlyString>& class_names() const { return m_classes; }
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
-    virtual void parse_attribute(const FlyString& name, const String& value);
+    virtual void parse_attribute(FlyString const& name, String const& value);
 
     void recompute_style();
 
@@ -92,14 +92,14 @@ public:
     NonnullRefPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
 
     ShadowRoot* shadow_root() { return m_shadow_root; }
-    const ShadowRoot* shadow_root() const { return m_shadow_root; }
+    ShadowRoot const* shadow_root() const { return m_shadow_root; }
     void set_shadow_root(RefPtr<ShadowRoot>);
 
-    Optional<CSS::StyleResolver::CustomPropertyResolutionTuple> resolve_custom_property(const String& custom_property_name)
+    Optional<CSS::StyleResolver::CustomPropertyResolutionTuple> resolve_custom_property(String const& custom_property_name)
     {
         return m_custom_properties.get(custom_property_name);
     }
-    void add_custom_property(const String& custom_property_name, CSS::StyleResolver::CustomPropertyResolutionTuple style_property)
+    void add_custom_property(String const& custom_property_name, CSS::StyleResolver::CustomPropertyResolutionTuple style_property)
     {
         m_custom_properties.set(custom_property_name, style_property);
     }
@@ -108,8 +108,8 @@ protected:
     RefPtr<Layout::Node> create_layout_node() override;
 
 private:
-    Attribute* find_attribute(const FlyString& name);
-    const Attribute* find_attribute(const FlyString& name) const;
+    Attribute* find_attribute(FlyString const& name);
+    Attribute const* find_attribute(FlyString const& name) const;
 
     void make_html_uppercased_qualified_name();
 

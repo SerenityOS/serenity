@@ -51,7 +51,7 @@ void endspent()
     s_pwdp = {};
 }
 
-struct spwd* getspnam(const char* name)
+struct spwd* getspnam(char const* name)
 {
     setspent();
     while (auto* sp = getspent()) {
@@ -62,7 +62,7 @@ struct spwd* getspnam(const char* name)
     return nullptr;
 }
 
-static bool parse_shadow_entry(const String& line)
+static bool parse_shadow_entry(String const& line)
 {
     auto parts = line.split_view(':', true);
     if (parts.size() != 9) {
@@ -192,7 +192,7 @@ static void construct_spwd(struct spwd* sp, char* buf, struct spwd** result)
     sp->sp_pwdp = buf_pwdp;
 }
 
-int getspnam_r(const char* name, struct spwd* sp, char* buf, size_t buflen, struct spwd** result)
+int getspnam_r(char const* name, struct spwd* sp, char* buf, size_t buflen, struct spwd** result)
 {
     // FIXME: This is a HACK!
     TemporaryChange name_change { s_name, {} };
@@ -227,7 +227,7 @@ int putspent(struct spwd* p, FILE* stream)
         return -1;
     }
 
-    auto is_valid_field = [](const char* str) {
+    auto is_valid_field = [](char const* str) {
         return str && !strpbrk(str, ":\n");
     };
 

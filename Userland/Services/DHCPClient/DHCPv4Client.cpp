@@ -21,7 +21,7 @@ static u8 mac_part(const Vector<String>& parts, size_t index)
     return result.value();
 }
 
-static MACAddress mac_from_string(const String& str)
+static MACAddress mac_from_string(String const& str)
 {
     auto chunks = str.split(':');
     VERIFY(chunks.size() == 6); // should we...worry about this?
@@ -31,7 +31,7 @@ static MACAddress mac_from_string(const String& str)
     };
 }
 
-static bool send(const InterfaceDescriptor& iface, const DHCPv4Packet& packet, Core::Object*)
+static bool send(InterfaceDescriptor const& iface, DHCPv4Packet const& packet, Core::Object*)
 {
     int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (fd < 0) {
@@ -62,7 +62,7 @@ static bool send(const InterfaceDescriptor& iface, const DHCPv4Packet& packet, C
     return true;
 }
 
-static void set_params(const InterfaceDescriptor& iface, const IPv4Address& ipv4_addr, const IPv4Address& netmask, const IPv4Address& gateway)
+static void set_params(InterfaceDescriptor const& iface, IPv4Address const& ipv4_addr, IPv4Address const& netmask, IPv4Address const& gateway)
 {
     int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
     if (fd < 0) {
@@ -208,7 +208,7 @@ DHCPv4Client::~DHCPv4Client()
 {
 }
 
-void DHCPv4Client::handle_offer(const DHCPv4Packet& packet, const ParsedDHCPv4Options& options)
+void DHCPv4Client::handle_offer(DHCPv4Packet const& packet, ParsedDHCPv4Options const& options)
 {
     dbgln("We were offered {} for {}", packet.yiaddr().to_string(), options.get<u32>(DHCPOption::IPAddressLeaseTime).value_or(0));
     auto* transaction = const_cast<DHCPv4Transaction*>(m_ongoing_transactions.get(packet.xid()).value_or(nullptr));
@@ -228,7 +228,7 @@ void DHCPv4Client::handle_offer(const DHCPv4Packet& packet, const ParsedDHCPv4Op
     dhcp_request(*transaction, packet);
 }
 
-void DHCPv4Client::handle_ack(const DHCPv4Packet& packet, const ParsedDHCPv4Options& options)
+void DHCPv4Client::handle_ack(DHCPv4Packet const& packet, ParsedDHCPv4Options const& options)
 {
     if constexpr (DHCPV4CLIENT_DEBUG) {
         dbgln("The DHCP server handed us {}", packet.yiaddr().to_string());
@@ -257,7 +257,7 @@ void DHCPv4Client::handle_ack(const DHCPv4Packet& packet, const ParsedDHCPv4Opti
     set_params(transaction->interface, new_ip, options.get<IPv4Address>(DHCPOption::SubnetMask).value(), options.get_many<IPv4Address>(DHCPOption::Router, 1).first());
 }
 
-void DHCPv4Client::handle_nak(const DHCPv4Packet& packet, const ParsedDHCPv4Options& options)
+void DHCPv4Client::handle_nak(DHCPv4Packet const& packet, ParsedDHCPv4Options const& options)
 {
     dbgln("The DHCP server told us to go chase our own tail about {}", packet.yiaddr().to_string());
     dbgln("Here are the options: {}", options.to_string());
@@ -278,7 +278,7 @@ void DHCPv4Client::handle_nak(const DHCPv4Packet& packet, const ParsedDHCPv4Opti
         this);
 }
 
-void DHCPv4Client::process_incoming(const DHCPv4Packet& packet)
+void DHCPv4Client::process_incoming(DHCPv4Packet const& packet)
 {
     auto options = packet.parse_options();
 
@@ -314,7 +314,7 @@ void DHCPv4Client::process_incoming(const DHCPv4Packet& packet)
     }
 }
 
-void DHCPv4Client::dhcp_discover(const InterfaceDescriptor& iface)
+void DHCPv4Client::dhcp_discover(InterfaceDescriptor const& iface)
 {
     auto transaction_id = get_random<u32>();
 
@@ -346,7 +346,7 @@ void DHCPv4Client::dhcp_discover(const InterfaceDescriptor& iface)
     m_ongoing_transactions.set(transaction_id, make<DHCPv4Transaction>(iface));
 }
 
-void DHCPv4Client::dhcp_request(DHCPv4Transaction& transaction, const DHCPv4Packet& offer)
+void DHCPv4Client::dhcp_request(DHCPv4Transaction& transaction, DHCPv4Packet const& offer)
 {
     auto& iface = transaction.interface;
     dbgln("Leasing the IP {} for adapter {}", offer.yiaddr().to_string(), iface.ifname);

@@ -49,8 +49,8 @@ public:
     bool has_seen_event(size_t event_index) const { return m_seen_events.get(event_index); }
     void did_see_event(size_t event_index) { m_seen_events.set(event_index, true); }
 
-    const FlyString& object_name() const { return m_object_name; }
-    const String& symbol() const { return m_symbol; }
+    FlyString const& object_name() const { return m_object_name; }
+    String const& symbol() const { return m_symbol; }
     FlatPtr address() const { return m_address; }
     u32 offset() const { return m_offset; }
     u64 timestamp() const { return m_timestamp; }
@@ -84,7 +84,7 @@ public:
     };
 
     ProfileNode* parent() { return m_parent; }
-    const ProfileNode* parent() const { return m_parent; }
+    ProfileNode const* parent() const { return m_parent; }
 
     void increment_event_count() { ++m_event_count; }
     void increment_self_count() { ++m_self_count; }
@@ -108,7 +108,7 @@ public:
 
 private:
     explicit ProfileNode(Process const&);
-    explicit ProfileNode(Process const&, const String& object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t);
+    explicit ProfileNode(Process const&, String const& object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t);
 
     bool m_root { false };
     Process const& m_process;
@@ -139,14 +139,14 @@ struct ProcessFilter {
 
 class Profile {
 public:
-    static Result<NonnullOwnPtr<Profile>, String> load_from_perfcore_file(const StringView& path);
+    static Result<NonnullOwnPtr<Profile>, String> load_from_perfcore_file(StringView const& path);
 
     GUI::Model& model();
     GUI::Model& samples_model();
     GUI::Model& signposts_model();
     GUI::Model* disassembly_model();
 
-    const Process* find_process(pid_t pid, EventSerialNumber serial) const
+    Process const* find_process(pid_t pid, EventSerialNumber serial) const
     {
         auto it = m_processes.find_if([&pid, &serial](auto& entry) {
             return entry.pid == pid && entry.valid_at(serial);

@@ -21,7 +21,7 @@ public:
     HTMLImageElement(DOM::Document&, QualifiedName);
     virtual ~HTMLImageElement() override;
 
-    virtual void parse_attribute(const FlyString& name, const String& value) override;
+    virtual void parse_attribute(FlyString const& name, String const& value) override;
 
     String alt() const { return attribute(HTML::AttributeNames::alt); }
     String src() const { return attribute(HTML::AttributeNames::src); }

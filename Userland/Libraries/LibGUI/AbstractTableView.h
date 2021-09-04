@@ -14,7 +14,7 @@ class TableCellPaintingDelegate {
 public:
     virtual ~TableCellPaintingDelegate() { }
 
-    virtual void paint(Painter&, const Gfx::IntRect&, const Gfx::Palette&, const ModelIndex&) = 0;
+    virtual void paint(Painter&, const Gfx::IntRect&, const Gfx::Palette&, ModelIndex const&) = 0;
 };
 
 class AbstractTableView : public AbstractView {
@@ -49,14 +49,14 @@ public:
 
     Gfx::IntPoint adjusted_position(const Gfx::IntPoint&) const;
 
-    virtual Gfx::IntRect content_rect(const ModelIndex&) const override;
+    virtual Gfx::IntRect content_rect(ModelIndex const&) const override;
     Gfx::IntRect content_rect(int row, int column) const;
     Gfx::IntRect row_rect(int item_index) const;
 
     virtual Gfx::IntRect paint_invalidation_rect(ModelIndex const& index) const override;
 
-    virtual void scroll_into_view(const ModelIndex&, bool scroll_horizontally = true, bool scroll_vertically = true) override;
-    void scroll_into_view(const ModelIndex& index, Orientation orientation)
+    virtual void scroll_into_view(ModelIndex const&, bool scroll_horizontally = true, bool scroll_vertically = true) override;
+    void scroll_into_view(ModelIndex const& index, Orientation orientation)
     {
         scroll_into_view(index, orientation == Gfx::Orientation::Horizontal, orientation == Gfx::Orientation::Vertical);
     }
@@ -72,10 +72,10 @@ public:
     virtual void did_scroll() override;
 
     HeaderView& column_header() { return *m_column_header; }
-    const HeaderView& column_header() const { return *m_column_header; }
+    HeaderView const& column_header() const { return *m_column_header; }
 
     HeaderView& row_header() { return *m_row_header; }
-    const HeaderView& row_header() const { return *m_row_header; }
+    HeaderView const& row_header() const { return *m_row_header; }
 
     virtual void model_did_update(unsigned flags) override;
 
@@ -88,7 +88,7 @@ protected:
     virtual void keydown_event(KeyEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
 
-    virtual void toggle_index(const ModelIndex&) { }
+    virtual void toggle_index(ModelIndex const&) { }
 
     void update_content_size();
     virtual void auto_resize_column(int column);

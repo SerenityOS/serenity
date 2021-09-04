@@ -73,7 +73,7 @@ String type_name(Type type)
     return "InvalidType";
 }
 
-Optional<Core::DateTime> parse_utc_time(const StringView& time)
+Optional<Core::DateTime> parse_utc_time(StringView const& time)
 {
     // YYMMDDhhmm[ss]Z or YYMMDDhhmm[ss](+|-)hhmm
     GenericLexer lexer(time);
@@ -120,7 +120,7 @@ Optional<Core::DateTime> parse_utc_time(const StringView& time)
     return Core::DateTime::create(full_year, month.value(), day.value(), hour.value(), minute.value(), full_seconds);
 }
 
-Optional<Core::DateTime> parse_generalized_time(const StringView& time)
+Optional<Core::DateTime> parse_generalized_time(StringView const& time)
 {
     // YYYYMMDDhh[mm[ss[.fff]]] or YYYYMMDDhh[mm[ss[.fff]]]Z or YYYYMMDDhh[mm[ss[.fff]]](+|-)hhmm
     GenericLexer lexer(time);

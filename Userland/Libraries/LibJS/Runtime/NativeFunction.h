@@ -15,7 +15,7 @@ class NativeFunction : public FunctionObject {
     JS_OBJECT(NativeFunction, FunctionObject);
 
 public:
-    static NativeFunction* create(GlobalObject&, const FlyString& name, Function<Value(VM&, GlobalObject&)>);
+    static NativeFunction* create(GlobalObject&, FlyString const& name, Function<Value(VM&, GlobalObject&)>);
 
     explicit NativeFunction(FlyString name, Function<Value(VM&, GlobalObject&)>, Object& prototype);
     virtual void initialize(GlobalObject&) override { }
@@ -24,7 +24,7 @@ public:
     virtual Value call() override;
     virtual Value construct(FunctionObject& new_target) override;
 
-    virtual const FlyString& name() const override { return m_name; };
+    virtual FlyString const& name() const override { return m_name; };
     virtual bool has_constructor() const { return false; }
 
     virtual bool is_strict_mode() const override;

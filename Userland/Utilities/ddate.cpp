@@ -25,8 +25,8 @@ public:
         m_date = date_from_day_of_yold(day);
     }
 
-    const char* day_of_week() { return m_day_of_week.characters(); };
-    const char* season() { return m_season.characters(); };
+    char const* day_of_week() { return m_day_of_week.characters(); };
+    char const* season() { return m_season.characters(); };
     uint16_t year() { return yold(); };
     uint16_t yold() { return m_yold; };
     uint16_t day_of_year() { return day_of_yold(); };
@@ -56,7 +56,7 @@ private:
         return (day % m_days_in_season == 0 ? m_days_in_season : day % m_days_in_season);
     }
 
-    const char* day_of_week_from_day_of_yold(uint16_t day)
+    char const* day_of_week_from_day_of_yold(uint16_t day)
     {
         if (is_st_tibs_day())
             return nullptr;
@@ -77,7 +77,7 @@ private:
         }
     }
 
-    const char* season_from_day_of_yold(uint16_t day)
+    char const* season_from_day_of_yold(uint16_t day)
     {
         if (is_st_tibs_day())
             return nullptr;

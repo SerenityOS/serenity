@@ -28,7 +28,7 @@ class BookmarkEditor final : public GUI::Dialog {
 
 public:
     static Vector<JsonValue>
-    edit_bookmark(Window* parent_window, const StringView& title, const StringView& url)
+    edit_bookmark(Window* parent_window, StringView const& title, StringView const& url)
     {
         auto editor = BookmarkEditor::construct(parent_window, title, url);
         editor->set_title("Edit Bookmark");
@@ -41,7 +41,7 @@ public:
     }
 
 private:
-    BookmarkEditor(Window* parent_window, const StringView& title, const StringView& url)
+    BookmarkEditor(Window* parent_window, StringView const& title, StringView const& url)
         : Dialog(parent_window)
     {
         auto& widget = set_main_widget<GUI::Widget>();
@@ -99,7 +99,7 @@ BookmarksBarWidget& BookmarksBarWidget::the()
     return *s_the;
 }
 
-BookmarksBarWidget::BookmarksBarWidget(const String& bookmarks_file, bool enabled)
+BookmarksBarWidget::BookmarksBarWidget(String const& bookmarks_file, bool enabled)
 {
     s_the = this;
     set_layout<GUI::HorizontalBoxLayout>();
@@ -250,7 +250,7 @@ void BookmarksBarWidget::update_content_size()
     }
 }
 
-bool BookmarksBarWidget::contains_bookmark(const String& url)
+bool BookmarksBarWidget::contains_bookmark(String const& url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
 
@@ -263,7 +263,7 @@ bool BookmarksBarWidget::contains_bookmark(const String& url)
     return false;
 }
 
-bool BookmarksBarWidget::remove_bookmark(const String& url)
+bool BookmarksBarWidget::remove_bookmark(String const& url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
 
@@ -283,7 +283,7 @@ bool BookmarksBarWidget::remove_bookmark(const String& url)
     return false;
 }
 
-bool BookmarksBarWidget::add_bookmark(const String& url, const String& title)
+bool BookmarksBarWidget::add_bookmark(String const& url, String const& title)
 {
     Vector<JsonValue> values;
     values.append(title);
@@ -297,7 +297,7 @@ bool BookmarksBarWidget::add_bookmark(const String& url, const String& title)
     return false;
 }
 
-bool BookmarksBarWidget::edit_bookmark(const String& url)
+bool BookmarksBarWidget::edit_bookmark(String const& url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
         auto item_title = model()->index(item_index, 0).data().to_string();

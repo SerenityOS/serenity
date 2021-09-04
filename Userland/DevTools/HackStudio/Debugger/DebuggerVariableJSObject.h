@@ -22,7 +22,7 @@ public:
     DebuggerVariableJSObject(const Debug::DebugInfo::VariableInfo& variable_info, JS::Object& prototype);
     virtual ~DebuggerVariableJSObject() override;
 
-    virtual const char* class_name() const override { return m_variable_info.type_name.characters(); }
+    virtual char const* class_name() const override { return m_variable_info.type_name.characters(); }
 
     bool internal_set(JS::PropertyName const&, JS::Value value, JS::Value receiver) override;
 

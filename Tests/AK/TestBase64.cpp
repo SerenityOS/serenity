@@ -12,7 +12,7 @@
 
 TEST_CASE(test_decode)
 {
-    auto decode_equal = [&](const char* input, const char* expected) {
+    auto decode_equal = [&](char const* input, char const* expected) {
         auto decoded = decode_base64(StringView(input));
         EXPECT(String::copy(decoded) == String(expected));
         EXPECT(StringView(expected).length() <= calculate_base64_decoded_length(StringView(input).bytes()));
@@ -29,7 +29,7 @@ TEST_CASE(test_decode)
 
 TEST_CASE(test_encode)
 {
-    auto encode_equal = [&](const char* input, const char* expected) {
+    auto encode_equal = [&](char const* input, char const* expected) {
         auto encoded = encode_base64({ input, strlen(input) });
         EXPECT(encoded == String(expected));
         EXPECT_EQ(StringView(expected).length(), calculate_base64_encoded_length(StringView(input).bytes()));

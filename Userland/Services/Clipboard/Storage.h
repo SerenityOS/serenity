@@ -20,10 +20,10 @@ public:
 
     bool has_data() const { return m_buffer.is_valid(); }
 
-    const String& mime_type() const { return m_mime_type; }
+    String const& mime_type() const { return m_mime_type; }
     const HashMap<String, String>& metadata() const { return m_metadata; }
 
-    const u8* data() const
+    u8 const* data() const
     {
         if (!has_data())
             return nullptr;
@@ -37,7 +37,7 @@ public:
         return 0;
     }
 
-    void set_data(Core::AnonymousBuffer, const String& mime_type, const HashMap<String, String>& metadata);
+    void set_data(Core::AnonymousBuffer, String const& mime_type, const HashMap<String, String>& metadata);
 
     Function<void()> on_content_change;
 

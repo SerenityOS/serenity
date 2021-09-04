@@ -51,7 +51,7 @@ public:
     template<typename T = char>
     T read()
     {
-        T value = reinterpret_cast<const T*>(m_bytes.offset(m_offset))[0];
+        T value = reinterpret_cast<T const*>(m_bytes.offset(m_offset))[0];
         move_by(sizeof(T));
         return value;
     }
@@ -76,7 +76,7 @@ public:
         return !done() && peek() == ch;
     }
 
-    bool matches(const char* chars) const
+    bool matches(char const* chars) const
     {
         String string(chars);
         if (remaining() < string.length())

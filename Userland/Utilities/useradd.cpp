@@ -22,7 +22,7 @@
 
 constexpr uid_t BASE_UID = 1000;
 constexpr gid_t USERS_GID = 100;
-constexpr const char* DEFAULT_SHELL = "/bin/sh";
+constexpr char const* DEFAULT_SHELL = "/bin/sh";
 
 int main(int argc, char** argv)
 {
@@ -31,14 +31,14 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* home_path = nullptr;
+    char const* home_path = nullptr;
     int uid = 0;
     int gid = USERS_GID;
     bool create_home_dir = false;
-    const char* password = "";
-    const char* shell = DEFAULT_SHELL;
-    const char* gecos = "";
-    const char* username = nullptr;
+    char const* password = "";
+    char const* shell = DEFAULT_SHELL;
+    char const* gecos = "";
+    char const* username = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(home_path, "Home directory for the new user", "home-dir", 'd', "path");

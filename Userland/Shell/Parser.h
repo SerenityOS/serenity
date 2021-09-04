@@ -110,8 +110,8 @@ private:
     char peek();
     char consume();
     bool expect(char);
-    bool expect(const StringView&);
-    bool next_is(const StringView&);
+    bool expect(StringView const&);
+    bool next_is(StringView const&);
 
     void restore_to(size_t offset, AST::Position::Line line)
     {
@@ -152,7 +152,7 @@ private:
         AST::Position::Line line;
     };
 
-    void restore_to(const ScopedOffset& offset) { restore_to(offset.offset, offset.line); }
+    void restore_to(ScopedOffset const& offset) { restore_to(offset.offset, offset.line); }
 
     OwnPtr<ScopedOffset> push_start();
     Offset current_position();

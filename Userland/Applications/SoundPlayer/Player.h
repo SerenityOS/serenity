@@ -38,7 +38,7 @@ public:
     double volume() const { return m_player_state.volume; }
     bool looping() const { return m_player_state.is_looping_file; }
     bool looping_playlist() const { return m_player_state.is_looping_playlist; }
-    const String& loaded_filename() { return m_player_state.loaded_filename; }
+    String const& loaded_filename() { return m_player_state.loaded_filename; }
     int loaded_file_samplerate() { return m_player_state.loaded_file_samplerate; }
 
     virtual void set_stopped(bool stopped) { m_player_state.is_stopped = stopped; }

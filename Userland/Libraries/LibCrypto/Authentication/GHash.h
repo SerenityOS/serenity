@@ -20,7 +20,7 @@ struct GHashDigest {
     constexpr static size_t Size = 16;
     u8 data[Size];
 
-    const u8* immutable_data() const { return data; }
+    u8 const* immutable_data() const { return data; }
     size_t data_length() { return Size; }
 };
 
@@ -34,7 +34,7 @@ public:
     {
     }
 
-    explicit GHash(const ReadonlyBytes& key)
+    explicit GHash(ReadonlyBytes const& key)
     {
         VERIFY(key.size() >= 16);
         for (size_t i = 0; i < 16; i += 4) {

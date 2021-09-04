@@ -28,12 +28,12 @@ public:
 
     Type type() const { return m_type; }
 
-    const Action* action() const { return m_action.ptr(); }
+    Action const* action() const { return m_action.ptr(); }
     Action* action() { return m_action.ptr(); }
     unsigned identifier() const { return m_identifier; }
 
     Menu* submenu() { return m_submenu.ptr(); }
-    const Menu* submenu() const { return m_submenu.ptr(); }
+    Menu const* submenu() const { return m_submenu.ptr(); }
 
     bool is_checkable() const { return m_checkable; }
     void set_checkable(bool checkable) { m_checkable = checkable; }

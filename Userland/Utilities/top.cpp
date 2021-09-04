@@ -66,7 +66,7 @@ struct ThreadData {
 };
 
 struct PidAndTid {
-    bool operator==(const PidAndTid& other) const
+    bool operator==(PidAndTid const& other) const
     {
         return pid == other.pid && tid == other.tid;
     }
@@ -77,7 +77,7 @@ struct PidAndTid {
 namespace AK {
 template<>
 struct Traits<PidAndTid> : public GenericTraits<PidAndTid> {
-    static unsigned hash(const PidAndTid& value) { return pair_int_hash(value.pid, value.tid); }
+    static unsigned hash(PidAndTid const& value) { return pair_int_hash(value.pid, value.tid); }
 };
 }
 
@@ -141,7 +141,7 @@ static void parse_args(int argc, char** argv, TopOption& top_option)
         "sort-by",
         's',
         nullptr,
-        [&top_option](const char* s) {
+        [&top_option](char const* s) {
             StringView sort_by_option { s };
             if (sort_by_option == "pid"sv)
                 top_option.sort_by = TopOption::SortBy::Pid;

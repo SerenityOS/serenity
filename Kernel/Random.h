@@ -61,13 +61,13 @@ public:
     }
 
     template<typename T>
-    void add_random_event(const T& event_data, size_t pool)
+    void add_random_event(T const& event_data, size_t pool)
     {
         pool %= pool_count;
         if (pool == 0) {
             m_p0_len++;
         }
-        m_pools[pool].update(reinterpret_cast<const u8*>(&event_data), sizeof(T));
+        m_pools[pool].update(reinterpret_cast<u8 const*>(&event_data), sizeof(T));
     }
 
     [[nodiscard]] bool is_seeded() const
@@ -152,7 +152,7 @@ public:
     }
 
     template<typename T>
-    void add_random_event(const T& event_data)
+    void add_random_event(T const& event_data)
     {
         auto& kernel_rng = KernelRng::the();
         SpinlockLocker lock(kernel_rng.get_lock());

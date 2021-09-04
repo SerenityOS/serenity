@@ -50,7 +50,7 @@ public:
         return try_create_with_size(size, access, name, strategy);
     }
 
-    static RefPtr<KBufferImpl> copy(const void* data, size_t size, Memory::Region::Access access, StringView name)
+    static RefPtr<KBufferImpl> copy(void const* data, size_t size, Memory::Region::Access access, StringView name)
     {
         auto buffer = create_with_size(size, access, name, AllocationStrategy::AllocateNow);
         if (!buffer)
@@ -71,7 +71,7 @@ public:
     }
 
     [[nodiscard]] u8* data() { return m_region->vaddr().as_ptr(); }
-    [[nodiscard]] const u8* data() const { return m_region->vaddr().as_ptr(); }
+    [[nodiscard]] u8 const* data() const { return m_region->vaddr().as_ptr(); }
     [[nodiscard]] size_t size() const { return m_size; }
     [[nodiscard]] size_t capacity() const { return m_region->size(); }
 
@@ -120,7 +120,7 @@ public:
         return adopt_own_if_nonnull(new (nothrow) KBuffer(impl.release_nonnull()));
     }
 
-    [[nodiscard]] static KBuffer copy(const void* data, size_t size, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer")
+    [[nodiscard]] static KBuffer copy(void const* data, size_t size, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer")
     {
         return KBuffer(KBufferImpl::copy(data, size, access, name));
     }
@@ -128,20 +128,20 @@ public:
     [[nodiscard]] bool is_null() const { return !m_impl; }
 
     [[nodiscard]] u8* data() { return m_impl ? m_impl->data() : nullptr; }
-    [[nodiscard]] const u8* data() const { return m_impl ? m_impl->data() : nullptr; }
+    [[nodiscard]] u8 const* data() const { return m_impl ? m_impl->data() : nullptr; }
     [[nodiscard]] size_t size() const { return m_impl ? m_impl->size() : 0; }
     [[nodiscard]] size_t capacity() const { return m_impl ? m_impl->capacity() : 0; }
 
     [[nodiscard]] void* end_pointer() { return data() + size(); }
-    [[nodiscard]] const void* end_pointer() const { return data() + size(); }
+    [[nodiscard]] void const* end_pointer() const { return data() + size(); }
 
     void set_size(size_t size) { m_impl->set_size(size); }
 
     [[nodiscard]] KBufferImpl& impl() { return *m_impl; }
-    [[nodiscard]] const KBufferImpl& impl() const { return *m_impl; }
+    [[nodiscard]] KBufferImpl const& impl() const { return *m_impl; }
     [[nodiscard]] RefPtr<KBufferImpl> take_impl() { return move(m_impl); }
 
-    KBuffer(const ByteBuffer& buffer, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer")
+    KBuffer(ByteBuffer const& buffer, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer")
         : m_impl(KBufferImpl::copy(buffer.data(), buffer.size(), access, name))
     {
     }

@@ -110,9 +110,9 @@ inline constexpr bool IsFunction<Ret(Args...) volatile&> = true;
 template<class Ret, class... Args>
 inline constexpr bool IsFunction<Ret(Args..., ...) volatile&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args...) const volatile&> = true;
+inline constexpr bool IsFunction<Ret(Args...) volatile const&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args..., ...) const volatile&> = true;
+inline constexpr bool IsFunction<Ret(Args..., ...) volatile const&> = true;
 template<class Ret, class... Args>
 inline constexpr bool IsFunction<Ret(Args...) &&> = true;
 template<class Ret, class... Args>
@@ -126,9 +126,9 @@ inline constexpr bool IsFunction<Ret(Args...) volatile&&> = true;
 template<class Ret, class... Args>
 inline constexpr bool IsFunction<Ret(Args..., ...) volatile&&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args...) const volatile&&> = true;
+inline constexpr bool IsFunction<Ret(Args...) volatile const&&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args..., ...) const volatile&&> = true;
+inline constexpr bool IsFunction<Ret(Args..., ...) volatile const&&> = true;
 
 template<class T>
 inline constexpr bool IsRvalueReference = false;

@@ -8,7 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
     ByteBuffer zip_data = ByteBuffer::copy(data, size);
     auto zip_file = Archive::Zip::try_create(zip_data);

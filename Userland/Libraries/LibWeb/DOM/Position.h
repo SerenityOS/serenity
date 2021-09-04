@@ -23,7 +23,7 @@ public:
     bool is_valid() const { return m_node; }
 
     Node* node() { return m_node; }
-    const Node* node() const { return m_node; }
+    Node const* node() const { return m_node; }
 
     unsigned offset() const { return m_offset; }
     bool offset_is_at_end_of_node() const;
@@ -31,12 +31,12 @@ public:
     bool increment_offset();
     bool decrement_offset();
 
-    bool operator==(const Position& other) const
+    bool operator==(Position const& other) const
     {
         return m_node == other.m_node && m_offset == other.m_offset;
     }
 
-    bool operator!=(const Position& other) const
+    bool operator!=(Position const& other) const
     {
         return !(*this == other);
     }

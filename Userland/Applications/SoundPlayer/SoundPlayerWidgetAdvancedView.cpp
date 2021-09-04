@@ -99,7 +99,7 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     m_back_button->set_enabled(has_loaded_file());
     m_back_button->on_click = [&](unsigned) {
         if (!m_playlist_model.is_null()) {
-            auto it = m_playlist_model->items().find_if([&](const M3UEntry& e) { return e.path == loaded_filename(); });
+            auto it = m_playlist_model->items().find_if([&](M3UEntry const& e) { return e.path == loaded_filename(); });
             if (it.index() == 0) {
                 open_file(m_playlist_model->items().at(m_playlist_model->items().size() - 1).path);
             } else
@@ -114,7 +114,7 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     m_next_button->set_enabled(has_loaded_file());
     m_next_button->on_click = [&](unsigned) {
         if (!m_playlist_model.is_null()) {
-            auto it = m_playlist_model->items().find_if([&](const M3UEntry& e) { return e.path == loaded_filename(); });
+            auto it = m_playlist_model->items().find_if([&](M3UEntry const& e) { return e.path == loaded_filename(); });
             if (it.index() + 1 == m_playlist_model->items().size()) {
                 open_file(m_playlist_model->items().at(0).path);
             } else
@@ -172,7 +172,7 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
         }
 
         if (!m_playlist_model.is_null() && !m_playlist_model->items().is_empty()) {
-            auto it = m_playlist_model->items().find_if([&](const M3UEntry& e) { return e.path == loaded_filename(); });
+            auto it = m_playlist_model->items().find_if([&](M3UEntry const& e) { return e.path == loaded_filename(); });
             if (it.index() + 1 == m_playlist_model->items().size()) {
                 if (looping_playlist()) {
                     open_file(m_playlist_model->items().at(0).path);

@@ -12,7 +12,7 @@
 
 TEST_CASE(is_integral_works_properly)
 {
-    EXPECT(!IsIntegral<const char*>);
+    EXPECT(!IsIntegral<char const*>);
     EXPECT(IsIntegral<unsigned long>);
 }
 
@@ -184,7 +184,7 @@ TEST_CASE(ensure_that_format_works)
 
 TEST_CASE(format_string_literal_as_pointer)
 {
-    const char* literal = "abc";
+    char const* literal = "abc";
     EXPECT_EQ(String::formatted("{:p}", literal), String::formatted("{:p}", reinterpret_cast<FlatPtr>(literal)));
 }
 

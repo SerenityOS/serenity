@@ -17,8 +17,8 @@ class RamdiskDevice final : public StorageDevice {
     friend class RamdiskController;
     AK_MAKE_ETERNAL
 public:
-    static NonnullRefPtr<RamdiskDevice> create(const RamdiskController&, NonnullOwnPtr<Memory::Region>&& region, int major, int minor);
-    RamdiskDevice(const RamdiskController&, NonnullOwnPtr<Memory::Region>&&, int major, int minor);
+    static NonnullRefPtr<RamdiskDevice> create(RamdiskController const&, NonnullOwnPtr<Memory::Region>&& region, int major, int minor);
+    RamdiskDevice(RamdiskController const&, NonnullOwnPtr<Memory::Region>&&, int major, int minor);
     virtual ~RamdiskDevice() override;
 
     // ^BlockDevice

@@ -12,12 +12,12 @@
 
 namespace Kernel {
 
-NonnullRefPtr<RamdiskDevice> RamdiskDevice::create(const RamdiskController& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor)
+NonnullRefPtr<RamdiskDevice> RamdiskDevice::create(RamdiskController const& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor)
 {
     return adopt_ref(*new RamdiskDevice(controller, move(region), major, minor));
 }
 
-RamdiskDevice::RamdiskDevice(const RamdiskController& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor)
+RamdiskDevice::RamdiskDevice(RamdiskController const& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor)
     : StorageDevice(controller, major, minor, 512, region->size() / 512)
     , m_region(move(region))
 {

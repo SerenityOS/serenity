@@ -30,8 +30,8 @@ inline u32 get_iopl_from_eflags(u32 eflags)
     return (eflags & iopl_mask) >> 12;
 }
 
-const DescriptorTablePointer& get_gdtr();
-const DescriptorTablePointer& get_idtr();
+DescriptorTablePointer const& get_gdtr();
+DescriptorTablePointer const& get_idtr();
 
 [[noreturn]] void handle_crash(RegisterState const&, char const* description, int signal, bool out_of_memory = false);
 
@@ -45,7 +45,7 @@ constexpr FlatPtr page_base_of(FlatPtr address)
     return address & PAGE_MASK;
 }
 
-inline FlatPtr page_base_of(const void* address)
+inline FlatPtr page_base_of(void const* address)
 {
     return page_base_of((FlatPtr)address);
 }
@@ -55,7 +55,7 @@ constexpr FlatPtr offset_in_page(FlatPtr address)
     return address & (~PAGE_MASK);
 }
 
-inline FlatPtr offset_in_page(const void* address)
+inline FlatPtr offset_in_page(void const* address)
 {
     return offset_in_page((FlatPtr)address);
 }

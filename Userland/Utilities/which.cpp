@@ -16,7 +16,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* filename = nullptr;
+    char const* filename = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(filename, "Name of executable", "executable");

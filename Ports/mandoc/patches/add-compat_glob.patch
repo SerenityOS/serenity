@@ -186,7 +186,7 @@
 +#endif
 +
 +#ifndef __UNCONST
-+#define __UNCONST(a) ((void*)(const void*)a)
++#define __UNCONST(a) ((void*)(void const*)a)
 +#endif
 +
 +int
@@ -245,7 +245,7 @@
 +static int
 +globexp1(const Char *pattern, glob_t *pglob, struct glob_limit *limit)
 +{
-+	const Char* ptr = pattern;
++	Char const* ptr = pattern;
 +	int rv;
 +
 +	_DIAGASSERT(pattern != NULL);

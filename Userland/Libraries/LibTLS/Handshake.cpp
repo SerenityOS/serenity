@@ -90,7 +90,7 @@ ByteBuffer TLSv12::build_hello()
         builder.append((u8)0);
         // SNI host length + value
         builder.append((u16)sni_length);
-        builder.append((const u8*)m_context.extensions.SNI.characters(), sni_length);
+        builder.append((u8 const*)m_context.extensions.SNI.characters(), sni_length);
     }
 
     // signature_algorithms extension
@@ -155,7 +155,7 @@ ByteBuffer TLSv12::build_handshake_finished()
 
     auto digest = m_context.handshake_hash.digest();
     auto hashbuf = ReadonlyBytes { digest.immutable_data(), m_context.handshake_hash.digest_size() };
-    pseudorandom_function(outbuffer, m_context.master_key, (const u8*)"client finished", 15, hashbuf, dummy);
+    pseudorandom_function(outbuffer, m_context.master_key, (u8 const*)"client finished", 15, hashbuf, dummy);
 
     builder.append(outbuffer);
     auto packet = builder.build();
@@ -289,7 +289,7 @@ ssize_t TLSv12::handle_handshake_payload(ReadonlyBytes vbuffer)
                 }
                 payload_res = handle_certificate(buffer.slice(1, payload_size));
                 if (m_context.certificates.size()) {
-                    auto it = m_context.certificates.find_if([](const auto& cert) { return cert.is_valid(); });
+                    auto it = m_context.certificates.find_if([](auto const& cert) { return cert.is_valid(); });
 
                     if (it.is_end()) {
                         // no valid certificates

@@ -8,7 +8,7 @@
 #include <AK/Format.h>
 
 extern "C" {
-const char* __cxa_demangle(const char*, void*, void*, int*)
+char const* __cxa_demangle(char const*, void*, void*, int*)
 {
     dbgln("WARNING: __cxa_demangle not supported");
     return "";

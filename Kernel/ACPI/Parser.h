@@ -48,7 +48,7 @@ public:
         set_the(*new ParserType(rsdp));
     }
 
-    virtual PhysicalAddress find_table(const StringView& signature);
+    virtual PhysicalAddress find_table(StringView const& signature);
 
     virtual void try_acpi_reboot();
     virtual bool can_reboot();
@@ -59,7 +59,7 @@ public:
     PhysicalAddress main_system_description_table() const { return m_main_system_description_table; }
     bool is_xsdt_supported() const { return m_xsdt_supported; }
 
-    void enumerate_static_tables(Function<void(const StringView&, PhysicalAddress, size_t)>);
+    void enumerate_static_tables(Function<void(StringView const&, PhysicalAddress, size_t)>);
 
     virtual bool have_8042() const
     {

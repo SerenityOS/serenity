@@ -249,7 +249,7 @@ Result<size_t, JS::Value> WebAssemblyObject::instantiate_module(Wasm::Module con
                     auto address = static_cast<WebAssemblyMemoryObject const&>(import_.as_object()).address();
                     resolved_imports.set(import_name, Wasm::ExternValue { address });
                 },
-                [&](const auto&) {
+                [&](auto const&) {
                     // FIXME: Implement these.
                     dbgln("Unimplemented import of non-function attempted");
                     vm.throw_exception<JS::TypeError>(global_object, "LinkError: Not Implemented");
@@ -411,7 +411,7 @@ Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueTyp
 JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String name, JS::GlobalObject& global_object)
 {
     Optional<Wasm::FunctionType> type;
-    WebAssemblyObject::s_abstract_machine.store().get(address)->visit([&](const auto& value) { type = value.type(); });
+    WebAssemblyObject::s_abstract_machine.store().get(address)->visit([&](auto const& value) { type = value.type(); });
     if (auto entry = WebAssemblyObject::s_global_cache.function_instances.get(address); entry.has_value())
         return *entry;
 

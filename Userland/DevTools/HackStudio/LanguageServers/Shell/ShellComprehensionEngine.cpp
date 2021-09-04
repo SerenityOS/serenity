@@ -14,12 +14,12 @@ namespace LanguageServers::Shell {
 
 RefPtr<::Shell::Shell> ShellComprehensionEngine::s_shell {};
 
-ShellComprehensionEngine::ShellComprehensionEngine(const FileDB& filedb)
+ShellComprehensionEngine::ShellComprehensionEngine(FileDB const& filedb)
     : CodeComprehensionEngine(filedb, true)
 {
 }
 
-const ShellComprehensionEngine::DocumentData& ShellComprehensionEngine::get_or_create_document_data(const String& file)
+const ShellComprehensionEngine::DocumentData& ShellComprehensionEngine::get_or_create_document_data(String const& file)
 {
     auto absolute_path = filedb().to_absolute_path(file);
     if (!m_documents.contains(absolute_path)) {
@@ -28,7 +28,7 @@ const ShellComprehensionEngine::DocumentData& ShellComprehensionEngine::get_or_c
     return get_document_data(absolute_path);
 }
 
-const ShellComprehensionEngine::DocumentData& ShellComprehensionEngine::get_document_data(const String& file) const
+const ShellComprehensionEngine::DocumentData& ShellComprehensionEngine::get_document_data(String const& file) const
 {
     auto absolute_path = filedb().to_absolute_path(file);
     auto document_data = m_documents.get(absolute_path);
@@ -36,7 +36,7 @@ const ShellComprehensionEngine::DocumentData& ShellComprehensionEngine::get_docu
     return *document_data.value();
 }
 
-OwnPtr<ShellComprehensionEngine::DocumentData> ShellComprehensionEngine::create_document_data_for(const String& file)
+OwnPtr<ShellComprehensionEngine::DocumentData> ShellComprehensionEngine::create_document_data_for(String const& file)
 {
     auto document = filedb().get(file);
     if (!document)
@@ -50,7 +50,7 @@ OwnPtr<ShellComprehensionEngine::DocumentData> ShellComprehensionEngine::create_
     return document_data;
 }
 
-void ShellComprehensionEngine::set_document_data(const String& file, OwnPtr<DocumentData>&& data)
+void ShellComprehensionEngine::set_document_data(String const& file, OwnPtr<DocumentData>&& data)
 {
     m_documents.set(filedb().to_absolute_path(file), move(data));
 }
@@ -133,11 +133,11 @@ size_t ShellComprehensionEngine::resolve(const ShellComprehensionEngine::Documen
     return offset;
 }
 
-Vector<GUI::AutocompleteProvider::Entry> ShellComprehensionEngine::get_suggestions(const String& file, const GUI::TextPosition& position)
+Vector<GUI::AutocompleteProvider::Entry> ShellComprehensionEngine::get_suggestions(String const& file, const GUI::TextPosition& position)
 {
     dbgln_if(SH_LANGUAGE_SERVER_DEBUG, "ShellComprehensionEngine position {}:{}", position.line(), position.column());
 
-    const auto& document = get_or_create_document_data(file);
+    auto const& document = get_or_create_document_data(file);
     size_t offset_in_file = resolve(document, position);
 
     ::Shell::AST::HitTestResult hit_test = document.node->hit_test_position(offset_in_file);
@@ -154,20 +154,20 @@ Vector<GUI::AutocompleteProvider::Entry> ShellComprehensionEngine::get_suggestio
     return entries;
 }
 
-void ShellComprehensionEngine::on_edit(const String& file)
+void ShellComprehensionEngine::on_edit(String const& file)
 {
     set_document_data(file, create_document_data_for(file));
 }
 
-void ShellComprehensionEngine::file_opened([[maybe_unused]] const String& file)
+void ShellComprehensionEngine::file_opened([[maybe_unused]] String const& file)
 {
     set_document_data(file, create_document_data_for(file));
 }
 
-Optional<GUI::AutocompleteProvider::ProjectLocation> ShellComprehensionEngine::find_declaration_of(const String& filename, const GUI::TextPosition& identifier_position)
+Optional<GUI::AutocompleteProvider::ProjectLocation> ShellComprehensionEngine::find_declaration_of(String const& filename, const GUI::TextPosition& identifier_position)
 {
     dbgln_if(SH_LANGUAGE_SERVER_DEBUG, "find_declaration_of({}, {}:{})", filename, identifier_position.line(), identifier_position.column());
-    const auto& document = get_or_create_document_data(filename);
+    auto const& document = get_or_create_document_data(filename);
     auto position = resolve(document, identifier_position);
     auto result = document.node->hit_test_position(position);
     if (!result.matching_node) {
@@ -192,10 +192,10 @@ Optional<GUI::AutocompleteProvider::ProjectLocation> ShellComprehensionEngine::f
     return {};
 }
 
-void ShellComprehensionEngine::update_declared_symbols(const DocumentData& document)
+void ShellComprehensionEngine::update_declared_symbols(DocumentData const& document)
 {
     struct Visitor : public ::Shell::AST::NodeVisitor {
-        explicit Visitor(const String& filename)
+        explicit Visitor(String const& filename)
             : filename(filename)
         {
         }
@@ -225,7 +225,7 @@ void ShellComprehensionEngine::update_declared_symbols(const DocumentData& docum
             declarations.append({ node->name().name, { filename, node->position().start_line.line_number, node->position().start_line.line_column }, GUI::AutocompleteProvider::DeclarationType::Function, {} });
         }
 
-        const String& filename;
+        String const& filename;
         Vector<GUI::AutocompleteProvider::Declaration> declarations;
     } visitor { document.filename };
 

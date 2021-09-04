@@ -19,18 +19,18 @@ class SpreadsheetWidget final : public GUI::Widget {
 public:
     ~SpreadsheetWidget();
 
-    void save(const StringView& filename);
-    void load(const StringView& filename);
+    void save(StringView const& filename);
+    void load(StringView const& filename);
     bool request_close();
     void add_sheet();
     void add_sheet(NonnullRefPtr<Sheet>&&);
 
-    const String& current_filename() const { return m_workbook->current_filename(); }
+    String const& current_filename() const { return m_workbook->current_filename(); }
     Sheet* current_worksheet_if_available() { return m_selected_view ? m_selected_view->sheet_if_available() : nullptr; }
-    void set_filename(const String& filename);
+    void set_filename(String const& filename);
 
     Workbook& workbook() { return *m_workbook; }
-    const Workbook& workbook() const { return *m_workbook; }
+    Workbook const& workbook() const { return *m_workbook; }
 
     const GUI::ModelIndex* current_selection_cursor() const
     {

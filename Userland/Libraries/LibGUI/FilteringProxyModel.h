@@ -23,17 +23,17 @@ public:
 
     virtual ~FilteringProxyModel() override {};
 
-    virtual int row_count(const ModelIndex& = ModelIndex()) const override;
-    virtual int column_count(const ModelIndex& = ModelIndex()) const override;
-    virtual Variant data(const ModelIndex&, ModelRole = ModelRole::Display) const override;
+    virtual int row_count(ModelIndex const& = ModelIndex()) const override;
+    virtual int column_count(ModelIndex const& = ModelIndex()) const override;
+    virtual Variant data(ModelIndex const&, ModelRole = ModelRole::Display) const override;
     virtual void invalidate() override;
-    virtual ModelIndex index(int row, int column = 0, const ModelIndex& parent = ModelIndex()) const override;
+    virtual ModelIndex index(int row, int column = 0, ModelIndex const& parent = ModelIndex()) const override;
     virtual bool is_searchable() const override;
-    virtual Vector<ModelIndex, 1> matches(const StringView&, unsigned = MatchesFlag::AllMatching, const ModelIndex& = ModelIndex()) override;
+    virtual Vector<ModelIndex, 1> matches(StringView const&, unsigned = MatchesFlag::AllMatching, ModelIndex const& = ModelIndex()) override;
 
-    void set_filter_term(const StringView& term);
+    void set_filter_term(StringView const& term);
 
-    ModelIndex map(const ModelIndex&) const;
+    ModelIndex map(ModelIndex const&) const;
 
 private:
     void filter();

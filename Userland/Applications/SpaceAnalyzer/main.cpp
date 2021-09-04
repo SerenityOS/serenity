@@ -26,7 +26,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-static const char* APP_NAME = "Space Analyzer";
+static char const* APP_NAME = "Space Analyzer";
 
 struct TreeNode : public SpaceAnalyzer::TreeMapNode {
     TreeNode(String name)
@@ -41,7 +41,7 @@ struct TreeNode : public SpaceAnalyzer::TreeMapNode {
         }
         return 0;
     }
-    virtual const TreeNode& child_at(size_t i) const { return m_children->at(i); }
+    virtual TreeNode const& child_at(size_t i) const { return m_children->at(i); }
     virtual void sort_children_by_area() const
     {
         if (m_children) {
@@ -228,7 +228,7 @@ static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidg
     treemapwidget.set_tree(tree);
 }
 
-static bool is_removable(const String& absolute_path)
+static bool is_removable(String const& absolute_path)
 {
     VERIFY(!absolute_path.is_empty());
     int access_result = access(absolute_path.characters(), W_OK);

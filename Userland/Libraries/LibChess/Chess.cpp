@@ -32,7 +32,7 @@ String char_for_piece(Chess::Type type)
     }
 }
 
-Chess::Type piece_for_char_promotion(const StringView& str)
+Chess::Type piece_for_char_promotion(StringView const& str)
 {
     String string = String(str).to_lowercase();
     if (string == "")
@@ -56,7 +56,7 @@ Color opposing_color(Color color)
     return (color == Color::White) ? Color::Black : Color::White;
 }
 
-Square::Square(const StringView& name)
+Square::Square(StringView const& name)
 {
     VERIFY(name.length() == 2);
     char filec = name[0];
@@ -85,7 +85,7 @@ String Square::to_algebraic() const
     return builder.build();
 }
 
-Move::Move(const StringView& long_algebraic)
+Move::Move(StringView const& long_algebraic)
     : from(long_algebraic.substring_view(0, 2))
     , to(long_algebraic.substring_view(2, 2))
     , promote_to(piece_for_char_promotion((long_algebraic.length() >= 5) ? long_algebraic.substring_view(4, 1) : ""))
@@ -101,7 +101,7 @@ String Move::to_long_algebraic() const
     return builder.build();
 }
 
-Move Move::from_algebraic(const StringView& algebraic, const Color turn, const Board& board)
+Move Move::from_algebraic(StringView const& algebraic, const Color turn, Board const& board)
 {
     String move_string = algebraic;
     Move move({ 50, 50 }, { 50, 50 });
@@ -143,7 +143,7 @@ Move Move::from_algebraic(const StringView& algebraic, const Color turn, const B
         move_string = move_string.substring(1, move_string.length() - 1);
     }
 
-    Square::for_each([&](const Square& square) {
+    Square::for_each([&](Square const& square) {
         if (!move_string.is_empty()) {
             if (board.get_piece(square).type == move.piece.type && board.is_legal(Move(square, move.to), turn)) {
                 if (move_string.length() >= 2) {
@@ -326,19 +326,19 @@ String Board::to_fen() const
     return builder.to_string();
 }
 
-Piece Board::get_piece(const Square& square) const
+Piece Board::get_piece(Square const& square) const
 {
     VERIFY(square.in_bounds());
     return m_board[square.rank][square.file];
 }
 
-Piece Board::set_piece(const Square& square, const Piece& piece)
+Piece Board::set_piece(Square const& square, Piece const& piece)
 {
     VERIFY(square.in_bounds());
     return m_board[square.rank][square.file] = piece;
 }
 
-bool Board::is_legal_promotion(const Move& move, Color color) const
+bool Board::is_legal_promotion(Move const& move, Color color) const
 {
     auto piece = get_piece(move.from);
 
@@ -367,7 +367,7 @@ bool Board::is_legal_promotion(const Move& move, Color color) const
     return true;
 }
 
-bool Board::is_legal(const Move& move, Color color) const
+bool Board::is_legal(Move const& move, Color color) const
 {
     if (color == Color::None)
         color = turn();
@@ -409,7 +409,7 @@ bool Board::is_legal(const Move& move, Color color) const
     return true;
 }
 
-bool Board::is_legal_no_check(const Move& move, Color color) const
+bool Board::is_legal_no_check(Move const& move, Color color) const
 {
     auto piece = get_piece(move.from);
 
@@ -536,7 +536,7 @@ bool Board::is_legal_no_check(const Move& move, Color color) const
 bool Board::in_check(Color color) const
 {
     Square king_square = { 50, 50 };
-    Square::for_each([&](const Square& square) {
+    Square::for_each([&](Square const& square) {
         if (get_piece(square) == Piece(color, Type::King)) {
             king_square = square;
             return IterationDecision::Break;
@@ -545,7 +545,7 @@ bool Board::in_check(Color color) const
     });
 
     bool check = false;
-    Square::for_each([&](const Square& square) {
+    Square::for_each([&](Square const& square) {
         if (is_legal_no_check({ square, king_square }, opposing_color(color))) {
             check = true;
             return IterationDecision::Break;
@@ -556,7 +556,7 @@ bool Board::in_check(Color color) const
     return check;
 }
 
-bool Board::apply_move(const Move& move, Color color)
+bool Board::apply_move(Move const& move, Color color)
 {
     if (color == Color::None)
         color = turn();
@@ -569,7 +569,7 @@ bool Board::apply_move(const Move& move, Color color)
     return apply_illegal_move(move, color);
 }
 
-bool Board::apply_illegal_move(const Move& move, Color color)
+bool Board::apply_illegal_move(Move const& move, Color color)
 {
     auto state = Traits<Board>::hash(*this);
     auto state_count = 0;
@@ -826,7 +826,7 @@ int Board::material_imbalance() const
     return imbalance;
 }
 
-bool Board::is_promotion_move(const Move& move, Color color) const
+bool Board::is_promotion_move(Move const& move, Color color) const
 {
     if (color == Color::None)
         color = turn();
@@ -846,7 +846,7 @@ bool Board::is_promotion_move(const Move& move, Color color) const
     return true;
 }
 
-bool Board::operator==(const Board& other) const
+bool Board::operator==(Board const& other) const
 {
     bool equal_squares = true;
     Square::for_each([&](Square sq) {

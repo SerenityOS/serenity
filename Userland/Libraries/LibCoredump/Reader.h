@@ -20,7 +20,7 @@ class Reader {
     AK_MAKE_NONMOVABLE(Reader);
 
 public:
-    static OwnPtr<Reader> create(const String&);
+    static OwnPtr<Reader> create(String const&);
     ~Reader();
 
     template<typename Func>
@@ -41,7 +41,7 @@ public:
         NonnullRefPtr<MappedFile> file;
         ELF::Image lib_elf;
     };
-    const LibraryData* library_containing(FlatPtr address) const;
+    LibraryData const* library_containing(FlatPtr address) const;
 
     int process_pid() const;
     u8 process_termination_signal() const;
@@ -53,11 +53,11 @@ public:
 private:
     Reader(ReadonlyBytes);
 
-    static ByteBuffer decompress_coredump(const ReadonlyBytes&);
+    static ByteBuffer decompress_coredump(ReadonlyBytes const&);
 
     class NotesEntryIterator {
     public:
-        NotesEntryIterator(const u8* notes_data);
+        NotesEntryIterator(u8 const* notes_data);
 
         ELF::Core::NotesEntryHeader::Type type() const;
         const ELF::Core::NotesEntry* current() const;
@@ -67,7 +67,7 @@ private:
 
     private:
         const ELF::Core::NotesEntry* m_current { nullptr };
-        const u8* start { nullptr };
+        u8 const* start { nullptr };
     };
 
     // Private as we don't need anyone poking around in this JsonObject
@@ -83,7 +83,7 @@ private:
 template<typename Func>
 void Reader::for_each_memory_region_info(Func func) const
 {
-    for (NotesEntryIterator it((const u8*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
+    for (NotesEntryIterator it((u8 const*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo)
             continue;
         auto& memory_region_info = reinterpret_cast<const ELF::Core::MemoryRegionInfo&>(*it.current());
@@ -96,7 +96,7 @@ void Reader::for_each_memory_region_info(Func func) const
 template<typename Func>
 void Reader::for_each_thread_info(Func func) const
 {
-    for (NotesEntryIterator it((const u8*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
+    for (NotesEntryIterator it((u8 const*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::ThreadInfo)
             continue;
         auto& thread_info = reinterpret_cast<const ELF::Core::ThreadInfo&>(*it.current());

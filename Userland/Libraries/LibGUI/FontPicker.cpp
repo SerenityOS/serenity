@@ -56,7 +56,7 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     quick_sort(m_families);
 
     m_family_list_view->on_selection_change = [this] {
-        const auto& index = m_family_list_view->selection().first();
+        auto const& index = m_family_list_view->selection().first();
         m_family = index.data().to_string();
         m_weights.clear();
         Gfx::FontDatabase::the().for_each_typeface([&](auto& typeface) {
@@ -77,7 +77,7 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     };
 
     m_weight_list_view->on_selection_change = [this] {
-        const auto& index = m_weight_list_view->selection().first();
+        auto const& index = m_weight_list_view->selection().first();
         bool font_is_fixed_size = false;
         m_weight = index.data(ModelRole::Custom).to_i32();
         m_sizes.clear();
@@ -132,7 +132,7 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     };
 
     m_size_list_view->on_selection_change = [this] {
-        const auto& index = m_size_list_view->selection().first();
+        auto const& index = m_size_list_view->selection().first();
         auto size = index.data().to_i32();
         Optional<size_t> index_of_new_size_in_list = m_sizes.find_first_index(size);
         if (index_of_new_size_in_list.has_value()) {

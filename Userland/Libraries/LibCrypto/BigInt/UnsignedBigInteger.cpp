@@ -12,7 +12,7 @@
 
 namespace Crypto {
 
-UnsignedBigInteger::UnsignedBigInteger(const u8* ptr, size_t length)
+UnsignedBigInteger::UnsignedBigInteger(u8 const* ptr, size_t length)
 {
     m_words.resize_and_keep_capacity((length + sizeof(u32) - 1) / sizeof(u32));
     size_t in = length, out = 0;
@@ -66,7 +66,7 @@ size_t UnsignedBigInteger::export_data(Bytes data, bool remove_leading_zeros) co
     return out;
 }
 
-UnsignedBigInteger UnsignedBigInteger::from_base(u16 N, const String& str)
+UnsignedBigInteger UnsignedBigInteger::from_base(u16 N, String const& str)
 {
     VERIFY(N <= 36);
     UnsignedBigInteger result;
@@ -129,7 +129,7 @@ void UnsignedBigInteger::set_to(UnsignedBigInteger::Word other)
     m_cached_hash = 0;
 }
 
-void UnsignedBigInteger::set_to(const UnsignedBigInteger& other)
+void UnsignedBigInteger::set_to(UnsignedBigInteger const& other)
 {
     m_is_invalid = other.m_is_invalid;
     m_words.resize_and_keep_capacity(other.m_words.size());
@@ -167,7 +167,7 @@ void UnsignedBigInteger::resize_with_leading_zeros(size_t new_length)
     }
 }
 
-FLATTEN UnsignedBigInteger UnsignedBigInteger::plus(const UnsignedBigInteger& other) const
+FLATTEN UnsignedBigInteger UnsignedBigInteger::plus(UnsignedBigInteger const& other) const
 {
     UnsignedBigInteger result;
 
@@ -176,7 +176,7 @@ FLATTEN UnsignedBigInteger UnsignedBigInteger::plus(const UnsignedBigInteger& ot
     return result;
 }
 
-FLATTEN UnsignedBigInteger UnsignedBigInteger::minus(const UnsignedBigInteger& other) const
+FLATTEN UnsignedBigInteger UnsignedBigInteger::minus(UnsignedBigInteger const& other) const
 {
     UnsignedBigInteger result;
 
@@ -185,7 +185,7 @@ FLATTEN UnsignedBigInteger UnsignedBigInteger::minus(const UnsignedBigInteger& o
     return result;
 }
 
-FLATTEN UnsignedBigInteger UnsignedBigInteger::bitwise_or(const UnsignedBigInteger& other) const
+FLATTEN UnsignedBigInteger UnsignedBigInteger::bitwise_or(UnsignedBigInteger const& other) const
 {
     UnsignedBigInteger result;
 
@@ -194,7 +194,7 @@ FLATTEN UnsignedBigInteger UnsignedBigInteger::bitwise_or(const UnsignedBigInteg
     return result;
 }
 
-FLATTEN UnsignedBigInteger UnsignedBigInteger::bitwise_and(const UnsignedBigInteger& other) const
+FLATTEN UnsignedBigInteger UnsignedBigInteger::bitwise_and(UnsignedBigInteger const& other) const
 {
     UnsignedBigInteger result;
 
@@ -203,7 +203,7 @@ FLATTEN UnsignedBigInteger UnsignedBigInteger::bitwise_and(const UnsignedBigInte
     return result;
 }
 
-FLATTEN UnsignedBigInteger UnsignedBigInteger::bitwise_xor(const UnsignedBigInteger& other) const
+FLATTEN UnsignedBigInteger UnsignedBigInteger::bitwise_xor(UnsignedBigInteger const& other) const
 {
     UnsignedBigInteger result;
 
@@ -232,7 +232,7 @@ FLATTEN UnsignedBigInteger UnsignedBigInteger::shift_left(size_t num_bits) const
     return output;
 }
 
-FLATTEN UnsignedBigInteger UnsignedBigInteger::multiplied_by(const UnsignedBigInteger& other) const
+FLATTEN UnsignedBigInteger UnsignedBigInteger::multiplied_by(UnsignedBigInteger const& other) const
 {
     UnsignedBigInteger result;
     UnsignedBigInteger temp_shift_result;
@@ -244,7 +244,7 @@ FLATTEN UnsignedBigInteger UnsignedBigInteger::multiplied_by(const UnsignedBigIn
     return result;
 }
 
-FLATTEN UnsignedDivisionResult UnsignedBigInteger::divided_by(const UnsignedBigInteger& divisor) const
+FLATTEN UnsignedDivisionResult UnsignedBigInteger::divided_by(UnsignedBigInteger const& divisor) const
 {
     UnsignedBigInteger quotient;
     UnsignedBigInteger remainder;
@@ -271,7 +271,7 @@ u32 UnsignedBigInteger::hash() const
     if (m_cached_hash != 0)
         return m_cached_hash;
 
-    return m_cached_hash = string_hash((const char*)m_words.data(), sizeof(Word) * m_words.size());
+    return m_cached_hash = string_hash((char const*)m_words.data(), sizeof(Word) * m_words.size());
 }
 
 void UnsignedBigInteger::set_bit_inplace(size_t bit_index)
@@ -290,7 +290,7 @@ void UnsignedBigInteger::set_bit_inplace(size_t bit_index)
     m_cached_hash = 0;
 }
 
-bool UnsignedBigInteger::operator==(const UnsignedBigInteger& other) const
+bool UnsignedBigInteger::operator==(UnsignedBigInteger const& other) const
 {
     if (is_invalid() != other.is_invalid())
         return false;
@@ -303,12 +303,12 @@ bool UnsignedBigInteger::operator==(const UnsignedBigInteger& other) const
     return !__builtin_memcmp(m_words.data(), other.words().data(), length * (BITS_IN_WORD / 8));
 }
 
-bool UnsignedBigInteger::operator!=(const UnsignedBigInteger& other) const
+bool UnsignedBigInteger::operator!=(UnsignedBigInteger const& other) const
 {
     return !(*this == other);
 }
 
-bool UnsignedBigInteger::operator<(const UnsignedBigInteger& other) const
+bool UnsignedBigInteger::operator<(UnsignedBigInteger const& other) const
 {
     auto length = trimmed_length();
     auto other_length = other.trimmed_length();
@@ -332,7 +332,7 @@ bool UnsignedBigInteger::operator<(const UnsignedBigInteger& other) const
     return false;
 }
 
-bool UnsignedBigInteger::operator>(const UnsignedBigInteger& other) const
+bool UnsignedBigInteger::operator>(UnsignedBigInteger const& other) const
 {
     return *this != other && !(*this < other);
 }

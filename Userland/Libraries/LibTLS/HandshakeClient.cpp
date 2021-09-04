@@ -34,7 +34,7 @@ bool TLSv12::expand_key()
     pseudorandom_function(
         key_buffer,
         m_context.master_key,
-        (const u8*)"key expansion", 13,
+        (u8 const*)"key expansion", 13,
         ReadonlyBytes { m_context.remote_random, sizeof(m_context.remote_random) },
         ReadonlyBytes { m_context.local_random, sizeof(m_context.local_random) });
 
@@ -124,7 +124,7 @@ bool TLSv12::compute_master_secret_from_pre_master_secret(size_t length)
     pseudorandom_function(
         m_context.master_key,
         m_context.premaster_key,
-        (const u8*)"master secret", 13,
+        (u8 const*)"master secret", 13,
         ReadonlyBytes { m_context.local_random, sizeof(m_context.local_random) },
         ReadonlyBytes { m_context.remote_random, sizeof(m_context.remote_random) });
 
@@ -137,7 +137,7 @@ bool TLSv12::compute_master_secret_from_pre_master_secret(size_t length)
     return true;
 }
 
-static bool wildcard_matches(const StringView& host, const StringView& subject)
+static bool wildcard_matches(StringView const& host, StringView const& subject)
 {
     if (host.matches(subject))
         return true;
@@ -148,7 +148,7 @@ static bool wildcard_matches(const StringView& host, const StringView& subject)
     return false;
 }
 
-Optional<size_t> TLSv12::verify_chain_and_get_matching_certificate(const StringView& host) const
+Optional<size_t> TLSv12::verify_chain_and_get_matching_certificate(StringView const& host) const
 {
     if (m_context.certificates.is_empty() || !m_context.verify_chain())
         return {};
@@ -191,7 +191,7 @@ void TLSv12::build_rsa_pre_master_secret(PacketBuilder& builder)
 
     m_context.premaster_key = ByteBuffer::copy(random_bytes, bytes);
 
-    const auto& certificate_option = verify_chain_and_get_matching_certificate(m_context.extensions.SNI); // if the SNI is empty, we'll make a special case and match *a* leaf certificate.
+    auto const& certificate_option = verify_chain_and_get_matching_certificate(m_context.extensions.SNI); // if the SNI is empty, we'll make a special case and match *a* leaf certificate.
     if (!certificate_option.has_value()) {
         dbgln("certificate verification failed :(");
         alert(AlertLevel::Critical, AlertDescription::BadCertificate);

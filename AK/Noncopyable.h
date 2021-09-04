@@ -8,8 +8,8 @@
 
 #define AK_MAKE_NONCOPYABLE(c) \
 private:                       \
-    c(const c&) = delete;      \
-    c& operator=(const c&) = delete
+    c(c const&) = delete;      \
+    c& operator=(c const&) = delete
 
 #define AK_MAKE_NONMOVABLE(c) \
 private:                      \

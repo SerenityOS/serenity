@@ -22,7 +22,7 @@ struct Index {
     ssize_t m_to { -1 };
     Type m_type { Type::SingleIndex };
 
-    bool intersects(const Index& other)
+    bool intersects(Index const& other)
     {
         if (m_type != Type::RangedIndex)
             return m_from == other.m_from;
@@ -142,7 +142,7 @@ static void expand_list(Vector<String>& tokens, Vector<Index>& indices)
     }
 }
 
-static void cut_file(const String& file, const Vector<Index>& byte_vector)
+static void cut_file(String const& file, const Vector<Index>& byte_vector)
 {
     FILE* fp = stdin;
     if (!file.is_null()) {

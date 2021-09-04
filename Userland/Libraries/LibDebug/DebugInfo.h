@@ -71,7 +71,7 @@ public:
         union {
             u32 as_u32;
             u32 as_i32;
-            const char* as_string;
+            char const* as_string;
         } constant_data { 0 };
 
         Dwarf::EntryTag type_tag;
@@ -107,19 +107,19 @@ public:
         FlatPtr address;
     };
 
-    Optional<SourcePositionAndAddress> get_address_from_source_position(const String& file, size_t line) const;
+    Optional<SourcePositionAndAddress> get_address_from_source_position(String const& file, size_t line) const;
 
     String name_of_containing_function(FlatPtr address) const;
-    Vector<SourcePosition> source_lines_in_scope(const VariablesScope&) const;
+    Vector<SourcePosition> source_lines_in_scope(VariablesScope const&) const;
     Optional<VariablesScope> get_containing_function(FlatPtr address) const;
 
 private:
     void prepare_variable_scopes();
     void prepare_lines();
     void parse_scopes_impl(const Dwarf::DIE& die);
-    OwnPtr<VariableInfo> create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters&, u32 address_offset = 0) const;
+    OwnPtr<VariableInfo> create_variable_info(const Dwarf::DIE& variable_die, PtraceRegisters const&, u32 address_offset = 0) const;
     static bool is_variable_tag_supported(const Dwarf::EntryTag& tag);
-    void add_type_info_to_variable(const Dwarf::DIE& type_die, const PtraceRegisters& regs, DebugInfo::VariableInfo* parent_variable) const;
+    void add_type_info_to_variable(const Dwarf::DIE& type_die, PtraceRegisters const& regs, DebugInfo::VariableInfo* parent_variable) const;
 
     Optional<Dwarf::LineProgram::DirectoryAndFile> get_source_path_of_inline(const Dwarf::DIE&) const;
     Optional<uint32_t> get_line_of_inline(const Dwarf::DIE&) const;

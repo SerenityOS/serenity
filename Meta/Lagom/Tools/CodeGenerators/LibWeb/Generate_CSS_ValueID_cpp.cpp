@@ -11,7 +11,7 @@
 #include <LibCore/File.h>
 #include <ctype.h>
 
-static String title_casify(const String& dashy_name)
+static String title_casify(String const& dashy_name)
 {
     auto parts = dashy_name.split('-');
     StringBuilder builder;
@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 
 namespace Web::CSS {
 
-ValueID value_id_from_string(const StringView& string)
+ValueID value_id_from_string(StringView const& string)
 {
 )~~~");
 
@@ -67,7 +67,7 @@ ValueID value_id_from_string(const StringView& string)
     return ValueID::Invalid;
 }
 
-const char* string_from_value_id(ValueID value_id) {
+char const* string_from_value_id(ValueID value_id) {
     switch (value_id) {
 )~~~");
 

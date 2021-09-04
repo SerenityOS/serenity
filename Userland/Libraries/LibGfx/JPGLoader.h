@@ -14,14 +14,14 @@
 namespace Gfx {
 
 RefPtr<Gfx::Bitmap> load_jpg(String const& path);
-RefPtr<Gfx::Bitmap> load_jpg_from_memory(const u8* data, size_t length);
+RefPtr<Gfx::Bitmap> load_jpg_from_memory(u8 const* data, size_t length);
 
 struct JPGLoadingContext;
 
 class JPGImageDecoderPlugin : public ImageDecoderPlugin {
 public:
     virtual ~JPGImageDecoderPlugin() override;
-    JPGImageDecoderPlugin(const u8*, size_t);
+    JPGImageDecoderPlugin(u8 const*, size_t);
     virtual IntSize size() override;
     virtual RefPtr<Gfx::Bitmap> bitmap() override;
     virtual void set_volatile() override;

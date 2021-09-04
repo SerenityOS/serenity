@@ -10,6 +10,6 @@
 
 __BEGIN_DECLS
 
-int res_query(const char* dname, int class_, int type, unsigned char* answer, int anslen);
+int res_query(char const* dname, int class_, int type, unsigned char* answer, int anslen);
 
 __END_DECLS

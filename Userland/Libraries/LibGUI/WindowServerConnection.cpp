@@ -66,7 +66,7 @@ void WindowServerConnection::update_system_theme(Core::AnonymousBuffer const& th
     });
 }
 
-void WindowServerConnection::update_system_fonts(const String& default_font_query, const String& fixed_width_font_query)
+void WindowServerConnection::update_system_fonts(String const& default_font_query, String const& fixed_width_font_query)
 {
     Gfx::FontDatabase::set_default_font_query(default_font_query);
     Gfx::FontDatabase::set_fixed_width_font_query(fixed_width_font_query);

@@ -187,7 +187,7 @@ public:
     }
 
     Process& process() { return m_process; }
-    const Process& process() const { return m_process; }
+    Process const& process() const { return m_process; }
 
     // NOTE: This returns a null-terminated string.
     StringView name() const
@@ -262,10 +262,10 @@ public:
             : m_infinite(true)
         {
         }
-        explicit BlockTimeout(bool is_absolute, const Time* time, const Time* start_time = nullptr, clockid_t clock_id = CLOCK_MONOTONIC_COARSE);
+        explicit BlockTimeout(bool is_absolute, Time const* time, Time const* start_time = nullptr, clockid_t clock_id = CLOCK_MONOTONIC_COARSE);
 
-        const Time& absolute_time() const { return m_time; }
-        const Time* start_time() const { return !m_infinite ? &m_start_time : nullptr; }
+        Time const& absolute_time() const { return m_time; }
+        Time const* start_time() const { return !m_infinite ? &m_start_time : nullptr; }
         clockid_t clock_id() const { return m_clock_id; }
         bool is_infinite() const { return m_infinite; }
 
@@ -297,7 +297,7 @@ public:
         virtual ~Blocker();
         virtual StringView state_string() const = 0;
         virtual Type blocker_type() const = 0;
-        virtual const BlockTimeout& override_timeout(const BlockTimeout& timeout) { return timeout; }
+        virtual BlockTimeout const& override_timeout(BlockTimeout const& timeout) { return timeout; }
         virtual bool can_be_interrupted() const { return true; }
         virtual bool setup_blocker();
 
@@ -607,7 +607,7 @@ public:
 
     class FileDescriptionBlocker : public FileBlocker {
     public:
-        const FileDescription& blocked_description() const;
+        FileDescription const& blocked_description() const;
 
         virtual bool unblock(bool, void*) override;
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
@@ -639,7 +639,7 @@ public:
     public:
         explicit WriteBlocker(FileDescription&, BlockFlags&);
         virtual StringView state_string() const override { return "Writing"sv; }
-        virtual const BlockTimeout& override_timeout(const BlockTimeout&) override;
+        virtual BlockTimeout const& override_timeout(BlockTimeout const&) override;
 
     private:
         BlockTimeout m_timeout;
@@ -649,7 +649,7 @@ public:
     public:
         explicit ReadBlocker(FileDescription&, BlockFlags&);
         virtual StringView state_string() const override { return "Reading"sv; }
-        virtual const BlockTimeout& override_timeout(const BlockTimeout&) override;
+        virtual BlockTimeout const& override_timeout(BlockTimeout const&) override;
 
     private:
         BlockTimeout m_timeout;
@@ -657,10 +657,10 @@ public:
 
     class SleepBlocker final : public Blocker {
     public:
-        explicit SleepBlocker(const BlockTimeout&, Time* = nullptr);
+        explicit SleepBlocker(BlockTimeout const&, Time* = nullptr);
         virtual StringView state_string() const override { return "Sleeping"sv; }
         virtual Type blocker_type() const override { return Type::Sleep; }
-        virtual const BlockTimeout& override_timeout(const BlockTimeout&) override;
+        virtual BlockTimeout const& override_timeout(BlockTimeout const&) override;
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
         virtual void was_unblocked(bool) override;
         virtual Thread::BlockResult block_result() override;
@@ -718,7 +718,7 @@ public:
 
     private:
         void do_was_disowned();
-        void do_set_result(const siginfo_t&);
+        void do_set_result(siginfo_t const&);
 
         const int m_wait_options;
         KResultOr<siginfo_t>& m_result;
@@ -799,10 +799,10 @@ public:
     void set_affinity(u32 affinity) { m_cpu_affinity = affinity; }
 
     RegisterState& get_register_dump_from_stack();
-    const RegisterState& get_register_dump_from_stack() const { return const_cast<Thread*>(this)->get_register_dump_from_stack(); }
+    RegisterState const& get_register_dump_from_stack() const { return const_cast<Thread*>(this)->get_register_dump_from_stack(); }
 
     DebugRegisterState& debug_register_state() { return m_debug_register_state; }
-    const DebugRegisterState& debug_register_state() const { return m_debug_register_state; }
+    DebugRegisterState const& debug_register_state() const { return m_debug_register_state; }
 
     ThreadRegisters& regs() { return m_regs; }
     ThreadRegisters const& regs() const { return m_regs; }
@@ -834,7 +834,7 @@ public:
     void block(Kernel::Mutex&, SpinlockLocker<Spinlock<u8>>&, u32);
 
     template<typename BlockerType, class... Args>
-    [[nodiscard]] BlockResult block(const BlockTimeout& timeout, Args&&... args)
+    [[nodiscard]] BlockResult block(BlockTimeout const& timeout, Args&&... args)
     {
         VERIFY(!Processor::current_in_irq());
         VERIFY(this == Thread::current());
@@ -971,13 +971,13 @@ public:
         return block<Thread::WaitQueueBlocker>(timeout, wait_queue, forward<Args>(args)...);
     }
 
-    BlockResult sleep(clockid_t, const Time&, Time* = nullptr);
-    BlockResult sleep(const Time& duration, Time* remaining_time = nullptr)
+    BlockResult sleep(clockid_t, Time const&, Time* = nullptr);
+    BlockResult sleep(Time const& duration, Time* remaining_time = nullptr)
     {
         return sleep(CLOCK_MONOTONIC_COARSE, duration, remaining_time);
     }
-    BlockResult sleep_until(clockid_t, const Time&);
-    BlockResult sleep_until(const Time& duration)
+    BlockResult sleep_until(clockid_t, Time const&);
+    BlockResult sleep_until(Time const& duration)
     {
         return sleep_until(CLOCK_MONOTONIC_COARSE, duration);
     }

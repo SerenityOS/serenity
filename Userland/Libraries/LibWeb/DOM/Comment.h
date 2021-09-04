@@ -15,7 +15,7 @@ class Comment final : public CharacterData {
 public:
     using WrapperType = Bindings::CommentWrapper;
 
-    explicit Comment(Document&, const String&);
+    explicit Comment(Document&, String const&);
     virtual ~Comment() override;
 
     virtual FlyString node_name() const override { return "#comment"; }

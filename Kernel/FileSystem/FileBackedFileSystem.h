@@ -17,7 +17,7 @@ public:
 
     File& file() { return m_file_description->file(); }
     FileDescription& file_description() { return *m_file_description; }
-    const File& file() const { return m_file_description->file(); }
+    File const& file() const { return m_file_description->file(); }
     FileDescription& file_description() const { return *m_file_description; }
 
 protected:

@@ -96,7 +96,7 @@ public:
     // FIXME: Add back the default intent parameter once clang-11 is the default in GitHub Actions.
     //        Once added back, remove the parameter where it's constructed in get_random_bytes in Kernel/Random.h.
     template<typename KeyType, typename... Args>
-    explicit constexpr CTR(const KeyType& user_key, size_t key_bits, Intent, Args... args)
+    explicit constexpr CTR(KeyType const& user_key, size_t key_bits, Intent, Args... args)
         : Mode<T>(user_key, key_bits, Intent::Encryption, args...)
     {
     }
@@ -118,7 +118,7 @@ public:
         this->encrypt_or_stream(&in, out, ivec, ivec_out);
     }
 
-    void key_stream(Bytes& out, const Bytes& ivec = {}, Bytes* ivec_out = nullptr)
+    void key_stream(Bytes& out, Bytes const& ivec = {}, Bytes* ivec_out = nullptr)
     {
         this->encrypt_or_stream(nullptr, out, ivec, ivec_out);
     }
@@ -136,7 +136,7 @@ private:
 protected:
     constexpr static IncrementFunctionType increment {};
 
-    void encrypt_or_stream(const ReadonlyBytes* in, Bytes& out, ReadonlyBytes ivec, Bytes* ivec_out = nullptr)
+    void encrypt_or_stream(ReadonlyBytes const* in, Bytes& out, ReadonlyBytes ivec, Bytes* ivec_out = nullptr)
     {
         size_t length;
         if (in) {

@@ -20,8 +20,8 @@ enum class Language {
     SQL,
 };
 
-Language language_from_file_extension(const String&);
-Language language_from_name(const String&);
-String language_name_from_file_extension(const String&);
+Language language_from_file_extension(String const&);
+Language language_from_name(String const&);
+String language_name_from_file_extension(String const&);
 
 }

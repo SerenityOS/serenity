@@ -57,7 +57,7 @@
 
 namespace Web::DOM {
 
-Document::Document(const URL& url)
+Document::Document(URL const& url)
     : ParentNode(*this, NodeType::DOCUMENT_NODE)
     , m_style_resolver(make<CSS::StyleResolver>(*this))
     , m_style_sheets(CSS::StyleSheetList::create(*this))
@@ -136,7 +136,7 @@ Origin Document::origin() const
     return { m_url.protocol(), m_url.host(), m_url.port() };
 }
 
-void Document::set_origin(const Origin& origin)
+void Document::set_origin(Origin const& origin)
 {
     m_url.set_protocol(origin.protocol());
     m_url.set_host(origin.host());
@@ -157,7 +157,7 @@ void Document::schedule_forced_layout()
     m_forced_layout_timer->start();
 }
 
-bool Document::is_child_allowed(const Node& node) const
+bool Document::is_child_allowed(Node const& node) const
 {
     switch (node.type()) {
     case NodeType::DOCUMENT_NODE:
@@ -179,7 +179,7 @@ Element* Document::document_element()
     return first_child_of_type<Element>();
 }
 
-const Element* Document::document_element() const
+Element const* Document::document_element() const
 {
     return first_child_of_type<Element>();
 }
@@ -265,7 +265,7 @@ String Document::title() const
     return builder.to_string();
 }
 
-void Document::set_title(const String& title)
+void Document::set_title(String const& title)
 {
     auto* head_element = const_cast<HTML::HTMLHeadElement*>(head());
     if (!head_element)
@@ -322,7 +322,7 @@ void Document::tear_down_layout_tree()
     m_layout_root = nullptr;
 }
 
-Color Document::background_color(const Palette& palette) const
+Color Document::background_color(Palette const& palette) const
 {
     auto default_color = palette.base();
     auto* body_element = body();
@@ -381,7 +381,7 @@ CSS::Repeat Document::background_repeat_y() const
     return body_layout_node->computed_values().background_repeat_y();
 }
 
-URL Document::complete_url(const String& string) const
+URL Document::complete_url(String const& string) const
 {
     return m_url.complete_url(string);
 }
@@ -668,7 +668,7 @@ JS::Interpreter& Document::interpreter()
     return *m_interpreter;
 }
 
-JS::Value Document::run_javascript(const StringView& source, const StringView& filename)
+JS::Value Document::run_javascript(StringView const& source, StringView const& filename)
 {
     auto parser = JS::Parser(JS::Lexer(source, filename));
     auto program = parser.parse_program();
@@ -686,7 +686,7 @@ JS::Value Document::run_javascript(const StringView& source, const StringView& f
 
 // https://dom.spec.whatwg.org/#dom-document-createelement
 // FIXME: This only implements step 6 of the algorithm and does not take in options.
-NonnullRefPtr<Element> Document::create_element(const String& tag_name)
+NonnullRefPtr<Element> Document::create_element(String const& tag_name)
 {
     // FIXME: Let namespace be the HTML namespace, if this is an HTML document or this’s content type is "application/xhtml+xml", and null otherwise.
     return DOM::create_element(*this, tag_name, Namespace::HTML);
@@ -694,7 +694,7 @@ NonnullRefPtr<Element> Document::create_element(const String& tag_name)
 
 // https://dom.spec.whatwg.org/#internal-createelementns-steps
 // FIXME: This only implements step 4 of the algorithm and does not take in options.
-NonnullRefPtr<Element> Document::create_element_ns(const String& namespace_, const String& qualified_name)
+NonnullRefPtr<Element> Document::create_element_ns(String const& namespace_, String const& qualified_name)
 {
     return DOM::create_element(*this, qualified_name, namespace_);
 }
@@ -704,12 +704,12 @@ NonnullRefPtr<DocumentFragment> Document::create_document_fragment()
     return adopt_ref(*new DocumentFragment(*this));
 }
 
-NonnullRefPtr<Text> Document::create_text_node(const String& data)
+NonnullRefPtr<Text> Document::create_text_node(String const& data)
 {
     return adopt_ref(*new Text(*this, data));
 }
 
-NonnullRefPtr<Comment> Document::create_comment(const String& data)
+NonnullRefPtr<Comment> Document::create_comment(String const& data)
 {
     return adopt_ref(*new Comment(*this, data));
 }
@@ -720,7 +720,7 @@ NonnullRefPtr<Range> Document::create_range()
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createevent
-NonnullRefPtr<Event> Document::create_event(const String& interface)
+NonnullRefPtr<Event> Document::create_event(String const& interface)
 {
     auto interface_lowercase = interface.to_lowercase();
     RefPtr<Event> event;
@@ -848,12 +848,12 @@ ExceptionOr<NonnullRefPtr<Node>> Document::adopt_node_binding(NonnullRefPtr<Node
     return node;
 }
 
-const DocumentType* Document::doctype() const
+DocumentType const* Document::doctype() const
 {
     return first_child_of_type<DocumentType>();
 }
 
-const String& Document::compat_mode() const
+String const& Document::compat_mode() const
 {
     static String back_compat = "BackCompat";
     static String css1_compat = "CSS1Compat";
@@ -891,7 +891,7 @@ void Document::set_active_element(Element* element)
         m_layout_root->set_needs_display();
 }
 
-void Document::set_ready_state(const String& ready_state)
+void Document::set_ready_state(String const& ready_state)
 {
     m_ready_state = ready_state;
     dispatch_event(Event::create(HTML::EventNames::readystatechange));
@@ -902,12 +902,12 @@ Page* Document::page()
     return m_browsing_context ? m_browsing_context->page() : nullptr;
 }
 
-const Page* Document::page() const
+Page const* Document::page() const
 {
     return m_browsing_context ? m_browsing_context->page() : nullptr;
 }
 
-EventTarget* Document::get_parent(const Event& event)
+EventTarget* Document::get_parent(Event const& event)
 {
     if (event.type() == HTML::EventNames::load)
         return nullptr;

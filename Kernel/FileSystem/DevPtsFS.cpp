@@ -93,7 +93,7 @@ KResultOr<size_t> DevPtsFSInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, 
     VERIFY_NOT_REACHED();
 }
 
-KResultOr<size_t> DevPtsFSInode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, FileDescription*)
+KResultOr<size_t> DevPtsFSInode::write_bytes(off_t, size_t, UserOrKernelBuffer const&, FileDescription*)
 {
     VERIFY_NOT_REACHED();
 }
@@ -155,7 +155,7 @@ void DevPtsFSInode::flush_metadata()
 {
 }
 
-KResult DevPtsFSInode::add_child(Inode&, const StringView&, mode_t)
+KResult DevPtsFSInode::add_child(Inode&, StringView const&, mode_t)
 {
     return EROFS;
 }
@@ -165,7 +165,7 @@ KResultOr<NonnullRefPtr<Inode>> DevPtsFSInode::create_child(StringView, mode_t, 
     return EROFS;
 }
 
-KResult DevPtsFSInode::remove_child(const StringView&)
+KResult DevPtsFSInode::remove_child(StringView const&)
 {
     return EROFS;
 }

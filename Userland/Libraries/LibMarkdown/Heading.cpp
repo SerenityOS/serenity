@@ -40,7 +40,7 @@ OwnPtr<Heading> Heading::parse(Vector<StringView>::ConstIterator& lines)
     if (lines.is_end())
         return {};
 
-    const StringView& line = *lines;
+    StringView const& line = *lines;
     size_t level;
 
     for (level = 0; level < line.length(); level++) {

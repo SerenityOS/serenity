@@ -33,7 +33,7 @@ static void handle_sigint(int)
     g_debug_session = nullptr;
 }
 
-static void handle_print_registers(const PtraceRegisters& regs)
+static void handle_print_registers(PtraceRegisters const& regs)
 {
 #if ARCH(I386)
     outln("eax={:p} ebx={:p} ecx={:p} edx={:p}", regs.eax, regs.ebx, regs.ecx, regs.edx);
@@ -46,7 +46,7 @@ static void handle_print_registers(const PtraceRegisters& regs)
 #endif
 }
 
-static bool handle_disassemble_command(const String& command, void* first_instruction)
+static bool handle_disassemble_command(String const& command, void* first_instruction)
 {
     auto parts = command.split(' ');
     size_t number_of_instructions_to_disassemble = 5;
@@ -83,7 +83,7 @@ static bool handle_disassemble_command(const String& command, void* first_instru
     return true;
 }
 
-static bool handle_backtrace_command(const PtraceRegisters& regs)
+static bool handle_backtrace_command(PtraceRegisters const& regs)
 {
 #if ARCH(I386)
     auto ebp_val = regs.ebp;
@@ -115,7 +115,7 @@ static bool insert_breakpoint_at_address(FlatPtr address)
     return g_debug_session->insert_breakpoint((void*)address);
 }
 
-static bool insert_breakpoint_at_source_position(const String& file, size_t line)
+static bool insert_breakpoint_at_source_position(String const& file, size_t line)
 {
     auto result = g_debug_session->insert_breakpoint(file, line);
     if (!result.has_value()) {
@@ -126,7 +126,7 @@ static bool insert_breakpoint_at_source_position(const String& file, size_t line
     return true;
 }
 
-static bool insert_breakpoint_at_symbol(const String& symbol)
+static bool insert_breakpoint_at_symbol(String const& symbol)
 {
     auto result = g_debug_session->insert_breakpoint(symbol);
     if (!result.has_value()) {
@@ -137,7 +137,7 @@ static bool insert_breakpoint_at_symbol(const String& symbol)
     return true;
 }
 
-static bool handle_breakpoint_command(const String& command)
+static bool handle_breakpoint_command(String const& command)
 {
     auto parts = command.split(' ');
     if (parts.size() != 2)
@@ -164,7 +164,7 @@ static bool handle_breakpoint_command(const String& command)
     return insert_breakpoint_at_symbol(argument);
 }
 
-static bool handle_examine_command(const String& command)
+static bool handle_examine_command(String const& command)
 {
     auto parts = command.split(' ');
     if (parts.size() != 2)
@@ -210,7 +210,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* command = nullptr;
+    char const* command = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(command,
         "The program to be debugged, along with its arguments",
@@ -239,7 +239,7 @@ int main(int argc, char** argv)
         }
 
         VERIFY(optional_regs.has_value());
-        const PtraceRegisters& regs = optional_regs.value();
+        PtraceRegisters const& regs = optional_regs.value();
 #if ARCH(I386)
         const FlatPtr ip = regs.eip;
 #else

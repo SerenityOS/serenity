@@ -25,12 +25,12 @@ public:
 
     int horizontal_padding() const { return m_horizontal_padding; }
 
-    virtual void scroll_into_view(const ModelIndex& index, bool scroll_horizontally, bool scroll_vertically) override;
+    virtual void scroll_into_view(ModelIndex const& index, bool scroll_horizontally, bool scroll_vertically) override;
 
     Gfx::IntPoint adjusted_position(const Gfx::IntPoint&) const;
 
     virtual ModelIndex index_at_event_position(const Gfx::IntPoint&) const override;
-    virtual Gfx::IntRect content_rect(const ModelIndex&) const override;
+    virtual Gfx::IntRect content_rect(ModelIndex const&) const override;
 
     int model_column() const { return m_model_column; }
     void set_model_column(int column) { m_model_column = column; }

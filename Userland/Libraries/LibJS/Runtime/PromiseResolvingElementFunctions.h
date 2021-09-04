@@ -19,7 +19,7 @@ struct RemainingElements final : public Cell {
     {
     }
 
-    virtual const char* class_name() const override { return "RemainingElements"; }
+    virtual char const* class_name() const override { return "RemainingElements"; }
 
     u64 value { 0 };
 };
@@ -30,7 +30,7 @@ struct PromiseValueList final : public Cell {
     {
     }
 
-    virtual const char* class_name() const override { return "PromiseValueList"; }
+    virtual char const* class_name() const override { return "PromiseValueList"; }
 
     MarkedValueList values;
 };

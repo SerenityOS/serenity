@@ -21,15 +21,15 @@ class Notification : public Core::Object {
 public:
     virtual ~Notification() override;
 
-    const String& text() const { return m_text; }
-    void set_text(const String& text)
+    String const& text() const { return m_text; }
+    void set_text(String const& text)
     {
         m_text_dirty = true;
         m_text = text;
     }
 
-    const String& title() const { return m_title; }
-    void set_title(const String& title)
+    String const& title() const { return m_title; }
+    void set_title(String const& title)
     {
         m_title_dirty = true;
         m_title = title;

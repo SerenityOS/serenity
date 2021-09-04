@@ -24,12 +24,12 @@ public:
     constexpr static size_t block_size() { return BlockSize; };
     constexpr static size_t digest_size() { return DigestSize; };
 
-    virtual void update(const u8*, size_t) = 0;
+    virtual void update(u8 const*, size_t) = 0;
 
-    void update(const Bytes& buffer) { update(buffer.data(), buffer.size()); };
-    void update(const ReadonlyBytes& buffer) { update(buffer.data(), buffer.size()); };
-    void update(const ByteBuffer& buffer) { update(buffer.data(), buffer.size()); };
-    void update(const StringView& string) { update((const u8*)string.characters_without_null_termination(), string.length()); };
+    void update(Bytes const& buffer) { update(buffer.data(), buffer.size()); };
+    void update(ReadonlyBytes const& buffer) { update(buffer.data(), buffer.size()); };
+    void update(ByteBuffer const& buffer) { update(buffer.data(), buffer.size()); };
+    void update(StringView const& string) { update((u8 const*)string.characters_without_null_termination(), string.length()); };
 
     virtual DigestType peek() = 0;
     virtual DigestType digest() = 0;

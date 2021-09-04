@@ -32,9 +32,9 @@ public:
     void set_readonly(bool);
 
     int buffer_size() const { return m_buffer.size(); }
-    void set_buffer(const ByteBuffer&);
+    void set_buffer(ByteBuffer const&);
     void fill_selection(u8 fill_byte);
-    bool write_to_file(const String& path);
+    bool write_to_file(String const& path);
     bool write_to_file(int fd);
 
     void select_all();

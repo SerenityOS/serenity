@@ -14,7 +14,7 @@
 
 namespace Desktop {
 
-auto Launcher::Details::from_details_str(const String& details_str) -> NonnullRefPtr<Details>
+auto Launcher::Details::from_details_str(String const& details_str) -> NonnullRefPtr<Details>
 {
     auto details = adopt_ref(*new Details);
     auto json = JsonValue::from_string(details_str);
@@ -51,7 +51,7 @@ static LaunchServerConnection& connection()
     return connection;
 }
 
-bool Launcher::add_allowed_url(const URL& url)
+bool Launcher::add_allowed_url(URL const& url)
 {
     auto response_or_error = connection().try_add_allowed_url(url);
     if (response_or_error.is_error()) {
@@ -61,7 +61,7 @@ bool Launcher::add_allowed_url(const URL& url)
     return true;
 }
 
-bool Launcher::add_allowed_handler_with_any_url(const String& handler)
+bool Launcher::add_allowed_handler_with_any_url(String const& handler)
 {
     auto response_or_error = connection().try_add_allowed_handler_with_any_url(handler);
     if (response_or_error.is_error()) {
@@ -71,7 +71,7 @@ bool Launcher::add_allowed_handler_with_any_url(const String& handler)
     return true;
 }
 
-bool Launcher::add_allowed_handler_with_only_specific_urls(const String& handler, const Vector<URL>& urls)
+bool Launcher::add_allowed_handler_with_only_specific_urls(String const& handler, const Vector<URL>& urls)
 {
     auto response_or_error = connection().try_add_allowed_handler_with_only_specific_urls(handler, urls);
     if (response_or_error.is_error()) {
@@ -91,23 +91,23 @@ bool Launcher::seal_allowlist()
     return true;
 }
 
-bool Launcher::open(const URL& url, const String& handler_name)
+bool Launcher::open(URL const& url, String const& handler_name)
 {
     return connection().open_url(url, handler_name);
 }
 
-bool Launcher::open(const URL& url, const Details& details)
+bool Launcher::open(URL const& url, Details const& details)
 {
     VERIFY(details.launcher_type != LauncherType::Application); // Launcher should not be used to execute arbitrary applications
     return open(url, details.executable);
 }
 
-Vector<String> Launcher::get_handlers_for_url(const URL& url)
+Vector<String> Launcher::get_handlers_for_url(URL const& url)
 {
     return connection().get_handlers_for_url(url.to_string());
 }
 
-auto Launcher::get_handlers_with_details_for_url(const URL& url) -> NonnullRefPtrVector<Details>
+auto Launcher::get_handlers_with_details_for_url(URL const& url) -> NonnullRefPtrVector<Details>
 {
     auto details = connection().get_handlers_with_details_for_url(url.to_string());
     NonnullRefPtrVector<Details> handlers_with_details;

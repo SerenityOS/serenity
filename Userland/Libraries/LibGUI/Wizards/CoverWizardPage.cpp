@@ -36,12 +36,12 @@ CoverWizardPage::CoverWizardPage()
     m_body_label->set_text_alignment(Gfx::TextAlignment::TopLeft);
 }
 
-void CoverWizardPage::set_header_text(const String& text)
+void CoverWizardPage::set_header_text(String const& text)
 {
     m_header_label->set_text(text);
 }
 
-void CoverWizardPage::set_body_text(const String& text)
+void CoverWizardPage::set_body_text(String const& text)
 {
     m_body_label->set_text(text);
 }

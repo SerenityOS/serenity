@@ -51,7 +51,7 @@ public:
     void window_was_constructed(Badge<Window>);
 
     Window& window() { return m_window; }
-    const Window& window() const { return m_window; }
+    Window const& window() const { return m_window; }
 
     Gfx::IntRect rect() const;
     Gfx::IntRect render_rect() const;
@@ -129,8 +129,8 @@ private:
     MultiScaleBitmaps* shadow_bitmap() const;
     Gfx::IntRect inflated_for_shadow(const Gfx::IntRect&) const;
 
-    void handle_menubar_mouse_event(const MouseEvent&);
-    void handle_menu_mouse_event(Menu&, const MouseEvent&);
+    void handle_menubar_mouse_event(MouseEvent const&);
+    void handle_menu_mouse_event(Menu&, MouseEvent const&);
 
     Gfx::WindowTheme::WindowState window_state_for_theme() const;
     String computed_title() const;

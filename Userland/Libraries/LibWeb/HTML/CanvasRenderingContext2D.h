@@ -40,7 +40,7 @@ public:
     void stroke_rect(float x, float y, float width, float height);
     void clear_rect(float x, float y, float width, float height);
 
-    void draw_image(const HTMLImageElement&, float x, float y);
+    void draw_image(HTMLImageElement const&, float x, float y);
 
     void scale(float sx, float sy);
     void translate(float x, float y);
@@ -60,14 +60,14 @@ public:
     void rect(float x, float y, float width, float height);
     void stroke();
 
-    void fill_text(const String&, float x, float y, Optional<double> max_width);
+    void fill_text(String const&, float x, float y, Optional<double> max_width);
 
     // FIXME: We should only have one fill(), really. Fix the wrapper generator!
     void fill(Gfx::Painter::WindingRule);
-    void fill(const String& fill_rule);
+    void fill(String const& fill_rule);
 
     RefPtr<ImageData> create_image_data(int width, int height) const;
-    void put_image_data(const ImageData&, float x, float y);
+    void put_image_data(ImageData const&, float x, float y);
 
     HTMLCanvasElement* canvas() { return m_element; }
 

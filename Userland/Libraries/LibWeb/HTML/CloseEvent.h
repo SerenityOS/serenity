@@ -14,7 +14,7 @@ class CloseEvent : public DOM::Event {
 public:
     using WrapperType = Bindings::CloseEventWrapper;
 
-    static NonnullRefPtr<CloseEvent> create(const FlyString& event_name, bool was_clean, u16 code, const String& reason)
+    static NonnullRefPtr<CloseEvent> create(FlyString const& event_name, bool was_clean, u16 code, String const& reason)
     {
         return adopt_ref(*new CloseEvent(event_name, was_clean, code, reason));
     }
@@ -26,7 +26,7 @@ public:
     String reason() const { return m_reason; }
 
 protected:
-    CloseEvent(const FlyString& event_name, bool was_clean, u16 code, const String& reason)
+    CloseEvent(FlyString const& event_name, bool was_clean, u16 code, String const& reason)
         : Event(event_name)
         , m_was_clean(was_clean)
         , m_code(code)

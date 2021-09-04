@@ -20,12 +20,12 @@ struct RegisterData {
 
 class RegistersModel final : public GUI::Model {
 public:
-    static RefPtr<RegistersModel> create(const PtraceRegisters& regs)
+    static RefPtr<RegistersModel> create(PtraceRegisters const& regs)
     {
         return adopt_ref(*new RegistersModel(regs));
     }
 
-    static RefPtr<RegistersModel> create(const PtraceRegisters& current_regs, const PtraceRegisters& previous_regs)
+    static RefPtr<RegistersModel> create(PtraceRegisters const& current_regs, PtraceRegisters const& previous_regs)
     {
         return adopt_ref(*new RegistersModel(current_regs, previous_regs));
     }
@@ -43,11 +43,11 @@ public:
     virtual String column_name(int) const override;
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
 
-    const PtraceRegisters& raw_registers() const { return m_raw_registers; }
+    PtraceRegisters const& raw_registers() const { return m_raw_registers; }
 
 private:
-    explicit RegistersModel(const PtraceRegisters& regs);
-    RegistersModel(const PtraceRegisters& current_regs, const PtraceRegisters& previous_regs);
+    explicit RegistersModel(PtraceRegisters const& regs);
+    RegistersModel(PtraceRegisters const& current_regs, PtraceRegisters const& previous_regs);
 
     PtraceRegisters m_raw_registers;
     Vector<RegisterData> m_registers;

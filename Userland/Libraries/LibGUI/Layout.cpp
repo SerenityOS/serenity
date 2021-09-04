@@ -112,7 +112,7 @@ void Layout::set_spacing(int spacing)
         m_owner->notify_layout_changed({});
 }
 
-void Layout::set_margins(const Margins& margins)
+void Layout::set_margins(Margins const& margins)
 {
     if (m_margins == margins)
         return;

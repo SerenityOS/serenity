@@ -34,7 +34,7 @@ NonnullOwnPtr<M3UParser> M3UParser::from_file(const String path)
     return parser;
 }
 
-NonnullOwnPtr<M3UParser> M3UParser::from_memory(const String& m3u_contents, bool utf8)
+NonnullOwnPtr<M3UParser> M3UParser::from_memory(String const& m3u_contents, bool utf8)
 {
     auto parser = make<M3UParser>();
     VERIFY(!m3u_contents.is_null() && !m3u_contents.is_empty() && !m3u_contents.is_whitespace());

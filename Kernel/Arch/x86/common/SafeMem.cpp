@@ -40,7 +40,7 @@ extern "C" u8 safe_atomic_compare_exchange_relaxed_faulted[];
 namespace Kernel {
 
 CODE_SECTION(".text.safemem")
-NEVER_INLINE bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at)
+NEVER_INLINE bool safe_memcpy(void* dest_ptr, void const* src_ptr, size_t n, void*& fault_at)
 {
     fault_at = nullptr;
     size_t dest = (size_t)dest_ptr;
@@ -94,7 +94,7 @@ NEVER_INLINE bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, voi
 }
 
 CODE_SECTION(".text.safemem")
-NEVER_INLINE ssize_t safe_strnlen(const char* str, size_t max_n, void*& fault_at)
+NEVER_INLINE ssize_t safe_strnlen(char const* str, size_t max_n, void*& fault_at)
 {
     ssize_t count = 0;
     fault_at = nullptr;

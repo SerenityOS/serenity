@@ -93,7 +93,7 @@ UNMAP_AFTER_INIT MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     m_mapped_bus = start_bus;
     dbgln_if(PCI_DEBUG, "PCI: First PCI ECAM Mapped region for starting bus {} @ {} {}", start_bus, m_mapped_region->vaddr(), m_mapped_region->physical_page(0)->paddr());
 
-    enumerate_hardware([&](const Address& address, ID id) {
+    enumerate_hardware([&](Address const& address, ID id) {
         m_physical_ids.append({ address, id, get_capabilities(address) });
     });
 }

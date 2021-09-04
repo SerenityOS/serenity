@@ -49,7 +49,7 @@ public:
         return wait_for_specific_endpoint_message<MessageType, LocalEndpoint>();
     }
 
-    void post_message(const Message& message)
+    void post_message(Message const& message)
     {
         post_message(message.encode());
     }
@@ -64,7 +64,7 @@ public:
 
         // Prepend the message size.
         uint32_t message_size = buffer.data.size();
-        buffer.data.prepend(reinterpret_cast<const u8*>(&message_size), sizeof(message_size));
+        buffer.data.prepend(reinterpret_cast<u8 const*>(&message_size), sizeof(message_size));
 
 #ifdef __serenity__
         for (auto& fd : buffer.fds) {

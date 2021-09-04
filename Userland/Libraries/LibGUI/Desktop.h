@@ -25,12 +25,12 @@ public:
     static Desktop& the();
     Desktop();
 
-    void set_background_color(const StringView& background_color);
+    void set_background_color(StringView const& background_color);
 
-    void set_wallpaper_mode(const StringView& mode);
+    void set_wallpaper_mode(StringView const& mode);
 
     String wallpaper() const;
-    bool set_wallpaper(const StringView& path, bool save_config = true);
+    bool set_wallpaper(StringView const& path, bool save_config = true);
 
     Gfx::IntRect rect() const { return m_bounding_rect; }
     const Vector<Gfx::IntRect, 4>& rects() const { return m_rects; }

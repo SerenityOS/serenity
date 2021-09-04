@@ -13,7 +13,7 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/StdLib.h>
 
-Kernel::KResultOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<const char*> user_str, size_t user_str_size)
+Kernel::KResultOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<char const*> user_str, size_t user_str_size)
 {
     bool is_user = Kernel::Memory::is_user_range(VirtualAddress(user_str), user_str_size);
     if (!is_user)
@@ -22,7 +22,7 @@ Kernel::KResultOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Use
     void* fault_at;
     ssize_t length = Kernel::safe_strnlen(user_str.unsafe_userspace_ptr(), user_str_size, fault_at);
     if (length < 0) {
-        dbgln("copy_kstring_from_user({:p}, {}) failed at {} (strnlen)", static_cast<const void*>(user_str.unsafe_userspace_ptr()), user_str_size, VirtualAddress { fault_at });
+        dbgln("copy_kstring_from_user({:p}, {}) failed at {} (strnlen)", static_cast<void const*>(user_str.unsafe_userspace_ptr()), user_str_size, VirtualAddress { fault_at });
         return EFAULT;
     }
     char* buffer;
@@ -36,13 +36,13 @@ Kernel::KResultOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Use
         return new_string.release_nonnull();
 
     if (!Kernel::safe_memcpy(buffer, user_str.unsafe_userspace_ptr(), (size_t)length, fault_at)) {
-        dbgln("copy_kstring_from_user({:p}, {}) failed at {} (memcpy)", static_cast<const void*>(user_str.unsafe_userspace_ptr()), user_str_size, VirtualAddress { fault_at });
+        dbgln("copy_kstring_from_user({:p}, {}) failed at {} (memcpy)", static_cast<void const*>(user_str.unsafe_userspace_ptr()), user_str_size, VirtualAddress { fault_at });
         return EFAULT;
     }
     return new_string.release_nonnull();
 }
 
-[[nodiscard]] Optional<Time> copy_time_from_user(const timespec* ts_user)
+[[nodiscard]] Optional<Time> copy_time_from_user(timespec const* ts_user)
 {
     timespec ts;
     if (!copy_from_user(&ts, ts_user, sizeof(timespec))) {
@@ -50,7 +50,7 @@ Kernel::KResultOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Use
     }
     return Time::from_timespec(ts);
 }
-[[nodiscard]] Optional<Time> copy_time_from_user(const timeval* tv_user)
+[[nodiscard]] Optional<Time> copy_time_from_user(timeval const* tv_user)
 {
     timeval tv;
     if (!copy_from_user(&tv, tv_user, sizeof(timeval))) {
@@ -60,11 +60,11 @@ Kernel::KResultOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Use
 }
 
 template<>
-[[nodiscard]] Optional<Time> copy_time_from_user<const timeval>(Userspace<const timeval*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
+[[nodiscard]] Optional<Time> copy_time_from_user<const timeval>(Userspace<timeval const*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
 template<>
 [[nodiscard]] Optional<Time> copy_time_from_user<timeval>(Userspace<timeval*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
 template<>
-[[nodiscard]] Optional<Time> copy_time_from_user<const timespec>(Userspace<const timespec*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
+[[nodiscard]] Optional<Time> copy_time_from_user<const timespec>(Userspace<timespec const*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
 template<>
 [[nodiscard]] Optional<Time> copy_time_from_user<timespec>(Userspace<timespec*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
 
@@ -170,7 +170,7 @@ Optional<u32> user_atomic_fetch_xor_relaxed(volatile u32* var, u32 val)
 
 extern "C" {
 
-bool copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
+bool copy_to_user(void* dest_ptr, void const* src_ptr, size_t n)
 {
     bool is_user = Kernel::Memory::is_user_range(VirtualAddress(dest_ptr), n);
     if (!is_user)
@@ -186,7 +186,7 @@ bool copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
     return true;
 }
 
-bool copy_from_user(void* dest_ptr, const void* src_ptr, size_t n)
+bool copy_from_user(void* dest_ptr, void const* src_ptr, size_t n)
 {
     bool is_user = Kernel::Memory::is_user_range(VirtualAddress(src_ptr), n);
     if (!is_user)
@@ -202,7 +202,7 @@ bool copy_from_user(void* dest_ptr, const void* src_ptr, size_t n)
     return true;
 }
 
-const void* memmem(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
+void const* memmem(void const* haystack, size_t haystack_length, void const* needle, size_t needle_length)
 {
     return AK::memmem(haystack, haystack_length, needle, needle_length);
 }
@@ -221,7 +221,7 @@ const void* memmem(const void* haystack, size_t haystack_length, const void* nee
     return true;
 }
 
-size_t strnlen(const char* str, size_t maxlen)
+size_t strnlen(char const* str, size_t maxlen)
 {
     size_t len = 0;
     for (; len < maxlen && *str; str++)
@@ -229,19 +229,19 @@ size_t strnlen(const char* str, size_t maxlen)
     return len;
 }
 
-int strcmp(const char* s1, const char* s2)
+int strcmp(char const* s1, char const* s2)
 {
     for (; *s1 == *s2; ++s1, ++s2) {
         if (*s1 == 0)
             return 0;
     }
-    return *(const u8*)s1 < *(const u8*)s2 ? -1 : 1;
+    return *(u8 const*)s1 < *(u8 const*)s2 ? -1 : 1;
 }
 
-int memcmp(const void* v1, const void* v2, size_t n)
+int memcmp(void const* v1, void const* v2, size_t n)
 {
-    auto* s1 = (const u8*)v1;
-    auto* s2 = (const u8*)v2;
+    auto* s1 = (u8 const*)v1;
+    auto* s2 = (u8 const*)v2;
     while (n-- > 0) {
         if (*s1++ != *s2++)
             return s1[-1] < s2[-1] ? -1 : 1;
@@ -249,7 +249,7 @@ int memcmp(const void* v1, const void* v2, size_t n)
     return 0;
 }
 
-int strncmp(const char* s1, const char* s2, size_t n)
+int strncmp(char const* s1, char const* s2, size_t n)
 {
     if (!n)
         return 0;
@@ -262,7 +262,7 @@ int strncmp(const char* s1, const char* s2, size_t n)
     return 0;
 }
 
-char* strstr(const char* haystack, const char* needle)
+char* strstr(char const* haystack, char const* needle)
 {
     char nch;
     char hch;

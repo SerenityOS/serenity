@@ -20,7 +20,7 @@ namespace Cpp {
 class Preprocessor {
 
 public:
-    explicit Preprocessor(const String& filename, const StringView& program);
+    explicit Preprocessor(String const& filename, StringView const& program);
     Vector<Token> process_and_lex();
     Vector<StringView> included_paths() const { return m_included_paths; }
 

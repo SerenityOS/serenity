@@ -47,7 +47,7 @@ KResultOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, u32 arg)
     case F_GETLK:
         return description->get_flock(Userspace<flock*>(arg));
     case F_SETLK:
-        return description->apply_flock(Process::current(), Userspace<const flock*>(arg));
+        return description->apply_flock(Process::current(), Userspace<flock const*>(arg));
     default:
         return EINVAL;
     }

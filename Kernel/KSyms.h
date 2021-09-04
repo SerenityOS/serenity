@@ -12,7 +12,7 @@ namespace Kernel {
 
 struct KernelSymbol {
     FlatPtr address;
-    const char* name;
+    char const* name;
 };
 
 enum class PrintToScreen {
@@ -20,8 +20,8 @@ enum class PrintToScreen {
     Yes,
 };
 
-FlatPtr address_for_kernel_symbol(const StringView& name);
-const KernelSymbol* symbolicate_kernel_address(FlatPtr);
+FlatPtr address_for_kernel_symbol(StringView const& name);
+KernelSymbol const* symbolicate_kernel_address(FlatPtr);
 void load_kernel_symbol_table();
 
 extern bool g_kernel_symbols_available;

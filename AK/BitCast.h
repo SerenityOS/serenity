@@ -9,7 +9,7 @@
 namespace AK {
 
 template<typename T, typename U>
-inline T bit_cast(const U& a)
+inline T bit_cast(U const& a)
 {
 #if (__has_builtin(__builtin_bit_cast))
     return __builtin_bit_cast(T, a);

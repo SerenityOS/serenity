@@ -13,7 +13,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-static Vector<int> collect_fds(Vector<const char*> paths, bool append, bool* err)
+static Vector<int> collect_fds(Vector<char const*> paths, bool append, bool* err)
 {
     int oflag;
     mode_t mode;
@@ -26,7 +26,7 @@ static Vector<int> collect_fds(Vector<const char*> paths, bool append, bool* err
     }
 
     Vector<int> fds;
-    for (const char* path : paths) {
+    for (char const* path : paths) {
         int fd = open(path, oflag, mode);
         if (fd < 0) {
             perror("failed to open file for writing");
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
 {
     bool append = false;
     bool ignore_interrupts = false;
-    Vector<const char*> paths;
+    Vector<char const*> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(append, "Append, don't overwrite", "append", 'a');

@@ -16,7 +16,7 @@ public:
     virtual ~InlineNode() override;
 
     virtual void paint(PaintContext&, PaintPhase) override;
-    virtual void paint_fragment(PaintContext&, const LineBoxFragment&, PaintPhase) const override;
+    virtual void paint_fragment(PaintContext&, LineBoxFragment const&, PaintPhase) const override;
 
     virtual void split_into_lines(InlineFormattingContext&, LayoutMode) override;
 };

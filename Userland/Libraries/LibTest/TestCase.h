@@ -20,7 +20,7 @@ using TestFunction = Function<void()>;
 
 class TestCase : public RefCounted<TestCase> {
 public:
-    TestCase(const String& name, TestFunction&& fn, bool is_benchmark)
+    TestCase(String const& name, TestFunction&& fn, bool is_benchmark)
         : m_name(name)
         , m_function(move(fn))
         , m_is_benchmark(is_benchmark)
@@ -28,8 +28,8 @@ public:
     }
 
     bool is_benchmark() const { return m_is_benchmark; }
-    const String& name() const { return m_name; }
-    const TestFunction& func() const { return m_function; }
+    String const& name() const { return m_name; }
+    TestFunction const& func() const { return m_function; }
 
 private:
     String m_name;

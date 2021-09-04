@@ -16,7 +16,7 @@ public:
     Stack() = default;
     ~Stack() = default;
 
-    bool push(const T& item)
+    bool push(T const& item)
     {
         if (m_stack.size() >= stack_size)
             return false;
@@ -58,7 +58,7 @@ public:
         return m_stack.last();
     }
 
-    const T& top() const
+    T const& top() const
     {
         return m_stack.last();
     }

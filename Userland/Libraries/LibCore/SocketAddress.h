@@ -24,20 +24,20 @@ public:
     };
 
     SocketAddress() { }
-    SocketAddress(const IPv4Address& address)
+    SocketAddress(IPv4Address const& address)
         : m_type(Type::IPv4)
         , m_ipv4_address(address)
     {
     }
 
-    SocketAddress(const IPv4Address& address, u16 port)
+    SocketAddress(IPv4Address const& address, u16 port)
         : m_type(Type::IPv4)
         , m_ipv4_address(address)
         , m_port(port)
     {
     }
 
-    static SocketAddress local(const String& address)
+    static SocketAddress local(String const& address)
     {
         SocketAddress addr;
         addr.m_type = Type::Local;

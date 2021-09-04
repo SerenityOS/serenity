@@ -19,7 +19,7 @@ struct PthreadFunctions {
     int (*pthread_once)(pthread_once_t*, void (*)(void));
 
     int (*pthread_cond_broadcast)(pthread_cond_t*);
-    int (*pthread_cond_init)(pthread_cond_t*, const pthread_condattr_t*);
+    int (*pthread_cond_init)(pthread_cond_t*, pthread_condattr_t const*);
     int (*pthread_cond_signal)(pthread_cond_t*);
     int (*pthread_cond_wait)(pthread_cond_t*, pthread_mutex_t*);
     int (*pthread_cond_destroy)(pthread_cond_t*);

@@ -18,7 +18,7 @@ class CellTypeDialog : public GUI::Dialog {
 
 public:
     CellTypeMetadata metadata() const;
-    const CellType* type() const { return m_type; }
+    CellType const* type() const { return m_type; }
     Vector<ConditionalFormat> conditional_formats() { return m_conditional_formats; }
 
     enum class HorizontalAlignment : int {
@@ -36,7 +36,7 @@ private:
     CellTypeDialog(const Vector<Position>&, Sheet&, GUI::Window* parent = nullptr);
     void setup_tabs(GUI::TabWidget&, const Vector<Position>&, Sheet&);
 
-    const CellType* m_type { nullptr };
+    CellType const* m_type { nullptr };
 
     int m_length { -1 };
     String m_format;

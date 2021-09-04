@@ -14,14 +14,14 @@ extern int optreset;
 extern char* optarg;
 
 struct option {
-    const char* name;
+    char const* name;
     int has_arg;
     int* flag;
     int val;
 };
 
-int getopt(int argc, char** argv, const char* short_options);
-int getopt_long(int argc, char** argv, const char* short_options, const struct option* long_options, int* out_long_option_index);
+int getopt(int argc, char** argv, char const* short_options);
+int getopt_long(int argc, char** argv, char const* short_options, const struct option* long_options, int* out_long_option_index);
 ```
 
 ## Description
@@ -99,12 +99,12 @@ option, or to `nullptr` is none has been given.
 #include <getopt.h>
 
 int verbose = 0;
-const char* pad = nullptr;
-const char* source = nullptr;
+char const* pad = nullptr;
+char const* source = nullptr;
 
 while (true) {
     // Accept short options: -h, -l, -s value, -p [value], -N.
-    const char* short_options = "hls:p::N";
+    char const* short_options = "hls:p::N";
     // Accept long options: --pad [value], --verbose.
     const option long_options[] {
         { "pad", optional_argument, nullptr, 'p' },
@@ -145,7 +145,7 @@ while (true) {
     }
 }
 
-const char* file_name = argv[optind];
+char const* file_name = argv[optind];
 ```
 
 ## See also

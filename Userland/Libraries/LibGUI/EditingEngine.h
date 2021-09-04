@@ -35,7 +35,7 @@ public:
         return *m_editor.unsafe_ptr();
     }
 
-    virtual bool on_key(const KeyEvent& event);
+    virtual bool on_key(KeyEvent const& event);
 
 protected:
     EditingEngine() { }
@@ -44,10 +44,10 @@ protected:
 
     void move_one_left();
     void move_one_right();
-    void move_one_up(const KeyEvent& event);
-    void move_one_down(const KeyEvent& event);
+    void move_one_up(KeyEvent const& event);
+    void move_one_down(KeyEvent const& event);
     void move_to_previous_span();
-    void move_to_next_span(const KeyEvent& event);
+    void move_to_next_span(KeyEvent const& event);
     void move_to_logical_line_beginning();
     void move_to_logical_line_end();
     void move_to_line_beginning();

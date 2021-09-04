@@ -34,9 +34,9 @@ inline bool is_setgid(mode_t mode) { return mode & S_ISGID; }
 struct InodeMetadata {
     bool is_valid() const { return inode.is_valid(); }
 
-    bool may_read(const Process&) const;
-    bool may_write(const Process&) const;
-    bool may_execute(const Process&) const;
+    bool may_read(Process const&) const;
+    bool may_write(Process const&) const;
+    bool may_execute(Process const&) const;
 
     bool may_read(UserID u, GroupID g, Span<GroupID const> eg) const
     {

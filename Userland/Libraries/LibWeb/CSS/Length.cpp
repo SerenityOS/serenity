@@ -162,7 +162,7 @@ static float resolve_calc_sum(NonnullOwnPtr<CalculatedStyleValue::CalcSum> const
     return value;
 }
 
-const char* Length::unit_name() const
+char const* Length::unit_name() const
 {
     switch (m_type) {
     case Type::Cm:

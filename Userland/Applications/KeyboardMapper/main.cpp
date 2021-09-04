@@ -16,7 +16,7 @@
 
 int main(int argc, char** argv)
 {
-    const char* path = nullptr;
+    char const* path = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "Keyboard character mapping file.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);

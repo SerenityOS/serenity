@@ -146,14 +146,14 @@ public:
     template<typename Func>
     void for_each_loaded_library(Func f) const
     {
-        for (const auto& lib_name : m_loaded_libraries.keys()) {
-            const auto& lib = *m_loaded_libraries.get(lib_name).value();
+        for (auto const& lib_name : m_loaded_libraries.keys()) {
+            auto const& lib = *m_loaded_libraries.get(lib_name).value();
             if (f(lib) == IterationDecision::Break)
                 break;
         }
     }
 
-    const LoadedLibrary* library_at(FlatPtr address) const;
+    LoadedLibrary const* library_at(FlatPtr address) const;
 
     struct SymbolicationResult {
         String library_name;

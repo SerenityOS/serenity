@@ -19,7 +19,7 @@
 
 namespace HackStudio {
 
-ProjectTemplate::ProjectTemplate(const String& id, const String& name, const String& description, const GUI::Icon& icon, int priority)
+ProjectTemplate::ProjectTemplate(String const& id, String const& name, String const& description, const GUI::Icon& icon, int priority)
     : m_id(id)
     , m_name(name)
     , m_description(description)
@@ -28,7 +28,7 @@ ProjectTemplate::ProjectTemplate(const String& id, const String& name, const Str
 {
 }
 
-RefPtr<ProjectTemplate> ProjectTemplate::load_from_manifest(const String& manifest_path)
+RefPtr<ProjectTemplate> ProjectTemplate::load_from_manifest(String const& manifest_path)
 {
     auto config = Core::ConfigFile::open(manifest_path);
 
@@ -57,7 +57,7 @@ RefPtr<ProjectTemplate> ProjectTemplate::load_from_manifest(const String& manife
     return adopt_ref(*new ProjectTemplate(id, name, description, icon, priority));
 }
 
-Result<void, String> ProjectTemplate::create_project(const String& name, const String& path)
+Result<void, String> ProjectTemplate::create_project(String const& name, String const& path)
 {
     // Check if a file or directory already exists at the project path
     if (Core::File::exists(path))
@@ -94,7 +94,7 @@ Result<void, String> ProjectTemplate::create_project(const String& name, const S
         namespace_safe.replace("-", "_", true);
 
         pid_t child_pid;
-        const char* argv[] = { postcreate_script_path.characters(), name.characters(), path.characters(), namespace_safe.characters(), nullptr };
+        char const* argv[] = { postcreate_script_path.characters(), name.characters(), path.characters(), namespace_safe.characters(), nullptr };
 
         if ((errno = posix_spawn(&child_pid, postcreate_script_path.characters(), nullptr, nullptr, const_cast<char**>(argv), environ))) {
             perror("posix_spawn");

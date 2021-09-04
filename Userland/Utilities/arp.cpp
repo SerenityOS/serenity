@@ -39,8 +39,8 @@ int main(int argc, char** argv)
 
     static bool flag_set;
     static bool flag_delete;
-    const char* value_ipv4_address = nullptr;
-    const char* value_hw_address = nullptr;
+    char const* value_ipv4_address = nullptr;
+    char const* value_hw_address = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display or modify the system ARP cache");

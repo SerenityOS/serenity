@@ -163,14 +163,14 @@ int pthread_detach(pthread_t thread)
     __RETURN_PTHREAD_ERROR(rc);
 }
 
-int pthread_sigmask(int how, const sigset_t* set, sigset_t* old_set)
+int pthread_sigmask(int how, sigset_t const* set, sigset_t* old_set)
 {
     if (sigprocmask(how, set, old_set))
         return errno;
     return 0;
 }
 
-int pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attributes)
+int pthread_mutex_init(pthread_mutex_t* mutex, pthread_mutexattr_t const* attributes)
 {
     return __pthread_mutex_init(mutex, attributes);
 }
@@ -245,9 +245,9 @@ int pthread_attr_destroy(pthread_attr_t* attributes)
     return 0;
 }
 
-int pthread_attr_getdetachstate(const pthread_attr_t* attributes, int* p_detach_state)
+int pthread_attr_getdetachstate(pthread_attr_t const* attributes, int* p_detach_state)
 {
-    auto* attributes_impl = *(reinterpret_cast<const PthreadAttrImpl* const*>(attributes));
+    auto* attributes_impl = *(reinterpret_cast<PthreadAttrImpl const* const*>(attributes));
 
     if (!attributes_impl || !p_detach_state)
         return EINVAL;
@@ -279,9 +279,9 @@ int pthread_attr_setdetachstate(pthread_attr_t* attributes, int detach_state)
     return 0;
 }
 
-int pthread_attr_getguardsize(const pthread_attr_t* attributes, size_t* p_guard_size)
+int pthread_attr_getguardsize(pthread_attr_t const* attributes, size_t* p_guard_size)
 {
-    auto* attributes_impl = *(reinterpret_cast<const PthreadAttrImpl* const*>(attributes));
+    auto* attributes_impl = *(reinterpret_cast<PthreadAttrImpl const* const*>(attributes));
 
     if (!attributes_impl || !p_guard_size)
         return EINVAL;
@@ -321,9 +321,9 @@ int pthread_attr_setguardsize(pthread_attr_t* attributes, size_t guard_size)
     return 0;
 }
 
-int pthread_attr_getschedparam(const pthread_attr_t* attributes, struct sched_param* p_sched_param)
+int pthread_attr_getschedparam(pthread_attr_t const* attributes, struct sched_param* p_sched_param)
 {
-    auto* attributes_impl = *(reinterpret_cast<const PthreadAttrImpl* const*>(attributes));
+    auto* attributes_impl = *(reinterpret_cast<PthreadAttrImpl const* const*>(attributes));
 
     if (!attributes_impl || !p_sched_param)
         return EINVAL;
@@ -354,9 +354,9 @@ int pthread_attr_setschedparam(pthread_attr_t* attributes, const struct sched_pa
     return 0;
 }
 
-int pthread_attr_getstack(const pthread_attr_t* attributes, void** p_stack_ptr, size_t* p_stack_size)
+int pthread_attr_getstack(pthread_attr_t const* attributes, void** p_stack_ptr, size_t* p_stack_size)
 {
-    auto* attributes_impl = *(reinterpret_cast<const PthreadAttrImpl* const*>(attributes));
+    auto* attributes_impl = *(reinterpret_cast<PthreadAttrImpl const* const*>(attributes));
 
     if (!attributes_impl || !p_stack_ptr || !p_stack_size)
         return EINVAL;
@@ -397,9 +397,9 @@ int pthread_attr_setstack(pthread_attr_t* attributes, void* p_stack, size_t stac
     return 0;
 }
 
-int pthread_attr_getstacksize(const pthread_attr_t* attributes, size_t* p_stack_size)
+int pthread_attr_getstacksize(pthread_attr_t const* attributes, size_t* p_stack_size)
 {
-    auto* attributes_impl = *(reinterpret_cast<const PthreadAttrImpl* const*>(attributes));
+    auto* attributes_impl = *(reinterpret_cast<PthreadAttrImpl const* const*>(attributes));
 
     if (!attributes_impl || !p_stack_size)
         return EINVAL;
@@ -431,7 +431,7 @@ int pthread_attr_setstacksize(pthread_attr_t* attributes, size_t stack_size)
     return 0;
 }
 
-int pthread_attr_getscope([[maybe_unused]] const pthread_attr_t* attributes, [[maybe_unused]] int* contention_scope)
+int pthread_attr_getscope([[maybe_unused]] pthread_attr_t const* attributes, [[maybe_unused]] int* contention_scope)
 {
     return 0;
 }
@@ -473,12 +473,12 @@ void* pthread_getspecific(pthread_key_t key)
     return __pthread_getspecific(key);
 }
 
-int pthread_setspecific(pthread_key_t key, const void* value)
+int pthread_setspecific(pthread_key_t key, void const* value)
 {
     return __pthread_setspecific(key, value);
 }
 
-int pthread_setname_np(pthread_t thread, const char* name)
+int pthread_setname_np(pthread_t thread, char const* name)
 {
     if (!name)
         return EFAULT;
@@ -596,7 +596,7 @@ constexpr static u32 reader_wake_mask = 1 << 30;
 constexpr static u32 writer_wake_mask = 1 << 31;
 constexpr static u32 writer_locked_mask = 1 << 17;
 constexpr static u32 writer_intent_mask = 1 << 16;
-int pthread_rwlock_init(pthread_rwlock_t* __restrict lockp, const pthread_rwlockattr_t* __restrict attr)
+int pthread_rwlock_init(pthread_rwlock_t* __restrict lockp, pthread_rwlockattr_t const* __restrict attr)
 {
     // Just ignore the attributes. use defaults for now.
     (void)attr;
@@ -799,7 +799,7 @@ int pthread_rwlockattr_destroy(pthread_rwlockattr_t*)
 {
     return 0;
 }
-int pthread_rwlockattr_getpshared(const pthread_rwlockattr_t* __restrict, int* __restrict)
+int pthread_rwlockattr_getpshared(pthread_rwlockattr_t const* __restrict, int* __restrict)
 {
     VERIFY_NOT_REACHED();
 }

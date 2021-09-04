@@ -7,7 +7,7 @@ module\_unload - unload a kernel module
 ```**c++
 #include <serenity.h>
 
-int module_unload(const char* name, size_t name_length);
+int module_unload(char const* name, size_t name_length);
 ```
 
 ## Description

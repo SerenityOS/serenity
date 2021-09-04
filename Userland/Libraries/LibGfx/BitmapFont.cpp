@@ -95,9 +95,9 @@ BitmapFont::~BitmapFont()
     }
 }
 
-RefPtr<BitmapFont> BitmapFont::load_from_memory(const u8* data)
+RefPtr<BitmapFont> BitmapFont::load_from_memory(u8 const* data)
 {
-    auto& header = *reinterpret_cast<const FontFileHeader*>(data);
+    auto& header = *reinterpret_cast<FontFileHeader const*>(data);
     if (memcmp(header.magic, "!Fnt", 4)) {
         dbgln("header.magic != '!Fnt', instead it's '{:c}{:c}{:c}{:c}'", header.magic[0], header.magic[1], header.magic[2], header.magic[3]);
         return nullptr;
@@ -127,7 +127,7 @@ RefPtr<BitmapFont> BitmapFont::load_from_memory(const u8* data)
     size_t count = glyph_count_by_type(type);
     size_t bytes_per_glyph = sizeof(unsigned) * header.glyph_height;
 
-    auto* rows = const_cast<unsigned*>((const unsigned*)(data + sizeof(FontFileHeader)));
+    auto* rows = const_cast<unsigned*>((unsigned const*)(data + sizeof(FontFileHeader)));
     u8* widths = (u8*)(rows) + count * bytes_per_glyph;
     return adopt_ref(*new BitmapFont(String(header.name), String(header.family), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height, header.glyph_spacing, type, header.baseline, header.mean_line, header.presentation_size, header.weight));
 }
@@ -177,7 +177,7 @@ RefPtr<BitmapFont> BitmapFont::load_from_file(String const& path)
     if (file_or_error.is_error())
         return nullptr;
 
-    auto font = load_from_memory((const u8*)file_or_error.value()->data());
+    auto font = load_from_memory((u8 const*)file_or_error.value()->data());
     if (!font)
         return nullptr;
 

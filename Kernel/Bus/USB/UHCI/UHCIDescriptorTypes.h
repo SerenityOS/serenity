@@ -185,11 +185,11 @@ struct alignas(16) TransferDescriptor final {
 
     // FIXME: For the love of God, use AK SMART POINTERS PLEASE!!
     TransferDescriptor* next_td() { return m_next_td; }
-    const TransferDescriptor* next_td() const { return m_next_td; }
+    TransferDescriptor const* next_td() const { return m_next_td; }
     void set_next_td(TransferDescriptor* td) { m_next_td = td; }
 
     TransferDescriptor* prev_td() { return m_prev_td; }
-    const TransferDescriptor* prev_td() const { return m_prev_td; }
+    TransferDescriptor const* prev_td() const { return m_prev_td; }
     void set_previous_td(TransferDescriptor* td) { m_prev_td = td; }
 
     void insert_next_transfer_descriptor(TransferDescriptor* td)
@@ -274,11 +274,11 @@ struct alignas(16) QueueHead {
 
     // FIXME: For the love of God, use AK SMART POINTERS PLEASE!!
     QueueHead* next_qh() { return m_next_qh; }
-    const QueueHead* next_qh() const { return m_next_qh; }
+    QueueHead const* next_qh() const { return m_next_qh; }
     void set_next_qh(QueueHead* qh) { m_next_qh = qh; }
 
     QueueHead* prev_qh() { return m_prev_qh; }
-    const QueueHead* prev_qh() const { return m_prev_qh; }
+    QueueHead const* prev_qh() const { return m_prev_qh; }
     void set_previous_qh(QueueHead* qh)
     {
         m_prev_qh = qh;

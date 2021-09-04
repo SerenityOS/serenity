@@ -75,7 +75,7 @@ int iswctype(wint_t, wctype_t)
     TODO();
 }
 
-wctype_t wctype(const char*)
+wctype_t wctype(char const*)
 {
     dbgln("FIXME: Implement wctype()");
     TODO();
@@ -97,7 +97,7 @@ wint_t towctrans(wint_t, wctrans_t)
     TODO();
 }
 
-wctrans_t wctrans(const char*)
+wctrans_t wctrans(char const*)
 {
     dbgln("FIXME: Implement wctrans()");
     TODO();

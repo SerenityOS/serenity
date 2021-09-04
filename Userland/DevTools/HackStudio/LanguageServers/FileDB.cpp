@@ -12,7 +12,7 @@
 
 namespace LanguageServers {
 
-RefPtr<const GUI::TextDocument> FileDB::get(const String& filename) const
+RefPtr<const GUI::TextDocument> FileDB::get(String const& filename) const
 {
     auto absolute_path = to_absolute_path(filename);
     auto document_optional = m_open_files.get(absolute_path);
@@ -22,15 +22,15 @@ RefPtr<const GUI::TextDocument> FileDB::get(const String& filename) const
     return *document_optional.value();
 }
 
-RefPtr<GUI::TextDocument> FileDB::get(const String& filename)
+RefPtr<GUI::TextDocument> FileDB::get(String const& filename)
 {
-    auto document = reinterpret_cast<const FileDB*>(this)->get(filename);
+    auto document = reinterpret_cast<FileDB const*>(this)->get(filename);
     if (document.is_null())
         return nullptr;
     return adopt_ref(*const_cast<GUI::TextDocument*>(document.leak_ref()));
 }
 
-RefPtr<const GUI::TextDocument> FileDB::get_or_create_from_filesystem(const String& filename) const
+RefPtr<const GUI::TextDocument> FileDB::get_or_create_from_filesystem(String const& filename) const
 {
     auto absolute_path = to_absolute_path(filename);
     auto document = get(absolute_path);
@@ -39,20 +39,20 @@ RefPtr<const GUI::TextDocument> FileDB::get_or_create_from_filesystem(const Stri
     return create_from_filesystem(absolute_path);
 }
 
-RefPtr<GUI::TextDocument> FileDB::get_or_create_from_filesystem(const String& filename)
+RefPtr<GUI::TextDocument> FileDB::get_or_create_from_filesystem(String const& filename)
 {
-    auto document = reinterpret_cast<const FileDB*>(this)->get_or_create_from_filesystem(filename);
+    auto document = reinterpret_cast<FileDB const*>(this)->get_or_create_from_filesystem(filename);
     if (document.is_null())
         return nullptr;
     return adopt_ref(*const_cast<GUI::TextDocument*>(document.leak_ref()));
 }
 
-bool FileDB::is_open(const String& filename) const
+bool FileDB::is_open(String const& filename) const
 {
     return m_open_files.contains(to_absolute_path(filename));
 }
 
-bool FileDB::add(const String& filename, int fd)
+bool FileDB::add(String const& filename, int fd)
 {
     auto document = create_from_fd(fd);
     if (!document)
@@ -62,7 +62,7 @@ bool FileDB::add(const String& filename, int fd)
     return true;
 }
 
-String FileDB::to_absolute_path(const String& filename) const
+String FileDB::to_absolute_path(String const& filename) const
 {
     if (LexicalPath { filename }.is_absolute()) {
         return filename;
@@ -72,7 +72,7 @@ String FileDB::to_absolute_path(const String& filename) const
     return LexicalPath { String::formatted("{}/{}", m_project_root, filename) }.string();
 }
 
-RefPtr<GUI::TextDocument> FileDB::create_from_filesystem(const String& filename) const
+RefPtr<GUI::TextDocument> FileDB::create_from_filesystem(String const& filename) const
 {
     auto file = Core::File::open(to_absolute_path(filename), Core::OpenMode::ReadOnly);
     if (file.is_error()) {
@@ -120,7 +120,7 @@ RefPtr<GUI::TextDocument> FileDB::create_from_file(Core::File& file) const
     return document;
 }
 
-void FileDB::on_file_edit_insert_text(const String& filename, const String& inserted_text, size_t start_line, size_t start_column)
+void FileDB::on_file_edit_insert_text(String const& filename, String const& inserted_text, size_t start_line, size_t start_column)
 {
     VERIFY(is_open(filename));
     auto document = get(filename);
@@ -131,7 +131,7 @@ void FileDB::on_file_edit_insert_text(const String& filename, const String& inse
     dbgln_if(FILE_CONTENT_DEBUG, "{}", document->text());
 }
 
-void FileDB::on_file_edit_remove_text(const String& filename, size_t start_line, size_t start_column, size_t end_line, size_t end_column)
+void FileDB::on_file_edit_remove_text(String const& filename, size_t start_line, size_t start_column, size_t end_line, size_t end_column)
 {
     // TODO: If file is not open - need to get its contents
     // Otherwise- somehow verify that respawned language server is synced with all file contents
@@ -148,7 +148,7 @@ void FileDB::on_file_edit_remove_text(const String& filename, size_t start_line,
     dbgln_if(FILE_CONTENT_DEBUG, "{}", document->text());
 }
 
-RefPtr<GUI::TextDocument> FileDB::create_with_content(const String& content)
+RefPtr<GUI::TextDocument> FileDB::create_with_content(String const& content)
 {
     StringView content_view(content);
     auto document = GUI::TextDocument::create(&s_default_document_client);
@@ -156,7 +156,7 @@ RefPtr<GUI::TextDocument> FileDB::create_with_content(const String& content)
     return document;
 }
 
-bool FileDB::add(const String& filename, const String& content)
+bool FileDB::add(String const& filename, String const& content)
 {
     auto document = create_with_content(content);
     if (!document) {

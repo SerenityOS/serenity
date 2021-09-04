@@ -33,14 +33,14 @@ class UnregisteredWidget final : public GUI::Widget {
     C_OBJECT(UnregisteredWidget);
 
 private:
-    UnregisteredWidget(const String& class_name);
+    UnregisteredWidget(String const& class_name);
 
     virtual void paint_event(GUI::PaintEvent& event) override;
 
     String m_text;
 };
 
-UnregisteredWidget::UnregisteredWidget(const String& class_name)
+UnregisteredWidget::UnregisteredWidget(String const& class_name)
 {
     StringBuilder builder;
     builder.append(class_name);
@@ -85,7 +85,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* path = nullptr;
+    char const* path = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "GML file to edit", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
@@ -148,7 +148,7 @@ int main(int argc, char** argv)
 
     editor.on_change = [&] {
         preview.remove_all_children();
-        preview.load_from_gml(editor.text(), [](const String& class_name) -> RefPtr<Core::Object> {
+        preview.load_from_gml(editor.text(), [](String const& class_name) -> RefPtr<Core::Object> {
             return UnregisteredWidget::construct(class_name);
         });
     };

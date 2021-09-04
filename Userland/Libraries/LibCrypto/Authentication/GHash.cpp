@@ -14,12 +14,12 @@
 
 namespace {
 
-static u32 to_u32(const u8* b)
+static u32 to_u32(u8 const* b)
 {
     return AK::convert_between_host_and_big_endian(ByteReader::load32(b));
 }
 
-static void to_u8s(u8* b, const u32* w)
+static void to_u8s(u8* b, u32 const* w)
 {
     for (auto i = 0; i < 4; ++i) {
         ByteReader::store(b + i * 4, AK::convert_between_host_and_big_endian(w[i]));

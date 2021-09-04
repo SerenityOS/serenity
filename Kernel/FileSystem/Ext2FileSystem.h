@@ -43,10 +43,10 @@ private:
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual void flush_metadata() override;
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, FileDescription*) override;
+    virtual KResultOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& data, FileDescription*) override;
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
-    virtual KResult add_child(Inode& child, const StringView& name, mode_t) override;
-    virtual KResult remove_child(const StringView& name) override;
+    virtual KResult add_child(Inode& child, StringView const& name, mode_t) override;
+    virtual KResult remove_child(StringView const& name) override;
     virtual KResult set_atime(time_t) override;
     virtual KResult set_ctime(time_t) override;
     virtual KResult set_mtime(time_t) override;
@@ -69,10 +69,10 @@ private:
     Vector<BlockBasedFileSystem::BlockIndex> compute_block_list() const;
     Vector<BlockBasedFileSystem::BlockIndex> compute_block_list_with_meta_blocks() const;
     Vector<BlockBasedFileSystem::BlockIndex> compute_block_list_impl(bool include_block_list_blocks) const;
-    Vector<BlockBasedFileSystem::BlockIndex> compute_block_list_impl_internal(const ext2_inode& e2inode, bool include_block_list_blocks) const;
+    Vector<BlockBasedFileSystem::BlockIndex> compute_block_list_impl_internal(ext2_inode const& e2inode, bool include_block_list_blocks) const;
 
     Ext2FS& fs();
-    const Ext2FS& fs() const;
+    Ext2FS const& fs() const;
     Ext2FSInode(Ext2FS&, InodeIndex);
 
     mutable Vector<BlockBasedFileSystem::BlockIndex> m_block_list;
@@ -103,7 +103,7 @@ public:
 
     virtual bool supports_watchers() const override { return true; }
 
-    virtual u8 internal_file_type_to_directory_entry_type(const DirectoryEntryView& entry) const override;
+    virtual u8 internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const override;
 
     FeaturesReadOnly get_features_readonly() const;
 
@@ -112,17 +112,17 @@ private:
 
     explicit Ext2FS(FileDescription&);
 
-    const ext2_super_block& super_block() const { return m_super_block; }
-    const ext2_group_desc& group_descriptor(GroupIndex) const;
+    ext2_super_block const& super_block() const { return m_super_block; }
+    ext2_group_desc const& group_descriptor(GroupIndex) const;
     ext2_group_desc* block_group_descriptors() { return (ext2_group_desc*)m_cached_group_descriptor_table->data(); }
-    const ext2_group_desc* block_group_descriptors() const { return (const ext2_group_desc*)m_cached_group_descriptor_table->data(); }
+    ext2_group_desc const* block_group_descriptors() const { return (ext2_group_desc const*)m_cached_group_descriptor_table->data(); }
     void flush_block_group_descriptor_table();
     u64 inodes_per_block() const;
     u64 inodes_per_group() const;
     u64 blocks_per_group() const;
     u64 inode_size() const;
 
-    bool write_ext2_inode(InodeIndex, const ext2_inode&);
+    bool write_ext2_inode(InodeIndex, ext2_inode const&);
     bool find_block_containing_inode(InodeIndex, BlockIndex& block_index, unsigned& offset) const;
 
     bool flush_super_block();
@@ -191,9 +191,9 @@ inline Ext2FS& Ext2FSInode::fs()
     return static_cast<Ext2FS&>(Inode::fs());
 }
 
-inline const Ext2FS& Ext2FSInode::fs() const
+inline Ext2FS const& Ext2FSInode::fs() const
 {
-    return static_cast<const Ext2FS&>(Inode::fs());
+    return static_cast<Ext2FS const&>(Inode::fs());
 }
 
 }

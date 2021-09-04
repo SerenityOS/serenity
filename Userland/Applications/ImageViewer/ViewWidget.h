@@ -27,7 +27,7 @@ public:
     virtual ~ViewWidget() override;
 
     const Gfx::Bitmap* bitmap() const { return m_bitmap.ptr(); }
-    const String& path() const { return m_path; }
+    String const& path() const { return m_path; }
     void set_scale(int);
     int scale() { return m_scale; }
     void set_toolbar_height(int height) { m_toolbar_height = height; }
@@ -40,7 +40,7 @@ public:
     void flip(Gfx::Orientation);
     void rotate(Gfx::RotationDirection);
     void navigate(Directions);
-    void load_from_file(const String&);
+    void load_from_file(String const&);
 
     Function<void(int)> on_scale_change;
     Function<void()> on_doubleclick;

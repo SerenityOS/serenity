@@ -78,7 +78,7 @@ UNMAP_AFTER_INIT NonnullRefPtrVector<StorageDevice> StorageManagement::enumerate
     return devices;
 }
 
-UNMAP_AFTER_INIT OwnPtr<PartitionTable> StorageManagement::try_to_initialize_partition_table(const StorageDevice& device) const
+UNMAP_AFTER_INIT OwnPtr<PartitionTable> StorageManagement::try_to_initialize_partition_table(StorageDevice const& device) const
 {
     auto mbr_table_or_result = MBRPartitionTable::try_to_initialize(device);
     if (!mbr_table_or_result.is_error())

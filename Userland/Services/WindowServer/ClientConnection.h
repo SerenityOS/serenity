@@ -52,7 +52,7 @@ public:
             return nullptr;
         return menu.value();
     }
-    const Menu* find_menu_by_id(int menu_id) const
+    Menu const* find_menu_by_id(int menu_id) const
     {
         auto menu = m_menus.get(menu_id);
         if (!menu.has_value())

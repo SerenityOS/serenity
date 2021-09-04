@@ -18,7 +18,7 @@
 #include <LibGfx/Color.h>
 #include <LibGfx/FontDatabase.h>
 
-static const char* short_month_names[] = {
+static char const* short_month_names[] = {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };

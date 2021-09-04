@@ -25,8 +25,8 @@ private:
     static void show_desktop_button_clicked(unsigned);
     void create_quick_launch_bar();
     void on_screen_rects_change(const Vector<Gfx::IntRect, 4>&, size_t);
-    NonnullRefPtr<GUI::Button> create_button(const WindowIdentifier&);
-    void add_window_button(::Window&, const WindowIdentifier&);
+    NonnullRefPtr<GUI::Button> create_button(WindowIdentifier const&);
+    void add_window_button(::Window&, WindowIdentifier const&);
     void remove_window_button(::Window&, bool);
     void update_window_button(::Window&, bool);
     ::Window* find_window_owner(::Window&) const;

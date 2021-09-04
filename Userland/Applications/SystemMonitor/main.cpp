@@ -58,7 +58,7 @@ class UnavailableProcessWidget final : public GUI::Frame {
 public:
     virtual ~UnavailableProcessWidget() override { }
 
-    const String& text() const { return m_text; }
+    String const& text() const { return m_text; }
     void set_text(String text) { m_text = move(text); }
 
 private:
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
 
     unveil(nullptr, nullptr);
 
-    const char* args_tab = "processes";
+    char const* args_tab = "processes";
     Core::ArgsParser parser;
     parser.add_option(args_tab, "Tab, one of 'processes', 'graphs', 'fs', 'hardware', or 'network'", "open-tab", 't', "tab");
     parser.parse(argc, argv);
@@ -265,7 +265,7 @@ int main(int argc, char** argv)
             if (pid != -1) {
                 auto pid_string = String::number(pid);
                 pid_t child;
-                const char* argv[] = { "/bin/Profiler", "--pid", pid_string.characters(), nullptr };
+                char const* argv[] = { "/bin/Profiler", "--pid", pid_string.characters(), nullptr };
                 if ((errno = posix_spawn(&child, "/bin/Profiler", nullptr, nullptr, const_cast<char**>(argv), environ))) {
                     perror("posix_spawn");
                 } else {
@@ -388,7 +388,7 @@ class ProgressbarPaintingDelegate final : public GUI::TableCellPaintingDelegate 
 public:
     virtual ~ProgressbarPaintingDelegate() override { }
 
-    virtual void paint(GUI::Painter& painter, const Gfx::IntRect& a_rect, const Palette& palette, const GUI::ModelIndex& index) override
+    virtual void paint(GUI::Painter& painter, const Gfx::IntRect& a_rect, Palette const& palette, const GUI::ModelIndex& index) override
     {
         auto rect = a_rect.shrunken(2, 2);
         auto percentage = index.data(GUI::ModelRole::Custom).to_i32();
@@ -483,17 +483,17 @@ NonnullRefPtr<GUI::Widget> build_storage_widget()
         df_fields.empend("source", "Source", Gfx::TextAlignment::CenterLeft);
         df_fields.empend(
             "Size", Gfx::TextAlignment::CenterRight,
-            [](const JsonObject& object) {
+            [](JsonObject const& object) {
                 StringBuilder size_builder;
                 size_builder.append(" ");
                 size_builder.append(human_readable_size(object.get("total_block_count").to_u64() * object.get("block_size").to_u64()));
                 size_builder.append(" ");
                 return size_builder.to_string();
             },
-            [](const JsonObject& object) {
+            [](JsonObject const& object) {
                 return object.get("total_block_count").to_u64() * object.get("block_size").to_u64();
             },
-            [](const JsonObject& object) {
+            [](JsonObject const& object) {
                 auto total_blocks = object.get("total_block_count").to_u64();
                 if (total_blocks == 0)
                     return 0;
@@ -504,12 +504,12 @@ NonnullRefPtr<GUI::Widget> build_storage_widget()
             });
         df_fields.empend(
             "Used", Gfx::TextAlignment::CenterRight,
-            [](const JsonObject& object) {
+            [](JsonObject const& object) {
             auto total_blocks = object.get("total_block_count").to_u64();
             auto free_blocks = object.get("free_block_count").to_u64();
             auto used_blocks = total_blocks - free_blocks;
             return human_readable_size(used_blocks * object.get("block_size").to_u64()); },
-            [](const JsonObject& object) {
+            [](JsonObject const& object) {
                 auto total_blocks = object.get("total_block_count").to_u64();
                 auto free_blocks = object.get("free_block_count").to_u64();
                 auto used_blocks = total_blocks - free_blocks;
@@ -517,22 +517,22 @@ NonnullRefPtr<GUI::Widget> build_storage_widget()
             });
         df_fields.empend(
             "Available", Gfx::TextAlignment::CenterRight,
-            [](const JsonObject& object) {
+            [](JsonObject const& object) {
                 return human_readable_size(object.get("free_block_count").to_u64() * object.get("block_size").to_u64());
             },
-            [](const JsonObject& object) {
+            [](JsonObject const& object) {
                 return object.get("free_block_count").to_u64() * object.get("block_size").to_u64();
             });
-        df_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](const JsonObject& object) {
+        df_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](JsonObject const& object) {
             bool readonly = object.get("readonly").to_bool();
             int mount_flags = object.get("mount_flags").to_int();
             return readonly || (mount_flags & MS_RDONLY) ? "Read-only" : "Read/Write";
         });
-        df_fields.empend("Mount flags", Gfx::TextAlignment::CenterLeft, [](const JsonObject& object) {
+        df_fields.empend("Mount flags", Gfx::TextAlignment::CenterLeft, [](JsonObject const& object) {
             int mount_flags = object.get("mount_flags").to_int();
             StringBuilder builder;
             bool first = true;
-            auto check = [&](int flag, const char* name) {
+            auto check = [&](int flag, char const* name) {
                 if (!(mount_flags & flag))
                     return;
                 if (!first)
@@ -617,7 +617,7 @@ NonnullRefPtr<GUI::Widget> build_hardware_tab()
             Vector<GUI::JsonArrayModel::FieldSpec> pci_fields;
             pci_fields.empend(
                 "Address", Gfx::TextAlignment::CenterLeft,
-                [](const JsonObject& object) {
+                [](JsonObject const& object) {
                     auto seg = object.get("seg").to_u32();
                     auto bus = object.get("bus").to_u32();
                     auto device = object.get("device").to_u32();
@@ -626,21 +626,21 @@ NonnullRefPtr<GUI::Widget> build_hardware_tab()
                 });
             pci_fields.empend(
                 "Class", Gfx::TextAlignment::CenterLeft,
-                [db](const JsonObject& object) {
+                [db](JsonObject const& object) {
                     auto class_id = object.get("class").to_u32();
                     String class_name = db ? db->get_class(class_id) : nullptr;
                     return class_name.is_empty() ? String::formatted("{:04x}", class_id) : class_name;
                 });
             pci_fields.empend(
                 "Vendor", Gfx::TextAlignment::CenterLeft,
-                [db](const JsonObject& object) {
+                [db](JsonObject const& object) {
                     auto vendor_id = object.get("vendor_id").to_u32();
                     String vendor_name = db ? db->get_vendor(vendor_id) : nullptr;
                     return vendor_name.is_empty() ? String::formatted("{:02x}", vendor_id) : vendor_name;
                 });
             pci_fields.empend(
                 "Device", Gfx::TextAlignment::CenterLeft,
-                [db](const JsonObject& object) {
+                [db](JsonObject const& object) {
                     auto vendor_id = object.get("vendor_id").to_u32();
                     auto device_id = object.get("device_id").to_u32();
                     String device_name = db ? db->get_device(vendor_id, device_id) : nullptr;
@@ -648,7 +648,7 @@ NonnullRefPtr<GUI::Widget> build_hardware_tab()
                 });
             pci_fields.empend(
                 "Revision", Gfx::TextAlignment::CenterRight,
-                [](const JsonObject& object) {
+                [](JsonObject const& object) {
                     auto revision_id = object.get("revision_id").to_u32();
                     return String::formatted("{:02x}", revision_id);
                 });

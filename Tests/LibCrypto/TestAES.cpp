@@ -10,7 +10,7 @@
 #include <LibTest/TestCase.h>
 #include <cstring>
 
-static ByteBuffer operator""_b(const char* string, size_t length)
+static ByteBuffer operator""_b(char const* string, size_t length)
 {
     return ByteBuffer::copy(string, length);
 }

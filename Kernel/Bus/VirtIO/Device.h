@@ -118,7 +118,7 @@ protected:
         }
     };
 
-    const Configuration* get_config(ConfigurationType cfg_type, u32 index = 0) const
+    Configuration const* get_config(ConfigurationType cfg_type, u32 index = 0) const
     {
         for (auto& cfg : m_configs) {
             if (cfg.cfg_type != cfg_type)
@@ -147,13 +147,13 @@ protected:
         }
     }
 
-    u8 config_read8(const Configuration&, u32);
-    u16 config_read16(const Configuration&, u32);
-    u32 config_read32(const Configuration&, u32);
-    void config_write8(const Configuration&, u32, u8);
-    void config_write16(const Configuration&, u32, u16);
-    void config_write32(const Configuration&, u32, u32);
-    void config_write64(const Configuration&, u32, u64);
+    u8 config_read8(Configuration const&, u32);
+    u16 config_read16(Configuration const&, u32);
+    u32 config_read32(Configuration const&, u32);
+    void config_write8(Configuration const&, u32, u8);
+    void config_write16(Configuration const&, u32, u16);
+    void config_write32(Configuration const&, u32, u32);
+    void config_write64(Configuration const&, u32, u64);
 
     auto mapping_for_bar(u8) -> MappedMMIO&;
 
@@ -170,7 +170,7 @@ protected:
         return m_queues[queue_index];
     }
 
-    const Queue& get_queue(u16 queue_index) const
+    Queue const& get_queue(u16 queue_index) const
     {
         VERIFY(queue_index < m_queue_count);
         return m_queues[queue_index];
@@ -223,13 +223,13 @@ private:
     void reset_device();
 
     u8 isr_status();
-    virtual bool handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(RegisterState const&) override;
 
     NonnullOwnPtrVector<Queue> m_queues;
     NonnullOwnPtrVector<Configuration> m_configs;
-    const Configuration* m_common_cfg { nullptr }; // Cached due to high usage
-    const Configuration* m_notify_cfg { nullptr }; // Cached due to high usage
-    const Configuration* m_isr_cfg { nullptr };    // Cached due to high usage
+    Configuration const* m_common_cfg { nullptr }; // Cached due to high usage
+    Configuration const* m_notify_cfg { nullptr }; // Cached due to high usage
+    Configuration const* m_isr_cfg { nullptr };    // Cached due to high usage
 
     IOAddress m_io_base;
     MappedMMIO m_mmio[6];

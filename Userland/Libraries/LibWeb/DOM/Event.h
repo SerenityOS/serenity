@@ -41,19 +41,19 @@ public:
 
     using Path = Vector<PathEntry>;
 
-    static NonnullRefPtr<Event> create(const FlyString& event_name)
+    static NonnullRefPtr<Event> create(FlyString const& event_name)
     {
         return adopt_ref(*new Event(event_name));
     }
-    static NonnullRefPtr<Event> create_with_global_object(Bindings::WindowObject&, const FlyString& event_name)
+    static NonnullRefPtr<Event> create_with_global_object(Bindings::WindowObject&, FlyString const& event_name)
     {
         return Event::create(event_name);
     }
 
     virtual ~Event() { }
 
-    const FlyString& type() const { return m_type; }
-    void set_type(const StringView& type) { m_type = type; }
+    FlyString const& type() const { return m_type; }
+    void set_type(StringView const& type) { m_type = type; }
 
     RefPtr<EventTarget> target() const { return m_target; }
     void set_target(EventTarget* target) { m_target = target; }
@@ -103,7 +103,7 @@ public:
 
     void append_to_path(EventTarget&, RefPtr<EventTarget>, RefPtr<EventTarget>, TouchTargetList&, bool);
     Path& path() { return m_path; }
-    const Path& path() const { return m_path; }
+    Path const& path() const { return m_path; }
     void clear_path() { m_path.clear(); }
 
     void set_touch_target_list(TouchTargetList& touch_target_list) { m_touch_target_list = touch_target_list; }
@@ -134,16 +134,16 @@ public:
         m_stop_immediate_propagation = true;
     }
 
-    void init_event(const String&, bool, bool);
+    void init_event(String const&, bool, bool);
 
 protected:
-    explicit Event(const FlyString& type)
+    explicit Event(FlyString const& type)
         : m_type(type)
         , m_initialized(true)
     {
     }
 
-    void initialize(const String&, bool, bool);
+    void initialize(String const&, bool, bool);
 
 private:
     FlyString m_type;

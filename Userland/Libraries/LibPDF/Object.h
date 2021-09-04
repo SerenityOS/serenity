@@ -29,7 +29,7 @@ public:
     ENUMERATE_OBJECT_TYPES(DEFINE_ID)
 #undef DEFINE_ID
 
-    virtual const char* type_name() const = 0;
+    virtual char const* type_name() const = 0;
     virtual String to_string(int indent) const = 0;
 
 private:
@@ -50,7 +50,7 @@ public:
     [[nodiscard]] ALWAYS_INLINE bool is_binary() const { return m_is_binary; }
 
     ALWAYS_INLINE bool is_string() const override { return true; }
-    ALWAYS_INLINE const char* type_name() const override { return "string"; }
+    ALWAYS_INLINE char const* type_name() const override { return "string"; }
     String to_string(int indent) const override;
 
 private:
@@ -70,7 +70,7 @@ public:
     [[nodiscard]] ALWAYS_INLINE FlyString const& name() const { return m_name; }
 
     ALWAYS_INLINE bool is_name() const override { return true; }
-    ALWAYS_INLINE const char* type_name() const override { return "name"; }
+    ALWAYS_INLINE char const* type_name() const override { return "name"; }
     String to_string(int indent) const override;
 
 private:
@@ -106,7 +106,7 @@ public:
     {
         return true;
     }
-    ALWAYS_INLINE const char* type_name() const override { return "array"; }
+    ALWAYS_INLINE char const* type_name() const override { return "array"; }
     String to_string(int indent) const override;
 
 private:
@@ -147,7 +147,7 @@ public:
     {
         return true;
     }
-    ALWAYS_INLINE const char* type_name() const override { return "dict"; }
+    ALWAYS_INLINE char const* type_name() const override { return "dict"; }
     String to_string(int indent) const override;
 
 private:
@@ -167,7 +167,7 @@ public:
     [[nodiscard]] virtual ReadonlyBytes bytes() const = 0;
 
     ALWAYS_INLINE bool is_stream() const override { return true; }
-    ALWAYS_INLINE const char* type_name() const override { return "stream"; }
+    ALWAYS_INLINE char const* type_name() const override { return "stream"; }
     String to_string(int indent) const override;
 
 private:
@@ -221,7 +221,7 @@ public:
     [[nodiscard]] ALWAYS_INLINE Value const& value() const { return m_value; }
 
     ALWAYS_INLINE bool is_indirect_value() const override { return true; }
-    ALWAYS_INLINE const char* type_name() const override { return "indirect_object"; }
+    ALWAYS_INLINE char const* type_name() const override { return "indirect_object"; }
     String to_string(int indent) const override;
 
 private:

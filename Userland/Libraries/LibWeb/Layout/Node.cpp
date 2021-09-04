@@ -39,13 +39,13 @@ bool Node::can_contain_boxes_with_position_absolute() const
     return computed_values().position() != CSS::Position::Static || is<InitialContainingBlockBox>(*this);
 }
 
-const BlockBox* Node::containing_block() const
+BlockBox const* Node::containing_block() const
 {
     auto nearest_block_ancestor = [this] {
         auto* ancestor = parent();
         while (ancestor && !is<BlockBox>(*ancestor))
             ancestor = ancestor->parent();
-        return static_cast<const BlockBox*>(ancestor);
+        return static_cast<BlockBox const*>(ancestor);
     };
 
     if (is<TextNode>(*this))
@@ -59,7 +59,7 @@ const BlockBox* Node::containing_block() const
             ancestor = ancestor->parent();
         while (ancestor && (!is<BlockBox>(*ancestor) || ancestor->is_anonymous()))
             ancestor = ancestor->containing_block();
-        return static_cast<const BlockBox*>(ancestor);
+        return static_cast<BlockBox const*>(ancestor);
     }
 
     if (position == CSS::Position::Fixed)
@@ -108,7 +108,7 @@ HitTestResult Node::hit_test(const Gfx::IntPoint& position, HitTestType type) co
     return result;
 }
 
-const BrowsingContext& Node::browsing_context() const
+BrowsingContext const& Node::browsing_context() const
 {
     VERIFY(document().browsing_context());
     return *document().browsing_context();
@@ -120,7 +120,7 @@ BrowsingContext& Node::browsing_context()
     return *document().browsing_context();
 }
 
-const InitialContainingBlockBox& Node::root() const
+InitialContainingBlockBox const& Node::root() const
 {
     VERIFY(document().layout_node());
     return *document().layout_node();

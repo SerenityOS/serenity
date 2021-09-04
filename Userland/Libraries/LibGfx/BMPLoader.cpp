@@ -129,7 +129,7 @@ struct BMPLoadingContext {
     };
     State state { State::NotDecoded };
 
-    const u8* file_bytes { nullptr };
+    u8 const* file_bytes { nullptr };
     size_t file_size { 0 };
     u32 data_offset { 0 };
 
@@ -164,20 +164,20 @@ struct BMPLoadingContext {
     }
 };
 
-static RefPtr<Bitmap> load_bmp_impl(const u8*, size_t);
+static RefPtr<Bitmap> load_bmp_impl(u8 const*, size_t);
 
 RefPtr<Gfx::Bitmap> load_bmp(String const& path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
         return nullptr;
-    auto bitmap = load_bmp_impl((const u8*)file_or_error.value()->data(), file_or_error.value()->size());
+    auto bitmap = load_bmp_impl((u8 const*)file_or_error.value()->data(), file_or_error.value()->size());
     if (bitmap)
         bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded BMP: {}", bitmap->size(), LexicalPath::canonicalized_path(path)));
     return bitmap;
 }
 
-RefPtr<Gfx::Bitmap> load_bmp_from_memory(const u8* data, size_t length)
+RefPtr<Gfx::Bitmap> load_bmp_from_memory(u8 const* data, size_t length)
 {
     auto bitmap = load_bmp_impl(data, length);
     if (bitmap)
@@ -187,7 +187,7 @@ RefPtr<Gfx::Bitmap> load_bmp_from_memory(const u8* data, size_t length)
 
 class InputStreamer {
 public:
-    InputStreamer(const u8* data, size_t size)
+    InputStreamer(u8 const* data, size_t size)
         : m_data_ptr(data)
         , m_size_remaining(size)
     {
@@ -237,7 +237,7 @@ public:
     size_t remaining() const { return m_size_remaining; }
 
 private:
-    const u8* m_data_ptr { nullptr };
+    u8 const* m_data_ptr { nullptr };
     size_t m_size_remaining { 0 };
 };
 
@@ -1312,7 +1312,7 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
     return true;
 }
 
-static RefPtr<Bitmap> load_bmp_impl(const u8* data, size_t data_size)
+static RefPtr<Bitmap> load_bmp_impl(u8 const* data, size_t data_size)
 {
     BMPLoadingContext context;
     context.file_bytes = data;
@@ -1327,7 +1327,7 @@ static RefPtr<Bitmap> load_bmp_impl(const u8* data, size_t data_size)
     return context.bitmap;
 }
 
-BMPImageDecoderPlugin::BMPImageDecoderPlugin(const u8* data, size_t data_size)
+BMPImageDecoderPlugin::BMPImageDecoderPlugin(u8 const* data, size_t data_size)
 {
     m_context = make<BMPLoadingContext>();
     m_context->file_bytes = data;

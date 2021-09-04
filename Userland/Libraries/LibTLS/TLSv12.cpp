@@ -232,7 +232,7 @@ bool Context::verify_chain() const
 }
 
 template<typename HMACType>
-static void hmac_pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b)
+static void hmac_pseudorandom_function(Bytes output, ReadonlyBytes secret, u8 const* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b)
 {
     if (!secret.size()) {
         dbgln("null secret");
@@ -270,7 +270,7 @@ static void hmac_pseudorandom_function(Bytes output, ReadonlyBytes secret, const
     }
 }
 
-void TLSv12::pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b)
+void TLSv12::pseudorandom_function(Bytes output, ReadonlyBytes secret, u8 const* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b)
 {
     // Simplification: We only support the HMAC PRF with the hash function SHA-256 or stronger.
 

@@ -17,7 +17,7 @@ namespace Keyboard {
 #ifndef KERNEL
 // The Kernel explicitly and exclusively links only this file into it.
 // Thus, we cannot even include a reference to the symbol `CharacterMapFile::load_from_file`.
-Optional<CharacterMap> CharacterMap::load_from_file(const String& map_name)
+Optional<CharacterMap> CharacterMap::load_from_file(String const& map_name)
 {
     auto result = CharacterMapFile::load_from_file(map_name);
     if (!result.has_value())
@@ -27,7 +27,7 @@ Optional<CharacterMap> CharacterMap::load_from_file(const String& map_name)
 }
 #endif
 
-CharacterMap::CharacterMap(const String& map_name, const CharacterMapData& map_data)
+CharacterMap::CharacterMap(String const& map_name, CharacterMapData const& map_data)
     : m_character_map_data(map_data)
     , m_character_map_name(map_name)
 {
@@ -96,12 +96,12 @@ void CharacterMap::set_character_map_data(CharacterMapData character_map_data)
     m_character_map_data = character_map_data;
 }
 
-void CharacterMap::set_character_map_name(const String& character_map_name)
+void CharacterMap::set_character_map_name(String const& character_map_name)
 {
     m_character_map_name = character_map_name;
 }
 
-const String& CharacterMap::character_map_name() const
+String const& CharacterMap::character_map_name() const
 {
     return m_character_map_name;
 }

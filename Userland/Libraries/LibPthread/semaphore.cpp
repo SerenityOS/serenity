@@ -16,7 +16,7 @@
 // threads.
 static constexpr u32 POST_WAKES = 1 << 31;
 
-sem_t* sem_open(const char*, int, ...)
+sem_t* sem_open(char const*, int, ...)
 {
     errno = ENOSYS;
     return nullptr;
@@ -28,7 +28,7 @@ int sem_close(sem_t*)
     return -1;
 }
 
-int sem_unlink(const char*)
+int sem_unlink(char const*)
 {
     errno = ENOSYS;
     return -1;

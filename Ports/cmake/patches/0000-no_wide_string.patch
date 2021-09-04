@@ -191,7 +191,7 @@ diff -urp a/Source/cmGccDepfileLexerHelper.cxx b/Source/cmGccDepfileLexerHelper.
 --- a/Source/cmGccDepfileLexerHelper.cxx	2021-01-28 18:58:45.000000000 +0330
 +++ b/Source/cmGccDepfileLexerHelper.cxx	2021-02-11 18:43:33.049173864 +0330
 @@ -18,8 +18,8 @@
- bool cmGccDepfileLexerHelper::readFile(const char* filePath)
+ bool cmGccDepfileLexerHelper::readFile(char const* filePath)
  {
  #ifdef _WIN32
 -  wchar_t* wpath = cmsysEncoding_DupToWide(filePath);
@@ -483,14 +483,14 @@ diff -urp a/Source/cmVSSetupHelper.cxx b/Source/cmVSSetupHelper.cxx
 @@ -47,10 +47,10 @@ const CLSID CLSID_SetupConfiguration = {
  #endif
  
- const WCHAR* Win10SDKComponent =
+ WCHAR const* Win10SDKComponent =
 -  L"Microsoft.VisualStudio.Component.Windows10SDK";
 +  "Microsoft.VisualStudio.Component.Windows10SDK";
- const WCHAR* Win81SDKComponent =
+ WCHAR const* Win81SDKComponent =
 -  L"Microsoft.VisualStudio.Component.Windows81SDK";
--const WCHAR* ComponentType = L"Component";
+-WCHAR const* ComponentType = L"Component";
 +  "Microsoft.VisualStudio.Component.Windows81SDK";
-+const WCHAR* ComponentType = "Component";
++WCHAR const* ComponentType = "Component";
  
  std::string VSInstanceInfo::GetInstallLocation() const
  {
@@ -725,7 +725,7 @@ diff -urp a/Source/kwsys/DynamicLoader.cxx b/Source/kwsys/DynamicLoader.cxx
 +++ b/Source/kwsys/DynamicLoader.cxx	2021-02-11 18:43:32.762502643 +0330
 @@ -263,7 +263,7 @@ DynamicLoader::SymbolPointer DynamicLoad
  
- const char* DynamicLoader::LastError()
+ char const* DynamicLoader::LastError()
  {
 -  wchar_t lpMsgBuf[DYNLOAD_ERROR_BUFFER_SIZE + 1];
 +  char lpMsgBuf[DYNLOAD_ERROR_BUFFER_SIZE + 1];
@@ -739,8 +739,8 @@ diff -urp a/Source/kwsys/EncodingC.c b/Source/kwsys/EncodingC.c
  #  include <windows.h>
  #endif
  
--size_t kwsysEncoding_mbstowcs(wchar_t* dest, const char* str, size_t n)
-+size_t kwsysEncoding_mbstowcs(char* dest, const char* str, size_t n)
+-size_t kwsysEncoding_mbstowcs(wchar_t* dest, char const* str, size_t n)
++size_t kwsysEncoding_mbstowcs(char* dest, char const* str, size_t n)
  {
    if (str == 0) {
      return (size_t)-1;
@@ -748,8 +748,8 @@ diff -urp a/Source/kwsys/EncodingC.c b/Source/kwsys/EncodingC.c
  #endif
  }
  
--wchar_t* kwsysEncoding_DupToWide(const char* str)
-+char* kwsysEncoding_DupToWide(const char* str)
+-wchar_t* kwsysEncoding_DupToWide(char const* str)
++char* kwsysEncoding_DupToWide(char const* str)
  {
 -  wchar_t* ret = NULL;
 +  char* ret = NULL;
@@ -764,8 +764,8 @@ diff -urp a/Source/kwsys/EncodingC.c b/Source/kwsys/EncodingC.c
    return ret;
  }
  
--size_t kwsysEncoding_wcstombs(char* dest, const wchar_t* str, size_t n)
-+size_t kwsysEncoding_wcstombs(char* dest, const char* str, size_t n)
+-size_t kwsysEncoding_wcstombs(char* dest, wchar_t const* str, size_t n)
++size_t kwsysEncoding_wcstombs(char* dest, char const* str, size_t n)
  {
    if (str == 0) {
      return (size_t)-1;
@@ -773,8 +773,8 @@ diff -urp a/Source/kwsys/EncodingC.c b/Source/kwsys/EncodingC.c
  #endif
  }
  
--char* kwsysEncoding_DupToNarrow(const wchar_t* str)
-+char* kwsysEncoding_DupToNarrow(const char* str)
+-char* kwsysEncoding_DupToNarrow(wchar_t const* str)
++char* kwsysEncoding_DupToNarrow(char const* str)
  {
    char* ret = NULL;
    size_t length = kwsysEncoding_wcstombs(0, str, 0) + 1;
@@ -852,8 +852,8 @@ diff -urp a/Source/kwsys/EncodingCXX.cxx b/Source/kwsys/EncodingCXX.cxx
    return nstr;
  }
  
--std::wstring Encoding::ToWide(const char* cstr)
-+std::string Encoding::ToWide(const char* cstr)
+-std::wstring Encoding::ToWide(char const* cstr)
++std::string Encoding::ToWide(char const* cstr)
  {
 -  std::wstring wstr;
 +  std::string wstr;
@@ -868,8 +868,8 @@ diff -urp a/Source/kwsys/EncodingCXX.cxx b/Source/kwsys/EncodingCXX.cxx
    return wstr;
  }
  
--std::string Encoding::ToNarrow(const wchar_t* wcstr)
-+std::string Encoding::ToNarrow(const char* wcstr)
+-std::string Encoding::ToNarrow(wchar_t const* wcstr)
++std::string Encoding::ToNarrow(char const* wcstr)
  {
    std::string str;
    size_t length = kwsysEncoding_wcstombs(nullptr, wcstr, 0) + 1;
@@ -884,8 +884,8 @@ diff -urp a/Source/kwsys/EncodingCXX.cxx b/Source/kwsys/EncodingCXX.cxx
  }
  
  // Convert local paths to UNC style paths
--std::wstring Encoding::ToWindowsExtendedPath(const char* source)
-+std::string Encoding::ToWindowsExtendedPath(const char* source)
+-std::wstring Encoding::ToWindowsExtendedPath(char const* source)
++std::string Encoding::ToWindowsExtendedPath(char const* source)
  {
    return ToWindowsExtendedPath(ToWide(source));
  }
@@ -952,26 +952,26 @@ diff -urp a/Source/kwsys/Encoding.h.in b/Source/kwsys/Encoding.h.in
     On Windows, UTF-8 is assumed, and on other platforms,
     the current locale is assumed.
     */
--kwsysEXPORT size_t kwsysEncoding_mbstowcs(wchar_t* dest, const char* src,
-+kwsysEXPORT size_t kwsysEncoding_mbstowcs(char* dest, const char* src,
+-kwsysEXPORT size_t kwsysEncoding_mbstowcs(wchar_t* dest, char const* src,
++kwsysEXPORT size_t kwsysEncoding_mbstowcs(char* dest, char const* src,
                                            size_t n);
  
  /* Convert a narrow string to a wide string.
     This can return NULL if the conversion fails. */
--kwsysEXPORT wchar_t* kwsysEncoding_DupToWide(const char* src);
-+kwsysEXPORT char* kwsysEncoding_DupToWide(const char* src);
+-kwsysEXPORT wchar_t* kwsysEncoding_DupToWide(char const* src);
++kwsysEXPORT char* kwsysEncoding_DupToWide(char const* src);
  
  /* Convert a wide string to a narrow string.
     On Windows, UTF-8 is assumed, and on other platforms,
     the current locale is assumed. */
--kwsysEXPORT size_t kwsysEncoding_wcstombs(char* dest, const wchar_t* src,
-+kwsysEXPORT size_t kwsysEncoding_wcstombs(char* dest, const char* src,
+-kwsysEXPORT size_t kwsysEncoding_wcstombs(char* dest, wchar_t const* src,
++kwsysEXPORT size_t kwsysEncoding_wcstombs(char* dest, char const* src,
                                            size_t n);
  
  /* Convert a wide string to a narrow string.
     This can return NULL if the conversion fails. */
--kwsysEXPORT char* kwsysEncoding_DupToNarrow(const wchar_t* str);
-+kwsysEXPORT char* kwsysEncoding_DupToNarrow(const char* str);
+-kwsysEXPORT char* kwsysEncoding_DupToNarrow(wchar_t const* str);
++kwsysEXPORT char* kwsysEncoding_DupToNarrow(char const* str);
  
  #if defined(__cplusplus)
  } /* extern "C" */
@@ -986,8 +986,8 @@ diff -urp a/Source/kwsys/Encoding.hxx.in b/Source/kwsys/Encoding.hxx.in
 -    // argc and wide argv.  This is useful if wmain() is used.
 -    CommandLineArguments(int argc, wchar_t const* const* argv);
      ~CommandLineArguments();
-     CommandLineArguments(const CommandLineArguments&);
-     CommandLineArguments& operator=(const CommandLineArguments&);
+     CommandLineArguments(CommandLineArguments const&);
+     CommandLineArguments& operator=(CommandLineArguments const&);
 @@ -42,7 +39,7 @@ public:
    };
  
@@ -1002,17 +1002,17 @@ diff -urp a/Source/kwsys/Encoding.hxx.in b/Source/kwsys/Encoding.hxx.in
    // On Windows, UTF-8 is assumed, and on other platforms,
    // the current locale is assumed.
 -  static std::wstring ToWide(const std::string& str);
--  static std::wstring ToWide(const char* str);
+-  static std::wstring ToWide(char const* str);
 +  static std::string ToWide(const std::string& str);
-+  static std::string ToWide(const char* str);
++  static std::string ToWide(char const* str);
  
    // Convert a wide string to a narrow string.
    // On Windows, UTF-8 is assumed, and on other platforms,
    // the current locale is assumed.
 -  static std::string ToNarrow(const std::wstring& str);
--  static std::string ToNarrow(const wchar_t* str);
+-  static std::string ToNarrow(wchar_t const* str);
 +  static std::string ToNarrow(const std::string& str);
-+  static std::string ToNarrow(const char* str);
++  static std::string ToNarrow(char const* str);
  
  #  if defined(_WIN32)
    /**
@@ -1021,10 +1021,10 @@ diff -urp a/Source/kwsys/Encoding.hxx.in b/Source/kwsys/Encoding.hxx.in
     * absolute paths with Windows-style backslashes.
     **/
 -  static std::wstring ToWindowsExtendedPath(std::string const&);
--  static std::wstring ToWindowsExtendedPath(const char* source);
+-  static std::wstring ToWindowsExtendedPath(char const* source);
 -  static std::wstring ToWindowsExtendedPath(std::wstring const& wsource);
 +  static std::string ToWindowsExtendedPath(std::string const&);
-+  static std::string ToWindowsExtendedPath(const char* source);
++  static std::string ToWindowsExtendedPath(char const* source);
  #  endif
  
  #endif // @KWSYS_NAMESPACE@_STL_HAS_WSTRING
@@ -1181,7 +1181,7 @@ diff -urp a/Source/kwsys/ProcessWin32.c b/Source/kwsys/ProcessWin32.c
          return 0;
        }
 @@ -1796,7 +1796,7 @@ void kwsysProcessDestroy(kwsysProcess* c
- DWORD kwsysProcessSetupOutputPipeFile(PHANDLE phandle, const char* name)
+ DWORD kwsysProcessSetupOutputPipeFile(PHANDLE phandle, char const* name)
  {
    HANDLE fout;
 -  wchar_t* wname;
@@ -1305,7 +1305,7 @@ diff -urp a/Source/kwsys/SystemTools.cxx b/Source/kwsys/SystemTools.cxx
 +++ b/Source/kwsys/SystemTools.cxx	2021-02-12 14:39:59.854519416 +0330
 @@ -223,7 +223,7 @@ inline int Rmdir(const std::string& dir)
  }
- inline const char* Getcwd(char* buf, unsigned int len)
+ inline char const* Getcwd(char* buf, unsigned int len)
  {
 -  std::vector<wchar_t> w_buf(len);
 +  std::vector<char> w_buf(len);
@@ -1335,37 +1335,37 @@ diff -urp a/Source/kwsys/SystemTools.cxx b/Source/kwsys/SystemTools.cxx
  using envchar = char;
  #endif
 @@ -362,8 +362,8 @@ struct kwsysEnvCompare
-   bool operator()(const envchar* l, const envchar* r) const
+   bool operator()(envchar const* l, envchar const* r) const
    {
  #if defined(_WIN32)
--    const wchar_t* leq = wcschr(l, L'=');
--    const wchar_t* req = wcschr(r, L'=');
-+    const char* leq = wcschr(l, L'=');
-+    const char* req = wcschr(r, L'=');
+-    wchar_t const* leq = wcschr(l, L'=');
+-    wchar_t const* req = wcschr(r, L'=');
++    char const* leq = wcschr(l, L'=');
++    char const* req = wcschr(r, L'=');
      size_t llen = leq ? (leq - l) : wcslen(l);
      size_t rlen = req ? (req - r) : wcslen(r);
      if (llen == rlen) {
-@@ -642,8 +642,8 @@ const char* SystemTools::GetEnv(const st
- bool SystemTools::GetEnv(const char* key, std::string& result)
+@@ -642,8 +642,8 @@ char const* SystemTools::GetEnv(const st
+ bool SystemTools::GetEnv(char const* key, std::string& result)
  {
  #if defined(_WIN32)
 -  const std::wstring wkey = Encoding::ToWide(key);
--  const wchar_t* wv = _wgetenv(wkey.c_str());
+-  wchar_t const* wv = _wgetenv(wkey.c_str());
 +  const std::string wkey = Encoding::ToWide(key);
-+  const char* wv = _wgetenv(wkey.c_str());
++  char const* wv = _wgetenv(wkey.c_str());
    if (wv) {
      result = Encoding::ToNarrow(wv);
      return true;
 @@ -666,8 +666,8 @@ bool SystemTools::GetEnv(const std::stri
- bool SystemTools::HasEnv(const char* key)
+ bool SystemTools::HasEnv(char const* key)
  {
  #if defined(_WIN32)
 -  const std::wstring wkey = Encoding::ToWide(key);
--  const wchar_t* v = _wgetenv(wkey.c_str());
+-  wchar_t const* v = _wgetenv(wkey.c_str());
 +  const std::string wkey = Encoding::ToWide(key);
-+  const char* v = _wgetenv(wkey.c_str());
++  char const* v = _wgetenv(wkey.c_str());
  #else
-   const char* v = getenv(key);
+   char const* v = getenv(key);
  #endif
 @@ -733,11 +733,11 @@ static kwsysEnvSet kwsysUnPutEnvSet;
  
@@ -1382,7 +1382,7 @@ diff -urp a/Source/kwsys/SystemTools.cxx b/Source/kwsys/SystemTools.cxx
      return -1;
    }
 @@ -820,8 +820,8 @@ public:
-   bool Put(const char* env)
+   bool Put(char const* env)
    {
  #  if defined(_WIN32)
 -    const std::wstring wEnv = Encoding::ToWide(env);
@@ -1393,7 +1393,7 @@ diff -urp a/Source/kwsys/SystemTools.cxx b/Source/kwsys/SystemTools.cxx
      char* newEnv = strdup(env);
  #  endif
 @@ -836,7 +836,7 @@ public:
-   bool UnPut(const char* env)
+   bool UnPut(char const* env)
    {
  #  if defined(_WIN32)
 -    const std::wstring wEnv = Encoding::ToWide(env);
@@ -1497,7 +1497,7 @@ diff -urp a/Source/kwsys/SystemTools.cxx b/Source/kwsys/SystemTools.cxx
 -  std::wstring wvalue = Encoding::ToWide(value);
 +  std::string wvalue = Encoding::ToWide(value);
    if (RegSetValueExW(hKey, Encoding::ToWide(valuename).c_str(), 0, REG_SZ,
-                      (CONST BYTE*)wvalue.c_str(),
+                      (BYTE const*)wvalue.c_str(),
 -                     (DWORD)(sizeof(wchar_t) * (wvalue.size() + 1))) ==
 +                     (DWORD)(sizeof(char) * (wvalue.size() + 1))) ==
        ERROR_SUCCESS) {
@@ -1624,7 +1624,7 @@ diff -urp a/Source/kwsys/SystemTools.hxx.in b/Source/kwsys/SystemTools.hxx.in
 diff -urp a/Source/kwsys/testConsoleBufChild.cxx b/Source/kwsys/testConsoleBufChild.cxx
 --- a/Source/kwsys/testConsoleBufChild.cxx	2021-01-28 18:58:45.000000000 +0330
 +++ b/Source/kwsys/testConsoleBufChild.cxx	2021-02-11 18:43:32.759169256 +0330
-@@ -27,8 +27,8 @@ int main(int argc, const char* argv[])
+@@ -27,8 +27,8 @@ int main(int argc, char const* argv[])
      std::cout << argv[1] << std::endl;
      std::cerr << argv[1] << std::endl;
    } else {
@@ -1651,8 +1651,8 @@ diff -urp a/Source/kwsys/testConsoleBuf.cxx b/Source/kwsys/testConsoleBuf.cxx
    return std::cerr.rdbuf();
  }
  
--std::basic_streambuf<wchar_t>* errstream(const wchar_t* unused)
-+std::basic_streambuf<char>* errstream(const char* unused)
+-std::basic_streambuf<wchar_t>* errstream(wchar_t const* unused)
++std::basic_streambuf<char>* errstream(char const* unused)
  {
    static_cast<void>(unused);
    return std::wcerr.rdbuf();
@@ -1859,7 +1859,7 @@ diff -urp a/Source/kwsys/testEncoding.cxx b/Source/kwsys/testEncoding.cxx
 +++ b/Source/kwsys/testEncoding.cxx	2021-02-11 18:43:32.815836824 +0330
 @@ -55,9 +55,9 @@ static int testHelloWorldEncoding()
    for (int i = 0; helloWorldStrings[i][0] != 0; i++) {
-     std::string str = reinterpret_cast<const char*>(helloWorldStrings[i]);
+     std::string str = reinterpret_cast<char const*>(helloWorldStrings[i]);
      std::cout << str << std::endl;
 -    std::wstring wstr = kwsys::Encoding::ToWide(str);
 +    std::string wstr = kwsys::Encoding::ToWide(str);
@@ -1878,8 +1878,8 @@ diff -urp a/Source/kwsys/testEncoding.cxx b/Source/kwsys/testEncoding.cxx
  
    wstr = kwsys::Encoding::ToWide(nullptr);
    if (!wstr.empty()) {
--    const wchar_t* wcstr = wstr.c_str();
-+    const char* wcstr = wstr.c_str();
+-    wchar_t const* wcstr = wstr.c_str();
++    char const* wcstr = wstr.c_str();
      std::cout << "ToWide(NULL) returned";
      for (size_t i = 0; i < wstr.size(); i++) {
        std::cout << " " << std::hex << (int)wcstr[i];
@@ -1887,8 +1887,8 @@ diff -urp a/Source/kwsys/testEncoding.cxx b/Source/kwsys/testEncoding.cxx
    }
    wstr = kwsys::Encoding::ToWide("");
    if (!wstr.empty()) {
--    const wchar_t* wcstr = wstr.c_str();
-+    const char* wcstr = wstr.c_str();
+-    wchar_t const* wcstr = wstr.c_str();
++    char const* wcstr = wstr.c_str();
      std::cout << "ToWide(\"\") returned";
      for (size_t i = 0; i < wstr.size(); i++) {
        std::cout << " " << std::hex << (int)wcstr[i];
@@ -5967,8 +5967,8 @@ diff -urp a/Utilities/cmlibrhash/librhash/rhash.c b/Utilities/cmlibrhash/librhas
  #ifdef _WIN32 /* windows only function */
  #include <share.h>
  
--RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned char* result)
-+RHASH_API int rhash_wfile(unsigned hash_id, const char* filepath, unsigned char* result)
+-RHASH_API int rhash_wfile(unsigned hash_id, wchar_t const* filepath, unsigned char* result)
++RHASH_API int rhash_wfile(unsigned hash_id, char const* filepath, unsigned char* result)
  {
  	FILE* fd;
  	rhash ctx;
@@ -5988,8 +5988,8 @@ diff -urp a/Utilities/cmlibrhash/librhash/rhash.h b/Utilities/cmlibrhash/librhas
   * @param result buffer to receive hash value with the lowest requested id
   * @return 0 on success, -1 on error, -1 on error and errno is set
   */
--RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned char* result);
-+RHASH_API int rhash_wfile(unsigned hash_id, const char* filepath, unsigned char* result);
+-RHASH_API int rhash_wfile(unsigned hash_id, wchar_t const* filepath, unsigned char* result);
++RHASH_API int rhash_wfile(unsigned hash_id, char const* filepath, unsigned char* result);
  #endif
  
  
@@ -6000,10 +6000,10 @@ diff -urp a/Utilities/cmlibuv/src/win/core.c b/Utilities/cmlibuv/src/win/core.c
  
  
  #if !defined(__MINGW32__) || __MSVCRT_VERSION__ >= 0x800
--static void uv__crt_invalid_parameter_handler(const wchar_t* expression,
--    const wchar_t* function, const wchar_t * file, unsigned int line,
-+static void uv__crt_invalid_parameter_handler(const char* expression,
-+    const char* function, const char * file, unsigned int line,
+-static void uv__crt_invalid_parameter_handler(wchar_t const* expression,
+-    wchar_t const* function, const wchar_t * file, unsigned int line,
++static void uv__crt_invalid_parameter_handler(char const* expression,
++    char const* function, const char * file, unsigned int line,
      uintptr_t reserved) {
    /* No-op. */
  }
@@ -6171,12 +6171,12 @@ diff -urp a/Utilities/cmlibuv/src/win/process.c b/Utilities/cmlibuv/src/win/proc
  }
  
  
--int env_strncmp(const wchar_t* a, int na, const wchar_t* b) {
+-int env_strncmp(wchar_t const* a, int na, wchar_t const* b) {
 -  wchar_t* a_eq;
 -  wchar_t* b_eq;
 -  wchar_t* A;
 -  wchar_t* B;
-+int env_strncmp(const char* a, int na, const char* b) {
++int env_strncmp(char const* a, int na, char const* b) {
 +  char* a_eq;
 +  char* b_eq;
 +  char* A;
@@ -6184,7 +6184,7 @@ diff -urp a/Utilities/cmlibuv/src/win/process.c b/Utilities/cmlibuv/src/win/proc
    int nb;
    int r;
  
-@@ -632,8 +632,8 @@ int env_strncmp(const wchar_t* a, int na
+@@ -632,8 +632,8 @@ int env_strncmp(wchar_t const* a, int na
    assert(b_eq);
    nb = b_eq - b;
  
@@ -6195,7 +6195,7 @@ diff -urp a/Utilities/cmlibuv/src/win/process.c b/Utilities/cmlibuv/src/win/proc
  
    r = LCMapStringW(LOCALE_INVARIANT, LCMAP_UPPERCASE, a, na, A, na);
    assert(r==na);
-@@ -643,8 +643,8 @@ int env_strncmp(const wchar_t* a, int na
+@@ -643,8 +643,8 @@ int env_strncmp(wchar_t const* a, int na
    B[nb] = L'\0';
  
    while (1) {
@@ -6206,7 +6206,7 @@ diff -urp a/Utilities/cmlibuv/src/win/process.c b/Utilities/cmlibuv/src/win/proc
      if (AA < BB) {
        return -1;
      } else if (AA > BB) {
-@@ -657,8 +657,8 @@ int env_strncmp(const wchar_t* a, int na
+@@ -657,8 +657,8 @@ int env_strncmp(wchar_t const* a, int na
  
  
  static int qsort_wcscmp(const void *a, const void *b) {
@@ -6344,7 +6344,7 @@ diff -urp a/Utilities/cmlibuv/src/win/util.c b/Utilities/cmlibuv/src/win/util.c
 @@ -1516,10 +1516,10 @@ fail:
  
  
- int uv_os_getenv(const char* name, char* buffer, size_t* size) {
+ int uv_os_getenv(char const* name, char* buffer, size_t* size) {
 -  wchar_t fastvar[512];
 -  wchar_t* var;
 +  char fastvar[512];
@@ -6358,7 +6358,7 @@ diff -urp a/Utilities/cmlibuv/src/win/util.c b/Utilities/cmlibuv/src/win/util.c
 @@ -1611,8 +1611,8 @@ fail:
  
  
- int uv_os_setenv(const char* name, const char* value) {
+ int uv_os_setenv(char const* name, char const* value) {
 -  wchar_t* name_w;
 -  wchar_t* value_w;
 +  char* name_w;
@@ -6366,10 +6366,10 @@ diff -urp a/Utilities/cmlibuv/src/win/util.c b/Utilities/cmlibuv/src/win/util.c
    int r;
  
    if (name == NULL || value == NULL)
-@@ -1642,7 +1642,7 @@ int uv_os_setenv(const char* name, const
+@@ -1642,7 +1642,7 @@ int uv_os_setenv(char const* name, const
  
  
- int uv_os_unsetenv(const char* name) {
+ int uv_os_unsetenv(char const* name) {
 -  wchar_t* name_w;
 +  char* name_w;
    int r;
@@ -6604,7 +6604,7 @@ diff -urp a/Utilities/std/cm/filesystem b/Utilities/std/cm/filesystem
 -    return unicode<wchar_t>::from_utf8(in);
 +    return str;
    }
--  std::wstring operator()(const char* in)
+-  std::wstring operator()(char const* in)
 +  static std::string to_utf8(Char c)
    {
 -    return unicode<wchar_t>::from_utf8(in);
@@ -6624,7 +6624,7 @@ diff -urp a/Utilities/std/cm/filesystem b/Utilities/std/cm/filesystem
 -    return unicode<wchar_t>::to_utf8(in);
 +    return str;
    }
--  std::string operator()(const wchar_t* in)
+-  std::string operator()(wchar_t const* in)
 +  static std::string from_utf8(char c)
    {
 -    return unicode<wchar_t>::to_utf8(in);
@@ -6641,7 +6641,7 @@ diff -urp a/Utilities/std/cm/filesystem b/Utilities/std/cm/filesystem
  {
  public:
 -  std::string operator()(const std::string& in) { return in; }
--  std::string operator()(const char* in) { return std::string(in); }
+-  std::string operator()(char const* in) { return std::string(in); }
 -  std::string operator()(char in) { return std::string(1, in); }
 -};
 -template <>
@@ -6649,13 +6649,13 @@ diff -urp a/Utilities/std/cm/filesystem b/Utilities/std/cm/filesystem
 -{
 -public:
 -  std::wstring operator()(const std::wstring& in) { return in; }
--  std::wstring operator()(const wchar_t* in) { return std::wstring(in); }
+-  std::wstring operator()(wchar_t const* in) { return std::wstring(in); }
 -  std::wstring operator()(wchar_t in) { return std::wstring(1, in); }
 +  std::string operator()(const std::string& in)
 +  {
 +    return unicode<char>::from_utf8(in);
 +  }
-+  std::string operator()(const char* in)
++  std::string operator()(char const* in)
 +  {
 +    return unicode<char>::from_utf8(in);
 +  }
@@ -6672,24 +6672,24 @@ diff -urp a/Utilities/std/cm/filesystem b/Utilities/std/cm/filesystem
 -{
 -  // some compilers, like gcc 4.8 does not implement the following C++11
 -  // signature:
--  // std::string::string(const string&, const Allocator&)
+-  // std::string::string(string const&, Allocator const&)
 -  // As workaround, use char* pointer.
 -  template <typename Char, typename Traits, typename Alloc>
 -  static std::basic_string<Char, Traits, Alloc> to(const std::wstring& in,
--                                                   const Alloc& a)
+-                                                   Alloc const& a)
 -  {
 -    return std::basic_string<Char, Traits, Alloc>(
 -      unicode_converter<wchar_t, Char>()(in).c_str(), a);
 -  }
 -  template <typename Char, typename Traits, typename Alloc>
--  static std::basic_string<Char, Traits, Alloc> to(const wchar_t* in,
--                                                   const Alloc& a)
+-  static std::basic_string<Char, Traits, Alloc> to(wchar_t const* in,
+-                                                   Alloc const& a)
 -  {
 -    return std::basic_string<Char, Traits, Alloc>(
 -      unicode_converter<wchar_t, Char>()(in).c_str(), a);
 -  }
 -  template <typename Char, typename Traits, typename Alloc>
--  static std::basic_string<Char, Traits, Alloc> to(wchar_t in, const Alloc& a)
+-  static std::basic_string<Char, Traits, Alloc> to(wchar_t in, Alloc const& a)
 -  {
 -    return std::basic_string<Char, Traits, Alloc>(
 -      unicode_converter<wchar_t, Char>()(in).c_str(), a);
@@ -6701,7 +6701,7 @@ diff -urp a/Utilities/std/cm/filesystem b/Utilities/std/cm/filesystem
 -    return std::basic_string<Char>(unicode_converter<wchar_t, Char>()(in));
 -  }
 -  template <typename Char>
--  static std::basic_string<Char> to(const wchar_t* in)
+-  static std::basic_string<Char> to(wchar_t const* in)
 -  {
 -    return std::basic_string<Char>(unicode_converter<wchar_t, Char>()(in));
 -  }
@@ -6756,7 +6756,7 @@ diff -urp a/Utilities/std/cm/filesystem b/Utilities/std/cm/filesystem
 -    append_range(p, s.begin(), s.end());
 -  }
 -  template <typename Source>
--  static void append_source(std::string& p, const Source& s)
+-  static void append_source(std::string& p, Source const& s)
 -  {
 -    append_range(p, s);
 -  }
@@ -6830,7 +6830,7 @@ diff -urp a/Utilities/std/cm/filesystem b/Utilities/std/cm/filesystem
 +                      (std::is_same<Char, char>::value &&
 +                       std::is_same<Traits, std::char_traits<char>>::value),
                      int> = 1>
-   std::basic_string<Char, Traits, Alloc> string(const Alloc& a = Alloc()) const
+   std::basic_string<Char, Traits, Alloc> string(Alloc const& a = Alloc()) const
    {
 @@ -870,11 +769,11 @@ public:
        this->path_, a);
@@ -6856,7 +6856,7 @@ diff -urp a/Utilities/std/cm/filesystem b/Utilities/std/cm/filesystem
 +                       std::is_same<Traits, std::char_traits<char>>::value),
                      int> = 1>
    std::basic_string<Char, Traits, Alloc> generic_string(
-     const Alloc& a = Alloc()) const
+     Alloc const& a = Alloc()) const
 @@ -893,11 +792,11 @@ public:
        this->get_generic(), a);
    }

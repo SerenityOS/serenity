@@ -74,14 +74,14 @@ void PS2KeyboardDevice::irq_handle_byte_read(u8 byte)
     }
 }
 
-bool PS2KeyboardDevice::handle_irq(const RegisterState&)
+bool PS2KeyboardDevice::handle_irq(RegisterState const&)
 {
     // The controller will read the data and call irq_handle_byte_read
     // for the appropriate device
     return m_i8042_controller->irq_process_input_buffer(HIDDevice::Type::Keyboard);
 }
 
-UNMAP_AFTER_INIT RefPtr<PS2KeyboardDevice> PS2KeyboardDevice::try_to_initialize(const I8042Controller& ps2_controller)
+UNMAP_AFTER_INIT RefPtr<PS2KeyboardDevice> PS2KeyboardDevice::try_to_initialize(I8042Controller const& ps2_controller)
 {
     auto device = adopt_ref(*new PS2KeyboardDevice(ps2_controller));
     if (device->initialize())
@@ -100,7 +100,7 @@ UNMAP_AFTER_INIT bool PS2KeyboardDevice::initialize()
 
 // FIXME: UNMAP_AFTER_INIT might not be correct, because in practice PS/2 devices
 // are hot pluggable.
-UNMAP_AFTER_INIT PS2KeyboardDevice::PS2KeyboardDevice(const I8042Controller& ps2_controller)
+UNMAP_AFTER_INIT PS2KeyboardDevice::PS2KeyboardDevice(I8042Controller const& ps2_controller)
     : IRQHandler(IRQ_KEYBOARD)
     , KeyboardDevice()
     , I8042Device(ps2_controller)

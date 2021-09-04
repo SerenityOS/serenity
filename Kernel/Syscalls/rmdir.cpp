@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$rmdir(Userspace<const char*> user_path, size_t path_length)
+KResultOr<FlatPtr> Process::sys$rmdir(Userspace<char const*> user_path, size_t path_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(cpath);

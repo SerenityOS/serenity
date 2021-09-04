@@ -33,7 +33,7 @@ public:
     bool has_error() const { return m_error != Error::None; }
     Error error() const { return m_error; }
     NetworkResponse* response() { return m_response.ptr(); }
-    const NetworkResponse* response() const { return m_response.ptr(); }
+    NetworkResponse const* response() const { return m_response.ptr(); }
 
     virtual void start() = 0;
     virtual void shutdown() = 0;
@@ -58,7 +58,7 @@ private:
     Error m_error { Error::None };
 };
 
-const char* to_string(NetworkJob::Error);
+char const* to_string(NetworkJob::Error);
 
 }
 

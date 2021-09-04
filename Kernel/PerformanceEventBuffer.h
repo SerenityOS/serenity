@@ -100,9 +100,9 @@ class PerformanceEventBuffer {
 public:
     static OwnPtr<PerformanceEventBuffer> try_create_with_size(size_t buffer_size);
 
-    KResult append(int type, FlatPtr arg1, FlatPtr arg2, const StringView& arg3, Thread* current_thread = Thread::current());
+    KResult append(int type, FlatPtr arg1, FlatPtr arg2, StringView const& arg3, Thread* current_thread = Thread::current());
     KResult append_with_ip_and_bp(ProcessID pid, ThreadID tid, FlatPtr eip, FlatPtr ebp,
-        int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, const StringView& arg3);
+        int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, StringView const& arg3);
 
     void clear()
     {
@@ -111,14 +111,14 @@ public:
 
     size_t capacity() const { return m_buffer->size() / sizeof(PerformanceEvent); }
     size_t count() const { return m_count; }
-    const PerformanceEvent& at(size_t index) const
+    PerformanceEvent const& at(size_t index) const
     {
         return const_cast<PerformanceEventBuffer&>(*this).at(index);
     }
 
     bool to_json(KBufferBuilder&) const;
 
-    void add_process(const Process&, ProcessEventType event_type);
+    void add_process(Process const&, ProcessEventType event_type);
 
     KResultOr<FlatPtr> register_string(NonnullOwnPtr<KString>);
 

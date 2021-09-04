@@ -7,7 +7,7 @@ module\_load - load a kernel module
 ```**c++
 #include <serenity.h>
 
-int module_load(const char* path, size_t path_length);
+int module_load(char const* path, size_t path_length);
 ```
 
 ## Description

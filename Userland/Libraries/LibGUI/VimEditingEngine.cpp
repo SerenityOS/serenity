@@ -773,7 +773,7 @@ CursorWidth VimEditingEngine::cursor_width() const
     return m_vim_mode == VimMode::Insert ? CursorWidth::NARROW : CursorWidth::WIDE;
 }
 
-bool VimEditingEngine::on_key(const KeyEvent& event)
+bool VimEditingEngine::on_key(KeyEvent const& event)
 {
     switch (m_vim_mode) {
     case (VimMode::Insert):
@@ -789,7 +789,7 @@ bool VimEditingEngine::on_key(const KeyEvent& event)
     return false;
 }
 
-bool VimEditingEngine::on_key_in_insert_mode(const KeyEvent& event)
+bool VimEditingEngine::on_key_in_insert_mode(KeyEvent const& event)
 {
     if (EditingEngine::on_key(event))
         return true;
@@ -819,7 +819,7 @@ bool VimEditingEngine::on_key_in_insert_mode(const KeyEvent& event)
     return false;
 }
 
-bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
+bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
 {
     // Ignore auxiliary keypress events.
     if (event.key() == KeyCode::Key_LeftShift
@@ -1095,7 +1095,7 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
     return true;
 }
 
-bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
+bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
 {
     // If the motion state machine requires the next character, feed it.
     if (m_motion.should_consume_next_character()) {

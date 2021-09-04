@@ -1396,7 +1396,7 @@ bool Parser::append_sub8x8_mvs(u8, u8)
     return true;
 }
 
-bool Parser::use_mv_hp(const MV&)
+bool Parser::use_mv_hp(MV const&)
 {
     // TODO: Implement
     return true;

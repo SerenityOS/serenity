@@ -19,7 +19,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* name_or_ip = nullptr;
+    char const* name_or_ip = nullptr;
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Convert between domain name and IPv4 address.");
     args_parser.add_positional_argument(name_or_ip, "Domain name or IPv4 address", "name");
@@ -49,7 +49,7 @@ int main(int argc, char** argv)
     }
 
     char buffer[INET_ADDRSTRLEN];
-    const char* ip_str = inet_ntop(AF_INET, hostent->h_addr_list[0], buffer, sizeof(buffer));
+    char const* ip_str = inet_ntop(AF_INET, hostent->h_addr_list[0], buffer, sizeof(buffer));
 
     outln("{} is {}", name_or_ip, ip_str);
     return 0;

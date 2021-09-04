@@ -11,7 +11,7 @@
 
 extern "C" {
 
-const char* inet_ntop(int af, const void* src, char* dst, socklen_t len)
+char const* inet_ntop(int af, void const* src, char* dst, socklen_t len)
 {
     if (af != AF_INET) {
         errno = EAFNOSUPPORT;
@@ -23,10 +23,10 @@ const char* inet_ntop(int af, const void* src, char* dst, socklen_t len)
     }
     auto* bytes = (const unsigned char*)src;
     snprintf(dst, len, "%u.%u.%u.%u", bytes[0], bytes[1], bytes[2], bytes[3]);
-    return (const char*)dst;
+    return (char const*)dst;
 }
 
-int inet_pton(int af, const char* src, void* dst)
+int inet_pton(int af, char const* src, void* dst)
 {
     if (af != AF_INET) {
         errno = EAFNOSUPPORT;
@@ -58,7 +58,7 @@ int inet_pton(int af, const char* src, void* dst)
     return 1;
 }
 
-in_addr_t inet_addr(const char* str)
+in_addr_t inet_addr(char const* str)
 {
     in_addr_t tmp {};
     int rc = inet_pton(AF_INET, str, &tmp);

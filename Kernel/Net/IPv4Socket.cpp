@@ -104,7 +104,7 @@ void IPv4Socket::get_peer_address(sockaddr* address, socklen_t* address_size)
     *address_size = sizeof(sockaddr_in);
 }
 
-KResult IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_t address_size)
+KResult IPv4Socket::bind(Userspace<sockaddr const*> user_address, socklen_t address_size)
 {
     VERIFY(setup_state() == SetupState::Unstarted);
     if (address_size != sizeof(sockaddr_in))
@@ -125,7 +125,7 @@ KResult IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_t addr
         }
     }
 
-    m_local_address = IPv4Address((const u8*)&address.sin_addr.s_addr);
+    m_local_address = IPv4Address((u8 const*)&address.sin_addr.s_addr);
     m_local_port = requested_local_port;
 
     dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket::bind {}({}) to {}:{}", class_name(), this, m_local_address, m_local_port);
@@ -149,12 +149,12 @@ KResult IPv4Socket::listen(size_t backlog)
     return protocol_listen(result.did_allocate);
 }
 
-KResult IPv4Socket::connect(FileDescription& description, Userspace<const sockaddr*> address, socklen_t address_size, ShouldBlock should_block)
+KResult IPv4Socket::connect(FileDescription& description, Userspace<sockaddr const*> address, socklen_t address_size, ShouldBlock should_block)
 {
     if (address_size != sizeof(sockaddr_in))
         return set_so_error(EINVAL);
     u16 sa_family_copy;
-    auto* user_address = reinterpret_cast<const sockaddr*>(address.unsafe_userspace_ptr());
+    auto* user_address = reinterpret_cast<sockaddr const*>(address.unsafe_userspace_ptr());
     if (!copy_from_user(&sa_family_copy, &user_address->sa_family, sizeof(u16)))
         return set_so_error(EFAULT);
     if (sa_family_copy != AF_INET)
@@ -163,10 +163,10 @@ KResult IPv4Socket::connect(FileDescription& description, Userspace<const sockad
         return set_so_error(EISCONN);
 
     sockaddr_in safe_address;
-    if (!copy_from_user(&safe_address, (const sockaddr_in*)user_address, sizeof(sockaddr_in)))
+    if (!copy_from_user(&safe_address, (sockaddr_in const*)user_address, sizeof(sockaddr_in)))
         return set_so_error(EFAULT);
 
-    m_peer_address = IPv4Address((const u8*)&safe_address.sin_addr.s_addr);
+    m_peer_address = IPv4Address((u8 const*)&safe_address.sin_addr.s_addr);
     if (m_peer_address == IPv4Address { 0, 0, 0, 0 })
         m_peer_address = IPv4Address { 127, 0, 0, 1 };
     m_peer_port = ntohs(safe_address.sin_port);
@@ -174,7 +174,7 @@ KResult IPv4Socket::connect(FileDescription& description, Userspace<const sockad
     return protocol_connect(description, should_block);
 }
 
-bool IPv4Socket::can_read(const FileDescription&, size_t) const
+bool IPv4Socket::can_read(FileDescription const&, size_t) const
 {
     if (m_role == Role::Listener)
         return can_accept();
@@ -183,7 +183,7 @@ bool IPv4Socket::can_read(const FileDescription&, size_t) const
     return m_can_read;
 }
 
-bool IPv4Socket::can_write(const FileDescription&, size_t) const
+bool IPv4Socket::can_write(FileDescription const&, size_t) const
 {
     return true;
 }
@@ -200,7 +200,7 @@ PortAllocationResult IPv4Socket::allocate_local_port_if_needed()
     return { m_local_port, true };
 }
 
-KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer& data, size_t data_length, [[maybe_unused]] int flags, Userspace<const sockaddr*> addr, socklen_t addr_length)
+KResultOr<size_t> IPv4Socket::sendto(FileDescription&, UserOrKernelBuffer const& data, size_t data_length, [[maybe_unused]] int flags, Userspace<sockaddr const*> addr, socklen_t addr_length)
 {
     MutexLocker locker(mutex());
 
@@ -209,7 +209,7 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
 
     if (addr) {
         sockaddr_in ia;
-        if (!copy_from_user(&ia, Userspace<const sockaddr_in*>(addr.ptr())))
+        if (!copy_from_user(&ia, Userspace<sockaddr_in const*>(addr.ptr())))
             return set_so_error(EFAULT);
 
         if (ia.sin_family != AF_INET) {
@@ -217,7 +217,7 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
             return set_so_error(EAFNOSUPPORT);
         }
 
-        m_peer_address = IPv4Address((const u8*)&ia.sin_addr.s_addr);
+        m_peer_address = IPv4Address((u8 const*)&ia.sin_addr.s_addr);
         m_peer_port = ntohs(ia.sin_port);
     }
 
@@ -410,7 +410,7 @@ KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKerne
     return nreceived;
 }
 
-bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, ReadonlyBytes packet, const Time& packet_timestamp)
+bool IPv4Socket::did_receive(IPv4Address const& source_address, u16 source_port, ReadonlyBytes packet, Time const& packet_timestamp)
 {
     MutexLocker locker(mutex());
 
@@ -458,7 +458,7 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
     return true;
 }
 
-String IPv4Socket::absolute_path(const FileDescription&) const
+String IPv4Socket::absolute_path(FileDescription const&) const
 {
     if (m_role == Role::None)
         return "socket";
@@ -490,7 +490,7 @@ String IPv4Socket::absolute_path(const FileDescription&) const
     return builder.to_string();
 }
 
-KResult IPv4Socket::setsockopt(int level, int option, Userspace<const void*> user_value, socklen_t user_value_size)
+KResult IPv4Socket::setsockopt(int level, int option, Userspace<void const*> user_value, socklen_t user_value_size)
 {
     if (level != IPPROTO_IP)
         return Socket::setsockopt(level, option, user_value, user_value_size);
@@ -500,7 +500,7 @@ KResult IPv4Socket::setsockopt(int level, int option, Userspace<const void*> use
         if (user_value_size < sizeof(int))
             return EINVAL;
         int value;
-        if (!copy_from_user(&value, static_ptr_cast<const int*>(user_value)))
+        if (!copy_from_user(&value, static_ptr_cast<int const*>(user_value)))
             return EFAULT;
         if (value < 0 || value > 255)
             return EINVAL;
@@ -511,7 +511,7 @@ KResult IPv4Socket::setsockopt(int level, int option, Userspace<const void*> use
         if (user_value_size != 1)
             return EINVAL;
         u8 value;
-        if (!copy_from_user(&value, static_ptr_cast<const u8*>(user_value)))
+        if (!copy_from_user(&value, static_ptr_cast<u8 const*>(user_value)))
             return EFAULT;
         if (value != 0 && value != 1)
             return EINVAL;
@@ -522,11 +522,11 @@ KResult IPv4Socket::setsockopt(int level, int option, Userspace<const void*> use
         if (user_value_size != sizeof(ip_mreq))
             return EINVAL;
         ip_mreq mreq;
-        if (!copy_from_user(&mreq, static_ptr_cast<const ip_mreq*>(user_value)))
+        if (!copy_from_user(&mreq, static_ptr_cast<ip_mreq const*>(user_value)))
             return EFAULT;
         if (mreq.imr_interface.s_addr != INADDR_ANY)
             return ENOTSUP;
-        IPv4Address address { (const u8*)&mreq.imr_multiaddr.s_addr };
+        IPv4Address address { (u8 const*)&mreq.imr_multiaddr.s_addr };
         if (!m_multicast_memberships.contains_slow(address))
             m_multicast_memberships.append(address);
         return KSuccess;
@@ -535,11 +535,11 @@ KResult IPv4Socket::setsockopt(int level, int option, Userspace<const void*> use
         if (user_value_size != sizeof(ip_mreq))
             return EINVAL;
         ip_mreq mreq;
-        if (!copy_from_user(&mreq, static_ptr_cast<const ip_mreq*>(user_value)))
+        if (!copy_from_user(&mreq, static_ptr_cast<ip_mreq const*>(user_value)))
             return EFAULT;
         if (mreq.imr_interface.s_addr != INADDR_ANY)
             return ENOTSUP;
-        IPv4Address address { (const u8*)&mreq.imr_multiaddr.s_addr };
+        IPv4Address address { (u8 const*)&mreq.imr_multiaddr.s_addr };
         m_multicast_memberships.remove_first_matching([&address](auto& a) { return a == address; });
         return KSuccess;
     }
@@ -570,7 +570,7 @@ KResult IPv4Socket::getsockopt(FileDescription& description, int level, int opti
     case IP_MULTICAST_LOOP: {
         if (size < 1)
             return EINVAL;
-        if (!copy_to_user(static_ptr_cast<u8*>(value), (const u8*)&m_multicast_loop))
+        if (!copy_to_user(static_ptr_cast<u8*>(value), (u8 const*)&m_multicast_loop))
             return EFAULT;
         size = 1;
         if (!copy_to_user(value_size, &size))
@@ -592,7 +592,7 @@ KResult IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> a
         if (!copy_from_user(&route, user_route))
             return EFAULT;
 
-        Userspace<const char*> user_rt_dev((FlatPtr)route.rt_dev);
+        Userspace<char const*> user_rt_dev((FlatPtr)route.rt_dev);
         auto ifname_or_error = try_copy_kstring_from_user(user_rt_dev, IFNAMSIZ);
         if (ifname_or_error.is_error())
             return ifname_or_error.error();

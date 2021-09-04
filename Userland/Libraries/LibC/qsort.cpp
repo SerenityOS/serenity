@@ -28,7 +28,7 @@ private:
 namespace AK {
 
 template<>
-inline void swap(const SizedObject& a, const SizedObject& b)
+inline void swap(SizedObject const& a, SizedObject const& b)
 {
     VERIFY(a.size() == b.size());
     const size_t size = a.size();
@@ -59,7 +59,7 @@ private:
     size_t m_element_size;
 };
 
-void qsort(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, const void*))
+void qsort(void* bot, size_t nmemb, size_t size, int (*compar)(void const*, void const*))
 {
     if (nmemb <= 1) {
         return;
@@ -67,10 +67,10 @@ void qsort(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, cons
 
     SizedObjectSlice slice { bot, size };
 
-    AK::dual_pivot_quick_sort(slice, 0, nmemb - 1, [=](const SizedObject& a, const SizedObject& b) { return compar(a.data(), b.data()) < 0; });
+    AK::dual_pivot_quick_sort(slice, 0, nmemb - 1, [=](SizedObject const& a, SizedObject const& b) { return compar(a.data(), b.data()) < 0; });
 }
 
-void qsort_r(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, const void*, void*), void* arg)
+void qsort_r(void* bot, size_t nmemb, size_t size, int (*compar)(void const*, void const*, void*), void* arg)
 {
     if (nmemb <= 1) {
         return;
@@ -78,5 +78,5 @@ void qsort_r(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, co
 
     SizedObjectSlice slice { bot, size };
 
-    AK::dual_pivot_quick_sort(slice, 0, nmemb - 1, [=](const SizedObject& a, const SizedObject& b) { return compar(a.data(), b.data(), arg) < 0; });
+    AK::dual_pivot_quick_sort(slice, 0, nmemb - 1, [=](SizedObject const& a, SizedObject const& b) { return compar(a.data(), b.data(), arg) < 0; });
 }

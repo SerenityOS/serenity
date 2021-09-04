@@ -1079,7 +1079,7 @@ UNMAP_AFTER_INIT RTL8168NetworkAdapter::~RTL8168NetworkAdapter()
 {
 }
 
-bool RTL8168NetworkAdapter::handle_irq(const RegisterState&)
+bool RTL8168NetworkAdapter::handle_irq(RegisterState const&)
 {
     bool was_handled = false;
     for (;;) {

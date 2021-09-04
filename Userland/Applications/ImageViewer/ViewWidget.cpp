@@ -225,7 +225,7 @@ void ViewWidget::mousewheel_event(GUI::MouseEvent& event)
     set_scale(new_scale);
 }
 
-void ViewWidget::load_from_file(const String& path)
+void ViewWidget::load_from_file(String const& path)
 {
     auto show_error = [&] {
         GUI::MessageBox::show(window(), String::formatted("Failed to open {}", path), "Cannot open image", GUI::MessageBox::Type::Error);
@@ -255,7 +255,7 @@ void ViewWidget::load_from_file(const String& path)
         on_image_change(m_bitmap);
 
     if (m_decoded_image->is_animated && m_decoded_image->frames.size() > 1) {
-        const auto& first_frame = m_decoded_image->frames[0];
+        auto const& first_frame = m_decoded_image->frames[0];
         m_timer->set_interval(first_frame.duration);
         m_timer->on_timeout = [this] { animate(); };
         m_timer->start();
@@ -321,7 +321,7 @@ void ViewWidget::animate()
 
     m_current_frame_index = (m_current_frame_index + 1) % m_decoded_image->frames.size();
 
-    const auto& current_frame = m_decoded_image->frames[m_current_frame_index];
+    auto const& current_frame = m_decoded_image->frames[m_current_frame_index];
     set_bitmap(current_frame.bitmap);
 
     if ((int)current_frame.duration != m_timer->interval()) {

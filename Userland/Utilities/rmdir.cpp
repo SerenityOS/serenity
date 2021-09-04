@@ -16,7 +16,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Vector<const char*> paths;
+    Vector<char const*> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(paths, "Directories to remove", "paths");

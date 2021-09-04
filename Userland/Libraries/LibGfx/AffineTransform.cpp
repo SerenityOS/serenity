@@ -60,7 +60,7 @@ AffineTransform& AffineTransform::scale(float sx, float sy)
     return *this;
 }
 
-AffineTransform& AffineTransform::scale(const FloatPoint& s)
+AffineTransform& AffineTransform::scale(FloatPoint const& s)
 {
     return scale(s.x(), s.y());
 }
@@ -74,7 +74,7 @@ AffineTransform& AffineTransform::set_scale(float sx, float sy)
     return *this;
 }
 
-AffineTransform& AffineTransform::set_scale(const FloatPoint& s)
+AffineTransform& AffineTransform::set_scale(FloatPoint const& s)
 {
     return set_scale(s.x(), s.y());
 }
@@ -86,7 +86,7 @@ AffineTransform& AffineTransform::translate(float tx, float ty)
     return *this;
 }
 
-AffineTransform& AffineTransform::translate(const FloatPoint& t)
+AffineTransform& AffineTransform::translate(FloatPoint const& t)
 {
     return translate(t.x(), t.y());
 }
@@ -98,12 +98,12 @@ AffineTransform& AffineTransform::set_translation(float tx, float ty)
     return *this;
 }
 
-AffineTransform& AffineTransform::set_translation(const FloatPoint& t)
+AffineTransform& AffineTransform::set_translation(FloatPoint const& t)
 {
     return set_translation(t.x(), t.y());
 }
 
-AffineTransform& AffineTransform::multiply(const AffineTransform& other)
+AffineTransform& AffineTransform::multiply(AffineTransform const& other)
 {
     AffineTransform result;
     result.m_values[0] = other.a() * a() + other.b() * c();
@@ -132,7 +132,7 @@ void AffineTransform::map(float unmapped_x, float unmapped_y, float& mapped_x, f
 }
 
 template<>
-IntPoint AffineTransform::map(const IntPoint& point) const
+IntPoint AffineTransform::map(IntPoint const& point) const
 {
     float mapped_x;
     float mapped_y;
@@ -141,7 +141,7 @@ IntPoint AffineTransform::map(const IntPoint& point) const
 }
 
 template<>
-FloatPoint AffineTransform::map(const FloatPoint& point) const
+FloatPoint AffineTransform::map(FloatPoint const& point) const
 {
     float mapped_x;
     float mapped_y;
@@ -150,7 +150,7 @@ FloatPoint AffineTransform::map(const FloatPoint& point) const
 }
 
 template<>
-IntSize AffineTransform::map(const IntSize& size) const
+IntSize AffineTransform::map(IntSize const& size) const
 {
     return {
         roundf(static_cast<float>(size.width()) * x_scale()),
@@ -159,7 +159,7 @@ IntSize AffineTransform::map(const IntSize& size) const
 }
 
 template<>
-FloatSize AffineTransform::map(const FloatSize& size) const
+FloatSize AffineTransform::map(FloatSize const& size) const
 {
     return { size.width() * x_scale(), size.height() * y_scale() };
 }
@@ -177,7 +177,7 @@ static T largest_of(T p1, T p2, T p3, T p4)
 }
 
 template<>
-FloatRect AffineTransform::map(const FloatRect& rect) const
+FloatRect AffineTransform::map(FloatRect const& rect) const
 {
     FloatPoint p1 = map(rect.top_left());
     FloatPoint p2 = map(rect.top_right().translated(1, 0));
@@ -191,7 +191,7 @@ FloatRect AffineTransform::map(const FloatRect& rect) const
 }
 
 template<>
-IntRect AffineTransform::map(const IntRect& rect) const
+IntRect AffineTransform::map(IntRect const& rect) const
 {
     return enclosing_int_rect(map(FloatRect(rect)));
 }

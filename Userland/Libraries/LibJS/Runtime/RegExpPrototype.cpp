@@ -78,7 +78,7 @@ static RegExpObject* regexp_object_from(VM& vm, GlobalObject& global_object)
     return static_cast<RegExpObject*>(this_object);
 }
 
-static String escape_regexp_pattern(const RegExpObject& regexp_object)
+static String escape_regexp_pattern(RegExpObject const& regexp_object)
 {
     auto pattern = regexp_object.pattern();
     if (pattern.is_empty())

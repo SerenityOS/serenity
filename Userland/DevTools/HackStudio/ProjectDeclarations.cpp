@@ -11,7 +11,7 @@ HackStudio::ProjectDeclarations& HackStudio::ProjectDeclarations::the()
     static ProjectDeclarations s_instance;
     return s_instance;
 }
-void HackStudio::ProjectDeclarations::set_declared_symbols(const String& filename, const Vector<GUI::AutocompleteProvider::Declaration>& declarations)
+void HackStudio::ProjectDeclarations::set_declared_symbols(String const& filename, const Vector<GUI::AutocompleteProvider::Declaration>& declarations)
 {
     m_document_to_declarations.set(filename, declarations);
     if (on_update)

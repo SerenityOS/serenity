@@ -15,7 +15,7 @@
 
 bool g_there_was_an_error = false;
 
-[[noreturn, gnu::format(printf, 1, 2)]] static void fatal_error(const char* format, ...)
+[[noreturn, gnu::format(printf, 1, 2)]] static void fatal_error(char const* format, ...)
 {
     fputs("\033[31m", stderr);
 
@@ -316,7 +316,7 @@ private:
 
 static OwnPtr<Condition> parse_complex_expression(char* argv[]);
 
-static bool should_treat_expression_as_single_string(const StringView& arg_after)
+static bool should_treat_expression_as_single_string(StringView const& arg_after)
 {
     return arg_after.is_null() || arg_after == "-a" || arg_after == "-o";
 }

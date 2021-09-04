@@ -406,7 +406,7 @@ TEST_CASE(parens_qualifier_questionmark)
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
-    const char* match_str;
+    char const* match_str;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
 
@@ -436,7 +436,7 @@ TEST_CASE(parens_qualifier_asterisk)
     regex_t regex;
     static constexpr int num_matches { 6 };
     regmatch_t matches[num_matches];
-    const char* match_str;
+    char const* match_str;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
 
@@ -482,7 +482,7 @@ TEST_CASE(parens_qualifier_asterisk_2)
     regex_t regex;
     static constexpr int num_matches { 6 };
     regmatch_t matches[num_matches];
-    const char* match_str;
+    char const* match_str;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
 
@@ -526,7 +526,7 @@ TEST_CASE(mulit_parens_qualifier_too_less_result_values)
     regex_t regex;
     static constexpr int num_matches { 4 };
     regmatch_t matches[num_matches];
-    const char* match_str;
+    char const* match_str;
 
     matches[3] = { -2, -2, 100 };
 
@@ -590,7 +590,7 @@ TEST_CASE(multi_parens_qualifier_questionmark)
     regex_t regex;
     static constexpr int num_matches { 8 };
     regmatch_t matches[num_matches];
-    const char* match_str;
+    char const* match_str;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
 
@@ -681,7 +681,7 @@ TEST_CASE(alternative_match_groups)
     regex_t regex;
     static constexpr int num_matches { 8 };
     regmatch_t matches[num_matches];
-    const char* match_str;
+    char const* match_str;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
 
@@ -787,7 +787,7 @@ TEST_CASE(parens_qualifier_exact)
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
-    const char* match_str;
+    char const* match_str;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
 
@@ -834,7 +834,7 @@ TEST_CASE(parens_qualifier_minimum)
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
-    const char* match_str;
+    char const* match_str;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
 
@@ -892,7 +892,7 @@ TEST_CASE(parens_qualifier_maximum)
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
-    const char* match_str;
+    char const* match_str;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
 

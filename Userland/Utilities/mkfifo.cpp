@@ -17,7 +17,7 @@ int main(int argc, char** argv)
     }
 
     mode_t mode = 0666;
-    Vector<const char*> paths;
+    Vector<char const*> paths;
 
     Core::ArgsParser args_parser;
     // FIXME: add -m for file modes

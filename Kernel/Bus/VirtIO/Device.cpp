@@ -138,37 +138,37 @@ void Device::notify_queue(u16 queue_index)
         config_write16(*m_notify_cfg, get_queue(queue_index).notify_offset() * m_notify_multiplier, queue_index);
 }
 
-u8 Device::config_read8(const Configuration& config, u32 offset)
+u8 Device::config_read8(Configuration const& config, u32 offset)
 {
     return mapping_for_bar(config.bar).read<u8>(config.offset + offset);
 }
 
-u16 Device::config_read16(const Configuration& config, u32 offset)
+u16 Device::config_read16(Configuration const& config, u32 offset)
 {
     return mapping_for_bar(config.bar).read<u16>(config.offset + offset);
 }
 
-u32 Device::config_read32(const Configuration& config, u32 offset)
+u32 Device::config_read32(Configuration const& config, u32 offset)
 {
     return mapping_for_bar(config.bar).read<u32>(config.offset + offset);
 }
 
-void Device::config_write8(const Configuration& config, u32 offset, u8 value)
+void Device::config_write8(Configuration const& config, u32 offset, u8 value)
 {
     mapping_for_bar(config.bar).write(config.offset + offset, value);
 }
 
-void Device::config_write16(const Configuration& config, u32 offset, u16 value)
+void Device::config_write16(Configuration const& config, u32 offset, u16 value)
 {
     mapping_for_bar(config.bar).write(config.offset + offset, value);
 }
 
-void Device::config_write32(const Configuration& config, u32 offset, u32 value)
+void Device::config_write32(Configuration const& config, u32 offset, u32 value)
 {
     mapping_for_bar(config.bar).write(config.offset + offset, value);
 }
 
-void Device::config_write64(const Configuration& config, u32 offset, u64 value)
+void Device::config_write64(Configuration const& config, u32 offset, u64 value)
 {
     mapping_for_bar(config.bar).write(config.offset + offset, value);
 }
@@ -361,7 +361,7 @@ u8 Device::isr_status()
     return config_read8(*m_isr_cfg, 0);
 }
 
-bool Device::handle_irq(const RegisterState&)
+bool Device::handle_irq(RegisterState const&)
 {
     u8 isr_type = isr_status();
     if ((isr_type & (QUEUE_INTERRUPT | DEVICE_CONFIG_INTERRUPT)) == 0) {

@@ -27,7 +27,7 @@ public:
     Optional<size_t> active_tab_index() const;
 
     Widget* active_widget() { return m_active_widget.ptr(); }
-    const Widget* active_widget() const { return m_active_widget.ptr(); }
+    Widget const* active_widget() const { return m_active_widget.ptr(); }
     void set_active_widget(Widget*);
     void set_tab_index(int);
 
@@ -36,11 +36,11 @@ public:
     GUI::Margins const& container_margins() const { return m_container_margins; }
     void set_container_margins(GUI::Margins const&);
 
-    void add_widget(const StringView&, Widget&);
+    void add_widget(StringView const&, Widget&);
     void remove_widget(Widget&);
 
     template<class T, class... Args>
-    T& add_tab(const StringView& title, Args&&... args)
+    T& add_tab(StringView const& title, Args&&... args)
     {
         auto t = T::construct(forward<Args>(args)...);
         add_widget(title, *t);
@@ -50,7 +50,7 @@ public:
     void remove_tab(Widget& tab) { remove_widget(tab); }
     void remove_all_tabs_except(Widget& tab);
 
-    void set_tab_title(Widget& tab, const StringView& title);
+    void set_tab_title(Widget& tab, StringView const& title);
     void set_tab_icon(Widget& tab, const Gfx::Bitmap*);
 
     void activate_next_tab();
@@ -72,7 +72,7 @@ public:
     Function<void(Widget&)> on_change;
     Function<void(Widget&)> on_middle_click;
     Function<void(Widget&)> on_tab_close_click;
-    Function<void(Widget&, const ContextMenuEvent&)> on_context_menu_request;
+    Function<void(Widget&, ContextMenuEvent const&)> on_context_menu_request;
 
 protected:
     TabWidget();

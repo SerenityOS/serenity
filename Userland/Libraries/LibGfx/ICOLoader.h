@@ -11,15 +11,15 @@
 
 namespace Gfx {
 
-RefPtr<Gfx::Bitmap> load_ico(const StringView& path);
-RefPtr<Gfx::Bitmap> load_ico_from_memory(const u8*, size_t);
+RefPtr<Gfx::Bitmap> load_ico(StringView const& path);
+RefPtr<Gfx::Bitmap> load_ico_from_memory(u8 const*, size_t);
 
 struct ICOLoadingContext;
 
 class ICOImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     virtual ~ICOImageDecoderPlugin() override;
-    ICOImageDecoderPlugin(const u8*, size_t);
+    ICOImageDecoderPlugin(u8 const*, size_t);
 
     virtual IntSize size() override;
     virtual RefPtr<Gfx::Bitmap> bitmap() override;

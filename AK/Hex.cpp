@@ -15,7 +15,7 @@
 
 namespace AK {
 
-Optional<ByteBuffer> decode_hex(const StringView& input)
+Optional<ByteBuffer> decode_hex(StringView const& input)
 {
     if ((input.length() % 2) != 0)
         return {};

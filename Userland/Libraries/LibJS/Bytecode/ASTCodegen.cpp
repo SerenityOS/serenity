@@ -43,7 +43,7 @@ void ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
                         generator.emit<Bytecode::Op::PutById>(Bytecode::Register::global_object(), generator.intern_string(id->string()));
                     },
                     [&](const NonnullRefPtr<BindingPattern>& binding) {
-                        binding->for_each_bound_name([&](const auto& name) {
+                        binding->for_each_bound_name([&](auto const& name) {
                             generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
                             generator.emit<Bytecode::Op::PutById>(Bytecode::Register::global_object(), generator.intern_string(name));
                         });
@@ -54,7 +54,7 @@ void ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
                         scope_variables_with_declaration_kind.set((size_t)generator.intern_string(id->string()).value(), { js_undefined(), declaration.declaration_kind() });
                     },
                     [&](const NonnullRefPtr<BindingPattern>& binding) {
-                        binding->for_each_bound_name([&](const auto& name) {
+                        binding->for_each_bound_name([&](auto const& name) {
                             scope_variables_with_declaration_kind.set((size_t)generator.intern_string(name).value(), { js_undefined(), declaration.declaration_kind() });
                         });
                     });
@@ -922,7 +922,7 @@ void CallExpression::generate_bytecode(Bytecode::Generator& generator) const
     } else if (is<SuperExpression>(*m_callee)) {
         TODO();
     } else if (is<MemberExpression>(*m_callee)) {
-        auto& member_expression = static_cast<const MemberExpression&>(*m_callee);
+        auto& member_expression = static_cast<MemberExpression const&>(*m_callee);
         if (is<SuperExpression>(member_expression.object())) {
             TODO();
         } else {

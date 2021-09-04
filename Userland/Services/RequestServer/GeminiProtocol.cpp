@@ -20,7 +20,7 @@ GeminiProtocol::~GeminiProtocol()
 {
 }
 
-OwnPtr<Request> GeminiProtocol::start_request(ClientConnection& client, const String&, const URL& url, const HashMap<String, String>&, ReadonlyBytes)
+OwnPtr<Request> GeminiProtocol::start_request(ClientConnection& client, String const&, URL const& url, const HashMap<String, String>&, ReadonlyBytes)
 {
     Gemini::GeminiRequest request;
     request.set_url(url);

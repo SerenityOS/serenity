@@ -13,7 +13,7 @@
 
 namespace Gfx {
 
-ShareableBitmap::ShareableBitmap(const Bitmap& bitmap)
+ShareableBitmap::ShareableBitmap(Bitmap const& bitmap)
     : m_bitmap(bitmap.to_bitmap_backed_by_anonymous_buffer())
 {
 }

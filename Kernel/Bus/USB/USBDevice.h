@@ -40,7 +40,7 @@ public:
 
     u8 address() const { return m_address; }
 
-    const USBDeviceDescriptor& device_descriptor() const { return m_device_descriptor; }
+    USBDeviceDescriptor const& device_descriptor() const { return m_device_descriptor; }
 
     USBController& controller() { return *m_controller; }
     USBController const& controller() const { return *m_controller; }

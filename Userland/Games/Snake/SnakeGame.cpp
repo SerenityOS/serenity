@@ -44,7 +44,7 @@ void SnakeGame::reset()
     update();
 }
 
-bool SnakeGame::is_available(const Coordinate& coord)
+bool SnakeGame::is_available(Coordinate const& coord)
 {
     for (size_t i = 0; i < m_tail.size(); ++i) {
         if (m_tail[i] == coord)
@@ -174,7 +174,7 @@ void SnakeGame::keydown_event(GUI::KeyEvent& event)
     }
 }
 
-Gfx::IntRect SnakeGame::cell_rect(const Coordinate& coord) const
+Gfx::IntRect SnakeGame::cell_rect(Coordinate const& coord) const
 {
     auto game_rect = frame_inner_rect();
     auto cell_size = Gfx::IntSize(game_rect.width() / m_columns, game_rect.height() / m_rows);

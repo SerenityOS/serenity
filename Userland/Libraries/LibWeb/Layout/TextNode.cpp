@@ -26,7 +26,7 @@ TextNode::~TextNode()
 {
 }
 
-static bool is_all_whitespace(const StringView& string)
+static bool is_all_whitespace(StringView const& string)
 {
     for (size_t i = 0; i < string.length(); ++i) {
         if (!is_ascii_space(string[i]))
@@ -70,7 +70,7 @@ void TextNode::paint_text_decoration(Gfx::Painter& painter, LineBoxFragment cons
     painter.draw_line(line_start_point, line_end_point, computed_values().color());
 }
 
-void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& fragment, PaintPhase phase) const
+void TextNode::paint_fragment(PaintContext& context, LineBoxFragment const& fragment, PaintPhase phase) const
 {
     auto& painter = context.painter();
 
@@ -108,7 +108,7 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
     }
 }
 
-void TextNode::paint_cursor_if_needed(PaintContext& context, const LineBoxFragment& fragment) const
+void TextNode::paint_cursor_if_needed(PaintContext& context, LineBoxFragment const& fragment) const
 {
     if (!browsing_context().is_focused_context())
         return;

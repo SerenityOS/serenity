@@ -16,12 +16,12 @@
 
 constexpr char TESTS_ROOT_DIR[] = "/home/anon/cpp-tests/preprocessor";
 
-static String read_all(const String& path)
+static String read_all(String const& path)
 {
     auto result = Core::File::open(path, Core::OpenMode::ReadOnly);
     VERIFY(!result.is_error());
     auto content = result.value()->read_all();
-    return { reinterpret_cast<const char*>(content.data()), content.size() };
+    return { reinterpret_cast<char const*>(content.data()), content.size() };
 }
 
 TEST_CASE(test_regression)

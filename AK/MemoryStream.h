@@ -126,7 +126,7 @@ public:
     ReadonlyBytes bytes() const { return { data(), size() }; }
     Bytes bytes() { return { data(), size() }; }
 
-    const u8* data() const { return m_bytes.data(); }
+    u8 const* data() const { return m_bytes.data(); }
     u8* data() { return m_bytes.data(); }
 
     size_t size() const { return m_offset; }

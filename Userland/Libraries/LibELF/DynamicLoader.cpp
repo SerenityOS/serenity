@@ -26,7 +26,7 @@
 #include <unistd.h>
 
 #ifndef __serenity__
-static void* mmap_with_name(void* addr, size_t length, int prot, int flags, int fd, off_t offset, const char*)
+static void* mmap_with_name(void* addr, size_t length, int prot, int flags, int fd, off_t offset, char const*)
 {
     return mmap(addr, length, prot, flags, fd, offset);
 }
@@ -86,7 +86,7 @@ DynamicLoader::~DynamicLoader()
     }
 }
 
-const DynamicObject& DynamicLoader::dynamic_object() const
+DynamicObject const& DynamicLoader::dynamic_object() const
 {
     if (!m_cached_dynamic_object) {
         VirtualAddress dynamic_section_address;
@@ -235,7 +235,7 @@ void DynamicLoader::load_stage_4()
 
 void DynamicLoader::do_lazy_relocations()
 {
-    for (const auto& relocation : m_unresolved_relocations) {
+    for (auto const& relocation : m_unresolved_relocations) {
         if (auto res = do_relocation(relocation, ShouldInitializeWeak::Yes); res != RelocationResult::Success) {
             dbgln("Loader.so: {} unresolved symbol '{}'", m_filename, relocation.symbol().name());
             VERIFY_NOT_REACHED();
@@ -533,14 +533,14 @@ ssize_t DynamicLoader::negative_offset_from_tls_block_end(ssize_t tls_offset, si
 
 void DynamicLoader::copy_initial_tls_data_into(ByteBuffer& buffer) const
 {
-    const u8* tls_data = nullptr;
+    u8 const* tls_data = nullptr;
     size_t tls_size_in_image = 0;
 
     m_elf_image.for_each_program_header([this, &tls_data, &tls_size_in_image](ELF::Image::ProgramHeader program_header) {
         if (program_header.type() != PT_TLS)
             return IterationDecision::Continue;
 
-        tls_data = (const u8*)m_file_data + program_header.offset();
+        tls_data = (u8 const*)m_file_data + program_header.offset();
         tls_size_in_image = program_header.size_in_image();
         return IterationDecision::Break;
     });

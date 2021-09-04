@@ -21,14 +21,14 @@ public:
     Utf8CodePointIterator() = default;
     ~Utf8CodePointIterator() = default;
 
-    bool operator==(const Utf8CodePointIterator&) const;
-    bool operator!=(const Utf8CodePointIterator&) const;
+    bool operator==(Utf8CodePointIterator const&) const;
+    bool operator!=(Utf8CodePointIterator const&) const;
     Utf8CodePointIterator& operator++();
     u32 operator*() const;
     // NOTE: This returns {} if the peek is at or past EOF.
     Optional<u32> peek(size_t offset = 0) const;
 
-    ssize_t operator-(const Utf8CodePointIterator& other) const
+    ssize_t operator-(Utf8CodePointIterator const& other) const
     {
         return m_ptr - other.m_ptr;
     }
@@ -53,12 +53,12 @@ public:
     using Iterator = Utf8CodePointIterator;
 
     Utf8View() = default;
-    explicit Utf8View(const String&);
-    explicit Utf8View(const StringView&);
-    explicit Utf8View(const char*);
+    explicit Utf8View(String const&);
+    explicit Utf8View(StringView const&);
+    explicit Utf8View(char const*);
     ~Utf8View() = default;
 
-    const StringView& as_string() const { return m_string; }
+    StringView const& as_string() const { return m_string; }
 
     Utf8CodePointIterator begin() const;
     Utf8CodePointIterator end() const;
@@ -66,7 +66,7 @@ public:
 
     const unsigned char* bytes() const { return begin_ptr(); }
     size_t byte_length() const { return m_string.length(); }
-    size_t byte_offset_of(const Utf8CodePointIterator&) const;
+    size_t byte_offset_of(Utf8CodePointIterator const&) const;
     size_t byte_offset_of(size_t code_point_offset) const;
 
     Utf8View substring_view(size_t byte_offset, size_t byte_length) const;
@@ -76,12 +76,12 @@ public:
 
     bool is_empty() const { return m_string.is_empty(); }
     bool is_null() const { return m_string.is_null(); }
-    bool starts_with(const Utf8View&) const;
+    bool starts_with(Utf8View const&) const;
     bool contains(u32) const;
 
-    Utf8View trim(const Utf8View& characters, TrimMode mode = TrimMode::Both) const;
+    Utf8View trim(Utf8View const& characters, TrimMode mode = TrimMode::Both) const;
 
-    size_t iterator_offset(const Utf8CodePointIterator& it) const
+    size_t iterator_offset(Utf8CodePointIterator const& it) const
     {
         return byte_offset_of(it);
     }

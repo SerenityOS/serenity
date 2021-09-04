@@ -12,7 +12,7 @@
 
 namespace Markdown {
 
-static String unescape(const StringView& text)
+static String unescape(StringView const& text)
 {
     StringBuilder builder;
     for (size_t i = 0; i < text.length(); ++i) {
@@ -48,7 +48,7 @@ String Text::render_to_html() const
             { "b", &Style::strong },
             { "code", &Style::code }
         };
-        auto it = open_tags.find_if([&](const String& open_tag) {
+        auto it = open_tags.find_if([&](String const& open_tag) {
             if (open_tag == "a" && current_style.href != span.style.href)
                 return true;
             if (open_tag == "img" && current_style.img != span.style.img)
@@ -167,7 +167,7 @@ String Text::render_for_terminal() const
     return builder.build();
 }
 
-Optional<Text> Text::parse(const StringView& str)
+Optional<Text> Text::parse(StringView const& str)
 {
     Style current_style;
     size_t current_span_start = 0;

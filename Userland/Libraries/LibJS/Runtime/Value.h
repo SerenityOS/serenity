@@ -133,31 +133,31 @@ public:
         m_value.as_i32 = value;
     }
 
-    Value(const Object* object)
+    Value(Object const* object)
         : m_type(object ? Type::Object : Type::Null)
     {
         m_value.as_object = const_cast<Object*>(object);
     }
 
-    Value(const PrimitiveString* string)
+    Value(PrimitiveString const* string)
         : m_type(Type::String)
     {
         m_value.as_string = const_cast<PrimitiveString*>(string);
     }
 
-    Value(const Symbol* symbol)
+    Value(Symbol const* symbol)
         : m_type(Type::Symbol)
     {
         m_value.as_symbol = const_cast<Symbol*>(symbol);
     }
 
-    Value(const Accessor* accessor)
+    Value(Accessor const* accessor)
         : m_type(Type::Accessor)
     {
         m_value.as_accessor = const_cast<Accessor*>(accessor);
     }
 
-    Value(const BigInt* bigint)
+    Value(BigInt const* bigint)
         : m_type(Type::BigInt)
     {
         m_value.as_bigint = const_cast<BigInt*>(bigint);
@@ -190,7 +190,7 @@ public:
         return *m_value.as_object;
     }
 
-    const Object& as_object() const
+    Object const& as_object() const
     {
         VERIFY(type() == Type::Object);
         return *m_value.as_object;
@@ -202,7 +202,7 @@ public:
         return *m_value.as_string;
     }
 
-    const PrimitiveString& as_string() const
+    PrimitiveString const& as_string() const
     {
         VERIFY(is_string());
         return *m_value.as_string;
@@ -214,7 +214,7 @@ public:
         return *m_value.as_symbol;
     }
 
-    const Symbol& as_symbol() const
+    Symbol const& as_symbol() const
     {
         VERIFY(is_symbol());
         return *m_value.as_symbol;

@@ -7,8 +7,8 @@ posix\_spawn - launch a new process
 ```**c++
 #include <spawn.h>
 
-int posix_spawn(pid_t* pid, const char* executable_path, const posix_spawn_file_actions_t*, const posix_spawnattr_t*, char* const argv[], char* const envp[]);
-int posix_spawnp(pid_t* pid, const char* executable_path, const posix_spawn_file_actions_t*, const posix_spawnattr_t*, char* const argv[], char* const envp[]);
+int posix_spawn(pid_t* pid, char const* executable_path, posix_spawn_file_actions_t const*, posix_spawnattr_t const*, char* const argv[], char* const envp[]);
+int posix_spawnp(pid_t* pid, char const* executable_path, posix_spawn_file_actions_t const*, posix_spawnattr_t const*, char* const argv[], char* const envp[]);
 ```
 
 ## Description
@@ -53,7 +53,7 @@ To make the child process use the parent's environment, it passes `environ` from
 
 int main()
 {
-    const char* argv[] = { "Calculator", nullptr };
+    char const* argv[] = { "Calculator", nullptr };
     pid_t child_pid;
     if ((errno = posix_spawn(&child_pid, "/bin/Calculator", nullptr, nullptr, const_cast<char**>(argv), environ)))
         perror("posix_spawn");

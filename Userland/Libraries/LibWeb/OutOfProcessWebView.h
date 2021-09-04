@@ -24,12 +24,12 @@ public:
     virtual ~OutOfProcessWebView() override;
 
     URL url() const { return m_url; }
-    void load(const URL&);
+    void load(URL const&);
 
-    void load_html(const StringView&, const URL&);
+    void load_html(StringView const&, URL const&);
     void load_empty_document();
 
-    void debug_request(const String& request, const String& argument = {});
+    void debug_request(String const& request, String const& argument = {});
     void get_source();
 
     void inspect_dom_tree();
@@ -42,7 +42,7 @@ public:
     i32 get_hovered_node_id();
 
     void js_console_initialize();
-    void js_console_input(const String& js_source);
+    void js_console_input(String const& js_source);
 
     void run_javascript(StringView);
 
@@ -54,30 +54,30 @@ public:
     void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, const Gfx::IntRect&);
     void notify_server_did_change_selection(Badge<WebContentClient>);
     void notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor);
-    void notify_server_did_change_title(Badge<WebContentClient>, const String&);
+    void notify_server_did_change_title(Badge<WebContentClient>, String const&);
     void notify_server_did_request_scroll(Badge<WebContentClient>, int);
     void notify_server_did_request_scroll_into_view(Badge<WebContentClient>, const Gfx::IntRect&);
-    void notify_server_did_enter_tooltip_area(Badge<WebContentClient>, const Gfx::IntPoint&, const String&);
+    void notify_server_did_enter_tooltip_area(Badge<WebContentClient>, const Gfx::IntPoint&, String const&);
     void notify_server_did_leave_tooltip_area(Badge<WebContentClient>);
-    void notify_server_did_hover_link(Badge<WebContentClient>, const URL&);
+    void notify_server_did_hover_link(Badge<WebContentClient>, URL const&);
     void notify_server_did_unhover_link(Badge<WebContentClient>);
-    void notify_server_did_click_link(Badge<WebContentClient>, const URL&, const String& target, unsigned modifiers);
-    void notify_server_did_middle_click_link(Badge<WebContentClient>, const URL&, const String& target, unsigned modifiers);
-    void notify_server_did_start_loading(Badge<WebContentClient>, const URL&);
-    void notify_server_did_finish_loading(Badge<WebContentClient>, const URL&);
+    void notify_server_did_click_link(Badge<WebContentClient>, URL const&, String const& target, unsigned modifiers);
+    void notify_server_did_middle_click_link(Badge<WebContentClient>, URL const&, String const& target, unsigned modifiers);
+    void notify_server_did_start_loading(Badge<WebContentClient>, URL const&);
+    void notify_server_did_finish_loading(Badge<WebContentClient>, URL const&);
     void notify_server_did_request_context_menu(Badge<WebContentClient>, const Gfx::IntPoint&);
-    void notify_server_did_request_link_context_menu(Badge<WebContentClient>, const Gfx::IntPoint&, const URL&, const String& target, unsigned modifiers);
-    void notify_server_did_request_image_context_menu(Badge<WebContentClient>, const Gfx::IntPoint&, const URL&, const String& target, unsigned modifiers, const Gfx::ShareableBitmap&);
-    void notify_server_did_request_alert(Badge<WebContentClient>, const String& message);
-    bool notify_server_did_request_confirm(Badge<WebContentClient>, const String& message);
-    String notify_server_did_request_prompt(Badge<WebContentClient>, const String& message, const String& default_);
-    void notify_server_did_get_source(const URL& url, const String& source);
-    void notify_server_did_get_dom_tree(const String& dom_tree);
+    void notify_server_did_request_link_context_menu(Badge<WebContentClient>, const Gfx::IntPoint&, URL const&, String const& target, unsigned modifiers);
+    void notify_server_did_request_image_context_menu(Badge<WebContentClient>, const Gfx::IntPoint&, URL const&, String const& target, unsigned modifiers, const Gfx::ShareableBitmap&);
+    void notify_server_did_request_alert(Badge<WebContentClient>, String const& message);
+    bool notify_server_did_request_confirm(Badge<WebContentClient>, String const& message);
+    String notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_);
+    void notify_server_did_get_source(URL const& url, String const& source);
+    void notify_server_did_get_dom_tree(String const& dom_tree);
     void notify_server_did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style);
-    void notify_server_did_js_console_output(const String& method, const String& line);
+    void notify_server_did_js_console_output(String const& method, String const& line);
     void notify_server_did_change_favicon(const Gfx::Bitmap& favicon);
-    String notify_server_did_request_cookie(Badge<WebContentClient>, const URL& url, Cookie::Source source);
-    void notify_server_did_set_cookie(Badge<WebContentClient>, const URL& url, const Cookie::ParsedCookie& cookie, Cookie::Source source);
+    String notify_server_did_request_cookie(Badge<WebContentClient>, URL const& url, Cookie::Source source);
+    void notify_server_did_set_cookie(Badge<WebContentClient>, URL const& url, const Cookie::ParsedCookie& cookie, Cookie::Source source);
 
 private:
     OutOfProcessWebView();

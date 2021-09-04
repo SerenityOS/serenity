@@ -20,7 +20,7 @@ public:
     Function<void(bool)> on_checked;
 
     void set_text(String);
-    const String& text() const { return m_text; }
+    String const& text() const { return m_text; }
 
     bool is_exclusive() const { return m_exclusive; }
     void set_exclusive(bool b) { m_exclusive = b; }

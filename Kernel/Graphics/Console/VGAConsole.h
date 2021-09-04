@@ -22,7 +22,7 @@ public:
     };
 
 public:
-    static NonnullRefPtr<VGAConsole> initialize(const VGACompatibleAdapter&, Mode, size_t width, size_t height);
+    static NonnullRefPtr<VGAConsole> initialize(VGACompatibleAdapter const&, Mode, size_t width, size_t height);
 
     virtual bool is_hardware_paged_capable() const override { return false; }
     virtual bool has_hardware_cursor() const override { return false; }
@@ -31,7 +31,7 @@ public:
     virtual ~VGAConsole() = default;
 
 protected:
-    VGAConsole(const VGACompatibleAdapter&, Mode, size_t width, size_t height);
+    VGAConsole(VGACompatibleAdapter const&, Mode, size_t width, size_t height);
 
     NonnullOwnPtr<Memory::Region> m_vga_region;
     NonnullRefPtr<VGACompatibleAdapter> m_adapter;

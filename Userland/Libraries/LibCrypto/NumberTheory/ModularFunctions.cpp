@@ -11,7 +11,7 @@
 namespace Crypto {
 namespace NumberTheory {
 
-UnsignedBigInteger ModularInverse(const UnsignedBigInteger& a_, const UnsignedBigInteger& b)
+UnsignedBigInteger ModularInverse(UnsignedBigInteger const& a_, UnsignedBigInteger const& b)
 {
     if (b == 1)
         return { 1 };
@@ -32,7 +32,7 @@ UnsignedBigInteger ModularInverse(const UnsignedBigInteger& a_, const UnsignedBi
     return result;
 }
 
-UnsignedBigInteger ModularPower(const UnsignedBigInteger& b, const UnsignedBigInteger& e, const UnsignedBigInteger& m)
+UnsignedBigInteger ModularPower(UnsignedBigInteger const& b, UnsignedBigInteger const& e, UnsignedBigInteger const& m)
 {
     if (m == 1)
         return 0;
@@ -68,7 +68,7 @@ UnsignedBigInteger ModularPower(const UnsignedBigInteger& b, const UnsignedBigIn
     return result;
 }
 
-UnsignedBigInteger GCD(const UnsignedBigInteger& a, const UnsignedBigInteger& b)
+UnsignedBigInteger GCD(UnsignedBigInteger const& a, UnsignedBigInteger const& b)
 {
     UnsignedBigInteger temp_a { a };
     UnsignedBigInteger temp_b { b };
@@ -85,7 +85,7 @@ UnsignedBigInteger GCD(const UnsignedBigInteger& a, const UnsignedBigInteger& b)
     return output;
 }
 
-UnsignedBigInteger LCM(const UnsignedBigInteger& a, const UnsignedBigInteger& b)
+UnsignedBigInteger LCM(UnsignedBigInteger const& a, UnsignedBigInteger const& b)
 {
     UnsignedBigInteger temp_a { a };
     UnsignedBigInteger temp_b { b };
@@ -158,7 +158,7 @@ static bool MR_primality_test(UnsignedBigInteger n, const Vector<UnsignedBigInte
     return true; // "probably prime"
 }
 
-UnsignedBigInteger random_number(const UnsignedBigInteger& min, const UnsignedBigInteger& max_excluded)
+UnsignedBigInteger random_number(UnsignedBigInteger const& min, UnsignedBigInteger const& max_excluded)
 {
     VERIFY(min < max_excluded);
     auto range = max_excluded.minus(min);
@@ -181,7 +181,7 @@ UnsignedBigInteger random_number(const UnsignedBigInteger& min, const UnsignedBi
     return divmod.remainder.plus(min);
 }
 
-bool is_probably_prime(const UnsignedBigInteger& p)
+bool is_probably_prime(UnsignedBigInteger const& p)
 {
     // Is it a small number?
     if (p < 49) {

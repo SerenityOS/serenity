@@ -18,7 +18,7 @@ public:
     virtual bool unref() const override;
     virtual ~SlavePTY() override;
 
-    void on_master_write(const UserOrKernelBuffer&, size_t);
+    void on_master_write(UserOrKernelBuffer const&, size_t);
     unsigned index() const { return m_index; }
 
     time_t time_of_last_write() const { return m_time_of_last_write; }
@@ -28,13 +28,13 @@ public:
 private:
     // ^TTY
     virtual String const& tty_name() const override;
-    virtual KResultOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) override;
+    virtual KResultOr<size_t> on_tty_write(UserOrKernelBuffer const&, size_t) override;
     virtual void echo(u8) override;
 
     // ^CharacterDevice
-    virtual bool can_read(const FileDescription&, size_t) const override;
+    virtual bool can_read(FileDescription const&, size_t) const override;
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual bool can_write(const FileDescription&, size_t) const override;
+    virtual bool can_write(FileDescription const&, size_t) const override;
     virtual StringView class_name() const override { return "SlavePTY"; }
     virtual KResult close() override;
 

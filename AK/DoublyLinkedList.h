@@ -15,8 +15,8 @@ namespace AK {
 template<typename ListType, typename ElementType>
 class DoublyLinkedListIterator {
 public:
-    bool operator!=(const DoublyLinkedListIterator& other) const { return m_node != other.m_node; }
-    bool operator==(const DoublyLinkedListIterator& other) const { return m_node == other.m_node; }
+    bool operator!=(DoublyLinkedListIterator const& other) const { return m_node != other.m_node; }
+    bool operator==(DoublyLinkedListIterator const& other) const { return m_node == other.m_node; }
     DoublyLinkedListIterator& operator++()
     {
         m_node = m_node->next;
@@ -74,7 +74,7 @@ public:
         VERIFY(m_head);
         return m_head->value;
     }
-    [[nodiscard]] const T& first() const
+    [[nodiscard]] T const& first() const
     {
         VERIFY(m_head);
         return m_head->value;
@@ -84,7 +84,7 @@ public:
         VERIFY(m_head);
         return m_tail->value;
     }
-    [[nodiscard]] const T& last() const
+    [[nodiscard]] T const& last() const
     {
         VERIFY(m_head);
         return m_tail->value;
@@ -127,7 +127,7 @@ public:
         m_head = node;
     }
 
-    [[nodiscard]] bool contains_slow(const T& value) const
+    [[nodiscard]] bool contains_slow(T const& value) const
     {
         return find(value) != end();
     }
@@ -142,12 +142,12 @@ public:
     ConstIterator begin() const { return ConstIterator(m_head); }
     ConstIterator end() const { return ConstIterator::universal_end(); }
 
-    ConstIterator find(const T& value) const
+    ConstIterator find(T const& value) const
     {
         return AK::find(begin(), end(), value);
     }
 
-    Iterator find(const T& value)
+    Iterator find(T const& value)
     {
         return AK::find(begin(), end(), value);
     }

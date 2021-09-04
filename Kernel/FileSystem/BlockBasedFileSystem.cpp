@@ -84,7 +84,7 @@ public:
         return new_entry;
     }
 
-    const CacheEntry* entries() const { return (const CacheEntry*)m_entries->data(); }
+    CacheEntry const* entries() const { return (CacheEntry const*)m_entries->data(); }
     CacheEntry* entries() { return (CacheEntry*)m_entries->data(); }
 
     template<typename Callback>
@@ -136,7 +136,7 @@ KResult BlockBasedFileSystem::initialize()
     return KSuccess;
 }
 
-KResult BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKernelBuffer& data, size_t count, size_t offset, bool allow_cache)
+KResult BlockBasedFileSystem::write_block(BlockIndex index, UserOrKernelBuffer const& data, size_t count, size_t offset, bool allow_cache)
 {
     VERIFY(m_logical_block_size);
     VERIFY(offset + count <= block_size());
@@ -178,7 +178,7 @@ bool BlockBasedFileSystem::raw_read(BlockIndex index, UserOrKernelBuffer& buffer
     return true;
 }
 
-bool BlockBasedFileSystem::raw_write(BlockIndex index, const UserOrKernelBuffer& buffer)
+bool BlockBasedFileSystem::raw_write(BlockIndex index, UserOrKernelBuffer const& buffer)
 {
     auto base_offset = index.value() * m_logical_block_size;
     auto nwritten = file_description().write(base_offset, buffer, m_logical_block_size);
@@ -198,7 +198,7 @@ bool BlockBasedFileSystem::raw_read_blocks(BlockIndex index, size_t count, UserO
     return true;
 }
 
-bool BlockBasedFileSystem::raw_write_blocks(BlockIndex index, size_t count, const UserOrKernelBuffer& buffer)
+bool BlockBasedFileSystem::raw_write_blocks(BlockIndex index, size_t count, UserOrKernelBuffer const& buffer)
 {
     auto current = buffer;
     for (auto block = index.value(); block < (index.value() + count); block++) {
@@ -209,7 +209,7 @@ bool BlockBasedFileSystem::raw_write_blocks(BlockIndex index, size_t count, cons
     return true;
 }
 
-KResult BlockBasedFileSystem::write_blocks(BlockIndex index, unsigned count, const UserOrKernelBuffer& data, bool allow_cache)
+KResult BlockBasedFileSystem::write_blocks(BlockIndex index, unsigned count, UserOrKernelBuffer const& data, bool allow_cache)
 {
     VERIFY(m_logical_block_size);
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_blocks {}, count={}", index, count);

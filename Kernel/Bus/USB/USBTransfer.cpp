@@ -31,7 +31,7 @@ Transfer::~Transfer()
 {
 }
 
-void Transfer::set_setup_packet(const USBRequestData& request)
+void Transfer::set_setup_packet(USBRequestData const& request)
 {
     // Kind of a nasty hack... Because the kernel isn't in the business
     // of handing out physical pointers that we can directly write to,

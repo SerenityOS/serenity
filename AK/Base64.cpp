@@ -40,7 +40,7 @@ static constexpr auto make_lookup_table()
     return table;
 }
 
-size_t calculate_base64_decoded_length(const StringView& input)
+size_t calculate_base64_decoded_length(StringView const& input)
 {
     return input.length() * 3 / 4;
 }
@@ -50,7 +50,7 @@ size_t calculate_base64_encoded_length(ReadonlyBytes input)
     return ((4 * input.size() / 3) + 3) & ~3;
 }
 
-ByteBuffer decode_base64(const StringView& input)
+ByteBuffer decode_base64(StringView const& input)
 {
     auto get = [&](const size_t offset, bool* is_padding = nullptr) -> u8 {
         constexpr auto table = make_lookup_table();

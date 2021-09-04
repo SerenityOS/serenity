@@ -15,7 +15,7 @@ namespace WindowServer {
 
 class Cursor : public RefCounted<Cursor> {
 public:
-    static RefPtr<Cursor> create(const StringView&, const StringView&);
+    static RefPtr<Cursor> create(StringView const&, StringView const&);
     static NonnullRefPtr<Cursor> create(NonnullRefPtr<Gfx::Bitmap>&&, int);
     static RefPtr<Cursor> create(Gfx::StandardCursor);
     ~Cursor() = default;
@@ -49,7 +49,7 @@ private:
     Cursor() { }
     Cursor(NonnullRefPtr<Gfx::Bitmap>&&, int, const Gfx::CursorParams&);
 
-    bool load(const StringView&, const StringView&);
+    bool load(StringView const&, StringView const&);
     void update_rect_if_animated();
 
     HashMap<int, NonnullRefPtr<Gfx::Bitmap>> m_bitmaps;

@@ -99,7 +99,7 @@ public:
     }
 
     template<typename... Args>
-    [[nodiscard]] bool read_from_buffer(const UserOrKernelBuffer& buffer, Args... args)
+    [[nodiscard]] bool read_from_buffer(UserOrKernelBuffer const& buffer, Args... args)
     {
         if (in_target_context(buffer))
             return buffer.read(forward<Args>(args)...);
@@ -108,7 +108,7 @@ public:
     }
 
     template<size_t BUFFER_BYTES, typename... Args>
-    [[nodiscard]] KResultOr<size_t> read_from_buffer_buffered(const UserOrKernelBuffer& buffer, Args... args)
+    [[nodiscard]] KResultOr<size_t> read_from_buffer_buffered(UserOrKernelBuffer const& buffer, Args... args)
     {
         if (in_target_context(buffer))
             return buffer.read_buffered<BUFFER_BYTES>(forward<Args>(args)...);
@@ -125,7 +125,7 @@ private:
     void sub_request_finished(AsyncDeviceRequest&);
     void request_finished();
 
-    [[nodiscard]] bool in_target_context(const UserOrKernelBuffer& buffer) const
+    [[nodiscard]] bool in_target_context(UserOrKernelBuffer const& buffer) const
     {
         if (buffer.is_kernel_buffer())
             return true;

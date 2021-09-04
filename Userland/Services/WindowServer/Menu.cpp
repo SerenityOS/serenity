@@ -24,7 +24,7 @@
 
 namespace WindowServer {
 
-u32 find_ampersand_shortcut_character(const StringView& string)
+u32 find_ampersand_shortcut_character(StringView const& string)
 {
     Utf8View utf8_view { string };
     for (auto it = utf8_view.begin(); it != utf8_view.end(); ++it) {
@@ -55,7 +55,7 @@ const Gfx::Font& Menu::font() const
     return Gfx::FontDatabase::default_font();
 }
 
-static const char* s_checked_bitmap_data = {
+static char const* s_checked_bitmap_data = {
     "         "
     "       # "
     "      ## "
@@ -67,7 +67,7 @@ static const char* s_checked_bitmap_data = {
     "         "
 };
 
-static const char* s_submenu_arrow_bitmap_data = {
+static char const* s_submenu_arrow_bitmap_data = {
     "         "
     "   #     "
     "   ##    "
@@ -355,7 +355,7 @@ void Menu::descend_into_submenu_at_hovered_item()
     VERIFY(submenu->hovered_item()->type() != MenuItem::Separator);
 }
 
-void Menu::handle_mouse_move_event(const MouseEvent& mouse_event)
+void Menu::handle_mouse_move_event(MouseEvent const& mouse_event)
 {
     VERIFY(menu_window());
     MenuManager::the().set_current_menu(this);
@@ -380,7 +380,7 @@ void Menu::handle_mouse_move_event(const MouseEvent& mouse_event)
 void Menu::event(Core::Event& event)
 {
     if (event.type() == Event::MouseMove) {
-        handle_mouse_move_event(static_cast<const MouseEvent&>(event));
+        handle_mouse_move_event(static_cast<MouseEvent const&>(event));
         return;
     }
 
@@ -391,7 +391,7 @@ void Menu::event(Core::Event& event)
 
     if (event.type() == Event::MouseWheel && is_scrollable()) {
         VERIFY(menu_window());
-        auto& mouse_event = static_cast<const MouseEvent&>(event);
+        auto& mouse_event = static_cast<MouseEvent const&>(event);
         auto previous_scroll_offset = m_scroll_offset;
         m_scroll_offset += mouse_event.wheel_delta();
         m_scroll_offset = clamp(m_scroll_offset, 0, m_max_scroll_offset);
@@ -425,7 +425,7 @@ void Menu::event(Core::Event& event)
             } else {
                 // Default to the first enabled, non-separator item on key press if one has not been selected yet
                 int counter = 0;
-                for (const auto& item : m_items) {
+                for (auto const& item : m_items) {
                     if (item.type() != MenuItem::Separator && item.is_enabled()) {
                         set_hovered_index(counter, key == Key_Right);
                         break;
@@ -643,7 +643,7 @@ void Menu::do_popup(const Gfx::IntPoint& position, bool make_input, bool as_subm
     WindowManager::the().did_popup_a_menu({});
 }
 
-bool Menu::is_menu_ancestor_of(const Menu& other) const
+bool Menu::is_menu_ancestor_of(Menu const& other) const
 {
     for (auto& item : m_items) {
         if (!item.is_submenu())

@@ -27,7 +27,7 @@ void GMLPreviewWidget::load_gml(String const& gml)
         return;
     }
 
-    load_from_gml(gml, [](const String& name) -> RefPtr<Core::Object> {
+    load_from_gml(gml, [](String const& name) -> RefPtr<Core::Object> {
         return GUI::Label::construct(String::formatted("{} is not registered as a GML element!", name));
     });
 

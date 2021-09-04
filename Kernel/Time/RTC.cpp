@@ -14,11 +14,11 @@ namespace Kernel {
 #define IRQ_TIMER 8
 #define MAX_FREQUENCY 8000
 
-NonnullRefPtr<RealTimeClock> RealTimeClock::create(Function<void(const RegisterState&)> callback)
+NonnullRefPtr<RealTimeClock> RealTimeClock::create(Function<void(RegisterState const&)> callback)
 {
     return adopt_ref(*new RealTimeClock(move(callback)));
 }
-RealTimeClock::RealTimeClock(Function<void(const RegisterState&)> callback)
+RealTimeClock::RealTimeClock(Function<void(RegisterState const&)> callback)
     : HardwareTimer(IRQ_TIMER, move(callback))
 {
     InterruptDisabler disabler;
@@ -27,7 +27,7 @@ RealTimeClock::RealTimeClock(Function<void(const RegisterState&)> callback)
     CMOS::write(0x8B, CMOS::read(0xB) | 0x40);
     reset_to_default_ticks_per_second();
 }
-bool RealTimeClock::handle_irq(const RegisterState& regs)
+bool RealTimeClock::handle_irq(RegisterState const& regs)
 {
     auto result = HardwareTimer::handle_irq(regs);
     CMOS::read(0x8C);

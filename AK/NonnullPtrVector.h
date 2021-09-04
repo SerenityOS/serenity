@@ -25,7 +25,7 @@ public:
     {
     }
     NonnullPtrVector(const Vector<PtrType>& other)
-        : Base(static_cast<const Base&>(other))
+        : Base(static_cast<Base const&>(other))
     {
     }
 
@@ -41,16 +41,16 @@ public:
     ALWAYS_INLINE constexpr Iterator end() { return Iterator::end(*this); }
 
     ALWAYS_INLINE PtrType& ptr_at(size_t index) { return Base::at(index); }
-    ALWAYS_INLINE const PtrType& ptr_at(size_t index) const { return Base::at(index); }
+    ALWAYS_INLINE PtrType const& ptr_at(size_t index) const { return Base::at(index); }
 
     ALWAYS_INLINE T& at(size_t index) { return *Base::at(index); }
-    ALWAYS_INLINE const T& at(size_t index) const { return *Base::at(index); }
+    ALWAYS_INLINE T const& at(size_t index) const { return *Base::at(index); }
     ALWAYS_INLINE T& operator[](size_t index) { return at(index); }
-    ALWAYS_INLINE const T& operator[](size_t index) const { return at(index); }
+    ALWAYS_INLINE T const& operator[](size_t index) const { return at(index); }
     ALWAYS_INLINE T& first() { return at(0); }
-    ALWAYS_INLINE const T& first() const { return at(0); }
+    ALWAYS_INLINE T const& first() const { return at(0); }
     ALWAYS_INLINE T& last() { return at(size() - 1); }
-    ALWAYS_INLINE const T& last() const { return at(size() - 1); }
+    ALWAYS_INLINE T const& last() const { return at(size() - 1); }
 
 private:
     // NOTE: You can't use resize() on a NonnullFooPtrVector since making the vector

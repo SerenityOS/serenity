@@ -8,7 +8,7 @@
 
 namespace HackStudio {
 
-NonnullRefPtr<CodeDocument> CodeDocument::create(const String& file_path, Client* client)
+NonnullRefPtr<CodeDocument> CodeDocument::create(String const& file_path, Client* client)
 {
     return adopt_ref(*new CodeDocument(file_path, client));
 }
@@ -18,7 +18,7 @@ NonnullRefPtr<CodeDocument> CodeDocument::create(Client* client)
     return adopt_ref(*new CodeDocument(client));
 }
 
-CodeDocument::CodeDocument(const String& file_path, Client* client)
+CodeDocument::CodeDocument(String const& file_path, Client* client)
     : TextDocument(client)
     , m_file_path(file_path)
 {

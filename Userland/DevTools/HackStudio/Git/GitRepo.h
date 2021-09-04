@@ -27,25 +27,25 @@ public:
         RefPtr<GitRepo> repo;
     };
 
-    static CreateResult try_to_create(const LexicalPath& repository_root);
-    static RefPtr<GitRepo> initialize_repository(const LexicalPath& repository_root);
+    static CreateResult try_to_create(LexicalPath const& repository_root);
+    static RefPtr<GitRepo> initialize_repository(LexicalPath const& repository_root);
 
     Vector<LexicalPath> unstaged_files() const;
     Vector<LexicalPath> staged_files() const;
-    bool stage(const LexicalPath& file);
-    bool unstage(const LexicalPath& file);
-    bool commit(const String& message);
-    Optional<String> original_file_content(const LexicalPath& file) const;
-    Optional<String> unstaged_diff(const LexicalPath& file) const;
-    bool is_tracked(const LexicalPath& file) const;
+    bool stage(LexicalPath const& file);
+    bool unstage(LexicalPath const& file);
+    bool commit(String const& message);
+    Optional<String> original_file_content(LexicalPath const& file) const;
+    Optional<String> unstaged_diff(LexicalPath const& file) const;
+    bool is_tracked(LexicalPath const& file) const;
 
 private:
-    static String command_wrapper(const Vector<String>& command_parts, const LexicalPath& chdir);
+    static String command_wrapper(const Vector<String>& command_parts, LexicalPath const& chdir);
     static bool git_is_installed();
-    static bool git_repo_exists(const LexicalPath& repo_root);
-    static Vector<LexicalPath> parse_files_list(const String&);
+    static bool git_repo_exists(LexicalPath const& repo_root);
+    static Vector<LexicalPath> parse_files_list(String const&);
 
-    explicit GitRepo(const LexicalPath& repository_root)
+    explicit GitRepo(LexicalPath const& repository_root)
         : m_repository_root(repository_root)
     {
     }

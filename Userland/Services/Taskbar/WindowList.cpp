@@ -14,7 +14,7 @@ WindowList& WindowList::the()
     return *s_the;
 }
 
-Window* WindowList::find_parent(const Window& window)
+Window* WindowList::find_parent(Window const& window)
 {
     if (!window.parent_identifier().is_valid())
         return nullptr;
@@ -26,7 +26,7 @@ Window* WindowList::find_parent(const Window& window)
     return nullptr;
 }
 
-Window* WindowList::window(const WindowIdentifier& identifier)
+Window* WindowList::window(WindowIdentifier const& identifier)
 {
     auto it = m_windows.find(identifier);
     if (it != m_windows.end())
@@ -34,7 +34,7 @@ Window* WindowList::window(const WindowIdentifier& identifier)
     return nullptr;
 }
 
-Window& WindowList::ensure_window(const WindowIdentifier& identifier)
+Window& WindowList::ensure_window(WindowIdentifier const& identifier)
 {
     auto it = m_windows.find(identifier);
     if (it != m_windows.end())
@@ -45,7 +45,7 @@ Window& WindowList::ensure_window(const WindowIdentifier& identifier)
     return window_ref;
 }
 
-void WindowList::remove_window(const WindowIdentifier& identifier)
+void WindowList::remove_window(WindowIdentifier const& identifier)
 {
     m_windows.remove(identifier);
 }

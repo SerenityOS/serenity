@@ -14,7 +14,7 @@
 
 namespace AK {
 template<typename... Parameters>
-void warnln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&...);
+void warnln(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&...);
 }
 
 namespace Test {

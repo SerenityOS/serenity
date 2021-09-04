@@ -35,8 +35,8 @@ public:
     void notify_adopted(Badge<Widget>, Widget&);
     void notify_disowned(Badge<Widget>, Widget&);
 
-    const Margins& margins() const { return m_margins; }
-    void set_margins(const Margins&);
+    Margins const& margins() const { return m_margins; }
+    void set_margins(Margins const&);
 
     int spacing() const { return m_spacing; }
     void set_spacing(int);

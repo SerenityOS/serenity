@@ -19,7 +19,7 @@ public:
 
     SVGGraphicsElement(DOM::Document&, QualifiedName);
 
-    virtual void parse_attribute(const FlyString& name, const String& value) override;
+    virtual void parse_attribute(FlyString const& name, String const& value) override;
 
     const Optional<Gfx::Color>& fill_color() const { return m_fill_color; }
     const Optional<Gfx::Color>& stroke_color() const { return m_stroke_color; }

@@ -58,7 +58,7 @@ KResultOr<FlatPtr> Process::sys$writev(int fd, Userspace<const struct iovec*> io
     return nwritten;
 }
 
-KResultOr<FlatPtr> Process::do_write(FileDescription& description, const UserOrKernelBuffer& data, size_t data_size)
+KResultOr<FlatPtr> Process::do_write(FileDescription& description, UserOrKernelBuffer const& data, size_t data_size)
 {
     size_t total_nwritten = 0;
 
@@ -97,7 +97,7 @@ KResultOr<FlatPtr> Process::do_write(FileDescription& description, const UserOrK
     return total_nwritten;
 }
 
-KResultOr<FlatPtr> Process::sys$write(int fd, Userspace<const u8*> data, size_t size)
+KResultOr<FlatPtr> Process::sys$write(int fd, Userspace<u8 const*> data, size_t size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);

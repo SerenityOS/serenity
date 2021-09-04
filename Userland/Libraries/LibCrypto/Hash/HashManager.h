@@ -59,18 +59,18 @@ struct MultiHashDigestVariant {
     {
     }
 
-    const u8* immutable_data() const
+    u8 const* immutable_data() const
     {
         return m_digest.visit(
-            [&](const Empty&) -> const u8* { VERIFY_NOT_REACHED(); },
-            [&](const auto& value) { return value.immutable_data(); });
+            [&](Empty const&) -> u8 const* { VERIFY_NOT_REACHED(); },
+            [&](auto const& value) { return value.immutable_data(); });
     }
 
     size_t data_length()
     {
         return m_digest.visit(
-            [&](const Empty&) -> size_t { VERIFY_NOT_REACHED(); },
-            [&](const auto& value) { return value.data_length(); });
+            [&](Empty const&) -> size_t { VERIFY_NOT_REACHED(); },
+            [&](auto const& value) { return value.data_length(); });
     }
 
     using DigestVariant = Variant<Empty, MD5::DigestType, SHA1::DigestType, SHA256::DigestType, SHA384::DigestType, SHA512::DigestType>;
@@ -86,7 +86,7 @@ public:
         m_pre_init_buffer = ByteBuffer::create_zeroed(0);
     }
 
-    Manager(const Manager& other) // NOT a copy constructor!
+    Manager(Manager const& other) // NOT a copy constructor!
     {
         m_pre_init_buffer = ByteBuffer::create_zeroed(0); // will not be used
         initialize(other.m_kind);
@@ -106,15 +106,15 @@ public:
     inline size_t digest_size() const
     {
         return m_algorithm.visit(
-            [&](const Empty&) -> size_t { return 0; },
-            [&](const auto& hash) { return hash.digest_size(); });
+            [&](Empty const&) -> size_t { return 0; },
+            [&](auto const& hash) { return hash.digest_size(); });
     }
 
     inline size_t block_size() const
     {
         return m_algorithm.visit(
-            [&](const Empty&) -> size_t { return 0; },
-            [&](const auto& hash) { return hash.block_size(); });
+            [&](Empty const&) -> size_t { return 0; },
+            [&](auto const& hash) { return hash.block_size(); });
     }
 
     inline void initialize(HashKind kind)
@@ -147,7 +147,7 @@ public:
         }
     }
 
-    virtual void update(const u8* data, size_t length) override
+    virtual void update(u8 const* data, size_t length) override
     {
         auto size = m_pre_init_buffer.size();
         if (size) {
@@ -187,8 +187,8 @@ public:
     virtual String class_name() const override
     {
         return m_algorithm.visit(
-            [&](const Empty&) -> String { return "UninitializedHashManager"; },
-            [&](const auto& hash) { return hash.class_name(); });
+            [&](Empty const&) -> String { return "UninitializedHashManager"; },
+            [&](auto const& hash) { return hash.class_name(); });
     }
 
     inline bool is(HashKind kind) const

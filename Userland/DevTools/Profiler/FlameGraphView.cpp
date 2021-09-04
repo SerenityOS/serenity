@@ -115,7 +115,7 @@ void FlameGraphView::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    for (const auto& bar : m_bars) {
+    for (auto const& bar : m_bars) {
         auto label_index = bar.index.sibling_at_column(m_text_column);
         String label = "All";
         if (label_index.is_valid()) {

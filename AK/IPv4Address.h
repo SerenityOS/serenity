@@ -66,7 +66,7 @@ public:
             octet(SubnetClass::A));
     }
 
-    static Optional<IPv4Address> from_string(const StringView& string)
+    static Optional<IPv4Address> from_string(StringView const& string)
     {
         if (string.is_null())
             return {};
@@ -104,8 +104,8 @@ public:
     constexpr in_addr_t to_in_addr_t() const { return m_data; }
     constexpr u32 to_u32() const { return m_data; }
 
-    constexpr bool operator==(const IPv4Address& other) const = default;
-    constexpr bool operator!=(const IPv4Address& other) const = default;
+    constexpr bool operator==(IPv4Address const& other) const = default;
+    constexpr bool operator!=(IPv4Address const& other) const = default;
 
     constexpr bool is_zero() const
     {
@@ -128,7 +128,7 @@ static_assert(sizeof(IPv4Address) == 4);
 
 template<>
 struct Traits<IPv4Address> : public GenericTraits<IPv4Address> {
-    static constexpr unsigned hash(const IPv4Address& address) { return int_hash(address.to_u32()); }
+    static constexpr unsigned hash(IPv4Address const& address) { return int_hash(address.to_u32()); }
 };
 
 template<>

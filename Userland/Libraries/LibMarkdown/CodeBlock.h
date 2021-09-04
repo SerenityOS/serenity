@@ -14,7 +14,7 @@ namespace Markdown {
 
 class CodeBlock final : public Block {
 public:
-    CodeBlock(Text&& style_spec, const String& code)
+    CodeBlock(Text&& style_spec, String const& code)
         : m_code(move(code))
         , m_style_spec(move(style_spec))
     {

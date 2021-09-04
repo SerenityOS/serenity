@@ -233,14 +233,14 @@ struct DDSHeaderDXT10 {
 };
 
 RefPtr<Gfx::Bitmap> load_dds(String const& path);
-RefPtr<Gfx::Bitmap> load_dds_from_memory(const u8*, size_t);
+RefPtr<Gfx::Bitmap> load_dds_from_memory(u8 const*, size_t);
 
 struct DDSLoadingContext;
 
 class DDSImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     virtual ~DDSImageDecoderPlugin() override;
-    DDSImageDecoderPlugin(const u8*, size_t);
+    DDSImageDecoderPlugin(u8 const*, size_t);
 
     virtual IntSize size() override;
     virtual RefPtr<Gfx::Bitmap> bitmap() override;

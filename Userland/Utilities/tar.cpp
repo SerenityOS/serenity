@@ -27,8 +27,8 @@ int main(int argc, char** argv)
     bool list = false;
     bool verbose = false;
     bool gzip = false;
-    const char* archive_file = nullptr;
-    Vector<const char*> paths;
+    char const* archive_file = nullptr;
+    Vector<char const*> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(create, "Create archive", "create", 'c');

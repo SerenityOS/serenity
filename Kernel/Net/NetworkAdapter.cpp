@@ -30,7 +30,7 @@ void NetworkAdapter::send_packet(ReadonlyBytes packet)
     send_raw(packet);
 }
 
-void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet)
+void NetworkAdapter::send(MACAddress const& destination, ARPPacket const& packet)
 {
     size_t size_in_bytes = sizeof(EthernetFrameHeader) + sizeof(ARPPacket);
     auto buffer = NetworkByteBuffer::create_zeroed(size_in_bytes);
@@ -39,7 +39,7 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
     eth->set_destination(destination);
     eth->set_ether_type(EtherType::ARP);
     memcpy(eth->payload(), &packet, sizeof(ARPPacket));
-    send_packet({ (const u8*)eth, size_in_bytes });
+    send_packet({ (u8 const*)eth, size_in_bytes });
 }
 
 void NetworkAdapter::fill_in_ipv4_header(PacketWithTimestamp& packet, IPv4Address const& source_ipv4, MACAddress const& destination_mac, IPv4Address const& destination_ipv4, IPv4Protocol protocol, size_t payload_size, u8 ttl)
@@ -145,17 +145,17 @@ void NetworkAdapter::release_packet_buffer(PacketWithTimestamp& packet)
     m_unused_packets.append(packet);
 }
 
-void NetworkAdapter::set_ipv4_address(const IPv4Address& address)
+void NetworkAdapter::set_ipv4_address(IPv4Address const& address)
 {
     m_ipv4_address = address;
 }
 
-void NetworkAdapter::set_ipv4_netmask(const IPv4Address& netmask)
+void NetworkAdapter::set_ipv4_netmask(IPv4Address const& netmask)
 {
     m_ipv4_netmask = netmask;
 }
 
-void NetworkAdapter::set_ipv4_gateway(const IPv4Address& gateway)
+void NetworkAdapter::set_ipv4_gateway(IPv4Address const& gateway)
 {
     m_ipv4_gateway = gateway;
 }

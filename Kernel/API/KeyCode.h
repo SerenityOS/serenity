@@ -155,7 +155,7 @@ struct KeyEvent {
     bool is_press() const { return flags & Is_Press; }
 };
 
-inline const char* key_code_to_string(KeyCode key)
+inline char const* key_code_to_string(KeyCode key)
 {
     switch (key) {
 #define __ENUMERATE_KEY_CODE(name, ui_name) \

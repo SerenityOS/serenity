@@ -25,7 +25,7 @@ namespace JS {
 #define JS_OBJECT(class_, base_class) \
 public:                               \
     using Base = base_class;          \
-    virtual const char* class_name() const override { return #class_; }
+    virtual char const* class_name() const override { return #class_; }
 
 class Object : public Cell {
 public:
@@ -119,7 +119,7 @@ public:
 
     // Non-standard methods
 
-    Value get_without_side_effects(const PropertyName&) const;
+    Value get_without_side_effects(PropertyName const&) const;
 
     void define_direct_property(PropertyName const& property_name, Value value, PropertyAttributes attributes) { storage_set(property_name, { value, attributes }); };
     void define_direct_accessor(PropertyName const&, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes);
@@ -144,13 +144,13 @@ public:
     bool has_parameter_map() const { return m_has_parameter_map; }
     void set_has_parameter_map() { m_has_parameter_map = true; }
 
-    virtual const char* class_name() const override { return "Object"; }
+    virtual char const* class_name() const override { return "Object"; }
     virtual void visit_edges(Cell::Visitor&) override;
     virtual Value value_of() const { return Value(const_cast<Object*>(this)); }
 
     Value get_direct(size_t index) const { return m_storage[index]; }
 
-    const IndexedProperties& indexed_properties() const { return m_indexed_properties; }
+    IndexedProperties const& indexed_properties() const { return m_indexed_properties; }
     IndexedProperties& indexed_properties() { return m_indexed_properties; }
     void set_indexed_property_elements(Vector<Value>&& values) { m_indexed_properties = IndexedProperties(move(values)); }
 

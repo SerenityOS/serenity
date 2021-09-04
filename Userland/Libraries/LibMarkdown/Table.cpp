@@ -15,7 +15,7 @@ String Table::render_for_terminal(size_t view_width) const
     auto unit_width_length = view_width == 0 ? 4 : ((float)(view_width - m_columns.size()) / (float)m_total_width);
     StringBuilder builder;
 
-    auto write_aligned = [&](const auto& text, auto width, auto alignment) {
+    auto write_aligned = [&](auto const& text, auto width, auto alignment) {
         size_t original_length = 0;
         for (auto& span : text.spans())
             original_length += span.text.length();

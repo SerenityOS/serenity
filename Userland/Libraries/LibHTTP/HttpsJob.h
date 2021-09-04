@@ -18,7 +18,7 @@ namespace HTTP {
 class HttpsJob final : public Job {
     C_OBJECT(HttpsJob)
 public:
-    explicit HttpsJob(const HttpRequest& request, OutputStream& output_stream, const Vector<Certificate>* override_certs = nullptr)
+    explicit HttpsJob(HttpRequest const& request, OutputStream& output_stream, const Vector<Certificate>* override_certs = nullptr)
         : Job(request, output_stream)
         , m_override_ca_certificates(override_certs)
     {

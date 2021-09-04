@@ -37,7 +37,7 @@ private:
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
 
     // ^GUI::Clipboard::ClipboardClient
-    virtual void clipboard_content_did_change(const String&) override { add_item(GUI::Clipboard::the().data_and_type()); }
+    virtual void clipboard_content_did_change(String const&) override { add_item(GUI::Clipboard::the().data_and_type()); }
 
     Vector<GUI::Clipboard::DataAndType> m_history_items;
     size_t m_history_limit { 20 };

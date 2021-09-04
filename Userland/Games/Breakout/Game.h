@@ -85,7 +85,7 @@ private:
 
     Gfx::IntRect pause_rect() const
     {
-        const char* msg = m_cheater ? "C H E A T E R" : "P A U S E D";
+        char const* msg = m_cheater ? "C H E A T E R" : "P A U S E D";
         int msg_width = font().width(msg);
         int msg_height = font().glyph_height();
         return { (game_width / 2) - (msg_width / 2), (game_height / 2) - (msg_height / 2), msg_width, msg_height };

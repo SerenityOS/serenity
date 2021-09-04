@@ -10,7 +10,7 @@
 
 namespace Web {
 
-ImageResource::ImageResource(const LoadRequest& request)
+ImageResource::ImageResource(LoadRequest const& request)
     : Resource(Type::Image, request)
 {
 }
@@ -79,7 +79,7 @@ void ImageResource::update_volatility()
 {
     bool visible_in_viewport = false;
     for_each_client([&](auto& client) {
-        if (static_cast<const ImageResourceClient&>(client).is_visible_in_viewport())
+        if (static_cast<ImageResourceClient const&>(client).is_visible_in_viewport())
             visible_in_viewport = true;
     });
 

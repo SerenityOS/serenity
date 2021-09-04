@@ -35,8 +35,8 @@ public:
 
     virtual bool is_texture_2d() const override { return true; }
 
-    void upload_texture_data(GLuint lod, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels, size_t pixels_per_row);
-    void replace_sub_texture_data(GLuint lod, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels, size_t pixels_per_row);
+    void upload_texture_data(GLuint lod, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLvoid const* pixels, size_t pixels_per_row);
+    void replace_sub_texture_data(GLuint lod, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid const* pixels, size_t pixels_per_row);
 
     MipMap const& mipmap(unsigned lod) const;
 

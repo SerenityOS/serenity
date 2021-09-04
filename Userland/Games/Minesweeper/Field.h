@@ -71,7 +71,7 @@ private:
     void set_flag(Square&, bool);
 
     Square& square(size_t row, size_t column) { return *m_squares[row * columns() + column]; }
-    const Square& square(size_t row, size_t column) const { return *m_squares[row * columns() + column]; }
+    Square const& square(size_t row, size_t column) const { return *m_squares[row * columns() + column]; }
 
     void flood_fill(Square&);
     void on_square_clicked_impl(Square&, bool);

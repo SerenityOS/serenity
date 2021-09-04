@@ -23,7 +23,7 @@
 
 namespace Kernel {
 
-OwnPtr<Coredump> Coredump::create(NonnullRefPtr<Process> process, const String& output_path)
+OwnPtr<Coredump> Coredump::create(NonnullRefPtr<Process> process, String const& output_path)
 {
     if (!process->is_dumpable()) {
         dbgln("Refusing to generate coredump for non-dumpable process {}", process->pid().value());
@@ -43,7 +43,7 @@ Coredump::Coredump(NonnullRefPtr<Process> process, NonnullRefPtr<FileDescription
 {
 }
 
-RefPtr<FileDescription> Coredump::create_target_file(const Process& process, const String& output_path)
+RefPtr<FileDescription> Coredump::create_target_file(Process const& process, String const& output_path)
 {
     auto output_directory = KLexicalPath::dirname(output_path);
     auto dump_directory = VirtualFileSystem::the().open_directory(output_directory, VirtualFileSystem::the().root_custody());

@@ -21,7 +21,7 @@ TEST_CASE(basic_scenario)
 #endif
 }
 
-static StringView test_default_arg(const SourceLocation& loc = SourceLocation::current())
+static StringView test_default_arg(SourceLocation const& loc = SourceLocation::current())
 {
     return loc.function_name();
 }

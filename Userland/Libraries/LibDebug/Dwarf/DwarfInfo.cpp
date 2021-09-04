@@ -61,14 +61,14 @@ void DwarfInfo::populate_compilation_units()
 }
 
 AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t implicit_const_value,
-    InputMemoryStream& debug_info_stream, const CompilationUnit* unit) const
+    InputMemoryStream& debug_info_stream, CompilationUnit const* unit) const
 {
     AttributeValue value;
     value.form = form;
 
     auto assign_raw_bytes_value = [&](size_t length) {
         value.data.as_raw_bytes.length = length;
-        value.data.as_raw_bytes.bytes = reinterpret_cast<const u8*>(debug_info_data().data()
+        value.data.as_raw_bytes.bytes = reinterpret_cast<u8 const*>(debug_info_data().data()
             + debug_info_stream.offset());
 
         debug_info_stream.discard_or_error(length);
@@ -82,7 +82,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         value.type = AttributeValue::Type::String;
 
         auto strings_data = debug_strings_data();
-        value.data.as_string = reinterpret_cast<const char*>(strings_data.data() + offset);
+        value.data.as_string = reinterpret_cast<char const*>(strings_data.data() + offset);
         break;
     }
     case AttributeDataForm::Data1: {
@@ -177,7 +177,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         debug_info_stream >> str;
         VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::String;
-        value.data.as_string = reinterpret_cast<const char*>(str_offset + debug_info_data().data());
+        value.data.as_string = reinterpret_cast<char const*>(str_offset + debug_info_data().data());
         break;
     }
     case AttributeDataForm::Block1: {
@@ -219,7 +219,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         value.type = AttributeValue::Type::String;
 
         auto strings_data = debug_line_strings_data();
-        value.data.as_string = reinterpret_cast<const char*>(strings_data.data() + offset);
+        value.data.as_string = reinterpret_cast<char const*>(strings_data.data() + offset);
         break;
     }
     case AttributeDataForm::ImplicitConst: {

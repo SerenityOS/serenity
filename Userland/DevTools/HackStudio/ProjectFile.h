@@ -16,12 +16,12 @@ namespace HackStudio {
 
 class ProjectFile : public RefCounted<ProjectFile> {
 public:
-    static NonnullRefPtr<ProjectFile> construct_with_name(const String& name)
+    static NonnullRefPtr<ProjectFile> construct_with_name(String const& name)
     {
         return adopt_ref(*new ProjectFile(name));
     }
 
-    const String& name() const { return m_name; }
+    String const& name() const { return m_name; }
     bool could_render_text() const { return m_could_render_text; }
 
     GUI::TextDocument& document() const;
@@ -33,7 +33,7 @@ public:
     void horizontal_scroll_value(int);
 
 private:
-    explicit ProjectFile(const String& name);
+    explicit ProjectFile(String const& name);
     void create_document_if_needed() const;
 
     String m_name;

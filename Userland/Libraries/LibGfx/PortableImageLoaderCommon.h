@@ -250,7 +250,7 @@ static bool decode(TContext& context)
 }
 
 template<typename TContext>
-static RefPtr<Gfx::Bitmap> load_impl(const u8* data, size_t data_size)
+static RefPtr<Gfx::Bitmap> load_impl(u8 const* data, size_t data_size)
 {
     TContext context {};
     context.data = data;
@@ -262,12 +262,12 @@ static RefPtr<Gfx::Bitmap> load_impl(const u8* data, size_t data_size)
     return context.bitmap;
 }
 template<typename TContext>
-static RefPtr<Gfx::Bitmap> load(const StringView& path)
+static RefPtr<Gfx::Bitmap> load(StringView const& path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
         return nullptr;
-    auto bitmap = load_impl<TContext>((const u8*)file_or_error.value()->data(), file_or_error.value()->size());
+    auto bitmap = load_impl<TContext>((u8 const*)file_or_error.value()->data(), file_or_error.value()->size());
     if (bitmap)
         bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded {}: {}",
             bitmap->size(),

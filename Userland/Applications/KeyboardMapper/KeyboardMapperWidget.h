@@ -21,7 +21,7 @@ public:
     void load_from_file(const String);
     void load_from_system();
     void save();
-    void save_to_file(const StringView&);
+    void save_to_file(StringView const&);
 
 protected:
     virtual void keydown_event(GUI::KeyEvent&) override;

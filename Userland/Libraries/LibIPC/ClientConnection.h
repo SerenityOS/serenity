@@ -43,7 +43,7 @@ public:
         this->shutdown();
     }
 
-    void did_misbehave(const char* message)
+    void did_misbehave(char const* message)
     {
         dbgln("{} (id={}) misbehaved ({}), disconnecting.", *this, m_client_id, message);
         this->shutdown();

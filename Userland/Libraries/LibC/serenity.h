@@ -16,8 +16,8 @@ __BEGIN_DECLS
 
 int disown(pid_t);
 
-int module_load(const char* path, size_t path_length);
-int module_unload(const char* name, size_t name_length);
+int module_load(char const* path, size_t path_length);
+int module_unload(char const* name, size_t name_length);
 
 int profiling_enable(pid_t, uint64_t);
 int profiling_disable(pid_t);
@@ -54,12 +54,12 @@ int get_stack_bounds(uintptr_t* user_stack_base, size_t* user_stack_size);
 
 int anon_create(size_t size, int options);
 
-int serenity_readlink(const char* path, size_t path_length, char* buffer, size_t buffer_size);
+int serenity_readlink(char const* path, size_t path_length, char* buffer, size_t buffer_size);
 
 int getkeymap(char* name_buffer, size_t name_buffer_size, uint32_t* map, uint32_t* shift_map, uint32_t* alt_map, uint32_t* altgr_map, uint32_t* shift_altgr_map);
-int setkeymap(const char* name, const uint32_t* map, uint32_t* const shift_map, const uint32_t* alt_map, const uint32_t* altgr_map, const uint32_t* shift_altgr_map);
+int setkeymap(char const* name, uint32_t const* map, uint32_t* const shift_map, uint32_t const* alt_map, uint32_t const* altgr_map, uint32_t const* shift_altgr_map);
 
-uint16_t internet_checksum(const void* ptr, size_t count);
+uint16_t internet_checksum(void const* ptr, size_t count);
 
 int emuctl(uintptr_t command, uintptr_t arg0, uintptr_t arg1);
 

@@ -127,12 +127,12 @@ public:
     };
 
     RefPtr() = default;
-    RefPtr(const T* ptr)
+    RefPtr(T const* ptr)
         : m_bits(PtrTraits::as_bits(const_cast<T*>(ptr)))
     {
         ref_if_not_null(const_cast<T*>(ptr));
     }
-    RefPtr(const T& object)
+    RefPtr(T const& object)
         : m_bits(PtrTraits::as_bits(const_cast<T*>(&object)))
     {
         T* ptr = const_cast<T*>(&object);
@@ -169,7 +169,7 @@ public:
         : m_bits(PtrTraits::template convert_from<U, P>(other.leak_ref_raw()))
     {
     }
-    RefPtr(const RefPtr& other)
+    RefPtr(RefPtr const& other)
         : m_bits(other.add_ref_raw())
     {
     }
@@ -245,7 +245,7 @@ public:
         return *this;
     }
 
-    ALWAYS_INLINE RefPtr& operator=(const RefPtr& other)
+    ALWAYS_INLINE RefPtr& operator=(RefPtr const& other)
     {
         if (this != &other)
             assign_raw(other.add_ref_raw());
@@ -259,14 +259,14 @@ public:
         return *this;
     }
 
-    ALWAYS_INLINE RefPtr& operator=(const T* ptr)
+    ALWAYS_INLINE RefPtr& operator=(T const* ptr)
     {
         ref_if_not_null(const_cast<T*>(ptr));
         assign_raw(PtrTraits::as_bits(const_cast<T*>(ptr)));
         return *this;
     }
 
-    ALWAYS_INLINE RefPtr& operator=(const T& object)
+    ALWAYS_INLINE RefPtr& operator=(T const& object)
     {
         const_cast<T&>(object).ref();
         assign_raw(PtrTraits::as_bits(const_cast<T*>(&object)));
@@ -315,14 +315,14 @@ public:
     }
 
     ALWAYS_INLINE T* ptr() { return as_ptr(); }
-    ALWAYS_INLINE const T* ptr() const { return as_ptr(); }
+    ALWAYS_INLINE T const* ptr() const { return as_ptr(); }
 
     ALWAYS_INLINE T* operator->()
     {
         return as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE const T* operator->() const
+    ALWAYS_INLINE T const* operator->() const
     {
         return as_nonnull_ptr();
     }
@@ -332,12 +332,12 @@ public:
         return *as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE const T& operator*() const
+    ALWAYS_INLINE T const& operator*() const
     {
         return *as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE operator const T*() const { return as_ptr(); }
+    ALWAYS_INLINE operator T const*() const { return as_ptr(); }
     ALWAYS_INLINE operator T*() { return as_ptr(); }
 
     ALWAYS_INLINE operator bool() { return !is_null(); }
@@ -345,14 +345,14 @@ public:
     bool operator==(std::nullptr_t) const { return is_null(); }
     bool operator!=(std::nullptr_t) const { return !is_null(); }
 
-    bool operator==(const RefPtr& other) const { return as_ptr() == other.as_ptr(); }
-    bool operator!=(const RefPtr& other) const { return as_ptr() != other.as_ptr(); }
+    bool operator==(RefPtr const& other) const { return as_ptr() == other.as_ptr(); }
+    bool operator!=(RefPtr const& other) const { return as_ptr() != other.as_ptr(); }
 
     bool operator==(RefPtr& other) { return as_ptr() == other.as_ptr(); }
     bool operator!=(RefPtr& other) { return as_ptr() != other.as_ptr(); }
 
-    bool operator==(const T* other) const { return as_ptr() == other; }
-    bool operator!=(const T* other) const { return as_ptr() != other; }
+    bool operator==(T const* other) const { return as_ptr() == other; }
+    bool operator!=(T const* other) const { return as_ptr() != other; }
 
     bool operator==(T* other) { return as_ptr() == other; }
     bool operator!=(T* other) { return as_ptr() != other; }
@@ -442,17 +442,17 @@ private:
 };
 
 template<typename T>
-struct Formatter<RefPtr<T>> : Formatter<const T*> {
+struct Formatter<RefPtr<T>> : Formatter<T const*> {
     void format(FormatBuilder& builder, const RefPtr<T>& value)
     {
-        Formatter<const T*>::format(builder, value.ptr());
+        Formatter<T const*>::format(builder, value.ptr());
     }
 };
 
 template<typename T>
 struct Traits<RefPtr<T>> : public GenericTraits<RefPtr<T>> {
     using PeekType = T*;
-    using ConstPeekType = const T*;
+    using ConstPeekType = T const*;
     static unsigned hash(const RefPtr<T>& p) { return ptr_hash(p.ptr()); }
     static bool equals(const RefPtr<T>& a, const RefPtr<T>& b) { return a.ptr() == b.ptr(); }
 };
@@ -460,13 +460,13 @@ struct Traits<RefPtr<T>> : public GenericTraits<RefPtr<T>> {
 template<typename T, typename U>
 inline NonnullRefPtr<T> static_ptr_cast(const NonnullRefPtr<U>& ptr)
 {
-    return NonnullRefPtr<T>(static_cast<const T&>(*ptr));
+    return NonnullRefPtr<T>(static_cast<T const&>(*ptr));
 }
 
 template<typename T, typename U, typename PtrTraits = RefPtrTraits<T>>
 inline RefPtr<T> static_ptr_cast(const RefPtr<U>& ptr)
 {
-    return RefPtr<T, PtrTraits>(static_cast<const T*>(ptr.ptr()));
+    return RefPtr<T, PtrTraits>(static_cast<T const*>(ptr.ptr()));
 }
 
 template<typename T, typename PtrTraitsT, typename U, typename PtrTraitsU>

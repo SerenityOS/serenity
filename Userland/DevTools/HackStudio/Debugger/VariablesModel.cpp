@@ -60,7 +60,7 @@ static String variable_value_as_string(const Debug::DebugInfo::VariableInfo& var
     if (variable.is_enum_type()) {
         auto value = Debugger::the().session()->peek((u32*)variable_address);
         VERIFY(value.has_value());
-        auto it = variable.type->members.find_if([&enumerator_value = value.value()](const auto& enumerator) {
+        auto it = variable.type->members.find_if([&enumerator_value = value.value()](auto const& enumerator) {
             return enumerator->constant_data.as_u32 == enumerator_value;
         });
         if (it.is_end())
@@ -89,7 +89,7 @@ static String variable_value_as_string(const Debug::DebugInfo::VariableInfo& var
     return String::formatted("type: {} @ {:p}, ", variable.type_name, variable_address);
 }
 
-static Optional<u32> string_to_variable_value(const StringView& string_value, const Debug::DebugInfo::VariableInfo& variable)
+static Optional<u32> string_to_variable_value(StringView const& string_value, const Debug::DebugInfo::VariableInfo& variable)
 {
     if (variable.is_enum_type()) {
         auto prefix_string = String::formatted("{}::", variable.type_name);
@@ -97,7 +97,7 @@ static Optional<u32> string_to_variable_value(const StringView& string_value, co
         if (string_value.starts_with(prefix_string))
             string_to_use = string_value.substring_view(prefix_string.length(), string_value.length() - prefix_string.length());
 
-        auto it = variable.type->members.find_if([string_to_use](const auto& enumerator) {
+        auto it = variable.type->members.find_if([string_to_use](auto const& enumerator) {
             return enumerator->name == string_to_use;
         });
 
@@ -124,7 +124,7 @@ static Optional<u32> string_to_variable_value(const StringView& string_value, co
     return {};
 }
 
-void VariablesModel::set_variable_value(const GUI::ModelIndex& index, const StringView& string_value, GUI::Window* parent_window)
+void VariablesModel::set_variable_value(const GUI::ModelIndex& index, StringView const& string_value, GUI::Window* parent_window)
 {
     auto variable = static_cast<const Debug::DebugInfo::VariableInfo*>(index.internal_data());
 
@@ -158,7 +158,7 @@ GUI::Variant VariablesModel::data(const GUI::ModelIndex& index, GUI::ModelRole r
     }
 }
 
-RefPtr<VariablesModel> VariablesModel::create(const PtraceRegisters& regs)
+RefPtr<VariablesModel> VariablesModel::create(PtraceRegisters const& regs)
 {
     auto lib = Debugger::the().session()->library_at(regs.ip());
     if (!lib)

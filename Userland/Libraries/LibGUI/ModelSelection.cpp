@@ -10,7 +10,7 @@
 
 namespace GUI {
 
-void ModelSelection::remove_matching(Function<bool(const ModelIndex&)> filter)
+void ModelSelection::remove_matching(Function<bool(ModelIndex const&)> filter)
 {
     Vector<ModelIndex> to_remove;
     for (auto& index : m_indices) {
@@ -24,7 +24,7 @@ void ModelSelection::remove_matching(Function<bool(const ModelIndex&)> filter)
     }
 }
 
-void ModelSelection::set(const ModelIndex& index)
+void ModelSelection::set(ModelIndex const& index)
 {
     VERIFY(index.is_valid());
     if (m_indices.size() == 1 && m_indices.contains(index))
@@ -34,7 +34,7 @@ void ModelSelection::set(const ModelIndex& index)
     notify_selection_changed();
 }
 
-void ModelSelection::add(const ModelIndex& index)
+void ModelSelection::add(ModelIndex const& index)
 {
     VERIFY(index.is_valid());
     if (m_indices.contains(index))
@@ -55,7 +55,7 @@ void ModelSelection::add_all(const Vector<ModelIndex>& indices)
         notify_selection_changed();
 }
 
-void ModelSelection::toggle(const ModelIndex& index)
+void ModelSelection::toggle(ModelIndex const& index)
 {
     VERIFY(index.is_valid());
     if (m_indices.contains(index))
@@ -65,7 +65,7 @@ void ModelSelection::toggle(const ModelIndex& index)
     notify_selection_changed();
 }
 
-bool ModelSelection::remove(const ModelIndex& index)
+bool ModelSelection::remove(ModelIndex const& index)
 {
     VERIFY(index.is_valid());
     if (!m_indices.contains(index))

@@ -43,7 +43,7 @@ static void exit_with_usage(int rc)
     exit(rc);
 }
 
-static Optional<Result> benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache);
+static Optional<Result> benchmark(String const& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache);
 
 int main(int argc, char** argv)
 {
@@ -69,11 +69,11 @@ int main(int argc, char** argv)
             time_per_benchmark = atoi(optarg);
             break;
         case 'f':
-            for (const auto& size : String(optarg).split(','))
+            for (auto const& size : String(optarg).split(','))
                 file_sizes.append(atoi(size.characters()));
             break;
         case 'b':
-            for (const auto& size : String(optarg).split(','))
+            for (auto const& size : String(optarg).split(','))
                 block_sizes.append(atoi(size.characters()));
             break;
         }
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
     return 0;
 }
 
-Optional<Result> benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache)
+Optional<Result> benchmark(String const& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache)
 {
     int flags = O_CREAT | O_TRUNC | O_RDWR;
     if (!allow_cache)

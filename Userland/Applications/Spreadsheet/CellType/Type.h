@@ -25,17 +25,17 @@ struct CellTypeMetadata {
 
 class CellType {
 public:
-    static const CellType* get_by_name(const StringView&);
+    static CellType const* get_by_name(StringView const&);
     static Vector<StringView> names();
 
-    virtual String display(Cell&, const CellTypeMetadata&) const = 0;
-    virtual JS::Value js_value(Cell&, const CellTypeMetadata&) const = 0;
+    virtual String display(Cell&, CellTypeMetadata const&) const = 0;
+    virtual JS::Value js_value(Cell&, CellTypeMetadata const&) const = 0;
     virtual ~CellType() { }
 
-    const String& name() const { return m_name; }
+    String const& name() const { return m_name; }
 
 protected:
-    CellType(const StringView& name);
+    CellType(StringView const& name);
 
 private:
     String m_name;

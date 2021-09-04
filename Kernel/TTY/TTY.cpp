@@ -80,7 +80,7 @@ KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, s
     return result;
 }
 
-KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> TTY::write(FileDescription&, u64, UserOrKernelBuffer const& buffer, size_t size)
 {
     if (m_termios.c_lflag & TOSTOP && Process::current().pgid() != pgid()) {
         [[maybe_unused]] auto rc = Process::current().send_signal(SIGTTOU, nullptr);
@@ -91,7 +91,7 @@ KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& bu
     return buffer.read_buffered<num_chars>(size, [&](ReadonlyBytes bytes) -> KResultOr<size_t> {
         u8 modified_data[num_chars * 2];
         size_t modified_data_size = 0;
-        for (const auto& byte : bytes) {
+        for (auto const& byte : bytes) {
             process_output(byte, [&modified_data, &modified_data_size](u8 out_ch) {
                 modified_data[modified_data_size++] = out_ch;
             });
@@ -139,7 +139,7 @@ void TTY::process_output(u8 ch, Functor put_char)
     }
 }
 
-bool TTY::can_read(const FileDescription&, size_t) const
+bool TTY::can_read(FileDescription const&, size_t) const
 {
     if (in_canonical_mode()) {
         return m_available_lines > 0;
@@ -147,7 +147,7 @@ bool TTY::can_read(const FileDescription&, size_t) const
     return !m_input_buffer.is_empty();
 }
 
-bool TTY::can_write(const FileDescription&, size_t) const
+bool TTY::can_write(FileDescription const&, size_t) const
 {
     return true;
 }
@@ -360,7 +360,7 @@ void TTY::flush_input()
     evaluate_block_conditions();
 }
 
-KResult TTY::set_termios(const termios& t)
+KResult TTY::set_termios(termios const& t)
 {
     KResult rc = KSuccess;
     m_termios = t;

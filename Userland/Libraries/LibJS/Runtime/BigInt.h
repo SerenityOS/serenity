@@ -20,7 +20,7 @@ public:
     const String to_string() const { return String::formatted("{}n", m_big_integer.to_base(10)); }
 
 private:
-    virtual const char* class_name() const override { return "BigInt"; }
+    virtual char const* class_name() const override { return "BigInt"; }
 
     Crypto::SignedBigInteger m_big_integer;
 };

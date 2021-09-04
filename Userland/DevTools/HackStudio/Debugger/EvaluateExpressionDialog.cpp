@@ -103,7 +103,7 @@ void EvaluateExpressionDialog::build(Window* parent_window)
     m_text_editor->set_focus(true);
 }
 
-void EvaluateExpressionDialog::handle_evaluation(const String& expression)
+void EvaluateExpressionDialog::handle_evaluation(String const& expression)
 {
     m_output_container->remove_all_children();
     m_output_view->update();
@@ -138,7 +138,7 @@ void EvaluateExpressionDialog::handle_evaluation(const String& expression)
     set_output(JS::MarkupGenerator::html_from_value(m_interpreter->vm().last_value()));
 }
 
-void EvaluateExpressionDialog::set_output(const StringView& html)
+void EvaluateExpressionDialog::set_output(StringView const& html)
 {
     auto paragraph = m_output_container->document().create_element("p");
     paragraph->set_inner_html(html);

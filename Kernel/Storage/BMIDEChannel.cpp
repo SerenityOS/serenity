@@ -12,23 +12,23 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<BMIDEChannel> BMIDEChannel::create(const IDEController& ide_controller, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
+UNMAP_AFTER_INIT NonnullRefPtr<BMIDEChannel> BMIDEChannel::create(IDEController const& ide_controller, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
 {
     return adopt_ref(*new BMIDEChannel(ide_controller, io_group, type));
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<BMIDEChannel> BMIDEChannel::create(const IDEController& ide_controller, u8 irq, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
+UNMAP_AFTER_INIT NonnullRefPtr<BMIDEChannel> BMIDEChannel::create(IDEController const& ide_controller, u8 irq, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
 {
     return adopt_ref(*new BMIDEChannel(ide_controller, irq, io_group, type));
 }
 
-UNMAP_AFTER_INIT BMIDEChannel::BMIDEChannel(const IDEController& controller, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
+UNMAP_AFTER_INIT BMIDEChannel::BMIDEChannel(IDEController const& controller, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
     : IDEChannel(controller, io_group, type)
 {
     initialize();
 }
 
-UNMAP_AFTER_INIT BMIDEChannel::BMIDEChannel(const IDEController& controller, u8 irq, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
+UNMAP_AFTER_INIT BMIDEChannel::BMIDEChannel(IDEController const& controller, u8 irq, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
     : IDEChannel(controller, irq, io_group, type)
 {
     initialize();
@@ -64,7 +64,7 @@ static void print_ide_status(u8 status)
         (status & ATA_SR_ERR) != 0);
 }
 
-bool BMIDEChannel::handle_irq(const RegisterState&)
+bool BMIDEChannel::handle_irq(RegisterState const&)
 {
     u8 status = m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
 

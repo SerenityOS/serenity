@@ -36,7 +36,7 @@ static void initialize_if_needed()
     s_initialized = true;
 }
 
-void CommonLocationsProvider::load_from_json(const String& json_path)
+void CommonLocationsProvider::load_from_json(String const& json_path)
 {
     auto file = Core::File::construct(json_path);
     if (!file->open(Core::OpenMode::ReadOnly)) {

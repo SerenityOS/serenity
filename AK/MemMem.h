@@ -15,7 +15,7 @@
 namespace AK {
 
 namespace {
-const static void* bitap_bitwise(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
+const static void* bitap_bitwise(void const* haystack, size_t haystack_length, void const* needle, size_t needle_length)
 {
     VERIFY(needle_length < 32);
 
@@ -28,14 +28,14 @@ const static void* bitap_bitwise(const void* haystack, size_t haystack_length, c
         needle_mask[i] = 0xffffffff;
 
     for (size_t i = 0; i < needle_length; ++i)
-        needle_mask[((const u8*)needle)[i]] &= ~(0x00000001 << i);
+        needle_mask[((u8 const*)needle)[i]] &= ~(0x00000001 << i);
 
     for (size_t i = 0; i < haystack_length; ++i) {
-        lookup |= needle_mask[((const u8*)haystack)[i]];
+        lookup |= needle_mask[((u8 const*)haystack)[i]];
         lookup <<= 1;
 
         if (!(lookup & (0x00000001 << needle_length)))
-            return ((const u8*)haystack) + i - needle_length + 1;
+            return ((u8 const*)haystack) + i - needle_length + 1;
     }
 
     return nullptr;
@@ -43,7 +43,7 @@ const static void* bitap_bitwise(const void* haystack, size_t haystack_length, c
 }
 
 template<typename HaystackIterT>
-static inline Optional<size_t> memmem(const HaystackIterT& haystack_begin, const HaystackIterT& haystack_end, Span<const u8> needle) requires(requires { (*haystack_begin).data(); (*haystack_begin).size(); })
+static inline Optional<size_t> memmem(HaystackIterT const& haystack_begin, HaystackIterT const& haystack_end, Span<const u8> needle) requires(requires { (*haystack_begin).data(); (*haystack_begin).size(); })
 {
     auto prepare_kmp_partial_table = [&] {
         Vector<int, 64> table;
@@ -100,7 +100,7 @@ static inline Optional<size_t> memmem(const HaystackIterT& haystack_begin, const
     return {};
 }
 
-static inline Optional<size_t> memmem_optional(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
+static inline Optional<size_t> memmem_optional(void const* haystack, size_t haystack_length, void const* needle, size_t needle_length)
 {
     if (needle_length == 0)
         return 0;
@@ -122,15 +122,15 @@ static inline Optional<size_t> memmem_optional(const void* haystack, size_t hays
     }
 
     // Fallback to KMP.
-    Array<Span<const u8>, 1> spans { Span<const u8> { (const u8*)haystack, haystack_length } };
-    return memmem(spans.begin(), spans.end(), { (const u8*)needle, needle_length });
+    Array<Span<const u8>, 1> spans { Span<const u8> { (u8 const*)haystack, haystack_length } };
+    return memmem(spans.begin(), spans.end(), { (u8 const*)needle, needle_length });
 }
 
-static inline const void* memmem(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
+static inline void const* memmem(void const* haystack, size_t haystack_length, void const* needle, size_t needle_length)
 {
     auto offset = memmem_optional(haystack, haystack_length, needle, needle_length);
     if (offset.has_value())
-        return ((const u8*)haystack) + offset.value();
+        return ((u8 const*)haystack) + offset.value();
 
     return nullptr;
 }

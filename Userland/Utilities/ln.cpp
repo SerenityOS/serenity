@@ -17,8 +17,8 @@ int main(int argc, char** argv)
     }
 
     bool symbolic = false;
-    const char* target = nullptr;
-    const char* path = nullptr;
+    char const* target = nullptr;
+    char const* path = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(symbolic, "Create a symlink", "symbolic", 's');

@@ -60,7 +60,7 @@ Key ColumnDef::key() const
     return key;
 }
 
-void ColumnDef::set_default_value(const Value& default_value)
+void ColumnDef::set_default_value(Value const& default_value)
 {
     VERIFY(default_value.type() == type());
     m_default = default_value;

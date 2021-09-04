@@ -47,7 +47,7 @@ static constexpr void round_4(u32& a, u32 b, u32 c, u32 d, u32 x, u32 s, u32 ac)
 namespace Crypto {
 namespace Hash {
 
-void MD5::update(const u8* input, size_t length)
+void MD5::update(u8 const* input, size_t length)
 {
     auto index = (u32)(m_count[0] >> 3) & 0x3f;
     size_t offset { 0 };
@@ -100,7 +100,7 @@ MD5::DigestType MD5::peek()
     return digest;
 }
 
-void MD5::encode(const u32* from, u8* to, size_t length)
+void MD5::encode(u32 const* from, u8* to, size_t length)
 {
     for (size_t i = 0, j = 0; j < length; ++i, j += 4) {
         to[j] = (u8)(from[i] & 0xff);
@@ -110,13 +110,13 @@ void MD5::encode(const u32* from, u8* to, size_t length)
     }
 }
 
-void MD5::decode(const u8* from, u32* to, size_t length)
+void MD5::decode(u8 const* from, u32* to, size_t length)
 {
     for (size_t i = 0, j = 0; j < length; ++i, j += 4)
         to[i] = (((u32)from[j]) | (((u32)from[j + 1]) << 8) | (((u32)from[j + 2]) << 16) | (((u32)from[j + 3]) << 24));
 }
 
-void MD5::transform(const u8* block)
+void MD5::transform(u8 const* block)
 {
     auto a = m_A;
     auto b = m_B;

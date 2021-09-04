@@ -25,7 +25,7 @@ void glVertex2d(GLdouble x, GLdouble y)
     g_gl_context->gl_vertex(x, y, 0.0, 1.0);
 }
 
-void glVertex2dv(const GLdouble* v)
+void glVertex2dv(GLdouble const* v)
 {
     g_gl_context->gl_vertex(v[0], v[1], 0.0, 1.0);
 }
@@ -35,7 +35,7 @@ void glVertex2f(GLfloat x, GLfloat y)
     g_gl_context->gl_vertex(x, y, 0.0, 1.0);
 }
 
-void glVertex2fv(const GLfloat* v)
+void glVertex2fv(GLfloat const* v)
 {
     g_gl_context->gl_vertex(v[0], v[1], 0.0, 1.0);
 }
@@ -45,7 +45,7 @@ void glVertex2i(GLint x, GLint y)
     g_gl_context->gl_vertex(x, y, 0.0, 1.0);
 }
 
-void glVertex2iv(const GLint* v)
+void glVertex2iv(GLint const* v)
 {
     g_gl_context->gl_vertex(v[0], v[1], 0.0, 1.0);
 }
@@ -55,7 +55,7 @@ void glVertex2s(GLshort x, GLshort y)
     g_gl_context->gl_vertex(x, y, 0.0, 1.0);
 }
 
-void glVertex2sv(const GLshort* v)
+void glVertex2sv(GLshort const* v)
 {
     g_gl_context->gl_vertex(v[0], v[1], 0.0, 1.0);
 }
@@ -65,7 +65,7 @@ void glVertex3d(GLdouble x, GLdouble y, GLdouble z)
     g_gl_context->gl_vertex(x, y, z, 1.0);
 }
 
-void glVertex3dv(const GLdouble* v)
+void glVertex3dv(GLdouble const* v)
 {
     g_gl_context->gl_vertex(v[0], v[1], v[2], 1.0);
 }
@@ -75,7 +75,7 @@ void glVertex3f(GLfloat x, GLfloat y, GLfloat z)
     g_gl_context->gl_vertex(x, y, z, 1.0);
 }
 
-void glVertex3fv(const GLfloat* v)
+void glVertex3fv(GLfloat const* v)
 {
     g_gl_context->gl_vertex(v[0], v[1], v[2], 1.0);
 }
@@ -85,7 +85,7 @@ void glVertex3i(GLint x, GLint y, GLint z)
     g_gl_context->gl_vertex(x, y, z, 1.0);
 }
 
-void glVertex3iv(const GLint* v)
+void glVertex3iv(GLint const* v)
 {
     g_gl_context->gl_vertex(v[0], v[1], v[2], 1.0);
 }
@@ -95,7 +95,7 @@ void glVertex3s(GLshort x, GLshort y, GLshort z)
     g_gl_context->gl_vertex(x, y, z, 1.0);
 }
 
-void glVertex3sv(const GLshort* v)
+void glVertex3sv(GLshort const* v)
 {
     g_gl_context->gl_vertex(v[0], v[1], v[2], 1.0);
 }
@@ -105,7 +105,7 @@ void glVertex4d(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
     g_gl_context->gl_vertex(x, y, z, w);
 }
 
-void glVertex4dv(const GLdouble* v)
+void glVertex4dv(GLdouble const* v)
 {
     g_gl_context->gl_vertex(v[0], v[1], v[2], v[3]);
 }
@@ -115,7 +115,7 @@ void glVertex4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
     g_gl_context->gl_vertex(x, y, z, w);
 }
 
-void glVertex4fv(const GLfloat* v)
+void glVertex4fv(GLfloat const* v)
 {
     g_gl_context->gl_vertex(v[0], v[1], v[2], v[3]);
 }
@@ -125,7 +125,7 @@ void glVertex4i(GLint x, GLint y, GLint z, GLint w)
     g_gl_context->gl_vertex(x, y, z, w);
 }
 
-void glVertex4iv(const GLint* v)
+void glVertex4iv(GLint const* v)
 {
     g_gl_context->gl_vertex(v[0], v[1], v[2], v[3]);
 }
@@ -135,7 +135,7 @@ void glVertex4s(GLshort x, GLshort y, GLshort z, GLshort w)
     g_gl_context->gl_vertex(x, y, z, w);
 }
 
-void glVertex4sv(const GLshort* v)
+void glVertex4sv(GLshort const* v)
 {
     g_gl_context->gl_vertex(v[0], v[1], v[2], v[3]);
 }
@@ -145,7 +145,7 @@ void glTexCoord2f(GLfloat s, GLfloat t)
     g_gl_context->gl_tex_coord(s, t, 0.0f, 0.0f);
 }
 
-void glTexCoord4fv(const GLfloat* v)
+void glTexCoord4fv(GLfloat const* v)
 {
     g_gl_context->gl_tex_coord(v[0], v[1], v[2], v[3]);
 }

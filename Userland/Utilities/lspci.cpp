@@ -16,8 +16,8 @@
 
 static bool flag_show_numerical = false;
 
-static const char* format_numerical = "{:04x}:{:02x}:{:02x}.{} {}: {}:{} (rev {:02x})";
-static const char* format_textual = "{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02x})";
+static char const* format_numerical = "{:04x}:{:02x}:{:02x}.{} {}: {}:{} (rev {:02x})";
+static char const* format_textual = "{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02x})";
 
 int main(int argc, char** argv)
 {
@@ -43,7 +43,7 @@ int main(int argc, char** argv)
     args_parser.add_option(flag_show_numerical, "Show numerical IDs", "numerical", 'n');
     args_parser.parse(argc, argv);
 
-    const char* format = flag_show_numerical ? format_numerical : format_textual;
+    char const* format = flag_show_numerical ? format_numerical : format_textual;
 
     RefPtr<PCIDB::Database> db;
     if (!flag_show_numerical) {

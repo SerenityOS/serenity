@@ -24,7 +24,7 @@ public:
 
     virtual size_t IV_length() const = 0;
 
-    const T& cipher() const { return m_cipher; }
+    T const& cipher() const { return m_cipher; }
 
     ByteBuffer create_aligned_buffer(size_t input_size) const
     {

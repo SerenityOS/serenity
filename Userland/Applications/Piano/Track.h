@@ -21,7 +21,7 @@ class Track {
     AK_MAKE_NONMOVABLE(Track);
 
 public:
-    explicit Track(const u32& time);
+    explicit Track(u32 const& time);
     ~Track();
 
     const Vector<Audio::Frame>& recorded_sample() const { return m_recorded_sample; }
@@ -36,7 +36,7 @@ public:
 
     void fill_sample(Sample& sample);
     void reset();
-    String set_recorded_sample(const StringView& path);
+    String set_recorded_sample(StringView const& path);
     void set_note(int note, Switch);
     void set_roll_note(int note, u32 on_sample, u32 off_sample);
     void set_wave(int wave);
@@ -78,7 +78,7 @@ private:
     int m_release;
     double m_release_step[note_count];
 
-    const u32& m_time;
+    u32 const& m_time;
 
     NonnullRefPtr<LibDSP::Transport> m_temporary_transport;
     NonnullRefPtr<LibDSP::Effects::Delay> m_delay;

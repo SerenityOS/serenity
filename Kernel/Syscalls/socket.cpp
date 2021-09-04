@@ -52,7 +52,7 @@ KResultOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
     return socket_fd.fd;
 }
 
-KResultOr<FlatPtr> Process::sys$bind(int sockfd, Userspace<const sockaddr*> address, socklen_t address_length)
+KResultOr<FlatPtr> Process::sys$bind(int sockfd, Userspace<sockaddr const*> address, socklen_t address_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     auto description = fds().file_description(sockfd);
@@ -97,7 +97,7 @@ KResultOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_para
     int flags = params.flags;
 
     socklen_t address_size = 0;
-    if (user_address && !copy_from_user(&address_size, static_ptr_cast<const socklen_t*>(user_address_size)))
+    if (user_address && !copy_from_user(&address_size, static_ptr_cast<socklen_t const*>(user_address_size)))
         return EFAULT;
 
     auto accepted_socket_fd_or_error = m_fds.allocate();
@@ -151,7 +151,7 @@ KResultOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_para
     return accepted_socket_fd.fd;
 }
 
-KResultOr<FlatPtr> Process::sys$connect(int sockfd, Userspace<const sockaddr*> user_address, socklen_t user_address_size)
+KResultOr<FlatPtr> Process::sys$connect(int sockfd, Userspace<sockaddr const*> user_address, socklen_t user_address_size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     auto description = fds().file_description(sockfd);
@@ -201,7 +201,7 @@ KResultOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghd
     if (iovs[0].iov_len > NumericLimits<ssize_t>::max())
         return EINVAL;
 
-    Userspace<const sockaddr*> user_addr((FlatPtr)msg.msg_name);
+    Userspace<sockaddr const*> user_addr((FlatPtr)msg.msg_name);
     socklen_t addr_length = msg.msg_namelen;
 
     auto description = fds().file_description(sockfd);
@@ -298,7 +298,7 @@ KResultOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> us
 }
 
 template<bool sockname, typename Params>
-int Process::get_sock_or_peer_name(const Params& params)
+int Process::get_sock_or_peer_name(Params const& params)
 {
     socklen_t addrlen_value;
     if (!copy_from_user(&addrlen_value, params.addrlen, sizeof(socklen_t)))
@@ -382,7 +382,7 @@ KResultOr<FlatPtr> Process::sys$setsockopt(Userspace<const Syscall::SC_setsockop
     Syscall::SC_setsockopt_params params;
     if (!copy_from_user(&params, user_params))
         return EFAULT;
-    Userspace<const void*> user_value((FlatPtr)params.value);
+    Userspace<void const*> user_value((FlatPtr)params.value);
     auto description = fds().file_description(params.sockfd);
     if (!description)
         return EBADF;

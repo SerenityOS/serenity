@@ -113,7 +113,7 @@ private:
 
     class EditingDelegate final : public GUI::StringModelEditingDelegate {
     public:
-        EditingDelegate(const Sheet& sheet)
+        EditingDelegate(Sheet const& sheet)
             : m_sheet(sheet)
         {
         }
@@ -140,7 +140,7 @@ private:
 
     private:
         bool m_has_set_initial_value { false };
-        const Sheet& m_sheet;
+        Sheet const& m_sheet;
     };
 
     class TableCellPainter final : public GUI::TableCellPaintingDelegate {

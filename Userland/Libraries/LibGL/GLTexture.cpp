@@ -15,17 +15,17 @@ void glGenTextures(GLsizei n, GLuint* textures)
     g_gl_context->gl_gen_textures(n, textures);
 }
 
-void glDeleteTextures(GLsizei n, const GLuint* textures)
+void glDeleteTextures(GLsizei n, GLuint const* textures)
 {
     g_gl_context->gl_delete_textures(n, textures);
 }
 
-void glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data)
+void glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLvoid const* data)
 {
     g_gl_context->gl_tex_image_2d(target, level, internalFormat, width, height, border, format, type, data);
 }
 
-void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* data)
+void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid const* data)
 {
     g_gl_context->gl_tex_sub_image_2d(target, level, xoffset, yoffset, width, height, format, type, data);
 }

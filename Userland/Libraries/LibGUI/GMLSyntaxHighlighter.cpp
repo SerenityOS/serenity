@@ -37,7 +37,7 @@ bool GMLSyntaxHighlighter::is_identifier(u64 token) const
     return ini_token == GUI::GMLToken::Type::Identifier;
 }
 
-void GMLSyntaxHighlighter::rehighlight(const Palette& palette)
+void GMLSyntaxHighlighter::rehighlight(Palette const& palette)
 {
     auto text = m_client->get_text();
     GMLLexer lexer(text);

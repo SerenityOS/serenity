@@ -130,12 +130,12 @@ public:
 
     bool is_null() const { return m_address == 0; }
 
-    bool operator==(const IOAddress& other) const { return m_address == other.m_address; }
-    bool operator!=(const IOAddress& other) const { return m_address != other.m_address; }
-    bool operator>(const IOAddress& other) const { return m_address > other.m_address; }
-    bool operator>=(const IOAddress& other) const { return m_address >= other.m_address; }
-    bool operator<(const IOAddress& other) const { return m_address < other.m_address; }
-    bool operator<=(const IOAddress& other) const { return m_address <= other.m_address; }
+    bool operator==(IOAddress const& other) const { return m_address == other.m_address; }
+    bool operator!=(IOAddress const& other) const { return m_address != other.m_address; }
+    bool operator>(IOAddress const& other) const { return m_address > other.m_address; }
+    bool operator>=(IOAddress const& other) const { return m_address >= other.m_address; }
+    bool operator<(IOAddress const& other) const { return m_address < other.m_address; }
+    bool operator<=(IOAddress const& other) const { return m_address <= other.m_address; }
 
 private:
     u16 m_address { 0 };

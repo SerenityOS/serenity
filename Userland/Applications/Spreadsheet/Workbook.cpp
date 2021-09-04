@@ -34,7 +34,7 @@ Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets)
     global_object().define_direct_property("workbook", workbook_object(), JS::default_attributes);
 }
 
-bool Workbook::set_filename(const String& filename)
+bool Workbook::set_filename(String const& filename)
 {
     if (m_current_filename == filename)
         return false;
@@ -43,7 +43,7 @@ bool Workbook::set_filename(const String& filename)
     return true;
 }
 
-Result<bool, String> Workbook::load(const StringView& filename)
+Result<bool, String> Workbook::load(StringView const& filename)
 {
     auto file_or_error = Core::File::open(filename, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error()) {
@@ -70,7 +70,7 @@ Result<bool, String> Workbook::load(const StringView& filename)
     return true;
 }
 
-Result<bool, String> Workbook::save(const StringView& filename)
+Result<bool, String> Workbook::save(StringView const& filename)
 {
     auto mime = Core::guess_mime_type_based_on_filename(filename);
     auto file = Core::File::construct(filename);

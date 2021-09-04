@@ -20,7 +20,7 @@ int socket(int domain, int type, int protocol)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int bind(int sockfd, const sockaddr* addr, socklen_t addrlen)
+int bind(int sockfd, sockaddr const* addr, socklen_t addrlen)
 {
     int rc = syscall(SC_bind, sockfd, addr, addrlen);
     __RETURN_WITH_ERRNO(rc, rc, -1);
@@ -44,7 +44,7 @@ int accept4(int sockfd, sockaddr* addr, socklen_t* addrlen, int flags)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int connect(int sockfd, const sockaddr* addr, socklen_t addrlen)
+int connect(int sockfd, sockaddr const* addr, socklen_t addrlen)
 {
     int rc = syscall(SC_connect, sockfd, addr, addrlen);
     __RETURN_WITH_ERRNO(rc, rc, -1);
@@ -62,14 +62,14 @@ ssize_t sendmsg(int sockfd, const struct msghdr* msg, int flags)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-ssize_t sendto(int sockfd, const void* data, size_t data_length, int flags, const struct sockaddr* addr, socklen_t addr_length)
+ssize_t sendto(int sockfd, void const* data, size_t data_length, int flags, const struct sockaddr* addr, socklen_t addr_length)
 {
     iovec iov = { const_cast<void*>(data), data_length };
     msghdr msg = { const_cast<struct sockaddr*>(addr), addr_length, &iov, 1, nullptr, 0, 0 };
     return sendmsg(sockfd, &msg, flags);
 }
 
-ssize_t send(int sockfd, const void* data, size_t data_length, int flags)
+ssize_t send(int sockfd, void const* data, size_t data_length, int flags)
 {
     return sendto(sockfd, data, data_length, flags, nullptr, 0);
 }
@@ -110,7 +110,7 @@ int getsockopt(int sockfd, int level, int option, void* value, socklen_t* value_
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int setsockopt(int sockfd, int level, int option, const void* value, socklen_t value_size)
+int setsockopt(int sockfd, int level, int option, void const* value, socklen_t value_size)
 {
     Syscall::SC_setsockopt_params params { sockfd, level, option, value, value_size };
     int rc = syscall(SC_setsockopt, &params);

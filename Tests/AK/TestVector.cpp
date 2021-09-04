@@ -42,7 +42,7 @@ TEST_CASE(strings)
     strings.append("DEF");
 
     int loop_counter = 0;
-    for (const String& string : strings) {
+    for (String const& string : strings) {
         EXPECT(!string.is_null());
         EXPECT(!string.is_empty());
         ++loop_counter;

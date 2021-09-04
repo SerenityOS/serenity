@@ -30,8 +30,8 @@ class HashTableIterator {
     friend HashTableType;
 
 public:
-    bool operator==(const HashTableIterator& other) const { return m_bucket == other.m_bucket; }
-    bool operator!=(const HashTableIterator& other) const { return m_bucket != other.m_bucket; }
+    bool operator==(HashTableIterator const& other) const { return m_bucket == other.m_bucket; }
+    bool operator!=(HashTableIterator const& other) const { return m_bucket != other.m_bucket; }
     T& operator*() { return *m_bucket->slot(); }
     T* operator->() { return m_bucket->slot(); }
     void operator++() { skip_to_next(); }
@@ -63,8 +63,8 @@ class OrderedHashTableIterator {
     friend OrderedHashTableType;
 
 public:
-    bool operator==(const OrderedHashTableIterator& other) const { return m_bucket == other.m_bucket; }
-    bool operator!=(const OrderedHashTableIterator& other) const { return m_bucket != other.m_bucket; }
+    bool operator==(OrderedHashTableIterator const& other) const { return m_bucket == other.m_bucket; }
+    bool operator!=(OrderedHashTableIterator const& other) const { return m_bucket != other.m_bucket; }
     T& operator*() { return *m_bucket->slot(); }
     T* operator->() { return m_bucket->slot(); }
     void operator++() { m_bucket = m_bucket->next; }
@@ -90,7 +90,7 @@ class HashTable {
         alignas(T) u8 storage[sizeof(T)];
 
         T* slot() { return reinterpret_cast<T*>(storage); }
-        const T* slot() const { return reinterpret_cast<const T*>(storage); }
+        T const* slot() const { return reinterpret_cast<T const*>(storage); }
     };
 
     struct OrderedBucket {
@@ -100,7 +100,7 @@ class HashTable {
         bool deleted;
         alignas(T) u8 storage[sizeof(T)];
         T* slot() { return reinterpret_cast<T*>(storage); }
-        const T* slot() const { return reinterpret_cast<const T*>(storage); }
+        T const* slot() const { return reinterpret_cast<T const*>(storage); }
     };
 
     using BucketType = Conditional<IsOrdered, OrderedBucket, Bucket>;
@@ -132,14 +132,14 @@ public:
         kfree_sized(m_buckets, size_in_bytes(m_capacity));
     }
 
-    HashTable(const HashTable& other)
+    HashTable(HashTable const& other)
     {
         rehash(other.capacity());
         for (auto& it : other)
             set(it);
     }
 
-    HashTable& operator=(const HashTable& other)
+    HashTable& operator=(HashTable const& other)
     {
         HashTable temporary(other);
         swap(*this, temporary);
@@ -303,7 +303,7 @@ public:
         return find(TraitsForT::hash(value), [&](auto& other) { return TraitsForT::equals(value, other); });
     }
 
-    bool remove(const T& value)
+    bool remove(T const& value)
     {
         auto it = find(value);
         if (it != end()) {

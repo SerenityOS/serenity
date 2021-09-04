@@ -40,20 +40,20 @@ void Window::set_wrapper(Badge<Bindings::WindowObject>, Bindings::WindowObject& 
     m_wrapper = wrapper.make_weak_ptr();
 }
 
-void Window::alert(const String& message)
+void Window::alert(String const& message)
 {
     if (auto* page = m_document.page())
         page->client().page_did_request_alert(message);
 }
 
-bool Window::confirm(const String& message)
+bool Window::confirm(String const& message)
 {
     if (auto* page = m_document.page())
         return page->client().page_did_request_confirm(message);
     return false;
 }
 
-String Window::prompt(const String& message, const String& default_)
+String Window::prompt(String const& message, String const& default_)
 {
     if (auto* page = m_document.page())
         return page->client().page_did_request_prompt(message, default_);
@@ -137,7 +137,7 @@ void Window::cancel_animation_frame(i32 id)
     GUI::DisplayLink::unregister_callback(id);
 }
 
-void Window::did_set_location_href(Badge<Bindings::LocationObject>, const URL& new_href)
+void Window::did_set_location_href(Badge<Bindings::LocationObject>, URL const& new_href)
 {
     auto* frame = document().browsing_context();
     if (!frame)

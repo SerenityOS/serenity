@@ -11,7 +11,7 @@
 int main(int argc, char** argv)
 {
     Core::ArgsParser args_parser;
-    const char* path = nullptr;
+    char const* path = nullptr;
     bool tokens_mode = false;
     args_parser.add_option(tokens_mode, "Print Tokens", "tokens", 'T');
     args_parser.add_positional_argument(path, "Cpp File", "cpp-file", Core::ArgsParser::Required::No);

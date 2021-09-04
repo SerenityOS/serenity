@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     }
 
     bool decode = false;
-    const char* filepath = nullptr;
+    char const* filepath = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(decode, "Decode data", "decode", 'd');

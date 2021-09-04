@@ -40,7 +40,7 @@ public:
 
     pid_t pgid() const { return m_pgid; }
     pid_t pid() const { return m_pid; }
-    const String& cmd() const { return m_cmd; }
+    String const& cmd() const { return m_cmd; }
     const AST::Command& command() const { return *m_command; }
     AST::Command* command_ptr() { return m_command; }
     u64 job_id() const { return m_job_id; }

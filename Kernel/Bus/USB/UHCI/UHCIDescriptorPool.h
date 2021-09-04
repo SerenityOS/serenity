@@ -35,7 +35,7 @@ public:
         return adopt_own_if_nonnull(new (nothrow) UHCIDescriptorPool(pool_memory_block.release_nonnull(), name));
     }
 
-    UHCIDescriptorPool(NonnullOwnPtr<Memory::Region> pool_memory_block, const StringView& name)
+    UHCIDescriptorPool(NonnullOwnPtr<Memory::Region> pool_memory_block, StringView const& name)
         : m_pool_name(name)
         , m_pool_region(move(pool_memory_block))
     {

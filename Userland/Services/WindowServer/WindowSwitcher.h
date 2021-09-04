@@ -39,7 +39,7 @@ public:
     }
     void hide() { set_visible(false); }
 
-    void on_key_event(const KeyEvent&);
+    void on_key_event(KeyEvent const&);
 
     void refresh();
     void refresh_if_needed();

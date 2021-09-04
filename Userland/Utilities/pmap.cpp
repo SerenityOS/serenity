@@ -27,7 +27,7 @@ int main(int argc, char** argv)
 
     unveil(nullptr, nullptr);
 
-    const char* pid;
+    char const* pid;
     static bool extended = false;
 
     Core::ArgsParser args_parser;

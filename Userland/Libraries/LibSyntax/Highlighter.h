@@ -38,7 +38,7 @@ public:
     virtual ~Highlighter();
 
     virtual Language language() const = 0;
-    virtual void rehighlight(const Palette&) = 0;
+    virtual void rehighlight(Palette const&) = 0;
     virtual void highlight_matching_token_pair();
 
     virtual bool is_identifier(u64) const { return false; };

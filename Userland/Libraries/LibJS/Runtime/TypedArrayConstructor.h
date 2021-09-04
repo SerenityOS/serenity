@@ -14,7 +14,7 @@ class TypedArrayConstructor : public NativeFunction {
     JS_OBJECT(TypedArrayConstructor, NativeFunction);
 
 public:
-    TypedArrayConstructor(const FlyString& name, Object& prototype);
+    TypedArrayConstructor(FlyString const& name, Object& prototype);
     explicit TypedArrayConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
     virtual ~TypedArrayConstructor() override;

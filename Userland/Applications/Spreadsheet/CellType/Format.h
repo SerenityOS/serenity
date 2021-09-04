@@ -10,6 +10,6 @@
 
 namespace Spreadsheet {
 
-String format_double(const char* format, double value);
+String format_double(char const* format, double value);
 
 }

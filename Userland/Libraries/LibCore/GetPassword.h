@@ -12,6 +12,6 @@
 
 namespace Core {
 
-Result<String, OSError> get_password(const StringView& prompt = "Password: ");
+Result<String, OSError> get_password(StringView const& prompt = "Password: ");
 
 }

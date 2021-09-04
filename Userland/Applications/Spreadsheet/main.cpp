@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 
     auto app = GUI::Application::construct(argc, argv);
 
-    const char* filename = nullptr;
+    char const* filename = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(filename, "File to read from", "file", Core::ArgsParser::Required::No);
@@ -198,7 +198,7 @@ int main(int argc, char* argv[])
         auto& sheet = *worksheet_ptr;
         auto& cells = sheet.selected_cells();
         VERIFY(!cells.is_empty());
-        const auto& data = GUI::Clipboard::the().data_and_type();
+        auto const& data = GUI::Clipboard::the().data_and_type();
         if (auto spreadsheet_data = data.metadata.get("text/x-spreadsheet-data"); spreadsheet_data.has_value()) {
             Vector<Spreadsheet::Position> source_positions, target_positions;
             auto lines = spreadsheet_data.value().split_view('\n');

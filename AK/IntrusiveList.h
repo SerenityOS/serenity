@@ -60,7 +60,7 @@ public:
     void prepend(T& n);
     void insert_before(T&, T&);
     void remove(T& n);
-    [[nodiscard]] bool contains(const T&) const;
+    [[nodiscard]] bool contains(T const&) const;
     [[nodiscard]] Container first() const;
     [[nodiscard]] Container last() const;
 
@@ -75,12 +75,12 @@ public:
         {
         }
 
-        const T& operator*() const { return *m_value; }
+        T const& operator*() const { return *m_value; }
         auto operator->() const { return m_value; }
         T& operator*() { return *m_value; }
         auto operator->() { return m_value; }
-        bool operator==(const Iterator& other) const { return other.m_value == m_value; }
-        bool operator!=(const Iterator& other) const { return !(*this == other); }
+        bool operator==(Iterator const& other) const { return other.m_value == m_value; }
+        bool operator!=(Iterator const& other) const { return !(*this == other); }
         Iterator& operator++()
         {
             m_value = IntrusiveList<T, Container, member>::next(m_value);
@@ -103,12 +103,12 @@ public:
         {
         }
 
-        const T& operator*() const { return *m_value; }
+        T const& operator*() const { return *m_value; }
         auto operator->() const { return m_value; }
         T& operator*() { return *m_value; }
         auto operator->() { return m_value; }
-        bool operator==(const ReverseIterator& other) const { return other.m_value == m_value; }
-        bool operator!=(const ReverseIterator& other) const { return !(*this == other); }
+        bool operator==(ReverseIterator const& other) const { return other.m_value == m_value; }
+        bool operator!=(ReverseIterator const& other) const { return !(*this == other); }
         ReverseIterator& operator++()
         {
             m_value = IntrusiveList<T, Container, member>::prev(m_value);
@@ -126,15 +126,15 @@ public:
     class ConstIterator {
     public:
         ConstIterator() = default;
-        ConstIterator(const T* value)
+        ConstIterator(T const* value)
             : m_value(value)
         {
         }
 
-        const T& operator*() const { return *m_value; }
+        T const& operator*() const { return *m_value; }
         auto operator->() const { return m_value; }
-        bool operator==(const ConstIterator& other) const { return other.m_value == m_value; }
-        bool operator!=(const ConstIterator& other) const { return !(*this == other); }
+        bool operator==(ConstIterator const& other) const { return other.m_value == m_value; }
+        bool operator!=(ConstIterator const& other) const { return !(*this == other); }
         ConstIterator& operator++()
         {
             m_value = IntrusiveList<T, Container, member>::next(m_value);
@@ -142,7 +142,7 @@ public:
         }
 
     private:
-        const T* m_value { nullptr };
+        T const* m_value { nullptr };
     };
 
     ConstIterator begin() const;
@@ -151,8 +151,8 @@ public:
 private:
     static T* next(T* current);
     static T* prev(T* current);
-    static const T* next(const T* current);
-    static const T* prev(const T* current);
+    static T const* next(T const* current);
+    static T const* prev(T const* current);
     static T* node_to_value(IntrusiveListNode<T, Container>& node);
     IntrusiveListStorage<T, Container> m_storage;
 };
@@ -300,7 +300,7 @@ inline void IntrusiveList<T, Container, member>::remove(T& n)
 }
 
 template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
-inline bool IntrusiveList<T, Container, member>::contains(const T& n) const
+inline bool IntrusiveList<T, Container, member>::contains(T const& n) const
 {
     auto& nnode = n.*member;
     return nnode.m_storage == &m_storage;
@@ -339,18 +339,18 @@ inline Container IntrusiveList<T, Container, member>::last() const
 }
 
 template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
-inline const T* IntrusiveList<T, Container, member>::next(const T* current)
+inline T const* IntrusiveList<T, Container, member>::next(T const* current)
 {
     auto& nextnode = (current->*member).m_next;
-    const T* nextstruct = nextnode ? node_to_value(*nextnode) : nullptr;
+    T const* nextstruct = nextnode ? node_to_value(*nextnode) : nullptr;
     return nextstruct;
 }
 
 template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
-inline const T* IntrusiveList<T, Container, member>::prev(const T* current)
+inline T const* IntrusiveList<T, Container, member>::prev(T const* current)
 {
     auto& prevnode = (current->*member).m_prev;
-    const T* prevstruct = prevnode ? node_to_value(*prevnode) : nullptr;
+    T const* prevstruct = prevnode ? node_to_value(*prevnode) : nullptr;
     return prevstruct;
 }
 

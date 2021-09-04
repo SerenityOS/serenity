@@ -26,36 +26,36 @@ public:
     constexpr void set_x(T value) { m_x = value; }
     constexpr void set_y(T value) { m_y = value; }
 
-    constexpr Vector2& operator+=(const Vector2& other)
+    constexpr Vector2& operator+=(Vector2 const& other)
     {
         m_x += other.m_x;
         m_y += other.m_y;
         return *this;
     }
 
-    constexpr Vector2& operator-=(const Vector2& other)
+    constexpr Vector2& operator-=(Vector2 const& other)
     {
         m_x -= other.m_x;
         m_y -= other.m_y;
         return *this;
     }
 
-    constexpr Vector2 operator+(const Vector2& other) const
+    constexpr Vector2 operator+(Vector2 const& other) const
     {
         return Vector2(m_x + other.m_x, m_y + other.m_y);
     }
 
-    constexpr Vector2 operator-(const Vector2& other) const
+    constexpr Vector2 operator-(Vector2 const& other) const
     {
         return Vector2(m_x - other.m_x, m_y - other.m_y);
     }
 
-    constexpr Vector2 operator*(const Vector2& other) const
+    constexpr Vector2 operator*(Vector2 const& other) const
     {
         return Vector2(m_x * other.m_x, m_y * other.m_y);
     }
 
-    constexpr Vector2 operator/(const Vector2& other) const
+    constexpr Vector2 operator/(Vector2 const& other) const
     {
         return Vector2(m_x / other.m_x, m_y / other.m_y);
     }
@@ -70,7 +70,7 @@ public:
         return Vector2(m_x / f, m_y / f);
     }
 
-    constexpr T dot(const Vector2& other) const
+    constexpr T dot(Vector2 const& other) const
     {
         return m_x * other.m_x + m_y * other.m_y;
     }

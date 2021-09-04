@@ -7,7 +7,7 @@ access - check if a file is accessible
 ```**c++
 #include <unistd.h>
 
-int access(const char* path, int mode);
+int access(char const* path, int mode);
 ```
 
 ## Description

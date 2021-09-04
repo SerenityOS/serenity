@@ -18,7 +18,7 @@ TEST_CASE(construct_empty)
 
 TEST_CASE(view_literal)
 {
-    const char* truth = "cats rule dogs drool";
+    char const* truth = "cats rule dogs drool";
     StringView view(truth);
     EXPECT_EQ(view.is_null(), false);
     EXPECT_EQ(view.characters_without_null_termination(), truth);

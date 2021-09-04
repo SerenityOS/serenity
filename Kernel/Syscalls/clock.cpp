@@ -43,7 +43,7 @@ KResultOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<time
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<const timespec*> user_ts)
+KResultOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<timespec const*> user_ts)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(settime);
@@ -108,7 +108,7 @@ KResultOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_cloc
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$adjtime(Userspace<const timeval*> user_delta, Userspace<timeval*> user_old_delta)
+KResultOr<FlatPtr> Process::sys$adjtime(Userspace<timeval const*> user_delta, Userspace<timeval*> user_old_delta)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     if (user_old_delta) {

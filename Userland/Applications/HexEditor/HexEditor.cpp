@@ -47,7 +47,7 @@ void HexEditor::set_readonly(bool readonly)
     m_readonly = readonly;
 }
 
-void HexEditor::set_buffer(const ByteBuffer& buffer)
+void HexEditor::set_buffer(ByteBuffer const& buffer)
 {
     m_buffer = buffer;
     set_content_length(buffer.size());
@@ -83,7 +83,7 @@ void HexEditor::set_position(int position)
     update_status();
 }
 
-bool HexEditor::write_to_file(const String& path)
+bool HexEditor::write_to_file(String const& path)
 {
     if (m_buffer.is_empty())
         return true;
@@ -604,7 +604,7 @@ int HexEditor::find(ByteBuffer& needle, int start)
     if (raw_offset == NULL)
         return -1;
 
-    int relative_offset = static_cast<const u8*>(raw_offset) - m_buffer.data();
+    int relative_offset = static_cast<u8 const*>(raw_offset) - m_buffer.data();
     dbgln("find: start={} raw_offset={} relative_offset={}", start, raw_offset, relative_offset);
 
     auto end_of_match = relative_offset + needle.size();
@@ -625,7 +625,7 @@ Vector<Match> HexEditor::find_all(ByteBuffer& needle, int start)
         if (raw_offset == NULL)
             break;
 
-        int relative_offset = static_cast<const u8*>(raw_offset) - m_buffer.data();
+        int relative_offset = static_cast<u8 const*>(raw_offset) - m_buffer.data();
         dbgln("find_all: needle={} start={} raw_offset={} relative_offset={}", needle.data(), i, raw_offset, relative_offset);
         matches.append({ relative_offset, String::formatted("{}", StringView { needle }.to_string().characters()) });
         i = relative_offset + needle.size();

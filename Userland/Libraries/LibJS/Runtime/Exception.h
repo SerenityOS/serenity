@@ -29,7 +29,7 @@ public:
     const Vector<TracebackFrame, 32>& traceback() const { return m_traceback; }
 
 private:
-    virtual const char* class_name() const override { return "Exception"; }
+    virtual char const* class_name() const override { return "Exception"; }
     virtual void visit_edges(Visitor&) override;
 
     Value m_value;

@@ -127,7 +127,7 @@ public:
         m_value = value;
     }
 
-    constexpr Checked(const Checked&) = default;
+    constexpr Checked(Checked const&) = default;
 
     constexpr Checked(Checked&& other)
         : m_value(exchange(other.m_value, 0))
@@ -141,7 +141,7 @@ public:
         return *this = Checked(value);
     }
 
-    constexpr Checked& operator=(const Checked& other) = default;
+    constexpr Checked& operator=(Checked const& other) = default;
 
     constexpr Checked& operator=(Checked&& other)
     {
@@ -198,7 +198,7 @@ public:
         m_value /= other;
     }
 
-    constexpr Checked& operator+=(const Checked& other)
+    constexpr Checked& operator+=(Checked const& other)
     {
         m_overflow |= other.m_overflow;
         add(other.value());
@@ -211,7 +211,7 @@ public:
         return *this;
     }
 
-    constexpr Checked& operator-=(const Checked& other)
+    constexpr Checked& operator-=(Checked const& other)
     {
         m_overflow |= other.m_overflow;
         sub(other.value());
@@ -224,7 +224,7 @@ public:
         return *this;
     }
 
-    constexpr Checked& operator*=(const Checked& other)
+    constexpr Checked& operator*=(Checked const& other)
     {
         m_overflow |= other.m_overflow;
         mul(other.value());
@@ -237,7 +237,7 @@ public:
         return *this;
     }
 
-    constexpr Checked& operator/=(const Checked& other)
+    constexpr Checked& operator/=(Checked const& other)
     {
         m_overflow |= other.m_overflow;
         div(other.value());

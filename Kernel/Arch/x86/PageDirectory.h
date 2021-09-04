@@ -26,7 +26,7 @@ public:
     void clear() { m_raw = 0; }
 
     u64 raw() const { return m_raw; }
-    void copy_from(Badge<Memory::PageDirectory>, const PageDirectoryEntry& other) { m_raw = other.m_raw; }
+    void copy_from(Badge<Memory::PageDirectory>, PageDirectoryEntry const& other) { m_raw = other.m_raw; }
 
     enum Flags {
         Present = 1 << 0,

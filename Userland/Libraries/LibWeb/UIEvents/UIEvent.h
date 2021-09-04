@@ -17,7 +17,7 @@ public:
     virtual ~UIEvent() override { }
 
 protected:
-    explicit UIEvent(const FlyString& event_name)
+    explicit UIEvent(FlyString const& event_name)
         : Event(event_name)
     {
     }

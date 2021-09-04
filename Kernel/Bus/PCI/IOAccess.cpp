@@ -23,7 +23,7 @@ UNMAP_AFTER_INIT void IOAccess::initialize()
 UNMAP_AFTER_INIT IOAccess::IOAccess()
 {
     dmesgln("PCI: Using I/O instructions for PCI configuration space access");
-    enumerate_hardware([&](const Address& address, ID id) {
+    enumerate_hardware([&](Address const& address, ID id) {
         m_physical_ids.append({ address, id, get_capabilities(address) });
     });
 }

@@ -24,7 +24,7 @@ struct LayoutPosition {
 class LayoutRange {
 public:
     LayoutRange() { }
-    LayoutRange(const LayoutPosition& start, const LayoutPosition& end)
+    LayoutRange(LayoutPosition const& start, LayoutPosition const& end)
         : m_start(start)
         , m_end(end)
     {
@@ -32,18 +32,18 @@ public:
 
     bool is_valid() const { return m_start.layout_node && m_end.layout_node; }
 
-    void set(const LayoutPosition& start, const LayoutPosition& end)
+    void set(LayoutPosition const& start, LayoutPosition const& end)
     {
         m_start = start;
         m_end = end;
     }
 
-    void set_start(const LayoutPosition& start) { m_start = start; }
-    void set_end(const LayoutPosition& end) { m_end = end; }
+    void set_start(LayoutPosition const& start) { m_start = start; }
+    void set_end(LayoutPosition const& end) { m_end = end; }
 
-    const LayoutPosition& start() const { return m_start; }
+    LayoutPosition const& start() const { return m_start; }
     LayoutPosition& start() { return m_start; }
-    const LayoutPosition& end() const { return m_end; }
+    LayoutPosition const& end() const { return m_end; }
     LayoutPosition& end() { return m_end; }
 
     LayoutRange normalized() const;

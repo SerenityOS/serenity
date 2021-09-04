@@ -38,7 +38,7 @@ public:
         return List::first();
     }
 
-    const T& first() const
+    T const& first() const
     {
         return List::first();
     }
@@ -48,7 +48,7 @@ public:
         return List::last();
     }
 
-    const T& last() const
+    T const& last() const
     {
         return List::last();
     }
@@ -66,7 +66,7 @@ public:
         return List::append(forward<T>(value));
     }
 
-    bool contains_slow(const T& value) const
+    bool contains_slow(T const& value) const
     {
         return List::contains_slow(value);
     }
@@ -93,12 +93,12 @@ public:
         return List::find_if(forward<TUnaryPredicate>(pred));
     }
 
-    ConstIterator find(const T& value) const
+    ConstIterator find(T const& value) const
     {
         return List::find(value);
     }
 
-    Iterator find(const T& value)
+    Iterator find(T const& value)
     {
         return List::find(value);
     }

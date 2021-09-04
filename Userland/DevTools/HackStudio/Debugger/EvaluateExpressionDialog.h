@@ -19,8 +19,8 @@ public:
 
 private:
     void build(Window* parent_window);
-    void handle_evaluation(const String& expression);
-    void set_output(const StringView& html);
+    void handle_evaluation(String const& expression);
+    void set_output(StringView const& html);
 
     NonnullOwnPtr<JS::Interpreter> m_interpreter;
     RefPtr<GUI::TextBox> m_text_editor;

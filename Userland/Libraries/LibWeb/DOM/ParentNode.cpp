@@ -11,7 +11,7 @@
 
 namespace Web::DOM {
 
-RefPtr<Element> ParentNode::query_selector(const StringView& selector_text)
+RefPtr<Element> ParentNode::query_selector(StringView const& selector_text)
 {
     auto maybe_selectors = parse_selector(CSS::ParsingContext(*this), selector_text);
     if (!maybe_selectors.has_value())
@@ -36,7 +36,7 @@ RefPtr<Element> ParentNode::query_selector(const StringView& selector_text)
     return result;
 }
 
-NonnullRefPtrVector<Element> ParentNode::query_selector_all(const StringView& selector_text)
+NonnullRefPtrVector<Element> ParentNode::query_selector_all(StringView const& selector_text)
 {
     auto maybe_selectors = parse_selector(CSS::ParsingContext(*this), selector_text);
     if (!maybe_selectors.has_value())

@@ -23,7 +23,7 @@ public:
     virtual ~DownloadWidget() override;
 
 private:
-    explicit DownloadWidget(const URL&);
+    explicit DownloadWidget(URL const&);
 
     void did_progress(Optional<u32> total_size, u32 downloaded_size);
     void did_finish(bool success);

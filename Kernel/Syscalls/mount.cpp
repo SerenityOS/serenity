@@ -137,7 +137,7 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
     return result;
 }
 
-KResultOr<FlatPtr> Process::sys$umount(Userspace<const char*> user_mountpoint, size_t mountpoint_length)
+KResultOr<FlatPtr> Process::sys$umount(Userspace<char const*> user_mountpoint, size_t mountpoint_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     if (!is_superuser())

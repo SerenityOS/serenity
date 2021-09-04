@@ -438,7 +438,7 @@ public:
 
     Span<const UnderlyingBufferDataType> data() const
     {
-        return { reinterpret_cast<const UnderlyingBufferDataType*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), m_array_length };
+        return { reinterpret_cast<UnderlyingBufferDataType const*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), m_array_length };
     }
     Span<UnderlyingBufferDataType> data()
     {

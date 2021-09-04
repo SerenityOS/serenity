@@ -26,7 +26,7 @@ public:
                 state->m_bits[x][y] = glyph.bit_at(x, y);
         return state;
     }
-    void restore_state(const UndoGlyph& state) const
+    void restore_state(UndoGlyph const& state) const
     {
         auto bitmap = font().glyph(state.m_code_point).glyph_bitmap();
         for (int x = 0; x < bitmap.width(); x++)

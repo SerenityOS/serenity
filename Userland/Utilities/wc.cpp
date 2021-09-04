@@ -26,7 +26,7 @@ bool g_output_line = false;
 bool g_output_byte = false;
 bool g_output_word = false;
 
-static void wc_out(const Count& count)
+static void wc_out(Count const& count)
 {
     if (g_output_line)
         out("{:7} ", count.lines);
@@ -38,7 +38,7 @@ static void wc_out(const Count& count)
     outln("{:>14}", count.name);
 }
 
-static Count get_count(const String& file_specifier)
+static Count get_count(String const& file_specifier)
 {
     Count count;
     FILE* file_pointer = nullptr;
@@ -92,7 +92,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Vector<const char*> file_specifiers;
+    Vector<char const*> file_specifiers;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(g_output_line, "Output line count", "lines", 'l');
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
         g_output_line = g_output_byte = g_output_word = true;
 
     Vector<Count> counts;
-    for (const auto& file_specifier : file_specifiers)
+    for (auto const& file_specifier : file_specifiers)
         counts.append(get_count(file_specifier));
 
     if (pledge("stdio", nullptr) < 0) {
@@ -118,7 +118,7 @@ int main(int argc, char** argv)
     else if (file_specifiers.size() > 1)
         counts.append(get_total_count(counts));
 
-    for (const auto& count : counts) {
+    for (auto const& count : counts) {
         if (count.exists)
             wc_out(count);
     }

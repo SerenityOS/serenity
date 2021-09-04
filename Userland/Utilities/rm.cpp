@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     bool recursive = false;
     bool force = false;
     bool verbose = false;
-    Vector<const char*> paths;
+    Vector<char const*> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(recursive, "Delete directories recursively", "recursive", 'r');

@@ -15,7 +15,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* path;
+    char const* path;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(

@@ -22,7 +22,7 @@ public:
         m_builder.append('[');
     }
 
-    JsonArraySerializer(const JsonArraySerializer&) = delete;
+    JsonArraySerializer(JsonArraySerializer const&) = delete;
     JsonArraySerializer(JsonArraySerializer&&) = delete;
 
     ~JsonArraySerializer()
@@ -32,14 +32,14 @@ public:
     }
 
 #ifndef KERNEL
-    void add(const JsonValue& value)
+    void add(JsonValue const& value)
     {
         begin_item();
         value.serialize(m_builder);
     }
 #endif
 
-    void add(const StringView& value)
+    void add(StringView const& value)
     {
         begin_item();
         m_builder.append('"');
@@ -47,7 +47,7 @@ public:
         m_builder.append('"');
     }
 
-    void add(const String& value)
+    void add(String const& value)
     {
         begin_item();
         m_builder.append('"');
@@ -55,7 +55,7 @@ public:
         m_builder.append('"');
     }
 
-    void add(const char* value)
+    void add(char const* value)
     {
         begin_item();
         m_builder.append('"');

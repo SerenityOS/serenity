@@ -10,7 +10,7 @@
 
 int main(int argc, char** argv)
 {
-    const char* name = nullptr;
+    char const* name = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(name, "Name of the module to unload", "name");

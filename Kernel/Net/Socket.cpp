@@ -81,7 +81,7 @@ KResult Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
     return KSuccess;
 }
 
-KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_value, socklen_t user_value_size)
+KResult Socket::setsockopt(int level, int option, Userspace<void const*> user_value, socklen_t user_value_size)
 {
     if (level != SOL_SOCKET)
         return ENOPROTOOPT;
@@ -91,7 +91,7 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
         if (user_value_size != sizeof(timeval))
             return EINVAL;
         {
-            auto timeout = copy_time_from_user(static_ptr_cast<const timeval*>(user_value));
+            auto timeout = copy_time_from_user(static_ptr_cast<timeval const*>(user_value));
             if (!timeout.has_value())
                 return EFAULT;
             m_send_timeout = timeout.value();
@@ -101,7 +101,7 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
         if (user_value_size != sizeof(timeval))
             return EINVAL;
         {
-            auto timeout = copy_time_from_user(static_ptr_cast<const timeval*>(user_value));
+            auto timeout = copy_time_from_user(static_ptr_cast<timeval const*>(user_value));
             if (!timeout.has_value())
                 return EFAULT;
             m_receive_timeout = timeout.value();
@@ -110,7 +110,7 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
     case SO_BINDTODEVICE: {
         if (user_value_size != IFNAMSIZ)
             return EINVAL;
-        auto user_string = static_ptr_cast<const char*>(user_value);
+        auto user_string = static_ptr_cast<char const*>(user_value);
         auto ifname_or_error = try_copy_kstring_from_user(user_string, user_value_size);
         if (ifname_or_error.is_error())
             return ifname_or_error.error();
@@ -128,7 +128,7 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
             return EINVAL;
         {
             int timestamp;
-            if (!copy_from_user(&timestamp, static_ptr_cast<const int*>(user_value)))
+            if (!copy_from_user(&timestamp, static_ptr_cast<int const*>(user_value)))
                 return EFAULT;
             m_timestamp = timestamp;
         }
@@ -196,7 +196,7 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<vo
         if (size < IFNAMSIZ)
             return EINVAL;
         if (m_bound_interface) {
-            const auto& name = m_bound_interface->name();
+            auto const& name = m_bound_interface->name();
             auto length = name.length() + 1;
             if (!copy_to_user(static_ptr_cast<char*>(value), name.characters(), length))
                 return EFAULT;
@@ -234,7 +234,7 @@ KResultOr<size_t> Socket::read(FileDescription& description, u64, UserOrKernelBu
     return recvfrom(description, buffer, size, 0, {}, 0, t);
 }
 
-KResultOr<size_t> Socket::write(FileDescription& description, u64, const UserOrKernelBuffer& data, size_t size)
+KResultOr<size_t> Socket::write(FileDescription& description, u64, UserOrKernelBuffer const& data, size_t size)
 {
     if (is_shut_down_for_writing())
         return set_so_error(EPIPE);

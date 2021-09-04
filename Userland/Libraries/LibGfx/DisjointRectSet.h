@@ -14,13 +14,13 @@ namespace Gfx {
 
 class DisjointRectSet {
 public:
-    DisjointRectSet(const DisjointRectSet&) = delete;
-    DisjointRectSet& operator=(const DisjointRectSet&) = delete;
+    DisjointRectSet(DisjointRectSet const&) = delete;
+    DisjointRectSet& operator=(DisjointRectSet const&) = delete;
 
     DisjointRectSet() { }
     ~DisjointRectSet() { }
 
-    DisjointRectSet(const IntRect& rect)
+    DisjointRectSet(IntRect const& rect)
     {
         m_rects.append(rect);
     }
@@ -36,22 +36,22 @@ public:
     }
 
     void move_by(int dx, int dy);
-    void move_by(const IntPoint& delta)
+    void move_by(IntPoint const& delta)
     {
         move_by(delta.x(), delta.y());
     }
 
-    void add(const IntRect& rect)
+    void add(IntRect const& rect)
     {
         if (add_no_shatter(rect) && m_rects.size() > 1)
             shatter();
     }
 
     template<typename Container>
-    void add_many(const Container& rects)
+    void add_many(Container const& rects)
     {
         bool added = false;
-        for (const auto& rect : rects) {
+        for (auto const& rect : rects) {
             if (add_no_shatter(rect))
                 added = true;
         }
@@ -59,7 +59,7 @@ public:
             shatter();
     }
 
-    void add(const DisjointRectSet& rect_set)
+    void add(DisjointRectSet const& rect_set)
     {
         if (this == &rect_set)
             return;
@@ -70,17 +70,17 @@ public:
         }
     }
 
-    DisjointRectSet shatter(const IntRect&) const;
-    DisjointRectSet shatter(const DisjointRectSet& hammer) const;
+    DisjointRectSet shatter(IntRect const&) const;
+    DisjointRectSet shatter(DisjointRectSet const& hammer) const;
 
-    bool contains(const IntRect&) const;
-    bool intersects(const IntRect&) const;
-    bool intersects(const DisjointRectSet&) const;
-    DisjointRectSet intersected(const IntRect&) const;
-    DisjointRectSet intersected(const DisjointRectSet&) const;
+    bool contains(IntRect const&) const;
+    bool intersects(IntRect const&) const;
+    bool intersects(DisjointRectSet const&) const;
+    DisjointRectSet intersected(IntRect const&) const;
+    DisjointRectSet intersected(DisjointRectSet const&) const;
 
     template<typename Function>
-    IterationDecision for_each_intersected(const IntRect& rect, Function f) const
+    IterationDecision for_each_intersected(IntRect const& rect, Function f) const
     {
         if (is_empty() || rect.is_empty())
             return IterationDecision::Continue;
@@ -96,7 +96,7 @@ public:
     }
 
     template<typename Function>
-    IterationDecision for_each_intersected(const DisjointRectSet& rects, Function f) const
+    IterationDecision for_each_intersected(DisjointRectSet const& rects, Function f) const
     {
         if (is_empty() || rects.is_empty())
             return IterationDecision::Continue;
@@ -141,7 +141,7 @@ public:
     }
 
 private:
-    bool add_no_shatter(const IntRect&);
+    bool add_no_shatter(IntRect const&);
     void shatter();
 
     Vector<IntRect, 32> m_rects;

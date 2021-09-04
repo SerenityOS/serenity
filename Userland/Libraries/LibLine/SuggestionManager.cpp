@@ -9,7 +9,7 @@
 
 namespace Line {
 
-CompletionSuggestion::CompletionSuggestion(const StringView& completion, const StringView& trailing_trivia, Style style)
+CompletionSuggestion::CompletionSuggestion(StringView const& completion, StringView const& trailing_trivia, Style style)
     : style(style)
     , text_string(completion)
     , is_valid(true)
@@ -75,7 +75,7 @@ void SuggestionManager::previous()
     m_next_suggestion_index--;
 }
 
-const CompletionSuggestion& SuggestionManager::suggest()
+CompletionSuggestion const& SuggestionManager::suggest()
 {
     m_last_shown_suggestion = m_suggestions[m_next_suggestion_index];
     m_selected_suggestion_index = m_next_suggestion_index;
@@ -158,7 +158,7 @@ SuggestionManager::CompletionAttemptResult SuggestionManager::attempt_completion
     return result;
 }
 
-size_t SuggestionManager::for_each_suggestion(Function<IterationDecision(const CompletionSuggestion&, size_t)> callback) const
+size_t SuggestionManager::for_each_suggestion(Function<IterationDecision(CompletionSuggestion const&, size_t)> callback) const
 {
     size_t start_index { 0 };
     for (auto& suggestion : m_suggestions) {

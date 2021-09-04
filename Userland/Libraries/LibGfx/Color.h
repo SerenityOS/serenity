@@ -203,7 +203,7 @@ public:
 #endif
     }
 
-    Color interpolate(const Color& other, float weight) const noexcept
+    Color interpolate(Color const& other, float weight) const noexcept
     {
         u8 r = red() + roundf(static_cast<float>(other.red() - red()) * weight);
         u8 g = green() + roundf(static_cast<float>(other.green() - green()) * weight);
@@ -212,7 +212,7 @@ public:
         return Color(r, g, b, a);
     }
 
-    constexpr Color multiply(const Color& other) const
+    constexpr Color multiply(Color const& other) const
     {
         return Color(
             red() * other.red() / 255,
@@ -271,26 +271,26 @@ public:
         return Color(~red(), ~green(), ~blue(), alpha());
     }
 
-    constexpr Color xored(const Color& other) const
+    constexpr Color xored(Color const& other) const
     {
         return Color(((other.m_value ^ m_value) & 0x00ffffff) | (m_value & 0xff000000));
     }
 
     constexpr RGBA32 value() const { return m_value; }
 
-    constexpr bool operator==(const Color& other) const
+    constexpr bool operator==(Color const& other) const
     {
         return m_value == other.m_value;
     }
 
-    constexpr bool operator!=(const Color& other) const
+    constexpr bool operator!=(Color const& other) const
     {
         return m_value != other.m_value;
     }
 
     String to_string() const;
     String to_string_without_alpha() const;
-    static Optional<Color> from_string(const StringView&);
+    static Optional<Color> from_string(StringView const&);
 
     constexpr HSV to_hsv() const
     {
@@ -333,7 +333,7 @@ public:
         return from_hsv({ hue, saturation, value });
     }
 
-    static constexpr Color from_hsv(const HSV& hsv)
+    static constexpr Color from_hsv(HSV const& hsv)
     {
         VERIFY(hsv.hue >= 0.0 && hsv.hue < 360.0);
         VERIFY(hsv.saturation >= 0.0 && hsv.saturation <= 1.0);

@@ -49,7 +49,7 @@ KResultOr<NonnullOwnPtr<KString>> UserOrKernelBuffer::try_copy_into_kstring(size
     return kstring.release_nonnull();
 }
 
-bool UserOrKernelBuffer::write(const void* src, size_t offset, size_t len)
+bool UserOrKernelBuffer::write(void const* src, size_t offset, size_t len)
 {
     if (!m_buffer)
         return false;

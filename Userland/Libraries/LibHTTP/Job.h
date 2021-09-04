@@ -18,14 +18,14 @@ namespace HTTP {
 
 class Job : public Core::NetworkJob {
 public:
-    explicit Job(const HttpRequest&, OutputStream&);
+    explicit Job(HttpRequest const&, OutputStream&);
     virtual ~Job() override;
 
     virtual void start() override = 0;
     virtual void shutdown() override = 0;
 
     HttpResponse* response() { return static_cast<HttpResponse*>(Core::NetworkJob::response()); }
-    const HttpResponse* response() const { return static_cast<const HttpResponse*>(Core::NetworkJob::response()); }
+    HttpResponse const* response() const { return static_cast<HttpResponse const*>(Core::NetworkJob::response()); }
 
 protected:
     void finish_up();

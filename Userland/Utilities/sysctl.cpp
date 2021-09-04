@@ -11,7 +11,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 
-static String read_var(const String& name)
+static String read_var(String const& name)
 {
     StringBuilder builder;
     builder.append("/proc/sys/");
@@ -22,15 +22,15 @@ static String read_var(const String& name)
         warnln("Failed to open {}: {}", f->name(), f->error_string());
         exit(1);
     }
-    const auto& b = f->read_all();
+    auto const& b = f->read_all();
     if (f->error() < 0) {
         warnln("Failed to read: {}", f->error_string());
         exit(1);
     }
-    return String((const char*)b.data(), b.size(), Chomp);
+    return String((char const*)b.data(), b.size(), Chomp);
 }
 
-static void write_var(const String& name, const String& value)
+static void write_var(String const& name, String const& value)
 {
     StringBuilder builder;
     builder.append("/proc/sys/");
@@ -63,7 +63,7 @@ static int handle_show_all()
     return 0;
 }
 
-static int handle_var(const String& var)
+static int handle_var(String const& var)
 {
     String spec(var.characters(), Chomp);
     auto parts = spec.split('=');
@@ -84,7 +84,7 @@ static int handle_var(const String& var)
 int main(int argc, char** argv)
 {
     bool show_all = false;
-    const char* var = nullptr;
+    char const* var = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(

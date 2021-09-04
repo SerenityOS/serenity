@@ -22,7 +22,7 @@ public:
     int fd() const { return m_fd; }
     size_t size() const { return m_size; }
     void* data() { return m_data; }
-    const void* data() const { return m_data; }
+    void const* data() const { return m_data; }
 
 private:
     AnonymousBufferImpl(int fd, size_t, void*);
@@ -54,12 +54,12 @@ public:
     }
 
     template<typename T>
-    const T* data() const
+    T const* data() const
     {
         static_assert(IsVoid<T> || IsTrivial<T>);
         if (!m_impl)
             return nullptr;
-        return (const T*)m_impl->data();
+        return (T const*)m_impl->data();
     }
 
 private:

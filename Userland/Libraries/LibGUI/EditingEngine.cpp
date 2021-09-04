@@ -37,7 +37,7 @@ void EditingEngine::detach()
     m_editor = nullptr;
 }
 
-bool EditingEngine::on_key(const KeyEvent& event)
+bool EditingEngine::on_key(KeyEvent const& event)
 {
     if (event.key() == KeyCode::Key_Left) {
         if (!event.shift() && m_editor->selection()->is_valid()) {
@@ -225,7 +225,7 @@ void EditingEngine::move_to_previous_span()
     m_editor->set_cursor(new_cursor);
 }
 
-void EditingEngine::move_to_next_span(const KeyEvent& event)
+void EditingEngine::move_to_next_span(KeyEvent const& event)
 {
     TextPosition new_cursor;
     if (m_editor->document().has_spans()) {
@@ -284,7 +284,7 @@ void EditingEngine::move_to_logical_line_end()
     m_editor->set_cursor({ m_editor->cursor().line(), m_editor->current_line().length() });
 }
 
-void EditingEngine::move_one_up(const KeyEvent& event)
+void EditingEngine::move_one_up(KeyEvent const& event)
 {
     if (m_editor->cursor().line() > 0 || m_editor->is_wrapping_enabled()) {
         if (event.ctrl() && event.shift()) {
@@ -304,7 +304,7 @@ void EditingEngine::move_one_up(const KeyEvent& event)
     }
 };
 
-void EditingEngine::move_one_down(const KeyEvent& event)
+void EditingEngine::move_one_down(KeyEvent const& event)
 {
     if (m_editor->cursor().line() < (m_editor->line_count() - 1) || m_editor->is_wrapping_enabled()) {
         if (event.ctrl() && event.shift()) {
@@ -422,7 +422,7 @@ TextPosition EditingEngine::find_beginning_of_next_word()
         for (size_t column_index = 0; column_index < lines.at(line_index).length(); column_index++) {
             if (line_index == cursor.line() && column_index < cursor.column())
                 continue;
-            const u32* line_chars = line.view().code_points();
+            u32 const* line_chars = line.view().code_points();
             const u32 current_char = line_chars[column_index];
 
             if (started_on_punct && is_vim_alphanumeric(current_char)) {
@@ -486,7 +486,7 @@ TextPosition EditingEngine::find_end_of_next_word()
             if (line_index == cursor.line() && column_index < cursor.column())
                 continue;
 
-            const u32* line_chars = line.view().code_points();
+            u32 const* line_chars = line.view().code_points();
             const u32 current_char = line_chars[column_index];
 
             if (column_index == lines.at(line_index).length() - 1 && !is_first_iteration && (is_vim_alphanumeric(current_char) || is_vim_punctuation(current_char)))
@@ -542,7 +542,7 @@ TextPosition EditingEngine::find_end_of_previous_word()
             if (line_index == cursor.line() && column_index > cursor.column())
                 continue;
 
-            const u32* line_chars = line.view().code_points();
+            u32 const* line_chars = line.view().code_points();
             const u32 current_char = line_chars[column_index];
 
             if (started_on_punct && is_vim_alphanumeric(current_char)) {
@@ -607,7 +607,7 @@ TextPosition EditingEngine::find_beginning_of_previous_word()
                 continue;
             }
 
-            const u32* line_chars = line.view().code_points();
+            u32 const* line_chars = line.view().code_points();
             const u32 current_char = line_chars[column_index];
 
             if (column_index == 0 && !is_first_iteration && (is_vim_alphanumeric(current_char) || is_vim_punctuation(current_char))) {

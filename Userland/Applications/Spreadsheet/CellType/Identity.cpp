@@ -19,12 +19,12 @@ IdentityCell::~IdentityCell()
 {
 }
 
-String IdentityCell::display(Cell& cell, const CellTypeMetadata&) const
+String IdentityCell::display(Cell& cell, CellTypeMetadata const&) const
 {
     return cell.js_data().to_string_without_side_effects();
 }
 
-JS::Value IdentityCell::js_value(Cell& cell, const CellTypeMetadata&) const
+JS::Value IdentityCell::js_value(Cell& cell, CellTypeMetadata const&) const
 {
     return cell.js_data();
 }

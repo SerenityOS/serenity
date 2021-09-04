@@ -9,7 +9,7 @@
 #define __STRINGIFY_HELPER(x) #x
 #define __STRINGIFY(x) __STRINGIFY_HELPER(x)
 
-[[noreturn]] void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func);
+[[noreturn]] void __assertion_failed(char const* msg, char const* file, unsigned line, char const* func);
 #define VERIFY(expr)                                                            \
     do {                                                                        \
         if (!static_cast<bool>(expr)) [[unlikely]]                              \

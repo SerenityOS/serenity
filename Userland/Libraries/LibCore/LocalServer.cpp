@@ -88,7 +88,7 @@ void LocalServer::setup_notifier()
     };
 }
 
-bool LocalServer::listen(const String& address)
+bool LocalServer::listen(String const& address)
 {
     if (m_listening)
         return false;
@@ -119,7 +119,7 @@ bool LocalServer::listen(const String& address)
         return false;
     }
     auto un = un_optional.value();
-    rc = ::bind(m_fd, (const sockaddr*)&un, sizeof(un));
+    rc = ::bind(m_fd, (sockaddr const*)&un, sizeof(un));
     if (rc < 0) {
         perror("bind");
         return false;

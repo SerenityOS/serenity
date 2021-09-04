@@ -30,26 +30,26 @@ public:
     u64 ns_to_raw_counter_ticks(u64) const;
 
     const NonnullRefPtrVector<HPETComparator>& comparators() const { return m_comparators; }
-    void disable(const HPETComparator&);
-    void enable(const HPETComparator&);
+    void disable(HPETComparator const&);
+    void enable(HPETComparator const&);
 
     void update_periodic_comparator_value();
-    void update_non_periodic_comparator_value(const HPETComparator& comparator);
+    void update_non_periodic_comparator_value(HPETComparator const& comparator);
 
     void set_comparator_irq_vector(u8 comparator_number, u8 irq_vector);
 
-    void enable_periodic_interrupt(const HPETComparator& comparator);
-    void disable_periodic_interrupt(const HPETComparator& comparator);
+    void enable_periodic_interrupt(HPETComparator const& comparator);
+    void disable_periodic_interrupt(HPETComparator const& comparator);
 
     u64 update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only);
     u64 read_main_counter_unsafe() const;
     u64 read_main_counter() const;
 
     Vector<unsigned> capable_interrupt_numbers(u8 comparator_number);
-    Vector<unsigned> capable_interrupt_numbers(const HPETComparator&);
+    Vector<unsigned> capable_interrupt_numbers(HPETComparator const&);
 
 private:
-    const HPETRegistersBlock& registers() const;
+    HPETRegistersBlock const& registers() const;
     HPETRegistersBlock& registers();
 
     void global_disable();

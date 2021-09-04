@@ -32,15 +32,15 @@ private:
     };
 
     // Stringify helpers
-    static String serialize_json_property(GlobalObject&, StringifyState&, const PropertyName& key, Object* holder);
+    static String serialize_json_property(GlobalObject&, StringifyState&, PropertyName const& key, Object* holder);
     static String serialize_json_object(GlobalObject&, StringifyState&, Object&);
     static String serialize_json_array(GlobalObject&, StringifyState&, Object&);
     static String quote_json_string(String);
 
     // Parse helpers
-    static Object* parse_json_object(GlobalObject&, const JsonObject&);
-    static Array* parse_json_array(GlobalObject&, const JsonArray&);
-    static Value parse_json_value(GlobalObject&, const JsonValue&);
+    static Object* parse_json_object(GlobalObject&, JsonObject const&);
+    static Array* parse_json_array(GlobalObject&, JsonArray const&);
+    static Value parse_json_value(GlobalObject&, JsonValue const&);
     static Value internalize_json_property(GlobalObject&, Object* holder, PropertyName const& name, FunctionObject& reviver);
 
     JS_DECLARE_NATIVE_FUNCTION(stringify);

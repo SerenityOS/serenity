@@ -91,17 +91,17 @@ private:
     virtual void on_key_pressed(KeyEvent) override;
 
     // ^TTY
-    virtual KResultOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) override;
+    virtual KResultOr<size_t> on_tty_write(UserOrKernelBuffer const&, size_t) override;
     virtual String const& tty_name() const override { return m_tty_name; }
     virtual void echo(u8) override;
 
     // ^TerminalClient
     virtual void beep() override;
-    virtual void set_window_title(const StringView&) override;
+    virtual void set_window_title(StringView const&) override;
     virtual void set_window_progress(int, int) override;
     virtual void terminal_did_resize(u16 columns, u16 rows) override;
     virtual void terminal_history_changed(int) override;
-    virtual void emit(const u8*, size_t) override;
+    virtual void emit(u8 const*, size_t) override;
     virtual void set_cursor_style(VT::CursorStyle) override;
 
     // ^CharacterDevice
@@ -126,7 +126,7 @@ private:
 
     void clear();
 
-    void inject_string(const StringView&);
+    void inject_string(StringView const&);
 
     Cell& cell_at(size_t column, size_t row);
 

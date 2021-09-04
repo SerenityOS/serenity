@@ -29,7 +29,7 @@ public:
     Optional<Token> token_at(Position) const;
     Optional<size_t> index_of_token_at(Position) const;
     RefPtr<const TranslationUnit> root_node() const { return m_root_node; }
-    String text_of_node(const ASTNode&) const;
+    String text_of_node(ASTNode const&) const;
     StringView text_of_token(const Cpp::Token& token) const;
     void print_tokens() const;
     const Vector<String>& errors() const { return m_errors; }
@@ -56,7 +56,7 @@ private:
     };
 
     Optional<DeclarationType> match_declaration_in_translation_unit();
-    Optional<Parser::DeclarationType> match_class_member(const StringView& class_name);
+    Optional<Parser::DeclarationType> match_class_member(StringView const& class_name);
 
     bool match_function_declaration();
     bool match_comment();
@@ -70,7 +70,7 @@ private:
     bool match_literal();
     bool match_unary_expression();
     bool match_boolean_literal();
-    bool match_keyword(const String&);
+    bool match_keyword(String const&);
     bool match_block_statement();
     bool match_namespace_declaration();
     bool match_template_arguments();
@@ -82,8 +82,8 @@ private:
     bool match_type();
     bool match_named_type();
     bool match_access_specifier();
-    bool match_constructor(const StringView& class_name);
-    bool match_destructor(const StringView& class_name);
+    bool match_constructor(StringView const& class_name);
+    bool match_destructor(StringView const& class_name);
 
     Optional<NonnullRefPtrVector<Parameter>> parse_parameter_list(ASTNode& parent);
     Optional<Token> consume_whitespace();
@@ -129,7 +129,7 @@ private:
     bool match(Token::Type);
     Token consume(Token::Type);
     Token consume();
-    Token consume_keyword(const String&);
+    Token consume_keyword(String const&);
     Token peek(size_t offset = 0) const;
     Optional<Token> peek(Token::Type) const;
     Position position() const;
@@ -147,7 +147,7 @@ private:
 
     template<class T, class... Args>
     NonnullRefPtr<T>
-    create_ast_node(ASTNode& parent, const Position& start, Optional<Position> end, Args&&... args)
+    create_ast_node(ASTNode& parent, Position const& start, Optional<Position> end, Args&&... args)
     {
         auto node = adopt_ref(*new T(&parent, start, end, m_filename, forward<Args>(args)...));
 
@@ -161,7 +161,7 @@ private:
     }
 
     NonnullRefPtr<TranslationUnit>
-    create_root_ast_node(const Position& start, Position end)
+    create_root_ast_node(Position const& start, Position end)
     {
         auto node = adopt_ref(*new TranslationUnit(nullptr, start, end, m_filename));
         m_nodes.append(node);

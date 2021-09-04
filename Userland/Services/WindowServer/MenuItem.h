@@ -23,7 +23,7 @@ public:
         Separator,
     };
 
-    MenuItem(Menu&, unsigned identifier, const String& text, const String& shortcut_text = {}, bool enabled = true, bool checkable = false, bool checked = false, const Gfx::Bitmap* icon = nullptr);
+    MenuItem(Menu&, unsigned identifier, String const& text, String const& shortcut_text = {}, bool enabled = true, bool checkable = false, bool checked = false, const Gfx::Bitmap* icon = nullptr);
     MenuItem(Menu&, Type);
     ~MenuItem();
 
@@ -60,7 +60,7 @@ public:
     void set_submenu_id(int submenu_id) { m_submenu_id = submenu_id; }
 
     Menu* submenu();
-    const Menu* submenu() const;
+    Menu const* submenu() const;
 
     bool is_exclusive() const { return m_exclusive; }
     void set_exclusive(bool exclusive) { m_exclusive = exclusive; }

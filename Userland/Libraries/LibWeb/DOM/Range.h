@@ -27,11 +27,11 @@ public:
     // FIXME: There are a ton of methods missing here.
 
     Node* start_container() { return m_start_container; }
-    const Node* start_container() const { return m_start_container; }
+    Node const* start_container() const { return m_start_container; }
     unsigned start_offset() const { return m_start_offset; }
 
     Node* end_container() { return m_end_container; }
-    const Node* end_container() const { return m_end_container; }
+    Node const* end_container() const { return m_end_container; }
     unsigned end_offset() const { return m_end_offset; }
 
     bool collapsed() const

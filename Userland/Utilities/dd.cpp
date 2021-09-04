@@ -14,7 +14,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-const char* usage = "usage:\n"
+char const* usage = "usage:\n"
                     "\tdd <options>\n"
                     "options:\n"
                     "\tif=<file>\tinput file (default: stdin)\n"
@@ -35,7 +35,7 @@ enum Status {
     Noxfer
 };
 
-static String split_at_equals(const char* argument)
+static String split_at_equals(char const* argument)
 {
     String string_value(argument);
 
@@ -48,7 +48,7 @@ static String split_at_equals(const char* argument)
     }
 }
 
-static int handle_io_file_arguments(int& fd, int flags, const char* argument)
+static int handle_io_file_arguments(int& fd, int flags, char const* argument)
 {
     auto value = split_at_equals(argument);
     if (value.is_empty()) {
@@ -64,7 +64,7 @@ static int handle_io_file_arguments(int& fd, int flags, const char* argument)
     }
 }
 
-static int handle_size_arguments(size_t& numeric_value, const char* argument)
+static int handle_size_arguments(size_t& numeric_value, char const* argument)
 {
     auto value = split_at_equals(argument);
     if (value.is_empty()) {
@@ -102,7 +102,7 @@ static int handle_size_arguments(size_t& numeric_value, const char* argument)
     }
 }
 
-static int handle_status_arguments(Status& status, const char* argument)
+static int handle_status_arguments(Status& status, char const* argument)
 {
     auto value = split_at_equals(argument);
     if (value.is_empty()) {

@@ -178,7 +178,7 @@ timeval Time::to_timeval() const
     return { static_cast<time_t>(m_seconds), static_cast<suseconds_t>(m_nanoseconds) / 1000 };
 }
 
-Time Time::operator+(const Time& other) const
+Time Time::operator+(Time const& other) const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
     VERIFY(other.m_nanoseconds < 1'000'000'000);
@@ -218,13 +218,13 @@ Time Time::operator+(const Time& other) const
     return Time { new_secs.value(), new_nsecs };
 }
 
-Time& Time::operator+=(const Time& other)
+Time& Time::operator+=(Time const& other)
 {
     *this = *this + other;
     return *this;
 }
 
-Time Time::operator-(const Time& other) const
+Time Time::operator-(Time const& other) const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
     VERIFY(other.m_nanoseconds < 1'000'000'000);
@@ -243,25 +243,25 @@ Time Time::operator-(const Time& other) const
     return Time { (m_seconds + 0x4000'0000'0000'0000) + 0x4000'0000'0000'0000, m_nanoseconds };
 }
 
-Time& Time::operator-=(const Time& other)
+Time& Time::operator-=(Time const& other)
 {
     *this = *this - other;
     return *this;
 }
 
-bool Time::operator<(const Time& other) const
+bool Time::operator<(Time const& other) const
 {
     return m_seconds < other.m_seconds || (m_seconds == other.m_seconds && m_nanoseconds < other.m_nanoseconds);
 }
-bool Time::operator<=(const Time& other) const
+bool Time::operator<=(Time const& other) const
 {
     return m_seconds < other.m_seconds || (m_seconds == other.m_seconds && m_nanoseconds <= other.m_nanoseconds);
 }
-bool Time::operator>(const Time& other) const
+bool Time::operator>(Time const& other) const
 {
     return m_seconds > other.m_seconds || (m_seconds == other.m_seconds && m_nanoseconds > other.m_nanoseconds);
 }
-bool Time::operator>=(const Time& other) const
+bool Time::operator>=(Time const& other) const
 {
     return m_seconds > other.m_seconds || (m_seconds == other.m_seconds && m_nanoseconds >= other.m_nanoseconds);
 }

@@ -21,11 +21,11 @@ class UnavailableDisassemblyWidget final : public GUI::Frame {
 public:
     virtual ~UnavailableDisassemblyWidget() override { }
 
-    const String& reason() const { return m_reason; }
-    void set_reason(const String& text) { m_reason = text; }
+    String const& reason() const { return m_reason; }
+    void set_reason(String const& text) { m_reason = text; }
 
 private:
-    UnavailableDisassemblyWidget(const String& reason)
+    UnavailableDisassemblyWidget(String const& reason)
         : m_reason(reason)
     {
     }
@@ -40,14 +40,14 @@ class DisassemblyWidget final : public GUI::Widget {
 public:
     virtual ~DisassemblyWidget() override { }
 
-    void update_state(const Debug::DebugSession&, const PtraceRegisters&);
+    void update_state(const Debug::DebugSession&, PtraceRegisters const&);
     void program_stopped();
 
 private:
     DisassemblyWidget();
 
     void show_disassembly();
-    void hide_disassembly(const String&);
+    void hide_disassembly(String const&);
 
     RefPtr<GUI::Widget> m_top_container;
     RefPtr<GUI::TableView> m_disassembly_view;

@@ -73,7 +73,7 @@ TEST_CASE(create_table)
         auto statement = result.release_value();
         EXPECT(is<SQL::AST::CreateTable>(*statement));
 
-        const auto& table = static_cast<const SQL::AST::CreateTable&>(*statement);
+        auto const& table = static_cast<const SQL::AST::CreateTable&>(*statement);
         EXPECT_EQ(table.schema_name(), expected_schema);
         EXPECT_EQ(table.table_name(), expected_table);
         EXPECT_EQ(table.is_temporary(), expected_is_temporary);
@@ -83,21 +83,21 @@ TEST_CASE(create_table)
         EXPECT_EQ(table.has_selection(), expect_select_statement);
         EXPECT_EQ(table.has_columns(), !expect_select_statement);
 
-        const auto& select_statement = table.select_statement();
+        auto const& select_statement = table.select_statement();
         EXPECT_EQ(select_statement.is_null(), !expect_select_statement);
 
-        const auto& columns = table.columns();
+        auto const& columns = table.columns();
         EXPECT_EQ(columns.size(), expected_columns.size());
 
         for (size_t i = 0; i < columns.size(); ++i) {
-            const auto& column = columns[i];
-            const auto& expected_column = expected_columns[i];
+            auto const& column = columns[i];
+            auto const& expected_column = expected_columns[i];
             EXPECT_EQ(column.name(), expected_column.name);
 
-            const auto& type_name = column.type_name();
+            auto const& type_name = column.type_name();
             EXPECT_EQ(type_name->name(), expected_column.type);
 
-            const auto& signed_numbers = type_name->signed_numbers();
+            auto const& signed_numbers = type_name->signed_numbers();
             EXPECT_EQ(signed_numbers.size(), expected_column.signed_numbers.size());
 
             for (size_t j = 0; j < signed_numbers.size(); ++j) {
@@ -152,7 +152,7 @@ TEST_CASE(alter_table_rename_table)
         auto statement = result.release_value();
         EXPECT(is<SQL::AST::RenameTable>(*statement));
 
-        const auto& alter = static_cast<const SQL::AST::RenameTable&>(*statement);
+        auto const& alter = static_cast<const SQL::AST::RenameTable&>(*statement);
         EXPECT_EQ(alter.schema_name(), expected_schema);
         EXPECT_EQ(alter.table_name(), expected_table);
         EXPECT_EQ(alter.new_table_name(), expected_new_table);
@@ -180,7 +180,7 @@ TEST_CASE(alter_table_rename_column)
         auto statement = result.release_value();
         EXPECT(is<SQL::AST::RenameColumn>(*statement));
 
-        const auto& alter = static_cast<const SQL::AST::RenameColumn&>(*statement);
+        auto const& alter = static_cast<const SQL::AST::RenameColumn&>(*statement);
         EXPECT_EQ(alter.schema_name(), expected_schema);
         EXPECT_EQ(alter.table_name(), expected_table);
         EXPECT_EQ(alter.column_name(), expected_column);
@@ -212,17 +212,17 @@ TEST_CASE(alter_table_add_column)
         auto statement = result.release_value();
         EXPECT(is<SQL::AST::AddColumn>(*statement));
 
-        const auto& alter = static_cast<const SQL::AST::AddColumn&>(*statement);
+        auto const& alter = static_cast<const SQL::AST::AddColumn&>(*statement);
         EXPECT_EQ(alter.schema_name(), expected_schema);
         EXPECT_EQ(alter.table_name(), expected_table);
 
-        const auto& column = alter.column();
+        auto const& column = alter.column();
         EXPECT_EQ(column->name(), expected_column.name);
 
-        const auto& type_name = column->type_name();
+        auto const& type_name = column->type_name();
         EXPECT_EQ(type_name->name(), expected_column.type);
 
-        const auto& signed_numbers = type_name->signed_numbers();
+        auto const& signed_numbers = type_name->signed_numbers();
         EXPECT_EQ(signed_numbers.size(), expected_column.signed_numbers.size());
 
         for (size_t j = 0; j < signed_numbers.size(); ++j) {
@@ -259,7 +259,7 @@ TEST_CASE(alter_table_drop_column)
         auto statement = result.release_value();
         EXPECT(is<SQL::AST::DropColumn>(*statement));
 
-        const auto& alter = static_cast<const SQL::AST::DropColumn&>(*statement);
+        auto const& alter = static_cast<const SQL::AST::DropColumn&>(*statement);
         EXPECT_EQ(alter.schema_name(), expected_schema);
         EXPECT_EQ(alter.table_name(), expected_table);
         EXPECT_EQ(alter.column_name(), expected_column);
@@ -285,7 +285,7 @@ TEST_CASE(drop_table)
         auto statement = result.release_value();
         EXPECT(is<SQL::AST::DropTable>(*statement));
 
-        const auto& table = static_cast<const SQL::AST::DropTable&>(*statement);
+        auto const& table = static_cast<const SQL::AST::DropTable&>(*statement);
         EXPECT_EQ(table.schema_name(), expected_schema);
         EXPECT_EQ(table.table_name(), expected_table);
         EXPECT_EQ(table.is_error_if_table_does_not_exist(), expected_is_error_if_table_does_not_exist);
@@ -318,28 +318,28 @@ TEST_CASE(insert)
         auto statement = result.release_value();
         EXPECT(is<SQL::AST::Insert>(*statement));
 
-        const auto& insert = static_cast<const SQL::AST::Insert&>(*statement);
+        auto const& insert = static_cast<const SQL::AST::Insert&>(*statement);
         EXPECT_EQ(insert.conflict_resolution(), expected_conflict_resolution);
         EXPECT_EQ(insert.schema_name(), expected_schema);
         EXPECT_EQ(insert.table_name(), expected_table);
         EXPECT_EQ(insert.alias(), expected_alias);
 
-        const auto& column_names = insert.column_names();
+        auto const& column_names = insert.column_names();
         EXPECT_EQ(column_names.size(), expected_column_names.size());
         for (size_t i = 0; i < column_names.size(); ++i)
             EXPECT_EQ(column_names[i], expected_column_names[i]);
 
         EXPECT_EQ(insert.has_expressions(), !expected_chain_sizes.is_empty());
         if (insert.has_expressions()) {
-            const auto& chained_expressions = insert.chained_expressions();
+            auto const& chained_expressions = insert.chained_expressions();
             EXPECT_EQ(chained_expressions.size(), expected_chain_sizes.size());
 
             for (size_t i = 0; i < chained_expressions.size(); ++i) {
-                const auto& chained_expression = chained_expressions[i];
-                const auto& expressions = chained_expression.expressions();
+                auto const& chained_expression = chained_expressions[i];
+                auto const& expressions = chained_expression.expressions();
                 EXPECT_EQ(expressions.size(), expected_chain_sizes[i]);
 
-                for (const auto& expression : expressions)
+                for (auto const& expression : expressions)
                     EXPECT(!is<SQL::AST::ErrorExpression>(expression));
             }
         }
@@ -398,19 +398,19 @@ TEST_CASE(update)
         auto statement = result.release_value();
         EXPECT(is<SQL::AST::Update>(*statement));
 
-        const auto& update = static_cast<const SQL::AST::Update&>(*statement);
+        auto const& update = static_cast<const SQL::AST::Update&>(*statement);
         EXPECT_EQ(update.conflict_resolution(), expected_conflict_resolution);
 
-        const auto& qualified_table_name = update.qualified_table_name();
+        auto const& qualified_table_name = update.qualified_table_name();
         EXPECT_EQ(qualified_table_name->schema_name(), expected_schema);
         EXPECT_EQ(qualified_table_name->table_name(), expected_table);
         EXPECT_EQ(qualified_table_name->alias(), expected_alias);
 
-        const auto& update_columns = update.update_columns();
+        auto const& update_columns = update.update_columns();
         EXPECT_EQ(update_columns.size(), expected_update_columns.size());
         for (size_t i = 0; i < update_columns.size(); ++i) {
-            const auto& update_column = update_columns[i];
-            const auto& expected_update_column = expected_update_columns[i];
+            auto const& update_column = update_columns[i];
+            auto const& expected_update_column = expected_update_columns[i];
             EXPECT_EQ(update_column.column_names.size(), expected_update_column.size());
             EXPECT(!is<SQL::AST::ErrorExpression>(*update_column.expression));
 
@@ -418,19 +418,19 @@ TEST_CASE(update)
                 EXPECT_EQ(update_column.column_names[j], expected_update_column[j]);
         }
 
-        const auto& where_clause = update.where_clause();
+        auto const& where_clause = update.where_clause();
         EXPECT_EQ(where_clause.is_null(), !expect_where_clause);
         if (where_clause)
             EXPECT(!is<SQL::AST::ErrorExpression>(*where_clause));
 
-        const auto& returning_clause = update.returning_clause();
+        auto const& returning_clause = update.returning_clause();
         EXPECT_EQ(returning_clause.is_null(), !expect_returning_clause);
         if (returning_clause) {
             EXPECT_EQ(returning_clause->columns().size(), expected_returned_column_aliases.size());
 
             for (size_t i = 0; i < returning_clause->columns().size(); ++i) {
-                const auto& column = returning_clause->columns()[i];
-                const auto& expected_column_alias = expected_returned_column_aliases[i];
+                auto const& column = returning_clause->columns()[i];
+                auto const& expected_column_alias = expected_returned_column_aliases[i];
 
                 EXPECT(!is<SQL::AST::ErrorExpression>(*column.expression));
                 EXPECT_EQ(column.column_alias, expected_column_alias);
@@ -482,26 +482,26 @@ TEST_CASE(delete_)
         auto statement = result.release_value();
         EXPECT(is<SQL::AST::Delete>(*statement));
 
-        const auto& delete_ = static_cast<const SQL::AST::Delete&>(*statement);
+        auto const& delete_ = static_cast<const SQL::AST::Delete&>(*statement);
 
-        const auto& qualified_table_name = delete_.qualified_table_name();
+        auto const& qualified_table_name = delete_.qualified_table_name();
         EXPECT_EQ(qualified_table_name->schema_name(), expected_schema);
         EXPECT_EQ(qualified_table_name->table_name(), expected_table);
         EXPECT_EQ(qualified_table_name->alias(), expected_alias);
 
-        const auto& where_clause = delete_.where_clause();
+        auto const& where_clause = delete_.where_clause();
         EXPECT_EQ(where_clause.is_null(), !expect_where_clause);
         if (where_clause)
             EXPECT(!is<SQL::AST::ErrorExpression>(*where_clause));
 
-        const auto& returning_clause = delete_.returning_clause();
+        auto const& returning_clause = delete_.returning_clause();
         EXPECT_EQ(returning_clause.is_null(), !expect_returning_clause);
         if (returning_clause) {
             EXPECT_EQ(returning_clause->columns().size(), expected_returned_column_aliases.size());
 
             for (size_t i = 0; i < returning_clause->columns().size(); ++i) {
-                const auto& column = returning_clause->columns()[i];
-                const auto& expected_column_alias = expected_returned_column_aliases[i];
+                auto const& column = returning_clause->columns()[i];
+                auto const& expected_column_alias = expected_returned_column_aliases[i];
 
                 EXPECT(!is<SQL::AST::ErrorExpression>(*column.expression));
                 EXPECT_EQ(column.column_alias, expected_column_alias);
@@ -578,13 +578,13 @@ TEST_CASE(select)
         auto statement = result.release_value();
         EXPECT(is<SQL::AST::Select>(*statement));
 
-        const auto& select = static_cast<const SQL::AST::Select&>(*statement);
+        auto const& select = static_cast<const SQL::AST::Select&>(*statement);
 
-        const auto& result_column_list = select.result_column_list();
+        auto const& result_column_list = select.result_column_list();
         EXPECT_EQ(result_column_list.size(), expected_columns.size());
         for (size_t i = 0; i < result_column_list.size(); ++i) {
-            const auto& result_column = result_column_list[i];
-            const auto& expected_column = expected_columns[i];
+            auto const& result_column = result_column_list[i];
+            auto const& expected_column = expected_columns[i];
             EXPECT_EQ(result_column.type(), expected_column.type);
 
             switch (result_column.type()) {
@@ -600,53 +600,53 @@ TEST_CASE(select)
             }
         }
 
-        const auto& table_or_subquery_list = select.table_or_subquery_list();
+        auto const& table_or_subquery_list = select.table_or_subquery_list();
         EXPECT_EQ(table_or_subquery_list.size(), expected_from_list.size());
         for (size_t i = 0; i < table_or_subquery_list.size(); ++i) {
-            const auto& result_from = table_or_subquery_list[i];
-            const auto& expected_from = expected_from_list[i];
+            auto const& result_from = table_or_subquery_list[i];
+            auto const& expected_from = expected_from_list[i];
             EXPECT_EQ(result_from.schema_name(), expected_from.schema_name);
             EXPECT_EQ(result_from.table_name(), expected_from.table_name);
             EXPECT_EQ(result_from.table_alias(), expected_from.table_alias);
         }
 
-        const auto& where_clause = select.where_clause();
+        auto const& where_clause = select.where_clause();
         EXPECT_EQ(where_clause.is_null(), !expect_where_clause);
         if (where_clause)
             EXPECT(!is<SQL::AST::ErrorExpression>(*where_clause));
 
-        const auto& group_by_clause = select.group_by_clause();
+        auto const& group_by_clause = select.group_by_clause();
         EXPECT_EQ(group_by_clause.is_null(), (expected_group_by_size == 0));
         if (group_by_clause) {
-            const auto& group_by_list = group_by_clause->group_by_list();
+            auto const& group_by_list = group_by_clause->group_by_list();
             EXPECT_EQ(group_by_list.size(), expected_group_by_size);
             for (size_t i = 0; i < group_by_list.size(); ++i)
                 EXPECT(!is<SQL::AST::ErrorExpression>(group_by_list[i]));
 
-            const auto& having_clause = group_by_clause->having_clause();
+            auto const& having_clause = group_by_clause->having_clause();
             EXPECT_EQ(having_clause.is_null(), !expect_having_clause);
             if (having_clause)
                 EXPECT(!is<SQL::AST::ErrorExpression>(*having_clause));
         }
 
-        const auto& ordering_term_list = select.ordering_term_list();
+        auto const& ordering_term_list = select.ordering_term_list();
         EXPECT_EQ(ordering_term_list.size(), expected_ordering.size());
         for (size_t i = 0; i < ordering_term_list.size(); ++i) {
-            const auto& result_order = ordering_term_list[i];
-            const auto& expected_order = expected_ordering[i];
+            auto const& result_order = ordering_term_list[i];
+            auto const& expected_order = expected_ordering[i];
             EXPECT(!is<SQL::AST::ErrorExpression>(*result_order.expression()));
             EXPECT_EQ(result_order.collation_name(), expected_order.collation_name);
             EXPECT_EQ(result_order.order(), expected_order.order);
             EXPECT_EQ(result_order.nulls(), expected_order.nulls);
         }
 
-        const auto& limit_clause = select.limit_clause();
+        auto const& limit_clause = select.limit_clause();
         EXPECT_EQ(limit_clause.is_null(), !expect_limit_clause);
         if (limit_clause) {
-            const auto& limit_expression = limit_clause->limit_expression();
+            auto const& limit_expression = limit_clause->limit_expression();
             EXPECT(!is<SQL::AST::ErrorExpression>(*limit_expression));
 
-            const auto& offset_expression = limit_clause->offset_expression();
+            auto const& offset_expression = limit_clause->offset_expression();
             EXPECT_EQ(offset_expression.is_null(), !expect_offset_clause);
             if (offset_expression)
                 EXPECT(!is<SQL::AST::ErrorExpression>(*offset_expression));
@@ -717,19 +717,19 @@ TEST_CASE(common_table_expression)
         auto statement = result.release_value();
         EXPECT(is<SQL::AST::Delete>(*statement));
 
-        const auto& delete_ = static_cast<const SQL::AST::Delete&>(*statement);
+        auto const& delete_ = static_cast<const SQL::AST::Delete&>(*statement);
 
-        const auto& common_table_expression_list = delete_.common_table_expression_list();
+        auto const& common_table_expression_list = delete_.common_table_expression_list();
         EXPECT(!common_table_expression_list.is_null());
 
         EXPECT_EQ(common_table_expression_list->recursive(), expected_selected_tables.recursive);
 
-        const auto& common_table_expressions = common_table_expression_list->common_table_expressions();
+        auto const& common_table_expressions = common_table_expression_list->common_table_expressions();
         EXPECT_EQ(common_table_expressions.size(), expected_selected_tables.selected_tables.size());
 
         for (size_t i = 0; i < common_table_expressions.size(); ++i) {
-            const auto& common_table_expression = common_table_expressions[i];
-            const auto& expected_common_table_expression = expected_selected_tables.selected_tables[i];
+            auto const& common_table_expression = common_table_expressions[i];
+            auto const& expected_common_table_expression = expected_selected_tables.selected_tables[i];
             EXPECT_EQ(common_table_expression.table_name(), expected_common_table_expression.table_name);
             EXPECT_EQ(common_table_expression.column_names().size(), expected_common_table_expression.column_names.size());
 

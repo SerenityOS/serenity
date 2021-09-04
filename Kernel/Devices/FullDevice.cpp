@@ -25,7 +25,7 @@ UNMAP_AFTER_INIT FullDevice::~FullDevice()
 {
 }
 
-bool FullDevice::can_read(const FileDescription&, size_t) const
+bool FullDevice::can_read(FileDescription const&, size_t) const
 {
     return true;
 }
@@ -37,7 +37,7 @@ KResultOr<size_t> FullDevice::read(FileDescription&, u64, UserOrKernelBuffer& bu
     return size;
 }
 
-KResultOr<size_t> FullDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t size)
+KResultOr<size_t> FullDevice::write(FileDescription&, u64, UserOrKernelBuffer const&, size_t size)
 {
     if (size == 0)
         return 0;

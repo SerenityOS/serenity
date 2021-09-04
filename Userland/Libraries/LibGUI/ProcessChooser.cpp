@@ -14,7 +14,7 @@
 
 namespace GUI {
 
-ProcessChooser::ProcessChooser(const StringView& window_title, const StringView& button_label, const Gfx::Bitmap* window_icon, GUI::Window* parent_window)
+ProcessChooser::ProcessChooser(StringView const& window_title, StringView const& button_label, const Gfx::Bitmap* window_icon, GUI::Window* parent_window)
     : Dialog(parent_window)
     , m_window_title(window_title)
     , m_button_label(button_label)
@@ -43,7 +43,7 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
 
     m_process_model = process_model;
 
-    m_table_view->on_activation = [this](const ModelIndex& index) { set_pid_from_index_and_close(index); };
+    m_table_view->on_activation = [this](ModelIndex const& index) { set_pid_from_index_and_close(index); };
 
     auto& button_container = widget.add<GUI::Widget>();
     button_container.set_fixed_height(30);
@@ -99,7 +99,7 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
     };
 }
 
-void ProcessChooser::set_pid_from_index_and_close(const ModelIndex& index)
+void ProcessChooser::set_pid_from_index_and_close(ModelIndex const& index)
 {
     m_pid = index.data(GUI::ModelRole::Custom).as_i32();
     done(ExecOK);

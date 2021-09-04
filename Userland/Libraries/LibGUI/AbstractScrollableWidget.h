@@ -42,11 +42,11 @@ public:
     Gfx::IntSize excess_size() const;
 
     Scrollbar& vertical_scrollbar() { return *m_vertical_scrollbar; }
-    const Scrollbar& vertical_scrollbar() const { return *m_vertical_scrollbar; }
+    Scrollbar const& vertical_scrollbar() const { return *m_vertical_scrollbar; }
     Scrollbar& horizontal_scrollbar() { return *m_horizontal_scrollbar; }
-    const Scrollbar& horizontal_scrollbar() const { return *m_horizontal_scrollbar; }
+    Scrollbar const& horizontal_scrollbar() const { return *m_horizontal_scrollbar; }
     Widget& corner_widget() { return *m_corner_widget; }
-    const Widget& corner_widget() const { return *m_corner_widget; }
+    Widget const& corner_widget() const { return *m_corner_widget; }
 
     void scroll_to_top();
     void scroll_to_bottom();

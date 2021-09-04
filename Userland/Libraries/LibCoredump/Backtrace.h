@@ -37,14 +37,14 @@ public:
         String to_string(bool color = false) const;
     };
 
-    Backtrace(const Reader&, const ELF::Core::ThreadInfo&);
+    Backtrace(Reader const&, const ELF::Core::ThreadInfo&);
     ~Backtrace();
 
     const ELF::Core::ThreadInfo thread_info() const { return m_thread_info; }
     const Vector<Entry> entries() const { return m_entries; }
 
 private:
-    void add_entry(const Reader&, FlatPtr ip);
+    void add_entry(Reader const&, FlatPtr ip);
     ELFObjectInfo const* object_info_for_region(ELF::Core::MemoryRegionInfo const&);
 
     ELF::Core::ThreadInfo m_thread_info;

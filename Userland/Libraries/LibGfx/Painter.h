@@ -32,50 +32,50 @@ public:
         Dashed,
     };
 
-    void clear_rect(const IntRect&, Color);
-    void fill_rect(const IntRect&, Color);
-    void fill_rect_with_dither_pattern(const IntRect&, Color, Color);
-    void fill_rect_with_checkerboard(const IntRect&, const IntSize&, Color color_dark, Color color_light);
-    void fill_rect_with_gradient(Orientation, const IntRect&, Color gradient_start, Color gradient_end);
-    void fill_rect_with_gradient(const IntRect&, Color gradient_start, Color gradient_end);
-    void fill_rect_with_rounded_corners(const IntRect&, Color, int radius);
-    void fill_rect_with_rounded_corners(const IntRect&, Color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius);
-    void fill_ellipse(const IntRect&, Color);
-    void draw_rect(const IntRect&, Color, bool rough = false);
-    void draw_rect_with_thickness(const IntRect&, Color, int thickness);
-    void draw_focus_rect(const IntRect&, Color);
-    void draw_bitmap(const IntPoint&, const CharacterBitmap&, Color = Color());
-    void draw_bitmap(const IntPoint&, const GlyphBitmap&, Color = Color());
-    void draw_scaled_bitmap(const IntRect& dst_rect, const Gfx::Bitmap&, const IntRect& src_rect, float opacity = 1.0f);
-    void draw_scaled_bitmap(const IntRect& dst_rect, const Gfx::Bitmap&, const FloatRect& src_rect, float opacity = 1.0f);
-    void draw_triangle(const IntPoint&, const IntPoint&, const IntPoint&, Color);
-    void draw_ellipse_intersecting(const IntRect&, Color, int thickness = 1);
-    void set_pixel(const IntPoint&, Color);
+    void clear_rect(IntRect const&, Color);
+    void fill_rect(IntRect const&, Color);
+    void fill_rect_with_dither_pattern(IntRect const&, Color, Color);
+    void fill_rect_with_checkerboard(IntRect const&, IntSize const&, Color color_dark, Color color_light);
+    void fill_rect_with_gradient(Orientation, IntRect const&, Color gradient_start, Color gradient_end);
+    void fill_rect_with_gradient(IntRect const&, Color gradient_start, Color gradient_end);
+    void fill_rect_with_rounded_corners(IntRect const&, Color, int radius);
+    void fill_rect_with_rounded_corners(IntRect const&, Color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius);
+    void fill_ellipse(IntRect const&, Color);
+    void draw_rect(IntRect const&, Color, bool rough = false);
+    void draw_rect_with_thickness(IntRect const&, Color, int thickness);
+    void draw_focus_rect(IntRect const&, Color);
+    void draw_bitmap(IntPoint const&, CharacterBitmap const&, Color = Color());
+    void draw_bitmap(IntPoint const&, GlyphBitmap const&, Color = Color());
+    void draw_scaled_bitmap(IntRect const& dst_rect, const Gfx::Bitmap&, IntRect const& src_rect, float opacity = 1.0f);
+    void draw_scaled_bitmap(IntRect const& dst_rect, const Gfx::Bitmap&, FloatRect const& src_rect, float opacity = 1.0f);
+    void draw_triangle(IntPoint const&, IntPoint const&, IntPoint const&, Color);
+    void draw_ellipse_intersecting(IntRect const&, Color, int thickness = 1);
+    void set_pixel(IntPoint const&, Color);
     void set_pixel(int x, int y, Color color) { set_pixel({ x, y }, color); }
-    void draw_line(const IntPoint&, const IntPoint&, Color, int thickness = 1, LineStyle style = LineStyle::Solid, Color alternate_color = Color::Transparent);
-    void draw_quadratic_bezier_curve(const IntPoint& control_point, const IntPoint&, const IntPoint&, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
-    void draw_elliptical_arc(const IntPoint& p1, const IntPoint& p2, const IntPoint& center, const FloatPoint& radii, float x_axis_rotation, float theta_1, float theta_delta, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
-    void blit(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, float opacity = 1.0f, bool apply_alpha = true);
-    void blit_dimmed(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect);
-    void blit_brightened(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect);
-    void blit_filtered(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, Function<Color(Color)>);
-    void draw_tiled_bitmap(const IntRect& dst_rect, const Gfx::Bitmap&);
-    void blit_offset(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, const IntPoint&);
-    void blit_disabled(const IntPoint&, const Gfx::Bitmap&, const IntRect&, const Palette&);
-    void blit_tiled(const IntRect&, const Gfx::Bitmap&, const IntRect& src_rect);
-    void draw_text(const IntRect&, const StringView&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
-    void draw_text(const IntRect&, const StringView&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
-    void draw_text(const IntRect&, const Utf32View&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
-    void draw_text(const IntRect&, const Utf32View&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
-    void draw_text(Function<void(const IntRect&, u32)>, const IntRect&, const StringView&, const Font&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
-    void draw_text(Function<void(const IntRect&, u32)>, const IntRect&, const Utf8View&, const Font&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
-    void draw_text(Function<void(const IntRect&, u32)>, const IntRect&, const Utf32View&, const Font&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
-    void draw_ui_text(const Gfx::IntRect&, const StringView&, const Gfx::Font&, TextAlignment, Gfx::Color);
-    void draw_glyph(const IntPoint&, u32, Color);
-    void draw_glyph(const IntPoint&, u32, const Font&, Color);
-    void draw_emoji(const IntPoint&, const Gfx::Bitmap&, const Font&);
-    void draw_glyph_or_emoji(const IntPoint&, u32 code_point, const Font&, Color);
-    void draw_circle_arc_intersecting(const IntRect&, const IntPoint&, int radius, Color, int thickness);
+    void draw_line(IntPoint const&, IntPoint const&, Color, int thickness = 1, LineStyle style = LineStyle::Solid, Color alternate_color = Color::Transparent);
+    void draw_quadratic_bezier_curve(IntPoint const& control_point, IntPoint const&, IntPoint const&, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
+    void draw_elliptical_arc(IntPoint const& p1, IntPoint const& p2, IntPoint const& center, FloatPoint const& radii, float x_axis_rotation, float theta_1, float theta_delta, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
+    void blit(IntPoint const&, const Gfx::Bitmap&, IntRect const& src_rect, float opacity = 1.0f, bool apply_alpha = true);
+    void blit_dimmed(IntPoint const&, const Gfx::Bitmap&, IntRect const& src_rect);
+    void blit_brightened(IntPoint const&, const Gfx::Bitmap&, IntRect const& src_rect);
+    void blit_filtered(IntPoint const&, const Gfx::Bitmap&, IntRect const& src_rect, Function<Color(Color)>);
+    void draw_tiled_bitmap(IntRect const& dst_rect, const Gfx::Bitmap&);
+    void blit_offset(IntPoint const&, const Gfx::Bitmap&, IntRect const& src_rect, IntPoint const&);
+    void blit_disabled(IntPoint const&, const Gfx::Bitmap&, IntRect const&, Palette const&);
+    void blit_tiled(IntRect const&, const Gfx::Bitmap&, IntRect const& src_rect);
+    void draw_text(IntRect const&, StringView const&, Font const&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
+    void draw_text(IntRect const&, StringView const&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
+    void draw_text(IntRect const&, Utf32View const&, Font const&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
+    void draw_text(IntRect const&, Utf32View const&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
+    void draw_text(Function<void(IntRect const&, u32)>, IntRect const&, StringView const&, Font const&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
+    void draw_text(Function<void(IntRect const&, u32)>, IntRect const&, Utf8View const&, Font const&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
+    void draw_text(Function<void(IntRect const&, u32)>, IntRect const&, Utf32View const&, Font const&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
+    void draw_ui_text(const Gfx::IntRect&, StringView const&, const Gfx::Font&, TextAlignment, Gfx::Color);
+    void draw_glyph(IntPoint const&, u32, Color);
+    void draw_glyph(IntPoint const&, u32, Font const&, Color);
+    void draw_emoji(IntPoint const&, const Gfx::Bitmap&, Font const&);
+    void draw_glyph_or_emoji(IntPoint const&, u32 code_point, Font const&, Color);
+    void draw_circle_arc_intersecting(IntRect const&, IntPoint const&, int radius, Color, int thickness);
 
     enum class CornerOrientation {
         TopLeft,
@@ -83,15 +83,15 @@ public:
         BottomRight,
         BottomLeft
     };
-    void fill_rounded_corner(const IntRect&, int radius, Color, CornerOrientation);
+    void fill_rounded_corner(IntRect const&, int radius, Color, CornerOrientation);
 
-    static void for_each_line_segment_on_bezier_curve(const FloatPoint& control_point, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>&);
-    static void for_each_line_segment_on_bezier_curve(const FloatPoint& control_point, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>&&);
+    static void for_each_line_segment_on_bezier_curve(FloatPoint const& control_point, FloatPoint const& p1, FloatPoint const& p2, Function<void(FloatPoint const&, FloatPoint const&)>&);
+    static void for_each_line_segment_on_bezier_curve(FloatPoint const& control_point, FloatPoint const& p1, FloatPoint const& p2, Function<void(FloatPoint const&, FloatPoint const&)>&&);
 
-    static void for_each_line_segment_on_elliptical_arc(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(const FloatPoint&, const FloatPoint&)>&);
-    static void for_each_line_segment_on_elliptical_arc(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(const FloatPoint&, const FloatPoint&)>&&);
+    static void for_each_line_segment_on_elliptical_arc(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint const&, FloatPoint const&)>&);
+    static void for_each_line_segment_on_elliptical_arc(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint const&, FloatPoint const&)>&&);
 
-    void stroke_path(const Path&, Color, int thickness);
+    void stroke_path(Path const&, Color, int thickness);
 
     enum class WindingRule {
         Nonzero,
@@ -99,8 +99,8 @@ public:
     };
     void fill_path(Path&, Color, WindingRule rule = WindingRule::Nonzero);
 
-    const Font& font() const { return *state().font; }
-    void set_font(const Font& font) { state().font = &font; }
+    Font const& font() const { return *state().font; }
+    void set_font(Font const& font) { state().font = &font; }
 
     enum class DrawOp {
         Copy,
@@ -110,11 +110,11 @@ public:
     void set_draw_op(DrawOp op) { state().draw_op = op; }
     DrawOp draw_op() const { return state().draw_op; }
 
-    void add_clip_rect(const IntRect& rect);
+    void add_clip_rect(IntRect const& rect);
     void clear_clip_rect();
 
     void translate(int dx, int dy) { translate({ dx, dy }); }
-    void translate(const IntPoint& delta) { state().translation.translate_by(delta); }
+    void translate(IntPoint const& delta) { state().translation.translate_by(delta); }
 
     Gfx::Bitmap* target() { return m_target.ptr(); }
 
@@ -129,17 +129,17 @@ public:
 
 protected:
     IntPoint translation() const { return state().translation; }
-    IntRect to_physical(const IntRect& r) const { return r.translated(translation()) * scale(); }
-    IntPoint to_physical(const IntPoint& p) const { return p.translated(translation()) * scale(); }
+    IntRect to_physical(IntRect const& r) const { return r.translated(translation()) * scale(); }
+    IntPoint to_physical(IntPoint const& p) const { return p.translated(translation()) * scale(); }
     int scale() const { return state().scale; }
-    void set_physical_pixel_with_draw_op(u32& pixel, const Color&);
-    void fill_physical_scanline_with_draw_op(int y, int x, int width, const Color& color);
-    void fill_rect_with_draw_op(const IntRect&, Color);
-    void blit_with_opacity(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, float opacity, bool apply_alpha = true);
-    void draw_physical_pixel(const IntPoint&, Color, int thickness = 1);
+    void set_physical_pixel_with_draw_op(u32& pixel, Color const&);
+    void fill_physical_scanline_with_draw_op(int y, int x, int width, Color const& color);
+    void fill_rect_with_draw_op(IntRect const&, Color);
+    void blit_with_opacity(IntPoint const&, const Gfx::Bitmap&, IntRect const& src_rect, float opacity, bool apply_alpha = true);
+    void draw_physical_pixel(IntPoint const&, Color, int thickness = 1);
 
     struct State {
-        const Font* font;
+        Font const* font;
         IntPoint translation;
         int scale = 1;
         IntRect clip_rect;
@@ -147,9 +147,9 @@ protected:
     };
 
     State& state() { return m_state_stack.last(); }
-    const State& state() const { return m_state_stack.last(); }
+    State const& state() const { return m_state_stack.last(); }
 
-    void fill_physical_rect(const IntRect&, Color);
+    void fill_physical_rect(IntRect const&, Color);
 
     IntRect m_clip_origin;
     NonnullRefPtr<Gfx::Bitmap> m_target;
@@ -171,6 +171,6 @@ private:
     Painter& m_painter;
 };
 
-String parse_ampersand_string(const StringView&, Optional<size_t>* underline_offset = nullptr);
+String parse_ampersand_string(StringView const&, Optional<size_t>* underline_offset = nullptr);
 
 }

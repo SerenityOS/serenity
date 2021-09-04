@@ -35,7 +35,7 @@ KResultOr<FlatPtr> Process::sys$get_process_name(Userspace<char*> buffer, size_t
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$set_process_name(Userspace<const char*> user_name, size_t user_name_length)
+KResultOr<FlatPtr> Process::sys$set_process_name(Userspace<char const*> user_name, size_t user_name_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);

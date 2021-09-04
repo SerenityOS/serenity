@@ -57,7 +57,7 @@ void Menu::add_action(NonnullRefPtr<Action> action)
     m_items.append(move(item));
 }
 
-Menu& Menu::add_submenu(const String& name)
+Menu& Menu::add_submenu(String const& name)
 {
     auto submenu = Menu::construct(name);
 

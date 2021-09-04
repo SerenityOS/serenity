@@ -51,8 +51,8 @@ static constexpr size_t convert_unsigned_to_string(u64 value, Array<u8, 128>& bu
 {
     VERIFY(base >= 2 && base <= 16);
 
-    constexpr const char* lowercase_lookup = "0123456789abcdef";
-    constexpr const char* uppercase_lookup = "0123456789ABCDEF";
+    constexpr char const* lowercase_lookup = "0123456789abcdef";
+    constexpr char const* uppercase_lookup = "0123456789ABCDEF";
 
     if (value == 0) {
         buffer[0] = '0';
@@ -623,7 +623,7 @@ void Formatter<T, typename EnableIf<IsIntegral<T>>::Type>::format(FormatBuilder&
         m_mode = Mode::String;
 
         Formatter<StringView> formatter { *this };
-        return formatter.format(builder, StringView { reinterpret_cast<const char*>(&value), 1 });
+        return formatter.format(builder, StringView { reinterpret_cast<char const*>(&value), 1 });
     }
 
     if (m_precision.has_value())

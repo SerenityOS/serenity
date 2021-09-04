@@ -65,11 +65,11 @@ struct ID {
 
     bool is_null() const { return !vendor_id && !device_id; }
 
-    bool operator==(const ID& other) const
+    bool operator==(ID const& other) const
     {
         return vendor_id == other.vendor_id && device_id == other.device_id;
     }
-    bool operator!=(const ID& other) const
+    bool operator!=(ID const& other) const
     {
         return vendor_id != other.vendor_id || device_id != other.device_id;
     }
@@ -93,7 +93,7 @@ public:
     {
     }
 
-    Address(const Address& address)
+    Address(Address const& address)
         : m_seg(address.seg())
         , m_bus(address.bus())
         , m_device(address.device())
@@ -105,18 +105,18 @@ public:
     operator bool() const { return !is_null(); }
 
     // Disable default implementations that would use surprising integer promotion.
-    bool operator<=(const Address&) const = delete;
-    bool operator>=(const Address&) const = delete;
-    bool operator<(const Address&) const = delete;
-    bool operator>(const Address&) const = delete;
+    bool operator<=(Address const&) const = delete;
+    bool operator>=(Address const&) const = delete;
+    bool operator<(Address const&) const = delete;
+    bool operator>(Address const&) const = delete;
 
-    bool operator==(const Address& other) const
+    bool operator==(Address const& other) const
     {
         if (this == &other)
             return true;
         return m_seg == other.m_seg && m_bus == other.m_bus && m_device == other.m_device && m_function == other.m_function;
     }
-    bool operator!=(const Address& other) const
+    bool operator!=(Address const& other) const
     {
         return !(*this == other);
     }
@@ -155,14 +155,14 @@ struct ChangeableAddress : public Address {
     void set_bus(u8 bus) { m_bus = bus; }
     void set_device(u8 device) { m_device = device; }
     void set_function(u8 function) { m_function = function; }
-    bool operator==(const Address& address)
+    bool operator==(Address const& address)
     {
         if (m_seg == address.seg() && m_bus == address.bus() && m_device == address.device() && m_function == address.function())
             return true;
         else
             return false;
     }
-    const ChangeableAddress& operator=(const Address& address)
+    ChangeableAddress const& operator=(Address const& address)
     {
         set_seg(address.seg());
         set_bus(address.bus());
@@ -174,7 +174,7 @@ struct ChangeableAddress : public Address {
 
 class Capability {
 public:
-    Capability(const Address& address, u8 id, u8 ptr)
+    Capability(Address const& address, u8 id, u8 ptr)
         : m_address(address)
         , m_id(id)
         , m_ptr(ptr)
@@ -204,14 +204,14 @@ public:
         , m_capabilities(capabilities)
     {
         if constexpr (PCI_DEBUG) {
-            for (const auto& capability : capabilities)
+            for (auto const& capability : capabilities)
                 dbgln("{} has capability {}", address, capability.id());
         }
     }
 
     Vector<Capability> capabilities() const { return m_capabilities; }
-    const ID& id() const { return m_id; }
-    const Address& address() const { return m_address; }
+    ID const& id() const { return m_id; }
+    Address const& address() const { return m_address; }
 
 private:
     Address m_address;

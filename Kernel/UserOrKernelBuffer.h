@@ -38,11 +38,11 @@ public:
     {
         if (!Memory::is_user_range(VirtualAddress(userspace.unsafe_userspace_ptr()), size))
             return {};
-        return UserOrKernelBuffer(const_cast<u8*>((const u8*)userspace.unsafe_userspace_ptr()));
+        return UserOrKernelBuffer(const_cast<u8*>((u8 const*)userspace.unsafe_userspace_ptr()));
     }
 
     [[nodiscard]] bool is_kernel_buffer() const;
-    [[nodiscard]] const void* user_or_kernel_ptr() const { return m_buffer; }
+    [[nodiscard]] void const* user_or_kernel_ptr() const { return m_buffer; }
 
     [[nodiscard]] UserOrKernelBuffer offset(size_t offset) const
     {
@@ -56,8 +56,8 @@ public:
 
     [[nodiscard]] String copy_into_string(size_t size) const;
     [[nodiscard]] KResultOr<NonnullOwnPtr<KString>> try_copy_into_kstring(size_t) const;
-    [[nodiscard]] bool write(const void* src, size_t offset, size_t len);
-    [[nodiscard]] bool write(const void* src, size_t len)
+    [[nodiscard]] bool write(void const* src, size_t offset, size_t len);
+    [[nodiscard]] bool write(void const* src, size_t len)
     {
         return write(src, 0, len);
     }

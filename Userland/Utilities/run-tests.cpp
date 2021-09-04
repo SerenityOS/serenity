@@ -46,13 +46,13 @@ public:
     virtual ~TestRunner() = default;
 
 protected:
-    virtual void do_run_single_test(const String& test_path, size_t current_text_index, size_t num_tests) override;
+    virtual void do_run_single_test(String const& test_path, size_t current_text_index, size_t num_tests) override;
     virtual Vector<String> get_test_paths() const override;
     virtual const Vector<String>* get_failed_test_names() const override { return &m_failed_test_names; }
 
-    virtual FileResult run_test_file(const String& test_path);
+    virtual FileResult run_test_file(String const& test_path);
 
-    bool should_skip_test(const LexicalPath& test_path);
+    bool should_skip_test(LexicalPath const& test_path);
 
     Regex<PosixExtended> m_exclude_regex;
     NonnullRefPtr<Core::ConfigFile> m_config;
@@ -66,7 +66,7 @@ protected:
 Vector<String> TestRunner::get_test_paths() const
 {
     Vector<String> paths;
-    Test::iterate_directory_recursively(m_test_root, [&](const String& file_path) {
+    Test::iterate_directory_recursively(m_test_root, [&](String const& file_path) {
         if (access(file_path.characters(), R_OK | X_OK) != 0)
             return;
         auto result = m_exclude_regex.match(file_path, PosixFlags::Global);
@@ -77,13 +77,13 @@ Vector<String> TestRunner::get_test_paths() const
     return paths;
 }
 
-bool TestRunner::should_skip_test(const LexicalPath& test_path)
+bool TestRunner::should_skip_test(LexicalPath const& test_path)
 {
-    for (const String& dir : m_skip_directories) {
+    for (String const& dir : m_skip_directories) {
         if (test_path.dirname().contains(dir))
             return true;
     }
-    for (const String& file : m_skip_files) {
+    for (String const& file : m_skip_files) {
         if (test_path.basename().contains(file))
             return true;
     }
@@ -94,7 +94,7 @@ bool TestRunner::should_skip_test(const LexicalPath& test_path)
     return false;
 }
 
-void TestRunner::do_run_single_test(const String& test_path, size_t current_test_index, size_t num_tests)
+void TestRunner::do_run_single_test(String const& test_path, size_t current_test_index, size_t num_tests)
 {
     g_currently_running_test = test_path;
     auto test_relative_path = LexicalPath::relative_path(test_path, m_test_root);
@@ -187,7 +187,7 @@ void TestRunner::do_run_single_test(const String& test_path, size_t current_test
     close(test_result.stdout_err_fd);
 }
 
-FileResult TestRunner::run_test_file(const String& test_path)
+FileResult TestRunner::run_test_file(String const& test_path)
 {
     double start_time = get_time_in_ms();
 
@@ -210,7 +210,7 @@ FileResult TestRunner::run_test_file(const String& test_path)
     (void)posix_spawn_file_actions_adddup2(&file_actions, child_out_err_file, STDERR_FILENO);
     (void)posix_spawn_file_actions_addchdir(&file_actions, dirname.characters());
 
-    Vector<const char*, 4> argv;
+    Vector<char const*, 4> argv;
     argv.append(basename.characters());
     auto extra_args = m_config->read_entry(path_for_test.basename(), "Arguments", "").split(' ');
     for (auto& arg : extra_args)
@@ -274,7 +274,7 @@ int main(int argc, char** argv)
 #endif
     bool print_json = false;
     bool print_all_output = false;
-    const char* specified_test_root = nullptr;
+    char const* specified_test_root = nullptr;
     String test_glob;
     String exclude_pattern;
     String config_file;

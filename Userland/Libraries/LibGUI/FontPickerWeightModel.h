@@ -11,7 +11,7 @@
 namespace GUI {
 
 struct FontWeightNameMapping {
-    constexpr FontWeightNameMapping(int w, const char* n)
+    constexpr FontWeightNameMapping(int w, char const* n)
         : weight(w)
         , name(n)
     {
@@ -58,7 +58,7 @@ public:
     {
     }
 
-    virtual Variant data(const ModelIndex& index, ModelRole role) const override
+    virtual Variant data(ModelIndex const& index, ModelRole role) const override
     {
         if (role == ModelRole::Custom)
             return m_data.at(index.row());

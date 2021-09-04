@@ -42,7 +42,7 @@ public:
     void update_volatility();
 
 private:
-    explicit ImageResource(const LoadRequest&);
+    explicit ImageResource(LoadRequest const&);
 
     void decode_if_needed() const;
 
@@ -60,7 +60,7 @@ public:
 
 protected:
     ImageResource* resource() { return static_cast<ImageResource*>(ResourceClient::resource()); }
-    const ImageResource* resource() const { return static_cast<const ImageResource*>(ResourceClient::resource()); }
+    ImageResource const* resource() const { return static_cast<ImageResource const*>(ResourceClient::resource()); }
 
 private:
     virtual Resource::Type client_type() const override { return Resource::Type::Image; }

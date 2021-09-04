@@ -34,7 +34,7 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph)
     layout()->set_margins({ 8, 0, 0 });
     layout()->set_spacing(3);
 
-    auto build_widgets_for_label = [this](const String& description) -> RefPtr<GUI::Label> {
+    auto build_widgets_for_label = [this](String const& description) -> RefPtr<GUI::Label> {
         auto& container = add<GUI::Widget>();
         container.set_layout<GUI::HorizontalBoxLayout>();
         container.set_fixed_size(275, 12);

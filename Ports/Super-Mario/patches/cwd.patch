@@ -6,7 +6,7 @@ diff -Naur Super-Mario-Clone-Cpp-master/src/main.cpp Super-Mario-Clone-Cpp-maste
  #include "Core.h"
 +#include <unistd.h>
  
- int main(int argc, const char* argv[]) {
+ int main(int argc, char const* argv[]) {
 -    CCore oCore;
 +    chdir("/opt/Super_Mario");
  

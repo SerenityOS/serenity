@@ -21,12 +21,12 @@ public:
 
     unsigned index() const { return m_index; }
     String pts_name() const;
-    KResultOr<size_t> on_slave_write(const UserOrKernelBuffer&, size_t);
+    KResultOr<size_t> on_slave_write(UserOrKernelBuffer const&, size_t);
     bool can_write_from_slave() const;
     void notify_slave_closed(Badge<SlavePTY>);
     bool is_closed() const { return m_closed; }
 
-    virtual String absolute_path(const FileDescription&) const override;
+    virtual String absolute_path(FileDescription const&) const override;
 
     // ^Device
     virtual mode_t required_mode() const override { return 0640; }
@@ -36,9 +36,9 @@ private:
     explicit MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer);
     // ^CharacterDevice
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual bool can_read(const FileDescription&, size_t) const override;
-    virtual bool can_write(const FileDescription&, size_t) const override;
+    virtual KResultOr<size_t> write(FileDescription&, u64, UserOrKernelBuffer const&, size_t) override;
+    virtual bool can_read(FileDescription const&, size_t) const override;
+    virtual bool can_write(FileDescription const&, size_t) const override;
     virtual KResult close() override;
     virtual bool is_master_pty() const override { return true; }
     virtual KResult ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override;

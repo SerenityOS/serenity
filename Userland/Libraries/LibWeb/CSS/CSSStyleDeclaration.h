@@ -34,7 +34,7 @@ public:
     virtual ~CSSStyleDeclaration();
 
     const Vector<StyleProperty>& properties() const { return m_properties; }
-    const Optional<StyleProperty> custom_property(const String& custom_property_name) const { return m_custom_properties.get(custom_property_name); }
+    const Optional<StyleProperty> custom_property(String const& custom_property_name) const { return m_custom_properties.get(custom_property_name); }
     size_t custom_property_count() const { return m_custom_properties.size(); };
 
     size_t length() const { return m_properties.size(); }

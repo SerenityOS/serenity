@@ -158,7 +158,7 @@ TEST_CASE(test_copy_ctor_and_dtor_called)
         {
         }
 
-        CopyChecker(const CopyChecker& other)
+        CopyChecker(CopyChecker const& other)
             : m_was_copy_constructed(other.m_was_copy_constructed)
         {
             m_was_copy_constructed = true;
@@ -181,7 +181,7 @@ TEST_CASE(test_copy_ctor_and_dtor_called)
         {
         }
 
-        MoveChecker(const MoveChecker& other)
+        MoveChecker(MoveChecker const& other)
             : m_was_move_constructed(other.m_was_move_constructed)
         {
             EXPECT(false);

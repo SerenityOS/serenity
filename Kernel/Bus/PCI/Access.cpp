@@ -368,12 +368,12 @@ void Capability::write32(u32 field, u32 value)
     PCI::write32(m_address, m_ptr + field, value);
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<PCIDeviceSysFSDirectory> PCIDeviceSysFSDirectory::create(const SysFSDirectory& parent_directory, Address address)
+UNMAP_AFTER_INIT NonnullRefPtr<PCIDeviceSysFSDirectory> PCIDeviceSysFSDirectory::create(SysFSDirectory const& parent_directory, Address address)
 {
     return adopt_ref(*new (nothrow) PCIDeviceSysFSDirectory(parent_directory, address));
 }
 
-UNMAP_AFTER_INIT PCIDeviceSysFSDirectory::PCIDeviceSysFSDirectory(const SysFSDirectory& parent_directory, Address address)
+UNMAP_AFTER_INIT PCIDeviceSysFSDirectory::PCIDeviceSysFSDirectory(SysFSDirectory const& parent_directory, Address address)
     : SysFSDirectory(String::formatted("{:04x}:{:02x}:{:02x}.{}", address.seg(), address.bus(), address.device(), address.function()), parent_directory)
     , m_address(address)
 {
@@ -396,18 +396,18 @@ UNMAP_AFTER_INIT void PCIBusSysFSDirectory::initialize()
 UNMAP_AFTER_INIT PCIBusSysFSDirectory::PCIBusSysFSDirectory()
     : SysFSDirectory("pci", SysFSComponentRegistry::the().root_directory())
 {
-    PCI::enumerate([&](const Address& address, ID) {
+    PCI::enumerate([&](Address const& address, ID) {
         auto pci_device = PCI::PCIDeviceSysFSDirectory::create(*this, address);
         m_components.append(pci_device);
     });
 }
 
-NonnullRefPtr<PCIDeviceAttributeSysFSComponent> PCIDeviceAttributeSysFSComponent::create(String name, const PCIDeviceSysFSDirectory& device, size_t offset, size_t field_bytes_width)
+NonnullRefPtr<PCIDeviceAttributeSysFSComponent> PCIDeviceAttributeSysFSComponent::create(String name, PCIDeviceSysFSDirectory const& device, size_t offset, size_t field_bytes_width)
 {
     return adopt_ref(*new (nothrow) PCIDeviceAttributeSysFSComponent(name, device, offset, field_bytes_width));
 }
 
-PCIDeviceAttributeSysFSComponent::PCIDeviceAttributeSysFSComponent(String name, const PCIDeviceSysFSDirectory& device, size_t offset, size_t field_bytes_width)
+PCIDeviceAttributeSysFSComponent::PCIDeviceAttributeSysFSComponent(String name, PCIDeviceSysFSDirectory const& device, size_t offset, size_t field_bytes_width)
     : SysFSComponent(name)
     , m_device(device)
     , m_offset(offset)

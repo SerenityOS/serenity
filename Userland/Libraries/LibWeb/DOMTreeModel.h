@@ -38,14 +38,14 @@ public:
 private:
     explicit DOMTreeModel(JsonObject);
 
-    ALWAYS_INLINE JsonObject const* get_parent(const JsonObject& o) const
+    ALWAYS_INLINE JsonObject const* get_parent(JsonObject const& o) const
     {
         auto parent_node = m_dom_node_to_parent_map.get(&o);
         VERIFY(parent_node.has_value());
         return *parent_node;
     }
 
-    ALWAYS_INLINE static JsonArray const* get_children(const JsonObject& o)
+    ALWAYS_INLINE static JsonArray const* get_children(JsonObject const& o)
     {
         if (auto const* maybe_children = o.get_ptr("children"); maybe_children)
             return &maybe_children->as_array();

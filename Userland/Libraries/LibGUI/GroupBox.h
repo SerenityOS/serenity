@@ -16,10 +16,10 @@ public:
     virtual ~GroupBox() override;
 
     String title() const { return m_title; }
-    void set_title(const StringView&);
+    void set_title(StringView const&);
 
 protected:
-    explicit GroupBox(const StringView& title = {});
+    explicit GroupBox(StringView const& title = {});
 
     virtual void paint_event(PaintEvent&) override;
 

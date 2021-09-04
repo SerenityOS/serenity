@@ -20,7 +20,7 @@ mode_t umask(mode_t mask)
     return syscall(SC_umask, mask);
 }
 
-int mkdir(const char* pathname, mode_t mode)
+int mkdir(char const* pathname, mode_t mode)
 {
     if (!pathname) {
         errno = EFAULT;
@@ -30,7 +30,7 @@ int mkdir(const char* pathname, mode_t mode)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int chmod(const char* pathname, mode_t mode)
+int chmod(char const* pathname, mode_t mode)
 {
     if (!pathname) {
         errno = EFAULT;
@@ -46,12 +46,12 @@ int fchmod(int fd, mode_t mode)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int mkfifo(const char* pathname, mode_t mode)
+int mkfifo(char const* pathname, mode_t mode)
 {
     return mknod(pathname, mode | S_IFIFO, 0);
 }
 
-static int do_stat(int dirfd, const char* path, struct stat* statbuf, bool follow_symlinks)
+static int do_stat(int dirfd, char const* path, struct stat* statbuf, bool follow_symlinks)
 {
     if (!path) {
         errno = EFAULT;
@@ -62,12 +62,12 @@ static int do_stat(int dirfd, const char* path, struct stat* statbuf, bool follo
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int lstat(const char* path, struct stat* statbuf)
+int lstat(char const* path, struct stat* statbuf)
 {
     return do_stat(AT_FDCWD, path, statbuf, false);
 }
 
-int stat(const char* path, struct stat* statbuf)
+int stat(char const* path, struct stat* statbuf)
 {
     return do_stat(AT_FDCWD, path, statbuf, true);
 }
@@ -78,7 +78,7 @@ int fstat(int fd, struct stat* statbuf)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int fstatat(int fd, const char* path, struct stat* statbuf, int flags)
+int fstatat(int fd, char const* path, struct stat* statbuf, int flags)
 {
     return do_stat(fd, path, statbuf, !(flags & AT_SYMLINK_NOFOLLOW));
 }

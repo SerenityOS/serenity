@@ -24,7 +24,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 
-static void log_parse_error(const SourceLocation& location = SourceLocation::current())
+static void log_parse_error(SourceLocation const& location = SourceLocation::current())
 {
     dbgln_if(CSS_PARSER_DEBUG, "Parse error (CSS) {}", location);
 }
@@ -1328,7 +1328,7 @@ Optional<float> Parser::try_parse_float(StringView string)
 {
     // FIXME: This is copied from DeprecatedCSSParser, so may not be to spec.
 
-    const char* str = string.characters_without_null_termination();
+    char const* str = string.characters_without_null_termination();
     size_t len = string.length();
     size_t weight = 1;
     int exp_val = 0;

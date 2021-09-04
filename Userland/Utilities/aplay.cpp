@@ -12,7 +12,7 @@
 
 int main(int argc, char** argv)
 {
-    const char* path = nullptr;
+    char const* path = nullptr;
     bool should_loop = false;
 
     Core::ArgsParser args_parser;

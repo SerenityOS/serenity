@@ -17,7 +17,7 @@ extern "C" {
 
 extern bool __stdio_is_initialized;
 #ifndef NDEBUG
-void __assertion_failed(const char* msg)
+void __assertion_failed(char const* msg)
 {
     dbgln("ASSERTION FAILED: {}", msg);
     if (__stdio_is_initialized)

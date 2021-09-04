@@ -46,7 +46,7 @@ public:
     EditorWrapper const& current_editor_wrapper() const;
     void set_current_editor_wrapper(RefPtr<EditorWrapper>);
 
-    const String& active_file() const { return m_current_editor_wrapper->filename(); }
+    String const& active_file() const { return m_current_editor_wrapper->filename(); }
     void initialize_menubar(GUI::Window&);
 
     Locator& locator()
@@ -59,14 +59,14 @@ public:
         No,
         Yes
     };
-    ContinueDecision warn_unsaved_changes(const String& prompt);
+    ContinueDecision warn_unsaved_changes(String const& prompt);
 
 private:
-    static String get_full_path_of_serenity_source(const String& file);
+    static String get_full_path_of_serenity_source(String const& file);
     Vector<String> selected_file_paths() const;
 
-    HackStudioWidget(const String& path_to_project);
-    void open_project(const String& root_path);
+    HackStudioWidget(String const& path_to_project);
+    void open_project(String const& root_path);
 
     enum class EditMode {
         Text,
@@ -98,7 +98,7 @@ private:
     void create_location_history_actions();
 
     void add_new_editor(GUI::Widget& parent);
-    RefPtr<EditorWrapper> get_editor_of_file(const String& filename);
+    RefPtr<EditorWrapper> get_editor_of_file(String const& filename);
     String get_project_executable_path() const;
 
     void on_action_tab_change();
@@ -106,7 +106,7 @@ private:
     void initialize_debugger();
     void update_statusbar();
 
-    void handle_external_file_deletion(const String& filepath);
+    void handle_external_file_deletion(String const& filepath);
     void stop_debugger_if_running();
     void close_current_project();
 

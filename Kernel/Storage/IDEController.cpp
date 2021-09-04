@@ -40,7 +40,7 @@ size_t IDEController::devices_count() const
     return count;
 }
 
-void IDEController::start_request(const StorageDevice&, AsyncBlockDeviceRequest&)
+void IDEController::start_request(StorageDevice const&, AsyncBlockDeviceRequest&)
 {
     VERIFY_NOT_REACHED();
 }
@@ -83,7 +83,7 @@ bool IDEController::is_bus_master_capable() const
     return PCI::get_programming_interface(pci_address()) & (1 << 7);
 }
 
-static const char* detect_controller_type(u8 programming_value)
+static char const* detect_controller_type(u8 programming_value)
 {
     switch (programming_value) {
     case 0x00:

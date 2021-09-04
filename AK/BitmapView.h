@@ -54,8 +54,8 @@ public:
             return 0;
 
         size_t count;
-        const u8* first = &m_data[start / 8];
-        const u8* last = &m_data[(start + len) / 8];
+        u8 const* first = &m_data[start / 8];
+        u8 const* last = &m_data[(start + len) / 8];
         u8 byte = *first;
         byte &= bitmask_first_byte[start % 8];
         if (first == last) {
@@ -70,19 +70,19 @@ public:
                 count += __builtin_popcount(byte);
             }
             if (++first < last) {
-                const u32* ptr32 = (const u32*)(((FlatPtr)first + sizeof(u32) - 1) & ~(sizeof(u32) - 1));
-                if ((const u8*)ptr32 > last)
-                    ptr32 = (const u32*)last;
-                while (first < (const u8*)ptr32) {
+                u32 const* ptr32 = (u32 const*)(((FlatPtr)first + sizeof(u32) - 1) & ~(sizeof(u32) - 1));
+                if ((u8 const*)ptr32 > last)
+                    ptr32 = (u32 const*)last;
+                while (first < (u8 const*)ptr32) {
                     count += __builtin_popcount(*first);
                     first++;
                 }
-                const u32* last32 = (const u32*)((FlatPtr)last & ~(sizeof(u32) - 1));
+                u32 const* last32 = (u32 const*)((FlatPtr)last & ~(sizeof(u32) - 1));
                 while (ptr32 < last32) {
                     count += __builtin_popcountl(*ptr32);
                     ptr32++;
                 }
-                for (first = (const u8*)ptr32; first < last; first++)
+                for (first = (u8 const*)ptr32; first < last; first++)
                     count += __builtin_popcount(*first);
             }
         }
@@ -94,24 +94,24 @@ public:
 
     bool is_null() const { return !m_data; }
 
-    const u8* data() const { return m_data; }
+    u8 const* data() const { return m_data; }
 
     template<bool VALUE>
     Optional<size_t> find_one_anywhere(size_t hint = 0) const
     {
         VERIFY(hint < m_size);
-        const u8* end = &m_data[m_size / 8];
+        u8 const* end = &m_data[m_size / 8];
 
         for (;;) {
             // We will use hint as what it is: a hint. Because we try to
             // scan over entire 32 bit words, we may start searching before
             // the hint!
-            const u32* ptr32 = (const u32*)((FlatPtr)&m_data[hint / 8] & ~(sizeof(u32) - 1));
-            if ((const u8*)ptr32 < &m_data[0]) {
+            u32 const* ptr32 = (u32 const*)((FlatPtr)&m_data[hint / 8] & ~(sizeof(u32) - 1));
+            if ((u8 const*)ptr32 < &m_data[0]) {
                 ptr32++;
 
                 // m_data isn't aligned, check first bytes
-                size_t start_ptr32 = (const u8*)ptr32 - &m_data[0];
+                size_t start_ptr32 = (u8 const*)ptr32 - &m_data[0];
                 size_t i = 0;
                 u8 byte = VALUE ? 0x00 : 0xff;
                 while (i < start_ptr32 && m_data[i] == byte)
@@ -126,14 +126,14 @@ public:
             }
 
             u32 val32 = VALUE ? 0x0 : 0xffffffff;
-            const u32* end32 = (const u32*)((FlatPtr)end & ~(sizeof(u32) - 1));
+            u32 const* end32 = (u32 const*)((FlatPtr)end & ~(sizeof(u32) - 1));
             while (ptr32 < end32 && *ptr32 == val32)
                 ptr32++;
 
             if (ptr32 == end32) {
                 // We didn't find anything, check the remaining few bytes (if any)
                 u8 byte = VALUE ? 0x00 : 0xff;
-                size_t i = (const u8*)ptr32 - &m_data[0];
+                size_t i = (u8 const*)ptr32 - &m_data[0];
                 size_t byte_count = m_size / 8;
                 VERIFY(i <= byte_count);
                 while (i < byte_count && m_data[i] == byte)
@@ -143,7 +143,7 @@ public:
                         return {}; // We already checked from the beginning
 
                     // Try scanning before the hint
-                    end = (const u8*)((FlatPtr)&m_data[hint / 8] & ~(sizeof(u32) - 1));
+                    end = (u8 const*)((FlatPtr)&m_data[hint / 8] & ~(sizeof(u32) - 1));
                     hint = 0;
                     continue;
                 }
@@ -160,7 +160,7 @@ public:
             if constexpr (!VALUE)
                 val32 = ~val32;
             VERIFY(val32 != 0);
-            return ((const u8*)ptr32 - &m_data[0]) * 8 + __builtin_ffsl(val32) - 1;
+            return ((u8 const*)ptr32 - &m_data[0]) * 8 + __builtin_ffsl(val32) - 1;
         }
     }
 

@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
 
     unveil(nullptr, nullptr);
 
-    const char* start_page = nullptr;
+    char const* start_page = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(start_page, "Page to open at launch", "page", Core::ArgsParser::Required::No);
@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
         go_forward_action->set_enabled(history.can_go_forward());
     };
 
-    auto open_page = [&](const String& path) {
+    auto open_page = [&](String const& path) {
         if (path.is_null()) {
             window->set_title("Help");
             page_view.load_empty_document();
@@ -191,7 +191,7 @@ int main(int argc, char* argv[])
         }
     };
     search_list_view.on_selection_change = [&] {
-        const auto& index = search_list_view.selection().first();
+        auto const& index = search_list_view.selection().first();
         if (!index.is_valid())
             return;
 
@@ -201,7 +201,7 @@ int main(int argc, char* argv[])
             return;
         }
         auto& search_model = *static_cast<GUI::FilteringProxyModel*>(view_model);
-        const auto& mapped_index = search_model.map(index);
+        auto const& mapped_index = search_model.map(index);
         String path = model->page_path(mapped_index);
         if (path.is_null()) {
             page_view.load_empty_document();

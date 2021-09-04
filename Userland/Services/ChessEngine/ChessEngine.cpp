@@ -18,7 +18,7 @@ void ChessEngine::handle_uci()
     send_command(UCIOkCommand());
 }
 
-void ChessEngine::handle_position(const PositionCommand& command)
+void ChessEngine::handle_position(PositionCommand const& command)
 {
     // FIXME: Implement fen board position.
     VERIFY(!command.fen().has_value());
@@ -28,7 +28,7 @@ void ChessEngine::handle_position(const PositionCommand& command)
     }
 }
 
-void ChessEngine::handle_go(const GoCommand& command)
+void ChessEngine::handle_go(GoCommand const& command)
 {
     // FIXME: A better algorithm than naive mcts.
     // FIXME: Add different ways to terminate search.

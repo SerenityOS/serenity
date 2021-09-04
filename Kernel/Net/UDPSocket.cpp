@@ -15,9 +15,9 @@
 
 namespace Kernel {
 
-void UDPSocket::for_each(Function<void(const UDPSocket&)> callback)
+void UDPSocket::for_each(Function<void(UDPSocket const&)> callback)
 {
-    sockets_by_port().for_each_shared([&](const auto& socket) {
+    sockets_by_port().for_each_shared([&](auto const& socket) {
         callback(*socket.value);
     });
 }
@@ -31,7 +31,7 @@ MutexProtected<HashMap<u16, UDPSocket*>>& UDPSocket::sockets_by_port()
 
 SocketHandle<UDPSocket> UDPSocket::from_port(u16 port)
 {
-    return sockets_by_port().with_shared([&](const auto& table) -> SocketHandle<UDPSocket> {
+    return sockets_by_port().with_shared([&](auto const& table) -> SocketHandle<UDPSocket> {
         RefPtr<UDPSocket> socket;
         auto it = table.find(port);
         if (it == table.end())
@@ -64,8 +64,8 @@ KResultOr<NonnullRefPtr<UDPSocket>> UDPSocket::create(int protocol, NonnullOwnPt
 
 KResultOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)
 {
-    auto& ipv4_packet = *(const IPv4Packet*)(raw_ipv4_packet.data());
-    auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
+    auto& ipv4_packet = *(IPv4Packet const*)(raw_ipv4_packet.data());
+    auto& udp_packet = *static_cast<UDPPacket const*>(ipv4_packet.payload());
     VERIFY(udp_packet.length() >= sizeof(UDPPacket)); // FIXME: This should be rejected earlier.
     size_t read_size = min(buffer_size, udp_packet.length() - sizeof(UDPPacket));
     if (!buffer.write(udp_packet.payload(), read_size))
@@ -73,7 +73,7 @@ KResultOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
     return read_size;
 }
 
-KResultOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_t data_length)
+KResultOr<size_t> UDPSocket::protocol_send(UserOrKernelBuffer const& data, size_t data_length)
 {
     auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
     if (routing_decision.is_zero())

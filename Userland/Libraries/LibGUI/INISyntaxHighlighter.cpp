@@ -36,7 +36,7 @@ bool IniSyntaxHighlighter::is_identifier(u64 token) const
     return ini_token == GUI::IniToken::Type::Name;
 }
 
-void IniSyntaxHighlighter::rehighlight(const Palette& palette)
+void IniSyntaxHighlighter::rehighlight(Palette const& palette)
 {
     auto text = m_client->get_text();
     IniLexer lexer(text);

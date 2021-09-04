@@ -20,7 +20,7 @@ ImageLoader::ImageLoader(DOM::Element& owner_element)
 {
 }
 
-void ImageLoader::load(const URL& url)
+void ImageLoader::load(URL const& url)
 {
     m_loading_state = LoadingState::Loading;
 

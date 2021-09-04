@@ -21,14 +21,14 @@ public:
     virtual ~ComboBox() override;
 
     String text() const;
-    void set_text(const String&);
+    void set_text(String const&);
 
     void open();
     void close();
     void select_all();
 
     Model* model();
-    const Model* model() const;
+    Model const* model() const;
     void set_model(NonnullRefPtr<Model>);
 
     size_t selected_index() const;
@@ -40,10 +40,10 @@ public:
     int model_column() const;
     void set_model_column(int);
 
-    void set_editor_placeholder(const StringView& placeholder);
-    const String& editor_placeholder() const;
+    void set_editor_placeholder(StringView const& placeholder);
+    String const& editor_placeholder() const;
 
-    Function<void(const String&, const ModelIndex&)> on_change;
+    Function<void(String const&, ModelIndex const&)> on_change;
     Function<void()> on_return_pressed;
 
 protected:
@@ -51,7 +51,7 @@ protected:
     virtual void resize_event(ResizeEvent&) override;
 
 private:
-    void selection_updated(const ModelIndex&);
+    void selection_updated(ModelIndex const&);
     void navigate(AbstractView::CursorMovement);
     void navigate_relative(int);
 

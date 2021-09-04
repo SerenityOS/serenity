@@ -20,7 +20,7 @@
 
 namespace Audio {
 
-FlacLoaderPlugin::FlacLoaderPlugin(const StringView& path)
+FlacLoaderPlugin::FlacLoaderPlugin(StringView const& path)
     : m_file(Core::File::construct(path))
 {
     if (!m_file->open(Core::OpenMode::ReadOnly)) {
@@ -42,7 +42,7 @@ FlacLoaderPlugin::FlacLoaderPlugin(const StringView& path)
         return;
 }
 
-FlacLoaderPlugin::FlacLoaderPlugin(const ByteBuffer& buffer)
+FlacLoaderPlugin::FlacLoaderPlugin(ByteBuffer const& buffer)
 {
     m_stream = make<FlacInputStream>(InputMemoryStream(buffer));
     if (!m_stream) {

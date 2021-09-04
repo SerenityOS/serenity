@@ -41,8 +41,8 @@ public:
 private:
     explicit RemoteObjectPropertyModel(RemoteObject&);
 
-    const JsonPath* cached_path_at(int n, const Vector<JsonPathElement>& prefix) const;
-    const JsonPath* find_cached_path(const Vector<JsonPathElement>& path) const;
+    JsonPath const* cached_path_at(int n, const Vector<JsonPathElement>& prefix) const;
+    JsonPath const* find_cached_path(const Vector<JsonPathElement>& path) const;
 
     RemoteObject& m_object;
     mutable NonnullOwnPtrVector<JsonPath> m_paths;

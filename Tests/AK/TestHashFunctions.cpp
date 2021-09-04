@@ -41,14 +41,14 @@ TEST_CASE(ptr_hash)
         EXPECT_EQ(ptr_hash(FlatPtr(42)), 2824066580u);
         EXPECT_EQ(ptr_hash(FlatPtr(0)), 954888656u);
 
-        EXPECT_EQ(ptr_hash(reinterpret_cast<const void*>(42)), 2824066580u);
-        EXPECT_EQ(ptr_hash(reinterpret_cast<const void*>(0)), 954888656u);
+        EXPECT_EQ(ptr_hash(reinterpret_cast<void const*>(42)), 2824066580u);
+        EXPECT_EQ(ptr_hash(reinterpret_cast<void const*>(0)), 954888656u);
     } else {
         EXPECT_EQ(ptr_hash(FlatPtr(42)), 3564735745u);
         EXPECT_EQ(ptr_hash(FlatPtr(0)), 1177991625u);
 
-        EXPECT_EQ(ptr_hash(reinterpret_cast<const void*>(42)), 3564735745u);
-        EXPECT_EQ(ptr_hash(reinterpret_cast<const void*>(0)), 1177991625u);
+        EXPECT_EQ(ptr_hash(reinterpret_cast<void const*>(42)), 3564735745u);
+        EXPECT_EQ(ptr_hash(reinterpret_cast<void const*>(0)), 1177991625u);
     }
 }
 

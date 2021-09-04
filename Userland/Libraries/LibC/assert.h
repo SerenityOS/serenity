@@ -11,7 +11,7 @@
 __BEGIN_DECLS
 
 #ifndef NDEBUG
-__attribute__((noreturn)) void __assertion_failed(const char* msg);
+__attribute__((noreturn)) void __assertion_failed(char const* msg);
 #    define __stringify_helper(x) #    x
 #    define __stringify(x) __stringify_helper(x)
 #    define assert(expr)                                                            \

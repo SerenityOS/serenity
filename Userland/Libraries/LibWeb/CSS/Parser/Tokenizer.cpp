@@ -15,7 +15,7 @@
 #define REPLACEMENT_CHARACTER 0xFFFD
 static const u32 TOKENIZER_EOF = 0xFFFFFFFF;
 
-static inline void log_parse_error(const SourceLocation& location = SourceLocation::current())
+static inline void log_parse_error(SourceLocation const& location = SourceLocation::current())
 {
     dbgln_if(CSS_TOKENIZER_DEBUG, "Parse error (css tokenization) {} ", location);
 }
@@ -187,7 +187,7 @@ static inline bool is_E(u32 code_point)
 
 namespace Web::CSS {
 
-Tokenizer::Tokenizer(const StringView& input, const String& encoding)
+Tokenizer::Tokenizer(StringView const& input, String const& encoding)
 {
     auto* decoder = TextCodec::decoder_for(encoding);
     VERIFY(decoder);

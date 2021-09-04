@@ -64,7 +64,7 @@ int settimeofday(struct timeval* __restrict__ tv, void* __restrict__)
     return clock_settime(CLOCK_REALTIME, &ts);
 }
 
-int utimes(const char* pathname, const struct timeval times[2])
+int utimes(char const* pathname, const struct timeval times[2])
 {
     if (!times) {
         return utime(pathname, nullptr);
@@ -74,12 +74,12 @@ int utimes(const char* pathname, const struct timeval times[2])
     return utime(pathname, &buf);
 }
 
-char* ctime(const time_t* t)
+char* ctime(time_t const* t)
 {
     return asctime(localtime(t));
 }
 
-char* ctime_r(const time_t* t, char* buf)
+char* ctime_r(time_t const* t, char* buf)
 {
     struct tm tm_buf;
     return asctime_r(localtime_r(t, &tm_buf), buf);
@@ -145,13 +145,13 @@ time_t mktime(struct tm* tm)
     return tm_to_time(tm, timezone);
 }
 
-struct tm* localtime(const time_t* t)
+struct tm* localtime(time_t const* t)
 {
     static struct tm tm_buf;
     return localtime_r(t, &tm_buf);
 }
 
-struct tm* localtime_r(const time_t* t, struct tm* tm)
+struct tm* localtime_r(time_t const* t, struct tm* tm)
 {
     if (!t)
         return nullptr;
@@ -164,13 +164,13 @@ time_t timegm(struct tm* tm)
     return tm_to_time(tm, 0);
 }
 
-struct tm* gmtime(const time_t* t)
+struct tm* gmtime(time_t const* t)
 {
     static struct tm tm_buf;
     return gmtime_r(t, &tm_buf);
 }
 
-struct tm* gmtime_r(const time_t* t, struct tm* tm)
+struct tm* gmtime_r(time_t const* t, struct tm* tm)
 {
     if (!t)
         return nullptr;
@@ -197,7 +197,7 @@ char* asctime_r(const struct tm* tm, char* buffer)
 }
 
 //FIXME: Some formats are not supported.
-size_t strftime(char* destination, size_t max_size, const char* format, const struct tm* tm)
+size_t strftime(char* destination, size_t max_size, char const* format, const struct tm* tm)
 {
     const char wday_short_names[7][4] = {
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
@@ -350,7 +350,7 @@ long altzone;
 char* tzname[2];
 int daylight;
 
-constexpr const char* __utc = "UTC";
+constexpr char const* __utc = "UTC";
 
 void tzset()
 {

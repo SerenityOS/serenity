@@ -68,7 +68,7 @@ public:
         new (&m_storage) T(move(value));
     }
 
-    ALWAYS_INLINE KResultOr(const T& value)
+    ALWAYS_INLINE KResultOr(T const& value)
         : m_have_storage(true)
     {
         new (&m_storage) T(value);
@@ -144,7 +144,7 @@ public:
         return *reinterpret_cast<T*>(&m_storage);
     }
 
-    [[nodiscard]] ALWAYS_INLINE const T& value() const
+    [[nodiscard]] ALWAYS_INLINE T const& value() const
     {
         VERIFY(!m_is_error);
         return *reinterpret_cast<T*>(&m_storage);

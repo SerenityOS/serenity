@@ -208,7 +208,7 @@ UNMAP_AFTER_INIT bool E1000NetworkAdapter::initialize()
     detect_eeprom();
     dmesgln("E1000: Has EEPROM? {}", m_has_eeprom);
     read_mac_address();
-    const auto& mac = mac_address();
+    auto const& mac = mac_address();
     dmesgln("E1000: MAC address: {}", mac.to_string());
 
     initialize_rx_descriptors();
@@ -232,7 +232,7 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::~E1000NetworkAdapter()
 {
 }
 
-bool E1000NetworkAdapter::handle_irq(const RegisterState&)
+bool E1000NetworkAdapter::handle_irq(RegisterState const&)
 {
     u32 status = in32(REG_INTERRUPT_CAUSE_READ);
 

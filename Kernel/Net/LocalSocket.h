@@ -26,25 +26,25 @@ public:
     static KResultOr<SocketPair> try_create_connected_pair(int type);
     virtual ~LocalSocket() override;
 
-    KResult sendfd(const FileDescription& socket_description, FileDescription& passing_description);
-    KResultOr<NonnullRefPtr<FileDescription>> recvfd(const FileDescription& socket_description);
+    KResult sendfd(FileDescription const& socket_description, FileDescription& passing_description);
+    KResultOr<NonnullRefPtr<FileDescription>> recvfd(FileDescription const& socket_description);
 
-    static void for_each(Function<void(const LocalSocket&)>);
+    static void for_each(Function<void(LocalSocket const&)>);
 
     StringView socket_path() const;
-    String absolute_path(const FileDescription& description) const override;
+    String absolute_path(FileDescription const& description) const override;
 
     // ^Socket
-    virtual KResult bind(Userspace<const sockaddr*>, socklen_t) override;
-    virtual KResult connect(FileDescription&, Userspace<const sockaddr*>, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
+    virtual KResult bind(Userspace<sockaddr const*>, socklen_t) override;
+    virtual KResult connect(FileDescription&, Userspace<sockaddr const*>, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
     virtual KResult listen(size_t) override;
     virtual void get_local_address(sockaddr*, socklen_t*) override;
     virtual void get_peer_address(sockaddr*, socklen_t*) override;
     virtual KResult attach(FileDescription&) override;
     virtual void detach(FileDescription&) override;
-    virtual bool can_read(const FileDescription&, size_t) const override;
-    virtual bool can_write(const FileDescription&, size_t) const override;
-    virtual KResultOr<size_t> sendto(FileDescription&, const UserOrKernelBuffer&, size_t, int, Userspace<const sockaddr*>, socklen_t) override;
+    virtual bool can_read(FileDescription const&, size_t) const override;
+    virtual bool can_write(FileDescription const&, size_t) const override;
+    virtual KResultOr<size_t> sendto(FileDescription&, UserOrKernelBuffer const&, size_t, int, Userspace<sockaddr const*>, socklen_t) override;
     virtual KResultOr<size_t> recvfrom(FileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) override;
     virtual KResult getsockopt(FileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
     virtual KResult ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override;
@@ -55,11 +55,11 @@ private:
     explicit LocalSocket(int type, NonnullOwnPtr<DoubleBuffer> client_buffer, NonnullOwnPtr<DoubleBuffer> server_buffer);
     virtual StringView class_name() const override { return "LocalSocket"; }
     virtual bool is_local() const override { return true; }
-    bool has_attached_peer(const FileDescription&) const;
+    bool has_attached_peer(FileDescription const&) const;
     DoubleBuffer* receive_buffer_for(FileDescription&);
     DoubleBuffer* send_buffer_for(FileDescription&);
-    NonnullRefPtrVector<FileDescription>& sendfd_queue_for(const FileDescription&);
-    NonnullRefPtrVector<FileDescription>& recvfd_queue_for(const FileDescription&);
+    NonnullRefPtrVector<FileDescription>& sendfd_queue_for(FileDescription const&);
+    NonnullRefPtrVector<FileDescription>& recvfd_queue_for(FileDescription const&);
 
     void set_connect_side_role(Role connect_side_role, bool force_evaluate_block_conditions = false)
     {
@@ -85,7 +85,7 @@ private:
     Role m_connect_side_role { Role::None };
     FileDescription* m_connect_side_fd { nullptr };
 
-    virtual Role role(const FileDescription& description) const override
+    virtual Role role(FileDescription const& description) const override
     {
         if (m_connect_side_fd == &description)
             return m_connect_side_role;

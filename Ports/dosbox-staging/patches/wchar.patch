@@ -6,7 +6,7 @@ diff -Naur dosbox-staging-0.76.0/src/libs/decoders/dr_mp3.h dosbox-staging-0.76.
  #endif
  
 +#ifndef __serenity__
- static drmp3_result drmp3_wfopen(FILE** ppFile, const wchar_t* pFilePath, const wchar_t* pOpenMode, const drmp3_allocation_callbacks* pAllocationCallbacks)
+ static drmp3_result drmp3_wfopen(FILE** ppFile, wchar_t const* pFilePath, wchar_t const* pOpenMode, drmp3_allocation_callbacks const* pAllocationCallbacks)
  {
      if (ppFile != NULL) {
 @@ -3459,6 +3460,7 @@
@@ -22,7 +22,7 @@ diff -Naur dosbox-staging-0.76.0/src/libs/decoders/dr_mp3.h dosbox-staging-0.76.
  }
  
 +#ifndef __serenity__
- DRMP3_API drmp3_bool32 drmp3_init_file_w(drmp3* pMP3, const wchar_t* pFilePath, const drmp3_allocation_callbacks* pAllocationCallbacks)
+ DRMP3_API drmp3_bool32 drmp3_init_file_w(drmp3* pMP3, wchar_t const* pFilePath, drmp3_allocation_callbacks const* pAllocationCallbacks)
  {
      FILE* pFile;
 @@ -3492,6 +3495,7 @@

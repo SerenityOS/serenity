@@ -22,10 +22,10 @@ public:
     Variant(i64);
     Variant(u32);
     Variant(u64);
-    Variant(const char*);
-    Variant(const StringView&);
-    Variant(const String&);
-    Variant(const FlyString&);
+    Variant(char const*);
+    Variant(StringView const&);
+    Variant(String const&);
+    Variant(FlyString const&);
     Variant(const Gfx::Bitmap&);
     Variant(const GUI::Icon&);
     Variant(const Gfx::IntPoint&);
@@ -33,11 +33,11 @@ public:
     Variant(const Gfx::IntRect&);
     Variant(const Gfx::Font&);
     Variant(const Gfx::TextAlignment);
-    Variant(const JsonValue&);
+    Variant(JsonValue const&);
     Variant(Color);
 
-    Variant(const Variant&);
-    Variant& operator=(const Variant&);
+    Variant(Variant const&);
+    Variant& operator=(Variant const&);
 
     Variant(Variant&&) = delete;
     Variant& operator=(Variant&&);
@@ -248,11 +248,11 @@ public:
 
     String to_string() const;
 
-    bool operator==(const Variant&) const;
-    bool operator<(const Variant&) const;
+    bool operator==(Variant const&) const;
+    bool operator<(Variant const&) const;
 
 private:
-    void copy_from(const Variant&);
+    void copy_from(Variant const&);
     void move_from(Variant&&);
 
     struct RawPoint {
@@ -291,6 +291,6 @@ private:
     Type m_type { Type::Invalid };
 };
 
-const char* to_string(Variant::Type);
+char const* to_string(Variant::Type);
 
 }

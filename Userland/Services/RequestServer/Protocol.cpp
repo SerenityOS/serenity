@@ -19,12 +19,12 @@ static HashMap<String, Protocol*>& all_protocols()
     return map;
 }
 
-Protocol* Protocol::find_by_name(const String& name)
+Protocol* Protocol::find_by_name(String const& name)
 {
     return all_protocols().get(name).value_or(nullptr);
 }
 
-Protocol::Protocol(const String& name)
+Protocol::Protocol(String const& name)
 {
     all_protocols().set(name, this);
 }

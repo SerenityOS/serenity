@@ -10,6 +10,6 @@
 
 namespace Web::DOM {
 
-NonnullRefPtr<Element> create_element(Document&, const FlyString& tag_name, const FlyString& namespace_);
+NonnullRefPtr<Element> create_element(Document&, FlyString const& tag_name, FlyString const& namespace_);
 
 }

@@ -55,7 +55,7 @@ int run_tests()
     return s_some_test_failed ? 1 : 0;
 }
 
-static void add_file(FileDB& filedb, const String& name)
+static void add_file(FileDB& filedb, String const& name)
 {
     auto file = Core::File::open(LexicalPath::join(TESTS_ROOT_DIR, name).string(), Core::OpenMode::ReadOnly);
     VERIFY(!file.is_error());

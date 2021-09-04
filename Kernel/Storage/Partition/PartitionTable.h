@@ -31,7 +31,7 @@ public:
     Vector<DiskPartitionMetadata> partitions() const { return m_partitions; }
 
 protected:
-    explicit PartitionTable(const StorageDevice&);
+    explicit PartitionTable(StorageDevice const&);
 
     NonnullRefPtr<StorageDevice> m_device;
     Vector<DiskPartitionMetadata> m_partitions;

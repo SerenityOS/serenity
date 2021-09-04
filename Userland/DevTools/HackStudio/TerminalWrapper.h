@@ -16,7 +16,7 @@ class TerminalWrapper final : public GUI::Widget {
 public:
     virtual ~TerminalWrapper() override;
 
-    void run_command(const String&);
+    void run_command(String const&);
     void kill_running_command();
     void clear_including_history();
 

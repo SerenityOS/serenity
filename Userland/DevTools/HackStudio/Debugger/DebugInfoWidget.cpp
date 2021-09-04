@@ -66,7 +66,7 @@ DebugInfoWidget::DebugInfoWidget()
     variables_tab_widget.add_widget("Registers", build_registers_tab());
 
     m_backtrace_view->on_selection_change = [this] {
-        const auto& index = m_backtrace_view->selection().first();
+        auto const& index = m_backtrace_view->selection().first();
 
         if (!index.is_valid()) {
             return;
@@ -150,7 +150,7 @@ NonnullRefPtr<GUI::Widget> DebugInfoWidget::build_registers_tab()
     return registers_widget;
 }
 
-void DebugInfoWidget::update_state(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
+void DebugInfoWidget::update_state(const Debug::DebugSession& debug_session, PtraceRegisters const& regs)
 {
     m_variables_view->set_model(VariablesModel::create(regs));
     m_backtrace_view->set_model(BacktraceModel::create(debug_session, regs));

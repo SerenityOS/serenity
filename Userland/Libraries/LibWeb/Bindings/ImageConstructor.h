@@ -21,7 +21,7 @@ public:
 
 private:
     virtual bool has_constructor() const override { return true; }
-    virtual const char* class_name() const override { return "ImageConstructor"; }
+    virtual char const* class_name() const override { return "ImageConstructor"; }
 };
 
 }

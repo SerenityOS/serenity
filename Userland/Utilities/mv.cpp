@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     bool force = false;
     bool verbose = false;
 
-    Vector<const char*> paths;
+    Vector<char const*> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(force, "Force", "force", 'f');
@@ -57,7 +57,7 @@ int main(int argc, char** argv)
 
     for (auto& old_path : paths) {
         String combined_new_path;
-        const char* new_path = original_new_path;
+        char const* new_path = original_new_path;
         if (S_ISDIR(st.st_mode)) {
             auto old_basename = LexicalPath::basename(old_path);
             combined_new_path = String::formatted("{}/{}", original_new_path, old_basename);

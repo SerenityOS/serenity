@@ -18,7 +18,7 @@
 #    include <linux/memfd.h>
 #    include <sys/syscall.h>
 
-static int memfd_create(const char* name, unsigned int flags)
+static int memfd_create(char const* name, unsigned int flags)
 {
     return syscall(SYS_memfd_create, name, flags);
 }

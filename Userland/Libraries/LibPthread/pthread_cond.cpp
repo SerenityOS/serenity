@@ -44,7 +44,7 @@ static constexpr u32 NEED_TO_WAKE_ONE = 1;
 static constexpr u32 NEED_TO_WAKE_ALL = 2;
 static constexpr u32 INCREMENT = 4;
 
-int pthread_cond_init(pthread_cond_t* cond, const pthread_condattr_t* attr)
+int pthread_cond_init(pthread_cond_t* cond, pthread_condattr_t const* attr)
 {
     cond->mutex = nullptr;
     cond->value = 0;

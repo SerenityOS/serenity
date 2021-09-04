@@ -7,7 +7,7 @@ set\_process\_name - change the process name
 ```**c++
 #include <unistd.h>
 
-int set_process_name(const char* name, size_t name_length);
+int set_process_name(char const* name, size_t name_length);
 ```
 
 ## Description

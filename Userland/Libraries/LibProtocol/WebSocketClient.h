@@ -21,7 +21,7 @@ class WebSocketClient final
     C_OBJECT(WebSocketClient);
 
 public:
-    RefPtr<WebSocket> connect(const URL&, const String& origin = {}, const Vector<String>& protocols = {}, const Vector<String>& extensions = {}, const HashMap<String, String>& request_headers = {});
+    RefPtr<WebSocket> connect(URL const&, String const& origin = {}, const Vector<String>& protocols = {}, const Vector<String>& extensions = {}, const HashMap<String, String>& request_headers = {});
 
     u32 ready_state(Badge<WebSocket>, WebSocket&);
     void send(Badge<WebSocket>, WebSocket&, ByteBuffer, bool is_text);

@@ -49,25 +49,25 @@ static bool s_scrub_free = true;
 static bool s_profiling = false;
 static bool s_in_userspace_emulator = false;
 
-ALWAYS_INLINE static void ue_notify_malloc(const void* ptr, size_t size)
+ALWAYS_INLINE static void ue_notify_malloc(void const* ptr, size_t size)
 {
     if (s_in_userspace_emulator)
         syscall(SC_emuctl, 1, size, (FlatPtr)ptr);
 }
 
-ALWAYS_INLINE static void ue_notify_free(const void* ptr)
+ALWAYS_INLINE static void ue_notify_free(void const* ptr)
 {
     if (s_in_userspace_emulator)
         syscall(SC_emuctl, 2, (FlatPtr)ptr, 0);
 }
 
-ALWAYS_INLINE static void ue_notify_realloc(const void* ptr, size_t size)
+ALWAYS_INLINE static void ue_notify_realloc(void const* ptr, size_t size)
 {
     if (s_in_userspace_emulator)
         syscall(SC_emuctl, 3, size, (FlatPtr)ptr);
 }
 
-ALWAYS_INLINE static void ue_notify_chunk_size_changed(const void* block, size_t chunk_size)
+ALWAYS_INLINE static void ue_notify_chunk_size_changed(void const* block, size_t chunk_size)
 {
     if (s_in_userspace_emulator)
         syscall(SC_emuctl, 4, chunk_size, (FlatPtr)block);
@@ -169,7 +169,7 @@ static BigAllocator* big_allocator_for_size(size_t size)
 
 extern "C" {
 
-static void* os_alloc(size_t size, const char* name)
+static void* os_alloc(size_t size, char const* name)
 {
     int flags = MAP_ANONYMOUS | MAP_PRIVATE | MAP_PURGEABLE;
 #if ARCH(X86_64)
@@ -448,7 +448,7 @@ size_t malloc_size(void* ptr)
     if (!ptr)
         return 0;
     void* page_base = (void*)((FlatPtr)ptr & ChunkedBlock::block_mask);
-    auto* header = (const CommonHeader*)page_base;
+    auto* header = (CommonHeader const*)page_base;
     auto size = header->m_size;
     if (header->m_magic == MAGIC_BIGALLOC_HEADER)
         size -= sizeof(CommonHeader);

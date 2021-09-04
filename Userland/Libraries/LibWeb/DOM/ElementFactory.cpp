@@ -82,7 +82,7 @@
 
 namespace Web::DOM {
 
-NonnullRefPtr<Element> create_element(Document& document, const FlyString& tag_name, const FlyString& namespace_)
+NonnullRefPtr<Element> create_element(Document& document, FlyString const& tag_name, FlyString const& namespace_)
 {
     auto lowercase_tag_name = tag_name.to_lowercase();
     // FIXME: Add prefix when we support it.

@@ -40,7 +40,7 @@ void Button::paint(Screen& screen, Gfx::Painter& painter)
     }
 }
 
-void Button::on_mouse_event(const MouseEvent& event)
+void Button::on_mouse_event(MouseEvent const& event)
 {
     auto interesting_button = false;
 

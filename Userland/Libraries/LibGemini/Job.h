@@ -16,14 +16,14 @@ namespace Gemini {
 
 class Job : public Core::NetworkJob {
 public:
-    explicit Job(const GeminiRequest&, OutputStream&);
+    explicit Job(GeminiRequest const&, OutputStream&);
     virtual ~Job() override;
 
     virtual void start() override = 0;
     virtual void shutdown() override = 0;
 
     GeminiResponse* response() { return static_cast<GeminiResponse*>(Core::NetworkJob::response()); }
-    const GeminiResponse* response() const { return static_cast<const GeminiResponse*>(Core::NetworkJob::response()); }
+    GeminiResponse const* response() const { return static_cast<GeminiResponse const*>(Core::NetworkJob::response()); }
 
 protected:
     void finish_up();

@@ -37,7 +37,7 @@ public:
     void advance();
     bool finished() const { return m_finished; }
     bool valid() const;
-    const TarFileHeader& header() const { return m_header; }
+    TarFileHeader const& header() const { return m_header; }
     TarFileStream file_contents();
 
 private:
@@ -53,8 +53,8 @@ private:
 class TarOutputStream {
 public:
     TarOutputStream(OutputStream&);
-    void add_file(const String& path, mode_t, const ReadonlyBytes&);
-    void add_directory(const String& path, mode_t);
+    void add_file(String const& path, mode_t, ReadonlyBytes const&);
+    void add_directory(String const& path, mode_t);
     void finish();
 
 private:

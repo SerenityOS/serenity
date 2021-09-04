@@ -331,17 +331,17 @@ static FloatT internal_gamma(FloatT x) NOEXCEPT
 
 extern "C" {
 
-float nanf(const char* s) NOEXCEPT
+float nanf(char const* s) NOEXCEPT
 {
     return __builtin_nanf(s);
 }
 
-double nan(const char* s) NOEXCEPT
+double nan(char const* s) NOEXCEPT
 {
     return __builtin_nan(s);
 }
 
-long double nanl(const char* s) NOEXCEPT
+long double nanl(char const* s) NOEXCEPT
 {
     return __builtin_nanl(s);
 }

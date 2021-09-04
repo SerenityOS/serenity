@@ -29,7 +29,7 @@ struct AvailableSpaceForLineInfo {
     float right { 0 };
 };
 
-static AvailableSpaceForLineInfo available_space_for_line(const InlineFormattingContext& context, size_t line_index)
+static AvailableSpaceForLineInfo available_space_for_line(InlineFormattingContext const& context, size_t line_index)
 {
     AvailableSpaceForLineInfo info;
 
@@ -37,7 +37,7 @@ static AvailableSpaceForLineInfo available_space_for_line(const InlineFormatting
     float line_height = context.containing_block().line_height();
     float y = (line_index * line_height);
 
-    auto& bfc = static_cast<const BlockFormattingContext&>(*context.parent());
+    auto& bfc = static_cast<BlockFormattingContext const&>(*context.parent());
 
     for (ssize_t i = bfc.left_floating_boxes().size() - 1; i >= 0; --i) {
         auto& floating_box = *bfc.left_floating_boxes().at(i);

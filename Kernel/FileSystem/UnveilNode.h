@@ -34,7 +34,7 @@ struct UnveilNode final : public Trie<String, UnveilMetadata, Traits<String>, Un
 
     bool was_explicitly_unveiled() const { return this->metadata_value().explicitly_unveiled; }
     UnveilAccess permissions() const { return this->metadata_value().permissions; }
-    const String& path() const { return this->metadata_value().full_path; }
+    String const& path() const { return this->metadata_value().full_path; }
 };
 
 }

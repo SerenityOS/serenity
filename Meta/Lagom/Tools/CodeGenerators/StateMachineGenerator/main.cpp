@@ -209,12 +209,12 @@ parse_state_machine(StringView input)
     return state_machine;
 }
 
-void output_header(const StateMachine&, SourceGenerator&);
+void output_header(StateMachine const&, SourceGenerator&);
 
 int main(int argc, char** argv)
 {
     Core::ArgsParser args_parser;
-    const char* path = nullptr;
+    char const* path = nullptr;
     args_parser.add_positional_argument(path, "Path to parser description", "input", Core::ArgsParser::Required::Yes);
     args_parser.parse(argc, argv);
 
@@ -233,11 +233,11 @@ int main(int argc, char** argv)
     return 0;
 }
 
-HashTable<String> actions(const StateMachine& machine)
+HashTable<String> actions(StateMachine const& machine)
 {
     HashTable<String> table;
 
-    auto do_state = [&](const State& state) {
+    auto do_state = [&](State const& state) {
         if (state.entry_action.has_value())
             table.set(state.entry_action.value());
         if (state.exit_action.has_value())
@@ -255,13 +255,13 @@ HashTable<String> actions(const StateMachine& machine)
     return table;
 }
 
-void generate_lookup_table(const StateMachine& machine, SourceGenerator& generator)
+void generate_lookup_table(StateMachine const& machine, SourceGenerator& generator)
 {
     generator.append(R"~~~(
     static constexpr StateTransition STATE_TRANSITION_TABLE[][256] = {
 )~~~");
 
-    auto generate_for_state = [&](const State& s) {
+    auto generate_for_state = [&](State const& s) {
         auto table_generator = generator.fork();
         table_generator.set("active_state", s.name);
         table_generator.append("/* @active_state@ */ { ");
@@ -293,7 +293,7 @@ void generate_lookup_table(const StateMachine& machine, SourceGenerator& generat
 )~~~");
 }
 
-void output_header(const StateMachine& machine, SourceGenerator& generator)
+void output_header(StateMachine const& machine, SourceGenerator& generator)
 {
     generator.set("class_name", machine.name);
     generator.set("initial_state", machine.initial_state);

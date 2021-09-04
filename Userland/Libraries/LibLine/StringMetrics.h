@@ -38,8 +38,8 @@ struct StringMetrics {
     size_t total_length { 0 };
     size_t max_line_length { 0 };
 
-    size_t lines_with_addition(const StringMetrics& offset, size_t column_width) const;
-    size_t offset_with_addition(const StringMetrics& offset, size_t column_width) const;
+    size_t lines_with_addition(StringMetrics const& offset, size_t column_width) const;
+    size_t offset_with_addition(StringMetrics const& offset, size_t column_width) const;
     void reset()
     {
         line_metrics.clear();

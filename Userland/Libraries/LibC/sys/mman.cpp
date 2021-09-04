@@ -13,7 +13,7 @@
 
 extern "C" {
 
-void* serenity_mmap(void* addr, size_t size, int prot, int flags, int fd, off_t offset, size_t alignment, const char* name)
+void* serenity_mmap(void* addr, size_t size, int prot, int flags, int fd, off_t offset, size_t alignment, char const* name)
 {
     Syscall::SC_mmap_params params { (uintptr_t)addr, size, alignment, prot, flags, fd, offset, { name, name ? strlen(name) : 0 } };
     ptrdiff_t rc = syscall(SC_mmap, &params);
@@ -29,7 +29,7 @@ void* mmap(void* addr, size_t size, int prot, int flags, int fd, off_t offset)
     return serenity_mmap(addr, size, prot, flags, fd, offset, PAGE_SIZE, nullptr);
 }
 
-void* mmap_with_name(void* addr, size_t size, int prot, int flags, int fd, off_t offset, const char* name)
+void* mmap_with_name(void* addr, size_t size, int prot, int flags, int fd, off_t offset, char const* name)
 {
     return serenity_mmap(addr, size, prot, flags, fd, offset, PAGE_SIZE, name);
 }
@@ -57,7 +57,7 @@ int mprotect(void* addr, size_t size, int prot)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int set_mmap_name(void* addr, size_t size, const char* name)
+int set_mmap_name(void* addr, size_t size, char const* name)
 {
     if (!name) {
         errno = EFAULT;
@@ -74,7 +74,7 @@ int madvise(void* address, size_t size, int advice)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-void* allocate_tls(const char* initial_data, size_t size)
+void* allocate_tls(char const* initial_data, size_t size)
 {
     ptrdiff_t rc = syscall(SC_allocate_tls, initial_data, size);
     if (rc < 0 && rc > -EMAXERRNO) {
@@ -84,7 +84,7 @@ void* allocate_tls(const char* initial_data, size_t size)
     return (void*)rc;
 }
 
-int mlock(const void*, size_t)
+int mlock(void const*, size_t)
 {
     dbgln("FIXME: Implement mlock()");
     return 0;

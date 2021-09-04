@@ -88,7 +88,7 @@ static TypedArrayBase* validate_typed_array_from_this(GlobalObject& global_objec
     return typed_array;
 }
 
-static FunctionObject* callback_from_args(GlobalObject& global_object, const String& name)
+static FunctionObject* callback_from_args(GlobalObject& global_object, String const& name)
 {
     auto& vm = global_object.vm();
     if (vm.argument_count() < 1) {
@@ -103,7 +103,7 @@ static FunctionObject* callback_from_args(GlobalObject& global_object, const Str
     return &callback.as_function();
 }
 
-static void for_each_item(VM& vm, GlobalObject& global_object, const String& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
+static void for_each_item(VM& vm, GlobalObject& global_object, String const& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
 {
     auto* typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
@@ -131,7 +131,7 @@ static void for_each_item(VM& vm, GlobalObject& global_object, const String& nam
     }
 }
 
-static void for_each_item_from_last(VM& vm, GlobalObject& global_object, const String& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
+static void for_each_item_from_last(VM& vm, GlobalObject& global_object, String const& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
 {
     auto* typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)

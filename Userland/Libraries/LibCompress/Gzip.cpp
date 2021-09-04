@@ -159,11 +159,11 @@ Optional<String> GzipDecompressor::describe_header(ReadonlyBytes bytes)
     if (bytes.size() < sizeof(BlockHeader))
         return {};
 
-    auto& header = *(reinterpret_cast<const BlockHeader*>(bytes.data()));
+    auto& header = *(reinterpret_cast<BlockHeader const*>(bytes.data()));
     if (!header.valid_magic_number() || !header.supported_by_implementation())
         return {};
 
-    LittleEndian<u32> original_size = *reinterpret_cast<const u32*>(bytes.offset(bytes.size() - sizeof(u32)));
+    LittleEndian<u32> original_size = *reinterpret_cast<u32 const*>(bytes.offset(bytes.size() - sizeof(u32)));
     return String::formatted("last modified: {}, original size {}", Core::DateTime::from_timestamp(header.modification_time).to_string(), (u32)original_size);
 }
 
@@ -261,7 +261,7 @@ bool GzipCompressor::write_or_error(ReadonlyBytes bytes)
     return true;
 }
 
-Optional<ByteBuffer> GzipCompressor::compress_all(const ReadonlyBytes& bytes)
+Optional<ByteBuffer> GzipCompressor::compress_all(ReadonlyBytes const& bytes)
 {
     DuplexMemoryStream output_stream;
     GzipCompressor gzip_stream { output_stream };

@@ -23,7 +23,7 @@ public:
         }
 
         static OwnPtr<Line> parse(Vector<StringView>::ConstIterator& lines);
-        const Text& text() const { return m_text; }
+        Text const& text() const { return m_text; }
 
     private:
         Text m_text;

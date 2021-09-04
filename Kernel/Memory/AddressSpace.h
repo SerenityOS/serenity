@@ -22,7 +22,7 @@ public:
     ~AddressSpace();
 
     PageDirectory& page_directory() { return *m_page_directory; }
-    const PageDirectory& page_directory() const { return *m_page_directory; }
+    PageDirectory const& page_directory() const { return *m_page_directory; }
 
     Region* add_region(NonnullOwnPtr<Region>);
 

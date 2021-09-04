@@ -49,7 +49,7 @@ void WebAssemblyInstanceObject::initialize(JS::GlobalObject& global_object)
                 }
                 m_exports_object->define_direct_property(export_.name(), *object, JS::default_attributes);
             },
-            [&](const auto&) {
+            [&](auto const&) {
                 // FIXME: Implement other exports!
             });
     }

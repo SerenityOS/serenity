@@ -7,7 +7,7 @@
 #include <LibCompress/Gzip.h>
 #include <stdio.h>
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
     auto result = Compress::GzipCompressor::compress_all(ReadonlyBytes { data, size });
     return result.has_value();

@@ -18,7 +18,7 @@
 #include <time.h>
 #include <unistd.h>
 
-static void wait_until_coredump_is_ready(const String& coredump_path)
+static void wait_until_coredump_is_ready(String const& coredump_path)
 {
     while (true) {
         struct stat statbuf;
@@ -33,7 +33,7 @@ static void wait_until_coredump_is_ready(const String& coredump_path)
     }
 }
 
-static bool compress_coredump(const String& coredump_path)
+static bool compress_coredump(String const& coredump_path)
 {
     auto file_or_error = MappedFile::map(coredump_path);
     if (file_or_error.is_error()) {
@@ -60,7 +60,7 @@ static bool compress_coredump(const String& coredump_path)
     return true;
 }
 
-static void print_backtrace(const String& coredump_path)
+static void print_backtrace(String const& coredump_path)
 {
     auto coredump = Coredump::Reader::create(coredump_path);
     if (!coredump) {
@@ -82,10 +82,10 @@ static void print_backtrace(const String& coredump_path)
     });
 }
 
-static void launch_crash_reporter(const String& coredump_path, bool unlink_after_use)
+static void launch_crash_reporter(String const& coredump_path, bool unlink_after_use)
 {
     pid_t child;
-    const char* argv[4] = { "CrashReporter" };
+    char const* argv[4] = { "CrashReporter" };
     if (unlink_after_use) {
         argv[1] = "--unlink";
         argv[2] = coredump_path.characters();

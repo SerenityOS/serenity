@@ -62,7 +62,7 @@ SharedIRQHandler::~SharedIRQHandler()
     disable_interrupt_vector();
 }
 
-bool SharedIRQHandler::handle_interrupt(const RegisterState& regs)
+bool SharedIRQHandler::handle_interrupt(RegisterState const& regs)
 {
     VERIFY_INTERRUPTS_DISABLED();
 

@@ -14,7 +14,7 @@ namespace JS {
 
 class MarkupGenerator {
 public:
-    static String html_from_source(const StringView&);
+    static String html_from_source(StringView const&);
     static String html_from_value(Value);
     static String html_from_error(Object&);
 
@@ -33,11 +33,11 @@ private:
     };
 
     static void value_to_html(Value, StringBuilder& output_html, HashTable<Object*> seen_objects = {});
-    static void array_to_html(const Array&, StringBuilder& output_html, HashTable<Object*>&);
-    static void object_to_html(const Object&, StringBuilder& output_html, HashTable<Object*>&);
-    static void function_to_html(const Object&, StringBuilder& output_html, HashTable<Object*>&);
-    static void date_to_html(const Object&, StringBuilder& output_html, HashTable<Object*>&);
-    static void error_to_html(const Object&, StringBuilder& output_html, HashTable<Object*>&);
+    static void array_to_html(Array const&, StringBuilder& output_html, HashTable<Object*>&);
+    static void object_to_html(Object const&, StringBuilder& output_html, HashTable<Object*>&);
+    static void function_to_html(Object const&, StringBuilder& output_html, HashTable<Object*>&);
+    static void date_to_html(Object const&, StringBuilder& output_html, HashTable<Object*>&);
+    static void error_to_html(Object const&, StringBuilder& output_html, HashTable<Object*>&);
 
     static String style_from_style_type(StyleType);
     static StyleType style_type_for_token(Token);

@@ -35,7 +35,7 @@ struct DDSLoadingContext {
 
     State state { State::NotDecoded };
 
-    const u8* data { nullptr };
+    u8 const* data { nullptr };
     size_t data_size { 0 };
 
     DDSHeader header;
@@ -940,7 +940,7 @@ void DDSLoadingContext::dump_debug()
     dbgln("{}", builder.to_string());
 }
 
-static RefPtr<Gfx::Bitmap> load_dds_impl(const u8* data, size_t length)
+static RefPtr<Gfx::Bitmap> load_dds_impl(u8 const* data, size_t length)
 {
     DDSLoadingContext context;
     context.data = data;
@@ -957,13 +957,13 @@ RefPtr<Gfx::Bitmap> load_dds(String const& path)
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
         return nullptr;
-    auto bitmap = load_dds_impl((const u8*)file_or_error.value()->data(), file_or_error.value()->size());
+    auto bitmap = load_dds_impl((u8 const*)file_or_error.value()->data(), file_or_error.value()->size());
     if (bitmap)
         bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded DDS: {}", bitmap->size(), LexicalPath::canonicalized_path(path)));
     return bitmap;
 }
 
-RefPtr<Gfx::Bitmap> load_dds_from_memory(const u8* data, size_t length)
+RefPtr<Gfx::Bitmap> load_dds_from_memory(u8 const* data, size_t length)
 {
     auto bitmap = load_dds_impl(data, length);
     if (bitmap)
@@ -971,7 +971,7 @@ RefPtr<Gfx::Bitmap> load_dds_from_memory(const u8* data, size_t length)
     return bitmap;
 }
 
-DDSImageDecoderPlugin::DDSImageDecoderPlugin(const u8* data, size_t size)
+DDSImageDecoderPlugin::DDSImageDecoderPlugin(u8 const* data, size_t size)
 {
     m_context = make<DDSLoadingContext>();
     m_context->data = data;

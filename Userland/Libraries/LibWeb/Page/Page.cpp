@@ -31,17 +31,17 @@ void Page::set_focused_browsing_context(Badge<EventHandler>, BrowsingContext& br
     m_focused_context = browsing_context.make_weak_ptr();
 }
 
-void Page::load(const URL& url)
+void Page::load(URL const& url)
 {
     top_level_browsing_context().loader().load(url, FrameLoader::Type::Navigation);
 }
 
-void Page::load(const LoadRequest& request)
+void Page::load(LoadRequest const& request)
 {
     top_level_browsing_context().loader().load(request, FrameLoader::Type::Navigation);
 }
 
-void Page::load_html(const StringView& html, const URL& url)
+void Page::load_html(StringView const& html, URL const& url)
 {
     top_level_browsing_context().loader().load_html(html, url);
 }

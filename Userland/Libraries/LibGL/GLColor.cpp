@@ -14,7 +14,7 @@ void glColor3f(GLfloat r, GLfloat g, GLfloat b)
 {
     g_gl_context->gl_color(r, g, b, 1.0);
 }
-void glColor3fv(const GLfloat* v)
+void glColor3fv(GLfloat const* v)
 {
     g_gl_context->gl_color(v[0], v[1], v[2], 1.0);
 }
@@ -24,7 +24,7 @@ void glColor4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
     g_gl_context->gl_color(r, g, b, a);
 }
 
-void glColor4fv(const GLfloat* v)
+void glColor4fv(GLfloat const* v)
 {
     g_gl_context->gl_color(v[0], v[1], v[2], v[3]);
 }
@@ -34,7 +34,7 @@ void glColor4ub(GLubyte r, GLubyte g, GLubyte b, GLubyte a)
     g_gl_context->gl_color(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
 }
 
-void glColor4ubv(const GLubyte* v)
+void glColor4ubv(GLubyte const* v)
 {
     g_gl_context->gl_color(v[0] / 255.0f, v[1] / 255.0f, v[2] / 255.0f, v[3] / 255.0f);
 }

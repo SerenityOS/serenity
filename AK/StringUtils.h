@@ -31,11 +31,11 @@ struct MaskSpan {
     size_t start;
     size_t length;
 
-    bool operator==(const MaskSpan& other) const
+    bool operator==(MaskSpan const& other) const
     {
         return start == other.start && length == other.length;
     }
-    bool operator!=(const MaskSpan& other) const
+    bool operator!=(MaskSpan const& other) const
     {
         return !(*this == other);
     }
@@ -43,20 +43,20 @@ struct MaskSpan {
 
 namespace StringUtils {
 
-bool matches(const StringView& str, const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive, Vector<MaskSpan>* match_spans = nullptr);
+bool matches(StringView const& str, StringView const& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive, Vector<MaskSpan>* match_spans = nullptr);
 template<typename T = int>
-Optional<T> convert_to_int(const StringView&, TrimWhitespace = TrimWhitespace::Yes);
+Optional<T> convert_to_int(StringView const&, TrimWhitespace = TrimWhitespace::Yes);
 template<typename T = unsigned>
-Optional<T> convert_to_uint(const StringView&, TrimWhitespace = TrimWhitespace::Yes);
+Optional<T> convert_to_uint(StringView const&, TrimWhitespace = TrimWhitespace::Yes);
 template<typename T = unsigned>
-Optional<T> convert_to_uint_from_hex(const StringView&, TrimWhitespace = TrimWhitespace::Yes);
-bool equals_ignoring_case(const StringView&, const StringView&);
-bool ends_with(const StringView& a, const StringView& b, CaseSensitivity);
-bool starts_with(const StringView&, const StringView&, CaseSensitivity);
-bool contains(const StringView&, const StringView&, CaseSensitivity);
-bool is_whitespace(const StringView&);
-StringView trim(const StringView& string, const StringView& characters, TrimMode mode);
-StringView trim_whitespace(const StringView& string, TrimMode mode);
+Optional<T> convert_to_uint_from_hex(StringView const&, TrimWhitespace = TrimWhitespace::Yes);
+bool equals_ignoring_case(StringView const&, StringView const&);
+bool ends_with(StringView const& a, StringView const& b, CaseSensitivity);
+bool starts_with(StringView const&, StringView const&, CaseSensitivity);
+bool contains(StringView const&, StringView const&, CaseSensitivity);
+bool is_whitespace(StringView const&);
+StringView trim(StringView const& string, StringView const& characters, TrimMode mode);
+StringView trim_whitespace(StringView const& string, TrimMode mode);
 
 Optional<size_t> find(StringView const& haystack, char needle, size_t start = 0);
 Optional<size_t> find(StringView const& haystack, StringView const& needle, size_t start = 0);
@@ -68,7 +68,7 @@ enum class SearchDirection {
 };
 Optional<size_t> find_any_of(StringView const& haystack, StringView const& needles, SearchDirection);
 
-String to_snakecase(const StringView&);
+String to_snakecase(StringView const&);
 String to_titlecase(StringView const&);
 
 }

@@ -27,9 +27,9 @@ bool read_items(FILE* fp, char entry_separator, Function<Decision(StringView)>);
 
 class ParsedInitialArguments {
 public:
-    ParsedInitialArguments(Vector<const char*>&, const StringView& placeholder);
+    ParsedInitialArguments(Vector<char const*>&, StringView const& placeholder);
 
-    void for_each_joined_argument(const StringView&, Function<void(const String&)>) const;
+    void for_each_joined_argument(StringView const&, Function<void(String const&)>) const;
 
     size_t size() const { return m_all_parts.size(); }
 
@@ -44,12 +44,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* placeholder = nullptr;
+    char const* placeholder = nullptr;
     bool split_with_nulls = false;
-    const char* specified_delimiter = "\n";
-    Vector<const char*> arguments;
+    char const* specified_delimiter = "\n";
+    Vector<char const*> arguments;
     bool verbose = false;
-    const char* file_to_read = "-";
+    char const* file_to_read = "-";
     int max_lines_for_one_command = 0;
     int max_bytes_for_one_command = ARG_MAX;
 
@@ -129,7 +129,7 @@ int main(int argc, char** argv)
         if (items_used_for_this_command == 0) {
             child_argv.ensure_capacity(initial_arguments.size());
 
-            initial_arguments.for_each_joined_argument(item, [&](const String& string) {
+            initial_arguments.for_each_joined_argument(item, [&](String const& string) {
                 total_command_length += string.length();
                 child_argv.append(strdup(string.characters()));
             });
@@ -244,7 +244,7 @@ bool run_command(Vector<char*>&& child_argv, bool verbose, bool is_stdin, int de
     return true;
 }
 
-ParsedInitialArguments::ParsedInitialArguments(Vector<const char*>& arguments, const StringView& placeholder)
+ParsedInitialArguments::ParsedInitialArguments(Vector<char const*>& arguments, StringView const& placeholder)
 {
     m_all_parts.ensure_capacity(arguments.size());
     bool some_argument_has_placeholder = false;
@@ -270,7 +270,7 @@ ParsedInitialArguments::ParsedInitialArguments(Vector<const char*>& arguments, c
     }
 }
 
-void ParsedInitialArguments::for_each_joined_argument(const StringView& separator, Function<void(const String&)> callback) const
+void ParsedInitialArguments::for_each_joined_argument(StringView const& separator, Function<void(String const&)> callback) const
 {
     StringBuilder builder;
     for (auto& parts : m_all_parts) {

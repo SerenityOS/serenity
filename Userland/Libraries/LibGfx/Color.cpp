@@ -28,7 +28,7 @@ String Color::to_string_without_alpha() const
     return String::formatted("#{:02x}{:02x}{:02x}", red(), green(), blue());
 }
 
-static Optional<Color> parse_rgb_color(const StringView& string)
+static Optional<Color> parse_rgb_color(StringView const& string)
 {
     VERIFY(string.starts_with("rgb("));
     VERIFY(string.ends_with(")"));
@@ -49,7 +49,7 @@ static Optional<Color> parse_rgb_color(const StringView& string)
     return Color(r, g, b);
 }
 
-static Optional<Color> parse_rgba_color(const StringView& string)
+static Optional<Color> parse_rgba_color(StringView const& string)
 {
     VERIFY(string.starts_with("rgba("));
     VERIFY(string.ends_with(")"));
@@ -73,13 +73,13 @@ static Optional<Color> parse_rgba_color(const StringView& string)
     return Color(r, g, b, a);
 }
 
-Optional<Color> Color::from_string(const StringView& string)
+Optional<Color> Color::from_string(StringView const& string)
 {
     if (string.is_empty())
         return {};
 
     struct ColorAndWebName {
-        constexpr ColorAndWebName(RGBA32 c, const char* n)
+        constexpr ColorAndWebName(RGBA32 c, char const* n)
             : color(c)
             , name(n)
         {
@@ -310,7 +310,7 @@ Optional<Color> Color::from_string(const StringView& string)
 
 }
 
-bool IPC::encode(IPC::Encoder& encoder, const Color& color)
+bool IPC::encode(IPC::Encoder& encoder, Color const& color)
 {
     encoder << color.value();
     return true;

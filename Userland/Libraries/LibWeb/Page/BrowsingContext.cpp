@@ -155,7 +155,7 @@ void BrowsingContext::set_needs_display(const Gfx::IntRect& rect)
         host_element()->layout_node()->set_needs_display();
 }
 
-void BrowsingContext::scroll_to_anchor(const String& fragment)
+void BrowsingContext::scroll_to_anchor(String const& fragment)
 {
     if (!document())
         return;

@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<sigset_t*> old_set)
+KResultOr<FlatPtr> Process::sys$sigprocmask(int how, Userspace<sigset_t const*> set, Userspace<sigset_t*> old_set)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(sigaction);
@@ -51,7 +51,7 @@ KResultOr<FlatPtr> Process::sys$sigpending(Userspace<sigset_t*> set)
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<const sigaction*> user_act, Userspace<sigaction*> user_old_act)
+KResultOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<sigaction const*> user_act, Userspace<sigaction*> user_old_act)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(sigaction);

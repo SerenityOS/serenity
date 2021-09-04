@@ -6,7 +6,7 @@
 
 #include "History.h"
 
-void History::push(const StringView& history_item)
+void History::push(StringView const& history_item)
 {
     if (!m_items.is_empty() && m_items[m_current_history_item] == history_item)
         return;

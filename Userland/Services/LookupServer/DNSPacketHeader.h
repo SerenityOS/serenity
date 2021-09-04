@@ -72,7 +72,7 @@ public:
     void set_additional_count(u16 w) { m_additional_count = w; }
 
     void* payload() { return this + 1; }
-    const void* payload() const { return this + 1; }
+    void const* payload() const { return this + 1; }
 
 private:
     NetworkOrdered<u16> m_id;

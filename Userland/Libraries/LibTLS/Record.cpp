@@ -243,20 +243,20 @@ void TLSv12::ensure_hmac(size_t digest_size, bool local)
         m_hmac_remote = move(hmac);
 }
 
-ByteBuffer TLSv12::hmac_message(const ReadonlyBytes& buf, const Optional<ReadonlyBytes> buf2, size_t mac_length, bool local)
+ByteBuffer TLSv12::hmac_message(ReadonlyBytes const& buf, const Optional<ReadonlyBytes> buf2, size_t mac_length, bool local)
 {
     u64 sequence_number = AK::convert_between_host_and_network_endian(local ? m_context.local_sequence_number : m_context.remote_sequence_number);
     ensure_hmac(mac_length, local);
     auto& hmac = local ? *m_hmac_local : *m_hmac_remote;
     if constexpr (TLS_DEBUG) {
         dbgln("========================= PACKET DATA ==========================");
-        print_buffer((const u8*)&sequence_number, sizeof(u64));
+        print_buffer((u8 const*)&sequence_number, sizeof(u64));
         print_buffer(buf.data(), buf.size());
         if (buf2.has_value())
             print_buffer(buf2.value().data(), buf2.value().size());
         dbgln("========================= PACKET DATA ==========================");
     }
-    hmac.update((const u8*)&sequence_number, sizeof(u64));
+    hmac.update((u8 const*)&sequence_number, sizeof(u64));
     hmac.update(buf);
     if (buf2.has_value() && buf2.value().size()) {
         hmac.update(buf2.value());
@@ -414,7 +414,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
 
                 length -= mac_size;
 
-                const u8* message_hmac = decrypted_span.offset(length);
+                u8 const* message_hmac = decrypted_span.offset(length);
                 u8 temp_buf[5];
                 memcpy(temp_buf, buffer.offset_pointer(0), 3);
                 *(u16*)(temp_buf + 3) = AK::convert_between_host_and_network_endian(length);

@@ -95,7 +95,7 @@ private:
         if (event.buttons() & (GUI::MouseButton::Left | GUI::MouseButton::Right))
             draw_at_mouse(event);
     }
-    void draw_at_mouse(const MouseEvent& event)
+    void draw_at_mouse(MouseEvent const& event)
     {
         bool set = event.buttons() & MouseButton::Left;
         bool unset = event.buttons() & MouseButton::Right;

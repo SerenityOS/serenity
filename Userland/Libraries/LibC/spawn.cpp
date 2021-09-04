@@ -29,7 +29,7 @@ struct posix_spawn_file_actions_state {
 
 extern "C" {
 
-[[noreturn]] static void posix_spawn_child(const char* path, const posix_spawn_file_actions_t* file_actions, const posix_spawnattr_t* attr, char* const argv[], char* const envp[], int (*exec)(const char*, char* const[], char* const[]))
+[[noreturn]] static void posix_spawn_child(char const* path, posix_spawn_file_actions_t const* file_actions, posix_spawnattr_t const* attr, char* const argv[], char* const envp[], int (*exec)(char const*, char* const[], char* const[]))
 {
     if (attr) {
         short flags = attr->flags;
@@ -86,7 +86,7 @@ extern "C" {
     }
 
     if (file_actions) {
-        for (const auto& action : file_actions->state->actions) {
+        for (auto const& action : file_actions->state->actions) {
             if (action() < 0) {
                 perror("posix_spawn file action");
                 _exit(127);
@@ -99,7 +99,7 @@ extern "C" {
     _exit(127);
 }
 
-int posix_spawn(pid_t* out_pid, const char* path, const posix_spawn_file_actions_t* file_actions, const posix_spawnattr_t* attr, char* const argv[], char* const envp[])
+int posix_spawn(pid_t* out_pid, char const* path, posix_spawn_file_actions_t const* file_actions, posix_spawnattr_t const* attr, char* const argv[], char* const envp[])
 {
     pid_t child_pid = fork();
     if (child_pid < 0)
@@ -113,7 +113,7 @@ int posix_spawn(pid_t* out_pid, const char* path, const posix_spawn_file_actions
     posix_spawn_child(path, file_actions, attr, argv, envp, execve);
 }
 
-int posix_spawnp(pid_t* out_pid, const char* path, const posix_spawn_file_actions_t* file_actions, const posix_spawnattr_t* attr, char* const argv[], char* const envp[])
+int posix_spawnp(pid_t* out_pid, char const* path, posix_spawn_file_actions_t const* file_actions, posix_spawnattr_t const* attr, char* const argv[], char* const envp[])
 {
     pid_t child_pid = fork();
     if (child_pid < 0)
@@ -127,7 +127,7 @@ int posix_spawnp(pid_t* out_pid, const char* path, const posix_spawn_file_action
     posix_spawn_child(path, file_actions, attr, argv, envp, execvpe);
 }
 
-int posix_spawn_file_actions_addchdir(posix_spawn_file_actions_t* actions, const char* path)
+int posix_spawn_file_actions_addchdir(posix_spawn_file_actions_t* actions, char const* path)
 {
     actions->state->actions.append([path]() { return chdir(path); });
     return 0;
@@ -151,7 +151,7 @@ int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t* actions, int ol
     return 0;
 }
 
-int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t* actions, int want_fd, const char* path, int flags, mode_t mode)
+int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t* actions, int want_fd, char const* path, int flags, mode_t mode)
 {
     actions->state->actions.append([want_fd, path, flags, mode]() {
         int opened_fd = open(path, flags, mode);
@@ -181,37 +181,37 @@ int posix_spawnattr_destroy(posix_spawnattr_t*)
     return 0;
 }
 
-int posix_spawnattr_getflags(const posix_spawnattr_t* attr, short* out_flags)
+int posix_spawnattr_getflags(posix_spawnattr_t const* attr, short* out_flags)
 {
     *out_flags = attr->flags;
     return 0;
 }
 
-int posix_spawnattr_getpgroup(const posix_spawnattr_t* attr, pid_t* out_pgroup)
+int posix_spawnattr_getpgroup(posix_spawnattr_t const* attr, pid_t* out_pgroup)
 {
     *out_pgroup = attr->pgroup;
     return 0;
 }
 
-int posix_spawnattr_getschedparam(const posix_spawnattr_t* attr, struct sched_param* out_schedparam)
+int posix_spawnattr_getschedparam(posix_spawnattr_t const* attr, struct sched_param* out_schedparam)
 {
     *out_schedparam = attr->schedparam;
     return 0;
 }
 
-int posix_spawnattr_getschedpolicy(const posix_spawnattr_t* attr, int* out_schedpolicty)
+int posix_spawnattr_getschedpolicy(posix_spawnattr_t const* attr, int* out_schedpolicty)
 {
     *out_schedpolicty = attr->schedpolicy;
     return 0;
 }
 
-int posix_spawnattr_getsigdefault(const posix_spawnattr_t* attr, sigset_t* out_sigdefault)
+int posix_spawnattr_getsigdefault(posix_spawnattr_t const* attr, sigset_t* out_sigdefault)
 {
     *out_sigdefault = attr->sigdefault;
     return 0;
 }
 
-int posix_spawnattr_getsigmask(const posix_spawnattr_t* attr, sigset_t* out_sigmask)
+int posix_spawnattr_getsigmask(posix_spawnattr_t const* attr, sigset_t* out_sigmask)
 {
     *out_sigmask = attr->sigmask;
     return 0;
@@ -255,13 +255,13 @@ int posix_spawnattr_setschedpolicy(posix_spawnattr_t* attr, int schedpolicy)
     return 0;
 }
 
-int posix_spawnattr_setsigdefault(posix_spawnattr_t* attr, const sigset_t* sigdefault)
+int posix_spawnattr_setsigdefault(posix_spawnattr_t* attr, sigset_t const* sigdefault)
 {
     attr->sigdefault = *sigdefault;
     return 0;
 }
 
-int posix_spawnattr_setsigmask(posix_spawnattr_t* attr, const sigset_t* sigmask)
+int posix_spawnattr_setsigmask(posix_spawnattr_t* attr, sigset_t const* sigmask)
 {
     attr->sigmask = *sigmask;
     return 0;

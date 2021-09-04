@@ -15,8 +15,8 @@
 namespace AK {
 
 struct FlyStringImplTraits : public Traits<StringImpl*> {
-    static unsigned hash(const StringImpl* s) { return s ? s->hash() : 0; }
-    static bool equals(const StringImpl* a, const StringImpl* b)
+    static unsigned hash(StringImpl const* s) { return s ? s->hash() : 0; }
+    static bool equals(StringImpl const* a, StringImpl const* b)
     {
         VERIFY(a);
         VERIFY(b);
@@ -36,7 +36,7 @@ void FlyString::did_destroy_impl(Badge<StringImpl>, StringImpl& impl)
     fly_impls().remove(&impl);
 }
 
-FlyString::FlyString(const String& string)
+FlyString::FlyString(String const& string)
 {
     if (string.is_null())
         return;
@@ -95,17 +95,17 @@ template Optional<u16> FlyString::to_uint(TrimWhitespace) const;
 template Optional<u32> FlyString::to_uint(TrimWhitespace) const;
 template Optional<u64> FlyString::to_uint(TrimWhitespace) const;
 
-bool FlyString::equals_ignoring_case(const StringView& other) const
+bool FlyString::equals_ignoring_case(StringView const& other) const
 {
     return StringUtils::equals_ignoring_case(view(), other);
 }
 
-bool FlyString::starts_with(const StringView& str, CaseSensitivity case_sensitivity) const
+bool FlyString::starts_with(StringView const& str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::starts_with(view(), str, case_sensitivity);
 }
 
-bool FlyString::ends_with(const StringView& str, CaseSensitivity case_sensitivity) const
+bool FlyString::ends_with(StringView const& str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::ends_with(view(), str, case_sensitivity);
 }
@@ -115,7 +115,7 @@ FlyString FlyString::to_lowercase() const
     return String(*m_impl).to_lowercase();
 }
 
-bool FlyString::operator==(const String& other) const
+bool FlyString::operator==(String const& other) const
 {
     if (m_impl == other.impl())
         return true;
@@ -132,12 +132,12 @@ bool FlyString::operator==(const String& other) const
     return !__builtin_memcmp(characters(), other.characters(), length());
 }
 
-bool FlyString::operator==(const StringView& string) const
+bool FlyString::operator==(StringView const& string) const
 {
     return *this == String(string);
 }
 
-bool FlyString::operator==(const char* string) const
+bool FlyString::operator==(char const* string) const
 {
     if (is_null())
         return !string;

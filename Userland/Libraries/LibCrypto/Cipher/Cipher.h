@@ -42,7 +42,7 @@ public:
     virtual ReadonlyBytes bytes() const = 0;
 
     virtual void overwrite(ReadonlyBytes) = 0;
-    virtual void overwrite(const u8* data, size_t size) { overwrite({ data, size }); }
+    virtual void overwrite(u8 const* data, size_t size) { overwrite({ data, size }); }
 
     virtual void apply_initialization_vector(ReadonlyBytes ivec) = 0;
 
@@ -101,15 +101,15 @@ public:
     {
     }
 
-    virtual const KeyType& key() const = 0;
+    virtual KeyType const& key() const = 0;
     virtual KeyType& key() = 0;
 
     constexpr static size_t block_size() { return BlockType::block_size(); }
 
     PaddingMode padding_mode() const { return m_padding_mode; }
 
-    virtual void encrypt_block(const BlockType& in, BlockType& out) = 0;
-    virtual void decrypt_block(const BlockType& in, BlockType& out) = 0;
+    virtual void encrypt_block(BlockType const& in, BlockType& out) = 0;
+    virtual void decrypt_block(BlockType const& in, BlockType& out) = 0;
 
     virtual String class_name() const = 0;
 

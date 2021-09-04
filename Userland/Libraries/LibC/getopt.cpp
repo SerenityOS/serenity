@@ -22,7 +22,7 @@ char* optarg = nullptr;
 // processed". Well, this is how we do it.
 static size_t s_index_into_multioption_argument = 0;
 
-[[gnu::format(printf, 1, 2)]] static inline void report_error(const char* format, ...)
+[[gnu::format(printf, 1, 2)]] static inline void report_error(char const* format, ...)
 {
     if (!opterr)
         return;
@@ -41,14 +41,14 @@ namespace {
 
 class OptionParser {
 public:
-    OptionParser(int argc, char* const* argv, const StringView& short_options, const option* long_options, int* out_long_option_index = nullptr);
+    OptionParser(int argc, char* const* argv, StringView const& short_options, option const* long_options, int* out_long_option_index = nullptr);
     int getopt();
 
 private:
     bool lookup_short_option(char option, int& needs_value) const;
     int handle_short_option();
 
-    const option* lookup_long_option(char* raw) const;
+    option const* lookup_long_option(char* raw) const;
     int handle_long_option();
 
     void shift_argv();
@@ -57,7 +57,7 @@ private:
     size_t m_argc { 0 };
     char* const* m_argv { nullptr };
     StringView m_short_options;
-    const option* m_long_options { nullptr };
+    option const* m_long_options { nullptr };
     int* m_out_long_option_index { nullptr };
     bool m_stop_on_first_non_option { false };
 
@@ -65,7 +65,7 @@ private:
     size_t m_consumed_args { 0 };
 };
 
-OptionParser::OptionParser(int argc, char* const* argv, const StringView& short_options, const option* long_options, int* out_long_option_index)
+OptionParser::OptionParser(int argc, char* const* argv, StringView const& short_options, option const* long_options, int* out_long_option_index)
     : m_argc(argc)
     , m_argv(argv)
     , m_short_options(short_options)
@@ -204,7 +204,7 @@ int OptionParser::handle_short_option()
     return option;
 }
 
-const option* OptionParser::lookup_long_option(char* raw) const
+option const* OptionParser::lookup_long_option(char* raw) const
 {
     StringView arg = raw;
 
@@ -336,14 +336,14 @@ bool OptionParser::find_next_option()
 
 }
 
-int getopt(int argc, char* const* argv, const char* short_options)
+int getopt(int argc, char* const* argv, char const* short_options)
 {
     option dummy { nullptr, 0, nullptr, 0 };
     OptionParser parser { argc, argv, short_options, &dummy };
     return parser.getopt();
 }
 
-int getopt_long(int argc, char* const* argv, const char* short_options, const struct option* long_options, int* out_long_option_index)
+int getopt_long(int argc, char* const* argv, char const* short_options, const struct option* long_options, int* out_long_option_index)
 {
     OptionParser parser { argc, argv, short_options, long_options, out_long_option_index };
     return parser.getopt();

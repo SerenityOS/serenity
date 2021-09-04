@@ -8,7 +8,7 @@
 
 extern "C" {
 
-void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
+void* memcpy(void* dest_ptr, void const* src_ptr, size_t n)
 {
     size_t dest = (size_t)dest_ptr;
     size_t src = (size_t)src_ptr;
@@ -38,13 +38,13 @@ void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
     return dest_ptr;
 }
 
-void* memmove(void* dest, const void* src, size_t n)
+void* memmove(void* dest, void const* src, size_t n)
 {
     if (dest < src)
         return memcpy(dest, src, n);
 
     u8* pd = (u8*)dest;
-    const u8* ps = (const u8*)src;
+    u8 const* ps = (u8 const*)src;
     for (pd += n, ps += n; n--;)
         *--pd = *--ps;
     return dest;
@@ -82,7 +82,7 @@ void* memset(void* dest_ptr, int c, size_t n)
     return dest_ptr;
 }
 
-size_t strlen(const char* str)
+size_t strlen(char const* str)
 {
     size_t len = 0;
     while (*(str++))

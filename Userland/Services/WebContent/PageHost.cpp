@@ -99,7 +99,7 @@ void PageHost::page_did_layout()
     m_client.async_did_layout(content_size);
 }
 
-void PageHost::page_did_change_title(const String& title)
+void PageHost::page_did_change_title(String const& title)
 {
     m_client.async_did_change_title(title);
 }
@@ -114,7 +114,7 @@ void PageHost::page_did_request_scroll_into_view(const Gfx::IntRect& rect)
     m_client.async_did_request_scroll_into_view(rect);
 }
 
-void PageHost::page_did_enter_tooltip_area(const Gfx::IntPoint& content_position, const String& title)
+void PageHost::page_did_enter_tooltip_area(const Gfx::IntPoint& content_position, String const& title)
 {
     m_client.async_did_enter_tooltip_area(content_position, title);
 }
@@ -124,7 +124,7 @@ void PageHost::page_did_leave_tooltip_area()
     m_client.async_did_leave_tooltip_area();
 }
 
-void PageHost::page_did_hover_link(const URL& url)
+void PageHost::page_did_hover_link(URL const& url)
 {
     m_client.async_did_hover_link(url);
 }
@@ -134,22 +134,22 @@ void PageHost::page_did_unhover_link()
     m_client.async_did_unhover_link();
 }
 
-void PageHost::page_did_click_link(const URL& url, const String& target, unsigned modifiers)
+void PageHost::page_did_click_link(URL const& url, String const& target, unsigned modifiers)
 {
     m_client.async_did_click_link(url, target, modifiers);
 }
 
-void PageHost::page_did_middle_click_link(const URL& url, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers)
+void PageHost::page_did_middle_click_link(URL const& url, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers)
 {
     m_client.async_did_middle_click_link(url, target, modifiers);
 }
 
-void PageHost::page_did_start_loading(const URL& url)
+void PageHost::page_did_start_loading(URL const& url)
 {
     m_client.async_did_start_loading(url);
 }
 
-void PageHost::page_did_finish_loading(const URL& url)
+void PageHost::page_did_finish_loading(URL const& url)
 {
     m_client.async_did_finish_loading(url);
 }
@@ -159,22 +159,22 @@ void PageHost::page_did_request_context_menu(const Gfx::IntPoint& content_positi
     m_client.async_did_request_context_menu(content_position);
 }
 
-void PageHost::page_did_request_link_context_menu(const Gfx::IntPoint& content_position, const URL& url, const String& target, unsigned modifiers)
+void PageHost::page_did_request_link_context_menu(const Gfx::IntPoint& content_position, URL const& url, String const& target, unsigned modifiers)
 {
     m_client.async_did_request_link_context_menu(content_position, url, target, modifiers);
 }
 
-void PageHost::page_did_request_alert(const String& message)
+void PageHost::page_did_request_alert(String const& message)
 {
     m_client.did_request_alert(message);
 }
 
-bool PageHost::page_did_request_confirm(const String& message)
+bool PageHost::page_did_request_confirm(String const& message)
 {
     return m_client.did_request_confirm(message);
 }
 
-String PageHost::page_did_request_prompt(const String& message, const String& default_)
+String PageHost::page_did_request_prompt(String const& message, String const& default_)
 {
     return m_client.did_request_prompt(message, default_);
 }
@@ -184,17 +184,17 @@ void PageHost::page_did_change_favicon(const Gfx::Bitmap& favicon)
     m_client.async_did_change_favicon(favicon.to_shareable_bitmap());
 }
 
-void PageHost::page_did_request_image_context_menu(const Gfx::IntPoint& content_position, const URL& url, const String& target, unsigned modifiers, const Gfx::Bitmap* bitmap)
+void PageHost::page_did_request_image_context_menu(const Gfx::IntPoint& content_position, URL const& url, String const& target, unsigned modifiers, const Gfx::Bitmap* bitmap)
 {
     m_client.async_did_request_image_context_menu(content_position, url, target, modifiers, bitmap->to_shareable_bitmap());
 }
 
-String PageHost::page_did_request_cookie(const URL& url, Web::Cookie::Source source)
+String PageHost::page_did_request_cookie(URL const& url, Web::Cookie::Source source)
 {
     return m_client.did_request_cookie(url, static_cast<u8>(source));
 }
 
-void PageHost::page_did_set_cookie(const URL& url, const Web::Cookie::ParsedCookie& cookie, Web::Cookie::Source source)
+void PageHost::page_did_set_cookie(URL const& url, const Web::Cookie::ParsedCookie& cookie, Web::Cookie::Source source)
 {
     m_client.async_did_set_cookie(url, cookie, static_cast<u8>(source));
 }

@@ -37,7 +37,7 @@ FrameLoader::~FrameLoader()
 {
 }
 
-static bool build_markdown_document(DOM::Document& document, const ByteBuffer& data)
+static bool build_markdown_document(DOM::Document& document, ByteBuffer const& data)
 {
     auto markdown_document = Markdown::Document::parse(data);
     if (!markdown_document)
@@ -48,7 +48,7 @@ static bool build_markdown_document(DOM::Document& document, const ByteBuffer& d
     return true;
 }
 
-static bool build_text_document(DOM::Document& document, const ByteBuffer& data)
+static bool build_text_document(DOM::Document& document, ByteBuffer const& data)
 {
     auto html_element = document.create_element("html");
     document.append_child(html_element);
@@ -71,7 +71,7 @@ static bool build_text_document(DOM::Document& document, const ByteBuffer& data)
     return true;
 }
 
-static bool build_image_document(DOM::Document& document, const ByteBuffer& data)
+static bool build_image_document(DOM::Document& document, ByteBuffer const& data)
 {
     auto image_decoder = Gfx::ImageDecoder::try_create(data.bytes());
     if (!image_decoder)
@@ -103,7 +103,7 @@ static bool build_image_document(DOM::Document& document, const ByteBuffer& data
     return true;
 }
 
-static bool build_gemini_document(DOM::Document& document, const ByteBuffer& data)
+static bool build_gemini_document(DOM::Document& document, ByteBuffer const& data)
 {
     StringView gemini_data { data };
     auto gemini_document = Gemini::Document::parse(gemini_data, document.url());
@@ -117,7 +117,7 @@ static bool build_gemini_document(DOM::Document& document, const ByteBuffer& dat
     return true;
 }
 
-bool FrameLoader::parse_document(DOM::Document& document, const ByteBuffer& data)
+bool FrameLoader::parse_document(DOM::Document& document, ByteBuffer const& data)
 {
     auto& mime_type = document.content_type();
     if (mime_type == "text/html" || mime_type == "image/svg+xml") {
@@ -137,7 +137,7 @@ bool FrameLoader::parse_document(DOM::Document& document, const ByteBuffer& data
     return false;
 }
 
-bool FrameLoader::load(const LoadRequest& request, Type type)
+bool FrameLoader::load(LoadRequest const& request, Type type)
 {
     if (!request.is_valid()) {
         load_error_page(request.url(), "Invalid request");
@@ -195,7 +195,7 @@ bool FrameLoader::load(const LoadRequest& request, Type type)
     return true;
 }
 
-bool FrameLoader::load(const URL& url, Type type)
+bool FrameLoader::load(URL const& url, Type type)
 {
     dbgln_if(SPAM_DEBUG, "FrameLoader::load: {}", url);
 
@@ -208,7 +208,7 @@ bool FrameLoader::load(const URL& url, Type type)
     return load(request, type);
 }
 
-void FrameLoader::load_html(const StringView& html, const URL& url)
+void FrameLoader::load_html(StringView const& html, URL const& url)
 {
     auto document = DOM::Document::create(url);
     HTML::HTMLDocumentParser parser(document, html, "utf-8");
@@ -219,7 +219,7 @@ void FrameLoader::load_html(const StringView& html, const URL& url)
 // FIXME: Use an actual templating engine (our own one when it's built, preferably
 // with a way to check these usages at compile time)
 
-void FrameLoader::load_error_page(const URL& failed_url, const String& error)
+void FrameLoader::load_error_page(URL const& failed_url, String const& error)
 {
     auto error_page_url = "file:///res/html/error.html";
     ResourceLoader::the().load(

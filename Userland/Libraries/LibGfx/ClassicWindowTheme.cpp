@@ -23,7 +23,7 @@ ClassicWindowTheme::~ClassicWindowTheme()
 {
 }
 
-Gfx::IntRect ClassicWindowTheme::titlebar_icon_rect(WindowType window_type, const IntRect& window_rect, const Palette& palette) const
+Gfx::IntRect ClassicWindowTheme::titlebar_icon_rect(WindowType window_type, IntRect const& window_rect, Palette const& palette) const
 {
     if (window_type == WindowType::ToolWindow)
         return {};
@@ -40,7 +40,7 @@ Gfx::IntRect ClassicWindowTheme::titlebar_icon_rect(WindowType window_type, cons
     return icon_rect;
 }
 
-Gfx::IntRect ClassicWindowTheme::titlebar_text_rect(WindowType window_type, const IntRect& window_rect, const Palette& palette) const
+Gfx::IntRect ClassicWindowTheme::titlebar_text_rect(WindowType window_type, IntRect const& window_rect, Palette const& palette) const
 {
     auto titlebar_rect = this->titlebar_rect(window_type, window_rect, palette);
     auto titlebar_icon_rect = this->titlebar_icon_rect(window_type, window_rect, palette);
@@ -52,7 +52,7 @@ Gfx::IntRect ClassicWindowTheme::titlebar_text_rect(WindowType window_type, cons
     };
 }
 
-void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window_state, const IntRect& window_rect, const StringView& window_title, const Bitmap& icon, const Palette& palette, const IntRect& leftmost_button_rect, int menu_row_count, [[maybe_unused]] bool window_modified) const
+void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window_state, IntRect const& window_rect, StringView const& window_title, Bitmap const& icon, Palette const& palette, IntRect const& leftmost_button_rect, int menu_row_count, [[maybe_unused]] bool window_modified) const
 {
     auto frame_rect = frame_rect_for_window(WindowType::Normal, window_rect, palette, menu_row_count);
     frame_rect.set_location({ 0, 0 });
@@ -94,7 +94,7 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
     painter.draw_scaled_bitmap(titlebar_icon_rect, icon, icon.rect());
 }
 
-void ClassicWindowTheme::paint_tool_window_frame(Painter& painter, WindowState window_state, const IntRect& window_rect, const StringView& title_text, const Palette& palette, const IntRect& leftmost_button_rect) const
+void ClassicWindowTheme::paint_tool_window_frame(Painter& painter, WindowState window_state, IntRect const& window_rect, StringView const& title_text, Palette const& palette, IntRect const& leftmost_button_rect) const
 {
     auto frame_rect = frame_rect_for_window(WindowType::ToolWindow, window_rect, palette, 0);
     frame_rect.set_location({ 0, 0 });
@@ -125,14 +125,14 @@ void ClassicWindowTheme::paint_tool_window_frame(Painter& painter, WindowState w
     }
 }
 
-IntRect ClassicWindowTheme::menubar_rect(WindowType window_type, const IntRect& window_rect, const Palette& palette, int menu_row_count) const
+IntRect ClassicWindowTheme::menubar_rect(WindowType window_type, IntRect const& window_rect, Palette const& palette, int menu_row_count) const
 {
     if (window_type != WindowType::Normal)
         return {};
     return { 4, 3 + titlebar_height(window_type, palette) + 2, window_rect.width(), menubar_height * menu_row_count };
 }
 
-IntRect ClassicWindowTheme::titlebar_rect(WindowType window_type, const IntRect& window_rect, const Palette& palette) const
+IntRect ClassicWindowTheme::titlebar_rect(WindowType window_type, IntRect const& window_rect, Palette const& palette) const
 {
     auto& title_font = FontDatabase::default_font().bold_variant();
     auto window_titlebar_height = titlebar_height(window_type, palette);
@@ -144,7 +144,7 @@ IntRect ClassicWindowTheme::titlebar_rect(WindowType window_type, const IntRect&
     return { 4, 4, window_rect.width(), window_titlebar_height };
 }
 
-ClassicWindowTheme::FrameColors ClassicWindowTheme::compute_frame_colors(WindowState state, const Palette& palette) const
+ClassicWindowTheme::FrameColors ClassicWindowTheme::compute_frame_colors(WindowState state, Palette const& palette) const
 {
     switch (state) {
     case WindowState::Highlighted:
@@ -160,7 +160,7 @@ ClassicWindowTheme::FrameColors ClassicWindowTheme::compute_frame_colors(WindowS
     }
 }
 
-void ClassicWindowTheme::paint_notification_frame(Painter& painter, const IntRect& window_rect, const Palette& palette, const IntRect& close_button_rect) const
+void ClassicWindowTheme::paint_notification_frame(Painter& painter, IntRect const& window_rect, Palette const& palette, IntRect const& close_button_rect) const
 {
     auto frame_rect = frame_rect_for_window(WindowType::Notification, window_rect, palette, 0);
     frame_rect.set_location({ 0, 0 });
@@ -180,7 +180,7 @@ void ClassicWindowTheme::paint_notification_frame(Painter& painter, const IntRec
     }
 }
 
-IntRect ClassicWindowTheme::frame_rect_for_window(WindowType window_type, const IntRect& window_rect, const Gfx::Palette& palette, int menu_row_count) const
+IntRect ClassicWindowTheme::frame_rect_for_window(WindowType window_type, IntRect const& window_rect, const Gfx::Palette& palette, int menu_row_count) const
 {
     auto window_titlebar_height = titlebar_height(window_type, palette);
 
@@ -205,7 +205,7 @@ IntRect ClassicWindowTheme::frame_rect_for_window(WindowType window_type, const 
     }
 }
 
-Vector<IntRect> ClassicWindowTheme::layout_buttons(WindowType window_type, const IntRect& window_rect, const Palette& palette, size_t buttons) const
+Vector<IntRect> ClassicWindowTheme::layout_buttons(WindowType window_type, IntRect const& window_rect, Palette const& palette, size_t buttons) const
 {
     int window_button_width = palette.window_title_button_width();
     int window_button_height = palette.window_title_button_height();
@@ -233,7 +233,7 @@ Vector<IntRect> ClassicWindowTheme::layout_buttons(WindowType window_type, const
     return button_rects;
 }
 
-int ClassicWindowTheme::titlebar_height(WindowType window_type, const Palette& palette) const
+int ClassicWindowTheme::titlebar_height(WindowType window_type, Palette const& palette) const
 {
     auto& title_font = FontDatabase::default_font().bold_variant();
     switch (window_type) {

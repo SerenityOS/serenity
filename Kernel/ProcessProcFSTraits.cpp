@@ -36,7 +36,7 @@ InodeIndex Process::ProcessProcFSTraits::component_index() const
     return SegmentedProcFSIndex::build_segmented_index_for_pid_directory(process->pid());
 }
 
-KResultOr<NonnullRefPtr<Inode>> Process::ProcessProcFSTraits::to_inode(const ProcFS& procfs_instance) const
+KResultOr<NonnullRefPtr<Inode>> Process::ProcessProcFSTraits::to_inode(ProcFS const& procfs_instance) const
 {
     auto process = m_process.strong_ref();
     if (!process)

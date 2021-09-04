@@ -31,7 +31,7 @@
 
 namespace GUI {
 
-Optional<String> FilePicker::get_open_filepath(Window* parent_window, const String& window_title, const StringView& path, bool folder, ScreenPosition screen_position)
+Optional<String> FilePicker::get_open_filepath(Window* parent_window, String const& window_title, StringView const& path, bool folder, ScreenPosition screen_position)
 {
     auto picker = FilePicker::construct(parent_window, folder ? Mode::OpenFolder : Mode::Open, "", path, screen_position);
 
@@ -49,7 +49,7 @@ Optional<String> FilePicker::get_open_filepath(Window* parent_window, const Stri
     return {};
 }
 
-Optional<String> FilePicker::get_save_filepath(Window* parent_window, const String& title, const String& extension, const StringView& path, ScreenPosition screen_position)
+Optional<String> FilePicker::get_save_filepath(Window* parent_window, String const& title, String const& extension, StringView const& path, ScreenPosition screen_position)
 {
     auto picker = FilePicker::construct(parent_window, Mode::Save, String::formatted("{}.{}", title, extension), path, screen_position);
 
@@ -64,7 +64,7 @@ Optional<String> FilePicker::get_save_filepath(Window* parent_window, const Stri
     return {};
 }
 
-FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filename, const StringView& path, ScreenPosition screen_position)
+FilePicker::FilePicker(Window* parent_window, Mode mode, StringView const& filename, StringView const& path, ScreenPosition screen_position)
     : Dialog(parent_window, screen_position)
     , m_model(FileSystemModel::create(path))
     , m_mode(mode)
@@ -114,7 +114,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
     };
 
     auto open_parent_directory_action = Action::create(
-        "Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open-parent-directory.png"), [this](const Action&) {
+        "Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open-parent-directory.png"), [this](Action const&) {
             set_path(String::formatted("{}/..", m_model->root_path()));
         },
         this);
@@ -128,7 +128,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
     toolbar.add_separator();
 
     auto mkdir_action = Action::create(
-        "New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"), [this](const Action&) {
+        "New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"), [this](Action const&) {
             String value;
             if (InputBox::show(this, value, "Enter name:", "New directory") == InputBox::ExecOK && !value.is_empty()) {
                 auto new_dir_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", m_model->root_path(), value));
@@ -290,7 +290,7 @@ void FilePicker::on_file_return()
     done(ExecOK);
 }
 
-void FilePicker::set_path(const String& path)
+void FilePicker::set_path(String const& path)
 {
     if (access(path.characters(), R_OK | X_OK) == -1) {
         GUI::MessageBox::show(this, String::formatted("Could not open '{}':\n{}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);

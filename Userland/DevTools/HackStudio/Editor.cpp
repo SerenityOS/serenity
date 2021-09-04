@@ -91,9 +91,9 @@ EditorWrapper& Editor::wrapper()
 {
     return static_cast<EditorWrapper&>(*parent());
 }
-const EditorWrapper& Editor::wrapper() const
+EditorWrapper const& Editor::wrapper() const
 {
-    return static_cast<const EditorWrapper&>(*parent());
+    return static_cast<EditorWrapper const&>(*parent());
 }
 
 void Editor::focusin_event(GUI::FocusEvent& event)
@@ -139,11 +139,11 @@ void Editor::paint_event(GUI::PaintEvent& event)
             if (line < first_visible_line || line > last_visible_line) {
                 continue;
             }
-            const auto& icon = breakpoint_icon_bitmap();
+            auto const& icon = breakpoint_icon_bitmap();
             painter.blit(gutter_icon_rect(line).top_left(), icon, icon.rect());
         }
         if (execution_position().has_value()) {
-            const auto& icon = current_position_icon_bitmap();
+            auto const& icon = current_position_icon_bitmap();
             painter.blit(gutter_icon_rect(execution_position().value()).top_left(), icon, icon.rect());
         }
 
@@ -190,7 +190,7 @@ static HashMap<String, String>& man_paths()
     return paths;
 }
 
-void Editor::show_documentation_tooltip_if_available(const String& hovered_token, const Gfx::IntPoint& screen_location)
+void Editor::show_documentation_tooltip_if_available(String const& hovered_token, const Gfx::IntPoint& screen_location)
 {
     auto it = man_paths().find(hovered_token);
     if (it == man_paths().end()) {
@@ -441,16 +441,16 @@ const Gfx::Bitmap& Editor::current_position_icon_bitmap()
     return *bitmap;
 }
 
-const CodeDocument& Editor::code_document() const
+CodeDocument const& Editor::code_document() const
 {
-    const auto& doc = document();
+    auto const& doc = document();
     VERIFY(doc.is_code_document());
-    return static_cast<const CodeDocument&>(doc);
+    return static_cast<CodeDocument const&>(doc);
 }
 
 CodeDocument& Editor::code_document()
 {
-    return const_cast<CodeDocument&>(static_cast<const Editor&>(*this).code_document());
+    return const_cast<CodeDocument&>(static_cast<Editor const&>(*this).code_document());
 }
 
 void Editor::set_document(GUI::TextDocument& doc)
@@ -576,7 +576,7 @@ void Editor::on_identifier_click(const GUI::TextDocumentSpan& span)
     if (!m_language_client)
         return;
 
-    m_language_client->on_declaration_found = [](const String& file, size_t line, size_t column) {
+    m_language_client->on_declaration_found = [](String const& file, size_t line, size_t column) {
         HackStudio::open_file(file, line, column);
     };
     m_language_client->search_declaration(code_document().file_path(), span.range.start().line(), span.range.start().column());
@@ -587,7 +587,7 @@ void Editor::set_cursor(const GUI::TextPosition& a_position)
     TextEditor::set_cursor(a_position);
 }
 
-void Editor::set_syntax_highlighter_for(const CodeDocument& document)
+void Editor::set_syntax_highlighter_for(CodeDocument const& document)
 {
     switch (document.language()) {
     case Language::Cpp:
@@ -627,7 +627,7 @@ void Editor::set_autocomplete_provider_for(CodeDocument const& document)
     }
 }
 
-void Editor::set_language_client_for(const CodeDocument& document)
+void Editor::set_language_client_for(CodeDocument const& document)
 {
     if (m_language_client && m_language_client->language() == document.language())
         return;

@@ -31,7 +31,7 @@ public:
     unsigned major() const { return m_major; }
     unsigned minor() const { return m_minor; }
 
-    virtual String absolute_path(const FileDescription&) const override;
+    virtual String absolute_path(FileDescription const&) const override;
     virtual String absolute_path() const;
 
     UserID uid() const { return m_uid; }
@@ -46,7 +46,7 @@ public:
     static void for_each(Function<void(Device&)>);
     static Device* get_device(unsigned major, unsigned minor);
 
-    void process_next_queued_request(Badge<AsyncDeviceRequest>, const AsyncDeviceRequest&);
+    void process_next_queued_request(Badge<AsyncDeviceRequest>, AsyncDeviceRequest const&);
 
     template<typename AsyncRequestType, typename... Args>
     NonnullRefPtr<AsyncRequestType> make_request(Args&&... args)

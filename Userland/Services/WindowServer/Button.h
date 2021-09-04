@@ -32,7 +32,7 @@ public:
 
     void paint(Screen&, Gfx::Painter&);
 
-    void on_mouse_event(const MouseEvent&);
+    void on_mouse_event(MouseEvent const&);
 
     Function<void(Button&)> on_click;
     Function<void(Button&)> on_right_click;

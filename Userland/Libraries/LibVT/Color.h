@@ -95,7 +95,7 @@ public:
         }
     }
 
-    constexpr bool operator==(const Color& other) const
+    constexpr bool operator==(Color const& other) const
     {
         if (m_kind != other.kind())
             return false;

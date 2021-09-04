@@ -23,8 +23,8 @@ private:
     RunWindow();
 
     void do_run();
-    bool run_as_command(const String& run_input);
-    bool run_via_launch(const String& run_input);
+    bool run_as_command(String const& run_input);
+    bool run_via_launch(String const& run_input);
 
     String history_file_path();
     void load_history();

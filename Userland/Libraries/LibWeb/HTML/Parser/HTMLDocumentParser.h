@@ -39,20 +39,20 @@ namespace Web::HTML {
     __ENUMERATE_INSERTION_MODE(AfterAfterBody)  \
     __ENUMERATE_INSERTION_MODE(AfterAfterFrameset)
 
-RefPtr<DOM::Document> parse_html_document(const StringView&, const URL&, const String& encoding);
+RefPtr<DOM::Document> parse_html_document(StringView const&, URL const&, String const& encoding);
 
 class HTMLDocumentParser {
 public:
-    HTMLDocumentParser(DOM::Document&, const StringView& input, const String& encoding);
+    HTMLDocumentParser(DOM::Document&, StringView const& input, String const& encoding);
     ~HTMLDocumentParser();
 
-    static NonnullOwnPtr<HTMLDocumentParser> create_with_uncertain_encoding(DOM::Document&, const ByteBuffer& input);
+    static NonnullOwnPtr<HTMLDocumentParser> create_with_uncertain_encoding(DOM::Document&, ByteBuffer const& input);
 
-    void run(const URL&);
+    void run(URL const&);
 
     DOM::Document& document();
 
-    static NonnullRefPtrVector<DOM::Node> parse_html_fragment(DOM::Element& context_element, const StringView&);
+    static NonnullRefPtrVector<DOM::Node> parse_html_fragment(DOM::Element& context_element, StringView const&);
 
     enum class InsertionMode {
 #define __ENUMERATE_INSERTION_MODE(mode) mode,
@@ -62,12 +62,12 @@ public:
 
     InsertionMode insertion_mode() const { return m_insertion_mode; }
 
-    static bool is_special_tag(const FlyString& tag_name, const FlyString& namespace_);
+    static bool is_special_tag(FlyString const& tag_name, FlyString const& namespace_);
 
 private:
-    const char* insertion_mode_name() const;
+    char const* insertion_mode_name() const;
 
-    DOM::QuirksMode which_quirks_mode(const HTMLToken&) const;
+    DOM::QuirksMode which_quirks_mode(HTMLToken const&) const;
 
     void handle_initial(HTMLToken&);
     void handle_before_html(HTMLToken&);
@@ -95,10 +95,10 @@ private:
 
     void stop_parsing() { m_stop_parsing = true; }
 
-    void generate_implied_end_tags(const FlyString& exception = {});
+    void generate_implied_end_tags(FlyString const& exception = {});
     void generate_all_implied_end_tags_thoroughly();
-    bool stack_of_open_elements_has_element_with_tag_name_in_scope(const FlyString& tag_name);
-    NonnullRefPtr<DOM::Element> create_element_for(const HTMLToken&, const FlyString& namespace_);
+    bool stack_of_open_elements_has_element_with_tag_name_in_scope(FlyString const& tag_name);
+    NonnullRefPtr<DOM::Element> create_element_for(HTMLToken const&, FlyString const& namespace_);
 
     struct AdjustedInsertionLocation {
         RefPtr<DOM::Node> parent;
@@ -109,8 +109,8 @@ private:
 
     DOM::Text* find_character_insertion_node();
     void flush_character_insertions();
-    NonnullRefPtr<DOM::Element> insert_foreign_element(const HTMLToken&, const FlyString&);
-    NonnullRefPtr<DOM::Element> insert_html_element(const HTMLToken&);
+    NonnullRefPtr<DOM::Element> insert_foreign_element(HTMLToken const&, FlyString const&);
+    NonnullRefPtr<DOM::Element> insert_html_element(HTMLToken const&);
     DOM::Element& current_node();
     DOM::Element& adjusted_current_node();
     DOM::Element& node_before_current_node();

@@ -97,8 +97,8 @@ TEST_CASE(apply)
     // With const reference, taken from a const tuple
     {
         bool was_called = false;
-        const auto& args_ref = args;
-        args_ref.apply_as_args([&](const int& a, const int& b, const String& c) {
+        auto const& args_ref = args;
+        args_ref.apply_as_args([&](int const& a, int const& b, String const& c) {
             was_called = true;
             EXPECT_EQ(a, 1);
             EXPECT_EQ(b, 2);

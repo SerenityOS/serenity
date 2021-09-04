@@ -40,7 +40,7 @@ public:
     String render_to_html() const;
     String render_for_terminal() const;
 
-    static Optional<Text> parse(const StringView&);
+    static Optional<Text> parse(StringView const&);
 
 private:
     Text(Vector<Span>&& spans)

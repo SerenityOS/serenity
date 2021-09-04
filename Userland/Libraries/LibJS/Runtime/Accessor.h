@@ -53,7 +53,7 @@ public:
     }
 
 private:
-    const char* class_name() const override { return "Accessor"; };
+    char const* class_name() const override { return "Accessor"; };
 
     FunctionObject* m_getter { nullptr };
     FunctionObject* m_setter { nullptr };

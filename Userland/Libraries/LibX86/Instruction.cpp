@@ -30,7 +30,7 @@ static bool opcode_has_register_index(u8 op)
     return false;
 }
 
-static void build(InstructionDescriptor* table, u8 op, const char* mnemonic, InstructionFormat format, InstructionHandler handler, IsLockPrefixAllowed lock_prefix_allowed)
+static void build(InstructionDescriptor* table, u8 op, char const* mnemonic, InstructionFormat format, InstructionHandler handler, IsLockPrefixAllowed lock_prefix_allowed)
 {
     InstructionDescriptor& d = table[op];
 
@@ -175,7 +175,7 @@ static void build(InstructionDescriptor* table, u8 op, const char* mnemonic, Ins
     }
 }
 
-static void build_slash(InstructionDescriptor* table, u8 op, u8 slash, const char* mnemonic, InstructionFormat format, InstructionHandler handler, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_slash(InstructionDescriptor* table, u8 op, u8 slash, char const* mnemonic, InstructionFormat format, InstructionHandler handler, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
     InstructionDescriptor& d = table[op];
     VERIFY(d.handler == nullptr);
@@ -187,7 +187,7 @@ static void build_slash(InstructionDescriptor* table, u8 op, u8 slash, const cha
     build(d.slashes, slash, mnemonic, format, handler, lock_prefix_allowed);
 }
 
-static void build_slash_rm(InstructionDescriptor* table, u8 op, u8 slash, u8 rm, const char* mnemonic, InstructionFormat format, InstructionHandler handler)
+static void build_slash_rm(InstructionDescriptor* table, u8 op, u8 slash, u8 rm, char const* mnemonic, InstructionFormat format, InstructionHandler handler)
 {
     VERIFY((rm & 0xc0) == 0xc0);
     VERIFY(((rm >> 3) & 7) == slash);
@@ -208,73 +208,73 @@ static void build_slash_rm(InstructionDescriptor* table, u8 op, u8 slash, u8 rm,
     build(d.slashes, rm & 7, mnemonic, format, handler, LockPrefixNotAllowed);
 }
 
-static void build_0f(u8 op, const char* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_0f(u8 op, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
     build(s_0f_table16, op, mnemonic, format, impl, lock_prefix_allowed);
     build(s_0f_table32, op, mnemonic, format, impl, lock_prefix_allowed);
 }
 
-static void build(u8 op, const char* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build(u8 op, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
     build(s_table16, op, mnemonic, format, impl, lock_prefix_allowed);
     build(s_table32, op, mnemonic, format, impl, lock_prefix_allowed);
 }
 
-static void build(u8 op, const char* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build(u8 op, char const* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
     build(s_table16, op, mnemonic, format16, impl16, lock_prefix_allowed);
     build(s_table32, op, mnemonic, format32, impl32, lock_prefix_allowed);
 }
 
-static void build_0f(u8 op, const char* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_0f(u8 op, char const* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
     build(s_0f_table16, op, mnemonic, format16, impl16, lock_prefix_allowed);
     build(s_0f_table32, op, mnemonic, format32, impl32, lock_prefix_allowed);
 }
 
-static void build(u8 op, const char* mnemonic16, InstructionFormat format16, InstructionHandler impl16, const char* mnemonic32, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build(u8 op, char const* mnemonic16, InstructionFormat format16, InstructionHandler impl16, char const* mnemonic32, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
     build(s_table16, op, mnemonic16, format16, impl16, lock_prefix_allowed);
     build(s_table32, op, mnemonic32, format32, impl32, lock_prefix_allowed);
 }
 
-static void build_0f(u8 op, const char* mnemonic16, InstructionFormat format16, InstructionHandler impl16, const char* mnemonic32, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_0f(u8 op, char const* mnemonic16, InstructionFormat format16, InstructionHandler impl16, char const* mnemonic32, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
     build(s_0f_table16, op, mnemonic16, format16, impl16, lock_prefix_allowed);
     build(s_0f_table32, op, mnemonic32, format32, impl32, lock_prefix_allowed);
 }
 
-static void build_slash(u8 op, u8 slash, const char* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_slash(u8 op, u8 slash, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
     build_slash(s_table16, op, slash, mnemonic, format, impl, lock_prefix_allowed);
     build_slash(s_table32, op, slash, mnemonic, format, impl, lock_prefix_allowed);
 }
 
-static void build_slash(u8 op, u8 slash, const char* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_slash(u8 op, u8 slash, char const* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
     build_slash(s_table16, op, slash, mnemonic, format16, impl16, lock_prefix_allowed);
     build_slash(s_table32, op, slash, mnemonic, format32, impl32, lock_prefix_allowed);
 }
 
-static void build_0f_slash(u8 op, u8 slash, const char* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_0f_slash(u8 op, u8 slash, char const* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
     build_slash(s_0f_table16, op, slash, mnemonic, format16, impl16, lock_prefix_allowed);
     build_slash(s_0f_table32, op, slash, mnemonic, format32, impl32, lock_prefix_allowed);
 }
 
-static void build_0f_slash(u8 op, u8 slash, const char* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+static void build_0f_slash(u8 op, u8 slash, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
     build_slash(s_0f_table16, op, slash, mnemonic, format, impl, lock_prefix_allowed);
     build_slash(s_0f_table32, op, slash, mnemonic, format, impl, lock_prefix_allowed);
 }
 
-static void build_slash_rm(u8 op, u8 slash, u8 rm, const char* mnemonic, InstructionFormat format, InstructionHandler impl)
+static void build_slash_rm(u8 op, u8 slash, u8 rm, char const* mnemonic, InstructionFormat format, InstructionHandler impl)
 {
     build_slash_rm(s_table16, op, slash, rm, mnemonic, format, impl);
     build_slash_rm(s_table32, op, slash, rm, mnemonic, format, impl);
 }
 
-static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFormat format, InstructionHandler impl)
+static void build_slash_reg(u8 op, u8 slash, char const* mnemonic, InstructionFormat format, InstructionHandler impl)
 {
     for (int i = 0; i < 8; ++i)
         build_slash_rm(op, slash, 0xc0 | (slash << 3) | i, mnemonic, format, impl);
@@ -934,43 +934,43 @@ static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFo
     build_0f(0xFF, "UD0", OP, &Interpreter::UD0);
 }
 
-static const char* register_name(RegisterIndex8);
-static const char* register_name(RegisterIndex16);
-static const char* register_name(RegisterIndex32);
-static const char* register_name(FpuRegisterIndex);
-static const char* register_name(SegmentRegister);
-static const char* register_name(MMXRegisterIndex);
+static char const* register_name(RegisterIndex8);
+static char const* register_name(RegisterIndex16);
+static char const* register_name(RegisterIndex32);
+static char const* register_name(FpuRegisterIndex);
+static char const* register_name(SegmentRegister);
+static char const* register_name(MMXRegisterIndex);
 
-const char* Instruction::reg8_name() const
+char const* Instruction::reg8_name() const
 {
     return register_name(static_cast<RegisterIndex8>(register_index()));
 }
 
-const char* Instruction::reg16_name() const
+char const* Instruction::reg16_name() const
 {
     return register_name(static_cast<RegisterIndex16>(register_index()));
 }
 
-const char* Instruction::reg32_name() const
+char const* Instruction::reg32_name() const
 {
     return register_name(static_cast<RegisterIndex32>(register_index()));
 }
 
-String MemoryOrRegisterReference::to_string_o8(const Instruction& insn) const
+String MemoryOrRegisterReference::to_string_o8(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg8());
     return String::formatted("[{}]", to_string(insn));
 }
 
-String MemoryOrRegisterReference::to_string_o16(const Instruction& insn) const
+String MemoryOrRegisterReference::to_string_o16(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg16());
     return String::formatted("[{}]", to_string(insn));
 }
 
-String MemoryOrRegisterReference::to_string_o32(const Instruction& insn) const
+String MemoryOrRegisterReference::to_string_o32(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg32());
@@ -983,7 +983,7 @@ String MemoryOrRegisterReference::to_string_fpu_reg() const
     return register_name(reg_fpu());
 }
 
-String MemoryOrRegisterReference::to_string_fpu_mem(const Instruction& insn) const
+String MemoryOrRegisterReference::to_string_fpu_mem(Instruction const& insn) const
 {
     VERIFY(!is_register());
     return String::formatted("[{}]", to_string(insn));
@@ -995,40 +995,40 @@ String MemoryOrRegisterReference::to_string_fpu_ax16() const
     return register_name(reg16());
 }
 
-String MemoryOrRegisterReference::to_string_fpu16(const Instruction& insn) const
+String MemoryOrRegisterReference::to_string_fpu16(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg_fpu());
     return String::formatted("word ptr [{}]", to_string(insn));
 }
 
-String MemoryOrRegisterReference::to_string_fpu32(const Instruction& insn) const
+String MemoryOrRegisterReference::to_string_fpu32(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg_fpu());
     return String::formatted("dword ptr [{}]", to_string(insn));
 }
 
-String MemoryOrRegisterReference::to_string_fpu64(const Instruction& insn) const
+String MemoryOrRegisterReference::to_string_fpu64(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg_fpu());
     return String::formatted("qword ptr [{}]", to_string(insn));
 }
 
-String MemoryOrRegisterReference::to_string_fpu80(const Instruction& insn) const
+String MemoryOrRegisterReference::to_string_fpu80(Instruction const& insn) const
 {
     VERIFY(!is_register());
     return String::formatted("tbyte ptr [{}]", to_string(insn));
 }
-String MemoryOrRegisterReference::to_string_mm(const Instruction& insn) const
+String MemoryOrRegisterReference::to_string_mm(Instruction const& insn) const
 {
     if (is_register())
         return register_name(static_cast<MMXRegisterIndex>(m_register_index));
     return String::formatted("[{}]", to_string(insn));
 }
 
-String MemoryOrRegisterReference::to_string(const Instruction& insn) const
+String MemoryOrRegisterReference::to_string(Instruction const& insn) const
 {
     if (insn.a32())
         return to_string_a32();
@@ -1248,7 +1248,7 @@ static String relative_address(u32 origin, bool x32, i32 imm)
     return String::formatted("{:#04x}", w + si);
 }
 
-String Instruction::to_string(u32 origin, const SymbolProvider* symbol_provider, bool x32) const
+String Instruction::to_string(u32 origin, SymbolProvider const* symbol_provider, bool x32) const
 {
     StringBuilder builder;
     if (has_segment_prefix())
@@ -1265,7 +1265,7 @@ String Instruction::to_string(u32 origin, const SymbolProvider* symbol_provider,
     return builder.to_string();
 }
 
-void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const SymbolProvider* symbol_provider, bool x32) const
+void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolProvider const* symbol_provider, bool x32) const
 {
     if (!m_descriptor) {
         builder.appendff("db {:02x}", m_op);
@@ -1896,39 +1896,39 @@ String Instruction::mnemonic() const
     return m_descriptor->mnemonic;
 }
 
-const char* register_name(SegmentRegister index)
+char const* register_name(SegmentRegister index)
 {
-    static constexpr const char* names[] = { "es", "cs", "ss", "ds", "fs", "gs", "segr6", "segr7" };
+    static constexpr char const* names[] = { "es", "cs", "ss", "ds", "fs", "gs", "segr6", "segr7" };
     return names[(int)index & 7];
 }
 
-const char* register_name(RegisterIndex8 register_index)
+char const* register_name(RegisterIndex8 register_index)
 {
-    static constexpr const char* names[] = { "al", "cl", "dl", "bl", "ah", "ch", "dh", "bh" };
+    static constexpr char const* names[] = { "al", "cl", "dl", "bl", "ah", "ch", "dh", "bh" };
     return names[register_index & 7];
 }
 
-const char* register_name(RegisterIndex16 register_index)
+char const* register_name(RegisterIndex16 register_index)
 {
-    static constexpr const char* names[] = { "ax", "cx", "dx", "bx", "sp", "bp", "si", "di" };
+    static constexpr char const* names[] = { "ax", "cx", "dx", "bx", "sp", "bp", "si", "di" };
     return names[register_index & 7];
 }
 
-const char* register_name(RegisterIndex32 register_index)
+char const* register_name(RegisterIndex32 register_index)
 {
-    static constexpr const char* names[] = { "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi" };
+    static constexpr char const* names[] = { "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi" };
     return names[register_index & 7];
 }
 
-const char* register_name(FpuRegisterIndex register_index)
+char const* register_name(FpuRegisterIndex register_index)
 {
-    static constexpr const char* names[] = { "st0", "st1", "st2", "st3", "st4", "st5", "st6", "st7" };
+    static constexpr char const* names[] = { "st0", "st1", "st2", "st3", "st4", "st5", "st6", "st7" };
     return names[register_index & 7];
 }
 
-const char* register_name(MMXRegisterIndex register_index)
+char const* register_name(MMXRegisterIndex register_index)
 {
-    static constexpr const char* names[] = { "mm0", "mm1", "mm2", "mm3", "mm4", "mm5", "mm6", "mm7" };
+    static constexpr char const* names[] = { "mm0", "mm1", "mm2", "mm3", "mm4", "mm5", "mm6", "mm7" };
     return names[register_index & 7];
 }
 

@@ -15,7 +15,7 @@ public:
     LaplacianFilter() { }
     virtual ~LaplacianFilter() { }
 
-    virtual const char* class_name() const override { return "LaplacianFilter"; }
+    virtual char const* class_name() const override { return "LaplacianFilter"; }
 };
 
 }

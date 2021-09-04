@@ -148,7 +148,7 @@ void Heap::flush()
     dbgln_if(SQL_DEBUG, "WAL flushed. Heap size = {}", size());
 }
 
-constexpr static const char* FILE_ID = "SerenitySQL ";
+constexpr static char const* FILE_ID = "SerenitySQL ";
 constexpr static int VERSION_OFFSET = 12;
 constexpr static int SCHEMAS_ROOT_OFFSET = 16;
 constexpr static int TABLES_ROOT_OFFSET = 20;

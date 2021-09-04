@@ -49,7 +49,7 @@ size_t AHCIController::devices_count() const
 {
     size_t count = 0;
     for (auto& port_handler : m_handlers) {
-        port_handler.enumerate_ports([&](const AHCIPort& port) {
+        port_handler.enumerate_ports([&](AHCIPort const& port) {
             if (port.connected_device())
                 count++;
         });
@@ -57,7 +57,7 @@ size_t AHCIController::devices_count() const
     return count;
 }
 
-void AHCIController::start_request(const StorageDevice&, AsyncBlockDeviceRequest&)
+void AHCIController::start_request(StorageDevice const&, AsyncBlockDeviceRequest&)
 {
     VERIFY_NOT_REACHED();
 }

@@ -80,19 +80,19 @@ public:
     virtual KResultOr<NonnullRefPtr<FileDescription>> open(int options);
     virtual KResult close();
 
-    virtual bool can_read(const FileDescription&, size_t) const = 0;
-    virtual bool can_write(const FileDescription&, size_t) const = 0;
+    virtual bool can_read(FileDescription const&, size_t) const = 0;
+    virtual bool can_write(FileDescription const&, size_t) const = 0;
 
     virtual KResult attach(FileDescription&);
     virtual void detach(FileDescription&);
     virtual void did_seek(FileDescription&, off_t) { }
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) = 0;
-    virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) = 0;
+    virtual KResultOr<size_t> write(FileDescription&, u64, UserOrKernelBuffer const&, size_t) = 0;
     virtual KResult ioctl(FileDescription&, unsigned request, Userspace<void*> arg);
     virtual KResultOr<Memory::Region*> mmap(Process&, FileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared);
     virtual KResult stat(::stat&) const { return EBADF; }
 
-    virtual String absolute_path(const FileDescription&) const = 0;
+    virtual String absolute_path(FileDescription const&) const = 0;
 
     virtual KResult truncate(u64) { return EINVAL; }
     virtual KResult chown(FileDescription&, UserID, GroupID) { return EBADF; }

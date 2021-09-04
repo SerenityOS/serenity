@@ -25,21 +25,21 @@ class BMIDEChannel final : public IDEChannel {
     friend class PATADiskDevice;
 
 public:
-    static NonnullRefPtr<BMIDEChannel> create(const IDEController&, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
-    static NonnullRefPtr<BMIDEChannel> create(const IDEController&, u8 irq, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
+    static NonnullRefPtr<BMIDEChannel> create(IDEController const&, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
+    static NonnullRefPtr<BMIDEChannel> create(IDEController const&, u8 irq, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
     virtual ~BMIDEChannel() override {};
 
     virtual bool is_dma_enabled() const override { return true; };
 
 private:
-    BMIDEChannel(const IDEController&, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
-    BMIDEChannel(const IDEController&, u8 irq, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
+    BMIDEChannel(IDEController const&, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
+    BMIDEChannel(IDEController const&, u8 irq, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
     void initialize();
 
     void complete_current_request(AsyncDeviceRequest::RequestResult);
 
     //^ IRQHandler
-    virtual bool handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(RegisterState const&) override;
 
     //* IDEChannel
     virtual void send_ata_io_command(LBAMode lba_mode, Direction direction) const override;

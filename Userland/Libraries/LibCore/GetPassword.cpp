@@ -13,7 +13,7 @@
 
 namespace Core {
 
-Result<String, OSError> get_password(const StringView& prompt)
+Result<String, OSError> get_password(StringView const& prompt)
 {
     if (write(STDOUT_FILENO, prompt.characters_without_null_termination(), prompt.length()) < 0)
         return OSError(errno);

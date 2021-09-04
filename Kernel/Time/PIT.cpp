@@ -16,7 +16,7 @@
 #define IRQ_TIMER 0
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<PIT> PIT::initialize(Function<void(const RegisterState&)> callback)
+UNMAP_AFTER_INIT NonnullRefPtr<PIT> PIT::initialize(Function<void(RegisterState const&)> callback)
 {
     return adopt_ref(*new PIT(move(callback)));
 }
@@ -28,7 +28,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<PIT> PIT::initialize(Function<void(const Register
     IO::out8(TIMER0_CTL, MSB(timer_reload));
 }
 
-PIT::PIT(Function<void(const RegisterState&)> callback)
+PIT::PIT(Function<void(RegisterState const&)> callback)
     : HardwareTimer(IRQ_TIMER, move(callback))
     , m_periodic(true)
 {

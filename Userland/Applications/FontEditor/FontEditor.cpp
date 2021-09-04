@@ -38,7 +38,7 @@
 #include <stdlib.h>
 
 static constexpr int s_pangram_count = 7;
-static const char* pangrams[s_pangram_count] = {
+static char const* pangrams[s_pangram_count] = {
     "quick fox jumps nightly above wizard",
     "five quacking zephyrs jolt my wax bed",
     "pack my box with five dozen liquor jugs",
@@ -103,7 +103,7 @@ static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
     return window;
 }
 
-FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&& edited_font)
+FontEditorWidget::FontEditorWidget(String const& path, RefPtr<Gfx::BitmapFont>&& edited_font)
 {
     load_from_gml(font_editor_window_gml);
 
@@ -321,7 +321,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     move_glyph_button.set_checkable(true);
     move_glyph_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/selection-move.png"));
 
-    GUI::Clipboard::the().on_change = [&](const String& data_type) {
+    GUI::Clipboard::the().on_change = [&](String const& data_type) {
         m_paste_action->set_enabled(data_type == "glyph/x-fonteditor");
     };
 
@@ -396,7 +396,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         did_modify_font();
     };
 
-    m_type_combobox->on_change = [this](auto&, const auto& index) {
+    m_type_combobox->on_change = [this](auto&, auto const& index) {
         m_edited_font->set_type(static_cast<Gfx::FontTypes>(index.row()));
         m_glyph_map_widget->reprobe_font();
         did_modify_font();
@@ -446,7 +446,7 @@ FontEditorWidget::~FontEditorWidget()
 {
 }
 
-void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& edited_font)
+void FontEditorWidget::initialize(String const& path, RefPtr<Gfx::BitmapFont>&& edited_font)
 {
     if (m_edited_font == edited_font)
         return;
@@ -560,7 +560,7 @@ void FontEditorWidget::initialize_menubar(GUI::Window& window)
     help_menu.add_action(GUI::CommonActions::make_about_action("Font Editor", GUI::Icon::default_icon("app-font-editor"), &window));
 }
 
-bool FontEditorWidget::save_as(const String& path)
+bool FontEditorWidget::save_as(String const& path)
 {
     auto ret_val = m_edited_font->write_to_file(path);
     if (!ret_val) {

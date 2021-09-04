@@ -16,21 +16,21 @@ REGISTER_WIDGET(GUI, Calendar);
 
 namespace GUI {
 
-static const char* long_day_names[] = {
+static char const* long_day_names[] = {
     "Sunday", "Monday", "Tuesday", "Wednesday",
     "Thursday", "Friday", "Saturday"
 };
 
-static const char* short_day_names[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-static const char* mini_day_names[] = { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" };
-static const char* micro_day_names[] = { "S", "M", "T", "W", "T", "F", "S" };
+static char const* short_day_names[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+static char const* mini_day_names[] = { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" };
+static char const* micro_day_names[] = { "S", "M", "T", "W", "T", "F", "S" };
 
-static const char* long_month_names[] = {
+static char const* long_month_names[] = {
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
 };
 
-static const char* short_month_names[] = {
+static char const* short_month_names[] = {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };

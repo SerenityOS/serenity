@@ -117,7 +117,7 @@ Value& Tuple::operator[](String const& name)
     return (*this)[index.value()];
 }
 
-void Tuple::append(const Value& value)
+void Tuple::append(Value const& value)
 {
     VERIFY(m_descriptor->size() == 0);
     m_data.append(value);
@@ -186,7 +186,7 @@ Vector<String> Tuple::to_string_vector() const
     return ret;
 }
 
-void Tuple::copy_from(const Tuple& other)
+void Tuple::copy_from(Tuple const& other)
 {
     if (*m_descriptor != *other.m_descriptor) {
         m_descriptor->clear();
@@ -201,7 +201,7 @@ void Tuple::copy_from(const Tuple& other)
     m_pointer = other.pointer();
 }
 
-int Tuple::compare(const Tuple& other) const
+int Tuple::compare(Tuple const& other) const
 {
     auto num_values = min(m_data.size(), other.m_data.size());
     VERIFY(num_values > 0);
@@ -216,7 +216,7 @@ int Tuple::compare(const Tuple& other) const
     return 0;
 }
 
-int Tuple::match(const Tuple& other) const
+int Tuple::match(Tuple const& other) const
 {
     auto other_index = 0u;
     for (auto& part : *other.descriptor()) {

@@ -22,8 +22,8 @@ public:
         return (id.edx() & (1 << 5)) != 0;
     }
 
-    MSR(const MSR&) = delete;
-    MSR& operator=(const MSR&) = delete;
+    MSR(MSR const&) = delete;
+    MSR& operator=(MSR const&) = delete;
 
     MSR(uint32_t msr)
         : m_msr(msr)

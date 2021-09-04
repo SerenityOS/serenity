@@ -20,8 +20,8 @@ struct hostent {
 #define h_addr h_addr_list[0]
 };
 
-struct hostent* gethostbyname(const char*);
-struct hostent* gethostbyaddr(const void* addr, socklen_t len, int type);
+struct hostent* gethostbyname(char const*);
+struct hostent* gethostbyaddr(void const* addr, socklen_t len, int type);
 
 struct servent {
     char* s_name;
@@ -31,8 +31,8 @@ struct servent {
 };
 
 struct servent* getservent();
-struct servent* getservbyname(const char* name, const char* protocol);
-struct servent* getservbyport(int port, const char* protocol);
+struct servent* getservbyname(char const* name, char const* protocol);
+struct servent* getservbyport(int port, char const* protocol);
 void setservent(int stay_open);
 void endservent();
 
@@ -43,7 +43,7 @@ struct protoent {
 };
 
 void endprotoent();
-struct protoent* getprotobyname(const char* name);
+struct protoent* getprotobyname(char const* name);
 struct protoent* getprotobynumber(int proto);
 struct protoent* getprotoent();
 void setprotoent(int stay_open);
@@ -94,9 +94,9 @@ struct addrinfo {
 #define NI_NUMERICSERV 2
 #define NI_NAMEREQD 3
 
-int getaddrinfo(const char* __restrict node, const char* __restrict service, const struct addrinfo* __restrict hints, struct addrinfo** __restrict res);
+int getaddrinfo(char const* __restrict node, char const* __restrict service, const struct addrinfo* __restrict hints, struct addrinfo** __restrict res);
 void freeaddrinfo(struct addrinfo* res);
-const char* gai_strerror(int errcode);
+char const* gai_strerror(int errcode);
 int getnameinfo(const struct sockaddr* __restrict addr, socklen_t addrlen, char* __restrict host, socklen_t hostlen, char* __restrict serv, socklen_t servlen, int flags);
 
 __END_DECLS

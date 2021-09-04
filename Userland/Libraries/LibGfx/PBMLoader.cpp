@@ -38,7 +38,7 @@ struct PBMLoadingContext {
 
     Type type { Type::Unknown };
     State state { State::NotDecoded };
-    const u8* data { nullptr };
+    u8 const* data { nullptr };
     size_t data_size { 0 };
     size_t width { 0 };
     size_t height { 0 };
@@ -97,12 +97,12 @@ static bool read_image_data(PBMLoadingContext& context, Streamer& streamer)
     return true;
 }
 
-RefPtr<Gfx::Bitmap> load_pbm(const StringView& path)
+RefPtr<Gfx::Bitmap> load_pbm(StringView const& path)
 {
     return load<PBMLoadingContext>(path);
 }
 
-RefPtr<Gfx::Bitmap> load_pbm_from_memory(const u8* data, size_t length)
+RefPtr<Gfx::Bitmap> load_pbm_from_memory(u8 const* data, size_t length)
 {
     auto bitmap = load_impl<PBMLoadingContext>(data, length);
     if (bitmap)
@@ -110,7 +110,7 @@ RefPtr<Gfx::Bitmap> load_pbm_from_memory(const u8* data, size_t length)
     return bitmap;
 }
 
-PBMImageDecoderPlugin::PBMImageDecoderPlugin(const u8* data, size_t size)
+PBMImageDecoderPlugin::PBMImageDecoderPlugin(u8 const* data, size_t size)
 {
     m_context = make<PBMLoadingContext>();
     m_context->data = data;

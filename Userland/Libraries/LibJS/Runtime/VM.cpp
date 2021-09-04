@@ -125,7 +125,7 @@ void VM::gather_roots(HashTable<Cell*>& roots)
         roots.set(finalization_registry);
 }
 
-Symbol* VM::get_global_symbol(const String& description)
+Symbol* VM::get_global_symbol(String const& description)
 {
     auto result = m_global_symbol_map.get(description);
     if (result.has_value())
@@ -136,7 +136,7 @@ Symbol* VM::get_global_symbol(const String& description)
     return new_global_symbol;
 }
 
-void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_object, bool first_assignment, Environment* specific_scope)
+void VM::set_variable(FlyString const& name, Value value, GlobalObject& global_object, bool first_assignment, Environment* specific_scope)
 {
     Optional<Variable> possible_match;
     if (!specific_scope && m_execution_context_stack.size()) {
@@ -190,7 +190,7 @@ bool VM::delete_variable(FlyString const& name)
     return specific_scope->delete_from_environment(name);
 }
 
-void VM::assign(const FlyString& target, Value value, GlobalObject& global_object, bool first_assignment, Environment* specific_scope)
+void VM::assign(FlyString const& target, Value value, GlobalObject& global_object, bool first_assignment, Environment* specific_scope)
 {
     set_variable(target, move(value), global_object, first_assignment, specific_scope);
 }
@@ -359,7 +359,7 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
     }
 }
 
-Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
+Value VM::get_variable(FlyString const& name, GlobalObject& global_object)
 {
     if (!m_execution_context_stack.is_empty()) {
         auto& context = running_execution_context();
@@ -736,7 +736,7 @@ void VM::enqueue_finalization_registry_cleanup_job(FinalizationRegistry& registr
 }
 
 // 27.2.1.9 HostPromiseRejectionTracker ( promise, operation ), https://tc39.es/ecma262/#sec-host-promise-rejection-tracker
-void VM::promise_rejection_tracker(const Promise& promise, Promise::RejectionOperation operation) const
+void VM::promise_rejection_tracker(Promise const& promise, Promise::RejectionOperation operation) const
 {
     switch (operation) {
     case Promise::RejectionOperation::Reject:

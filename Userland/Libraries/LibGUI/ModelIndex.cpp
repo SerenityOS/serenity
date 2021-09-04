@@ -19,7 +19,7 @@ Variant ModelIndex::data(ModelRole role) const
     return model()->data(*this, role);
 }
 
-bool ModelIndex::is_parent_of(const ModelIndex& child) const
+bool ModelIndex::is_parent_of(ModelIndex const& child) const
 {
     auto current_index = child.parent();
     while (current_index.is_valid()) {

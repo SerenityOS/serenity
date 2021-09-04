@@ -18,10 +18,10 @@ static constexpr char TEXT_RESET[] = "\x1b[0m";
 static constexpr long long LENIENCY = 8;
 
 struct Testcase {
-    const char* test_name;
+    char const* test_name;
     int should_consume;
-    const char* hex;
-    const char* test_string;
+    char const* hex;
+    char const* test_string;
 };
 
 static Testcase TESTCASES[] = {
@@ -231,7 +231,7 @@ static Testcase TESTCASES[] = {
 
 constexpr size_t NUM_TESTCASES = sizeof(TESTCASES) / sizeof(TESTCASES[0]);
 
-typedef double (*strtod_fn_t)(const char* str, char** endptr);
+typedef double (*strtod_fn_t)(char const* str, char** endptr);
 
 static long long cast_ll(double d)
 {
@@ -250,7 +250,7 @@ static long long cast_ll(double d)
     return readable.as_ll;
 }
 
-static bool is_strtod_close(strtod_fn_t strtod_fn, const char* test_string, const char* expect_hex, int expect_consume, long long expect_ll)
+static bool is_strtod_close(strtod_fn_t strtod_fn, char const* test_string, char const* expect_hex, int expect_consume, long long expect_ll)
 {
     union readable_t {
         double as_double;
@@ -277,7 +277,7 @@ static bool is_strtod_close(strtod_fn_t strtod_fn, const char* test_string, cons
     if (endptr < test_string) {
         actual_consume = 999;
     } else {
-        const char* max_endptr = test_string + strlen(test_string);
+        char const* max_endptr = test_string + strlen(test_string);
         actual_consume_possible = endptr <= max_endptr;
         actual_consume = endptr - test_string;
     }
@@ -303,7 +303,7 @@ static bool is_strtod_close(strtod_fn_t strtod_fn, const char* test_string, cons
     return !(wrong_hex || error_cns || wrong_cns);
 }
 
-static long long hex_to_ll(const char* hex)
+static long long hex_to_ll(char const* hex)
 {
     long long result = 0;
     for (int i = 0; i < 16; ++i) {

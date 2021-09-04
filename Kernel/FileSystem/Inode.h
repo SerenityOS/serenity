@@ -54,10 +54,10 @@ public:
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const = 0;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const = 0;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) = 0;
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, FileDescription*) = 0;
+    virtual KResultOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& data, FileDescription*) = 0;
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) = 0;
-    virtual KResult add_child(Inode&, const StringView& name, mode_t) = 0;
-    virtual KResult remove_child(const StringView& name) = 0;
+    virtual KResult add_child(Inode&, StringView const& name, mode_t) = 0;
+    virtual KResult remove_child(StringView const& name) = 0;
     virtual KResult chmod(mode_t) = 0;
     virtual KResult chown(UserID, GroupID) = 0;
     virtual KResult truncate(u64) { return KSuccess; }
@@ -66,7 +66,7 @@ public:
     virtual KResultOr<int> get_block_address(int) { return ENOTSUP; }
 
     LocalSocket* socket() { return m_socket.ptr(); }
-    const LocalSocket* socket() const { return m_socket.ptr(); }
+    LocalSocket const* socket() const { return m_socket.ptr(); }
     bool bind_socket(LocalSocket&);
     bool unbind_socket();
 

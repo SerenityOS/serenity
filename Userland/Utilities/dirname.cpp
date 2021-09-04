@@ -9,7 +9,7 @@
 
 int main(int argc, char** argv)
 {
-    const char* path = nullptr;
+    char const* path = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "Path", "path");
     args_parser.parse(argc, argv);

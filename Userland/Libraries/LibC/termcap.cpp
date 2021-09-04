@@ -18,7 +18,7 @@ char PC;
 char* UP;
 char* BC;
 
-int tgetent([[maybe_unused]] char* bp, [[maybe_unused]] const char* name)
+int tgetent([[maybe_unused]] char* bp, [[maybe_unused]] char const* name)
 {
     warnln_if(TERMCAP_DEBUG, "tgetent: bp={:p}, name='{}'", bp, name);
     PC = '\0';
@@ -27,13 +27,13 @@ int tgetent([[maybe_unused]] char* bp, [[maybe_unused]] const char* name)
     return 1;
 }
 
-static HashMap<String, const char*>* caps = nullptr;
+static HashMap<String, char const*>* caps = nullptr;
 
 static void ensure_caps()
 {
     if (caps)
         return;
-    caps = new HashMap<String, const char*>;
+    caps = new HashMap<String, char const*>;
     caps->set("DC", "\033[%p1%dP");
     caps->set("IC", "\033[%p1%d@");
     caps->set("ce", "\033[K");
@@ -75,14 +75,14 @@ static void ensure_caps()
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-char* tgetstr(const char* id, char** area)
+char* tgetstr(char const* id, char** area)
 {
     ensure_caps();
     warnln_if(TERMCAP_DEBUG, "tgetstr: id='{}'", id);
     auto it = caps->find(id);
     if (it != caps->end()) {
         char* ret = *area;
-        const char* val = (*it).value;
+        char const* val = (*it).value;
         strcpy(*area, val);
         *area += strlen(val) + 1;
         return ret;
@@ -93,7 +93,7 @@ char* tgetstr(const char* id, char** area)
 
 #pragma GCC diagnostic pop
 
-int tgetflag([[maybe_unused]] const char* id)
+int tgetflag([[maybe_unused]] char const* id)
 {
     warnln_if(TERMCAP_DEBUG, "tgetflag: '{}'", id);
     auto it = caps->find(id);
@@ -102,7 +102,7 @@ int tgetflag([[maybe_unused]] const char* id)
     return 0;
 }
 
-int tgetnum(const char* id)
+int tgetnum(char const* id)
 {
     warnln_if(TERMCAP_DEBUG, "tgetnum: '{}'", id);
     auto it = caps->find(id);
@@ -112,7 +112,7 @@ int tgetnum(const char* id)
 }
 
 static Vector<char> s_tgoto_buffer;
-char* tgoto([[maybe_unused]] const char* cap, [[maybe_unused]] int col, [[maybe_unused]] int row)
+char* tgoto([[maybe_unused]] char const* cap, [[maybe_unused]] int col, [[maybe_unused]] int row)
 {
     auto cap_str = String(cap);
     cap_str.replace("%p1%d", String::number(col));
@@ -124,7 +124,7 @@ char* tgoto([[maybe_unused]] const char* cap, [[maybe_unused]] int col, [[maybe_
     return s_tgoto_buffer.data();
 }
 
-int tputs(const char* str, [[maybe_unused]] int affcnt, int (*putc)(int))
+int tputs(char const* str, [[maybe_unused]] int affcnt, int (*putc)(int))
 {
     size_t len = strlen(str);
     for (size_t i = 0; i < len; ++i)

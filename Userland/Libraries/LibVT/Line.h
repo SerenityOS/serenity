@@ -30,18 +30,18 @@ public:
         bool operator!=(Cell const& other) const { return code_point != other.code_point || attribute != other.attribute; }
     };
 
-    const Attribute& attribute_at(size_t index) const { return m_cells[index].attribute; }
+    Attribute const& attribute_at(size_t index) const { return m_cells[index].attribute; }
     Attribute& attribute_at(size_t index) { return m_cells[index].attribute; }
 
     Cell& cell_at(size_t index) { return m_cells[index]; }
-    const Cell& cell_at(size_t index) const { return m_cells[index]; }
+    Cell const& cell_at(size_t index) const { return m_cells[index]; }
 
-    void clear(const Attribute& attribute = Attribute())
+    void clear(Attribute const& attribute = Attribute())
     {
         m_terminated_at.clear();
         clear_range(0, m_cells.size() - 1, attribute);
     }
-    void clear_range(size_t first_column, size_t last_column, const Attribute& attribute = Attribute());
+    void clear_range(size_t first_column, size_t last_column, Attribute const& attribute = Attribute());
     bool has_only_one_background_color() const;
 
     bool is_empty() const

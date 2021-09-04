@@ -40,11 +40,11 @@ public:
 
     void enumerate();
 
-    const String& keymap_name() const { return m_character_map.character_map_name(); }
+    String const& keymap_name() const { return m_character_map.character_map_name(); }
     const Keyboard::CharacterMapData& character_maps() const { return m_character_map.character_map_data(); }
     const Keyboard::CharacterMap& character_map() const { return m_character_map; }
     void set_client(KeyboardClient* client) { m_client = client; }
-    void set_maps(const Keyboard::CharacterMapData& character_map, const String& character_map_name);
+    void set_maps(const Keyboard::CharacterMapData& character_map, String const& character_map_name);
 
 private:
     size_t generate_minor_device_number_for_mouse();

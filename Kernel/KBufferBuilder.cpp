@@ -53,7 +53,7 @@ void KBufferBuilder::append_bytes(ReadonlyBytes bytes)
     m_size += bytes.size();
 }
 
-void KBufferBuilder::append(const StringView& str)
+void KBufferBuilder::append(StringView const& str)
 {
     if (str.is_empty())
         return;
@@ -63,7 +63,7 @@ void KBufferBuilder::append(const StringView& str)
     m_size += str.length();
 }
 
-void KBufferBuilder::append(const char* characters, int length)
+void KBufferBuilder::append(char const* characters, int length)
 {
     if (!length)
         return;
@@ -81,7 +81,7 @@ void KBufferBuilder::append(char ch)
     m_size += 1;
 }
 
-void KBufferBuilder::append_escaped_for_json(const StringView& string)
+void KBufferBuilder::append_escaped_for_json(StringView const& string)
 {
     for (auto ch : string) {
         switch (ch) {

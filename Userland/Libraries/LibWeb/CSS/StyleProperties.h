@@ -20,7 +20,7 @@ class StyleProperties : public RefCounted<StyleProperties> {
 public:
     StyleProperties();
 
-    explicit StyleProperties(const StyleProperties&);
+    explicit StyleProperties(StyleProperties const&);
 
     static NonnullRefPtr<StyleProperties> create() { return adopt_ref(*new StyleProperties); }
 
@@ -34,10 +34,10 @@ public:
     }
 
     void set_property(CSS::PropertyID, NonnullRefPtr<StyleValue> value);
-    void set_property(CSS::PropertyID, const StringView&);
+    void set_property(CSS::PropertyID, StringView const&);
     Optional<NonnullRefPtr<StyleValue>> property(CSS::PropertyID) const;
 
-    Length length_or_fallback(CSS::PropertyID, const Length& fallback) const;
+    Length length_or_fallback(CSS::PropertyID, Length const& fallback) const;
     LengthBox length_box(CSS::PropertyID left_id, CSS::PropertyID top_id, CSS::PropertyID right_id, CSS::PropertyID bottom_id, const CSS::Length& default_value) const;
     Color color_or_fallback(CSS::PropertyID, const DOM::Document&, Color fallback) const;
     Optional<CSS::TextAlign> text_align() const;
@@ -72,8 +72,8 @@ public:
 
     float line_height(const Layout::Node&) const;
 
-    bool operator==(const StyleProperties&) const;
-    bool operator!=(const StyleProperties& other) const { return !(*this == other); }
+    bool operator==(StyleProperties const&) const;
+    bool operator!=(StyleProperties const& other) const { return !(*this == other); }
 
     Optional<CSS::Position> position() const;
     Optional<int> z_index() const;

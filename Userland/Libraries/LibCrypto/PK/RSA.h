@@ -31,8 +31,8 @@ public:
     {
     }
 
-    const Integer& modulus() const { return m_modulus; }
-    const Integer& public_exponent() const { return m_public_exponent; }
+    Integer const& modulus() const { return m_modulus; }
+    Integer const& public_exponent() const { return m_public_exponent; }
     size_t length() const { return m_length; }
     void set_length(size_t length) { m_length = length; }
 
@@ -64,9 +64,9 @@ public:
     {
     }
 
-    const Integer& modulus() const { return m_modulus; }
-    const Integer& private_exponent() const { return m_private_exponent; }
-    const Integer& public_exponent() const { return m_public_exponent; }
+    Integer const& modulus() const { return m_modulus; }
+    Integer const& private_exponent() const { return m_private_exponent; }
+    Integer const& public_exponent() const { return m_public_exponent; }
     size_t length() const { return m_length; }
     void set_length(size_t length) { m_length = length; }
 
@@ -137,13 +137,13 @@ public:
     {
     }
 
-    RSA(const ByteBuffer& publicKeyPEM, const ByteBuffer& privateKeyPEM)
+    RSA(ByteBuffer const& publicKeyPEM, ByteBuffer const& privateKeyPEM)
     {
         import_public_key(publicKeyPEM);
         import_private_key(privateKeyPEM);
     }
 
-    RSA(const StringView& privKeyPEM)
+    RSA(StringView const& privKeyPEM)
     {
         import_private_key(privKeyPEM.bytes());
         m_public_key.set(m_private_key.modulus(), m_private_key.public_exponent());
@@ -170,8 +170,8 @@ public:
     void import_public_key(ReadonlyBytes, bool pem = true);
     void import_private_key(ReadonlyBytes, bool pem = true);
 
-    const PrivateKeyType& private_key() const { return m_private_key; }
-    const PublicKeyType& public_key() const { return m_public_key; }
+    PrivateKeyType const& private_key() const { return m_private_key; }
+    PublicKeyType const& public_key() const { return m_public_key; }
 };
 
 template<typename HashFunction>

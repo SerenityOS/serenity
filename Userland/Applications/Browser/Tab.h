@@ -40,7 +40,7 @@ public:
         HistoryNavigation,
     };
 
-    void load(const URL&, LoadType = LoadType::Normal);
+    void load(URL const&, LoadType = LoadType::Normal);
     void reload();
     void go_back(int steps = 1);
     void go_forward(int steps = 1);
@@ -51,13 +51,13 @@ public:
     void action_entered(GUI::Action&);
     void action_left(GUI::Action&);
 
-    Function<void(const String&)> on_title_change;
-    Function<void(const URL&)> on_tab_open_request;
+    Function<void(String const&)> on_title_change;
+    Function<void(URL const&)> on_tab_open_request;
     Function<void(Tab&)> on_tab_close_request;
     Function<void(Tab&)> on_tab_close_other_request;
     Function<void(const Gfx::Bitmap&)> on_favicon_change;
-    Function<String(const URL&, Web::Cookie::Source source)> on_get_cookie;
-    Function<void(const URL&, const Web::Cookie::ParsedCookie& cookie, Web::Cookie::Source source)> on_set_cookie;
+    Function<String(URL const&, Web::Cookie::Source source)> on_get_cookie;
+    Function<void(URL const&, const Web::Cookie::ParsedCookie& cookie, Web::Cookie::Source source)> on_set_cookie;
     Function<void()> on_dump_cookies;
 
     enum class InspectorTarget {
@@ -66,7 +66,7 @@ public:
     };
     void show_inspector_window(InspectorTarget);
 
-    const String& title() const { return m_title; }
+    String const& title() const { return m_title; }
     const Gfx::Bitmap* icon() const { return m_icon; }
 
     GUI::AbstractScrollableWidget& view();
@@ -80,9 +80,9 @@ private:
     Web::WebViewHooks& hooks();
     void update_actions();
     void bookmark_current_url();
-    void update_bookmark_button(const String& url);
-    void start_download(const URL& url);
-    void view_source(const URL& url, const String& source);
+    void update_bookmark_button(String const& url);
+    void start_download(URL const& url);
+    void view_source(URL const& url, String const& source);
 
     History m_history;
 
@@ -113,6 +113,6 @@ private:
     bool m_is_history_navigation { false };
 };
 
-URL url_from_user_input(const String& input);
+URL url_from_user_input(String const& input);
 
 }

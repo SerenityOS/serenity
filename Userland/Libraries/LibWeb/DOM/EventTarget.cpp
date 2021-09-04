@@ -21,7 +21,7 @@ EventTarget::~EventTarget()
 }
 
 // https://dom.spec.whatwg.org/#add-an-event-listener
-void EventTarget::add_event_listener(const FlyString& event_name, RefPtr<EventListener> listener)
+void EventTarget::add_event_listener(FlyString const& event_name, RefPtr<EventListener> listener)
 {
     if (listener.is_null())
         return;
@@ -35,7 +35,7 @@ void EventTarget::add_event_listener(const FlyString& event_name, RefPtr<EventLi
 }
 
 // https://dom.spec.whatwg.org/#remove-an-event-listener
-void EventTarget::remove_event_listener(const FlyString& event_name, RefPtr<EventListener> listener)
+void EventTarget::remove_event_listener(FlyString const& event_name, RefPtr<EventListener> listener)
 {
     if (listener.is_null())
         return;

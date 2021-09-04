@@ -153,8 +153,8 @@ constexpr ControlCharacter control_characters[] = {
 Optional<speed_t> numeric_value_to_speed(unsigned long);
 Optional<unsigned long> speed_to_numeric_value(speed_t);
 
-void print_stty_readable(const termios&);
-void print_human_readable(const termios&, const winsize&, bool);
+void print_stty_readable(termios const&);
+void print_human_readable(termios const&, winsize const&, bool);
 Result<void, int> apply_stty_readable_modes(StringView, termios&);
 Result<void, int> apply_modes(size_t, char**, termios&, winsize&);
 
@@ -176,7 +176,7 @@ Optional<unsigned long> speed_to_numeric_value(speed_t speed)
     return {};
 }
 
-void print_stty_readable(const termios& modes)
+void print_stty_readable(termios const& modes)
 {
     out("{:x}:{:x}:{:x}:{:x}", modes.c_iflag, modes.c_oflag, modes.c_cflag, modes.c_lflag);
     for (size_t i = 0; i < NCCS; ++i)
@@ -184,7 +184,7 @@ void print_stty_readable(const termios& modes)
     out(":{:x}:{:x}\n", modes.c_ispeed, modes.c_ospeed);
 }
 
-void print_human_readable(const termios& modes, const winsize& ws, bool verbose_mode)
+void print_human_readable(termios const& modes, winsize const& ws, bool verbose_mode)
 {
     auto print_speed = [&] {
         if (verbose_mode && modes.c_ispeed != modes.c_ospeed) {
@@ -260,7 +260,7 @@ Result<void, int> apply_stty_readable_modes(StringView mode_string, termios& t)
         warnln("Save string has an incorrect number of parameters");
         return 1;
     }
-    auto parse_hex = [&](const StringView& v) {
+    auto parse_hex = [&](StringView const& v) {
         tcflag_t ret = 0;
         for (auto c : v) {
             c = tolower(c);

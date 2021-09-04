@@ -21,7 +21,7 @@ public:
     virtual ~SymbolObject() override;
 
     Symbol& primitive_symbol() { return m_symbol; }
-    const Symbol& primitive_symbol() const { return m_symbol; }
+    Symbol const& primitive_symbol() const { return m_symbol; }
 
     String description() const { return m_symbol.description(); }
     bool is_global() const { return m_symbol.is_global(); }

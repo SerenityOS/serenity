@@ -170,7 +170,7 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
 
 // clang-format on
 
-static void dump(const RegisterState& regs)
+static void dump(RegisterState const& regs)
 {
 #if ARCH(I386)
     u16 ss;
@@ -495,7 +495,7 @@ void handle_interrupt(TrapFrame* trap)
     handler->eoi();
 }
 
-const DescriptorTablePointer& get_idtr()
+DescriptorTablePointer const& get_idtr()
 {
     return s_idtr;
 }

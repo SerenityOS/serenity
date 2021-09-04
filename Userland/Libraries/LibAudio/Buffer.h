@@ -66,7 +66,7 @@ struct Frame {
         return Frame { left * fraction, right * fraction };
     }
 
-    Frame& operator+=(const Frame& other)
+    Frame& operator+=(Frame const& other)
     {
         left += other.left;
         right += other.right;
@@ -136,9 +136,9 @@ public:
         return adopt_ref(*new Buffer(move(buffer), buffer_id, sample_count));
     }
 
-    const Frame* samples() const { return (const Frame*)data(); }
+    Frame const* samples() const { return (Frame const*)data(); }
     int sample_count() const { return m_sample_count; }
-    const void* data() const { return m_buffer.data<void>(); }
+    void const* data() const { return m_buffer.data<void>(); }
     int size_in_bytes() const { return m_sample_count * (int)sizeof(Frame); }
     int id() const { return m_id; }
     const Core::AnonymousBuffer& anonymous_buffer() const { return m_buffer; }

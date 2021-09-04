@@ -27,7 +27,7 @@ struct [[gnu::packed]] EndOfCentralDirectory {
     u32 central_directory_size;
     u32 central_directory_offset;
     u16 comment_length;
-    const u8* comment;
+    u8 const* comment;
 
     bool read(ReadonlyBytes buffer)
     {
@@ -76,9 +76,9 @@ struct [[gnu::packed]] CentralDirectoryRecord {
     u16 internal_attributes;
     u32 external_attributes;
     u32 local_file_header_offset;
-    const u8* name;
-    const u8* extra_data;
-    const u8* comment;
+    u8 const* name;
+    u8 const* extra_data;
+    u8 const* comment;
 
     bool read(ReadonlyBytes buffer)
     {
@@ -142,9 +142,9 @@ struct [[gnu::packed]] LocalFileHeader {
     u32 uncompressed_size;
     u16 name_length;
     u16 extra_data_length;
-    const u8* name;
-    const u8* extra_data;
-    const u8* compressed_data;
+    u8 const* name;
+    u8 const* extra_data;
+    u8 const* compressed_data;
 
     bool read(ReadonlyBytes buffer)
     {
@@ -207,11 +207,11 @@ struct ZipMember {
 
 class Zip {
 public:
-    static Optional<Zip> try_create(const ReadonlyBytes& buffer);
-    bool for_each_member(Function<IterationDecision(const ZipMember&)>);
+    static Optional<Zip> try_create(ReadonlyBytes const& buffer);
+    bool for_each_member(Function<IterationDecision(ZipMember const&)>);
 
 private:
-    static bool find_end_of_central_directory_offset(const ReadonlyBytes&, size_t& offset);
+    static bool find_end_of_central_directory_offset(ReadonlyBytes const&, size_t& offset);
 
     u16 member_count { 0 };
     size_t members_start_offset { 0 };
@@ -221,7 +221,7 @@ private:
 class ZipOutputStream {
 public:
     ZipOutputStream(OutputStream&);
-    void add_member(const ZipMember&);
+    void add_member(ZipMember const&);
     void finish();
 
 private:

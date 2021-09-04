@@ -21,7 +21,7 @@ DateCell::~DateCell()
 {
 }
 
-String DateCell::display(Cell& cell, const CellTypeMetadata& metadata) const
+String DateCell::display(Cell& cell, CellTypeMetadata const& metadata) const
 {
     ScopeGuard propagate_exception { [&cell] {
         if (auto exc = cell.sheet().interpreter().exception()) {
@@ -38,7 +38,7 @@ String DateCell::display(Cell& cell, const CellTypeMetadata& metadata) const
     return string;
 }
 
-JS::Value DateCell::js_value(Cell& cell, const CellTypeMetadata&) const
+JS::Value DateCell::js_value(Cell& cell, CellTypeMetadata const&) const
 {
     auto js_data = cell.js_data();
     auto value = js_data.to_double(cell.sheet().global_object());

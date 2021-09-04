@@ -42,7 +42,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* username = nullptr;
+    char const* username = nullptr;
     bool remove_home = false;
 
     Core::ArgsParser args_parser;
@@ -177,7 +177,7 @@ int main(int argc, char** argv)
         }
 
         pid_t child;
-        const char* argv[] = { "rm", "-r", target_account.home_directory().characters(), nullptr };
+        char const* argv[] = { "rm", "-r", target_account.home_directory().characters(), nullptr };
         if ((errno = posix_spawn(&child, "/bin/rm", nullptr, nullptr, const_cast<char**>(argv), environ))) {
             perror("posix_spawn");
             return 12;

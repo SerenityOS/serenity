@@ -18,7 +18,7 @@ StyleProperties::StyleProperties()
 {
 }
 
-StyleProperties::StyleProperties(const StyleProperties& other)
+StyleProperties::StyleProperties(StyleProperties const& other)
     : m_property_values(other.m_property_values)
 {
     if (other.m_font) {
@@ -38,7 +38,7 @@ void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue>
     m_property_values.set((unsigned)id, move(value));
 }
 
-void StyleProperties::set_property(CSS::PropertyID id, const StringView& value)
+void StyleProperties::set_property(CSS::PropertyID id, StringView const& value)
 {
     m_property_values.set((unsigned)id, StringStyleValue::create(value));
 }
@@ -79,7 +79,7 @@ Optional<NonnullRefPtr<StyleValue>> StyleProperties::property(CSS::PropertyID id
     return value;
 }
 
-Length StyleProperties::length_or_fallback(CSS::PropertyID id, const Length& fallback) const
+Length StyleProperties::length_or_fallback(CSS::PropertyID id, Length const& fallback) const
 {
     auto value = property(id);
     if (!value.has_value())
@@ -119,7 +119,7 @@ void StyleProperties::load_font(Layout::Node const& node) const
 
     int weight = Gfx::FontWeight::Regular;
     if (font_weight->is_identifier()) {
-        switch (static_cast<const IdentifierStyleValue&>(*font_weight).id()) {
+        switch (static_cast<IdentifierStyleValue const&>(*font_weight).id()) {
         case CSS::ValueID::Normal:
             weight = Gfx::FontWeight::Regular;
             break;
@@ -155,7 +155,7 @@ void StyleProperties::load_font(Layout::Node const& node) const
     constexpr float font_size_ratio = 1.2f;
 
     if (font_size->is_identifier()) {
-        switch (static_cast<const IdentifierStyleValue&>(*font_size).id()) {
+        switch (static_cast<IdentifierStyleValue const&>(*font_size).id()) {
         case CSS::ValueID::XxSmall:
         case CSS::ValueID::XSmall:
         case CSS::ValueID::Small:
@@ -415,7 +415,7 @@ Optional<CSS::Position> StyleProperties::position() const
     auto value = property(CSS::PropertyID::Position);
     if (!value.has_value() || !value.value()->is_identifier())
         return {};
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (static_cast<IdentifierStyleValue const&>(*value.value()).id()) {
     case CSS::ValueID::Static:
         return CSS::Position::Static;
     case CSS::ValueID::Relative:
@@ -431,7 +431,7 @@ Optional<CSS::Position> StyleProperties::position() const
     }
 }
 
-bool StyleProperties::operator==(const StyleProperties& other) const
+bool StyleProperties::operator==(StyleProperties const& other) const
 {
     if (m_property_values.size() != other.m_property_values.size())
         return false;
@@ -457,7 +457,7 @@ Optional<CSS::TextAlign> StyleProperties::text_align() const
     if (!value.has_value() || !value.value()->is_identifier())
         return {};
 
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (static_cast<IdentifierStyleValue const&>(*value.value()).id()) {
     case CSS::ValueID::Left:
         return CSS::TextAlign::Left;
     case CSS::ValueID::Center:
@@ -478,7 +478,7 @@ Optional<CSS::WhiteSpace> StyleProperties::white_space() const
     auto value = property(CSS::PropertyID::WhiteSpace);
     if (!value.has_value() || !value.value()->is_identifier())
         return {};
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (static_cast<IdentifierStyleValue const&>(*value.value()).id()) {
     case CSS::ValueID::Normal:
         return CSS::WhiteSpace::Normal;
     case CSS::ValueID::Nowrap:
@@ -499,7 +499,7 @@ Optional<CSS::LineStyle> StyleProperties::line_style(CSS::PropertyID property_id
     auto value = property(property_id);
     if (!value.has_value() || !value.value()->is_identifier())
         return {};
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (static_cast<IdentifierStyleValue const&>(*value.value()).id()) {
     case CSS::ValueID::None:
         return CSS::LineStyle::None;
     case CSS::ValueID::Hidden:
@@ -530,7 +530,7 @@ Optional<CSS::Float> StyleProperties::float_() const
     auto value = property(CSS::PropertyID::Float);
     if (!value.has_value() || !value.value()->is_identifier())
         return {};
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (static_cast<IdentifierStyleValue const&>(*value.value()).id()) {
     case CSS::ValueID::None:
         return CSS::Float::None;
     case CSS::ValueID::Left:
@@ -547,7 +547,7 @@ Optional<CSS::Clear> StyleProperties::clear() const
     auto value = property(CSS::PropertyID::Clear);
     if (!value.has_value() || !value.value()->is_identifier())
         return {};
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (static_cast<IdentifierStyleValue const&>(*value.value()).id()) {
     case CSS::ValueID::None:
         return CSS::Clear::None;
     case CSS::ValueID::Left:
@@ -566,7 +566,7 @@ Optional<CSS::Cursor> StyleProperties::cursor() const
     auto value = property(CSS::PropertyID::Cursor);
     if (!value.has_value() || !value.value()->is_identifier())
         return {};
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (static_cast<IdentifierStyleValue const&>(*value.value()).id()) {
     case CSS::ValueID::Auto:
         return CSS::Cursor::Auto;
     case CSS::ValueID::Default:
@@ -649,7 +649,7 @@ CSS::Display StyleProperties::display() const
     auto value = property(CSS::PropertyID::Display);
     if (!value.has_value() || !value.value()->is_identifier())
         return CSS::Display::Inline;
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (static_cast<IdentifierStyleValue const&>(*value.value()).id()) {
     case CSS::ValueID::None:
         return CSS::Display::None;
     case CSS::ValueID::Block:
@@ -690,7 +690,7 @@ Optional<CSS::TextDecorationLine> StyleProperties::text_decoration_line() const
     auto value = property(CSS::PropertyID::TextDecorationLine);
     if (!value.has_value() || !value.value()->is_identifier())
         return {};
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (static_cast<IdentifierStyleValue const&>(*value.value()).id()) {
     case CSS::ValueID::None:
         return CSS::TextDecorationLine::None;
     case CSS::ValueID::Underline:

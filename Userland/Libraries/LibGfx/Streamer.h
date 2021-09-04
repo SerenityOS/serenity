@@ -15,7 +15,7 @@ namespace Gfx {
 
 class Streamer {
 public:
-    constexpr Streamer(const u8* data, size_t size)
+    constexpr Streamer(u8 const* data, size_t size)
         : m_data_ptr(data)
         , m_size_remaining(size)
     {
@@ -51,7 +51,7 @@ public:
     }
 
 private:
-    const u8* m_data_ptr { nullptr };
+    u8 const* m_data_ptr { nullptr };
     size_t m_size_remaining { 0 };
 };
 

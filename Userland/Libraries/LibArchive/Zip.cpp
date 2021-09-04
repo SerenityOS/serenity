@@ -8,7 +8,7 @@
 
 namespace Archive {
 
-bool Zip::find_end_of_central_directory_offset(const ReadonlyBytes& buffer, size_t& offset)
+bool Zip::find_end_of_central_directory_offset(ReadonlyBytes const& buffer, size_t& offset)
 {
     for (size_t backwards_offset = 0; backwards_offset <= UINT16_MAX; backwards_offset++) // the file may have a trailing comment of an arbitrary 16 bit length
     {
@@ -24,7 +24,7 @@ bool Zip::find_end_of_central_directory_offset(const ReadonlyBytes& buffer, size
     return false;
 }
 
-Optional<Zip> Zip::try_create(const ReadonlyBytes& buffer)
+Optional<Zip> Zip::try_create(ReadonlyBytes const& buffer)
 {
     size_t end_of_central_directory_offset;
     if (!find_end_of_central_directory_offset(buffer, end_of_central_directory_offset))
@@ -73,7 +73,7 @@ Optional<Zip> Zip::try_create(const ReadonlyBytes& buffer)
     return zip;
 }
 
-bool Zip::for_each_member(Function<IterationDecision(const ZipMember&)> callback)
+bool Zip::for_each_member(Function<IterationDecision(ZipMember const&)> callback)
 {
     size_t member_offset = members_start_offset;
     for (size_t i = 0; i < member_count; i++) {
@@ -106,7 +106,7 @@ ZipOutputStream::ZipOutputStream(OutputStream& stream)
 {
 }
 
-void ZipOutputStream::add_member(const ZipMember& member)
+void ZipOutputStream::add_member(ZipMember const& member)
 {
     VERIFY(!m_finished);
     VERIFY(member.name.length() <= UINT16_MAX);
@@ -124,7 +124,7 @@ void ZipOutputStream::add_member(const ZipMember& member)
     local_file_header.uncompressed_size = member.uncompressed_size;
     local_file_header.name_length = member.name.length();
     local_file_header.extra_data_length = 0;
-    local_file_header.name = (const u8*)(member.name.characters());
+    local_file_header.name = (u8 const*)(member.name.characters());
     local_file_header.extra_data = nullptr;
     local_file_header.compressed_data = member.compressed_data.data();
     local_file_header.write(m_stream);
@@ -137,7 +137,7 @@ void ZipOutputStream::finish()
 
     auto file_header_offset = 0;
     auto central_directory_size = 0;
-    for (const ZipMember& member : m_members) {
+    for (ZipMember const& member : m_members) {
         CentralDirectoryRecord central_directory_record {};
         auto zip_version = member.compression_method == ZipCompressionMethod::Deflate ? 20 : 10; // Deflate was added in PKZip 2.0
         central_directory_record.made_by_version = zip_version;
@@ -157,7 +157,7 @@ void ZipOutputStream::finish()
         central_directory_record.external_attributes = member.is_directory ? zip_directory_external_attribute : 0;
         central_directory_record.local_file_header_offset = file_header_offset; // FIXME: we assume the wrapped output stream was never written to before us
         file_header_offset += sizeof(local_file_header_signature) + (sizeof(LocalFileHeader) - (sizeof(u8*) * 3)) + member.name.length() + member.compressed_data.size();
-        central_directory_record.name = (const u8*)(member.name.characters());
+        central_directory_record.name = (u8 const*)(member.name.characters());
         central_directory_record.extra_data = nullptr;
         central_directory_record.comment = nullptr;
         central_directory_record.write(m_stream);

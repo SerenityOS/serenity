@@ -16,9 +16,9 @@ namespace HackStudio {
 
 class VariablesModel final : public GUI::Model {
 public:
-    static RefPtr<VariablesModel> create(const PtraceRegisters& regs);
+    static RefPtr<VariablesModel> create(PtraceRegisters const& regs);
 
-    void set_variable_value(const GUI::ModelIndex&, const StringView&, GUI::Window*);
+    void set_variable_value(const GUI::ModelIndex&, StringView const&, GUI::Window*);
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return 1; }
@@ -27,7 +27,7 @@ public:
     virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& = GUI::ModelIndex()) const override;
 
 private:
-    explicit VariablesModel(NonnullOwnPtrVector<Debug::DebugInfo::VariableInfo>&& variables, const PtraceRegisters& regs)
+    explicit VariablesModel(NonnullOwnPtrVector<Debug::DebugInfo::VariableInfo>&& variables, PtraceRegisters const& regs)
         : m_variables(move(variables))
         , m_regs(regs)
     {

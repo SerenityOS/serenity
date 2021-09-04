@@ -55,12 +55,12 @@ String Device::absolute_path() const
     return String::formatted("/dev/{}", device_name());
 }
 
-String Device::absolute_path(const FileDescription&) const
+String Device::absolute_path(FileDescription const&) const
 {
     return absolute_path();
 }
 
-void Device::process_next_queued_request(Badge<AsyncDeviceRequest>, const AsyncDeviceRequest& completed_request)
+void Device::process_next_queued_request(Badge<AsyncDeviceRequest>, AsyncDeviceRequest const& completed_request)
 {
     SpinlockLocker lock(m_requests_lock);
     VERIFY(!m_requests.is_empty());

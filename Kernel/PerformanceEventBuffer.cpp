@@ -20,7 +20,7 @@ PerformanceEventBuffer::PerformanceEventBuffer(NonnullOwnPtr<KBuffer> buffer)
 {
 }
 
-NEVER_INLINE KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2, const StringView& arg3, Thread* current_thread)
+NEVER_INLINE KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2, StringView const& arg3, Thread* current_thread)
 {
     FlatPtr ebp;
     asm volatile("movl %%ebp, %%eax"
@@ -55,7 +55,7 @@ static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(Fl
 }
 
 KResult PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID tid,
-    FlatPtr ip, FlatPtr bp, int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, const StringView& arg3)
+    FlatPtr ip, FlatPtr bp, int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, StringView const& arg3)
 {
     if (count() >= capacity())
         return ENOBUFS;
@@ -280,7 +280,7 @@ OwnPtr<PerformanceEventBuffer> PerformanceEventBuffer::try_create_with_size(size
     return adopt_own_if_nonnull(new (nothrow) PerformanceEventBuffer(buffer.release_nonnull()));
 }
 
-void PerformanceEventBuffer::add_process(const Process& process, ProcessEventType event_type)
+void PerformanceEventBuffer::add_process(Process const& process, ProcessEventType event_type)
 {
     SpinlockLocker locker(process.address_space().get_lock());
 

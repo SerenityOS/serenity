@@ -48,7 +48,7 @@ struct ExecutionContext {
     {
     }
 
-    const ASTNode* current_node { nullptr };
+    ASTNode const* current_node { nullptr };
     FlyString function_name;
     FunctionObject* function { nullptr };
     Value this_value;
@@ -65,7 +65,7 @@ public:
     ~VM();
 
     Heap& heap() { return m_heap; }
-    const Heap& heap() const { return m_heap; }
+    Heap const& heap() const { return m_heap; }
 
     Interpreter& interpreter();
     Interpreter* interpreter_if_exists();
@@ -96,7 +96,7 @@ public:
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 
-    Symbol* get_global_symbol(const String& description);
+    Symbol* get_global_symbol(String const& description);
 
     PrimitiveString& empty_string() { return *m_empty_string; }
     PrimitiveString& single_ascii_character_string(u8 character)
@@ -178,7 +178,7 @@ public:
     void set_last_value(Badge<Bytecode::Interpreter>, Value value) { m_last_value = value; }
     void set_last_value(Badge<Interpreter>, Value value) { m_last_value = value; }
 
-    const StackInfo& stack_info() const { return m_stack_info; };
+    StackInfo const& stack_info() const { return m_stack_info; };
 
     bool underscore_is_last_value() const { return m_underscore_is_last_value; }
     void set_underscore_is_last_value(bool b) { m_underscore_is_last_value = b; }
@@ -207,11 +207,11 @@ public:
     ScopeType unwind_until() const { return m_unwind_until; }
     FlyString unwind_until_label() const { return m_unwind_until_label; }
 
-    Value get_variable(const FlyString& name, GlobalObject&);
-    void set_variable(const FlyString& name, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
+    Value get_variable(FlyString const& name, GlobalObject&);
+    void set_variable(FlyString const& name, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
     bool delete_variable(FlyString const& name);
     void assign(const Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>>& target, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
-    void assign(const FlyString& target, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
+    void assign(FlyString const& target, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
     void assign(const NonnullRefPtr<BindingPattern>& target, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
 
     Reference resolve_binding(FlyString const&, Environment* = nullptr);
@@ -261,11 +261,11 @@ public:
     void run_queued_finalization_registry_cleanup_jobs();
     void enqueue_finalization_registry_cleanup_job(FinalizationRegistry&);
 
-    void promise_rejection_tracker(const Promise&, Promise::RejectionOperation) const;
+    void promise_rejection_tracker(Promise const&, Promise::RejectionOperation) const;
 
     Function<void()> on_call_stack_emptied;
-    Function<void(const Promise&)> on_promise_unhandled_rejection;
-    Function<void(const Promise&)> on_promise_rejection_handled;
+    Function<void(Promise const&)> on_promise_unhandled_rejection;
+    Function<void(Promise const&)> on_promise_rejection_handled;
 
     void initialize_instance_elements(Object& object, FunctionObject& constructor);
 

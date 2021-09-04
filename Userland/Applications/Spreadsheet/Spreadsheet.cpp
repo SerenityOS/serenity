@@ -24,7 +24,7 @@
 
 namespace Spreadsheet {
 
-Sheet::Sheet(const StringView& name, Workbook& workbook)
+Sheet::Sheet(StringView const& name, Workbook& workbook)
     : Sheet(workbook)
 {
     m_name = name;
@@ -153,7 +153,7 @@ void Sheet::update(Cell& cell)
     }
 }
 
-Sheet::ValueAndException Sheet::evaluate(const StringView& source, Cell* on_behalf_of)
+Sheet::ValueAndException Sheet::evaluate(StringView const& source, Cell* on_behalf_of)
 {
     TemporaryChange cell_change { m_current_cell_being_evaluated, on_behalf_of };
     ScopeGuard clear_exception { [&] { interpreter().vm().clear_exception(); } };
@@ -175,7 +175,7 @@ Sheet::ValueAndException Sheet::evaluate(const StringView& source, Cell* on_beha
     return { value, {} };
 }
 
-Cell* Sheet::at(const StringView& name)
+Cell* Sheet::at(StringView const& name)
 {
     auto pos = parse_cell_name(name);
     if (pos.has_value())
@@ -184,7 +184,7 @@ Cell* Sheet::at(const StringView& name)
     return nullptr;
 }
 
-Cell* Sheet::at(const Position& position)
+Cell* Sheet::at(Position const& position)
 {
     auto it = m_cells.find(position);
 
@@ -194,7 +194,7 @@ Cell* Sheet::at(const Position& position)
     return it->value;
 }
 
-Optional<Position> Sheet::parse_cell_name(const StringView& name) const
+Optional<Position> Sheet::parse_cell_name(StringView const& name) const
 {
     GenericLexer lexer(name);
     auto col = lexer.consume_while(isalpha);
@@ -210,7 +210,7 @@ Optional<Position> Sheet::parse_cell_name(const StringView& name) const
     return Position { it.index(), row.to_uint().value() };
 }
 
-Optional<size_t> Sheet::column_index(const StringView& column_name) const
+Optional<size_t> Sheet::column_index(StringView const& column_name) const
 {
     auto maybe_index = convert_from_string(column_name);
     if (!maybe_index.has_value())
@@ -227,7 +227,7 @@ Optional<size_t> Sheet::column_index(const StringView& column_name) const
     return index;
 }
 
-Optional<String> Sheet::column_arithmetic(const StringView& column_name, int offset)
+Optional<String> Sheet::column_arithmetic(StringView const& column_name, int offset)
 {
     auto maybe_index = column_index(column_name);
     if (!maybe_index.has_value())
@@ -246,7 +246,7 @@ Optional<String> Sheet::column_arithmetic(const StringView& column_name, int off
     return m_columns.last();
 }
 
-Cell* Sheet::from_url(const URL& url)
+Cell* Sheet::from_url(URL const& url)
 {
     auto maybe_position = position_from_url(url);
     if (!maybe_position.has_value())
@@ -255,7 +255,7 @@ Cell* Sheet::from_url(const URL& url)
     return at(maybe_position.value());
 }
 
-Optional<Position> Sheet::position_from_url(const URL& url) const
+Optional<Position> Sheet::position_from_url(URL const& url) const
 {
     if (!url.is_valid()) {
         dbgln("Invalid url: {}", url.to_string());
@@ -273,7 +273,7 @@ Optional<Position> Sheet::position_from_url(const URL& url) const
     return parse_cell_name(url.fragment());
 }
 
-Position Sheet::offset_relative_to(const Position& base, const Position& offset, const Position& offset_base) const
+Position Sheet::offset_relative_to(Position const& base, Position const& offset, Position const& offset_base) const
 {
     if (offset.column >= m_columns.size()) {
         dbgln("Column '{}' does not exist!", offset.column);
@@ -345,7 +345,7 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
     dbgln("Cannot copy {} cells to {} cells", from.size(), to.size());
 }
 
-RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
+RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
 {
     auto sheet = adopt_ref(*new Sheet(workbook));
     auto rows = object.get("rows").to_u32(default_row_count);
@@ -375,7 +375,7 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
     auto json = sheet->interpreter().global_object().get("JSON");
     auto& parse_function = json.as_object().get("parse").as_function();
 
-    auto read_format = [](auto& format, const auto& obj) {
+    auto read_format = [](auto& format, auto const& obj) {
         if (auto value = obj.get("foreground_color"); value.is_string())
             format.foreground_color = Color::from_string(value.as_string());
         if (auto value = obj.get("background_color"); value.is_string())
@@ -429,7 +429,7 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
             auto conditional_formats = obj.get("conditional_formats");
             auto cformats = cell->conditional_formats();
             if (conditional_formats.is_array()) {
-                conditional_formats.as_array().for_each([&](const auto& fmt_val) {
+                conditional_formats.as_array().for_each([&](auto const& fmt_val) {
                     if (!fmt_val.is_object())
                         return IterationDecision::Continue;
 
@@ -497,7 +497,7 @@ JsonObject Sheet::to_json() const
     JsonObject object;
     object.set("name", m_name);
 
-    auto save_format = [](const auto& format, auto& obj) {
+    auto save_format = [](auto const& format, auto& obj) {
         if (format.foreground_color.has_value())
             obj.set("foreground_color", format.foreground_color.value().to_string());
         if (format.background_color.has_value())
@@ -711,12 +711,12 @@ String Sheet::generate_inline_documentation_for(StringView function, size_t argu
     return builder.build();
 }
 
-String Position::to_cell_identifier(const Sheet& sheet) const
+String Position::to_cell_identifier(Sheet const& sheet) const
 {
     return String::formatted("{}{}", sheet.column(column), row);
 }
 
-URL Position::to_url(const Sheet& sheet) const
+URL Position::to_url(Sheet const& sheet) const
 {
     URL url;
     url.set_protocol("spreadsheet");

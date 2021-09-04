@@ -42,7 +42,7 @@ void Process::handle_thread_exit(pid_t tid, EventSerialNumber serial)
 
 HashMap<String, OwnPtr<MappedObject>> g_mapped_object_cache;
 
-static MappedObject* get_or_create_mapped_object(const String& path)
+static MappedObject* get_or_create_mapped_object(String const& path)
 {
     if (auto it = g_mapped_object_cache.find(path); it != g_mapped_object_cache.end())
         return it->value.ptr();
@@ -66,7 +66,7 @@ static MappedObject* get_or_create_mapped_object(const String& path)
     return ptr;
 }
 
-void LibraryMetadata::handle_mmap(FlatPtr base, size_t size, const String& name)
+void LibraryMetadata::handle_mmap(FlatPtr base, size_t size, String const& name)
 {
     String path;
     if (name.contains("Loader.so"))

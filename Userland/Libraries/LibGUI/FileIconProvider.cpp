@@ -126,7 +126,7 @@ Icon FileIconProvider::filetype_image_icon()
     return s_filetype_image_icon;
 }
 
-Icon FileIconProvider::icon_for_path(const String& path)
+Icon FileIconProvider::icon_for_path(String const& path)
 {
     struct stat stat;
     if (::stat(path.characters(), &stat) < 0)
@@ -134,7 +134,7 @@ Icon FileIconProvider::icon_for_path(const String& path)
     return icon_for_path(path, stat.st_mode);
 }
 
-Icon FileIconProvider::icon_for_executable(const String& path)
+Icon FileIconProvider::icon_for_executable(String const& path)
 {
     static HashMap<String, Icon> app_icon_cache;
 
@@ -164,7 +164,7 @@ Icon FileIconProvider::icon_for_executable(const String& path)
         return s_executable_icon;
     }
 
-    auto image = ELF::Image((const u8*)mapped_file->data(), mapped_file->size());
+    auto image = ELF::Image((u8 const*)mapped_file->data(), mapped_file->size());
     if (!image.is_valid()) {
         app_icon_cache.set(path, s_executable_icon);
         return s_executable_icon;
@@ -173,14 +173,14 @@ Icon FileIconProvider::icon_for_executable(const String& path)
     // If any of the required sections are missing then use the defaults
     Icon icon;
     struct IconSection {
-        const char* section_name;
+        char const* section_name;
         int image_size;
     };
 
     static const IconSection icon_sections[] = { { .section_name = "serenity_icon_s", .image_size = 16 }, { .section_name = "serenity_icon_m", .image_size = 32 } };
 
     bool had_error = false;
-    for (const auto& icon_section : icon_sections) {
+    for (auto const& icon_section : icon_sections) {
         auto section = image.lookup_section(icon_section.section_name);
 
         RefPtr<Gfx::Bitmap> bitmap;
@@ -207,7 +207,7 @@ Icon FileIconProvider::icon_for_executable(const String& path)
     return icon;
 }
 
-Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
+Icon FileIconProvider::icon_for_path(String const& path, mode_t mode)
 {
     initialize_if_needed();
     if (path == "/")

@@ -13,7 +13,7 @@
 
 namespace GUI {
 
-static const char* s_arrow_bitmap_data = {
+static char const* s_arrow_bitmap_data = {
     "         "
     "   #     "
     "   ##    "
@@ -159,7 +159,7 @@ void ColumnsView::paint_event(PaintEvent& event)
     }
 }
 
-void ColumnsView::push_column(const ModelIndex& parent_index)
+void ColumnsView::push_column(ModelIndex const& parent_index)
 {
     VERIFY(model());
 
@@ -309,7 +309,7 @@ void ColumnsView::move_cursor(CursorMovement movement, SelectionUpdate selection
         set_cursor(new_index, selection_update);
 }
 
-Gfx::IntRect ColumnsView::content_rect(const ModelIndex& index) const
+Gfx::IntRect ColumnsView::content_rect(ModelIndex const& index) const
 {
     if (!index.is_valid())
         return {};

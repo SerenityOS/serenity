@@ -14,8 +14,8 @@ namespace Kernel::Memory {
 
 class MappedROM {
 public:
-    const u8* base() const { return region->vaddr().offset(offset).as_ptr(); }
-    const u8* end() const { return base() + size; }
+    u8 const* base() const { return region->vaddr().offset(offset).as_ptr(); }
+    u8 const* end() const { return base() + size; }
     OwnPtr<Region> region;
     size_t size { 0 };
     size_t offset { 0 };
@@ -30,7 +30,7 @@ public:
         return {};
     }
 
-    PhysicalAddress paddr_of(const u8* ptr) const { return paddr.offset(ptr - this->base()); }
+    PhysicalAddress paddr_of(u8 const* ptr) const { return paddr.offset(ptr - this->base()); }
 };
 
 }

@@ -18,7 +18,7 @@ void History::dump() const
     }
 }
 
-void History::push(const URL& url, const String& title)
+void History::push(URL const& url, String const& title)
 {
     if (!m_items.is_empty() && m_items[m_current].url == url)
         return;
@@ -55,7 +55,7 @@ void History::clear()
     m_current = -1;
 }
 
-void History::update_title(const String& title)
+void History::update_title(String const& title)
 {
     m_items[m_current].title = title;
 }

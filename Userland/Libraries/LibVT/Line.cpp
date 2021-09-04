@@ -118,7 +118,7 @@ void Line::take_cells_from_next_line(size_t new_length, Line* next_line, bool cu
         next_line->m_cells.clear();
 }
 
-void Line::clear_range(size_t first_column, size_t last_column, const Attribute& attribute)
+void Line::clear_range(size_t first_column, size_t last_column, Attribute const& attribute)
 {
     VERIFY(first_column <= last_column);
     VERIFY(last_column < m_cells.size());

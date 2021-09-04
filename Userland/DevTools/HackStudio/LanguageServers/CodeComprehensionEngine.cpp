@@ -8,7 +8,7 @@
 
 namespace LanguageServers {
 
-CodeComprehensionEngine::CodeComprehensionEngine(const FileDB& filedb, bool should_store_all_declarations)
+CodeComprehensionEngine::CodeComprehensionEngine(FileDB const& filedb, bool should_store_all_declarations)
     : m_filedb(filedb)
     , m_store_all_declarations(should_store_all_declarations)
 {
@@ -17,7 +17,7 @@ CodeComprehensionEngine::CodeComprehensionEngine(const FileDB& filedb, bool shou
 CodeComprehensionEngine::~CodeComprehensionEngine()
 {
 }
-void CodeComprehensionEngine::set_declarations_of_document(const String& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations)
+void CodeComprehensionEngine::set_declarations_of_document(String const& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations)
 {
     // Callback may not be configured if we're running tests
     if (!set_declarations_of_document_callback)

@@ -23,7 +23,7 @@
 
 namespace JS {
 
-OrdinaryFunctionObject* OrdinaryFunctionObject::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind kind, bool is_strict, bool is_arrow_function)
+OrdinaryFunctionObject* OrdinaryFunctionObject::create(GlobalObject& global_object, FlyString const& name, Statement const& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind kind, bool is_strict, bool is_arrow_function)
 {
     Object* prototype = nullptr;
     switch (kind) {
@@ -37,7 +37,7 @@ OrdinaryFunctionObject* OrdinaryFunctionObject::create(GlobalObject& global_obje
     return global_object.heap().allocate<OrdinaryFunctionObject>(global_object, global_object, name, body, move(parameters), m_function_length, parent_scope, *prototype, kind, is_strict, is_arrow_function);
 }
 
-OrdinaryFunctionObject::OrdinaryFunctionObject(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 function_length, Environment* parent_scope, Object& prototype, FunctionKind kind, bool is_strict, bool is_arrow_function)
+OrdinaryFunctionObject::OrdinaryFunctionObject(GlobalObject& global_object, FlyString const& name, Statement const& body, Vector<FunctionNode::Parameter> parameters, i32 function_length, Environment* parent_scope, Object& prototype, FunctionKind kind, bool is_strict, bool is_arrow_function)
     : FunctionObject(is_arrow_function ? vm().this_value(global_object) : Value(), {}, prototype)
     , m_name(name)
     , m_body(body)
@@ -105,23 +105,23 @@ FunctionEnvironment* OrdinaryFunctionObject::create_environment(FunctionObject& 
     HashMap<FlyString, Variable> variables;
     for (auto& parameter : m_parameters) {
         parameter.binding.visit(
-            [&](const FlyString& name) { variables.set(name, { js_undefined(), DeclarationKind::Var }); },
+            [&](FlyString const& name) { variables.set(name, { js_undefined(), DeclarationKind::Var }); },
             [&](const NonnullRefPtr<BindingPattern>& binding) {
-                binding->for_each_bound_name([&](const auto& name) {
+                binding->for_each_bound_name([&](auto const& name) {
                     variables.set(name, { js_undefined(), DeclarationKind::Var });
                 });
             });
     }
 
     if (is<ScopeNode>(body())) {
-        for (auto& declaration : static_cast<const ScopeNode&>(body()).variables()) {
+        for (auto& declaration : static_cast<ScopeNode const&>(body()).variables()) {
             for (auto& declarator : declaration.declarations()) {
                 declarator.target().visit(
                     [&](const NonnullRefPtr<Identifier>& id) {
                         variables.set(id->string(), { js_undefined(), declaration.declaration_kind() });
                     },
                     [&](const NonnullRefPtr<BindingPattern>& binding) {
-                        binding->for_each_bound_name([&](const auto& name) {
+                        binding->for_each_bound_name([&](auto const& name) {
                             variables.set(name, { js_undefined(), declaration.declaration_kind() });
                         });
                     });
@@ -151,7 +151,7 @@ Value OrdinaryFunctionObject::execute_function_body()
         for (size_t i = 0; i < m_parameters.size(); ++i) {
             auto& parameter = m_parameters[i];
             parameter.binding.visit(
-                [&](const auto& param) {
+                [&](auto const& param) {
                     Value argument_value;
                     if (parameter.is_rest) {
                         auto* array = Array::create(global_object(), 0);
@@ -234,7 +234,7 @@ Value OrdinaryFunctionObject::construct(FunctionObject&)
     return execute_function_body();
 }
 
-void OrdinaryFunctionObject::set_name(const FlyString& name)
+void OrdinaryFunctionObject::set_name(FlyString const& name)
 {
     VERIFY(!name.is_null());
     auto& vm = this->vm();

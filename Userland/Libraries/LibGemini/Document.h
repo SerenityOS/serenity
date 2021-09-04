@@ -33,17 +33,17 @@ class Document : public RefCounted<Document> {
 public:
     String render_to_html() const;
 
-    static NonnullRefPtr<Document> parse(const StringView& source, const URL&);
+    static NonnullRefPtr<Document> parse(StringView const& source, URL const&);
 
-    const URL& url() const { return m_url; };
+    URL const& url() const { return m_url; };
 
 private:
-    explicit Document(const URL& url)
+    explicit Document(URL const& url)
         : m_url(url)
     {
     }
 
-    void read_lines(const StringView&);
+    void read_lines(StringView const&);
 
     NonnullOwnPtrVector<Line> m_lines;
     URL m_url;
@@ -63,7 +63,7 @@ public:
 
 class Link : public Line {
 public:
-    Link(String line, const Document&);
+    Link(String line, Document const&);
     virtual ~Link() override;
     virtual String render_to_html() const override;
 

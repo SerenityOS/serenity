@@ -223,18 +223,18 @@ public:
     JS_ENUMERATE_ERROR_TYPES(__ENUMERATE_JS_ERROR)
 #undef __ENUMERATE_JS_ERROR
 
-    const char* message() const
+    char const* message() const
     {
         return m_message;
     }
 
 private:
-    explicit ErrorType(const char* message)
+    explicit ErrorType(char const* message)
         : m_message(message)
     {
     }
 
-    const char* m_message;
+    char const* m_message;
 };
 
 }

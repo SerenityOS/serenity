@@ -13,7 +13,7 @@ namespace Web {
 class Origin {
 public:
     Origin() { }
-    Origin(const String& protocol, const String& host, u16 port)
+    Origin(String const& protocol, String const& host, u16 port)
         : m_protocol(protocol)
         , m_host(host)
         , m_port(port)
@@ -22,11 +22,11 @@ public:
 
     bool is_null() const { return m_protocol.is_null() && m_host.is_null() && !m_port; }
 
-    const String& protocol() const { return m_protocol; }
-    const String& host() const { return m_host; }
+    String const& protocol() const { return m_protocol; }
+    String const& host() const { return m_host; }
     u16 port() const { return m_port; }
 
-    bool is_same(const Origin& other) const
+    bool is_same(Origin const& other) const
     {
         return protocol() == other.protocol()
             && host() == other.host()

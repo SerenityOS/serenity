@@ -29,7 +29,7 @@
 
 namespace Web::HTML {
 
-static inline void log_parse_error(const SourceLocation& location = SourceLocation::current())
+static inline void log_parse_error(SourceLocation const& location = SourceLocation::current())
 {
     dbgln("Parse error! {}", location);
 }
@@ -92,7 +92,7 @@ static Vector<FlyString> s_quirks_public_ids = {
     "-//WebTechs//DTD Mozilla HTML//"
 };
 
-RefPtr<DOM::Document> parse_html_document(const StringView& data, const URL& url, const String& encoding)
+RefPtr<DOM::Document> parse_html_document(StringView const& data, URL const& url, String const& encoding)
 {
     auto document = DOM::Document::create(url);
     HTMLDocumentParser parser(document, data, encoding);
@@ -100,7 +100,7 @@ RefPtr<DOM::Document> parse_html_document(const StringView& data, const URL& url
     return document;
 }
 
-HTMLDocumentParser::HTMLDocumentParser(DOM::Document& document, const StringView& input, const String& encoding)
+HTMLDocumentParser::HTMLDocumentParser(DOM::Document& document, StringView const& input, String const& encoding)
     : m_tokenizer(input, encoding)
     , m_document(document)
 {
@@ -115,7 +115,7 @@ HTMLDocumentParser::~HTMLDocumentParser()
     m_document->set_should_invalidate_styles_on_attribute_changes(true);
 }
 
-void HTMLDocumentParser::run(const URL& url)
+void HTMLDocumentParser::run(URL const& url)
 {
     m_document->set_url(url);
     m_document->set_source(m_tokenizer.source());
@@ -256,7 +256,7 @@ void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLTok
     }
 }
 
-DOM::QuirksMode HTMLDocumentParser::which_quirks_mode(const HTMLToken& doctype_token) const
+DOM::QuirksMode HTMLDocumentParser::which_quirks_mode(HTMLToken const& doctype_token) const
 {
     if (doctype_token.doctype_data().force_quirks)
         return DOM::QuirksMode::Yes;
@@ -433,7 +433,7 @@ HTMLDocumentParser::AdjustedInsertionLocation HTMLDocumentParser::find_appropria
     return adjusted_insertion_location;
 }
 
-NonnullRefPtr<DOM::Element> HTMLDocumentParser::create_element_for(const HTMLToken& token, const FlyString& namespace_)
+NonnullRefPtr<DOM::Element> HTMLDocumentParser::create_element_for(HTMLToken const& token, FlyString const& namespace_)
 {
     auto element = create_element(document(), token.tag_name(), namespace_);
     token.for_each_attribute([&](auto& attribute) {
@@ -444,7 +444,7 @@ NonnullRefPtr<DOM::Element> HTMLDocumentParser::create_element_for(const HTMLTok
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#insert-a-foreign-element
-NonnullRefPtr<DOM::Element> HTMLDocumentParser::insert_foreign_element(const HTMLToken& token, const FlyString& namespace_)
+NonnullRefPtr<DOM::Element> HTMLDocumentParser::insert_foreign_element(HTMLToken const& token, FlyString const& namespace_)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
 
@@ -470,7 +470,7 @@ NonnullRefPtr<DOM::Element> HTMLDocumentParser::insert_foreign_element(const HTM
     return element;
 }
 
-NonnullRefPtr<DOM::Element> HTMLDocumentParser::insert_html_element(const HTMLToken& token)
+NonnullRefPtr<DOM::Element> HTMLDocumentParser::insert_html_element(HTMLToken const& token)
 {
     return insert_foreign_element(token, Namespace::HTML);
 }
@@ -803,7 +803,7 @@ AnythingElse:
     process_using_the_rules_for(m_insertion_mode, token);
 }
 
-void HTMLDocumentParser::generate_implied_end_tags(const FlyString& exception)
+void HTMLDocumentParser::generate_implied_end_tags(FlyString const& exception)
 {
     while (current_node().local_name() != exception && current_node().local_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc))
         m_stack_of_open_elements.pop();
@@ -988,7 +988,7 @@ HTMLDocumentParser::AdoptionAgencyAlgorithmOutcome HTMLDocumentParser::run_the_a
     TODO();
 }
 
-bool HTMLDocumentParser::is_special_tag(const FlyString& tag_name, const FlyString& namespace_)
+bool HTMLDocumentParser::is_special_tag(FlyString const& tag_name, FlyString const& namespace_)
 {
     if (namespace_ == Namespace::HTML) {
         return tag_name.is_one_of(
@@ -2971,7 +2971,7 @@ void HTMLDocumentParser::reset_the_insertion_mode_appropriately()
     m_insertion_mode = InsertionMode::InBody;
 }
 
-const char* HTMLDocumentParser::insertion_mode_name() const
+char const* HTMLDocumentParser::insertion_mode_name() const
 {
     switch (m_insertion_mode) {
 #define __ENUMERATE_INSERTION_MODE(mode) \
@@ -2988,7 +2988,7 @@ DOM::Document& HTMLDocumentParser::document()
     return *m_document;
 }
 
-NonnullRefPtrVector<DOM::Node> HTMLDocumentParser::parse_html_fragment(DOM::Element& context_element, const StringView& markup)
+NonnullRefPtrVector<DOM::Node> HTMLDocumentParser::parse_html_fragment(DOM::Element& context_element, StringView const& markup)
 {
     auto temp_document = DOM::Document::create();
     HTMLDocumentParser parser(*temp_document, markup, "utf-8");
@@ -3039,7 +3039,7 @@ NonnullRefPtrVector<DOM::Node> HTMLDocumentParser::parse_html_fragment(DOM::Elem
     return children;
 }
 
-NonnullOwnPtr<HTMLDocumentParser> HTMLDocumentParser::create_with_uncertain_encoding(DOM::Document& document, const ByteBuffer& input)
+NonnullOwnPtr<HTMLDocumentParser> HTMLDocumentParser::create_with_uncertain_encoding(DOM::Document& document, ByteBuffer const& input)
 {
     if (document.has_encoding())
         return make<HTMLDocumentParser>(document, input, document.encoding().value());

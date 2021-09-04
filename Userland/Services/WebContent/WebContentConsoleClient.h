@@ -24,7 +24,7 @@ public:
     {
     }
 
-    void handle_input(const String& js_source);
+    void handle_input(String const& js_source);
 
 private:
     virtual JS::Value log() override;
@@ -41,7 +41,7 @@ private:
     ClientConnection& m_client;
     WeakPtr<JS::Interpreter> m_interpreter;
     void clear_output();
-    void print_html(const String& line);
+    void print_html(String const& line);
 };
 
 }

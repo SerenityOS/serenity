@@ -21,7 +21,7 @@ namespace HackStudio {
 
 class BacktraceModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<BacktraceModel> create(const Debug::DebugSession&, const PtraceRegisters& regs);
+    static NonnullRefPtr<BacktraceModel> create(const Debug::DebugSession&, PtraceRegisters const& regs);
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_frames.size(); }
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return 1; }
@@ -49,7 +49,7 @@ private:
     {
     }
 
-    static Vector<FrameInfo> create_backtrace(const Debug::DebugSession&, const PtraceRegisters&);
+    static Vector<FrameInfo> create_backtrace(const Debug::DebugSession&, PtraceRegisters const&);
 
     Vector<FrameInfo> m_frames;
 };

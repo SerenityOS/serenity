@@ -159,15 +159,15 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
     for (auto possible_pointer : possible_pointers) {
         if (!possible_pointer)
             continue;
-        dbgln_if(HEAP_DEBUG, "  ? {}", (const void*)possible_pointer);
-        auto* possible_heap_block = HeapBlock::from_cell(reinterpret_cast<const Cell*>(possible_pointer));
+        dbgln_if(HEAP_DEBUG, "  ? {}", (void const*)possible_pointer);
+        auto* possible_heap_block = HeapBlock::from_cell(reinterpret_cast<Cell const*>(possible_pointer));
         if (all_live_heap_blocks.contains(possible_heap_block)) {
             if (auto* cell = possible_heap_block->cell_from_possible_pointer(possible_pointer)) {
                 if (cell->state() == Cell::State::Live) {
-                    dbgln_if(HEAP_DEBUG, "  ?-> {}", (const void*)cell);
+                    dbgln_if(HEAP_DEBUG, "  ?-> {}", (void const*)cell);
                     roots.set(cell);
                 } else {
-                    dbgln_if(HEAP_DEBUG, "  #-> {}", (const void*)cell);
+                    dbgln_if(HEAP_DEBUG, "  #-> {}", (void const*)cell);
                 }
             }
         }

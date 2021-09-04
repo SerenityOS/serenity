@@ -16,7 +16,7 @@
 
 namespace GUI {
 
-AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window* parent_window, const StringView& version)
+AboutDialog::AboutDialog(StringView const& name, const Gfx::Bitmap* icon, Window* parent_window, StringView const& version)
     : Dialog(parent_window)
     , m_name(name)
     , m_icon(icon)
@@ -58,7 +58,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     right_container.set_layout<VerticalBoxLayout>();
     right_container.layout()->set_margins({ 12, 4, 4, 0 });
 
-    auto make_label = [&](const StringView& text, bool bold = false) {
+    auto make_label = [&](StringView const& text, bool bold = false) {
         auto& label = right_container.add<Label>(text);
         label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         label.set_fixed_height(14);

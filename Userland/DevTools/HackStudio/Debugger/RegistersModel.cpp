@@ -8,7 +8,7 @@
 
 namespace HackStudio {
 
-RegistersModel::RegistersModel(const PtraceRegisters& regs)
+RegistersModel::RegistersModel(PtraceRegisters const& regs)
     : m_raw_registers(regs)
 {
 #if ARCH(I386)
@@ -51,7 +51,7 @@ RegistersModel::RegistersModel(const PtraceRegisters& regs)
     m_registers.append({ "gs", regs.gs });
 }
 
-RegistersModel::RegistersModel(const PtraceRegisters& current_regs, const PtraceRegisters& previous_regs)
+RegistersModel::RegistersModel(PtraceRegisters const& current_regs, PtraceRegisters const& previous_regs)
     : m_raw_registers(current_regs)
 {
 #if ARCH(I386)

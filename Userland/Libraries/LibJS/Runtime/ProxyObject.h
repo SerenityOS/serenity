@@ -22,11 +22,11 @@ public:
 
     virtual Value call() override;
     virtual Value construct(FunctionObject& new_target) override;
-    virtual const FlyString& name() const override;
+    virtual FlyString const& name() const override;
     virtual FunctionEnvironment* create_environment(FunctionObject&) override;
 
-    const Object& target() const { return m_target; }
-    const Object& handler() const { return m_handler; }
+    Object const& target() const { return m_target; }
+    Object const& handler() const { return m_handler; }
 
     bool is_revoked() const { return m_is_revoked; }
     void revoke() { m_is_revoked = true; }

@@ -146,7 +146,7 @@ class VimEditingEngine final : public EditingEngine {
 public:
     virtual CursorWidth cursor_width() const override;
 
-    virtual bool on_key(const KeyEvent& event) override;
+    virtual bool on_key(KeyEvent const& event) override;
 
 private:
     enum VimMode {
@@ -184,9 +184,9 @@ private:
     void move_to_previous_empty_lines_block();
     void move_to_next_empty_lines_block();
 
-    bool on_key_in_insert_mode(const KeyEvent& event);
-    bool on_key_in_normal_mode(const KeyEvent& event);
-    bool on_key_in_visual_mode(const KeyEvent& event);
+    bool on_key_in_insert_mode(KeyEvent const& event);
+    bool on_key_in_normal_mode(KeyEvent const& event);
+    bool on_key_in_visual_mode(KeyEvent const& event);
 };
 
 }

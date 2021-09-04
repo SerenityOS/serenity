@@ -17,7 +17,7 @@ struct FontSelector {
     int size { 0 };
     int weight { 0 };
 
-    bool operator==(const FontSelector& other) const
+    bool operator==(FontSelector const& other) const
     {
         return family == other.family && size == other.size && weight == other.weight;
     }
@@ -26,15 +26,15 @@ struct FontSelector {
 namespace AK {
 template<>
 struct Traits<FontSelector> : public GenericTraits<FontSelector> {
-    static unsigned hash(const FontSelector& key) { return pair_int_hash(pair_int_hash(key.family.hash(), key.weight), key.size); }
+    static unsigned hash(FontSelector const& key) { return pair_int_hash(pair_int_hash(key.family.hash(), key.weight), key.size); }
 };
 }
 
 class FontCache {
 public:
     static FontCache& the();
-    RefPtr<Gfx::Font> get(const FontSelector&) const;
-    void set(const FontSelector&, NonnullRefPtr<Gfx::Font>);
+    RefPtr<Gfx::Font> get(FontSelector const&) const;
+    void set(FontSelector const&, NonnullRefPtr<Gfx::Font>);
 
 private:
     FontCache() { }

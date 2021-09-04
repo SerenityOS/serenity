@@ -64,7 +64,7 @@ public:
         encrypt(in, out, ivec);
     }
 
-    void encrypt(const ReadonlyBytes& in, Bytes out, const ReadonlyBytes& iv_in, const ReadonlyBytes& aad, Bytes tag)
+    void encrypt(ReadonlyBytes const& in, Bytes out, ReadonlyBytes const& iv_in, ReadonlyBytes const& aad, Bytes tag)
     {
         auto iv_buf = ByteBuffer::copy(iv_in.data(), iv_in.size());
         auto iv = iv_buf.bytes();

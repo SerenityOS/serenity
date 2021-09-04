@@ -12,14 +12,14 @@
 namespace Gfx {
 
 RefPtr<Gfx::Bitmap> load_png(String const& path);
-RefPtr<Gfx::Bitmap> load_png_from_memory(const u8*, size_t);
+RefPtr<Gfx::Bitmap> load_png_from_memory(u8 const*, size_t);
 
 struct PNGLoadingContext;
 
 class PNGImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     virtual ~PNGImageDecoderPlugin() override;
-    PNGImageDecoderPlugin(const u8*, size_t);
+    PNGImageDecoderPlugin(u8 const*, size_t);
 
     virtual IntSize size() override;
     virtual RefPtr<Gfx::Bitmap> bitmap() override;

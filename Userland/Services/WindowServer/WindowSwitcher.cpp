@@ -83,7 +83,7 @@ void WindowSwitcher::event(Core::Event& event)
     event.accept();
 }
 
-void WindowSwitcher::on_key_event(const KeyEvent& event)
+void WindowSwitcher::on_key_event(KeyEvent const& event)
 {
     if (event.type() == Event::KeyUp) {
         if (event.key() == (m_mode == Mode::ShowAllWindows ? Key_Super : Key_Alt)) {
@@ -198,7 +198,7 @@ void WindowSwitcher::draw()
 void WindowSwitcher::refresh()
 {
     auto& wm = WindowManager::the();
-    const Window* selected_window = nullptr;
+    Window const* selected_window = nullptr;
     if (m_selected_index > 0 && m_windows[m_selected_index])
         selected_window = m_windows[m_selected_index].ptr();
     if (!selected_window)

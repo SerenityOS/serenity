@@ -9,7 +9,7 @@
 
 #include "Parser.h"
 
-void Parser::write(const StringView& data)
+void Parser::write(StringView const& data)
 {
     for (size_t i = 0; i < data.length(); i++) {
         u8 ch = data[i];

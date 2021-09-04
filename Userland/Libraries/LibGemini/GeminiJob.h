@@ -17,7 +17,7 @@ namespace Gemini {
 class GeminiJob final : public Job {
     C_OBJECT(GeminiJob)
 public:
-    explicit GeminiJob(const GeminiRequest& request, OutputStream& output_stream, const Vector<Certificate>* override_certificates = nullptr)
+    explicit GeminiJob(GeminiRequest const& request, OutputStream& output_stream, const Vector<Certificate>* override_certificates = nullptr)
         : Job(request, output_stream)
         , m_override_ca_certificates(override_certificates)
     {

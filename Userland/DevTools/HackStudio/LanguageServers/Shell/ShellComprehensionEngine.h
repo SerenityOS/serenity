@@ -13,11 +13,11 @@ namespace LanguageServers::Shell {
 
 class ShellComprehensionEngine : public CodeComprehensionEngine {
 public:
-    ShellComprehensionEngine(const FileDB& filedb);
-    virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& position) override;
-    virtual void on_edit(const String& file) override;
-    virtual void file_opened([[maybe_unused]] const String& file) override;
-    virtual Optional<GUI::AutocompleteProvider::ProjectLocation> find_declaration_of(const String& filename, const GUI::TextPosition& identifier_position) override;
+    ShellComprehensionEngine(FileDB const& filedb);
+    virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(String const& file, const GUI::TextPosition& position) override;
+    virtual void on_edit(String const& file) override;
+    virtual void file_opened([[maybe_unused]] String const& file) override;
+    virtual Optional<GUI::AutocompleteProvider::ProjectLocation> find_declaration_of(String const& filename, const GUI::TextPosition& identifier_position) override;
 
 private:
     struct DocumentData {
@@ -34,13 +34,13 @@ private:
         mutable Optional<Vector<String>> all_sourced_paths {};
     };
 
-    const DocumentData& get_document_data(const String& file) const;
-    const DocumentData& get_or_create_document_data(const String& file);
-    void set_document_data(const String& file, OwnPtr<DocumentData>&& data);
+    DocumentData const& get_document_data(String const& file) const;
+    DocumentData const& get_or_create_document_data(String const& file);
+    void set_document_data(String const& file, OwnPtr<DocumentData>&& data);
 
-    OwnPtr<DocumentData> create_document_data_for(const String& file);
-    String document_path_from_include_path(const StringView& include_path) const;
-    void update_declared_symbols(const DocumentData&);
+    OwnPtr<DocumentData> create_document_data_for(String const& file);
+    String document_path_from_include_path(StringView const& include_path) const;
+    void update_declared_symbols(DocumentData const&);
 
     static size_t resolve(const ShellComprehensionEngine::DocumentData& document, const GUI::TextPosition& position);
 

@@ -36,7 +36,7 @@ private:
         float stroke_width { 1.0 };
     };
 
-    const State& state() const { return m_states.last(); }
+    State const& state() const { return m_states.last(); }
     State& state() { return m_states.last(); }
 
     Vector<State> m_states;

@@ -25,7 +25,7 @@ public:
         , m_closing(closing)
     {
     }
-    explicit SourceGenerator(StringBuilder& builder, const MappingType& mapping, char opening = '@', char closing = '@')
+    explicit SourceGenerator(StringBuilder& builder, MappingType const& mapping, char opening = '@', char closing = '@')
         : m_builder(builder)
         , m_mapping(mapping)
         , m_opening(opening)

@@ -44,7 +44,7 @@
 namespace UserspaceEmulator {
 
 template<typename T>
-ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, const char* message)
+ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, char const* message)
 {
     if (value_with_shadow.is_uninitialized()) [[unlikely]] {
         reportln("\033[31;1mWarning! Use of uninitialized value: {}\033[0m\n", message);
@@ -52,7 +52,7 @@ ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, const char* messag
     }
 }
 
-ALWAYS_INLINE void SoftCPU::warn_if_flags_tainted(const char* message) const
+ALWAYS_INLINE void SoftCPU::warn_if_flags_tainted(char const* message) const
 {
     if (m_flags_tainted) [[unlikely]] {
         reportln("\n=={}==  \033[31;1mConditional depends on uninitialized data\033[0m ({})\n", getpid(), message);
@@ -196,7 +196,7 @@ void SoftCPU::write_memory256(X86::LogicalAddress address, ValueWithShadow<u256>
     m_emulator.mmu().write256(address, value);
 }
 
-void SoftCPU::push_string(const StringView& string)
+void SoftCPU::push_string(StringView const& string)
 {
     size_t space_to_allocate = round_up_to_power_of_two(string.length() + 1, 16);
     set_esp({ esp().value() - space_to_allocate, esp().shadow() });
@@ -204,7 +204,7 @@ void SoftCPU::push_string(const StringView& string)
     m_emulator.mmu().write8({ 0x23, esp().value() + string.length() }, shadow_wrap_as_initialized((u8)'\0'));
 }
 
-void SoftCPU::push_buffer(const u8* data, size_t size)
+void SoftCPU::push_buffer(u8 const* data, size_t size)
 {
     set_esp({ esp().value() - size, esp().shadow() });
     warn_if_uninitialized(esp(), "push_buffer");
@@ -321,7 +321,7 @@ ALWAYS_INLINE static T op_dec(SoftCPU& cpu, T data)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_xor(SoftCPU& cpu, const T& dest, const T& src)
+ALWAYS_INLINE static T op_xor(SoftCPU& cpu, T const& dest, T const& src)
 {
     typename T::ValueType result;
     u32 new_flags = 0;
@@ -353,7 +353,7 @@ ALWAYS_INLINE static T op_xor(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_or(SoftCPU& cpu, const T& dest, const T& src)
+ALWAYS_INLINE static T op_or(SoftCPU& cpu, T const& dest, T const& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -385,7 +385,7 @@ ALWAYS_INLINE static T op_or(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_sub(SoftCPU& cpu, const T& dest, const T& src)
+ALWAYS_INLINE static T op_sub(SoftCPU& cpu, T const& dest, T const& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -417,7 +417,7 @@ ALWAYS_INLINE static T op_sub(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T, bool cf>
-ALWAYS_INLINE static T op_sbb_impl(SoftCPU& cpu, const T& dest, const T& src)
+ALWAYS_INLINE static T op_sbb_impl(SoftCPU& cpu, T const& dest, T const& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -454,7 +454,7 @@ ALWAYS_INLINE static T op_sbb_impl(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_sbb(SoftCPU& cpu, T& dest, const T& src)
+ALWAYS_INLINE static T op_sbb(SoftCPU& cpu, T& dest, T const& src)
 {
     cpu.warn_if_flags_tainted("sbb");
     if (cpu.cf())
@@ -463,7 +463,7 @@ ALWAYS_INLINE static T op_sbb(SoftCPU& cpu, T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_add(SoftCPU& cpu, T& dest, const T& src)
+ALWAYS_INLINE static T op_add(SoftCPU& cpu, T& dest, T const& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -495,7 +495,7 @@ ALWAYS_INLINE static T op_add(SoftCPU& cpu, T& dest, const T& src)
 }
 
 template<typename T, bool cf>
-ALWAYS_INLINE static T op_adc_impl(SoftCPU& cpu, T& dest, const T& src)
+ALWAYS_INLINE static T op_adc_impl(SoftCPU& cpu, T& dest, T const& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -532,7 +532,7 @@ ALWAYS_INLINE static T op_adc_impl(SoftCPU& cpu, T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_adc(SoftCPU& cpu, T& dest, const T& src)
+ALWAYS_INLINE static T op_adc(SoftCPU& cpu, T& dest, T const& src)
 {
     cpu.warn_if_flags_tainted("adc");
     if (cpu.cf())
@@ -541,7 +541,7 @@ ALWAYS_INLINE static T op_adc(SoftCPU& cpu, T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_and(SoftCPU& cpu, const T& dest, const T& src)
+ALWAYS_INLINE static T op_and(SoftCPU& cpu, T const& dest, T const& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -573,7 +573,7 @@ ALWAYS_INLINE static T op_and(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static void op_imul(SoftCPU& cpu, const T& dest, const T& src, T& result_high, T& result_low)
+ALWAYS_INLINE static void op_imul(SoftCPU& cpu, T const& dest, T const& src, T& result_high, T& result_low)
 {
     bool did_overflow = false;
     if constexpr (sizeof(T) == 4) {

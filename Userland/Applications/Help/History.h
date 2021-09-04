@@ -11,7 +11,7 @@
 
 class History final {
 public:
-    void push(const StringView& history_item);
+    void push(StringView const& history_item);
     String current();
 
     void go_back();

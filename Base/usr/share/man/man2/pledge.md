@@ -7,7 +7,7 @@ pledge - reduce process capabilities
 ```**c++
 #include <unistd.h>
 
-int pledge(const char* promises, const char* execpromises);
+int pledge(char const* promises, char const* execpromises);
 ```
 
 ## Description

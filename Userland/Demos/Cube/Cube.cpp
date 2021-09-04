@@ -143,7 +143,7 @@ void Cube::timer_event(Core::TimerEvent&)
     else
         painter.clear_rect(m_bitmap->rect(), Gfx::Color::Transparent);
 
-    auto to_point = [](const FloatVector3& v) {
+    auto to_point = [](FloatVector3 const& v) {
         return Gfx::IntPoint(v.x(), v.y());
     };
 

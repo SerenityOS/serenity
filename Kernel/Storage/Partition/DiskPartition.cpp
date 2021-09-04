@@ -26,7 +26,7 @@ DiskPartition::~DiskPartition()
 {
 }
 
-const DiskPartitionMetadata& DiskPartition::metadata() const
+DiskPartitionMetadata const& DiskPartition::metadata() const
 {
     return m_metadata;
 }
@@ -44,21 +44,21 @@ KResultOr<size_t> DiskPartition::read(FileDescription& fd, u64 offset, UserOrKer
     return m_device->read(fd, offset + adjust, outbuf, len);
 }
 
-bool DiskPartition::can_read(const FileDescription& fd, size_t offset) const
+bool DiskPartition::can_read(FileDescription const& fd, size_t offset) const
 {
     unsigned adjust = m_metadata.start_block() * block_size();
     dbgln_if(OFFD_DEBUG, "DiskPartition::can_read offset={}, adjust={}", offset, adjust);
     return m_device->can_read(fd, offset + adjust);
 }
 
-KResultOr<size_t> DiskPartition::write(FileDescription& fd, u64 offset, const UserOrKernelBuffer& inbuf, size_t len)
+KResultOr<size_t> DiskPartition::write(FileDescription& fd, u64 offset, UserOrKernelBuffer const& inbuf, size_t len)
 {
     unsigned adjust = m_metadata.start_block() * block_size();
     dbgln_if(OFFD_DEBUG, "DiskPartition::write offset={}, adjust={}, len={}", offset, adjust, len);
     return m_device->write(fd, offset + adjust, inbuf, len);
 }
 
-bool DiskPartition::can_write(const FileDescription& fd, size_t offset) const
+bool DiskPartition::can_write(FileDescription const& fd, size_t offset) const
 {
     unsigned adjust = m_metadata.start_block() * block_size();
     dbgln_if(OFFD_DEBUG, "DiskPartition::can_write offset={}, adjust={}", offset, adjust);

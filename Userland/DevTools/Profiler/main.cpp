@@ -43,7 +43,7 @@ static bool generate_profile(pid_t& pid);
 int main(int argc, char** argv)
 {
     int pid = 0;
-    const char* perfcore_file_arg = nullptr;
+    char const* perfcore_file_arg = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_option(pid, "PID to profile", "pid", 'p', "PID");
     args_parser.add_positional_argument(perfcore_file_arg, "Path of perfcore file", "perfcore-file", Core::ArgsParser::Required::No);
@@ -173,7 +173,7 @@ int main(int argc, char** argv)
 
     auto& individual_sample_view = samples_splitter.add<GUI::TableView>();
     samples_table_view.on_selection_change = [&] {
-        const auto& index = samples_table_view.selection().first();
+        auto const& index = samples_table_view.selection().first();
         auto model = IndividualSampleModel::create(*profile, index.data(GUI::ModelRole::Custom).to_integer<size_t>());
         individual_sample_view.set_model(move(model));
     };
@@ -188,7 +188,7 @@ int main(int argc, char** argv)
 
     auto& individual_signpost_view = signposts_splitter.add<GUI::TableView>();
     signposts_table_view.on_selection_change = [&] {
-        const auto& index = signposts_table_view.selection().first();
+        auto const& index = signposts_table_view.selection().first();
         auto model = IndividualSampleModel::create(*profile, index.data(GUI::ModelRole::Custom).to_integer<size_t>());
         individual_signpost_view.set_model(move(model));
     };
@@ -272,7 +272,7 @@ int main(int argc, char** argv)
     return app->exec();
 }
 
-static bool prompt_to_stop_profiling(pid_t pid, const String& process_name)
+static bool prompt_to_stop_profiling(pid_t pid, String const& process_name)
 {
     auto window = GUI::Window::construct();
     window->set_title(String::formatted("Profiling {}({})", process_name, pid));

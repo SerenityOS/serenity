@@ -17,7 +17,7 @@ Engine::~Engine()
         kill(m_pid, SIGINT);
 }
 
-Engine::Engine(const StringView& command)
+Engine::Engine(StringView const& command)
 {
     int wpipefds[2];
     int rpipefds[2];
@@ -37,7 +37,7 @@ Engine::Engine(const StringView& command)
     posix_spawn_file_actions_adddup2(&file_actions, rpipefds[1], STDOUT_FILENO);
 
     String cstr(command);
-    const char* argv[] = { cstr.characters(), nullptr };
+    char const* argv[] = { cstr.characters(), nullptr };
     if (posix_spawnp(&m_pid, cstr.characters(), &file_actions, nullptr, const_cast<char**>(argv), environ) < 0) {
         perror("posix_spawnp");
         VERIFY_NOT_REACHED();

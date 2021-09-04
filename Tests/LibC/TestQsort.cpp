@@ -19,10 +19,10 @@ struct SortableObject {
     int m_payload;
 };
 
-static int compare_sortable_object(const void* a, const void* b)
+static int compare_sortable_object(void const* a, void const* b)
 {
-    const int key1 = static_cast<const SortableObject*>(a)->m_key;
-    const int key2 = static_cast<const SortableObject*>(b)->m_key;
+    const int key1 = static_cast<SortableObject const*>(a)->m_key;
+    const int key2 = static_cast<SortableObject const*>(b)->m_key;
     if (key1 < key2) {
         return -1;
     } else if (key1 == key2) {
@@ -60,8 +60,8 @@ TEST_CASE(quick_sort)
         qsort(test_objects.data(), test_objects.size(), sizeof(SortableObject), compare_sortable_object);
         // Check that the objects are sorted by key
         for (auto i = 0u; i + 1 < test_objects.size(); ++i) {
-            const auto& key1 = test_objects[i].m_key;
-            const auto& key2 = test_objects[i + 1].m_key;
+            auto const& key1 = test_objects[i].m_key;
+            auto const& key2 = test_objects[i + 1].m_key;
             if (key1 > key2) {
                 FAIL(String::formatted("saw key {} before key {}\n", key1, key2));
             }

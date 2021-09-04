@@ -257,11 +257,11 @@ void VirtualConsole::on_key_pressed(KeyEvent event)
     });
 }
 
-KResultOr<size_t> VirtualConsole::on_tty_write(const UserOrKernelBuffer& data, size_t size)
+KResultOr<size_t> VirtualConsole::on_tty_write(UserOrKernelBuffer const& data, size_t size)
 {
     SpinlockLocker global_lock(ConsoleManagement::the().tty_write_lock());
     auto result = data.read_buffered<512>(size, [&](ReadonlyBytes buffer) {
-        for (const auto& byte : buffer)
+        for (auto const& byte : buffer)
             m_console_impl.on_input(byte);
         return buffer.size();
     });
@@ -327,7 +327,7 @@ void VirtualConsole::beep()
     dbgln("Beep!1");
 }
 
-void VirtualConsole::set_window_title(const StringView&)
+void VirtualConsole::set_window_title(StringView const&)
 {
     // Do nothing.
 }
@@ -348,7 +348,7 @@ void VirtualConsole::terminal_history_changed(int)
     // Do nothing, I guess?
 }
 
-void VirtualConsole::emit(const u8* data, size_t size)
+void VirtualConsole::emit(u8 const* data, size_t size)
 {
     for (size_t i = 0; i < size; i++)
         TTY::emit(data[i], true);

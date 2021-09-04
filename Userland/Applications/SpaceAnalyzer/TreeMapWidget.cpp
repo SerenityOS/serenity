@@ -43,7 +43,7 @@ static float get_normalized_aspect_ratio(float a, float b)
     }
 }
 
-static bool node_is_leaf(const TreeMapNode& node)
+static bool node_is_leaf(TreeMapNode const& node)
 {
     return node.num_children() == 0;
 }
@@ -53,7 +53,7 @@ bool TreeMapWidget::rect_can_contain_label(const Gfx::IntRect& rect) const
     return rect.height() >= font().presentation_size() && rect.width() > 20;
 }
 
-void TreeMapWidget::paint_cell_frame(GUI::Painter& painter, const TreeMapNode& node, const Gfx::IntRect& cell_rect, const Gfx::IntRect& inner_rect, int depth, HasLabel has_label) const
+void TreeMapWidget::paint_cell_frame(GUI::Painter& painter, TreeMapNode const& node, const Gfx::IntRect& cell_rect, const Gfx::IntRect& inner_rect, int depth, HasLabel has_label) const
 {
     if (cell_rect.width() <= 2 || cell_rect.height() <= 2) {
         painter.fill_rect(cell_rect, Color::Black);
@@ -109,7 +109,7 @@ void TreeMapWidget::paint_cell_frame(GUI::Painter& painter, const TreeMapNode& n
 }
 
 template<typename Function>
-void TreeMapWidget::lay_out_children(const TreeMapNode& node, const Gfx::IntRect& rect, int depth, Function callback)
+void TreeMapWidget::lay_out_children(TreeMapNode const& node, const Gfx::IntRect& rect, int depth, Function callback)
 {
     if (node.num_children() == 0) {
         return;
@@ -222,11 +222,11 @@ void TreeMapWidget::lay_out_children(const TreeMapNode& node, const Gfx::IntRect
     }
 }
 
-const TreeMapNode* TreeMapWidget::path_node(size_t n) const
+TreeMapNode const* TreeMapWidget::path_node(size_t n) const
 {
     if (!m_tree.ptr())
         return nullptr;
-    const TreeMapNode* iter = &m_tree->root();
+    TreeMapNode const* iter = &m_tree->root();
     size_t path_index = 0;
     while (iter && path_index < m_path.size() && path_index < n) {
         size_t child_index = m_path[path_index];
@@ -246,13 +246,13 @@ void TreeMapWidget::paint_event(GUI::PaintEvent& event)
 
     m_selected_node_cache = path_node(m_path.size());
 
-    const TreeMapNode* node = path_node(m_viewpoint);
+    TreeMapNode const* node = path_node(m_viewpoint);
     if (!node) {
         painter.fill_rect(frame_inner_rect(), Color::MidGray);
     } else if (node_is_leaf(*node)) {
         paint_cell_frame(painter, *node, frame_inner_rect(), Gfx::IntRect(), m_viewpoint - 1, HasLabel::Yes);
     } else {
-        lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](const TreeMapNode& node, int, const Gfx::IntRect& rect, const Gfx::IntRect& inner_rect, int depth, HasLabel has_label, IsRemainder remainder) {
+        lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](TreeMapNode const& node, int, const Gfx::IntRect& rect, const Gfx::IntRect& inner_rect, int depth, HasLabel has_label, IsRemainder remainder) {
             if (remainder == IsRemainder::No) {
                 paint_cell_frame(painter, node, rect, inner_rect, depth, has_label);
             } else {
@@ -268,12 +268,12 @@ void TreeMapWidget::paint_event(GUI::PaintEvent& event)
 
 Vector<int> TreeMapWidget::path_to_position(const Gfx::IntPoint& position)
 {
-    const TreeMapNode* node = path_node(m_viewpoint);
+    TreeMapNode const* node = path_node(m_viewpoint);
     if (!node) {
         return {};
     }
     Vector<int> path;
-    lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](const TreeMapNode&, int index, const Gfx::IntRect& rect, const Gfx::IntRect&, int, HasLabel, IsRemainder is_remainder) {
+    lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](TreeMapNode const&, int index, const Gfx::IntRect& rect, const Gfx::IntRect&, int, HasLabel, IsRemainder is_remainder) {
         if (is_remainder == IsRemainder::No && rect.contains(position)) {
             path.append(index);
         }
@@ -283,7 +283,7 @@ Vector<int> TreeMapWidget::path_to_position(const Gfx::IntPoint& position)
 
 void TreeMapWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    const TreeMapNode* node = path_node(m_viewpoint);
+    TreeMapNode const* node = path_node(m_viewpoint);
     if (node && !node_is_leaf(*node)) {
         Vector<int> path = path_to_position(event.position());
         if (!path.is_empty()) {
@@ -301,7 +301,7 @@ void TreeMapWidget::doubleclick_event(GUI::MouseEvent& event)
 {
     if (event.button() != GUI::MouseButton::Left)
         return;
-    const TreeMapNode* node = path_node(m_viewpoint);
+    TreeMapNode const* node = path_node(m_viewpoint);
     if (node && !node_is_leaf(*node)) {
         Vector<int> path = path_to_position(event.position());
         m_path.shrink(m_viewpoint);

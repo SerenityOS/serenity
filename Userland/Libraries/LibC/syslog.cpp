@@ -36,7 +36,7 @@ static bool program_name_set = false;
 
 // Convenience function for initialization and checking what string to use
 // for the program name.
-static const char* get_syslog_ident(struct syslog_data* data)
+static char const* get_syslog_ident(struct syslog_data* data)
 {
     if (!program_name_set && data->ident == nullptr)
         program_name_set = get_process_name(program_name_buffer, sizeof(program_name_buffer)) >= 0;
@@ -49,7 +49,7 @@ static const char* get_syslog_ident(struct syslog_data* data)
     VERIFY_NOT_REACHED();
 }
 
-void openlog_r(const char* ident, int logopt, int facility, struct syslog_data* data)
+void openlog_r(char const* ident, int logopt, int facility, struct syslog_data* data)
 {
     data->ident = ident;
     data->logopt = logopt;
@@ -59,7 +59,7 @@ void openlog_r(const char* ident, int logopt, int facility, struct syslog_data* 
     // would be where we connect to a daemon
 }
 
-void openlog(const char* ident, int logopt, int facility)
+void openlog(char const* ident, int logopt, int facility)
 {
     openlog_r(ident, logopt, facility, &global_log_data);
 }
@@ -92,7 +92,7 @@ int setlogmask(int maskpri)
     return setlogmask_r(maskpri, &global_log_data);
 }
 
-void syslog_r(int priority, struct syslog_data* data, const char* message, ...)
+void syslog_r(int priority, struct syslog_data* data, char const* message, ...)
 {
     va_list ap;
     va_start(ap, message);
@@ -100,7 +100,7 @@ void syslog_r(int priority, struct syslog_data* data, const char* message, ...)
     va_end(ap);
 }
 
-void syslog(int priority, const char* message, ...)
+void syslog(int priority, char const* message, ...)
 {
     va_list ap;
     va_start(ap, message);
@@ -108,7 +108,7 @@ void syslog(int priority, const char* message, ...)
     va_end(ap);
 }
 
-void vsyslog_r(int priority, struct syslog_data* data, const char* message, va_list args)
+void vsyslog_r(int priority, struct syslog_data* data, char const* message, va_list args)
 {
     StringBuilder combined;
 
@@ -132,7 +132,7 @@ void vsyslog_r(int priority, struct syslog_data* data, const char* message, va_l
         fputs(combined_string.characters(), stderr);
 }
 
-void vsyslog(int priority, const char* message, va_list args)
+void vsyslog(int priority, char const* message, va_list args)
 {
     vsyslog_r(priority, &global_log_data, message, args);
 }

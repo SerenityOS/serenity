@@ -10,7 +10,7 @@
 
 namespace JS {
 
-NativeFunction* NativeFunction::create(GlobalObject& global_object, const FlyString& name, Function<Value(VM&, GlobalObject&)> function)
+NativeFunction* NativeFunction::create(GlobalObject& global_object, FlyString const& name, Function<Value(VM&, GlobalObject&)> function)
 {
     return global_object.heap().allocate<NativeFunction>(global_object, name, move(function), *global_object.function_prototype());
 }

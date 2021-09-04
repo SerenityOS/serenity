@@ -33,17 +33,17 @@ static u8 parse_hex_digit(char nibble)
     return 10 + (nibble - 'a');
 }
 
-FlatPtr address_for_kernel_symbol(const StringView& name)
+FlatPtr address_for_kernel_symbol(StringView const& name)
 {
     for (size_t i = 0; i < s_symbol_count; ++i) {
-        const auto& symbol = s_symbols[i];
+        auto const& symbol = s_symbols[i];
         if (name == symbol.name)
             return symbol.address;
     }
     return 0;
 }
 
-const KernelSymbol* symbolicate_kernel_address(FlatPtr address)
+KernelSymbol const* symbolicate_kernel_address(FlatPtr address)
 {
     if (address < g_lowest_kernel_symbol_address || address > g_highest_kernel_symbol_address)
         return nullptr;
@@ -59,7 +59,7 @@ UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(ReadonlyBytes const& 
     g_lowest_kernel_symbol_address = 0xffffffff;
     g_highest_kernel_symbol_address = 0;
 
-    auto* bufptr = (const char*)buffer.data();
+    auto* bufptr = (char const*)buffer.data();
     auto* start_of_name = bufptr;
     FlatPtr address = 0;
 
@@ -118,7 +118,7 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksym
 
     struct RecognizedSymbol {
         FlatPtr address;
-        const KernelSymbol* symbol { nullptr };
+        KernelSymbol const* symbol { nullptr };
     };
     constexpr size_t max_recognized_symbol_count = 256;
     RecognizedSymbol recognized_symbols[max_recognized_symbol_count];

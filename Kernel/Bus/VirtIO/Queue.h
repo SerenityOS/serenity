@@ -54,7 +54,7 @@ public:
 private:
     void reclaim_buffer_chain(u16 chain_start_index, u16 chain_end_index, size_t length_of_chain);
 
-    PhysicalAddress to_physical(const void* ptr) const
+    PhysicalAddress to_physical(void const* ptr) const
     {
         auto offset = FlatPtr(ptr) - m_queue_region->vaddr().get();
         return m_queue_region->physical_page(0)->paddr().offset(offset);

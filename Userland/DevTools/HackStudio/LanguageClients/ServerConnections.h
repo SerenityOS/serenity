@@ -17,10 +17,10 @@
     class ServerConnection final : public HackStudio::ServerConnection {                       \
         C_OBJECT(ServerConnection)                                                             \
     public:                                                                                    \
-        static const char* language_name() { return #language_name_; }                         \
+        static char const* language_name() { return #language_name_; }                         \
                                                                                                \
     private:                                                                                   \
-        ServerConnection(const String& project_path)                                           \
+        ServerConnection(String const& project_path)                                           \
             : HackStudio::ServerConnection("/tmp/portal/language/" #socket_name, project_path) \
         {                                                                                      \
         }                                                                                      \

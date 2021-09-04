@@ -22,7 +22,7 @@ public:
 
     bool is_valid() const { return m_bitmap; }
 
-    const Bitmap* bitmap() const { return m_bitmap; }
+    Bitmap const* bitmap() const { return m_bitmap; }
     Bitmap* bitmap() { return m_bitmap; }
 
 private:

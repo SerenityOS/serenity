@@ -91,7 +91,7 @@ int DOMTreeModel::column_count(const GUI::ModelIndex&) const
     return 1;
 }
 
-static String with_whitespace_collapsed(const StringView& string)
+static String with_whitespace_collapsed(StringView const& string)
 {
     StringBuilder builder;
     for (size_t i = 0; i < string.length(); ++i) {

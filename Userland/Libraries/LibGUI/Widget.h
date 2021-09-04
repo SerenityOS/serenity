@@ -59,7 +59,7 @@ public:
     virtual ~Widget() override;
 
     Layout* layout() { return m_layout.ptr(); }
-    const Layout* layout() const { return m_layout.ptr(); }
+    Layout const* layout() const { return m_layout.ptr(); }
     void set_layout(NonnullRefPtr<Layout>);
 
     template<class T, class... Args>
@@ -150,7 +150,7 @@ public:
     bool has_focus_within() const;
 
     Widget* focus_proxy() { return m_focus_proxy; }
-    const Widget* focus_proxy() const { return m_focus_proxy; }
+    Widget const* focus_proxy() const { return m_focus_proxy; }
     void set_focus_proxy(Widget*);
 
     void set_focus_policy(FocusPolicy policy);
@@ -198,7 +198,7 @@ public:
         return m_window;
     }
 
-    const Window* window() const
+    Window const* window() const
     {
         if (auto* pw = parent_widget())
             return pw->window();
@@ -208,7 +208,7 @@ public:
     void set_window(Window*);
 
     Widget* parent_widget();
-    const Widget* parent_widget() const;
+    Widget const* parent_widget() const;
 
     void set_fill_with_background_color(bool b) { m_fill_with_background_color = b; }
     bool fill_with_background_color() const { return m_fill_with_background_color; }
@@ -218,7 +218,7 @@ public:
     void set_font(const Gfx::Font*);
     void set_font(const Gfx::Font& font) { set_font(&font); }
 
-    void set_font_family(const String&);
+    void set_font_family(String const&);
     void set_font_size(unsigned);
     void set_font_weight(unsigned);
     void set_font_fixed_width(bool);
@@ -243,7 +243,7 @@ public:
     bool is_frontmost() const;
     bool is_backmost() const;
 
-    Action* action_for_key_event(const KeyEvent&);
+    Action* action_for_key_event(KeyEvent const&);
 
     template<typename Callback>
     void for_each_child_widget(Callback callback)
@@ -262,8 +262,8 @@ public:
     Gfx::Palette palette() const;
     void set_palette(const Gfx::Palette&);
 
-    const Margins& content_margins() const { return m_content_margins; }
-    void set_content_margins(const Margins&);
+    Margins const& content_margins() const { return m_content_margins; }
+    void set_content_margins(Margins const&);
 
     Gfx::IntRect content_rect() const;
 
@@ -275,8 +275,8 @@ public:
     Gfx::StandardCursor override_cursor() const { return m_override_cursor; }
     void set_override_cursor(Gfx::StandardCursor);
 
-    bool load_from_gml(const StringView&);
-    bool load_from_gml(const StringView&, RefPtr<Core::Object> (*unregistered_child_handler)(const String&));
+    bool load_from_gml(StringView const&);
+    bool load_from_gml(StringView const&, RefPtr<Core::Object> (*unregistered_child_handler)(String const&));
 
     void set_shrink_to_fit(bool);
     bool is_shrink_to_fit() const { return m_shrink_to_fit; }
@@ -338,7 +338,7 @@ private:
     void focus_previous_widget(FocusSource, bool siblings_only);
     void focus_next_widget(FocusSource, bool siblings_only);
 
-    virtual bool load_from_json(const JsonObject&, RefPtr<Core::Object> (*unregistered_child_handler)(const String&)) override;
+    virtual bool load_from_json(JsonObject const&, RefPtr<Core::Object> (*unregistered_child_handler)(String const&)) override;
 
     // HACK: These are used as property getters for the fixed_* size property aliases.
     int dummy_fixed_width() { return 0; }
@@ -382,7 +382,7 @@ inline Widget* Widget::parent_widget()
         return &verify_cast<Widget>(*parent());
     return nullptr;
 }
-inline const Widget* Widget::parent_widget() const
+inline Widget const* Widget::parent_widget() const
 {
     if (parent() && is<Widget>(*parent()))
         return &verify_cast<const Widget>(*parent());

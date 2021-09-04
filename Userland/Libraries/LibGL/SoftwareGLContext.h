@@ -33,14 +33,14 @@ public:
     virtual void gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) override;
     virtual void gl_clear_depth(GLdouble depth) override;
     virtual void gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a) override;
-    virtual void gl_delete_textures(GLsizei n, const GLuint* textures) override;
+    virtual void gl_delete_textures(GLsizei n, GLuint const* textures) override;
     virtual void gl_end() override;
     virtual void gl_frustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) override;
     virtual void gl_gen_textures(GLsizei n, GLuint* textures) override;
     virtual GLenum gl_get_error() override;
     virtual GLubyte* gl_get_string(GLenum name) override;
     virtual void gl_load_identity() override;
-    virtual void gl_load_matrix(const FloatMatrix4x4& matrix) override;
+    virtual void gl_load_matrix(FloatMatrix4x4 const& matrix) override;
     virtual void gl_matrix_mode(GLenum mode) override;
     virtual void gl_ortho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) override;
     virtual void gl_push_matrix() override;
@@ -68,8 +68,8 @@ public:
     virtual void gl_read_buffer(GLenum mode) override;
     virtual void gl_draw_buffer(GLenum buffer) override;
     virtual void gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels) override;
-    virtual void gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data) override;
-    virtual void gl_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* data) override;
+    virtual void gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLvoid const* data) override;
+    virtual void gl_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid const* data) override;
     virtual void gl_tex_parameter(GLenum target, GLenum pname, GLfloat param) override;
     virtual void gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q) override;
     virtual void gl_tex_env(GLenum target, GLenum pname, GLfloat param) override;
@@ -79,11 +79,11 @@ public:
     virtual void gl_depth_mask(GLboolean flag) override;
     virtual void gl_enable_client_state(GLenum cap) override;
     virtual void gl_disable_client_state(GLenum cap) override;
-    virtual void gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) override;
-    virtual void gl_color_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) override;
-    virtual void gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) override;
+    virtual void gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, void const* pointer) override;
+    virtual void gl_color_pointer(GLint size, GLenum type, GLsizei stride, void const* pointer) override;
+    virtual void gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, void const* pointer) override;
     virtual void gl_draw_arrays(GLenum mode, GLint first, GLsizei count) override;
-    virtual void gl_draw_elements(GLenum mode, GLsizei count, GLenum type, const void* indices) override;
+    virtual void gl_draw_elements(GLenum mode, GLsizei count, GLenum type, void const* indices) override;
     virtual void gl_color_mask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) override;
     virtual void gl_get_booleanv(GLenum pname, GLboolean* data) override;
     virtual void gl_get_integerv(GLenum pname, GLint* data) override;
@@ -253,7 +253,7 @@ private:
         GLint size { 4 };
         GLenum type { GL_FLOAT };
         GLsizei stride { 0 };
-        const void* pointer { 0 };
+        void const* pointer { 0 };
     };
 
     static void read_from_vertex_attribute_pointer(VertexAttribPointer const&, int index, float* elements, bool normalize);

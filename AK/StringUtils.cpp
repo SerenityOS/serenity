@@ -19,7 +19,7 @@ namespace AK {
 
 namespace StringUtils {
 
-bool matches(const StringView& str, const StringView& mask, CaseSensitivity case_sensitivity, Vector<MaskSpan>* match_spans)
+bool matches(StringView const& str, StringView const& mask, CaseSensitivity case_sensitivity, Vector<MaskSpan>* match_spans)
 {
     auto record_span = [&match_spans](size_t start, size_t length) {
         if (match_spans)
@@ -34,11 +34,11 @@ bool matches(const StringView& str, const StringView& mask, CaseSensitivity case
         return true;
     }
 
-    const char* string_ptr = str.characters_without_null_termination();
-    const char* string_start = str.characters_without_null_termination();
-    const char* string_end = string_ptr + str.length();
-    const char* mask_ptr = mask.characters_without_null_termination();
-    const char* mask_end = mask_ptr + mask.length();
+    char const* string_ptr = str.characters_without_null_termination();
+    char const* string_start = str.characters_without_null_termination();
+    char const* string_end = string_ptr + str.length();
+    char const* mask_ptr = mask.characters_without_null_termination();
+    char const* mask_end = mask_ptr + mask.length();
 
     auto matches_one = [](char ch, char p, CaseSensitivity case_sensitivity) {
         if (p == '?')
@@ -86,7 +86,7 @@ bool matches(const StringView& str, const StringView& mask, CaseSensitivity case
 }
 
 template<typename T>
-Optional<T> convert_to_int(const StringView& str, TrimWhitespace trim_whitespace)
+Optional<T> convert_to_int(StringView const& str, TrimWhitespace trim_whitespace)
 {
     auto string = trim_whitespace == TrimWhitespace::Yes
         ? str.trim_whitespace()
@@ -120,13 +120,13 @@ Optional<T> convert_to_int(const StringView& str, TrimWhitespace trim_whitespace
     return value;
 }
 
-template Optional<i8> convert_to_int(const StringView& str, TrimWhitespace);
-template Optional<i16> convert_to_int(const StringView& str, TrimWhitespace);
-template Optional<i32> convert_to_int(const StringView& str, TrimWhitespace);
-template Optional<i64> convert_to_int(const StringView& str, TrimWhitespace);
+template Optional<i8> convert_to_int(StringView const& str, TrimWhitespace);
+template Optional<i16> convert_to_int(StringView const& str, TrimWhitespace);
+template Optional<i32> convert_to_int(StringView const& str, TrimWhitespace);
+template Optional<i64> convert_to_int(StringView const& str, TrimWhitespace);
 
 template<typename T>
-Optional<T> convert_to_uint(const StringView& str, TrimWhitespace trim_whitespace)
+Optional<T> convert_to_uint(StringView const& str, TrimWhitespace trim_whitespace)
 {
     auto string = trim_whitespace == TrimWhitespace::Yes
         ? str.trim_whitespace()
@@ -150,15 +150,15 @@ Optional<T> convert_to_uint(const StringView& str, TrimWhitespace trim_whitespac
     return value;
 }
 
-template Optional<u8> convert_to_uint(const StringView& str, TrimWhitespace);
-template Optional<u16> convert_to_uint(const StringView& str, TrimWhitespace);
-template Optional<u32> convert_to_uint(const StringView& str, TrimWhitespace);
-template Optional<u64> convert_to_uint(const StringView& str, TrimWhitespace);
-template Optional<long> convert_to_uint(const StringView& str, TrimWhitespace);
-template Optional<long long> convert_to_uint(const StringView& str, TrimWhitespace);
+template Optional<u8> convert_to_uint(StringView const& str, TrimWhitespace);
+template Optional<u16> convert_to_uint(StringView const& str, TrimWhitespace);
+template Optional<u32> convert_to_uint(StringView const& str, TrimWhitespace);
+template Optional<u64> convert_to_uint(StringView const& str, TrimWhitespace);
+template Optional<long> convert_to_uint(StringView const& str, TrimWhitespace);
+template Optional<long long> convert_to_uint(StringView const& str, TrimWhitespace);
 
 template<typename T>
-Optional<T> convert_to_uint_from_hex(const StringView& str, TrimWhitespace trim_whitespace)
+Optional<T> convert_to_uint_from_hex(StringView const& str, TrimWhitespace trim_whitespace)
 {
     auto string = trim_whitespace == TrimWhitespace::Yes
         ? str.trim_whitespace()
@@ -191,12 +191,12 @@ Optional<T> convert_to_uint_from_hex(const StringView& str, TrimWhitespace trim_
     return value;
 }
 
-template Optional<u8> convert_to_uint_from_hex(const StringView& str, TrimWhitespace);
-template Optional<u16> convert_to_uint_from_hex(const StringView& str, TrimWhitespace);
-template Optional<u32> convert_to_uint_from_hex(const StringView& str, TrimWhitespace);
-template Optional<u64> convert_to_uint_from_hex(const StringView& str, TrimWhitespace);
+template Optional<u8> convert_to_uint_from_hex(StringView const& str, TrimWhitespace);
+template Optional<u16> convert_to_uint_from_hex(StringView const& str, TrimWhitespace);
+template Optional<u32> convert_to_uint_from_hex(StringView const& str, TrimWhitespace);
+template Optional<u64> convert_to_uint_from_hex(StringView const& str, TrimWhitespace);
 
-bool equals_ignoring_case(const StringView& a, const StringView& b)
+bool equals_ignoring_case(StringView const& a, StringView const& b)
 {
     if (a.length() != b.length())
         return false;
@@ -207,7 +207,7 @@ bool equals_ignoring_case(const StringView& a, const StringView& b)
     return true;
 }
 
-bool ends_with(const StringView& str, const StringView& end, CaseSensitivity case_sensitivity)
+bool ends_with(StringView const& str, StringView const& end, CaseSensitivity case_sensitivity)
 {
     if (end.is_empty())
         return true;
@@ -230,7 +230,7 @@ bool ends_with(const StringView& str, const StringView& end, CaseSensitivity cas
     return true;
 }
 
-bool starts_with(const StringView& str, const StringView& start, CaseSensitivity case_sensitivity)
+bool starts_with(StringView const& str, StringView const& start, CaseSensitivity case_sensitivity)
 {
     if (start.is_empty())
         return true;
@@ -255,7 +255,7 @@ bool starts_with(const StringView& str, const StringView& start, CaseSensitivity
     return true;
 }
 
-bool contains(const StringView& str, const StringView& needle, CaseSensitivity case_sensitivity)
+bool contains(StringView const& str, StringView const& needle, CaseSensitivity case_sensitivity)
 {
     if (str.is_null() || needle.is_null() || str.is_empty() || needle.length() > str.length())
         return false;
@@ -282,12 +282,12 @@ bool contains(const StringView& str, const StringView& needle, CaseSensitivity c
     return false;
 }
 
-bool is_whitespace(const StringView& str)
+bool is_whitespace(StringView const& str)
 {
     return all_of(str, is_ascii_space);
 }
 
-StringView trim(const StringView& str, const StringView& characters, TrimMode mode)
+StringView trim(StringView const& str, StringView const& characters, TrimMode mode)
 {
     size_t substring_start = 0;
     size_t substring_length = str.length();
@@ -316,7 +316,7 @@ StringView trim(const StringView& str, const StringView& characters, TrimMode mo
     return str.substring_view(substring_start, substring_length);
 }
 
-StringView trim_whitespace(const StringView& str, TrimMode mode)
+StringView trim_whitespace(StringView const& str, TrimMode mode)
 {
     return trim(str, " \n\t\v\f\r", mode);
 }
@@ -385,7 +385,7 @@ Optional<size_t> find_any_of(StringView const& haystack, StringView const& needl
     return {};
 }
 
-String to_snakecase(const StringView& str)
+String to_snakecase(StringView const& str)
 {
     auto should_insert_underscore = [&](auto i, auto current_char) {
         if (i == 0)

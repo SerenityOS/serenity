@@ -298,7 +298,7 @@ Region* AddressSpace::add_region(NonnullOwnPtr<Region> region)
 }
 
 // Carve out a virtual address range from a region and return the two regions on either side
-KResultOr<Vector<Region*, 2>> AddressSpace::try_split_region_around_range(const Region& source_region, VirtualRange const& desired_range)
+KResultOr<Vector<Region*, 2>> AddressSpace::try_split_region_around_range(Region const& source_region, VirtualRange const& desired_range)
 {
     VirtualRange old_region_range = source_region.range();
     auto remaining_ranges_after_unmap = old_region_range.carve(desired_range);
@@ -369,10 +369,10 @@ size_t AddressSpace::amount_dirty_private() const
 size_t AddressSpace::amount_clean_inode() const
 {
     SpinlockLocker lock(m_lock);
-    HashTable<const InodeVMObject*> vmobjects;
+    HashTable<InodeVMObject const*> vmobjects;
     for (auto& region : m_regions) {
         if (region->vmobject().is_inode())
-            vmobjects.set(&static_cast<const InodeVMObject&>(region->vmobject()));
+            vmobjects.set(&static_cast<InodeVMObject const&>(region->vmobject()));
     }
     size_t amount = 0;
     for (auto& vmobject : vmobjects)

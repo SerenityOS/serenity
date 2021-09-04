@@ -33,7 +33,7 @@ public:
 
     size_t byte_length() const { return buffer_impl().size(); }
     ByteBuffer& buffer() { return buffer_impl(); }
-    const ByteBuffer& buffer() const { return buffer_impl(); }
+    ByteBuffer const& buffer() const { return buffer_impl(); }
 
     Value detach_key() const { return m_detach_key; }
     void set_detach_key(Value detach_key) { m_detach_key = detach_key; }
@@ -62,7 +62,7 @@ private:
         return *ptr;
     }
 
-    const ByteBuffer& buffer_impl() const { return const_cast<ArrayBuffer*>(this)->buffer_impl(); }
+    ByteBuffer const& buffer_impl() const { return const_cast<ArrayBuffer*>(this)->buffer_impl(); }
 
     Variant<Empty, ByteBuffer, ByteBuffer*> m_buffer;
     // The various detach related members of ArrayBuffer are not used by any ECMA262 functionality,

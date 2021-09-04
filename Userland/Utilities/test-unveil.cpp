@@ -14,7 +14,7 @@
 int main(int argc, char** argv)
 {
     Vector<StringView> paths_to_test;
-    const char* permissions = "r";
+    char const* permissions = "r";
     bool should_sleep = false;
 
     Core::ArgsParser parser;

@@ -66,7 +66,7 @@ struct passwd* getpwuid(uid_t uid)
     return nullptr;
 }
 
-struct passwd* getpwnam(const char* name)
+struct passwd* getpwnam(char const* name)
 {
     setpwent();
     while (auto* pw = getpwent()) {
@@ -76,7 +76,7 @@ struct passwd* getpwnam(const char* name)
     return nullptr;
 }
 
-static bool parse_pwddb_entry(const String& line)
+static bool parse_pwddb_entry(String const& line)
 {
     auto parts = line.split_view(':', true);
     if (parts.size() != 7) {
@@ -168,7 +168,7 @@ static void construct_pwd(struct passwd* pwd, char* buf, struct passwd** result)
     pwd->pw_shell = buf_shell;
 }
 
-int getpwnam_r(const char* name, struct passwd* pwd, char* buf, size_t buflen, struct passwd** result)
+int getpwnam_r(char const* name, struct passwd* pwd, char* buf, size_t buflen, struct passwd** result)
 {
     // FIXME: This is a HACK!
     TemporaryChange name_change { s_name, {} };
@@ -237,7 +237,7 @@ int putpwent(const struct passwd* p, FILE* stream)
         return -1;
     }
 
-    auto is_valid_field = [](const char* str) {
+    auto is_valid_field = [](char const* str) {
         return str && !strpbrk(str, ":\n");
     };
 

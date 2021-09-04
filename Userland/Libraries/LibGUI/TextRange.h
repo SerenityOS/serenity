@@ -13,7 +13,7 @@ namespace GUI {
 class TextRange {
 public:
     TextRange() { }
-    TextRange(const TextPosition& start, const TextPosition& end)
+    TextRange(TextPosition const& start, TextPosition const& end)
         : m_start(start)
         , m_end(end)
     {
@@ -28,26 +28,26 @@ public:
 
     TextPosition& start() { return m_start; }
     TextPosition& end() { return m_end; }
-    const TextPosition& start() const { return m_start; }
-    const TextPosition& end() const { return m_end; }
+    TextPosition const& start() const { return m_start; }
+    TextPosition const& end() const { return m_end; }
 
     TextRange normalized() const { return TextRange(normalized_start(), normalized_end()); }
 
-    void set_start(const TextPosition& position) { m_start = position; }
-    void set_end(const TextPosition& position) { m_end = position; }
+    void set_start(TextPosition const& position) { m_start = position; }
+    void set_end(TextPosition const& position) { m_end = position; }
 
-    void set(const TextPosition& start, const TextPosition& end)
+    void set(TextPosition const& start, TextPosition const& end)
     {
         m_start = start;
         m_end = end;
     }
 
-    bool operator==(const TextRange& other) const
+    bool operator==(TextRange const& other) const
     {
         return m_start == other.m_start && m_end == other.m_end;
     }
 
-    bool contains(const TextPosition& position) const
+    bool contains(TextPosition const& position) const
     {
         if (!(position.line() > m_start.line() || (position.line() == m_start.line() && position.column() >= m_start.column())))
             return false;

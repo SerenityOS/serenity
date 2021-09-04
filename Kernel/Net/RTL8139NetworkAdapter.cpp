@@ -152,7 +152,7 @@ UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address addre
     reset();
 
     read_mac_address();
-    const auto& mac = mac_address();
+    auto const& mac = mac_address();
     dmesgln("RTL8139: MAC address: {}", mac.to_string());
 
     enable_irq();
@@ -162,7 +162,7 @@ UNMAP_AFTER_INIT RTL8139NetworkAdapter::~RTL8139NetworkAdapter()
 {
 }
 
-bool RTL8139NetworkAdapter::handle_irq(const RegisterState&)
+bool RTL8139NetworkAdapter::handle_irq(RegisterState const&)
 {
     bool was_handled = false;
     for (;;) {
@@ -322,8 +322,8 @@ void RTL8139NetworkAdapter::receive()
 {
     auto* start_of_packet = m_rx_buffer->vaddr().as_ptr() + m_rx_buffer_offset;
 
-    u16 status = *(const u16*)(start_of_packet + 0);
-    u16 length = *(const u16*)(start_of_packet + 2);
+    u16 status = *(u16 const*)(start_of_packet + 0);
+    u16 length = *(u16 const*)(start_of_packet + 2);
 
     dbgln_if(RTL8139_DEBUG, "RTL8139: receive, status={:#04x}, length={}, offset={}", status, length, m_rx_buffer_offset);
 
@@ -336,7 +336,7 @@ void RTL8139NetworkAdapter::receive()
     // we never have to worry about the packet wrapping around the buffer,
     // since we set RXCFG_WRAP_INHIBIT, which allows the rtl8139 to write data
     // past the end of the allotted space.
-    memcpy(m_packet_buffer->vaddr().as_ptr(), (const u8*)(start_of_packet + 4), length - 4);
+    memcpy(m_packet_buffer->vaddr().as_ptr(), (u8 const*)(start_of_packet + 4), length - 4);
     // let the card know that we've read this data
     m_rx_buffer_offset = ((m_rx_buffer_offset + length + 4 + 3) & ~3) % RX_BUFFER_SIZE;
     out16(REG_CAPR, m_rx_buffer_offset - 0x10);

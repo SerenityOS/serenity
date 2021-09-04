@@ -32,7 +32,7 @@ ResourceLoader::ResourceLoader()
 {
 }
 
-void ResourceLoader::load_sync(const LoadRequest& request, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
+void ResourceLoader::load_sync(LoadRequest const& request, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback)
 {
     Core::EventLoop loop;
 
@@ -53,7 +53,7 @@ void ResourceLoader::load_sync(const LoadRequest& request, Function<void(Readonl
 
 static HashMap<LoadRequest, NonnullRefPtr<Resource>> s_resource_cache;
 
-RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, const LoadRequest& request)
+RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, LoadRequest const& request)
 {
     if (!request.is_valid())
         return nullptr;
@@ -89,7 +89,7 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, const LoadRe
     return resource;
 }
 
-void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
+void ResourceLoader::load(LoadRequest const& request, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback)
 {
     auto& url = request.url();
 
@@ -191,7 +191,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
         error_callback(String::formatted("Protocol not implemented: {}", url.protocol()), {});
 }
 
-void ResourceLoader::load(const URL& url, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
+void ResourceLoader::load(URL const& url, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback)
 {
     LoadRequest request;
     request.set_url(url);

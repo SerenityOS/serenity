@@ -26,7 +26,7 @@ class DebugInfoWidget final : public GUI::Widget {
 public:
     virtual ~DebugInfoWidget() override { }
 
-    void update_state(const Debug::DebugSession&, const PtraceRegisters&);
+    void update_state(const Debug::DebugSession&, PtraceRegisters const&);
     void program_stopped();
     void set_debug_actions_enabled(bool enabled);
 

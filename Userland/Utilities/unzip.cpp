@@ -73,7 +73,7 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
 
 int main(int argc, char** argv)
 {
-    const char* path;
+    char const* path;
     int map_size_limit = 32 * MiB;
     bool quiet { false };
     String output_directory_path;

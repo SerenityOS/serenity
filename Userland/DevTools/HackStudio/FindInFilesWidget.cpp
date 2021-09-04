@@ -89,7 +89,7 @@ private:
     Vector<Match> m_matches;
 };
 
-static RefPtr<SearchResultsModel> find_in_files(const StringView& text)
+static RefPtr<SearchResultsModel> find_in_files(StringView const& text)
 {
     Vector<Match> matches;
     project().for_each_text_file([&](auto& file) {
@@ -128,7 +128,7 @@ FindInFilesWidget::FindInFilesWidget()
     m_result_view = add<GUI::TableView>();
 
     m_result_view->on_activation = [](auto& index) {
-        auto& match = *(const Match*)index.internal_data();
+        auto& match = *(Match const*)index.internal_data();
         open_file(match.filename);
         current_editor().set_selection(match.range);
         current_editor().set_focus(true);

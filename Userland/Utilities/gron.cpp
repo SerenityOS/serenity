@@ -15,15 +15,15 @@
 #include <unistd.h>
 
 static bool use_color = false;
-static void print(const String& name, const JsonValue&, Vector<String>& trail);
+static void print(String const& name, JsonValue const&, Vector<String>& trail);
 
-static const char* color_name = "";
-static const char* color_index = "";
-static const char* color_brace = "";
-static const char* color_bool = "";
-static const char* color_null = "";
-static const char* color_string = "";
-static const char* color_off = "";
+static char const* color_name = "";
+static char const* color_index = "";
+static char const* color_brace = "";
+static char const* color_bool = "";
+static char const* color_null = "";
+static char const* color_string = "";
+static char const* color_off = "";
 
 int main(int argc, char** argv)
 {
@@ -43,7 +43,7 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Print each value in a JSON file with its fully expanded key.");
 
-    const char* path = nullptr;
+    char const* path = nullptr;
     args_parser.add_positional_argument(path, "Input", "input", Core::ArgsParser::Required::No);
 
     args_parser.parse(argc, argv);
@@ -93,7 +93,7 @@ int main(int argc, char** argv)
     return 0;
 }
 
-static void print(const String& name, const JsonValue& value, Vector<String>& trail)
+static void print(String const& name, JsonValue const& value, Vector<String>& trail)
 {
     for (size_t i = 0; i < trail.size(); ++i)
         out("{}", trail[i]);

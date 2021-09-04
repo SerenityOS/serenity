@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static Optional<double> convert_to_double(const char* s)
+static Optional<double> convert_to_double(char const* s)
 {
     char* p;
     double v = strtod(s, &p);
@@ -100,7 +100,7 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
         }
         VERIFY(found_option);
 
-        const char* arg = found_option->requires_argument ? optarg : nullptr;
+        char const* arg = found_option->requires_argument ? optarg : nullptr;
         if (!found_option->accept_value(arg)) {
             warnln("\033[31mInvalid value for option \033[1m{}\033[22m\033[0m", found_option->name_for_display());
             fail();
@@ -160,7 +160,7 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
     for (size_t i = 0; i < m_positional_args.size(); i++) {
         auto& arg = m_positional_args[i];
         for (int j = 0; j < num_values_for_arg[i]; j++) {
-            const char* value = argv[optind++];
+            char const* value = argv[optind++];
             if (!arg.accept_value(value)) {
                 warnln("Invalid value for argument {}", arg.name);
                 fail();
@@ -172,7 +172,7 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
     return true;
 }
 
-void ArgsParser::print_usage(FILE* file, const char* argv0)
+void ArgsParser::print_usage(FILE* file, char const* argv0)
 {
     out(file, "Usage:\n\t\033[1m{}\033[0m", argv0);
 
@@ -253,7 +253,7 @@ void ArgsParser::add_option(Option&& option)
     m_options.append(move(option));
 }
 
-void ArgsParser::add_option(bool& value, const char* help_string, const char* long_name, char short_name)
+void ArgsParser::add_option(bool& value, char const* help_string, char const* long_name, char short_name)
 {
     Option option {
         false,
@@ -261,7 +261,7 @@ void ArgsParser::add_option(bool& value, const char* help_string, const char* lo
         long_name,
         short_name,
         nullptr,
-        [&value](const char* s) {
+        [&value](char const* s) {
             VERIFY(s == nullptr);
             value = true;
             return true;
@@ -270,7 +270,7 @@ void ArgsParser::add_option(bool& value, const char* help_string, const char* lo
     add_option(move(option));
 }
 
-void ArgsParser::add_option(const char*& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+void ArgsParser::add_option(char const*& value, char const* help_string, char const* long_name, char short_name, char const* value_name)
 {
     Option option {
         true,
@@ -278,7 +278,7 @@ void ArgsParser::add_option(const char*& value, const char* help_string, const c
         long_name,
         short_name,
         value_name,
-        [&value](const char* s) {
+        [&value](char const* s) {
             value = s;
             return true;
         }
@@ -286,7 +286,7 @@ void ArgsParser::add_option(const char*& value, const char* help_string, const c
     add_option(move(option));
 }
 
-void ArgsParser::add_option(String& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+void ArgsParser::add_option(String& value, char const* help_string, char const* long_name, char short_name, char const* value_name)
 {
     Option option {
         true,
@@ -294,7 +294,7 @@ void ArgsParser::add_option(String& value, const char* help_string, const char* 
         long_name,
         short_name,
         value_name,
-        [&value](const char* s) {
+        [&value](char const* s) {
             value = s;
             return true;
         }
@@ -310,7 +310,7 @@ void ArgsParser::add_option(StringView& value, char const* help_string, char con
         long_name,
         short_name,
         value_name,
-        [&value](const char* s) {
+        [&value](char const* s) {
             value = s;
             return true;
         }
@@ -318,7 +318,7 @@ void ArgsParser::add_option(StringView& value, char const* help_string, char con
     add_option(move(option));
 }
 
-void ArgsParser::add_option(int& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+void ArgsParser::add_option(int& value, char const* help_string, char const* long_name, char short_name, char const* value_name)
 {
     Option option {
         true,
@@ -326,7 +326,7 @@ void ArgsParser::add_option(int& value, const char* help_string, const char* lon
         long_name,
         short_name,
         value_name,
-        [&value](const char* s) {
+        [&value](char const* s) {
             auto opt = StringView(s).to_int();
             value = opt.value_or(0);
             return opt.has_value();
@@ -335,7 +335,7 @@ void ArgsParser::add_option(int& value, const char* help_string, const char* lon
     add_option(move(option));
 }
 
-void ArgsParser::add_option(unsigned& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+void ArgsParser::add_option(unsigned& value, char const* help_string, char const* long_name, char short_name, char const* value_name)
 {
     Option option {
         true,
@@ -343,7 +343,7 @@ void ArgsParser::add_option(unsigned& value, const char* help_string, const char
         long_name,
         short_name,
         value_name,
-        [&value](const char* s) {
+        [&value](char const* s) {
             auto opt = StringView(s).to_uint();
             value = opt.value_or(0);
             return opt.has_value();
@@ -352,7 +352,7 @@ void ArgsParser::add_option(unsigned& value, const char* help_string, const char
     add_option(move(option));
 }
 
-void ArgsParser::add_option(double& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+void ArgsParser::add_option(double& value, char const* help_string, char const* long_name, char short_name, char const* value_name)
 {
     Option option {
         true,
@@ -360,7 +360,7 @@ void ArgsParser::add_option(double& value, const char* help_string, const char* 
         long_name,
         short_name,
         value_name,
-        [&value](const char* s) {
+        [&value](char const* s) {
             auto opt = convert_to_double(s);
             value = opt.value_or(0.0);
             return opt.has_value();
@@ -374,14 +374,14 @@ void ArgsParser::add_positional_argument(Arg&& arg)
     m_positional_args.append(move(arg));
 }
 
-void ArgsParser::add_positional_argument(const char*& value, const char* help_string, const char* name, Required required)
+void ArgsParser::add_positional_argument(char const*& value, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
         name,
         required == Required::Yes ? 1 : 0,
         1,
-        [&value](const char* s) {
+        [&value](char const* s) {
             value = s;
             return true;
         }
@@ -389,14 +389,14 @@ void ArgsParser::add_positional_argument(const char*& value, const char* help_st
     add_positional_argument(move(arg));
 }
 
-void ArgsParser::add_positional_argument(String& value, const char* help_string, const char* name, Required required)
+void ArgsParser::add_positional_argument(String& value, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
         name,
         required == Required::Yes ? 1 : 0,
         1,
-        [&value](const char* s) {
+        [&value](char const* s) {
             value = s;
             return true;
         }
@@ -411,7 +411,7 @@ void ArgsParser::add_positional_argument(StringView& value, char const* help_str
         name,
         required == Required::Yes ? 1 : 0,
         1,
-        [&value](const char* s) {
+        [&value](char const* s) {
             value = s;
             return true;
         }
@@ -419,14 +419,14 @@ void ArgsParser::add_positional_argument(StringView& value, char const* help_str
     add_positional_argument(move(arg));
 }
 
-void ArgsParser::add_positional_argument(int& value, const char* help_string, const char* name, Required required)
+void ArgsParser::add_positional_argument(int& value, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
         name,
         required == Required::Yes ? 1 : 0,
         1,
-        [&value](const char* s) {
+        [&value](char const* s) {
             auto opt = StringView(s).to_int();
             value = opt.value_or(0);
             return opt.has_value();
@@ -435,14 +435,14 @@ void ArgsParser::add_positional_argument(int& value, const char* help_string, co
     add_positional_argument(move(arg));
 }
 
-void ArgsParser::add_positional_argument(unsigned& value, const char* help_string, const char* name, Required required)
+void ArgsParser::add_positional_argument(unsigned& value, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
         name,
         required == Required::Yes ? 1 : 0,
         1,
-        [&value](const char* s) {
+        [&value](char const* s) {
             auto opt = StringView(s).to_uint();
             value = opt.value_or(0);
             return opt.has_value();
@@ -451,14 +451,14 @@ void ArgsParser::add_positional_argument(unsigned& value, const char* help_strin
     add_positional_argument(move(arg));
 }
 
-void ArgsParser::add_positional_argument(double& value, const char* help_string, const char* name, Required required)
+void ArgsParser::add_positional_argument(double& value, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
         name,
         required == Required::Yes ? 1 : 0,
         1,
-        [&value](const char* s) {
+        [&value](char const* s) {
             auto opt = convert_to_double(s);
             value = opt.value_or(0.0);
             return opt.has_value();
@@ -467,14 +467,14 @@ void ArgsParser::add_positional_argument(double& value, const char* help_string,
     add_positional_argument(move(arg));
 }
 
-void ArgsParser::add_positional_argument(Vector<const char*>& values, const char* help_string, const char* name, Required required)
+void ArgsParser::add_positional_argument(Vector<char const*>& values, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
         name,
         required == Required::Yes ? 1 : 0,
         INT_MAX,
-        [&values](const char* s) {
+        [&values](char const* s) {
             values.append(s);
             return true;
         }
@@ -482,14 +482,14 @@ void ArgsParser::add_positional_argument(Vector<const char*>& values, const char
     add_positional_argument(move(arg));
 }
 
-void ArgsParser::add_positional_argument(Vector<String>& values, const char* help_string, const char* name, Required required)
+void ArgsParser::add_positional_argument(Vector<String>& values, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
         name,
         required == Required::Yes ? 1 : 0,
         INT_MAX,
-        [&values](const char* s) {
+        [&values](char const* s) {
             values.append(s);
             return true;
         }

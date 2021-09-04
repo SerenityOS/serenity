@@ -8,7 +8,7 @@
 
 namespace HackStudio {
 
-Language language_from_file_extension(const String& extension)
+Language language_from_file_extension(String const& extension)
 {
     VERIFY(!extension.starts_with("."));
     if (extension == "c" || extension == "cc" || extension == "cxx" || extension == "cpp" || extension == "c++"
@@ -30,7 +30,7 @@ Language language_from_file_extension(const String& extension)
     return Language::Unknown;
 }
 
-Language language_from_name(const String& name)
+Language language_from_name(String const& name)
 {
     if (name == "Cpp")
         return Language::Cpp;
@@ -42,7 +42,7 @@ Language language_from_name(const String& name)
     return Language::Unknown;
 }
 
-String language_name_from_file_extension(const String& extension)
+String language_name_from_file_extension(String const& extension)
 {
     VERIFY(!extension.starts_with("."));
     if (extension == "c" || extension == "cc" || extension == "cxx" || extension == "cpp" || extension == "c++"

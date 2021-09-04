@@ -65,13 +65,13 @@ InspectorWidget::InspectorWidget()
 
     m_dom_tree_view = top_tab_widget.add_tab<GUI::TreeView>("DOM");
     m_dom_tree_view->on_selection_change = [this] {
-        const auto& index = m_dom_tree_view->selection().first();
+        auto const& index = m_dom_tree_view->selection().first();
         set_inspected_node(index);
     };
 
     m_layout_tree_view = top_tab_widget.add_tab<GUI::TreeView>("Layout");
     m_layout_tree_view->on_selection_change = [this] {
-        const auto& index = m_layout_tree_view->selection().first();
+        auto const& index = m_layout_tree_view->selection().first();
         set_inspected_node(index);
     };
 

@@ -39,7 +39,7 @@ public:
 
     String key(const GUI::ModelIndex& index) const { return m_keys[index.row()]; }
 
-    void set_from(const JsonObject& object)
+    void set_from(JsonObject const& object)
     {
         m_keys.clear();
         object.for_each_member([this](auto& name, auto&) {
@@ -88,7 +88,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
                 return;
             }
             auto& doc = doc_option.as_object();
-            const auto& name = url.fragment();
+            auto const& name = url.fragment();
 
             auto* example_data_ptr = doc.get_ptr("example_data");
             if (!example_data_ptr || !example_data_ptr->is_object()) {
@@ -135,7 +135,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     };
 }
 
-String HelpWindow::render(const StringView& key)
+String HelpWindow::render(StringView const& key)
 {
     VERIFY(m_docs.has_object(key));
     auto& doc = m_docs.get(key).as_object();

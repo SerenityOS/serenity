@@ -21,10 +21,10 @@ int main(int argc, char** argv)
 {
     NumberStyle number_style = NumberNonEmptyLines;
     int increment = 1;
-    const char* separator = "  ";
+    char const* separator = "  ";
     int start_number = 1;
     int number_width = 6;
-    Vector<const char*> files;
+    Vector<char const*> files;
 
     Core::ArgsParser args_parser;
 
@@ -34,7 +34,7 @@ int main(int argc, char** argv)
         "body-numbering",
         'b',
         "style",
-        [&number_style](const char* s) {
+        [&number_style](char const* s) {
             if (!strcmp(s, "t"))
                 number_style = NumberNonEmptyLines;
             else if (!strcmp(s, "a"))

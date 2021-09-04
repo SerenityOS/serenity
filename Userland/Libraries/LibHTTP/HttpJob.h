@@ -18,7 +18,7 @@ namespace HTTP {
 class HttpJob final : public Job {
     C_OBJECT(HttpJob)
 public:
-    explicit HttpJob(const HttpRequest& request, OutputStream& output_stream)
+    explicit HttpJob(HttpRequest const& request, OutputStream& output_stream)
         : Job(request, output_stream)
     {
     }

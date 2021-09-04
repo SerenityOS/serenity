@@ -25,7 +25,7 @@ constexpr static auto EP1(u64 x) { return ROTRIGHT(x, 14) ^ ROTRIGHT(x, 18) ^ RO
 constexpr static auto SIGN0(u64 x) { return ROTRIGHT(x, 1) ^ ROTRIGHT(x, 8) ^ (x >> 7); }
 constexpr static auto SIGN1(u64 x) { return ROTRIGHT(x, 19) ^ ROTRIGHT(x, 61) ^ (x >> 6); }
 
-inline void SHA256::transform(const u8* data)
+inline void SHA256::transform(u8 const* data)
 {
     u32 m[64];
 
@@ -66,7 +66,7 @@ inline void SHA256::transform(const u8* data)
     m_state[7] += h;
 }
 
-void SHA256::update(const u8* message, size_t length)
+void SHA256::update(u8 const* message, size_t length)
 {
     for (size_t i = 0; i < length; ++i) {
         if (m_data_length == BlockSize) {
@@ -142,7 +142,7 @@ SHA256::DigestType SHA256::peek()
     return digest;
 }
 
-inline void SHA384::transform(const u8* data)
+inline void SHA384::transform(u8 const* data)
 {
     u64 m[80];
 
@@ -184,7 +184,7 @@ inline void SHA384::transform(const u8* data)
     m_state[7] += h;
 }
 
-void SHA384::update(const u8* message, size_t length)
+void SHA384::update(u8 const* message, size_t length)
 {
     for (size_t i = 0; i < length; ++i) {
         if (m_data_length == BlockSize) {
@@ -258,7 +258,7 @@ SHA384::DigestType SHA384::peek()
     return digest;
 }
 
-inline void SHA512::transform(const u8* data)
+inline void SHA512::transform(u8 const* data)
 {
     u64 m[80];
 
@@ -299,7 +299,7 @@ inline void SHA512::transform(const u8* data)
     m_state[7] += h;
 }
 
-void SHA512::update(const u8* message, size_t length)
+void SHA512::update(u8 const* message, size_t length)
 {
     for (size_t i = 0; i < length; ++i) {
         if (m_data_length == BlockSize) {

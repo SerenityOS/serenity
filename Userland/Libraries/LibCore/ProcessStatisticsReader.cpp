@@ -40,7 +40,7 @@ Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all(RefPtr<Core::F
 
     auto& json_obj = json.value().as_object();
     json_obj.get("processes").as_array().for_each([&](auto& value) {
-        const JsonObject& process_object = value.as_object();
+        JsonObject const& process_object = value.as_object();
         Core::ProcessStatistics process;
 
         // kernel data first

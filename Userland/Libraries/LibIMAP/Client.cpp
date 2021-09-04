@@ -342,7 +342,7 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::search(Optional<String> charset
         args.append("CHARSET ");
         args.append(charset.value());
     }
-    for (const auto& item : keys) {
+    for (auto const& item : keys) {
         args.append(item.serialize());
     }
     auto command = Command { uid ? CommandType::UIDSearch : CommandType::Search, m_current_command, args };

@@ -37,7 +37,7 @@ static void update_notification_window_locations(const Gfx::IntRect& screen_rect
     }
 }
 
-NotificationWindow::NotificationWindow(i32 client_id, const String& text, const String& title, const Gfx::ShareableBitmap& icon)
+NotificationWindow::NotificationWindow(i32 client_id, String const& text, String const& title, const Gfx::ShareableBitmap& icon)
 {
     m_id = client_id;
     s_windows.set(m_id, this);

@@ -42,19 +42,19 @@ public:
     static void set_default_font_query(String);
     static void set_fixed_width_font_query(String);
 
-    RefPtr<Gfx::Font> get(const String& family, unsigned size, unsigned weight);
-    RefPtr<Gfx::Font> get(const String& family, const String& variant, unsigned size);
-    RefPtr<Gfx::Font> get_by_name(const StringView&);
+    RefPtr<Gfx::Font> get(String const& family, unsigned size, unsigned weight);
+    RefPtr<Gfx::Font> get(String const& family, String const& variant, unsigned size);
+    RefPtr<Gfx::Font> get_by_name(StringView const&);
     void for_each_font(Function<void(const Gfx::Font&)>);
     void for_each_fixed_width_font(Function<void(const Gfx::Font&)>);
 
-    void for_each_typeface(Function<void(const Typeface&)>);
+    void for_each_typeface(Function<void(Typeface const&)>);
 
 private:
     FontDatabase();
     ~FontDatabase();
 
-    RefPtr<Typeface> get_or_create_typeface(const String& family, const String& variant);
+    RefPtr<Typeface> get_or_create_typeface(String const& family, String const& variant);
 
     struct Private;
     OwnPtr<Private> m_private;

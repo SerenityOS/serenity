@@ -136,7 +136,7 @@ void FontDatabase::for_each_fixed_width_font(Function<void(const Gfx::Font&)> ca
         callback(*font);
 }
 
-RefPtr<Gfx::Font> FontDatabase::get_by_name(const StringView& name)
+RefPtr<Gfx::Font> FontDatabase::get_by_name(StringView const& name)
 {
     auto it = m_private->full_name_to_font_map.find(name);
     if (it == m_private->full_name_to_font_map.end()) {
@@ -153,7 +153,7 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(const StringView& name)
     return it->value;
 }
 
-RefPtr<Gfx::Font> FontDatabase::get(const String& family, unsigned size, unsigned weight)
+RefPtr<Gfx::Font> FontDatabase::get(String const& family, unsigned size, unsigned weight)
 {
     for (auto typeface : m_private->typefaces) {
         if (typeface->family() == family && typeface->weight() == weight)
@@ -163,7 +163,7 @@ RefPtr<Gfx::Font> FontDatabase::get(const String& family, unsigned size, unsigne
     return nullptr;
 }
 
-RefPtr<Gfx::Font> FontDatabase::get(const String& family, const String& variant, unsigned size)
+RefPtr<Gfx::Font> FontDatabase::get(String const& family, String const& variant, unsigned size)
 {
     for (auto typeface : m_private->typefaces) {
         if (typeface->family() == family && typeface->variant() == variant)
@@ -172,7 +172,7 @@ RefPtr<Gfx::Font> FontDatabase::get(const String& family, const String& variant,
     return nullptr;
 }
 
-RefPtr<Typeface> FontDatabase::get_or_create_typeface(const String& family, const String& variant)
+RefPtr<Typeface> FontDatabase::get_or_create_typeface(String const& family, String const& variant)
 {
     for (auto typeface : m_private->typefaces) {
         if (typeface->family() == family && typeface->variant() == variant)
@@ -183,7 +183,7 @@ RefPtr<Typeface> FontDatabase::get_or_create_typeface(const String& family, cons
     return typeface;
 }
 
-void FontDatabase::for_each_typeface(Function<void(const Typeface&)> callback)
+void FontDatabase::for_each_typeface(Function<void(Typeface const&)> callback)
 {
     for (auto typeface : m_private->typefaces) {
         callback(*typeface);

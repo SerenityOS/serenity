@@ -18,9 +18,9 @@ namespace Syscall {
 struct StringArgument;
 }
 
-[[nodiscard]] Kernel::KResultOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<const char*>, size_t);
-[[nodiscard]] Optional<Time> copy_time_from_user(const timespec*);
-[[nodiscard]] Optional<Time> copy_time_from_user(const timeval*);
+[[nodiscard]] Kernel::KResultOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<char const*>, size_t);
+[[nodiscard]] Optional<Time> copy_time_from_user(timespec const*);
+[[nodiscard]] Optional<Time> copy_time_from_user(timeval const*);
 template<typename T>
 [[nodiscard]] Optional<Time> copy_time_from_user(Userspace<T*> src);
 
@@ -36,41 +36,41 @@ template<typename T>
 
 extern "C" {
 
-[[nodiscard]] bool copy_to_user(void*, const void*, size_t);
-[[nodiscard]] bool copy_from_user(void*, const void*, size_t);
+[[nodiscard]] bool copy_to_user(void*, void const*, size_t);
+[[nodiscard]] bool copy_from_user(void*, void const*, size_t);
 [[nodiscard]] bool memset_user(void*, int, size_t);
 
-void* memcpy(void*, const void*, size_t);
-[[nodiscard]] int strncmp(const char* s1, const char* s2, size_t n);
-[[nodiscard]] char* strstr(const char* haystack, const char* needle);
-[[nodiscard]] int strcmp(char const*, const char*);
-[[nodiscard]] size_t strlen(const char*);
-[[nodiscard]] size_t strnlen(const char*, size_t);
+void* memcpy(void*, void const*, size_t);
+[[nodiscard]] int strncmp(char const* s1, char const* s2, size_t n);
+[[nodiscard]] char* strstr(char const* haystack, char const* needle);
+[[nodiscard]] int strcmp(char const*, char const*);
+[[nodiscard]] size_t strlen(char const*);
+[[nodiscard]] size_t strnlen(char const*, size_t);
 void* memset(void*, int, size_t);
-[[nodiscard]] int memcmp(const void*, const void*, size_t);
-void* memmove(void* dest, const void* src, size_t n);
-const void* memmem(const void* haystack, size_t, const void* needle, size_t);
+[[nodiscard]] int memcmp(void const*, void const*, size_t);
+void* memmove(void* dest, void const* src, size_t n);
+void const* memmem(void const* haystack, size_t, void const* needle, size_t);
 
 [[nodiscard]] inline u16 ntohs(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
 [[nodiscard]] inline u16 htons(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_from_user(T* dest, const T* src)
+[[nodiscard]] inline bool copy_from_user(T* dest, T const* src)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_from_user(dest, src, sizeof(T));
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_to_user(T* dest, const T* src)
+[[nodiscard]] inline bool copy_to_user(T* dest, T const* src)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_to_user(dest, src, sizeof(T));
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_from_user(T* dest, Userspace<const T*> src)
+[[nodiscard]] inline bool copy_from_user(T* dest, Userspace<T const*> src)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_from_user(dest, src.unsafe_userspace_ptr(), sizeof(T));
@@ -85,12 +85,12 @@ template<typename T>
 
 #define DEPRECATE_COPY_FROM_USER_TYPE(T, REPLACEMENT)                                                                                \
     template<>                                                                                                                       \
-    [[nodiscard]] inline __attribute__((deprecated("use " #REPLACEMENT " instead"))) bool copy_from_user<T>(T*, const T*)            \
+    [[nodiscard]] inline __attribute__((deprecated("use " #REPLACEMENT " instead"))) bool copy_from_user<T>(T*, T const*)            \
     {                                                                                                                                \
         VERIFY_NOT_REACHED();                                                                                                        \
     }                                                                                                                                \
     template<>                                                                                                                       \
-    [[nodiscard]] inline __attribute__((deprecated("use " #REPLACEMENT " instead"))) bool copy_from_user<T>(T*, Userspace<const T*>) \
+    [[nodiscard]] inline __attribute__((deprecated("use " #REPLACEMENT " instead"))) bool copy_from_user<T>(T*, Userspace<T const*>) \
     {                                                                                                                                \
         VERIFY_NOT_REACHED();                                                                                                        \
     }                                                                                                                                \
@@ -104,28 +104,28 @@ DEPRECATE_COPY_FROM_USER_TYPE(timespec, copy_time_from_user)
 DEPRECATE_COPY_FROM_USER_TYPE(timeval, copy_time_from_user)
 
 template<typename T>
-[[nodiscard]] inline bool copy_to_user(Userspace<T*> dest, const T* src)
+[[nodiscard]] inline bool copy_to_user(Userspace<T*> dest, T const* src)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_to_user(dest.unsafe_userspace_ptr(), src, sizeof(T));
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_to_user(Userspace<T*> dest, const void* src, size_t size)
+[[nodiscard]] inline bool copy_to_user(Userspace<T*> dest, void const* src, size_t size)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_to_user(dest.unsafe_userspace_ptr(), src, size);
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_from_user(void* dest, Userspace<const T*> src, size_t size)
+[[nodiscard]] inline bool copy_from_user(void* dest, Userspace<T const*> src, size_t size)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_from_user(dest, src.unsafe_userspace_ptr(), size);
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_n_from_user(T* dest, const T* src, size_t count)
+[[nodiscard]] inline bool copy_n_from_user(T* dest, T const* src, size_t count)
 {
     static_assert(IsTriviallyCopyable<T>);
     Checked<size_t> size = sizeof(T);
@@ -136,7 +136,7 @@ template<typename T>
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_n_to_user(T* dest, const T* src, size_t count)
+[[nodiscard]] inline bool copy_n_to_user(T* dest, T const* src, size_t count)
 {
     static_assert(IsTriviallyCopyable<T>);
     Checked<size_t> size = sizeof(T);
@@ -147,7 +147,7 @@ template<typename T>
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_n_from_user(T* dest, Userspace<const T*> src, size_t count)
+[[nodiscard]] inline bool copy_n_from_user(T* dest, Userspace<T const*> src, size_t count)
 {
     static_assert(IsTriviallyCopyable<T>);
     Checked<size_t> size = sizeof(T);
@@ -158,7 +158,7 @@ template<typename T>
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_n_to_user(Userspace<T*> dest, const T* src, size_t count)
+[[nodiscard]] inline bool copy_n_to_user(Userspace<T*> dest, T const* src, size_t count)
 {
     static_assert(IsTriviallyCopyable<T>);
     Checked<size_t> size = sizeof(T);

@@ -53,7 +53,7 @@ public:
     class BaseIterator {
     public:
         BaseIterator() = default;
-        bool operator!=(const BaseIterator& other) const { return m_node != other.m_node; }
+        bool operator!=(BaseIterator const& other) const { return m_node != other.m_node; }
         BaseIterator& operator++()
         {
             if (!m_node)

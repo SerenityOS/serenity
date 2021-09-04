@@ -161,7 +161,7 @@ String SearchKey::serialize() const
             StringBuilder sb;
             sb.append("(");
             bool first = true;
-            for (const auto& item : x.keys) {
+            for (auto const& item : x.keys) {
                 if (!first)
                     sb.append(", ");
                 sb.append(item->serialize());

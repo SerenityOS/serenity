@@ -29,7 +29,7 @@ namespace Kernel {
 #define PS2MOUSE_INTELLIMOUSE_ID 0x03
 #define PS2MOUSE_INTELLIMOUSE_EXPLORER_ID 0x04
 
-UNMAP_AFTER_INIT PS2MouseDevice::PS2MouseDevice(const I8042Controller& ps2_controller)
+UNMAP_AFTER_INIT PS2MouseDevice::PS2MouseDevice(I8042Controller const& ps2_controller)
     : IRQHandler(IRQ_MOUSE)
     , MouseDevice()
     , I8042Device(ps2_controller)
@@ -40,7 +40,7 @@ UNMAP_AFTER_INIT PS2MouseDevice::~PS2MouseDevice()
 {
 }
 
-bool PS2MouseDevice::handle_irq(const RegisterState&)
+bool PS2MouseDevice::handle_irq(RegisterState const&)
 {
     // The controller will read the data and call irq_handle_byte_read
     // for the appropriate device
@@ -94,7 +94,7 @@ void PS2MouseDevice::irq_handle_byte_read(u8 byte)
     }
 }
 
-MousePacket PS2MouseDevice::parse_data_packet(const RawPacket& raw_packet)
+MousePacket PS2MouseDevice::parse_data_packet(RawPacket const& raw_packet)
 {
     int x = raw_packet.bytes[1];
     int y = raw_packet.bytes[2];
@@ -172,7 +172,7 @@ void PS2MouseDevice::set_sample_rate(u8 rate)
     send_command(PS2MOUSE_SET_SAMPLE_RATE, rate);
 }
 
-UNMAP_AFTER_INIT RefPtr<PS2MouseDevice> PS2MouseDevice::try_to_initialize(const I8042Controller& ps2_controller)
+UNMAP_AFTER_INIT RefPtr<PS2MouseDevice> PS2MouseDevice::try_to_initialize(I8042Controller const& ps2_controller)
 {
     auto device = adopt_ref(*new PS2MouseDevice(ps2_controller));
     if (device->initialize())

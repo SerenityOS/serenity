@@ -142,14 +142,14 @@ int main(int argc, char** argv)
     combo_box.set_only_allow_values_from_model(true);
     combo_box.set_model(adopt_ref(*new ColorRoleModel(color_roles)));
     combo_box.on_change = [&](auto&, auto& index) {
-        auto role = static_cast<const ColorRoleModel*>(index.model())->color_role(index);
+        auto role = static_cast<ColorRoleModel const*>(index.model())->color_role(index);
         color_input.set_color(preview_palette.color(role));
     };
 
     combo_box.set_selected_index((size_t)Gfx::ColorRole::Window - 1);
 
     color_input.on_change = [&] {
-        auto role = static_cast<const ColorRoleModel*>(combo_box.model())->color_role(combo_box.selected_index());
+        auto role = static_cast<ColorRoleModel const*>(combo_box.model())->color_role(combo_box.selected_index());
         preview_palette.set_color(role, color_input.color());
         preview_widget.set_preview_palette(preview_palette);
     };

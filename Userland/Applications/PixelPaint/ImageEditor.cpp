@@ -477,7 +477,7 @@ Result<void, String> ImageEditor::save_project_to_fd_and_close(int fd) const
     JsonObjectSerializer json(builder);
     m_image->serialize_as_json(json);
     auto json_guides = json.add_array("guides");
-    for (const auto& guide : m_guides) {
+    for (auto const& guide : m_guides) {
         auto json_guide = json_guides.add_object();
         json_guide.add("offset"sv, (double)guide.offset());
         if (guide.orientation() == Guide::Orientation::Vertical)

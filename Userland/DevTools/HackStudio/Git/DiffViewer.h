@@ -17,10 +17,10 @@ class DiffViewer final : public GUI::AbstractScrollableWidget {
 public:
     virtual ~DiffViewer() override;
 
-    void set_content(const String& original, const String& diff);
+    void set_content(String const& original, String const& diff);
 
 private:
-    DiffViewer(const String& original, const String& diff);
+    DiffViewer(String const& original, String const& diff);
     DiffViewer();
 
     void setup_properties();
@@ -42,9 +42,9 @@ private:
         Missing,
     };
 
-    void draw_line(GUI::Painter&, const String& line, size_t y_offset, LinePosition, LineType);
+    void draw_line(GUI::Painter&, String const& line, size_t y_offset, LinePosition, LineType);
 
-    static Vector<String> split_to_lines(const String& text);
+    static Vector<String> split_to_lines(String const& text);
 
     static Gfx::Color red_background();
     static Gfx::Color green_background();

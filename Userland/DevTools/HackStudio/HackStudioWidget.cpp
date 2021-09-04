@@ -76,7 +76,7 @@
 
 namespace HackStudio {
 
-HackStudioWidget::HackStudioWidget(const String& path_to_project)
+HackStudioWidget::HackStudioWidget(String const& path_to_project)
 {
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>();
@@ -187,7 +187,7 @@ void HackStudioWidget::on_action_tab_change()
     }
 }
 
-void HackStudioWidget::open_project(const String& root_path)
+void HackStudioWidget::open_project(String const& root_path)
 {
     if (warn_unsaved_changes("There are unsaved changes, do you want to save before closing current project?") == ContinueDecision::No)
         return;
@@ -239,7 +239,7 @@ Vector<String> HackStudioWidget::selected_file_paths() const
     return files;
 }
 
-bool HackStudioWidget::open_file(const String& full_filename, size_t line, size_t column)
+bool HackStudioWidget::open_file(String const& full_filename, size_t line, size_t column)
 {
     String filename = full_filename;
     if (full_filename.starts_with(project().root_path())) {
@@ -783,9 +783,9 @@ void HackStudioWidget::initialize_debugger()
 {
     Debugger::initialize(
         m_project->root_path(),
-        [this](const PtraceRegisters& regs) {
+        [this](PtraceRegisters const& regs) {
             VERIFY(Debugger::the().session());
-            const auto& debug_session = *Debugger::the().session();
+            auto const& debug_session = *Debugger::the().session();
             auto source_position = debug_session.get_source_position(regs.ip());
             if (!source_position.has_value()) {
                 dbgln("Could not find source position for address: {:p}", regs.ip());
@@ -836,7 +836,7 @@ void HackStudioWidget::initialize_debugger()
         });
 }
 
-String HackStudioWidget::get_full_path_of_serenity_source(const String& file)
+String HackStudioWidget::get_full_path_of_serenity_source(String const& file)
 {
     auto path_parts = LexicalPath(file).parts();
     VERIFY(path_parts[0] == "..");
@@ -848,7 +848,7 @@ String HackStudioWidget::get_full_path_of_serenity_source(const String& file)
     return String::formatted("{}/{}", serenity_sources_base, relative_path_builder.to_string());
 }
 
-RefPtr<EditorWrapper> HackStudioWidget::get_editor_of_file(const String& filename)
+RefPtr<EditorWrapper> HackStudioWidget::get_editor_of_file(String const& filename)
 {
     String file_path = filename;
 
@@ -1016,7 +1016,7 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
     m_debug_info_widget = m_action_tab_widget->add_tab<DebugInfoWidget>("Debug");
     m_disassembly_widget = m_action_tab_widget->add_tab<DisassemblyWidget>("Disassembly");
     m_git_widget = m_action_tab_widget->add_tab<GitWidget>("Git", LexicalPath(m_project->root_path()));
-    m_git_widget->set_view_diff_callback([this](const auto& original_content, const auto& diff) {
+    m_git_widget->set_view_diff_callback([this](auto const& original_content, auto const& diff) {
         m_diff_viewer->set_content(original_content, diff);
         set_edit_mode(EditMode::Diff);
     });
@@ -1204,7 +1204,7 @@ void HackStudioWidget::update_statusbar()
     m_statusbar->set_text(2, current_editor_wrapper().editor().code_document().language_name());
 }
 
-void HackStudioWidget::handle_external_file_deletion(const String& filepath)
+void HackStudioWidget::handle_external_file_deletion(String const& filepath)
 {
     close_file_in_all_editors(filepath);
 }
@@ -1241,7 +1241,7 @@ HackStudioWidget::~HackStudioWidget()
     stop_debugger_if_running();
 }
 
-HackStudioWidget::ContinueDecision HackStudioWidget::warn_unsaved_changes(const String& prompt)
+HackStudioWidget::ContinueDecision HackStudioWidget::warn_unsaved_changes(String const& prompt)
 {
     if (!any_document_is_dirty())
         return ContinueDecision::Yes;

@@ -13,7 +13,7 @@
 
 namespace JS {
 
-const char* Token::name(TokenType type)
+char const* Token::name(TokenType type)
 {
     switch (type) {
 #define __ENUMERATE_JS_TOKEN(type, category) \
@@ -27,7 +27,7 @@ const char* Token::name(TokenType type)
     }
 }
 
-const char* Token::name() const
+char const* Token::name() const
 {
     return name(m_type);
 }

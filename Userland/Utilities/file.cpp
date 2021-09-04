@@ -15,13 +15,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-static Optional<String> description_only(String description, [[maybe_unused]] const String& path)
+static Optional<String> description_only(String description, [[maybe_unused]] String const& path)
 {
     return description;
 }
 
 // FIXME: Ideally Gfx::ImageDecoder could tell us the image type directly.
-static Optional<String> image_details(const String& description, const String& path)
+static Optional<String> image_details(String const& description, String const& path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
@@ -35,7 +35,7 @@ static Optional<String> image_details(const String& description, const String& p
     return String::formatted("{}, {} x {}", description, image_decoder->width(), image_decoder->height());
 }
 
-static Optional<String> gzip_details(String description, const String& path)
+static Optional<String> gzip_details(String description, String const& path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
@@ -85,7 +85,7 @@ static Optional<String> gzip_details(String description, const String& path)
     __ENUMERATE_MIME_TYPE_DESCRIPTION("text/markdown", "Markdown document", description_only)                       \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("text/x-shellscript", "POSIX shell script text executable", description_only)
 
-static Optional<String> get_description_from_mime_type(const String& mime, const String& path)
+static Optional<String> get_description_from_mime_type(String const& mime, String const& path)
 {
 #define __ENUMERATE_MIME_TYPE_DESCRIPTION(mime_type, description, details) \
     if (String(mime_type) == mime)                                         \
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Vector<const char*> paths;
+    Vector<char const*> paths;
     bool flag_mime_only = false;
 
     Core::ArgsParser args_parser;

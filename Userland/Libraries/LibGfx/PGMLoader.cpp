@@ -38,7 +38,7 @@ struct PGMLoadingContext {
 
     Type type { Type::Unknown };
     State state { State::NotDecoded };
-    const u8* data { nullptr };
+    u8 const* data { nullptr };
     size_t data_size { 0 };
     u16 width { 0 };
     u16 height { 0 };
@@ -99,12 +99,12 @@ static bool read_image_data(PGMLoadingContext& context, Streamer& streamer)
     return true;
 }
 
-RefPtr<Gfx::Bitmap> load_pgm(const StringView& path)
+RefPtr<Gfx::Bitmap> load_pgm(StringView const& path)
 {
     return load<PGMLoadingContext>(path);
 }
 
-RefPtr<Gfx::Bitmap> load_pgm_from_memory(const u8* data, size_t length)
+RefPtr<Gfx::Bitmap> load_pgm_from_memory(u8 const* data, size_t length)
 {
     auto bitmap = load_impl<PGMLoadingContext>(data, length);
     if (bitmap)
@@ -112,7 +112,7 @@ RefPtr<Gfx::Bitmap> load_pgm_from_memory(const u8* data, size_t length)
     return bitmap;
 }
 
-PGMImageDecoderPlugin::PGMImageDecoderPlugin(const u8* data, size_t size)
+PGMImageDecoderPlugin::PGMImageDecoderPlugin(u8 const* data, size_t size)
 {
     m_context = make<PGMLoadingContext>();
     m_context->data = data;

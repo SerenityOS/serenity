@@ -15,12 +15,12 @@
 
 namespace AK {
 
-bool String::operator==(const FlyString& fly_string) const
+bool String::operator==(FlyString const& fly_string) const
 {
     return *this == String(fly_string.impl());
 }
 
-bool String::operator==(const String& other) const
+bool String::operator==(String const& other) const
 {
     if (!m_impl)
         return !other.m_impl;
@@ -31,7 +31,7 @@ bool String::operator==(const String& other) const
     return *m_impl == *other.m_impl;
 }
 
-bool String::operator==(const StringView& other) const
+bool String::operator==(StringView const& other) const
 {
     if (!m_impl)
         return !other.m_characters;
@@ -45,7 +45,7 @@ bool String::operator==(const StringView& other) const
     return !memcmp(characters(), other.characters_without_null_termination(), length());
 }
 
-bool String::operator<(const String& other) const
+bool String::operator<(String const& other) const
 {
     if (!m_impl)
         return other.m_impl;
@@ -56,7 +56,7 @@ bool String::operator<(const String& other) const
     return strcmp(characters(), other.characters()) < 0;
 }
 
-bool String::operator>(const String& other) const
+bool String::operator>(String const& other) const
 {
     if (!m_impl)
         return other.m_impl;
@@ -176,7 +176,7 @@ ByteBuffer String::to_byte_buffer() const
 {
     if (!m_impl)
         return {};
-    return ByteBuffer::copy(reinterpret_cast<const u8*>(characters()), length());
+    return ByteBuffer::copy(reinterpret_cast<u8 const*>(characters()), length());
 }
 
 template<typename T>
@@ -201,7 +201,7 @@ template Optional<u16> String::to_uint(TrimWhitespace) const;
 template Optional<u32> String::to_uint(TrimWhitespace) const;
 template Optional<u64> String::to_uint(TrimWhitespace) const;
 
-bool String::starts_with(const StringView& str, CaseSensitivity case_sensitivity) const
+bool String::starts_with(StringView const& str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::starts_with(*this, str, case_sensitivity);
 }
@@ -213,7 +213,7 @@ bool String::starts_with(char ch) const
     return characters()[0] == ch;
 }
 
-bool String::ends_with(const StringView& str, CaseSensitivity case_sensitivity) const
+bool String::ends_with(StringView const& str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::ends_with(*this, str, case_sensitivity);
 }
@@ -235,7 +235,7 @@ String String::repeated(char ch, size_t count)
     return *impl;
 }
 
-String String::repeated(const StringView& string, size_t count)
+String String::repeated(StringView const& string, size_t count)
 {
     if (!count || string.is_empty())
         return empty();
@@ -326,17 +326,17 @@ String String::roman_number_from(size_t value)
     return builder.to_string();
 }
 
-bool String::matches(const StringView& mask, Vector<MaskSpan>& mask_spans, CaseSensitivity case_sensitivity) const
+bool String::matches(StringView const& mask, Vector<MaskSpan>& mask_spans, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::matches(*this, mask, case_sensitivity, &mask_spans);
 }
 
-bool String::matches(const StringView& mask, CaseSensitivity case_sensitivity) const
+bool String::matches(StringView const& mask, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::matches(*this, mask, case_sensitivity);
 }
 
-bool String::contains(const StringView& needle, CaseSensitivity case_sensitivity) const
+bool String::contains(StringView const& needle, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::contains(*this, needle, case_sensitivity);
 }
@@ -346,12 +346,12 @@ bool String::contains(char needle, CaseSensitivity case_sensitivity) const
     return StringUtils::contains(*this, StringView(&needle, 1), case_sensitivity);
 }
 
-bool String::equals_ignoring_case(const StringView& other) const
+bool String::equals_ignoring_case(StringView const& other) const
 {
     return StringUtils::equals_ignoring_case(view(), other);
 }
 
-int String::replace(const String& needle, const String& replacement, bool all_occurrences)
+int String::replace(String const& needle, String const& replacement, bool all_occurrences)
 {
     if (is_empty())
         return 0;
@@ -381,12 +381,12 @@ int String::replace(const String& needle, const String& replacement, bool all_oc
     return positions.size();
 }
 
-size_t String::count(const String& needle) const
+size_t String::count(String const& needle) const
 {
     size_t count = 0;
     size_t start = 0, pos;
     for (;;) {
-        const char* ptr = strstr(characters() + start, needle.characters());
+        char const* ptr = strstr(characters() + start, needle.characters());
         if (!ptr)
             break;
 
@@ -406,7 +406,7 @@ String String::reverse() const
     return reversed_string.to_string();
 }
 
-String escape_html_entities(const StringView& html)
+String escape_html_entities(StringView const& html)
 {
     StringBuilder builder;
     for (size_t i = 0; i < html.length(); ++i) {
@@ -422,7 +422,7 @@ String escape_html_entities(const StringView& html)
     return builder.to_string();
 }
 
-String::String(const FlyString& string)
+String::String(FlyString const& string)
     : m_impl(string.impl())
 {
 }
@@ -451,7 +451,7 @@ String String::to_titlecase() const
     return StringUtils::to_titlecase(*this);
 }
 
-bool operator<(const char* characters, const String& string)
+bool operator<(char const* characters, String const& string)
 {
     if (!characters)
         return !string.is_null();
@@ -462,12 +462,12 @@ bool operator<(const char* characters, const String& string)
     return __builtin_strcmp(characters, string.characters()) < 0;
 }
 
-bool operator>=(const char* characters, const String& string)
+bool operator>=(char const* characters, String const& string)
 {
     return !(characters < string);
 }
 
-bool operator>(const char* characters, const String& string)
+bool operator>(char const* characters, String const& string)
 {
     if (!characters)
         return !string.is_null();
@@ -478,12 +478,12 @@ bool operator>(const char* characters, const String& string)
     return __builtin_strcmp(characters, string.characters()) > 0;
 }
 
-bool operator<=(const char* characters, const String& string)
+bool operator<=(char const* characters, String const& string)
 {
     return !(characters > string);
 }
 
-bool String::operator==(const char* cstring) const
+bool String::operator==(char const* cstring) const
 {
     if (is_null())
         return !cstring;

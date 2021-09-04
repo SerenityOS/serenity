@@ -16,7 +16,7 @@
 
 namespace HackStudio {
 
-DisassemblyModel::DisassemblyModel(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
+DisassemblyModel::DisassemblyModel(const Debug::DebugSession& debug_session, PtraceRegisters const& regs)
 {
     auto lib = debug_session.library_at(regs.ip());
     if (!lib)
@@ -50,7 +50,7 @@ DisassemblyModel::DisassemblyModel(const Debug::DebugSession& debug_session, con
     auto view = symbol.value().raw_data();
 
     X86::ELFSymbolProvider symbol_provider(*elf);
-    X86::SimpleInstructionStream stream((const u8*)view.characters_without_null_termination(), view.length());
+    X86::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
     X86::Disassembler disassembler(stream);
 
     size_t offset_into_symbol = 0;

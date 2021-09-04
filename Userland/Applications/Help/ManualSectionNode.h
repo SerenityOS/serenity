@@ -24,12 +24,12 @@ public:
         return m_children;
     }
 
-    virtual const ManualNode* parent() const override { return nullptr; }
+    virtual ManualNode const* parent() const override { return nullptr; }
     virtual String name() const override { return m_full_name; }
     virtual bool is_open() const override { return m_open; }
     void set_open(bool open);
 
-    const String& section_name() const { return m_section; }
+    String const& section_name() const { return m_section; }
     String path() const;
 
 private:

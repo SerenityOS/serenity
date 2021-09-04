@@ -10,13 +10,13 @@
 
 namespace HackStudio {
 
-Project::Project(const String& root_path)
+Project::Project(String const& root_path)
     : m_root_path(root_path)
 {
     m_model = GUI::FileSystemModel::create(root_path, GUI::FileSystemModel::Mode::FilesAndDirectories);
 }
 
-OwnPtr<Project> Project::open_with_root_path(const String& root_path)
+OwnPtr<Project> Project::open_with_root_path(String const& root_path)
 {
     if (!Core::File::is_directory(root_path))
         return {};
@@ -37,7 +37,7 @@ static void traverse_model(const GUI::FileSystemModel& model, const GUI::ModelIn
     }
 }
 
-void Project::for_each_text_file(Function<void(const ProjectFile&)> callback) const
+void Project::for_each_text_file(Function<void(ProjectFile const&)> callback) const
 {
     traverse_model(model(), {}, [&](auto& index) {
         auto file = get_file(model().full_path(index));
@@ -45,7 +45,7 @@ void Project::for_each_text_file(Function<void(const ProjectFile&)> callback) co
     });
 }
 
-NonnullRefPtr<ProjectFile> Project::get_file(const String& path) const
+NonnullRefPtr<ProjectFile> Project::get_file(String const& path) const
 {
     auto full_path = to_absolute_path(path);
     for (auto& file : m_files) {
@@ -57,7 +57,7 @@ NonnullRefPtr<ProjectFile> Project::get_file(const String& path) const
     return file;
 }
 
-String Project::to_absolute_path(const String& path) const
+String Project::to_absolute_path(String const& path) const
 {
     if (LexicalPath { path }.is_absolute()) {
         return path;

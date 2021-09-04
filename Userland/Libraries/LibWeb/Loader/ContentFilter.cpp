@@ -23,7 +23,7 @@ ContentFilter::~ContentFilter()
 {
 }
 
-bool ContentFilter::is_filtered(const URL& url) const
+bool ContentFilter::is_filtered(URL const& url) const
 {
     auto url_string = url.to_string();
 
@@ -34,7 +34,7 @@ bool ContentFilter::is_filtered(const URL& url) const
     return false;
 }
 
-void ContentFilter::add_pattern(const String& pattern)
+void ContentFilter::add_pattern(String const& pattern)
 {
     StringBuilder builder;
     if (!pattern.starts_with('*'))

@@ -9,7 +9,7 @@
 
 namespace Crypto {
 
-SignedBigInteger SignedBigInteger::import_data(const u8* ptr, size_t length)
+SignedBigInteger SignedBigInteger::import_data(u8 const* ptr, size_t length)
 {
     bool sign = *ptr;
     auto unsigned_data = UnsignedBigInteger::import_data(ptr + 1, length - 1);
@@ -63,7 +63,7 @@ u64 SignedBigInteger::to_u64() const
     return ~(unsigned_value - 1); // equivalent to `-unsigned_value`, but doesnt trigger UBSAN
 }
 
-FLATTEN SignedBigInteger SignedBigInteger::plus(const SignedBigInteger& other) const
+FLATTEN SignedBigInteger SignedBigInteger::plus(SignedBigInteger const& other) const
 {
     // If both are of the same sign, just add the unsigned data and return.
     if (m_sign == other.m_sign)
@@ -73,7 +73,7 @@ FLATTEN SignedBigInteger SignedBigInteger::plus(const SignedBigInteger& other) c
     return m_sign ? other.minus(this->m_unsigned_data) : minus(other.m_unsigned_data);
 }
 
-FLATTEN SignedBigInteger SignedBigInteger::minus(const SignedBigInteger& other) const
+FLATTEN SignedBigInteger SignedBigInteger::minus(SignedBigInteger const& other) const
 {
     // If the signs are different, convert the op to an addition.
     if (m_sign != other.m_sign) {
@@ -108,7 +108,7 @@ FLATTEN SignedBigInteger SignedBigInteger::minus(const SignedBigInteger& other) 
     return SignedBigInteger { m_unsigned_data.minus(other.m_unsigned_data) };
 }
 
-FLATTEN SignedBigInteger SignedBigInteger::plus(const UnsignedBigInteger& other) const
+FLATTEN SignedBigInteger SignedBigInteger::plus(UnsignedBigInteger const& other) const
 {
     if (m_sign) {
         if (other < m_unsigned_data)
@@ -120,7 +120,7 @@ FLATTEN SignedBigInteger SignedBigInteger::plus(const UnsignedBigInteger& other)
     return { m_unsigned_data.plus(other), false };
 }
 
-FLATTEN SignedBigInteger SignedBigInteger::minus(const UnsignedBigInteger& other) const
+FLATTEN SignedBigInteger SignedBigInteger::minus(UnsignedBigInteger const& other) const
 {
     if (m_sign)
         return { m_unsigned_data.plus(m_unsigned_data), true };
@@ -131,17 +131,17 @@ FLATTEN SignedBigInteger SignedBigInteger::minus(const UnsignedBigInteger& other
     return { other.minus(m_unsigned_data), true };
 }
 
-FLATTEN SignedBigInteger SignedBigInteger::bitwise_or(const UnsignedBigInteger& other) const
+FLATTEN SignedBigInteger SignedBigInteger::bitwise_or(UnsignedBigInteger const& other) const
 {
     return { unsigned_value().bitwise_or(other), m_sign };
 }
 
-FLATTEN SignedBigInteger SignedBigInteger::bitwise_and(const UnsignedBigInteger& other) const
+FLATTEN SignedBigInteger SignedBigInteger::bitwise_and(UnsignedBigInteger const& other) const
 {
     return { unsigned_value().bitwise_and(other), false };
 }
 
-FLATTEN SignedBigInteger SignedBigInteger::bitwise_xor(const UnsignedBigInteger& other) const
+FLATTEN SignedBigInteger SignedBigInteger::bitwise_xor(UnsignedBigInteger const& other) const
 {
     return { unsigned_value().bitwise_xor(other), m_sign };
 }
@@ -165,7 +165,7 @@ FLATTEN SignedDivisionResult SignedBigInteger::divided_by(UnsignedBigInteger con
     };
 }
 
-FLATTEN SignedBigInteger SignedBigInteger::bitwise_or(const SignedBigInteger& other) const
+FLATTEN SignedBigInteger SignedBigInteger::bitwise_or(SignedBigInteger const& other) const
 {
     auto result = bitwise_or(other.unsigned_value());
 
@@ -175,7 +175,7 @@ FLATTEN SignedBigInteger SignedBigInteger::bitwise_or(const SignedBigInteger& ot
     return result;
 }
 
-FLATTEN SignedBigInteger SignedBigInteger::bitwise_and(const SignedBigInteger& other) const
+FLATTEN SignedBigInteger SignedBigInteger::bitwise_and(SignedBigInteger const& other) const
 {
     auto result = bitwise_and(other.unsigned_value());
 
@@ -185,7 +185,7 @@ FLATTEN SignedBigInteger SignedBigInteger::bitwise_and(const SignedBigInteger& o
     return result;
 }
 
-FLATTEN SignedBigInteger SignedBigInteger::bitwise_xor(const SignedBigInteger& other) const
+FLATTEN SignedBigInteger SignedBigInteger::bitwise_xor(SignedBigInteger const& other) const
 {
     auto result = bitwise_xor(other.unsigned_value());
 
@@ -195,28 +195,28 @@ FLATTEN SignedBigInteger SignedBigInteger::bitwise_xor(const SignedBigInteger& o
     return result;
 }
 
-bool SignedBigInteger::operator==(const UnsignedBigInteger& other) const
+bool SignedBigInteger::operator==(UnsignedBigInteger const& other) const
 {
     if (m_sign)
         return false;
     return m_unsigned_data == other;
 }
 
-bool SignedBigInteger::operator!=(const UnsignedBigInteger& other) const
+bool SignedBigInteger::operator!=(UnsignedBigInteger const& other) const
 {
     if (m_sign)
         return true;
     return m_unsigned_data != other;
 }
 
-bool SignedBigInteger::operator<(const UnsignedBigInteger& other) const
+bool SignedBigInteger::operator<(UnsignedBigInteger const& other) const
 {
     if (m_sign)
         return true;
     return m_unsigned_data < other;
 }
 
-bool SignedBigInteger::operator>(const UnsignedBigInteger& other) const
+bool SignedBigInteger::operator>(UnsignedBigInteger const& other) const
 {
     return *this != other && !(*this < other);
 }
@@ -226,13 +226,13 @@ FLATTEN SignedBigInteger SignedBigInteger::shift_left(size_t num_bits) const
     return SignedBigInteger { m_unsigned_data.shift_left(num_bits), m_sign };
 }
 
-FLATTEN SignedBigInteger SignedBigInteger::multiplied_by(const SignedBigInteger& other) const
+FLATTEN SignedBigInteger SignedBigInteger::multiplied_by(SignedBigInteger const& other) const
 {
     bool result_sign = m_sign ^ other.m_sign;
     return { m_unsigned_data.multiplied_by(other.m_unsigned_data), result_sign };
 }
 
-FLATTEN SignedDivisionResult SignedBigInteger::divided_by(const SignedBigInteger& divisor) const
+FLATTEN SignedDivisionResult SignedBigInteger::divided_by(SignedBigInteger const& divisor) const
 {
     // Aa / Bb -> (A^B)q, Ar
     bool result_sign = m_sign ^ divisor.m_sign;
@@ -253,7 +253,7 @@ void SignedBigInteger::set_bit_inplace(size_t bit_index)
     m_unsigned_data.set_bit_inplace(bit_index);
 }
 
-bool SignedBigInteger::operator==(const SignedBigInteger& other) const
+bool SignedBigInteger::operator==(SignedBigInteger const& other) const
 {
     if (is_invalid() != other.is_invalid())
         return false;
@@ -264,12 +264,12 @@ bool SignedBigInteger::operator==(const SignedBigInteger& other) const
     return m_sign == other.m_sign && m_unsigned_data == other.m_unsigned_data;
 }
 
-bool SignedBigInteger::operator!=(const SignedBigInteger& other) const
+bool SignedBigInteger::operator!=(SignedBigInteger const& other) const
 {
     return !(*this == other);
 }
 
-bool SignedBigInteger::operator<(const SignedBigInteger& other) const
+bool SignedBigInteger::operator<(SignedBigInteger const& other) const
 {
     if (m_sign ^ other.m_sign)
         return m_sign;
@@ -280,17 +280,17 @@ bool SignedBigInteger::operator<(const SignedBigInteger& other) const
     return m_unsigned_data < other.m_unsigned_data;
 }
 
-bool SignedBigInteger::operator<=(const SignedBigInteger& other) const
+bool SignedBigInteger::operator<=(SignedBigInteger const& other) const
 {
     return *this < other || *this == other;
 }
 
-bool SignedBigInteger::operator>(const SignedBigInteger& other) const
+bool SignedBigInteger::operator>(SignedBigInteger const& other) const
 {
     return *this != other && !(*this < other);
 }
 
-bool SignedBigInteger::operator>=(const SignedBigInteger& other) const
+bool SignedBigInteger::operator>=(SignedBigInteger const& other) const
 {
     return !(*this < other);
 }

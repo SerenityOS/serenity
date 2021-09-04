@@ -12,11 +12,11 @@
 
 namespace AK {
 
-size_t calculate_base64_decoded_length(const StringView&);
+size_t calculate_base64_decoded_length(StringView const&);
 
 size_t calculate_base64_encoded_length(ReadonlyBytes);
 
-ByteBuffer decode_base64(const StringView&);
+ByteBuffer decode_base64(StringView const&);
 
 String encode_base64(ReadonlyBytes);
 

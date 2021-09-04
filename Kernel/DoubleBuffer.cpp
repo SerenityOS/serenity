@@ -50,7 +50,7 @@ void DoubleBuffer::flip()
     compute_lockfree_metadata();
 }
 
-KResultOr<size_t> DoubleBuffer::write(const UserOrKernelBuffer& data, size_t size)
+KResultOr<size_t> DoubleBuffer::write(UserOrKernelBuffer const& data, size_t size)
 {
     if (!size || m_storage->is_null())
         return 0;

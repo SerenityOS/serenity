@@ -15,7 +15,7 @@
 #    include <string.h>
 #endif
 
-ALWAYS_INLINE void fast_u32_copy(u32* dest, const u32* src, size_t count)
+ALWAYS_INLINE void fast_u32_copy(u32* dest, u32 const* src, size_t count)
 {
 #if ARCH(I386)
     asm volatile(

@@ -34,7 +34,7 @@ struct PathInstruction {
 
 class PathDataParser final {
 public:
-    PathDataParser(const String& source);
+    PathDataParser(String const& source);
     ~PathDataParser() = default;
 
     Vector<PathInstruction> parse();
@@ -91,7 +91,7 @@ public:
 
     virtual RefPtr<Layout::Node> create_layout_node() override;
 
-    virtual void parse_attribute(const FlyString& name, const String& value) override;
+    virtual void parse_attribute(FlyString const& name, String const& value) override;
 
     Gfx::Path& get_path();
 

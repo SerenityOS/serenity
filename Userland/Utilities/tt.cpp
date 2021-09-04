@@ -24,7 +24,7 @@ static int kill_test();
 
 int main(int argc, char** argv)
 {
-    const char* test_name = "n";
+    char const* test_name = "n";
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(

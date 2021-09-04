@@ -15,8 +15,8 @@ class NumericCell : public CellType {
 public:
     NumericCell();
     virtual ~NumericCell() override;
-    virtual String display(Cell&, const CellTypeMetadata&) const override;
-    virtual JS::Value js_value(Cell&, const CellTypeMetadata&) const override;
+    virtual String display(Cell&, CellTypeMetadata const&) const override;
+    virtual JS::Value js_value(Cell&, CellTypeMetadata const&) const override;
 };
 
 }

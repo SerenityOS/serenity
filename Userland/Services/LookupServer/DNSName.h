@@ -14,28 +14,28 @@ namespace LookupServer {
 
 class DNSName {
 public:
-    DNSName(const String&);
+    DNSName(String const&);
 
-    static DNSName parse(const u8* data, size_t& offset, size_t max_offset, size_t recursion_level = 0);
+    static DNSName parse(u8 const* data, size_t& offset, size_t max_offset, size_t recursion_level = 0);
 
     size_t serialized_size() const;
-    const String& as_string() const { return m_name; }
+    String const& as_string() const { return m_name; }
 
     void randomize_case();
 
-    bool operator==(const DNSName& other) const { return Traits::equals(*this, other); }
+    bool operator==(DNSName const& other) const { return Traits::equals(*this, other); }
 
     class Traits : public AK::Traits<DNSName> {
     public:
-        static unsigned hash(const DNSName& name);
-        static bool equals(const DNSName&, const DNSName&);
+        static unsigned hash(DNSName const& name);
+        static bool equals(DNSName const&, DNSName const&);
     };
 
 private:
     String m_name;
 };
 
-OutputStream& operator<<(OutputStream& stream, const DNSName&);
+OutputStream& operator<<(OutputStream& stream, DNSName const&);
 
 }
 

@@ -8,7 +8,7 @@
 #include <AK/Debug.h>
 
 namespace Diff {
-Vector<Hunk> parse_hunks(const String& diff)
+Vector<Hunk> parse_hunks(String const& diff)
 {
     Vector<String> diff_lines = diff.split('\n');
     if (diff_lines.is_empty())
@@ -58,15 +58,15 @@ Vector<Hunk> parse_hunks(const String& diff)
     }
 
     if constexpr (HUNKS_DEBUG) {
-        for (const auto& hunk : hunks) {
+        for (auto const& hunk : hunks) {
             dbgln("Hunk location:");
             dbgln("  orig: {}", hunk.original_start_line);
             dbgln("  target: {}", hunk.target_start_line);
             dbgln("  removed:");
-            for (const auto& line : hunk.removed_lines)
+            for (auto const& line : hunk.removed_lines)
                 dbgln("- {}", line);
             dbgln("  added:");
-            for (const auto& line : hunk.added_lines)
+            for (auto const& line : hunk.added_lines)
                 dbgln("+ {}", line);
         }
     }
@@ -74,14 +74,14 @@ Vector<Hunk> parse_hunks(const String& diff)
     return hunks;
 }
 
-HunkLocation parse_hunk_location(const String& location_line)
+HunkLocation parse_hunk_location(String const& location_line)
 {
     size_t char_index = 0;
     struct StartAndLength {
         size_t start { 0 };
         size_t length { 0 };
     };
-    auto parse_start_and_length_pair = [](const String& raw) {
+    auto parse_start_and_length_pair = [](String const& raw) {
         auto index_of_separator = raw.find(',').value();
         auto start = raw.substring(0, index_of_separator);
         auto length = raw.substring(index_of_separator + 1, raw.length() - index_of_separator - 1);

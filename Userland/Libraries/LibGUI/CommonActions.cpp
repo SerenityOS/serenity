@@ -15,7 +15,7 @@ namespace GUI {
 
 namespace CommonActions {
 
-NonnullRefPtr<Action> make_about_action(const String& app_name, const Icon& app_icon, Window* parent)
+NonnullRefPtr<Action> make_about_action(String const& app_name, Icon const& app_icon, Window* parent)
 {
     auto weak_parent = AK::try_make_weak_ptr<Window>(parent);
     auto action = Action::create(String::formatted("&About {}", app_name), app_icon.bitmap_for_size(16), [=](auto&) {

@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static void print(const JsonValue& value, int spaces_per_indent, int indent = 0, bool use_color = true);
+static void print(JsonValue const& value, int spaces_per_indent, int indent = 0, bool use_color = true);
 static void print_indent(int indent, int spaces_per_indent)
 {
     for (int i = 0; i < indent * spaces_per_indent; ++i)
@@ -29,7 +29,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* path = nullptr;
+    char const* path = nullptr;
     int spaces_in_indent = 4;
 
     Core::ArgsParser args_parser;
@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     return 0;
 }
 
-void print(const JsonValue& value, int spaces_per_indent, int indent, bool use_color)
+void print(JsonValue const& value, int spaces_per_indent, int indent, bool use_color)
 {
     if (value.is_object()) {
         size_t printed_members = 0;

@@ -15,12 +15,12 @@ Icon::Icon()
 {
 }
 
-Icon::Icon(const IconImpl& impl)
+Icon::Icon(IconImpl const& impl)
     : m_impl(const_cast<IconImpl&>(impl))
 {
 }
 
-Icon::Icon(const Icon& other)
+Icon::Icon(Icon const& other)
     : m_impl(other.m_impl)
 {
 }
@@ -72,7 +72,7 @@ void IconImpl::set_bitmap_for_size(int size, RefPtr<Gfx::Bitmap>&& bitmap)
     m_bitmaps.set(size, move(bitmap));
 }
 
-Icon Icon::default_icon(const StringView& name)
+Icon Icon::default_icon(StringView const& name)
 {
     auto bitmap16 = Gfx::Bitmap::try_load_from_file(String::formatted("/res/icons/16x16/{}.png", name));
     auto bitmap32 = Gfx::Bitmap::try_load_from_file(String::formatted("/res/icons/32x32/{}.png", name));

@@ -48,7 +48,7 @@ Socket::~Socket()
     close();
 }
 
-bool Socket::connect(const String& hostname, int port)
+bool Socket::connect(String const& hostname, int port)
 {
     auto* hostent = gethostbyname(hostname.characters());
     if (!hostent) {
@@ -74,7 +74,7 @@ void Socket::set_blocking(bool blocking)
     VERIFY(flags == 0);
 }
 
-bool Socket::connect(const SocketAddress& address, int port)
+bool Socket::connect(SocketAddress const& address, int port)
 {
     VERIFY(!is_connected());
     VERIFY(address.type() == SocketAddress::Type::IPv4);
@@ -95,7 +95,7 @@ bool Socket::connect(const SocketAddress& address, int port)
     return common_connect((struct sockaddr*)&addr, sizeof(addr));
 }
 
-bool Socket::connect(const SocketAddress& address)
+bool Socket::connect(SocketAddress const& address)
 {
     VERIFY(!is_connected());
     VERIFY(address.type() == SocketAddress::Type::Local);
@@ -112,7 +112,7 @@ bool Socket::connect(const SocketAddress& address)
     }
     m_destination_address = address;
 
-    return common_connect((const sockaddr*)&saddr, sizeof(saddr));
+    return common_connect((sockaddr const*)&saddr, sizeof(saddr));
 }
 
 bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)

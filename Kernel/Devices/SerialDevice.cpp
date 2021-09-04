@@ -49,7 +49,7 @@ UNMAP_AFTER_INIT SerialDevice::~SerialDevice()
 {
 }
 
-bool SerialDevice::can_read(const FileDescription&, size_t) const
+bool SerialDevice::can_read(FileDescription const&, size_t) const
 {
     return (get_line_status() & DataReady) != 0;
 }
@@ -70,12 +70,12 @@ KResultOr<size_t> SerialDevice::read(FileDescription&, u64, UserOrKernelBuffer& 
     });
 }
 
-bool SerialDevice::can_write(const FileDescription&, size_t) const
+bool SerialDevice::can_write(FileDescription const&, size_t) const
 {
     return (get_line_status() & EmptyTransmitterHoldingRegister) != 0;
 }
 
-KResultOr<size_t> SerialDevice::write(FileDescription& description, u64, const UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> SerialDevice::write(FileDescription& description, u64, UserOrKernelBuffer const& buffer, size_t size)
 {
     if (!size)
         return 0;
@@ -85,7 +85,7 @@ KResultOr<size_t> SerialDevice::write(FileDescription& description, u64, const U
         return EAGAIN;
 
     return buffer.read_buffered<128>(size, [&](ReadonlyBytes bytes) {
-        for (const auto& byte : bytes)
+        for (auto const& byte : bytes)
             put_char(byte);
         return bytes.size();
     });

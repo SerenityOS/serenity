@@ -65,14 +65,14 @@ public:
         return value;
     }
 
-    const T& at(size_t index) const { return elements()[(m_head + index) % Capacity]; }
+    T const& at(size_t index) const { return elements()[(m_head + index) % Capacity]; }
 
-    const T& first() const { return at(0); }
-    const T& last() const { return at(size() - 1); }
+    T const& first() const { return at(0); }
+    T const& last() const { return at(size() - 1); }
 
     class ConstIterator {
     public:
-        bool operator!=(const ConstIterator& other) { return m_index != other.m_index; }
+        bool operator!=(ConstIterator const& other) { return m_index != other.m_index; }
         ConstIterator& operator++()
         {
             m_index = (m_index + 1) % Capacity;
@@ -81,16 +81,16 @@ public:
             return *this;
         }
 
-        const T& operator*() const { return m_queue.elements()[m_index]; }
+        T const& operator*() const { return m_queue.elements()[m_index]; }
 
     private:
         friend class CircularQueue;
-        ConstIterator(const CircularQueue& queue, const size_t index)
+        ConstIterator(CircularQueue const& queue, const size_t index)
             : m_queue(queue)
             , m_index(index)
         {
         }
-        const CircularQueue& m_queue;
+        CircularQueue const& m_queue;
         size_t m_index { 0 };
     };
 
@@ -101,7 +101,7 @@ public:
 
 protected:
     T* elements() { return reinterpret_cast<T*>(m_storage); }
-    const T* elements() const { return reinterpret_cast<const T*>(m_storage); }
+    T const* elements() const { return reinterpret_cast<T const*>(m_storage); }
 
     friend class ConstIterator;
     alignas(T) u8 m_storage[sizeof(T) * Capacity];

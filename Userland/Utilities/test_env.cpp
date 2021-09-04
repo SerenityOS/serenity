@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void assert_env(const char* name, const char* value)
+static void assert_env(char const* name, char const* value)
 {
     char* result = getenv(name);
     if (!result) {

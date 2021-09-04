@@ -20,7 +20,7 @@
 
 __BEGIN_DECLS
 
-extern const char* const sys_errlist[];
+extern char const* const sys_errlist[];
 extern int sys_nerr;
 
 #ifdef NO_TLS

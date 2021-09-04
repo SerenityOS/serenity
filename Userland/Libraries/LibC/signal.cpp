@@ -85,7 +85,7 @@ int sigdelset(sigset_t* set, int sig)
     return 0;
 }
 
-int sigismember(const sigset_t* set, int sig)
+int sigismember(sigset_t const* set, int sig)
 {
     if (sig < 1 || sig > 32) {
         errno = EINVAL;
@@ -96,7 +96,7 @@ int sigismember(const sigset_t* set, int sig)
     return 0;
 }
 
-int sigprocmask(int how, const sigset_t* set, sigset_t* old_set)
+int sigprocmask(int how, sigset_t const* set, sigset_t* old_set)
 {
     int rc = syscall(SC_sigprocmask, how, set, old_set);
     __RETURN_WITH_ERRNO(rc, rc, -1);
@@ -108,7 +108,7 @@ int sigpending(sigset_t* set)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-const char* sys_siglist[NSIG] = {
+char const* sys_siglist[NSIG] = {
     "Invalid signal number",
     "Hangup",
     "Interrupt",
@@ -152,12 +152,12 @@ void siglongjmp(jmp_buf env, int val)
     longjmp(env, val);
 }
 
-int sigsuspend(const sigset_t* set)
+int sigsuspend(sigset_t const* set)
 {
     return pselect(0, nullptr, nullptr, nullptr, nullptr, set);
 }
 
-const char* sys_signame[] = {
+char const* sys_signame[] = {
     "INVAL",
     "HUP",
     "INT",
@@ -192,9 +192,9 @@ const char* sys_signame[] = {
     "SYS",
 };
 
-static_assert(sizeof(sys_signame) == sizeof(const char*) * NSIG);
+static_assert(sizeof(sys_signame) == sizeof(char const*) * NSIG);
 
-int getsignalbyname(const char* name)
+int getsignalbyname(char const* name)
 {
     VERIFY(name);
     StringView name_sv(name);
@@ -207,7 +207,7 @@ int getsignalbyname(const char* name)
     return -1;
 }
 
-const char* getsignalname(int signal)
+char const* getsignalname(int signal)
 {
     if (signal < 0 || signal >= NSIG) {
         errno = EINVAL;

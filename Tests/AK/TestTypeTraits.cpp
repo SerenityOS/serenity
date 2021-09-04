@@ -114,7 +114,7 @@ TEST_CASE(UnderlyingType)
 
 TEST_CASE(RemoveCVReference)
 {
-    using TestTypeList = TypeList<int, int&, int const&, int volatile&, int const volatile&, int&&, int const&&, int volatile&&, int const volatile&&>;
+    using TestTypeList = TypeList<int, int&, int const&, int volatile&, int volatile const&, int&&, int const&&, int volatile&&, int volatile const&&>;
     using ResultTypeList = TypeList<int, int, int, int, int, int, int, int, int>;
 
     EXPECT_EQ_WITH_TRAIT(RemoveCVReference, TestTypeList, ResultTypeList);
@@ -169,7 +169,7 @@ TEST_CASE(IsAssignable)
     EXPECT_TRAIT_TRUE(IsTriviallyMoveAssignable, A);
 
     struct B {
-        B& operator=(const B&) { return *this; }
+        B& operator=(B const&) { return *this; }
         B& operator=(B&&) { return *this; }
     };
     EXPECT_TRAIT_TRUE(IsCopyAssignable, B);
@@ -178,7 +178,7 @@ TEST_CASE(IsAssignable)
     EXPECT_TRAIT_FALSE(IsTriviallyMoveAssignable, B);
 
     struct C {
-        C& operator=(const C&) = delete;
+        C& operator=(C const&) = delete;
         C& operator=(C&&) = delete;
     };
     EXPECT_TRAIT_FALSE(IsCopyAssignable, C);
@@ -197,7 +197,7 @@ TEST_CASE(IsConstructible)
     EXPECT_TRAIT_TRUE(IsTriviallyMoveConstructible, A);
 
     struct B {
-        B(const B&)
+        B(B const&)
         {
         }
         B(B&&)
@@ -210,7 +210,7 @@ TEST_CASE(IsConstructible)
     EXPECT_TRAIT_FALSE(IsTriviallyMoveConstructible, B);
 
     struct C {
-        C(const C&) = delete;
+        C(C const&) = delete;
         C(C&&) = delete;
     };
     EXPECT_TRAIT_FALSE(IsCopyConstructible, C);
@@ -223,7 +223,7 @@ TEST_CASE(IsConstructible)
     };
     EXPECT_VARIADIC_TRAIT_TRUE(IsConstructible, D, int);
     EXPECT_VARIADIC_TRAIT_TRUE(IsConstructible, D, char);
-    EXPECT_VARIADIC_TRAIT_FALSE(IsConstructible, D, const char*);
+    EXPECT_VARIADIC_TRAIT_FALSE(IsConstructible, D, char const*);
     EXPECT_VARIADIC_TRAIT_FALSE(IsConstructible, D, void);
 }
 

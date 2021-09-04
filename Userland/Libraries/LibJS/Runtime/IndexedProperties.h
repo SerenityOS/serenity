@@ -94,18 +94,18 @@ private:
 
 class IndexedPropertyIterator {
 public:
-    IndexedPropertyIterator(const IndexedProperties&, u32 starting_index, bool skip_empty);
+    IndexedPropertyIterator(IndexedProperties const&, u32 starting_index, bool skip_empty);
 
     IndexedPropertyIterator& operator++();
     IndexedPropertyIterator& operator*();
-    bool operator!=(const IndexedPropertyIterator&) const;
+    bool operator!=(IndexedPropertyIterator const&) const;
 
     u32 index() const { return m_index; };
 
 private:
     void skip_empty_indices();
 
-    const IndexedProperties& m_indexed_properties;
+    IndexedProperties const& m_indexed_properties;
     u32 m_index;
     bool m_skip_empty;
 };
@@ -147,7 +147,7 @@ public:
             for (auto& value : static_cast<SimpleIndexedPropertyStorage&>(*m_storage).elements())
                 callback(value);
         } else {
-            for (auto& element : static_cast<const GenericIndexedPropertyStorage&>(*m_storage).sparse_elements())
+            for (auto& element : static_cast<GenericIndexedPropertyStorage const&>(*m_storage).sparse_elements())
                 callback(element.value.value);
         }
     }

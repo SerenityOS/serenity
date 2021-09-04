@@ -25,14 +25,14 @@ public:
 
     virtual FlyString node_name() const override { return "#doctype"; }
 
-    const String& name() const { return m_name; }
-    void set_name(const String& name) { m_name = name; }
+    String const& name() const { return m_name; }
+    void set_name(String const& name) { m_name = name; }
 
-    const String& public_id() const { return m_public_id; }
-    void set_public_id(const String& public_id) { m_public_id = public_id; }
+    String const& public_id() const { return m_public_id; }
+    void set_public_id(String const& public_id) { m_public_id = public_id; }
 
-    const String& system_id() const { return m_system_id; }
-    void set_system_id(const String& system_id) { m_system_id = system_id; }
+    String const& system_id() const { return m_system_id; }
+    void set_system_id(String const& system_id) { m_system_id = system_id; }
 
 private:
     String m_name;

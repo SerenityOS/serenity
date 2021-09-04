@@ -36,7 +36,7 @@ Value evaluate(ReadonlyBytes bytes, [[maybe_unused]] PtraceRegisters const& regs
 #endif
 
         default:
-            dbgln("DWARF expr addr: {}", (const void*)bytes.data());
+            dbgln("DWARF expr addr: {}", (void const*)bytes.data());
             dbgln("unsupported opcode: {}", (u8)opcode);
             VERIFY_NOT_REACHED();
         }

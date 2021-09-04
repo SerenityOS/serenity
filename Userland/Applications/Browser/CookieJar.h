@@ -17,7 +17,7 @@
 namespace Browser {
 
 struct CookieStorageKey {
-    bool operator==(const CookieStorageKey&) const = default;
+    bool operator==(CookieStorageKey const&) const = default;
 
     String name;
     String domain;
@@ -26,18 +26,18 @@ struct CookieStorageKey {
 
 class CookieJar {
 public:
-    String get_cookie(const URL& url, Web::Cookie::Source source);
-    void set_cookie(const URL& url, const Web::Cookie::ParsedCookie& parsed_cookie, Web::Cookie::Source source);
+    String get_cookie(URL const& url, Web::Cookie::Source source);
+    void set_cookie(URL const& url, const Web::Cookie::ParsedCookie& parsed_cookie, Web::Cookie::Source source);
     void dump_cookies() const;
 
 private:
-    static Optional<String> canonicalize_domain(const URL& url);
-    static bool domain_matches(const String& string, const String& domain_string);
-    static bool path_matches(const String& request_path, const String& cookie_path);
-    static String default_path(const URL& url);
+    static Optional<String> canonicalize_domain(URL const& url);
+    static bool domain_matches(String const& string, String const& domain_string);
+    static bool path_matches(String const& request_path, String const& cookie_path);
+    static String default_path(URL const& url);
 
-    void store_cookie(const Web::Cookie::ParsedCookie& parsed_cookie, const URL& url, String canonicalized_domain, Web::Cookie::Source source);
-    Vector<Web::Cookie::Cookie&> get_matching_cookies(const URL& url, const String& canonicalized_domain, Web::Cookie::Source source);
+    void store_cookie(const Web::Cookie::ParsedCookie& parsed_cookie, URL const& url, String canonicalized_domain, Web::Cookie::Source source);
+    Vector<Web::Cookie::Cookie&> get_matching_cookies(URL const& url, String const& canonicalized_domain, Web::Cookie::Source source);
     void purge_expired_cookies();
 
     HashMap<CookieStorageKey, Web::Cookie::Cookie> m_cookies;

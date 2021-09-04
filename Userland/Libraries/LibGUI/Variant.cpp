@@ -11,7 +11,7 @@
 
 namespace GUI {
 
-const char* to_string(Variant::Type type)
+char const* to_string(Variant::Type type)
 {
     switch (type) {
     case Variant::Type::Invalid:
@@ -121,29 +121,29 @@ Variant::Variant(bool value)
     m_value.as_bool = value;
 }
 
-Variant::Variant(const char* cstring)
+Variant::Variant(char const* cstring)
     : Variant(String(cstring))
 {
 }
 
-Variant::Variant(const FlyString& value)
+Variant::Variant(FlyString const& value)
     : Variant(String(value.impl()))
 {
 }
 
-Variant::Variant(const StringView& value)
+Variant::Variant(StringView const& value)
     : Variant(value.to_string())
 {
 }
 
-Variant::Variant(const String& value)
+Variant::Variant(String const& value)
     : m_type(Type::String)
 {
     m_value.as_string = const_cast<StringImpl*>(value.impl());
     AK::ref_if_not_null(m_value.as_string);
 }
 
-Variant::Variant(const JsonValue& value)
+Variant::Variant(JsonValue const& value)
 {
     if (value.is_null()) {
         m_value.as_string = nullptr;
@@ -232,10 +232,10 @@ Variant::Variant(const Gfx::IntSize& size)
 Variant::Variant(const Gfx::IntRect& rect)
     : m_type(Type::Rect)
 {
-    m_value.as_rect = (const RawRect&)rect;
+    m_value.as_rect = (RawRect const&)rect;
 }
 
-Variant& Variant::operator=(const Variant& other)
+Variant& Variant::operator=(Variant const& other)
 {
     if (&other == this)
         return *this;
@@ -253,7 +253,7 @@ Variant& Variant::operator=(Variant&& other)
     return *this;
 }
 
-Variant::Variant(const Variant& other)
+Variant::Variant(Variant const& other)
 {
     copy_from(other);
 }
@@ -266,7 +266,7 @@ void Variant::move_from(Variant&& other)
     other.m_value.as_string = nullptr;
 }
 
-void Variant::copy_from(const Variant& other)
+void Variant::copy_from(Variant const& other)
 {
     VERIFY(!is_valid());
     m_type = other.m_type;
@@ -325,7 +325,7 @@ void Variant::copy_from(const Variant& other)
     }
 }
 
-bool Variant::operator==(const Variant& other) const
+bool Variant::operator==(Variant const& other) const
 {
     if (m_type != other.m_type)
         return to_string() == other.to_string();
@@ -366,7 +366,7 @@ bool Variant::operator==(const Variant& other) const
     VERIFY_NOT_REACHED();
 }
 
-bool Variant::operator<(const Variant& other) const
+bool Variant::operator<(Variant const& other) const
 {
     if (m_type != other.m_type)
         return to_string() < other.to_string();
