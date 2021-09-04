@@ -313,7 +313,8 @@ size_t kmalloc_good_size(size_t size)
 void* operator new(size_t size)
 {
     void* ptr = kmalloc(size);
-    VERIFY(ptr);
+    if (ptr == nullptr)
+        PANIC("Out of memory");
     return ptr;
 }
 
@@ -325,7 +326,8 @@ void* operator new(size_t size, const std::nothrow_t&) noexcept
 void* operator new(size_t size, std::align_val_t al)
 {
     void* ptr = kmalloc_aligned_cxx(size, (size_t)al);
-    VERIFY(ptr);
+    if (ptr == nullptr)
+        PANIC("Out of memory");
     return ptr;
 }
 
@@ -337,7 +339,8 @@ void* operator new(size_t size, std::align_val_t al, const std::nothrow_t&) noex
 void* operator new[](size_t size)
 {
     void* ptr = kmalloc(size);
-    VERIFY(ptr);
+    if (ptr == nullptr)
+        PANIC("Out of memory");
     return ptr;
 }
 
