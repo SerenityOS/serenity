@@ -139,6 +139,16 @@ public:
         return find(key)->value;
     }
 
+    template<typename Callback>
+    V& ensure(K const& key, Callback initialization_callback)
+    {
+        auto it = find(key);
+        if (it == end()) {
+            set(key, initialization_callback());
+        }
+        return find(key)->value;
+    }
+
     [[nodiscard]] Vector<K> keys() const
     {
         Vector<K> list;
