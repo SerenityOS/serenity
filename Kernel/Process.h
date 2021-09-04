@@ -509,6 +509,9 @@ public:
 
     VirtualAddress signal_trampoline() const { return m_protected_values.signal_trampoline; }
 
+    void require_promise(Pledge);
+    void require_no_promises();
+
 private:
     friend class MemoryManager;
     friend class Scheduler;
@@ -955,26 +958,16 @@ inline ProcessID Thread::pid() const
     return m_process->pid();
 }
 
-#define REQUIRE_NO_PROMISES                       \
-    do {                                          \
-        if (Process::current().has_promises()) {  \
-            dbgln("Has made a promise");          \
-            Process::current().crash(SIGABRT, 0); \
-            VERIFY_NOT_REACHED();                 \
-        }                                         \
+#define REQUIRE_PROMISE(promise)                             \
+    do {                                                     \
+        Process::current().require_promise(Pledge::promise); \
     } while (0)
 
-#define REQUIRE_PROMISE(promise)                                    \
-    do {                                                            \
-        if (Process::current().has_promises()                       \
-            && !Process::current().has_promised(Pledge::promise)) { \
-            dbgln("Has not pledged {}", #promise);                  \
-            (void)Process::current().try_set_coredump_property(     \
-                "pledge_violation"sv, #promise);                    \
-            Process::current().crash(SIGABRT, 0);                   \
-            VERIFY_NOT_REACHED();                                   \
-        }                                                           \
+#define REQUIRE_NO_PROMISES                       \
+    do {                                          \
+        Process::current().require_no_promises(); \
     } while (0)
+
 }
 
 #define VERIFY_PROCESS_BIG_LOCK_ACQUIRED(process) \

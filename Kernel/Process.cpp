@@ -893,4 +893,38 @@ KResult Process::try_set_coredump_property(StringView key, StringView value)
     return ENOMEM;
 };
 
+static constexpr StringView to_string(Pledge promise)
+{
+#define __ENUMERATE_PLEDGE_PROMISE(x) \
+    case Pledge::x:                   \
+        return #x;
+    switch (promise) {
+        ENUMERATE_PLEDGE_PROMISES
+    }
+#undef __ENUMERATE_PLEDGE_PROMISE
+    VERIFY_NOT_REACHED();
+}
+
+void Process::require_no_promises()
+{
+    if (!has_promises())
+        return;
+    dbgln("Has made a promise");
+    Process::current().crash(SIGABRT, 0);
+    VERIFY_NOT_REACHED();
+}
+
+void Process::require_promise(Pledge promise)
+{
+    if (!has_promises())
+        return;
+
+    if (has_promised(promise))
+        return;
+
+    dbgln("Has not pledged {}", to_string(promise));
+    (void)try_set_coredump_property("pledge_violation"sv, to_string(promise));
+    crash(SIGABRT, 0);
+}
+
 }
