@@ -336,18 +336,17 @@ void init_stage2(void*)
     // NOTE: Everything in the .ksyms section becomes inaccessible after this point.
     MM.unmap_ksyms_after_init();
 
-    int error;
-
     // FIXME: It would be nicer to set the mode from userspace.
     // FIXME: It would be smarter to not hardcode that the first tty is the only graphical one
     ConsoleManagement::the().first_tty()->set_graphical(GraphicsManagement::the().framebuffer_devices_exist());
     RefPtr<Thread> thread;
     auto userspace_init = kernel_command_line().userspace_init();
     auto init_args = kernel_command_line().userspace_init_args();
-    Process::create_user_process(thread, userspace_init, UserID(0), GroupID(0), ProcessID(0), error, move(init_args), {}, tty0);
-    if (error != 0) {
-        PANIC("init_stage2: Error spawning SystemServer: {}", error);
-    }
+
+    auto init_or_error = Process::try_create_user_process(thread, userspace_init, UserID(0), GroupID(0), move(init_args), {}, tty0);
+    if (init_or_error.is_error())
+        PANIC("init_stage2: Error spawning init process: {}", init_or_error.error());
+
     thread->set_priority(THREAD_PRIORITY_HIGH);
 
     if (boot_profiling) {

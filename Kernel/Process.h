@@ -179,7 +179,7 @@ public:
     }
 
     static RefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes);
-    static RefPtr<Process> create_user_process(RefPtr<Thread>& first_thread, const String& path, UserID, GroupID, ProcessID ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
+    static KResultOr<NonnullRefPtr<Process>> try_create_user_process(RefPtr<Thread>& first_thread, String const& path, UserID, GroupID, Vector<String> arguments, Vector<String> environment, TTY*);
     static void register_new(Process&);
 
     bool unref() const;
