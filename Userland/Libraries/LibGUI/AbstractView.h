@@ -163,8 +163,8 @@ protected:
     void update_edit_widget_position();
 
     bool is_searching() const { return !m_highlighted_search.is_null(); }
-    void cancel_searching();
-    void start_searching_timer();
+    void stop_highlighted_search_timer();
+    void start_highlighted_search_timer();
     void do_search(String&&);
 
     ModelIndex drop_candidate_index() const { return m_drop_candidate_index; }
@@ -193,7 +193,7 @@ private:
     RefPtr<Model> m_model;
     ModelSelection m_selection;
     String m_highlighted_search;
-    RefPtr<Core::Timer> m_searching_timer;
+    RefPtr<Core::Timer> m_highlighted_search_timer;
     SelectionBehavior m_selection_behavior { SelectionBehavior::SelectItems };
     SelectionMode m_selection_mode { SelectionMode::SingleSelection };
     unsigned m_edit_triggers { EditTrigger::DoubleClicked | EditTrigger::EditKeyPressed };
