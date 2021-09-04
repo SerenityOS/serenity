@@ -78,6 +78,11 @@ const Gfx::Bitmap& Compositor::front_bitmap_for_screenshot(Badge<ClientConnectio
     return *screen.compositor_screen_data().m_front_bitmap;
 }
 
+Gfx::Color Compositor::color_at_position(Badge<ClientConnection>, Screen& screen, Gfx::IntPoint const& position) const
+{
+    return screen.compositor_screen_data().m_front_bitmap->get_pixel(position);
+}
+
 void CompositorScreenData::init_bitmaps(Compositor& compositor, Screen& screen)
 {
     // Recreate the screen-number overlay as the Screen instances may have changed, or get rid of it if we no longer need it
