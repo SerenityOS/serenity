@@ -353,6 +353,18 @@ void OutOfProcessWebView::notify_server_did_js_console_output(const String& meth
         on_js_console_output(method, line);
 }
 
+void OutOfProcessWebView::notify_server_did_output_js_console_message(i32 message_index)
+{
+    if (on_js_console_new_message)
+        on_js_console_new_message(message_index);
+}
+
+void OutOfProcessWebView::notify_server_did_get_js_console_messages(i32 start_index, const Vector<String>& message_types, const Vector<String>& messages)
+{
+    if (on_get_js_console_messages)
+        on_get_js_console_messages(start_index, message_types, messages);
+}
+
 void OutOfProcessWebView::notify_server_did_change_favicon(const Gfx::Bitmap& favicon)
 {
     if (on_favicon_change)
@@ -437,6 +449,11 @@ void OutOfProcessWebView::js_console_initialize()
 void OutOfProcessWebView::js_console_input(const String& js_source)
 {
     client().async_js_console_input(js_source);
+}
+
+void OutOfProcessWebView::js_console_request_messages(i32 start_index)
+{
+    client().async_js_console_request_messages(start_index);
 }
 
 void OutOfProcessWebView::run_javascript(StringView js_source)

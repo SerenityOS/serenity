@@ -30,6 +30,8 @@ public:
     Function<void(const String&)> on_get_dom_tree;
     Function<void(i32 node_id, String const& specified_style, String const& computed_style)> on_get_dom_node_properties;
     Function<void(const String& method, const String& line)> on_js_console_output;
+    Function<void(i32 message_id)> on_js_console_new_message;
+    Function<void(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages)> on_get_js_console_messages;
     Function<String(const URL& url, Cookie::Source source)> on_get_cookie;
     Function<void(const URL& url, const Cookie::ParsedCookie& cookie, Cookie::Source source)> on_set_cookie;
 };

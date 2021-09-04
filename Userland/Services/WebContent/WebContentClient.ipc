@@ -33,4 +33,8 @@ endpoint WebContentClient
     did_change_favicon(Gfx::ShareableBitmap favicon) =|
     did_request_cookie(URL url, u8 source) => (String cookie)
     did_set_cookie(URL url, Web::Cookie::ParsedCookie cookie, u8 source) =|
+
+    did_output_js_console_message(i32 message_index) =|
+    did_get_js_console_messages(i32 start_index, Vector<String> message_types, Vector<String> messages) =|
+
 }
