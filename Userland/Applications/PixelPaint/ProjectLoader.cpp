@@ -69,7 +69,7 @@ Result<void, String> ProjectLoader::try_load_from_path(StringView path)
     if (file_or_error.is_error())
         return String::formatted("Unable to open file because: {}", file_or_error.release_error());
 
-    return try_load_from_fd_and_close(file_or_error.release_value()->fd(), path);
+    return try_load_from_fd_and_close(file_or_error.release_value()->leak_fd(), path);
 }
 
 }
