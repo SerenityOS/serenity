@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/RefCounted.h>
+#include <Kernel/API/KResult.h>
 #include <Kernel/Bus/USB/USBDevice.h>
 #include <Kernel/Bus/USB/USBTransfer.h>
-#include <Kernel/KResult.h>
 
 namespace Kernel::USB {
 

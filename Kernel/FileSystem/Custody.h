@@ -10,9 +10,9 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
+#include <Kernel/API/KResult.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Heap/SlabAllocator.h>
-#include <Kernel/KResult.h>
 #include <Kernel/KString.h>
 
 namespace Kernel {

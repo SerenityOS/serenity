@@ -11,11 +11,11 @@
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
+#include <Kernel/API/KResult.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/Forward.h>
-#include <Kernel/KResult.h>
 
 namespace Kernel {
 

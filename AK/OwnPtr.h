@@ -9,7 +9,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefCounted.h>
 #ifdef KERNEL
-#    include <Kernel/KResult.h>
+#    include <Kernel/API/KResult.h>
 #endif
 
 namespace AK {

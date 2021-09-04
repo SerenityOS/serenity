@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <Kernel/KResult.h>
+#include <Kernel/API/KResult.h>
 #include <Kernel/VirtualAddress.h>
 
 namespace Kernel::Memory {

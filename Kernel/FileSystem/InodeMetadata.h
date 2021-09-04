@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/Span.h>
+#include <Kernel/API/KResult.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
-#include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {

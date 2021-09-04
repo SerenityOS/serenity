@@ -8,9 +8,9 @@
 
 #include <AK/NonnullOwnPtr.h>
 #include <AK/NonnullRefPtr.h>
+#include <Kernel/API/KResult.h>
 #include <Kernel/Bus/USB/USBHub.h>
 #include <Kernel/Bus/USB/USBTransfer.h>
-#include <Kernel/KResult.h>
 
 namespace Kernel::USB {
 

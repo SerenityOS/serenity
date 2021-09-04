@@ -11,8 +11,8 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Weakable.h>
+#include <Kernel/API/KResult.h>
 #include <Kernel/Forward.h>
-#include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/UserOrKernelBuffer.h>
 #include <Kernel/VirtualAddress.h>

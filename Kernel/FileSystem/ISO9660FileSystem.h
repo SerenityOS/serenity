@@ -12,10 +12,10 @@
 #include <AK/RecursionDecision.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
+#include <Kernel/API/KResult.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/KBuffer.h>
-#include <Kernel/KResult.h>
 
 namespace Kernel {
 

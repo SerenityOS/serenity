@@ -10,8 +10,8 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Time.h>
+#include <Kernel/API/KResult.h>
 #include <Kernel/FileSystem/File.h>
-#include <Kernel/KResult.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/UnixTypes.h>
