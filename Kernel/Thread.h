@@ -602,14 +602,14 @@ public:
 
         virtual Type blocker_type() const override { return Type::File; }
 
-        virtual bool unblock(bool, void*) = 0;
+        virtual bool unblock_if_conditions_are_met(bool, void*) = 0;
     };
 
     class FileDescriptionBlocker : public FileBlocker {
     public:
         const FileDescription& blocked_description() const;
 
-        virtual bool unblock(bool, void*) override;
+        virtual bool unblock_if_conditions_are_met(bool, void*) override;
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
         virtual bool setup_blocker() override;
 
@@ -684,7 +684,7 @@ public:
         explicit SelectBlocker(FDVector&);
         virtual ~SelectBlocker();
 
-        virtual bool unblock(bool, void*) override;
+        virtual bool unblock_if_conditions_are_met(bool, void*) override;
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
         virtual void was_unblocked(bool) override;
         virtual StringView state_string() const override { return "Selecting"sv; }

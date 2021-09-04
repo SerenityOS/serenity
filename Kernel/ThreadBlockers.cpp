@@ -208,7 +208,7 @@ bool Thread::FileDescriptionBlocker::setup_blocker()
     return add_to_blocker_set(m_blocked_description->blocker_set());
 }
 
-bool Thread::FileDescriptionBlocker::unblock(bool from_add_blocker, void*)
+bool Thread::FileDescriptionBlocker::unblock_if_conditions_are_met(bool from_add_blocker, void*)
 {
     auto unblock_flags = m_blocked_description->should_unblock(m_flags);
     if (unblock_flags == BlockFlags::None)
@@ -238,13 +238,13 @@ void Thread::FileDescriptionBlocker::will_unblock_immediately_without_blocking(U
     // could be called by the BlockerSet at any time!
     VERIFY(reason == UnblockImmediatelyReason::TimeoutInThePast);
 
-    // Just call unblock here because we will query the file description
+    // Just call unblock_if_conditions_are_met here because we will query the file description
     // for the data and don't need any input from the FileBlockerSet.
     // However, it's possible that if timeout_in_past is true then FileBlockerSet
     // may call us at any given time, so our call to unblock here may fail.
     // Either way, unblock will be called at least once, which provides
     // all the data we need.
-    unblock(false, nullptr);
+    unblock_if_conditions_are_met(false, nullptr);
 }
 
 const FileDescription& Thread::FileDescriptionBlocker::blocked_description() const
@@ -386,7 +386,7 @@ void Thread::SelectBlocker::will_unblock_immediately_without_blocking(UnblockImm
     }
 }
 
-bool Thread::SelectBlocker::unblock(bool from_add_blocker, void* data)
+bool Thread::SelectBlocker::unblock_if_conditions_are_met(bool from_add_blocker, void* data)
 {
     VERIFY(data); // data is a pointer to an entry in the m_fds vector
     auto& fd_info = *static_cast<FDInfo*>(data);

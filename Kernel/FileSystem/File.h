@@ -29,7 +29,7 @@ public:
     {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::File);
         auto& blocker = static_cast<Thread::FileBlocker&>(b);
-        return !blocker.unblock(true, data);
+        return !blocker.unblock_if_conditions_are_met(true, data);
     }
 
     void unblock_all_blockers_whose_conditions_are_met()
@@ -38,7 +38,7 @@ public:
         BlockerSet::unblock_all_blockers_whose_conditions_are_met_locked([&](auto& b, void* data, bool&) {
             VERIFY(b.blocker_type() == Thread::Blocker::Type::File);
             auto& blocker = static_cast<Thread::FileBlocker&>(b);
-            return blocker.unblock(false, data);
+            return blocker.unblock_if_conditions_are_met(false, data);
         });
     }
 };
