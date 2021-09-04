@@ -23,7 +23,7 @@ KResultOr<FlatPtr> Process::sys$create_inode_watcher(u32 flags)
         return fd_or_error.error();
     auto inode_watcher_fd = fd_or_error.release_value();
 
-    auto watcher_or_error = InodeWatcher::create();
+    auto watcher_or_error = InodeWatcher::try_create();
     if (watcher_or_error.is_error())
         return watcher_or_error.error();
 

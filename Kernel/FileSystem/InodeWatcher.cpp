@@ -12,12 +12,9 @@
 
 namespace Kernel {
 
-KResultOr<NonnullRefPtr<InodeWatcher>> InodeWatcher::create()
+KResultOr<NonnullRefPtr<InodeWatcher>> InodeWatcher::try_create()
 {
-    auto watcher = adopt_ref_if_nonnull(new (nothrow) InodeWatcher);
-    if (watcher)
-        return watcher.release_nonnull();
-    return ENOMEM;
+    return adopt_nonnull_ref_or_enomem(new (nothrow) InodeWatcher);
 }
 
 InodeWatcher::~InodeWatcher()

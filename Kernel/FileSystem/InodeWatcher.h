@@ -43,7 +43,7 @@ private:
 
 class InodeWatcher final : public File {
 public:
-    static KResultOr<NonnullRefPtr<InodeWatcher>> create();
+    static KResultOr<NonnullRefPtr<InodeWatcher>> try_create();
     virtual ~InodeWatcher() override;
 
     virtual bool can_read(const FileDescription&, size_t) const override;
