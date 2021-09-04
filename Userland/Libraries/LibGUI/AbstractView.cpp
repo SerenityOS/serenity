@@ -566,7 +566,7 @@ void AbstractView::keydown_event(KeyEvent& event)
                 //if (event.modifiers() == Mod_Ctrl) {
                 // TODO: delete last word
                 //}
-                Utf8View view(m_searching);
+                Utf8View view(m_highlighted_search);
                 size_t n_code_points = view.length();
                 if (n_code_points > 1) {
                     n_code_points--;
@@ -595,7 +595,7 @@ void AbstractView::keydown_event(KeyEvent& event)
             }
         } else if (event.key() != KeyCode::Key_Tab && !event.ctrl() && !event.alt() && event.code_point() != 0) {
             StringBuilder sb;
-            sb.append(m_searching);
+            sb.append(m_highlighted_search);
             sb.append_code_point(event.code_point());
             do_search(sb.to_string());
             start_searching_timer();
@@ -610,7 +610,7 @@ void AbstractView::keydown_event(KeyEvent& event)
 
 void AbstractView::cancel_searching()
 {
-    m_searching = nullptr;
+    m_highlighted_search = nullptr;
     if (m_searching_timer)
         m_searching_timer->stop();
     if (m_highlighted_search_index.is_valid()) {
@@ -643,7 +643,7 @@ void AbstractView::do_search(String&& searching)
     if (!found_indices.is_empty() && found_indices[0].is_valid()) {
         auto& index = found_indices[0];
         m_highlighted_search_index = index;
-        m_searching = move(searching);
+        m_highlighted_search = move(searching);
         set_selection(index);
         scroll_into_view(index);
         update();
@@ -677,7 +677,7 @@ void AbstractView::draw_item_text(Gfx::Painter& painter, const ModelIndex& index
     else
         text_color = index.data(ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
     if (index == m_highlighted_search_index) {
-        Utf8View searching_text(m_searching);
+        Utf8View searching_text(m_highlighted_search);
         auto searching_length = searching_text.length();
         if (searching_length > search_highlighting_offset)
             searching_length -= search_highlighting_offset;
