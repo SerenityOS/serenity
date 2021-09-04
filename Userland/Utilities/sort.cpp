@@ -37,13 +37,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
         lines.append({ buffer, AK::ShouldChomp::Chomp });
     }
 
-    quick_sort(lines, [](auto& a, auto& b) {
-        return strcmp(a.characters(), b.characters()) < 0;
-    });
+    quick_sort(lines);
 
     for (auto& line : lines) {
-        fputs(line.characters(), stdout);
-        fputc('\n', stdout);
+        outln("{}", line);
     }
 
     return 0;
