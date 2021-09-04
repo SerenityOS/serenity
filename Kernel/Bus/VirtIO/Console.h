@@ -18,7 +18,7 @@ class Console
     friend VirtIO::ConsolePort;
 
 public:
-    static NonnullRefPtr<Console> must_create(PCI::Address address);
+    static RefPtr<Console> try_create(PCI::Address address);
     virtual ~Console() override = default;
 
     virtual StringView purpose() const override { return class_name(); }
@@ -28,7 +28,7 @@ public:
         return m_device_id;
     }
 
-    virtual void initialize() override;
+    virtual bool initialize() override;
 
 private:
     virtual StringView class_name() const override { return "VirtIOConsole"; }

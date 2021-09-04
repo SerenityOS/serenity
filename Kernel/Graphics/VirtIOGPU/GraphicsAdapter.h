@@ -18,11 +18,13 @@ class GraphicsAdapter final
     AK_MAKE_ETERNAL
 
 public:
-    static NonnullRefPtr<GraphicsAdapter> initialize(PCI::Address);
+    static RefPtr<GraphicsAdapter> initialize(PCI::Address);
 
     virtual bool framebuffer_devices_initialized() const override { return m_created_framebuffer_devices; }
 
 private:
+    bool initialize();
+
     explicit GraphicsAdapter(PCI::Address base_address);
 
     virtual void initialize_framebuffer_devices() override;
