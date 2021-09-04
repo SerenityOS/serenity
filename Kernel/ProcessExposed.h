@@ -11,12 +11,12 @@
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <Kernel/API/KResult.h>
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/KBufferBuilder.h>
-#include <Kernel/KResult.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {

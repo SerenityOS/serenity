@@ -12,9 +12,9 @@
 #include <AK/RefPtr.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
+#include <Kernel/API/KResult.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/API/MousePacket.h>
-#include <Kernel/KResult.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/UnixTypes.h>
 #include <LibKeyboard/CharacterMap.h>

@@ -12,12 +12,12 @@
 #include <AK/IntrusiveList.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
+#include <Kernel/API/KResult.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
-#include <Kernel/KResult.h>
 #include <Kernel/Library/ListedRefCounted.h>
 #include <Kernel/Locking/Mutex.h>
 

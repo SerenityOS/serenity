@@ -10,7 +10,7 @@
 #include <AK/Forward.h>
 #include <AK/Time.h>
 #include <AK/Userspace.h>
-#include <Kernel/KResult.h>
+#include <Kernel/API/KResult.h>
 #include <Kernel/KString.h>
 #include <Kernel/UnixTypes.h>
 
