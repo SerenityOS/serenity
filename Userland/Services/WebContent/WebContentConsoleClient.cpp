@@ -26,7 +26,7 @@ WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, WeakPtr<J
     m_console_global_object = JS::make_handle(console_global_object);
 }
 
-void WebContentConsoleClient::handle_input(const String& js_source)
+void WebContentConsoleClient::handle_input(String const& js_source)
 {
     auto parser = JS::Parser(JS::Lexer(js_source));
     auto program = parser.parse_program();
@@ -58,14 +58,52 @@ void WebContentConsoleClient::handle_input(const String& js_source)
     print_html(JS::MarkupGenerator::html_from_value(m_interpreter->vm().last_value()));
 }
 
-void WebContentConsoleClient::print_html(const String& line)
+void WebContentConsoleClient::print_html(String const& line)
 {
-    m_client.async_did_js_console_output("html", line);
+    m_message_log.append({ .type = ConsoleOutput::Type::HTML, .html = line });
+    m_client.async_did_output_js_console_message(m_message_log.size() - 1);
 }
 
 void WebContentConsoleClient::clear_output()
 {
-    m_client.async_did_js_console_output("clear_output", {});
+    m_message_log.append({ .type = ConsoleOutput::Type::Clear, .html = "" });
+    m_client.async_did_output_js_console_message(m_message_log.size() - 1);
+}
+
+void WebContentConsoleClient::send_messages(i32 start_index)
+{
+    // FIXME: Cap the number of messages we send at once?
+    auto messages_to_send = m_message_log.size() - start_index;
+    if (messages_to_send < 1) {
+        // When the console is first created, it requests any messages that happened before
+        // then, by requesting with start_index=0. If we don't have any messages at all, that
+        // is still a valid request, and we can just ignore it.
+        if (start_index != 0)
+            m_client.did_misbehave("Requested non-existent console message index.");
+        return;
+    }
+
+    // FIXME: Replace with a single Vector of message structs
+    Vector<String> message_types;
+    Vector<String> messages;
+    message_types.ensure_capacity(messages_to_send);
+    messages.ensure_capacity(messages_to_send);
+
+    for (size_t i = start_index; i < m_message_log.size(); i++) {
+        auto& message = m_message_log[i];
+        switch (message.type) {
+        case ConsoleOutput::Type::HTML:
+            message_types.append("html");
+            break;
+        case ConsoleOutput::Type::Clear:
+            message_types.append("clear");
+            break;
+        }
+
+        messages.append(message.html);
+    }
+
+    m_client.async_did_get_js_console_messages(start_index, message_types, messages);
 }
 
 JS::Value WebContentConsoleClient::log()
