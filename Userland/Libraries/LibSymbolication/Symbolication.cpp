@@ -169,7 +169,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
             String path;
             if (name == "/usr/lib/Loader.so") {
                 path = name;
-            } else if (name.ends_with(": .text")) {
+            } else if (name.ends_with(": .text") || name.ends_with(": .rodata")) {
                 auto parts = name.split_view(':');
                 path = parts[0];
                 if (!path.starts_with('/'))
@@ -208,7 +208,19 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
             continue;
         }
 
-        FlatPtr adjusted_address = address - found_region->base;
+        // We found an address inside of a region, but the base of that region
+        // may not be the base of the ELF image. For example, there could be an
+        // .rodata mapping at a lower address than the first .text mapping from
+        // the same image. look for the lowest address region with the same path.
+        RegionWithSymbols const* base_region = nullptr;
+        for (auto& region : regions) {
+            if (region.path != found_region->path)
+                continue;
+            if (!base_region || region.base <= base_region->base)
+                base_region = &region;
+        }
+
+        FlatPtr adjusted_address = address - base_region->base;
 
         // We're subtracting 1 from the address because this is the return address,
         // i.e. it is one instruction past the call instruction.
