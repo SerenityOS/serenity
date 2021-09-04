@@ -64,8 +64,6 @@ public:
     bool is_editable() const { return m_editable; }
     void set_editable(bool editable) { m_editable = editable; }
 
-    bool is_searching() const { return !m_searching.is_null(); }
-
     bool is_searchable() const;
     void set_searchable(bool);
 
@@ -164,6 +162,7 @@ protected:
     void activate_selected();
     void update_edit_widget_position();
 
+    bool is_searching() const { return !m_searching.is_null(); }
     StringView searching() const { return m_searching; }
     void cancel_searching();
     void start_searching_timer();
