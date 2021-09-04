@@ -577,8 +577,12 @@ void AbstractView::keydown_event(KeyEvent& event)
                         n_code_points--;
                         sb.append_code_point(*it);
                     }
-                    do_search(sb.to_string());
-                    start_highlighted_search_timer();
+                    auto index = find_next_search_match(sb.string_view());
+                    if (index.is_valid()) {
+                        m_highlighted_search = sb.to_string();
+                        highlight_search(index);
+                        start_highlighted_search_timer();
+                    }
                 } else {
                     stop_highlighted_search_timer();
                 }
@@ -597,8 +601,13 @@ void AbstractView::keydown_event(KeyEvent& event)
             StringBuilder sb;
             sb.append(m_highlighted_search);
             sb.append_code_point(event.code_point());
-            do_search(sb.to_string());
-            start_highlighted_search_timer();
+
+            auto index = find_next_search_match(sb.string_view());
+            if (index.is_valid()) {
+                m_highlighted_search = sb.to_string();
+                highlight_search(index);
+                start_highlighted_search_timer();
+            }
 
             event.accept();
             return;
@@ -632,22 +641,25 @@ void AbstractView::start_highlighted_search_timer()
     m_highlighted_search_timer->restart();
 }
 
-void AbstractView::do_search(String&& searching)
+ModelIndex AbstractView::find_next_search_match(StringView const search)
 {
-    if (searching.is_empty() || !model()) {
-        stop_highlighted_search_timer();
-        return;
-    }
+    if (search.is_empty())
+        return {};
 
-    auto found_indices = model()->matches(searching, Model::MatchesFlag::FirstMatchOnly | Model::MatchesFlag::MatchAtStart | Model::MatchesFlag::CaseInsensitive, model()->parent_index(cursor_index()));
-    if (!found_indices.is_empty() && found_indices[0].is_valid()) {
-        auto& index = found_indices[0];
-        m_highlighted_search_index = index;
-        m_highlighted_search = move(searching);
-        set_selection(index);
-        scroll_into_view(index);
-        update();
-    }
+    auto found_indices = model()->matches(search, Model::MatchesFlag::FirstMatchOnly | Model::MatchesFlag::MatchAtStart | Model::MatchesFlag::CaseInsensitive, model()->parent_index(cursor_index()));
+
+    if (found_indices.is_empty())
+        return {};
+
+    return found_indices[0];
+}
+
+void AbstractView::highlight_search(ModelIndex const index)
+{
+    m_highlighted_search_index = index;
+    set_selection(index);
+    scroll_into_view(index);
+    update();
 }
 
 bool AbstractView::is_searchable() const
