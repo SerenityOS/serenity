@@ -27,7 +27,8 @@ public:
 
     ByteBuffer(ByteBuffer const& other)
     {
-        resize(other.size());
+        auto ok = try_resize(other.size());
+        VERIFY(ok);
         VERIFY(m_size == other.size());
         __builtin_memcpy(data(), other.data(), other.size());
     }
@@ -50,10 +51,12 @@ public:
     ByteBuffer& operator=(ByteBuffer const& other)
     {
         if (this != &other) {
-            if (m_size > other.size())
+            if (m_size > other.size()) {
                 trim(other.size(), true);
-            else
-                resize(other.size());
+            } else {
+                auto ok = try_resize(other.size());
+                VERIFY(ok);
+            }
             __builtin_memcpy(data(), other.data(), other.size());
         }
         return *this;
@@ -61,7 +64,10 @@ public:
 
     [[nodiscard]] static ByteBuffer create_uninitialized(size_t size)
     {
-        return ByteBuffer(size);
+        auto buffer = ByteBuffer();
+        auto ok = buffer.try_resize(size);
+        VERIFY(ok);
+        return buffer;
     }
 
     [[nodiscard]] static ByteBuffer create_zeroed(size_t size)
@@ -146,39 +152,64 @@ public:
 
     ALWAYS_INLINE void resize(size_t new_size)
     {
-        if (new_size <= m_size) {
-            trim(new_size, false);
-            return;
-        }
-        ensure_capacity(new_size);
-        m_size = new_size;
+        auto ok = try_resize(new_size);
+        VERIFY(ok);
     }
 
     ALWAYS_INLINE void ensure_capacity(size_t new_capacity)
     {
+        auto ok = try_ensure_capacity(new_capacity);
+        VERIFY(ok);
+    }
+
+    [[nodiscard]] ALWAYS_INLINE bool try_resize(size_t new_size)
+    {
+        if (new_size <= m_size) {
+            trim(new_size, false);
+            return true;
+        }
+        if (!try_ensure_capacity(new_size))
+            return false;
+        m_size = new_size;
+        return true;
+    }
+
+    [[nodiscard]] ALWAYS_INLINE bool try_ensure_capacity(size_t new_capacity)
+    {
         if (new_capacity <= capacity())
-            return;
-        ensure_capacity_slowpath(new_capacity);
+            return true;
+        return try_ensure_capacity_slowpath(new_capacity);
     }
 
     void append(ReadonlyBytes const& bytes)
     {
-        append(bytes.data(), bytes.size());
+        auto ok = try_append(bytes);
+        VERIFY(ok);
     }
 
-    void append(void const* data, size_t data_size)
+    void append(void const* data, size_t data_size) { append({ data, data_size }); }
+
+    [[nodiscard]] bool try_append(ReadonlyBytes const& bytes)
+    {
+        return try_append(bytes.data(), bytes.size());
+    }
+
+    [[nodiscard]] bool try_append(void const* data, size_t data_size)
     {
         if (data_size == 0)
-            return;
+            return true;
         VERIFY(data != nullptr);
         int old_size = size();
-        resize(size() + data_size);
+        if (!try_resize(size() + data_size))
+            return false;
         __builtin_memcpy(this->data() + old_size, data, data_size);
+        return true;
     }
 
     void operator+=(ByteBuffer const& other)
     {
-        append(other.data(), other.size());
+        auto ok = try_append(other.data(), other.size());
+        VERIFY(ok);
     }
 
     void overwrite(size_t offset, void const* data, size_t data_size)
@@ -199,12 +230,6 @@ public:
     ALWAYS_INLINE size_t capacity() const { return m_inline ? inline_capacity : m_outline_capacity; }
 
 private:
-    ByteBuffer(size_t size)
-    {
-        resize(size);
-        VERIFY(m_size == size);
-    }
-
     void move_from(ByteBuffer&& other)
     {
         m_size = other.m_size;
@@ -237,25 +262,24 @@ private:
         m_inline = true;
     }
 
-    NEVER_INLINE void ensure_capacity_slowpath(size_t new_capacity)
+    [[nodiscard]] NEVER_INLINE bool try_ensure_capacity_slowpath(size_t new_capacity)
     {
-        u8* new_buffer;
         new_capacity = kmalloc_good_size(new_capacity);
-        if (!m_inline) {
-            new_buffer = (u8*)kmalloc(new_capacity);
-            if (m_outline_buffer) {
-                __builtin_memcpy(new_buffer, m_outline_buffer, min(new_capacity, m_outline_capacity));
-                kfree_sized(m_outline_buffer, m_outline_capacity);
-            }
-            VERIFY(new_buffer);
-        } else {
-            new_buffer = (u8*)kmalloc(new_capacity);
-            VERIFY(new_buffer);
+        auto new_buffer = (u8*)kmalloc(new_capacity);
+        if (!new_buffer)
+            return false;
+
+        if (m_inline) {
             __builtin_memcpy(new_buffer, data(), m_size);
+        } else if (m_outline_buffer) {
+            __builtin_memcpy(new_buffer, m_outline_buffer, min(new_capacity, m_outline_capacity));
+            kfree_sized(m_outline_buffer, m_outline_capacity);
         }
+
         m_outline_buffer = new_buffer;
         m_outline_capacity = new_capacity;
         m_inline = false;
+        return true;
     }
 
     union {
