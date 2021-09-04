@@ -163,7 +163,6 @@ protected:
     void update_edit_widget_position();
 
     bool is_searching() const { return !m_searching.is_null(); }
-    StringView searching() const { return m_searching; }
     void cancel_searching();
     void start_searching_timer();
     void do_search(String&&);
