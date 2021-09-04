@@ -6,6 +6,10 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
+#include <AK/Function.h>
+#include <AK/Vector.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS {
@@ -16,6 +20,19 @@ class Array : public Object {
 public:
     static Array* create(GlobalObject&, size_t length, Object* prototype = nullptr);
     static Array* create_from(GlobalObject&, Vector<Value> const&);
+    // Non-standard but equivalent to CreateArrayFromList.
+    template<typename T>
+    static Array* create_from(GlobalObject& global_object, Vector<T>& elements, Function<Value(T&)> map_fn)
+    {
+        auto& vm = global_object.vm();
+        auto values = MarkedValueList { global_object.heap() };
+        values.ensure_capacity(elements.size());
+        for (auto& element : elements) {
+            values.append(map_fn(element));
+            VERIFY(!vm.exception());
+        }
+        return Array::create_from(global_object, values);
+    }
 
     explicit Array(Object& prototype);
     virtual ~Array() override;
