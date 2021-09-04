@@ -17,10 +17,9 @@ UNMAP_AFTER_INIT NonnullRefPtr<Console> Console::must_create(PCI::Address addres
     return adopt_ref_if_nonnull(new Console(address)).release_nonnull();
 }
 
-UNMAP_AFTER_INIT Console::Console(PCI::Address address)
-    : VirtIO::Device(address)
-    , m_device_id(next_device_id++)
+UNMAP_AFTER_INIT void Console::initialize()
 {
+    Device::initialize();
     if (auto cfg = get_config(ConfigurationType::Device)) {
         bool success = negotiate_features([&](u64 supported_features) {
             u64 negotiated = 0;
@@ -56,6 +55,12 @@ UNMAP_AFTER_INIT Console::Console(PCI::Address address)
                 m_ports.append(make_ref_counted<VirtIO::ConsolePort>(0u, *this));
         }
     }
+}
+
+UNMAP_AFTER_INIT Console::Console(PCI::Address address)
+    : VirtIO::Device(address)
+    , m_device_id(next_device_id++)
+{
 }
 
 bool Console::handle_device_config_change()
