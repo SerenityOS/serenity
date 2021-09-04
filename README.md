@@ -147,6 +147,7 @@ Join our Discord server: [SerenityOS Discord](https://discord.gg/serenityos)
 * **sin-ack** - [sin-ack](https://github.com/sin-ack)
 * **Jesse Buhagiar** - [Quaker762](https://github.com/Quaker762)
 * **Peter Elliott** - [Petelliott](https://github.com/Petelliott)
+* **Karol Kosek** - [krkk](https://github.com/krkk)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 
