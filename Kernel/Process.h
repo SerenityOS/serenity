@@ -522,7 +522,7 @@ private:
     bool remove_thread(Thread&);
 
     Process(const String& name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty);
-    static RefPtr<Process> try_create(RefPtr<Thread>& first_thread, String const& name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
+    static KResultOr<NonnullRefPtr<Process>> try_create(RefPtr<Thread>& first_thread, String const& name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
     KResult attach_resources(NonnullOwnPtr<Memory::AddressSpace>&&, RefPtr<Thread>& first_thread, Process* fork_parent);
     static ProcessID allocate_pid();
 

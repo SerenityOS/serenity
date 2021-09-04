@@ -18,9 +18,10 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(proc);
     RefPtr<Thread> child_first_thread;
-    auto child = Process::try_create(child_first_thread, m_name, uid(), gid(), pid(), m_is_kernel_process, m_cwd, m_executable, m_tty, this);
-    if (!child || !child_first_thread)
-        return ENOMEM;
+    auto child_or_error = Process::try_create(child_first_thread, m_name, uid(), gid(), pid(), m_is_kernel_process, m_cwd, m_executable, m_tty, this);
+    if (child_or_error.is_error())
+        return child_or_error.error();
+    auto child = child_or_error.release_value();
     child->m_veil_state = m_veil_state;
     child->m_unveiled_paths = m_unveiled_paths.deep_copy();
 
