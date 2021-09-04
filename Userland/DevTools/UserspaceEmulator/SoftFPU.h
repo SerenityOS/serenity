@@ -110,7 +110,10 @@ private:
         reportln("fpu-stacktop: {}", m_fpu_stack_top);
         reportln("fpu-stack /w stacktop (real):");
         for (u8 i = 0; i < 8; ++i) {
-            reportln("\t{} ({}): fp {} ({}), mmx (:x016)", i, (u8)((m_fpu_stack_top + i) % 8), m_storage[(m_fpu_stack_top + i) % 8].fp, fpu_is_set(i) ? "set" : "free", m_storage[(m_fpu_stack_top + i) % 8].mmx.raw);
+            reportln("\t{} ({}): fp {} ({}), mmx {:016x}",
+                i, (u8)((m_fpu_stack_top + i) % 8),
+                m_storage[(m_fpu_stack_top + i) % 8].fp, fpu_is_set(i) ? "set" : "free",
+                m_storage[(m_fpu_stack_top + i) % 8].mmx.raw);
         }
     }
 
