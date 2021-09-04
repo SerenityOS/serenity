@@ -20,6 +20,7 @@ constexpr auto round_up_to_power_of_two(T value, U power_of_two) requires(IsInte
 // Disabling formatting for that doesn't help either.
 //
 // clang-format off
+#ifndef AK_DONT_REPLACE_STD
 namespace std {
 
 // NOTE: These are in the "std" namespace since some compilers and static analyzers rely on it.
@@ -44,6 +45,7 @@ constexpr T&& move(T& arg)
 }
 
 }
+#endif
 // clang-format on
 
 using std::forward;
