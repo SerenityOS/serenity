@@ -29,7 +29,6 @@ endpoint WebContentClient
     did_get_source(URL url, String source) =|
     did_get_dom_tree(String dom_tree) =|
     did_get_dom_node_properties(i32 node_id, String specified_style, String computed_style) =|
-    did_js_console_output(String method, String line) =|
     did_change_favicon(Gfx::ShareableBitmap favicon) =|
     did_request_cookie(URL url, u8 source) => (String cookie)
     did_set_cookie(URL url, Web::Cookie::ParsedCookie cookie, u8 source) =|

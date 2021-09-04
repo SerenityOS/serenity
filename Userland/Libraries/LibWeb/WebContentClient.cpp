@@ -146,11 +146,6 @@ void WebContentClient::did_get_dom_node_properties(i32 node_id, String const& sp
     m_view.notify_server_did_get_dom_node_properties(node_id, specified_style, computed_style);
 }
 
-void WebContentClient::did_js_console_output(String const& method, String const& line)
-{
-    m_view.notify_server_did_js_console_output(method, line);
-}
-
 void WebContentClient::did_output_js_console_message(i32 message_index)
 {
     m_view.notify_server_did_output_js_console_message(message_index);
