@@ -47,7 +47,11 @@ void ConsolePort::handle_queue_update(Badge<VirtIO::Console>, u16 queue_index)
         QueueChain popped_chain = queue.pop_used_buffer_chain(used);
 
         SpinlockLocker ringbuffer_lock(m_receive_buffer->lock());
-        auto used_space = m_receive_buffer->reserve_space(used).value();
+        auto used_space_or_error = m_receive_buffer->reserve_space(used);
+        if (used_space_or_error.is_error()) {
+            TODO();
+        }
+        auto used_space = used_space_or_error.release_value();
         auto remaining_space = m_receive_buffer->bytes_till_end();
 
         // Our algorithm always has only one buffer in the queue.
@@ -97,7 +101,10 @@ KResultOr<size_t> ConsolePort::read(FileDescription& desc, u64, UserOrKernelBuff
     if (!can_read(desc, size))
         return EAGAIN;
 
-    auto bytes_copied = m_receive_buffer->copy_data_out(size, buffer).value();
+    auto bytes_copied_or_error = m_receive_buffer->copy_data_out(size, buffer);
+    if (bytes_copied_or_error.is_error())
+        return bytes_copied_or_error.error();
+    auto bytes_copied = bytes_copied_or_error.release_value();
     m_receive_buffer->reclaim_space(m_receive_buffer->start_of_used(), bytes_copied);
 
     if (m_receive_buffer_exhausted && m_receive_buffer->used_bytes() == 0) {
