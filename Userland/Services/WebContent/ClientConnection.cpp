@@ -318,9 +318,9 @@ void ClientConnection::run_javascript(String const& js_source)
     }
 }
 
-void ClientConnection::js_console_request_messages(i32)
+void ClientConnection::js_console_request_messages(i32 start_index)
 {
-    TODO();
+    m_console_client->send_messages(start_index);
 }
 
 Messages::WebContentServer::GetSelectedTextResponse ClientConnection::get_selected_text()

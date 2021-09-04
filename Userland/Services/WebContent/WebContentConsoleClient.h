@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Brandon Scott <xeon.productions@gmail.com>
  * Copyright (c) 2020, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +20,8 @@ class WebContentConsoleClient final : public JS::ConsoleClient {
 public:
     WebContentConsoleClient(JS::Console&, WeakPtr<JS::Interpreter>, ClientConnection&);
 
-    void handle_input(const String& js_source);
+    void handle_input(String const& js_source);
+    void send_messages(i32 start_index);
 
 private:
     virtual JS::Value log() override;
@@ -38,7 +40,17 @@ private:
     JS::Handle<ConsoleGlobalObject> m_console_global_object;
 
     void clear_output();
-    void print_html(const String& line);
+    void print_html(String const& line);
+
+    struct ConsoleOutput {
+        enum class Type {
+            HTML,
+            Clear
+        };
+        Type type;
+        String html;
+    };
+    Vector<ConsoleOutput> m_message_log;
 };
 
 }
