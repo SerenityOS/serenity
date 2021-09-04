@@ -61,6 +61,7 @@ StringView trim_whitespace(const StringView& string, TrimMode mode);
 Optional<size_t> find(StringView const& haystack, char needle, size_t start = 0);
 Optional<size_t> find(StringView const& haystack, StringView const& needle, size_t start = 0);
 Optional<size_t> find_last(StringView const& haystack, char needle);
+Optional<size_t> find_last(StringView const& haystack, StringView const& needle);
 Vector<size_t> find_all(StringView const& haystack, StringView const& needle);
 enum class SearchDirection {
     Forward,

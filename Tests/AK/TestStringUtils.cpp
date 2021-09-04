@@ -291,6 +291,17 @@ TEST_CASE(find)
     EXPECT_EQ(AK::StringUtils::find(test_string, "78").has_value(), false);
 }
 
+TEST_CASE(find_last)
+{
+    StringView test_string = "1234567754321";
+    EXPECT_EQ(AK::StringUtils::find_last(test_string, "21").value(), 11u);
+    EXPECT_EQ(AK::StringUtils::find_last(test_string, "77").value(), 6u);
+    EXPECT_EQ(AK::StringUtils::find_last(test_string, "12").value(), 0u);
+    EXPECT_EQ(AK::StringUtils::find_last(test_string, test_string).value(), 0u);
+    EXPECT(!AK::StringUtils::find_last(test_string, "78").has_value());
+    EXPECT(!AK::StringUtils::find_last(test_string, "521").has_value());
+}
+
 TEST_CASE(to_snakecase)
 {
     EXPECT_EQ(AK::StringUtils::to_snakecase("foobar"), "foobar");

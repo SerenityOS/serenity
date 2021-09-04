@@ -351,6 +351,23 @@ Optional<size_t> find_last(StringView const& haystack, char needle)
     return {};
 }
 
+Optional<size_t> find_last(StringView const& haystack, StringView const& needle)
+{
+    if (needle.length() > haystack.length()) {
+        return {};
+    } else if (needle == haystack) {
+        return 0;
+    }
+
+    for (auto i = haystack.length() - needle.length() + 1; i > 0; --i) {
+        auto const subhaystack = haystack.substring_view(i - 1, needle.length());
+        if (subhaystack == needle) {
+            return i - 1;
+        }
+    }
+    return {};
+}
+
 Vector<size_t> find_all(StringView const& haystack, StringView const& needle)
 {
     Vector<size_t> positions;

@@ -123,6 +123,17 @@ TEST_CASE(find_last)
     EXPECT_EQ(test_string_view.find_last('/'), 0U);
 }
 
+TEST_CASE(find_last_with_stringview)
+{
+    auto test_string_view = "aabbcc_xy_ccbbaa"sv;
+    EXPECT_EQ(test_string_view.find_last("bb").value(), 12U);
+    EXPECT_EQ(test_string_view.find_last("_c").value(), 9U);
+    EXPECT_EQ(test_string_view.find_last("35").has_value(), false);
+
+    test_string_view = "/"sv;
+    EXPECT_EQ(test_string_view.find_last("/"), 0U);
+}
+
 TEST_CASE(find_any_of)
 {
     auto test_string_view = "aabbcc_xy_ccbbaa"sv;

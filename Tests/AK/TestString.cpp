@@ -272,6 +272,17 @@ TEST_CASE(find)
     EXPECT_EQ(a.find('b', 9), Optional<size_t> {});
 }
 
+TEST_CASE(find_last_with_stringview)
+{
+    String test_string = "aabbcc_xy_ccbbaa";
+    EXPECT_EQ(test_string.find_last("bb").value(), 12U);
+    EXPECT_EQ(test_string.find_last("_c").value(), 9U);
+    EXPECT_EQ(test_string.find_last("35").has_value(), false);
+
+    test_string = "/";
+    EXPECT_EQ(test_string.find_last("/"), 0U);
+}
+
 TEST_CASE(find_with_empty_needle)
 {
     String string = "";
