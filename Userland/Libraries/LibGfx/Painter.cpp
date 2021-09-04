@@ -1492,7 +1492,7 @@ void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const
                 // compatible with draw_text_line.
                 StringBuilder builder;
                 builder.append(directional_run.text());
-                auto line_text = Utf8View { builder.to_string() };
+                auto line_text = Utf8View { builder.string_view() };
 
                 draw_text_line(run_rect, line_text, font, alignment, directional_run.direction(), draw_glyph);
                 if (line_direction == TextDirection::LTR)
