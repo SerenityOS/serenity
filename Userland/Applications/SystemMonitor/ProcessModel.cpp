@@ -397,11 +397,11 @@ void ProcessModel::update()
             continue;
         }
         auto& thread = *it.value;
-        u32 time_scheduled_diff = (thread.current_state.time_user + thread.current_state.time_kernel)
+        u64 time_scheduled_diff = (thread.current_state.time_user + thread.current_state.time_kernel)
             - (thread.previous_state.time_user + thread.previous_state.time_kernel);
-        u32 time_scheduled_diff_kernel = thread.current_state.time_kernel - thread.previous_state.time_kernel;
-        thread.current_state.cpu_percent = total_time_scheduled_diff > 0 ? ((float)time_scheduled_diff * 100) / (float)total_time_scheduled_diff : 0;
-        thread.current_state.cpu_percent_kernel = total_time_scheduled_diff > 0 ? ((float)time_scheduled_diff_kernel * 100) / (float)total_time_scheduled_diff : 0;
+        u64 time_scheduled_diff_kernel = thread.current_state.time_kernel - thread.previous_state.time_kernel;
+        thread.current_state.cpu_percent = total_time_scheduled_diff > 0 ? (float)((time_scheduled_diff * 1000) / total_time_scheduled_diff) / 10.0f : 0;
+        thread.current_state.cpu_percent_kernel = total_time_scheduled_diff > 0 ? (float)((time_scheduled_diff_kernel * 1000) / total_time_scheduled_diff) / 10.0f : 0;
         if (it.value->current_state.pid != 0) {
             auto& cpu_info = m_cpus[thread.current_state.cpu];
             cpu_info.total_cpu_percent += thread.current_state.cpu_percent;
