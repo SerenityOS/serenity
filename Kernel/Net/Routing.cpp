@@ -28,9 +28,9 @@ public:
 
     virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
 
-    bool unblock(bool from_add_blocker, IPv4Address const& ip_addr, MACAddress const& addr)
+    bool unblock_if_matching_ip_address(bool from_add_blocker, IPv4Address const& ip_address, MACAddress const& mac_address)
     {
-        if (m_ip_addr != ip_addr)
+        if (m_ip_address != ip_address)
             return false;
 
         {
@@ -38,7 +38,7 @@ public:
             if (m_did_unblock)
                 return false;
             m_did_unblock = true;
-            m_addr = addr;
+            m_mac_address = mac_address;
         }
 
         if (!from_add_blocker)
@@ -46,22 +46,22 @@ public:
         return true;
     }
 
-    IPv4Address const& ip_addr() const { return m_ip_addr; }
+    IPv4Address const& ip_address() const { return m_ip_address; }
 
 private:
-    IPv4Address const m_ip_addr;
-    Optional<MACAddress>& m_addr;
+    IPv4Address const m_ip_address;
+    Optional<MACAddress>& m_mac_address;
     bool m_did_unblock { false };
 };
 
 class ARPTableBlockerSet final : public Thread::BlockerSet {
 public:
-    void unblock(IPv4Address const& ip_addr, MACAddress const& addr)
+    void unblock_blockers_waiting_for_ipv4_address(IPv4Address const& ipv4_address, MACAddress const& mac_address)
     {
         BlockerSet::unblock_all_blockers_whose_conditions_are_met([&](auto& b, void*, bool&) {
             VERIFY(b.blocker_type() == Thread::Blocker::Type::Routing);
             auto& blocker = static_cast<ARPTableBlocker&>(b);
-            return blocker.unblock(false, ip_addr, addr);
+            return blocker.unblock_if_matching_ip_address(false, ipv4_address, mac_address);
         });
     }
 
@@ -70,20 +70,20 @@ protected:
     {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Routing);
         auto& blocker = static_cast<ARPTableBlocker&>(b);
-        auto val = arp_table().with_shared([&](auto const& table) -> auto {
-            return table.get(blocker.ip_addr());
+        auto maybe_mac_address = arp_table().with_shared([&](auto const& table) -> auto {
+            return table.get(blocker.ip_address());
         });
-        if (!val.has_value())
+        if (!maybe_mac_address.has_value())
             return true;
-        return blocker.unblock(true, blocker.ip_addr(), val.value());
+        return blocker.unblock_if_matching_ip_address(true, blocker.ip_address(), maybe_mac_address.value());
     }
 };
 
 static Singleton<ARPTableBlockerSet> s_arp_table_blocker_set;
 
 ARPTableBlocker::ARPTableBlocker(IPv4Address ip_addr, Optional<MACAddress>& addr)
-    : m_ip_addr(ip_addr)
-    , m_addr(addr)
+    : m_ip_address(ip_addr)
+    , m_mac_address(addr)
 {
 }
 
@@ -95,13 +95,13 @@ bool ARPTableBlocker::setup_blocker()
 void ARPTableBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason)
 {
     auto addr = arp_table().with_shared([&](auto const& table) -> auto {
-        return table.get(ip_addr());
+        return table.get(ip_address());
     });
 
     SpinlockLocker lock(m_lock);
     if (!m_did_unblock) {
         m_did_unblock = true;
-        m_addr = move(addr);
+        m_mac_address = move(addr);
     }
 }
 
@@ -118,7 +118,7 @@ void update_arp_table(IPv4Address const& ip_addr, MACAddress const& addr, Update
         if (update == UpdateArp::Delete)
             table.remove(ip_addr);
     });
-    s_arp_table_blocker_set->unblock(ip_addr, addr);
+    s_arp_table_blocker_set->unblock_blockers_waiting_for_ipv4_address(ip_addr, addr);
 
     if constexpr (ARP_DEBUG) {
         arp_table().with_shared([&](auto const& table) {
