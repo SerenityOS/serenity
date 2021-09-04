@@ -96,6 +96,9 @@ protected:
     virtual KResult chown(UserID, GroupID) override;
     virtual KResult truncate(u64) override;
 
+    virtual KResult attach(FileDescription& description) override final;
+    virtual void did_seek(FileDescription&, off_t) override final;
+
     NonnullRefPtr<SysFSComponent> m_associated_component;
 };
 
