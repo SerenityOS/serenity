@@ -90,6 +90,8 @@ class Device
 public:
     virtual ~Device() override = default;
 
+    virtual void initialize();
+
 protected:
     virtual StringView class_name() const = 0;
     explicit Device(PCI::Address);

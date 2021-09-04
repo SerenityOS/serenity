@@ -25,11 +25,13 @@ UNMAP_AFTER_INIT void detect()
             return;
         switch (id.device_id) {
         case PCI::DeviceID::VirtIOConsole: {
-            [[maybe_unused]] auto& unused = Console::must_create(address).leak_ref();
+            auto& console = Console::must_create(address).leak_ref();
+            console.initialize();
             break;
         }
         case PCI::DeviceID::VirtIOEntropy: {
-            [[maybe_unused]] auto& unused = RNG::must_create(address).leak_ref();
+            auto& rng = RNG::must_create(address).leak_ref();
+            rng.initialize();
             break;
         }
         case PCI::DeviceID::VirtIOGPU: {
@@ -60,13 +62,9 @@ StringView determine_device_class(const PCI::Address& address)
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT VirtIO::Device::Device(PCI::Address address)
-    : PCI::Device(address)
-    , IRQHandler(PCI::get_interrupt_line(address))
-    , m_io_base(IOAddress(PCI::get_BAR0(pci_address()) & ~1))
+UNMAP_AFTER_INIT void Device::initialize()
 {
-    dbgln("{}: Found @ {}", VirtIO::determine_device_class(address), pci_address());
-
+    auto address = pci_address();
     enable_bus_mastering(pci_address());
     PCI::enable_interrupt_line(pci_address());
     enable_irq();
@@ -114,6 +112,14 @@ UNMAP_AFTER_INIT VirtIO::Device::Device(PCI::Address address)
     set_status_bit(DEVICE_STATUS_ACKNOWLEDGE);
 
     set_status_bit(DEVICE_STATUS_DRIVER);
+}
+
+UNMAP_AFTER_INIT VirtIO::Device::Device(PCI::Address address)
+    : PCI::Device(address)
+    , IRQHandler(PCI::get_interrupt_line(address))
+    , m_io_base(IOAddress(PCI::get_BAR0(pci_address()) & ~1))
+{
+    dbgln("{}: Found @ {}", VirtIO::determine_device_class(address), pci_address());
 }
 
 auto Device::mapping_for_bar(u8 bar) -> MappedMMIO&
