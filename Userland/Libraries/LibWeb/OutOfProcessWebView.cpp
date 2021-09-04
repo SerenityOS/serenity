@@ -347,12 +347,6 @@ void OutOfProcessWebView::notify_server_did_get_dom_node_properties(i32 node_id,
         on_get_dom_node_properties(node_id, specified_style, computed_style);
 }
 
-void OutOfProcessWebView::notify_server_did_js_console_output(const String& method, const String& line)
-{
-    if (on_js_console_output)
-        on_js_console_output(method, line);
-}
-
 void OutOfProcessWebView::notify_server_did_output_js_console_message(i32 message_index)
 {
     if (on_js_console_new_message)
@@ -439,11 +433,6 @@ void OutOfProcessWebView::clear_inspected_dom_node()
 i32 OutOfProcessWebView::get_hovered_node_id()
 {
     return client().get_hovered_node_id();
-}
-
-void OutOfProcessWebView::js_console_initialize()
-{
-    client().async_js_console_initialize();
 }
 
 void OutOfProcessWebView::js_console_input(const String& js_source)
