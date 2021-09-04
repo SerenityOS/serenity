@@ -441,7 +441,7 @@ void Game::draw_cards()
         NonnullRefPtrVector<Card> cards_drawn;
         for (size_t i = 0; (i < cards_to_draw) && !stock.is_empty(); ++i) {
             auto card = stock.pop();
-            cards_drawn.append(card);
+            cards_drawn.prepend(card);
             play.push(move(card));
         }
 
