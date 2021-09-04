@@ -369,15 +369,9 @@ void ProcessModel::update()
                 state.state = thread.state;
                 sum_time_scheduled += thread.time_user + thread.time_kernel;
                 sum_time_scheduled_kernel += thread.time_kernel;
-                {
-                    auto pit = m_threads.find(thread.tid);
-                    if (pit == m_threads.end())
-                        m_threads.set(thread.tid, make<Thread>());
-                }
-                auto pit = m_threads.find(thread.tid);
-                VERIFY(pit != m_threads.end());
-                (*pit).value->previous_state = (*pit).value->current_state;
-                (*pit).value->current_state = state;
+                auto& thread_data = *m_threads.ensure(thread.tid, [] { return make<Thread>(); });
+                thread_data.previous_state = move(thread_data.current_state);
+                thread_data.current_state = move(state);
 
                 live_tids.set(thread.tid);
             }
