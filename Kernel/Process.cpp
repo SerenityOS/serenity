@@ -143,32 +143,26 @@ void Process::register_new(Process& process)
     });
 }
 
-RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const String& path, UserID uid, GroupID gid, ProcessID parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
+KResultOr<NonnullRefPtr<Process>> Process::try_create_user_process(RefPtr<Thread>& first_thread, String const& path, UserID uid, GroupID gid, Vector<String> arguments, Vector<String> environment, TTY* tty)
 {
     auto parts = path.split('/');
     if (arguments.is_empty()) {
         arguments.append(parts.last());
     }
 
-    RefPtr<Custody> cwd;
-    if (auto parent = Process::from_pid(parent_pid))
-        cwd = parent->m_cwd;
-    if (!cwd)
-        cwd = VirtualFileSystem::the().root_custody();
-
-    auto process = Process::try_create(first_thread, parts.take_last(), uid, gid, parent_pid, false, move(cwd), nullptr, tty);
+    auto process = Process::try_create(first_thread, parts.take_last(), uid, gid, ProcessID(0), false, VirtualFileSystem::the().root_custody(), nullptr, tty);
     if (!process || !first_thread)
-        return {};
+        return ENOMEM;
+
     if (!process->m_fds.try_resize(process->m_fds.max_open())) {
         first_thread = nullptr;
-        return {};
+        return ENOMEM;
     }
     auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : NullDevice::the();
     auto description_or_error = device_to_use_as_tty.open(O_RDWR);
-    if (description_or_error.is_error()) {
-        error = description_or_error.error().error();
-        return {};
-    }
+    if (description_or_error.is_error())
+        return description_or_error.error();
+
     auto& description = description_or_error.value();
 
     auto setup_description = [&process, &description](int fd) {
@@ -179,20 +173,18 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
     setup_description(1);
     setup_description(2);
 
-    error = process->exec(path, move(arguments), move(environment)).error();
-    if (error != 0) {
-        dbgln("Failed to exec {}: {}", path, error);
+    if (auto result = process->exec(path, move(arguments), move(environment)); result.is_error()) {
+        dbgln("Failed to exec {}: {}", path, result);
         first_thread = nullptr;
-        return {};
+        return result;
     }
 
     register_new(*process);
-    error = 0;
 
     // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
-    (void)process.leak_ref();
+    process->ref();
 
-    return process;
+    return process.release_nonnull();
 }
 
 RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data, u32 affinity, RegisterProcess do_register)
