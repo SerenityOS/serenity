@@ -138,17 +138,19 @@ public:
 
     [[nodiscard]] KResult result() const { return m_is_error ? m_error : KSuccess; }
 
-    [[nodiscard]] ALWAYS_INLINE T& value()
+    [[nodiscard]] ALWAYS_INLINE T& value() &
     {
         VERIFY(!m_is_error);
         return *reinterpret_cast<T*>(&m_storage);
     }
 
-    [[nodiscard]] ALWAYS_INLINE const T& value() const
+    [[nodiscard]] ALWAYS_INLINE T const& value() const&
     {
         VERIFY(!m_is_error);
         return *reinterpret_cast<T*>(&m_storage);
     }
+
+    T value() && = delete;
 
     [[nodiscard]] ALWAYS_INLINE T release_value()
     {
