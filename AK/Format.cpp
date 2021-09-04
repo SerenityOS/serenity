@@ -864,24 +864,19 @@ void vdmesgln(StringView fmtstr, TypeErasedFormatParams& params)
 
 void v_critical_dmesgln(StringView fmtstr, TypeErasedFormatParams& params)
 {
-    // FIXME: Try to avoid memory allocations further to prevent faulting
-    // at OOM conditions.
-
-    StringBuilder builder;
 #    ifdef __serenity__
+    // FIXME: What should happen if the lock is held by someone else when we get here?
+    SpinlockLocker lock(g_log_lock);
     if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
         auto& thread = *Kernel::Thread::current();
-        builder.appendff("[{}({}:{})]: ", thread.process().name(), thread.pid().value(), thread.tid().value());
+        format_to(critical_console_out, "[{}({}:{})]: ", thread.process().name(), thread.pid().value(), thread.tid().value());
     } else {
-        builder.appendff("[Kernel]: ");
+        format_to(critical_console_out, "[Kernel]: ");
     }
 #    endif
 
-    vformat(builder, fmtstr, params);
-    builder.append('\n');
-
-    const auto string = builder.string_view();
-    kernelcriticalputstr(string.characters_without_null_termination(), string.length());
+    vformat_to(critical_console_out, fmtstr, params);
+    critical_console_out('\n');
 }
 
 #endif

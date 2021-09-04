@@ -8,6 +8,9 @@
 
 #include <AK/StringView.h>
 #include <AK/Types.h>
+#include <Kernel/Locking/Spinlock.h>
+
+extern Kernel::RecursiveSpinlock g_log_lock;
 
 extern "C" {
 void dbgputch(char);
@@ -20,3 +23,4 @@ int get_serial_debug();
 }
 
 void dbgputstr(StringView view);
+void critical_console_out(char);
