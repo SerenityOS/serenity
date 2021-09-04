@@ -130,7 +130,7 @@ private:
 
     Cell& cell_at(size_t column, size_t row);
 
-    typedef Vector<unsigned, 4> ParamVector;
+    using ParamVector = Vector<unsigned, 4>;
 
     void on_code_point(u32);
 
