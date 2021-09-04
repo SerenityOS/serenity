@@ -1101,7 +1101,7 @@ public:
         return !m_is_joinable;
     }
 
-    RefPtr<Thread> clone(Process&);
+    KResultOr<NonnullRefPtr<Thread>> try_clone(Process&);
 
     template<IteratorFunction<Thread&> Callback>
     static IterationDecision for_each_in_state(State, Callback);

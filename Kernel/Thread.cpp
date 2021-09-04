@@ -50,11 +50,7 @@ KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> proce
 
     auto name = KString::try_create(process->name());
 
-    auto thread = adopt_ref_if_nonnull(new (nothrow) Thread(move(process), kernel_stack_region.release_nonnull(), block_timer.release_nonnull(), move(name)));
-    if (!thread)
-        return ENOMEM;
-
-    return thread.release_nonnull();
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Thread(move(process), kernel_stack_region.release_nonnull(), block_timer.release_nonnull(), move(name)));
 }
 
 Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> kernel_stack_region, NonnullRefPtr<Timer> block_timer, OwnPtr<KString> name)
@@ -1030,11 +1026,11 @@ RegisterState& Thread::get_register_dump_from_stack()
     return *trap->regs;
 }
 
-RefPtr<Thread> Thread::clone(Process& process)
+KResultOr<NonnullRefPtr<Thread>> Thread::try_clone(Process& process)
 {
     auto thread_or_error = Thread::try_create(process);
     if (thread_or_error.is_error())
-        return {};
+        return thread_or_error.error();
     auto& clone = thread_or_error.value();
     auto signal_action_data_span = m_signal_action_data.span();
     signal_action_data_span.copy_to(clone->m_signal_action_data.span());
