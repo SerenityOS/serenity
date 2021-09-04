@@ -666,11 +666,6 @@ void AbstractView::set_searchable(bool searchable)
         cancel_searching();
 }
 
-bool AbstractView::is_highlighting_searching(const ModelIndex& index) const
-{
-    return index == m_highlighted_search_index;
-}
-
 void AbstractView::draw_item_text(Gfx::Painter& painter, const ModelIndex& index, bool is_selected, const Gfx::IntRect& text_rect, const StringView& item_text, const Gfx::Font& font, Gfx::TextAlignment alignment, Gfx::TextElision elision, size_t search_highlighting_offset)
 {
     if (m_edit_index == index)
@@ -681,7 +676,7 @@ void AbstractView::draw_item_text(Gfx::Painter& painter, const ModelIndex& index
         text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
     else
         text_color = index.data(ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
-    if (is_highlighting_searching(index)) {
+    if (index == m_highlighted_search_index) {
         Utf8View searching_text(m_searching);
         auto searching_length = searching_text.length();
         if (searching_length > search_highlighting_offset)

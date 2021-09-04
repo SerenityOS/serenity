@@ -166,7 +166,6 @@ protected:
     void cancel_searching();
     void start_searching_timer();
     void do_search(String&&);
-    bool is_highlighting_searching(const ModelIndex&) const;
 
     ModelIndex drop_candidate_index() const { return m_drop_candidate_index; }
 
