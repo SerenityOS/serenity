@@ -176,8 +176,8 @@ class ExpandableHeap {
     AK_MAKE_NONMOVABLE(ExpandableHeap);
 
 public:
-    typedef ExpandHeap ExpandHeapType;
-    typedef Heap<CHUNK_SIZE, HEAP_SCRUB_BYTE_ALLOC, HEAP_SCRUB_BYTE_FREE> HeapType;
+    using ExpandHeapType = ExpandHeap;
+    using HeapType = Heap<CHUNK_SIZE, HEAP_SCRUB_BYTE_ALLOC, HEAP_SCRUB_BYTE_FREE>;
 
     struct SubHeap {
         HeapType heap;

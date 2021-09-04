@@ -159,7 +159,7 @@ struct KmallocGlobalHeap {
             return false;
         }
     };
-    typedef ExpandableHeap<CHUNK_SIZE, KMALLOC_SCRUB_BYTE, KFREE_SCRUB_BYTE, ExpandGlobalHeap> HeapType;
+    using HeapType = ExpandableHeap<CHUNK_SIZE, KMALLOC_SCRUB_BYTE, KFREE_SCRUB_BYTE, ExpandGlobalHeap>;
 
     HeapType m_heap;
     NonnullOwnPtrVector<Memory::Region> m_subheap_memory;

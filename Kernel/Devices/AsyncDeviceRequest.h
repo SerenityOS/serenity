@@ -143,7 +143,7 @@ private:
     RequestResult m_result { Pending };
     IntrusiveListNode<AsyncDeviceRequest, RefPtr<AsyncDeviceRequest>> m_list_node;
 
-    typedef IntrusiveList<AsyncDeviceRequest, RefPtr<AsyncDeviceRequest>, &AsyncDeviceRequest::m_list_node> AsyncDeviceSubRequestList;
+    using AsyncDeviceSubRequestList = IntrusiveList<AsyncDeviceRequest, RefPtr<AsyncDeviceRequest>, &AsyncDeviceRequest::m_list_node>;
 
     AsyncDeviceSubRequestList m_sub_requests_pending;
     AsyncDeviceSubRequestList m_sub_requests_complete;
