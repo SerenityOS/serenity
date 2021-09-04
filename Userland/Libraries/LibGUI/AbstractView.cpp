@@ -682,7 +682,7 @@ void AbstractView::draw_item_text(Gfx::Painter& painter, const ModelIndex& index
     else
         text_color = index.data(ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
     if (is_highlighting_searching(index)) {
-        Utf8View searching_text(searching());
+        Utf8View searching_text(m_searching);
         auto searching_length = searching_text.length();
         if (searching_length > search_highlighting_offset)
             searching_length -= search_highlighting_offset;
