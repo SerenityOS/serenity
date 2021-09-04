@@ -322,6 +322,13 @@ void DynamicLoader::load_program_headers()
         FlatPtr ph_base = region.desired_load_address().page_base().get();
         FlatPtr ph_end = ph_base + round_up_to_power_of_two(region.size_in_memory() + region.desired_load_address().get() - ph_base, PAGE_SIZE);
 
+        StringBuilder builder;
+        builder.append(m_filename);
+        if (region.is_executable())
+            builder.append(": .text");
+        else
+            builder.append(": .rodata");
+
         // Now we can map the text segment at the reserved address.
         auto* segment_base = (u8*)mmap_with_name(
             (u8*)reservation + ph_base - ph_load_base,
@@ -330,7 +337,7 @@ void DynamicLoader::load_program_headers()
             MAP_FILE | MAP_SHARED | MAP_FIXED,
             m_image_fd,
             VirtualAddress { region.offset() }.page_base().get(),
-            String::formatted("{}: .text", m_filename).characters());
+            builder.to_string().characters());
 
         if (segment_base == MAP_FAILED) {
             perror("mmap non-writable");
