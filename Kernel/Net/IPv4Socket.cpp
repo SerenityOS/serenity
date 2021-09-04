@@ -53,10 +53,10 @@ KResultOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
         return tcp_socket_or_error.release_value();
     }
     if (type == SOCK_DGRAM) {
-        auto udp_socket = UDPSocket::create(protocol, receive_buffer.release_nonnull());
-        if (udp_socket.is_error())
-            return udp_socket.error();
-        return udp_socket.release_value();
+        auto udp_socket_or_error = UDPSocket::try_create(protocol, receive_buffer.release_nonnull());
+        if (udp_socket_or_error.is_error())
+            return udp_socket_or_error.error();
+        return udp_socket_or_error.release_value();
     }
     if (type == SOCK_RAW) {
         auto raw_socket = adopt_ref_if_nonnull(new (nothrow) IPv4Socket(type, protocol, receive_buffer.release_nonnull(), {}));

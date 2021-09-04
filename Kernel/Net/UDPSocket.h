@@ -14,7 +14,7 @@ namespace Kernel {
 
 class UDPSocket final : public IPv4Socket {
 public:
-    static KResultOr<NonnullRefPtr<UDPSocket>> create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
+    static KResultOr<NonnullRefPtr<UDPSocket>> try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual ~UDPSocket() override;
 
     static SocketHandle<UDPSocket> from_port(u16);
