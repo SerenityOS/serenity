@@ -146,19 +146,15 @@ private:
     {
         {
             Threading::MutexLocker db_locker(m_mutex);
-            auto it = m_result_cache.find(query);
-            if (it == m_result_cache.end()) {
-                m_result_cache.set(query, {});
-            }
-            it = m_result_cache.find(query);
+            auto& cache_entry = m_result_cache.ensure(query);
 
             for (auto& result : results) {
-                auto found = it->value.find_if([&result](auto& other) {
+                auto found = cache_entry.find_if([&result](auto& other) {
                     return result.equals(other);
                 });
 
                 if (found.is_end())
-                    it->value.append(result);
+                    cache_entry.append(result);
             }
         }
 
