@@ -176,6 +176,7 @@ public:
 
     const Gfx::Bitmap* cursor_bitmap_for_screenshot(Badge<ClientConnection>, Screen&) const;
     const Gfx::Bitmap& front_bitmap_for_screenshot(Badge<ClientConnection>, Screen&) const;
+    Gfx::Color color_at_position(Badge<ClientConnection>, Screen&, Gfx::IntPoint const&) const;
 
     void register_animation(Badge<Animation>, Animation&);
     void unregister_animation(Badge<Animation>, Animation&);
