@@ -72,6 +72,10 @@ void AbstractView::model_did_update(unsigned int flags)
         if (!model()->is_within_range(m_drop_candidate_index))
             m_drop_candidate_index = {};
         selection().remove_matching([this](auto& index) { return !model()->is_within_range(index); });
+
+        auto index = find_next_search_match(m_highlighted_search.view());
+        if (index.is_valid())
+            highlight_search(index);
     }
     m_selection_start_index = {};
 }
