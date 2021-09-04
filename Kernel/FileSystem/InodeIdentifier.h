@@ -61,11 +61,3 @@ struct AK::Formatter<Kernel::InodeIdentifier> : AK::Formatter<FormatString> {
         return AK::Formatter<FormatString>::format(builder, "{}:{}", value.fsid(), value.index());
     }
 };
-
-template<>
-struct AK::Formatter<Kernel::InodeIndex> : AK::Formatter<FormatString> {
-    void format(FormatBuilder& builder, Kernel::InodeIndex value)
-    {
-        return AK::Formatter<FormatString>::format(builder, "{}", value.value());
-    }
-};
