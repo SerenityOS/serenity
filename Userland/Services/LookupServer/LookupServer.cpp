@@ -91,12 +91,7 @@ void LookupServer::load_etc_hosts()
 {
     m_etc_hosts.clear();
     auto add_answer = [this](const DNSName& name, DNSRecordType record_type, String data) {
-        auto it = m_etc_hosts.find(name);
-        if (it == m_etc_hosts.end()) {
-            m_etc_hosts.set(name, {});
-            it = m_etc_hosts.find(name);
-        }
-        it->value.empend(name, record_type, DNSRecordClass::IN, s_static_ttl, data, false);
+        m_etc_hosts.ensure(name).empend(name, record_type, DNSRecordClass::IN, s_static_ttl, move(data), false);
     };
 
     auto file = Core::File::construct("/etc/hosts");
