@@ -1,12 +1,12 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Userspace.h>
 #include <Kernel/Memory/MemoryManager.h>
@@ -54,7 +54,6 @@ public:
         return offset_buffer;
     }
 
-    [[nodiscard]] String copy_into_string(size_t size) const;
     [[nodiscard]] KResultOr<NonnullOwnPtr<KString>> try_copy_into_kstring(size_t) const;
     [[nodiscard]] bool write(const void* src, size_t offset, size_t len);
     [[nodiscard]] bool write(const void* src, size_t len)
