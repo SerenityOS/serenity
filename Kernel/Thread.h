@@ -680,7 +680,7 @@ public:
             BlockFlags unblocked_flags { BlockFlags::None };
         };
 
-        typedef Vector<FDInfo, FD_SETSIZE> FDVector;
+        using FDVector = Vector<FDInfo, FD_SETSIZE>;
         explicit SelectBlocker(FDVector&);
         virtual ~SelectBlocker();
 

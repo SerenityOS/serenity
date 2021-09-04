@@ -80,7 +80,7 @@ enum class VeilState {
     Locked,
 };
 
-typedef HashMap<FlatPtr, RefPtr<FutexQueue>> FutexQueues;
+using FutexQueues = HashMap<FlatPtr, RefPtr<FutexQueue>>;
 
 struct LoadResult;
 
