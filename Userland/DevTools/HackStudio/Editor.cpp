@@ -357,6 +357,7 @@ void Editor::drop_event(GUI::DropEvent& event)
             GUI::MessageBox::show(window(), "HackStudio can only open one file at a time!", "One at a time please!", GUI::MessageBox::Type::Error);
             return;
         }
+        set_current_editor_wrapper(static_cast<EditorWrapper*>(parent()));
         open_file(urls.first().path());
     }
 }
