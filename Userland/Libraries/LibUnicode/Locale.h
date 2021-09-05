@@ -58,14 +58,19 @@ struct LocaleID {
     String to_string() const;
 
     template<typename ExtensionType>
-    void remove_extension_type()
+    Vector<Extension> remove_extension_type()
     {
+        Vector<Extension> removed_extensions {};
         auto tmp_extensions = move(extensions);
 
         for (auto& extension : tmp_extensions) {
-            if (!extension.has<ExtensionType>())
+            if (extension.has<ExtensionType>())
+                removed_extensions.append(move(extension));
+            else
                 extensions.append(move(extension));
         }
+
+        return removed_extensions;
     }
 
     LanguageID language_id {};
