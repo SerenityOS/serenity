@@ -160,6 +160,9 @@ void AbstractView::begin_editing(const ModelIndex& index)
         VERIFY(model());
         stop_editing();
     };
+    m_editing_delegate->on_change = [this, index] {
+        editing_widget_did_change(index);
+    };
 }
 
 void AbstractView::stop_editing()
@@ -670,6 +673,9 @@ bool AbstractView::is_highlighting_searching(const ModelIndex& index) const
 
 void AbstractView::draw_item_text(Gfx::Painter& painter, const ModelIndex& index, bool is_selected, const Gfx::IntRect& text_rect, const StringView& item_text, const Gfx::Font& font, Gfx::TextAlignment alignment, Gfx::TextElision elision, size_t search_highlighting_offset)
 {
+    if (m_edit_index == index)
+        return;
+
     Color text_color;
     if (is_selected)
         text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
