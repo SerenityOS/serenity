@@ -95,6 +95,10 @@ public:
     void set_guide_visibility(bool show_guides);
     Function<void(bool)> on_set_guide_visibility;
 
+    bool ruler_visibility() { return m_show_rulers; }
+    void set_ruler_visibility(bool);
+    Function<void(bool)> on_set_ruler_visibility;
+
     bool pixel_grid_visibility() const { return m_show_pixel_grid; }
     void set_pixel_grid_visibility(bool show_pixel_grid);
 
@@ -125,12 +129,15 @@ private:
     void clamped_scale(float);
     void relayout();
 
+    int calculate_ruler_step_size() const;
+
     NonnullRefPtr<Image> m_image;
     RefPtr<Layer> m_active_layer;
     OwnPtr<GUI::UndoStack> m_undo_stack;
 
     NonnullRefPtrVector<Guide> m_guides;
     bool m_show_guides { true };
+    bool m_show_rulers { true };
     bool m_show_pixel_grid { true };
 
     Tool* m_active_tool { nullptr };
@@ -143,6 +150,8 @@ private:
     Gfx::FloatPoint m_pan_origin;
     Gfx::FloatPoint m_saved_pan_origin;
     Gfx::IntPoint m_click_position;
+
+    int m_ruler_thickness { 20 };
 
     Gfx::StandardCursor m_active_cursor { Gfx::StandardCursor::None };
 

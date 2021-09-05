@@ -117,6 +117,72 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
 
     if (!m_selection.is_empty())
         m_selection.paint(painter);
+
+    if (m_show_rulers) {
+        const auto ruler_bg_color = palette().color(Gfx::ColorRole::InactiveSelection);
+        const auto ruler_fg_color = palette().color(Gfx::ColorRole::Ruler);
+        const auto ruler_text_color = palette().color(Gfx::ColorRole::InactiveSelectionText);
+
+        // Ruler background
+        painter.fill_rect({ { 0, 0 }, { m_ruler_thickness, rect().height() } }, ruler_bg_color);
+        painter.fill_rect({ { 0, 0 }, { rect().width(), m_ruler_thickness } }, ruler_bg_color);
+
+        const auto ruler_step = calculate_ruler_step_size();
+        const auto editor_origin_to_image = editor_position_to_image_position({ 0, 0 });
+        const auto editor_max_to_image = editor_position_to_image_position({ width(), height() });
+
+        // Horizontal ruler
+        painter.draw_line({ 0, m_ruler_thickness }, { rect().width(), m_ruler_thickness }, ruler_fg_color);
+        const auto x_start = floor(editor_origin_to_image.x()) - ((int)floor(editor_origin_to_image.x()) % ruler_step) - ruler_step;
+        for (int x = x_start; x < editor_max_to_image.x(); x += ruler_step) {
+            const int num_sub_divisions = min(ruler_step, 10);
+            for (int x_sub = 0; x_sub < num_sub_divisions; ++x_sub) {
+                const int x_pos = x + (int)(ruler_step * x_sub / num_sub_divisions);
+                const int editor_x_sub = image_position_to_editor_position({ x_pos, 0 }).x();
+                const int line_length = (x_sub % 2 == 0) ? m_ruler_thickness / 3 : m_ruler_thickness / 6;
+                painter.draw_line({ editor_x_sub, m_ruler_thickness - line_length }, { editor_x_sub, m_ruler_thickness }, ruler_fg_color);
+            }
+
+            const int editor_x = image_position_to_editor_position({ x, 0 }).x();
+            painter.draw_line({ editor_x, 0 }, { editor_x, m_ruler_thickness }, ruler_fg_color);
+            painter.draw_text({ { editor_x + 2, 0 }, { m_ruler_thickness, m_ruler_thickness - 2 } }, String::formatted("{}", x), painter.font(), Gfx::TextAlignment::CenterLeft, ruler_text_color);
+        }
+
+        // Vertical ruler
+        painter.draw_line({ m_ruler_thickness, 0 }, { m_ruler_thickness, rect().height() }, ruler_fg_color);
+        const auto y_start = floor(editor_origin_to_image.y()) - ((int)floor(editor_origin_to_image.y()) % ruler_step) - ruler_step;
+        for (int y = y_start; y < editor_max_to_image.y(); y += ruler_step) {
+            const int num_sub_divisions = min(ruler_step, 10);
+            for (int y_sub = 0; y_sub < num_sub_divisions; ++y_sub) {
+                const int y_pos = y + (int)(ruler_step * y_sub / num_sub_divisions);
+                const int editor_y_sub = image_position_to_editor_position({ 0, y_pos }).y();
+                const int line_length = (y_sub % 2 == 0) ? m_ruler_thickness / 3 : m_ruler_thickness / 6;
+                painter.draw_line({ m_ruler_thickness - line_length, editor_y_sub }, { m_ruler_thickness, editor_y_sub }, ruler_fg_color);
+            }
+
+            const int editor_y = image_position_to_editor_position({ 0, y }).y();
+            painter.draw_line({ 0, editor_y }, { m_ruler_thickness, editor_y }, ruler_fg_color);
+            painter.draw_text({ { 0, editor_y - m_ruler_thickness }, { m_ruler_thickness, m_ruler_thickness } }, String::formatted("{}", y), painter.font(), Gfx::TextAlignment::BottomRight, ruler_text_color);
+        }
+
+        // Top left square
+        painter.fill_rect({ { 0, 0 }, { m_ruler_thickness, m_ruler_thickness } }, ruler_bg_color);
+    }
+}
+
+int ImageEditor::calculate_ruler_step_size() const
+{
+    const auto step_target = 80 / m_scale;
+    const auto max_factor = 5;
+    for (int factor = 0; factor < max_factor; ++factor) {
+        if (step_target <= 1 * (float)pow(10, factor))
+            return 1 * pow(10, factor);
+        if (step_target <= 2 * (float)pow(10, factor))
+            return 2 * pow(10, factor);
+        if (step_target <= 5 * (float)pow(10, factor))
+            return 5 * pow(10, factor);
+    }
+    return 1 * pow(10, max_factor);
 }
 
 Gfx::FloatRect ImageEditor::layer_rect_to_editor_rect(Layer const& layer, Gfx::IntRect const& layer_rect) const
@@ -351,6 +417,19 @@ void ImageEditor::set_guide_visibility(bool show_guides)
 
     if (on_set_guide_visibility)
         on_set_guide_visibility(m_show_guides);
+
+    update();
+}
+
+void ImageEditor::set_ruler_visibility(bool show_rulers)
+{
+    if (m_show_rulers == show_rulers)
+        return;
+
+    m_show_rulers = show_rulers;
+
+    if (on_set_ruler_visibility)
+        on_set_ruler_visibility(m_show_rulers);
 
     update();
 }
