@@ -15,14 +15,10 @@
 
 namespace Kernel::Memory {
 
-OwnPtr<AddressSpace> AddressSpace::try_create(AddressSpace const* parent)
+KResultOr<NonnullOwnPtr<AddressSpace>> AddressSpace::try_create(AddressSpace const* parent)
 {
-    auto page_directory = PageDirectory::try_create_for_userspace(parent ? &parent->page_directory().range_allocator() : nullptr);
-    if (!page_directory)
-        return {};
-    auto space = adopt_own_if_nonnull(new (nothrow) AddressSpace(page_directory.release_nonnull()));
-    if (!space)
-        return {};
+    auto page_directory = TRY(PageDirectory::try_create_for_userspace(parent ? &parent->page_directory().range_allocator() : nullptr));
+    auto space = TRY(adopt_nonnull_own_or_enomem(new (nothrow) AddressSpace(page_directory)));
     space->page_directory().set_space({}, *space);
     return space;
 }

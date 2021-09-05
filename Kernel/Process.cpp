@@ -219,16 +219,10 @@ void Process::unprotect_data()
 
 KResultOr<NonnullRefPtr<Process>> Process::try_create(RefPtr<Thread>& first_thread, String const& name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
 {
-    auto space = Memory::AddressSpace::try_create(fork_parent ? &fork_parent->address_space() : nullptr);
-    if (!space)
-        return ENOMEM;
-    auto process = adopt_ref_if_nonnull(new (nothrow) Process(name, uid, gid, ppid, is_kernel_process, move(cwd), move(executable), tty));
-    if (!process)
-        return ENOMEM;
-    auto result = process->attach_resources(space.release_nonnull(), first_thread, fork_parent);
-    if (result.is_error())
-        return result;
-    return process.release_nonnull();
+    auto space = TRY(Memory::AddressSpace::try_create(fork_parent ? &fork_parent->address_space() : nullptr));
+    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(name, uid, gid, ppid, is_kernel_process, move(cwd), move(executable), tty)));
+    TRY(process->attach_resources(move(space), first_thread, fork_parent));
+    return process;
 }
 
 Process::Process(const String& name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty)
