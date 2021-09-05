@@ -17,13 +17,9 @@ KResultOr<FlatPtr> Process::sys$link(Userspace<const Syscall::SC_link_params*> u
     Syscall::SC_link_params params;
     if (!copy_from_user(&params, user_params))
         return EFAULT;
-    auto old_path_or_error = try_copy_kstring_from_user(params.old_path);
-    if (old_path_or_error.is_error())
-        return old_path_or_error.error();
-    auto new_path_or_error = try_copy_kstring_from_user(params.new_path);
-    if (new_path_or_error.is_error())
-        return new_path_or_error.error();
-    return VirtualFileSystem::the().link(old_path_or_error.value()->view(), new_path_or_error.value()->view(), current_directory());
+    auto old_path = TRY(try_copy_kstring_from_user(params.old_path));
+    auto new_path = TRY(try_copy_kstring_from_user(params.new_path));
+    return VirtualFileSystem::the().link(old_path->view(), new_path->view(), current_directory());
 }
 
 KResultOr<FlatPtr> Process::sys$symlink(Userspace<const Syscall::SC_symlink_params*> user_params)
@@ -33,13 +29,9 @@ KResultOr<FlatPtr> Process::sys$symlink(Userspace<const Syscall::SC_symlink_para
     Syscall::SC_symlink_params params;
     if (!copy_from_user(&params, user_params))
         return EFAULT;
-    auto target = get_syscall_path_argument(params.target);
-    if (target.is_error())
-        return target.error();
-    auto linkpath = get_syscall_path_argument(params.linkpath);
-    if (linkpath.is_error())
-        return linkpath.error();
-    return VirtualFileSystem::the().symlink(target.value()->view(), linkpath.value()->view(), current_directory());
+    auto target = TRY(get_syscall_path_argument(params.target));
+    auto linkpath = TRY(get_syscall_path_argument(params.linkpath));
+    return VirtualFileSystem::the().symlink(target->view(), linkpath->view(), current_directory());
 }
 
 }
