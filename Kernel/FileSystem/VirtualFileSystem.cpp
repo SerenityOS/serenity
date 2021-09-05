@@ -111,11 +111,11 @@ KResult VirtualFileSystem::unmount(Inode& guest_inode)
     });
 }
 
-bool VirtualFileSystem::mount_root(FileSystem& fs)
+KResult VirtualFileSystem::mount_root(FileSystem& fs)
 {
     if (m_root_inode) {
         dmesgln("VirtualFileSystem: mount_root can't mount another root");
-        return false;
+        return EEXIST;
     }
 
     Mount mount { fs, nullptr, root_mount_flags };
@@ -123,7 +123,7 @@ bool VirtualFileSystem::mount_root(FileSystem& fs)
     auto& root_inode = fs.root_inode();
     if (!root_inode.is_directory()) {
         dmesgln("VirtualFileSystem: root inode ({}) for / is not a directory :(", root_inode.identifier());
-        return false;
+        return ENOTDIR;
     }
 
     m_root_inode = root_inode;
@@ -133,11 +133,8 @@ bool VirtualFileSystem::mount_root(FileSystem& fs)
         mounts.append(move(mount));
     });
 
-    auto custody_or_error = Custody::try_create(nullptr, "", *m_root_inode, root_mount_flags);
-    if (custody_or_error.is_error())
-        return false;
-    m_root_custody = custody_or_error.release_value();
-    return true;
+    m_root_custody = TRY(Custody::try_create(nullptr, "", *m_root_inode, root_mount_flags));
+    return KSuccess;
 }
 
 auto VirtualFileSystem::find_mount_for_host(InodeIdentifier id) -> Mount*
