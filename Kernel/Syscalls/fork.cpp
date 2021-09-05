@@ -18,15 +18,11 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(proc);
     RefPtr<Thread> child_first_thread;
-    auto child_or_error = Process::try_create(child_first_thread, m_name, uid(), gid(), pid(), m_is_kernel_process, m_cwd, m_executable, m_tty, this);
-    if (child_or_error.is_error())
-        return child_or_error.error();
-    auto child = child_or_error.release_value();
+    auto child = TRY(Process::try_create(child_first_thread, m_name, uid(), gid(), pid(), m_is_kernel_process, m_cwd, m_executable, m_tty, this));
     child->m_veil_state = m_veil_state;
     child->m_unveiled_paths = m_unveiled_paths.deep_copy();
 
-    if (auto result = child->m_fds.try_clone(m_fds); result.is_error())
-        return result.error();
+    TRY(child->m_fds.try_clone(m_fds));
 
     child->m_pg = m_pg;
 
@@ -97,14 +93,8 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         SpinlockLocker lock(address_space().get_lock());
         for (auto& region : address_space().regions()) {
             dbgln_if(FORK_DEBUG, "fork: cloning Region({}) '{}' @ {}", region, region->name(), region->vaddr());
-            auto maybe_region_clone = region->try_clone();
-            if (maybe_region_clone.is_error()) {
-                dbgln("fork: Cannot clone region, insufficient memory");
-                // TODO: tear down new process?
-                return maybe_region_clone.error();
-            }
-
-            auto* child_region = child->address_space().add_region(maybe_region_clone.release_value());
+            auto region_clone = TRY(region->try_clone());
+            auto* child_region = child->address_space().add_region(move(region_clone));
             if (!child_region) {
                 dbgln("fork: Cannot add region, insufficient memory");
                 // TODO: tear down new process?
