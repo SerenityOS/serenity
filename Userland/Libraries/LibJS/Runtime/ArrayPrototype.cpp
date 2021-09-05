@@ -1946,7 +1946,7 @@ static size_t flatten_into_array(GlobalObject& global_object, Object& new_array,
 
         if (depth > 0 && value.is_array(global_object)) {
             if (vm.did_reach_stack_space_limit()) {
-                vm.throw_exception<Error>(global_object, "Call stack size limit exceeded");
+                vm.throw_exception<Error>(global_object, ErrorType::CallStackSizeExceeded);
                 return {};
             }
 
