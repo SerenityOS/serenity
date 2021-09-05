@@ -167,3 +167,11 @@ template<typename T>
         return EOVERFLOW;
     return copy_to_user(dest.unsafe_userspace_ptr(), src, size.value());
 }
+
+template<typename T>
+inline KResultOr<T> copy_typed_from_user(Userspace<T const*> user_data)
+{
+    T data {};
+    TRY(copy_from_user(&data, user_data));
+    return data;
+}
