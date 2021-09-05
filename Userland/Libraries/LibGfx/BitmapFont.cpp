@@ -29,7 +29,7 @@ struct [[gnu::packed]] FontFileHeader {
     u16 unused;
 };
 
-static_assert(sizeof(FontFileHeader) == 80);
+static_assert(AssertSize<FontFileHeader, 80>());
 
 NonnullRefPtr<Font> BitmapFont::clone() const
 {

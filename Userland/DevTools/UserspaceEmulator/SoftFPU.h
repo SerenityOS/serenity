@@ -28,7 +28,7 @@ union MMX {
     i16x4 v16u;
     i32x2 v32u;
 };
-static_assert(sizeof(MMX) == sizeof(u64));
+static_assert(AssertSize<MMX, sizeof(u64)>());
 
 class SoftFPU final {
 public:
