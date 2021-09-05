@@ -107,8 +107,11 @@ public:
 
     bool did_reach_stack_space_limit() const
     {
-        // Note: the 32 kiB used to be 16 kiB, but that turned out to not be enough with ASAN enabled.
+#ifdef HAS_ADDRESS_SANITIZER
         return m_stack_info.size_free() < 32 * KiB;
+#else
+        return m_stack_info.size_free() < 16 * KiB;
+#endif
     }
 
     void push_execution_context(ExecutionContext& context, GlobalObject& global_object)
