@@ -29,13 +29,11 @@ KResultOr<FlatPtr> Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_
     TRY(copy_n_from_user(character_map_data.altgr_map, params.altgr_map, CHAR_MAP_SIZE));
     TRY(copy_n_from_user(character_map_data.shift_altgr_map, params.shift_altgr_map, CHAR_MAP_SIZE));
 
-    auto map_name = get_syscall_path_argument(params.map_name);
-    if (map_name.is_error())
-        return map_name.error();
-    if (map_name.value()->length() > map_name_max_size)
+    auto map_name = TRY(get_syscall_path_argument(params.map_name));
+    if (map_name->length() > map_name_max_size)
         return ENAMETOOLONG;
 
-    HIDManagement::the().set_maps(character_map_data, map_name.value()->view());
+    HIDManagement::the().set_maps(character_map_data, map_name->view());
     return 0;
 }
 
