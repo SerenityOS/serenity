@@ -257,6 +257,37 @@ TEST_CASE(to_unicode_uppercase_unconditional_special_casing)
     EXPECT_EQ(result, "\u03A9\u0342\u0399");
 }
 
+TEST_CASE(to_unicode_uppercase_special_casing_soft_dotted)
+{
+    // LATIN SMALL LETTER I
+    auto result = Unicode::to_unicode_uppercase_full("i"sv, "en"sv);
+    EXPECT_EQ(result, "I"sv);
+
+    result = Unicode::to_unicode_uppercase_full("i"sv, "lt"sv);
+    EXPECT_EQ(result, "I"sv);
+
+    // LATIN SMALL LETTER J
+    result = Unicode::to_unicode_uppercase_full("j"sv, "en"sv);
+    EXPECT_EQ(result, "J"sv);
+
+    result = Unicode::to_unicode_uppercase_full("j"sv, "lt"sv);
+    EXPECT_EQ(result, "J"sv);
+
+    // LATIN SMALL LETTER I followed by COMBINING DOT ABOVE
+    result = Unicode::to_unicode_uppercase_full("i\u0307"sv, "en"sv);
+    EXPECT_EQ(result, "I\u0307"sv);
+
+    result = Unicode::to_unicode_uppercase_full("i\u0307"sv, "lt"sv);
+    EXPECT_EQ(result, "I"sv);
+
+    // LATIN SMALL LETTER J followed by COMBINING DOT ABOVE
+    result = Unicode::to_unicode_uppercase_full("j\u0307"sv, "en"sv);
+    EXPECT_EQ(result, "J\u0307"sv);
+
+    result = Unicode::to_unicode_uppercase_full("j\u0307"sv, "lt"sv);
+    EXPECT_EQ(result, "J"sv);
+}
+
 TEST_CASE(general_category)
 {
     auto general_category = [](StringView name) {
