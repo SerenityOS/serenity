@@ -33,10 +33,10 @@ KResultOr<FlatPtr> Process::sys$anon_create(size_t size, int options)
     if (maybe_vmobject.is_error())
         return maybe_vmobject.error();
 
-    auto anon_file = AnonymousFile::create(maybe_vmobject.release_value());
-    if (!anon_file)
-        return ENOMEM;
-    auto description_or_error = FileDescription::try_create(*anon_file);
+    auto anon_file_or_error = AnonymousFile::try_create(maybe_vmobject.release_value());
+    if (anon_file_or_error.is_error())
+        return anon_file_or_error.error();
+    auto description_or_error = FileDescription::try_create(anon_file_or_error.release_value());
     if (description_or_error.is_error())
         return description_or_error.error();
 
