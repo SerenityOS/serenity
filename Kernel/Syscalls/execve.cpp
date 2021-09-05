@@ -435,11 +435,8 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
         return ENOMEM;
     }
 
-    auto stack_region_or_error = new_space->allocate_region(stack_range.value(), "Stack (Main thread)", PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
-    if (stack_region_or_error.is_error())
-        return stack_region_or_error.error();
-    auto& stack_region = *stack_region_or_error.value();
-    stack_region.set_stack(true);
+    auto* stack_region = TRY(new_space->allocate_region(stack_range.value(), "Stack (Main thread)", PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
+    stack_region->set_stack(true);
 
     return LoadResult {
         move(new_space),
@@ -449,7 +446,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
         AK::try_make_weak_ptr(master_tls_region),
         master_tls_size,
         master_tls_alignment,
-        stack_region.make_weak_ptr()
+        stack_region->make_weak_ptr()
     };
 }
 
@@ -513,13 +510,9 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
 
     auto main_program_metadata = main_program_description->metadata();
 
-    auto load_result_or_error = load(main_program_description, interpreter_description, main_program_header);
-    if (load_result_or_error.is_error()) {
-        dbgln("do_exec: Failed to load main program or interpreter for {}", path);
-        return load_result_or_error.error();
-    }
+    auto load_result = TRY(load(main_program_description, interpreter_description, main_program_header));
 
-    auto signal_trampoline_range = load_result_or_error.value().space->allocate_range({}, PAGE_SIZE);
+    auto signal_trampoline_range = load_result.space->allocate_range({}, PAGE_SIZE);
     if (!signal_trampoline_range.has_value()) {
         dbgln("do_exec: Failed to allocate VM for signal trampoline");
         return ENOMEM;
@@ -536,7 +529,6 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
 
     kill_threads_except_self();
 
-    auto& load_result = load_result_or_error.value();
     bool executable_is_setid = false;
 
     if (!(main_program_description->custody()->mount_flags() & MS_NOSUID)) {
@@ -858,10 +850,7 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
     //        * ET_EXEC binary that just gets loaded
     //        * ET_DYN binary that requires a program interpreter
     //
-    auto file_or_error = VirtualFileSystem::the().open(path, O_EXEC, 0, current_directory());
-    if (file_or_error.is_error())
-        return file_or_error.error();
-    auto description = file_or_error.release_value();
+    auto description = TRY(VirtualFileSystem::the().open(path, O_EXEC, 0, current_directory()));
     auto metadata = description->metadata();
 
     if (!metadata.is_regular_file())
