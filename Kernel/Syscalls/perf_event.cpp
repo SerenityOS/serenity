@@ -25,11 +25,8 @@ KResultOr<FlatPtr> Process::sys$perf_register_string(Userspace<char const*> user
     if (!events_buffer)
         return KSuccess;
 
-    auto string_or_error = try_copy_kstring_from_user(user_string, user_string_length);
-    if (string_or_error.is_error())
-        return string_or_error.error();
-
-    return events_buffer->register_string(string_or_error.release_value());
+    auto string = TRY(try_copy_kstring_from_user(user_string, user_string_length));
+    return events_buffer->register_string(move(string));
 }
 
 }
