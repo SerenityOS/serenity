@@ -26,10 +26,8 @@ KResultOr<FlatPtr> Process::sys$chown(Userspace<const Syscall::SC_chown_params*>
     Syscall::SC_chown_params params;
     if (!copy_from_user(&params, user_params))
         return EFAULT;
-    auto path = get_syscall_path_argument(params.path);
-    if (path.is_error())
-        return path.error();
-    return VirtualFileSystem::the().chown(path.value()->view(), params.uid, params.gid, current_directory());
+    auto path = TRY(get_syscall_path_argument(params.path));
+    return VirtualFileSystem::the().chown(path->view(), params.uid, params.gid, current_directory());
 }
 
 }
