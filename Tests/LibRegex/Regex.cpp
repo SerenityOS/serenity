@@ -848,7 +848,7 @@ TEST_CASE(case_insensitive_match)
 TEST_CASE(extremely_long_fork_chain)
 {
     Regex<ECMA262> re("(?:aa)*");
-    auto result = re.match(String::repeated('a', 100'000));
+    auto result = re.match(String::repeated('a', 1000));
     EXPECT_EQ(result.success, true);
 }
 
