@@ -198,13 +198,15 @@ KResult Coredump::write_notes_segment(ByteBuffer& notes_segment)
     return KSuccess;
 }
 
-ByteBuffer Coredump::create_notes_process_data() const
+KResultOr<ByteBuffer> Coredump::create_notes_process_data() const
 {
     ByteBuffer process_data;
 
     ELF::Core::ProcessInfo info {};
     info.header.type = ELF::Core::NotesEntryHeader::Type::ProcessInfo;
-    process_data.append((void*)&info, sizeof(info));
+    auto ok = process_data.try_append((void*)&info, sizeof(info));
+    if (!ok)
+        return ENOMEM;
 
     StringBuilder builder;
     {
@@ -227,18 +229,18 @@ ByteBuffer Coredump::create_notes_process_data() const
     }
 
     builder.append(0);
-    process_data.append(builder.string_view().characters_without_null_termination(), builder.length());
+    ok = process_data.try_append(builder.string_view().characters_without_null_termination(), builder.length());
+    if (!ok)
+        return ENOMEM;
 
     return process_data;
 }
 
-ByteBuffer Coredump::create_notes_threads_data() const
+KResultOr<ByteBuffer> Coredump::create_notes_threads_data() const
 {
     ByteBuffer threads_data;
 
     for (auto& thread : m_process->threads_for_coredump({})) {
-        ByteBuffer entry_buff;
-
         ELF::Core::ThreadInfo info {};
         info.header.type = ELF::Core::NotesEntryHeader::Type::ThreadInfo;
         info.tid = thread.tid().value();
@@ -246,20 +248,17 @@ ByteBuffer Coredump::create_notes_threads_data() const
         if (thread.current_trap())
             copy_kernel_registers_into_ptrace_registers(info.regs, thread.get_register_dump_from_stack());
 
-        entry_buff.append((void*)&info, sizeof(info));
-
-        threads_data += entry_buff;
+        if (!threads_data.try_append(&info, sizeof(info)))
+            return ENOMEM;
     }
     return threads_data;
 }
 
-ByteBuffer Coredump::create_notes_regions_data() const
+KResultOr<ByteBuffer> Coredump::create_notes_regions_data() const
 {
     ByteBuffer regions_data;
     size_t region_index = 0;
     for (auto& region : m_process->address_space().regions()) {
-
-        ByteBuffer memory_region_info_buffer;
         ELF::Core::MemoryRegionInfo info {};
         info.header.type = ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo;
 
@@ -267,28 +266,32 @@ ByteBuffer Coredump::create_notes_regions_data() const
         info.region_end = region->vaddr().offset(region->size()).get();
         info.program_header_index = region_index++;
 
-        memory_region_info_buffer.append((void*)&info, sizeof(info));
+        if (!regions_data.try_ensure_capacity(regions_data.size() + sizeof(info) + region->name().length() + 1))
+            return ENOMEM;
+
+        auto ok = regions_data.try_append((void*)&info, sizeof(info));
         // NOTE: The region name *is* null-terminated, so the following is ok:
         auto name = region->name();
         if (name.is_empty()) {
             char null_terminator = '\0';
-            memory_region_info_buffer.append(&null_terminator, 1);
+            ok = ok && regions_data.try_append(&null_terminator, 1);
         } else {
-            memory_region_info_buffer.append(name.characters_without_null_termination(), name.length() + 1);
+            ok = ok && regions_data.try_append(name.characters_without_null_termination(), name.length() + 1);
         }
-
-        regions_data += memory_region_info_buffer;
+        VERIFY(ok);
     }
     return regions_data;
 }
 
-ByteBuffer Coredump::create_notes_metadata_data() const
+KResultOr<ByteBuffer> Coredump::create_notes_metadata_data() const
 {
     ByteBuffer metadata_data;
 
     ELF::Core::Metadata metadata {};
     metadata.header.type = ELF::Core::NotesEntryHeader::Type::Metadata;
-    metadata_data.append((void*)&metadata, sizeof(metadata));
+    auto ok = metadata_data.try_append((void*)&metadata, sizeof(metadata));
+    if (!ok)
+        return ENOMEM;
 
     StringBuilder builder;
     {
@@ -298,23 +301,41 @@ ByteBuffer Coredump::create_notes_metadata_data() const
         });
     }
     builder.append(0);
-    metadata_data.append(builder.string_view().characters_without_null_termination(), builder.length());
+    ok = metadata_data.try_append(builder.string_view().characters_without_null_termination(), builder.length());
+    if (!ok)
+        return ENOMEM;
 
     return metadata_data;
 }
 
-ByteBuffer Coredump::create_notes_segment_data() const
+KResultOr<ByteBuffer> Coredump::create_notes_segment_data() const
 {
     ByteBuffer notes_buffer;
 
-    notes_buffer += create_notes_process_data();
-    notes_buffer += create_notes_threads_data();
-    notes_buffer += create_notes_regions_data();
-    notes_buffer += create_notes_metadata_data();
+    if (auto result = create_notes_process_data(); result.is_error())
+        return result;
+    else if (!notes_buffer.try_append(result.value()))
+        return ENOMEM;
+
+    if (auto result = create_notes_threads_data(); result.is_error())
+        return result;
+    else if (!notes_buffer.try_append(result.value()))
+        return ENOMEM;
+
+    if (auto result = create_notes_regions_data(); result.is_error())
+        return result;
+    else if (!notes_buffer.try_append(result.value()))
+        return ENOMEM;
+
+    if (auto result = create_notes_metadata_data(); result.is_error())
+        return result;
+    else if (!notes_buffer.try_append(result.value()))
+        return ENOMEM;
 
     ELF::Core::NotesEntryHeader null_entry {};
     null_entry.type = ELF::Core::NotesEntryHeader::Type::Null;
-    notes_buffer.append(&null_entry, sizeof(null_entry));
+    if (!notes_buffer.try_append(&null_entry, sizeof(null_entry)))
+        return ENOMEM;
 
     return notes_buffer;
 }
@@ -324,7 +345,11 @@ KResult Coredump::write()
     SpinlockLocker lock(m_process->address_space().get_lock());
     ProcessPagingScope scope(m_process);
 
-    ByteBuffer notes_segment = create_notes_segment_data();
+    auto notes_segment_result = create_notes_segment_data();
+    if (notes_segment_result.is_error())
+        return notes_segment_result.error();
+
+    auto& notes_segment = notes_segment_result.value();
 
     auto result = write_elf_header();
     if (result.is_error())

@@ -29,11 +29,11 @@ private:
     [[nodiscard]] KResult write_regions();
     [[nodiscard]] KResult write_notes_segment(ByteBuffer&);
 
-    ByteBuffer create_notes_segment_data() const;
-    ByteBuffer create_notes_process_data() const;
-    ByteBuffer create_notes_threads_data() const;
-    ByteBuffer create_notes_regions_data() const;
-    ByteBuffer create_notes_metadata_data() const;
+    KResultOr<ByteBuffer> create_notes_segment_data() const;
+    KResultOr<ByteBuffer> create_notes_process_data() const;
+    KResultOr<ByteBuffer> create_notes_threads_data() const;
+    KResultOr<ByteBuffer> create_notes_regions_data() const;
+    KResultOr<ByteBuffer> create_notes_metadata_data() const;
 
     NonnullRefPtr<Process> m_process;
     NonnullRefPtr<FileDescription> m_fd;

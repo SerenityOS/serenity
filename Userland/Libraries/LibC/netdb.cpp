@@ -282,7 +282,7 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
 
 struct servent* getservent()
 {
-    //If the services file is not open, attempt to open it and return null if it fails.
+    // If the services file is not open, attempt to open it and return null if it fails.
     if (!services_file) {
         services_file = fopen(services_path, "r");
 
@@ -424,7 +424,7 @@ void endservent()
 // false if failure occurs.
 static bool fill_getserv_buffers(const char* line, ssize_t read)
 {
-    //Splitting the line by tab delimiter and filling the servent buffers name, port, and protocol members.
+    // Splitting the line by tab delimiter and filling the servent buffers name, port, and protocol members.
     String string_line = String(line, read);
     string_line.replace(" ", "\t", true);
     auto split_line = string_line.split('\t');
@@ -465,7 +465,8 @@ static bool fill_getserv_buffers(const char* line, ssize_t read)
                 break;
             }
             auto alias = split_line[i].to_byte_buffer();
-            alias.append("\0", sizeof(char));
+            if (!alias.try_append("\0", sizeof(char)))
+                return false;
             __getserv_alias_list_buffer.append(move(alias));
         }
     }
@@ -635,7 +636,8 @@ static bool fill_getproto_buffers(const char* line, ssize_t read)
             if (split_line[i].starts_with('#'))
                 break;
             auto alias = split_line[i].to_byte_buffer();
-            alias.append("\0", sizeof(char));
+            if (!alias.try_append("\0", sizeof(char)))
+                return false;
             __getproto_alias_list_buffer.append(move(alias));
         }
     }

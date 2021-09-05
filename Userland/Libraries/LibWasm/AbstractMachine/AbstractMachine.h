@@ -349,7 +349,8 @@ public:
                 return false;
         }
         auto previous_size = m_size;
-        m_data.resize(new_size);
+        if (!m_data.try_resize(new_size))
+            return false;
         m_size = new_size;
         // The spec requires that we zero out everything on grow
         __builtin_memset(m_data.offset_pointer(previous_size), 0, size_to_grow);

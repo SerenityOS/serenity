@@ -72,9 +72,7 @@ PNGChunk::PNGChunk(String type)
 
 void PNGChunk::store_type()
 {
-    for (auto character : type()) {
-        m_data.append(&character, sizeof(character));
-    }
+    m_data.append(type().bytes());
 }
 
 void PNGChunk::store_data_length()
