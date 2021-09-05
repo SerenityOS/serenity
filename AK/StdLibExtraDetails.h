@@ -475,6 +475,21 @@ using AddRvalueReference = typename __AddReference<T>::RvalueType;
 template<class T>
 requires(IsEnum<T>) using UnderlyingType = __underlying_type(T);
 
+template<typename T, unsigned ExpectedSize, unsigned ActualSize>
+struct __AssertSize : TrueType {
+    static_assert(ActualSize == ExpectedSize,
+        "actual size does not match expected size");
+
+    consteval explicit operator bool() const { return value; }
+};
+
+// Note: This type is useful, as the sizes will be visible in the
+//       compiler error messages, as they will be part of the
+//       template parameters. This is not possible with a
+//       static_assert on the sizeof a type.
+template<typename T, unsigned ExpectedSize>
+using AssertSize = __AssertSize<T, ExpectedSize, sizeof(T)>;
+
 template<typename T>
 inline constexpr bool IsTrivial = __is_trivial(T);
 
@@ -543,6 +558,7 @@ inline constexpr bool IsSpecializationOf<U<Us...>, U> = true;
 using AK::Detail::AddConst;
 using AK::Detail::AddLvalueReference;
 using AK::Detail::AddRvalueReference;
+using AK::Detail::AssertSize;
 using AK::Detail::CommonType;
 using AK::Detail::Conditional;
 using AK::Detail::CopyConst;
