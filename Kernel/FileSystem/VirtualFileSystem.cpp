@@ -98,10 +98,7 @@ KResult VirtualFileSystem::unmount(Inode& guest_inode)
             auto& mount = mounts[i];
             if (&mount.guest() != &guest_inode)
                 continue;
-            if (auto result = mount.guest_fs().prepare_to_unmount(); result.is_error()) {
-                dbgln("VirtualFileSystem: Failed to unmount!");
-                return result;
-            }
+            TRY(mount.guest_fs().prepare_to_unmount());
             dbgln("VirtualFileSystem: Unmounting file system {}...", mount.guest_fs().fsid());
             mounts.unstable_take(i);
             return KSuccess;
@@ -196,10 +193,8 @@ KResult VirtualFileSystem::utime(StringView path, Custody& base, time_t atime, t
     if (custody->is_readonly())
         return EROFS;
 
-    if (auto result = inode.set_atime(atime); result.is_error())
-        return result;
-    if (auto result = inode.set_mtime(mtime); result.is_error())
-        return result;
+    TRY(inode.set_atime(atime));
+    TRY(inode.set_mtime(mtime));
     return KSuccess;
 }
 
@@ -258,19 +253,13 @@ KResultOr<NonnullRefPtr<FileDescription>> VirtualFileSystem::open(StringView pat
     if (metadata.is_fifo()) {
         auto fifo = inode.fifo();
         if (options & O_WRONLY) {
-            auto open_result = fifo->open_direction_blocking(FIFO::Direction::Writer);
-            if (open_result.is_error())
-                return open_result.error();
-            auto& description = open_result.value();
+            auto description = TRY(fifo->open_direction_blocking(FIFO::Direction::Writer));
             description->set_rw_mode(options);
             description->set_file_flags(options);
             description->set_original_inode({}, inode);
             return description;
         } else if (options & O_RDONLY) {
-            auto open_result = fifo->open_direction_blocking(FIFO::Direction::Reader);
-            if (open_result.is_error())
-                return open_result.error();
-            auto& description = open_result.value();
+            auto description = TRY(fifo->open_direction_blocking(FIFO::Direction::Reader));
             description->set_rw_mode(options);
             description->set_file_flags(options);
             description->set_original_inode({}, inode);
@@ -297,16 +286,12 @@ KResultOr<NonnullRefPtr<FileDescription>> VirtualFileSystem::open(StringView pat
         return EROFS;
 
     if (should_truncate_file) {
-        if (auto result = inode.truncate(0); result.is_error())
-            return result;
-        if (auto result = inode.set_mtime(kgettimeofday().to_truncated_seconds()); result.is_error())
-            return result;
+        TRY(inode.truncate(0));
+        TRY(inode.set_mtime(kgettimeofday().to_truncated_seconds()));
     }
-    auto description = FileDescription::try_create(custody);
-    if (!description.is_error()) {
-        description.value()->set_rw_mode(options);
-        description.value()->set_file_flags(options);
-    }
+    auto description = TRY(FileDescription::try_create(custody));
+    description->set_rw_mode(options);
+    description->set_file_flags(options);
     return description;
 }
 
@@ -344,8 +329,7 @@ KResultOr<NonnullRefPtr<FileDescription>> VirtualFileSystem::create(StringView p
     auto full_path = KLexicalPath::try_join(parent_path->view(), basename);
     if (!full_path)
         return ENOMEM;
-    if (auto result = validate_path_against_process_veil(full_path->view(), options); result.is_error())
-        return result;
+    TRY(validate_path_against_process_veil(full_path->view(), options));
 
     if (!is_socket(mode) && !is_fifo(mode) && !is_block_device(mode) && !is_character_device(mode)) {
         // Turn it into a regular file. (This feels rather hackish.)
@@ -366,11 +350,9 @@ KResultOr<NonnullRefPtr<FileDescription>> VirtualFileSystem::create(StringView p
     auto inode = TRY(parent_inode.create_child(basename, mode, 0, uid, gid));
     auto custody = TRY(Custody::try_create(&parent_custody, basename, inode, parent_custody.mount_flags()));
 
-    auto description = FileDescription::try_create(move(custody));
-    if (!description.is_error()) {
-        description.value()->set_rw_mode(options);
-        description.value()->set_file_flags(options);
-    }
+    auto description = TRY(FileDescription::try_create(move(custody)));
+    description->set_rw_mode(options);
+    description->set_file_flags(options);
     return description;
 }
 
@@ -545,16 +527,11 @@ KResult VirtualFileSystem::rename(StringView old_path, StringView new_path, Cust
         }
         if (new_inode.is_directory() && !old_inode.is_directory())
             return EISDIR;
-        if (auto result = new_parent_inode.remove_child(new_basename); result.is_error())
-            return result;
+        TRY(new_parent_inode.remove_child(new_basename));
     }
 
-    if (auto result = new_parent_inode.add_child(old_inode, new_basename, old_inode.mode()); result.is_error())
-        return result;
-
-    if (auto result = old_parent_inode.remove_child(old_basename); result.is_error())
-        return result;
-
+    TRY(new_parent_inode.add_child(old_inode, new_basename, old_inode.mode()));
+    TRY(old_parent_inode.remove_child(old_basename));
     return KSuccess;
 }
 
@@ -588,8 +565,7 @@ KResult VirtualFileSystem::chown(Custody& custody, UserID a_uid, GroupID a_gid)
 
     if (metadata.is_setuid() || metadata.is_setgid()) {
         dbgln_if(VFS_DEBUG, "VirtualFileSystem::chown(): Stripping SUID/SGID bits from {}", inode.identifier());
-        if (auto result = inode.chmod(metadata.mode & ~(04000 | 02000)); result.is_error())
-            return result;
+        TRY(inode.chmod(metadata.mode & ~(04000 | 02000)));
     }
 
     return inode.chown(new_uid, new_gid);
@@ -678,10 +654,7 @@ KResult VirtualFileSystem::unlink(StringView path, Custody& base)
     if (parent_custody->is_readonly())
         return EROFS;
 
-    if (auto result = parent_inode.remove_child(KLexicalPath::basename(path)); result.is_error())
-        return result;
-
-    return KSuccess;
+    return parent_inode.remove_child(KLexicalPath::basename(path));
 }
 
 KResult VirtualFileSystem::symlink(StringView target, StringView linkpath, Custody& base)
@@ -752,11 +725,8 @@ KResult VirtualFileSystem::rmdir(StringView path, Custody& base)
     if (custody->is_readonly())
         return EROFS;
 
-    if (auto result = inode.remove_child("."); result.is_error())
-        return result;
-
-    if (auto result = inode.remove_child(".."); result.is_error())
-        return result;
+    TRY(inode.remove_child("."));
+    TRY(inode.remove_child(".."));
 
     return parent_inode.remove_child(KLexicalPath::basename(path));
 }
@@ -868,8 +838,7 @@ KResult VirtualFileSystem::validate_path_against_process_veil(StringView path, i
 KResultOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path(StringView path, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
 {
     auto custody = TRY(resolve_path_without_veil(path, base, out_parent, options, symlink_recursion_level));
-    if (auto result = validate_path_against_process_veil(*custody, options); result.is_error())
-        return result;
+    TRY(validate_path_against_process_veil(*custody, options));
     return custody;
 }
 
@@ -962,11 +931,10 @@ KResultOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(S
             if (!safe_to_follow_symlink(*child_inode, parent_metadata))
                 return EACCES;
 
-            if (auto result = validate_path_against_process_veil(*custody, options); result.is_error())
-                return result;
+            TRY(validate_path_against_process_veil(*custody, options));
 
-            auto symlink_target = child_inode->resolve_as_link(parent, out_parent, options, symlink_recursion_level + 1);
-            if (symlink_target.is_error() || !have_more_parts)
+            auto symlink_target = TRY(child_inode->resolve_as_link(parent, out_parent, options, symlink_recursion_level + 1));
+            if (!have_more_parts)
                 return symlink_target;
 
             // Now, resolve the remaining path relative to the symlink target.
@@ -976,7 +944,7 @@ KResultOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(S
             remaining_path.append('.');
             remaining_path.append(path.substring_view_starting_after_substring(part));
 
-            return resolve_path_without_veil(remaining_path.to_string(), *symlink_target.value(), out_parent, options, symlink_recursion_level + 1);
+            return resolve_path_without_veil(remaining_path.to_string(), symlink_target, out_parent, options, symlink_recursion_level + 1);
         }
     }
 
