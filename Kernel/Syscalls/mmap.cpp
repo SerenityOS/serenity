@@ -212,15 +212,9 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
         auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
         RefPtr<Memory::AnonymousVMObject> vmobject;
         if (flags & MAP_PURGEABLE) {
-            auto maybe_vmobject = Memory::AnonymousVMObject::try_create_purgeable_with_size(Memory::page_round_up(size), strategy);
-            if (maybe_vmobject.is_error())
-                return maybe_vmobject.error();
-            vmobject = maybe_vmobject.release_value();
+            vmobject = TRY(Memory::AnonymousVMObject::try_create_purgeable_with_size(Memory::page_round_up(size), strategy));
         } else {
-            auto maybe_vmobject = Memory::AnonymousVMObject::try_create_with_size(Memory::page_round_up(size), strategy);
-            if (maybe_vmobject.is_error())
-                return maybe_vmobject.error();
-            vmobject = maybe_vmobject.release_value();
+            vmobject = TRY(Memory::AnonymousVMObject::try_create_with_size(Memory::page_round_up(size), strategy));
         }
 
         region = TRY(address_space().allocate_region_with_vmobject(range.value(), vmobject.release_nonnull(), 0, {}, prot, map_shared));
@@ -453,9 +447,7 @@ KResultOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, i
         if (!vmobject.is_purgeable())
             return EINVAL;
         bool was_purged = false;
-        auto result = vmobject.set_volatile(set_volatile, was_purged);
-        if (result.is_error())
-            return result.error();
+        TRY(vmobject.set_volatile(set_volatile, was_purged));
         return was_purged ? 1 : 0;
     }
     return EINVAL;
@@ -489,11 +481,7 @@ KResultOr<FlatPtr> Process::sys$munmap(Userspace<void*> addr, size_t size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-
-    auto result = address_space().unmap_mmap_range(VirtualAddress { addr }, size);
-    if (result.is_error())
-        return result;
-    return 0;
+    return address_space().unmap_mmap_range(VirtualAddress { addr }, size);
 }
 
 KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_params)
@@ -580,9 +568,7 @@ KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data
             return EFAULT;
     }
 
-    auto tsr_result = main_thread->make_thread_specific_region({});
-    if (tsr_result.is_error())
-        return EFAULT;
+    TRY(main_thread->make_thread_specific_region({}));
 
 #if ARCH(I386)
     auto& tls_descriptor = Processor::current().get_gdt_entry(GDT_SELECTOR_TLS);
