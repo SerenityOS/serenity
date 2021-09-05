@@ -453,9 +453,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
 KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_description,
     RefPtr<FileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header)
 {
-    auto new_space = Memory::AddressSpace::try_create(nullptr);
-    if (!new_space)
-        return ENOMEM;
+    auto new_space = TRY(Memory::AddressSpace::try_create(nullptr));
 
     ScopeGuard space_guard([&]() {
         Memory::MemoryManager::enter_process_paging_scope(*this);
@@ -467,7 +465,7 @@ KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_
     }
 
     if (interpreter_description.is_null()) {
-        auto result = load_elf_object(new_space.release_nonnull(), main_program_description, load_offset.value(), ShouldAllocateTls::Yes, ShouldAllowSyscalls::No);
+        auto result = load_elf_object(move(new_space), main_program_description, load_offset.value(), ShouldAllocateTls::Yes, ShouldAllowSyscalls::No);
         if (result.is_error())
             return result.error();
 
@@ -478,7 +476,7 @@ KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_
         return result;
     }
 
-    auto interpreter_load_result = load_elf_object(new_space.release_nonnull(), *interpreter_description, load_offset.value(), ShouldAllocateTls::No, ShouldAllowSyscalls::Yes);
+    auto interpreter_load_result = load_elf_object(move(new_space), *interpreter_description, load_offset.value(), ShouldAllocateTls::No, ShouldAllowSyscalls::Yes);
 
     if (interpreter_load_result.is_error())
         return interpreter_load_result.error();

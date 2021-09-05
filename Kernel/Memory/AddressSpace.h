@@ -18,7 +18,7 @@ namespace Kernel::Memory {
 
 class AddressSpace {
 public:
-    static OwnPtr<AddressSpace> try_create(AddressSpace const* parent);
+    static KResultOr<NonnullOwnPtr<AddressSpace>> try_create(AddressSpace const* parent);
     ~AddressSpace();
 
     PageDirectory& page_directory() { return *m_page_directory; }

@@ -19,7 +19,7 @@ class PageDirectory : public RefCounted<PageDirectory> {
     friend class MemoryManager;
 
 public:
-    static RefPtr<PageDirectory> try_create_for_userspace(VirtualRangeAllocator const* parent_range_allocator = nullptr);
+    static KResultOr<NonnullRefPtr<PageDirectory>> try_create_for_userspace(VirtualRangeAllocator const* parent_range_allocator = nullptr);
     static NonnullRefPtr<PageDirectory> must_create_kernel_page_directory();
     static RefPtr<PageDirectory> find_by_cr3(FlatPtr);
 
