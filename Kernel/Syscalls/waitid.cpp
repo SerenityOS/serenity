@@ -52,11 +52,8 @@ KResultOr<FlatPtr> Process::sys$waitid(Userspace<const Syscall::SC_waitid_params
 
     dbgln_if(PROCESS_DEBUG, "sys$waitid({}, {}, {}, {})", params.idtype, params.id, params.infop, params.options);
 
-    auto siginfo_or_error = do_waitid(move(waitee), params.options);
-    if (siginfo_or_error.is_error())
-        return siginfo_or_error.error();
-
-    return copy_to_user(params.infop, &siginfo_or_error.value());
+    auto siginfo = TRY(do_waitid(move(waitee), params.options));
+    return copy_to_user(params.infop, &siginfo);
 }
 
 }
