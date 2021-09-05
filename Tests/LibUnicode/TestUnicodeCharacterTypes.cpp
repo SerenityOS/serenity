@@ -198,6 +198,51 @@ TEST_CASE(to_unicode_lowercase_special_casing_i)
     EXPECT_EQ(result, "\u0131a\u0307"sv);
 }
 
+TEST_CASE(to_unicode_lowercase_special_casing_more_above)
+{
+    // LATIN CAPITAL LETTER I
+    auto result = Unicode::to_unicode_lowercase_full("I"sv, "en"sv);
+    EXPECT_EQ(result, "i"sv);
+
+    result = Unicode::to_unicode_lowercase_full("I"sv, "lt"sv);
+    EXPECT_EQ(result, "i"sv);
+
+    // LATIN CAPITAL LETTER J
+    result = Unicode::to_unicode_lowercase_full("J"sv, "en"sv);
+    EXPECT_EQ(result, "j"sv);
+
+    result = Unicode::to_unicode_lowercase_full("J"sv, "lt"sv);
+    EXPECT_EQ(result, "j"sv);
+
+    // LATIN CAPITAL LETTER I WITH OGONEK
+    result = Unicode::to_unicode_lowercase_full("\u012e"sv, "en"sv);
+    EXPECT_EQ(result, "\u012f"sv);
+
+    result = Unicode::to_unicode_lowercase_full("\u012e"sv, "lt"sv);
+    EXPECT_EQ(result, "\u012f"sv);
+
+    // LATIN CAPITAL LETTER I followed by COMBINING GRAVE ACCENT
+    result = Unicode::to_unicode_lowercase_full("I\u0300"sv, "en"sv);
+    EXPECT_EQ(result, "i\u0300"sv);
+
+    result = Unicode::to_unicode_lowercase_full("I\u0300"sv, "lt"sv);
+    EXPECT_EQ(result, "i\u0307\u0300"sv);
+
+    // LATIN CAPITAL LETTER J followed by COMBINING GRAVE ACCENT
+    result = Unicode::to_unicode_lowercase_full("J\u0300"sv, "en"sv);
+    EXPECT_EQ(result, "j\u0300"sv);
+
+    result = Unicode::to_unicode_lowercase_full("J\u0300"sv, "lt"sv);
+    EXPECT_EQ(result, "j\u0307\u0300"sv);
+
+    // LATIN CAPITAL LETTER I WITH OGONEK followed by COMBINING GRAVE ACCENT
+    result = Unicode::to_unicode_lowercase_full("\u012e\u0300"sv, "en"sv);
+    EXPECT_EQ(result, "\u012f\u0300"sv);
+
+    result = Unicode::to_unicode_lowercase_full("\u012e\u0300"sv, "lt"sv);
+    EXPECT_EQ(result, "\u012f\u0307\u0300"sv);
+}
+
 TEST_CASE(to_unicode_uppercase_unconditional_special_casing)
 {
     // LATIN SMALL LETTER SHARP S
