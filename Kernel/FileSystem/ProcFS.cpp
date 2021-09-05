@@ -52,11 +52,7 @@ ProcFS::~ProcFS()
 
 KResult ProcFS::initialize()
 {
-    auto root_inode = ProcFSComponentRegistry::the().root_directory().to_inode(*this);
-    if (root_inode.is_error())
-        return root_inode.error();
-    m_root_inode = static_ptr_cast<ProcFSDirectoryInode>(root_inode.release_value());
-
+    m_root_inode = static_ptr_cast<ProcFSDirectoryInode>(TRY(ProcFSComponentRegistry::the().root_directory().to_inode(*this)));
     return KSuccess;
 }
 
@@ -207,16 +203,8 @@ KResult ProcFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::Di
 KResultOr<NonnullRefPtr<Inode>> ProcFSDirectoryInode::lookup(StringView name)
 {
     MutexLocker locker(procfs().m_lock);
-    auto maybe_component = m_associated_component->lookup(name);
-    if (maybe_component.is_error())
-        return maybe_component.error();
-
-    auto component = maybe_component.release_value();
-    auto maybe_inode = component->to_inode(procfs());
-    if (maybe_inode.is_error())
-        return maybe_inode.error();
-
-    return maybe_inode.release_value();
+    auto component = TRY(m_associated_component->lookup(name));
+    return component->to_inode(procfs());
 }
 
 KResultOr<NonnullRefPtr<ProcFSLinkInode>> ProcFSLinkInode::try_create(const ProcFS& procfs, const ProcFSExposedComponent& component)
@@ -306,61 +294,24 @@ KResultOr<NonnullRefPtr<Inode>> ProcFSProcessDirectoryInode::lookup(StringView n
     auto process = Process::from_pid(associated_pid());
     if (!process)
         return ESRCH;
-    if (name == "fd") {
-        auto maybe_inode = ProcFSProcessSubDirectoryInode::try_create(procfs(), SegmentedProcFSIndex::ProcessSubDirectory::FileDescriptions, associated_pid());
-        if (maybe_inode.is_error())
-            return maybe_inode.error();
-        return maybe_inode.release_value();
-    }
-    if (name == "stacks") {
-        auto maybe_inode = ProcFSProcessSubDirectoryInode::try_create(procfs(), SegmentedProcFSIndex::ProcessSubDirectory::Stacks, associated_pid());
-        if (maybe_inode.is_error())
-            return maybe_inode.error();
-        return maybe_inode.release_value();
-    }
-    if (name == "unveil") {
-        auto maybe_inode = ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::Unveil, associated_pid());
-        if (maybe_inode.is_error())
-            return maybe_inode.error();
-        return maybe_inode.release_value();
-    }
-    if (name == "pledge") {
-        auto maybe_inode = ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::Pledge, associated_pid());
-        if (maybe_inode.is_error())
-            return maybe_inode.error();
-        return maybe_inode.release_value();
-    }
-    if (name == "fds") {
-        auto maybe_inode = ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::FileDescriptions, associated_pid());
-        if (maybe_inode.is_error())
-            return maybe_inode.error();
-        return maybe_inode.release_value();
-    }
-    if (name == "exe") {
-        auto maybe_inode = ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::BinaryLink, associated_pid());
-        if (maybe_inode.is_error())
-            return maybe_inode.error();
-        return maybe_inode.release_value();
-    }
-    if (name == "cwd") {
-        auto maybe_inode = ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::CurrentWorkDirectoryLink, associated_pid());
-        if (maybe_inode.is_error())
-            return maybe_inode.error();
-        return maybe_inode.release_value();
-    }
-    if (name == "perf_events") {
-        auto maybe_inode = ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::PerformanceEvents, associated_pid());
-        if (maybe_inode.is_error())
-            return maybe_inode.error();
-        return maybe_inode.release_value();
-    }
-    if (name == "vm") {
-        auto maybe_inode = ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::VirtualMemoryStats, associated_pid());
-        if (maybe_inode.is_error())
-            return maybe_inode.error();
-        return maybe_inode.release_value();
-    }
-
+    if (name == "fd"sv)
+        return TRY(ProcFSProcessSubDirectoryInode::try_create(procfs(), SegmentedProcFSIndex::ProcessSubDirectory::FileDescriptions, associated_pid()));
+    if (name == "stacks"sv)
+        return TRY(ProcFSProcessSubDirectoryInode::try_create(procfs(), SegmentedProcFSIndex::ProcessSubDirectory::Stacks, associated_pid()));
+    if (name == "unveil"sv)
+        return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::Unveil, associated_pid()));
+    if (name == "pledge"sv)
+        return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::Pledge, associated_pid()));
+    if (name == "fds"sv)
+        return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::FileDescriptions, associated_pid()));
+    if (name == "exe"sv)
+        return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::BinaryLink, associated_pid()));
+    if (name == "cwd"sv)
+        return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::CurrentWorkDirectoryLink, associated_pid()));
+    if (name == "perf_events"sv)
+        return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::PerformanceEvents, associated_pid()));
+    if (name == "vm"sv)
+        return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::VirtualMemoryStats, associated_pid()));
     return ENOENT;
 }
 
@@ -431,26 +382,14 @@ KResultOr<NonnullRefPtr<Inode>> ProcFSProcessSubDirectoryInode::lookup(StringVie
     auto process = Process::from_pid(associated_pid());
     if (!process)
         return ESRCH;
-    RefPtr<Inode> inode;
     switch (m_sub_directory_type) {
-    case SegmentedProcFSIndex::ProcessSubDirectory::FileDescriptions: {
-        auto maybe_inode = process->lookup_file_descriptions_directory(procfs(), name);
-        if (maybe_inode.is_error())
-            return maybe_inode.error();
-        return maybe_inode.release_value();
-    }
-    case SegmentedProcFSIndex::ProcessSubDirectory::Stacks: {
-        auto maybe_inode = process->lookup_stacks_directory(procfs(), name);
-        if (maybe_inode.is_error())
-            return maybe_inode.error();
-        return maybe_inode.release_value();
-    }
+    case SegmentedProcFSIndex::ProcessSubDirectory::FileDescriptions:
+        return process->lookup_file_descriptions_directory(procfs(), name);
+    case SegmentedProcFSIndex::ProcessSubDirectory::Stacks:
+        return process->lookup_stacks_directory(procfs(), name);
     default:
         VERIFY_NOT_REACHED();
     }
-    if (!inode)
-        return ENOENT;
-    return inode.release_nonnull();
 }
 
 KResultOr<NonnullRefPtr<ProcFSProcessPropertyInode>> ProcFSProcessPropertyInode::try_create_for_file_description_link(const ProcFS& procfs, unsigned file_description_index, ProcessID pid)
@@ -545,8 +484,7 @@ KResultOr<size_t> ProcFSProcessPropertyInode::read_bytes(off_t offset, size_t co
         auto process = Process::from_pid(associated_pid());
         if (!process)
             return KResult(ESRCH);
-        if (auto result = try_to_acquire_data(*process, builder); result.is_error())
-            return result;
+        TRY(try_to_acquire_data(*process, builder));
         auto data_buffer = builder.build();
         if (!data_buffer)
             return KResult(EFAULT);
@@ -591,13 +529,11 @@ KResult ProcFSProcessPropertyInode::try_to_acquire_data(Process& process, KBuffe
 {
     // FIXME: Verify process is already ref-counted
     if (m_parent_sub_directory_type == SegmentedProcFSIndex::ProcessSubDirectory::FileDescriptions) {
-        if (auto result = process.procfs_get_file_description_link(m_possible_data.property_index, builder); result.is_error())
-            return result.error();
+        TRY(process.procfs_get_file_description_link(m_possible_data.property_index, builder));
         return KSuccess;
     }
     if (m_parent_sub_directory_type == SegmentedProcFSIndex::ProcessSubDirectory::Stacks) {
-        if (auto result = process.procfs_get_thread_stack(m_possible_data.property_index, builder); result.is_error())
-            return result.error();
+        TRY(process.procfs_get_thread_stack(m_possible_data.property_index, builder));
         return KSuccess;
     }
 
@@ -646,8 +582,7 @@ KResult ProcFSProcessPropertyInode::refresh_data(FileDescription& description)
             return ENOMEM;
     }
     KBufferBuilder builder;
-    if (auto result = try_to_acquire_data(*process, builder); result.is_error())
-        return result;
+    TRY(try_to_acquire_data(*process, builder));
     return build_from_cached_data(builder, static_cast<ProcFSInodeData&>(*cached_data));
 }
 }
