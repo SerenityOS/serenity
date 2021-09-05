@@ -19,9 +19,6 @@ bool GPU::initialize()
 {
     if (auto result = Device::initialize(); !result)
         return false;
-    m_scratch_space = MM.allocate_contiguous_kernel_region(32 * PAGE_SIZE, "VirtGPU Scratch Space", Memory::Region::Access::ReadWrite);
-    if (!m_scratch_space)
-        return false;
     if (auto cfg = get_config(VirtIO::ConfigurationType::Device)) {
         m_device_configuration = cfg;
         bool success = negotiate_features([&](u64 supported_features) {
@@ -54,7 +51,10 @@ bool GPU::initialize()
 
 UNMAP_AFTER_INIT RefPtr<GPU> GPU::try_create(Badge<VirtIOGPU::GraphicsAdapter>, PCI::Address address)
 {
-    auto gpu_device = adopt_ref_if_nonnull(new GPU(address));
+    auto scratch_region = MM.allocate_contiguous_kernel_region(32 * PAGE_SIZE, "VirtGPU Scratch Space", Memory::Region::Access::ReadWrite);
+    if (scratch_region.is_error())
+        return {};
+    auto gpu_device = adopt_ref_if_nonnull(new GPU(address, scratch_region.release_value()));
     if (!gpu_device)
         return {};
     if (!gpu_device->initialize())
@@ -62,13 +62,10 @@ UNMAP_AFTER_INIT RefPtr<GPU> GPU::try_create(Badge<VirtIOGPU::GraphicsAdapter>, 
     return gpu_device;
 }
 
-GPU::GPU(PCI::Address address)
+GPU::GPU(PCI::Address address, NonnullOwnPtr<Memory::Region> scratch_region)
     : VirtIO::Device(address)
+    , m_scratch_space(move(scratch_region))
 {
-    auto region_or_error = MM.allocate_contiguous_kernel_region(32 * PAGE_SIZE, "VirtGPU Scratch Space", Memory::Region::Access::ReadWrite);
-    if (region_or_error.is_error())
-        TODO();
-    m_scratch_space = region_or_error.release_value();
 }
 
 GPU::~GPU()

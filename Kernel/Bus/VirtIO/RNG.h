@@ -27,12 +27,12 @@ public:
 
 private:
     virtual StringView class_name() const override { return "VirtIOConsole"; }
-    explicit RNG(PCI::Address);
+    RNG(PCI::Address, NonnullOwnPtr<Memory::Region>);
     virtual bool handle_device_config_change() override;
     virtual void handle_queue_update(u16 queue_index) override;
     void request_entropy_from_host();
 
-    OwnPtr<Memory::Region> m_entropy_buffer;
+    NonnullOwnPtr<Memory::Region> m_entropy_buffer;
     EntropySource m_entropy_source;
 };
 

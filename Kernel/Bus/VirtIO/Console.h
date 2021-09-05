@@ -32,7 +32,7 @@ public:
 
 private:
     virtual StringView class_name() const override { return "VirtIOConsole"; }
-    explicit Console(PCI::Address);
+    Console(PCI::Address, NonnullOwnPtr<Memory::RingBuffer> control_transmit_buffer, NonnullOwnPtr<Memory::RingBuffer> control_receive_buffer);
     enum class ControlEvent : u16 {
         DeviceReady = 0,
         DeviceAdd = 1,
@@ -72,8 +72,8 @@ private:
 
     unsigned m_device_id;
 
-    OwnPtr<Memory::RingBuffer> m_control_transmit_buffer;
-    OwnPtr<Memory::RingBuffer> m_control_receive_buffer;
+    NonnullOwnPtr<Memory::RingBuffer> m_control_transmit_buffer;
+    NonnullOwnPtr<Memory::RingBuffer> m_control_receive_buffer;
 
     WaitQueue m_control_wait_queue;
 
