@@ -17,14 +17,9 @@ KResultOr<FlatPtr> Process::sys$realpath(Userspace<const Syscall::SC_realpath_pa
     REQUIRE_PROMISE(rpath);
     auto params = TRY(copy_typed_from_user(user_params));
 
-    auto path = get_syscall_path_argument(params.path);
-    if (path.is_error())
-        return path.error();
+    auto path = TRY(get_syscall_path_argument(params.path));
+    auto custody = TRY(VirtualFileSystem::the().resolve_path(path->view(), current_directory()));
 
-    auto custody_or_error = VirtualFileSystem::the().resolve_path(path.value()->view(), current_directory());
-    if (custody_or_error.is_error())
-        return custody_or_error.error();
-    auto& custody = custody_or_error.value();
     auto absolute_path = custody->try_create_absolute_path();
     if (!absolute_path)
         return ENOMEM;
