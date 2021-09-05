@@ -35,7 +35,7 @@ public:
 
     KResult unmap_mmap_range(VirtualAddress, size_t);
 
-    Optional<VirtualRange> allocate_range(VirtualAddress, size_t, size_t alignment = PAGE_SIZE);
+    KResultOr<VirtualRange> try_allocate_range(VirtualAddress, size_t, size_t alignment = PAGE_SIZE);
 
     KResultOr<Region*> allocate_region_with_vmobject(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, StringView name, int prot, bool shared);
     KResultOr<Region*> allocate_region(VirtualRange const&, StringView name, int prot = PROT_READ | PROT_WRITE, AllocationStrategy strategy = AllocationStrategy::Reserve);

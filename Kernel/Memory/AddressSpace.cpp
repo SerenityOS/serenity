@@ -131,13 +131,13 @@ KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
     return KSuccess;
 }
 
-Optional<VirtualRange> AddressSpace::allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)
+KResultOr<VirtualRange> AddressSpace::try_allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)
 {
     vaddr.mask(PAGE_MASK);
     size = page_round_up(size);
     if (vaddr.is_null())
-        return page_directory().range_allocator().allocate_anywhere(size, alignment);
-    return page_directory().range_allocator().allocate_specific(vaddr, size);
+        return page_directory().range_allocator().try_allocate_anywhere(size, alignment);
+    return page_directory().range_allocator().try_allocate_specific(vaddr, size);
 }
 
 KResultOr<Region*> AddressSpace::try_allocate_split_region(Region const& source_region, VirtualRange const& range, size_t offset_in_vmobject)

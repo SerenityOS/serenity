@@ -316,13 +316,14 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
                 return IterationDecision::Break;
             }
 
-            auto range = new_space->allocate_range({}, program_header.size_in_memory());
-            if (!range.has_value()) {
+            auto range_or_error = new_space->try_allocate_range({}, program_header.size_in_memory());
+            if (range_or_error.is_error()) {
                 ph_load_result = ENOMEM;
                 return IterationDecision::Break;
             }
+            auto range = range_or_error.release_value();
 
-            auto region_or_error = new_space->allocate_region(range.value(), String::formatted("{} (master-tls)", elf_name), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
+            auto region_or_error = new_space->allocate_region(range, String::formatted("{} (master-tls)", elf_name), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
             if (region_or_error.is_error()) {
                 ph_load_result = region_or_error.error();
                 return IterationDecision::Break;
@@ -365,12 +366,14 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
             auto range_base = VirtualAddress { Memory::page_round_down(program_header.vaddr().offset(load_offset).get()) };
             auto range_end = VirtualAddress { Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()) };
 
-            auto range = new_space->allocate_range(range_base, range_end.get() - range_base.get());
-            if (!range.has_value()) {
+            auto range_or_error = new_space->try_allocate_range(range_base, range_end.get() - range_base.get());
+            if (range_or_error.is_error()) {
                 ph_load_result = ENOMEM;
                 return IterationDecision::Break;
             }
-            auto region_or_error = new_space->allocate_region(range.value(), region_name, prot, AllocationStrategy::Reserve);
+            auto range = range_or_error.release_value();
+
+            auto region_or_error = new_space->allocate_region(range, region_name, prot, AllocationStrategy::Reserve);
             if (region_or_error.is_error()) {
                 ph_load_result = region_or_error.error();
                 return IterationDecision::Break;
@@ -405,12 +408,13 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
 
         auto range_base = VirtualAddress { Memory::page_round_down(program_header.vaddr().offset(load_offset).get()) };
         auto range_end = VirtualAddress { Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()) };
-        auto range = new_space->allocate_range(range_base, range_end.get() - range_base.get());
-        if (!range.has_value()) {
+        auto range_or_error = new_space->try_allocate_range(range_base, range_end.get() - range_base.get());
+        if (range_or_error.is_error()) {
             ph_load_result = ENOMEM;
             return IterationDecision::Break;
         }
-        auto region_or_error = new_space->allocate_region_with_vmobject(range.value(), *vmobject, program_header.offset(), elf_name, prot, true);
+        auto range = range_or_error.release_value();
+        auto region_or_error = new_space->allocate_region_with_vmobject(range, *vmobject, program_header.offset(), elf_name, prot, true);
         if (region_or_error.is_error()) {
             ph_load_result = region_or_error.error();
             return IterationDecision::Break;
@@ -432,13 +436,8 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
         return ENOEXEC;
     }
 
-    auto stack_range = new_space->allocate_range({}, Thread::default_userspace_stack_size);
-    if (!stack_range.has_value()) {
-        dbgln("do_exec: Failed to allocate VM range for stack");
-        return ENOMEM;
-    }
-
-    auto* stack_region = TRY(new_space->allocate_region(stack_range.value(), "Stack (Main thread)", PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
+    auto stack_range = TRY(new_space->try_allocate_range({}, Thread::default_userspace_stack_size));
+    auto* stack_region = TRY(new_space->allocate_region(stack_range, "Stack (Main thread)", PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
     stack_region->set_stack(true);
 
     return LoadResult {
@@ -512,12 +511,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     auto main_program_metadata = main_program_description->metadata();
 
     auto load_result = TRY(load(main_program_description, interpreter_description, main_program_header));
-
-    auto signal_trampoline_range = load_result.space->allocate_range({}, PAGE_SIZE);
-    if (!signal_trampoline_range.has_value()) {
-        dbgln("do_exec: Failed to allocate VM for signal trampoline");
-        return ENOMEM;
-    }
+    auto signal_trampoline_range = TRY(load_result.space->try_allocate_range({}, PAGE_SIZE));
 
     // We commit to the new executable at this point. There is no turning back!
 
@@ -558,7 +552,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     }
     Memory::MemoryManager::enter_space(*m_space);
 
-    auto signal_trampoline_region = m_space->allocate_region_with_vmobject(signal_trampoline_range.value(), g_signal_trampoline_region->vmobject(), 0, "Signal trampoline", PROT_READ | PROT_EXEC, true);
+    auto signal_trampoline_region = m_space->allocate_region_with_vmobject(signal_trampoline_range, g_signal_trampoline_region->vmobject(), 0, "Signal trampoline", PROT_READ | PROT_EXEC, true);
     if (signal_trampoline_region.is_error()) {
         VERIFY_NOT_REACHED();
     }

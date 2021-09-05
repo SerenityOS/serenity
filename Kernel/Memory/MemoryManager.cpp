@@ -403,11 +403,12 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
     m_kernel_page_directory = PageDirectory::must_create_kernel_page_directory();
 
     // Allocate a virtual address range for our array
-    auto range = m_kernel_page_directory->range_allocator().allocate_anywhere(physical_page_array_pages * PAGE_SIZE);
-    if (!range.has_value()) {
+    auto range_or_error = m_kernel_page_directory->range_allocator().try_allocate_anywhere(physical_page_array_pages * PAGE_SIZE);
+    if (range_or_error.is_error()) {
         dmesgln("MM: Could not allocate {} bytes to map physical page array!", physical_page_array_pages * PAGE_SIZE);
         VERIFY_NOT_REACHED();
     }
+    auto range = range_or_error.release_value();
 
     // Now that we have our special m_physical_pages_region region with enough pages to hold the entire array
     // try to map the entire region into kernel space so we always have it
@@ -419,7 +420,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
     auto page_tables_base = m_physical_pages_region->lower();
     auto physical_page_array_base = page_tables_base.offset(needed_page_table_count * PAGE_SIZE);
     auto physical_page_array_current_page = physical_page_array_base.get();
-    auto virtual_page_array_base = range.value().base().get();
+    auto virtual_page_array_base = range.base().get();
     auto virtual_page_array_current_page = virtual_page_array_base;
     for (size_t pt_index = 0; pt_index < needed_page_table_count; pt_index++) {
         auto virtual_page_base_for_this_pt = virtual_page_array_current_page;
@@ -461,7 +462,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
     }
 
     // We now have the entire PhysicalPageEntry array mapped!
-    m_physical_page_entries = (PhysicalPageEntry*)range.value().base().get();
+    m_physical_page_entries = (PhysicalPageEntry*)range.base().get();
     for (size_t i = 0; i < m_physical_page_entries_count; i++)
         new (&m_physical_page_entries[i]) PageTableEntry();
 
@@ -474,7 +475,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
     auto& kernel_page_tables = kernel_page_directory().m_page_tables;
     virtual_page_array_current_page = virtual_page_array_base;
     for (size_t pt_index = 0; pt_index < needed_page_table_count; pt_index++) {
-        VERIFY(virtual_page_array_current_page <= range.value().end().get());
+        VERIFY(virtual_page_array_current_page <= range.end().get());
         auto pt_paddr = page_tables_base.offset(pt_index * PAGE_SIZE);
         auto physical_page_index = PhysicalAddress::physical_page_index(pt_paddr.get());
         auto& physical_page_entry = m_physical_page_entries[physical_page_index];
@@ -485,7 +486,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
         virtual_page_array_current_page += (PAGE_SIZE / sizeof(PageTableEntry)) * PAGE_SIZE;
     }
 
-    dmesgln("MM: Physical page entries: {}", range.value());
+    dmesgln("MM: Physical page entries: {}", range);
 }
 
 PhysicalPageEntry& MemoryManager::get_physical_page_entry(PhysicalAddress physical_address)
@@ -703,16 +704,17 @@ OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, Str
 {
     VERIFY(!(size % PAGE_SIZE));
     SpinlockLocker lock(kernel_page_directory().get_lock());
-    auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
-    if (!range.has_value())
+    auto range_or_error = kernel_page_directory().range_allocator().try_allocate_anywhere(size);
+    if (range_or_error.is_error())
         return {};
+    auto range = range_or_error.release_value();
     auto maybe_vmobject = AnonymousVMObject::try_create_physically_contiguous_with_size(size);
     if (maybe_vmobject.is_error()) {
-        kernel_page_directory().range_allocator().deallocate(range.value());
+        kernel_page_directory().range_allocator().deallocate(range);
         // FIXME: Would be nice to be able to return a KResultOr from here.
         return {};
     }
-    return allocate_kernel_region_with_vmobject(range.value(), maybe_vmobject.release_value(), name, access, cacheable);
+    return allocate_kernel_region_with_vmobject(range, maybe_vmobject.release_value(), name, access, cacheable);
 }
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, StringView name, Region::Access access, AllocationStrategy strategy, Region::Cacheable cacheable)
@@ -722,10 +724,11 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, StringView nam
     if (maybe_vm_object.is_error())
         return {};
     SpinlockLocker lock(kernel_page_directory().get_lock());
-    auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
-    if (!range.has_value())
+    auto range_or_error = kernel_page_directory().range_allocator().try_allocate_anywhere(size);
+    if (range_or_error.is_error())
         return {};
-    return allocate_kernel_region_with_vmobject(range.value(), maybe_vm_object.release_value(), name, access, cacheable);
+    auto range = range_or_error.release_value();
+    return allocate_kernel_region_with_vmobject(range, maybe_vm_object.release_value(), name, access, cacheable);
 }
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
@@ -735,10 +738,11 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size
         return {};
     VERIFY(!(size % PAGE_SIZE));
     SpinlockLocker lock(kernel_page_directory().get_lock());
-    auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
-    if (!range.has_value())
+    auto range_or_error = kernel_page_directory().range_allocator().try_allocate_anywhere(size);
+    if (range_or_error.is_error())
         return {};
-    return allocate_kernel_region_with_vmobject(range.value(), maybe_vm_object.release_value(), name, access, cacheable);
+    auto range = range_or_error.release_value();
+    return allocate_kernel_region_with_vmobject(range, maybe_vm_object.release_value(), name, access, cacheable);
 }
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VirtualRange const& range, VMObject& vmobject, StringView name, Region::Access access, Region::Cacheable cacheable)
@@ -757,10 +761,11 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmo
 {
     VERIFY(!(size % PAGE_SIZE));
     SpinlockLocker lock(kernel_page_directory().get_lock());
-    auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
-    if (!range.has_value())
+    auto range_or_error = kernel_page_directory().range_allocator().try_allocate_anywhere(size);
+    if (range_or_error.is_error())
         return {};
-    return allocate_kernel_region_with_vmobject(range.value(), vmobject, name, access, cacheable);
+    auto range = range_or_error.release_value();
+    return allocate_kernel_region_with_vmobject(range, vmobject, name, access, cacheable);
 }
 
 KResultOr<CommittedPhysicalPageSet> MemoryManager::commit_user_physical_pages(size_t page_count)

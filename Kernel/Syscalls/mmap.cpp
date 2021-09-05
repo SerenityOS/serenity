@@ -191,22 +191,20 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
         return EINVAL;
 
     Memory::Region* region = nullptr;
-    Optional<Memory::VirtualRange> range;
 
-    if (map_randomized) {
-        range = address_space().page_directory().range_allocator().allocate_randomized(Memory::page_round_up(size), alignment);
-    } else {
-        range = address_space().allocate_range(VirtualAddress(addr), size, alignment);
-        if (!range.has_value()) {
+    auto range = TRY([&]() -> KResultOr<Memory::VirtualRange> {
+        if (map_randomized) {
+            return address_space().page_directory().range_allocator().try_allocate_randomized(Memory::page_round_up(size), alignment);
+        }
+        auto range = address_space().try_allocate_range(VirtualAddress(addr), size, alignment);
+        if (range.is_error()) {
             if (addr && !map_fixed) {
                 // If there's an address but MAP_FIXED wasn't specified, the address is just a hint.
-                range = address_space().allocate_range({}, size, alignment);
+                range = address_space().try_allocate_range({}, size, alignment);
             }
         }
-    }
-
-    if (!range.has_value())
-        return ENOMEM;
+        return range;
+    }());
 
     if (map_anonymous) {
         auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
@@ -217,7 +215,7 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
             vmobject = TRY(Memory::AnonymousVMObject::try_create_with_size(Memory::page_round_up(size), strategy));
         }
 
-        region = TRY(address_space().allocate_region_with_vmobject(range.value(), vmobject.release_nonnull(), 0, {}, prot, map_shared));
+        region = TRY(address_space().allocate_region_with_vmobject(range, vmobject.release_nonnull(), 0, {}, prot, map_shared));
     } else {
         if (offset < 0)
             return EINVAL;
@@ -238,7 +236,7 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
                 return EACCES;
         }
 
-        region = TRY(description->mmap(*this, range.value(), static_cast<u64>(offset), prot, map_shared));
+        region = TRY(description->mmap(*this, range, static_cast<u64>(offset), prot, map_shared));
     }
 
     if (!region)
@@ -549,11 +547,8 @@ KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data
     if (multiple_threads)
         return EINVAL;
 
-    auto range = address_space().allocate_range({}, size);
-    if (!range.has_value())
-        return ENOMEM;
-
-    auto region = TRY(address_space().allocate_region(range.value(), String("Master TLS"), PROT_READ | PROT_WRITE));
+    auto range = TRY(address_space().try_allocate_range({}, size));
+    auto region = TRY(address_space().allocate_region(range, String("Master TLS"), PROT_READ | PROT_WRITE));
 
     m_master_tls_region = region->make_weak_ptr();
     m_master_tls_size = size;
