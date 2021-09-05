@@ -146,19 +146,15 @@ KResult BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKernelBu
         if (!allow_cache) {
             flush_specific_block_if_needed(index);
             auto base_offset = index.value() * block_size() + offset;
-            auto nwritten = file_description().write(base_offset, data, count);
-            if (nwritten.is_error())
-                return nwritten.error();
-            VERIFY(nwritten.value() == count);
+            auto nwritten = TRY(file_description().write(base_offset, data, count));
+            VERIFY(nwritten == count);
             return KSuccess;
         }
 
         auto& entry = cache->get(index);
         if (count < block_size()) {
             // Fill the cache first.
-            auto result = read_block(index, nullptr, block_size());
-            if (result.is_error())
-                return result;
+            TRY(read_block(index, nullptr, block_size()));
         }
         if (!data.read(entry.data + offset, count))
             return EFAULT;
@@ -214,9 +210,7 @@ KResult BlockBasedFileSystem::write_blocks(BlockIndex index, unsigned count, con
     VERIFY(m_logical_block_size);
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_blocks {}, count={}", index, count);
     for (unsigned i = 0; i < count; ++i) {
-        auto result = write_block(BlockIndex { index.value() + i }, data.offset(i * block_size()), block_size(), 0, allow_cache);
-        if (result.is_error())
-            return result;
+        TRY(write_block(BlockIndex { index.value() + i }, data.offset(i * block_size()), block_size(), 0, allow_cache));
     }
     return KSuccess;
 }
@@ -231,10 +225,8 @@ KResult BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuffer* b
         if (!allow_cache) {
             const_cast<BlockBasedFileSystem*>(this)->flush_specific_block_if_needed(index);
             auto base_offset = index.value() * block_size() + offset;
-            auto nread = file_description().read(*buffer, base_offset, count);
-            if (nread.is_error())
-                return nread.error();
-            VERIFY(nread.value() == count);
+            auto nread = TRY(file_description().read(*buffer, base_offset, count));
+            VERIFY(nread == count);
             return KSuccess;
         }
 
@@ -242,10 +234,8 @@ KResult BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuffer* b
         if (!entry.has_data) {
             auto base_offset = index.value() * block_size();
             auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
-            auto nread = file_description().read(entry_data_buffer, base_offset, block_size());
-            if (nread.is_error())
-                return nread.error();
-            VERIFY(nread.value() == block_size());
+            auto nread = TRY(file_description().read(entry_data_buffer, base_offset, block_size()));
+            VERIFY(nread == block_size());
             entry.has_data = true;
         }
         if (buffer && !buffer->write(entry.data + offset, count))
@@ -263,9 +253,7 @@ KResult BlockBasedFileSystem::read_blocks(BlockIndex index, unsigned count, User
         return read_block(index, &buffer, block_size(), 0, allow_cache);
     auto out = buffer;
     for (unsigned i = 0; i < count; ++i) {
-        auto result = read_block(BlockIndex { index.value() + i }, &out, block_size(), 0, allow_cache);
-        if (result.is_error())
-            return result;
+        TRY(read_block(BlockIndex { index.value() + i }, &out, block_size(), 0, allow_cache));
         out = out.offset(block_size());
     }
 
