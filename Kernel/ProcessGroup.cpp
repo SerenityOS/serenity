@@ -24,27 +24,24 @@ ProcessGroup::~ProcessGroup()
     });
 }
 
-RefPtr<ProcessGroup> ProcessGroup::try_create(ProcessGroupID pgid)
+KResultOr<NonnullRefPtr<ProcessGroup>> ProcessGroup::try_create(ProcessGroupID pgid)
 {
-    auto process_group = adopt_ref_if_nonnull(new (nothrow) ProcessGroup(pgid));
-    if (!process_group)
-        return {};
+    auto process_group = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ProcessGroup(pgid)));
     process_groups().with([&](auto& groups) {
         groups.prepend(*process_group);
     });
     return process_group;
 }
 
-RefPtr<ProcessGroup> ProcessGroup::try_find_or_create(ProcessGroupID pgid)
+KResultOr<NonnullRefPtr<ProcessGroup>> ProcessGroup::try_find_or_create(ProcessGroupID pgid)
 {
-    return process_groups().with([&](auto& groups) -> RefPtr<ProcessGroup> {
+    return process_groups().with([&](auto& groups) -> KResultOr<NonnullRefPtr<ProcessGroup>> {
         for (auto& group : groups) {
             if (group.pgid() == pgid)
-                return &group;
+                return group;
         }
-        auto process_group = adopt_ref_if_nonnull(new (nothrow) ProcessGroup(pgid));
-        if (process_group)
-            groups.prepend(*process_group);
+        auto process_group = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ProcessGroup(pgid)));
+        groups.prepend(*process_group);
         return process_group;
     });
 }
