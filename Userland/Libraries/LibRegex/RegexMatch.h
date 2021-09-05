@@ -524,6 +524,7 @@ struct MatchState {
     Vector<Match> matches;
     Vector<Vector<Match>> capture_group_matches;
     Vector<u64> repetition_marks;
+    HashMap<u64, u64> checkpoints;
 };
 
 }

@@ -46,6 +46,22 @@ char const* execution_result_name(ExecutionResult result)
     }
 }
 
+char const* opcode_id_name(OpCodeId opcode)
+{
+    switch (opcode) {
+#define __ENUMERATE_OPCODE(x) \
+    case OpCodeId::x:         \
+        return #x;
+
+        ENUMERATE_OPCODES
+
+#undef __ENUMERATE_OPCODE
+    default:
+        VERIFY_NOT_REACHED();
+        return "<Unknown>";
+    }
+}
+
 char const* boundary_check_type_name(BoundaryCheckType ty)
 {
     switch (ty) {
@@ -144,60 +160,14 @@ void ByteCode::ensure_opcodes_initialized()
         return;
     for (u32 i = (u32)OpCodeId::First; i <= (u32)OpCodeId::Last; ++i) {
         switch ((OpCodeId)i) {
-        case OpCodeId::Exit:
-            s_opcodes[i] = make<OpCode_Exit>();
-            break;
-        case OpCodeId::Jump:
-            s_opcodes[i] = make<OpCode_Jump>();
-            break;
-        case OpCodeId::Compare:
-            s_opcodes[i] = make<OpCode_Compare>();
-            break;
-        case OpCodeId::CheckEnd:
-            s_opcodes[i] = make<OpCode_CheckEnd>();
-            break;
-        case OpCodeId::CheckBoundary:
-            s_opcodes[i] = make<OpCode_CheckBoundary>();
-            break;
-        case OpCodeId::ForkJump:
-            s_opcodes[i] = make<OpCode_ForkJump>();
-            break;
-        case OpCodeId::ForkStay:
-            s_opcodes[i] = make<OpCode_ForkStay>();
-            break;
-        case OpCodeId::FailForks:
-            s_opcodes[i] = make<OpCode_FailForks>();
-            break;
-        case OpCodeId::Save:
-            s_opcodes[i] = make<OpCode_Save>();
-            break;
-        case OpCodeId::Restore:
-            s_opcodes[i] = make<OpCode_Restore>();
-            break;
-        case OpCodeId::GoBack:
-            s_opcodes[i] = make<OpCode_GoBack>();
-            break;
-        case OpCodeId::CheckBegin:
-            s_opcodes[i] = make<OpCode_CheckBegin>();
-            break;
-        case OpCodeId::ClearCaptureGroup:
-            s_opcodes[i] = make<OpCode_ClearCaptureGroup>();
-            break;
-        case OpCodeId::SaveLeftCaptureGroup:
-            s_opcodes[i] = make<OpCode_SaveLeftCaptureGroup>();
-            break;
-        case OpCodeId::SaveRightCaptureGroup:
-            s_opcodes[i] = make<OpCode_SaveRightCaptureGroup>();
-            break;
-        case OpCodeId::SaveRightNamedCaptureGroup:
-            s_opcodes[i] = make<OpCode_SaveRightNamedCaptureGroup>();
-            break;
-        case OpCodeId::Repeat:
-            s_opcodes[i] = make<OpCode_Repeat>();
-            break;
-        case OpCodeId::ResetRepeat:
-            s_opcodes[i] = make<OpCode_ResetRepeat>();
-            break;
+#define __ENUMERATE_OPCODE(OpCode)              \
+    case OpCodeId::OpCode:                      \
+        s_opcodes[i] = make<OpCode_##OpCode>(); \
+        break;
+
+            ENUMERATE_OPCODES
+
+#undef __ENUMERATE_OPCODE
         }
     }
     s_opcodes_initialized = true;
@@ -898,6 +868,36 @@ ALWAYS_INLINE ExecutionResult OpCode_ResetRepeat::execute(MatchInput const&, Mat
         state.repetition_marks.resize(id() + 1);
 
     state.repetition_marks.at(id()) = 0;
+    return ExecutionResult::Continue;
+}
+
+ALWAYS_INLINE ExecutionResult OpCode_Checkpoint::execute(MatchInput const&, MatchState& state) const
+{
+    state.checkpoints.set(state.instruction_position, state.string_position);
+    return ExecutionResult::Continue;
+}
+
+ALWAYS_INLINE ExecutionResult OpCode_JumpNonEmpty::execute(MatchInput const&, MatchState& state) const
+{
+    auto current_position = state.string_position;
+    auto checkpoint_ip = state.instruction_position + size() + checkpoint();
+    if (state.checkpoints.get(checkpoint_ip).value_or(current_position) != current_position) {
+        auto form = this->form();
+
+        if (form == OpCodeId::Jump) {
+            state.instruction_position += offset();
+            return ExecutionResult::Continue;
+        }
+
+        state.fork_at_position = state.instruction_position + size() + offset();
+
+        if (form == OpCodeId::ForkJump)
+            return ExecutionResult::Fork_PrioHigh;
+
+        if (form == OpCodeId::ForkStay)
+            return ExecutionResult::Fork_PrioLow;
+    }
+
     return ExecutionResult::Continue;
 }
 
