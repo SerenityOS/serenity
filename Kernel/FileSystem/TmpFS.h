@@ -34,7 +34,7 @@ private:
     RefPtr<TmpFSInode> m_root_inode;
 
     HashMap<InodeIndex, NonnullRefPtr<TmpFSInode>> m_inodes;
-    RefPtr<Inode> get_inode(InodeIdentifier identifier) const;
+    KResultOr<NonnullRefPtr<Inode>> get_inode(InodeIdentifier identifier) const;
     void register_inode(TmpFSInode&);
     void unregister_inode(InodeIdentifier);
 

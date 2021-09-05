@@ -29,7 +29,7 @@ public:
 
 private:
     DevPtsFS();
-    RefPtr<Inode> get_inode(InodeIdentifier) const;
+    KResultOr<NonnullRefPtr<Inode>> get_inode(InodeIdentifier) const;
 
     RefPtr<DevPtsFSInode> m_root_inode;
 };

@@ -65,7 +65,7 @@ Inode& DevFS::root_inode()
     return *m_root_inode;
 }
 
-RefPtr<Inode> DevFS::get_inode(InodeIdentifier inode_id) const
+KResultOr<NonnullRefPtr<Inode>> DevFS::get_inode(InodeIdentifier inode_id) const
 {
     MutexLocker locker(m_lock);
     if (inode_id.index() == 1)
@@ -74,7 +74,7 @@ RefPtr<Inode> DevFS::get_inode(InodeIdentifier inode_id) const
         if (inode_id.index() == node.index())
             return node;
     }
-    return nullptr;
+    return ENOENT;
 }
 
 DevFSInode::DevFSInode(DevFS& fs)

@@ -32,7 +32,7 @@ public:
 
 private:
     DevFS();
-    RefPtr<Inode> get_inode(InodeIdentifier) const;
+    KResultOr<NonnullRefPtr<Inode>> get_inode(InodeIdentifier) const;
     size_t allocate_inode_index();
 
     NonnullRefPtr<DevFSRootDirectoryInode> m_root_inode;
