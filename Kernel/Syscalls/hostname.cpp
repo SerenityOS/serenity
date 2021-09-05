@@ -17,8 +17,7 @@ KResultOr<FlatPtr> Process::sys$gethostname(Userspace<char*> buffer, size_t size
     return hostname().with_shared([&](const auto& name) -> KResultOr<FlatPtr> {
         if (size < (name.length() + 1))
             return ENAMETOOLONG;
-        if (!copy_to_user(buffer, name.characters(), name.length() + 1))
-            return EFAULT;
+        TRY(copy_to_user(buffer, name.characters(), name.length() + 1));
         return 0;
     });
 }

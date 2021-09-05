@@ -128,8 +128,7 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
             return EINVAL;
         {
             int timestamp;
-            if (!copy_from_user(&timestamp, static_ptr_cast<const int*>(user_value)))
-                return EFAULT;
+            TRY(copy_from_user(&timestamp, static_ptr_cast<const int*>(user_value)));
             m_timestamp = timestamp;
         }
         if (m_timestamp && (domain() != AF_INET || type() == SOCK_STREAM)) {
@@ -147,8 +146,7 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
 KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)
 {
     socklen_t size;
-    if (!copy_from_user(&size, value_size.unsafe_userspace_ptr()))
-        return EFAULT;
+    TRY(copy_from_user(&size, value_size.unsafe_userspace_ptr()));
 
     // FIXME: Add TCP_NODELAY, IPPROTO_TCP and IPPROTO_IP (used in OpenSSH)
     if (level != SOL_SOCKET) {
@@ -162,34 +160,26 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<vo
             return EINVAL;
         {
             timeval tv = m_send_timeout.to_timeval();
-            if (!copy_to_user(static_ptr_cast<timeval*>(value), &tv))
-                return EFAULT;
+            TRY(copy_to_user(static_ptr_cast<timeval*>(value), &tv));
         }
         size = sizeof(timeval);
-        if (!copy_to_user(value_size, &size))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(value_size, &size);
     case SO_RCVTIMEO:
         if (size < sizeof(timeval))
             return EINVAL;
         {
             timeval tv = m_send_timeout.to_timeval();
-            if (!copy_to_user(static_ptr_cast<timeval*>(value), &tv))
-                return EFAULT;
+            TRY(copy_to_user(static_ptr_cast<timeval*>(value), &tv));
         }
         size = sizeof(timeval);
-        if (!copy_to_user(value_size, &size))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(value_size, &size);
     case SO_ERROR: {
         if (size < sizeof(int))
             return EINVAL;
         int errno = so_error().error();
-        if (!copy_to_user(static_ptr_cast<int*>(value), &errno))
-            return EFAULT;
+        TRY(copy_to_user(static_ptr_cast<int*>(value), &errno));
         size = sizeof(int);
-        if (!copy_to_user(value_size, &size))
-            return EFAULT;
+        TRY(copy_to_user(value_size, &size));
         return set_so_error(KSuccess);
     }
     case SO_BINDTODEVICE:
@@ -198,28 +188,21 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<vo
         if (m_bound_interface) {
             const auto& name = m_bound_interface->name();
             auto length = name.length() + 1;
-            if (!copy_to_user(static_ptr_cast<char*>(value), name.characters(), length))
-                return EFAULT;
+            TRY(copy_to_user(static_ptr_cast<char*>(value), name.characters(), length));
             size = length;
-            if (!copy_to_user(value_size, &size))
-                return EFAULT;
-            return KSuccess;
+            return copy_to_user(value_size, &size);
         } else {
             size = 0;
-            if (!copy_to_user(value_size, &size))
-                return EFAULT;
-
+            TRY(copy_to_user(value_size, &size));
+            // FIXME: This return value looks suspicious.
             return EFAULT;
         }
     case SO_TIMESTAMP:
         if (size < sizeof(int))
             return EINVAL;
-        if (!copy_to_user(static_ptr_cast<int*>(value), &m_timestamp))
-            return EFAULT;
+        TRY(copy_to_user(static_ptr_cast<int*>(value), &m_timestamp));
         size = sizeof(int);
-        if (!copy_to_user(value_size, &size))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(value_size, &size);
     default:
         dbgln("setsockopt({}) at SOL_SOCKET not implemented.", option);
         return ENOPROTOOPT;

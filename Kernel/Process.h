@@ -418,7 +418,7 @@ public:
     KResultOr<FlatPtr> sys$map_time_page();
 
     template<bool sockname, typename Params>
-    int get_sock_or_peer_name(const Params&);
+    KResult get_sock_or_peer_name(Params const&);
 
     static void initialize();
 

@@ -24,8 +24,7 @@ KResultOr<NonnullOwnPtr<KString>> UserOrKernelBuffer::try_copy_into_kstring(size
         auto kstring = KString::try_create_uninitialized(size, buffer);
         if (!kstring)
             return ENOMEM;
-        if (!copy_from_user(buffer, m_buffer, size))
-            return EFAULT;
+        TRY(copy_from_user(buffer, m_buffer, size));
         return kstring.release_nonnull();
     }
 
@@ -41,7 +40,7 @@ bool UserOrKernelBuffer::write(const void* src, size_t offset, size_t len)
         return false;
 
     if (Memory::is_user_address(VirtualAddress(m_buffer)))
-        return copy_to_user(m_buffer + offset, src, len);
+        return copy_to_user(m_buffer + offset, src, len).is_success();
 
     memcpy(m_buffer + offset, src, len);
     return true;
@@ -53,7 +52,7 @@ bool UserOrKernelBuffer::read(void* dest, size_t offset, size_t len) const
         return false;
 
     if (Memory::is_user_address(VirtualAddress(m_buffer)))
-        return copy_from_user(dest, m_buffer + offset, len);
+        return copy_from_user(dest, m_buffer + offset, len).is_success();
 
     memcpy(dest, m_buffer + offset, len);
     return true;
@@ -65,7 +64,7 @@ bool UserOrKernelBuffer::memset(int value, size_t offset, size_t len)
         return false;
 
     if (Memory::is_user_address(VirtualAddress(m_buffer)))
-        return memset_user(m_buffer + offset, value, len);
+        return memset_user(m_buffer + offset, value, len).is_success();
 
     ::memset(m_buffer + offset, value, len);
     return true;

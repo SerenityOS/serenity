@@ -316,9 +316,7 @@ KResult KeyboardDevice::ioctl(FileDescription&, unsigned request, Userspace<void
     switch (request) {
     case KEYBOARD_IOCTL_GET_NUM_LOCK: {
         auto output = static_ptr_cast<bool*>(arg);
-        if (!copy_to_user(output, &m_num_lock_on))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(output, &m_num_lock_on);
     }
     case KEYBOARD_IOCTL_SET_NUM_LOCK: {
         // In this case we expect the value to be a boolean and not a pointer.
@@ -330,9 +328,7 @@ KResult KeyboardDevice::ioctl(FileDescription&, unsigned request, Userspace<void
     }
     case KEYBOARD_IOCTL_GET_CAPS_LOCK: {
         auto output = static_ptr_cast<bool*>(arg);
-        if (!copy_to_user(output, &m_caps_lock_on))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(output, &m_caps_lock_on);
     }
     case KEYBOARD_IOCTL_SET_CAPS_LOCK: {
         auto caps_lock_value = static_cast<u8>(arg.ptr());

@@ -18,8 +18,7 @@ KResultOr<FlatPtr> Process::sys$sigprocmask(int how, Userspace<const sigset_t*> 
     u32 previous_signal_mask;
     if (set) {
         sigset_t set_value;
-        if (!copy_from_user(&set_value, set))
-            return EFAULT;
+        TRY(copy_from_user(&set_value, set));
         switch (how) {
         case SIG_BLOCK:
             previous_signal_mask = current_thread->signal_mask_block(set_value, true);
@@ -36,8 +35,9 @@ KResultOr<FlatPtr> Process::sys$sigprocmask(int how, Userspace<const sigset_t*> 
     } else {
         previous_signal_mask = current_thread->signal_mask();
     }
-    if (old_set && !copy_to_user(old_set, &previous_signal_mask))
-        return EFAULT;
+    if (old_set) {
+        TRY(copy_to_user(old_set, &previous_signal_mask));
+    }
     return 0;
 }
 
@@ -46,9 +46,7 @@ KResultOr<FlatPtr> Process::sys$sigpending(Userspace<sigset_t*> set)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     auto pending_signals = Thread::current()->pending_signals();
-    if (!copy_to_user(set, &pending_signals))
-        return EFAULT;
-    return 0;
+    return copy_to_user(set, &pending_signals);
 }
 
 KResultOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<const sigaction*> user_act, Userspace<sigaction*> user_old_act)
@@ -64,13 +62,11 @@ KResultOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<const sigaction*
         sigaction old_act {};
         old_act.sa_flags = action.flags;
         old_act.sa_sigaction = reinterpret_cast<decltype(old_act.sa_sigaction)>(action.handler_or_sigaction.as_ptr());
-        if (!copy_to_user(user_old_act, &old_act))
-            return EFAULT;
+        TRY(copy_to_user(user_old_act, &old_act));
     }
     if (user_act) {
         sigaction act {};
-        if (!copy_from_user(&act, user_act))
-            return EFAULT;
+        TRY(copy_from_user(&act, user_act));
         action.flags = act.sa_flags;
         action.handler_or_sigaction = VirtualAddress { reinterpret_cast<void*>(act.sa_sigaction) };
     }

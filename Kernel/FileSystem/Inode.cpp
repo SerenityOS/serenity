@@ -317,9 +317,7 @@ KResult Inode::can_apply_flock(FileDescription const& description, flock const& 
 KResult Inode::apply_flock(Process const& process, FileDescription const& description, Userspace<flock const*> input_lock)
 {
     flock new_lock = {};
-    if (!copy_from_user(&new_lock, input_lock))
-        return EFAULT;
-
+    TRY(copy_from_user(&new_lock, input_lock));
     TRY(normalize_flock(description, new_lock));
 
     MutexLocker locker(m_inode_lock);
@@ -343,9 +341,7 @@ KResult Inode::apply_flock(Process const& process, FileDescription const& descri
 KResult Inode::get_flock(FileDescription const& description, Userspace<flock*> reference_lock) const
 {
     flock lookup = {};
-    if (!copy_from_user(&lookup, reference_lock))
-        return EFAULT;
-
+    TRY(copy_from_user(&lookup, reference_lock));
     TRY(normalize_flock(description, lookup));
 
     MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
@@ -356,16 +352,12 @@ KResult Inode::get_flock(FileDescription const& description, Userspace<flock*> r
 
         if ((lookup.l_type == F_RDLCK && lock.type == F_WRLCK) || lookup.l_type == F_WRLCK) {
             lookup = { lock.type, SEEK_SET, lock.start, lock.len, lock.pid };
-            if (!copy_to_user(reference_lock, &lookup))
-                return EFAULT;
-            return KSuccess;
+            return copy_to_user(reference_lock, &lookup);
         }
     }
 
     lookup.l_type = F_UNLCK;
-    if (!copy_to_user(reference_lock, &lookup))
-        return EFAULT;
-    return KSuccess;
+    return copy_to_user(reference_lock, &lookup);
 }
 
 void Inode::remove_flocks_for_description(FileDescription const& description)

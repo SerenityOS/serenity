@@ -28,8 +28,7 @@ KResultOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     Syscall::SC_unveil_params params;
-    if (!copy_from_user(&params, user_params))
-        return EFAULT;
+    TRY(copy_from_user(&params, user_params));
 
     if (!params.path.characters && !params.permissions.characters) {
         m_veil_state = VeilState::Locked;

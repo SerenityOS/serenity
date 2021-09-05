@@ -27,9 +27,7 @@ KResultOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
         memcpy(buf.nodename, name.characters(), name.length() + 1);
     });
 
-    if (!copy_to_user(user_buf, &buf))
-        return EFAULT;
-    return 0;
+    return copy_to_user(user_buf, &buf);
 }
 
 }

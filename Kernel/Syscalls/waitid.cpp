@@ -25,8 +25,7 @@ KResultOr<FlatPtr> Process::sys$waitid(Userspace<const Syscall::SC_waitid_params
     REQUIRE_PROMISE(proc);
 
     Syscall::SC_waitid_params params;
-    if (!copy_from_user(&params, user_params))
-        return EFAULT;
+    TRY(copy_from_user(&params, user_params));
 
     Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee = Empty {};
     switch (params.idtype) {
@@ -59,9 +58,7 @@ KResultOr<FlatPtr> Process::sys$waitid(Userspace<const Syscall::SC_waitid_params
     if (siginfo_or_error.is_error())
         return siginfo_or_error.error();
 
-    if (!copy_to_user(params.infop, &siginfo_or_error.value()))
-        return EFAULT;
-    return 0;
+    return copy_to_user(params.infop, &siginfo_or_error.value());
 }
 
 }

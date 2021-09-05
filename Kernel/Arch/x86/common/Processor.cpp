@@ -476,10 +476,10 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
                 break;
 
             if (Memory::is_user_range(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2)) {
-                if (!copy_from_user(&retaddr, &((FlatPtr*)stack_ptr)[1]) || !retaddr)
+                if (copy_from_user(&retaddr, &((FlatPtr*)stack_ptr)[1]).is_error() || !retaddr)
                     break;
                 stack_trace.append(retaddr);
-                if (!copy_from_user(&stack_ptr, (FlatPtr*)stack_ptr))
+                if (copy_from_user(&stack_ptr, (FlatPtr*)stack_ptr).is_error())
                     break;
             } else {
                 void* fault_at;
@@ -552,7 +552,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             auto& regs = thread.regs();
             auto* stack_top = reinterpret_cast<FlatPtr*>(regs.sp());
             if (Memory::is_user_range(VirtualAddress(stack_top), sizeof(FlatPtr))) {
-                if (!copy_from_user(&frame_ptr, &((FlatPtr*)stack_top)[0]))
+                if (copy_from_user(&frame_ptr, &((FlatPtr*)stack_top)[0]).is_error())
                     frame_ptr = 0;
             } else {
                 void* fault_at;

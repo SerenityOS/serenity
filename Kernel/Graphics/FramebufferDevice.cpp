@@ -164,15 +164,12 @@ KResult FramebufferDevice::ioctl(FileDescription&, unsigned request, Userspace<v
     case FB_IOCTL_GET_SIZE_IN_BYTES: {
         auto user_size = static_ptr_cast<size_t*>(arg);
         size_t value = framebuffer_size_in_bytes();
-        if (!copy_to_user(user_size, &value))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(user_size, &value);
     }
     case FB_IOCTL_GET_BUFFER: {
         auto user_index = static_ptr_cast<int*>(arg);
         int value = m_y_offset == 0 ? 0 : 1;
-        if (!copy_to_user(user_index, &value))
-            return EFAULT;
+        TRY(copy_to_user(user_index, &value));
         if (!m_graphics_adapter->double_framebuffering_capable())
             return ENOTIMPL;
         return KSuccess;
@@ -192,15 +189,12 @@ KResult FramebufferDevice::ioctl(FileDescription&, unsigned request, Userspace<v
         resolution.pitch = m_framebuffer_pitch;
         resolution.width = m_framebuffer_width;
         resolution.height = m_framebuffer_height;
-        if (!copy_to_user(user_resolution, &resolution))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(user_resolution, &resolution);
     }
     case FB_IOCTL_SET_RESOLUTION: {
         auto user_resolution = static_ptr_cast<FBResolution*>(arg);
         FBResolution resolution;
-        if (!copy_from_user(&resolution, user_resolution))
-            return EFAULT;
+        TRY(copy_from_user(&resolution, user_resolution));
         if (resolution.width > MAX_RESOLUTION_WIDTH || resolution.height > MAX_RESOLUTION_HEIGHT)
             return EINVAL;
 
@@ -208,8 +202,7 @@ KResult FramebufferDevice::ioctl(FileDescription&, unsigned request, Userspace<v
             resolution.pitch = m_framebuffer_pitch;
             resolution.width = m_framebuffer_width;
             resolution.height = m_framebuffer_height;
-            if (!copy_to_user(user_resolution, &resolution))
-                return EFAULT;
+            TRY(copy_to_user(user_resolution, &resolution));
             return ENOTIMPL;
         }
 
@@ -223,8 +216,7 @@ KResult FramebufferDevice::ioctl(FileDescription&, unsigned request, Userspace<v
             resolution.pitch = m_framebuffer_pitch;
             resolution.width = m_framebuffer_width;
             resolution.height = m_framebuffer_height;
-            if (!copy_to_user(user_resolution, &resolution))
-                return EFAULT;
+            TRY(copy_to_user(user_resolution, &resolution));
             return EINVAL;
         }
         m_framebuffer_width = resolution.width;
@@ -235,21 +227,16 @@ KResult FramebufferDevice::ioctl(FileDescription&, unsigned request, Userspace<v
         resolution.pitch = m_framebuffer_pitch;
         resolution.width = m_framebuffer_width;
         resolution.height = m_framebuffer_height;
-        if (!copy_to_user(user_resolution, &resolution))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(user_resolution, &resolution);
     }
     case FB_IOCTL_GET_BUFFER_OFFSET: {
         auto user_buffer_offset = static_ptr_cast<FBBufferOffset*>(arg);
         FBBufferOffset buffer_offset;
-        if (!copy_from_user(&buffer_offset, user_buffer_offset))
-            return EFAULT;
+        TRY(copy_from_user(&buffer_offset, user_buffer_offset));
         if (buffer_offset.buffer_index != 0 && buffer_offset.buffer_index != 1)
             return EINVAL;
         buffer_offset.offset = (size_t)buffer_offset.buffer_index * m_framebuffer_pitch * m_framebuffer_height;
-        if (!copy_to_user(user_buffer_offset, &buffer_offset))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(user_buffer_offset, &buffer_offset);
     }
     case FB_IOCTL_FLUSH_BUFFERS:
         return ENOTSUP;

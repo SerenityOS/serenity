@@ -18,9 +18,7 @@ KResultOr<FlatPtr> Process::sys$times(Userspace<tms*> user_times)
     times.tms_cutime = m_ticks_in_user_for_dead_children;
     times.tms_cstime = m_ticks_in_kernel_for_dead_children;
 
-    if (!copy_to_user(user_times, &times))
-        return EFAULT;
-
+    TRY(copy_to_user(user_times, &times));
     return TimeManagement::the().uptime_ms() & 0x7fffffff;
 }
 

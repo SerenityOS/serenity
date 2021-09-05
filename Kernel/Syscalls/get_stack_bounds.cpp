@@ -21,11 +21,8 @@ KResultOr<FlatPtr> Process::sys$get_stack_bounds(Userspace<FlatPtr*> user_stack_
 
     FlatPtr stack_base = stack_region->range().base().get();
     size_t stack_size = stack_region->size();
-    if (!copy_to_user(user_stack_base, &stack_base))
-        return EFAULT;
-    if (!copy_to_user(user_stack_size, &stack_size))
-        return EFAULT;
-    return 0;
+    TRY(copy_to_user(user_stack_base, &stack_base));
+    return copy_to_user(user_stack_size, &stack_size);
 }
 
 }

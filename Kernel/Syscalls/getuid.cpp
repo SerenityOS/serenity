@@ -40,18 +40,20 @@ KResultOr<FlatPtr> Process::sys$getresuid(Userspace<UserID*> ruid, Userspace<Use
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-    if (!copy_to_user(ruid, &m_protected_values.uid) || !copy_to_user(euid, &m_protected_values.euid) || !copy_to_user(suid, &m_protected_values.suid))
-        return EFAULT;
-    return 0;
+    TRY(copy_to_user(ruid, &m_protected_values.uid));
+    TRY(copy_to_user(euid, &m_protected_values.euid));
+    TRY(copy_to_user(suid, &m_protected_values.suid));
+    return KSuccess;
 }
 
 KResultOr<FlatPtr> Process::sys$getresgid(Userspace<GroupID*> rgid, Userspace<GroupID*> egid, Userspace<GroupID*> sgid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-    if (!copy_to_user(rgid, &m_protected_values.gid) || !copy_to_user(egid, &m_protected_values.egid) || !copy_to_user(sgid, &m_protected_values.sgid))
-        return EFAULT;
-    return 0;
+    TRY(copy_to_user(rgid, &m_protected_values.gid));
+    TRY(copy_to_user(egid, &m_protected_values.egid));
+    TRY(copy_to_user(sgid, &m_protected_values.sgid));
+    return KSuccess;
 }
 
 KResultOr<FlatPtr> Process::sys$getgroups(size_t count, Userspace<gid_t*> user_gids)
@@ -62,11 +64,7 @@ KResultOr<FlatPtr> Process::sys$getgroups(size_t count, Userspace<gid_t*> user_g
         return extra_gids().size();
     if (count != extra_gids().size())
         return EINVAL;
-
-    if (!copy_to_user(user_gids, extra_gids().data(), sizeof(gid_t) * count))
-        return EFAULT;
-
-    return 0;
+    return copy_to_user(user_gids, extra_gids().data(), sizeof(gid_t) * count);
 }
 
 }
