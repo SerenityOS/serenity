@@ -19,18 +19,12 @@ KResultOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params
 
     OwnPtr<KString> promises;
     if (params.promises.characters) {
-        auto promises_or_error = try_copy_kstring_from_user(params.promises);
-        if (promises_or_error.is_error())
-            return promises_or_error.error();
-        promises = promises_or_error.release_value();
+        promises = TRY(try_copy_kstring_from_user(params.promises));
     }
 
     OwnPtr<KString> execpromises;
     if (params.execpromises.characters) {
-        auto execpromises_or_error = try_copy_kstring_from_user(params.execpromises);
-        if (execpromises_or_error.is_error())
-            return execpromises_or_error.error();
-        execpromises = execpromises_or_error.release_value();
+        execpromises = TRY(try_copy_kstring_from_user(params.execpromises));
     }
 
     auto parse_pledge = [&](auto pledge_spec, u32& mask) {
