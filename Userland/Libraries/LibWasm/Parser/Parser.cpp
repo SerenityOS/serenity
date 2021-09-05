@@ -744,7 +744,8 @@ ParseResult<CustomSection> CustomSection::parse(InputStream& stream)
         auto size = stream.read({ buf, 16 });
         if (size == 0)
             break;
-        data_buffer.append(buf, size);
+        if (!data_buffer.try_append(buf, size))
+            return with_eof_check(stream, ParseError::HugeAllocationRequested);
     }
 
     return CustomSection(name.release_value(), move(data_buffer));

@@ -17,18 +17,18 @@
 
 namespace AK {
 
-inline void StringBuilder::will_append(size_t size)
+inline bool StringBuilder::will_append(size_t size)
 {
     Checked<size_t> needed_capacity = m_buffer.size();
     needed_capacity += size;
     VERIFY(!needed_capacity.has_overflow());
     // Prefer to completely use the existing capacity first
     if (needed_capacity <= m_buffer.capacity())
-        return;
+        return true;
     Checked<size_t> expanded_capacity = needed_capacity;
     expanded_capacity *= 2;
     VERIFY(!expanded_capacity.has_overflow());
-    m_buffer.ensure_capacity(expanded_capacity.value());
+    return m_buffer.try_ensure_capacity(expanded_capacity.value());
 }
 
 StringBuilder::StringBuilder(size_t initial_capacity)
@@ -40,8 +40,10 @@ void StringBuilder::append(StringView const& str)
 {
     if (str.is_empty())
         return;
-    will_append(str.length());
-    m_buffer.append(str.characters_without_null_termination(), str.length());
+    auto ok = will_append(str.length());
+    VERIFY(ok);
+    ok = m_buffer.try_append(str.characters_without_null_termination(), str.length());
+    VERIFY(ok);
 }
 
 void StringBuilder::append(char const* characters, size_t length)
@@ -51,8 +53,10 @@ void StringBuilder::append(char const* characters, size_t length)
 
 void StringBuilder::append(char ch)
 {
-    will_append(1);
-    m_buffer.append(&ch, 1);
+    auto ok = will_append(1);
+    VERIFY(ok);
+    ok = m_buffer.try_append(&ch, 1);
+    VERIFY(ok);
 }
 
 void StringBuilder::appendvf(char const* fmt, va_list ap)

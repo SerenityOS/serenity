@@ -122,7 +122,8 @@ private:
     {
         if (!m_condition()) {
         write_to_buffer:;
-            m_buffer.append(bytes.data(), bytes.size());
+            if (!m_buffer.try_append(bytes.data(), bytes.size()))
+                return 0;
             return bytes.size();
         }
 

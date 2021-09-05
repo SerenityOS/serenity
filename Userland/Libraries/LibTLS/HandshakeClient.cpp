@@ -119,7 +119,10 @@ bool TLSv12::compute_master_secret_from_pre_master_secret(size_t length)
         return false;
     }
 
-    m_context.master_key.resize(length);
+    if (!m_context.master_key.try_resize(length)) {
+        dbgln("Couldn't allocate enough space for the master key :(");
+        return false;
+    }
 
     pseudorandom_function(
         m_context.master_key,

@@ -75,7 +75,8 @@ bool Heap::write_block(u32 block, ByteBuffer& buffer)
     VERIFY(buffer.size() <= BLOCKSIZE);
     auto sz = buffer.size();
     if (sz < BLOCKSIZE) {
-        buffer.resize(BLOCKSIZE);
+        if (!buffer.try_resize(BLOCKSIZE))
+            return false;
         memset(buffer.offset_pointer((int)sz), 0, BLOCKSIZE - sz);
     }
     dbgln_if(SQL_DEBUG, "{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",

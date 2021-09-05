@@ -263,8 +263,10 @@ bool Parser::initialize_hint_tables()
         auto total_size = primary_size + overflow_size;
 
         possible_merged_stream_buffer = ByteBuffer::create_uninitialized(total_size);
-        possible_merged_stream_buffer.append(primary_hint_stream->bytes());
-        possible_merged_stream_buffer.append(overflow_hint_stream->bytes());
+        auto ok = possible_merged_stream_buffer.try_append(primary_hint_stream->bytes());
+        ok = ok && possible_merged_stream_buffer.try_append(overflow_hint_stream->bytes());
+        if (!ok)
+            return false;
         hint_stream_bytes = possible_merged_stream_buffer.bytes();
     } else {
         hint_stream_bytes = primary_hint_stream->bytes();
