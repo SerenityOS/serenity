@@ -120,6 +120,7 @@ struct UnicodeData {
 };
 
 static constexpr auto s_desired_fields = Array {
+    "canonical_combining_class"sv,
     "simple_uppercase_mapping"sv,
     "simple_lowercase_mapping"sv,
 };
