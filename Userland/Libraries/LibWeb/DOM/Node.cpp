@@ -98,22 +98,45 @@ const HTML::HTMLElement* Node::enclosing_html_element_with_attribute(const FlySt
     return nullptr;
 }
 
-String Node::text_content() const
+// https://dom.spec.whatwg.org/#concept-descendant-text-content
+String Node::descendant_text_content() const
 {
     StringBuilder builder;
-    for (auto* child = first_child(); child; child = child->next_sibling()) {
-        builder.append(child->text_content());
-    }
+    for_each_in_subtree_of_type<Text>([&](auto& text_node) {
+        builder.append(text_node.data());
+        return IterationDecision::Continue;
+    });
     return builder.to_string();
 }
 
-void Node::set_text_content(const String& content)
+// https://dom.spec.whatwg.org/#dom-node-textcontent
+String Node::text_content() const
 {
-    if (is_text()) {
-        verify_cast<Text>(this)->set_data(content);
+    if (is<DocumentFragment>(this) || is<Element>(this))
+        return descendant_text_content();
+    else if (is<CharacterData>(this))
+        return verify_cast<CharacterData>(this)->data();
+
+    // FIXME: Else if this is an Attr node, return this's value.
+
+    return {};
+}
+
+// https://dom.spec.whatwg.org/#ref-for-dom-node-textcontent%E2%91%A0
+void Node::set_text_content(String const& content)
+{
+    if (is<DocumentFragment>(this) || is<Element>(this)) {
+        string_replace_all(content);
+    } else if (is<CharacterData>(this)) {
+        // FIXME: CharacterData::set_data is not spec compliant. Make this match the spec when set_data becomes spec compliant.
+        //        Do note that this will make this function able to throw an exception.
+
+        auto* character_data_node = verify_cast<CharacterData>(this);
+        character_data_node->set_data(content);
     } else {
-        remove_all_children();
-        append_child(document().create_text_node(content));
+        // FIXME: Else if this is an Attr node, set an existing attribute value with this and the given value.
+
+        return;
     }
 
     set_needs_style_update(true);

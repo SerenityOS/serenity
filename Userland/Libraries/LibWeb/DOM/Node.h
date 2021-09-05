@@ -99,8 +99,9 @@ public:
 
     virtual FlyString node_name() const = 0;
 
-    virtual String text_content() const;
-    void set_text_content(const String&);
+    String descendant_text_content() const;
+    String text_content() const;
+    void set_text_content(String const&);
 
     Document& document() { return *m_document; }
     const Document& document() const { return *m_document; }

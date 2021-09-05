@@ -25,8 +25,6 @@ public:
 
     unsigned length() const { return m_data.length(); }
 
-    virtual String text_content() const override { return m_data; }
-
 protected:
     explicit CharacterData(Document&, NodeType, const String&);
 
