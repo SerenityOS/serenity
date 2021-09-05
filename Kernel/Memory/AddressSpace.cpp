@@ -41,10 +41,7 @@ KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
     if (!size)
         return EINVAL;
 
-    auto range_or_error = VirtualRange::expand_to_page_boundaries(addr.get(), size);
-    if (range_or_error.is_error())
-        return range_or_error.error();
-    auto range_to_unmap = range_or_error.value();
+    auto range_to_unmap = TRY(VirtualRange::expand_to_page_boundaries(addr.get(), size));
 
     if (!is_user_range(range_to_unmap))
         return EFAULT;
@@ -70,10 +67,7 @@ KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
         // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
         region->unmap(Region::ShouldDeallocateVirtualRange::No);
 
-        auto new_regions_or_error = try_split_region_around_range(*region, range_to_unmap);
-        if (new_regions_or_error.is_error())
-            return new_regions_or_error.error();
-        auto& new_regions = new_regions_or_error.value();
+        auto new_regions = TRY(try_split_region_around_range(*region, range_to_unmap));
 
         // Instead we give back the unwanted VM manually.
         page_directory().range_allocator().deallocate(range_to_unmap);
@@ -120,11 +114,8 @@ KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
         region->unmap(Region::ShouldDeallocateVirtualRange::No);
 
         // Otherwise, split the regions and collect them for future mapping.
-        auto split_regions_or_error = try_split_region_around_range(*region, range_to_unmap);
-        if (split_regions_or_error.is_error())
-            return split_regions_or_error.error();
-
-        if (new_regions.try_extend(split_regions_or_error.value()))
+        auto split_regions = TRY(try_split_region_around_range(*region, range_to_unmap));
+        if (new_regions.try_extend(split_regions))
             return ENOMEM;
     }
 
@@ -311,10 +302,8 @@ KResultOr<Vector<Region*, 2>> AddressSpace::try_split_region_around_range(const 
     };
     Vector<Region*, 2> new_regions;
     for (auto& new_range : remaining_ranges_after_unmap) {
-        auto new_region_or_error = try_make_replacement_region(new_range);
-        if (new_region_or_error.is_error())
-            return new_region_or_error.error();
-        new_regions.unchecked_append(new_region_or_error.value());
+        auto new_region = TRY(try_make_replacement_region(new_range));
+        new_regions.unchecked_append(new_region);
     }
     return new_regions;
 }
