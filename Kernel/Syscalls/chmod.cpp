@@ -14,10 +14,8 @@ KResultOr<FlatPtr> Process::sys$chmod(Userspace<const char*> user_path, size_t p
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(fattr);
-    auto path = get_syscall_path_argument(user_path, path_length);
-    if (path.is_error())
-        return path.error();
-    return VirtualFileSystem::the().chmod(path.value()->view(), mode, current_directory());
+    auto path = TRY(get_syscall_path_argument(user_path, path_length));
+    return VirtualFileSystem::the().chmod(path->view(), mode, current_directory());
 }
 
 KResultOr<FlatPtr> Process::sys$fchmod(int fd, mode_t mode)
