@@ -46,7 +46,7 @@ KResultOr<NonnullRefPtr<VMObject>> AnonymousVMObject::try_clone()
     if (!new_shared_committed_cow_pages)
         return ENOMEM;
 
-    auto maybe_clone = adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(*this, new_shared_committed_cow_pages.release_nonnull()));
+    auto maybe_clone = adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(*this, *new_shared_committed_cow_pages));
     if (!maybe_clone)
         return ENOMEM;
     auto clone = maybe_clone.release_nonnull();
