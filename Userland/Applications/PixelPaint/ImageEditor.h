@@ -130,6 +130,8 @@ private:
     void relayout();
 
     int calculate_ruler_step_size() const;
+    Gfx::IntRect mouse_indicator_rect_x() const;
+    Gfx::IntRect mouse_indicator_rect_y() const;
 
     NonnullRefPtr<Image> m_image;
     RefPtr<Layer> m_active_layer;
@@ -150,8 +152,10 @@ private:
     Gfx::FloatPoint m_pan_origin;
     Gfx::FloatPoint m_saved_pan_origin;
     Gfx::IntPoint m_click_position;
+    Gfx::IntPoint m_mouse_position;
 
     int m_ruler_thickness { 20 };
+    int m_mouse_indicator_triangle_size { 5 };
 
     Gfx::StandardCursor m_active_cursor { Gfx::StandardCursor::None };
 
