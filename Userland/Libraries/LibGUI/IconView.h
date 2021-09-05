@@ -57,6 +57,7 @@ private:
     virtual void mouseup_event(MouseEvent&) override;
     virtual void did_change_hovered_index(const ModelIndex& old_index, const ModelIndex& new_index) override;
     virtual void did_change_cursor_index(const ModelIndex& old_index, const ModelIndex& new_index) override;
+    virtual void editing_widget_did_change(const ModelIndex& index) override;
 
     virtual void move_cursor(CursorMovement, SelectionUpdate) override;
 

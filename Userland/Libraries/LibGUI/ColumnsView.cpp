@@ -105,7 +105,9 @@ void ColumnsView::paint_event(PaintEvent& event)
             }
 
             Gfx::IntRect row_rect { column_x, row * item_height(), column.width, item_height() };
-            painter.fill_rect(row_rect, background_color);
+
+            if (m_edit_index.row() != row)
+                painter.fill_rect(row_rect, background_color);
 
             auto icon = index.data(ModelRole::Icon);
             Gfx::IntRect icon_rect = { column_x + icon_spacing(), 0, icon_size(), icon_size() };

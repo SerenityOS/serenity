@@ -35,6 +35,7 @@ public:
 
     Function<void()> on_commit;
     Function<void()> on_rollback;
+    Function<void()> on_change;
 
     virtual Variant value() const = 0;
     virtual void set_value(Variant const&, SelectionBehavior selection_behavior = SelectionBehavior::SelectAll) = 0;
@@ -55,6 +56,11 @@ protected:
         if (on_rollback)
             on_rollback();
     }
+    void change()
+    {
+        if (on_change)
+            on_change();
+    }
 
     const ModelIndex& index() const { return m_index; }
 
@@ -72,11 +78,16 @@ public:
     virtual RefPtr<Widget> create_widget() override
     {
         auto textbox = TextBox::construct();
+        textbox->set_frame_shape(Gfx::FrameShape::NoFrame);
+
         textbox->on_return_pressed = [this] {
             commit();
         };
         textbox->on_escape_pressed = [this] {
             rollback();
+        };
+        textbox->on_change = [this] {
+            change();
         };
         return textbox;
     }
