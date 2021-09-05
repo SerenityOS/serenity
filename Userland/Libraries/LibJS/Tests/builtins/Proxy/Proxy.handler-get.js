@@ -107,3 +107,12 @@ describe("[[Get]] invariants", () => {
         );
     });
 });
+
+test("Proxy handler that has the Proxy itself as its prototype", () => {
+    const handler = {};
+    const proxy = new Proxy({}, handler);
+    handler.__proto__ = proxy;
+    expect(() => {
+        proxy.foo;
+    }).toThrowWithMessage(Error, "Call stack size limit exceeded");
+});
