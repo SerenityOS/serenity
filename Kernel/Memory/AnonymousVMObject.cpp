@@ -21,11 +21,7 @@ KResultOr<NonnullRefPtr<VMObject>> AnonymousVMObject::try_clone()
     if (is_purgeable() && is_volatile()) {
         // If this object is purgeable+volatile, create a new zero-filled purgeable+volatile
         // object, effectively "pre-purging" it in the child process.
-        auto maybe_clone = try_create_purgeable_with_size(size(), AllocationStrategy::None);
-        if (maybe_clone.is_error())
-            return maybe_clone.error();
-
-        auto clone = maybe_clone.release_value();
+        auto clone = TRY(try_create_purgeable_with_size(size(), AllocationStrategy::None));
         clone->m_volatile = true;
         return clone;
     }
