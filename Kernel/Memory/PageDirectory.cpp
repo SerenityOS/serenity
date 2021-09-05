@@ -63,7 +63,7 @@ KResultOr<NonnullRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace(
 #if ARCH(X86_64)
     directory->m_pml4t = MM.allocate_user_physical_page();
     if (!directory->m_pml4t)
-        return {};
+        return ENOMEM;
 #endif
 
     directory->m_directory_table = MM.allocate_user_physical_page();
