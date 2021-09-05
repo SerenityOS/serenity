@@ -142,15 +142,9 @@ KResultOr<FlatPtr> Process::sys$umount(Userspace<const char*> user_mountpoint, s
 
     REQUIRE_NO_PROMISES;
 
-    auto mountpoint = get_syscall_path_argument(user_mountpoint, mountpoint_length);
-    if (mountpoint.is_error())
-        return mountpoint.error();
-
-    auto custody_or_error = VirtualFileSystem::the().resolve_path(mountpoint.value()->view(), current_directory());
-    if (custody_or_error.is_error())
-        return custody_or_error.error();
-
-    auto& guest_inode = custody_or_error.value()->inode();
+    auto mountpoint = TRY(get_syscall_path_argument(user_mountpoint, mountpoint_length));
+    auto custody = TRY(VirtualFileSystem::the().resolve_path(mountpoint->view(), current_directory()));
+    auto& guest_inode = custody->inode();
     return VirtualFileSystem::the().unmount(guest_inode);
 }
 
