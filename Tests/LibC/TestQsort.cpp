@@ -12,7 +12,7 @@
 #include <AK/Vector.h>
 #include <stdlib.h>
 
-const size_t NUM_RUNS = 100;
+const size_t NUM_RUNS = 10;
 
 struct SortableObject {
     int m_key;
