@@ -41,8 +41,8 @@ void KCOVDevice::free_thread()
         return;
 
     auto kcov_instance = maybe_kcov_instance.value();
-    VERIFY(kcov_instance->state == KCOVInstance::TRACING);
-    kcov_instance->state = KCOVInstance::OPENED;
+    VERIFY(kcov_instance->state() == KCOVInstance::TRACING);
+    kcov_instance->set_state(KCOVInstance::OPENED);
     thread_instance->remove(tid);
 }
 
@@ -55,8 +55,8 @@ void KCOVDevice::free_process()
         return;
 
     auto kcov_instance = maybe_kcov_instance.value();
-    VERIFY(kcov_instance->state == KCOVInstance::OPENED);
-    kcov_instance->state = KCOVInstance::UNUSED;
+    VERIFY(kcov_instance->state() == KCOVInstance::OPENED);
+    kcov_instance->set_state(KCOVInstance::UNUSED);
     proc_instance->remove(pid);
     delete kcov_instance;
 }
@@ -67,7 +67,7 @@ KResultOr<NonnullRefPtr<FileDescription>> KCOVDevice::open(int options)
     if (proc_instance->get(pid).has_value())
         return EBUSY; // This process already open()ed the kcov device
     auto kcov_instance = new KCOVInstance(pid);
-    kcov_instance->state = KCOVInstance::OPENED;
+    kcov_instance->set_state(KCOVInstance::OPENED);
     proc_instance->set(pid, kcov_instance);
 
     return File::open(options);
@@ -84,10 +84,10 @@ KResult KCOVDevice::ioctl(FileDescription&, unsigned request, Userspace<void*> a
         return ENXIO; // This proc hasn't opened the kcov dev yet
     auto kcov_instance = maybe_kcov_instance.value();
 
-    SpinlockLocker lock(kcov_instance->lock);
+    SpinlockLocker locker(kcov_instance->spinlock());
     switch (request) {
     case KCOV_SETBUFSIZE: {
-        if (kcov_instance->state >= KCOVInstance::TRACING) {
+        if (kcov_instance->state() >= KCOVInstance::TRACING) {
             return_value = EBUSY;
             break;
         }
@@ -95,7 +95,7 @@ KResult KCOVDevice::ioctl(FileDescription&, unsigned request, Userspace<void*> a
         break;
     }
     case KCOV_ENABLE: {
-        if (kcov_instance->state >= KCOVInstance::TRACING) {
+        if (kcov_instance->state() >= KCOVInstance::TRACING) {
             return_value = EBUSY;
             break;
         }
@@ -103,8 +103,8 @@ KResult KCOVDevice::ioctl(FileDescription&, unsigned request, Userspace<void*> a
             return_value = ENOBUFS;
             break;
         }
-        VERIFY(kcov_instance->state == KCOVInstance::OPENED);
-        kcov_instance->state = KCOVInstance::TRACING;
+        VERIFY(kcov_instance->state() == KCOVInstance::OPENED);
+        kcov_instance->set_state(KCOVInstance::TRACING);
         thread_instance->set(tid, kcov_instance);
         break;
     }
@@ -114,8 +114,8 @@ KResult KCOVDevice::ioctl(FileDescription&, unsigned request, Userspace<void*> a
             return_value = ENOENT;
             break;
         }
-        VERIFY(kcov_instance->state == KCOVInstance::TRACING);
-        kcov_instance->state = KCOVInstance::OPENED;
+        VERIFY(kcov_instance->state() == KCOVInstance::TRACING);
+        kcov_instance->set_state(KCOVInstance::OPENED);
         thread_instance->remove(tid);
         break;
     }
@@ -134,12 +134,11 @@ KResultOr<Memory::Region*> KCOVDevice::mmap(Process& process, FileDescription&, 
     VERIFY(maybe_kcov_instance.has_value()); // Should happen on fd open()
     auto kcov_instance = maybe_kcov_instance.value();
 
-    if (!kcov_instance->vmobject) {
-        return ENOBUFS; // Mmaped, before KCOV_SETBUFSIZE
-    }
+    if (!kcov_instance->vmobject())
+        return ENOBUFS; // mmaped, before KCOV_SETBUFSIZE
 
     return process.address_space().allocate_region_with_vmobject(
-        range, *kcov_instance->vmobject, offset, {}, prot, shared);
+        range, *kcov_instance->vmobject(), offset, {}, prot, shared);
 }
 
 String KCOVDevice::device_name() const

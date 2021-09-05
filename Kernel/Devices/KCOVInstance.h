@@ -35,23 +35,30 @@ public:
     bool has_buffer() const { return m_buffer != nullptr; }
     void buffer_add_pc(u64 pc);
 
-    Spinlock lock;
-    enum {
+    enum State {
         UNUSED = 0,
         OPENED = 1,
         TRACING = 2,
-    } state;
+    } m_state { UNUSED };
 
-    RefPtr<Memory::AnonymousVMObject> vmobject;
+    State state() const { return m_state; }
+    void set_state(State state) { m_state = state; }
+
+    Memory::VMObject* vmobject() { return m_vmobject; }
+
+    Spinlock& spinlock() { return m_lock; }
 
 private:
-    ProcessID m_pid = { 0 };
-    u64 m_buffer_size_in_entries = { 0 };
-    size_t m_buffer_size_in_bytes = { 0 };
-    kcov_pc_t* m_buffer = { nullptr };
+    ProcessID m_pid { 0 };
+    u64 m_buffer_size_in_entries { 0 };
+    size_t m_buffer_size_in_bytes { 0 };
+    kcov_pc_t* m_buffer { nullptr };
+    RefPtr<Memory::AnonymousVMObject> m_vmobject;
 
     // Here to ensure it's not garbage collected at the end of open()
     OwnPtr<Memory::Region> m_kernel_region;
+
+    Spinlock m_lock;
 };
 
 }
