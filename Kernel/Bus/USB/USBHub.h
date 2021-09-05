@@ -53,7 +53,7 @@ struct [[gnu::packed]] HubStatus {
     u16 status { 0 };
     u16 change { 0 };
 };
-static_assert(sizeof(HubStatus) == 4);
+static_assert(AssertSize<HubStatus, 4>());
 
 static constexpr u16 HUB_STATUS_LOCAL_POWER_SOURCE = (1 << 0);
 static constexpr u16 HUB_STATUS_OVER_CURRENT = (1 << 1);

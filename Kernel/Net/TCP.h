@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StdLibExtras.h>
 #include <Kernel/Net/IPv4.h>
 
 namespace Kernel {
@@ -36,7 +37,7 @@ private:
     NetworkOrdered<u16> m_value;
 };
 
-static_assert(sizeof(TCPOptionMSS) == 4);
+static_assert(AssertSize<TCPOptionMSS, 4>());
 
 class [[gnu::packed]] TCPPacket {
 public:
@@ -92,6 +93,6 @@ private:
     NetworkOrdered<u16> m_urgent;
 };
 
-static_assert(sizeof(TCPPacket) == 20);
+static_assert(AssertSize<TCPPacket, 20>());
 
 }

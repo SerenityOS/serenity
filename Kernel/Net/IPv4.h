@@ -102,7 +102,7 @@ private:
     IPv4Address m_destination;
 };
 
-static_assert(sizeof(IPv4Packet) == 20);
+static_assert(AssertSize<IPv4Packet, 20>());
 
 inline NetworkOrdered<u16> internet_checksum(const void* ptr, size_t count)
 {

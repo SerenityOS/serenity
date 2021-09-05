@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StdLibExtras.h>
 #if LOCK_DEBUG
 #    include <AK/SourceLocation.h>
 #endif
@@ -25,6 +26,9 @@ using LockLocation = SourceLocation;
 #else
 struct LockLocation {
     static constexpr LockLocation current() { return {}; }
+
+private:
+    constexpr LockLocation() = default;
 };
 #endif
 

@@ -83,7 +83,7 @@ static_assert(__builtin_offsetof(HPETRegistersBlock, timers[1]) == 0x120);
 // Note: The HPET specification says it reserves the range of byte 0x160 to
 // 0x400 for comparators 3-31, but for implementing all 32 comparators the HPET
 // MMIO space has to be 1280 bytes and not 1024 bytes.
-static_assert(sizeof(HPETRegistersBlock) == 0x500);
+static_assert(AssertSize<HPETRegistersBlock, 0x500>());
 
 static u64 read_register_safe64(const HPETRegister& reg)
 {

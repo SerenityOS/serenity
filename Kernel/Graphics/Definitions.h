@@ -80,6 +80,6 @@ struct [[gnu::packed]] VideoInfoBlock {
     u8 checksum;
 };
 
-static_assert(sizeof(VideoInfoBlock) == 128);
+static_assert(AssertSize<VideoInfoBlock, 128>());
 
 }
