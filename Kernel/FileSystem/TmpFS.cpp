@@ -61,14 +61,14 @@ unsigned TmpFS::next_inode_index()
     return m_next_inode_index++;
 }
 
-RefPtr<Inode> TmpFS::get_inode(InodeIdentifier identifier) const
+KResultOr<NonnullRefPtr<Inode>> TmpFS::get_inode(InodeIdentifier identifier) const
 {
     MutexLocker locker(m_lock, Mutex::Mode::Shared);
     VERIFY(identifier.fsid() == fsid());
 
     auto it = m_inodes.find(identifier.index());
     if (it == m_inodes.end())
-        return nullptr;
+        return ENOENT;
     return it->value;
 }
 
@@ -201,13 +201,8 @@ KResultOr<NonnullRefPtr<Inode>> TmpFSInode::lookup(StringView name)
 
     if (name == ".")
         return *this;
-    if (name == "..") {
-        auto inode = fs().get_inode(m_parent);
-        // FIXME: If this cannot fail, we should probably VERIFY here instead.
-        if (!inode)
-            return ENOENT;
-        return inode.release_nonnull();
-    }
+    if (name == "..")
+        return fs().get_inode(m_parent);
 
     auto* child = find_child_by_name(name);
     if (!child)

@@ -55,15 +55,16 @@ Inode& DevPtsFS::root_inode()
     return *m_root_inode;
 }
 
-RefPtr<Inode> DevPtsFS::get_inode(InodeIdentifier inode_id) const
+KResultOr<NonnullRefPtr<Inode>> DevPtsFS::get_inode(InodeIdentifier inode_id) const
 {
     if (inode_id.index() == 1)
-        return m_root_inode;
+        return *m_root_inode;
 
     unsigned pty_index = inode_index_to_pty_index(inode_id.index());
     auto* device = Device::get_device(201, pty_index);
     VERIFY(device);
 
+    // FIXME: Handle OOM
     auto inode = adopt_ref(*new DevPtsFSInode(const_cast<DevPtsFS&>(*this), inode_id.index(), static_cast<SlavePTY*>(device)));
     inode->m_metadata.inode = inode_id;
     inode->m_metadata.size = 0;
@@ -142,10 +143,7 @@ KResultOr<NonnullRefPtr<Inode>> DevPtsFSInode::lookup(StringView name)
         for (SlavePTY& slave_pty : list) {
             if (slave_pty.index() != pty_index.value())
                 continue;
-            auto inode = fs().get_inode({ fsid(), pty_index_to_inode_index(pty_index.value()) });
-            if (!inode)
-                return ENOENT;
-            return inode.release_nonnull();
+            return fs().get_inode({ fsid(), pty_index_to_inode_index(pty_index.value()) });
         }
         return ENOENT;
     });

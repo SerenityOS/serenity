@@ -147,12 +147,7 @@ KResult Ext2FS::initialize()
         }
     }
 
-    m_root_inode = static_ptr_cast<Ext2FSInode>(get_inode({ fsid(), EXT2_ROOT_INO }));
-    if (!m_root_inode) {
-        dbgln("Ext2FS: failed to acquire root inode");
-        return EINVAL;
-    }
-
+    m_root_inode = static_ptr_cast<Ext2FSInode>(TRY(get_inode({ fsid(), EXT2_ROOT_INO })));
     return KSuccess;
 }
 
@@ -781,37 +776,37 @@ void Ext2FSInode::flush_metadata()
     set_metadata_dirty(false);
 }
 
-RefPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
+KResultOr<NonnullRefPtr<Inode>> Ext2FS::get_inode(InodeIdentifier inode) const
 {
     MutexLocker locker(m_lock);
     VERIFY(inode.fsid() == fsid());
 
     {
         auto it = m_inode_cache.find(inode.index());
-        if (it != m_inode_cache.end())
-            return (*it).value;
+        if (it != m_inode_cache.end()) {
+            if (!it->value)
+                return ENOENT;
+            return *it->value;
+        }
     }
 
-    auto state_or_error = get_inode_allocation_state(inode.index());
-    if (state_or_error.is_error())
-        return {};
+    auto inode_allocation_state = TRY(get_inode_allocation_state(inode.index()));
 
-    if (!state_or_error.value()) {
+    if (!inode_allocation_state) {
         m_inode_cache.set(inode.index(), nullptr);
-        return {};
+        return ENOENT;
     }
 
     BlockIndex block_index;
     unsigned offset;
     if (!find_block_containing_inode(inode.index(), block_index, offset))
-        return {};
+        return EINVAL;
 
-    auto new_inode = adopt_ref(*new Ext2FSInode(const_cast<Ext2FS&>(*this), inode.index()));
+    auto new_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Ext2FSInode(const_cast<Ext2FS&>(*this), inode.index())));
+
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&new_inode->m_raw_inode));
-    if (auto result = read_block(block_index, &buffer, sizeof(ext2_inode), offset); result.is_error()) {
-        // FIXME: Propagate the actual error.
-        return nullptr;
-    }
+    TRY(read_block(block_index, &buffer, sizeof(ext2_inode), offset));
+
     m_inode_cache.set(inode.index(), new_inode);
     return new_inode;
 }
@@ -1218,7 +1213,7 @@ KResult Ext2FSInode::remove_child(const StringView& name)
 
     m_lookup_cache.remove(name);
 
-    auto child_inode = fs().get_inode(child_id);
+    auto child_inode = TRY(fs().get_inode(child_id));
     TRY(child_inode->decrement_link_count());
 
     did_remove_child(child_id, name);
@@ -1541,12 +1536,11 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, 
     auto success = write_ext2_inode(inode_id, e2inode);
     VERIFY(success);
 
-    auto new_inode = get_inode({ fsid(), inode_id });
-    VERIFY(new_inode);
+    auto new_inode = TRY(get_inode({ fsid(), inode_id }));
 
     dbgln_if(EXT2_DEBUG, "Ext2FS: Adding inode '{}' (mode {:o}) to parent directory {}", name, mode, parent_inode.index());
     TRY(parent_inode.add_child(*new_inode, name, mode));
-    return new_inode.release_nonnull();
+    return new_inode;
 }
 
 KResult Ext2FSInode::populate_lookup_cache() const
@@ -1586,10 +1580,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FSInode::lookup(StringView name)
         inode_index = it->value;
     }
 
-    auto inode = fs().get_inode({ fsid(), inode_index });
-    if (!inode)
-        return ENOENT;
-    return inode.release_nonnull();
+    return fs().get_inode({ fsid(), inode_index });
 }
 
 void Ext2FSInode::one_ref_left()
