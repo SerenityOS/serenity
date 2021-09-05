@@ -130,11 +130,7 @@ KResult UHCIController::reset()
 
 UNMAP_AFTER_INIT KResult UHCIController::create_structures()
 {
-    m_queue_head_pool = UHCIDescriptorPool<QueueHead>::try_create("Queue Head Pool");
-    if (!m_queue_head_pool) {
-        dmesgln("UHCI: Failed to create Queue Head Pool!");
-        return ENOMEM;
-    }
+    m_queue_head_pool = TRY(UHCIDescriptorPool<QueueHead>::try_create("Queue Head Pool"sv));
 
     // Create the Full Speed, Low Speed Control and Bulk Queue Heads
     m_interrupt_transfer_queue = allocate_queue_head();
@@ -146,11 +142,7 @@ UNMAP_AFTER_INIT KResult UHCIController::create_structures()
     // Now the Transfer Descriptor pool
     auto td_pool_vmobject = TRY(Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(PAGE_SIZE));
 
-    m_transfer_descriptor_pool = UHCIDescriptorPool<TransferDescriptor>::try_create("Transfer Descriptor Pool");
-    if (!m_transfer_descriptor_pool) {
-        dmesgln("UHCI: Failed to create Transfer Descriptor Pool!");
-        return ENOMEM;
-    }
+    m_transfer_descriptor_pool = TRY(UHCIDescriptorPool<TransferDescriptor>::try_create("Transfer Descriptor Pool"sv));
 
     m_isochronous_transfer_pool = MM.allocate_kernel_region_with_vmobject(move(td_pool_vmobject), PAGE_SIZE, "UHCI Isochronous Descriptor Pool", Memory::Region::Access::ReadWrite);
     if (!m_isochronous_transfer_pool) {

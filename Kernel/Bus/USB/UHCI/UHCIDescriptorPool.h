@@ -20,36 +20,23 @@ namespace Kernel::USB {
 // that can fit in a single page.
 template<typename T>
 class UHCIDescriptorPool {
+    AK_MAKE_NONCOPYABLE(UHCIDescriptorPool);
+    AK_MAKE_NONMOVABLE(UHCIDescriptorPool);
 
     // Ensure that we can't get into a situation where we'll write past the page
     // and blow up
     static_assert(sizeof(T) <= PAGE_SIZE);
 
 public:
-    static OwnPtr<UHCIDescriptorPool<T>> try_create(const StringView name)
+    static KResultOr<NonnullOwnPtr<UHCIDescriptorPool<T>>> try_create(StringView name)
     {
         auto pool_memory_block = MM.allocate_kernel_region(PAGE_SIZE, "UHCI Descriptor Pool", Memory::Region::Access::ReadWrite);
         if (!pool_memory_block)
-            return {};
+            return ENOMEM;
 
-        return adopt_own_if_nonnull(new (nothrow) UHCIDescriptorPool(pool_memory_block.release_nonnull(), name));
+        return adopt_nonnull_own_or_enomem(new (nothrow) UHCIDescriptorPool(pool_memory_block.release_nonnull(), name));
     }
 
-    UHCIDescriptorPool(NonnullOwnPtr<Memory::Region> pool_memory_block, const StringView& name)
-        : m_pool_name(name)
-        , m_pool_region(move(pool_memory_block))
-    {
-        // Go through the number of descriptors to create in the pool, and create a virtual/physical address mapping
-        for (size_t i = 0; i < PAGE_SIZE / sizeof(T); i++) {
-            auto placement_address = reinterpret_cast<void*>(m_pool_region->vaddr().get() + (i * sizeof(T)));
-            auto physical_address = static_cast<u32>(m_pool_region->physical_page(0)->paddr().get() + (i * sizeof(T)));
-            auto* object = new (placement_address) T(physical_address);
-            m_free_descriptor_stack.push(object); // Push the descriptor's pointer onto the free list
-        }
-    }
-
-public:
-    UHCIDescriptorPool() = delete;
     ~UHCIDescriptorPool() = default;
 
     [[nodiscard]] T* try_take_free_descriptor()
@@ -78,6 +65,19 @@ public:
     }
 
 private:
+    UHCIDescriptorPool(NonnullOwnPtr<Memory::Region> pool_memory_block, StringView name)
+        : m_pool_name(name)
+        , m_pool_region(move(pool_memory_block))
+    {
+        // Go through the number of descriptors to create in the pool, and create a virtual/physical address mapping
+        for (size_t i = 0; i < PAGE_SIZE / sizeof(T); i++) {
+            auto placement_address = reinterpret_cast<void*>(m_pool_region->vaddr().get() + (i * sizeof(T)));
+            auto physical_address = static_cast<u32>(m_pool_region->physical_page(0)->paddr().get() + (i * sizeof(T)));
+            auto* object = new (placement_address) T(physical_address);
+            m_free_descriptor_stack.push(object); // Push the descriptor's pointer onto the free list
+        }
+    }
+
     StringView m_pool_name;                                   // Name of this pool
     NonnullOwnPtr<Memory::Region> m_pool_region;              // Memory region where descriptors actually reside
     Stack<T*, PAGE_SIZE / sizeof(T)> m_free_descriptor_stack; // Stack of currently free descriptor pointers
