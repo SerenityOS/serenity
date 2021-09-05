@@ -243,6 +243,29 @@ TEST_CASE(to_unicode_lowercase_special_casing_more_above)
     EXPECT_EQ(result, "\u012f\u0307\u0300"sv);
 }
 
+TEST_CASE(to_unicode_lowercase_special_casing_not_before_dot)
+{
+    // LATIN CAPITAL LETTER I
+    auto result = Unicode::to_unicode_lowercase_full("I"sv, "en"sv);
+    EXPECT_EQ(result, "i"sv);
+
+    result = Unicode::to_unicode_lowercase_full("I"sv, "az"sv);
+    EXPECT_EQ(result, "\u0131"sv);
+
+    result = Unicode::to_unicode_lowercase_full("I"sv, "tr"sv);
+    EXPECT_EQ(result, "\u0131"sv);
+
+    // LATIN CAPITAL LETTER I followed by COMBINING DOT ABOVE
+    result = Unicode::to_unicode_lowercase_full("I\u0307"sv, "en"sv);
+    EXPECT_EQ(result, "i\u0307"sv);
+
+    result = Unicode::to_unicode_lowercase_full("I\u0307"sv, "az"sv);
+    EXPECT_EQ(result, "i"sv);
+
+    result = Unicode::to_unicode_lowercase_full("I\u0307"sv, "tr"sv);
+    EXPECT_EQ(result, "i"sv);
+}
+
 TEST_CASE(to_unicode_uppercase_unconditional_special_casing)
 {
     // LATIN SMALL LETTER SHARP S
