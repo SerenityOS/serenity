@@ -46,5 +46,10 @@ int main(int, char**)
     auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
     VERIFY(socket);
     IPC::new_client_connection<RequestServer::ClientConnection>(socket.release_nonnull(), 1);
-    return event_loop.exec();
+    auto result = event_loop.exec();
+
+    // FIXME: We exit instead of returning, so that protocol destructors don't get called.
+    //        The Protocol base class should probably do proper de-registration instead of
+    //        just VERIFY_NOT_REACHED().
+    exit(result);
 }
