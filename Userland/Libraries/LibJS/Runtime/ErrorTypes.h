@@ -15,6 +15,7 @@
     M(BigIntFromNonIntegral, "Cannot convert non-integral number to BigInt")                                                            \
     M(BigIntInvalidValue, "Invalid value for BigInt: {}")                                                                               \
     M(BindingNotInitialized, "Binding {} is not initialized")                                                                           \
+    M(CallStackSizeExceeded, "Call stack size limit exceeded")                                                                          \
     M(ClassConstructorWithoutNew, "Class constructor {} must be called with 'new'")                                                     \
     M(ClassExtendsValueNotAConstructorOrNull, "Class extends value {} is not a constructor or null")                                    \
     M(ClassExtendsValueInvalidPrototype, "Class extends value has an invalid prototype {}")                                             \

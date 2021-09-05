@@ -116,7 +116,7 @@ public:
         VERIFY(!exception());
         // Ensure we got some stack space left, so the next function call doesn't kill us.
         if (did_reach_stack_space_limit())
-            throw_exception<Error>(global_object, "Call stack size limit exceeded");
+            throw_exception<Error>(global_object, ErrorType::CallStackSizeExceeded);
         else
             m_execution_context_stack.append(&context);
     }
