@@ -58,13 +58,7 @@ KResultOr<FlatPtr> Process::sys$inode_watcher_remove_watch(int fd, int wd)
     auto description = TRY(fds().file_description(fd));
     if (!description->is_inode_watcher())
         return EBADF;
-    auto inode_watcher = description->inode_watcher();
-
-    auto result = inode_watcher->unregister_by_wd(wd);
-    if (result.is_error())
-        return result;
-
-    return 0;
+    return description->inode_watcher()->unregister_by_wd(wd);
 }
 
 }
