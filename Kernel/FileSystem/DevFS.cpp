@@ -175,14 +175,12 @@ InodeMetadata DevFSLinkInode::metadata() const
 
 KResultOr<size_t> DevFSLinkInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, FileDescription*)
 {
-    auto kstring_or_error = buffer.try_copy_into_kstring(count);
-    if (kstring_or_error.is_error())
-        return kstring_or_error.error();
+    auto new_string = TRY(buffer.try_copy_into_kstring(count));
 
     MutexLocker locker(m_inode_lock);
     VERIFY(offset == 0);
     VERIFY(buffer.is_kernel_buffer());
-    m_link = kstring_or_error.release_value();
+    m_link = move(new_string);
     return count;
 }
 
