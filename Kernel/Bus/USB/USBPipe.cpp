@@ -61,11 +61,7 @@ KResultOr<size_t> Pipe::control_transfer(u8 request_type, u8 request, u16 value,
     usb_request.index = index;
     usb_request.length = length;
 
-    auto transfer = Transfer::try_create(*this, length);
-
-    if (!transfer)
-        return ENOMEM;
-
+    auto transfer = TRY(Transfer::try_create(*this, length));
     transfer->set_setup_packet(usb_request);
 
     dbgln_if(USB_DEBUG, "Pipe: Transfer allocated @ {}", transfer->buffer_physical());
