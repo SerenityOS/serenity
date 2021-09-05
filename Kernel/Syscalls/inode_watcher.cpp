@@ -18,28 +18,20 @@ KResultOr<FlatPtr> Process::sys$create_inode_watcher(u32 flags)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(rpath);
 
-    auto fd_or_error = m_fds.allocate();
-    if (fd_or_error.is_error())
-        return fd_or_error.error();
-    auto inode_watcher_fd = fd_or_error.release_value();
+    auto fd_allocation = TRY(m_fds.allocate());
+    auto watcher = TRY(InodeWatcher::try_create());
+    auto description = TRY(FileDescription::try_create(move(watcher)));
 
-    auto watcher_or_error = InodeWatcher::try_create();
-    if (watcher_or_error.is_error())
-        return watcher_or_error.error();
-
-    auto description_or_error = FileDescription::try_create(*watcher_or_error.value());
-    if (description_or_error.is_error())
-        return description_or_error.error();
-
-    m_fds[inode_watcher_fd.fd].set(description_or_error.release_value());
-    m_fds[inode_watcher_fd.fd].description()->set_readable(true);
-
+    description->set_readable(true);
     if (flags & static_cast<unsigned>(InodeWatcherFlags::Nonblock))
-        m_fds[inode_watcher_fd.fd].description()->set_blocking(false);
-    if (flags & static_cast<unsigned>(InodeWatcherFlags::CloseOnExec))
-        m_fds[inode_watcher_fd.fd].set_flags(m_fds[inode_watcher_fd.fd].flags() | FD_CLOEXEC);
+        description->set_blocking(false);
 
-    return inode_watcher_fd.fd;
+    m_fds[fd_allocation.fd].set(move(description));
+
+    if (flags & static_cast<unsigned>(InodeWatcherFlags::CloseOnExec))
+        m_fds[fd_allocation.fd].set_flags(m_fds[fd_allocation.fd].flags() | FD_CLOEXEC);
+
+    return fd_allocation.fd;
 }
 
 KResultOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<const Syscall::SC_inode_watcher_add_watch_params*> user_params)
@@ -52,23 +44,12 @@ KResultOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<const Syscall:
     if (!description->is_inode_watcher())
         return EBADF;
     auto inode_watcher = description->inode_watcher();
-
-    auto path = get_syscall_path_argument(params.user_path);
-    if (path.is_error())
-        return path.error();
-
-    auto custody_or_error = VirtualFileSystem::the().resolve_path(path.value()->view(), current_directory());
-    if (custody_or_error.is_error())
-        return custody_or_error.error();
-
-    auto& custody = custody_or_error.value();
+    auto path = TRY(get_syscall_path_argument(params.user_path));
+    auto custody = TRY(VirtualFileSystem::the().resolve_path(path->view(), current_directory()));
     if (!custody->inode().fs().supports_watchers())
         return ENOTSUP;
 
-    auto wd_or_error = inode_watcher->register_inode(custody->inode(), params.event_mask);
-    if (wd_or_error.is_error())
-        return wd_or_error.error();
-    return wd_or_error.value();
+    return TRY(inode_watcher->register_inode(custody->inode(), params.event_mask));
 }
 
 KResultOr<FlatPtr> Process::sys$inode_watcher_remove_watch(int fd, int wd)
