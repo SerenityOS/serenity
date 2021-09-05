@@ -182,6 +182,9 @@ static void initialize_typed_array_from_array_like(GlobalObject& global_object, 
     }
     auto byte_length = element_size * length;
     auto array_buffer = ArrayBuffer::create(global_object, byte_length);
+    if (!array_buffer)
+        return;
+
     typed_array.set_viewed_array_buffer(array_buffer);
     typed_array.set_byte_length(byte_length);
     typed_array.set_byte_offset(0);
@@ -215,6 +218,9 @@ static void initialize_typed_array_from_list(GlobalObject& global_object, TypedA
     }
     auto byte_length = element_size * list.size();
     auto array_buffer = ArrayBuffer::create(global_object, byte_length);
+    if (!array_buffer)
+        return;
+
     typed_array.set_viewed_array_buffer(array_buffer);
     typed_array.set_byte_length(byte_length);
     typed_array.set_byte_offset(0);

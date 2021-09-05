@@ -11,7 +11,12 @@ namespace JS {
 
 ArrayBuffer* ArrayBuffer::create(GlobalObject& global_object, size_t byte_size)
 {
-    return global_object.heap().allocate<ArrayBuffer>(global_object, byte_size, *global_object.array_buffer_prototype());
+    auto buffer = ByteBuffer::create_zeroed(byte_size);
+    if (!buffer.has_value()) {
+        global_object.vm().throw_exception<RangeError>(global_object, ErrorType::NotEnoughMemoryToAllocate, byte_size);
+        return nullptr;
+    }
+    return global_object.heap().allocate<ArrayBuffer>(global_object, buffer.release_value(), *global_object.array_buffer_prototype());
 }
 
 ArrayBuffer* ArrayBuffer::create(GlobalObject& global_object, ByteBuffer* buffer)
@@ -19,9 +24,9 @@ ArrayBuffer* ArrayBuffer::create(GlobalObject& global_object, ByteBuffer* buffer
     return global_object.heap().allocate<ArrayBuffer>(global_object, buffer, *global_object.array_buffer_prototype());
 }
 
-ArrayBuffer::ArrayBuffer(size_t byte_size, Object& prototype)
+ArrayBuffer::ArrayBuffer(ByteBuffer buffer, Object& prototype)
     : Object(prototype)
-    , m_buffer(ByteBuffer::create_zeroed(byte_size).release_value()) // FIXME: Handle this possible OOM failure.
+    , m_buffer(move(buffer))
     , m_detach_key(js_undefined())
 {
 }

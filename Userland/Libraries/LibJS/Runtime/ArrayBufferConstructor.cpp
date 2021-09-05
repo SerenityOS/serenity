@@ -60,7 +60,11 @@ Value ArrayBufferConstructor::construct(FunctionObject&)
         }
         return {};
     }
-    return ArrayBuffer::create(global_object(), byte_length);
+    auto array_buffer = ArrayBuffer::create(global_object(), byte_length);
+    if (!array_buffer)
+        return {};
+
+    return array_buffer;
 }
 
 // 25.1.4.1 ArrayBuffer.isView ( arg ), https://tc39.es/ecma262/#sec-arraybuffer.isview
