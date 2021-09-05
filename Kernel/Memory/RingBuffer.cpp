@@ -47,9 +47,8 @@ KResultOr<PhysicalAddress> RingBuffer::reserve_space(size_t size)
     return start_of_reserved_space;
 }
 
-void RingBuffer::reclaim_space(PhysicalAddress chunk_start, size_t chunk_size)
+void RingBuffer::reclaim_space(size_t chunk_size)
 {
-    VERIFY(start_of_used() == chunk_start);
     VERIFY(m_num_used_bytes >= chunk_size);
     m_num_used_bytes -= chunk_size;
     m_start_of_used += chunk_size;

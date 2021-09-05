@@ -7,6 +7,8 @@
 
 #include "Mixer.h"
 #include "AK/Format.h"
+#include "errno_numbers.h"
+#include "unistd.h"
 #include <AK/Array.h>
 #include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
@@ -129,7 +131,15 @@ void Mixer::mix()
 
             VERIFY(stream.is_end());
             VERIFY(!stream.has_any_error());
-            m_device->write(stream.data(), stream.size());
+
+            for (;;) {
+                if (audiodevice_get_free_buffer_space() >= stream.size()) {
+                    m_device->write(stream.data(), stream.size());
+                    break;
+                }
+                dbgln("No space in SB16 buffer, retry after wait");
+                usleep(250000);
+            }
         }
     }
 }
@@ -180,6 +190,15 @@ u16 Mixer::audiodevice_get_sample_rate() const
     if (code != 0)
         dbgln("Error while getting sample rate: ioctl returned with {}", strerror(code));
     return sample_rate;
+}
+
+size_t Mixer::audiodevice_get_free_buffer_space() const
+{
+    size_t free = 0;
+    int code = ioctl(m_device->fd(), SOUNDCARD_IOCTL_GET_FREE_BUFFER, &free);
+    if (code != 0)
+        dbgln("Error while getting audio device free buffer space: ioctl returned with {}", strerror(code));
+    return free;
 }
 
 void Mixer::request_setting_sync()

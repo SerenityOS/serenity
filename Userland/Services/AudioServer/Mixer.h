@@ -123,6 +123,8 @@ public:
     int audiodevice_set_sample_rate(u16 sample_rate);
     u16 audiodevice_get_sample_rate() const;
 
+    size_t audiodevice_get_free_buffer_space() const;
+
 private:
     void request_setting_sync();
 

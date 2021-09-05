@@ -74,8 +74,8 @@ void ConsolePort::handle_queue_update(Badge<VirtIO::Console>, u16 queue_index)
         size_t used;
         QueueChain popped_chain = queue.pop_used_buffer_chain(used);
         do {
-            popped_chain.for_each([this](PhysicalAddress address, size_t length) {
-                m_transmit_buffer->reclaim_space(address, length);
+            popped_chain.for_each([this]([[maybe_unused]] PhysicalAddress address, size_t length) {
+                m_transmit_buffer->reclaim_space(length);
             });
             popped_chain.release_buffer_slots_to_queue();
             popped_chain = queue.pop_used_buffer_chain(used);
@@ -104,7 +104,7 @@ KResultOr<size_t> ConsolePort::read(OpenFileDescription& desc, u64, UserOrKernel
     if (bytes_copied_or_error.is_error())
         return bytes_copied_or_error.error();
     auto bytes_copied = bytes_copied_or_error.release_value();
-    m_receive_buffer->reclaim_space(m_receive_buffer->start_of_used(), bytes_copied);
+    m_receive_buffer->reclaim_space(bytes_copied);
 
     if (m_receive_buffer_exhausted && m_receive_buffer->used_bytes() == 0) {
         auto& queue = m_console.get_queue(m_receive_queue);

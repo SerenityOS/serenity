@@ -102,8 +102,8 @@ void Console::handle_queue_update(u16 queue_index)
         QueueChain popped_chain = queue.pop_used_buffer_chain(used);
         auto number_of_messages = 0;
         do {
-            popped_chain.for_each([this](PhysicalAddress address, size_t length) {
-                m_control_transmit_buffer->reclaim_space(address, length);
+            popped_chain.for_each([this]([[maybe_unused]] PhysicalAddress address, size_t length) {
+                m_control_transmit_buffer->reclaim_space(length);
             });
             popped_chain.release_buffer_slots_to_queue();
             popped_chain = queue.pop_used_buffer_chain(used);

@@ -9,6 +9,7 @@
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Memory/PhysicalPage.h>
+#include <Kernel/Memory/RingBuffer.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/WaitQueue.h>
 
@@ -29,7 +30,7 @@ public:
     virtual bool can_read(const OpenFileDescription&, size_t) const override;
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual bool can_write(const OpenFileDescription&, size_t) const override { return true; }
+    virtual bool can_write(const OpenFileDescription&, size_t) const override { return m_audio_buffer->has_space(); }
 
     virtual StringView purpose() const override { return class_name(); }
 
@@ -45,7 +46,6 @@ private:
     virtual StringView class_name() const override { return "SB16"; }
 
     void initialize();
-    void wait_for_irq();
     void dma_start(uint32_t length);
     void set_sample_rate(uint16_t hz);
     void dsp_write(u8 value);
@@ -55,9 +55,9 @@ private:
     void set_irq_line(u8 irq_number);
 
     OwnPtr<Memory::Region> m_dma_region;
+    u8 m_current_buffer_half { 0 };
+    OwnPtr<Memory::RingBuffer> m_audio_buffer;
     int m_major_version { 0 };
     u16 m_sample_rate { 44100 };
-
-    WaitQueue m_irq_queue;
 };
 }

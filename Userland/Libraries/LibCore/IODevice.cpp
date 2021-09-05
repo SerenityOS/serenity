@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "LibCore/Forward.h"
 #include <AK/ByteBuffer.h>
 #include <LibCore/IODevice.h>
 #include <errno.h>
@@ -296,6 +297,7 @@ bool IODevice::write(const u8* data, int size)
         perror("IODevice::write: write");
         return false;
     }
+
     return rc == size;
 }
 
