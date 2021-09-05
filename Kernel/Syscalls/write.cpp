@@ -62,9 +62,7 @@ KResultOr<FlatPtr> Process::do_write(FileDescription& description, const UserOrK
     size_t total_nwritten = 0;
 
     if (description.should_append() && description.file().is_seekable()) {
-        auto seek_result = description.seek(0, SEEK_END);
-        if (seek_result.is_error())
-            return seek_result.error();
+        TRY(description.seek(0, SEEK_END));
     }
 
     while (total_nwritten < data_size) {
