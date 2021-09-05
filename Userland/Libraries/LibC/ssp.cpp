@@ -18,7 +18,7 @@
 extern "C" {
 
 extern size_t __stack_chk_guard;
-size_t __stack_chk_guard = (size_t)0xc6c7c8c9;
+__attribute__((used)) size_t __stack_chk_guard = (size_t)0xc6c7c8c9;
 
 __attribute__((noreturn)) void __stack_chk_fail()
 {
