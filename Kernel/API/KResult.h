@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +10,7 @@
 #include <AK/Format.h>
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
+#include <AK/Try.h>
 #include <LibC/errno_numbers.h>
 
 namespace Kernel {
