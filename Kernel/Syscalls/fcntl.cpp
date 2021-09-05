@@ -25,12 +25,9 @@ KResultOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, u32 arg)
         int arg_fd = (int)arg;
         if (arg_fd < 0)
             return EINVAL;
-        auto new_fd_or_error = fds().allocate(arg_fd);
-        if (new_fd_or_error.is_error())
-            return new_fd_or_error.error();
-        auto new_fd = new_fd_or_error.release_value();
-        m_fds[new_fd.fd].set(*description);
-        return new_fd.fd;
+        auto fd_allocation = TRY(m_fds.allocate(arg_fd));
+        m_fds[fd_allocation.fd].set(*description);
+        return fd_allocation.fd;
     }
     case F_GETFD:
         return m_fds[fd].flags();
