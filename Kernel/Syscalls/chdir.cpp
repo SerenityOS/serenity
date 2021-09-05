@@ -14,13 +14,8 @@ KResultOr<FlatPtr> Process::sys$chdir(Userspace<const char*> user_path, size_t p
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(rpath);
-    auto path = get_syscall_path_argument(user_path, path_length);
-    if (path.is_error())
-        return path.error();
-    auto directory_or_error = VirtualFileSystem::the().open_directory(path.value()->view(), current_directory());
-    if (directory_or_error.is_error())
-        return directory_or_error.error();
-    m_cwd = *directory_or_error.value();
+    auto path = TRY(get_syscall_path_argument(user_path, path_length));
+    m_cwd = TRY(VirtualFileSystem::the().open_directory(path->view(), current_directory()));
     return 0;
 }
 
