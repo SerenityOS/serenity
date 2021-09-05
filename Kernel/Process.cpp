@@ -263,19 +263,16 @@ KResult Process::attach_resources(NonnullOwnPtr<Memory::AddressSpace>&& prealloc
 {
     m_space = move(preallocated_space);
 
-    auto thread_or_error = [&] {
+    auto create_first_thread = [&] {
         if (fork_parent) {
             // NOTE: fork() doesn't clone all threads; the thread that called fork() becomes the only thread in the new process.
             return Thread::current()->try_clone(*this);
         }
         // NOTE: This non-forked code path is only taken when the kernel creates a process "manually" (at boot.)
         return Thread::try_create(*this);
-    }();
+    };
 
-    if (thread_or_error.is_error())
-        return thread_or_error.error();
-
-    first_thread = thread_or_error.release_value();
+    first_thread = TRY(create_first_thread());
 
     if (!fork_parent) {
         // FIXME: Figure out if this is really necessary.
