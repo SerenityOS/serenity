@@ -150,22 +150,14 @@ KResultOr<NonnullRefPtr<Process>> Process::try_create_user_process(RefPtr<Thread
         arguments.append(parts.last());
     }
 
-    auto process_or_error = Process::try_create(first_thread, parts.take_last(), uid, gid, ProcessID(0), false, VirtualFileSystem::the().root_custody(), nullptr, tty);
-    if (process_or_error.is_error())
-        return process_or_error.error();
-    auto process = process_or_error.release_value();
+    auto process = TRY(Process::try_create(first_thread, parts.take_last(), uid, gid, ProcessID(0), false, VirtualFileSystem::the().root_custody(), nullptr, tty));
 
     if (!process->m_fds.try_resize(process->m_fds.max_open())) {
         first_thread = nullptr;
         return ENOMEM;
     }
     auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : NullDevice::the();
-    auto description_or_error = device_to_use_as_tty.open(O_RDWR);
-    if (description_or_error.is_error())
-        return description_or_error.error();
-
-    auto& description = description_or_error.value();
-
+    auto description = TRY(device_to_use_as_tty.open(O_RDWR));
     auto setup_description = [&process, &description](int fd) {
         process->m_fds.m_fds_metadatas[fd].allocate();
         process->m_fds[fd].set(*description);
