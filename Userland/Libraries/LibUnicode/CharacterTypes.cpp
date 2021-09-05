@@ -49,6 +49,32 @@ static bool is_after_uppercase_i(Utf8View const& string, size_t index)
     return found_uppercase_i;
 }
 
+static bool is_after_soft_dotted_code_point(Utf8View const& string, size_t index)
+{
+    // There is a Soft_Dotted character before C, with no intervening character of combining class 0 or 230 (Above).
+    auto preceding_view = string.substring_view(0, index);
+    bool found_soft_dotted_code_point = false;
+
+    // FIXME: Would be better if Utf8View supported reverse iteration.
+    for (auto code_point : preceding_view) {
+        if (code_point_has_property(code_point, Property::Soft_Dotted)) {
+            found_soft_dotted_code_point = true;
+            continue;
+        }
+
+        auto unicode_data = Detail::unicode_data_for_code_point(code_point);
+        if (!unicode_data.has_value())
+            return false;
+
+        if (unicode_data->canonical_combining_class == 0)
+            found_soft_dotted_code_point = false;
+        else if (unicode_data->canonical_combining_class == 230)
+            found_soft_dotted_code_point = false;
+    }
+
+    return found_soft_dotted_code_point;
+}
+
 static bool is_final_code_point(Utf8View const& string, size_t index, size_t byte_length)
 {
     // C is preceded by a sequence consisting of a cased letter and then zero or more case-ignorable
@@ -110,6 +136,11 @@ static SpecialCasing const* find_matching_special_case(Utf8View const& string, O
 
         case Condition::AfterI:
             if (is_after_uppercase_i(string, index))
+                return special_casing;
+            break;
+
+        case Condition::AfterSoftDotted:
+            if (is_after_soft_dotted_code_point(string, index))
                 return special_casing;
             break;
 
