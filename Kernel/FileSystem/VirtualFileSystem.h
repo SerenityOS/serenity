@@ -42,7 +42,7 @@ public:
     VirtualFileSystem();
     ~VirtualFileSystem();
 
-    bool mount_root(FileSystem&);
+    KResult mount_root(FileSystem&);
     KResult mount(FileSystem&, Custody& mount_point, int flags);
     KResult bind_mount(Custody& source, Custody& mount_point, int flags);
     KResult remount(Custody& mount_point, int new_flags);
