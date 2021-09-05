@@ -165,8 +165,9 @@ static void tls(const char* message, size_t len)
             g_loop.quit(0);
         };
     }
-    write.append(message, len);
-    write.append("\r\n", 2);
+    auto ok = write.try_append(message, len);
+    ok = ok && write.try_append("\r\n", 2);
+    VERIFY(ok);
 }
 
 static void aes_cbc(const char* message, size_t len)
@@ -2037,7 +2038,10 @@ static void tls_test_client_hello()
             loop.quit(1);
         } else {
             //            print_buffer(data.value(), 16);
-            contents.append(data.value().data(), data.value().size());
+            if (!contents.try_append(data.value().data(), data.value().size())) {
+                FAIL(Allocation failed);
+                loop.quit(1);
+            }
         }
     };
     tls->on_tls_finished = [&] {

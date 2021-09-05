@@ -37,7 +37,11 @@ void TLSv12::alert(AlertLevel level, AlertDescription code)
 
 void TLSv12::write_packet(ByteBuffer& packet)
 {
-    m_context.tls_buffer.append(packet.data(), packet.size());
+    auto ok = m_context.tls_buffer.try_append(packet.data(), packet.size());
+    if (!ok) {
+        // Toooooo bad, drop the record on the ground.
+        return;
+    }
     if (m_context.connection_status > ConnectionStatus::Disconnected) {
         if (!m_has_scheduled_write_flush) {
             dbgln_if(TLS_DEBUG, "Scheduling write of {}", m_context.tls_buffer.size());
@@ -451,7 +455,11 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
         } else {
             dbgln_if(TLS_DEBUG, "application data message of size {}", plain.size());
 
-            m_context.application_buffer.append(plain.data(), plain.size());
+            if (!m_context.application_buffer.try_append(plain.data(), plain.size())) {
+                payload_res = (i8)Error::DecryptionFailed;
+                auto packet = build_alert(true, (u8)AlertDescription::DecryptionFailed);
+                write_packet(packet);
+            }
         }
         break;
     case MessageType::Handshake:

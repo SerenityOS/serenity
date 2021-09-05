@@ -95,7 +95,10 @@ TEST_CASE(test_TLS_hello_handshake)
             loop.quit(1);
         } else {
             //            print_buffer(data.value(), 16);
-            contents.append(data.value().data(), data.value().size());
+            if (!contents.try_append(data.value().data(), data.value().size())) {
+                FAIL("Allocation failure");
+                loop.quit(1);
+            }
         }
     };
     tls->on_tls_finished = [&] {
