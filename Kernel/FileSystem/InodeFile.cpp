@@ -31,10 +31,7 @@ KResultOr<size_t> InodeFile::read(FileDescription& description, u64 offset, User
     if (Checked<off_t>::addition_would_overflow(offset, count))
         return EOVERFLOW;
 
-    auto result = m_inode->read_bytes(offset, count, buffer, &description);
-    if (result.is_error())
-        return result.error();
-    auto nread = result.value();
+    auto nread = TRY(m_inode->read_bytes(offset, count, buffer, &description));
     if (nread > 0) {
         Thread::current()->did_file_read(nread);
         evaluate_block_conditions();
@@ -47,11 +44,7 @@ KResultOr<size_t> InodeFile::write(FileDescription& description, u64 offset, con
     if (Checked<off_t>::addition_would_overflow(offset, count))
         return EOVERFLOW;
 
-    auto result = m_inode->write_bytes(offset, count, data, &description);
-    if (result.is_error())
-        return result.error();
-
-    auto nwritten = result.value();
+    auto nwritten = TRY(m_inode->write_bytes(offset, count, data, &description));
     if (nwritten > 0) {
         auto mtime_result = m_inode->set_mtime(kgettimeofday().to_truncated_seconds());
         Thread::current()->did_file_write(nwritten);
@@ -77,11 +70,8 @@ KResult InodeFile::ioctl(FileDescription& description, unsigned request, Userspa
         if (block_number < 0)
             return EINVAL;
 
-        auto block_address = inode().get_block_address(block_number);
-        if (block_address.is_error())
-            return block_address.error();
-
-        if (!copy_to_user(user_block_number, &block_address.value()))
+        auto block_address = TRY(inode().get_block_address(block_number));
+        if (!copy_to_user(user_block_number, &block_address))
             return EFAULT;
 
         return KSuccess;
@@ -120,10 +110,8 @@ String InodeFile::absolute_path(const FileDescription& description) const
 
 KResult InodeFile::truncate(u64 size)
 {
-    if (auto result = m_inode->truncate(size); result.is_error())
-        return result;
-    if (auto result = m_inode->set_mtime(kgettimeofday().to_truncated_seconds()); result.is_error())
-        return result;
+    TRY(m_inode->truncate(size));
+    TRY(m_inode->set_mtime(kgettimeofday().to_truncated_seconds()));
     return KSuccess;
 }
 
