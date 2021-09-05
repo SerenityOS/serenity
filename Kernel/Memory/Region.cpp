@@ -60,14 +60,8 @@ KResultOr<NonnullOwnPtr<Region>> Region::try_clone()
             VERIFY(vmobject().is_shared_inode());
 
         // Create a new region backed by the same VMObject.
-        auto maybe_region = Region::try_create_user_accessible(
-            m_range, m_vmobject, m_offset_in_vmobject, m_name ? m_name->try_clone() : OwnPtr<KString> {}, access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared);
-        if (maybe_region.is_error()) {
-            dbgln("Region::clone: Unable to allocate new Region");
-            return maybe_region.error();
-        }
-
-        auto region = maybe_region.release_value();
+        auto region = TRY(Region::try_create_user_accessible(
+            m_range, m_vmobject, m_offset_in_vmobject, m_name ? m_name->try_clone() : OwnPtr<KString> {}, access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
         region->set_mmap(m_mmap);
         region->set_shared(m_shared);
         region->set_syscall_region(is_syscall_region());
@@ -77,20 +71,12 @@ KResultOr<NonnullOwnPtr<Region>> Region::try_clone()
     if (vmobject().is_inode())
         VERIFY(vmobject().is_private_inode());
 
-    auto maybe_vmobject_clone = vmobject().try_clone();
-    if (maybe_vmobject_clone.is_error())
-        return maybe_vmobject_clone.error();
-    auto vmobject_clone = maybe_vmobject_clone.release_value();
+    auto vmobject_clone = TRY(vmobject().try_clone());
 
     // Set up a COW region. The parent (this) region becomes COW as well!
     remap();
-    auto maybe_clone_region = Region::try_create_user_accessible(
-        m_range, vmobject_clone, m_offset_in_vmobject, m_name ? m_name->try_clone() : OwnPtr<KString> {}, access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared);
-    if (maybe_clone_region.is_error()) {
-        dbgln("Region::clone: Unable to allocate new Region for COW");
-        return maybe_clone_region.error();
-    }
-    auto clone_region = maybe_clone_region.release_value();
+    auto clone_region = TRY(Region::try_create_user_accessible(
+        m_range, vmobject_clone, m_offset_in_vmobject, m_name ? m_name->try_clone() : OwnPtr<KString> {}, access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
 
     if (m_stack) {
         VERIFY(is_readable());
