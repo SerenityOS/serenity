@@ -10,6 +10,7 @@
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
 #include <LibUnicode/CharacterTypes.h>
+#include <LibUnicode/Locale.h>
 
 #if ENABLE_UNICODE_DATA
 #    include <LibUnicode/UnicodeData.h>
@@ -21,6 +22,32 @@
 namespace Unicode {
 
 #if ENABLE_UNICODE_DATA
+
+static bool is_after_uppercase_i(Utf8View const& string, size_t index)
+{
+    // There is an uppercase I before C, and there is no intervening combining character class 230 (Above) or 0.
+    auto preceding_view = string.substring_view(0, index);
+    bool found_uppercase_i = false;
+
+    // FIXME: Would be better if Utf8View supported reverse iteration.
+    for (auto code_point : preceding_view) {
+        if (code_point == 'I') {
+            found_uppercase_i = true;
+            continue;
+        }
+
+        auto unicode_data = Detail::unicode_data_for_code_point(code_point);
+        if (!unicode_data.has_value())
+            return false;
+
+        if (unicode_data->canonical_combining_class == 0)
+            found_uppercase_i = false;
+        else if (unicode_data->canonical_combining_class == 230)
+            found_uppercase_i = false;
+    }
+
+    return found_uppercase_i;
+}
 
 static bool is_final_code_point(Utf8View const& string, size_t index, size_t byte_length)
 {
@@ -62,19 +89,30 @@ static bool is_final_code_point(Utf8View const& string, size_t index, size_t byt
     return true;
 }
 
-static SpecialCasing const* find_matching_special_case(Utf8View const& string, size_t index, size_t byte_length, UnicodeData const& unicode_data)
+static SpecialCasing const* find_matching_special_case(Utf8View const& string, Optional<StringView> locale, size_t index, size_t byte_length, UnicodeData const& unicode_data)
 {
+    auto requested_locale = Locale::None;
+
+    if (locale.has_value()) {
+        if (auto maybe_locale = locale_from_string(*locale); maybe_locale.has_value())
+            requested_locale = *maybe_locale;
+    }
+
     for (size_t i = 0; i < unicode_data.special_casing_size; ++i) {
         auto const* special_casing = unicode_data.special_casing[i];
 
-        if ((special_casing->locale == Locale::None) && (special_casing->condition == Condition::None))
-            return special_casing;
-
-        // FIXME: Handle locale.
-        if (special_casing->locale != Locale::None)
+        if (special_casing->locale != Locale::None && special_casing->locale != requested_locale)
             continue;
 
         switch (special_casing->condition) {
+        case Condition::None:
+            return special_casing;
+
+        case Condition::AfterI:
+            if (is_after_uppercase_i(string, index))
+                return special_casing;
+            break;
+
         case Condition::FinalSigma:
             if (is_final_code_point(string, index, byte_length))
                 return special_casing;
@@ -114,7 +152,7 @@ u32 to_unicode_uppercase(u32 code_point)
 #endif
 }
 
-String to_unicode_lowercase_full(StringView const& string)
+String to_unicode_lowercase_full(StringView const& string, [[maybe_unused]] Optional<StringView> locale)
 {
 #if ENABLE_UNICODE_DATA
     Utf8View view { string };
@@ -133,7 +171,7 @@ String to_unicode_lowercase_full(StringView const& string)
             continue;
         }
 
-        auto const* special_casing = find_matching_special_case(view, index, byte_length, *unicode_data);
+        auto const* special_casing = find_matching_special_case(view, locale, index, byte_length, *unicode_data);
         if (!special_casing) {
             builder.append_code_point(unicode_data->simple_lowercase_mapping);
             continue;
@@ -149,7 +187,7 @@ String to_unicode_lowercase_full(StringView const& string)
 #endif
 }
 
-String to_unicode_uppercase_full(StringView const& string)
+String to_unicode_uppercase_full(StringView const& string, [[maybe_unused]] Optional<StringView> locale)
 {
 #if ENABLE_UNICODE_DATA
     Utf8View view { string };
@@ -168,7 +206,7 @@ String to_unicode_uppercase_full(StringView const& string)
             continue;
         }
 
-        auto const* special_casing = find_matching_special_case(view, index, byte_length, *unicode_data);
+        auto const* special_casing = find_matching_special_case(view, locale, index, byte_length, *unicode_data);
         if (!special_casing) {
             builder.append_code_point(unicode_data->simple_uppercase_mapping);
             continue;
