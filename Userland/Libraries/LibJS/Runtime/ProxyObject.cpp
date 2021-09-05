@@ -577,6 +577,24 @@ Value ProxyObject::internal_get(PropertyName const& property_name, Value receive
     // 4. Assert: Type(handler) is Object.
     // 5. Let target be O.[[ProxyTarget]].
 
+    // NOTE: We need to protect ourselves from a Proxy with the handler's prototype set to the
+    // Proxy itself, which would by default bounce between these functions indefinitely and lead to
+    // a stack overflow when the Proxy's (p) or Proxy handler's (h) Object::get() is called and the
+    // handler doesn't have a `get` trap:
+    //
+    // 1. p -> ProxyObject::internal_get()  <- you are here
+    // 2. h -> Value::get_method()
+    // 3. h -> Value::get()
+    // 4. h -> Object::internal_get()
+    // 5. h -> Object::internal_get_prototype_of() (result is p)
+    // 6. goto 1
+    //
+    // In JS code: `h = {}; p = new Proxy({}, h); h.__proto__ = p; p.foo // or h.foo`
+    if (vm.did_reach_stack_space_limit()) {
+        vm.throw_exception<Error>(global_object, ErrorType::CallStackSizeExceeded);
+        return {};
+    }
+
     // 6. Let trap be ? GetMethod(handler, "get").
     auto trap = Value(&m_handler).get_method(global_object, vm.names.get);
     if (vm.exception())
