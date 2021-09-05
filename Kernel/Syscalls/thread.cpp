@@ -177,10 +177,7 @@ KResultOr<FlatPtr> Process::sys$set_thread_name(pid_t tid, Userspace<const char*
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
 
-    auto name_or_error = try_copy_kstring_from_user(user_name, user_name_length);
-    if (name_or_error.is_error())
-        return name_or_error.error();
-    auto name = name_or_error.release_value();
+    auto name = TRY(try_copy_kstring_from_user(user_name, user_name_length));
 
     const size_t max_thread_name_size = 64;
     if (name->length() > max_thread_name_size)
