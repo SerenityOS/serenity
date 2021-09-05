@@ -99,22 +99,14 @@ UHCIRootHub::UHCIRootHub(NonnullRefPtr<UHCIController> uhci_controller)
 
 KResult UHCIRootHub::setup(Badge<UHCIController>)
 {
-    auto hub_or_error = Hub::try_create_root_hub(m_uhci_controller, Device::DeviceSpeed::FullSpeed);
-    if (hub_or_error.is_error())
-        return hub_or_error.error();
-
-    m_hub = hub_or_error.release_value();
+    m_hub = TRY(Hub::try_create_root_hub(m_uhci_controller, Device::DeviceSpeed::FullSpeed));
 
     // NOTE: The root hub will be on the default address at this point.
     // The root hub must be the first device to be created, otherwise the HCD will intercept all default address transfers as though they're targeted at the root hub.
-    auto result = m_hub->enumerate_device();
-    if (result.is_error())
-        return result;
+    TRY(m_hub->enumerate_device());
 
     // NOTE: The root hub is no longer on the default address.
-    result = m_hub->enumerate_and_power_on_hub();
-    if (result.is_error())
-        return result;
+    TRY(m_hub->enumerate_and_power_on_hub());
 
     return KSuccess;
 }
@@ -219,9 +211,7 @@ KResultOr<size_t> UHCIRootHub::handle_control_transfer(Transfer& transfer)
             return EINVAL;
 
         auto feature_selector = (HubFeatureSelector)request.value;
-        auto result = m_uhci_controller->set_port_feature({}, port - 1, feature_selector);
-        if (result.is_error())
-            return result.error();
+        TRY(m_uhci_controller->set_port_feature({}, port - 1, feature_selector));
         break;
     }
     case HubRequest::CLEAR_FEATURE: {
@@ -246,9 +236,7 @@ KResultOr<size_t> UHCIRootHub::handle_control_transfer(Transfer& transfer)
             return EINVAL;
 
         auto feature_selector = (HubFeatureSelector)request.value;
-        auto result = m_uhci_controller->clear_port_feature({}, port - 1, feature_selector);
-        if (result.is_error())
-            return result.error();
+        TRY(m_uhci_controller->clear_port_feature({}, port - 1, feature_selector));
         break;
     }
     default:
