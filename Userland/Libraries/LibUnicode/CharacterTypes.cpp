@@ -121,21 +121,21 @@ String to_unicode_lowercase_full(StringView const& string)
     StringBuilder builder;
 
     size_t index = 0;
-    for (auto it = view.begin(); it != view.end(); ++it) {
+    size_t byte_length = 0;
+
+    for (auto it = view.begin(); it != view.end(); ++it, index += byte_length) {
         u32 code_point = *it;
-        size_t byte_length = it.underlying_code_point_length_in_bytes();
+        byte_length = it.underlying_code_point_length_in_bytes();
 
         auto unicode_data = Detail::unicode_data_for_code_point(code_point);
         if (!unicode_data.has_value()) {
             builder.append_code_point(code_point);
-            index += byte_length;
             continue;
         }
 
         auto const* special_casing = find_matching_special_case(view, index, byte_length, *unicode_data);
         if (!special_casing) {
             builder.append_code_point(unicode_data->simple_lowercase_mapping);
-            index += byte_length;
             continue;
         }
 
@@ -156,21 +156,21 @@ String to_unicode_uppercase_full(StringView const& string)
     StringBuilder builder;
 
     size_t index = 0;
-    for (auto it = view.begin(); it != view.end(); ++it) {
+    size_t byte_length = 0;
+
+    for (auto it = view.begin(); it != view.end(); ++it, index += byte_length) {
         u32 code_point = *it;
-        size_t byte_length = it.underlying_code_point_length_in_bytes();
+        byte_length = it.underlying_code_point_length_in_bytes();
 
         auto unicode_data = Detail::unicode_data_for_code_point(code_point);
         if (!unicode_data.has_value()) {
             builder.append_code_point(code_point);
-            index += byte_length;
             continue;
         }
 
         auto const* special_casing = find_matching_special_case(view, index, byte_length, *unicode_data);
         if (!special_casing) {
             builder.append_code_point(unicode_data->simple_uppercase_mapping);
-            index += byte_length;
             continue;
         }
 
