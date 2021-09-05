@@ -83,9 +83,6 @@ public:
     static KResultOr<NonnullRefPtr<Hub>> try_create_root_hub(NonnullRefPtr<USBController>, DeviceSpeed);
     static KResultOr<NonnullRefPtr<Hub>> try_create_from_device(Device const&);
 
-    // Root Hub constructor
-    Hub(NonnullRefPtr<USBController>, DeviceSpeed, NonnullOwnPtr<Pipe> default_pipe);
-    Hub(Device const&, NonnullOwnPtr<Pipe> default_pipe);
     virtual ~Hub() override = default;
 
     KResult enumerate_and_power_on_hub();
@@ -99,7 +96,12 @@ public:
     void check_for_port_updates();
 
 private:
-    USBHubDescriptor m_hub_descriptor;
+    // Root Hub constructor
+    Hub(NonnullRefPtr<USBController>, DeviceSpeed, NonnullOwnPtr<Pipe> default_pipe);
+
+    Hub(Device const&, NonnullOwnPtr<Pipe> default_pipe);
+
+    USBHubDescriptor m_hub_descriptor {};
 
     Device::List m_children;
 

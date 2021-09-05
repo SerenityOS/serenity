@@ -15,24 +15,18 @@ namespace Kernel::USB {
 
 KResultOr<NonnullRefPtr<Hub>> Hub::try_create_root_hub(NonnullRefPtr<USBController> controller, DeviceSpeed device_speed)
 {
-    auto pipe = TRY(Pipe::try_create_pipe(controller, Pipe::Type::Control, Pipe::Direction::Bidirectional, 0, 8, 0));
-    auto hub = try_make_ref_counted<Hub>(controller, device_speed, move(pipe));
-    if (!hub)
-        return ENOMEM;
-
     // NOTE: Enumeration does not happen here, as the controller must know what the device address is at all times during enumeration to intercept requests.
-
-    return hub.release_nonnull();
+    auto pipe = TRY(Pipe::try_create_pipe(controller, Pipe::Type::Control, Pipe::Direction::Bidirectional, 0, 8, 0));
+    auto hub = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Hub(controller, device_speed, move(pipe))));
+    return hub;
 }
 
 KResultOr<NonnullRefPtr<Hub>> Hub::try_create_from_device(Device const& device)
 {
     auto pipe = TRY(Pipe::try_create_pipe(device.controller(), Pipe::Type::Control, Pipe::Direction::Bidirectional, 0, device.device_descriptor().max_packet_size, device.address()));
-    auto hub = try_make_ref_counted<Hub>(device, move(pipe));
-    if (!hub)
-        return ENOMEM;
+    auto hub = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Hub(device, move(pipe))));
     TRY(hub->enumerate_and_power_on_hub());
-    return hub.release_nonnull();
+    return hub;
 }
 
 Hub::Hub(NonnullRefPtr<USBController> controller, DeviceSpeed device_speed, NonnullOwnPtr<Pipe> default_pipe)
