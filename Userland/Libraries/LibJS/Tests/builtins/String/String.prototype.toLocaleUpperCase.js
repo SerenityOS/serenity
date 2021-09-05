@@ -27,4 +27,19 @@ test("special case folding", () => {
     expect("\u1FB7".toLocaleUpperCase()).toBe("\u0391\u0342\u0399");
     expect("\u1FC7".toLocaleUpperCase()).toBe("\u0397\u0342\u0399");
     expect("\u1FF7".toLocaleUpperCase()).toBe("\u03A9\u0342\u0399");
+
+    expect("i".toLocaleUpperCase()).toBe("I");
+    expect("i".toLocaleUpperCase("lt")).toBe("I");
+
+    expect("i\u0307".toLocaleUpperCase()).toBe("I\u0307");
+    expect("i\u0307".toLocaleUpperCase("lt")).toBe("I");
+
+    expect("j".toLocaleUpperCase()).toBe("J");
+    expect("j".toLocaleUpperCase("lt")).toBe("J");
+
+    expect("j\u0307".toLocaleUpperCase()).toBe("J\u0307");
+    expect("j\u0307".toLocaleUpperCase("lt")).toBe("J");
+
+    expect("j\u0307".toLocaleUpperCase(["en", "lt"])).toBe("J\u0307");
+    expect("j\u0307".toLocaleUpperCase(["lt", "en"])).toBe("J");
 });
