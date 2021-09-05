@@ -27,8 +27,8 @@ KResultOr<FlatPtr> Process::sys$stat(Userspace<const Syscall::SC_stat_params*> u
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(rpath);
-    Syscall::SC_stat_params params;
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
+
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();

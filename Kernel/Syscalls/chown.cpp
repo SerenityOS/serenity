@@ -23,8 +23,8 @@ KResultOr<FlatPtr> Process::sys$chown(Userspace<const Syscall::SC_chown_params*>
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(chown);
-    Syscall::SC_chown_params params;
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
+
     auto path = TRY(get_syscall_path_argument(params.path));
     return VirtualFileSystem::the().chown(path->view(), params.uid, params.gid, current_directory());
 }

@@ -15,9 +15,7 @@ KResultOr<FlatPtr> Process::sys$realpath(Userspace<const Syscall::SC_realpath_pa
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(rpath);
-
-    Syscall::SC_realpath_params params;
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
 
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())

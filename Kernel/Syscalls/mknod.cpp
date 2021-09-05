@@ -14,8 +14,8 @@ KResultOr<FlatPtr> Process::sys$mknod(Userspace<const Syscall::SC_mknod_params*>
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(dpath);
-    Syscall::SC_mknod_params params;
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
+
     if (!is_superuser() && !is_regular_file(params.mode) && !is_fifo(params.mode) && !is_socket(params.mode))
         return EPERM;
     auto path = TRY(get_syscall_path_argument(params.path));

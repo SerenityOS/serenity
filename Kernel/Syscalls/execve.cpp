@@ -939,8 +939,7 @@ KResultOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params
 
     // NOTE: Be extremely careful with allocating any kernel memory in exec().
     //       On success, the kernel stack will be lost.
-    Syscall::SC_execve_params params;
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
 
     if (params.arguments.length > ARG_MAX || params.environment.length > ARG_MAX)
         return E2BIG;

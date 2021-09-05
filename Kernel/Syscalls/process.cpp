@@ -53,8 +53,8 @@ KResultOr<FlatPtr> Process::sys$set_process_name(Userspace<const char*> user_nam
 KResultOr<FlatPtr> Process::sys$set_coredump_metadata(Userspace<const Syscall::SC_set_coredump_metadata_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    Syscall::SC_set_coredump_metadata_params params;
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
+
     if (params.key.length == 0 || params.key.length > 16 * KiB)
         return EINVAL;
     if (params.value.length > 16 * KiB)

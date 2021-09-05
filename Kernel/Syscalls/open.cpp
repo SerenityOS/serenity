@@ -14,8 +14,7 @@ namespace Kernel {
 KResultOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    Syscall::SC_open_params params;
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
 
     int dirfd = params.dirfd;
     int options = params.options;

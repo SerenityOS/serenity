@@ -148,8 +148,8 @@ KResultOr<FlatPtr> Process::sys$ptrace(Userspace<const Syscall::SC_ptrace_params
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(ptrace);
-    Syscall::SC_ptrace_params params {};
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
+
     auto result = handle_ptrace(params, *this);
     return result.is_error() ? result.error().error() : result.value();
 }

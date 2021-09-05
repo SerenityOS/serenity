@@ -12,8 +12,7 @@ namespace Kernel {
 KResultOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    Syscall::SC_pledge_params params;
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
 
     if (params.promises.length > 1024 || params.execpromises.length > 1024)
         return E2BIG;

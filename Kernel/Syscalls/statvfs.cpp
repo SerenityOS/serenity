@@ -69,9 +69,8 @@ KResultOr<FlatPtr> Process::sys$statvfs(Userspace<const Syscall::SC_statvfs_para
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(rpath);
+    auto params = TRY(copy_typed_from_user(user_params));
 
-    Syscall::SC_statvfs_params params;
-    TRY(copy_from_user(&params, user_params));
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
