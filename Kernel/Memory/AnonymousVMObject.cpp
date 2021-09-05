@@ -34,9 +34,7 @@ KResultOr<NonnullRefPtr<VMObject>> AnonymousVMObject::try_clone()
 
     dbgln_if(COMMIT_DEBUG, "Cloning {:p}, need {} committed cow pages", this, new_cow_pages_needed);
 
-    auto committed_pages = MM.commit_user_physical_pages(new_cow_pages_needed);
-    if (!committed_pages.has_value())
-        return ENOMEM;
+    auto committed_pages = TRY(MM.commit_user_physical_pages(new_cow_pages_needed));
 
     // Create or replace the committed cow pages. When cloning a previously
     // cloned vmobject, we want to essentially "fork", leaving us and the
@@ -44,8 +42,7 @@ KResultOr<NonnullRefPtr<VMObject>> AnonymousVMObject::try_clone()
     // one would keep the one it still has. This ensures that the original
     // one and this one, as well as the clone have sufficient resources
     // to cow all pages as needed
-    auto new_shared_committed_cow_pages = try_make_ref_counted<SharedCommittedCowPages>(committed_pages.release_value());
-
+    auto new_shared_committed_cow_pages = try_make_ref_counted<SharedCommittedCowPages>(move(committed_pages));
     if (!new_shared_committed_cow_pages)
         return ENOMEM;
 
@@ -79,9 +76,7 @@ KResultOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with_s
 {
     Optional<CommittedPhysicalPageSet> committed_pages;
     if (strategy == AllocationStrategy::Reserve || strategy == AllocationStrategy::AllocateNow) {
-        committed_pages = MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE)));
-        if (!committed_pages.has_value())
-            return ENOMEM;
+        committed_pages = TRY(MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))));
     }
 
     return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(size, strategy, move(committed_pages)));
@@ -100,9 +95,7 @@ KResultOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_purgea
 {
     Optional<CommittedPhysicalPageSet> committed_pages;
     if (strategy == AllocationStrategy::Reserve || strategy == AllocationStrategy::AllocateNow) {
-        committed_pages = MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE)));
-        if (!committed_pages.has_value())
-            return ENOMEM;
+        committed_pages = TRY(MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))));
     }
 
     auto vmobject = adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(size, strategy, move(committed_pages)));
@@ -242,9 +235,7 @@ KResult AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged)
         return KSuccess;
     }
 
-    m_unused_committed_pages = MM.commit_user_physical_pages(committed_pages_needed);
-    if (!m_unused_committed_pages.has_value())
-        return ENOMEM;
+    m_unused_committed_pages = TRY(MM.commit_user_physical_pages(committed_pages_needed));
 
     for (auto& page : m_physical_pages) {
         if (page->is_shared_zero_page())

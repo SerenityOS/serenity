@@ -171,7 +171,7 @@ public:
         Yes
     };
 
-    Optional<CommittedPhysicalPageSet> commit_user_physical_pages(size_t page_count);
+    KResultOr<CommittedPhysicalPageSet> commit_user_physical_pages(size_t page_count);
     void uncommit_user_physical_pages(Badge<CommittedPhysicalPageSet>, size_t page_count);
 
     NonnullRefPtr<PhysicalPage> allocate_committed_user_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill = ShouldZeroFill::Yes);
