@@ -38,10 +38,7 @@ KResultOr<FlatPtr> Process::sys$dbgputstr(Userspace<const char*> characters, siz
         return size;
     }
 
-    auto result = try_copy_kstring_from_user(characters, size);
-    if (result.is_error())
-        return result.error();
-    auto string = result.release_value();
+    auto string = TRY(try_copy_kstring_from_user(characters, size));
     dbgputstr(string->view());
     return string->length();
 }
