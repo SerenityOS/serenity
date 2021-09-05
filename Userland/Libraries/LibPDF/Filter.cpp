@@ -44,7 +44,11 @@ Optional<ByteBuffer> Filter::decode_ascii_hex(ReadonlyBytes const& bytes)
 
     // FIXME: Integrate this padding into AK/Hex?
 
-    auto output = ByteBuffer::create_zeroed(bytes.size() / 2 + 1);
+    auto output_result = ByteBuffer::create_zeroed(bytes.size() / 2 + 1);
+    if (!output_result.has_value())
+        return output_result;
+
+    auto output = output_result.release_value();
 
     for (size_t i = 0; i < bytes.size() / 2; ++i) {
         const auto c1 = decode_hex_digit(static_cast<char>(bytes[i * 2]));
@@ -61,7 +65,7 @@ Optional<ByteBuffer> Filter::decode_ascii_hex(ReadonlyBytes const& bytes)
     // Process last byte with a padded zero
     output[output.size() - 1] = decode_hex_digit(static_cast<char>(bytes[bytes.size() - 1])) * 16;
 
-    return output;
+    return { move(output) };
 };
 
 Optional<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes const& bytes)

@@ -136,17 +136,17 @@ void Job::on_socket_connected()
                 return;
             auto line = read_line(PAGE_SIZE);
             if (line.is_null()) {
-                warnln("Job: Expected HTTP status");
+                dbgln("Job: Expected HTTP status");
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
             }
             auto parts = line.split_view(' ');
             if (parts.size() < 3) {
-                warnln("Job: Expected 3-part HTTP status, got '{}'", line);
+                dbgln("Job: Expected 3-part HTTP status, got '{}'", line);
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
             auto code = parts[1].to_uint();
             if (!code.has_value()) {
-                warnln("Job: Expected numeric HTTP status");
+                dbgln("Job: Expected numeric HTTP status");
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
             m_code = code.value();
@@ -164,7 +164,7 @@ void Job::on_socket_connected()
                     // that is not a valid trailing header.
                     return finish_up();
                 }
-                warnln("Job: Expected HTTP header");
+                dbgln("Job: Expected HTTP header");
                 return did_fail(Core::NetworkJob::Error::ProtocolFailed);
             }
             if (line.is_empty()) {
@@ -185,7 +185,7 @@ void Job::on_socket_connected()
                     // that is not a valid trailing header.
                     return finish_up();
                 }
-                warnln("Job: Expected HTTP header with key/value");
+                dbgln("Job: Expected HTTP header with key/value");
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
             auto name = parts[0];
@@ -196,7 +196,7 @@ void Job::on_socket_connected()
                     // that is not a valid trailing header.
                     return finish_up();
                 }
-                warnln("Job: Malformed HTTP header: '{}' ({})", line, line.length());
+                dbgln("Job: Malformed HTTP header: '{}' ({})", line, line.length());
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
             auto value = line.substring(name.length() + 2, line.length() - name.length() - 2);
@@ -363,7 +363,7 @@ void Job::finish_up()
     VERIFY(!m_has_scheduled_finish);
     m_state = State::Finished;
     if (!m_can_stream_response) {
-        auto flattened_buffer = ByteBuffer::create_uninitialized(m_received_size);
+        auto flattened_buffer = ByteBuffer::create_uninitialized(m_received_size).release_value(); // FIXME: Handle possible OOM situation.
         u8* flat_ptr = flattened_buffer.data();
         for (auto& received_buffer : m_received_buffers) {
             memcpy(flat_ptr, received_buffer.data(), received_buffer.size());

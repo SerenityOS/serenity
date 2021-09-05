@@ -45,7 +45,11 @@ private:
 static ByteBuffer write_pixel_data(const RefPtr<Bitmap> bitmap, int pixel_row_data_size, int bytes_per_pixel, bool include_alpha_channel)
 {
     int image_size = pixel_row_data_size * bitmap->height();
-    auto buffer = ByteBuffer::create_uninitialized(image_size);
+    auto buffer_result = ByteBuffer::create_uninitialized(image_size);
+    if (!buffer_result.has_value())
+        return {};
+
+    auto buffer = buffer_result.release_value();
 
     int current_row = 0;
     for (int y = bitmap->physical_height() - 1; y >= 0; --y) {
@@ -95,7 +99,11 @@ ByteBuffer BMPWriter::dump(const RefPtr<Bitmap> bitmap, DibHeader dib_header)
 
     int pixel_row_data_size = (m_bytes_per_pixel * 8 * bitmap->width() + 31) / 32 * 4;
     int image_size = pixel_row_data_size * bitmap->height();
-    auto buffer = ByteBuffer::create_uninitialized(pixel_data_offset);
+    auto buffer_result = ByteBuffer::create_uninitialized(pixel_data_offset);
+    if (!buffer_result.has_value())
+        return {};
+
+    auto buffer = buffer_result.release_value();
 
     auto pixel_data = write_pixel_data(bitmap, pixel_row_data_size, m_bytes_per_pixel, m_include_alpha_channel);
     pixel_data = compress_pixel_data(pixel_data, m_compression);

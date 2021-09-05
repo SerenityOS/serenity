@@ -113,7 +113,7 @@ TEST_CASE(deflate_decompress_zeroes)
 
 TEST_CASE(deflate_round_trip_store)
 {
-    auto original = ByteBuffer::create_uninitialized(1024);
+    auto original = ByteBuffer::create_uninitialized(1024).release_value();
     fill_with_random(original.data(), 1024);
     auto compressed = Compress::DeflateCompressor::compress_all(original, Compress::DeflateCompressor::CompressionLevel::STORE);
     EXPECT(compressed.has_value());
@@ -124,7 +124,7 @@ TEST_CASE(deflate_round_trip_store)
 
 TEST_CASE(deflate_round_trip_compress)
 {
-    auto original = ByteBuffer::create_zeroed(2048);
+    auto original = ByteBuffer::create_zeroed(2048).release_value();
     fill_with_random(original.data(), 1024); // we pre-filled the second half with 0s to make sure we test back references as well
     // Since the different levels just change how much time is spent looking for better matches, just use fast here to reduce test time
     auto compressed = Compress::DeflateCompressor::compress_all(original, Compress::DeflateCompressor::CompressionLevel::FAST);
@@ -137,7 +137,7 @@ TEST_CASE(deflate_round_trip_compress)
 TEST_CASE(deflate_round_trip_compress_large)
 {
     auto size = Compress::DeflateCompressor::block_size * 2;
-    auto original = ByteBuffer::create_uninitialized(size); // Compress a buffer larger than the maximum block size to test the sliding window mechanism
+    auto original = ByteBuffer::create_uninitialized(size).release_value(); // Compress a buffer larger than the maximum block size to test the sliding window mechanism
     fill_with_random(original.data(), size);
     // Since the different levels just change how much time is spent looking for better matches, just use fast here to reduce test time
     auto compressed = Compress::DeflateCompressor::compress_all(original, Compress::DeflateCompressor::CompressionLevel::FAST);

@@ -63,17 +63,17 @@ void SoftMMU::ensure_split_at(X86::LogicalAddress address)
     // a previous page, and that it belongs to the same region.
     auto* old_region = verify_cast<MmapRegion>(m_page_to_region_map[page_index]);
 
-    //dbgln("splitting at {:p}", address.offset());
-    //dbgln("    old region: {:p}-{:p}", old_region->base(), old_region->end() - 1);
+    // dbgln("splitting at {:p}", address.offset());
+    // dbgln("    old region: {:p}-{:p}", old_region->base(), old_region->end() - 1);
 
     NonnullOwnPtr<MmapRegion> new_region = old_region->split_at(VirtualAddress(offset));
-    //dbgln("    new region: {:p}-{:p}", new_region->base(), new_region->end() - 1);
-    //dbgln(" up old region: {:p}-{:p}", old_region->base(), old_region->end() - 1);
+    // dbgln("    new region: {:p}-{:p}", new_region->base(), new_region->end() - 1);
+    // dbgln(" up old region: {:p}-{:p}", old_region->base(), old_region->end() - 1);
 
     size_t first_page_in_region = new_region->base() / PAGE_SIZE;
     size_t last_page_in_region = (new_region->base() + new_region->size() - 1) / PAGE_SIZE;
 
-    //dbgln("  @ remapping pages {} thru {}", first_page_in_region, last_page_in_region);
+    // dbgln("  @ remapping pages {} thru {}", first_page_in_region, last_page_in_region);
 
     for (size_t page = first_page_in_region; page <= last_page_in_region; ++page) {
         VERIFY(m_page_to_region_map[page] == old_region);
@@ -321,7 +321,7 @@ void SoftMMU::copy_from_vm(void* destination, const FlatPtr source, size_t size)
 
 ByteBuffer SoftMMU::copy_buffer_from_vm(const FlatPtr source, size_t size)
 {
-    auto buffer = ByteBuffer::create_uninitialized(size);
+    auto buffer = ByteBuffer::create_uninitialized(size).release_value(); // FIXME: Handle possible OOM situation.
     copy_from_vm(buffer.data(), source, size);
     return buffer;
 }

@@ -35,7 +35,7 @@ Result<void, String> ProjectLoader::try_load_from_fd_and_close(int fd, StringVie
 
         auto& mapped_file = *file_or_error.value();
         // FIXME: Find a way to avoid the memory copy here.
-        auto bitmap = Image::try_decode_bitmap(ByteBuffer::copy(mapped_file.bytes()));
+        auto bitmap = Image::try_decode_bitmap(mapped_file.bytes());
         if (!bitmap)
             return String { "Unable to decode image"sv };
         auto image = Image::try_create_from_bitmap(bitmap.release_nonnull());

@@ -251,7 +251,7 @@ UNMAP_AFTER_INIT int NE2000NetworkAdapter::ram_test()
     out8(REG_WR_REMOTEBYTECOUNT1, 0x00);
     out8(REG_WR_RECEIVECONFIGURATION, BIT_RECEIVECONFIGURATION_MON);
     out8(REG_RW_COMMAND, BIT_COMMAND_DMA_ABORT | BIT_COMMAND_START);
-    auto buffer = ByteBuffer::create_uninitialized(NE2K_RAM_SIZE);
+    Array<u8, NE2K_RAM_SIZE> buffer;
 
     const u8 patterns[3] = { 0x5a, 0xff, 0x00 };
     for (int i = 0; i < 3; ++i) {
@@ -412,22 +412,35 @@ void NE2000NetworkAdapter::receive()
         dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: Packet received {} length={}", (packet_ok ? "intact" : "damaged"), header.length);
 
         if (packet_ok) {
-            auto packet = NetworkByteBuffer::create_uninitialized(sizeof(received_packet_header) + header.length);
-            int bytes_left = packet.size();
+            size_t bytes_in_packet = sizeof(received_packet_header) + header.length;
+
+            auto packet_result = NetworkByteBuffer::create_uninitialized(bytes_in_packet);
+            u8 drop_buffer[NE2K_PAGE_SIZE];
+            Bytes buffer { drop_buffer, array_size(drop_buffer) };
+            bool will_drop { false };
+            if (!packet_result.has_value()) {
+                dbgln("NE2000NetworkAdapter: Not enough memory for packet with length = {}, dropping.", header.length);
+                will_drop = true;
+            } else {
+                buffer = packet_result->bytes();
+            }
+
             int current_offset = 0;
             int ring_offset = header_address;
 
-            while (bytes_left > 0) {
-                int copy_size = min(bytes_left, NE2K_PAGE_SIZE);
-                rdma_read(ring_offset, packet.span().slice(current_offset, copy_size));
-                current_offset += copy_size;
+            while (bytes_in_packet > 0) {
+                int copy_size = min(bytes_in_packet, NE2K_PAGE_SIZE);
+                rdma_read(ring_offset, buffer.slice(current_offset, copy_size));
+                if (!will_drop)
+                    current_offset += copy_size;
                 ring_offset += copy_size;
-                bytes_left -= copy_size;
+                bytes_in_packet -= copy_size;
                 if (ring_offset == NE2K_RAM_RECV_END)
                     ring_offset = NE2K_RAM_RECV_BEGIN;
             }
 
-            did_receive(packet.span().slice(sizeof(received_packet_header)));
+            if (!will_drop)
+                did_receive(buffer.slice(sizeof(received_packet_header)));
         }
 
         if (header.next_packet_page == (NE2K_RAM_RECV_BEGIN >> 8))

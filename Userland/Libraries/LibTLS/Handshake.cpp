@@ -151,7 +151,7 @@ ByteBuffer TLSv12::build_handshake_finished()
 
     u8 out[verify_data_length];
     auto outbuffer = Bytes { out, verify_data_length };
-    auto dummy = ByteBuffer::create_zeroed(0);
+    ByteBuffer dummy;
 
     auto digest = m_context.handshake_hash.digest();
     auto hashbuf = ReadonlyBytes { digest.immutable_data(), m_context.handshake_hash.digest_size() };

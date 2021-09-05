@@ -319,7 +319,7 @@ static String get_key_sequence()
 
 static void cat_file(FILE* file)
 {
-    ByteBuffer buffer = ByteBuffer::create_uninitialized(4096);
+    Array<u8, 4096> buffer;
     while (!feof(file)) {
         size_t n = fread(buffer.data(), 1, buffer.size(), file);
         if (n == 0 && ferror(file)) {

@@ -30,8 +30,9 @@ public:
     using HashType = HashT;
     using DigestType = typename HashT::DigestType;
 
+    // FIXME: Do something other than VERIFY()'ing inside Optional in case of OOM.
     FortunaPRNG()
-        : m_counter(ByteBuffer::create_zeroed(BlockType::block_size()))
+        : m_counter(ByteBuffer::create_zeroed(BlockType::block_size()).release_value())
     {
     }
 
@@ -95,8 +96,17 @@ private:
             }
         }
         DigestType digest = new_key.digest();
-        m_key = ByteBuffer::copy(digest.immutable_data(),
-            digest.data_length());
+        if (m_key.size() == digest.data_length()) {
+            // Avoid reallocating, just overwrite the key.
+            m_key.overwrite(0, digest.immutable_data(), digest.data_length());
+        } else {
+            auto buffer_result = ByteBuffer::copy(digest.immutable_data(), digest.data_length());
+            // If there's no memory left to copy this into, bail out.
+            if (!buffer_result.has_value())
+                return;
+
+            m_key = buffer_result.release_value();
+        }
 
         m_reseed_number++;
         m_p0_len = 0;

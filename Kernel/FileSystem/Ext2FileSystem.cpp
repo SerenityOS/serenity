@@ -213,7 +213,10 @@ KResult Ext2FSInode::write_indirect_block(BlockBasedFileSystem::BlockIndex block
     const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
     VERIFY(blocks_indices.size() <= entries_per_block);
 
-    auto block_contents = ByteBuffer::create_uninitialized(fs().block_size());
+    auto block_contents_result = ByteBuffer::create_uninitialized(fs().block_size());
+    if (!block_contents_result.has_value())
+        return ENOMEM;
+    auto block_contents = block_contents_result.release_value();
     OutputMemoryStream stream { block_contents };
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
 
@@ -235,7 +238,10 @@ KResult Ext2FSInode::grow_doubly_indirect_block(BlockBasedFileSystem::BlockIndex
     VERIFY(blocks_indices.size() > old_blocks_length);
     VERIFY(blocks_indices.size() <= entries_per_doubly_indirect_block);
 
-    auto block_contents = ByteBuffer::create_uninitialized(fs().block_size());
+    auto block_contents_result = ByteBuffer::create_uninitialized(fs().block_size());
+    if (!block_contents_result.has_value())
+        return ENOMEM;
+    auto block_contents = block_contents_result.release_value();
     auto* block_as_pointers = (unsigned*)block_contents.data();
     OutputMemoryStream stream { block_contents };
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
@@ -275,7 +281,10 @@ KResult Ext2FSInode::shrink_doubly_indirect_block(BlockBasedFileSystem::BlockInd
     VERIFY(old_blocks_length >= new_blocks_length);
     VERIFY(new_blocks_length <= entries_per_doubly_indirect_block);
 
-    auto block_contents = ByteBuffer::create_uninitialized(fs().block_size());
+    auto block_contents_result = ByteBuffer::create_uninitialized(fs().block_size());
+    if (!block_contents_result.has_value())
+        return ENOMEM;
+    auto block_contents = block_contents_result.release_value();
     auto* block_as_pointers = (unsigned*)block_contents.data();
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(block_as_pointers));
     TRY(fs().read_block(block, &buffer, fs().block_size()));
@@ -308,7 +317,10 @@ KResult Ext2FSInode::grow_triply_indirect_block(BlockBasedFileSystem::BlockIndex
     VERIFY(blocks_indices.size() > old_blocks_length);
     VERIFY(blocks_indices.size() <= entries_per_triply_indirect_block);
 
-    auto block_contents = ByteBuffer::create_uninitialized(fs().block_size());
+    auto block_contents_result = ByteBuffer::create_uninitialized(fs().block_size());
+    if (!block_contents_result.has_value())
+        return ENOMEM;
+    auto block_contents = block_contents_result.release_value();
     auto* block_as_pointers = (unsigned*)block_contents.data();
     OutputMemoryStream stream { block_contents };
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
@@ -351,7 +363,10 @@ KResult Ext2FSInode::shrink_triply_indirect_block(BlockBasedFileSystem::BlockInd
     VERIFY(old_blocks_length >= new_blocks_length);
     VERIFY(new_blocks_length <= entries_per_triply_indirect_block);
 
-    auto block_contents = ByteBuffer::create_uninitialized(fs().block_size());
+    auto block_contents_result = ByteBuffer::create_uninitialized(fs().block_size());
+    if (!block_contents_result.has_value())
+        return ENOMEM;
+    auto block_contents = block_contents_result.release_value();
     auto* block_as_pointers = (unsigned*)block_contents.data();
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(block_as_pointers));
     TRY(fs().read_block(block, &buffer, fs().block_size()));
@@ -583,7 +598,8 @@ Vector<Ext2FS::BlockIndex> Ext2FSInode::compute_block_list_impl_internal(const e
         if (!count)
             return;
         size_t read_size = count * sizeof(u32);
-        auto array_storage = ByteBuffer::create_uninitialized(read_size);
+        // FIXME: Handle possible OOM situation.
+        auto array_storage = ByteBuffer::create_uninitialized(read_size).release_value();
         auto* array = (u32*)array_storage.data();
         auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)array);
         if (auto result = fs().read_block(array_block_index, &buffer, read_size, 0); result.is_error()) {
@@ -1109,7 +1125,10 @@ KResult Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries)
 
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_directory(): New directory contents to write (size {}):", identifier(), directory_size);
 
-    auto directory_data = ByteBuffer::create_uninitialized(directory_size);
+    auto directory_data_result = ByteBuffer::create_uninitialized(directory_size);
+    if (!directory_data_result.has_value())
+        return ENOMEM;
+    auto directory_data = directory_data_result.release_value();
     OutputMemoryStream stream { directory_data };
 
     for (auto& entry : entries) {

@@ -20,7 +20,11 @@ Optional<ByteBuffer> decode_hex(const StringView& input)
     if ((input.length() % 2) != 0)
         return {};
 
-    auto output = ByteBuffer::create_zeroed(input.length() / 2);
+    auto output_result = ByteBuffer::create_zeroed(input.length() / 2);
+    if (!output_result.has_value())
+        return {};
+
+    auto& output = output_result.value();
 
     for (size_t i = 0; i < input.length() / 2; ++i) {
         const auto c1 = decode_hex_digit(input[i * 2]);
@@ -34,7 +38,7 @@ Optional<ByteBuffer> decode_hex(const StringView& input)
         output[i] = (c1 << 4) + c2;
     }
 
-    return output;
+    return output_result;
 }
 
 String encode_hex(const ReadonlyBytes input)

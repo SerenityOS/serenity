@@ -98,7 +98,7 @@ void WebSocket::close(u16 code, String message)
     VERIFY(m_state == WebSocket::InternalState::Open);
     VERIFY(m_impl);
     auto message_bytes = message.bytes();
-    auto close_payload = ByteBuffer::create_uninitialized(message_bytes.size() + 2);
+    auto close_payload = ByteBuffer::create_uninitialized(message_bytes.size() + 2).release_value(); // FIXME: Handle possible OOM situation.
     close_payload.overwrite(0, (u8*)&code, 2);
     close_payload.overwrite(2, message_bytes.data(), message_bytes.size());
     send_frame(WebSocket::OpCode::ConnectionClose, close_payload, true);
@@ -428,7 +428,7 @@ void WebSocket::read_frame()
         masking_key[3] = masking_key_data[3];
     }
 
-    auto payload = ByteBuffer::create_uninitialized(payload_length);
+    auto payload = ByteBuffer::create_uninitialized(payload_length).release_value(); // FIXME: Handle possible OOM situation.
     u64 read_length = 0;
     while (read_length < payload_length) {
         auto payload_part = m_impl->read(payload_length - read_length);
@@ -546,11 +546,14 @@ void WebSocket::send_frame(WebSocket::OpCode op_code, ReadonlyBytes payload, boo
         fill_with_random(masking_key, 4);
         m_impl->send(ReadonlyBytes(masking_key, 4));
         // Mask the payload
-        auto masked_payload = ByteBuffer::create_uninitialized(payload.size());
-        for (size_t i = 0; i < payload.size(); ++i) {
-            masked_payload[i] = payload[i] ^ (masking_key[i % 4]);
+        auto buffer_result = ByteBuffer::create_uninitialized(payload.size());
+        if (buffer_result.has_value()) {
+            auto& masked_payload = buffer_result.value();
+            for (size_t i = 0; i < payload.size(); ++i) {
+                masked_payload[i] = payload[i] ^ (masking_key[i % 4]);
+            }
+            m_impl->send(masked_payload);
         }
-        m_impl->send(masked_payload);
     } else {
         m_impl->send(payload);
     }

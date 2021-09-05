@@ -68,7 +68,8 @@ static String mime_type_from_content_type(const String& content_type)
 void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers, Optional<u32> status_code)
 {
     VERIFY(!m_loaded);
-    m_encoded_data = ByteBuffer::copy(data);
+    // FIXME: Handle OOM failure.
+    m_encoded_data = ByteBuffer::copy(data).release_value();
     m_response_headers = headers;
     m_status_code = move(status_code);
     m_loaded = true;

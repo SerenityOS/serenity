@@ -51,9 +51,9 @@ public:
     HashMap<String, String> metadata() const;
 
 private:
-    Reader(ReadonlyBytes);
+    Reader(ByteBuffer);
 
-    static ByteBuffer decompress_coredump(const ReadonlyBytes&);
+    static Optional<ByteBuffer> decompress_coredump(const ReadonlyBytes&);
 
     class NotesEntryIterator {
     public:

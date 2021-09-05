@@ -47,7 +47,6 @@ public:
     void set_method(Method method) { m_method = method; }
 
     ByteBuffer const& body() const { return m_body; }
-    void set_body(ReadonlyBytes body) { m_body = ByteBuffer::copy(body); }
     void set_body(ByteBuffer&& body) { m_body = move(body); }
 
     String method_name() const;

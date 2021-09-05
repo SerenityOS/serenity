@@ -21,7 +21,7 @@ ArrayBuffer* ArrayBuffer::create(GlobalObject& global_object, ByteBuffer* buffer
 
 ArrayBuffer::ArrayBuffer(size_t byte_size, Object& prototype)
     : Object(prototype)
-    , m_buffer(ByteBuffer::create_zeroed(byte_size))
+    , m_buffer(ByteBuffer::create_zeroed(byte_size).release_value()) // FIXME: Handle this possible OOM failure.
     , m_detach_key(js_undefined())
 {
 }

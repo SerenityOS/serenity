@@ -198,7 +198,12 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes der)
         // Now just read it as a PKCS#1 DER.
         auto data = data_result.release_value();
         // FIXME: This is pretty awkward, maybe just generate a zero'd out ByteBuffer from the parser instead?
-        auto padded_data = ByteBuffer::create_zeroed(data.size_in_bytes());
+        auto padded_data_result = ByteBuffer::create_zeroed(data.size_in_bytes());
+        if (!padded_data_result.has_value()) {
+            dbgln_if(RSA_PARSE_DEBUG, "RSA PKCS#1 key parse failed: Not enough memory");
+            return keypair;
+        }
+        auto padded_data = padded_data_result.release_value();
         padded_data.overwrite(0, data.data(), data.size_in_bytes());
 
         return parse_rsa_key(padded_data.bytes());

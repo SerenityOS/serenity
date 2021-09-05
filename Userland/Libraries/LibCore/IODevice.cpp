@@ -43,7 +43,12 @@ ByteBuffer IODevice::read(size_t max_size)
         return {};
     if (!max_size)
         return {};
-    auto buffer = ByteBuffer::create_uninitialized(max_size);
+    auto buffer_result = ByteBuffer::create_uninitialized(max_size);
+    if (!buffer_result.has_value()) {
+        dbgln("IODevice::read: Not enough memory to allocate a buffer of {} bytes", max_size);
+        return {};
+    }
+    auto buffer = buffer_result.release_value();
     auto* buffer_ptr = (char*)buffer.data();
     size_t remaining_buffer_space = buffer.size();
     size_t taken_from_buffered = 0;
@@ -166,7 +171,13 @@ ByteBuffer IODevice::read_all()
         }
         data.append((const u8*)read_buffer, nread);
     }
-    return ByteBuffer::copy(data.data(), data.size());
+
+    auto result = ByteBuffer::copy(data);
+    if (result.has_value())
+        return result.release_value();
+
+    set_error(ENOMEM);
+    return {};
 }
 
 String IODevice::read_line(size_t max_size)
@@ -186,7 +197,12 @@ String IODevice::read_line(size_t max_size)
         m_buffered_data.clear();
         return line;
     }
-    auto line = ByteBuffer::create_uninitialized(max_size + 1);
+    auto line_result = ByteBuffer::create_uninitialized(max_size + 1);
+    if (!line_result.has_value()) {
+        dbgln("IODevice::read_line: Not enough memory to allocate a buffer of {} bytes", max_size + 1);
+        return {};
+    }
+    auto line = line_result.release_value();
     size_t line_index = 0;
     while (line_index < max_size) {
         u8 ch = m_buffered_data[line_index];

@@ -35,7 +35,7 @@ void TLSv12::consume(ReadonlyBytes record)
 
     dbgln_if(TLS_DEBUG, "Consuming {} bytes", record.size());
 
-    if (!m_context.message_buffer.try_append(record.data(), record.size())) {
+    if (!m_context.message_buffer.try_append(record)) {
         dbgln("Not enough space in message buffer, dropping the record");
         return;
     }
@@ -306,7 +306,7 @@ TLSv12::TLSv12(Core::Object* parent, Options options)
 {
     m_context.options = move(options);
     m_context.is_server = false;
-    m_context.tls_buffer = ByteBuffer::create_uninitialized(0);
+    m_context.tls_buffer = {};
 #ifdef SOCK_NONBLOCK
     int fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
 #else

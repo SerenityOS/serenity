@@ -239,7 +239,7 @@ private:
 class DHCPv4PacketBuilder {
 public:
     DHCPv4PacketBuilder()
-        : m_buffer(ByteBuffer::create_zeroed(sizeof(DHCPv4Packet)))
+        : m_buffer(ByteBuffer::create_zeroed(sizeof(DHCPv4Packet)).release_value()) // FIXME: Handle possible OOM failure.
     {
         auto* options = peek().options();
         // set the magic DHCP cookie value

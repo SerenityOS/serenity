@@ -240,15 +240,30 @@ ssize_t TLSv12::handle_dhe_rsa_server_key_exchange(ReadonlyBytes buffer)
 {
     auto dh_p_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(3)));
     auto dh_p = buffer.slice(5, dh_p_length);
-    m_context.server_diffie_hellman_params.p = ByteBuffer::copy(dh_p.data(), dh_p.size());
+    auto p_result = ByteBuffer::copy(dh_p);
+    if (!p_result.has_value()) {
+        dbgln("dhe_rsa_server_key_exchange failed: Not enough memory");
+        return 0;
+    }
+    m_context.server_diffie_hellman_params.p = p_result.release_value();
 
     auto dh_g_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(5 + dh_p_length)));
     auto dh_g = buffer.slice(7 + dh_p_length, dh_g_length);
-    m_context.server_diffie_hellman_params.g = ByteBuffer::copy(dh_g.data(), dh_g.size());
+    auto g_result = ByteBuffer::copy(dh_g);
+    if (!g_result.has_value()) {
+        dbgln("dhe_rsa_server_key_exchange failed: Not enough memory");
+        return 0;
+    }
+    m_context.server_diffie_hellman_params.g = g_result.release_value();
 
     auto dh_Ys_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(7 + dh_p_length + dh_g_length)));
     auto dh_Ys = buffer.slice(9 + dh_p_length + dh_g_length, dh_Ys_length);
-    m_context.server_diffie_hellman_params.Ys = ByteBuffer::copy(dh_Ys.data(), dh_Ys.size());
+    auto Ys_result = ByteBuffer::copy(dh_Ys);
+    if (!Ys_result.has_value()) {
+        dbgln("dhe_rsa_server_key_exchange failed: Not enough memory");
+        return 0;
+    }
+    m_context.server_diffie_hellman_params.Ys = Ys_result.release_value();
 
     if constexpr (TLS_DEBUG) {
         dbgln("dh_p: {:hex-dump}", dh_p);

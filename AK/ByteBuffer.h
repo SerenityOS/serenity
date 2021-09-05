@@ -62,31 +62,35 @@ public:
         return *this;
     }
 
-    [[nodiscard]] static ByteBuffer create_uninitialized(size_t size)
+    [[nodiscard]] static Optional<ByteBuffer> create_uninitialized(size_t size)
     {
         auto buffer = ByteBuffer();
-        auto ok = buffer.try_resize(size);
-        VERIFY(ok);
-        return buffer;
+        if (!buffer.try_resize(size))
+            return {};
+        return { move(buffer) };
     }
 
-    [[nodiscard]] static ByteBuffer create_zeroed(size_t size)
+    [[nodiscard]] static Optional<ByteBuffer> create_zeroed(size_t size)
     {
-        auto buffer = create_uninitialized(size);
+        auto buffer_result = create_uninitialized(size);
+        if (!buffer_result.has_value())
+            return {};
+
+        auto& buffer = buffer_result.value();
         buffer.zero_fill();
         VERIFY(size == 0 || (buffer[0] == 0 && buffer[size - 1] == 0));
-        return buffer;
+        return buffer_result;
     }
 
-    [[nodiscard]] static ByteBuffer copy(void const* data, size_t size)
+    [[nodiscard]] static Optional<ByteBuffer> copy(void const* data, size_t size)
     {
         auto buffer = create_uninitialized(size);
-        if (size != 0)
-            __builtin_memcpy(buffer.data(), data, size);
+        if (buffer.has_value() && size != 0)
+            __builtin_memcpy(buffer->data(), data, size);
         return buffer;
     }
 
-    [[nodiscard]] static ByteBuffer copy(ReadonlyBytes bytes)
+    [[nodiscard]] static Optional<ByteBuffer> copy(ReadonlyBytes bytes)
     {
         return copy(bytes.data(), bytes.size());
     }
@@ -133,12 +137,13 @@ public:
     [[nodiscard]] void* end_pointer() { return data() + m_size; }
     [[nodiscard]] void const* end_pointer() const { return data() + m_size; }
 
+    // FIXME: Make this function handle failures too.
     [[nodiscard]] ByteBuffer slice(size_t offset, size_t size) const
     {
         // I cannot hand you a slice I don't have
         VERIFY(offset + size <= this->size());
 
-        return copy(offset_pointer(offset), size);
+        return copy(offset_pointer(offset), size).release_value();
     }
 
     void clear()
@@ -237,8 +242,10 @@ private:
         if (!other.m_inline) {
             m_outline_buffer = other.m_outline_buffer;
             m_outline_capacity = other.m_outline_capacity;
-        } else
+        } else {
+            VERIFY(other.m_size <= inline_capacity);
             __builtin_memcpy(m_inline_buffer, other.m_inline_buffer, other.m_size);
+        }
         other.m_size = 0;
         other.m_inline = true;
     }

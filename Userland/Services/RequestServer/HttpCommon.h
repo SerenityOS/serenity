@@ -69,7 +69,11 @@ OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ClientConnection& clie
         request.set_method(HTTP::HttpRequest::Method::GET);
     request.set_url(url);
     request.set_headers(headers);
-    request.set_body(body);
+
+    auto allocated_body_result = ByteBuffer::copy(body);
+    if (!allocated_body_result.has_value())
+        return {};
+    request.set_body(allocated_body_result.release_value());
 
     auto output_stream = make<OutputFileStream>(pipe_result.value().write_fd);
     output_stream->make_unbuffered();

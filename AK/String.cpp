@@ -176,7 +176,8 @@ ByteBuffer String::to_byte_buffer() const
 {
     if (!m_impl)
         return {};
-    return ByteBuffer::copy(reinterpret_cast<const u8*>(characters()), length());
+    // FIXME: Handle OOM failure.
+    return ByteBuffer::copy(bytes()).release_value();
 }
 
 template<typename T>

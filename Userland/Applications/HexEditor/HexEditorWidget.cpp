@@ -75,7 +75,12 @@ HexEditorWidget::HexEditorWidget()
             auto file_size = value.to_int();
             if (file_size.has_value() && file_size.value() > 0) {
                 m_document_dirty = false;
-                m_editor->set_buffer(ByteBuffer::create_zeroed(file_size.value()));
+                auto buffer_result = ByteBuffer::create_zeroed(file_size.value());
+                if (!buffer_result.has_value()) {
+                    GUI::MessageBox::show(window(), "Entered file size is too large.", "Error", GUI::MessageBox::Type::Error);
+                    return;
+                }
+                m_editor->set_buffer(buffer_result.release_value());
                 set_path({});
                 update_title();
             } else {

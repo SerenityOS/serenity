@@ -68,8 +68,7 @@ int main(int argc, char** argv)
                 return 1;
             }
 
-            auto bytes = AK::ByteBuffer::copy(buf, nread);
-            socket->send(bytes.span());
+            socket->send({ buf, static_cast<size_t>(nread) });
         }
     }
 

@@ -221,7 +221,8 @@ ByteBuffer PNGWriter::encode(Gfx::Bitmap const& bitmap)
     writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, 6, 0, 0, 0);
     writer.add_IDAT_chunk(bitmap);
     writer.add_IEND_chunk();
-    return ByteBuffer::copy(writer.m_data);
+    // FIXME: Handle OOM failure.
+    return ByteBuffer::copy(writer.m_data).release_value();
 }
 
 }

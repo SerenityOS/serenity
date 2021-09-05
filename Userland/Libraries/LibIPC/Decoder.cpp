@@ -110,10 +110,14 @@ bool Decoder::decode(ByteBuffer& value)
         return true;
     }
     if (length == 0) {
-        value = ByteBuffer::create_uninitialized(0);
+        value = {};
         return true;
     }
-    value = ByteBuffer::create_uninitialized(length);
+    if (auto buffer_result = ByteBuffer::create_uninitialized(length); buffer_result.has_value())
+        value = buffer_result.release_value();
+    else
+        return false;
+
     m_stream >> value.bytes();
     return !m_stream.handle_any_error();
 }

@@ -56,9 +56,12 @@ Clipboard::DataAndType Clipboard::data_and_type() const
     if (!response.data().is_valid())
         return {};
     auto data = ByteBuffer::copy(response.data().data<void>(), response.data().size());
+    if (!data.has_value())
+        return {};
+
     auto type = response.mime_type();
     auto metadata = response.metadata().entries();
-    return { data, type, metadata };
+    return { data.release_value(), type, metadata };
 }
 
 RefPtr<Gfx::Bitmap> Clipboard::bitmap() const

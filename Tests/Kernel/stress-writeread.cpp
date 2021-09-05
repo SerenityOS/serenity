@@ -84,7 +84,12 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(target, "Target device/file path", "target");
     args_parser.parse(argc, argv);
 
-    auto buffer = AK::ByteBuffer::create_zeroed(block_size);
+    auto buffer_result = AK::ByteBuffer::create_zeroed(block_size);
+    if (!buffer_result.has_value()) {
+        warnln("Failed to allocate a buffer of {} bytes", block_size);
+        return EXIT_FAILURE;
+    }
+    auto buffer = buffer_result.release_value();
 
     int fd = open(target, O_CREAT | O_RDWR, 0666);
     if (fd < 0) {

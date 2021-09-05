@@ -1999,6 +1999,9 @@ void Shell::possibly_print_error() const
     case ShellError::OpenFailure:
         warnln("Shell: Open failed for {}", m_error_description);
         break;
+    case ShellError::OutOfMemory:
+        warnln("Shell: Hit an OOM situation");
+        break;
     case ShellError::InternalControlFlowBreak:
     case ShellError::InternalControlFlowContinue:
         return;

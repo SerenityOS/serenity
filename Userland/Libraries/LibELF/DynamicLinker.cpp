@@ -169,7 +169,13 @@ static void allocate_tls()
         return;
 
     auto page_aligned_size = align_up_to(s_total_tls_size, PAGE_SIZE);
-    ByteBuffer initial_tls_data = ByteBuffer::create_zeroed(page_aligned_size);
+    auto initial_tls_data_result = ByteBuffer::create_zeroed(page_aligned_size);
+    if (!initial_tls_data_result.has_value()) {
+        dbgln("Failed to allocate initial TLS data");
+        VERIFY_NOT_REACHED();
+    }
+
+    auto& initial_tls_data = initial_tls_data_result.value();
 
     // Initialize TLS data
     for (const auto& entry : s_loaders) {

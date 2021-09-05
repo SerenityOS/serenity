@@ -35,7 +35,7 @@ CSVExportDialogPage::CSVExportDialogPage(const Sheet& sheet)
     m_headers.extend(m_data.take_first());
 
     auto temp_template = String::formatted("{}/spreadsheet-csv-export.{}.XXXXXX", Core::StandardPaths::tempfile_directory(), getpid());
-    auto temp_path = ByteBuffer::create_uninitialized(temp_template.length() + 1);
+    auto temp_path = ByteBuffer::create_uninitialized(temp_template.length() + 1).release_value();
     auto buf = reinterpret_cast<char*>(temp_path.data());
     auto copy_ok = temp_template.copy_characters_to_buffer(buf, temp_path.size());
     VERIFY(copy_ok);
