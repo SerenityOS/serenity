@@ -28,15 +28,9 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
     auto params = TRY(copy_typed_from_user(user_params));
 
     auto source_fd = params.source_fd;
-    auto target_or_error = try_copy_kstring_from_user(params.target);
-    if (target_or_error.is_error())
-        return target_or_error.error();
-    auto fs_type_or_error = try_copy_kstring_from_user(params.fs_type);
-    if (fs_type_or_error.is_error())
-        return fs_type_or_error.error();
-
-    auto target = target_or_error.value()->view();
-    auto fs_type = fs_type_or_error.value()->view();
+    auto target = TRY(try_copy_kstring_from_user(params.target));
+    auto fs_type_string = TRY(try_copy_kstring_from_user(params.fs_type));
+    auto fs_type = fs_type_string->view();
 
     auto description = fds().file_description(source_fd);
     if (!description.is_null())
@@ -44,11 +38,7 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
     else
         dbgln("mount {} @ {}", fs_type, target);
 
-    auto custody_or_error = VirtualFileSystem::the().resolve_path(target, current_directory());
-    if (custody_or_error.is_error())
-        return custody_or_error.error();
-
-    auto& target_custody = custody_or_error.value();
+    auto target_custody = TRY(VirtualFileSystem::the().resolve_path(target->view(), current_directory()));
 
     if (params.flags & MS_REMOUNT) {
         // We're not creating a new mount, we're updating an existing one!
@@ -87,10 +77,7 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
 
         fs = Plan9FS::create(*description);
     } else if (fs_type == "proc"sv || fs_type == "ProcFS"sv) {
-        auto maybe_fs = ProcFS::try_create();
-        if (maybe_fs.is_error())
-            return maybe_fs.error();
-        fs = maybe_fs.release_value();
+        fs = TRY(ProcFS::try_create());
     } else if (fs_type == "devpts"sv || fs_type == "DevPtsFS"sv) {
         fs = DevPtsFS::create();
     } else if (fs_type == "dev"sv || fs_type == "DevFS"sv) {
@@ -109,11 +96,7 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
 
         dbgln("mount: attempting to mount {} on {}", description->absolute_path(), target);
 
-        auto maybe_fs = ISO9660FS::try_create(*description);
-        if (maybe_fs.is_error()) {
-            return maybe_fs.error();
-        }
-        fs = maybe_fs.release_value();
+        fs = TRY(ISO9660FS::try_create(*description));
     } else {
         return ENODEV;
     }
@@ -121,17 +104,8 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
     if (!fs)
         return ENOMEM;
 
-    if (auto result = fs->initialize(); result.is_error()) {
-        dbgln("mount: failed to initialize {} filesystem, fd={}", fs_type, source_fd);
-        return result;
-    }
-
-    auto result = VirtualFileSystem::the().mount(fs.release_nonnull(), target_custody, params.flags);
-    if (!description.is_null())
-        dbgln("mount: successfully mounted {} on {}", description->absolute_path(), target);
-    else
-        dbgln("mount: successfully mounted {}", target);
-    return result;
+    TRY(fs->initialize());
+    return VirtualFileSystem::the().mount(fs.release_nonnull(), target_custody, params.flags);
 }
 
 KResultOr<FlatPtr> Process::sys$umount(Userspace<const char*> user_mountpoint, size_t mountpoint_length)
