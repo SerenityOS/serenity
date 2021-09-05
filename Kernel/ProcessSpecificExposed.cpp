@@ -79,9 +79,7 @@ KResultOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(const ProcFS& p
 
 KResultOr<size_t> Process::procfs_get_file_description_link(unsigned fd, KBufferBuilder& builder) const
 {
-    auto file_description = m_fds.file_description(fd);
-    if (!file_description)
-        return EBADF;
+    auto file_description = TRY(m_fds.file_description(fd));
     auto data = file_description->absolute_path();
     builder.append(data);
     return data.length();

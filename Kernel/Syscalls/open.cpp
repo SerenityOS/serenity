@@ -46,9 +46,7 @@ KResultOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> u
     if (dirfd == AT_FDCWD) {
         base = current_directory();
     } else {
-        auto base_description = fds().file_description(dirfd);
-        if (!base_description)
-            return EBADF;
+        auto base_description = TRY(fds().file_description(dirfd));
         if (!base_description->is_directory())
             return ENOTDIR;
         if (!base_description->custody())
@@ -70,10 +68,7 @@ KResultOr<FlatPtr> Process::sys$close(int fd)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-    auto description = fds().file_description(fd);
-    dbgln_if(IO_DEBUG, "sys$close({}) {}", fd, description.ptr());
-    if (!description)
-        return EBADF;
+    auto description = TRY(fds().file_description(fd));
     auto result = description->close();
     m_fds[fd] = {};
     return result;

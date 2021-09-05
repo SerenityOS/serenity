@@ -22,9 +22,7 @@ KResultOr<FlatPtr> Process::sys$fchmod(int fd, mode_t mode)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(fattr);
-    auto description = fds().file_description(fd);
-    if (!description)
-        return EBADF;
+    auto description = TRY(fds().file_description(fd));
     return description->chmod(mode);
 }
 

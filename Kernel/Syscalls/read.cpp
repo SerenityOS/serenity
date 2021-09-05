@@ -34,13 +34,9 @@ KResultOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov
             return EINVAL;
     }
 
-    auto description = fds().file_description(fd);
-    if (!description)
-        return EBADF;
-
+    auto description = TRY(fds().file_description(fd));
     if (!description->is_readable())
         return EBADF;
-
     if (description->is_directory())
         return EISDIR;
 
@@ -75,9 +71,7 @@ KResultOr<FlatPtr> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
     dbgln_if(IO_DEBUG, "sys$read({}, {}, {})", fd, buffer.ptr(), size);
-    auto description = fds().file_description(fd);
-    if (!description)
-        return EBADF;
+    auto description = TRY(fds().file_description(fd));
     if (!description->is_readable())
         return EBADF;
     if (description->is_directory())

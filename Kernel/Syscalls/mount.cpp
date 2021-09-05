@@ -32,8 +32,8 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
     auto fs_type_string = TRY(try_copy_kstring_from_user(params.fs_type));
     auto fs_type = fs_type_string->view();
 
-    auto description = fds().file_description(source_fd);
-    if (!description.is_null())
+    auto description_or_error = fds().file_description(source_fd);
+    if (!description_or_error.is_error())
         dbgln("mount {}: source fd {} @ {}", fs_type, source_fd, target);
     else
         dbgln("mount {} @ {}", fs_type, target);
@@ -47,8 +47,9 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
 
     if (params.flags & MS_BIND) {
         // We're doing a bind mount.
-        if (description.is_null())
-            return EBADF;
+        if (description_or_error.is_error())
+            return description_or_error.error();
+        auto description = description_or_error.release_value();
         if (!description->custody()) {
             // We only support bind-mounting inodes, not arbitrary files.
             return ENODEV;
@@ -59,8 +60,9 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
     RefPtr<FileSystem> fs;
 
     if (fs_type == "ext2"sv || fs_type == "Ext2FS"sv) {
-        if (description.is_null())
+        if (description_or_error.is_error())
             return EBADF;
+        auto description = description_or_error.release_value();
         if (!description->file().is_block_device())
             return ENOTBLK;
         if (!description->file().is_seekable()) {
@@ -72,9 +74,9 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
 
         fs = Ext2FS::create(*description);
     } else if (fs_type == "9p"sv || fs_type == "Plan9FS"sv) {
-        if (description.is_null())
+        if (description_or_error.is_error())
             return EBADF;
-
+        auto description = description_or_error.release_value();
         fs = Plan9FS::create(*description);
     } else if (fs_type == "proc"sv || fs_type == "ProcFS"sv) {
         fs = TRY(ProcFS::try_create());
@@ -87,15 +89,14 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
     } else if (fs_type == "tmp"sv || fs_type == "TmpFS"sv) {
         fs = TmpFS::create();
     } else if (fs_type == "iso9660"sv || fs_type == "ISO9660FS"sv) {
-        if (description.is_null())
+        if (description_or_error.is_error())
             return EBADF;
+        auto description = description_or_error.release_value();
         if (!description->file().is_seekable()) {
             dbgln("mount: this is not a seekable file");
             return ENODEV;
         }
-
         dbgln("mount: attempting to mount {} on {}", description->absolute_path(), target);
-
         fs = TRY(ISO9660FS::try_create(*description));
     } else {
         return ENODEV;
