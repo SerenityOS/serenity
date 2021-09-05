@@ -13,9 +13,9 @@ namespace Kernel {
 
 class AnonymousFile final : public File {
 public:
-    static RefPtr<AnonymousFile> create(NonnullRefPtr<Memory::AnonymousVMObject> vmobject)
+    static KResultOr<NonnullRefPtr<AnonymousFile>> try_create(NonnullRefPtr<Memory::AnonymousVMObject> vmobject)
     {
-        return adopt_ref_if_nonnull(new (nothrow) AnonymousFile(move(vmobject)));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousFile(move(vmobject)));
     }
 
     virtual ~AnonymousFile() override;
