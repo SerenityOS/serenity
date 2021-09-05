@@ -26,11 +26,9 @@ RefPtr<FIFO> FIFO::try_create(UserID uid)
 
 KResultOr<NonnullRefPtr<FileDescription>> FIFO::open_direction(FIFO::Direction direction)
 {
-    auto description = FileDescription::try_create(*this);
-    if (!description.is_error()) {
-        attach(direction);
-        description.value()->set_fifo_direction({}, direction);
-    }
+    auto description = TRY(FileDescription::try_create(*this));
+    attach(direction);
+    description->set_fifo_direction({}, direction);
     return description;
 }
 
@@ -38,9 +36,7 @@ KResultOr<NonnullRefPtr<FileDescription>> FIFO::open_direction_blocking(FIFO::Di
 {
     MutexLocker locker(m_open_lock);
 
-    auto description = open_direction(direction);
-    if (description.is_error())
-        return description;
+    auto description = TRY(open_direction(direction));
 
     if (direction == Direction::Reader) {
         m_read_open_queue.wake_all();
