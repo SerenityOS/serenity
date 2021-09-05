@@ -135,6 +135,30 @@ static bool is_followed_by_combining_class_above(Utf8View const& string, size_t 
     return false;
 }
 
+static bool is_followed_by_combining_dot_above(Utf8View const& string, size_t index, size_t byte_length)
+{
+    // C is followed by combining dot above (U+0307). Any sequence of characters with a combining class that is neither 0 nor 230 may
+    // intervene between the current character and the combining dot above.
+    auto following_view = ((index + byte_length) < string.byte_length())
+        ? string.substring_view(index + byte_length)
+        : Utf8View {};
+
+    for (auto code_point : following_view) {
+        if (code_point == 0x307)
+            return true;
+
+        auto unicode_data = Detail::unicode_data_for_code_point(code_point);
+        if (!unicode_data.has_value())
+            return false;
+        if (unicode_data->canonical_combining_class == 0)
+            return false;
+        if (unicode_data->canonical_combining_class == 230)
+            return false;
+    }
+
+    return false;
+}
+
 static SpecialCasing const* find_matching_special_case(Utf8View const& string, Optional<StringView> locale, size_t index, size_t byte_length, UnicodeData const& unicode_data)
 {
     auto requested_locale = Locale::None;
@@ -174,7 +198,9 @@ static SpecialCasing const* find_matching_special_case(Utf8View const& string, O
                 return special_casing;
             break;
 
-        default:
+        case Condition::NotBeforeDot:
+            if (!is_followed_by_combining_dot_above(string, index, byte_length))
+                return special_casing;
             break;
         }
     }
