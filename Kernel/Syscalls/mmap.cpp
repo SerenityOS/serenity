@@ -128,9 +128,7 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-
-    Syscall::SC_mmap_params params;
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
 
     FlatPtr addr = params.addr;
     auto size = params.size;
@@ -467,9 +465,7 @@ KResultOr<FlatPtr> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mm
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-
-    Syscall::SC_set_mmap_name_params params;
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
 
     if (params.name.length > PATH_MAX)
         return ENAMETOOLONG;
@@ -504,9 +500,7 @@ KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-
-    Syscall::SC_mremap_params params {};
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
 
     auto old_range = TRY(expand_range_to_page_boundaries((FlatPtr)params.old_address, params.old_size));
 

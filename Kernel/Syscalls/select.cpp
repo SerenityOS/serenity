@@ -18,9 +18,8 @@ KResultOr<FlatPtr> Process::sys$select(Userspace<const Syscall::SC_select_params
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-    Syscall::SC_select_params params {};
 
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
 
     if (params.nfds < 0)
         return EINVAL;
@@ -132,9 +131,7 @@ KResultOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> u
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-
-    Syscall::SC_poll_params params {};
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
 
     if (params.nfds >= fds().max_open())
         return ENOBUFS;

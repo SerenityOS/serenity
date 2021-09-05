@@ -19,8 +19,7 @@ KResultOr<FlatPtr> Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_
     if (!is_superuser())
         return EPERM;
 
-    Syscall::SC_setkeymap_params params;
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
 
     Keyboard::CharacterMapData character_map_data;
 
@@ -44,9 +43,7 @@ KResultOr<FlatPtr> Process::sys$getkeymap(Userspace<const Syscall::SC_getkeymap_
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     REQUIRE_PROMISE(getkeymap);
-
-    Syscall::SC_getkeymap_params params {};
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
 
     String keymap_name = HIDManagement::the().keymap_name();
     const Keyboard::CharacterMapData& character_maps = HIDManagement::the().character_maps();

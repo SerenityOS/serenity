@@ -66,9 +66,7 @@ KResultOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_cloc
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     REQUIRE_PROMISE(stdio);
-
-    Syscall::SC_clock_nanosleep_params params;
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
 
     Optional<Time> requested_sleep = copy_time_from_user(params.requested_sleep);
     if (!requested_sleep.has_value())

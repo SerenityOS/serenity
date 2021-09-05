@@ -25,9 +25,7 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
         return EPERM;
 
     REQUIRE_NO_PROMISES;
-
-    Syscall::SC_mount_params params;
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
 
     auto source_fd = params.source_fd;
     auto target_or_error = try_copy_kstring_from_user(params.target);

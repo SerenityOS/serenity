@@ -17,9 +17,7 @@ KResultOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<c
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(thread);
-
-    Syscall::SC_create_thread_params params;
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
 
     unsigned detach_state = params.detach_state;
     int schedule_priority = params.schedule_priority;

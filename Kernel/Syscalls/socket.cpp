@@ -79,9 +79,7 @@ KResultOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_para
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(accept);
-
-    Syscall::SC_accept4_params params = {};
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
 
     int accepting_socket_fd = params.sockfd;
     Userspace<sockaddr*> user_address((FlatPtr)params.addr);
@@ -307,24 +305,21 @@ KResult Process::get_sock_or_peer_name(const Params& params)
 KResultOr<FlatPtr> Process::sys$getsockname(Userspace<const Syscall::SC_getsockname_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    Syscall::SC_getsockname_params params = {};
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
     return get_sock_or_peer_name<true>(params);
 }
 
 KResultOr<FlatPtr> Process::sys$getpeername(Userspace<const Syscall::SC_getpeername_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    Syscall::SC_getpeername_params params = {};
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
     return get_sock_or_peer_name<false>(params);
 }
 
 KResultOr<FlatPtr> Process::sys$getsockopt(Userspace<const Syscall::SC_getsockopt_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    Syscall::SC_getsockopt_params params = {};
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
 
     int sockfd = params.sockfd;
     int level = params.level;
@@ -349,8 +344,8 @@ KResultOr<FlatPtr> Process::sys$getsockopt(Userspace<const Syscall::SC_getsockop
 KResultOr<FlatPtr> Process::sys$setsockopt(Userspace<const Syscall::SC_setsockopt_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    Syscall::SC_setsockopt_params params;
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
+
     Userspace<const void*> user_value((FlatPtr)params.value);
     auto description = fds().file_description(params.sockfd);
     if (!description)
@@ -365,8 +360,7 @@ KResultOr<FlatPtr> Process::sys$setsockopt(Userspace<const Syscall::SC_setsockop
 KResultOr<FlatPtr> Process::sys$socketpair(Userspace<const Syscall::SC_socketpair_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    Syscall::SC_socketpair_params params;
-    TRY(copy_from_user(&params, user_params));
+    auto params = TRY(copy_typed_from_user(user_params));
 
     if (params.domain != AF_LOCAL)
         return EINVAL;
