@@ -31,6 +31,7 @@ Protocol::Protocol(const String& name)
 
 Protocol::~Protocol()
 {
+    // FIXME: Do proper de-registration.
     VERIFY_NOT_REACHED();
 }
 
