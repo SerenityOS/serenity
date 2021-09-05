@@ -544,10 +544,7 @@ KResultOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Userspace<c
         return EINVAL;
     if (path_length > PATH_MAX)
         return ENAMETOOLONG;
-    auto string_or_error = try_copy_kstring_from_user(user_path, path_length);
-    if (string_or_error.is_error())
-        return string_or_error.error();
-    return string_or_error.release_value();
+    return try_copy_kstring_from_user(user_path, path_length);
 }
 
 KResultOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Syscall::StringArgument const& path) const
