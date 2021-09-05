@@ -452,14 +452,17 @@ Process::FileDescriptionAndFlags& Process::FileDescriptions::at(size_t i)
     return m_fds_metadatas[i];
 }
 
-RefPtr<FileDescription> Process::FileDescriptions::file_description(int fd) const
+KResultOr<NonnullRefPtr<FileDescription>> Process::FileDescriptions::file_description(int fd) const
 {
     SpinlockLocker lock(m_fds_lock);
     if (fd < 0)
-        return nullptr;
-    if (static_cast<size_t>(fd) < m_fds_metadatas.size())
-        return m_fds_metadatas[fd].description();
-    return nullptr;
+        return EBADF;
+    if (static_cast<size_t>(fd) >= m_fds_metadatas.size())
+        return EBADF;
+    RefPtr description = m_fds_metadatas[fd].description();
+    if (!description)
+        return EBADF;
+    return description.release_nonnull();
 }
 
 void Process::FileDescriptions::enumerate(Function<void(const FileDescriptionAndFlags&)> callback) const

@@ -48,9 +48,7 @@ KResultOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<const Syscall:
     REQUIRE_PROMISE(rpath);
     auto params = TRY(copy_typed_from_user(user_params));
 
-    auto description = fds().file_description(params.fd);
-    if (!description)
-        return EBADF;
+    auto description = TRY(fds().file_description(params.fd));
     if (!description->is_inode_watcher())
         return EBADF;
     auto inode_watcher = description->inode_watcher();
@@ -76,9 +74,7 @@ KResultOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<const Syscall:
 KResultOr<FlatPtr> Process::sys$inode_watcher_remove_watch(int fd, int wd)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    auto description = fds().file_description(fd);
-    if (!description)
-        return EBADF;
+    auto description = TRY(fds().file_description(fd));
     if (!description->is_inode_watcher())
         return EBADF;
     auto inode_watcher = description->inode_watcher();

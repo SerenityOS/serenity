@@ -15,9 +15,7 @@ KResultOr<FlatPtr> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t 
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(tty);
-    auto description = fds().file_description(fd);
-    if (!description)
-        return EBADF;
+    auto description = TRY(fds().file_description(fd));
     if (!description->is_tty())
         return ENOTTY;
     auto tty_name = description->tty()->tty_name();
@@ -30,9 +28,7 @@ KResultOr<FlatPtr> Process::sys$ptsname(int fd, Userspace<char*> buffer, size_t 
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(tty);
-    auto description = fds().file_description(fd);
-    if (!description)
-        return EBADF;
+    auto description = TRY(fds().file_description(fd));
     auto* master_pty = description->master_pty();
     if (!master_pty)
         return ENOTTY;

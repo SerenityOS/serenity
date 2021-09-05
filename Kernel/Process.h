@@ -676,8 +676,7 @@ public:
             m_fds_metadatas.clear();
         }
 
-        // FIXME: Consider to remove this somehow
-        RefPtr<FileDescription> file_description(int fd) const;
+        KResultOr<NonnullRefPtr<FileDescription>> file_description(int fd) const;
 
     private:
         FileDescriptions() = default;
