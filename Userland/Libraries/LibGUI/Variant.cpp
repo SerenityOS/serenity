@@ -46,6 +46,8 @@ const char* to_string(Variant::Type type)
         return "Font";
     case Variant::Type::TextAlignment:
         return "TextAlignment";
+    case Variant::Type::ColorRole:
+        return "ColorRole";
     }
     VERIFY_NOT_REACHED();
 }
@@ -83,6 +85,12 @@ Variant::Variant(Gfx::TextAlignment value)
     : m_type(Type::TextAlignment)
 {
     m_value.as_text_alignment = value;
+}
+
+Variant::Variant(Gfx::ColorRole value)
+    : m_type(Type::ColorRole)
+{
+    m_value.as_color_role = value;
 }
 
 Variant::Variant(i32 value)
@@ -320,6 +328,9 @@ void Variant::copy_from(const Variant& other)
     case Type::TextAlignment:
         m_value.as_text_alignment = other.m_value.as_text_alignment;
         break;
+    case Type::ColorRole:
+        m_value.as_color_role = other.m_value.as_color_role;
+        break;
     case Type::Invalid:
         break;
     }
@@ -360,6 +371,8 @@ bool Variant::operator==(const Variant& other) const
         return &as_font() == &other.as_font();
     case Type::TextAlignment:
         return m_value.as_text_alignment == other.m_value.as_text_alignment;
+    case Type::ColorRole:
+        return m_value.as_color_role == other.m_value.as_color_role;
     case Type::Invalid:
         return true;
     }
@@ -398,6 +411,7 @@ bool Variant::operator<(const Variant& other) const
     case Type::Rect:
     case Type::Font:
     case Type::TextAlignment:
+    case Type::ColorRole:
         // FIXME: Figure out how to compare these.
         VERIFY_NOT_REACHED();
     case Type::Invalid:
@@ -453,6 +467,9 @@ String Variant::to_string() const
             VERIFY_NOT_REACHED();
         }
         return "";
+    }
+    case Type::ColorRole: {
+        return String::formatted("Gfx::ColorRole::{}", Gfx::to_string(m_value.as_color_role));
     }
     case Type::Invalid:
         return "[null]";
