@@ -25,22 +25,11 @@ KResultOr<FlatPtr> Process::sys$anon_create(size_t size, int options)
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
 
-    auto new_fd_or_error = m_fds.allocate();
-    if (new_fd_or_error.is_error())
-        return new_fd_or_error.error();
-    auto new_fd = new_fd_or_error.release_value();
-    auto maybe_vmobject = Memory::AnonymousVMObject::try_create_purgeable_with_size(size, AllocationStrategy::Reserve);
-    if (maybe_vmobject.is_error())
-        return maybe_vmobject.error();
+    auto new_fd = TRY(m_fds.allocate());
+    auto vmobject = TRY(Memory::AnonymousVMObject::try_create_purgeable_with_size(size, AllocationStrategy::Reserve));
+    auto anon_file = TRY(AnonymousFile::try_create(move(vmobject)));
+    auto description = TRY(FileDescription::try_create(move(anon_file)));
 
-    auto anon_file_or_error = AnonymousFile::try_create(maybe_vmobject.release_value());
-    if (anon_file_or_error.is_error())
-        return anon_file_or_error.error();
-    auto description_or_error = FileDescription::try_create(anon_file_or_error.release_value());
-    if (description_or_error.is_error())
-        return description_or_error.error();
-
-    auto description = description_or_error.release_value();
     description->set_writable(true);
     description->set_readable(true);
 
