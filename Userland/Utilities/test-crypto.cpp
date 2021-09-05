@@ -174,7 +174,7 @@ static void aes_cbc(const char* message, size_t len)
 {
     ReadonlyBytes buffer { message, len };
     // FIXME: Take iv as an optional parameter
-    auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size());
+    auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size()).release_value();
 
     if (encrypting) {
         Crypto::Cipher::AESCipher::CBCMode cipher(
@@ -182,7 +182,7 @@ static void aes_cbc(const char* message, size_t len)
             key_bits,
             Crypto::Cipher::Intent::Encryption);
 
-        auto enc = cipher.create_aligned_buffer(buffer.size());
+        auto enc = cipher.create_aligned_buffer(buffer.size()).release_value();
         auto enc_span = enc.bytes();
         cipher.encrypt(buffer, enc_span, iv);
 
@@ -195,7 +195,7 @@ static void aes_cbc(const char* message, size_t len)
             StringView(secret_key).bytes(),
             key_bits,
             Crypto::Cipher::Intent::Decryption);
-        auto dec = cipher.create_aligned_buffer(buffer.size());
+        auto dec = cipher.create_aligned_buffer(buffer.size()).release_value();
         auto dec_span = dec.bytes();
         cipher.decrypt(buffer, dec_span, iv);
         outln("{}", StringView { dec_span.data(), dec_span.size() });
@@ -550,7 +550,7 @@ auto main(int argc, char** argv) -> int
 
 static ByteBuffer operator""_b(const char* string, size_t length)
 {
-    return ByteBuffer::copy(string, length);
+    return ByteBuffer::copy(string, length).release_value();
 }
 
 // tests go after here
@@ -652,8 +652,8 @@ static void aes_cbc_test_encrypt()
 {
     auto test_it = [](auto& cipher, auto& result) {
         auto in = "This is a test! This is another test!"_b;
-        auto out = cipher.create_aligned_buffer(in.size());
-        auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size());
+        auto out = cipher.create_aligned_buffer(in.size()).release_value();
+        auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size()).release_value();
         auto out_span = out.bytes();
         cipher.encrypt(in, out_span, iv);
         if (out.size() != sizeof(result))
@@ -715,9 +715,9 @@ static void aes_cbc_test_decrypt()
 {
     auto test_it = [](auto& cipher, auto& result, auto result_len) {
         auto true_value = "This is a test! This is another test!";
-        auto in = ByteBuffer::copy(result, result_len);
-        auto out = cipher.create_aligned_buffer(in.size());
-        auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size());
+        auto in = ByteBuffer::copy(result, result_len).release_value();
+        auto out = cipher.create_aligned_buffer(in.size()).release_value();
+        auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size()).release_value();
         auto out_span = out.bytes();
         cipher.decrypt(in, out_span, iv);
         if (out_span.size() != strlen(true_value)) {
@@ -793,7 +793,7 @@ static void aes_ctr_test_encrypt()
     auto test_it = [](auto key, auto ivec, auto in, auto out_expected) {
         // nonce is already included in ivec.
         Crypto::Cipher::AESCipher::CTRMode cipher(key, 8 * key.size(), Crypto::Cipher::Intent::Encryption);
-        ByteBuffer out_actual = ByteBuffer::create_zeroed(in.size());
+        ByteBuffer out_actual = ByteBuffer::create_zeroed(in.size()).release_value();
         Bytes out_span = out_actual.bytes();
         cipher.encrypt(in, out_span, ivec);
         if (out_expected.size() != out_actual.size()) {
@@ -988,7 +988,7 @@ static void aes_ctr_test_decrypt()
     auto test_it = [](auto key, auto ivec, auto in, auto out_expected) {
         // nonce is already included in ivec.
         Crypto::Cipher::AESCipher::CTRMode cipher(key, 8 * key.size(), Crypto::Cipher::Intent::Decryption);
-        ByteBuffer out_actual = ByteBuffer::create_zeroed(in.size());
+        ByteBuffer out_actual = ByteBuffer::create_zeroed(in.size()).release_value();
         auto out_span = out_actual.bytes();
         cipher.decrypt(in, out_span, ivec);
         if (out_expected.size() != out_span.size()) {
@@ -1051,7 +1051,7 @@ static void aes_gcm_test_encrypt()
         Crypto::Cipher::AESCipher::GCMMode cipher("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b, 128, Crypto::Cipher::Intent::Encryption);
         u8 result_tag[] { 0x58, 0xe2, 0xfc, 0xce, 0xfa, 0x7e, 0x30, 0x61, 0x36, 0x7f, 0x1d, 0x57, 0xa4, 0xe7, 0x45, 0x5a };
         Bytes out;
-        auto tag = ByteBuffer::create_uninitialized(16);
+        auto tag = ByteBuffer::create_uninitialized(16).release_value();
         cipher.encrypt({}, out, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b.bytes(), {}, tag);
         if (memcmp(result_tag, tag.data(), tag.size()) != 0) {
             FAIL(Invalid auth tag);
@@ -1064,8 +1064,8 @@ static void aes_gcm_test_encrypt()
         Crypto::Cipher::AESCipher::GCMMode cipher("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b, 128, Crypto::Cipher::Intent::Encryption);
         u8 result_tag[] { 0xab, 0x6e, 0x47, 0xd4, 0x2c, 0xec, 0x13, 0xbd, 0xf5, 0x3a, 0x67, 0xb2, 0x12, 0x57, 0xbd, 0xdf };
         u8 result_ct[] { 0x03, 0x88, 0xda, 0xce, 0x60, 0xb6, 0xa3, 0x92, 0xf3, 0x28, 0xc2, 0xb9, 0x71, 0xb2, 0xfe, 0x78 };
-        auto tag = ByteBuffer::create_uninitialized(16);
-        auto out = ByteBuffer::create_uninitialized(16);
+        auto tag = ByteBuffer::create_uninitialized(16).release_value();
+        auto out = ByteBuffer::create_uninitialized(16).release_value();
         auto out_bytes = out.bytes();
         cipher.encrypt("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b.bytes(), out_bytes, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b.bytes(), {}, tag);
         if (memcmp(result_ct, out.data(), out.size()) != 0) {
@@ -1082,8 +1082,8 @@ static void aes_gcm_test_encrypt()
         Crypto::Cipher::AESCipher::GCMMode cipher("\xfe\xff\xe9\x92\x86\x65\x73\x1c\x6d\x6a\x8f\x94\x67\x30\x83\x08"_b, 128, Crypto::Cipher::Intent::Encryption);
         u8 result_tag[] { 0x4d, 0x5c, 0x2a, 0xf3, 0x27, 0xcd, 0x64, 0xa6, 0x2c, 0xf3, 0x5a, 0xbd, 0x2b, 0xa6, 0xfa, 0xb4 };
         u8 result_ct[] { 0x42, 0x83, 0x1e, 0xc2, 0x21, 0x77, 0x74, 0x24, 0x4b, 0x72, 0x21, 0xb7, 0x84, 0xd0, 0xd4, 0x9c, 0xe3, 0xaa, 0x21, 0x2f, 0x2c, 0x02, 0xa4, 0xe0, 0x35, 0xc1, 0x7e, 0x23, 0x29, 0xac, 0xa1, 0x2e, 0x21, 0xd5, 0x14, 0xb2, 0x54, 0x66, 0x93, 0x1c, 0x7d, 0x8f, 0x6a, 0x5a, 0xac, 0x84, 0xaa, 0x05, 0x1b, 0xa3, 0x0b, 0x39, 0x6a, 0x0a, 0xac, 0x97, 0x3d, 0x58, 0xe0, 0x91, 0x47, 0x3f, 0x59, 0x85 };
-        auto tag = ByteBuffer::create_uninitialized(16);
-        auto out = ByteBuffer::create_uninitialized(64);
+        auto tag = ByteBuffer::create_uninitialized(16).release_value();
+        auto out = ByteBuffer::create_uninitialized(64).release_value();
         auto out_bytes = out.bytes();
         cipher.encrypt(
             "\xd9\x31\x32\x25\xf8\x84\x06\xe5\xa5\x59\x09\xc5\xaf\xf5\x26\x9a\x86\xa7\xa9\x53\x15\x34\xf7\xda\x2e\x4c\x30\x3d\x8a\x31\x8a\x72\x1c\x3c\x0c\x95\x95\x68\x09\x53\x2f\xcf\x0e\x24\x49\xa6\xb5\x25\xb1\x6a\xed\xf5\xaa\x0d\xe6\x57\xba\x63\x7b\x39\x1a\xaf\xd2\x55"_b.bytes(),
@@ -1105,8 +1105,8 @@ static void aes_gcm_test_encrypt()
         Crypto::Cipher::AESCipher::GCMMode cipher("\xfe\xff\xe9\x92\x86\x65\x73\x1c\x6d\x6a\x8f\x94\x67\x30\x83\x08"_b, 128, Crypto::Cipher::Intent::Encryption);
         u8 result_tag[] { 0x93, 0xae, 0x16, 0x97, 0x49, 0xa3, 0xbf, 0x39, 0x4f, 0x61, 0xb7, 0xc1, 0xb1, 0x2, 0x4f, 0x60 };
         u8 result_ct[] { 0x42, 0x83, 0x1e, 0xc2, 0x21, 0x77, 0x74, 0x24, 0x4b, 0x72, 0x21, 0xb7, 0x84, 0xd0, 0xd4, 0x9c, 0xe3, 0xaa, 0x21, 0x2f, 0x2c, 0x02, 0xa4, 0xe0, 0x35, 0xc1, 0x7e, 0x23, 0x29, 0xac, 0xa1, 0x2e, 0x21, 0xd5, 0x14, 0xb2, 0x54, 0x66, 0x93, 0x1c, 0x7d, 0x8f, 0x6a, 0x5a, 0xac, 0x84, 0xaa, 0x05, 0x1b, 0xa3, 0x0b, 0x39, 0x6a, 0x0a, 0xac, 0x97, 0x3d, 0x58, 0xe0, 0x91, 0x47, 0x3f, 0x59, 0x85 };
-        auto tag = ByteBuffer::create_uninitialized(16);
-        auto out = ByteBuffer::create_uninitialized(64);
+        auto tag = ByteBuffer::create_uninitialized(16).release_value();
+        auto out = ByteBuffer::create_uninitialized(64).release_value();
         auto out_bytes = out.bytes();
         cipher.encrypt(
             "\xd9\x31\x32\x25\xf8\x84\x06\xe5\xa5\x59\x09\xc5\xaf\xf5\x26\x9a\x86\xa7\xa9\x53\x15\x34\xf7\xda\x2e\x4c\x30\x3d\x8a\x31\x8a\x72\x1c\x3c\x0c\x95\x95\x68\x09\x53\x2f\xcf\x0e\x24\x49\xa6\xb5\x25\xb1\x6a\xed\xf5\xaa\x0d\xe6\x57\xba\x63\x7b\x39\x1a\xaf\xd2\x55"_b.bytes(),
@@ -1146,7 +1146,7 @@ static void aes_gcm_test_decrypt()
         u8 input_tag[] { 0xab, 0x6e, 0x47, 0xd4, 0x2c, 0xec, 0x13, 0xbd, 0xf5, 0x3a, 0x67, 0xb2, 0x12, 0x57, 0xbd, 0xdf };
         u8 input_ct[] { 0x03, 0x88, 0xda, 0xce, 0x60, 0xb6, 0xa3, 0x92, 0xf3, 0x28, 0xc2, 0xb9, 0x71, 0xb2, 0xfe, 0x78 };
         u8 result_pt[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-        auto out = ByteBuffer::create_uninitialized(16);
+        auto out = ByteBuffer::create_uninitialized(16).release_value();
         auto out_bytes = out.bytes();
         auto consistency = cipher.decrypt({ input_ct, 16 }, out_bytes, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b.bytes(), {}, { input_tag, 16 });
         if (consistency != Crypto::VerificationConsistency::Consistent) {
@@ -1163,7 +1163,7 @@ static void aes_gcm_test_decrypt()
         u8 input_tag[] { 0x4d, 0x5c, 0x2a, 0xf3, 0x27, 0xcd, 0x64, 0xa6, 0x2c, 0xf3, 0x5a, 0xbd, 0x2b, 0xa6, 0xfa, 0xb4 };
         u8 input_ct[] { 0x42, 0x83, 0x1e, 0xc2, 0x21, 0x77, 0x74, 0x24, 0x4b, 0x72, 0x21, 0xb7, 0x84, 0xd0, 0xd4, 0x9c, 0xe3, 0xaa, 0x21, 0x2f, 0x2c, 0x02, 0xa4, 0xe0, 0x35, 0xc1, 0x7e, 0x23, 0x29, 0xac, 0xa1, 0x2e, 0x21, 0xd5, 0x14, 0xb2, 0x54, 0x66, 0x93, 0x1c, 0x7d, 0x8f, 0x6a, 0x5a, 0xac, 0x84, 0xaa, 0x05, 0x1b, 0xa3, 0x0b, 0x39, 0x6a, 0x0a, 0xac, 0x97, 0x3d, 0x58, 0xe0, 0x91, 0x47, 0x3f, 0x59, 0x85 };
         u8 result_pt[] { 0xd9, 0x31, 0x32, 0x25, 0xf8, 0x84, 0x06, 0xe5, 0xa5, 0x59, 0x09, 0xc5, 0xaf, 0xf5, 0x26, 0x9a, 0x86, 0xa7, 0xa9, 0x53, 0x15, 0x34, 0xf7, 0xda, 0x2e, 0x4c, 0x30, 0x3d, 0x8a, 0x31, 0x8a, 0x72, 0x1c, 0x3c, 0x0c, 0x95, 0x95, 0x68, 0x09, 0x53, 0x2f, 0xcf, 0x0e, 0x24, 0x49, 0xa6, 0xb5, 0x25, 0xb1, 0x6a, 0xed, 0xf5, 0xaa, 0x0d, 0xe6, 0x57, 0xba, 0x63, 0x7b, 0x39, 0x1a, 0xaf, 0xd2, 0x55 };
-        auto out = ByteBuffer::create_uninitialized(64);
+        auto out = ByteBuffer::create_uninitialized(64).release_value();
         auto out_bytes = out.bytes();
 
         auto consistency = cipher.decrypt(
@@ -1186,7 +1186,7 @@ static void aes_gcm_test_decrypt()
         u8 input_tag[] { 0x93, 0xae, 0x16, 0x97, 0x49, 0xa3, 0xbf, 0x39, 0x4f, 0x61, 0xb7, 0xc1, 0xb1, 0x2, 0x4f, 0x60 };
         u8 input_ct[] { 0x42, 0x83, 0x1e, 0xc2, 0x21, 0x77, 0x74, 0x24, 0x4b, 0x72, 0x21, 0xb7, 0x84, 0xd0, 0xd4, 0x9c, 0xe3, 0xaa, 0x21, 0x2f, 0x2c, 0x02, 0xa4, 0xe0, 0x35, 0xc1, 0x7e, 0x23, 0x29, 0xac, 0xa1, 0x2e, 0x21, 0xd5, 0x14, 0xb2, 0x54, 0x66, 0x93, 0x1c, 0x7d, 0x8f, 0x6a, 0x5a, 0xac, 0x84, 0xaa, 0x05, 0x1b, 0xa3, 0x0b, 0x39, 0x6a, 0x0a, 0xac, 0x97, 0x3d, 0x58, 0xe0, 0x91, 0x47, 0x3f, 0x59, 0x85 };
         u8 result_pt[] { 0xd9, 0x31, 0x32, 0x25, 0xf8, 0x84, 0x06, 0xe5, 0xa5, 0x59, 0x09, 0xc5, 0xaf, 0xf5, 0x26, 0x9a, 0x86, 0xa7, 0xa9, 0x53, 0x15, 0x34, 0xf7, 0xda, 0x2e, 0x4c, 0x30, 0x3d, 0x8a, 0x31, 0x8a, 0x72, 0x1c, 0x3c, 0x0c, 0x95, 0x95, 0x68, 0x09, 0x53, 0x2f, 0xcf, 0x0e, 0x24, 0x49, 0xa6, 0xb5, 0x25, 0xb1, 0x6a, 0xed, 0xf5, 0xaa, 0x0d, 0xe6, 0x57, 0xba, 0x63, 0x7b, 0x39, 0x1a, 0xaf, 0xd2, 0x55 };
-        auto out = ByteBuffer::create_uninitialized(64);
+        auto out = ByteBuffer::create_uninitialized(64).release_value();
         auto out_bytes = out.bytes();
         auto consistency = cipher.decrypt(
             { input_ct, 64 },
@@ -1207,7 +1207,7 @@ static void aes_gcm_test_decrypt()
         Crypto::Cipher::AESCipher::GCMMode cipher("\xfe\xff\xe9\x92\x86\x65\x73\x1c\x6d\x6a\x8f\x94\x67\x30\x83\x08"_b, 128, Crypto::Cipher::Intent::Encryption);
         u8 input_tag[] { 0x94, 0xae, 0x16, 0x97, 0x49, 0xa3, 0xbf, 0x39, 0x4f, 0x61, 0xb7, 0xc1, 0xb1, 0x2, 0x4f, 0x60 };
         u8 input_ct[] { 0x42, 0x83, 0x1e, 0xc2, 0x21, 0x77, 0x74, 0x24, 0x4b, 0x72, 0x21, 0xb7, 0x84, 0xd0, 0xd4, 0x9c, 0xe3, 0xaa, 0x21, 0x2f, 0x2c, 0x02, 0xa4, 0xe0, 0x35, 0xc1, 0x7e, 0x23, 0x29, 0xac, 0xa1, 0x2e, 0x21, 0xd5, 0x14, 0xb2, 0x54, 0x66, 0x93, 0x1c, 0x7d, 0x8f, 0x6a, 0x5a, 0xac, 0x84, 0xaa, 0x05, 0x1b, 0xa3, 0x0b, 0x39, 0x6a, 0x0a, 0xac, 0x97, 0x3d, 0x58, 0xe0, 0x91, 0x47, 0x3f, 0x59, 0x85 };
-        auto out = ByteBuffer::create_uninitialized(64);
+        auto out = ByteBuffer::create_uninitialized(64).release_value();
         auto out_bytes = out.bytes();
         auto consistency = cipher.decrypt(
             { input_ct, 64 },
@@ -2012,7 +2012,7 @@ static void tls_test_client_hello()
     RefPtr<TLS::TLSv12> tls = TLS::TLSv12::construct(nullptr);
     tls->set_root_certificates(s_root_ca_certificates);
     bool sent_request = false;
-    ByteBuffer contents = ByteBuffer::create_uninitialized(0);
+    ByteBuffer contents;
     tls->on_tls_ready_to_write = [&](TLS::TLSv12& tls) {
         if (sent_request)
             return;

@@ -946,7 +946,12 @@ static bool uncompress_bmp_rle_data(BMPLoadingContext& context, ByteBuffer& buff
         dbgln("Suspiciously large amount of RLE data");
         return false;
     }
-    buffer = ByteBuffer::create_zeroed(buffer_size);
+    auto buffer_result = ByteBuffer::create_zeroed(buffer_size);
+    if (!buffer_result.has_value()) {
+        dbgln("Not enough memory for buffer allocation");
+        return false;
+    }
+    buffer = buffer_result.release_value();
 
     // Avoid as many if statements as possible by pulling out
     // compression-dependent actions into separate lambdas

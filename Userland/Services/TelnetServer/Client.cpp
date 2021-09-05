@@ -150,7 +150,7 @@ void Client::send_command(Command command)
 
 void Client::send_commands(Vector<Command> commands)
 {
-    auto buffer = ByteBuffer::create_uninitialized(commands.size() * 3);
+    auto buffer = ByteBuffer::create_uninitialized(commands.size() * 3).release_value(); // FIXME: Handle possible OOM situation.
     OutputMemoryStream stream { buffer };
 
     for (auto& command : commands)

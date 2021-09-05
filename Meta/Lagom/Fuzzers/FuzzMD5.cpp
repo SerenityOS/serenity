@@ -10,7 +10,6 @@
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    auto buffer = ByteBuffer::copy(data, size);
-    Crypto::Hash::MD5::hash(buffer);
+    Crypto::Hash::MD5::hash(data, size);
     return 0;
 }

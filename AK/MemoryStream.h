@@ -224,7 +224,7 @@ public:
         size_t nwritten = 0;
         while (bytes.size() - nwritten > 0) {
             if ((m_write_offset + nwritten) % chunk_size == 0)
-                m_chunks.append(ByteBuffer::create_uninitialized(chunk_size));
+                m_chunks.append(ByteBuffer::create_uninitialized(chunk_size).release_value()); // FIXME: Handle possible OOM situation.
 
             nwritten += bytes.slice(nwritten).copy_trimmed_to(m_chunks.last().bytes().slice((m_write_offset + nwritten) % chunk_size));
         }
@@ -241,7 +241,8 @@ public:
 
     ByteBuffer copy_into_contiguous_buffer() const
     {
-        auto buffer = ByteBuffer::create_uninitialized(size());
+        // FIXME: Handle possible OOM situation.
+        auto buffer = ByteBuffer::create_uninitialized(size()).release_value();
 
         const auto nread = read_without_consuming(buffer);
         VERIFY(nread == buffer.size());

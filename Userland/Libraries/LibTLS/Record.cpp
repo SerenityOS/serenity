@@ -97,7 +97,12 @@ void TLSv12::update_packet(ByteBuffer& packet)
 
             if (m_context.crypto.created == 1) {
                 // `buffer' will continue to be encrypted
-                auto buffer = ByteBuffer::create_uninitialized(length);
+                auto buffer_result = ByteBuffer::create_uninitialized(length);
+                if (!buffer_result.has_value()) {
+                    dbgln("LibTLS: Failed to allocate enough memory");
+                    VERIFY_NOT_REACHED();
+                }
+                auto buffer = buffer_result.release_value();
                 size_t buffer_position = 0;
                 auto iv_size = iv_length();
 
@@ -112,7 +117,12 @@ void TLSv12::update_packet(ByteBuffer& packet)
                     [&](Crypto::Cipher::AESCipher::GCMMode& gcm) {
                         VERIFY(is_aead());
                         // We need enough space for a header, the data, a tag, and the IV
-                        ct = ByteBuffer::create_uninitialized(length + header_size + iv_size + 16);
+                        auto ct_buffer_result = ByteBuffer::create_uninitialized(length + header_size + iv_size + 16);
+                        if (!ct_buffer_result.has_value()) {
+                            dbgln("LibTLS: Failed to allocate enough memory for the ciphertext");
+                            VERIFY_NOT_REACHED();
+                        }
+                        ct = ct_buffer_result.release_value();
 
                         // copy the header over
                         ct.overwrite(0, packet.data(), header_size - 2);
@@ -161,7 +171,12 @@ void TLSv12::update_packet(ByteBuffer& packet)
                     [&](Crypto::Cipher::AESCipher::CBCMode& cbc) {
                         VERIFY(!is_aead());
                         // We need enough space for a header, iv_length bytes of IV and whatever the packet contains
-                        ct = ByteBuffer::create_uninitialized(length + header_size + iv_size);
+                        auto ct_buffer_result = ByteBuffer::create_uninitialized(length + header_size + iv_size);
+                        if (!ct_buffer_result.has_value()) {
+                            dbgln("LibTLS: Failed to allocate enough memory for the ciphertext");
+                            VERIFY_NOT_REACHED();
+                        }
+                        ct = ct_buffer_result.release_value();
 
                         // copy the header over
                         ct.overwrite(0, packet.data(), header_size - 2);
@@ -179,7 +194,12 @@ void TLSv12::update_packet(ByteBuffer& packet)
 
                         VERIFY(buffer_position == buffer.size());
 
-                        auto iv = ByteBuffer::create_uninitialized(iv_size);
+                        auto iv_buffer_result = ByteBuffer::create_uninitialized(iv_size);
+                        if (!iv_buffer_result.has_value()) {
+                            dbgln("LibTLS: Failed to allocate memory for IV");
+                            VERIFY_NOT_REACHED();
+                        }
+                        auto iv = iv_buffer_result.release_value();
                         fill_with_random(iv.data(), iv.size());
 
                         // write it into the ciphertext portion of the message
@@ -266,14 +286,18 @@ ByteBuffer TLSv12::hmac_message(const ReadonlyBytes& buf, const Optional<Readonl
         hmac.update(buf2.value());
     }
     auto digest = hmac.digest();
-    auto mac = ByteBuffer::copy(digest.immutable_data(), digest.data_length());
+    auto mac_result = ByteBuffer::copy(digest.immutable_data(), digest.data_length());
+    if (!mac_result.has_value()) {
+        dbgln("Failed to calculate message HMAC: Not enough memory");
+        return {};
+    }
 
     if constexpr (TLS_DEBUG) {
         dbgln("HMAC of the block for sequence number {}", sequence_number);
-        print_buffer(mac);
+        print_buffer(*mac_result);
     }
 
-    return mac;
+    return mac_result.release_value();
 }
 
 ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
@@ -336,7 +360,13 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
 
                 auto packet_length = length - iv_length() - 16;
                 auto payload = plain;
-                decrypted = ByteBuffer::create_uninitialized(packet_length);
+                auto decrypted_result = ByteBuffer::create_uninitialized(packet_length);
+                if (!decrypted_result.has_value()) {
+                    dbgln("Failed to allocate memory for the packet");
+                    return_value = Error::DecryptionFailed;
+                    return;
+                }
+                decrypted = decrypted_result.release_value();
 
                 // AEAD AAD (13)
                 // Seq. no (8)
@@ -394,7 +424,13 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
                 VERIFY(!is_aead());
                 auto iv_size = iv_length();
 
-                decrypted = cbc.create_aligned_buffer(length - iv_size);
+                auto decrypted_result = cbc.create_aligned_buffer(length - iv_size);
+                if (!decrypted_result.has_value()) {
+                    dbgln("Failed to allocate memory for the packet");
+                    return_value = Error::DecryptionFailed;
+                    return;
+                }
+                decrypted = decrypted_result.release_value();
                 auto iv = buffer.slice(header_size, iv_size);
 
                 Bytes decrypted_span = decrypted;

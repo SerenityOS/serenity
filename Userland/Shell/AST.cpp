@@ -1589,7 +1589,13 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
                             return Break;
                         }
                 } else {
-                    auto entry = ByteBuffer::create_uninitialized(line_end + ifs.length());
+                    auto entry_result = ByteBuffer::create_uninitialized(line_end + ifs.length());
+                    if (!entry_result.has_value()) {
+                        loop.quit(Break);
+                        notifier->set_enabled(false);
+                        return Break;
+                    }
+                    auto entry = entry_result.release_value();
                     auto rc = stream.read_or_error(entry);
                     VERIFY(rc);
 
@@ -1675,7 +1681,12 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
             } while (action == Continue);
 
             if (!stream.eof()) {
-                auto entry = ByteBuffer::create_uninitialized(stream.size());
+                auto entry_result = ByteBuffer::create_uninitialized(stream.size());
+                if (!entry_result.has_value()) {
+                    shell->raise_error(Shell::ShellError::OutOfMemory, {}, position());
+                    return;
+                }
+                auto entry = entry_result.release_value();
                 auto rc = stream.read_or_error(entry);
                 VERIFY(rc);
                 callback(make_ref_counted<StringValue>(String::copy(entry)));

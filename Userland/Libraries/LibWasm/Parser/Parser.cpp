@@ -738,7 +738,10 @@ ParseResult<CustomSection> CustomSection::parse(InputStream& stream)
     if (name.is_error())
         return name.error();
 
-    auto data_buffer = ByteBuffer::create_uninitialized(64);
+    ByteBuffer data_buffer;
+    if (!data_buffer.try_resize(64))
+        return ParseError::OutOfMemory;
+
     while (!stream.has_any_error() && !stream.unreliable_eof()) {
         char buf[16];
         auto size = stream.read({ buf, 16 });
@@ -1413,6 +1416,8 @@ String parse_error_to_string(ParseError error)
         return "The parser encountered an unimplemented feature";
     case ParseError::HugeAllocationRequested:
         return "Parsing caused an attempt to allocate a very big chunk of memory, likely malformed data";
+    case ParseError::OutOfMemory:
+        return "The parser hit an OOM condition";
     case ParseError::ExpectedFloatingImmediate:
         return "Expected a floating point immediate";
     case ParseError::ExpectedSignedImmediate:

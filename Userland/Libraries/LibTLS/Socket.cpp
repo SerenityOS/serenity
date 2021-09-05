@@ -15,9 +15,8 @@ namespace TLS {
 Optional<ByteBuffer> TLSv12::read()
 {
     if (m_context.application_buffer.size()) {
-        auto buf = m_context.application_buffer.slice(0, m_context.application_buffer.size());
-        m_context.application_buffer.clear();
-        return buf;
+        auto buf = move(m_context.application_buffer);
+        return { move(buf) };
     }
     return {};
 }
@@ -47,10 +46,18 @@ String TLSv12::read_line(size_t max_size)
     if (offset > max_size)
         return {};
 
-    auto buffer = ByteBuffer::copy(start, offset);
+    auto buffer_result = ByteBuffer::copy(start, offset);
+    if (!buffer_result.has_value()) {
+        dbgln("TLS: Failed to read line, not enough memory");
+        dbgln("max_size < offset: {} < {} (size = {})", max_size, offset, m_context.application_buffer.size());
+        dbgln("-> {:32hex-dump}", ReadonlyBytes { start, offset });
+        return {};
+    }
+
+    String line { bit_cast<char const*>(start), offset, Chomp };
     m_context.application_buffer = m_context.application_buffer.slice(offset + 1, m_context.application_buffer.size() - offset - 1);
 
-    return String::copy(buffer, Chomp);
+    return line;
 }
 
 bool TLSv12::write(ReadonlyBytes buffer)

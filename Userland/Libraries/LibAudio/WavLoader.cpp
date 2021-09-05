@@ -69,7 +69,10 @@ RefPtr<Buffer> WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_i
         bytes_to_read, m_num_channels, m_sample_rate,
         pcm_bits_per_sample(m_sample_format), sample_format_name(m_sample_format));
 
-    ByteBuffer sample_data = ByteBuffer::create_zeroed(bytes_to_read);
+    auto sample_data_result = ByteBuffer::create_zeroed(bytes_to_read);
+    if (!sample_data_result.has_value())
+        return nullptr;
+    auto sample_data = sample_data_result.release_value();
     m_stream->read_or_error(sample_data.bytes());
     if (m_stream->handle_any_error()) {
         return nullptr;
@@ -244,17 +247,17 @@ bool WavLoaderPlugin::parse_header()
     while (true) {
         search_byte = read_u8();
         CHECK_OK("Reading byte searching for data");
-        if (search_byte != 0x64) //D
+        if (search_byte != 0x64) // D
             continue;
 
         search_byte = read_u8();
         CHECK_OK("Reading next byte searching for data");
-        if (search_byte != 0x61) //A
+        if (search_byte != 0x61) // A
             continue;
 
         u16 search_remaining = read_u16();
         CHECK_OK("Reading remaining bytes searching for data");
-        if (search_remaining != 0x6174) //TA
+        if (search_remaining != 0x6174) // TA
             continue;
 
         data_sz = read_u32();

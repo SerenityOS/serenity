@@ -58,7 +58,8 @@ Result<NonnullOwnPtr<GUIDPartitionTable>, PartitionTable::Error> GUIDPartitionTa
 GUIDPartitionTable::GUIDPartitionTable(const StorageDevice& device)
     : MBRPartitionTable(device)
 {
-    m_cached_header = ByteBuffer::create_zeroed(m_device->block_size());
+    // FIXME: Handle OOM failure here.
+    m_cached_header = ByteBuffer::create_zeroed(m_device->block_size()).release_value();
     VERIFY(partitions_count() == 0);
     if (!initialize())
         m_valid = false;
@@ -87,7 +88,12 @@ bool GUIDPartitionTable::initialize()
         return false;
     }
 
-    auto entries_buffer = ByteBuffer::create_zeroed(m_device->block_size());
+    auto entries_buffer_result = ByteBuffer::create_zeroed(m_device->block_size());
+    if (!entries_buffer_result.has_value()) {
+        dbgln("GUIPartitionTable: not enough memory for entries buffer");
+        return false;
+    }
+    auto entries_buffer = entries_buffer_result.release_value();
     auto raw_entries_buffer = UserOrKernelBuffer::for_kernel_buffer(entries_buffer.data());
     size_t raw_byte_index = header().partition_array_start_lba * m_device->block_size();
     for (size_t entry_index = 0; entry_index < header().entries_count; entry_index++) {

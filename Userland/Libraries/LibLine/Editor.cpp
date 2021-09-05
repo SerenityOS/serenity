@@ -185,7 +185,7 @@ Editor::Editor(Configuration configuration)
     : m_configuration(move(configuration))
 {
     m_always_refresh = m_configuration.refresh_behaviour == Configuration::RefreshBehaviour::Eager;
-    m_pending_chars = ByteBuffer::create_uninitialized(0);
+    m_pending_chars = {};
     get_terminal_size();
     m_suggestion_display = make<XtermSuggestionDisplay>(m_num_lines, m_num_columns);
 }

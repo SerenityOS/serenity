@@ -85,7 +85,7 @@ BENCHMARK_CASE(fairly_big_data)
 {
     constexpr auto num_rows = 100000u;
     constexpr auto line = "well,hello,friends,1,2,3,4,5,6,7,8,pizza,guacamole\n"sv;
-    auto buf = ByteBuffer::create_uninitialized((line.length() * num_rows) + 1);
+    auto buf = ByteBuffer::create_uninitialized((line.length() * num_rows) + 1).release_value();
     buf[buf.size() - 1] = '\0';
 
     for (size_t row = 0; row <= num_rows; ++row) {

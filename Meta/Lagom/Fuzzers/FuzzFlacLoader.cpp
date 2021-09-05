@@ -10,7 +10,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    auto flac_data = ByteBuffer::copy(data, size);
+    auto flac_data = ByteBuffer::copy(data, size).release_value();
     auto flac = make<Audio::FlacLoaderPlugin>(flac_data);
 
     if (!flac->sniff())

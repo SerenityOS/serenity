@@ -2106,6 +2106,8 @@ Value ArrayExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
     InterpreterNodeScope node_scope { interpreter, *this };
 
     auto* array = Array::create(global_object, 0);
+    array->indexed_properties();
+    size_t index = 0;
     for (auto& element : m_elements) {
         auto value = Value();
         if (element) {
@@ -2115,7 +2117,7 @@ Value ArrayExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
 
             if (is<SpreadExpression>(*element)) {
                 get_iterator_values(global_object, value, [&](Value iterator_value) {
-                    array->indexed_properties().append(iterator_value);
+                    array->indexed_properties().put(index++, iterator_value, default_attributes);
                     return IterationDecision::Continue;
                 });
                 if (interpreter.exception())
@@ -2123,7 +2125,7 @@ Value ArrayExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
                 continue;
             }
         }
-        array->indexed_properties().append(value);
+        array->indexed_properties().put(index++, value, default_attributes);
     }
     return array;
 }

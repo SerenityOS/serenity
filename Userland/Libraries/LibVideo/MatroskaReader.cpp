@@ -404,18 +404,27 @@ OwnPtr<Block> MatroskaReader::parse_simple_block()
 
         for (int i = 0; i < frame_count; i++) {
             auto current_frame_size = frame_sizes.at(i);
-            block->add_frame(ByteBuffer::copy(m_streamer.data(), current_frame_size));
+            auto frame_result = ByteBuffer::copy(m_streamer.data(), current_frame_size);
+            if (!frame_result.has_value())
+                return {};
+            block->add_frame(frame_result.release_value());
             m_streamer.drop_octets(current_frame_size);
         }
     } else if (block->lacing() == Block::Lacing::FixedSize) {
         auto frame_count = m_streamer.read_octet() + 1;
         auto individual_frame_size = total_frame_content_size / frame_count;
         for (int i = 0; i < frame_count; i++) {
-            block->add_frame(ByteBuffer::copy(m_streamer.data(), individual_frame_size));
+            auto frame_result = ByteBuffer::copy(m_streamer.data(), individual_frame_size);
+            if (!frame_result.has_value())
+                return {};
+            block->add_frame(frame_result.release_value());
             m_streamer.drop_octets(individual_frame_size);
         }
     } else {
-        block->add_frame(ByteBuffer::copy(m_streamer.data(), total_frame_content_size));
+        auto frame_result = ByteBuffer::copy(m_streamer.data(), total_frame_content_size);
+        if (!frame_result.has_value())
+            return {};
+        block->add_frame(frame_result.release_value());
         m_streamer.drop_octets(total_frame_content_size);
     }
     return block;
