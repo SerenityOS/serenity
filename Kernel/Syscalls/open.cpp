@@ -39,16 +39,11 @@ KResultOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> u
     // Ignore everything except permission bits.
     mode &= 0777;
 
-    auto path = get_syscall_path_argument(params.path);
-    if (path.is_error())
-        return path.error();
+    auto path = TRY(get_syscall_path_argument(params.path));
 
-    dbgln_if(IO_DEBUG, "sys$open(dirfd={}, path='{}', options={}, mode={})", dirfd, path.value()->view(), options, mode);
+    dbgln_if(IO_DEBUG, "sys$open(dirfd={}, path='{}', options={}, mode={})", dirfd, path->view(), options, mode);
 
-    auto fd_or_error = m_fds.allocate();
-    if (fd_or_error.is_error())
-        return fd_or_error.error();
-    auto new_fd = fd_or_error.release_value();
+    auto fd_allocation = TRY(m_fds.allocate());
     RefPtr<Custody> base;
     if (dirfd == AT_FDCWD) {
         base = current_directory();
@@ -63,17 +58,14 @@ KResultOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> u
         base = base_description->custody();
     }
 
-    auto result = VirtualFileSystem::the().open(path.value()->view(), options, mode & ~umask(), *base);
-    if (result.is_error())
-        return result.error();
-    auto description = result.value();
+    auto description = TRY(VirtualFileSystem::the().open(path->view(), options, mode & ~umask(), *base));
 
     if (description->inode() && description->inode()->socket())
         return ENXIO;
 
     u32 fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
-    m_fds[new_fd.fd].set(move(description), fd_flags);
-    return new_fd.fd;
+    m_fds[fd_allocation.fd].set(move(description), fd_flags);
+    return fd_allocation.fd;
 }
 
 KResultOr<FlatPtr> Process::sys$close(int fd)
