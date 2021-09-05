@@ -72,7 +72,7 @@ private:
     UserID m_uid { 0 };
     GroupID m_gid { 0 };
 
-    Spinlock<u8> m_requests_lock;
+    Spinlock m_requests_lock;
     DoublyLinkedList<RefPtr<AsyncDeviceRequest>> m_requests;
 };
 

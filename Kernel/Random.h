@@ -81,7 +81,7 @@ public:
         return is_seeded() || m_p0_len >= reseed_threshold;
     }
 
-    Spinlock<u8>& get_lock() { return m_lock; }
+    Spinlock& get_lock() { return m_lock; }
 
 private:
     void reseed()
@@ -107,7 +107,7 @@ private:
     size_t m_p0_len { 0 };
     ByteBuffer m_key;
     HashType m_pools[pool_count];
-    Spinlock<u8> m_lock;
+    Spinlock m_lock;
 };
 
 class KernelRng : public Lockable<FortunaPRNG<Crypto::Cipher::AESCipher, Crypto::Hash::SHA256, 256>> {
@@ -121,7 +121,7 @@ public:
 
     void wake_if_ready();
 
-    Spinlock<u8>& get_lock() { return resource().get_lock(); }
+    Spinlock& get_lock() { return resource().get_lock(); }
 
 private:
     WaitQueue m_seed_queue;

@@ -35,7 +35,7 @@ public:
     bool has_buffer() const { return m_buffer != nullptr; }
     void buffer_add_pc(u64 pc);
 
-    Spinlock<u8> lock;
+    Spinlock lock;
     enum {
         UNUSED = 0,
         OPENED = 1,

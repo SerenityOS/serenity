@@ -77,7 +77,7 @@ private:
         return mode == Mode::Exclusive ? m_blocked_threads_list_exclusive : m_blocked_threads_list_shared;
     }
 
-    void block(Thread&, Mode, SpinlockLocker<Spinlock<u8>>&, u32);
+    void block(Thread&, Mode, SpinlockLocker<Spinlock>&, u32);
     void unblock_waiters(Mode);
 
     StringView m_name;
@@ -98,7 +98,7 @@ private:
     BlockedThreadList m_blocked_threads_list_exclusive;
     BlockedThreadList m_blocked_threads_list_shared;
 
-    mutable Spinlock<u8> m_lock;
+    mutable Spinlock m_lock;
 };
 
 class MutexLocker {
