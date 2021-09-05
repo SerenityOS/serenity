@@ -59,14 +59,8 @@ KResultOr<FlatPtr> Process::sys$set_coredump_metadata(Userspace<const Syscall::S
         return EINVAL;
     if (params.value.length > 16 * KiB)
         return EINVAL;
-    auto key_or_error = try_copy_kstring_from_user(params.key);
-    if (key_or_error.is_error())
-        return key_or_error.error();
-    auto key = key_or_error.release_value();
-    auto value_or_error = try_copy_kstring_from_user(params.value);
-    if (value_or_error.is_error())
-        return value_or_error.error();
-    auto value = value_or_error.release_value();
+    auto key = TRY(try_copy_kstring_from_user(params.key));
+    auto value = TRY(try_copy_kstring_from_user(params.value));
     return set_coredump_property(move(key), move(value));
 }
 
