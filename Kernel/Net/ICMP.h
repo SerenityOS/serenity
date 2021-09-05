@@ -40,7 +40,7 @@ private:
     // NOTE: The rest of the header is 4 bytes
 };
 
-static_assert(sizeof(ICMPHeader) == 4);
+static_assert(AssertSize<ICMPHeader, 4>());
 
 struct [[gnu::packed]] ICMPEchoPacket {
     ICMPHeader header;

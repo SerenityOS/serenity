@@ -132,8 +132,8 @@ private:
     u64 m_raw;
 };
 
-static_assert(sizeof(PageDirectoryEntry) == 8);
-static_assert(sizeof(PageTableEntry) == 8);
+static_assert(AssertSize<PageDirectoryEntry, 8>());
+static_assert(AssertSize<PageTableEntry, 8>());
 
 class PageDirectoryPointerTable {
 public:

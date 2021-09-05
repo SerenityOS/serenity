@@ -121,7 +121,7 @@ struct [[gnu::packed]] RegisterState {
 #else
 #    define REGISTER_STATE_SIZE (22 * 8)
 #endif
-static_assert(REGISTER_STATE_SIZE == sizeof(RegisterState));
+static_assert(AssertSize<RegisterState, REGISTER_STATE_SIZE>());
 
 inline void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_regs, const RegisterState& kernel_regs)
 {

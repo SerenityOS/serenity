@@ -59,7 +59,7 @@ private:
         static constexpr u16 LargeSend = 0x800u;
     };
 
-    static_assert(sizeof(TXDescriptor) == 16u);
+    static_assert(AssertSize<TXDescriptor, 16u>());
 
     struct [[gnu::packed]] RXDescriptor {
         volatile u16 buffer_size; // top 2 bits are reserved
@@ -83,7 +83,7 @@ private:
         static constexpr u16 CRCError = 0x8;
     };
 
-    static_assert(sizeof(RXDescriptor) == 16u);
+    static_assert(AssertSize<RXDescriptor, 16u>());
 
     enum class ChipVersion : u8 {
         Unknown = 0,

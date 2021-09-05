@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <Kernel/VirtualAddress.h>
 
@@ -100,7 +101,7 @@ union [[gnu::packed]] Descriptor {
     }
 };
 
-static_assert(sizeof(Descriptor) == 8);
+static_assert(AssertSize<Descriptor, 8>());
 
 enum class IDTEntryType {
     TaskGate32 = 0b0101,
@@ -174,6 +175,6 @@ struct [[gnu::packed]] IDTEntry
 };
 // clang-format on
 
-static_assert(sizeof(IDTEntry) == 2 * sizeof(void*));
+static_assert(AssertSize<IDTEntry, 2 * sizeof(void*)>());
 
 }
