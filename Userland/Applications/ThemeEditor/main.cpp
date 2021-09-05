@@ -13,40 +13,28 @@
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/ItemListModel.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
-#include <LibGUI/Model.h>
 #include <LibGUI/Window.h>
 #include <unistd.h>
 
-class ColorRoleModel final : public GUI::Model {
+class ColorRoleModel final : public GUI::ItemListModel<Gfx::ColorRole> {
 public:
-    virtual int row_count(const GUI::ModelIndex&) const { return m_color_roles.size(); }
-    virtual int column_count(const GUI::ModelIndex&) const { return 1; }
-    virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role = GUI::ModelRole::Display) const
+    explicit ColorRoleModel(const Vector<Gfx::ColorRole>& data)
+        : ItemListModel<Gfx::ColorRole>(data)
+    {
+    }
+
+    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
     {
         if (role == GUI::ModelRole::Display)
-            return Gfx::to_string(m_color_roles[(size_t)index.row()]);
-        return {};
-    }
+            return Gfx::to_string(m_data[(size_t)index.row()]);
+        if (role == GUI::ModelRole::Custom)
+            return m_data[(size_t)index.row()];
 
-    explicit ColorRoleModel(const Vector<Gfx::ColorRole>& color_roles)
-        : m_color_roles(color_roles)
-    {
+        return ItemListModel::data(index, role);
     }
-
-    Gfx::ColorRole color_role(const GUI::ModelIndex& index) const
-    {
-        return m_color_roles[index.row()];
-    }
-
-    Gfx::ColorRole color_role(size_t index) const
-    {
-        return m_color_roles[index];
-    }
-
-private:
-    const Vector<Gfx::ColorRole>& m_color_roles;
 };
 
 int main(int argc, char** argv)
@@ -142,14 +130,14 @@ int main(int argc, char** argv)
     combo_box.set_only_allow_values_from_model(true);
     combo_box.set_model(adopt_ref(*new ColorRoleModel(color_roles)));
     combo_box.on_change = [&](auto&, auto& index) {
-        auto role = static_cast<const ColorRoleModel*>(index.model())->color_role(index);
+        auto role = index.model()->data(index, GUI::ModelRole::Custom).to_color_role();
         color_input.set_color(preview_palette.color(role));
     };
 
     combo_box.set_selected_index((size_t)Gfx::ColorRole::Window - 1);
 
     color_input.on_change = [&] {
-        auto role = static_cast<const ColorRoleModel*>(combo_box.model())->color_role(combo_box.selected_index());
+        auto role = combo_box.model()->index(combo_box.selected_index()).data(GUI::ModelRole::Custom).to_color_role();
         preview_palette.set_color(role, color_input.color());
         preview_widget.set_preview_palette(preview_palette);
     };
