@@ -30,22 +30,14 @@ KResultOr<NonnullRefPtr<FileDescription>> FileDescription::try_create(Custody& c
     auto description = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FileDescription(move(inode_file))));
 
     description->m_custody = custody;
-    auto result = description->attach();
-    if (result.is_error()) {
-        dbgln_if(FILEDESCRIPTION_DEBUG, "Failed to create file description for custody: {}", result);
-        return result;
-    }
+    TRY(description->attach());
     return description;
 }
 
 KResultOr<NonnullRefPtr<FileDescription>> FileDescription::try_create(File& file)
 {
     auto description = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FileDescription(file)));
-    auto result = description->attach();
-    if (result.is_error()) {
-        dbgln_if(FILEDESCRIPTION_DEBUG, "Failed to create file description for file: {}", result);
-        return result;
-    }
+    TRY(description->attach());
     return description;
 }
 
