@@ -753,6 +753,15 @@ bool is_locale_available([[maybe_unused]] StringView locale)
 #endif
 }
 
+Optional<Locale> locale_from_string([[maybe_unused]] StringView locale)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::locale_from_string(locale);
+#else
+    return {};
+#endif
+}
+
 Optional<StringView> get_locale_language_mapping([[maybe_unused]] StringView locale, [[maybe_unused]] StringView language)
 {
 #if ENABLE_UNICODE_DATA
