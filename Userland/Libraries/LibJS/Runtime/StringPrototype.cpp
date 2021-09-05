@@ -14,6 +14,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/StringIterator.h>
@@ -22,6 +23,7 @@
 #include <LibJS/Runtime/Utf16String.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibUnicode/CharacterTypes.h>
+#include <LibUnicode/Locale.h>
 #include <string.h>
 
 namespace JS {
@@ -372,27 +374,72 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
     return index.has_value() ? Value(*index) : Value(-1);
 }
 
-// 22.1.3.24 String.prototype.toLocaleLowerCase ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-string.prototype.tolocalelowercase
-// NOTE: This is the minimum toLocaleLowerCase implementation for engines without ECMA-402.
+static Optional<String> resolve_best_locale(GlobalObject& global_object, Value locales)
+{
+    // For details on these steps, see https://tc39.es/ecma402/#sup-string.prototype.tolocalelowercase
+    auto& vm = global_object.vm();
+
+    // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
+    auto requested_locales = Intl::canonicalize_locale_list(global_object, locales);
+    if (vm.exception())
+        return {};
+
+    Optional<Unicode::LocaleID> requested_locale;
+
+    // 4. If requestedLocales is not an empty List, then
+    if (!requested_locales.is_empty()) {
+        // a. Let requestedLocale be requestedLocales[0].
+        requested_locale = Unicode::parse_unicode_locale_id(requested_locales[0]);
+    }
+    // 5. Else,
+    else {
+        // a. Let requestedLocale be DefaultLocale().
+        requested_locale = Unicode::parse_unicode_locale_id(Unicode::default_locale());
+    }
+    VERIFY(requested_locale.has_value());
+
+    // 6. Let noExtensionsLocale be the String value that is requestedLocale with any Unicode locale extension sequences (6.2.1) removed.
+    requested_locale->remove_extension_type<Unicode::LocaleExtension>();
+    auto no_extensions_locale = requested_locale->to_string();
+
+    // 7. Let availableLocales be a List with language tags that includes the languages for which the Unicode Character Database contains language sensitive case mappings. Implementations may add additional language tags if they support case mapping for additional locales.
+    // 8. Let locale be BestAvailableLocale(availableLocales, noExtensionsLocale).
+    auto locale = Intl::best_available_locale(no_extensions_locale);
+
+    // 9. If locale is undefined, let locale be "und".
+    if (!locale.has_value())
+        locale = "und"sv;
+
+    return locale;
+}
+
+// 18.1.2 String.prototype.toLocaleLowerCase ( [ locales ] ), https://tc39.es/ecma402/#sup-string.prototype.tolocalelowercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_lowercase)
 {
     auto string = ak_string_from(vm, global_object);
     if (!string.has_value())
         return {};
 
-    auto lowercase = Unicode::to_unicode_lowercase_full(*string);
+    auto locale = resolve_best_locale(global_object, vm.argument(0));
+    if (!locale.has_value())
+        return {};
+
+    auto lowercase = Unicode::to_unicode_lowercase_full(*string, *locale);
     return js_string(vm, move(lowercase));
 }
 
-// 22.1.3.25 String.prototype.toLocaleUpperCase ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-string.prototype.tolocaleuppercase
-// NOTE: This is the minimum toLocaleUpperCase implementation for engines without ECMA-402.
+// 18.1.3 String.prototype.toLocaleUpperCase ( [ locales ] ), https://tc39.es/ecma402/#sup-string.prototype.tolocaleuppercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_uppercase)
 {
     auto string = ak_string_from(vm, global_object);
     if (!string.has_value())
         return {};
 
-    auto uppercase = Unicode::to_unicode_uppercase_full(*string);
+    auto locale = resolve_best_locale(global_object, vm.argument(0));
+    if (!locale.has_value())
+        return {};
+
+    auto uppercase = Unicode::to_unicode_uppercase_full(*string, *locale);
     return js_string(vm, move(uppercase));
 }
 
