@@ -233,6 +233,7 @@ public:
         InvalidGlobError,
         InvalidSliceContentsError,
         OpenFailure,
+        OutOfMemory,
     };
 
     void raise_error(ShellError kind, String description, Optional<AST::Position> position = {})

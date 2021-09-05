@@ -73,7 +73,10 @@ KResultOr<size_t> StorageDevice::read(FileDescription&, u64 offset, UserOrKernel
     off_t pos = whole_blocks * block_size();
 
     if (remaining > 0) {
-        auto data = ByteBuffer::create_uninitialized(block_size());
+        auto data_result = ByteBuffer::create_uninitialized(block_size());
+        if (!data_result.has_value())
+            return ENOMEM;
+        auto data = data_result.release_value();
         auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data.data());
         auto read_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index + whole_blocks, 1, data_buffer, block_size());
         auto result = read_request->wait();
@@ -141,7 +144,8 @@ KResultOr<size_t> StorageDevice::write(FileDescription&, u64 offset, const UserO
     // partial write, we have to read the block's content first, modify it,
     // then write the whole block back to the disk.
     if (remaining > 0) {
-        auto data = ByteBuffer::create_zeroed(block_size());
+        // FIXME: Do something sensible with this OOM scenario.
+        auto data = ByteBuffer::create_zeroed(block_size()).release_value();
         auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data.data());
 
         {

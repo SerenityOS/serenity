@@ -127,7 +127,12 @@ int main(int argc, char** argv)
     }
 
     for (;;) {
-        ByteBuffer ping_packet = ByteBuffer::create_zeroed(sizeof(struct icmphdr) + payload_size);
+        auto ping_packet_result = ByteBuffer::create_zeroed(sizeof(struct icmphdr) + payload_size);
+        if (!ping_packet_result.has_value()) {
+            warnln("failed to allocate a large enough buffer for the ping packet");
+            return 1;
+        }
+        auto& ping_packet = ping_packet_result.value();
         struct icmphdr* ping_hdr = reinterpret_cast<struct icmphdr*>(ping_packet.data());
         ping_hdr->type = ICMP_ECHO;
         ping_hdr->code = 0;
@@ -157,7 +162,12 @@ int main(int argc, char** argv)
 
         for (;;) {
             // FIXME: IPv4 headers are not actually fixed-size, handle other sizes.
-            ByteBuffer pong_packet = ByteBuffer::create_uninitialized(sizeof(struct ip) + sizeof(struct icmphdr) + payload_size);
+            auto pong_packet_result = ByteBuffer::create_uninitialized(sizeof(struct ip) + sizeof(struct icmphdr) + payload_size);
+            if (!pong_packet_result.has_value()) {
+                warnln("failed to allocate a large enough buffer for the pong packet");
+                return 1;
+            }
+            auto& pong_packet = pong_packet_result.value();
             struct icmphdr* pong_hdr = reinterpret_cast<struct icmphdr*>(pong_packet.data() + sizeof(struct ip));
             socklen_t peer_address_size = sizeof(peer_address);
             rc = recvfrom(fd, pong_packet.data(), pong_packet.size(), 0, (struct sockaddr*)&peer_address, &peer_address_size);

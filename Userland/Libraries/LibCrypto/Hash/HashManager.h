@@ -83,18 +83,18 @@ public:
 
     Manager()
     {
-        m_pre_init_buffer = ByteBuffer::create_zeroed(0);
+        m_pre_init_buffer = ByteBuffer();
     }
 
     Manager(const Manager& other) // NOT a copy constructor!
     {
-        m_pre_init_buffer = ByteBuffer::create_zeroed(0); // will not be used
+        m_pre_init_buffer = ByteBuffer(); // will not be used
         initialize(other.m_kind);
     }
 
     Manager(HashKind kind)
     {
-        m_pre_init_buffer = ByteBuffer::create_zeroed(0);
+        m_pre_init_buffer = ByteBuffer();
         initialize(kind);
     }
 

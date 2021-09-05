@@ -87,7 +87,8 @@ ByteBuffer decode_base64(const StringView& input)
             output.append(out2);
     }
 
-    return ByteBuffer::copy(output.data(), output.size());
+    // FIXME: Handle OOM failure.
+    return ByteBuffer::copy(output).release_value();
 }
 
 String encode_base64(ReadonlyBytes input)

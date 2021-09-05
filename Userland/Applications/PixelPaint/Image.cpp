@@ -56,7 +56,7 @@ void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect) con
     }
 }
 
-RefPtr<Gfx::Bitmap> Image::try_decode_bitmap(ByteBuffer const& bitmap_data)
+RefPtr<Gfx::Bitmap> Image::try_decode_bitmap(ReadonlyBytes const& bitmap_data)
 {
     // Spawn a new ImageDecoder service process and connect to it.
     auto client = ImageDecoderClient::Client::construct();

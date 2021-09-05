@@ -36,6 +36,7 @@ enum class ParseError {
     InvalidTag,
     InvalidType,
     HugeAllocationRequested,
+    OutOfMemory,
     // FIXME: This should not exist!
     NotImplemented,
 };

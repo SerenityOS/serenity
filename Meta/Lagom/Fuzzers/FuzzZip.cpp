@@ -10,8 +10,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    ByteBuffer zip_data = ByteBuffer::copy(data, size);
-    auto zip_file = Archive::Zip::try_create(zip_data);
+    auto zip_file = Archive::Zip::try_create({ data, size });
     if (!zip_file.has_value())
         return 0;
 

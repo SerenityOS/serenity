@@ -192,7 +192,12 @@ void TLSv12::build_rsa_pre_master_secret(PacketBuilder& builder)
         *(u16*)random_bytes = AK::convert_between_host_and_network_endian((u16)Version::V12);
     }
 
-    m_context.premaster_key = ByteBuffer::copy(random_bytes, bytes);
+    auto premaster_key_result = ByteBuffer::copy(random_bytes, bytes);
+    if (!premaster_key_result.has_value()) {
+        dbgln("RSA premaster key generation failed, not enough memory");
+        return;
+    }
+    m_context.premaster_key = premaster_key_result.release_value();
 
     const auto& certificate_option = verify_chain_and_get_matching_certificate(m_context.extensions.SNI); // if the SNI is empty, we'll make a special case and match *a* leaf certificate.
     if (!certificate_option.has_value()) {
@@ -239,11 +244,21 @@ void TLSv12::build_dhe_rsa_pre_master_secret(PacketBuilder& builder)
 
     auto dh_random = Crypto::NumberTheory::random_number(0, dh_p);
     auto dh_Yc = Crypto::NumberTheory::ModularPower(dh_g, dh_random, dh_p);
-    auto dh_Yc_bytes = ByteBuffer::create_uninitialized(dh_key_size);
+    auto dh_Yc_bytes_result = ByteBuffer::create_uninitialized(dh_key_size);
+    if (!dh_Yc_bytes_result.has_value()) {
+        dbgln("Failed to build DHE_RSA premaster secret: not enough memory");
+        return;
+    }
+    auto dh_Yc_bytes = dh_Yc_bytes_result.release_value();
     dh_Yc.export_data(dh_Yc_bytes);
 
     auto premaster_key = Crypto::NumberTheory::ModularPower(dh_Ys, dh_random, dh_p);
-    m_context.premaster_key = ByteBuffer::create_uninitialized(dh_key_size);
+    auto premaster_key_result = ByteBuffer::create_uninitialized(dh_key_size);
+    if (!premaster_key_result.has_value()) {
+        dbgln("Failed to build DHE_RSA premaster secret: not enough memory");
+        return;
+    }
+    m_context.premaster_key = premaster_key_result.release_value();
     premaster_key.export_data(m_context.premaster_key, true);
 
     dh.p.clear();

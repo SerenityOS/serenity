@@ -66,8 +66,14 @@ public:
 
     void encrypt(const ReadonlyBytes& in, Bytes out, const ReadonlyBytes& iv_in, const ReadonlyBytes& aad, Bytes tag)
     {
-        auto iv_buf = ByteBuffer::copy(iv_in.data(), iv_in.size());
-        auto iv = iv_buf.bytes();
+        auto iv_buf_result = ByteBuffer::copy(iv_in);
+        // Not enough memory to figure out :shrug:
+        if (!iv_buf_result.has_value()) {
+            dbgln("GCM::encrypt: Not enough memory to allocate {} bytes for IV", iv_in.size());
+            return;
+        }
+
+        auto iv = iv_buf_result->bytes();
 
         // Increment the IV for block 0
         CTR<T>::increment(iv);
@@ -90,8 +96,12 @@ public:
 
     VerificationConsistency decrypt(ReadonlyBytes in, Bytes out, ReadonlyBytes iv_in, ReadonlyBytes aad, ReadonlyBytes tag)
     {
-        auto iv_buf = ByteBuffer::copy(iv_in.data(), iv_in.size());
-        auto iv = iv_buf.bytes();
+        auto iv_buf_result = ByteBuffer::copy(iv_in);
+        // Not enough memory to figure out :shrug:
+        if (!iv_buf_result.has_value())
+            return VerificationConsistency::Inconsistent;
+
+        auto iv = iv_buf_result->bytes();
 
         // Increment the IV for block 0
         CTR<T>::increment(iv);
