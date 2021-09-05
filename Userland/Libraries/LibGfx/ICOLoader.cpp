@@ -23,7 +23,7 @@ struct ICONDIR {
     u16 must_be_1 = 0;
     u16 image_count = 0;
 };
-static_assert(sizeof(ICONDIR) == 6);
+static_assert(AssertSize<ICONDIR, 6>());
 
 struct ICONDIRENTRY {
     u8 width;
@@ -35,7 +35,7 @@ struct ICONDIRENTRY {
     u32 size;
     u32 offset;
 };
-static_assert(sizeof(ICONDIRENTRY) == 16);
+static_assert(AssertSize<ICONDIRENTRY, 16>());
 
 struct [[gnu::packed]] BMPFILEHEADER {
     u8 signature[2];

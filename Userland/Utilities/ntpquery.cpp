@@ -46,7 +46,7 @@ struct [[gnu::packed]] NtpPacket {
     uint8_t version_number() const { return (li_vn_mode >> 3) & 7; }
     uint8_t mode() const { return li_vn_mode & 7; }
 };
-static_assert(sizeof(NtpPacket) == 48);
+static_assert(AssertSize<NtpPacket, 48>());
 
 // NTP measures time in seconds since 1900-01-01, POSIX in seconds since 1970-01-01.
 // 1900 wasn't a leap year, so there are 70/4 leap years between 1900 and 1970.

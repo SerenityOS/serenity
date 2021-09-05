@@ -36,7 +36,7 @@ struct PNG_IHDR {
     u8 interlace_method { 0 };
 };
 
-static_assert(sizeof(PNG_IHDR) == 13);
+static_assert(AssertSize<PNG_IHDR, 13>());
 
 struct Scanline {
     u8 filter { 0 };
@@ -211,7 +211,7 @@ union [[gnu::packed]] Pixel {
         u8 a;
     };
 };
-static_assert(sizeof(Pixel) == 4);
+static_assert(AssertSize<Pixel, 4>());
 
 template<bool has_alpha, u8 filter_type>
 ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, const void* dummy_scanline_data)
