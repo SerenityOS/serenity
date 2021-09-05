@@ -46,11 +46,9 @@ KResultOr<NonnullRefPtr<FileDescription>> PTYMultiplexer::open(int options)
         if (!master)
             return ENOMEM;
         dbgln_if(PTMX_DEBUG, "PTYMultiplexer::open: Vending master {}", master->index());
-        auto description = FileDescription::try_create(*master);
-        if (!description.is_error()) {
-            description.value()->set_rw_mode(options);
-            description.value()->set_file_flags(options);
-        }
+        auto description = TRY(FileDescription::try_create(*master));
+        description->set_rw_mode(options);
+        description->set_file_flags(options);
         return description;
     });
 }
