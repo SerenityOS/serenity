@@ -155,6 +155,49 @@ TEST_CASE(to_unicode_lowercase_special_casing_sigma)
     EXPECT_EQ(result, "a\u180E\u03C3\u180Eb");
 }
 
+TEST_CASE(to_unicode_lowercase_special_casing_i)
+{
+    // LATIN CAPITAL LETTER I
+    auto result = Unicode::to_unicode_lowercase_full("I"sv, "en"sv);
+    EXPECT_EQ(result, "i"sv);
+
+    result = Unicode::to_unicode_lowercase_full("I"sv, "az"sv);
+    EXPECT_EQ(result, "\u0131"sv);
+
+    result = Unicode::to_unicode_lowercase_full("I"sv, "tr"sv);
+    EXPECT_EQ(result, "\u0131"sv);
+
+    // LATIN CAPITAL LETTER I WITH DOT ABOVE
+    result = Unicode::to_unicode_lowercase_full("\u0130"sv, "en"sv);
+    EXPECT_EQ(result, "\u0069\u0307"sv);
+
+    result = Unicode::to_unicode_lowercase_full("\u0130"sv, "az"sv);
+    EXPECT_EQ(result, "i"sv);
+
+    result = Unicode::to_unicode_lowercase_full("\u0130"sv, "tr"sv);
+    EXPECT_EQ(result, "i"sv);
+
+    // LATIN CAPITAL LETTER I followed by COMBINING DOT ABOVE
+    result = Unicode::to_unicode_lowercase_full("I\u0307"sv, "en"sv);
+    EXPECT_EQ(result, "i\u0307"sv);
+
+    result = Unicode::to_unicode_lowercase_full("I\u0307"sv, "az"sv);
+    EXPECT_EQ(result, "i"sv);
+
+    result = Unicode::to_unicode_lowercase_full("I\u0307"sv, "tr"sv);
+    EXPECT_EQ(result, "i"sv);
+
+    // LATIN CAPITAL LETTER I followed by combining class 0 and COMBINING DOT ABOVE
+    result = Unicode::to_unicode_lowercase_full("IA\u0307"sv, "en"sv);
+    EXPECT_EQ(result, "ia\u0307"sv);
+
+    result = Unicode::to_unicode_lowercase_full("IA\u0307"sv, "az"sv);
+    EXPECT_EQ(result, "\u0131a\u0307"sv);
+
+    result = Unicode::to_unicode_lowercase_full("IA\u0307"sv, "tr"sv);
+    EXPECT_EQ(result, "\u0131a\u0307"sv);
+}
+
 TEST_CASE(to_unicode_uppercase_unconditional_special_casing)
 {
     // LATIN SMALL LETTER SHARP S
