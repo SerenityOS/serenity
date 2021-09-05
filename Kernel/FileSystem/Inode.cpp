@@ -49,15 +49,11 @@ KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(FileDescription* descriptio
 {
     KBufferBuilder builder;
 
-    size_t nread;
     u8 buffer[4096];
     off_t offset = 0;
     for (;;) {
         auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer);
-        auto result = read_bytes(offset, sizeof(buffer), buf, description);
-        if (result.is_error())
-            return result.error();
-        nread = result.value();
+        auto nread = TRY(read_bytes(offset, sizeof(buffer), buf, description));
         VERIFY(nread <= sizeof(buffer));
         if (nread == 0)
             break;
@@ -78,11 +74,7 @@ KResultOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Custody& base, RefPtr<C
     // The default implementation simply treats the stored
     // contents as a path and resolves that. That is, it
     // behaves exactly how you would expect a symlink to work.
-    auto contents_or = read_entire();
-    if (contents_or.is_error())
-        return contents_or.error();
-
-    auto& contents = contents_or.value();
+    auto contents = TRY(read_entire());
     auto path = StringView(contents->data(), contents->size());
     return VirtualFileSystem::the().resolve_path(path, base, out_parent, options, symlink_recursion_level);
 }
@@ -324,19 +316,15 @@ KResult Inode::can_apply_flock(FileDescription const& description, flock const& 
 
 KResult Inode::apply_flock(Process const& process, FileDescription const& description, Userspace<flock const*> input_lock)
 {
-    flock new_lock;
+    flock new_lock = {};
     if (!copy_from_user(&new_lock, input_lock))
         return EFAULT;
 
-    auto rc = normalize_flock(description, new_lock);
-    if (rc.is_error())
-        return rc;
+    TRY(normalize_flock(description, new_lock));
 
     MutexLocker locker(m_inode_lock);
 
-    rc = can_apply_flock(description, new_lock);
-    if (rc.is_error())
-        return rc;
+    TRY(can_apply_flock(description, new_lock));
 
     if (new_lock.l_type == F_UNLCK) {
         for (size_t i = 0; i < m_flocks.size(); ++i) {
@@ -354,13 +342,11 @@ KResult Inode::apply_flock(Process const& process, FileDescription const& descri
 
 KResult Inode::get_flock(FileDescription const& description, Userspace<flock*> reference_lock) const
 {
-    flock lookup;
+    flock lookup = {};
     if (!copy_from_user(&lookup, reference_lock))
         return EFAULT;
 
-    auto rc = normalize_flock(description, lookup);
-    if (rc.is_error())
-        return rc;
+    TRY(normalize_flock(description, lookup));
 
     MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
 
