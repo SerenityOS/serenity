@@ -4,14 +4,24 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Try.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/RingBuffer.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel::Memory {
 
-RingBuffer::RingBuffer(String region_name, size_t capacity)
-    : m_region(MM.allocate_contiguous_kernel_region(page_round_up(capacity), move(region_name), Region::Access::Read | Region::Access::Write).release_value())
+KResultOr<NonnullOwnPtr<RingBuffer>> RingBuffer::try_create(String region_name, size_t capacity)
+{
+    auto region = TRY(MM.allocate_contiguous_kernel_region(page_round_up(capacity), move(region_name), Region::Access::Read | Region::Access::Write));
+    auto ring_buffer = adopt_own_if_nonnull(new RingBuffer(move(region), capacity));
+    if (!ring_buffer)
+        return ENOMEM;
+    return ring_buffer.release_nonnull();
+}
+
+RingBuffer::RingBuffer(NonnullOwnPtr<Memory::Region>&& region, size_t capacity)
+    : m_region(move(region))
     , m_capacity_in_bytes(capacity)
 {
 }
