@@ -12,11 +12,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::do_statvfs(String path, statvfs* buf)
 {
-    auto custody_or_error = VirtualFileSystem::the().resolve_path(path, current_directory(), nullptr, 0);
-    if (custody_or_error.is_error())
-        return custody_or_error.error();
-
-    auto& custody = custody_or_error.value();
+    auto custody = TRY(VirtualFileSystem::the().resolve_path(path, current_directory(), nullptr, 0));
     auto& inode = custody->inode();
     auto& fs = inode.fs();
 
@@ -71,11 +67,8 @@ KResultOr<FlatPtr> Process::sys$statvfs(Userspace<const Syscall::SC_statvfs_para
     REQUIRE_PROMISE(rpath);
     auto params = TRY(copy_typed_from_user(user_params));
 
-    auto path = get_syscall_path_argument(params.path);
-    if (path.is_error())
-        return path.error();
-
-    return do_statvfs(path.value()->view(), params.buf);
+    auto path = TRY(get_syscall_path_argument(params.path));
+    return do_statvfs(path->view(), params.buf);
 }
 
 KResultOr<FlatPtr> Process::sys$fstatvfs(int fd, statvfs* buf)
