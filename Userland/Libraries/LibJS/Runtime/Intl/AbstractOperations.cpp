@@ -274,11 +274,9 @@ static MatcherResult lookup_matcher(Vector<String> const& requested_locales)
         auto locale_id = Unicode::parse_unicode_locale_id(locale);
         VERIFY(locale_id.has_value());
 
-        auto extensions = move(locale_id->extensions);
-        locale_id->private_use_extensions.clear();
-
         // a. Let noExtensionsLocale be the String value that is locale with any Unicode locale extension sequences removed.
-        auto no_extensions_locale = JS::Intl::canonicalize_unicode_locale_id(*locale_id);
+        auto extensions = locale_id->remove_extension_type<Unicode::LocaleExtension>();
+        auto no_extensions_locale = locale_id->to_string();
 
         // b. Let availableLocale be BestAvailableLocale(availableLocales, noExtensionsLocale).
         auto available_locale = best_available_locale(no_extensions_locale);
@@ -292,7 +290,7 @@ static MatcherResult lookup_matcher(Vector<String> const& requested_locales)
             if (locale != no_extensions_locale) {
                 // 1. Let extension be the String value consisting of the substring of the Unicode locale extension sequence within locale.
                 // 2. Set result.[[extension]] to extension.
-                result.extensions = move(extensions);
+                result.extensions.extend(move(extensions));
             }
 
             // iii. Return result.
