@@ -14,7 +14,11 @@ unsigned Console::next_device_id = 0;
 
 UNMAP_AFTER_INIT RefPtr<Console> Console::try_create(PCI::Address address)
 {
-    auto console = adopt_ref_if_nonnull(new Console(address));
+    auto control_receive_buffer = Memory::RingBuffer::try_create("VirtIOConsole control receive queue", CONTROL_BUFFER_SIZE);
+    auto control_transmit_buffer = Memory::RingBuffer::try_create("VirtIOConsole control transmit queue", CONTROL_BUFFER_SIZE);
+    if ((!control_receive_buffer.is_error()) || (control_transmit_buffer.is_error()))
+        return {};
+    auto console = adopt_ref_if_nonnull(new Console(address, control_receive_buffer.release_value(), control_transmit_buffer.release_value()));
     if (!console)
         return {};
     if (!console->initialize())
@@ -64,9 +68,11 @@ UNMAP_AFTER_INIT bool Console::initialize()
     return true;
 }
 
-UNMAP_AFTER_INIT Console::Console(PCI::Address address)
+UNMAP_AFTER_INIT Console::Console(PCI::Address address, NonnullOwnPtr<Memory::RingBuffer>&& control_transmit_buffer, NonnullOwnPtr<Memory::RingBuffer>&& control_receive_buffer)
     : VirtIO::Device(address)
     , m_device_id(next_device_id++)
+    , m_control_transmit_buffer(move(control_transmit_buffer))
+    , m_control_receive_buffer(move(control_receive_buffer))
 {
 }
 
@@ -125,9 +131,6 @@ void Console::handle_queue_update(u16 queue_index)
 
 void Console::setup_multiport()
 {
-    m_control_receive_buffer = Memory::RingBuffer::try_create("VirtIOConsole control receive queue", CONTROL_BUFFER_SIZE).release_value();
-    m_control_transmit_buffer = Memory::RingBuffer::try_create("VirtIOConsole control transmit queue", CONTROL_BUFFER_SIZE).release_value();
-
     auto& queue = get_queue(CONTROL_RECEIVEQ);
     SpinlockLocker queue_lock(queue.lock());
     QueueChain chain(queue);

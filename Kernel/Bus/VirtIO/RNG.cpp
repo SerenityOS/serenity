@@ -11,7 +11,10 @@ namespace Kernel::VirtIO {
 
 UNMAP_AFTER_INIT RefPtr<RNG> RNG::try_create(PCI::Address address)
 {
-    auto rng = adopt_ref_if_nonnull(new RNG(address));
+    auto entropy_buffer = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIO::RNG", Memory::Region::Access::ReadWrite);
+    if (entropy_buffer.is_error())
+        return {};
+    auto rng = adopt_ref_if_nonnull(new RNG(address, entropy_buffer.release_value()));
     if (!rng)
         return {};
     if (!rng->initialize())
@@ -31,17 +34,15 @@ UNMAP_AFTER_INIT bool RNG::initialize()
     }
     if (success) {
         finish_init();
-        m_entropy_buffer = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIO::RNG", Memory::Region::Access::ReadWrite).release_value();
-        if (m_entropy_buffer) {
-            memset(m_entropy_buffer->vaddr().as_ptr(), 0, m_entropy_buffer->size());
-            request_entropy_from_host();
-        }
+        memset(m_entropy_buffer->vaddr().as_ptr(), 0, m_entropy_buffer->size());
+        request_entropy_from_host();
     }
     return true;
 }
 
-UNMAP_AFTER_INIT RNG::RNG(PCI::Address address)
+UNMAP_AFTER_INIT RNG::RNG(PCI::Address address, NonnullOwnPtr<Memory::Region>&& entropy_buffer_region)
     : VirtIO::Device(address)
+    , m_entropy_buffer(move(entropy_buffer_region))
 {
 }
 

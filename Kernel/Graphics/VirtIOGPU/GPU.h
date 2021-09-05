@@ -80,7 +80,7 @@ public:
     void flush_dirty_rectangle(ScanoutID, Protocol::Rect const& dirty_rect, ResourceID);
 
 private:
-    explicit GPU(PCI::Address);
+    GPU(PCI::Address, NonnullOwnPtr<Memory::Region>&&);
     virtual StringView class_name() const override { return "VirtIOGPU"; }
 
     struct Scanout {
@@ -124,7 +124,7 @@ private:
     // Synchronous commands
     WaitQueue m_outstanding_request;
     Mutex m_operation_lock;
-    OwnPtr<Memory::Region> m_scratch_space;
+    NonnullOwnPtr<Memory::Region> m_scratch_space;
 };
 
 }
