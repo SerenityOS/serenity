@@ -244,7 +244,7 @@ private:
     bool m_in_use;                                   // Has this TD been allocated (and therefore in use)?
 };
 
-static_assert(sizeof(TransferDescriptor) == 32); // Transfer Descriptor is always 8 Dwords
+static_assert(AssertSize<TransferDescriptor, 32>()); // Transfer Descriptor is always 8 Dwords
 
 //
 // Queue Head
@@ -361,5 +361,5 @@ private:
     bool m_in_use { false };                          // Is this QH currently in use?
 };
 
-static_assert(sizeof(QueueHead) == 32); // Queue Head is always 8 Dwords
+static_assert(AssertSize<QueueHead, 32>()); // Queue Head is always 8 Dwords
 }

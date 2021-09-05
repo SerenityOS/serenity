@@ -102,7 +102,7 @@ private:
     void* m_base { nullptr };
     void* m_end { nullptr };
 
-    static_assert(sizeof(FreeSlab) == templated_slab_size);
+    static_assert(AssertSize<FreeSlab, templated_slab_size>());
 };
 
 static SlabAllocator<16> s_slab_allocator_16;

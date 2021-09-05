@@ -811,7 +811,7 @@ public:
 // It's not expected that the Process object will expand further because the first
 // page is used for all unprotected values (which should be plenty of space for them).
 // The second page is being used exclusively for write-protected values.
-static_assert(sizeof(Process) == (PAGE_SIZE * 2));
+static_assert(AssertSize<Process, (PAGE_SIZE * 2)>());
 
 extern RecursiveSpinlock g_profiling_lock;
 
