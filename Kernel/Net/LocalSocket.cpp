@@ -50,15 +50,8 @@ KResultOr<NonnullRefPtr<LocalSocket>> LocalSocket::try_create(int type)
 
 KResultOr<SocketPair> LocalSocket::try_create_connected_pair(int type)
 {
-    auto socket_or_error = LocalSocket::try_create(type);
-    if (socket_or_error.is_error())
-        return socket_or_error.error();
-
-    auto socket = socket_or_error.release_value();
-
-    auto description1_result = FileDescription::try_create(*socket);
-    if (description1_result.is_error())
-        return description1_result.error();
+    auto socket = TRY(LocalSocket::try_create(type));
+    auto description1 = TRY(FileDescription::try_create(*socket));
 
     if (auto result = socket->try_set_path("[socketpair]"sv); result.is_error())
         return result;
@@ -68,11 +61,9 @@ KResultOr<SocketPair> LocalSocket::try_create_connected_pair(int type)
     socket->set_connect_side_role(Role::Connected);
     socket->set_role(Role::Accepted);
 
-    auto description2_result = FileDescription::try_create(*socket);
-    if (description2_result.is_error())
-        return description2_result.error();
+    auto description2 = TRY(FileDescription::try_create(*socket));
 
-    return SocketPair { description1_result.release_value(), description2_result.release_value() };
+    return SocketPair { move(description1), move(description2) };
 }
 
 LocalSocket::LocalSocket(int type, NonnullOwnPtr<DoubleBuffer> client_buffer, NonnullOwnPtr<DoubleBuffer> server_buffer)
