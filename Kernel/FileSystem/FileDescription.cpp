@@ -74,11 +74,8 @@ FileDescription::~FileDescription()
 
 KResult FileDescription::attach()
 {
-    if (m_inode) {
-        auto result = m_inode->attach(*this);
-        if (result.is_error())
-            return result;
-    }
+    if (m_inode)
+        TRY(m_inode->attach(*this));
     return m_file->attach(*this);
 }
 
