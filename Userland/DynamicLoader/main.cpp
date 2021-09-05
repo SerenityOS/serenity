@@ -57,8 +57,8 @@ this helper program directly.
 extern "C" {
 
 // The compiler expects a previous declaration
-void _start(int, char**, char**);
-void _entry(int, char**, char**);
+void _start(int, char**, char**) __attribute__((used));
+void _entry(int, char**, char**) __attribute__((used));
 
 NAKED void _start(int, char**, char**)
 {

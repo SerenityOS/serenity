@@ -19,8 +19,8 @@ extern size_t __stack_chk_guard;
 int main(int, char**, char**);
 
 // Tell the compiler that this may be called from somewhere else.
-int _entry(int argc, char** argv, char** env);
-void _start(int, char**, char**);
+int _entry(int argc, char** argv, char** env) __attribute__((used));
+void _start(int, char**, char**) __attribute__((used));
 
 NAKED void _start(int, char**, char**)
 {
