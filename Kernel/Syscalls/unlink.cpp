@@ -14,10 +14,8 @@ KResultOr<FlatPtr> Process::sys$unlink(Userspace<const char*> user_path, size_t 
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(cpath);
-    auto path = get_syscall_path_argument(user_path, path_length);
-    if (path.is_error())
-        return path.error();
-    return VirtualFileSystem::the().unlink(path.value()->view(), current_directory());
+    auto path = TRY(get_syscall_path_argument(user_path, path_length));
+    return VirtualFileSystem::the().unlink(path->view(), current_directory());
 }
 
 }
