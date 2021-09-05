@@ -18,17 +18,13 @@ namespace Kernel::USB {
 
 KResultOr<NonnullRefPtr<Device>> Device::try_create(USBController const& controller, u8 port, DeviceSpeed speed)
 {
-    auto pipe_or_error = Pipe::try_create_pipe(controller, Pipe::Type::Control, Pipe::Direction::Bidirectional, 0, 8, 0);
-    if (pipe_or_error.is_error())
-        return pipe_or_error.error();
+    auto pipe = TRY(Pipe::try_create_pipe(controller, Pipe::Type::Control, Pipe::Direction::Bidirectional, 0, 8, 0));
 
-    auto device = try_make_ref_counted<Device>(controller, port, speed, pipe_or_error.release_value());
+    auto device = try_make_ref_counted<Device>(controller, port, speed, move(pipe));
     if (!device)
         return ENOMEM;
 
-    auto enumerate_result = device->enumerate_device();
-    if (enumerate_result.is_error())
-        return enumerate_result;
+    TRY(device->enumerate_device());
 
     return device.release_nonnull();
 }
@@ -71,12 +67,7 @@ KResult Device::enumerate_device()
 
     // Send 8-bytes to get at least the `max_packet_size` from the device
     constexpr u8 short_device_descriptor_length = 8;
-    auto transfer_length_or_error = m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_DEVICE << 8), 0, short_device_descriptor_length, &dev_descriptor);
-
-    if (transfer_length_or_error.is_error())
-        return transfer_length_or_error.error();
-
-    auto transfer_length = transfer_length_or_error.release_value();
+    auto transfer_length = TRY(m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_DEVICE << 8), 0, short_device_descriptor_length, &dev_descriptor));
 
     // FIXME: This be "not equal to" instead of "less than", but control transfers report a higher transfer length than expected.
     if (transfer_length < short_device_descriptor_length) {
@@ -99,12 +90,7 @@ KResult Device::enumerate_device()
     VERIFY(dev_descriptor.descriptor_header.descriptor_type == DESCRIPTOR_TYPE_DEVICE);
     m_default_pipe->set_max_packet_size(dev_descriptor.max_packet_size);
 
-    transfer_length_or_error = m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_DEVICE << 8), 0, sizeof(USBDeviceDescriptor), &dev_descriptor);
-
-    if (transfer_length_or_error.is_error())
-        return transfer_length_or_error.error();
-
-    transfer_length = transfer_length_or_error.release_value();
+    transfer_length = TRY(m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_DEVICE << 8), 0, sizeof(USBDeviceDescriptor), &dev_descriptor));
 
     // FIXME: This be "not equal to" instead of "less than", but control transfers report a higher transfer length than expected.
     if (transfer_length < sizeof(USBDeviceDescriptor)) {
@@ -127,10 +113,7 @@ KResult Device::enumerate_device()
     auto new_address = m_controller->allocate_address();
 
     // Attempt to set devices address on the bus
-    transfer_length_or_error = m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE, USB_REQUEST_SET_ADDRESS, new_address, 0, 0, nullptr);
-
-    if (transfer_length_or_error.is_error())
-        return transfer_length_or_error.error();
+    transfer_length = TRY(m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE, USB_REQUEST_SET_ADDRESS, new_address, 0, 0, nullptr));
 
     // This has to be set after we send out the "Set Address" request because it might be sent to the root hub.
     // The root hub uses the address to intercept requests to itself.

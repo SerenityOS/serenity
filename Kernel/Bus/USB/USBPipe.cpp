@@ -69,12 +69,7 @@ KResultOr<size_t> Pipe::control_transfer(u8 request_type, u8 request, u16 value,
     transfer->set_setup_packet(usb_request);
 
     dbgln_if(USB_DEBUG, "Pipe: Transfer allocated @ {}", transfer->buffer_physical());
-    auto transfer_len_or_error = m_controller->submit_control_transfer(*transfer);
-
-    if (transfer_len_or_error.is_error())
-        return transfer_len_or_error.error();
-
-    auto transfer_length = transfer_len_or_error.release_value();
+    auto transfer_length = TRY(m_controller->submit_control_transfer(*transfer));
 
     // TODO: Check transfer for completion and copy data from transfer buffer into data
     if (length > 0)

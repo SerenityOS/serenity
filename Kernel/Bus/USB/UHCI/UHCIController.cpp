@@ -64,15 +64,9 @@ static constexpr u16 UHCI_NUMBER_OF_FRAMES = 1024;
 KResultOr<NonnullRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI::Address address)
 {
     // NOTE: This assumes that address is pointing to a valid UHCI controller.
-    auto controller = adopt_ref_if_nonnull(new (nothrow) UHCIController(address));
-    if (!controller)
-        return ENOMEM;
-
-    auto init_result = controller->initialize();
-    if (init_result.is_error())
-        return init_result;
-
-    return controller.release_nonnull();
+    auto controller = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) UHCIController(address)));
+    TRY(controller->initialize());
+    return controller;
 }
 
 KResult UHCIController::initialize()
@@ -83,12 +77,8 @@ KResult UHCIController::initialize()
 
     spawn_port_proc();
 
-    auto reset_result = reset();
-    if (reset_result.is_error())
-        return reset_result;
-
-    auto start_result = start();
-    return start_result;
+    TRY(reset());
+    return start();
 }
 
 UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::Address address)
@@ -104,8 +94,7 @@ UNMAP_AFTER_INIT UHCIController::~UHCIController()
 
 KResult UHCIController::reset()
 {
-    if (auto stop_result = stop(); stop_result.is_error())
-        return stop_result;
+    TRY(stop());
 
     write_usbcmd(UHCI_USBCMD_HOST_CONTROLLER_RESET);
 
@@ -117,17 +106,14 @@ KResult UHCIController::reset()
     }
 
     // Let's allocate the physical page for the Frame List (which is 4KiB aligned)
-    auto maybe_framelist_vmobj = Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(PAGE_SIZE);
-    if (maybe_framelist_vmobj.is_error())
-        return maybe_framelist_vmobj.error();
+    auto vmobject = TRY(Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(PAGE_SIZE));
 
-    m_framelist = MM.allocate_kernel_region_with_vmobject(maybe_framelist_vmobj.release_value(), PAGE_SIZE, "UHCI Framelist", Memory::Region::Access::Write);
+    m_framelist = MM.allocate_kernel_region_with_vmobject(move(vmobject), PAGE_SIZE, "UHCI Framelist", Memory::Region::Access::Write);
     dbgln("UHCI: Allocated framelist at physical address {}", m_framelist->physical_page(0)->paddr());
     dbgln("UHCI: Framelist is at virtual address {}", m_framelist->vaddr());
     write_sofmod(64); // 1mS frame time
 
-    if (auto result = create_structures(); result.is_error())
-        return result;
+    TRY(create_structures());
 
     setup_schedule();
 
@@ -158,9 +144,7 @@ UNMAP_AFTER_INIT KResult UHCIController::create_structures()
     m_dummy_qh = allocate_queue_head();
 
     // Now the Transfer Descriptor pool
-    auto maybe_td_pool_vmobject = Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(PAGE_SIZE);
-    if (maybe_td_pool_vmobject.is_error())
-        return maybe_td_pool_vmobject.error();
+    auto td_pool_vmobject = TRY(Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(PAGE_SIZE));
 
     m_transfer_descriptor_pool = UHCIDescriptorPool<TransferDescriptor>::try_create("Transfer Descriptor Pool");
     if (!m_transfer_descriptor_pool) {
@@ -168,7 +152,7 @@ UNMAP_AFTER_INIT KResult UHCIController::create_structures()
         return ENOMEM;
     }
 
-    m_isochronous_transfer_pool = MM.allocate_kernel_region_with_vmobject(*maybe_td_pool_vmobject.release_value(), PAGE_SIZE, "UHCI Isochronous Descriptor Pool", Memory::Region::Access::ReadWrite);
+    m_isochronous_transfer_pool = MM.allocate_kernel_region_with_vmobject(move(td_pool_vmobject), PAGE_SIZE, "UHCI Isochronous Descriptor Pool", Memory::Region::Access::ReadWrite);
     if (!m_isochronous_transfer_pool) {
         dmesgln("UHCI: Failed to allocated Isochronous Descriptor Pool!");
         return ENOMEM;
@@ -293,15 +277,8 @@ KResult UHCIController::start()
     }
     dbgln("UHCI: Started");
 
-    auto root_hub_or_error = UHCIRootHub::try_create(*this);
-    if (root_hub_or_error.is_error())
-        return root_hub_or_error.error();
-
-    m_root_hub = root_hub_or_error.release_value();
-    auto result = m_root_hub->setup({});
-    if (result.is_error())
-        return result;
-
+    m_root_hub = TRY(UHCIRootHub::try_create(*this));
+    TRY(m_root_hub->setup({}));
     return KSuccess;
 }
 
@@ -416,8 +393,7 @@ KResultOr<size_t> UHCIController::submit_control_transfer(Transfer& transfer)
     TransferDescriptor* last_data_descriptor;
     TransferDescriptor* data_descriptor_chain;
     auto buffer_address = Ptr32<u8>(transfer.buffer_physical().as_ptr() + sizeof(USBRequestData));
-    if (auto result = create_chain(pipe, direction_in ? PacketID::IN : PacketID::OUT, buffer_address, pipe.max_packet_size(), transfer.transfer_data_size(), &data_descriptor_chain, &last_data_descriptor); result.is_error())
-        return result;
+    TRY(create_chain(pipe, direction_in ? PacketID::IN : PacketID::OUT, buffer_address, pipe.max_packet_size(), transfer.transfer_data_size(), &data_descriptor_chain, &last_data_descriptor));
 
     // Status TD always has toggle set to 1
     pipe.set_toggle(true);
