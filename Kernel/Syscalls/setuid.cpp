@@ -171,8 +171,7 @@ KResultOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<const gid_t*> 
     Vector<gid_t> new_extra_gids;
     if (!new_extra_gids.try_resize(count))
         return ENOMEM;
-    if (!copy_n_from_user(new_extra_gids.data(), user_gids, count))
-        return EFAULT;
+    TRY(copy_n_from_user(new_extra_gids.data(), user_gids, count));
 
     HashTable<gid_t> unique_extra_gids;
     for (auto& extra_gid : new_extra_gids) {

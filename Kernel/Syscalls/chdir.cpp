@@ -52,8 +52,7 @@ KResultOr<FlatPtr> Process::sys$getcwd(Userspace<char*> buffer, size_t size)
 
     size_t ideal_size = path.length() + 1;
     auto size_to_copy = min(ideal_size, size);
-    if (!copy_to_user(buffer, path.characters(), size_to_copy))
-        return EFAULT;
+    TRY(copy_to_user(buffer, path.characters(), size_to_copy));
     // Note: we return the whole size here, not the copied size.
     return ideal_size;
 }

@@ -36,12 +36,9 @@ KResultOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
     m_fds[reader_fd_allocation.fd].set(move(reader_description), fd_flags);
     m_fds[writer_fd_allocation.fd].set(move(writer_description), fd_flags);
 
-    if (!copy_to_user(&pipefd[0], &reader_fd_allocation.fd))
-        return EFAULT;
-    if (!copy_to_user(&pipefd[1], &writer_fd_allocation.fd))
-        return EFAULT;
-
-    return 0;
+    TRY(copy_to_user(&pipefd[0], &reader_fd_allocation.fd));
+    TRY(copy_to_user(&pipefd[1], &writer_fd_allocation.fd));
+    return KSuccess;
 }
 
 }

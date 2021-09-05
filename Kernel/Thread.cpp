@@ -802,10 +802,11 @@ bool Thread::has_signal_handler(u8 signal) const
     return !action.handler_or_sigaction.is_null();
 }
 
-static bool push_value_on_user_stack(FlatPtr& stack, FlatPtr data)
+static void push_value_on_user_stack(FlatPtr& stack, FlatPtr data)
 {
     stack -= sizeof(FlatPtr);
-    return copy_to_user((FlatPtr*)stack, &data);
+    auto result = copy_to_user((FlatPtr*)stack, &data);
+    VERIFY(result.is_success());
 }
 
 void Thread::resume_from_stopped()

@@ -30,9 +30,7 @@ KResultOr<FlatPtr> Process::sys$get_process_name(Userspace<char*> buffer, size_t
     if (m_name.length() + 1 > buffer_size)
         return ENAMETOOLONG;
 
-    if (!copy_to_user(buffer, m_name.characters(), m_name.length() + 1))
-        return EFAULT;
-    return 0;
+    return copy_to_user(buffer, m_name.characters(), m_name.length() + 1);
 }
 
 KResultOr<FlatPtr> Process::sys$set_process_name(Userspace<const char*> user_name, size_t user_name_length)
@@ -56,8 +54,7 @@ KResultOr<FlatPtr> Process::sys$set_coredump_metadata(Userspace<const Syscall::S
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     Syscall::SC_set_coredump_metadata_params params;
-    if (!copy_from_user(&params, user_params))
-        return EFAULT;
+    TRY(copy_from_user(&params, user_params));
     if (params.key.length == 0 || params.key.length > 16 * KiB)
         return EINVAL;
     if (params.value.length > 16 * KiB)

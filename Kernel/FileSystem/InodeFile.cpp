@@ -64,24 +64,17 @@ KResult InodeFile::ioctl(FileDescription& description, unsigned request, Userspa
 
         auto user_block_number = static_ptr_cast<int*>(arg);
         int block_number = 0;
-        if (!copy_from_user(&block_number, user_block_number))
-            return EFAULT;
+        TRY(copy_from_user(&block_number, user_block_number));
 
         if (block_number < 0)
             return EINVAL;
 
         auto block_address = TRY(inode().get_block_address(block_number));
-        if (!copy_to_user(user_block_number, &block_address))
-            return EFAULT;
-
-        return KSuccess;
+        return copy_to_user(user_block_number, &block_address);
     }
     case FIONREAD: {
         int remaining_bytes = inode().size() - description.offset();
-        if (!copy_to_user(Userspace<int*>(arg), &remaining_bytes))
-            return EFAULT;
-
-        return KSuccess;
+        return copy_to_user(Userspace<int*>(arg), &remaining_bytes);
     }
     default:
         return EINVAL;

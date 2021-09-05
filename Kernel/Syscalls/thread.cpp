@@ -19,8 +19,7 @@ KResultOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<c
     REQUIRE_PROMISE(thread);
 
     Syscall::SC_create_thread_params params;
-    if (!copy_from_user(&params, user_params))
-        return EFAULT;
+    TRY(copy_from_user(&params, user_params));
 
     unsigned detach_state = params.detach_state;
     int schedule_priority = params.schedule_priority;
@@ -151,9 +150,10 @@ KResultOr<FlatPtr> Process::sys$join_thread(pid_t tid, Userspace<void**> exit_va
         dbgln("join_thread: retrying");
     }
 
-    if (exit_value && !copy_to_user(exit_value, &joinee_exit_value))
-        return EFAULT;
-    return 0;
+    if (exit_value)
+        TRY(copy_to_user(exit_value, &joinee_exit_value));
+
+    return KSuccess;
 }
 
 KResultOr<FlatPtr> Process::sys$kill_thread(pid_t tid, int signal)
@@ -212,17 +212,14 @@ KResultOr<FlatPtr> Process::sys$get_thread_name(pid_t tid, Userspace<char*> buff
 
     if (thread_name.is_null()) {
         char null_terminator = '\0';
-        if (!copy_to_user(buffer, &null_terminator, sizeof(null_terminator)))
-            return EFAULT;
-        return 0;
+        TRY(copy_to_user(buffer, &null_terminator, sizeof(null_terminator)));
+        return KSuccess;
     }
 
     if (thread_name.length() + 1 > buffer_size)
         return ENAMETOOLONG;
 
-    if (!copy_to_user(buffer, thread_name.characters_without_null_termination(), thread_name.length() + 1))
-        return EFAULT;
-    return 0;
+    return copy_to_user(buffer, thread_name.characters_without_null_termination(), thread_name.length() + 1);
 }
 
 KResultOr<FlatPtr> Process::sys$gettid()

@@ -17,12 +17,9 @@ KResultOr<FlatPtr> Process::sys$lseek(int fd, Userspace<off_t*> userspace_offset
     if (!description)
         return EBADF;
     off_t offset;
-    if (!copy_from_user(&offset, userspace_offset))
-        return EFAULT;
+    TRY(copy_from_user(&offset, userspace_offset));
     auto seek_result = TRY(description->seek(offset, whence));
-    if (!copy_to_user(userspace_offset, &seek_result))
-        return EFAULT;
-    return KSuccess;
+    return copy_to_user(userspace_offset, &seek_result);
 }
 
 }

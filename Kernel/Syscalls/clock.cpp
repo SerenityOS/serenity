@@ -37,10 +37,7 @@ KResultOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<time
         return EINVAL;
 
     auto ts = TimeManagement::the().current_time(clock_id).to_timespec();
-    if (!copy_to_user(user_ts, &ts))
-        return EFAULT;
-
-    return 0;
+    return copy_to_user(user_ts, &ts);
 }
 
 KResultOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<const timespec*> user_ts)
@@ -71,8 +68,7 @@ KResultOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_cloc
     REQUIRE_PROMISE(stdio);
 
     Syscall::SC_clock_nanosleep_params params;
-    if (!copy_from_user(&params, user_params))
-        return EFAULT;
+    TRY(copy_from_user(&params, user_params));
 
     Optional<Time> requested_sleep = copy_time_from_user(params.requested_sleep);
     if (!requested_sleep.has_value())
@@ -100,8 +96,9 @@ KResultOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_cloc
         Time remaining_sleep;
         was_interrupted = Thread::current()->sleep(params.clock_id, requested_sleep.value(), &remaining_sleep).was_interrupted();
         timespec remaining_sleep_ts = remaining_sleep.to_timespec();
-        if (was_interrupted && params.remaining_sleep && !copy_to_user(params.remaining_sleep, &remaining_sleep_ts))
-            return EFAULT;
+        if (was_interrupted && params.remaining_sleep) {
+            TRY(copy_to_user(params.remaining_sleep, &remaining_sleep_ts));
+        }
     }
     if (was_interrupted)
         return EINTR;
@@ -115,8 +112,7 @@ KResultOr<FlatPtr> Process::sys$adjtime(Userspace<const timeval*> user_delta, Us
         timespec old_delta_ts = TimeManagement::the().remaining_epoch_time_adjustment();
         timeval old_delta;
         timespec_to_timeval(old_delta_ts, old_delta);
-        if (!copy_to_user(user_old_delta, &old_delta))
-            return EFAULT;
+        TRY(copy_to_user(user_old_delta, &old_delta));
     }
 
     if (user_delta) {

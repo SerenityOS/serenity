@@ -121,7 +121,7 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
         return set_so_error(EINVAL);
 
     sockaddr_un address = {};
-    if (!copy_from_user(&address, user_address, sizeof(sockaddr_un)))
+    if (copy_from_user(&address, user_address, sizeof(sockaddr_un)).is_error())
         return set_so_error(EFAULT);
 
     if (address.sun_family != AF_LOCAL)
@@ -162,7 +162,7 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
         return set_so_error(EINVAL);
     u16 sa_family_copy;
     auto* user_address = reinterpret_cast<const sockaddr*>(address.unsafe_userspace_ptr());
-    if (!copy_from_user(&sa_family_copy, &user_address->sa_family, sizeof(u16)))
+    if (copy_from_user(&sa_family_copy, &user_address->sa_family, sizeof(u16)).is_error())
         return set_so_error(EFAULT);
     if (sa_family_copy != AF_LOCAL)
         return set_so_error(EINVAL);
@@ -173,7 +173,7 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
     {
         auto const& local_address = *reinterpret_cast<sockaddr_un const*>(user_address);
         char safe_address[sizeof(local_address.sun_path) + 1] = { 0 };
-        if (!copy_from_user(&safe_address[0], &local_address.sun_path[0], sizeof(safe_address) - 1))
+        if (copy_from_user(&safe_address[0], &local_address.sun_path[0], sizeof(safe_address) - 1).is_error())
             return set_so_error(EFAULT);
         safe_address[sizeof(safe_address) - 1] = '\0';
         maybe_path = KString::try_create(safe_address);
@@ -398,8 +398,7 @@ KResult LocalSocket::getsockopt(FileDescription& description, int level, int opt
         return Socket::getsockopt(description, level, option, value, value_size);
 
     socklen_t size;
-    if (!copy_from_user(&size, value_size.unsafe_userspace_ptr()))
-        return EFAULT;
+    TRY(copy_from_user(&size, value_size.unsafe_userspace_ptr()));
 
     switch (option) {
     case SO_SNDBUF:
@@ -411,18 +410,14 @@ KResult LocalSocket::getsockopt(FileDescription& description, int level, int opt
             return EINVAL;
         switch (role(description)) {
         case Role::Accepted:
-            if (!copy_to_user(static_ptr_cast<ucred*>(value), &m_origin))
-                return EFAULT;
+            TRY(copy_to_user(static_ptr_cast<ucred*>(value), &m_origin));
             size = sizeof(ucred);
-            if (!copy_to_user(value_size, &size))
-                return EFAULT;
+            TRY(copy_to_user(value_size, &size));
             return KSuccess;
         case Role::Connected:
-            if (!copy_to_user(static_ptr_cast<ucred*>(value), &m_acceptor))
-                return EFAULT;
+            TRY(copy_to_user(static_ptr_cast<ucred*>(value), &m_acceptor));
             size = sizeof(ucred);
-            if (!copy_to_user(value_size, &size))
-                return EFAULT;
+            TRY(copy_to_user(value_size, &size));
             return KSuccess;
         case Role::Connecting:
             return ENOTCONN;
@@ -441,10 +436,7 @@ KResult LocalSocket::ioctl(FileDescription& description, unsigned request, Users
     switch (request) {
     case FIONREAD: {
         int readable = receive_buffer_for(description)->immediately_readable();
-        if (!copy_to_user(Userspace<int*>(arg), &readable))
-            return EFAULT;
-
-        return KSuccess;
+        return copy_to_user(Userspace<int*>(arg), &readable);
     }
     }
 

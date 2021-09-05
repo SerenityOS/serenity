@@ -103,7 +103,7 @@ KResult IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_t addr
         return set_so_error(EINVAL);
 
     sockaddr_in address;
-    if (!copy_from_user(&address, user_address, sizeof(sockaddr_in)))
+    if (copy_from_user(&address, user_address, sizeof(sockaddr_in)).is_error())
         return set_so_error(EFAULT);
 
     if (address.sin_family != AF_INET)
@@ -147,7 +147,7 @@ KResult IPv4Socket::connect(FileDescription& description, Userspace<const sockad
         return set_so_error(EINVAL);
     u16 sa_family_copy;
     auto* user_address = reinterpret_cast<const sockaddr*>(address.unsafe_userspace_ptr());
-    if (!copy_from_user(&sa_family_copy, &user_address->sa_family, sizeof(u16)))
+    if (copy_from_user(&sa_family_copy, &user_address->sa_family, sizeof(u16)).is_error())
         return set_so_error(EFAULT);
     if (sa_family_copy != AF_INET)
         return set_so_error(EINVAL);
@@ -155,7 +155,7 @@ KResult IPv4Socket::connect(FileDescription& description, Userspace<const sockad
         return set_so_error(EISCONN);
 
     sockaddr_in safe_address;
-    if (!copy_from_user(&safe_address, (const sockaddr_in*)user_address, sizeof(sockaddr_in)))
+    if (copy_from_user(&safe_address, (const sockaddr_in*)user_address, sizeof(sockaddr_in)).is_error())
         return set_so_error(EFAULT);
 
     m_peer_address = IPv4Address((const u8*)&safe_address.sin_addr.s_addr);
@@ -201,7 +201,7 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
 
     if (addr) {
         sockaddr_in ia;
-        if (!copy_from_user(&ia, Userspace<const sockaddr_in*>(addr.ptr())))
+        if (copy_from_user(&ia, Userspace<const sockaddr_in*>(addr.ptr())).is_error())
             return set_so_error(EFAULT);
 
         if (ia.sin_family != AF_INET) {
@@ -360,12 +360,12 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
         out_addr.sin_port = htons(packet.peer_port);
         out_addr.sin_family = AF_INET;
         Userspace<sockaddr_in*> dest_addr = addr.ptr();
-        if (!copy_to_user(dest_addr, &out_addr))
+        if (copy_to_user(dest_addr, &out_addr).is_error())
             return set_so_error(EFAULT);
 
         socklen_t out_length = sizeof(sockaddr_in);
         VERIFY(addr_length);
-        if (!copy_to_user(addr_length, &out_length))
+        if (copy_to_user(addr_length, &out_length).is_error())
             return set_so_error(EFAULT);
     }
 
@@ -383,7 +383,7 @@ KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKerne
 {
     if (user_addr_length) {
         socklen_t addr_length;
-        if (!copy_from_user(&addr_length, user_addr_length.unsafe_userspace_ptr()))
+        if (copy_from_user(&addr_length, user_addr_length.unsafe_userspace_ptr()).is_error())
             return set_so_error(EFAULT);
         if (addr_length < sizeof(sockaddr_in))
             return set_so_error(EINVAL);
@@ -492,8 +492,7 @@ KResult IPv4Socket::setsockopt(int level, int option, Userspace<const void*> use
         if (user_value_size < sizeof(int))
             return EINVAL;
         int value;
-        if (!copy_from_user(&value, static_ptr_cast<const int*>(user_value)))
-            return EFAULT;
+        TRY(copy_from_user(&value, static_ptr_cast<const int*>(user_value)));
         if (value < 0 || value > 255)
             return EINVAL;
         m_ttl = value;
@@ -503,8 +502,7 @@ KResult IPv4Socket::setsockopt(int level, int option, Userspace<const void*> use
         if (user_value_size != 1)
             return EINVAL;
         u8 value;
-        if (!copy_from_user(&value, static_ptr_cast<const u8*>(user_value)))
-            return EFAULT;
+        TRY(copy_from_user(&value, static_ptr_cast<const u8*>(user_value)));
         if (value != 0 && value != 1)
             return EINVAL;
         m_multicast_loop = value;
@@ -514,8 +512,7 @@ KResult IPv4Socket::setsockopt(int level, int option, Userspace<const void*> use
         if (user_value_size != sizeof(ip_mreq))
             return EINVAL;
         ip_mreq mreq;
-        if (!copy_from_user(&mreq, static_ptr_cast<const ip_mreq*>(user_value)))
-            return EFAULT;
+        TRY(copy_from_user(&mreq, static_ptr_cast<const ip_mreq*>(user_value)));
         if (mreq.imr_interface.s_addr != INADDR_ANY)
             return ENOTSUP;
         IPv4Address address { (const u8*)&mreq.imr_multiaddr.s_addr };
@@ -527,8 +524,7 @@ KResult IPv4Socket::setsockopt(int level, int option, Userspace<const void*> use
         if (user_value_size != sizeof(ip_mreq))
             return EINVAL;
         ip_mreq mreq;
-        if (!copy_from_user(&mreq, static_ptr_cast<const ip_mreq*>(user_value)))
-            return EFAULT;
+        TRY(copy_from_user(&mreq, static_ptr_cast<const ip_mreq*>(user_value)));
         if (mreq.imr_interface.s_addr != INADDR_ANY)
             return ENOTSUP;
         IPv4Address address { (const u8*)&mreq.imr_multiaddr.s_addr };
@@ -546,28 +542,21 @@ KResult IPv4Socket::getsockopt(FileDescription& description, int level, int opti
         return Socket::getsockopt(description, level, option, value, value_size);
 
     socklen_t size;
-    if (!copy_from_user(&size, value_size.unsafe_userspace_ptr()))
-        return EFAULT;
+    TRY(copy_from_user(&size, value_size.unsafe_userspace_ptr()));
 
     switch (option) {
     case IP_TTL:
         if (size < sizeof(int))
             return EINVAL;
-        if (!copy_to_user(static_ptr_cast<int*>(value), (int*)&m_ttl))
-            return EFAULT;
+        TRY(copy_to_user(static_ptr_cast<int*>(value), (int*)&m_ttl));
         size = sizeof(int);
-        if (!copy_to_user(value_size, &size))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(value_size, &size);
     case IP_MULTICAST_LOOP: {
         if (size < 1)
             return EINVAL;
-        if (!copy_to_user(static_ptr_cast<u8*>(value), (const u8*)&m_multicast_loop))
-            return EFAULT;
+        TRY(copy_to_user(static_ptr_cast<u8*>(value), (const u8*)&m_multicast_loop));
         size = 1;
-        if (!copy_to_user(value_size, &size))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(value_size, &size);
     }
     default:
         return ENOPROTOOPT;
@@ -581,8 +570,7 @@ KResult IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> a
     auto ioctl_route = [request, arg]() -> KResult {
         auto user_route = static_ptr_cast<rtentry*>(arg);
         rtentry route;
-        if (!copy_from_user(&route, user_route))
-            return EFAULT;
+        TRY(copy_from_user(&route, user_route));
 
         Userspace<const char*> user_rt_dev((FlatPtr)route.rt_dev);
         auto ifname = TRY(try_copy_kstring_from_user(user_rt_dev, IFNAMSIZ));
@@ -613,8 +601,7 @@ KResult IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> a
     auto ioctl_arp = [request, arg]() -> KResult {
         auto user_req = static_ptr_cast<arpreq*>(arg);
         arpreq arp_req;
-        if (!copy_from_user(&arp_req, user_req))
-            return EFAULT;
+        TRY(copy_from_user(&arp_req, user_req));
 
         switch (request) {
         case SIOCSARP:
@@ -640,8 +627,7 @@ KResult IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> a
     auto ioctl_interface = [request, arg]() -> KResult {
         auto user_ifr = static_ptr_cast<ifreq*>(arg);
         ifreq ifr;
-        if (!copy_from_user(&ifr, user_ifr))
-            return EFAULT;
+        TRY(copy_from_user(&ifr, user_ifr));
 
         char namebuf[IFNAMSIZ + 1];
         memcpy(namebuf, ifr.ifr_name, IFNAMSIZ);
@@ -673,9 +659,7 @@ KResult IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> a
             auto& socket_address_in = reinterpret_cast<sockaddr_in&>(ifr.ifr_addr);
             socket_address_in.sin_family = AF_INET;
             socket_address_in.sin_addr.s_addr = ip4_addr;
-            if (!copy_to_user(user_ifr, &ifr))
-                return EFAULT;
-            return KSuccess;
+            return copy_to_user(user_ifr, &ifr);
         }
 
         case SIOCGIFNETMASK: {
@@ -685,18 +669,14 @@ KResult IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> a
             // NOTE: NOT ifr_netmask.
             socket_address_in.sin_addr.s_addr = ip4_netmask;
 
-            if (!copy_to_user(user_ifr, &ifr))
-                return EFAULT;
-            return KSuccess;
+            return copy_to_user(user_ifr, &ifr);
         }
 
         case SIOCGIFHWADDR: {
             auto mac_address = adapter->mac_address();
             ifr.ifr_hwaddr.sa_family = AF_INET;
             mac_address.copy_to(Bytes { ifr.ifr_hwaddr.sa_data, sizeof(ifr.ifr_hwaddr.sa_data) });
-            if (!copy_to_user(user_ifr, &ifr))
-                return EFAULT;
-            return KSuccess;
+            return copy_to_user(user_ifr, &ifr);
         }
 
         case SIOCGIFBRDADDR: {
@@ -707,9 +687,7 @@ KResult IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> a
             auto& socket_address_in = reinterpret_cast<sockaddr_in&>(ifr.ifr_addr);
             socket_address_in.sin_family = AF_INET;
             socket_address_in.sin_addr.s_addr = broadcast_addr;
-            if (!copy_to_user(user_ifr, &ifr))
-                return EFAULT;
-            return KSuccess;
+            return copy_to_user(user_ifr, &ifr);
         }
 
         case SIOCGIFMTU: {
@@ -717,9 +695,7 @@ KResult IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> a
 
             ifr.ifr_addr.sa_family = AF_INET;
             ifr.ifr_metric = ip4_metric;
-            if (!copy_to_user(user_ifr, &ifr))
-                return EFAULT;
-            return KSuccess;
+            return copy_to_user(user_ifr, &ifr);
         }
 
         case SIOCGIFFLAGS: {
@@ -727,9 +703,7 @@ KResult IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> a
             constexpr short flags = 1;
             ifr.ifr_addr.sa_family = AF_INET;
             ifr.ifr_flags = flags;
-            if (!copy_to_user(user_ifr, &ifr))
-                return EFAULT;
-            return KSuccess;
+            return copy_to_user(user_ifr, &ifr);
         }
 
         case SIOCGIFCONF: {
@@ -763,10 +737,7 @@ KResult IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> a
 
     case FIONREAD: {
         int readable = m_receive_buffer->immediately_readable();
-        if (!copy_to_user(Userspace<int*>(arg), &readable))
-            return EFAULT;
-
-        return KSuccess;
+        return copy_to_user(Userspace<int*>(arg), &readable);
     }
     }
 
@@ -791,4 +762,5 @@ void IPv4Socket::set_can_read(bool value)
     if (value)
         evaluate_block_conditions();
 }
+
 }

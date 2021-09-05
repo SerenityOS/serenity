@@ -62,10 +62,7 @@ KResultOr<FlatPtr> Process::do_statvfs(String path, statvfs* buf)
         }
     }
 
-    if (!copy_to_user(buf, &kernelbuf))
-        return EFAULT;
-
-    return 0;
+    return copy_to_user(buf, &kernelbuf);
 }
 
 KResultOr<FlatPtr> Process::sys$statvfs(Userspace<const Syscall::SC_statvfs_params*> user_params)
@@ -74,8 +71,7 @@ KResultOr<FlatPtr> Process::sys$statvfs(Userspace<const Syscall::SC_statvfs_para
     REQUIRE_PROMISE(rpath);
 
     Syscall::SC_statvfs_params params;
-    if (!copy_from_user(&params, user_params))
-        return EFAULT;
+    TRY(copy_from_user(&params, user_params));
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();

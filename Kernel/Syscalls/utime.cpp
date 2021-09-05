@@ -19,8 +19,7 @@ KResultOr<FlatPtr> Process::sys$utime(Userspace<const char*> user_path, size_t p
         return path.error();
     utimbuf buf;
     if (user_buf) {
-        if (!copy_from_user(&buf, user_buf))
-            return EFAULT;
+        TRY(copy_from_user(&buf, user_buf));
     } else {
         auto now = kgettimeofday().to_truncated_seconds();
         // Not a bug!

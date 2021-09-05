@@ -158,21 +158,16 @@ KResult FrameBufferDevice::ioctl(FileDescription&, unsigned request, Userspace<v
     case FB_IOCTL_GET_SIZE_IN_BYTES: {
         auto out = static_ptr_cast<size_t*>(arg);
         size_t value = m_buffer_size * 2;
-        if (!copy_to_user(out, &value))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(out, &value);
     }
     case FB_IOCTL_SET_RESOLUTION: {
         auto user_resolution = static_ptr_cast<FBResolution*>(arg);
         FBResolution resolution;
-        if (!copy_from_user(&resolution, user_resolution))
-            return EFAULT;
+        TRY(copy_from_user(&resolution, user_resolution));
         if (!try_to_set_resolution(resolution.width, resolution.height))
             return EINVAL;
         resolution.pitch = pitch();
-        if (!copy_to_user(user_resolution, &resolution))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(user_resolution, &resolution);
     }
     case FB_IOCTL_GET_RESOLUTION: {
         auto user_resolution = static_ptr_cast<FBResolution*>(arg);
@@ -180,9 +175,7 @@ KResult FrameBufferDevice::ioctl(FileDescription&, unsigned request, Userspace<v
         resolution.pitch = pitch();
         resolution.width = width();
         resolution.height = height();
-        if (!copy_to_user(user_resolution, &resolution))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(user_resolution, &resolution);
     }
     case FB_IOCTL_SET_BUFFER: {
         auto buffer_index = static_cast<int>(arg.ptr());
@@ -195,8 +188,7 @@ KResult FrameBufferDevice::ioctl(FileDescription&, unsigned request, Userspace<v
     case FB_IOCTL_FLUSH_BUFFERS: {
         auto user_flush_rects = static_ptr_cast<FBFlushRects*>(arg);
         FBFlushRects flush_rects;
-        if (!copy_from_user(&flush_rects, user_flush_rects))
-            return EFAULT;
+        TRY(copy_from_user(&flush_rects, user_flush_rects));
         if (!is_valid_buffer_index(flush_rects.buffer_index))
             return EINVAL;
         if (Checked<unsigned>::multiplication_would_overflow(flush_rects.count, sizeof(FBRect)))
@@ -206,8 +198,7 @@ KResult FrameBufferDevice::ioctl(FileDescription&, unsigned request, Userspace<v
             MutexLocker locker(m_gpu.operation_lock());
             for (unsigned i = 0; i < flush_rects.count; i++) {
                 FBRect user_dirty_rect;
-                if (!copy_from_user(&user_dirty_rect, &flush_rects.rects[i]))
-                    return EFAULT;
+                TRY(copy_from_user(&user_dirty_rect, &flush_rects.rects[i]));
                 Protocol::Rect dirty_rect {
                     .x = user_dirty_rect.x,
                     .y = user_dirty_rect.y,
@@ -238,14 +229,11 @@ KResult FrameBufferDevice::ioctl(FileDescription&, unsigned request, Userspace<v
     case FB_IOCTL_GET_BUFFER_OFFSET: {
         auto user_buffer_offset = static_ptr_cast<FBBufferOffset*>(arg);
         FBBufferOffset buffer_offset;
-        if (!copy_from_user(&buffer_offset, user_buffer_offset))
-            return EFAULT;
+        TRY(copy_from_user(&buffer_offset, user_buffer_offset));
         if (!is_valid_buffer_index(buffer_offset.buffer_index))
             return EINVAL;
         buffer_offset.offset = (size_t)buffer_offset.buffer_index * m_buffer_size;
-        if (!copy_to_user(user_buffer_offset, &buffer_offset))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(user_buffer_offset, &buffer_offset);
     }
     default:
         return EINVAL;

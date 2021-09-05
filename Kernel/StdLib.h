@@ -34,11 +34,11 @@ template<typename T>
 [[nodiscard]] Optional<u32> user_atomic_fetch_or_relaxed(volatile u32* var, u32 val);
 [[nodiscard]] Optional<u32> user_atomic_fetch_xor_relaxed(volatile u32* var, u32 val);
 
-extern "C" {
+[[nodiscard]] KResult copy_to_user(void*, const void*, size_t);
+[[nodiscard]] KResult copy_from_user(void*, const void*, size_t);
+[[nodiscard]] KResult memset_user(void*, int, size_t);
 
-[[nodiscard]] bool copy_to_user(void*, const void*, size_t);
-[[nodiscard]] bool copy_from_user(void*, const void*, size_t);
-[[nodiscard]] bool memset_user(void*, int, size_t);
+extern "C" {
 
 void* memcpy(void*, const void*, size_t);
 [[nodiscard]] int strncmp(const char* s1, const char* s2, size_t n);
@@ -56,114 +56,114 @@ const void* memmem(const void* haystack, size_t, const void* needle, size_t);
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_from_user(T* dest, const T* src)
+[[nodiscard]] inline KResult copy_from_user(T* dest, const T* src)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_from_user(dest, src, sizeof(T));
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_to_user(T* dest, const T* src)
+[[nodiscard]] inline KResult copy_to_user(T* dest, const T* src)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_to_user(dest, src, sizeof(T));
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_from_user(T* dest, Userspace<const T*> src)
+[[nodiscard]] inline KResult copy_from_user(T* dest, Userspace<const T*> src)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_from_user(dest, src.unsafe_userspace_ptr(), sizeof(T));
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_from_user(T* dest, Userspace<T*> src)
+[[nodiscard]] inline KResult copy_from_user(T* dest, Userspace<T*> src)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_from_user(dest, src.unsafe_userspace_ptr(), sizeof(T));
 }
 
-#define DEPRECATE_COPY_FROM_USER_TYPE(T, REPLACEMENT)                                                                                \
-    template<>                                                                                                                       \
-    [[nodiscard]] inline __attribute__((deprecated("use " #REPLACEMENT " instead"))) bool copy_from_user<T>(T*, const T*)            \
-    {                                                                                                                                \
-        VERIFY_NOT_REACHED();                                                                                                        \
-    }                                                                                                                                \
-    template<>                                                                                                                       \
-    [[nodiscard]] inline __attribute__((deprecated("use " #REPLACEMENT " instead"))) bool copy_from_user<T>(T*, Userspace<const T*>) \
-    {                                                                                                                                \
-        VERIFY_NOT_REACHED();                                                                                                        \
-    }                                                                                                                                \
-    template<>                                                                                                                       \
-    [[nodiscard]] inline __attribute__((deprecated("use " #REPLACEMENT " instead"))) bool copy_from_user<T>(T*, Userspace<T*>)       \
-    {                                                                                                                                \
-        VERIFY_NOT_REACHED();                                                                                                        \
+#define DEPRECATE_COPY_FROM_USER_TYPE(T, REPLACEMENT)                                                                                   \
+    template<>                                                                                                                          \
+    [[nodiscard]] inline __attribute__((deprecated("use " #REPLACEMENT " instead"))) KResult copy_from_user<T>(T*, const T*)            \
+    {                                                                                                                                   \
+        VERIFY_NOT_REACHED();                                                                                                           \
+    }                                                                                                                                   \
+    template<>                                                                                                                          \
+    [[nodiscard]] inline __attribute__((deprecated("use " #REPLACEMENT " instead"))) KResult copy_from_user<T>(T*, Userspace<const T*>) \
+    {                                                                                                                                   \
+        VERIFY_NOT_REACHED();                                                                                                           \
+    }                                                                                                                                   \
+    template<>                                                                                                                          \
+    [[nodiscard]] inline __attribute__((deprecated("use " #REPLACEMENT " instead"))) KResult copy_from_user<T>(T*, Userspace<T*>)       \
+    {                                                                                                                                   \
+        VERIFY_NOT_REACHED();                                                                                                           \
     }
 
 DEPRECATE_COPY_FROM_USER_TYPE(timespec, copy_time_from_user)
 DEPRECATE_COPY_FROM_USER_TYPE(timeval, copy_time_from_user)
 
 template<typename T>
-[[nodiscard]] inline bool copy_to_user(Userspace<T*> dest, const T* src)
+[[nodiscard]] inline KResult copy_to_user(Userspace<T*> dest, const T* src)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_to_user(dest.unsafe_userspace_ptr(), src, sizeof(T));
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_to_user(Userspace<T*> dest, const void* src, size_t size)
+[[nodiscard]] inline KResult copy_to_user(Userspace<T*> dest, const void* src, size_t size)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_to_user(dest.unsafe_userspace_ptr(), src, size);
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_from_user(void* dest, Userspace<const T*> src, size_t size)
+[[nodiscard]] inline KResult copy_from_user(void* dest, Userspace<const T*> src, size_t size)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_from_user(dest, src.unsafe_userspace_ptr(), size);
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_n_from_user(T* dest, const T* src, size_t count)
+[[nodiscard]] inline KResult copy_n_from_user(T* dest, const T* src, size_t count)
 {
     static_assert(IsTriviallyCopyable<T>);
     Checked<size_t> size = sizeof(T);
     size *= count;
     if (size.has_overflow())
-        return false;
+        return EOVERFLOW;
     return copy_from_user(dest, src, size.value());
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_n_to_user(T* dest, const T* src, size_t count)
+[[nodiscard]] inline KResult copy_n_to_user(T* dest, const T* src, size_t count)
 {
     static_assert(IsTriviallyCopyable<T>);
     Checked<size_t> size = sizeof(T);
     size *= count;
     if (size.has_overflow())
-        return false;
+        return EOVERFLOW;
     return copy_to_user(dest, src, size.value());
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_n_from_user(T* dest, Userspace<const T*> src, size_t count)
+[[nodiscard]] inline KResult copy_n_from_user(T* dest, Userspace<const T*> src, size_t count)
 {
     static_assert(IsTriviallyCopyable<T>);
     Checked<size_t> size = sizeof(T);
     size *= count;
     if (size.has_overflow())
-        return false;
+        return EOVERFLOW;
     return copy_from_user(dest, src.unsafe_userspace_ptr(), size.value());
 }
 
 template<typename T>
-[[nodiscard]] inline bool copy_n_to_user(Userspace<T*> dest, const T* src, size_t count)
+[[nodiscard]] inline KResult try_copy_n_to_user(Userspace<T*> dest, const T* src, size_t count)
 {
     static_assert(IsTriviallyCopyable<T>);
     Checked<size_t> size = sizeof(T);
     size *= count;
     if (size.has_overflow())
-        return false;
+        return EOVERFLOW;
     return copy_to_user(dest.unsafe_userspace_ptr(), src, size.value());
 }

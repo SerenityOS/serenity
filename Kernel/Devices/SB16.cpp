@@ -127,9 +127,7 @@ KResult SB16::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
     switch (request) {
     case SOUNDCARD_IOCTL_GET_SAMPLE_RATE: {
         auto output = static_ptr_cast<u16*>(arg);
-        if (!copy_to_user(output, &m_sample_rate))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(output, &m_sample_rate);
     }
     case SOUNDCARD_IOCTL_SET_SAMPLE_RATE: {
         auto sample_rate_value = static_cast<u16>(arg.ptr());

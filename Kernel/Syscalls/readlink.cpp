@@ -16,8 +16,7 @@ KResultOr<FlatPtr> Process::sys$readlink(Userspace<const Syscall::SC_readlink_pa
     REQUIRE_PROMISE(rpath);
 
     Syscall::SC_readlink_params params;
-    if (!copy_from_user(&params, user_params))
-        return EFAULT;
+    TRY(copy_from_user(&params, user_params));
 
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
@@ -37,8 +36,7 @@ KResultOr<FlatPtr> Process::sys$readlink(Userspace<const Syscall::SC_readlink_pa
 
     auto& link_target = *contents.value();
     auto size_to_copy = min(link_target.size(), params.buffer.size);
-    if (!copy_to_user(params.buffer.data, link_target.data(), size_to_copy))
-        return EFAULT;
+    TRY(copy_to_user(params.buffer.data, link_target.data(), size_to_copy));
     // Note: we return the whole size here, not the copied size.
     return link_target.size();
 }

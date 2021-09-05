@@ -80,9 +80,8 @@ KResultOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_para
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(accept);
 
-    Syscall::SC_accept4_params params;
-    if (!copy_from_user(&params, user_params))
-        return EFAULT;
+    Syscall::SC_accept4_params params = {};
+    TRY(copy_from_user(&params, user_params));
 
     int accepting_socket_fd = params.sockfd;
     Userspace<sockaddr*> user_address((FlatPtr)params.addr);
@@ -90,8 +89,9 @@ KResultOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_para
     int flags = params.flags;
 
     socklen_t address_size = 0;
-    if (user_address && !copy_from_user(&address_size, static_ptr_cast<const socklen_t*>(user_address_size)))
-        return EFAULT;
+    if (user_address) {
+        TRY(copy_from_user(&address_size, static_ptr_cast<const socklen_t*>(user_address_size)));
+    }
 
     auto fd_allocation = TRY(m_fds.allocate());
     auto accepting_socket_description = fds().file_description(accepting_socket_fd);
@@ -117,10 +117,8 @@ KResultOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_para
         sockaddr_un address_buffer;
         address_size = min(sizeof(sockaddr_un), static_cast<size_t>(address_size));
         accepted_socket->get_peer_address((sockaddr*)&address_buffer, &address_size);
-        if (!copy_to_user(user_address, &address_buffer, address_size))
-            return EFAULT;
-        if (!copy_to_user(user_address_size, &address_size))
-            return EFAULT;
+        TRY(copy_to_user(user_address, &address_buffer, address_size));
+        TRY(copy_to_user(user_address_size, &address_size));
     }
 
     auto accepted_socket_description = TRY(FileDescription::try_create(*accepted_socket));
@@ -175,17 +173,15 @@ KResultOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghd
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-    struct msghdr msg;
-    if (!copy_from_user(&msg, user_msg))
-        return EFAULT;
+    struct msghdr msg = {};
+    TRY(copy_from_user(&msg, user_msg));
 
     if (msg.msg_iovlen != 1)
         return ENOTSUP; // FIXME: Support this :)
     Vector<iovec, 1> iovs;
     if (!iovs.try_resize(msg.msg_iovlen))
         return ENOMEM;
-    if (!copy_n_from_user(iovs.data(), msg.msg_iov, msg.msg_iovlen))
-        return EFAULT;
+    TRY(copy_n_from_user(iovs.data(), msg.msg_iov, msg.msg_iovlen));
     if (iovs[0].iov_len > NumericLimits<ssize_t>::max())
         return EINVAL;
 
@@ -216,16 +212,14 @@ KResultOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> us
     REQUIRE_PROMISE(stdio);
 
     struct msghdr msg;
-    if (!copy_from_user(&msg, user_msg))
-        return EFAULT;
+    TRY(copy_from_user(&msg, user_msg));
 
     if (msg.msg_iovlen != 1)
         return ENOTSUP; // FIXME: Support this :)
     Vector<iovec, 1> iovs;
     if (!iovs.try_resize(msg.msg_iovlen))
         return ENOMEM;
-    if (!copy_n_from_user(iovs.data(), msg.msg_iov, msg.msg_iovlen))
-        return EFAULT;
+    TRY(copy_n_from_user(iovs.data(), msg.msg_iov, msg.msg_iovlen));
 
     Userspace<sockaddr*> user_addr((FlatPtr)msg.msg_name);
     Userspace<socklen_t*> user_addr_length(msg.msg_name ? (FlatPtr)&user_msg.unsafe_userspace_ptr()->msg_namelen : 0);
@@ -272,25 +266,20 @@ KResultOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> us
             msg_flags |= MSG_CTRUNC;
         } else {
             cmsg_timestamp = { { control_length, SOL_SOCKET, SCM_TIMESTAMP }, timestamp.to_timeval() };
-            if (!copy_to_user(msg.msg_control, &cmsg_timestamp, control_length))
-                return EFAULT;
+            TRY(copy_to_user(msg.msg_control, &cmsg_timestamp, control_length));
         }
-        if (!copy_to_user(&user_msg.unsafe_userspace_ptr()->msg_controllen, &control_length))
-            return EFAULT;
+        TRY(copy_to_user(&user_msg.unsafe_userspace_ptr()->msg_controllen, &control_length));
     }
 
-    if (!copy_to_user(&user_msg.unsafe_userspace_ptr()->msg_flags, &msg_flags))
-        return EFAULT;
-
+    TRY(copy_to_user(&user_msg.unsafe_userspace_ptr()->msg_flags, &msg_flags));
     return result.value();
 }
 
 template<bool sockname, typename Params>
-int Process::get_sock_or_peer_name(const Params& params)
+KResult Process::get_sock_or_peer_name(const Params& params)
 {
     socklen_t addrlen_value;
-    if (!copy_from_user(&addrlen_value, params.addrlen, sizeof(socklen_t)))
-        return EFAULT;
+    TRY(copy_from_user(&addrlen_value, params.addrlen, sizeof(socklen_t)));
 
     if (addrlen_value <= 0)
         return EINVAL;
@@ -311,37 +300,31 @@ int Process::get_sock_or_peer_name(const Params& params)
         socket.get_local_address((sockaddr*)&address_buffer, &addrlen_value);
     else
         socket.get_peer_address((sockaddr*)&address_buffer, &addrlen_value);
-    if (!copy_to_user(params.addr, &address_buffer, addrlen_value))
-        return EFAULT;
-    if (!copy_to_user(params.addrlen, &addrlen_value))
-        return EFAULT;
-    return 0;
+    TRY(copy_to_user(params.addr, &address_buffer, addrlen_value));
+    return copy_to_user(params.addrlen, &addrlen_value);
 }
 
 KResultOr<FlatPtr> Process::sys$getsockname(Userspace<const Syscall::SC_getsockname_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    Syscall::SC_getsockname_params params;
-    if (!copy_from_user(&params, user_params))
-        return EFAULT;
+    Syscall::SC_getsockname_params params = {};
+    TRY(copy_from_user(&params, user_params));
     return get_sock_or_peer_name<true>(params);
 }
 
 KResultOr<FlatPtr> Process::sys$getpeername(Userspace<const Syscall::SC_getpeername_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    Syscall::SC_getpeername_params params;
-    if (!copy_from_user(&params, user_params))
-        return EFAULT;
+    Syscall::SC_getpeername_params params = {};
+    TRY(copy_from_user(&params, user_params));
     return get_sock_or_peer_name<false>(params);
 }
 
 KResultOr<FlatPtr> Process::sys$getsockopt(Userspace<const Syscall::SC_getsockopt_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    Syscall::SC_getsockopt_params params;
-    if (!copy_from_user(&params, user_params))
-        return EFAULT;
+    Syscall::SC_getsockopt_params params = {};
+    TRY(copy_from_user(&params, user_params));
 
     int sockfd = params.sockfd;
     int level = params.level;
@@ -350,8 +333,7 @@ KResultOr<FlatPtr> Process::sys$getsockopt(Userspace<const Syscall::SC_getsockop
     Userspace<socklen_t*> user_value_size((FlatPtr)params.value_size);
 
     socklen_t value_size;
-    if (!copy_from_user(&value_size, params.value_size, sizeof(socklen_t)))
-        return EFAULT;
+    TRY(copy_from_user(&value_size, params.value_size, sizeof(socklen_t)));
 
     auto description = fds().file_description(sockfd);
     if (!description)
@@ -368,8 +350,7 @@ KResultOr<FlatPtr> Process::sys$setsockopt(Userspace<const Syscall::SC_setsockop
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     Syscall::SC_setsockopt_params params;
-    if (!copy_from_user(&params, user_params))
-        return EFAULT;
+    TRY(copy_from_user(&params, user_params));
     Userspace<const void*> user_value((FlatPtr)params.value);
     auto description = fds().file_description(params.sockfd);
     if (!description)
@@ -385,8 +366,7 @@ KResultOr<FlatPtr> Process::sys$socketpair(Userspace<const Syscall::SC_socketpai
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     Syscall::SC_socketpair_params params;
-    if (!copy_from_user(&params, user_params))
-        return EFAULT;
+    TRY(copy_from_user(&params, user_params));
 
     if (params.domain != AF_LOCAL)
         return EINVAL;
@@ -405,7 +385,7 @@ KResultOr<FlatPtr> Process::sys$socketpair(Userspace<const Syscall::SC_socketpai
     setup_socket_fd(fds[0], pair.description0, params.type);
     setup_socket_fd(fds[1], pair.description1, params.type);
 
-    if (!copy_to_user(params.sv, fds, sizeof(fds))) {
+    if (copy_to_user(params.sv, fds, sizeof(fds)).is_error()) {
         // Avoid leaking both file descriptors on error.
         m_fds[fds[0]] = {};
         m_fds[fds[1]] = {};

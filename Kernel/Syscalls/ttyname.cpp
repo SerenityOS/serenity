@@ -23,9 +23,7 @@ KResultOr<FlatPtr> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t 
     auto tty_name = description->tty()->tty_name();
     if (size < tty_name.length() + 1)
         return ERANGE;
-    if (!copy_to_user(buffer, tty_name.characters(), tty_name.length() + 1))
-        return EFAULT;
-    return 0;
+    return copy_to_user(buffer, tty_name.characters(), tty_name.length() + 1);
 }
 
 KResultOr<FlatPtr> Process::sys$ptsname(int fd, Userspace<char*> buffer, size_t size)
@@ -41,9 +39,7 @@ KResultOr<FlatPtr> Process::sys$ptsname(int fd, Userspace<char*> buffer, size_t 
     auto pts_name = master_pty->pts_name();
     if (size < pts_name.length() + 1)
         return ERANGE;
-    if (!copy_to_user(buffer, pts_name.characters(), pts_name.length() + 1))
-        return EFAULT;
-    return 0;
+    return copy_to_user(buffer, pts_name.characters(), pts_name.length() + 1);
 }
 
 }

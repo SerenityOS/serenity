@@ -472,9 +472,7 @@ KResult TTY::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
     case TIOCGPGRP: {
         auto user_pgid = static_ptr_cast<pid_t*>(arg);
         auto pgid = this->pgid().value();
-        if (!copy_to_user(user_pgid, &pgid))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(user_pgid, &pgid);
     }
     case TIOCSPGRP: {
         ProcessGroupID pgid = static_cast<pid_t>(arg.ptr());
@@ -506,17 +504,14 @@ KResult TTY::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
     }
     case TCGETS: {
         user_termios = static_ptr_cast<termios*>(arg);
-        if (!copy_to_user(user_termios, &m_termios))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(user_termios, &m_termios);
     }
     case TCSETS:
     case TCSETSF:
     case TCSETSW: {
         user_termios = static_ptr_cast<termios*>(arg);
         termios termios;
-        if (!copy_from_user(&termios, user_termios))
-            return EFAULT;
+        TRY(copy_from_user(&termios, user_termios));
         auto rc = set_termios(termios);
         if (request == TCSETSF)
             flush_input();
@@ -539,14 +534,11 @@ KResult TTY::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
         ws.ws_col = m_columns;
         ws.ws_xpixel = 0;
         ws.ws_ypixel = 0;
-        if (!copy_to_user(user_winsize, &ws))
-            return EFAULT;
-        return KSuccess;
+        return copy_to_user(user_winsize, &ws);
     case TIOCSWINSZ: {
         user_winsize = static_ptr_cast<winsize*>(arg);
         winsize ws;
-        if (!copy_from_user(&ws, user_winsize))
-            return EFAULT;
+        TRY(copy_from_user(&ws, user_winsize));
         if (ws.ws_col == m_columns && ws.ws_row == m_rows)
             return KSuccess;
         m_rows = ws.ws_row;

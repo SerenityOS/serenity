@@ -79,19 +79,22 @@ static KResultOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]
     auto push_on_new_stack = [&new_sp](FlatPtr value) {
         new_sp -= sizeof(FlatPtr);
         Userspace<FlatPtr*> stack_ptr = new_sp;
-        return copy_to_user(stack_ptr, &value);
+        auto result = copy_to_user(stack_ptr, &value);
+        VERIFY(result.is_success());
     };
 
     auto push_aux_value_on_new_stack = [&new_sp](auxv_t value) {
         new_sp -= sizeof(auxv_t);
         Userspace<auxv_t*> stack_ptr = new_sp;
-        return copy_to_user(stack_ptr, &value);
+        auto result = copy_to_user(stack_ptr, &value);
+        VERIFY(result.is_success());
     };
 
     auto push_string_on_new_stack = [&new_sp](const String& string) {
         new_sp -= round_up_to_power_of_two(string.length() + 1, sizeof(FlatPtr));
         Userspace<FlatPtr*> stack_ptr = new_sp;
-        return copy_to_user(stack_ptr, string.characters(), string.length() + 1);
+        auto result = copy_to_user(stack_ptr, string.characters(), string.length() + 1);
+        VERIFY(result.is_success());
     };
 
     Vector<FlatPtr> argv_entries;
@@ -329,7 +332,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
             master_tls_size = program_header.size_in_memory();
             master_tls_alignment = program_header.alignment();
 
-            if (!copy_to_user(master_tls_region->vaddr().as_ptr(), program_header.raw_data(), program_header.size_in_image())) {
+            if (copy_to_user(master_tls_region->vaddr().as_ptr(), program_header.raw_data(), program_header.size_in_image()).is_error()) {
                 ph_load_result = EFAULT;
                 return IterationDecision::Break;
             }
@@ -382,7 +385,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
             //     Accessing it would definitely be a bug.
             auto page_offset = program_header.vaddr();
             page_offset.mask(~PAGE_MASK);
-            if (!copy_to_user((u8*)region_or_error.value()->vaddr().as_ptr() + page_offset.get(), program_header.raw_data(), program_header.size_in_image())) {
+            if (copy_to_user((u8*)region_or_error.value()->vaddr().as_ptr() + page_offset.get(), program_header.raw_data(), program_header.size_in_image()).is_error()) {
                 ph_load_result = EFAULT;
                 return IterationDecision::Break;
             }
@@ -937,8 +940,7 @@ KResultOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params
     // NOTE: Be extremely careful with allocating any kernel memory in exec().
     //       On success, the kernel stack will be lost.
     Syscall::SC_execve_params params;
-    if (!copy_from_user(&params, user_params))
-        return EFAULT;
+    TRY(copy_from_user(&params, user_params));
 
     if (params.arguments.length > ARG_MAX || params.environment.length > ARG_MAX)
         return E2BIG;
@@ -961,7 +963,7 @@ KResultOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params
         Vector<Syscall::StringArgument, 32> strings;
         if (!strings.try_resize(list.length))
             return false;
-        if (!copy_from_user(strings.data(), list.strings, size.value()))
+        if (copy_from_user(strings.data(), list.strings, size.value()).is_error())
             return false;
         for (size_t i = 0; i < list.length; ++i) {
             auto string_or_error = try_copy_kstring_from_user(strings[i]);

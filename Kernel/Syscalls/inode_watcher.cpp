@@ -48,8 +48,7 @@ KResultOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<const Syscall:
     REQUIRE_PROMISE(rpath);
 
     Syscall::SC_inode_watcher_add_watch_params params;
-    if (!copy_from_user(&params, user_params))
-        return EFAULT;
+    TRY(copy_from_user(&params, user_params));
 
     auto description = fds().file_description(params.fd);
     if (!description)

@@ -19,10 +19,8 @@ KResultOr<FlatPtr> Process::sys$fstat(int fd, Userspace<stat*> user_statbuf)
     if (!description)
         return EBADF;
     stat buffer = {};
-    auto result = description->stat(buffer);
-    if (!copy_to_user(user_statbuf, &buffer))
-        return EFAULT;
-    return result;
+    TRY(description->stat(buffer));
+    return copy_to_user(user_statbuf, &buffer);
 }
 
 KResultOr<FlatPtr> Process::sys$stat(Userspace<const Syscall::SC_stat_params*> user_params)
@@ -30,8 +28,7 @@ KResultOr<FlatPtr> Process::sys$stat(Userspace<const Syscall::SC_stat_params*> u
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(rpath);
     Syscall::SC_stat_params params;
-    if (!copy_from_user(&params, user_params))
-        return EFAULT;
+    TRY(copy_from_user(&params, user_params));
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
@@ -55,9 +52,7 @@ KResultOr<FlatPtr> Process::sys$stat(Userspace<const Syscall::SC_stat_params*> u
     auto result = metadata_or_error.value().stat(statbuf);
     if (result.is_error())
         return result;
-    if (!copy_to_user(params.statbuf, &statbuf))
-        return EFAULT;
-    return 0;
+    return copy_to_user(params.statbuf, &statbuf);
 }
 
 }

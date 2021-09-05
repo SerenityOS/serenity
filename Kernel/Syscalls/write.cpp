@@ -26,8 +26,7 @@ KResultOr<FlatPtr> Process::sys$writev(int fd, Userspace<const struct iovec*> io
     Vector<iovec, 32> vecs;
     if (!vecs.try_resize(iov_count))
         return ENOMEM;
-    if (!copy_n_from_user(vecs.data(), iov, iov_count))
-        return EFAULT;
+    TRY(copy_n_from_user(vecs.data(), iov, iov_count));
     for (auto& vec : vecs) {
         total_length += vec.iov_len;
         if (total_length > NumericLimits<i32>::max())
