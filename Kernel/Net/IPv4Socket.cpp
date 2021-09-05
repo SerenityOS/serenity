@@ -46,18 +46,10 @@ KResultOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
     if (!receive_buffer)
         return ENOMEM;
 
-    if (type == SOCK_STREAM) {
-        auto tcp_socket_or_error = TCPSocket::try_create(protocol, receive_buffer.release_nonnull());
-        if (tcp_socket_or_error.is_error())
-            return tcp_socket_or_error.error();
-        return tcp_socket_or_error.release_value();
-    }
-    if (type == SOCK_DGRAM) {
-        auto udp_socket_or_error = UDPSocket::try_create(protocol, receive_buffer.release_nonnull());
-        if (udp_socket_or_error.is_error())
-            return udp_socket_or_error.error();
-        return udp_socket_or_error.release_value();
-    }
+    if (type == SOCK_STREAM)
+        return TRY(TCPSocket::try_create(protocol, receive_buffer.release_nonnull()));
+    if (type == SOCK_DGRAM)
+        return TRY(UDPSocket::try_create(protocol, receive_buffer.release_nonnull()));
     if (type == SOCK_RAW) {
         auto raw_socket = adopt_ref_if_nonnull(new (nothrow) IPv4Socket(type, protocol, receive_buffer.release_nonnull(), {}));
         if (raw_socket)
@@ -593,11 +585,9 @@ KResult IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> a
             return EFAULT;
 
         Userspace<const char*> user_rt_dev((FlatPtr)route.rt_dev);
-        auto ifname_or_error = try_copy_kstring_from_user(user_rt_dev, IFNAMSIZ);
-        if (ifname_or_error.is_error())
-            return ifname_or_error.error();
+        auto ifname = TRY(try_copy_kstring_from_user(user_rt_dev, IFNAMSIZ));
 
-        auto adapter = NetworkingManagement::the().lookup_by_name(ifname_or_error.value()->view());
+        auto adapter = NetworkingManagement::the().lookup_by_name(ifname->view());
         if (!adapter)
             return ENODEV;
 
@@ -801,5 +791,4 @@ void IPv4Socket::set_can_read(bool value)
     if (value)
         evaluate_block_conditions();
 }
-
 }
