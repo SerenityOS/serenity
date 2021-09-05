@@ -26,13 +26,8 @@ namespace Kernel {
 
 KResultOr<NonnullRefPtr<FileDescription>> FileDescription::try_create(Custody& custody)
 {
-    auto inode_file = InodeFile::create(custody.inode());
-    if (inode_file.is_error())
-        return inode_file.error();
-
-    auto description = adopt_ref_if_nonnull(new (nothrow) FileDescription(*inode_file.release_value()));
-    if (!description)
-        return ENOMEM;
+    auto inode_file = TRY(InodeFile::create(custody.inode()));
+    auto description = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FileDescription(move(inode_file))));
 
     description->m_custody = custody;
     auto result = description->attach();
@@ -40,20 +35,18 @@ KResultOr<NonnullRefPtr<FileDescription>> FileDescription::try_create(Custody& c
         dbgln_if(FILEDESCRIPTION_DEBUG, "Failed to create file description for custody: {}", result);
         return result;
     }
-    return description.release_nonnull();
+    return description;
 }
 
 KResultOr<NonnullRefPtr<FileDescription>> FileDescription::try_create(File& file)
 {
-    auto description = adopt_ref_if_nonnull(new (nothrow) FileDescription(file));
-    if (!description)
-        return ENOMEM;
+    auto description = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FileDescription(file)));
     auto result = description->attach();
     if (result.is_error()) {
         dbgln_if(FILEDESCRIPTION_DEBUG, "Failed to create file description for file: {}", result);
         return result;
     }
-    return description.release_nonnull();
+    return description;
 }
 
 FileDescription::FileDescription(File& file)
@@ -179,13 +172,11 @@ KResultOr<size_t> FileDescription::read(UserOrKernelBuffer& buffer, size_t count
     MutexLocker locker(m_lock);
     if (Checked<off_t>::addition_would_overflow(m_current_offset, count))
         return EOVERFLOW;
-    auto nread_or_error = m_file->read(*this, offset(), buffer, count);
-    if (!nread_or_error.is_error()) {
-        if (m_file->is_seekable())
-            m_current_offset += nread_or_error.value();
-        evaluate_block_conditions();
-    }
-    return nread_or_error;
+    auto nread = TRY(m_file->read(*this, offset(), buffer, count));
+    if (m_file->is_seekable())
+        m_current_offset += nread;
+    evaluate_block_conditions();
+    return nread;
 }
 
 KResultOr<size_t> FileDescription::write(const UserOrKernelBuffer& data, size_t size)
@@ -193,13 +184,11 @@ KResultOr<size_t> FileDescription::write(const UserOrKernelBuffer& data, size_t 
     MutexLocker locker(m_lock);
     if (Checked<off_t>::addition_would_overflow(m_current_offset, size))
         return EOVERFLOW;
-    auto nwritten_or_error = m_file->write(*this, offset(), data, size);
-    if (!nwritten_or_error.is_error()) {
-        if (m_file->is_seekable())
-            m_current_offset += nwritten_or_error.value();
-        evaluate_block_conditions();
-    }
-    return nwritten_or_error;
+    auto nwritten = TRY(m_file->write(*this, offset(), data, size));
+    if (m_file->is_seekable())
+        m_current_offset += nwritten;
+    evaluate_block_conditions();
+    return nwritten;
 }
 
 bool FileDescription::can_write() const
