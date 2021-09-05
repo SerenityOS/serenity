@@ -668,11 +668,9 @@ void Painter::draw_bitmap(const IntPoint& p, const GlyphBitmap& bitmap, Color co
 
 void Painter::draw_triangle(const IntPoint& a, const IntPoint& b, const IntPoint& c, Color color)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
-    IntPoint p0(a);
-    IntPoint p1(b);
-    IntPoint p2(c);
+    IntPoint p0(to_physical(a));
+    IntPoint p1(to_physical(b));
+    IntPoint p2(to_physical(c));
 
     // sort points from top to bottom
     if (p0.y() > p1.y())
