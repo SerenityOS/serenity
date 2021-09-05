@@ -14,10 +14,8 @@ KResultOr<FlatPtr> Process::sys$rmdir(Userspace<const char*> user_path, size_t p
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(cpath);
-    auto path = get_syscall_path_argument(user_path, path_length);
-    if (path.is_error())
-        return path.error();
-    return VirtualFileSystem::the().rmdir(path.value()->view(), current_directory());
+    auto path = TRY(get_syscall_path_argument(user_path, path_length));
+    return VirtualFileSystem::the().rmdir(path->view(), current_directory());
 }
 
 }
