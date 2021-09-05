@@ -57,7 +57,7 @@ UNMAP_AFTER_INIT MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
 {
     dmesgln("PCI: Using MMIO for PCI configuration space access");
 
-    auto checkup_region = MM.allocate_kernel_region(p_mcfg.page_base(), (PAGE_SIZE * 2), "PCI MCFG Checkup", Memory::Region::Access::ReadWrite);
+    auto checkup_region = MM.allocate_kernel_region(p_mcfg.page_base(), (PAGE_SIZE * 2), "PCI MCFG Checkup", Memory::Region::Access::ReadWrite).release_value();
     dbgln_if(PCI_DEBUG, "PCI: Checking MCFG Table length to choose the correct mapping size");
     auto* sdt = (ACPI::Structures::SDTHeader*)checkup_region->vaddr().offset(p_mcfg.offset_in_page()).as_ptr();
     u32 length = sdt->length;
@@ -66,7 +66,7 @@ UNMAP_AFTER_INIT MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     dbgln("PCI: MCFG, length: {}, revision: {}", length, revision);
     checkup_region->unmap();
 
-    auto mcfg_region = MM.allocate_kernel_region(p_mcfg.page_base(), Memory::page_round_up(length) + PAGE_SIZE, "PCI Parsing MCFG", Memory::Region::Access::ReadWrite);
+    auto mcfg_region = MM.allocate_kernel_region(p_mcfg.page_base(), Memory::page_round_up(length) + PAGE_SIZE, "PCI Parsing MCFG", Memory::Region::Access::ReadWrite).release_value();
 
     auto& mcfg = *(ACPI::Structures::MCFG*)mcfg_region->vaddr().offset(p_mcfg.offset_in_page()).as_ptr();
     dbgln_if(PCI_DEBUG, "PCI: Checking MCFG @ {}, {}", VirtualAddress(&mcfg), PhysicalAddress(p_mcfg.get()));
@@ -89,7 +89,7 @@ UNMAP_AFTER_INIT MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     // PCI::PhysicalID objects to the vector, because get_capabilities calls
     // PCI::read16 which will need this region to be mapped.
     u8 start_bus = m_segments.get(0).value().get_start_bus();
-    m_mapped_region = MM.allocate_kernel_region(determine_memory_mapped_bus_region(0, start_bus), MEMORY_RANGE_PER_BUS, "PCI ECAM", Memory::Region::Access::ReadWrite);
+    m_mapped_region = MM.allocate_kernel_region(determine_memory_mapped_bus_region(0, start_bus), MEMORY_RANGE_PER_BUS, "PCI ECAM", Memory::Region::Access::ReadWrite).release_value();
     m_mapped_bus = start_bus;
     dbgln_if(PCI_DEBUG, "PCI: First PCI ECAM Mapped region for starting bus {} @ {} {}", start_bus, m_mapped_region->vaddr(), m_mapped_region->physical_page(0)->paddr());
 
@@ -102,7 +102,7 @@ void MMIOAccess::map_bus_region(u32 segment, u8 bus)
     VERIFY(m_access_lock.is_locked());
     if (m_mapped_bus == bus)
         return;
-    m_mapped_region = MM.allocate_kernel_region(determine_memory_mapped_bus_region(segment, bus), MEMORY_RANGE_PER_BUS, "PCI ECAM", Memory::Region::Access::ReadWrite);
+    m_mapped_region = MM.allocate_kernel_region(determine_memory_mapped_bus_region(segment, bus), MEMORY_RANGE_PER_BUS, "PCI ECAM", Memory::Region::Access::ReadWrite).release_value();
     m_mapped_bus = bus;
     dbgln_if(PCI_DEBUG, "PCI: New PCI ECAM Mapped region for bus {} @ {} {}", bus, m_mapped_region->vaddr(), m_mapped_region->physical_page(0)->paddr());
 }

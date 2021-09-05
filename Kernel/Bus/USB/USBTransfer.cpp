@@ -9,15 +9,12 @@
 
 namespace Kernel::USB {
 
-KResultOr<NonnullRefPtr<Transfer>> Transfer::try_create(Pipe& pipe, u16 len)
+KResultOr<NonnullRefPtr<Transfer>> Transfer::try_create(Pipe& pipe, u16 length)
 {
     // Initialize data buffer for transfer
     // This will definitely need to be refactored in the future, I doubt this will scale well...
-    auto data_buffer = MM.allocate_kernel_region(PAGE_SIZE, "USB Transfer Buffer", Memory::Region::Access::ReadWrite);
-    if (!data_buffer)
-        return ENOMEM;
-
-    return adopt_nonnull_ref_or_enomem(new (nothrow) Transfer(pipe, len, data_buffer.release_nonnull()));
+    auto region = TRY(MM.allocate_kernel_region(PAGE_SIZE, "USB Transfer Buffer", Memory::Region::Access::ReadWrite));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Transfer(pipe, length, move(region)));
 }
 
 Transfer::Transfer(Pipe& pipe, u16 len, NonnullOwnPtr<Memory::Region> data_buffer)

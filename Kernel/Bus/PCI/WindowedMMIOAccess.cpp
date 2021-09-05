@@ -18,7 +18,7 @@ namespace PCI {
 
 UNMAP_AFTER_INIT DeviceConfigurationSpaceMapping::DeviceConfigurationSpaceMapping(Address device_address, const MMIOAccess::MMIOSegment& mmio_segment)
     : m_device_address(device_address)
-    , m_mapped_region(MM.allocate_kernel_region(Memory::page_round_up(PCI_MMIO_CONFIG_SPACE_SIZE), "PCI MMIO Device Access", Memory::Region::Access::ReadWrite).release_nonnull())
+    , m_mapped_region(MM.allocate_kernel_region(Memory::page_round_up(PCI_MMIO_CONFIG_SPACE_SIZE), "PCI MMIO Device Access", Memory::Region::Access::ReadWrite).release_value())
 {
     PhysicalAddress segment_lower_addr = mmio_segment.get_paddr();
     PhysicalAddress device_physical_mmio_space = segment_lower_addr.offset(

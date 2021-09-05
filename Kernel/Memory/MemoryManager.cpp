@@ -700,71 +700,46 @@ PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
     return region->handle_fault(fault);
 }
 
-OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
+KResultOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
     SpinlockLocker lock(kernel_page_directory().get_lock());
-    auto range_or_error = kernel_page_directory().range_allocator().try_allocate_anywhere(size);
-    if (range_or_error.is_error())
-        return {};
-    auto range = range_or_error.release_value();
-    auto maybe_vmobject = AnonymousVMObject::try_create_physically_contiguous_with_size(size);
-    if (maybe_vmobject.is_error()) {
-        kernel_page_directory().range_allocator().deallocate(range);
-        // FIXME: Would be nice to be able to return a KResultOr from here.
-        return {};
-    }
-    return allocate_kernel_region_with_vmobject(range, maybe_vmobject.release_value(), name, access, cacheable);
+    auto vmobject = TRY(AnonymousVMObject::try_create_physically_contiguous_with_size(size));
+    auto range = TRY(kernel_page_directory().range_allocator().try_allocate_anywhere(size));
+    return allocate_kernel_region_with_vmobject(range, move(vmobject), name, access, cacheable);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, StringView name, Region::Access access, AllocationStrategy strategy, Region::Cacheable cacheable)
+KResultOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(size_t size, StringView name, Region::Access access, AllocationStrategy strategy, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
-    auto maybe_vm_object = AnonymousVMObject::try_create_with_size(size, strategy);
-    if (maybe_vm_object.is_error())
-        return {};
+    auto vmobject = TRY(AnonymousVMObject::try_create_with_size(size, strategy));
     SpinlockLocker lock(kernel_page_directory().get_lock());
-    auto range_or_error = kernel_page_directory().range_allocator().try_allocate_anywhere(size);
-    if (range_or_error.is_error())
-        return {};
-    auto range = range_or_error.release_value();
-    return allocate_kernel_region_with_vmobject(range, maybe_vm_object.release_value(), name, access, cacheable);
+    auto range = TRY(kernel_page_directory().range_allocator().try_allocate_anywhere(size));
+    return allocate_kernel_region_with_vmobject(range, move(vmobject), name, access, cacheable);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
+KResultOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
-    auto maybe_vm_object = AnonymousVMObject::try_create_for_physical_range(paddr, size);
-    if (maybe_vm_object.is_error())
-        return {};
     VERIFY(!(size % PAGE_SIZE));
+    auto vmobject = TRY(AnonymousVMObject::try_create_for_physical_range(paddr, size));
     SpinlockLocker lock(kernel_page_directory().get_lock());
-    auto range_or_error = kernel_page_directory().range_allocator().try_allocate_anywhere(size);
-    if (range_or_error.is_error())
-        return {};
-    auto range = range_or_error.release_value();
-    return allocate_kernel_region_with_vmobject(range, maybe_vm_object.release_value(), name, access, cacheable);
+    auto range = TRY(kernel_page_directory().range_allocator().try_allocate_anywhere(size));
+    return allocate_kernel_region_with_vmobject(range, move(vmobject), name, access, cacheable);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VirtualRange const& range, VMObject& vmobject, StringView name, Region::Access access, Region::Cacheable cacheable)
+KResultOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobject(VirtualRange const& range, VMObject& vmobject, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
-    auto maybe_region = Region::try_create_kernel_only(range, vmobject, 0, KString::try_create(name), access, cacheable);
-    if (maybe_region.is_error())
-        return {};
-
-    auto region = maybe_region.release_value();
+    auto region = TRY(Region::try_create_kernel_only(range, vmobject, 0, KString::try_create(name), access, cacheable));
     if (!region->map(kernel_page_directory()))
-        return {};
+        return ENOMEM;
     return region;
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
+KResultOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
     SpinlockLocker lock(kernel_page_directory().get_lock());
-    auto range_or_error = kernel_page_directory().range_allocator().try_allocate_anywhere(size);
-    if (range_or_error.is_error())
-        return {};
-    auto range = range_or_error.release_value();
+    auto range = TRY(kernel_page_directory().range_allocator().try_allocate_anywhere(size));
     return allocate_kernel_region_with_vmobject(range, vmobject, name, access, cacheable);
 }
 
@@ -909,8 +884,13 @@ NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_
         return {};
     }
 
-    auto cleanup_region = MM.allocate_kernel_region(physical_pages[0].paddr(), PAGE_SIZE * count, "MemoryManager Allocation Sanitization", Region::Access::Read | Region::Access::Write);
-    fast_u32_fill((u32*)cleanup_region->vaddr().as_ptr(), 0, (PAGE_SIZE * count) / sizeof(u32));
+    {
+        auto region_or_error = MM.allocate_kernel_region(physical_pages[0].paddr(), PAGE_SIZE * count, "MemoryManager Allocation Sanitization", Region::Access::Read | Region::Access::Write);
+        if (region_or_error.is_error())
+            TODO();
+        auto cleanup_region = region_or_error.release_value();
+        fast_u32_fill((u32*)cleanup_region->vaddr().as_ptr(), 0, (PAGE_SIZE * count) / sizeof(u32));
+    }
     m_system_memory_info.super_physical_pages_used += count;
     return physical_pages;
 }

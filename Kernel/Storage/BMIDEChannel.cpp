@@ -43,8 +43,19 @@ UNMAP_AFTER_INIT void BMIDEChannel::initialize()
     m_dma_buffer_page = MM.allocate_supervisor_physical_page();
     if (m_dma_buffer_page.is_null() || m_prdt_page.is_null())
         return;
-    m_prdt_region = MM.allocate_kernel_region(m_prdt_page->paddr(), PAGE_SIZE, "IDE PRDT", Memory::Region::Access::ReadWrite);
-    m_dma_buffer_region = MM.allocate_kernel_region(m_dma_buffer_page->paddr(), PAGE_SIZE, "IDE DMA region", Memory::Region::Access::ReadWrite);
+    {
+        auto region_or_error = MM.allocate_kernel_region(m_prdt_page->paddr(), PAGE_SIZE, "IDE PRDT", Memory::Region::Access::ReadWrite);
+        if (region_or_error.is_error())
+            TODO();
+        m_prdt_region = region_or_error.release_value();
+    }
+    {
+        auto region_or_error = MM.allocate_kernel_region(m_dma_buffer_page->paddr(), PAGE_SIZE, "IDE DMA region", Memory::Region::Access::ReadWrite);
+        if (region_or_error.is_error())
+            TODO();
+        m_dma_buffer_region = region_or_error.release_value();
+    }
+
     prdt().end_of_table = 0x8000;
 
     // clear bus master interrupt status

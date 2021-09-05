@@ -88,7 +88,10 @@ void NetworkTask_main(void*)
     };
 
     size_t buffer_size = 64 * KiB;
-    auto buffer_region = MM.allocate_kernel_region(buffer_size, "Kernel Packet Buffer", Memory::Region::Access::ReadWrite);
+    auto region_or_error = MM.allocate_kernel_region(buffer_size, "Kernel Packet Buffer", Memory::Region::Access::ReadWrite);
+    if (region_or_error.is_error())
+        TODO();
+    auto buffer_region = region_or_error.release_value();
     auto buffer = (u8*)buffer_region->vaddr().get();
     Time packet_timestamp;
 

@@ -30,11 +30,8 @@ class UHCIDescriptorPool {
 public:
     static KResultOr<NonnullOwnPtr<UHCIDescriptorPool<T>>> try_create(StringView name)
     {
-        auto pool_memory_block = MM.allocate_kernel_region(PAGE_SIZE, "UHCI Descriptor Pool", Memory::Region::Access::ReadWrite);
-        if (!pool_memory_block)
-            return ENOMEM;
-
-        return adopt_nonnull_own_or_enomem(new (nothrow) UHCIDescriptorPool(pool_memory_block.release_nonnull(), name));
+        auto pool_memory_block = TRY(MM.allocate_kernel_region(PAGE_SIZE, "UHCI Descriptor Pool", Memory::Region::Access::ReadWrite));
+        return adopt_nonnull_own_or_enomem(new (nothrow) UHCIDescriptorPool(move(pool_memory_block), name));
     }
 
     ~UHCIDescriptorPool() = default;

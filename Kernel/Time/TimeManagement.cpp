@@ -146,8 +146,7 @@ UNMAP_AFTER_INIT void TimeManagement::initialize(u32 cpu)
             s_the->set_system_timer(*apic_timer);
         }
 
-        s_the->m_time_page_region = MM.allocate_kernel_region(PAGE_SIZE, "Time page"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow);
-        VERIFY(s_the->m_time_page_region);
+        s_the->m_time_page_region = MM.allocate_kernel_region(PAGE_SIZE, "Time page"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value();
     } else {
         VERIFY(s_the.is_initialized());
         if (auto* apic_timer = APIC::the().get_timer()) {
