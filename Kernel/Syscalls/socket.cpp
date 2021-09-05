@@ -38,18 +38,11 @@ KResultOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
 
     if ((type & SOCK_TYPE_MASK) == SOCK_RAW && !is_superuser())
         return EACCES;
-    auto fd_or_error = m_fds.allocate();
-    if (fd_or_error.is_error())
-        return fd_or_error.error();
-    auto socket_fd = fd_or_error.release_value();
-    auto result = Socket::create(domain, type, protocol);
-    if (result.is_error())
-        return result.error();
-    auto description_result = FileDescription::try_create(*result.value());
-    if (description_result.is_error())
-        return description_result.error();
-    setup_socket_fd(socket_fd.fd, description_result.value(), type);
-    return socket_fd.fd;
+    auto fd_allocation = TRY(m_fds.allocate());
+    auto socket = TRY(Socket::create(domain, type, protocol));
+    auto description = TRY(FileDescription::try_create(socket));
+    setup_socket_fd(fd_allocation.fd, move(description), type);
+    return fd_allocation.fd;
 }
 
 KResultOr<FlatPtr> Process::sys$bind(int sockfd, Userspace<const sockaddr*> address, socklen_t address_length)
@@ -100,10 +93,7 @@ KResultOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_para
     if (user_address && !copy_from_user(&address_size, static_ptr_cast<const socklen_t*>(user_address_size)))
         return EFAULT;
 
-    auto accepted_socket_fd_or_error = m_fds.allocate();
-    if (accepted_socket_fd_or_error.is_error())
-        return accepted_socket_fd_or_error.error();
-    auto accepted_socket_fd = accepted_socket_fd_or_error.release_value();
+    auto fd_allocation = TRY(m_fds.allocate());
     auto accepting_socket_description = fds().file_description(accepting_socket_fd);
     if (!accepting_socket_description)
         return EBADF;
@@ -133,22 +123,20 @@ KResultOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_para
             return EFAULT;
     }
 
-    auto accepted_socket_description_result = FileDescription::try_create(*accepted_socket);
-    if (accepted_socket_description_result.is_error())
-        return accepted_socket_description_result.error();
+    auto accepted_socket_description = TRY(FileDescription::try_create(*accepted_socket));
 
-    accepted_socket_description_result.value()->set_readable(true);
-    accepted_socket_description_result.value()->set_writable(true);
+    accepted_socket_description->set_readable(true);
+    accepted_socket_description->set_writable(true);
     if (flags & SOCK_NONBLOCK)
-        accepted_socket_description_result.value()->set_blocking(false);
+        accepted_socket_description->set_blocking(false);
     int fd_flags = 0;
     if (flags & SOCK_CLOEXEC)
         fd_flags |= FD_CLOEXEC;
-    m_fds[accepted_socket_fd.fd].set(accepted_socket_description_result.release_value(), fd_flags);
+    m_fds[fd_allocation.fd].set(move(accepted_socket_description), fd_flags);
 
     // NOTE: Moving this state to Completed is what causes connect() to unblock on the client side.
     accepted_socket->set_setup_state(Socket::SetupState::Completed);
-    return accepted_socket_fd.fd;
+    return fd_allocation.fd;
 }
 
 KResultOr<FlatPtr> Process::sys$connect(int sockfd, Userspace<const sockaddr*> user_address, socklen_t user_address_size)
@@ -406,21 +394,14 @@ KResultOr<FlatPtr> Process::sys$socketpair(Userspace<const Syscall::SC_socketpai
     if (params.protocol != 0 && params.protocol != PF_LOCAL)
         return EINVAL;
 
-    auto result = LocalSocket::try_create_connected_pair(params.type & SOCK_TYPE_MASK);
-    if (result.is_error())
-        return result.error();
-    auto pair = result.value();
+    auto pair = TRY(LocalSocket::try_create_connected_pair(params.type & SOCK_TYPE_MASK));
 
-    auto fd0_or_error = m_fds.allocate();
-    if (fd0_or_error.is_error())
-        return fd0_or_error.error();
-    auto fd1_or_error = m_fds.allocate();
-    if (fd1_or_error.is_error())
-        return fd1_or_error.error();
+    auto fd_allocation0 = TRY(m_fds.allocate());
+    auto fd_allocation1 = TRY(m_fds.allocate());
 
     int fds[2];
-    fds[0] = fd0_or_error.value().fd;
-    fds[1] = fd1_or_error.value().fd;
+    fds[0] = fd_allocation0.fd;
+    fds[1] = fd_allocation1.fd;
     setup_socket_fd(fds[0], pair.description0, params.type);
     setup_socket_fd(fds[1], pair.description1, params.type);
 
