@@ -45,21 +45,12 @@ KResultOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params
     if (params.permissions.length > 5)
         return EINVAL;
 
-    auto path_or_error = get_syscall_path_argument(params.path);
-    if (path_or_error.is_error())
-        return path_or_error.error();
-    auto& path = *path_or_error.value();
+    auto path = TRY(get_syscall_path_argument(params.path));
 
-    if (path.is_empty() || !path.view().starts_with('/'))
+    if (path->is_empty() || !path->view().starts_with('/'))
         return EINVAL;
 
-    OwnPtr<KString> permissions;
-    {
-        auto permissions_or_error = try_copy_kstring_from_user(params.permissions);
-        if (permissions_or_error.is_error())
-            return permissions_or_error.error();
-        permissions = permissions_or_error.release_value();
-    }
+    auto permissions = TRY(try_copy_kstring_from_user(params.permissions));
 
     // Let's work out permissions first...
     unsigned new_permissions = 0;
@@ -92,7 +83,7 @@ KResultOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params
     // If this case is encountered, the parent node of the path is returned and the custody of that inode is used instead.
     RefPtr<Custody> parent_custody; // Parent inode in case of ENOENT
     OwnPtr<KString> new_unveiled_path;
-    auto custody_or_error = VirtualFileSystem::the().resolve_path_without_veil(path.view(), VirtualFileSystem::the().root_custody(), &parent_custody);
+    auto custody_or_error = VirtualFileSystem::the().resolve_path_without_veil(path->view(), VirtualFileSystem::the().root_custody(), &parent_custody);
     if (!custody_or_error.is_error()) {
         new_unveiled_path = custody_or_error.value()->try_create_absolute_path();
         if (!new_unveiled_path)
@@ -101,7 +92,7 @@ KResultOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params
         auto parent_custody_path = parent_custody->try_create_absolute_path();
         if (!parent_custody_path)
             return ENOMEM;
-        new_unveiled_path = KLexicalPath::try_join(parent_custody_path->view(), KLexicalPath::basename(path.view()));
+        new_unveiled_path = KLexicalPath::try_join(parent_custody_path->view(), KLexicalPath::basename(path->view()));
         if (!new_unveiled_path)
             return ENOMEM;
     } else {
