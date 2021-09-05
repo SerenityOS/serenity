@@ -14,9 +14,7 @@ KResultOr<FlatPtr> Process::sys$utime(Userspace<const char*> user_path, size_t p
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(fattr);
-    auto path = get_syscall_path_argument(user_path, path_length);
-    if (path.is_error())
-        return path.error();
+    auto path = TRY(get_syscall_path_argument(user_path, path_length));
     utimbuf buf;
     if (user_buf) {
         TRY(copy_from_user(&buf, user_buf));
@@ -25,7 +23,7 @@ KResultOr<FlatPtr> Process::sys$utime(Userspace<const char*> user_path, size_t p
         // Not a bug!
         buf = { now, now };
     }
-    return VirtualFileSystem::the().utime(path.value()->view(), current_directory(), buf.actime, buf.modtime);
+    return VirtualFileSystem::the().utime(path->view(), current_directory(), buf.actime, buf.modtime);
 }
 
 }
