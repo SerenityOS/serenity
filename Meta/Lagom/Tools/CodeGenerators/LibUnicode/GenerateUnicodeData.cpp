@@ -181,7 +181,6 @@ static void parse_special_casing(Core::File& file, UnicodeData& unicode_data)
         VERIFY(segments.size() == 5 || segments.size() == 6);
 
         SpecialCasing casing {};
-        casing.index = static_cast<u32>(unicode_data.special_casing.size());
         casing.code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
         casing.lowercase_mapping = parse_code_point_list(segments[1]);
         casing.titlecase_mapping = parse_code_point_list(segments[2]);
@@ -214,6 +213,19 @@ static void parse_special_casing(Core::File& file, UnicodeData& unicode_data)
 
         unicode_data.special_casing.append(move(casing));
     }
+
+    quick_sort(unicode_data.special_casing, [](auto const& lhs, auto const& rhs) {
+        if (lhs.code_point != rhs.code_point)
+            return lhs.code_point < rhs.code_point;
+        if (lhs.locale.is_empty() && !rhs.locale.is_empty())
+            return false;
+        if (!lhs.locale.is_empty() && rhs.locale.is_empty())
+            return true;
+        return lhs.locale < rhs.locale;
+    });
+
+    for (u32 i = 0; i < unicode_data.special_casing.size(); ++i)
+        unicode_data.special_casing[i].index = i;
 }
 
 static void parse_prop_list(Core::File& file, PropList& prop_list, bool multi_value_property = false)
