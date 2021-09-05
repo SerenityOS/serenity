@@ -507,7 +507,7 @@ public:
             blockers_to_append.clear();
         }
 
-        mutable Spinlock<u8> m_lock;
+        mutable Spinlock m_lock;
 
     private:
         Vector<BlockerInfo, 4> m_blockers;
@@ -831,7 +831,7 @@ public:
         }
     }
 
-    void block(Kernel::Mutex&, SpinlockLocker<Spinlock<u8>>&, u32);
+    void block(Kernel::Mutex&, SpinlockLocker<Spinlock>&, u32);
 
     template<typename BlockerType, class... Args>
     [[nodiscard]] BlockResult block(const BlockTimeout& timeout, Args&&... args)
@@ -1307,7 +1307,7 @@ private:
         unsigned count;
     };
     Atomic<u32> m_holding_locks { 0 };
-    Spinlock<u8> m_holding_locks_lock;
+    Spinlock m_holding_locks_lock;
     Vector<HoldingLockInfo> m_holding_locks_list;
 #endif
 

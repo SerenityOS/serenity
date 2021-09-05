@@ -55,7 +55,7 @@ private:
     RefPtr<SysFSUSBDeviceInformation> device_node_for(USB::Device& device);
 
     IntrusiveList<SysFSUSBDeviceInformation, RefPtr<SysFSUSBDeviceInformation>, &SysFSUSBDeviceInformation::m_list_node> m_device_nodes;
-    mutable Spinlock<u8> m_lock;
+    mutable Spinlock m_lock;
 };
 
 }

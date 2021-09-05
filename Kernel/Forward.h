@@ -84,7 +84,6 @@ class VirtualRange;
 class VirtualRangeAllocator;
 }
 
-template<typename BaseType>
 class Spinlock;
 template<typename LockType>
 class SpinlockLocker;

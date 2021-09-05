@@ -44,7 +44,7 @@ private:
     PhysicalAddress determine_memory_mapped_bus_region(u32 segment, u8 bus) const;
     void map_bus_region(u32, u8);
     VirtualAddress get_device_configuration_space(Address address);
-    Spinlock<u8> m_access_lock;
+    Spinlock m_access_lock;
     u8 m_mapped_bus { 0 };
     OwnPtr<Memory::Region> m_mapped_region;
 

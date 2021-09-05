@@ -15,7 +15,7 @@
 
 namespace Kernel {
 
-static Spinlock<u8> s_index_lock;
+static Spinlock s_index_lock;
 static InodeIndex s_next_inode_index = 0;
 
 namespace SegmentedProcFSIndex {

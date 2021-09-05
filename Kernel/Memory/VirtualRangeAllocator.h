@@ -35,7 +35,7 @@ private:
 
     RedBlackTree<FlatPtr, VirtualRange> m_available_ranges;
     VirtualRange m_total_range;
-    mutable Spinlock<u8> m_lock;
+    mutable Spinlock m_lock;
 };
 
 }

@@ -238,7 +238,7 @@ bool AHCIPort::initialize_without_reset()
     return initialize(lock);
 }
 
-bool AHCIPort::initialize(SpinlockLocker<Spinlock<u8>>& main_lock)
+bool AHCIPort::initialize(SpinlockLocker<Spinlock>& main_lock)
 {
     VERIFY(m_lock.is_locked());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Initialization. Signature = {:#08x}", representative_port_index(), static_cast<u32>(m_port_registers.sig));
@@ -591,7 +591,7 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
     return true;
 }
 
-bool AHCIPort::identify_device(SpinlockLocker<Spinlock<u8>>& main_lock)
+bool AHCIPort::identify_device(SpinlockLocker<Spinlock>& main_lock)
 {
     VERIFY(m_lock.is_locked());
     VERIFY(is_operable());
@@ -740,7 +740,7 @@ void AHCIPort::stop_fis_receiving() const
     m_port_registers.cmd = m_port_registers.cmd & 0xFFFFFFEF;
 }
 
-bool AHCIPort::initiate_sata_reset(SpinlockLocker<Spinlock<u8>>& main_lock)
+bool AHCIPort::initiate_sata_reset(SpinlockLocker<Spinlock>& main_lock)
 {
     VERIFY(m_lock.is_locked());
     VERIFY(m_hard_lock.is_locked());

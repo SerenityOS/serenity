@@ -41,7 +41,7 @@ protected:
     // ^CharacterDevice
     virtual StringView class_name() const override { return "MouseDevice"; }
 
-    mutable Spinlock<u8> m_queue_lock;
+    mutable Spinlock m_queue_lock;
     CircularQueue<MousePacket, 100> m_queue;
 };
 

@@ -18,7 +18,7 @@ return true;
 
 This lock doesn't disable interrupts at all, and if it is already in use, the scheduler will simply yield away from that section until it tries to lock it again.
 
-### Hard lock - `SpinLock<u8>`
+### Hard lock - `Spinlock`
 
 A hard lock is essentially a lock that is used in critical sections in the kernel. We use it with a `ScopedSpinLock` class, to create a scoped locking of that lock:
 

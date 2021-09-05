@@ -51,7 +51,7 @@ public:
 
 private:
     bool is_phy_enabled() const { return (m_port_registers.ssts & 0xf) == 3; }
-    bool initialize(SpinlockLocker<Spinlock<u8>>&);
+    bool initialize(SpinlockLocker<Spinlock>&);
 
     UNMAP_AFTER_INIT AHCIPort(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
 
@@ -62,7 +62,7 @@ private:
     const char* try_disambiguate_sata_status();
     void try_disambiguate_sata_error();
 
-    bool initiate_sata_reset(SpinlockLocker<Spinlock<u8>>&);
+    bool initiate_sata_reset(SpinlockLocker<Spinlock>&);
     void rebase();
     void recover_from_fatal_error();
     bool shutdown();
@@ -79,7 +79,7 @@ private:
 
     bool spin_until_ready() const;
 
-    bool identify_device(SpinlockLocker<Spinlock<u8>>&);
+    bool identify_device(SpinlockLocker<Spinlock>&);
 
     ALWAYS_INLINE void start_command_list_processing() const;
     ALWAYS_INLINE void mark_command_header_ready_to_process(u8 command_header_index) const;
@@ -101,7 +101,7 @@ private:
 
     EntropySource m_entropy_source;
     RefPtr<AsyncBlockDeviceRequest> m_current_request;
-    Spinlock<u8> m_hard_lock;
+    Spinlock m_hard_lock;
     Mutex m_lock { "AHCIPort" };
 
     mutable bool m_wait_for_completion { false };

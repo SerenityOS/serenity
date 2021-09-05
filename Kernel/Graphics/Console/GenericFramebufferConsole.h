@@ -47,6 +47,6 @@ protected:
     virtual u8* framebuffer_data() = 0;
     void clear_glyph(size_t x, size_t y);
     size_t m_pitch;
-    mutable Spinlock<u8> m_lock;
+    mutable Spinlock m_lock;
 };
 }
