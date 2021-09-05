@@ -52,9 +52,7 @@ static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& par
         if (peer_process.tracer()) {
             return EBUSY;
         }
-        auto result = peer_process.start_tracing_from(caller.pid());
-        if (result.is_error())
-            return result.error();
+        TRY(peer_process.start_tracing_from(caller.pid()));
         SpinlockLocker lock(peer->get_lock());
         if (peer->state() != Thread::State::Stopped) {
             peer->send_signal(SIGSTOP, &caller);
@@ -123,10 +121,8 @@ static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& par
             return EFAULT;
         if (!Memory::is_user_address(VirtualAddress { peek_params.address }))
             return EFAULT;
-        auto result = peer->process().peek_user_data(Userspace<const u32*> { (FlatPtr)peek_params.address });
-        if (result.is_error())
-            return result.error();
-        if (!copy_to_user(peek_params.out_data, &result.value()))
+        auto data = TRY(peer->process().peek_user_data(Userspace<const u32*> { (FlatPtr)peek_params.address }));
+        if (!copy_to_user(peek_params.out_data, &data))
             return EFAULT;
         break;
     }
@@ -140,10 +136,8 @@ static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& par
         Kernel::Syscall::SC_ptrace_peek_params peek_params {};
         if (!copy_from_user(&peek_params, reinterpret_cast<Kernel::Syscall::SC_ptrace_peek_params*>(params.addr)))
             return EFAULT;
-        auto result = peer->peek_debug_register(reinterpret_cast<uintptr_t>(peek_params.address));
-        if (result.is_error())
-            return result.error();
-        if (!copy_to_user(peek_params.out_data, &result.value()))
+        auto data = TRY(peer->peek_debug_register(reinterpret_cast<uintptr_t>(peek_params.address)));
+        if (!copy_to_user(peek_params.out_data, &data))
             return EFAULT;
         break;
     }
