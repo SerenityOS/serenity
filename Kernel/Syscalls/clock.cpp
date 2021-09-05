@@ -21,11 +21,8 @@ KResultOr<FlatPtr> Process::sys$map_time_page()
     if (!range.has_value())
         return ENOMEM;
 
-    auto region_or_error = address_space().allocate_region_with_vmobject(range.value(), vmobject, 0, "Kernel time page"sv, PROT_READ, true);
-    if (region_or_error.is_error())
-        return region_or_error.error();
-
-    return region_or_error.value()->vaddr().get();
+    auto* region = TRY(address_space().allocate_region_with_vmobject(range.value(), vmobject, 0, "Kernel time page"sv, PROT_READ, true));
+    return region->vaddr().get();
 }
 
 KResultOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
