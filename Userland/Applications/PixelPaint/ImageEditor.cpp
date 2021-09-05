@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
+ * Copyright (c) 2021, David Isaksson <davidisaksson93@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -122,6 +123,7 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
         const auto ruler_bg_color = palette().color(Gfx::ColorRole::InactiveSelection);
         const auto ruler_fg_color = palette().color(Gfx::ColorRole::Ruler);
         const auto ruler_text_color = palette().color(Gfx::ColorRole::InactiveSelectionText);
+        const auto mouse_indicator_color = Color::White;
 
         // Ruler background
         painter.fill_rect({ { 0, 0 }, { m_ruler_thickness, rect().height() } }, ruler_bg_color);
@@ -165,6 +167,12 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
             painter.draw_text({ { 0, editor_y - m_ruler_thickness }, { m_ruler_thickness, m_ruler_thickness } }, String::formatted("{}", y), painter.font(), Gfx::TextAlignment::BottomRight, ruler_text_color);
         }
 
+        // Mouse position indicator
+        const Gfx::IntPoint indicator_x({ m_mouse_position.x(), m_ruler_thickness });
+        const Gfx::IntPoint indicator_y({ m_ruler_thickness, m_mouse_position.y() });
+        painter.draw_triangle(indicator_x, indicator_x + Gfx::IntPoint(-m_mouse_indicator_triangle_size, -m_mouse_indicator_triangle_size), indicator_x + Gfx::IntPoint(m_mouse_indicator_triangle_size, -m_mouse_indicator_triangle_size), mouse_indicator_color);
+        painter.draw_triangle(indicator_y, indicator_y + Gfx::IntPoint(-m_mouse_indicator_triangle_size, -m_mouse_indicator_triangle_size), indicator_y + Gfx::IntPoint(-m_mouse_indicator_triangle_size, m_mouse_indicator_triangle_size), mouse_indicator_color);
+
         // Top left square
         painter.fill_rect({ { 0, 0 }, { m_ruler_thickness, m_ruler_thickness } }, ruler_bg_color);
     }
@@ -183,6 +191,20 @@ int ImageEditor::calculate_ruler_step_size() const
             return 5 * pow(10, factor);
     }
     return 1 * pow(10, max_factor);
+}
+
+Gfx::IntRect ImageEditor::mouse_indicator_rect_x() const
+{
+    const Gfx::IntPoint top_left({ m_ruler_thickness, m_ruler_thickness - m_mouse_indicator_triangle_size });
+    const Gfx::IntSize size({ width() + 1, m_mouse_indicator_triangle_size + 1 });
+    return Gfx::IntRect(top_left, size);
+}
+
+Gfx::IntRect ImageEditor::mouse_indicator_rect_y() const
+{
+    const Gfx::IntPoint top_left({ m_ruler_thickness - m_mouse_indicator_triangle_size, m_ruler_thickness });
+    const Gfx::IntSize size({ m_mouse_indicator_triangle_size + 1, height() + 1 });
+    return Gfx::IntRect(top_left, size);
 }
 
 Gfx::FloatRect ImageEditor::layer_rect_to_editor_rect(Layer const& layer, Gfx::IntRect const& layer_rect) const
@@ -288,6 +310,12 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
 
 void ImageEditor::mousemove_event(GUI::MouseEvent& event)
 {
+    m_mouse_position = event.position();
+    if (m_show_rulers) {
+        update(mouse_indicator_rect_x());
+        update(mouse_indicator_rect_y());
+    }
+
     if (event.buttons() & GUI::MouseButton::Middle) {
         auto delta = event.position() - m_click_position;
         m_pan_origin = m_saved_pan_origin.translated(
