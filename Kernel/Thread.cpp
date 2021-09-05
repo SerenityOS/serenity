@@ -1190,13 +1190,10 @@ KResult Thread::make_thread_specific_region(Badge<Process>)
     if (!process().m_master_tls_region)
         return KSuccess;
 
-    auto range = process().address_space().allocate_range({}, thread_specific_region_size());
-    if (!range.has_value())
-        return ENOMEM;
+    auto range = TRY(process().address_space().try_allocate_range({}, thread_specific_region_size()));
+    auto* region = TRY(process().address_space().allocate_region(range, "Thread-specific", PROT_READ | PROT_WRITE));
 
-    auto* region = TRY(process().address_space().allocate_region(range.value(), "Thread-specific", PROT_READ | PROT_WRITE));
-
-    m_thread_specific_range = range.value();
+    m_thread_specific_range = range;
 
     SmapDisabler disabler;
     auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment())).as_ptr();

@@ -21,9 +21,9 @@ public:
     void initialize_with_range(VirtualAddress, size_t);
     void initialize_from_parent(VirtualRangeAllocator const&);
 
-    Optional<VirtualRange> allocate_anywhere(size_t, size_t alignment = PAGE_SIZE);
-    Optional<VirtualRange> allocate_specific(VirtualAddress, size_t);
-    Optional<VirtualRange> allocate_randomized(size_t, size_t alignment);
+    KResultOr<VirtualRange> try_allocate_anywhere(size_t, size_t alignment = PAGE_SIZE);
+    KResultOr<VirtualRange> try_allocate_specific(VirtualAddress, size_t);
+    KResultOr<VirtualRange> try_allocate_randomized(size_t, size_t alignment);
     void deallocate(VirtualRange const&);
 
     void dump() const;
