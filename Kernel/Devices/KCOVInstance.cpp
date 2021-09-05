@@ -33,11 +33,9 @@ KResult KCOVInstance::buffer_allocate(size_t buffer_size_in_entries)
         return maybe_vmobject.error();
     m_vmobject = maybe_vmobject.release_value();
 
-    m_kernel_region = MM.allocate_kernel_region_with_vmobject(
+    m_kernel_region = TRY(MM.allocate_kernel_region_with_vmobject(
         *m_vmobject, m_buffer_size_in_bytes, String::formatted("kcov_{}", m_pid),
-        Memory::Region::Access::ReadWrite);
-    if (!m_kernel_region)
-        return ENOMEM;
+        Memory::Region::Access::ReadWrite));
 
     m_buffer = (u64*)m_kernel_region->vaddr().as_ptr();
     if (!has_buffer())

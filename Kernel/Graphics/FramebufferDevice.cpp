@@ -51,13 +51,8 @@ KResultOr<Memory::Region*> FramebufferDevice::mmap(Process& process, FileDescrip
         return maybe_swapped_framebuffer_vmobject.error();
     m_swapped_framebuffer_vmobject = maybe_swapped_framebuffer_vmobject.release_value();
 
-    m_real_framebuffer_region = MM.allocate_kernel_region_with_vmobject(*m_real_framebuffer_vmobject, Memory::page_round_up(framebuffer_size_in_bytes()), "Framebuffer", Memory::Region::Access::ReadWrite);
-    if (!m_real_framebuffer_region)
-        return ENOMEM;
-
-    m_swapped_framebuffer_region = MM.allocate_kernel_region_with_vmobject(*m_swapped_framebuffer_vmobject, Memory::page_round_up(framebuffer_size_in_bytes()), "Framebuffer Swap (Blank)", Memory::Region::Access::ReadWrite);
-    if (!m_swapped_framebuffer_region)
-        return ENOMEM;
+    m_real_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(*m_real_framebuffer_vmobject, Memory::page_round_up(framebuffer_size_in_bytes()), "Framebuffer", Memory::Region::Access::ReadWrite));
+    m_swapped_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(*m_swapped_framebuffer_vmobject, Memory::page_round_up(framebuffer_size_in_bytes()), "Framebuffer Swap (Blank)", Memory::Region::Access::ReadWrite));
 
     RefPtr<Memory::VMObject> chosen_vmobject;
     if (m_graphical_writes_enabled) {
@@ -123,13 +118,8 @@ UNMAP_AFTER_INIT KResult FramebufferDevice::initialize()
         return maybe_swapped_framebuffer_vmobject.error();
     m_swapped_framebuffer_vmobject = maybe_swapped_framebuffer_vmobject.release_value();
 
-    m_real_framebuffer_region = MM.allocate_kernel_region_with_vmobject(*m_real_framebuffer_vmobject, Memory::page_round_up(framebuffer_size_in_bytes()), "Framebuffer", Memory::Region::Access::ReadWrite);
-    if (!m_real_framebuffer_region)
-        return ENOMEM;
-
-    m_swapped_framebuffer_region = MM.allocate_kernel_region_with_vmobject(*m_swapped_framebuffer_vmobject, Memory::page_round_up(framebuffer_size_in_bytes()), "Framebuffer Swap (Blank)", Memory::Region::Access::ReadWrite);
-    if (!m_swapped_framebuffer_region)
-        return ENOMEM;
+    m_real_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(*m_real_framebuffer_vmobject, Memory::page_round_up(framebuffer_size_in_bytes()), "Framebuffer", Memory::Region::Access::ReadWrite));
+    m_swapped_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(*m_swapped_framebuffer_vmobject, Memory::page_round_up(framebuffer_size_in_bytes()), "Framebuffer Swap (Blank)", Memory::Region::Access::ReadWrite));
 
     return KSuccess;
 }

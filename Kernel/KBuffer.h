@@ -29,20 +29,21 @@ class KBufferImpl : public RefCounted<KBufferImpl> {
 public:
     static RefPtr<KBufferImpl> try_create_with_size(size_t size, Memory::Region::Access access, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
-        auto region = MM.allocate_kernel_region(Memory::page_round_up(size), name, access, strategy);
-        if (!region)
+        auto region_or_error = MM.allocate_kernel_region(Memory::page_round_up(size), name, access, strategy);
+        if (region_or_error.is_error())
             return nullptr;
-        return adopt_ref_if_nonnull(new (nothrow) KBufferImpl(region.release_nonnull(), size, strategy));
+        return adopt_ref_if_nonnull(new (nothrow) KBufferImpl(region_or_error.release_value(), size, strategy));
     }
 
     static RefPtr<KBufferImpl> try_create_with_bytes(ReadonlyBytes bytes, Memory::Region::Access access, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
-        auto region = MM.allocate_kernel_region(Memory::page_round_up(bytes.size()), name, access, strategy);
-        if (!region)
+        auto region_or_error = MM.allocate_kernel_region(Memory::page_round_up(bytes.size()), name, access, strategy);
+        if (region_or_error.is_error())
             return nullptr;
+        auto region = region_or_error.release_value();
         memcpy(region->vaddr().as_ptr(), bytes.data(), bytes.size());
 
-        return adopt_ref_if_nonnull(new (nothrow) KBufferImpl(region.release_nonnull(), bytes.size(), strategy));
+        return adopt_ref_if_nonnull(new (nothrow) KBufferImpl(move(region), bytes.size(), strategy));
     }
 
     static RefPtr<KBufferImpl> create_with_size(size_t size, Memory::Region::Access access, StringView name, AllocationStrategy strategy = AllocationStrategy::Reserve)
@@ -61,12 +62,13 @@ public:
 
     [[nodiscard]] bool expand(size_t new_capacity)
     {
-        auto new_region = MM.allocate_kernel_region(Memory::page_round_up(new_capacity), m_region->name(), m_region->access(), m_allocation_strategy);
-        if (!new_region)
+        auto new_region_or_error = MM.allocate_kernel_region(Memory::page_round_up(new_capacity), m_region->name(), m_region->access(), m_allocation_strategy);
+        if (new_region_or_error.is_error())
             return false;
+        auto new_region = new_region_or_error.release_value();
         if (m_size > 0)
             memcpy(new_region->vaddr().as_ptr(), data(), min(m_region->size(), m_size));
-        m_region = new_region.release_nonnull();
+        m_region = move(new_region);
         return true;
     }
 

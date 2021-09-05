@@ -19,10 +19,9 @@ Queue::Queue(u16 queue_size, u16 notify_offset)
     size_t size_of_device = sizeof(QueueDevice) + queue_size * sizeof(QueueDeviceItem);
     auto queue_region_size = Memory::page_round_up(size_of_descriptors + size_of_driver + size_of_device);
     if (queue_region_size <= PAGE_SIZE)
-        m_queue_region = MM.allocate_kernel_region(queue_region_size, "VirtIO Queue", Memory::Region::Access::ReadWrite);
+        m_queue_region = MM.allocate_kernel_region(queue_region_size, "VirtIO Queue", Memory::Region::Access::ReadWrite).release_value();
     else
-        m_queue_region = MM.allocate_contiguous_kernel_region(queue_region_size, "VirtIO Queue", Memory::Region::Access::ReadWrite);
-    VERIFY(m_queue_region);
+        m_queue_region = MM.allocate_contiguous_kernel_region(queue_region_size, "VirtIO Queue", Memory::Region::Access::ReadWrite).release_value();
     // TODO: ensure alignment!!!
     u8* ptr = m_queue_region->vaddr().as_ptr();
     memset(ptr, 0, m_queue_region->size());

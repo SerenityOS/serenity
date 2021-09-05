@@ -173,12 +173,7 @@ static KResultOr<RequiredLoadRange> get_required_load_range(FileDescription& pro
 
     size_t executable_size = inode.size();
 
-    auto region = MM.allocate_kernel_region_with_vmobject(*vmobject, Memory::page_round_up(executable_size), "ELF memory range calculation", Memory::Region::Access::Read);
-    if (!region) {
-        dbgln("Could not allocate memory for ELF");
-        return ENOMEM;
-    }
-
+    auto region = TRY(MM.allocate_kernel_region_with_vmobject(*vmobject, Memory::page_round_up(executable_size), "ELF memory range calculation", Memory::Region::Access::Read));
     auto elf_image = ELF::Image(region->vaddr().as_ptr(), executable_size);
     if (!elf_image.is_valid()) {
         return EINVAL;
@@ -283,12 +278,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
 
     size_t executable_size = inode.size();
 
-    auto executable_region = MM.allocate_kernel_region_with_vmobject(*vmobject, Memory::page_round_up(executable_size), "ELF loading", Memory::Region::Access::Read);
-    if (!executable_region) {
-        dbgln("Could not allocate memory for ELF loading");
-        return ENOMEM;
-    }
-
+    auto executable_region = TRY(MM.allocate_kernel_region_with_vmobject(*vmobject, Memory::page_round_up(executable_size), "ELF loading", Memory::Region::Access::Read));
     auto elf_image = ELF::Image(executable_region->vaddr().as_ptr(), executable_size);
 
     if (!elf_image.is_valid())

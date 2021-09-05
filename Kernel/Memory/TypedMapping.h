@@ -28,7 +28,10 @@ static TypedMapping<T> map_typed(PhysicalAddress paddr, size_t length, Region::A
 {
     TypedMapping<T> table;
     size_t mapping_length = page_round_up(paddr.offset_in_page() + length);
-    table.region = MM.allocate_kernel_region(paddr.page_base(), mapping_length, {}, access);
+    auto region_or_error = MM.allocate_kernel_region(paddr.page_base(), mapping_length, {}, access);
+    if (region_or_error.is_error())
+        TODO();
+    table.region = region_or_error.release_value();
     table.offset = paddr.offset_in_page();
     return table;
 }

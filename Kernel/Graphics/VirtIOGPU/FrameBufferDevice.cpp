@@ -35,7 +35,7 @@ KResult FrameBufferDevice::create_framebuffer()
     // Allocate frame buffer for both front and back
     auto& info = display_info();
     m_buffer_size = calculate_framebuffer_size(info.rect.width, info.rect.height);
-    m_framebuffer = MM.allocate_kernel_region(m_buffer_size * 2, String::formatted("VirtGPU FrameBuffer #{}", m_scanout.value()), Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow);
+    m_framebuffer = TRY(MM.allocate_kernel_region(m_buffer_size * 2, String::formatted("VirtGPU FrameBuffer #{}", m_scanout.value()), Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow));
     auto write_sink_page = MM.allocate_user_physical_page(Memory::MemoryManager::ShouldZeroFill::No).release_nonnull();
     auto num_needed_pages = m_framebuffer->vmobject().page_count();
 
@@ -43,10 +43,7 @@ KResult FrameBufferDevice::create_framebuffer()
     for (auto i = 0u; i < num_needed_pages; ++i) {
         pages.append(write_sink_page);
     }
-    auto maybe_framebuffer_sink_vmobject = Memory::AnonymousVMObject::try_create_with_physical_pages(pages.span());
-    if (maybe_framebuffer_sink_vmobject.is_error())
-        return maybe_framebuffer_sink_vmobject.error();
-    m_framebuffer_sink_vmobject = maybe_framebuffer_sink_vmobject.release_value();
+    m_framebuffer_sink_vmobject = TRY(Memory::AnonymousVMObject::try_create_with_physical_pages(pages.span()));
 
     MutexLocker locker(m_gpu.operation_lock());
     m_current_buffer = &buffer_from_index(m_last_set_buffer_index.load());

@@ -251,11 +251,12 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
     set_base(apic_base);
 
     if (!m_is_x2) {
-        m_apic_base = MM.allocate_kernel_region(apic_base.page_base(), PAGE_SIZE, {}, Memory::Region::Access::ReadWrite);
-        if (!m_apic_base) {
+        auto region_or_error = MM.allocate_kernel_region(apic_base.page_base(), PAGE_SIZE, {}, Memory::Region::Access::ReadWrite);
+        if (region_or_error.is_error()) {
             dbgln("APIC: Failed to allocate memory for APIC base");
             return false;
         }
+        m_apic_base = region_or_error.release_value();
     }
 
     auto rsdp = ACPI::StaticParsing::find_rsdp();
@@ -311,13 +312,13 @@ UNMAP_AFTER_INIT static NonnullOwnPtr<Memory::Region> create_identity_mapped_reg
     // FIXME: Would be nice to be able to return a KResultOr from here.
     VERIFY(!maybe_vmobject.is_error());
 
-    auto region = MM.allocate_kernel_region_with_vmobject(
+    auto region_or_error = MM.allocate_kernel_region_with_vmobject(
         Memory::VirtualRange { VirtualAddress { static_cast<FlatPtr>(paddr.get()) }, size },
         maybe_vmobject.release_value(),
         {},
         Memory::Region::Access::ReadWriteExecute);
-    VERIFY(region);
-    return region.release_nonnull();
+    VERIFY(!region_or_error.is_error());
+    return region_or_error.release_value();
 }
 
 UNMAP_AFTER_INIT void APIC::do_boot_aps()
@@ -335,11 +336,12 @@ UNMAP_AFTER_INIT void APIC::do_boot_aps()
     // Allocate enough stacks for all APs
     Vector<OwnPtr<Memory::Region>> apic_ap_stacks;
     for (u32 i = 0; i < aps_to_enable; i++) {
-        auto stack_region = MM.allocate_kernel_region(Thread::default_kernel_stack_size, {}, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow);
-        if (!stack_region) {
+        auto stack_region_or_error = MM.allocate_kernel_region(Thread::default_kernel_stack_size, {}, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow);
+        if (stack_region_or_error.is_error()) {
             dbgln("APIC: Failed to allocate stack for AP #{}", i);
             return;
         }
+        auto stack_region = stack_region_or_error.release_value();
         stack_region->set_stack(true);
         apic_ap_stacks.append(move(stack_region));
     }

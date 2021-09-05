@@ -162,7 +162,7 @@ Memory::MappedROM map_bios()
     Memory::MappedROM mapping;
     mapping.size = 128 * KiB;
     mapping.paddr = PhysicalAddress(0xe0000);
-    mapping.region = MM.allocate_kernel_region(mapping.paddr, Memory::page_round_up(mapping.size), {}, Memory::Region::Access::Read);
+    mapping.region = MM.allocate_kernel_region(mapping.paddr, Memory::page_round_up(mapping.size), {}, Memory::Region::Access::Read).release_value();
     return mapping;
 }
 
@@ -176,7 +176,7 @@ Memory::MappedROM map_ebda()
     size_t ebda_size = (*ebda_length_ptr_b1 << 8) | *ebda_length_ptr_b0;
 
     Memory::MappedROM mapping;
-    mapping.region = MM.allocate_kernel_region(ebda_paddr.page_base(), Memory::page_round_up(ebda_size), {}, Memory::Region::Access::Read);
+    mapping.region = MM.allocate_kernel_region(ebda_paddr.page_base(), Memory::page_round_up(ebda_size), {}, Memory::Region::Access::Read).release_value();
     mapping.offset = ebda_paddr.offset_in_page();
     mapping.size = ebda_size;
     mapping.paddr = ebda_paddr;

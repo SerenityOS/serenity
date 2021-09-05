@@ -25,7 +25,7 @@ UNMAP_AFTER_INIT void RNG::initialize()
     }
     if (success) {
         finish_init();
-        m_entropy_buffer = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIO::RNG", Memory::Region::Access::ReadWrite);
+        m_entropy_buffer = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIO::RNG", Memory::Region::Access::ReadWrite).release_value();
         if (m_entropy_buffer) {
             memset(m_entropy_buffer->vaddr().as_ptr(), 0, m_entropy_buffer->size());
             request_entropy_from_host();

@@ -108,7 +108,7 @@ KResult UHCIController::reset()
     // Let's allocate the physical page for the Frame List (which is 4KiB aligned)
     auto vmobject = TRY(Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(PAGE_SIZE));
 
-    m_framelist = MM.allocate_kernel_region_with_vmobject(move(vmobject), PAGE_SIZE, "UHCI Framelist", Memory::Region::Access::Write);
+    m_framelist = TRY(MM.allocate_kernel_region_with_vmobject(move(vmobject), PAGE_SIZE, "UHCI Framelist", Memory::Region::Access::Write));
     dbgln("UHCI: Allocated framelist at physical address {}", m_framelist->physical_page(0)->paddr());
     dbgln("UHCI: Framelist is at virtual address {}", m_framelist->vaddr());
     write_sofmod(64); // 1mS frame time
@@ -144,11 +144,7 @@ UNMAP_AFTER_INIT KResult UHCIController::create_structures()
 
     m_transfer_descriptor_pool = TRY(UHCIDescriptorPool<TransferDescriptor>::try_create("Transfer Descriptor Pool"sv));
 
-    m_isochronous_transfer_pool = MM.allocate_kernel_region_with_vmobject(move(td_pool_vmobject), PAGE_SIZE, "UHCI Isochronous Descriptor Pool", Memory::Region::Access::ReadWrite);
-    if (!m_isochronous_transfer_pool) {
-        dmesgln("UHCI: Failed to allocated Isochronous Descriptor Pool!");
-        return ENOMEM;
-    }
+    m_isochronous_transfer_pool = TRY(MM.allocate_kernel_region_with_vmobject(move(td_pool_vmobject), PAGE_SIZE, "UHCI Isochronous Descriptor Pool", Memory::Region::Access::ReadWrite));
 
     // Set up the Isochronous Transfer Descriptor list
     m_iso_td_list.resize(UHCI_NUMBER_OF_ISOCHRONOUS_TDS);

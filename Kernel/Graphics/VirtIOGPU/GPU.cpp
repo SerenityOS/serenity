@@ -48,8 +48,11 @@ void GPU::initialize()
 
 GPU::GPU(PCI::Address address)
     : VirtIO::Device(address)
-    , m_scratch_space(MM.allocate_contiguous_kernel_region(32 * PAGE_SIZE, "VirtGPU Scratch Space", Memory::Region::Access::ReadWrite))
 {
+    auto region_or_error = MM.allocate_contiguous_kernel_region(32 * PAGE_SIZE, "VirtGPU Scratch Space", Memory::Region::Access::ReadWrite);
+    if (region_or_error.is_error())
+        TODO();
+    m_scratch_space = region_or_error.release_value();
 }
 
 GPU::~GPU()
