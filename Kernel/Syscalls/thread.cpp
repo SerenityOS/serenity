@@ -41,11 +41,7 @@ KResultOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<c
 
     // FIXME: Do something with guard pages?
 
-    auto thread_or_error = Thread::try_create(*this);
-    if (thread_or_error.is_error())
-        return thread_or_error.error();
-
-    auto& thread = thread_or_error.value();
+    auto thread = TRY(Thread::try_create(*this));
 
     // We know this thread is not the main_thread,
     // So give it a unique name until the user calls $set_thread_name on it
@@ -68,9 +64,7 @@ KResultOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<c
 #endif
     regs.cr3 = address_space().page_directory().cr3();
 
-    auto tsr_result = thread->make_thread_specific_region({});
-    if (tsr_result.is_error())
-        return tsr_result.error();
+    TRY(thread->make_thread_specific_region({}));
 
     PerformanceManager::add_thread_created_event(*thread);
 
