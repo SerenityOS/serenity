@@ -53,7 +53,7 @@ private:
     size_t m_framebuffer_width { 0 };
     size_t m_framebuffer_height { 0 };
 
-    Spinlock<u8> m_activation_lock;
+    Spinlock m_activation_lock;
 
     RefPtr<Memory::AnonymousVMObject> m_real_framebuffer_vmobject;
     RefPtr<Memory::AnonymousVMObject> m_swapped_framebuffer_vmobject;

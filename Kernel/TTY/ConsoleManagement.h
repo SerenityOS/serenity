@@ -40,7 +40,7 @@ public:
 private:
     NonnullRefPtrVector<VirtualConsole, s_max_virtual_consoles> m_consoles;
     VirtualConsole* m_active_console { nullptr };
-    Spinlock<u8> m_lock;
+    Spinlock m_lock;
     RecursiveSpinlock m_tty_write_lock;
 };
 

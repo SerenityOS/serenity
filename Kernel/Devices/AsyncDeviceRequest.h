@@ -61,7 +61,7 @@ public:
 
     [[nodiscard]] RequestWaitResult wait(Time* = nullptr);
 
-    void do_start(SpinlockLocker<Spinlock<u8>>&& requests_lock)
+    void do_start(SpinlockLocker<Spinlock>&& requests_lock)
     {
         if (is_completed_result(m_result))
             return;
@@ -150,7 +150,7 @@ private:
     WaitQueue m_queue;
     NonnullRefPtr<Process> m_process;
     void* m_private { nullptr };
-    mutable Spinlock<u8> m_lock;
+    mutable Spinlock m_lock;
 };
 
 }

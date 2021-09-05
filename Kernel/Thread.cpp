@@ -151,7 +151,7 @@ Thread::~Thread()
     }
 }
 
-void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock<u8>>& lock_lock, u32 lock_count)
+void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32 lock_count)
 {
     VERIFY(!Processor::current_in_irq());
     VERIFY(this == Thread::current());

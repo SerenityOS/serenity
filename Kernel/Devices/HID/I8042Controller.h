@@ -105,7 +105,7 @@ private:
     void do_wait_then_write(u8 port, u8 data);
     u8 do_wait_then_read(u8 port);
 
-    Spinlock<u8> m_lock;
+    Spinlock m_lock;
     bool m_first_port_available { false };
     bool m_second_port_available { false };
     bool m_is_dual_channel { false };

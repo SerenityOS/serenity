@@ -681,7 +681,7 @@ public:
     private:
         FileDescriptions() = default;
         static constexpr size_t m_max_open_file_descriptors { FD_SETSIZE };
-        mutable Spinlock<u8> m_fds_lock;
+        mutable Spinlock m_fds_lock;
         Vector<FileDescriptionAndFlags> m_fds_metadatas;
     };
 
@@ -782,7 +782,7 @@ private:
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
 
     FutexQueues m_futex_queues;
-    Spinlock<u8> m_futex_lock;
+    Spinlock m_futex_lock;
 
     // This member is used in the implementation of ptrace's PT_TRACEME flag.
     // If it is set to true, the process will stop at the next execve syscall

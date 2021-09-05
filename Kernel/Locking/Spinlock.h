@@ -13,7 +13,6 @@
 
 namespace Kernel {
 
-template<typename BaseType = u32>
 class Spinlock {
     AK_MAKE_NONCOPYABLE(Spinlock);
     AK_MAKE_NONMOVABLE(Spinlock);
@@ -54,7 +53,7 @@ public:
     }
 
 private:
-    Atomic<BaseType> m_lock { 0 };
+    Atomic<u8> m_lock { 0 };
 };
 
 class RecursiveSpinlock {
