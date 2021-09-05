@@ -70,6 +70,7 @@ private:
     RefPtr<GUI::Action> m_reset_zoom_action;
     RefPtr<GUI::Action> m_add_guide_action;
     RefPtr<GUI::Action> m_show_guides_action;
+    RefPtr<GUI::Action> m_show_rulers_action;
 };
 
 }

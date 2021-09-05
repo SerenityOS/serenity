@@ -80,6 +80,7 @@ MainWidget::MainWidget()
             }
         });
         m_show_guides_action->set_checked(image_editor.guide_visibility());
+        m_show_rulers_action->set_checked(image_editor.ruler_visibility());
     };
 }
 
@@ -366,6 +367,15 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         });
     show_pixel_grid_action->set_checked(true);
     view_menu.add_action(*show_pixel_grid_action);
+
+    m_show_rulers_action = GUI::Action::create_checkable(
+        "Show Rulers", { Mod_Ctrl, Key_R }, [&](auto& action) {
+            if (auto* editor = current_image_editor()) {
+                editor->set_ruler_visibility(action.is_checked());
+            }
+        });
+    m_show_rulers_action->set_checked(true);
+    view_menu.add_action(*m_show_rulers_action);
 
     auto& tool_menu = window.add_menu("&Tool");
     m_toolbox->for_each_tool([&](auto& tool) {
@@ -774,6 +784,10 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
 
     image_editor.on_set_guide_visibility = [&](bool show_guides) {
         m_show_guides_action->set_checked(show_guides);
+    };
+
+    image_editor.on_set_ruler_visibility = [&](bool show_rulers) {
+        m_show_rulers_action->set_checked(show_rulers);
     };
 
     // NOTE: We invoke the above hook directly here to make sure the tab title is set up.
