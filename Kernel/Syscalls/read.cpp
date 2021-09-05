@@ -60,10 +60,8 @@ KResultOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov
         auto buffer = UserOrKernelBuffer::for_user_buffer((u8*)vec.iov_base, vec.iov_len);
         if (!buffer.has_value())
             return EFAULT;
-        auto result = description->read(buffer.value(), vec.iov_len);
-        if (result.is_error())
-            return result.error();
-        nread += result.value();
+        auto nread_here = TRY(description->read(buffer.value(), vec.iov_len));
+        nread += nread_here;
     }
 
     return nread;
@@ -98,10 +96,7 @@ KResultOr<FlatPtr> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
     auto user_buffer = UserOrKernelBuffer::for_user_buffer(buffer, size);
     if (!user_buffer.has_value())
         return EFAULT;
-    auto result = description->read(user_buffer.value(), size);
-    if (result.is_error())
-        return result.error();
-    return result.value();
+    return TRY(description->read(user_buffer.value(), size));
 }
 
 }
