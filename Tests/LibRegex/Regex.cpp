@@ -852,6 +852,21 @@ TEST_CASE(extremely_long_fork_chain)
     EXPECT_EQ(result.success, true);
 }
 
+TEST_CASE(theoretically_infinite_loop)
+{
+    Array patterns {
+        "(a*)*"sv,  // Infinitely matching empty substrings, the outer loop should short-circuit.
+        "(a*?)*"sv, // Infinitely matching empty substrings, the outer loop should short-circuit.
+        "(a*)*?"sv, // Should match exactly nothing.
+        "(?:)*?"sv, // Should not generate an infinite fork loop.
+    };
+    for (auto& pattern : patterns) {
+        Regex<ECMA262> re(pattern);
+        auto result = re.match("");
+        EXPECT_EQ(result.success, true);
+    }
+}
+
 static auto g_lots_of_a_s = String::repeated('a', 10'000'000);
 
 BENCHMARK_CASE(fork_performance)
