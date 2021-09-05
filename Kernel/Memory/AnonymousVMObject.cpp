@@ -42,14 +42,8 @@ KResultOr<NonnullRefPtr<VMObject>> AnonymousVMObject::try_clone()
     // one would keep the one it still has. This ensures that the original
     // one and this one, as well as the clone have sufficient resources
     // to cow all pages as needed
-    auto new_shared_committed_cow_pages = try_make_ref_counted<SharedCommittedCowPages>(move(committed_pages));
-    if (!new_shared_committed_cow_pages)
-        return ENOMEM;
-
-    auto maybe_clone = adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(*this, *new_shared_committed_cow_pages));
-    if (!maybe_clone)
-        return ENOMEM;
-    auto clone = maybe_clone.release_nonnull();
+    auto new_shared_committed_cow_pages = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SharedCommittedCowPages(move(committed_pages))));
+    auto clone = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(*this, *new_shared_committed_cow_pages)));
 
     m_shared_committed_cow_pages = move(new_shared_committed_cow_pages);
 
@@ -98,12 +92,9 @@ KResultOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_purgea
         committed_pages = TRY(MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))));
     }
 
-    auto vmobject = adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(size, strategy, move(committed_pages)));
-    if (!vmobject)
-        return ENOMEM;
-
+    auto vmobject = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(size, strategy, move(committed_pages))));
     vmobject->m_purgeable = true;
-    return vmobject.release_nonnull();
+    return vmobject;
 }
 
 KResultOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with_physical_pages(Span<NonnullRefPtr<PhysicalPage>> physical_pages)
