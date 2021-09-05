@@ -40,6 +40,10 @@ public:
     bool operator!=(KSuccessTag) const { return is_error(); }
     bool operator==(KSuccessTag) const { return !is_error(); }
 
+    // NOTE: These are here to make KResult usable with TRY()
+    KResult release_error() { return *this; }
+    void release_value() { }
+
 private:
     template<typename T>
     friend class KResultOr;
