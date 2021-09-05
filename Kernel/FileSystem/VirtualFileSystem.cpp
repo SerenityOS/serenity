@@ -191,15 +191,12 @@ KResult VirtualFileSystem::traverse_directory_inode(Inode& dir_inode, Function<b
 
 KResult VirtualFileSystem::utime(StringView path, Custody& base, time_t atime, time_t mtime)
 {
-    auto custody_or_error = VirtualFileSystem::the().resolve_path(move(path), base);
-    if (custody_or_error.is_error())
-        return custody_or_error.error();
-    auto& custody = *custody_or_error.value();
-    auto& inode = custody.inode();
+    auto custody = TRY(resolve_path(path, base));
+    auto& inode = custody->inode();
     auto& current_process = Process::current();
     if (!current_process.is_superuser() && inode.metadata().uid != current_process.euid())
         return EACCES;
-    if (custody.is_readonly())
+    if (custody->is_readonly())
         return EROFS;
 
     if (auto result = inode.set_atime(atime); result.is_error())
@@ -211,10 +208,8 @@ KResult VirtualFileSystem::utime(StringView path, Custody& base, time_t atime, t
 
 KResultOr<InodeMetadata> VirtualFileSystem::lookup_metadata(StringView path, Custody& base, int options)
 {
-    auto custody_or_error = resolve_path(path, base, nullptr, options);
-    if (custody_or_error.is_error())
-        return custody_or_error.error();
-    return custody_or_error.value()->inode().metadata();
+    auto custody = TRY(resolve_path(path, base, nullptr, options));
+    return custody->inode().metadata();
 }
 
 KResultOr<NonnullRefPtr<FileDescription>> VirtualFileSystem::open(StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> owner)
@@ -294,11 +289,9 @@ KResultOr<NonnullRefPtr<FileDescription>> VirtualFileSystem::open(StringView pat
         if (device == nullptr) {
             return ENODEV;
         }
-        auto descriptor_or_error = device->open(options);
-        if (descriptor_or_error.is_error())
-            return descriptor_or_error.error();
-        descriptor_or_error.value()->set_original_inode({}, inode);
-        return descriptor_or_error;
+        auto description = TRY(device->open(options));
+        description->set_original_inode({}, inode);
+        return description;
     }
 
     // Check for read-only FS. Do this after handling preopen FD and devices,
@@ -372,14 +365,11 @@ KResultOr<NonnullRefPtr<FileDescription>> VirtualFileSystem::create(StringView p
     dbgln_if(VFS_DEBUG, "VirtualFileSystem::create: '{}' in {}", basename, parent_inode.identifier());
     auto uid = owner.has_value() ? owner.value().uid : current_process.euid();
     auto gid = owner.has_value() ? owner.value().gid : current_process.egid();
-    auto inode_or_error = parent_inode.create_child(basename, mode, 0, uid, gid);
-    if (inode_or_error.is_error())
-        return inode_or_error.error();
 
-    auto new_custody_or_error = Custody::try_create(&parent_custody, basename, inode_or_error.value(), parent_custody.mount_flags());
-    if (new_custody_or_error.is_error())
-        return new_custody_or_error.error();
-    auto description = FileDescription::try_create(*new_custody_or_error.release_value());
+    auto inode = TRY(parent_inode.create_child(basename, mode, 0, uid, gid));
+    auto custody = TRY(Custody::try_create(&parent_custody, basename, inode, parent_custody.mount_flags()));
+
+    auto description = FileDescription::try_create(move(custody));
     if (!description.is_error()) {
         description.value()->set_rw_mode(options);
         description.value()->set_file_flags(options);
@@ -422,11 +412,9 @@ KResult VirtualFileSystem::mkdir(StringView path, mode_t mode, Custody& base)
 
 KResult VirtualFileSystem::access(StringView path, int mode, Custody& base)
 {
-    auto custody_or_error = resolve_path(path, base);
-    if (custody_or_error.is_error())
-        return custody_or_error.error();
-    auto& custody = *custody_or_error.value();
-    auto& inode = custody.inode();
+    auto custody = TRY(resolve_path(path, base));
+
+    auto& inode = custody->inode();
     auto metadata = inode.metadata();
     auto& current_process = Process::current();
     if (mode & R_OK) {
@@ -436,7 +424,7 @@ KResult VirtualFileSystem::access(StringView path, int mode, Custody& base)
     if (mode & W_OK) {
         if (!metadata.may_write(current_process))
             return EACCES;
-        if (custody.is_readonly())
+        if (custody->is_readonly())
             return EROFS;
     }
     if (mode & X_OK) {
@@ -448,11 +436,8 @@ KResult VirtualFileSystem::access(StringView path, int mode, Custody& base)
 
 KResultOr<NonnullRefPtr<Custody>> VirtualFileSystem::open_directory(StringView path, Custody& base)
 {
-    auto inode_or_error = resolve_path(path, base);
-    if (inode_or_error.is_error())
-        return inode_or_error.error();
-    auto& custody = *inode_or_error.value();
-    auto& inode = custody.inode();
+    auto custody = TRY(resolve_path(path, base));
+    auto& inode = custody->inode();
     if (!inode.is_directory())
         return ENOTDIR;
     if (!inode.metadata().may_execute(Process::current()))
@@ -477,21 +462,15 @@ KResult VirtualFileSystem::chmod(Custody& custody, mode_t mode)
 
 KResult VirtualFileSystem::chmod(StringView path, mode_t mode, Custody& base)
 {
-    auto custody_or_error = resolve_path(path, base);
-    if (custody_or_error.is_error())
-        return custody_or_error.error();
-    auto& custody = *custody_or_error.value();
+    auto custody = TRY(resolve_path(path, base));
     return chmod(custody, mode);
 }
 
 KResult VirtualFileSystem::rename(StringView old_path, StringView new_path, Custody& base)
 {
     RefPtr<Custody> old_parent_custody;
-    auto old_custody_or_error = resolve_path(old_path, base, &old_parent_custody, O_NOFOLLOW_NOERROR);
-    if (old_custody_or_error.is_error())
-        return old_custody_or_error.error();
-    auto& old_custody = *old_custody_or_error.value();
-    auto& old_inode = old_custody.inode();
+    auto old_custody = TRY(resolve_path(old_path, base, &old_parent_custody, O_NOFOLLOW_NOERROR));
+    auto& old_inode = old_custody->inode();
 
     RefPtr<Custody> new_parent_custody;
     auto new_custody_or_error = resolve_path(new_path, base, &new_parent_custody);
@@ -621,10 +600,7 @@ KResult VirtualFileSystem::chown(Custody& custody, UserID a_uid, GroupID a_gid)
 
 KResult VirtualFileSystem::chown(StringView path, UserID a_uid, GroupID a_gid, Custody& base)
 {
-    auto custody_or_error = resolve_path(path, base);
-    if (custody_or_error.is_error())
-        return custody_or_error.error();
-    auto& custody = *custody_or_error.value();
+    auto custody = TRY(resolve_path(path, base));
     return chown(custody, a_uid, a_gid);
 }
 
@@ -647,11 +623,8 @@ static bool hard_link_allowed(const Inode& inode)
 
 KResult VirtualFileSystem::link(StringView old_path, StringView new_path, Custody& base)
 {
-    auto old_custody_or_error = resolve_path(old_path, base);
-    if (old_custody_or_error.is_error())
-        return old_custody_or_error.error();
-    auto& old_custody = *old_custody_or_error.value();
-    auto& old_inode = old_custody.inode();
+    auto old_custody = TRY(resolve_path(old_path, base));
+    auto& old_inode = old_custody->inode();
 
     RefPtr<Custody> parent_custody;
     auto new_custody_or_error = resolve_path(new_path, base, &parent_custody);
@@ -684,11 +657,8 @@ KResult VirtualFileSystem::link(StringView old_path, StringView new_path, Custod
 KResult VirtualFileSystem::unlink(StringView path, Custody& base)
 {
     RefPtr<Custody> parent_custody;
-    auto custody_or_error = resolve_path(path, base, &parent_custody, O_NOFOLLOW_NOERROR | O_UNLINK_INTERNAL);
-    if (custody_or_error.is_error())
-        return custody_or_error.error();
-    auto& custody = *custody_or_error.value();
-    auto& inode = custody.inode();
+    auto custody = TRY(resolve_path(path, base, &parent_custody, O_NOFOLLOW_NOERROR | O_UNLINK_INTERNAL));
+    auto& inode = custody->inode();
 
     if (inode.is_directory())
         return EISDIR;
@@ -736,26 +706,19 @@ KResult VirtualFileSystem::symlink(StringView target, StringView linkpath, Custo
 
     auto basename = KLexicalPath::basename(linkpath);
     dbgln_if(VFS_DEBUG, "VirtualFileSystem::symlink: '{}' (-> '{}') in {}", basename, target, parent_inode.identifier());
-    auto inode_or_error = parent_inode.create_child(basename, S_IFLNK | 0644, 0, current_process.euid(), current_process.egid());
-    if (inode_or_error.is_error())
-        return inode_or_error.error();
-    auto& inode = inode_or_error.value();
+
+    auto inode = TRY(parent_inode.create_child(basename, S_IFLNK | 0644, 0, current_process.euid(), current_process.egid()));
+
     auto target_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((const u8*)target.characters_without_null_termination()));
-    auto result = inode->write_bytes(0, target.length(), target_buffer, nullptr);
-    if (result.is_error())
-        return result.error();
+    TRY(inode->write_bytes(0, target.length(), target_buffer, nullptr));
     return KSuccess;
 }
 
 KResult VirtualFileSystem::rmdir(StringView path, Custody& base)
 {
     RefPtr<Custody> parent_custody;
-    auto custody_or_error = resolve_path(path, base, &parent_custody);
-    if (custody_or_error.is_error())
-        return KResult(custody_or_error.error());
-
-    auto& custody = *custody_or_error.value();
-    auto& inode = custody.inode();
+    auto custody = TRY(resolve_path(path, base, &parent_custody));
+    auto& inode = custody->inode();
 
     // FIXME: We should return EINVAL if the last component of the path is "."
     // FIXME: We should return ENOTEMPTY if the last component of the path is ".."
@@ -789,7 +752,7 @@ KResult VirtualFileSystem::rmdir(StringView path, Custody& base)
     if (child_count != 2)
         return ENOTEMPTY;
 
-    if (custody.is_readonly())
+    if (custody->is_readonly())
         return EROFS;
 
     if (auto result = inode.remove_child("."); result.is_error())
@@ -907,14 +870,9 @@ KResult VirtualFileSystem::validate_path_against_process_veil(StringView path, i
 
 KResultOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path(StringView path, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
 {
-    auto custody_or_error = resolve_path_without_veil(path, base, out_parent, options, symlink_recursion_level);
-    if (custody_or_error.is_error())
-        return custody_or_error.error();
-
-    auto& custody = custody_or_error.value();
+    auto custody = TRY(resolve_path_without_veil(path, base, out_parent, options, symlink_recursion_level));
     if (auto result = validate_path_against_process_veil(*custody, options); result.is_error())
         return result;
-
     return custody;
 }
 
@@ -994,11 +952,7 @@ KResultOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(S
             mount_flags_for_child = mount->flags();
         }
 
-        auto new_custody_or_error = Custody::try_create(&parent, part, *child_inode, mount_flags_for_child);
-        if (new_custody_or_error.is_error())
-            return new_custody_or_error.error();
-
-        custody = new_custody_or_error.release_value();
+        custody = TRY(Custody::try_create(&parent, part, *child_inode, mount_flags_for_child));
 
         if (child_inode->metadata().is_symlink()) {
             if (!have_more_parts) {
