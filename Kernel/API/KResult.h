@@ -162,6 +162,12 @@ public:
         return released_value;
     }
 
+    [[nodiscard]] KResult release_error()
+    {
+        VERIFY(m_is_error);
+        return m_error;
+    }
+
 private:
     union {
         alignas(T) char m_storage[sizeof(T)];
