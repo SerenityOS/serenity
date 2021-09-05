@@ -14,7 +14,11 @@ interface Node : EventTarget {
     readonly attribute Element? parentElement;
     readonly attribute boolean isConnected;
     readonly attribute Document? ownerDocument;
-    attribute DOMString textContent;
+
+    // FIXME: [LegacyNullToEmptyString] is not allowed on nullable types as per the Web IDL spec.
+    //        However, we only apply it to setters, so this works as a stop gap.
+    //        Replace this with something like a special cased [LegacyNullToEmptyString].
+    [LegacyNullToEmptyString] attribute DOMString? textContent;
 
     Node appendChild(Node node);
     [ImplementedAs=pre_insert] Node insertBefore(Node node, Node? child);
