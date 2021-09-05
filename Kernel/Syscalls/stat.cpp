@@ -29,9 +29,8 @@ KResultOr<FlatPtr> Process::sys$stat(Userspace<const Syscall::SC_stat_params*> u
     REQUIRE_PROMISE(rpath);
     auto params = TRY(copy_typed_from_user(user_params));
 
-    auto path = get_syscall_path_argument(params.path);
-    if (path.is_error())
-        return path.error();
+    auto path = TRY(get_syscall_path_argument(params.path));
+
     RefPtr<Custody> base;
     if (params.dirfd == AT_FDCWD) {
         base = current_directory();
@@ -45,13 +44,9 @@ KResultOr<FlatPtr> Process::sys$stat(Userspace<const Syscall::SC_stat_params*> u
             return EINVAL;
         base = base_description->custody();
     }
-    auto metadata_or_error = VirtualFileSystem::the().lookup_metadata(path.value()->view(), *base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR);
-    if (metadata_or_error.is_error())
-        return metadata_or_error.error();
-    stat statbuf;
-    auto result = metadata_or_error.value().stat(statbuf);
-    if (result.is_error())
-        return result;
+    auto metadata = TRY(VirtualFileSystem::the().lookup_metadata(path->view(), *base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
+    stat statbuf = {};
+    TRY(metadata.stat(statbuf));
     return copy_to_user(params.statbuf, &statbuf);
 }
 
