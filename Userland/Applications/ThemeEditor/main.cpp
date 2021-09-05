@@ -6,6 +6,7 @@
  */
 
 #include "PreviewWidget.h"
+#include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
@@ -46,6 +47,25 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
+    char const* file_to_edit = nullptr;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(file_to_edit, "Theme file to edit", "file", Core::ArgsParser::Required::No);
+    parser.parse(argc, argv);
+
+    Optional<String> path = {};
+
+    if (file_to_edit) {
+        path = Core::File::absolute_path(file_to_edit);
+        if (Core::File::exists(*path)) {
+            dbgln("unveil for: {}", *path);
+            if (unveil(path->characters(), "r") < 0) {
+                perror("unveil");
+                return 1;
+            }
+        }
+    }
+
     if (pledge("stdio recvfd sendfd thread rpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -68,7 +88,7 @@ int main(int argc, char** argv)
 
     auto app_icon = GUI::Icon::default_icon("app-theme-editor");
 
-    Gfx::Palette preview_palette = app->palette();
+    Gfx::Palette preview_palette = file_to_edit ? Gfx::Palette(Gfx::PaletteImpl::create_with_anonymous_buffer(Gfx::load_system_theme(*path))) : app->palette();
 
     auto window = GUI::Window::construct();
 
@@ -81,7 +101,7 @@ int main(int argc, char** argv)
     main_widget.set_fill_with_background_color(true);
     main_widget.set_layout<GUI::VerticalBoxLayout>();
 
-    auto& preview_widget = main_widget.add<ThemeEditor::PreviewWidget>(app->palette());
+    auto& preview_widget = main_widget.add<ThemeEditor::PreviewWidget>(preview_palette);
     preview_widget.set_fixed_size(480, 360);
 
     auto& horizontal_container = main_widget.add<GUI::Widget>();
@@ -108,8 +128,6 @@ int main(int argc, char** argv)
     color_input.set_color(preview_palette.color(Gfx::ColorRole::Window));
 
     auto& file_menu = window->add_menu("&File");
-
-    Optional<String> path = {};
 
     auto save_to_result = [&](FileSystemAccessClient::Result const& result) {
         if (result.error != 0)
