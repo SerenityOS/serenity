@@ -1028,10 +1028,7 @@ RegisterState& Thread::get_register_dump_from_stack()
 
 KResultOr<NonnullRefPtr<Thread>> Thread::try_clone(Process& process)
 {
-    auto thread_or_error = Thread::try_create(process);
-    if (thread_or_error.is_error())
-        return thread_or_error.error();
-    auto& clone = thread_or_error.value();
+    auto clone = TRY(Thread::try_create(process));
     auto signal_action_data_span = m_signal_action_data.span();
     signal_action_data_span.copy_to(clone->m_signal_action_data.span());
     clone->m_signal_mask = m_signal_mask;
@@ -1196,14 +1193,12 @@ KResult Thread::make_thread_specific_region(Badge<Process>)
     if (!range.has_value())
         return ENOMEM;
 
-    auto region_or_error = process().address_space().allocate_region(range.value(), "Thread-specific", PROT_READ | PROT_WRITE);
-    if (region_or_error.is_error())
-        return region_or_error.error();
+    auto* region = TRY(process().address_space().allocate_region(range.value(), "Thread-specific", PROT_READ | PROT_WRITE));
 
     m_thread_specific_range = range.value();
 
     SmapDisabler disabler;
-    auto* thread_specific_data = (ThreadSpecificData*)region_or_error.value()->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment())).as_ptr();
+    auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment())).as_ptr();
     auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(process().m_master_tls_size, process().m_master_tls_alignment);
     m_thread_specific_data = VirtualAddress(thread_specific_data);
     thread_specific_data->self = thread_specific_data;
