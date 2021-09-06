@@ -798,6 +798,15 @@ Optional<StringView> get_locale_currency_mapping([[maybe_unused]] StringView loc
 #endif
 }
 
+Optional<ListPatterns> get_locale_list_patterns([[maybe_unused]] StringView locale, [[maybe_unused]] StringView type, [[maybe_unused]] StringView style)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::get_locale_list_pattern_mapping(locale, type, style);
+#else
+    return {};
+#endif
+}
+
 Optional<StringView> resolve_language_alias(StringView language)
 {
 #if ENABLE_UNICODE_DATA

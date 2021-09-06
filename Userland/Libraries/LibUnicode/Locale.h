@@ -78,6 +78,13 @@ struct LocaleID {
     Vector<String> private_use_extensions {};
 };
 
+struct ListPatterns {
+    StringView start;
+    StringView middle;
+    StringView end;
+    StringView pair;
+};
+
 // Note: These methods only verify that the provided strings match the EBNF grammar of the
 // Unicode identifier subtag (i.e. no validation is done that the tags actually exist).
 constexpr bool is_unicode_language_subtag(StringView subtag)
@@ -130,6 +137,7 @@ Optional<StringView> get_locale_language_mapping(StringView locale, StringView l
 Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory);
 Optional<StringView> get_locale_script_mapping(StringView locale, StringView script);
 Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency);
+Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView type, StringView style);
 
 Optional<StringView> resolve_language_alias(StringView language);
 Optional<StringView> resolve_territory_alias(StringView territory);
