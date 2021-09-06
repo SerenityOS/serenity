@@ -14,7 +14,7 @@ ProcessPagingScope::ProcessPagingScope(Process& process)
 {
     VERIFY(Thread::current() != nullptr);
     m_previous_cr3 = read_cr3();
-    MM.enter_process_paging_scope(process);
+    MM.enter_process_address_space(process);
 }
 
 ProcessPagingScope::~ProcessPagingScope()
