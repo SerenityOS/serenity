@@ -86,7 +86,10 @@ ProcFSExposedComponent::ProcFSExposedComponent()
 ProcFSExposedComponent::ProcFSExposedComponent(StringView name)
     : m_component_index(s_allocate_global_inode_index())
 {
-    m_name = KString::try_create(name);
+    auto name_or_error = KString::try_create(name);
+    if (name_or_error.is_error())
+        TODO();
+    m_name = name_or_error.release_value();
 }
 
 ProcFSExposedDirectory::ProcFSExposedDirectory(StringView name)

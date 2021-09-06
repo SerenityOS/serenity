@@ -21,17 +21,12 @@ KResultOr<NonnullOwnPtr<KString>> UserOrKernelBuffer::try_copy_into_kstring(size
         return EINVAL;
     if (Memory::is_user_address(VirtualAddress(m_buffer))) {
         char* buffer;
-        auto kstring = KString::try_create_uninitialized(size, buffer);
-        if (!kstring)
-            return ENOMEM;
+        auto kstring = TRY(KString::try_create_uninitialized(size, buffer));
         TRY(copy_from_user(buffer, m_buffer, size));
-        return kstring.release_nonnull();
+        return kstring;
     }
 
-    auto kstring = KString::try_create(ReadonlyBytes { m_buffer, size });
-    if (!kstring)
-        return ENOMEM;
-    return kstring.release_nonnull();
+    return KString::try_create(ReadonlyBytes { m_buffer, size });
 }
 
 bool UserOrKernelBuffer::write(const void* src, size_t offset, size_t len)

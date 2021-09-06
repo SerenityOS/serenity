@@ -46,11 +46,8 @@ KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> proce
     if (!block_timer)
         return ENOMEM;
 
-    auto name = KString::try_create(process->name());
-    if (!name)
-        return ENOMEM;
-
-    return adopt_nonnull_ref_or_enomem(new (nothrow) Thread(move(process), move(kernel_stack_region), block_timer.release_nonnull(), name.release_nonnull()));
+    auto name = TRY(KString::try_create(process->name()));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Thread(move(process), move(kernel_stack_region), block_timer.release_nonnull(), move(name)));
 }
 
 Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> kernel_stack_region, NonnullRefPtr<Timer> block_timer, NonnullOwnPtr<KString> name)
@@ -70,7 +67,8 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> ker
     {
         // FIXME: Go directly to KString
         auto string = String::formatted("Kernel stack (thread {})", m_tid.value());
-        m_kernel_stack_region->set_name(KString::try_create(string));
+        // FIXME: Handle KString allocation failure.
+        m_kernel_stack_region->set_name(KString::try_create(string).release_value());
     }
 
     Thread::all_instances().with([&](auto& list) {

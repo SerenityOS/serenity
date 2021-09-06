@@ -127,9 +127,10 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
     if (address.sun_family != AF_LOCAL)
         return set_so_error(EINVAL);
 
-    auto path = KString::try_create(StringView { address.sun_path, strnlen(address.sun_path, sizeof(address.sun_path)) });
-    if (!path)
-        return set_so_error(ENOMEM);
+    auto path_kstring_or_error = KString::try_create(StringView { address.sun_path, strnlen(address.sun_path, sizeof(address.sun_path)) });
+    if (path_kstring_or_error.is_error())
+        return set_so_error(path_kstring_or_error.error());
+    auto path = path_kstring_or_error.release_value();
 
     dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) bind({})", this, path);
 
@@ -176,9 +177,10 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
         if (copy_from_user(&safe_address[0], &local_address.sun_path[0], sizeof(safe_address) - 1).is_error())
             return set_so_error(EFAULT);
         safe_address[sizeof(safe_address) - 1] = '\0';
-        maybe_path = KString::try_create(safe_address);
-        if (!maybe_path)
-            return set_so_error(ENOMEM);
+        auto path_kstring_or_error = KString::try_create(safe_address);
+        if (path_kstring_or_error.is_error())
+            return set_so_error(path_kstring_or_error.error());
+        maybe_path = path_kstring_or_error.release_value();
     }
 
     auto path = maybe_path.release_nonnull();
@@ -517,10 +519,7 @@ KResultOr<NonnullRefPtr<FileDescription>> LocalSocket::recvfd(const FileDescript
 
 KResult LocalSocket::try_set_path(StringView path)
 {
-    auto kstring = KString::try_create(path);
-    if (!kstring)
-        return ENOMEM;
-    m_path = move(kstring);
+    m_path = TRY(KString::try_create(path));
     return KSuccess;
 }
 

@@ -864,11 +864,9 @@ KResult Process::set_coredump_property(NonnullOwnPtr<KString> key, NonnullOwnPtr
 
 KResult Process::try_set_coredump_property(StringView key, StringView value)
 {
-    auto key_kstring = KString::try_create(key);
-    auto value_kstring = KString::try_create(value);
-    if (key_kstring && value_kstring)
-        return set_coredump_property(key_kstring.release_nonnull(), value_kstring.release_nonnull());
-    return ENOMEM;
+    auto key_kstring = TRY(KString::try_create(key));
+    auto value_kstring = TRY(KString::try_create(value));
+    return set_coredump_property(move(key_kstring), move(value_kstring));
 };
 
 static constexpr StringView to_string(Pledge promise)

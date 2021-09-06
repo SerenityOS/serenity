@@ -44,15 +44,13 @@ KResultOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<c
     auto thread = TRY(Thread::try_create(*this));
 
     // FIXME: Don't make a temporary String here
-    auto new_thread_name = KString::try_create(String::formatted("{} [{}]", m_name, thread->tid().value()));
-    if (!new_thread_name)
-        return ENOMEM;
+    auto new_thread_name = TRY(KString::try_create(String::formatted("{} [{}]", m_name, thread->tid().value())));
 
     // We know this thread is not the main_thread,
     // So give it a unique name until the user calls $set_thread_name on it
     // length + 4 to give space for our extra junk at the end
     StringBuilder builder(m_name.length() + 4);
-    thread->set_name(new_thread_name.release_nonnull());
+    thread->set_name(move(new_thread_name));
 
     if (!is_thread_joinable)
         thread->detach();

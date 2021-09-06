@@ -62,7 +62,7 @@ Vector<StringView> parts(StringView const& path)
     return path.split_view('/');
 }
 
-OwnPtr<KString> try_join(StringView const& first, StringView const& second)
+KResultOr<NonnullOwnPtr<KString>> try_join(StringView const& first, StringView const& second)
 {
     VERIFY(is_canonical(first));
     VERIFY(is_canonical(second));
@@ -70,24 +70,19 @@ OwnPtr<KString> try_join(StringView const& first, StringView const& second)
 
     if (first == "/"sv) {
         char* buffer;
-        auto string = KString::try_create_uninitialized(1 + second.length(), buffer);
-        if (!string)
-            return {};
+        auto string = TRY(KString::try_create_uninitialized(1 + second.length(), buffer));
         buffer[0] = '/';
         __builtin_memcpy(buffer + 1, second.characters_without_null_termination(), second.length());
         buffer[string->length()] = 0;
         return string;
-    } else {
-        char* buffer;
-        auto string = KString::try_create_uninitialized(first.length() + 1 + second.length(), buffer);
-        if (!string)
-            return string;
-        __builtin_memcpy(buffer, first.characters_without_null_termination(), first.length());
-        buffer[first.length()] = '/';
-        __builtin_memcpy(buffer + first.length() + 1, second.characters_without_null_termination(), second.length());
-        buffer[string->length()] = 0;
-        return string;
     }
+    char* buffer;
+    auto string = TRY(KString::try_create_uninitialized(first.length() + 1 + second.length(), buffer));
+    __builtin_memcpy(buffer, first.characters_without_null_termination(), first.length());
+    buffer[first.length()] = '/';
+    __builtin_memcpy(buffer + first.length() + 1, second.characters_without_null_termination(), second.length());
+    buffer[string->length()] = 0;
+    return string;
 }
 
 }
