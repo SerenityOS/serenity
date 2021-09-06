@@ -45,7 +45,7 @@ int main(int argc, char** argv)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     if (argc >= 2) {
-        auto response = FileSystemAccessClient::Client::the().request_file(window->window_id(), argv[1], Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window->window_id(), argv[1]);
 
         if (response.error != 0) {
             if (response.error != -1)
