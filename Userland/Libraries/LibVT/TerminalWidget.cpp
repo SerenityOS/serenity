@@ -1100,7 +1100,7 @@ void TerminalWidget::drop_event(GUI::DropEvent& event)
                 send_non_user_input(" "sv.bytes());
 
             if (url.protocol() == "file")
-                send_non_user_input(url.path().bytes());
+                send_non_user_input(String::formatted("\"{}\"", url.path()).bytes());
             else
                 send_non_user_input(url.to_string().bytes());
 
