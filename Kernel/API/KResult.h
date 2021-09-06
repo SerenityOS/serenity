@@ -141,7 +141,7 @@ public:
         return m_error;
     }
 
-    [[nodiscard]] KResult result() const { return m_is_error ? m_error : KSuccess; }
+    KResult result() const { return m_is_error ? m_error : KSuccess; }
 
     [[nodiscard]] ALWAYS_INLINE T& value() &
     {
@@ -167,7 +167,7 @@ public:
         return released_value;
     }
 
-    [[nodiscard]] KResult release_error()
+    KResult release_error()
     {
         VERIFY(m_is_error);
         return m_error;

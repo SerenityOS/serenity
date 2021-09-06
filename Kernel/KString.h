@@ -23,7 +23,7 @@ public:
 
     void operator delete(void*);
 
-    [[nodiscard]] KResultOr<NonnullOwnPtr<KString>> try_clone() const;
+    KResultOr<NonnullOwnPtr<KString>> try_clone() const;
 
     [[nodiscard]] bool is_empty() const { return m_length == 0; }
     [[nodiscard]] size_t length() const { return m_length; }

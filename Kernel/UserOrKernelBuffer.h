@@ -54,7 +54,7 @@ public:
         return offset_buffer;
     }
 
-    [[nodiscard]] KResultOr<NonnullOwnPtr<KString>> try_copy_into_kstring(size_t) const;
+    KResultOr<NonnullOwnPtr<KString>> try_copy_into_kstring(size_t) const;
     [[nodiscard]] bool write(const void* src, size_t offset, size_t len);
     [[nodiscard]] bool write(const void* src, size_t len)
     {
@@ -82,7 +82,7 @@ public:
     }
 
     template<size_t BUFFER_BYTES, typename F>
-    [[nodiscard]] KResultOr<size_t> write_buffered(size_t offset, size_t len, F f)
+    KResultOr<size_t> write_buffered(size_t offset, size_t len, F f)
     {
         if (!m_buffer)
             return EFAULT;
@@ -113,13 +113,13 @@ public:
         return nwritten;
     }
     template<size_t BUFFER_BYTES, typename F>
-    [[nodiscard]] KResultOr<size_t> write_buffered(size_t len, F f)
+    KResultOr<size_t> write_buffered(size_t len, F f)
     {
         return write_buffered<BUFFER_BYTES, F>(0, len, f);
     }
 
     template<size_t BUFFER_BYTES, typename F>
-    [[nodiscard]] KResultOr<size_t> read_buffered(size_t offset, size_t len, F f) const
+    KResultOr<size_t> read_buffered(size_t offset, size_t len, F f) const
     {
         if (!m_buffer)
             return EFAULT;
@@ -149,7 +149,7 @@ public:
         return nread;
     }
     template<size_t BUFFER_BYTES, typename F>
-    [[nodiscard]] KResultOr<size_t> read_buffered(size_t len, F f) const
+    KResultOr<size_t> read_buffered(size_t len, F f) const
     {
         return read_buffered<BUFFER_BYTES, F>(0, len, f);
     }

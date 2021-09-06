@@ -193,7 +193,7 @@ KResult copy_from_user(void* dest_ptr, void const* src_ptr, size_t n)
     return KSuccess;
 }
 
-[[nodiscard]] KResult memset_user(void* dest_ptr, int c, size_t n)
+KResult memset_user(void* dest_ptr, int c, size_t n)
 {
     bool is_user = Kernel::Memory::is_user_range(VirtualAddress(dest_ptr), n);
     if (!is_user)
