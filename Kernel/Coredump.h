@@ -18,7 +18,7 @@ public:
     static KResultOr<NonnullOwnPtr<Coredump>> try_create(NonnullRefPtr<Process>, StringView output_path);
 
     ~Coredump() = default;
-    [[nodiscard]] KResult write();
+    KResult write();
 
 private:
     Coredump(NonnullRefPtr<Process>, NonnullRefPtr<FileDescription>);

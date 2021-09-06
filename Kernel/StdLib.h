@@ -34,9 +34,9 @@ KResultOr<Time> copy_time_from_user(Userspace<T*>);
 [[nodiscard]] Optional<u32> user_atomic_fetch_or_relaxed(volatile u32* var, u32 val);
 [[nodiscard]] Optional<u32> user_atomic_fetch_xor_relaxed(volatile u32* var, u32 val);
 
-[[nodiscard]] KResult copy_to_user(void*, const void*, size_t);
-[[nodiscard]] KResult copy_from_user(void*, const void*, size_t);
-[[nodiscard]] KResult memset_user(void*, int, size_t);
+KResult copy_to_user(void*, const void*, size_t);
+KResult copy_from_user(void*, const void*, size_t);
+KResult memset_user(void*, int, size_t);
 
 extern "C" {
 
