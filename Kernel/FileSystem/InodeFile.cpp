@@ -86,11 +86,9 @@ KResultOr<Memory::Region*> InodeFile::mmap(Process& process, FileDescription& de
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
     RefPtr<Memory::InodeVMObject> vmobject;
     if (shared)
-        vmobject = Memory::SharedInodeVMObject::try_create_with_inode(inode());
+        vmobject = TRY(Memory::SharedInodeVMObject::try_create_with_inode(inode()));
     else
-        vmobject = Memory::PrivateInodeVMObject::try_create_with_inode(inode());
-    if (!vmobject)
-        return ENOMEM;
+        vmobject = TRY(Memory::PrivateInodeVMObject::try_create_with_inode(inode()));
     return process.address_space().allocate_region_with_vmobject(range, vmobject.release_nonnull(), offset, description.absolute_path(), prot, shared);
 }
 

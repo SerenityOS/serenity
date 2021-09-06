@@ -18,7 +18,7 @@ class PrivateInodeVMObject final : public InodeVMObject {
 public:
     virtual ~PrivateInodeVMObject() override;
 
-    static RefPtr<PrivateInodeVMObject> try_create_with_inode(Inode&);
+    static KResultOr<NonnullRefPtr<PrivateInodeVMObject>> try_create_with_inode(Inode&);
     virtual KResultOr<NonnullRefPtr<VMObject>> try_clone() override;
 
 private:
