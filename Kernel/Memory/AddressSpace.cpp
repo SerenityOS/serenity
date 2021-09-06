@@ -72,8 +72,7 @@ KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
         for (auto* new_region : new_regions) {
             // TODO: Ideally we should do this in a way that can be rolled back on failure, as failing here
             // leaves the caller in an undefined state.
-            if (!new_region->map(page_directory()))
-                return ENOMEM;
+            TRY(new_region->map(page_directory()));
         }
 
         PerformanceManager::add_unmap_perf_event(Process::current(), range_to_unmap);
@@ -122,8 +121,7 @@ KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
     for (auto* new_region : new_regions) {
         // TODO: Ideally we should do this in a way that can be rolled back on failure, as failing here
         // leaves the caller in an undefined state.
-        if (!new_region->map(page_directory()))
-            return ENOMEM;
+        TRY(new_region->map(page_directory()));
     }
 
     PerformanceManager::add_unmap_perf_event(Process::current(), range_to_unmap);
@@ -161,8 +159,7 @@ KResultOr<Region*> AddressSpace::allocate_region(VirtualRange const& range, Stri
     VERIFY(range.is_valid());
     auto vmobject = TRY(AnonymousVMObject::try_create_with_size(range.size(), strategy));
     auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), 0, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, false));
-    if (!region->map(page_directory()))
-        return ENOMEM;
+    TRY(region->map(page_directory()));
     return add_region(move(region));
 }
 
@@ -185,8 +182,7 @@ KResultOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange cons
     offset_in_vmobject &= PAGE_MASK;
     auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), offset_in_vmobject, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, shared));
     auto* added_region = TRY(add_region(move(region)));
-    if (!added_region->map(page_directory()))
-        return ENOMEM;
+    TRY(added_region->map(page_directory()));
     return added_region;
 }
 

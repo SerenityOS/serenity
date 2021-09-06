@@ -243,7 +243,7 @@ void Region::set_page_directory(PageDirectory& page_directory)
     m_page_directory = page_directory;
 }
 
-bool Region::map(PageDirectory& page_directory, ShouldFlushTLB should_flush_tlb)
+KResult Region::map(PageDirectory& page_directory, ShouldFlushTLB should_flush_tlb)
 {
     SpinlockLocker page_lock(page_directory.get_lock());
     SpinlockLocker lock(s_mm_lock);
@@ -263,16 +263,18 @@ bool Region::map(PageDirectory& page_directory, ShouldFlushTLB should_flush_tlb)
     if (page_index > 0) {
         if (should_flush_tlb == ShouldFlushTLB::Yes)
             MM.flush_tlb(m_page_directory, vaddr(), page_index);
-        return page_index == page_count();
+        if (page_index == page_count())
+            return KSuccess;
     }
-    return false;
+    return ENOMEM;
 }
 
 void Region::remap()
 {
     VERIFY(m_page_directory);
     auto result = map(*m_page_directory);
-    VERIFY(result);
+    if (result.is_error())
+        TODO();
 }
 
 PageFaultResponse Region::handle_fault(PageFault const& fault)
