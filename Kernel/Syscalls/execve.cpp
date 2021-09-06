@@ -482,7 +482,10 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     auto main_program_metadata = main_program_description->metadata();
 
     auto load_result = TRY(load(main_program_description, interpreter_description, main_program_header));
+
     auto signal_trampoline_range = TRY(load_result.space->try_allocate_range({}, PAGE_SIZE));
+    auto signal_trampoline_region = TRY(load_result.space->allocate_region_with_vmobject(signal_trampoline_range, g_signal_trampoline_region->vmobject(), 0, "Signal trampoline", PROT_READ | PROT_EXEC, true));
+    signal_trampoline_region->set_syscall_region(true);
 
     // We commit to the new executable at this point. There is no turning back!
 
@@ -522,13 +525,6 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
         m_space = load_result.space.release_nonnull();
     }
     Memory::MemoryManager::enter_space(*m_space);
-
-    auto signal_trampoline_region = m_space->allocate_region_with_vmobject(signal_trampoline_range, g_signal_trampoline_region->vmobject(), 0, "Signal trampoline", PROT_READ | PROT_EXEC, true);
-    if (signal_trampoline_region.is_error()) {
-        VERIFY_NOT_REACHED();
-    }
-
-    signal_trampoline_region.value()->set_syscall_region(true);
 
     m_executable = main_program_description->custody();
     m_arguments = arguments;
@@ -612,7 +608,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
         m_protected_values.execpromises = 0;
         m_protected_values.has_execpromises = false;
 
-        m_protected_values.signal_trampoline = signal_trampoline_region.value()->vaddr();
+        m_protected_values.signal_trampoline = signal_trampoline_region->vaddr();
 
         // FIXME: PID/TID ISSUE
         m_protected_values.pid = new_main_thread->tid().value();
