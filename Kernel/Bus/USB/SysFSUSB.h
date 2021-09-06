@@ -33,7 +33,7 @@ protected:
     NonnullRefPtr<USB::Device> m_device;
 
 private:
-    bool output(KBufferBuilder& builder);
+    KResult try_generate(KBufferBuilder&);
     virtual KResult refresh_data(FileDescription& description) const override;
     mutable Mutex m_lock { "SysFSUSBDeviceInformation" };
 };

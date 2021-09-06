@@ -167,7 +167,7 @@ protected:
     {
     }
     virtual KResult refresh_data(FileDescription&) const override;
-    virtual bool output(KBufferBuilder& builder) = 0;
+    virtual KResult try_generate(KBufferBuilder&) = 0;
 
     mutable Mutex m_refresh_lock;
 };
@@ -182,11 +182,9 @@ protected:
         : ProcFSGlobalInformation(name)
     {
     }
-    virtual bool output(KBufferBuilder& builder) override
+    virtual KResult try_generate(KBufferBuilder& builder) override
     {
-        if (builder.appendff("{}\n", value()).is_error())
-            return false;
-        return true;
+        return builder.appendff("{}\n", value());
     }
 };
 
