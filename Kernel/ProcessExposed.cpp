@@ -144,8 +144,7 @@ KResult ProcFSGlobalInformation::refresh_data(FileDescription& description) cons
             return ENOMEM;
     }
     KBufferBuilder builder;
-    if (!const_cast<ProcFSGlobalInformation&>(*this).output(builder))
-        return ENOENT;
+    TRY(const_cast<ProcFSGlobalInformation&>(*this).try_generate(builder));
     auto& typed_cached_data = static_cast<ProcFSInodeData&>(*cached_data);
     typed_cached_data.buffer = builder.build();
     if (!typed_cached_data.buffer)

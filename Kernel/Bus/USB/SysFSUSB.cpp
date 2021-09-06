@@ -23,7 +23,7 @@ SysFSUSBDeviceInformation::~SysFSUSBDeviceInformation()
 {
 }
 
-bool SysFSUSBDeviceInformation::output(KBufferBuilder& builder)
+KResult SysFSUSBDeviceInformation::try_generate(KBufferBuilder& builder)
 {
     VERIFY(m_lock.is_locked());
     JsonArraySerializer array { builder };
@@ -44,7 +44,7 @@ bool SysFSUSBDeviceInformation::output(KBufferBuilder& builder)
     obj.add("num_configurations", m_device->device_descriptor().num_configurations);
     obj.finish();
     array.finish();
-    return true;
+    return KSuccess;
 }
 
 KResult SysFSUSBDeviceInformation::refresh_data(FileDescription& description) const
@@ -55,8 +55,7 @@ KResult SysFSUSBDeviceInformation::refresh_data(FileDescription& description) co
         cached_data = TRY(adopt_nonnull_own_or_enomem(new (nothrow) SysFSInodeData));
     }
     KBufferBuilder builder;
-    if (!const_cast<SysFSUSBDeviceInformation&>(*this).output(builder))
-        return ENOENT;
+    TRY(const_cast<SysFSUSBDeviceInformation&>(*this).try_generate(builder));
     auto& typed_cached_data = static_cast<SysFSInodeData&>(*cached_data);
     typed_cached_data.buffer = builder.build();
     if (!typed_cached_data.buffer)
