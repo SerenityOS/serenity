@@ -94,12 +94,7 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         for (auto& region : address_space().regions()) {
             dbgln_if(FORK_DEBUG, "fork: cloning Region({}) '{}' @ {}", region, region->name(), region->vaddr());
             auto region_clone = TRY(region->try_clone());
-            auto* child_region = child->address_space().add_region(move(region_clone));
-            if (!child_region) {
-                dbgln("fork: Cannot add region, insufficient memory");
-                // TODO: tear down new process?
-                return ENOMEM;
-            }
+            auto* child_region = TRY(child->address_space().add_region(move(region_clone)));
             if (!child_region->map(child->address_space().page_directory(), Memory::ShouldFlushTLB::No))
                 return ENOMEM;
 

@@ -144,9 +144,7 @@ KResultOr<Region*> AddressSpace::try_allocate_split_region(Region const& source_
 {
     auto new_region = TRY(Region::try_create_user_accessible(
         range, source_region.vmobject(), offset_in_vmobject, KString::try_create(source_region.name()), source_region.access(), source_region.is_cacheable() ? Region::Cacheable::Yes : Region::Cacheable::No, source_region.is_shared()));
-    auto* region = add_region(move(new_region));
-    if (!region)
-        return ENOMEM;
+    auto* region = TRY(add_region(move(new_region)));
     region->set_syscall_region(source_region.is_syscall_region());
     region->set_mmap(source_region.is_mmap());
     region->set_stack(source_region.is_stack());
@@ -165,10 +163,7 @@ KResultOr<Region*> AddressSpace::allocate_region(VirtualRange const& range, Stri
     auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), 0, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, false));
     if (!region->map(page_directory()))
         return ENOMEM;
-    auto* added_region = add_region(move(region));
-    if (!added_region)
-        return ENOMEM;
-    return added_region;
+    return add_region(move(region));
 }
 
 KResultOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
@@ -189,9 +184,7 @@ KResultOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange cons
     }
     offset_in_vmobject &= PAGE_MASK;
     auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), offset_in_vmobject, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, shared));
-    auto* added_region = add_region(move(region));
-    if (!added_region)
-        return ENOMEM;
+    auto* added_region = TRY(add_region(move(region)));
     if (!added_region->map(page_directory()))
         return ENOMEM;
     return added_region;
@@ -264,12 +257,13 @@ Vector<Region*> AddressSpace::find_regions_intersecting(VirtualRange const& rang
     return regions;
 }
 
-Region* AddressSpace::add_region(NonnullOwnPtr<Region> region)
+KResultOr<Region*> AddressSpace::add_region(NonnullOwnPtr<Region> region)
 {
     auto* ptr = region.ptr();
     SpinlockLocker lock(m_lock);
-    auto success = m_regions.try_insert(region->vaddr().get(), move(region));
-    return success ? ptr : nullptr;
+    if (!m_regions.try_insert(region->vaddr().get(), move(region)))
+        return ENOMEM;
+    return ptr;
 }
 
 // Carve out a virtual address range from a region and return the two regions on either side
