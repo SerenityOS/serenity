@@ -381,6 +381,7 @@ namespace JS {
     P(shift)                                 \
     P(sign)                                  \
     P(sin)                                   \
+    P(since)                                 \
     P(sinh)                                  \
     P(size)                                  \
     P(slice)                                 \
