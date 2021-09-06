@@ -1175,17 +1175,14 @@ KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode
 
     Vector<Ext2FSDirectoryEntry> entries;
     bool name_already_exists = false;
-    KResult result = traverse_as_directory([&](auto& entry) {
+    TRY(traverse_as_directory([&](auto& entry) {
         if (name == entry.name) {
             name_already_exists = true;
             return false;
         }
         entries.append({ entry.name, entry.inode.index(), entry.file_type });
         return true;
-    });
-
-    if (result.is_error())
-        return result;
+    }));
 
     if (name_already_exists) {
         dbgln("Ext2FSInode[{}]::add_child(): Name '{}' already exists", identifier(), name);
@@ -1220,13 +1217,11 @@ KResult Ext2FSInode::remove_child(const StringView& name)
     InodeIdentifier child_id { fsid(), child_inode_index };
 
     Vector<Ext2FSDirectoryEntry> entries;
-    KResult result = traverse_as_directory([&](auto& entry) {
+    TRY(traverse_as_directory([&](auto& entry) {
         if (name != entry.name)
             entries.append({ entry.name, entry.inode.index(), entry.file_type });
         return true;
-    });
-    if (result.is_error())
-        return result;
+    }));
 
     TRY(write_directory(entries));
 
@@ -1569,13 +1564,10 @@ KResult Ext2FSInode::populate_lookup_cache() const
         return KSuccess;
     HashMap<String, InodeIndex> children;
 
-    KResult result = traverse_as_directory([&children](auto& entry) {
+    TRY(traverse_as_directory([&children](auto& entry) {
         children.set(entry.name, entry.inode.index());
         return true;
-    });
-
-    if (!result.is_success())
-        return result;
+    }));
 
     VERIFY(m_lookup_cache.is_empty());
     m_lookup_cache = move(children);
