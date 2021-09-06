@@ -745,11 +745,11 @@ static KResultOr<Vector<String>> find_shebang_interpreter_for_executable(char co
     return ENOEXEC;
 }
 
-KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(const String& path, const ElfW(Ehdr) & main_program_header, int nread, size_t file_size)
+KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(String const& path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size)
 {
     // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
     String interpreter_path;
-    if (!ELF::validate_program_headers(main_program_header, file_size, (const u8*)&main_program_header, nread, &interpreter_path)) {
+    if (!ELF::validate_program_headers(main_executable_header, file_size, (u8 const*)&main_executable_header, main_executable_header_size, &interpreter_path)) {
         dbgln("exec({}): File has invalid ELF Program headers", path);
         return ENOEXEC;
     }
@@ -799,11 +799,11 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
         return interpreter_description;
     }
 
-    if (main_program_header.e_type == ET_REL) {
+    if (main_executable_header.e_type == ET_REL) {
         // We can't exec an ET_REL, that's just an object file from the compiler
         return ENOEXEC;
     }
-    if (main_program_header.e_type == ET_DYN) {
+    if (main_executable_header.e_type == ET_DYN) {
         // If it's ET_DYN with no PT_INTERP, then it's a dynamic executable responsible
         // for its own relocation (i.e. it's /usr/lib/Loader.so)
         if (path != "/usr/lib/Loader.so")
