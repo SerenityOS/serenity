@@ -462,12 +462,10 @@ KResult VirtualFileSystem::rename(StringView old_path, StringView new_path, Cust
 
         if (old_inode.index() != new_inode.index() && old_inode.is_directory() && new_inode.is_directory()) {
             size_t child_count = 0;
-            auto traversal_result = new_inode.traverse_as_directory([&child_count](auto&) {
+            TRY(new_inode.traverse_as_directory([&child_count](auto&) {
                 ++child_count;
                 return child_count <= 2;
-            });
-            if (traversal_result.is_error())
-                return traversal_result;
+            }));
             if (child_count > 2)
                 return ENOTEMPTY;
         }
@@ -707,12 +705,10 @@ KResult VirtualFileSystem::rmdir(StringView path, Custody& base)
     }
 
     size_t child_count = 0;
-    auto traversal_result = inode.traverse_as_directory([&child_count](auto&) {
+    TRY(inode.traverse_as_directory([&child_count](auto&) {
         ++child_count;
         return true;
-    });
-    if (traversal_result.is_error())
-        return traversal_result;
+    }));
 
     if (child_count != 2)
         return ENOTEMPTY;
