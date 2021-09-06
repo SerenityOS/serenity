@@ -253,7 +253,7 @@ pushd "$DIR/Build/clang/$ARCH"
             -DCMAKE_BUILD_TYPE="MinSizeRel" \
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
             -DLLVM_DEFAULT_TARGET_TRIPLE="$LLVM_TARGET" \
-            -DLLVM_TARGETS_TO_BUILD=X86 \
+            '-DLLVM_TARGETS_TO_BUILD=X86;AArch64' \
             -DLLVM_ENABLE_BINDINGS=OFF \
             -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF \
             -DLLVM_ENABLE_PROJECTS="clang;lld" \
