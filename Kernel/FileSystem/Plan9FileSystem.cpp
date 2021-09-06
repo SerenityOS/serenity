@@ -513,10 +513,7 @@ KResult Plan9FS::post_message(Message& message, RefPtr<ReceiveCompletion> comple
                 return EINTR;
         }
         auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(data));
-        auto nwritten_or_error = description.write(data_buffer, size);
-        if (nwritten_or_error.is_error())
-            return nwritten_or_error.error();
-        auto nwritten = nwritten_or_error.value();
+        auto nwritten = TRY(description.write(data_buffer, size));
         data += nwritten;
         size -= nwritten;
     }
@@ -534,10 +531,7 @@ KResult Plan9FS::do_read(u8* data, size_t size)
                 return EINTR;
         }
         auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data);
-        auto nread_or_error = description.read(data_buffer, size);
-        if (nread_or_error.is_error())
-            return nread_or_error.error();
-        auto nread = nread_or_error.value();
+        auto nread = TRY(description.read(data_buffer, size));
         if (nread == 0)
             return EIO;
         data += nread;
@@ -554,18 +548,14 @@ KResult Plan9FS::read_and_dispatch_one_message()
         u16 tag;
     };
     Header header;
-    KResult result = do_read(reinterpret_cast<u8*>(&header), sizeof(header));
-    if (result.is_error())
-        return result;
+    TRY(do_read(reinterpret_cast<u8*>(&header), sizeof(header)));
 
     auto buffer = KBuffer::try_create_with_size(header.size, Memory::Region::Access::ReadWrite);
     if (!buffer)
         return ENOMEM;
     // Copy the already read header into the buffer.
     memcpy(buffer->data(), &header, sizeof(header));
-    result = do_read(buffer->data() + sizeof(header), header.size - sizeof(header));
-    if (result.is_error())
-        return result;
+    TRY(do_read(buffer->data() + sizeof(header), header.size - sizeof(header)));
 
     MutexLocker locker(m_lock);
 
@@ -596,9 +586,7 @@ KResult Plan9FS::post_message_and_wait_for_a_reply(Message& message)
     auto request_type = message.type();
     auto tag = message.tag();
     auto completion = adopt_ref(*new ReceiveCompletion(tag));
-    auto result = post_message(message, completion);
-    if (result.is_error())
-        return result;
+    TRY(post_message(message, completion));
     if (Thread::current()->block<Plan9FS::Blocker>({}, *this, message, completion).was_interrupted())
         return EINTR;
 
@@ -728,9 +716,7 @@ KResult Plan9FSInode::ensure_open_for_mode(int mode)
 
 KResultOr<size_t> Plan9FSInode::read_bytes(off_t offset, size_t size, UserOrKernelBuffer& buffer, FileDescription*) const
 {
-    auto result = const_cast<Plan9FSInode&>(*this).ensure_open_for_mode(O_RDONLY);
-    if (result.is_error())
-        return result;
+    TRY(const_cast<Plan9FSInode&>(*this).ensure_open_for_mode(O_RDONLY));
 
     size = fs().adjust_buffer_size(size);
 
@@ -741,8 +727,7 @@ KResultOr<size_t> Plan9FSInode::read_bytes(off_t offset, size_t size, UserOrKern
     bool readlink_succeded = false;
     if (fs().m_remote_protocol_version >= Plan9FS::ProtocolVersion::v9P2000L && offset == 0) {
         message << fid();
-        result = fs().post_message_and_wait_for_a_reply(message);
-        if (result.is_success()) {
+        if (auto result = fs().post_message_and_wait_for_a_reply(message); result.is_success()) {
             readlink_succeded = true;
             message >> data;
         }
@@ -751,9 +736,7 @@ KResultOr<size_t> Plan9FSInode::read_bytes(off_t offset, size_t size, UserOrKern
     if (!readlink_succeded) {
         message = Plan9FS::Message { fs(), Plan9FS::Message::Type::Tread };
         message << fid() << (u64)offset << (u32)size;
-        result = fs().post_message_and_wait_for_a_reply(message);
-        if (result.is_error())
-            return result.error();
+        TRY(fs().post_message_and_wait_for_a_reply(message));
         data = message.read_data();
     }
 
@@ -767,23 +750,15 @@ KResultOr<size_t> Plan9FSInode::read_bytes(off_t offset, size_t size, UserOrKern
 
 KResultOr<size_t> Plan9FSInode::write_bytes(off_t offset, size_t size, const UserOrKernelBuffer& data, FileDescription*)
 {
-    auto result = ensure_open_for_mode(O_WRONLY);
-    if (result.is_error())
-        return result.error();
-
+    TRY(ensure_open_for_mode(O_WRONLY));
     size = fs().adjust_buffer_size(size);
 
-    auto data_copy_or_error = data.try_copy_into_kstring(size); // FIXME: this seems ugly
-    if (data_copy_or_error.is_error())
-        return data_copy_or_error.error();
-    auto data_copy = data_copy_or_error.release_value();
+    auto data_copy = TRY(data.try_copy_into_kstring(size)); // FIXME: this seems ugly
 
     Plan9FS::Message message { fs(), Plan9FS::Message::Type::Twrite };
     message << fid() << (u64)offset;
     message.append_data(data_copy->view());
-    result = fs().post_message_and_wait_for_a_reply(message);
-    if (result.is_error())
-        return result.error();
+    TRY(fs().post_message_and_wait_for_a_reply(message));
 
     u32 nwritten;
     message >> nwritten;
@@ -852,8 +827,6 @@ void Plan9FSInode::flush_metadata()
 
 KResult Plan9FSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    KResult result = KSuccess;
-
     // TODO: Should we synthesize "." and ".." here?
 
     if (fs().m_remote_protocol_version >= Plan9FS::ProtocolVersion::v9P2000L) {
@@ -862,12 +835,10 @@ KResult Plan9FSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryE
         {
             Plan9FS::Message clone_message { fs(), Plan9FS::Message::Type::Twalk };
             clone_message << fid() << clone_fid << (u16)0;
-            result = fs().post_message_and_wait_for_a_reply(clone_message);
-            if (result.is_error())
-                return result;
+            TRY(fs().post_message_and_wait_for_a_reply(clone_message));
             Plan9FS::Message open_message { fs(), Plan9FS::Message::Type::Tlopen };
             open_message << clone_fid << (u32)0;
-            result = fs().post_message_and_wait_for_a_reply(open_message);
+            auto result = fs().post_message_and_wait_for_a_reply(open_message);
             if (result.is_error()) {
                 Plan9FS::Message close_message { fs(), Plan9FS::Message::Type::Tclunk };
                 close_message << clone_fid;
@@ -879,6 +850,7 @@ KResult Plan9FSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryE
 
         u64 offset = 0;
         u32 count = fs().adjust_buffer_size(8 * MiB);
+        KResult result = KSuccess;
 
         while (true) {
             Plan9FS::Message message { fs(), Plan9FS::Message::Type::Treaddir };
