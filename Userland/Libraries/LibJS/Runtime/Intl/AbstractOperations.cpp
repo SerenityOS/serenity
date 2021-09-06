@@ -536,6 +536,65 @@ Value get_option(GlobalObject& global_object, Value options, PropertyName const&
     return value;
 }
 
+// 9.2.16 PartitionPattern ( pattern ), https://tc39.es/ecma402/#sec-partitionpattern
+Vector<PatternPartition> partition_pattern(StringView pattern)
+{
+    // 1. Let result be a new empty List.
+    Vector<PatternPartition> result;
+
+    // 2. Let beginIndex be ! StringIndexOf(pattern, "{", 0).
+    auto begin_index = pattern.find('{', 0);
+
+    // 3. Let endIndex be 0.
+    size_t end_index = 0;
+
+    // 4. Let nextIndex be 0.
+    size_t next_index = 0;
+
+    // 5. Let length be the number of code units in pattern.
+    // 6. Repeat, while beginIndex is an integer index into pattern,
+    while (begin_index.has_value()) {
+        // a. Set endIndex to ! StringIndexOf(pattern, "}", beginIndex).
+        end_index = pattern.find('}', *begin_index).value();
+
+        // b. Assert: endIndex is greater than beginIndex.
+        VERIFY(end_index > *begin_index);
+
+        // c. If beginIndex is greater than nextIndex, then
+        if (*begin_index > next_index) {
+            // i. Let literal be a substring of pattern from position nextIndex, inclusive, to position beginIndex, exclusive.
+            auto literal = pattern.substring_view(next_index, *begin_index - next_index);
+
+            // ii. Append a new Record { [[Type]]: "literal", [[Value]]: literal } as the last element of the list result.
+            result.append({ "literal"sv, literal });
+        }
+
+        // d. Let p be the substring of pattern from position beginIndex, exclusive, to position endIndex, exclusive.
+        auto partition = pattern.substring_view(*begin_index + 1, end_index - *begin_index - 1);
+
+        // e. Append a new Record { [[Type]]: p, [[Value]]: undefined } as the last element of the list result.
+        result.append({ partition, {} });
+
+        // f. Set nextIndex to endIndex + 1.
+        next_index = end_index + 1;
+
+        // g. Set beginIndex to ! StringIndexOf(pattern, "{", nextIndex).
+        begin_index = pattern.find('{', next_index);
+    }
+
+    // 7. If nextIndex is less than length, then
+    if (next_index < pattern.length()) {
+        // a. Let literal be the substring of pattern from position nextIndex, inclusive, to position length, exclusive.
+        auto literal = pattern.substring_view(next_index);
+
+        // b. Append a new Record { [[Type]]: "literal", [[Value]]: literal } as the last element of the list result.
+        result.append({ "literal"sv, literal });
+    }
+
+    // 8. Return result.
+    return result;
+}
+
 // 12.1.1 CanonicalCodeForDisplayNames ( type, code ), https://tc39.es/ecma402/#sec-canonicalcodefordisplaynames
 Value canonical_code_for_display_names(GlobalObject& global_object, DisplayNames::Type type, StringView code)
 {
