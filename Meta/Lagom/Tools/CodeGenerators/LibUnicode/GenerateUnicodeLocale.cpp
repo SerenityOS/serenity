@@ -937,6 +937,7 @@ int main(int argc, char** argv)
     char const* generated_implementation_path = nullptr;
     char const* core_path = nullptr;
     char const* locale_names_path = nullptr;
+    char const* misc_path = nullptr;
     char const* numbers_path = nullptr;
 
     Core::ArgsParser args_parser;
@@ -944,6 +945,7 @@ int main(int argc, char** argv)
     args_parser.add_option(generated_implementation_path, "Path to the Unicode locale implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path");
     args_parser.add_option(core_path, "Path to cldr-core directory", "core-path", 'r', "core-path");
     args_parser.add_option(locale_names_path, "Path to cldr-localenames directory", "locale-names-path", 'l', "locale-names-path");
+    args_parser.add_option(misc_path, "Path to cldr-misc directory", "misc-path", 'm', "misc-path");
     args_parser.add_option(numbers_path, "Path to cldr-numbers directory", "numbers-path", 'n', "numbers-path");
     args_parser.parse(argc, argv);
 
