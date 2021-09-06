@@ -111,9 +111,8 @@ KResult Coredump::write_elf_header()
     elf_file_header.e_shnum = 0;
     elf_file_header.e_shstrndx = SHN_UNDEF;
 
-    auto result = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&elf_file_header)), sizeof(ElfW(Ehdr)));
-    if (result.is_error())
-        return result.error();
+    TRY(m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&elf_file_header)), sizeof(ElfW(Ehdr))));
+
     return KSuccess;
 }
 
@@ -153,9 +152,8 @@ KResult Coredump::write_program_headers(size_t notes_size)
     notes_pheader.p_align = 0;
     notes_pheader.p_flags = 0;
 
-    auto result = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&notes_pheader)), sizeof(ElfW(Phdr)));
-    if (result.is_error())
-        return result.error();
+    TRY(m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&notes_pheader)), sizeof(ElfW(Phdr))));
+
     return KSuccess;
 }
 
@@ -182,9 +180,7 @@ KResult Coredump::write_regions()
                 //       (A page may not be backed by a physical page because it has never been faulted in when the process ran).
                 src_buffer = UserOrKernelBuffer::for_kernel_buffer(zero_buffer);
             }
-            auto result = m_fd->write(src_buffer.value(), PAGE_SIZE);
-            if (result.is_error())
-                return result.error();
+            TRY(m_fd->write(src_buffer.value(), PAGE_SIZE));
         }
     }
     return KSuccess;
@@ -192,9 +188,7 @@ KResult Coredump::write_regions()
 
 KResult Coredump::write_notes_segment(ByteBuffer& notes_segment)
 {
-    auto result = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(notes_segment.data()), notes_segment.size());
-    if (result.is_error())
-        return result.error();
+    TRY(m_fd->write(UserOrKernelBuffer::for_kernel_buffer(notes_segment.data()), notes_segment.size()));
     return KSuccess;
 }
 
@@ -345,24 +339,11 @@ KResult Coredump::write()
     SpinlockLocker lock(m_process->address_space().get_lock());
     ScopedAddressSpaceSwitcher switcher(m_process);
 
-    auto notes_segment_result = create_notes_segment_data();
-    if (notes_segment_result.is_error())
-        return notes_segment_result.error();
-
-    auto& notes_segment = notes_segment_result.value();
-
-    auto result = write_elf_header();
-    if (result.is_error())
-        return result;
-    result = write_program_headers(notes_segment.size());
-    if (result.is_error())
-        return result;
-    result = write_regions();
-    if (result.is_error())
-        return result;
-    result = write_notes_segment(notes_segment);
-    if (result.is_error())
-        return result;
+    auto notes_segment = TRY(create_notes_segment_data());
+    TRY(write_elf_header());
+    TRY(write_program_headers(notes_segment.size()));
+    TRY(write_regions());
+    TRY(write_notes_segment(notes_segment));
 
     return m_fd->chmod(0600); // Make coredump file read/writable
 }
