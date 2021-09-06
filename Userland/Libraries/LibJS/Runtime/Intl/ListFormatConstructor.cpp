@@ -6,8 +6,10 @@
 
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Intl/ListFormat.h>
 #include <LibJS/Runtime/Intl/ListFormatConstructor.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 
 namespace JS::Intl {
 
@@ -42,11 +44,62 @@ Value ListFormatConstructor::construct(FunctionObject& new_target)
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
+    auto locales = vm.argument(0);
+    auto options = vm.argument(1);
+
     // 2. Let listFormat be ? OrdinaryCreateFromConstructor(NewTarget, "%ListFormat.prototype%", « [[InitializedListFormat]], [[Locale]], [[Type]], [[Style]], [[Templates]] »).
     auto* list_format = ordinary_create_from_constructor<ListFormat>(global_object, new_target, &GlobalObject::intl_list_format_prototype);
     if (vm.exception())
         return {};
 
+    // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
+    auto requested_locales = canonicalize_locale_list(global_object, locales);
+    if (vm.exception())
+        return {};
+
+    // 4. Set options to ? GetOptionsObject(options).
+    options = Temporal::get_options_object(global_object, options);
+    if (vm.exception())
+        return {};
+
+    // 5. Let opt be a new Record.
+    LocaleOptions opt {};
+
+    // 6. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
+    auto matcher = get_option(global_object, options, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv);
+    if (vm.exception())
+        return {};
+
+    // 7. Set opt.[[localeMatcher]] to matcher.
+    opt.locale_matcher = matcher;
+
+    // 8. Let localeData be %ListFormat%.[[LocaleData]].
+
+    // 9. Let r be ResolveLocale(%ListFormat%.[[AvailableLocales]], requestedLocales, opt, %ListFormat%.[[RelevantExtensionKeys]], localeData).
+    auto result = resolve_locale(requested_locales, opt, {});
+
+    // 10. Set listFormat.[[Locale]] to r.[[locale]].
+    list_format->set_locale(move(result.locale));
+
+    // 11. Let type be ? GetOption(options, "type", "string", « "conjunction", "disjunction", "unit" », "conjunction").
+    auto type = get_option(global_object, options, vm.names.type, Value::Type::String, { "conjunction"sv, "disjunction"sv, "unit"sv }, "conjunction"sv);
+    if (vm.exception())
+        return {};
+
+    // 12. Set listFormat.[[Type]] to type.
+    list_format->set_type(type.as_string().string());
+
+    // 13. Let style be ? GetOption(options, "style", "string", « "long", "short", "narrow" », "long").
+    auto style = get_option(global_object, options, vm.names.style, Value::Type::String, { "long"sv, "short"sv, "narrow"sv }, "long"sv);
+    if (vm.exception())
+        return {};
+
+    // 14. Set listFormat.[[Style]] to style.
+    list_format->set_style(style.as_string().string());
+
+    // Note: The remaining steps are skipped in favor of deferring to LibUnicode.
+
+    // 19. Return listFormat.
     return list_format;
 }
 
