@@ -26,7 +26,7 @@ EditorWrapper::EditorWrapper()
     label_wrapper.set_layout<GUI::HorizontalBoxLayout>();
     label_wrapper.layout()->set_margins({ 0, 2 });
 
-    m_filename_label = label_wrapper.add<GUI::Label>("(Untitled)");
+    m_filename_label = label_wrapper.add<GUI::Label>(untitled_label);
     m_filename_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     m_filename_label->set_fixed_height(14);
 
@@ -123,7 +123,10 @@ void EditorWrapper::set_project_root(LexicalPath const& project_root)
 void EditorWrapper::update_title()
 {
     StringBuilder title;
-    title.append(m_filename);
+    if (m_filename.is_null())
+        title.append(untitled_label);
+    else
+        title.append(m_filename);
 
     if (m_document_dirty)
         title.append(" (*)");
