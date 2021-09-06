@@ -77,6 +77,9 @@ set(SOURCES
     Runtime/Intl/DisplayNamesConstructor.cpp
     Runtime/Intl/DisplayNamesPrototype.cpp
     Runtime/Intl/Intl.cpp
+    Runtime/Intl/ListFormat.cpp
+    Runtime/Intl/ListFormatConstructor.cpp
+    Runtime/Intl/ListFormatPrototype.cpp
     Runtime/Intl/Locale.cpp
     Runtime/Intl/LocaleConstructor.cpp
     Runtime/Intl/LocalePrototype.cpp
