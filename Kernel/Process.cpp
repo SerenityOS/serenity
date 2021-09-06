@@ -553,10 +553,10 @@ bool Process::dump_core()
     VERIFY(should_generate_coredump());
     dbgln("Generating coredump for pid: {}", pid().value());
     auto coredump_path = String::formatted("/tmp/coredump/{}_{}_{}", name(), pid().value(), kgettimeofday().to_truncated_seconds());
-    auto coredump = Coredump::create(*this, coredump_path);
-    if (!coredump)
+    auto coredump_or_error = Coredump::try_create(*this, coredump_path);
+    if (coredump_or_error.is_error())
         return false;
-    return !coredump->write().is_error();
+    return !coredump_or_error.value()->write().is_error();
 }
 
 bool Process::dump_perfcore()

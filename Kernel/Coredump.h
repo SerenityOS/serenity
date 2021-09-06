@@ -15,14 +15,14 @@ namespace Kernel {
 
 class Coredump {
 public:
-    static OwnPtr<Coredump> create(NonnullRefPtr<Process>, const String& output_path);
+    static KResultOr<NonnullOwnPtr<Coredump>> try_create(NonnullRefPtr<Process>, StringView output_path);
 
     ~Coredump() = default;
     [[nodiscard]] KResult write();
 
 private:
-    Coredump(NonnullRefPtr<Process>, NonnullRefPtr<FileDescription>&&);
-    static RefPtr<FileDescription> create_target_file(const Process&, const String& output_path);
+    Coredump(NonnullRefPtr<Process>, NonnullRefPtr<FileDescription>);
+    static KResultOr<NonnullRefPtr<FileDescription>> try_create_target_file(Process const&, StringView output_path);
 
     [[nodiscard]] KResult write_elf_header();
     [[nodiscard]] KResult write_program_headers(size_t notes_size);
@@ -36,7 +36,7 @@ private:
     KResultOr<ByteBuffer> create_notes_metadata_data() const;
 
     NonnullRefPtr<Process> m_process;
-    NonnullRefPtr<FileDescription> m_fd;
+    NonnullRefPtr<FileDescription> m_description;
     const size_t m_num_program_headers;
 };
 
