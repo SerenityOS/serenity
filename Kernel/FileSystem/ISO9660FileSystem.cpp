@@ -305,7 +305,7 @@ KResult ISO9660FS::calculate_inode_count() const
 
     size_t inode_count = 1;
 
-    auto traversal_result = visit_directory_record(m_primary_volume->root_directory_record_header, [&](ISO::DirectoryRecordHeader const* header) {
+    TRY(visit_directory_record(m_primary_volume->root_directory_record_header, [&](ISO::DirectoryRecordHeader const* header) {
         if (header == nullptr) {
             return RecursionDecision::Continue;
         }
@@ -324,12 +324,7 @@ KResult ISO9660FS::calculate_inode_count() const
         }
 
         return RecursionDecision::Continue;
-    });
-
-    if (traversal_result.is_error()) {
-        dbgln_if(ISO9660_DEBUG, "Failed to traverse for caching inode count!");
-        return traversal_result;
-    }
+    }));
 
     m_cached_inode_count = inode_count;
     return KSuccess;
@@ -473,7 +468,7 @@ KResult ISO9660Inode::traverse_as_directory(Function<bool(FileSystem::DirectoryE
 {
     Array<u8, max_file_identifier_length> file_identifier_buffer;
 
-    auto traversal_result = fs().visit_directory_record(m_record, [&](ISO::DirectoryRecordHeader const* record) {
+    return fs().visit_directory_record(m_record, [&](ISO::DirectoryRecordHeader const* record) {
         StringView filename = get_normalized_filename(*record, file_identifier_buffer);
         dbgln_if(ISO9660_VERY_DEBUG, "traverse_as_directory(): Found {}", filename);
 
@@ -486,11 +481,6 @@ KResult ISO9660Inode::traverse_as_directory(Function<bool(FileSystem::DirectoryE
 
         return RecursionDecision::Continue;
     });
-
-    if (traversal_result.is_error())
-        return traversal_result;
-
-    return KSuccess;
 }
 
 KResultOr<NonnullRefPtr<Inode>> ISO9660Inode::lookup(StringView name)
@@ -498,7 +488,7 @@ KResultOr<NonnullRefPtr<Inode>> ISO9660Inode::lookup(StringView name)
     RefPtr<Inode> inode;
     Array<u8, max_file_identifier_length> file_identifier_buffer;
 
-    auto traversal_result = fs().visit_directory_record(m_record, [&](ISO::DirectoryRecordHeader const* record) {
+    TRY(fs().visit_directory_record(m_record, [&](ISO::DirectoryRecordHeader const* record) {
         StringView filename = get_normalized_filename(*record, file_identifier_buffer);
 
         if (filename == name) {
@@ -516,10 +506,7 @@ KResultOr<NonnullRefPtr<Inode>> ISO9660Inode::lookup(StringView name)
         }
 
         return RecursionDecision::Continue;
-    });
-
-    if (traversal_result.is_error())
-        return traversal_result;
+    }));
 
     if (!inode)
         return ENOENT;
