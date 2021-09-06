@@ -112,6 +112,12 @@ u64 UnsignedBigInteger::to_u64() const
     return value;
 }
 
+double UnsignedBigInteger::to_double() const
+{
+    // FIXME: I am naive
+    return static_cast<double>(to_u64());
+}
+
 void UnsignedBigInteger::set_to_0()
 {
     m_words.clear_with_capacity();
