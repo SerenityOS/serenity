@@ -462,41 +462,51 @@ static void print_temporal_instant(JS::Object const& object, HashTable<JS::Objec
     print_value(&instant.nanoseconds(), seen_objects);
 }
 
-static void print_temporal_plain_date(JS::Object const& object, HashTable<JS::Object*>&)
+static void print_temporal_plain_date(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     auto& plain_date = static_cast<JS::Temporal::PlainDate const&>(object);
     print_type("Temporal.PlainDate");
     out(" \033[34;1m{:04}-{:02}-{:02}\033[0m", plain_date.iso_year(), plain_date.iso_month(), plain_date.iso_day());
+    out("\n  calendar: ");
+    print_value(&plain_date.calendar(), seen_objects);
 }
 
-static void print_temporal_plain_date_time(JS::Object const& object, HashTable<JS::Object*>&)
+static void print_temporal_plain_date_time(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     auto& plain_date_time = static_cast<JS::Temporal::PlainDateTime const&>(object);
     print_type("Temporal.PlainDateTime");
     out(" \033[34;1m{:04}-{:02}-{:02} {:02}:{:02}:{:02}.{:03}{:03}{:03}\033[0m", plain_date_time.iso_year(), plain_date_time.iso_month(), plain_date_time.iso_day(), plain_date_time.iso_hour(), plain_date_time.iso_minute(), plain_date_time.iso_second(), plain_date_time.iso_millisecond(), plain_date_time.iso_microsecond(), plain_date_time.iso_nanosecond());
+    out("\n  calendar: ");
+    print_value(&plain_date_time.calendar(), seen_objects);
 }
 
-static void print_temporal_plain_month_day(JS::Object const& object, HashTable<JS::Object*>&)
+static void print_temporal_plain_month_day(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     auto& plain_month_day = static_cast<JS::Temporal::PlainMonthDay const&>(object);
     print_type("Temporal.PlainMonthDay");
     // Also has an [[ISOYear]] internal slot, but showing that here seems rather unexpected.
     out(" \033[34;1m{:02}-{:02}\033[0m", plain_month_day.iso_month(), plain_month_day.iso_day());
+    out("\n  calendar: ");
+    print_value(&plain_month_day.calendar(), seen_objects);
 }
 
-static void print_temporal_plain_time(JS::Object const& object, HashTable<JS::Object*>&)
+static void print_temporal_plain_time(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     auto& plain_time = static_cast<JS::Temporal::PlainTime const&>(object);
     print_type("Temporal.PlainTime");
     out(" \033[34;1m{:02}:{:02}:{:02}.{:03}{:03}{:03}\033[0m", plain_time.iso_hour(), plain_time.iso_minute(), plain_time.iso_second(), plain_time.iso_millisecond(), plain_time.iso_microsecond(), plain_time.iso_nanosecond());
+    out("\n  calendar: ");
+    print_value(&plain_time.calendar(), seen_objects);
 }
 
-static void print_temporal_plain_year_month(JS::Object const& object, HashTable<JS::Object*>&)
+static void print_temporal_plain_year_month(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     auto& plain_year_month = static_cast<JS::Temporal::PlainYearMonth const&>(object);
     print_type("Temporal.PlainYearMonth");
     // Also has an [[ISODay]] internal slot, but showing that here seems rather unexpected.
     out(" \033[34;1m{:04}-{:02}\033[0m", plain_year_month.iso_year(), plain_year_month.iso_month());
+    out("\n  calendar: ");
+    print_value(&plain_year_month.calendar(), seen_objects);
 }
 
 static void print_temporal_time_zone(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
