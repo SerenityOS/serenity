@@ -20,6 +20,7 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(format);
+    JS_DECLARE_NATIVE_FUNCTION(format_to_parts);
 };
 
 }

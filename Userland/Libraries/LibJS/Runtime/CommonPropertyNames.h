@@ -168,6 +168,7 @@ namespace JS {
     P(fontsize)                              \
     P(forEach)                               \
     P(format)                                \
+    P(formatToParts)                         \
     P(fractionalSecondDigits)                \
     P(freeze)                                \
     P(from)                                  \
