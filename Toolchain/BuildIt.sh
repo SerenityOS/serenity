@@ -78,6 +78,12 @@ BINUTILS_NAME="binutils-$BINUTILS_VERSION"
 BINUTILS_PKG="${BINUTILS_NAME}.tar.gz"
 BINUTILS_BASE_URL="http://ftp.gnu.org/gnu/binutils"
 
+GDB_VERSION="10.2"
+GDB_MD5SUM="7aeb896762924ae9a2ec59525088bada"
+GDB_NAME="gdb-$GDB_VERSION"
+GDB_PKG="${GDB_NAME}.tar.gz"
+GDB_BASE_URL="http://ftp.gnu.org/gnu/gdb"
+
 # Note: If you bump the gcc version, you also have to update the matching
 #       GCC_VERSION variable in the project's root CMakeLists.txt
 GCC_VERSION="11.2.0"
@@ -174,6 +180,21 @@ popd
 # === DOWNLOAD AND PATCH ===
 
 pushd "$DIR/Tarballs"
+    # Build aarch64-gdb for cross-debugging support on x86 systems
+    if [ "$ARCH" = "aarch64" ]; then
+        md5=""
+        if [ -e "$GDB_PKG" ]; then
+            md5="$($MD5SUM $GDB_PKG | cut -f1 -d' ')"
+            echo "bu md5='$md5'"
+        fi
+        if [ "$md5" != ${GDB_MD5SUM} ] ; then
+            rm -f $GDB_PKG
+            curl -LO "$GDB_BASE_URL/$GDB_PKG"
+        else
+            echo "Skipped downloading gdb"
+        fi
+    fi
+
     md5=""
     if [ -e "$BINUTILS_PKG" ]; then
         md5="$($MD5SUM $BINUTILS_PKG | cut -f1 -d' ')"
@@ -196,6 +217,27 @@ pushd "$DIR/Tarballs"
         curl -LO "$GCC_BASE_URL/$GCC_NAME/$GCC_PKG"
     else
         echo "Skipped downloading gcc"
+    fi
+
+    if [ "$ARCH" = "aarch64" ]; then
+        if [ -d ${GDB_NAME} ]; then
+            rm -rf "${GDB_NAME}"
+            rm -rf "$DIR/Build/$ARCH/$GDB_NAME"
+        fi
+        echo "Extracting GDB..."
+        tar -xzf ${GDB_PKG}
+
+        pushd ${GDB_NAME}
+            if [ "$git_patch" = "1" ]; then
+                git init > /dev/null
+                git add . > /dev/null
+                git commit -am "BASE" > /dev/null
+                git apply "$DIR"/Patches/gdb.patch > /dev/null
+            else
+                patch -p1 < "$DIR"/Patches/gdb.patch > /dev/null
+            fi
+            $MD5SUM "$DIR"/Patches/gdb.patch > .patch.applied
+        popd
     fi
 
     if [ -d ${BINUTILS_NAME} ]; then
@@ -258,6 +300,24 @@ mkdir -p "$DIR/Build/$ARCH"
 
 pushd "$DIR/Build/$ARCH"
     unset PKG_CONFIG_LIBDIR # Just in case
+
+    if [ "$ARCH" = "aarch64" ]; then
+        rm -rf gdb
+        mkdir -p gdb
+
+        pushd gdb
+            echo "XXX configure gdb"
+            buildstep "gdb/configure" "$DIR"/Tarballs/$GDB_NAME/configure --prefix="$PREFIX" \
+                                                     --target="$TARGET" \
+                                                     --with-sysroot="$SYSROOT" \
+                                                     --enable-shared \
+                                                     --disable-nls \
+                                                     ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
+            echo "XXX build gdb"
+            buildstep "gdb/build" "$MAKE" -j "$MAKEJOBS" || exit 1
+            buildstep "gdb/install" "$MAKE" install || exit 1
+        popd
+    fi
 
     rm -rf binutils
     mkdir -p binutils
