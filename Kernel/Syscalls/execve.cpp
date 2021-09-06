@@ -710,14 +710,14 @@ static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, 
     return auxv;
 }
 
-static KResultOr<Vector<String>> find_shebang_interpreter_for_executable(const char first_page[], int nread)
+static KResultOr<Vector<String>> find_shebang_interpreter_for_executable(char const first_page[], size_t nread)
 {
     int word_start = 2;
     int word_length = 0;
     if (nread > 2 && first_page[0] == '#' && first_page[1] == '!') {
         Vector<String> interpreter_words;
 
-        for (int i = 2; i < nread; ++i) {
+        for (size_t i = 2; i < nread; ++i) {
             if (first_page[i] == '\n') {
                 break;
             }
@@ -773,12 +773,9 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
 
         char first_page[PAGE_SIZE] = {};
         auto first_page_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&first_page);
-        auto nread_or_error = interpreter_description->read(first_page_buffer, sizeof(first_page));
-        if (nread_or_error.is_error())
-            return ENOEXEC;
-        nread = nread_or_error.value();
+        auto nread = TRY(interpreter_description->read(first_page_buffer, sizeof(first_page)));
 
-        if (nread < (int)sizeof(ElfW(Ehdr)))
+        if (nread < sizeof(ElfW(Ehdr)))
             return ENOEXEC;
 
         auto elf_header = (ElfW(Ehdr)*)first_page;
@@ -847,12 +844,10 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
     // Read the first page of the program into memory so we can validate the binfmt of it
     char first_page[PAGE_SIZE];
     auto first_page_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&first_page);
-    auto nread_or_error = description->read(first_page_buffer, sizeof(first_page));
-    if (nread_or_error.is_error())
-        return ENOEXEC;
+    auto nread = TRY(description->read(first_page_buffer, sizeof(first_page)));
 
     // 1) #! interpreted file
-    auto shebang_result = find_shebang_interpreter_for_executable(first_page, nread_or_error.value());
+    auto shebang_result = find_shebang_interpreter_for_executable(first_page, nread);
     if (!shebang_result.is_error()) {
         auto shebang_words = shebang_result.release_value();
         auto shebang_path = shebang_words.first();
@@ -864,7 +859,7 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
 
     // #2) ELF32 for i386
 
-    if (nread_or_error.value() < (int)sizeof(ElfW(Ehdr)))
+    if (nread < sizeof(ElfW(Ehdr)))
         return ENOEXEC;
     auto main_program_header = (ElfW(Ehdr)*)first_page;
 
@@ -873,7 +868,7 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
         return ENOEXEC;
     }
 
-    auto elf_result = find_elf_interpreter_for_executable(path, *main_program_header, nread_or_error.value(), metadata.size);
+    auto elf_result = find_elf_interpreter_for_executable(path, *main_program_header, nread, metadata.size);
     // Assume a static ELF executable by default
     RefPtr<FileDescription> interpreter_description;
     // We're getting either an interpreter, an error, or KSuccess (i.e. no interpreter but file checks out)
