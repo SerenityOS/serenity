@@ -848,6 +848,9 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
         VERIFY_NOT_REACHED();
     }
 
+    // NOTE: This code path is taken in the non-syscall case, i.e when the kernel spawns
+    //       a userspace process directly (such as /bin/SystemServer on startup)
+
     if (prev_flags & 0x200)
         sti();
     Processor::leave_critical();
