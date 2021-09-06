@@ -63,6 +63,14 @@ u64 SignedBigInteger::to_u64() const
     return ~(unsigned_value - 1); // equivalent to `-unsigned_value`, but doesnt trigger UBSAN
 }
 
+double SignedBigInteger::to_double() const
+{
+    double unsigned_value = m_unsigned_data.to_double();
+    if (!m_sign)
+        return unsigned_value;
+    return -unsigned_value;
+}
+
 FLATTEN SignedBigInteger SignedBigInteger::plus(const SignedBigInteger& other) const
 {
     // If both are of the same sign, just add the unsigned data and return.

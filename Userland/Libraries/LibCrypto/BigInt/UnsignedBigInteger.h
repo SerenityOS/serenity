@@ -57,6 +57,7 @@ public:
     String to_base(u16 N) const;
 
     u64 to_u64() const;
+    double to_double() const;
 
     const Vector<Word, STARTING_WORD_SIZE>& words() const { return m_words; }
 

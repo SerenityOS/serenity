@@ -66,6 +66,7 @@ public:
     String to_base(u16 N) const;
 
     u64 to_u64() const;
+    double to_double() const;
 
     const UnsignedBigInteger& unsigned_value() const { return m_unsigned_data; }
     const Vector<u32, STARTING_WORD_SIZE> words() const { return m_unsigned_data.words(); }
