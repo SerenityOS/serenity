@@ -30,6 +30,7 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/DisplayNames.h>
+#include <LibJS/Runtime/Intl/ListFormat.h>
 #include <LibJS/Runtime/Intl/Locale.h>
 #include <LibJS/Runtime/Map.h>
 #include <LibJS/Runtime/NativeFunction.h>
@@ -577,6 +578,18 @@ static void print_intl_locale(JS::Object const& object, HashTable<JS::Object*>& 
     print_value(JS::Value(locale.numeric()), seen_objects);
 }
 
+static void print_intl_list_format(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& list_format = static_cast<JS::Intl::ListFormat const&>(object);
+    print_type("Intl.ListFormat");
+    out("\n  locale: ");
+    print_value(js_string(object.vm(), list_format.locale()), seen_objects);
+    out("\n  type: ");
+    print_value(js_string(object.vm(), list_format.type_string()), seen_objects);
+    out("\n  style: ");
+    print_value(js_string(object.vm(), list_format.style_string()), seen_objects);
+}
+
 static void print_primitive_wrapper_object(FlyString const& name, JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     // BooleanObject, NumberObject, StringObject
@@ -658,6 +671,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_intl_display_names(object, seen_objects);
         if (is<JS::Intl::Locale>(object))
             return print_intl_locale(object, seen_objects);
+        if (is<JS::Intl::ListFormat>(object))
+            return print_intl_list_format(object, seen_objects);
         return print_object(object, seen_objects);
     }
 
