@@ -6,18 +6,18 @@
 
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/ProcessPagingScope.h>
+#include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 
 namespace Kernel {
 
-ProcessPagingScope::ProcessPagingScope(Process& process)
+ScopedAddressSpaceSwitcher::ScopedAddressSpaceSwitcher(Process& process)
 {
     VERIFY(Thread::current() != nullptr);
     m_previous_cr3 = read_cr3();
     MM.enter_process_address_space(process);
 }
 
-ProcessPagingScope::~ProcessPagingScope()
+ScopedAddressSpaceSwitcher::~ScopedAddressSpaceSwitcher()
 {
     InterruptDisabler disabler;
     Thread::current()->regs().cr3 = m_previous_cr3;

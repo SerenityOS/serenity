@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,10 +11,10 @@
 
 namespace Kernel {
 
-class ProcessPagingScope {
+class ScopedAddressSpaceSwitcher {
 public:
-    explicit ProcessPagingScope(Process&);
-    ~ProcessPagingScope();
+    explicit ScopedAddressSpaceSwitcher(Process&);
+    ~ScopedAddressSpaceSwitcher();
 
 private:
     u32 m_previous_cr3 { 0 };

@@ -10,7 +10,7 @@
 #include <AK/Types.h>
 
 #include <Kernel/Interrupts/APIC.h>
-#include <Kernel/Memory/ProcessPagingScope.h>
+#include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
@@ -522,7 +522,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             thread.cpu(),
             [&]() {
                 dbgln("CPU[{}] getting stack for cpu #{}", Processor::current_id(), proc.id());
-                ProcessPagingScope paging_scope(thread.process());
+                ScopedAddressSpaceSwitcher switcher(thread.process());
                 VERIFY(&Processor::current() != &proc);
                 VERIFY(&thread == Processor::current_thread());
                 // NOTE: Because the other processor is still holding the
@@ -548,7 +548,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             // stack. Before switching out of that thread, it switch_context
             // pushed the callee-saved registers, and the last of them happens
             // to be ebp.
-            ProcessPagingScope paging_scope(thread.process());
+            ScopedAddressSpaceSwitcher switcher(thread.process());
             auto& regs = thread.regs();
             auto* stack_top = reinterpret_cast<FlatPtr*>(regs.sp());
             if (Memory::is_user_range(VirtualAddress(stack_top), sizeof(FlatPtr))) {

@@ -15,7 +15,7 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KLexicalPath.h>
 #include <Kernel/Locking/Spinlock.h>
-#include <Kernel/Memory/ProcessPagingScope.h>
+#include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
 #include <LibC/elf.h>
@@ -343,7 +343,7 @@ KResultOr<ByteBuffer> Coredump::create_notes_segment_data() const
 KResult Coredump::write()
 {
     SpinlockLocker lock(m_process->address_space().get_lock());
-    ProcessPagingScope scope(m_process);
+    ScopedAddressSpaceSwitcher switcher(m_process);
 
     auto notes_segment_result = create_notes_segment_data();
     if (notes_segment_result.is_error())

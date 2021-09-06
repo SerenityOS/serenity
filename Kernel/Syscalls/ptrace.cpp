@@ -8,8 +8,8 @@
 #include <AK/ScopeGuard.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PrivateInodeVMObject.h>
-#include <Kernel/Memory/ProcessPagingScope.h>
 #include <Kernel/Memory/Region.h>
+#include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Process.h>
 #include <Kernel/ThreadTracer.h>
@@ -168,7 +168,7 @@ KResultOr<u32> Process::peek_user_data(Userspace<const u32*> address)
 {
     // This function can be called from the context of another
     // process that called PT_PEEK
-    ProcessPagingScope scope(*this);
+    ScopedAddressSpaceSwitcher switcher(*this);
     uint32_t data;
     TRY(copy_from_user(&data, address));
     return data;
@@ -180,7 +180,7 @@ KResult Process::poke_user_data(Userspace<u32*> address, u32 data)
     auto* region = address_space().find_region_containing(range);
     if (!region)
         return EFAULT;
-    ProcessPagingScope scope(*this);
+    ScopedAddressSpaceSwitcher switcher(*this);
     if (region->is_shared()) {
         // If the region is shared, we change its vmobject to a PrivateInodeVMObject
         // to prevent the write operation from changing any shared inode data

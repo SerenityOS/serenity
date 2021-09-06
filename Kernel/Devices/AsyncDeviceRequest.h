@@ -8,7 +8,7 @@
 
 #include <AK/IntrusiveList.h>
 #include <AK/NonnullRefPtr.h>
-#include <Kernel/Memory/ProcessPagingScope.h>
+#include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
 #include <Kernel/UserOrKernelBuffer.h>
@@ -85,7 +85,7 @@ public:
     {
         if (in_target_context(buffer))
             return buffer.write(forward<Args>(args)...);
-        ProcessPagingScope paging_scope(m_process);
+        ScopedAddressSpaceSwitcher switcher(m_process);
         return buffer.write(forward<Args>(args)...);
     }
 
@@ -94,7 +94,7 @@ public:
     {
         if (in_target_context(buffer))
             return buffer.write_buffered<BUFFER_BYTES>(forward<Args>(args)...);
-        ProcessPagingScope paging_scope(m_process);
+        ScopedAddressSpaceSwitcher switcher(m_process);
         return buffer.write_buffered<BUFFER_BYTES>(forward<Args>(args)...);
     }
 
@@ -103,7 +103,7 @@ public:
     {
         if (in_target_context(buffer))
             return buffer.read(forward<Args>(args)...);
-        ProcessPagingScope paging_scope(m_process);
+        ScopedAddressSpaceSwitcher switcher(m_process);
         return buffer.read(forward<Args>(args)...);
     }
 
@@ -112,7 +112,7 @@ public:
     {
         if (in_target_context(buffer))
             return buffer.read_buffered<BUFFER_BYTES>(forward<Args>(args)...);
-        ProcessPagingScope paging_scope(m_process);
+        ScopedAddressSpaceSwitcher switcher(m_process);
         return buffer.read_buffered<BUFFER_BYTES>(forward<Args>(args)...);
     }
 

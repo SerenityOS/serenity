@@ -16,7 +16,7 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PageDirectory.h>
-#include <Kernel/Memory/ProcessPagingScope.h>
+#include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
@@ -911,7 +911,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     VERIFY(previous_mode() == PreviousMode::UserMode);
     VERIFY(current_trap());
 
-    ProcessPagingScope paging_scope(m_process);
+    ScopedAddressSpaceSwitcher switcher(m_process);
 
     u32 old_signal_mask = m_signal_mask;
     u32 new_signal_mask = action.mask;
@@ -1157,7 +1157,7 @@ String Thread::backtrace()
     auto& process = const_cast<Process&>(this->process());
     auto stack_trace = Processor::capture_stack_trace(*this);
     VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
-    ProcessPagingScope paging_scope(process);
+    ScopedAddressSpaceSwitcher switcher(process);
     for (auto& frame : stack_trace) {
         if (Memory::is_user_range(VirtualAddress(frame), sizeof(FlatPtr) * 2)) {
             recognized_symbols.append({ frame });
