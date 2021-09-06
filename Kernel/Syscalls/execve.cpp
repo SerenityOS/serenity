@@ -280,99 +280,67 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
 
     Memory::MemoryManager::enter_address_space(*new_space);
 
-    KResult ph_load_result = KSuccess;
-    elf_image.for_each_program_header([&](const ELF::Image::ProgramHeader& program_header) {
-        if (program_header.type() == PT_TLS) {
-            VERIFY(should_allocate_tls == ShouldAllocateTls::Yes);
-            VERIFY(program_header.size_in_memory());
+    auto load_tls_section = [&](auto& program_header) -> KResult {
+        VERIFY(should_allocate_tls == ShouldAllocateTls::Yes);
+        VERIFY(program_header.size_in_memory());
 
-            if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
-                dbgln("Shenanigans! ELF PT_TLS header sneaks outside of executable.");
-                ph_load_result = ENOEXEC;
-                return IterationDecision::Break;
-            }
-
-            auto range_or_error = new_space->try_allocate_range({}, program_header.size_in_memory());
-            if (range_or_error.is_error()) {
-                ph_load_result = ENOMEM;
-                return IterationDecision::Break;
-            }
-            auto range = range_or_error.release_value();
-
-            auto region_or_error = new_space->allocate_region(range, String::formatted("{} (master-tls)", elf_name), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
-            if (region_or_error.is_error()) {
-                ph_load_result = region_or_error.error();
-                return IterationDecision::Break;
-            }
-
-            master_tls_region = region_or_error.value();
-            master_tls_size = program_header.size_in_memory();
-            master_tls_alignment = program_header.alignment();
-
-            if (copy_to_user(master_tls_region->vaddr().as_ptr(), program_header.raw_data(), program_header.size_in_image()).is_error()) {
-                ph_load_result = EFAULT;
-                return IterationDecision::Break;
-            }
-            return IterationDecision::Continue;
+        if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
+            dbgln("Shenanigans! ELF PT_TLS header sneaks outside of executable.");
+            return ENOEXEC;
         }
-        if (program_header.type() != PT_LOAD)
-            return IterationDecision::Continue;
 
+        auto range = TRY(new_space->try_allocate_range({}, program_header.size_in_memory()));
+        master_tls_region = TRY(new_space->allocate_region(range, String::formatted("{} (master-tls)", elf_name), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
+        master_tls_size = program_header.size_in_memory();
+        master_tls_alignment = program_header.alignment();
+
+        TRY(copy_to_user(master_tls_region->vaddr().as_ptr(), program_header.raw_data(), program_header.size_in_image()));
+        return KSuccess;
+    };
+
+    auto load_writable_section = [&](auto& program_header) -> KResult {
+        // Writable section: create a copy in memory.
+        VERIFY(program_header.alignment() == PAGE_SIZE);
+
+        if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
+            dbgln("Shenanigans! Writable ELF PT_LOAD header sneaks outside of executable.");
+            return ENOEXEC;
+        }
+
+        int prot = 0;
+        if (program_header.is_readable())
+            prot |= PROT_READ;
+        if (program_header.is_writable())
+            prot |= PROT_WRITE;
+        auto region_name = String::formatted("{} (data-{}{})", elf_name, program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "");
+
+        auto range_base = VirtualAddress { Memory::page_round_down(program_header.vaddr().offset(load_offset).get()) };
+        auto range_end = VirtualAddress { Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()) };
+
+        auto range = TRY(new_space->try_allocate_range(range_base, range_end.get() - range_base.get()));
+        auto region = TRY(new_space->allocate_region(range, region_name, prot, AllocationStrategy::Reserve));
+
+        // It's not always the case with PIE executables (and very well shouldn't be) that the
+        // virtual address in the program header matches the one we end up giving the process.
+        // In order to copy the data image correctly into memory, we need to copy the data starting at
+        // the right initial page offset into the pages allocated for the elf_alloc-XX section.
+        // FIXME: There's an opportunity to munmap, or at least mprotect, the padding space between
+        //     the .text and .data PT_LOAD sections of the executable.
+        //     Accessing it would definitely be a bug.
+        auto page_offset = program_header.vaddr();
+        page_offset.mask(~PAGE_MASK);
+        TRY(copy_to_user((u8*)region->vaddr().as_ptr() + page_offset.get(), program_header.raw_data(), program_header.size_in_image()));
+        return KSuccess;
+    };
+
+    auto load_section = [&](auto& program_header) -> KResult {
         if (program_header.size_in_memory() == 0)
-            return IterationDecision::Continue;
+            return KSuccess;
 
-        if (program_header.is_writable()) {
-            // Writable section: create a copy in memory.
-            VERIFY(program_header.size_in_memory());
-            VERIFY(program_header.alignment() == PAGE_SIZE);
-
-            if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
-                dbgln("Shenanigans! Writable ELF PT_LOAD header sneaks outside of executable.");
-                ph_load_result = ENOEXEC;
-                return IterationDecision::Break;
-            }
-
-            int prot = 0;
-            if (program_header.is_readable())
-                prot |= PROT_READ;
-            if (program_header.is_writable())
-                prot |= PROT_WRITE;
-            auto region_name = String::formatted("{} (data-{}{})", elf_name, program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "");
-
-            auto range_base = VirtualAddress { Memory::page_round_down(program_header.vaddr().offset(load_offset).get()) };
-            auto range_end = VirtualAddress { Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()) };
-
-            auto range_or_error = new_space->try_allocate_range(range_base, range_end.get() - range_base.get());
-            if (range_or_error.is_error()) {
-                ph_load_result = ENOMEM;
-                return IterationDecision::Break;
-            }
-            auto range = range_or_error.release_value();
-
-            auto region_or_error = new_space->allocate_region(range, region_name, prot, AllocationStrategy::Reserve);
-            if (region_or_error.is_error()) {
-                ph_load_result = region_or_error.error();
-                return IterationDecision::Break;
-            }
-
-            // It's not always the case with PIE executables (and very well shouldn't be) that the
-            // virtual address in the program header matches the one we end up giving the process.
-            // In order to copy the data image correctly into memory, we need to copy the data starting at
-            // the right initial page offset into the pages allocated for the elf_alloc-XX section.
-            // FIXME: There's an opportunity to munmap, or at least mprotect, the padding space between
-            //     the .text and .data PT_LOAD sections of the executable.
-            //     Accessing it would definitely be a bug.
-            auto page_offset = program_header.vaddr();
-            page_offset.mask(~PAGE_MASK);
-            if (copy_to_user((u8*)region_or_error.value()->vaddr().as_ptr() + page_offset.get(), program_header.raw_data(), program_header.size_in_image()).is_error()) {
-                ph_load_result = EFAULT;
-                return IterationDecision::Break;
-            }
-            return IterationDecision::Continue;
-        }
+        if (program_header.is_writable())
+            return load_writable_section(program_header);
 
         // Non-writable section: map the executable itself in memory.
-        VERIFY(program_header.size_in_memory());
         VERIFY(program_header.alignment() == PAGE_SIZE);
         int prot = 0;
         if (program_header.is_readable())
@@ -384,28 +352,35 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
 
         auto range_base = VirtualAddress { Memory::page_round_down(program_header.vaddr().offset(load_offset).get()) };
         auto range_end = VirtualAddress { Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()) };
-        auto range_or_error = new_space->try_allocate_range(range_base, range_end.get() - range_base.get());
-        if (range_or_error.is_error()) {
-            ph_load_result = ENOMEM;
-            return IterationDecision::Break;
-        }
-        auto range = range_or_error.release_value();
-        auto region_or_error = new_space->allocate_region_with_vmobject(range, *vmobject, program_header.offset(), elf_name, prot, true);
-        if (region_or_error.is_error()) {
-            ph_load_result = region_or_error.error();
-            return IterationDecision::Break;
-        }
-        if (should_allow_syscalls == ShouldAllowSyscalls::Yes)
-            region_or_error.value()->set_syscall_region(true);
-        if (program_header.offset() == 0)
-            load_base_address = (FlatPtr)region_or_error.value()->vaddr().as_ptr();
-        return IterationDecision::Continue;
-    });
+        auto range = TRY(new_space->try_allocate_range(range_base, range_end.get() - range_base.get()));
+        auto region = TRY(new_space->allocate_region_with_vmobject(range, *vmobject, program_header.offset(), elf_name, prot, true));
 
-    if (ph_load_result.is_error()) {
-        dbgln("do_exec: Failure loading program ({})", ph_load_result.error());
-        return ph_load_result;
-    }
+        if (should_allow_syscalls == ShouldAllowSyscalls::Yes)
+            region->set_syscall_region(true);
+        if (program_header.offset() == 0)
+            load_base_address = (FlatPtr)region->vaddr().as_ptr();
+        return KSuccess;
+    };
+
+    auto load_elf_program_header = [&](auto& program_header) -> KResult {
+        if (program_header.type() == PT_TLS)
+            return load_tls_section(program_header);
+
+        if (program_header.type() == PT_LOAD)
+            return load_section(program_header);
+
+        // NOTE: We ignore other program header types.
+        return KSuccess;
+    };
+
+    TRY([&] {
+        KResult result = KSuccess;
+        elf_image.for_each_program_header([&](ELF::Image::ProgramHeader const& program_header) {
+            result = load_elf_program_header(program_header);
+            return result.is_error() ? IterationDecision::Break : IterationDecision::Continue;
+        });
+        return result;
+    }());
 
     if (!elf_image.entry().offset(load_offset).get()) {
         dbgln("do_exec: Failure loading program, entry pointer is invalid! {})", elf_image.entry().offset(load_offset));
@@ -428,7 +403,8 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
     };
 }
 
-KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_description,
+KResultOr<LoadResult>
+Process::load(NonnullRefPtr<FileDescription> main_program_description,
     RefPtr<FileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header)
 {
     auto new_space = TRY(Memory::AddressSpace::try_create(nullptr));
@@ -929,5 +905,4 @@ KResultOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params
     VERIFY(result.is_error()); // We should never continue after a successful exec!
     return result.error();
 }
-
 }
