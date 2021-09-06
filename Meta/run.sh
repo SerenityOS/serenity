@@ -123,13 +123,14 @@ if command -v wslpath >/dev/null; then
 fi
 
 [ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max"
-[ -z "$SERENITY_CPUS" ] && SERENITY_CPUS="2"
-if [ "$SERENITY_CPUS" -le 8 ]; then
-    # Explicitly disable x2APIC so we can test it more easily
-    SERENITY_QEMU_CPU="$SERENITY_QEMU_CPU,-x2apic"
-fi
 
 if [ "$SERENITY_ARCH" != "aarch64" ]; then
+    [ -z "$SERENITY_CPUS" ] && SERENITY_CPUS="2"
+    if [ "$SERENITY_CPUS" -le 8 ]; then
+        # Explicitly disable x2APIC so we can test it more easily
+        SERENITY_QEMU_CPU="$SERENITY_QEMU_CPU,-x2apic"
+    fi
+
     if [ -z "$SERENITY_SPICE" ] && "${SERENITY_QEMU_BIN}" -chardev help | grep -iq qemu-vdagent; then
         SERENITY_SPICE_SERVER_CHARDEV="-chardev qemu-vdagent,clipboard=on,mouse=off,id=vdagent,name=vdagent"
     elif "${SERENITY_QEMU_BIN}" -chardev help | grep -iq spicevmc; then
