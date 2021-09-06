@@ -39,6 +39,7 @@ void InstantPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.add, add, 1, attr);
     define_native_function(vm.names.subtract, subtract, 1, attr);
     define_native_function(vm.names.until, until, 1, attr);
+    define_native_function(vm.names.since, since, 1, attr);
     define_native_function(vm.names.round, round, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
@@ -235,6 +236,66 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
 
     // 12. Let roundedNs be ! DifferenceInstant(instant.[[Nanoseconds]], other.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
     auto rounded_ns = difference_instant(global_object, instant->nanoseconds(), other->nanoseconds(), rounding_increment, *smallest_unit, *rounding_mode);
+
+    // 13. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
+    auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, *largest_unit);
+
+    // 14. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
+    return create_temporal_duration(global_object, 0, 0, 0, 0, result->hours, result->minutes, result->seconds, result->milliseconds, result->microseconds, result->nanoseconds);
+}
+
+// 8.3.10 Temporal.Instant.prototype.since ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.since
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
+{
+    // 1. Let instant be the this value.
+    // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
+    auto* instant = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Set other to ? ToTemporalInstant(other).
+    auto* other = to_temporal_instant(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 4. Set options to ? GetOptionsObject(options).
+    auto* options = get_options_object(global_object, vm.argument(1));
+    if (vm.exception())
+        return {};
+
+    // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », "nanosecond").
+    auto smallest_unit = to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv);
+    if (vm.exception())
+        return {};
+
+    // 6. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("second", smallestUnit).
+    auto default_largest_unit = larger_of_two_temporal_units("second"sv, *smallest_unit);
+
+    // 7. Let largestUnit be ? ToLargestTemporalUnit(options, « "year", "month", "week", "day" », "auto", defaultLargestUnit).
+    auto largest_unit = to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit));
+    if (vm.exception())
+        return {};
+
+    // 8. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
+    validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit);
+    if (vm.exception())
+        return {};
+
+    // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
+    auto rounding_mode = to_temporal_rounding_mode(global_object, *options, "trunc"sv);
+    if (vm.exception())
+        return {};
+
+    // 10. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
+    auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
+
+    // 11. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
+    auto rounding_increment = to_temporal_rounding_increment(global_object, *options, *maximum, false);
+    if (vm.exception())
+        return {};
+
+    // 12. Let roundedNs be ! DifferenceInstant(other.[[Nanoseconds]], instant.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
+    auto rounded_ns = difference_instant(global_object, other->nanoseconds(), instant->nanoseconds(), rounding_increment, *smallest_unit, *rounding_mode);
 
     // 13. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
     auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, *largest_unit);
