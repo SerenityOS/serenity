@@ -410,11 +410,30 @@ static void parse_all_locales(String core_path, String locale_names_path, String
     parse_core_aliases(core_supplemental_path.string(), locale_data);
     parse_likely_subtags(core_supplemental_path.string(), locale_data);
 
+    auto remove_variants_from_path = [](String path) -> Optional<String> {
+        auto parsed_locale = parse_language(LexicalPath::basename(path));
+        if (!parsed_locale.has_value())
+            return {};
+
+        StringBuilder builder;
+        builder.append(parsed_locale->language);
+        if (!parsed_locale->script.is_empty())
+            builder.appendff("-{}", parsed_locale->script);
+        if (!parsed_locale->region.is_empty())
+            builder.appendff("-{}", parsed_locale->region);
+
+        return builder.build();
+    };
+
     while (locale_names_iterator.has_next()) {
         auto locale_path = locale_names_iterator.next_full_path();
         VERIFY(Core::File::is_directory(locale_path));
 
-        auto& locale = locale_data.locales.ensure(LexicalPath::basename(locale_path));
+        auto language = remove_variants_from_path(locale_path);
+        if (!language.has_value())
+            continue;
+
+        auto& locale = locale_data.locales.ensure(*language);
         parse_identity(locale_path, locale_data, locale);
         parse_locale_languages(locale_path, locale);
         parse_locale_territories(locale_path, locale);
@@ -425,7 +444,11 @@ static void parse_all_locales(String core_path, String locale_names_path, String
         auto misc_path = misc_iterator.next_full_path();
         VERIFY(Core::File::is_directory(misc_path));
 
-        auto& locale = locale_data.locales.ensure(LexicalPath::basename(misc_path));
+        auto language = remove_variants_from_path(misc_path);
+        if (!language.has_value())
+            continue;
+
+        auto& locale = locale_data.locales.ensure(*language);
         parse_locale_list_patters(misc_path, locale_data, locale);
     }
 
@@ -433,7 +456,11 @@ static void parse_all_locales(String core_path, String locale_names_path, String
         auto numbers_path = numbers_iterator.next_full_path();
         VERIFY(Core::File::is_directory(numbers_path));
 
-        auto& locale = locale_data.locales.ensure(LexicalPath::basename(numbers_path));
+        auto language = remove_variants_from_path(numbers_path);
+        if (!language.has_value())
+            continue;
+
+        auto& locale = locale_data.locales.ensure(*language);
         parse_locale_currencies(numbers_path, locale_data, locale);
     }
 }
