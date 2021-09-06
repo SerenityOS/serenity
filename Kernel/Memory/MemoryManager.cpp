@@ -910,12 +910,12 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
     return page;
 }
 
-void MemoryManager::enter_process_paging_scope(Process& process)
+void MemoryManager::enter_process_address_space(Process& process)
 {
-    enter_space(process.address_space());
+    enter_address_space(process.address_space());
 }
 
-void MemoryManager::enter_space(AddressSpace& space)
+void MemoryManager::enter_address_space(AddressSpace& space)
 {
     auto current_thread = Thread::current();
     VERIFY(current_thread != nullptr);

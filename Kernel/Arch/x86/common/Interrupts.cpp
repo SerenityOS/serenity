@@ -221,7 +221,7 @@ void handle_crash(RegisterState const& regs, char const* description, int signal
 
     // If a process crashed while inspecting another process,
     // make sure we switch back to the right page tables.
-    MM.enter_process_paging_scope(process);
+    MM.enter_process_address_space(process);
 
     dmesgln("CRASH: CPU #{} {} in ring {}", Processor::current_id(), description, (regs.cs & 3));
     dump(regs);

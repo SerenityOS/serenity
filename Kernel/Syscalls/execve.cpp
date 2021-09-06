@@ -278,7 +278,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
     String elf_name = object_description.absolute_path();
     VERIFY(!Processor::in_critical());
 
-    Memory::MemoryManager::enter_space(*new_space);
+    Memory::MemoryManager::enter_address_space(*new_space);
 
     KResult ph_load_result = KSuccess;
     elf_image.for_each_program_header([&](const ELF::Image::ProgramHeader& program_header) {
@@ -434,7 +434,7 @@ KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_
     auto new_space = TRY(Memory::AddressSpace::try_create(nullptr));
 
     ScopeGuard space_guard([&]() {
-        Memory::MemoryManager::enter_process_paging_scope(*this);
+        Memory::MemoryManager::enter_process_address_space(*this);
     });
 
     auto load_offset = TRY(get_load_offset(main_program_header, main_program_description, interpreter_description));
@@ -524,7 +524,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
         TemporaryChange global_profiling_disabler(g_profiling_all_threads, false);
         m_space = load_result.space.release_nonnull();
     }
-    Memory::MemoryManager::enter_space(*m_space);
+    Memory::MemoryManager::enter_address_space(*m_space);
 
     m_executable = main_program_description->custody();
     m_arguments = arguments;

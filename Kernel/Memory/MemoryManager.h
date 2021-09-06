@@ -160,8 +160,8 @@ public:
     void unmap_text_after_init();
     void unmap_ksyms_after_init();
 
-    static void enter_process_paging_scope(Process&);
-    static void enter_space(AddressSpace&);
+    static void enter_process_address_space(Process&);
+    static void enter_address_space(AddressSpace&);
 
     bool validate_user_stack_no_lock(AddressSpace&, VirtualAddress) const;
     bool validate_user_stack(AddressSpace&, VirtualAddress) const;
