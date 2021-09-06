@@ -1,5 +1,7 @@
 interface DocumentFragment : Node {
 
+    constructor();
+
     Element? getElementById(DOMString id);
 
     // FIXME: These should all come from a ParentNode mixin

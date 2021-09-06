@@ -19,6 +19,8 @@ class DocumentFragment
 public:
     using WrapperType = Bindings::DocumentFragmentWrapper;
 
+    static NonnullRefPtr<DocumentFragment> create_with_global_object(Bindings::WindowObject& window);
+
     explicit DocumentFragment(Document& document);
     virtual ~DocumentFragment() override;
 
