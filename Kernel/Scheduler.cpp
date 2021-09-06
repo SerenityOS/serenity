@@ -417,7 +417,7 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
     VERIFY(s_colonel_process);
     VERIFY(idle_thread);
     idle_thread->set_priority(THREAD_PRIORITY_MIN);
-    idle_thread->set_name(KString::try_create("idle thread #0"));
+    idle_thread->set_name(KString::must_create("idle thread #0"));
 
     set_idle_thread(idle_thread);
 }
@@ -436,7 +436,7 @@ UNMAP_AFTER_INIT Thread* Scheduler::create_ap_idle_thread(u32 cpu)
     VERIFY(Processor::is_bootstrap_processor());
 
     VERIFY(s_colonel_process);
-    Thread* idle_thread = s_colonel_process->create_kernel_thread(idle_loop, nullptr, THREAD_PRIORITY_MIN, KString::try_create(String::formatted("idle thread #{}", cpu)), 1 << cpu, false);
+    Thread* idle_thread = s_colonel_process->create_kernel_thread(idle_loop, nullptr, THREAD_PRIORITY_MIN, KString::must_create(String::formatted("idle thread #{}", cpu)), 1 << cpu, false);
     VERIFY(idle_thread);
     return idle_thread;
 }

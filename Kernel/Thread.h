@@ -194,10 +194,10 @@ public:
     {
         // NOTE: Whoever is calling this needs to be holding our lock while reading the name.
         VERIFY(m_lock.is_locked_by_current_processor());
-        return m_name ? m_name->view() : StringView {};
+        return m_name->view();
     }
 
-    void set_name(OwnPtr<KString> name)
+    void set_name(NonnullOwnPtr<KString> name)
     {
         SpinlockLocker lock(m_lock);
         m_name = move(name);
@@ -1202,7 +1202,7 @@ public:
     String backtrace();
 
 private:
-    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Memory::Region>, NonnullRefPtr<Timer>, OwnPtr<KString>);
+    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Memory::Region>, NonnullRefPtr<Timer>, NonnullOwnPtr<KString>);
 
     IntrusiveListNode<Thread> m_process_thread_list_node;
     int m_runnable_priority { -1 };
@@ -1333,7 +1333,7 @@ private:
 
     FPUState m_fpu_state {};
     State m_state { Invalid };
-    OwnPtr<KString> m_name;
+    NonnullOwnPtr<KString> m_name;
     u32 m_priority { THREAD_PRIORITY_NORMAL };
 
     State m_stop_state { Invalid };
