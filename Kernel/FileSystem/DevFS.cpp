@@ -10,21 +10,13 @@
 
 namespace Kernel {
 
-NonnullRefPtr<DevFS> DevFS::create()
+KResultOr<NonnullRefPtr<DevFS>> DevFS::try_create()
 {
-    return adopt_ref(*new DevFS);
+    return adopt_nonnull_ref_or_enomem(new (nothrow) DevFS);
 }
 
 DevFS::DevFS()
-    : m_root_inode(adopt_ref(*new DevFSRootDirectoryInode(*this)))
 {
-    MutexLocker locker(m_lock);
-    Device::for_each([&](Device& device) {
-        // FIXME: Find a better way to not add MasterPTYs or SlavePTYs!
-        if (device.is_master_pty() || (device.is_character_device() && device.major() == 201))
-            return;
-        notify_new_device(device);
-    });
 }
 
 void DevFS::notify_new_device(Device& device)
@@ -57,6 +49,13 @@ DevFS::~DevFS()
 
 KResult DevFS::initialize()
 {
+    m_root_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevFSRootDirectoryInode(*this)));
+    Device::for_each([&](Device& device) {
+        // FIXME: Find a better way to not add MasterPTYs or SlavePTYs!
+        if (device.is_master_pty() || (device.is_character_device() && device.major() == 201))
+            return;
+        notify_new_device(device);
+    });
     return KSuccess;
 }
 
@@ -69,7 +68,7 @@ KResultOr<NonnullRefPtr<Inode>> DevFS::get_inode(InodeIdentifier inode_id) const
 {
     MutexLocker locker(m_lock);
     if (inode_id.index() == 1)
-        return m_root_inode;
+        return *m_root_inode;
     for (auto& node : m_nodes) {
         if (inode_id.index() == node.index())
             return node;
@@ -263,9 +262,7 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView
         }
         if (name != "pts")
             return EROFS;
-        auto new_directory_inode = adopt_ref_if_nonnull(new (nothrow) DevFSPtsDirectoryInode(fs()));
-        if (!new_directory_inode)
-            return ENOMEM;
+        auto new_directory_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevFSPtsDirectoryInode(fs())));
         if (!m_subdirectories.try_ensure_capacity(m_subdirectories.size() + 1))
             return ENOMEM;
         if (!fs().m_nodes.try_ensure_capacity(fs().m_nodes.size() + 1))
@@ -282,16 +279,14 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView
         auto name_kstring = KString::try_create(name);
         if (!name_kstring)
             return ENOMEM;
-        auto new_link_inode = adopt_ref_if_nonnull(new (nothrow) DevFSLinkInode(fs(), name_kstring.release_nonnull()));
-        if (!new_link_inode)
-            return ENOMEM;
+        auto new_link_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevFSLinkInode(fs(), name_kstring.release_nonnull())));
         if (!m_links.try_ensure_capacity(m_links.size() + 1))
             return ENOMEM;
         if (!fs().m_nodes.try_ensure_capacity(fs().m_nodes.size() + 1))
             return ENOMEM;
         m_links.append(*new_link_inode);
         fs().m_nodes.append(*new_link_inode);
-        return new_link_inode.release_nonnull();
+        return new_link_inode;
     }
     return EROFS;
 }
