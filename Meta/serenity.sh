@@ -271,7 +271,7 @@ run_gdb() {
             export SERENITY_KERNEL_CMDLINE="$KERNEL_CMD_LINE"
         fi
         sleep 1
-        "$(get_top_dir)/Meta/debug-kernel.sh" "${GDB_ARGS[@]}" -ex cont
+        "$(get_top_dir)/Meta/debug-kernel.sh" "${GDB_ARGS[@]}"
     fi
 }
 
