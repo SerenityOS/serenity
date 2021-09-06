@@ -19,10 +19,10 @@ struct StringArgument;
 }
 
 [[nodiscard]] Kernel::KResultOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<const char*>, size_t);
-[[nodiscard]] Optional<Time> copy_time_from_user(const timespec*);
-[[nodiscard]] Optional<Time> copy_time_from_user(const timeval*);
+KResultOr<Time> copy_time_from_user(timespec const*);
+KResultOr<Time> copy_time_from_user(timeval const*);
 template<typename T>
-[[nodiscard]] Optional<Time> copy_time_from_user(Userspace<T*> src);
+KResultOr<Time> copy_time_from_user(Userspace<T*>);
 
 [[nodiscard]] Optional<u32> user_atomic_fetch_add_relaxed(volatile u32* var, u32 val);
 [[nodiscard]] Optional<u32> user_atomic_exchange_relaxed(volatile u32* var, u32 val);

@@ -26,10 +26,8 @@ KResultOr<FlatPtr> Process::sys$select(Userspace<const Syscall::SC_select_params
 
     Thread::BlockTimeout timeout;
     if (params.timeout) {
-        Optional<Time> timeout_time = copy_time_from_user(params.timeout);
-        if (!timeout_time.has_value())
-            return EFAULT;
-        timeout = Thread::BlockTimeout(false, &timeout_time.value());
+        auto timeout_time = TRY(copy_time_from_user(params.timeout));
+        timeout = Thread::BlockTimeout(false, &timeout_time);
     }
 
     auto current_thread = Thread::current();
@@ -134,10 +132,8 @@ KResultOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> u
 
     Thread::BlockTimeout timeout;
     if (params.timeout) {
-        auto timeout_time = copy_time_from_user(params.timeout);
-        if (!timeout_time.has_value())
-            return EFAULT;
-        timeout = Thread::BlockTimeout(false, &timeout_time.value());
+        auto timeout_time = TRY(copy_time_from_user(params.timeout));
+        timeout = Thread::BlockTimeout(false, &timeout_time);
     }
 
     sigset_t sigmask = {};

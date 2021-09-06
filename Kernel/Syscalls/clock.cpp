@@ -42,13 +42,11 @@ KResultOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<cons
     if (!is_superuser())
         return EPERM;
 
-    auto ts = copy_time_from_user(user_ts);
-    if (!ts.has_value())
-        return EFAULT;
+    auto time = TRY(copy_time_from_user(user_ts));
 
     switch (clock_id) {
     case CLOCK_REALTIME:
-        TimeManagement::the().set_epoch_time(ts.value());
+        TimeManagement::the().set_epoch_time(time);
         break;
     default:
         return EINVAL;
@@ -62,9 +60,7 @@ KResultOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_cloc
     REQUIRE_PROMISE(stdio);
     auto params = TRY(copy_typed_from_user(user_params));
 
-    Optional<Time> requested_sleep = copy_time_from_user(params.requested_sleep);
-    if (!requested_sleep.has_value())
-        return EFAULT;
+    auto requested_sleep = TRY(copy_time_from_user(params.requested_sleep));
 
     bool is_absolute;
     switch (params.flags) {
@@ -83,10 +79,10 @@ KResultOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_cloc
 
     bool was_interrupted;
     if (is_absolute) {
-        was_interrupted = Thread::current()->sleep_until(params.clock_id, requested_sleep.value()).was_interrupted();
+        was_interrupted = Thread::current()->sleep_until(params.clock_id, requested_sleep).was_interrupted();
     } else {
         Time remaining_sleep;
-        was_interrupted = Thread::current()->sleep(params.clock_id, requested_sleep.value(), &remaining_sleep).was_interrupted();
+        was_interrupted = Thread::current()->sleep(params.clock_id, requested_sleep, &remaining_sleep).was_interrupted();
         timespec remaining_sleep_ts = remaining_sleep.to_timespec();
         if (was_interrupted && params.remaining_sleep) {
             TRY(copy_to_user(params.remaining_sleep, &remaining_sleep_ts));
@@ -111,12 +107,10 @@ KResultOr<FlatPtr> Process::sys$adjtime(Userspace<const timeval*> user_delta, Us
         REQUIRE_PROMISE(settime);
         if (!is_superuser())
             return EPERM;
-        auto delta = copy_time_from_user(user_delta);
-        if (!delta.has_value())
-            return EFAULT;
+        auto delta = TRY(copy_time_from_user(user_delta));
 
         // FIXME: Should use AK::Time internally
-        TimeManagement::the().set_remaining_epoch_time_adjustment(delta->to_timespec());
+        TimeManagement::the().set_remaining_epoch_time_adjustment(delta.to_timespec());
     }
 
     return 0;
