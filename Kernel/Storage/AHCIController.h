@@ -25,7 +25,7 @@ class AHCIController final : public StorageController
     friend class AHCIPort;
     AK_MAKE_ETERNAL
 public:
-    UNMAP_AFTER_INIT static NonnullRefPtr<AHCIController> initialize(PCI::Address address);
+    UNMAP_AFTER_INIT static KResultOr<NonnullRefPtr<AHCIController>> try_create(PCI::Address address);
     virtual ~AHCIController() override;
 
     virtual RefPtr<StorageDevice> device(u32 index) const override;
@@ -41,8 +41,8 @@ private:
     void disable_global_interrupts() const;
     void enable_global_interrupts() const;
 
-    UNMAP_AFTER_INIT explicit AHCIController(PCI::Address address);
-    UNMAP_AFTER_INIT void initialize();
+    UNMAP_AFTER_INIT AHCIController(NonnullOwnPtr<Memory::Region>&& hba_region, PCI::Address address);
+    UNMAP_AFTER_INIT KResult initialize();
 
     AHCI::HBADefinedCapabilities capabilities() const;
     RefPtr<StorageDevice> device_by_port(u32 index) const;

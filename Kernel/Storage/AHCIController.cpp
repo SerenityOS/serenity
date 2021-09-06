@@ -14,9 +14,15 @@
 
 namespace Kernel {
 
-NonnullRefPtr<AHCIController> AHCIController::initialize(PCI::Address address)
+KResultOr<NonnullRefPtr<AHCIController>> AHCIController::try_create(PCI::Address address)
 {
-    return adopt_ref(*new AHCIController(address));
+    auto hba_region = TRY(MM.allocate_kernel_region(PhysicalAddress(PCI::get_BAR5(address)).page_base(), Memory::page_round_up(sizeof(AHCI::HBA)), "AHCI HBA", Memory::Region::Access::ReadWrite));
+    auto controller = adopt_ref_if_nonnull(new AHCIController(move(hba_region), address));
+    if (!controller)
+        return KResult(ENOMEM);
+    if (auto result = controller->initialize(); result.is_error())
+        return result.release_error();
+    return controller.release_nonnull();
 }
 
 bool AHCIController::reset()
@@ -78,13 +84,12 @@ volatile AHCI::HBA& AHCIController::hba() const
     return static_cast<volatile AHCI::HBA&>(*(volatile AHCI::HBA*)(m_hba_region->vaddr().as_ptr()));
 }
 
-AHCIController::AHCIController(PCI::Address address)
+AHCIController::AHCIController(NonnullOwnPtr<Memory::Region>&& hba_region, PCI::Address address)
     : StorageController()
     , PCI::Device(address)
-    , m_hba_region(default_hba_region())
+    , m_hba_region(move(hba_region))
     , m_capabilities(capabilities())
 {
-    initialize();
 }
 
 AHCI::HBADefinedCapabilities AHCIController::capabilities() const
@@ -124,20 +129,15 @@ AHCI::HBADefinedCapabilities AHCIController::capabilities() const
     };
 }
 
-NonnullOwnPtr<Memory::Region> AHCIController::default_hba_region() const
-{
-    return MM.allocate_kernel_region(PhysicalAddress(PCI::get_BAR5(pci_address())).page_base(), Memory::page_round_up(sizeof(AHCI::HBA)), "AHCI HBA", Memory::Region::Access::ReadWrite).release_value();
-}
-
 AHCIController::~AHCIController()
 {
 }
 
-void AHCIController::initialize()
+KResult AHCIController::initialize()
 {
     if (!reset()) {
         dmesgln("{}: AHCI controller reset failed", pci_address());
-        return;
+        return KResult(EIO);
     }
     dmesgln("{}: AHCI controller reset", pci_address());
     dbgln("{}: AHCI command list entries count - {}", pci_address(), hba_capabilities().max_command_list_entries_count);
@@ -149,8 +149,10 @@ void AHCIController::initialize()
     PCI::enable_interrupt_line(pci_address());
     PCI::enable_bus_mastering(pci_address());
     enable_global_interrupts();
-    m_handlers.append(AHCIPortHandler::create(*this, PCI::get_interrupt_line(pci_address()),
-        AHCI::MaskedBitField((volatile u32&)(hba().control_regs.pi))));
+
+    auto handler = TRY(AHCIPortHandler::try_create(*this, PCI::get_interrupt_line(pci_address()), AHCI::MaskedBitField((volatile u32&)(hba().control_regs.pi))));
+    m_handlers.append(handler);
+    return KSuccess;
 }
 
 void AHCIController::disable_global_interrupts() const

@@ -9,41 +9,55 @@
 
 namespace Kernel {
 
-NonnullRefPtr<AHCIPortHandler> AHCIPortHandler::create(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
+KResultOr<NonnullRefPtr<AHCIPortHandler>> AHCIPortHandler::try_create(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
 {
-    return adopt_ref(*new AHCIPortHandler(controller, irq, taken_ports));
-}
-
-AHCIPortHandler::AHCIPortHandler(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
-    : IRQHandler(irq)
-    , m_parent_controller(controller)
-    , m_taken_ports(taken_ports)
-    , m_pending_ports_interrupts(create_pending_ports_interrupts_bitfield())
-{
+    NonnullRefPtrVector<Memory::PhysicalPage> identify_metadata_pages;
     // FIXME: Use the number of taken ports to determine how many pages we should allocate.
     for (size_t index = 0; index < (((size_t)AHCI::Limits::MaxPorts * 512) / PAGE_SIZE); index++) {
-        m_identify_metadata_pages.append(MM.allocate_supervisor_physical_page().release_nonnull());
+        auto page = MM.allocate_supervisor_physical_page();
+        if (!page)
+            return KResult(ENOMEM);
+        identify_metadata_pages.append(page.release_nonnull());
     }
 
-    dbgln_if(AHCI_DEBUG, "AHCI Port Handler: IRQ {}", irq);
+    auto handler = adopt_ref_if_nonnull(new AHCIPortHandler(controller, irq, identify_metadata_pages, taken_ports));
+    if (!handler)
+        return KResult(ENOMEM);
+    if (auto result = handler->initialize(); result.is_error())
+        return result.release_error();
+    return handler.release_nonnull();
+}
 
+KResult AHCIPortHandler::initialize()
+{
     // Clear pending interrupts, if there are any!
     m_pending_ports_interrupts.set_all();
     enable_irq();
 
     if (kernel_command_line().ahci_reset_mode() == AHCIResetMode::Aggressive) {
-        for (auto index : taken_ports.to_vector()) {
-            auto port = AHCIPort::create(*this, static_cast<volatile AHCI::PortRegisters&>(controller.hba().port_regs[index]), index);
+        for (auto index : m_taken_ports.to_vector()) {
+            auto port = TRY(AHCIPort::try_create(*this, static_cast<volatile AHCI::PortRegisters&>(m_parent_controller->hba().port_regs[index]), index));
             m_handled_ports.set(index, port);
             port->reset();
         }
-        return;
+        return KSuccess;
     }
-    for (auto index : taken_ports.to_vector()) {
-        auto port = AHCIPort::create(*this, static_cast<volatile AHCI::PortRegisters&>(controller.hba().port_regs[index]), index);
+    for (auto index : m_taken_ports.to_vector()) {
+        auto port = TRY(AHCIPort::try_create(*this, static_cast<volatile AHCI::PortRegisters&>(m_parent_controller->hba().port_regs[index]), index));
         m_handled_ports.set(index, port);
         port->initialize_without_reset();
     }
+    return KSuccess;
+}
+
+AHCIPortHandler::AHCIPortHandler(AHCIController& controller, u8 irq, NonnullRefPtrVector<Memory::PhysicalPage> identify_metadata_pages, AHCI::MaskedBitField taken_ports)
+    : IRQHandler(irq)
+    , m_parent_controller(controller)
+    , m_identify_metadata_pages(identify_metadata_pages)
+    , m_taken_ports(taken_ports)
+    , m_pending_ports_interrupts(create_pending_ports_interrupts_bitfield())
+{
+    dbgln_if(AHCI_DEBUG, "AHCI Port Handler: IRQ {}", irq);
 }
 
 void AHCIPortHandler::enumerate_ports(Function<void(const AHCIPort&)> callback) const

@@ -55,7 +55,10 @@ UNMAP_AFTER_INIT NonnullRefPtrVector<StorageController> StorageManagement::enume
         }
         PCI::enumerate([&](const PCI::Address& address, PCI::ID) {
             if (PCI::get_class(address) == PCI_MASS_STORAGE_CLASS_ID && PCI::get_subclass(address) == PCI_SATA_CTRL_SUBCLASS_ID && PCI::get_programming_interface(address) == PCI_AHCI_IF_PROGIF) {
-                controllers.append(AHCIController::initialize(address));
+                auto controller_or_error = AHCIController::try_create(address);
+                if (controller_or_error.is_error())
+                    VERIFY_NOT_REACHED();
+                controllers.append(controller_or_error.release_value());
             }
         });
     }

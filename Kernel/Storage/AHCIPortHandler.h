@@ -32,7 +32,7 @@ class AHCIPortHandler final : public RefCounted<AHCIPortHandler>
     friend class SATADiskDevice;
 
 public:
-    UNMAP_AFTER_INIT static NonnullRefPtr<AHCIPortHandler> create(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
+    UNMAP_AFTER_INIT static KResultOr<NonnullRefPtr<AHCIPortHandler>> try_create(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
     virtual ~AHCIPortHandler() override;
 
     RefPtr<StorageDevice> device_at_port(size_t port_index) const;
@@ -45,7 +45,8 @@ public:
     bool is_responsible_for_port_index(u32 port_index) const { return m_taken_ports.is_set_at(port_index); }
 
 private:
-    UNMAP_AFTER_INIT AHCIPortHandler(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
+    KResult initialize();
+    UNMAP_AFTER_INIT AHCIPortHandler(AHCIController&, u8 irq, NonnullRefPtrVector<Memory::PhysicalPage>, AHCI::MaskedBitField taken_ports);
 
     //^ IRQHandler
     virtual bool handle_irq(const RegisterState&) override;

@@ -19,9 +19,36 @@
 
 namespace Kernel {
 
-NonnullRefPtr<AHCIPort> AHCIPort::create(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
+static ALWAYS_INLINE bool is_interface_disabled(volatile AHCI::PortRegisters& registers)
 {
-    return adopt_ref(*new AHCIPort(handler, registers, port_index));
+    return (registers.ssts & 0xf) == 4;
+}
+
+KResultOr<NonnullRefPtr<AHCIPort>> AHCIPort::try_create(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
+{
+    if (is_interface_disabled(registers)) {
+        auto port = adopt_ref_if_nonnull(new AHCIPort(handler, registers, port_index));
+        if (!port)
+            return KResult(ENOMEM);
+        return port.release_nonnull();
+    }
+    RefPtr<Memory::PhysicalPage> command_list_page = MM.allocate_supervisor_physical_page();
+    if (command_list_page.is_null())
+        return ENOMEM;
+    RefPtr<Memory::PhysicalPage> fis_receive_page = MM.allocate_supervisor_physical_page();
+    if (fis_receive_page.is_null())
+        return ENOMEM;
+    RefPtr<Memory::PhysicalPage> dma_buffer_page = MM.allocate_supervisor_physical_page();
+    if (dma_buffer_page.is_null())
+        return ENOMEM;
+    RefPtr<Memory::PhysicalPage> command_table_page = MM.allocate_supervisor_physical_page();
+    if (command_table_page.is_null())
+        return ENOMEM;
+    auto command_list_region = TRY(MM.allocate_kernel_region(command_list_page->paddr(), PAGE_SIZE, "AHCI Port Command List", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No));
+    auto port = adopt_ref_if_nonnull(new AHCIPort(handler, registers, move(command_list_region), *command_list_page, *fis_receive_page, *dma_buffer_page, *command_table_page, port_index));
+    if (!port)
+        return KResult(ENOMEM);
+    return port.release_nonnull();
 }
 
 AHCIPort::AHCIPort(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
@@ -31,30 +58,24 @@ AHCIPort::AHCIPort(const AHCIPortHandler& handler, volatile AHCI::PortRegisters&
     , m_interrupt_status((volatile u32&)m_port_registers.is)
     , m_interrupt_enable((volatile u32&)m_port_registers.ie)
 {
-    if (is_interface_disabled()) {
-        m_disabled_by_firmware = true;
-        return;
-    }
+    m_disabled_by_firmware = false;
+}
 
-    m_command_list_page = MM.allocate_supervisor_physical_page();
-    m_fis_receive_page = MM.allocate_supervisor_physical_page();
-    if (m_command_list_page.is_null() || m_fis_receive_page.is_null())
-        return;
-
+AHCIPort::AHCIPort(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, NonnullOwnPtr<Memory::Region>&& command_list_region, Memory::PhysicalPage const& command_list_page, Memory::PhysicalPage const& fis_receive_page, Memory::PhysicalPage const& dma_buffer_page, Memory::PhysicalPage const& command_table_page, u32 port_index)
+    : m_command_list_page(command_list_page)
+    , m_command_list_region(move(command_list_region))
+    , m_fis_receive_page(fis_receive_page)
+    , m_dma_buffer_page(dma_buffer_page)
+    , m_command_table_page(command_table_page)
+    , m_port_index(port_index)
+    , m_port_registers(registers)
+    , m_parent_handler(handler)
+    , m_interrupt_status((volatile u32&)m_port_registers.is)
+    , m_interrupt_enable((volatile u32&)m_port_registers.ie)
+{
+    m_disabled_by_firmware = false;
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Command list page at {}", representative_port_index(), m_command_list_page->paddr());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: FIS receive page at {}", representative_port_index(), m_command_list_page->paddr());
-
-    for (size_t index = 0; index < 1; index++) {
-        m_dma_buffers.append(MM.allocate_supervisor_physical_page().release_nonnull());
-    }
-    for (size_t index = 0; index < 1; index++) {
-        m_command_table_pages.append(MM.allocate_supervisor_physical_page().release_nonnull());
-    }
-
-    auto region_or_error = MM.allocate_kernel_region(m_command_list_page->paddr(), PAGE_SIZE, "AHCI Port Command List", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
-    if (region_or_error.is_error())
-        TODO();
-    m_command_list_region = region_or_error.release_value();
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Command list region at {}", representative_port_index(), m_command_list_region->vaddr());
 }
 
@@ -152,7 +173,7 @@ void AHCIPort::eject()
     auto unused_command_header = try_to_find_unused_command_header();
     VERIFY(unused_command_header.has_value());
     auto* command_list_entries = (volatile AHCI::CommandHeader*)m_command_list_region->vaddr().as_ptr();
-    command_list_entries[unused_command_header.value()].ctba = m_command_table_pages[unused_command_header.value()].paddr().get();
+    command_list_entries[unused_command_header.value()].ctba = m_command_table_page->paddr().get();
     command_list_entries[unused_command_header.value()].ctbau = 0;
     command_list_entries[unused_command_header.value()].prdbc = 0;
     command_list_entries[unused_command_header.value()].prdtl = 0;
@@ -163,7 +184,7 @@ void AHCIPort::eject()
     // handshake error bit in PxSERR register if CFL is incorrect.
     command_list_entries[unused_command_header.value()].attributes = (size_t)FIS::DwordCount::RegisterHostToDevice | AHCI::CommandHeaderAttributes::P | AHCI::CommandHeaderAttributes::C | AHCI::CommandHeaderAttributes::A;
 
-    auto command_table_region_or_error = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()].paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)), "AHCI Command Table", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
+    auto command_table_region_or_error = MM.allocate_kernel_region(m_command_table_page->paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)), "AHCI Command Table", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
     if (command_table_region_or_error.is_error())
         TODO();
     auto command_table_region = command_table_region_or_error.release_value();
@@ -431,7 +452,9 @@ size_t AHCIPort::calculate_descriptors_count(size_t block_count) const
 {
     VERIFY(m_connected_device);
     size_t needed_dma_regions_count = Memory::page_round_up((block_count * m_connected_device->block_size())) / PAGE_SIZE;
-    VERIFY(needed_dma_regions_count <= m_dma_buffers.size());
+    // Note: For now, we only support 1 DMA buffer page. We had "support" for
+    // more, but in practice we never allocated more than one page.
+    VERIFY(needed_dma_regions_count <= 1);
     return needed_dma_regions_count;
 }
 
@@ -442,7 +465,7 @@ Optional<AsyncDeviceRequest::RequestResult> AHCIPort::prepare_and_set_scatter_li
 
     NonnullRefPtrVector<Memory::PhysicalPage> allocated_dma_regions;
     for (size_t index = 0; index < calculate_descriptors_count(request.block_count()); index++) {
-        allocated_dma_regions.append(m_dma_buffers.at(index));
+        allocated_dma_regions.append(*m_dma_buffer_page);
     }
 
     m_current_scatter_list = Memory::ScatterGatherList::try_create(request, allocated_dma_regions.span(), m_connected_device->block_size());
@@ -523,7 +546,7 @@ AsyncBlockDeviceRequest::RequestResult AHCIPort::access_device(AsyncBlockDeviceR
     auto unused_command_header = try_to_find_unused_command_header();
     VERIFY(unused_command_header.has_value());
     auto* command_list_entries = (volatile AHCI::CommandHeader*)m_command_list_region->vaddr().as_ptr();
-    command_list_entries[unused_command_header.value()].ctba = m_command_table_pages[unused_command_header.value()].paddr().get();
+    command_list_entries[unused_command_header.value()].ctba = m_command_table_page->paddr().get();
     command_list_entries[unused_command_header.value()].ctbau = 0;
     command_list_entries[unused_command_header.value()].prdbc = 0;
     command_list_entries[unused_command_header.value()].prdtl = m_current_scatter_list->scatters_count();
@@ -536,7 +559,7 @@ AsyncBlockDeviceRequest::RequestResult AHCIPort::access_device(AsyncBlockDeviceR
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: CLE: ctba={:#08x}, ctbau={:#08x}, prdbc={:#08x}, prdtl={:#04x}, attributes={:#04x}", representative_port_index(), (u32)command_list_entries[unused_command_header.value()].ctba, (u32)command_list_entries[unused_command_header.value()].ctbau, (u32)command_list_entries[unused_command_header.value()].prdbc, (u16)command_list_entries[unused_command_header.value()].prdtl, (u16)command_list_entries[unused_command_header.value()].attributes);
 
-    auto command_table_region_or_error = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()].paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)), "AHCI Command Table", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
+    auto command_table_region_or_error = MM.allocate_kernel_region(m_command_table_page->paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)), "AHCI Command Table", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
     if (command_table_region_or_error.is_error())
         return AsyncBlockDeviceRequest::RequestResult::MemoryFault;
     auto command_table_region = command_table_region_or_error.release_value();
@@ -600,7 +623,7 @@ AsyncBlockDeviceRequest::RequestResult AHCIPort::access_device(AsyncBlockDeviceR
     mark_command_header_ready_to_process(unused_command_header.value());
     full_memory_barrier();
 
-    dbgln_if(AHCI_DEBUG, "AHCI Port {}: Do a {}, lba {}, block count {} @ {}, ended", representative_port_index(), direction == AsyncBlockDeviceRequest::RequestType::Write ? "write" : "read", lba, block_count, m_dma_buffers[0].paddr());
+    dbgln_if(AHCI_DEBUG, "AHCI Port {}: Do a {}, lba {}, block count {} @ {}, ended", representative_port_index(), direction == AsyncBlockDeviceRequest::RequestType::Write ? "write" : "read", lba, block_count, m_dma_buffer_page->paddr());
     return AsyncBlockDeviceRequest::RequestResult::Started;
 }
 
@@ -614,7 +637,7 @@ bool AHCIPort::identify_device(SpinlockLocker<Spinlock>& main_lock)
     auto unused_command_header = try_to_find_unused_command_header();
     VERIFY(unused_command_header.has_value());
     auto* command_list_entries = (volatile AHCI::CommandHeader*)m_command_list_region->vaddr().as_ptr();
-    command_list_entries[unused_command_header.value()].ctba = m_command_table_pages[unused_command_header.value()].paddr().get();
+    command_list_entries[unused_command_header.value()].ctba = m_command_table_page->paddr().get();
     command_list_entries[unused_command_header.value()].ctbau = 0;
     command_list_entries[unused_command_header.value()].prdbc = 512;
     command_list_entries[unused_command_header.value()].prdtl = 1;
@@ -623,7 +646,7 @@ bool AHCIPort::identify_device(SpinlockLocker<Spinlock>& main_lock)
     // QEMU doesn't care if we don't set the correct CFL field in this register, real hardware will set an handshake error bit in PxSERR register.
     command_list_entries[unused_command_header.value()].attributes = (size_t)FIS::DwordCount::RegisterHostToDevice | AHCI::CommandHeaderAttributes::P;
 
-    auto command_table_region = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()].paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)), "AHCI Command Table", Memory::Region::Access::ReadWrite).release_value();
+    auto command_table_region = MM.allocate_kernel_region(m_command_table_page->paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)), "AHCI Command Table", Memory::Region::Access::ReadWrite).release_value();
     auto& command_table = *(volatile AHCI::CommandTable*)command_table_region->vaddr().as_ptr();
     memset(const_cast<u8*>(command_table.command_fis), 0, 64);
     command_table.descriptors[0].base_high = 0;

@@ -35,7 +35,7 @@ class AHCIPort : public RefCounted<AHCIPort> {
     friend class SATADiskDevice;
 
 public:
-    UNMAP_AFTER_INIT static NonnullRefPtr<AHCIPort> create(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
+    UNMAP_AFTER_INIT static KResultOr<NonnullRefPtr<AHCIPort>> try_create(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
 
     u32 port_index() const { return m_port_index; }
     u32 representative_port_index() const { return port_index() + 1; }
@@ -53,6 +53,7 @@ private:
     bool is_phy_enabled() const { return (m_port_registers.ssts & 0xf) == 3; }
     bool initialize(SpinlockLocker<Spinlock>&);
 
+    UNMAP_AFTER_INIT AHCIPort(const AHCIPortHandler&, volatile AHCI::PortRegisters&, NonnullOwnPtr<Memory::Region>&&, Memory::PhysicalPage const& command_list_page, Memory::PhysicalPage const& fis_receive_page, Memory::PhysicalPage const& dma_buffer_page, Memory::PhysicalPage const& command_table_page, u32 port_index);
     UNMAP_AFTER_INIT AHCIPort(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
 
     ALWAYS_INLINE void clear_sata_error_register() const;
@@ -94,9 +95,6 @@ private:
     void set_interface_state(AHCI::DeviceDetectionInitialization);
 
     Optional<u8> try_to_find_unused_command_header();
-
-    ALWAYS_INLINE bool is_interface_disabled() const { return (m_port_registers.ssts & 0xf) == 4; };
-
     // Data members
 
     EntropySource m_entropy_source;
@@ -107,11 +105,11 @@ private:
     mutable bool m_wait_for_completion { false };
     bool m_wait_connect_for_completion { false };
 
-    NonnullRefPtrVector<Memory::PhysicalPage> m_dma_buffers;
-    NonnullRefPtrVector<Memory::PhysicalPage> m_command_table_pages;
     RefPtr<Memory::PhysicalPage> m_command_list_page;
     OwnPtr<Memory::Region> m_command_list_region;
     RefPtr<Memory::PhysicalPage> m_fis_receive_page;
+    RefPtr<Memory::PhysicalPage> m_dma_buffer_page;
+    RefPtr<Memory::PhysicalPage> m_command_table_page;
     RefPtr<StorageDevice> m_connected_device;
 
     u32 m_port_index;
