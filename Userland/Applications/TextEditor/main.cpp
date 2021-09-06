@@ -10,6 +10,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 
@@ -33,22 +34,6 @@ int main(int argc, char** argv)
     parser.add_positional_argument(file_to_edit, "File to edit, with optional starting line and column number", "file[:line[:column]]", Core::ArgsParser::Required::No);
 
     parser.parse(argc, argv);
-
-    String file_to_edit_full_path;
-
-    if (file_to_edit) {
-        FileArgument parsed_argument(file_to_edit);
-
-        file_to_edit_full_path = Core::File::absolute_path(parsed_argument.filename());
-        VERIFY(!file_to_edit_full_path.is_empty());
-        if (Core::File::exists(parsed_argument.filename())) {
-            dbgln("unveil for: {}", file_to_edit_full_path);
-            if (unveil(file_to_edit_full_path.characters(), "r") < 0) {
-                perror("unveil");
-                return 1;
-            }
-        }
-    }
 
     if (unveil("/res", "r") < 0) {
         perror("unveil");
@@ -104,29 +89,22 @@ int main(int argc, char** argv)
 
     text_widget.initialize_menubar(*window);
 
+    window->show();
+    window->set_icon(app_icon.bitmap_for_size(16));
+
     if (file_to_edit) {
-        // A file name was passed, parse any possible line and column numbers included.
         FileArgument parsed_argument(file_to_edit);
-        if (Core::File::exists(file_to_edit_full_path)) {
-            auto file = Core::File::open(file_to_edit_full_path, Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window->window_id(), parsed_argument.filename());
 
-            if (file.is_error()) {
-                GUI::MessageBox::show_error(window, String::formatted("Opening \"{}\" failed: {}", file_to_edit_full_path, file.error()));
+        if (response.error == 0) {
+            if (!text_widget.read_file_and_close(*response.fd, *response.chosen_file))
                 return 1;
-            }
-
-            if (!text_widget.read_file_and_close(file.value()->leak_fd(), file_to_edit_full_path))
-                return 1;
-
             text_widget.editor().set_cursor_and_focus_line(parsed_argument.line().value_or(1) - 1, parsed_argument.column().value_or(0));
         } else {
-            text_widget.open_nonexistent_file(file_to_edit_full_path);
+            text_widget.open_nonexistent_file(parsed_argument.filename());
         }
     }
     text_widget.update_title();
-
-    window->show();
-    window->set_icon(app_icon.bitmap_for_size(16));
 
     return app->exec();
 }
