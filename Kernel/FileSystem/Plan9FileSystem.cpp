@@ -9,9 +9,9 @@
 
 namespace Kernel {
 
-NonnullRefPtr<Plan9FS> Plan9FS::create(FileDescription& file_description)
+KResultOr<NonnullRefPtr<Plan9FS>> Plan9FS::try_create(FileDescription& file_description)
 {
-    return adopt_ref(*new Plan9FS(file_description));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Plan9FS(file_description));
 }
 
 Plan9FS::Plan9FS(FileDescription& file_description)
@@ -202,9 +202,7 @@ KResult Plan9FS::initialize()
     Message version_message { *this, Message::Type::Tversion };
     version_message << (u32)m_max_message_size << "9P2000.L";
 
-    auto result = post_message_and_wait_for_a_reply(version_message);
-    if (result.is_error())
-        return result;
+    TRY(post_message_and_wait_for_a_reply(version_message));
 
     u32 msize;
     StringView remote_protocol_version;
@@ -224,15 +222,8 @@ KResult Plan9FS::initialize()
     if (m_remote_protocol_version >= ProtocolVersion::v9P2000u)
         attach_message << (u32)-1;
 
-    result = post_message_and_wait_for_a_reply(attach_message);
-    if (result.is_error()) {
-        dbgln("Attaching failed");
-        return result;
-    }
-
-    m_root_inode = Plan9FSInode::create(*this, root_fid);
-    if (!m_root_inode)
-        return ENOMEM;
+    TRY(post_message_and_wait_for_a_reply(attach_message));
+    m_root_inode = TRY(Plan9FSInode::try_create(*this, root_fid));
     return KSuccess;
 }
 
@@ -685,9 +676,9 @@ Plan9FSInode::Plan9FSInode(Plan9FS& fs, u32 fid)
 {
 }
 
-NonnullRefPtr<Plan9FSInode> Plan9FSInode::create(Plan9FS& fs, u32 fid)
+KResultOr<NonnullRefPtr<Plan9FSInode>> Plan9FSInode::try_create(Plan9FS& fs, u32 fid)
 {
-    return adopt_ref(*new Plan9FSInode(fs, fid));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Plan9FSInode(fs, fid));
 }
 
 Plan9FSInode::~Plan9FSInode()
@@ -927,12 +918,8 @@ KResultOr<NonnullRefPtr<Inode>> Plan9FSInode::lookup(StringView name)
     u32 newfid = fs().allocate_fid();
     Plan9FS::Message message { fs(), Plan9FS::Message::Type::Twalk };
     message << fid() << newfid << (u16)1 << name;
-    auto result = fs().post_message_and_wait_for_a_reply(message);
-
-    if (result.is_error())
-        return result;
-
-    return Plan9FSInode::create(fs(), newfid);
+    TRY(fs().post_message_and_wait_for_a_reply(message));
+    return TRY(Plan9FSInode::try_create(fs(), newfid));
 }
 
 KResultOr<NonnullRefPtr<Inode>> Plan9FSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)

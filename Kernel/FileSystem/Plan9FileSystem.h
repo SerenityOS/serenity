@@ -20,7 +20,7 @@ class Plan9FS final : public FileBackedFileSystem {
 
 public:
     virtual ~Plan9FS() override;
-    static NonnullRefPtr<Plan9FS> create(FileDescription&);
+    static KResultOr<NonnullRefPtr<Plan9FS>> try_create(FileDescription&);
 
     virtual KResult initialize() override;
 
@@ -169,7 +169,7 @@ public:
 
 private:
     Plan9FSInode(Plan9FS&, u32 fid);
-    static NonnullRefPtr<Plan9FSInode> create(Plan9FS&, u32 fid);
+    static KResultOr<NonnullRefPtr<Plan9FSInode>> try_create(Plan9FS&, u32 fid);
 
     enum class GetAttrMask : u64 {
         Mode = 0x1,
