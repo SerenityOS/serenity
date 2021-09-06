@@ -63,12 +63,7 @@ public:
 
             dbgln_if(ISO9660_VERY_DEBUG, "next(): Pushed into directory stack");
 
-            {
-                auto result = read_directory_contents();
-                if (result.is_error()) {
-                    return result;
-                }
-            }
+            TRY(read_directory_contents());
 
             dbgln_if(ISO9660_VERY_DEBUG, "next(): Read directory contents");
 
@@ -155,12 +150,7 @@ public:
 private:
     KResult read_directory_contents()
     {
-        auto result = m_fs.directory_entry_for_record({}, m_current_header);
-        if (result.is_error()) {
-            return result.error();
-        }
-
-        m_current_directory.entry = result.value();
+        m_current_directory.entry = TRY(m_fs.directory_entry_for_record({}, m_current_header));
         return KSuccess;
     }
 
@@ -199,12 +189,9 @@ ISO9660FS::~ISO9660FS()
 
 KResult ISO9660FS::initialize()
 {
-    if (auto result = BlockBasedFileSystem::initialize(); result.is_error())
-        return result;
-    if (auto result = parse_volume_set(); result.is_error())
-        return result;
-    if (auto result = create_root_inode(); result.is_error())
-        return result;
+    TRY(BlockBasedFileSystem::initialize());
+    TRY(parse_volume_set());
+    TRY(create_root_inode());
     return KSuccess;
 }
 
@@ -305,12 +292,7 @@ KResult ISO9660FS::create_root_inode()
         return EIO;
     }
 
-    auto maybe_inode = ISO9660Inode::try_create_from_directory_record(*this, m_primary_volume->root_directory_record_header, {});
-    if (maybe_inode.is_error()) {
-        return ENOMEM;
-    }
-
-    m_root_inode = maybe_inode.release_value();
+    m_root_inode = TRY(ISO9660Inode::try_create_from_directory_record(*this, m_primary_volume->root_directory_record_header, {}));
     return KSuccess;
 }
 
@@ -362,19 +344,11 @@ KResult ISO9660FS::visit_directory_record(ISO::DirectoryRecordHeader const& reco
     ISO9660DirectoryIterator iterator { const_cast<ISO9660FS&>(*this), record };
 
     while (!iterator.done()) {
-        auto maybe_result = visitor(*iterator);
-        if (maybe_result.is_error()) {
-            return maybe_result.error();
-        }
-
-        switch (maybe_result.value()) {
+        auto decision = TRY(visitor(*iterator));
+        switch (decision) {
         case RecursionDecision::Recurse: {
-            auto maybe_has_moved = iterator.next();
-            if (maybe_has_moved.is_error()) {
-                return maybe_has_moved.error();
-            }
-
-            if (!maybe_has_moved.value()) {
+            auto has_moved = TRY(iterator.next());
+            if (!has_moved) {
                 // If next() hasn't moved then we have read through all the
                 // directories, and can exit.
                 return KSuccess;
@@ -434,14 +408,11 @@ KResultOr<NonnullRefPtr<ISO9660FS::DirectoryEntry>> ISO9660FS::directory_entry_f
         return EIO;
     }
 
-    auto maybe_entry = DirectoryEntry::try_create(extent_location, data_length, move(blocks));
-    if (maybe_entry.is_error()) {
-        return maybe_entry.error();
-    }
-    m_directory_entry_cache.set(key, maybe_entry.value());
+    auto entry = TRY(DirectoryEntry::try_create(extent_location, data_length, move(blocks)));
+    m_directory_entry_cache.set(key, entry);
 
     dbgln_if(ISO9660_DEBUG, "Cached dirent @ {}", extent_location);
-    return maybe_entry.release_value();
+    return entry;
 }
 
 u32 ISO9660FS::calculate_directory_entry_cache_key(ISO::DirectoryRecordHeader const& record)
