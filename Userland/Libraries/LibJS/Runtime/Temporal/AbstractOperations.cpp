@@ -654,13 +654,13 @@ double constrain_to_range(double x, double minimum, double maximum)
 }
 
 // 13.32 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
-BigInt* round_number_to_increment(GlobalObject& global_object, BigInt const& x, u64 increment, String const& rounding_mode)
+BigInt* round_number_to_increment(GlobalObject& global_object, BigInt const& x, u64 increment, StringView rounding_mode)
 {
     auto& heap = global_object.heap();
 
     // 1. Assert: x and increment are mathematical values.
     // 2. Assert: roundingMode is "ceil", "floor", "trunc", or "halfExpand".
-    VERIFY(rounding_mode == "ceil" || rounding_mode == "floor" || rounding_mode == "trunc" || rounding_mode == "halfExpand");
+    VERIFY(rounding_mode == "ceil"sv || rounding_mode == "floor"sv || rounding_mode == "trunc"sv || rounding_mode == "halfExpand"sv);
 
     // OPTIMIZATION: If the increment is 1 the number is always rounded
     if (increment == 1)
@@ -676,19 +676,19 @@ BigInt* round_number_to_increment(GlobalObject& global_object, BigInt const& x, 
 
     Crypto::SignedBigInteger rounded = move(division_result.quotient);
     // 4. If roundingMode is "ceil", then
-    if (rounding_mode == "ceil") {
+    if (rounding_mode == "ceil"sv) {
         // a. Let rounded be −floor(−quotient).
         if (!division_result.remainder.is_negative())
             rounded = rounded.plus(Crypto::UnsignedBigInteger { 1 });
     }
     // 5. Else if roundingMode is "floor", then
-    else if (rounding_mode == "floor") {
+    else if (rounding_mode == "floor"sv) {
         // a. Let rounded be floor(quotient).
         if (division_result.remainder.is_negative())
             rounded = rounded.minus(Crypto::UnsignedBigInteger { 1 });
     }
     // 6. Else if roundingMode is "trunc", then
-    else if (rounding_mode == "trunc") {
+    else if (rounding_mode == "trunc"sv) {
         // a. Let rounded be the integral part of quotient, removing any fractional digits.
         // NOTE: This is a no-op
     }
