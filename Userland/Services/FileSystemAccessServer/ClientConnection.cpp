@@ -49,7 +49,7 @@ RefPtr<GUI::Window> ClientConnection::create_dummy_child_window(i32 window_serve
     return window;
 }
 
-void ClientConnection::request_file(i32 window_server_client_id, i32 parent_window_id, String const& path, Core::OpenMode const& requested_access)
+void ClientConnection::request_file_handler(i32 window_server_client_id, i32 parent_window_id, String const& path, Core::OpenMode const& requested_access, ShouldPrompt prompt)
 {
     VERIFY(path.starts_with("/"sv));
 
@@ -79,9 +79,12 @@ void ClientConnection::request_file(i32 window_server_client_id, i32 parent_wind
 
         auto main_window = create_dummy_child_window(window_server_client_id, parent_window_id);
 
-        auto result = GUI::MessageBox::show(main_window, String::formatted("Allow {} ({}) to {} \"{}\"?", exe_name, pid, access_string, path), "File Permissions Requested", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNo);
-
-        approved = result == GUI::MessageBox::ExecYes;
+        if (prompt == ShouldPrompt::Yes) {
+            auto result = GUI::MessageBox::show(main_window, String::formatted("Allow {} ({}) to {} \"{}\"?", exe_name, pid, access_string, path), "File Permissions Requested", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNo);
+            approved = result == GUI::MessageBox::ExecYes;
+        } else {
+            approved = true;
+        }
 
         if (approved) {
             auto new_permissions = relevant_permissions;
@@ -105,6 +108,16 @@ void ClientConnection::request_file(i32 window_server_client_id, i32 parent_wind
     } else {
         async_handle_prompt_end(-1, Optional<IPC::File> {}, path);
     }
+}
+
+void ClientConnection::request_file_read_only_approved(i32 window_server_client_id, i32 parent_window_id, String const& path)
+{
+    request_file_handler(window_server_client_id, parent_window_id, path, Core::OpenMode::ReadOnly, ShouldPrompt::No);
+}
+
+void ClientConnection::request_file(i32 window_server_client_id, i32 parent_window_id, String const& path, Core::OpenMode const& requested_access)
+{
+    request_file_handler(window_server_client_id, parent_window_id, path, requested_access, ShouldPrompt::Yes);
 }
 
 void ClientConnection::prompt_open_file(i32 window_server_client_id, i32 parent_window_id, String const& window_title, String const& path_to_view, Core::OpenMode const& requested_access)
