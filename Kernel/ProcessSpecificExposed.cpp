@@ -112,10 +112,7 @@ KResultOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(cons
     if (!fds().get_if_valid(*maybe_index))
         return ENOENT;
 
-    auto maybe_inode = ProcFSProcessPropertyInode::try_create_for_file_description_link(procfs, *maybe_index, pid());
-    if (maybe_inode.is_error())
-        return maybe_inode.error();
-    return maybe_inode.release_value();
+    return TRY(ProcFSProcessPropertyInode::try_create_for_file_description_link(procfs, *maybe_index, pid()));
 }
 
 KResult Process::procfs_get_pledge_stats(KBufferBuilder& builder) const
