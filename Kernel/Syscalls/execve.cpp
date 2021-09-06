@@ -209,20 +209,14 @@ static KResultOr<FlatPtr> get_load_offset(const ElfW(Ehdr) & main_program_header
     if (main_program_header.e_type != ET_EXEC)
         return EINVAL;
 
-    auto main_program_load_range_result = get_required_load_range(main_program_description);
-    if (main_program_load_range_result.is_error())
-        return main_program_load_range_result.error();
-
-    auto main_program_load_range = main_program_load_range_result.value();
+    auto main_program_load_range = TRY(get_required_load_range(main_program_description));
 
     RequiredLoadRange selected_range {};
 
     if (interpreter_description) {
-        auto interpreter_load_range_result = get_required_load_range(*interpreter_description);
-        if (interpreter_load_range_result.is_error())
-            return interpreter_load_range_result.error();
+        auto interpreter_load_range = TRY(get_required_load_range(*interpreter_description));
 
-        auto interpreter_size_in_memory = interpreter_load_range_result.value().end - interpreter_load_range_result.value().start;
+        auto interpreter_size_in_memory = interpreter_load_range.end - interpreter_load_range.start;
         auto interpreter_load_range_end = load_range_start + load_range_size - interpreter_size_in_memory;
 
         // No intersection
@@ -443,32 +437,22 @@ KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_
         Memory::MemoryManager::enter_process_paging_scope(*this);
     });
 
-    auto load_offset = get_load_offset(main_program_header, main_program_description, interpreter_description);
-    if (load_offset.is_error()) {
-        return load_offset.error();
-    }
+    auto load_offset = TRY(get_load_offset(main_program_header, main_program_description, interpreter_description));
 
     if (interpreter_description.is_null()) {
-        auto result = load_elf_object(move(new_space), main_program_description, load_offset.value(), ShouldAllocateTls::Yes, ShouldAllowSyscalls::No);
-        if (result.is_error())
-            return result.error();
-
-        m_master_tls_region = result.value().tls_region;
-        m_master_tls_size = result.value().tls_size;
-        m_master_tls_alignment = result.value().tls_alignment;
-
-        return result;
+        auto load_result = TRY(load_elf_object(move(new_space), main_program_description, load_offset, ShouldAllocateTls::Yes, ShouldAllowSyscalls::No));
+        m_master_tls_region = load_result.tls_region;
+        m_master_tls_size = load_result.tls_size;
+        m_master_tls_alignment = load_result.tls_alignment;
+        return load_result;
     }
 
-    auto interpreter_load_result = load_elf_object(move(new_space), *interpreter_description, load_offset.value(), ShouldAllocateTls::No, ShouldAllowSyscalls::Yes);
-
-    if (interpreter_load_result.is_error())
-        return interpreter_load_result.error();
+    auto interpreter_load_result = TRY(load_elf_object(move(new_space), *interpreter_description, load_offset, ShouldAllocateTls::No, ShouldAllowSyscalls::Yes));
 
     // TLS allocation will be done in userspace by the loader
-    VERIFY(!interpreter_load_result.value().tls_region);
-    VERIFY(!interpreter_load_result.value().tls_alignment);
-    VERIFY(!interpreter_load_result.value().tls_size);
+    VERIFY(!interpreter_load_result.tls_region);
+    VERIFY(!interpreter_load_result.tls_alignment);
+    VERIFY(!interpreter_load_result.tls_size);
 
     return interpreter_load_result;
 }
@@ -877,9 +861,7 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
     // are cleaned up by the time we yield-teleport below.
     Thread* new_main_thread = nullptr;
     u32 prev_flags = 0;
-    auto result = do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, prev_flags, *main_program_header);
-    if (result.is_error())
-        return result;
+    TRY(do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, prev_flags, *main_program_header));
 
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(Processor::in_critical());
@@ -915,12 +897,11 @@ KResultOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params
     if (params.arguments.length > ARG_MAX || params.environment.length > ARG_MAX)
         return E2BIG;
 
+    // FIXME: This should use KString.
     String path;
     {
-        auto path_arg = get_syscall_path_argument(params.path);
-        if (path_arg.is_error())
-            return path_arg.error();
-        path = path_arg.value()->view();
+        auto path_arg = TRY(get_syscall_path_argument(params.path));
+        path = path_arg->view();
     }
 
     auto copy_user_strings = [](const auto& list, auto& output) -> KResult {
