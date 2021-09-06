@@ -756,12 +756,7 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
 
     if (!interpreter_path.is_empty()) {
         dbgln_if(EXEC_DEBUG, "exec({}): Using program interpreter {}", path, interpreter_path);
-        auto interp_result = VirtualFileSystem::the().open(interpreter_path, O_EXEC, 0, current_directory());
-        if (interp_result.is_error()) {
-            dbgln("exec({}): Unable to open program interpreter {}", path, interpreter_path);
-            return interp_result.error();
-        }
-        auto interpreter_description = interp_result.value();
+        auto interpreter_description = TRY(VirtualFileSystem::the().open(interpreter_path, O_EXEC, 0, current_directory()));
         auto interp_metadata = interpreter_description->metadata();
 
         VERIFY(interpreter_description->inode());
