@@ -933,39 +933,32 @@ KResultOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params
         path = path_arg.value()->view();
     }
 
-    auto copy_user_strings = [](const auto& list, auto& output) {
+    auto copy_user_strings = [](const auto& list, auto& output) -> KResult {
         if (!list.length)
-            return true;
+            return KSuccess;
         Checked<size_t> size = sizeof(*list.strings);
         size *= list.length;
         if (size.has_overflow())
-            return false;
+            return EOVERFLOW;
         Vector<Syscall::StringArgument, 32> strings;
         if (!strings.try_resize(list.length))
-            return false;
-        if (copy_from_user(strings.data(), list.strings, size.value()).is_error())
-            return false;
+            return ENOMEM;
+        TRY(copy_from_user(strings.data(), list.strings, size.value()));
         for (size_t i = 0; i < list.length; ++i) {
-            auto string_or_error = try_copy_kstring_from_user(strings[i]);
-            if (string_or_error.is_error()) {
-                // FIXME: Propagate the error.
-                return false;
-            }
+            auto string = TRY(try_copy_kstring_from_user(strings[i]));
             // FIXME: Don't convert to String here, use KString all the way.
-            auto string = String(string_or_error.value()->view());
-            if (!output.try_append(move(string)))
-                return false;
+            auto ak_string = String(string->view());
+            if (!output.try_append(move(ak_string)))
+                return ENOMEM;
         }
-        return true;
+        return KSuccess;
     };
 
     Vector<String> arguments;
-    if (!copy_user_strings(params.arguments, arguments))
-        return EFAULT;
+    TRY(copy_user_strings(params.arguments, arguments));
 
     Vector<String> environment;
-    if (!copy_user_strings(params.environment, environment))
-        return EFAULT;
+    TRY(copy_user_strings(params.environment, environment));
 
     auto result = exec(move(path), move(arguments), move(environment));
     VERIFY(result.is_error()); // We should never continue after a successful exec!
