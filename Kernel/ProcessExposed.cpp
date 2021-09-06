@@ -172,29 +172,17 @@ KResultOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, User
 
 KResultOr<NonnullRefPtr<Inode>> ProcFSExposedLink::to_inode(const ProcFS& procfs_instance) const
 {
-    auto maybe_inode = ProcFSLinkInode::try_create(procfs_instance, *this);
-    if (maybe_inode.is_error())
-        return maybe_inode.error();
-
-    return maybe_inode.release_value();
+    return TRY(ProcFSLinkInode::try_create(procfs_instance, *this));
 }
 
 KResultOr<NonnullRefPtr<Inode>> ProcFSExposedComponent::to_inode(const ProcFS& procfs_instance) const
 {
-    auto maybe_inode = ProcFSGlobalInode::try_create(procfs_instance, *this);
-    if (maybe_inode.is_error())
-        return maybe_inode.error();
-
-    return maybe_inode.release_value();
+    return TRY(ProcFSGlobalInode::try_create(procfs_instance, *this));
 }
 
 KResultOr<NonnullRefPtr<Inode>> ProcFSExposedDirectory::to_inode(const ProcFS& procfs_instance) const
 {
-    auto maybe_inode = ProcFSDirectoryInode::try_create(procfs_instance, *this);
-    if (maybe_inode.is_error())
-        return maybe_inode.error();
-
-    return maybe_inode.release_value();
+    return TRY(ProcFSDirectoryInode::try_create(procfs_instance, *this));
 }
 
 void ProcFSExposedDirectory::add_component(const ProcFSExposedComponent&)
