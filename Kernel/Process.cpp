@@ -245,11 +245,6 @@ Process::Process(const String& name, UserID uid, GroupID gid, ProcessID ppid, bo
     m_protected_values.suid = uid;
     m_protected_values.sgid = gid;
 
-    auto maybe_procfs_traits = ProcessProcFSTraits::try_create({}, make_weak_ptr());
-    // NOTE: This can fail, but it should be very, *very* rare.
-    VERIFY(!maybe_procfs_traits.is_error());
-    m_procfs_traits = maybe_procfs_traits.release_value();
-
     dbgln_if(PROCESS_DEBUG, "Created new process {}({})", m_name, this->pid().value());
 }
 
@@ -272,6 +267,8 @@ KResult Process::attach_resources(NonnullOwnPtr<Memory::AddressSpace>&& prealloc
         // FIXME: Figure out if this is really necessary.
         first_thread->detach();
     }
+
+    m_procfs_traits = TRY(ProcessProcFSTraits::try_create({}, make_weak_ptr()));
     return KSuccess;
 }
 
