@@ -55,6 +55,8 @@ public:
     Function<void()> on_change;
 
 private:
+    static constexpr auto untitled_label = "(Untitled)";
+
     EditorWrapper();
 
     void update_title();
