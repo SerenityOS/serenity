@@ -739,7 +739,7 @@ KResult Process::send_signal(u8 signal, Process* sender)
     return ESRCH;
 }
 
-RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, OwnPtr<KString> name, u32 affinity, bool joinable)
+RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, NonnullOwnPtr<KString> name, u32 affinity, bool joinable)
 {
     VERIFY((priority >= THREAD_PRIORITY_MIN) && (priority <= THREAD_PRIORITY_MAX));
 
