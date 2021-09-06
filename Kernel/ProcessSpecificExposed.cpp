@@ -81,7 +81,7 @@ KResultOr<size_t> Process::procfs_get_file_description_link(unsigned fd, KBuffer
 {
     auto file_description = TRY(m_fds.file_description(fd));
     auto data = file_description->absolute_path();
-    builder.append(data);
+    TRY(builder.append(data));
     return data.length();
 }
 
@@ -249,8 +249,7 @@ KResult Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) const
 
 KResult Process::procfs_get_current_work_directory_link(KBufferBuilder& builder) const
 {
-    builder.append_bytes(const_cast<Process&>(*this).current_directory().absolute_path().bytes());
-    return KSuccess;
+    return builder.append_bytes(const_cast<Process&>(*this).current_directory().absolute_path().bytes());
 }
 
 mode_t Process::binary_link_required_mode() const
@@ -265,8 +264,7 @@ KResult Process::procfs_get_binary_link(KBufferBuilder& builder) const
     auto* custody = executable();
     if (!custody)
         return KResult(ENOEXEC);
-    builder.append(custody->absolute_path().bytes());
-    return KSuccess;
+    return builder.append(custody->absolute_path().bytes());
 }
 
 }

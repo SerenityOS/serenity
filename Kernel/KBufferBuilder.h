@@ -20,25 +20,32 @@ public:
     KBufferBuilder(KBufferBuilder&&) = default;
     ~KBufferBuilder() = default;
 
-    void append(const StringView&);
-    void append(char);
-    void append(const char*, int);
+    KResult append(const StringView&);
+    KResult append(char);
+    KResult append(const char*, int);
 
-    void append_escaped_for_json(const StringView&);
-    void append_bytes(ReadonlyBytes);
+    KResult append_escaped_for_json(const StringView&);
+    KResult append_bytes(ReadonlyBytes);
 
     template<typename... Parameters>
-    void appendff(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+    KResult appendff(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
     {
         // FIXME: This really not ideal, but vformat expects StringBuilder.
         StringBuilder builder;
         AK::VariadicFormatParams variadic_format_params { parameters... };
         vformat(builder, fmtstr.view(), variadic_format_params);
-        append_bytes(builder.string_view().bytes());
+        return append_bytes(builder.string_view().bytes());
     }
 
     bool flush();
     OwnPtr<KBuffer> build();
+
+    ReadonlyBytes bytes() const
+    {
+        if (!m_buffer)
+            return {};
+        return ReadonlyBytes { m_buffer->data(), m_buffer->size() };
+    }
 
 private:
     bool check_expand(size_t);

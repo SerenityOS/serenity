@@ -178,7 +178,8 @@ private:
     Message& append_number(N number)
     {
         VERIFY(!m_have_been_built);
-        m_builder.append(reinterpret_cast<const char*>(&number), sizeof(number));
+        // FIXME: Handle append failure.
+        (void)m_builder.append(reinterpret_cast<const char*>(&number), sizeof(number));
         return *this;
     }
 
@@ -264,14 +265,16 @@ Plan9FS::Message& Plan9FS::Message::operator<<(u64 number)
 Plan9FS::Message& Plan9FS::Message::operator<<(const StringView& string)
 {
     *this << static_cast<u16>(string.length());
-    m_builder.append(string);
+    // FIXME: Handle append failure.
+    (void)m_builder.append(string);
     return *this;
 }
 
 void Plan9FS::Message::append_data(const StringView& data)
 {
     *this << static_cast<u32>(data.length());
-    m_builder.append(data);
+    // FIXME: Handle append failure.
+    (void)m_builder.append(data);
 }
 
 Plan9FS::Message::Decoder& Plan9FS::Message::Decoder::operator>>(u8& number)
