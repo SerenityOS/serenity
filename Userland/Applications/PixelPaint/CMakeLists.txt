@@ -24,6 +24,7 @@ set(SOURCES
     LayerListWidget.cpp
     LayerPropertiesWidget.cpp
     LineTool.cpp
+    MainWidget.cpp
     main.cpp
     MoveTool.cpp
     PaletteWidget.cpp
