@@ -20,7 +20,7 @@ class DevPtsFS final : public FileSystem {
 
 public:
     virtual ~DevPtsFS() override;
-    static NonnullRefPtr<DevPtsFS> create();
+    static KResultOr<NonnullRefPtr<DevPtsFS>> try_create();
 
     virtual KResult initialize() override;
     virtual StringView class_name() const override { return "DevPtsFS"sv; }
