@@ -54,9 +54,9 @@ static unsigned divide_rounded_up(unsigned a, unsigned b)
     return (a / b) + (a % b != 0);
 }
 
-NonnullRefPtr<Ext2FS> Ext2FS::create(FileDescription& file_description)
+KResultOr<NonnullRefPtr<Ext2FS>> Ext2FS::try_create(FileDescription& file_description)
 {
-    return adopt_ref(*new Ext2FS(file_description));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Ext2FS(file_description));
 }
 
 Ext2FS::Ext2FS(FileDescription& file_description)
