@@ -2,6 +2,15 @@ diff --git a/clang/lib/Basic/Targets.cpp b/clang/lib/Basic/Targets.cpp
 index 90a67d03b..ad21af415 100644
 --- a/clang/lib/Basic/Targets.cpp
 +++ b/clang/lib/Basic/Targets.cpp
+@@ -148,6 +148,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+       return new NetBSDTargetInfo<AArch64leTargetInfo>(Triple, Opts);
+     case llvm::Triple::OpenBSD:
+       return new OpenBSDTargetInfo<AArch64leTargetInfo>(Triple, Opts);
++    case llvm::Triple::Serenity:
++      return new SerenityTargetInfo<AArch64leTargetInfo>(Triple, Opts);
+     case llvm::Triple::Win32:
+       switch (Triple.getEnvironment()) {
+       case llvm::Triple::GNU:
 @@ -527,6 +527,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
        return new MCUX86_32TargetInfo(Triple, Opts);
      case llvm::Triple::Hurd:
