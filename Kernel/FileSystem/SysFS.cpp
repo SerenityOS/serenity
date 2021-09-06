@@ -61,13 +61,12 @@ SysFSRootDirectory::SysFSRootDirectory()
     m_buses_directory = buses_directory;
 }
 
-NonnullRefPtr<SysFS> SysFS::create()
+KResultOr<NonnullRefPtr<SysFS>> SysFS::try_create()
 {
-    return adopt_ref(*new (nothrow) SysFS);
+    return adopt_nonnull_ref_or_enomem(new (nothrow) SysFS);
 }
 
 SysFS::SysFS()
-    : m_root_inode(SysFSComponentRegistry::the().root_directory().to_inode(*this))
 {
 }
 
@@ -77,6 +76,7 @@ SysFS::~SysFS()
 
 KResult SysFS::initialize()
 {
+    m_root_inode = TRY(SysFSComponentRegistry::the().root_directory().to_inode(*this));
     return KSuccess;
 }
 
@@ -85,9 +85,9 @@ Inode& SysFS::root_inode()
     return *m_root_inode;
 }
 
-NonnullRefPtr<SysFSInode> SysFSInode::create(SysFS const& fs, SysFSComponent const& component)
+KResultOr<NonnullRefPtr<SysFSInode>> SysFSInode::try_create(SysFS const& fs, SysFSComponent const& component)
 {
-    return adopt_ref(*new (nothrow) SysFSInode(fs, component));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) SysFSInode(fs, component));
 }
 
 SysFSInode::SysFSInode(SysFS const& fs, SysFSComponent const& component)
@@ -179,9 +179,9 @@ KResult SysFSInode::truncate(u64)
     return EPERM;
 }
 
-NonnullRefPtr<SysFSDirectoryInode> SysFSDirectoryInode::create(SysFS const& sysfs, SysFSComponent const& component)
+KResultOr<NonnullRefPtr<SysFSDirectoryInode>> SysFSDirectoryInode::try_create(SysFS const& sysfs, SysFSComponent const& component)
 {
-    return adopt_ref(*new (nothrow) SysFSDirectoryInode(sysfs, component));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) SysFSDirectoryInode(sysfs, component));
 }
 
 SysFSDirectoryInode::SysFSDirectoryInode(SysFS const& fs, SysFSComponent const& component)
@@ -217,7 +217,7 @@ KResultOr<NonnullRefPtr<Inode>> SysFSDirectoryInode::lookup(StringView name)
     auto component = m_associated_component->lookup(name);
     if (!component)
         return ENOENT;
-    return component->to_inode(fs());
+    return TRY(component->to_inode(fs()));
 }
 
 SysFSBusDirectory& SysFSComponentRegistry::buses_directory()
