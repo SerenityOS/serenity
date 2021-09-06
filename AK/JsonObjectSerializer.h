@@ -20,7 +20,7 @@ public:
     explicit JsonObjectSerializer(Builder& builder)
         : m_builder(builder)
     {
-        m_builder.append('{');
+        (void)m_builder.append('{');
     }
 
     JsonObjectSerializer(const JsonObjectSerializer&) = delete;
@@ -43,74 +43,74 @@ public:
     void add(const StringView& key, const StringView& value)
     {
         begin_item(key);
-        m_builder.append('"');
-        m_builder.append_escaped_for_json(value);
-        m_builder.append('"');
+        (void)m_builder.append('"');
+        (void)m_builder.append_escaped_for_json(value);
+        (void)m_builder.append('"');
     }
 
     void add(const StringView& key, const String& value)
     {
         begin_item(key);
-        m_builder.append('"');
-        m_builder.append_escaped_for_json(value);
-        m_builder.append('"');
+        (void)m_builder.append('"');
+        (void)m_builder.append_escaped_for_json(value);
+        (void)m_builder.append('"');
     }
 
     void add(const StringView& key, const char* value)
     {
         begin_item(key);
-        m_builder.append('"');
-        m_builder.append_escaped_for_json(value);
-        m_builder.append('"');
+        (void)m_builder.append('"');
+        (void)m_builder.append_escaped_for_json(value);
+        (void)m_builder.append('"');
     }
 
     void add(const StringView& key, bool value)
     {
         begin_item(key);
-        m_builder.append(value ? "true" : "false");
+        (void)m_builder.append(value ? "true" : "false");
     }
 
     void add(const StringView& key, int value)
     {
         begin_item(key);
-        m_builder.appendff("{}", value);
+        (void)m_builder.appendff("{}", value);
     }
 
     void add(const StringView& key, unsigned value)
     {
         begin_item(key);
-        m_builder.appendff("{}", value);
+        (void)m_builder.appendff("{}", value);
     }
 
     void add(const StringView& key, long value)
     {
         begin_item(key);
-        m_builder.appendff("{}", value);
+        (void)m_builder.appendff("{}", value);
     }
 
     void add(const StringView& key, long unsigned value)
     {
         begin_item(key);
-        m_builder.appendff("{}", value);
+        (void)m_builder.appendff("{}", value);
     }
 
     void add(const StringView& key, long long value)
     {
         begin_item(key);
-        m_builder.appendff("{}", value);
+        (void)m_builder.appendff("{}", value);
     }
 
     void add(const StringView& key, long long unsigned value)
     {
         begin_item(key);
-        m_builder.appendff("{}", value);
+        (void)m_builder.appendff("{}", value);
     }
 
 #ifndef KERNEL
     void add(const StringView& key, double value)
     {
         begin_item(key);
-        m_builder.appendff("{}", value);
+        (void)m_builder.appendff("{}", value);
     }
 #endif
 
@@ -130,19 +130,19 @@ public:
     {
         VERIFY(!m_finished);
         m_finished = true;
-        m_builder.append('}');
+        (void)m_builder.append('}');
     }
 
 private:
     void begin_item(const StringView& key)
     {
         if (!m_empty)
-            m_builder.append(',');
+            (void)m_builder.append(',');
         m_empty = false;
 
-        m_builder.append('"');
-        m_builder.append_escaped_for_json(key);
-        m_builder.append("\":");
+        (void)m_builder.append('"');
+        (void)m_builder.append_escaped_for_json(key);
+        (void)m_builder.append("\":");
     }
 
     Builder& m_builder;
