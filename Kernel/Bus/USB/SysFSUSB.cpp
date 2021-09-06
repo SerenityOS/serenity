@@ -52,9 +52,7 @@ KResult SysFSUSBDeviceInformation::refresh_data(FileDescription& description) co
     MutexLocker lock(m_lock);
     auto& cached_data = description.data();
     if (!cached_data) {
-        cached_data = adopt_own_if_nonnull(new (nothrow) SysFSInodeData);
-        if (!cached_data)
-            return ENOMEM;
+        cached_data = TRY(adopt_nonnull_own_or_enomem(new (nothrow) SysFSInodeData));
     }
     KBufferBuilder builder;
     if (!const_cast<SysFSUSBDeviceInformation&>(*this).output(builder))

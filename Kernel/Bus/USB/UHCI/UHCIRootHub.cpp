@@ -85,11 +85,7 @@ static USBHubDescriptor uhci_root_hub_hub_descriptor = {
 
 KResultOr<NonnullOwnPtr<UHCIRootHub>> UHCIRootHub::try_create(NonnullRefPtr<UHCIController> uhci_controller)
 {
-    auto root_hub = adopt_own_if_nonnull(new (nothrow) UHCIRootHub(uhci_controller));
-    if (!root_hub)
-        return ENOMEM;
-
-    return root_hub.release_nonnull();
+    return adopt_nonnull_own_or_enomem(new (nothrow) UHCIRootHub(uhci_controller));
 }
 
 UHCIRootHub::UHCIRootHub(NonnullRefPtr<UHCIController> uhci_controller)
