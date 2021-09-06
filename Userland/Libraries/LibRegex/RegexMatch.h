@@ -513,6 +513,7 @@ struct MatchInput {
     mutable size_t fail_counter { 0 };
     mutable Vector<size_t> saved_positions;
     mutable Vector<size_t> saved_code_unit_positions;
+    mutable HashMap<u64, u64> checkpoints;
 };
 
 struct MatchState {
@@ -524,7 +525,6 @@ struct MatchState {
     Vector<Match> matches;
     Vector<Vector<Match>> capture_group_matches;
     Vector<u64> repetition_marks;
-    HashMap<u64, u64> checkpoints;
 };
 
 }

@@ -871,17 +871,17 @@ ALWAYS_INLINE ExecutionResult OpCode_ResetRepeat::execute(MatchInput const&, Mat
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_Checkpoint::execute(MatchInput const&, MatchState& state) const
+ALWAYS_INLINE ExecutionResult OpCode_Checkpoint::execute(MatchInput const& input, MatchState& state) const
 {
-    state.checkpoints.set(state.instruction_position, state.string_position);
+    input.checkpoints.set(state.instruction_position, state.string_position);
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_JumpNonEmpty::execute(MatchInput const&, MatchState& state) const
+ALWAYS_INLINE ExecutionResult OpCode_JumpNonEmpty::execute(MatchInput const& input, MatchState& state) const
 {
     auto current_position = state.string_position;
     auto checkpoint_ip = state.instruction_position + size() + checkpoint();
-    if (state.checkpoints.get(checkpoint_ip).value_or(current_position) != current_position) {
+    if (input.checkpoints.get(checkpoint_ip).value_or(current_position) != current_position) {
         auto form = this->form();
 
         if (form == OpCodeId::Jump) {
