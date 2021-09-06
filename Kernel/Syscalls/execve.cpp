@@ -457,13 +457,20 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
 
     auto load_result = TRY(load(main_program_description, interpreter_description, main_program_header));
 
+    // NOTE: We don't need the interpreter executable description after this point.
+    //       We destroy it here to prevent it from getting destroyed when we return from this function.
+    //       That's important because when we're returning from this function, we're in a very delicate
+    //       state where we can't block (e.g by trying to acquire a mutex in description teardown.)
+    bool has_interpreter = interpreter_description;
+    interpreter_description = nullptr;
+
     auto signal_trampoline_range = TRY(load_result.space->try_allocate_range({}, PAGE_SIZE));
     auto signal_trampoline_region = TRY(load_result.space->allocate_region_with_vmobject(signal_trampoline_range, g_signal_trampoline_region->vmobject(), 0, "Signal trampoline", PROT_READ | PROT_EXEC, true));
     signal_trampoline_region->set_syscall_region(true);
 
     // (For dynamically linked executable) Allocate an FD for passing the main executable to the dynamic loader.
     Optional<ScopedDescriptionAllocation> main_program_fd_allocation;
-    if (interpreter_description)
+    if (has_interpreter)
         main_program_fd_allocation = TRY(m_fds.allocate());
 
     // We commit to the new executable at this point. There is no turning back!
@@ -761,7 +768,7 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
     }
 
     // No interpreter, but, path refers to a valid elf image
-    return KResult(KSuccess);
+    return nullptr;
 }
 
 KResult Process::exec(String path, Vector<String> arguments, Vector<String> environment, int recursion_depth)
@@ -817,20 +824,12 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
         return ENOEXEC;
     }
 
-    auto elf_result = find_elf_interpreter_for_executable(path, *main_program_header, nread, metadata.size);
-    // Assume a static ELF executable by default
-    RefPtr<FileDescription> interpreter_description;
-    // We're getting either an interpreter, an error, or KSuccess (i.e. no interpreter but file checks out)
-    if (!elf_result.is_error()) {
-        // It's a dynamic ELF executable, with or without an interpreter. Do not allocate TLS
-        interpreter_description = elf_result.value();
-    } else if (elf_result.error().is_error())
-        return elf_result.error();
-
     // The bulk of exec() is done by do_exec(), which ensures that all locals
     // are cleaned up by the time we yield-teleport below.
     Thread* new_main_thread = nullptr;
     u32 prev_flags = 0;
+
+    auto interpreter_description = TRY(find_elf_interpreter_for_executable(path, *main_program_header, nread, metadata.size));
     TRY(do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, prev_flags, *main_program_header));
 
     VERIFY_INTERRUPTS_DISABLED();
