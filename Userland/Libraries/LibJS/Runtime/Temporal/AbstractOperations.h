@@ -86,7 +86,11 @@ Optional<String> to_temporal_rounding_mode(GlobalObject&, Object& normalized_opt
 Optional<String> to_show_calendar_option(GlobalObject&, Object& normalized_options);
 u64 to_temporal_rounding_increment(GlobalObject&, Object& normalized_options, Optional<double> dividend, bool inclusive);
 Optional<SecondsStringPrecision> to_seconds_string_precision(GlobalObject&, Object& normalized_options);
+Optional<String> to_largest_temporal_unit(GlobalObject&, Object& normalized_options, Vector<StringView> const& disallowed_units, String const& fallback, Optional<String> auto_value);
 Optional<String> to_smallest_temporal_unit(GlobalObject&, Object& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback);
+void validate_temporal_unit_range(GlobalObject&, String const& largest_unit, String const& smallest_unit);
+String larger_of_two_temporal_units(StringView, StringView);
+Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit);
 String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<String, u8> const& precision);
 double constrain_to_range(double x, double minimum, double maximum);
 BigInt* round_number_to_increment(GlobalObject&, BigInt const&, u64 increment, String const& rounding_mode);

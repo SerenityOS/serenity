@@ -71,6 +71,17 @@ struct PartialDuration {
     Optional<double> nanoseconds;
 };
 
+// Used by BalanceDuration to temporarily hold values
+struct BalancedDuration {
+    double days;
+    double hours;
+    double minutes;
+    double seconds;
+    double milliseconds;
+    double microseconds;
+    double nanoseconds;
+};
+
 // Table 7: Properties of a TemporalDurationLike, https://tc39.es/proposal-temporal/#table-temporal-temporaldurationlike-properties
 
 template<typename StructT, typename ValueT>
@@ -102,6 +113,8 @@ i8 duration_sign(double years, double months, double weeks, double days, double 
 bool is_valid_duration(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 PartialDuration to_partial_duration(GlobalObject&, Value temporal_duration_like);
 Duration* create_temporal_duration(GlobalObject&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, FunctionObject* new_target = nullptr);
+BigInt* total_duration_nanoseconds(GlobalObject&, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, BigInt const& nanoseconds, double offset_shift);
+Optional<BalancedDuration> balance_duration(GlobalObject&, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, BigInt const& nanoseconds, String const& largest_unit, Object* relative_to = nullptr);
 Optional<TemporalDuration> to_limited_temporal_duration(GlobalObject&, Value temporal_duration_like, Vector<StringView> const& disallowed_fields);
 
 }
