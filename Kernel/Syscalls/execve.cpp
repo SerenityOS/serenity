@@ -527,8 +527,6 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     });
 
     if (main_program_fd_allocation.has_value()) {
-        auto seek_result = main_program_description->seek(0, SEEK_SET);
-        VERIFY(!seek_result.is_error());
         main_program_description->set_readable(true);
         m_fds[main_program_fd_allocation->fd].set(move(main_program_description), FD_CLOEXEC);
     }
