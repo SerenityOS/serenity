@@ -20,7 +20,7 @@ class DevFS final : public FileSystem {
 
 public:
     virtual ~DevFS() override;
-    static NonnullRefPtr<DevFS> create();
+    static KResultOr<NonnullRefPtr<DevFS>> try_create();
 
     virtual KResult initialize() override;
     virtual StringView class_name() const override { return "DevFS"sv; }
@@ -35,7 +35,7 @@ private:
     KResultOr<NonnullRefPtr<Inode>> get_inode(InodeIdentifier) const;
     size_t allocate_inode_index();
 
-    NonnullRefPtr<DevFSRootDirectoryInode> m_root_inode;
+    RefPtr<DevFSRootDirectoryInode> m_root_inode;
     NonnullRefPtrVector<DevFSInode> m_nodes;
 
     InodeIndex m_next_inode_index { 0 };
