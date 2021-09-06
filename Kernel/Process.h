@@ -538,7 +538,7 @@ private:
 
     KResultOr<FlatPtr> do_statvfs(String path, statvfs* buf);
 
-    KResultOr<RefPtr<FileDescription>> find_elf_interpreter_for_executable(const String& path, const ElfW(Ehdr) & elf_header, int nread, size_t file_size);
+    KResultOr<RefPtr<FileDescription>> find_elf_interpreter_for_executable(String const& path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size);
 
     KResult do_kill(Process&, int signal);
     KResult do_killpg(ProcessGroupID pgrp, int signal);
