@@ -93,7 +93,7 @@ String larger_of_two_temporal_units(StringView, StringView);
 Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit);
 String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<String, u8> const& precision);
 double constrain_to_range(double x, double minimum, double maximum);
-BigInt* round_number_to_increment(GlobalObject&, BigInt const&, u64 increment, String const& rounding_mode);
+BigInt* round_number_to_increment(GlobalObject&, BigInt const&, u64 increment, StringView rounding_mode);
 Optional<ISODateTime> parse_iso_date_time(GlobalObject&, String const& iso_string);
 Optional<TemporalInstant> parse_temporal_instant_string(GlobalObject&, String const& iso_string);
 Optional<String> parse_temporal_calendar_string(GlobalObject&, String const& iso_string);
