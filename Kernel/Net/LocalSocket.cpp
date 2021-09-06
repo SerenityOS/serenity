@@ -53,8 +53,7 @@ KResultOr<SocketPair> LocalSocket::try_create_connected_pair(int type)
     auto socket = TRY(LocalSocket::try_create(type));
     auto description1 = TRY(FileDescription::try_create(*socket));
 
-    if (auto result = socket->try_set_path("[socketpair]"sv); result.is_error())
-        return result;
+    TRY(socket->try_set_path("[socketpair]"sv));
 
     socket->set_acceptor(Process::current());
     socket->set_connected(true);
