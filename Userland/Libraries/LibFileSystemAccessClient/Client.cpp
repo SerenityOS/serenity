@@ -8,6 +8,8 @@
 // clang-format off
 #include <LibGUI/WindowServerConnection.h>
 // clang-format on
+#include <AK/LexicalPath.h>
+#include <LibCore/File.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Window.h>
 
@@ -34,7 +36,12 @@ Result Client::request_file_read_only_approved(i32 parent_window_id, String cons
         GUI::WindowServerConnection::the().async_remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
     });
 
-    async_request_file_read_only_approved(parent_window_server_client_id, parent_window_id, path);
+    if (path.starts_with('/')) {
+        async_request_file_read_only_approved(parent_window_server_client_id, parent_window_id, path);
+    } else {
+        auto full_path = LexicalPath::join(Core::File::current_working_directory(), path).string();
+        async_request_file_read_only_approved(parent_window_server_client_id, parent_window_id, full_path);
+    }
 
     return m_promise->await();
 }
@@ -51,7 +58,12 @@ Result Client::request_file(i32 parent_window_id, String const& path, Core::Open
         GUI::WindowServerConnection::the().async_remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
     });
 
-    async_request_file(parent_window_server_client_id, parent_window_id, path, mode);
+    if (path.starts_with('/')) {
+        async_request_file(parent_window_server_client_id, parent_window_id, path, mode);
+    } else {
+        auto full_path = LexicalPath::join(Core::File::current_working_directory(), path).string();
+        async_request_file(parent_window_server_client_id, parent_window_id, full_path, mode);
+    }
 
     return m_promise->await();
 }
