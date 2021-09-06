@@ -190,6 +190,7 @@
     M(TemporalInvalidPlainYearMonth, "Invalid plain year month")                                                                        \
     M(TemporalInvalidTime, "Invalid time")                                                                                              \
     M(TemporalInvalidTimeZoneName, "Invalid time zone name")                                                                            \
+    M(TemporalInvalidUnitRange, "Invalid unit range, {} is larger than {}")                                                             \
     M(TemporalMissingOptionsObject, "Required options object is missing or undefined")                                                  \
     M(TemporalMissingRequiredProperty, "Required property {} is missing or undefined")                                                  \
     M(TemporalPropertyMustBeFinite, "Property must not be Infinity")                                                                    \

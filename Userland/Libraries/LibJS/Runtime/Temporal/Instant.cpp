@@ -191,6 +191,18 @@ BigInt* add_instant(GlobalObject& global_object, BigInt const& epoch_nanoseconds
     return result;
 }
 
+// 8.5.7 DifferenceInstant ( ns1, ns2, roundingIncrement, smallestUnit, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-differenceinstant
+BigInt* difference_instant(GlobalObject& global_object, BigInt const& nanoseconds1, BigInt const& nanoseconds2, u64 rounding_increment, StringView smallest_unit, StringView rounding_mode)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(ns1) is BigInt.
+    // 2. Assert: Type(ns2) is BigInt.
+
+    // 3. Return ! RoundTemporalInstant(ns2 − ns1, roundingIncrement, smallestUnit, roundingMode).
+    return round_temporal_instant(global_object, *js_bigint(vm, nanoseconds2.big_integer().minus(nanoseconds1.big_integer())), rounding_increment, smallest_unit, rounding_mode);
+}
+
 // 8.5.8 RoundTemporalInstant ( ns, increment, unit, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundtemporalinstant
 BigInt* round_temporal_instant(GlobalObject& global_object, BigInt const& nanoseconds, u64 increment, String const& unit, String const& rounding_mode)
 {
