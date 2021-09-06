@@ -48,6 +48,7 @@
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
+#include <LibJS/Runtime/Temporal/PlainMonthDay.h>
 #include <LibJS/Runtime/Temporal/PlainTime.h>
 #include <LibJS/Runtime/Temporal/PlainYearMonth.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
@@ -475,6 +476,14 @@ static void print_temporal_plain_date_time(JS::Object const& object, HashTable<J
     out(" \033[34;1m{:04}-{:02}-{:02} {:02}:{:02}:{:02}.{:03}{:03}{:03}\033[0m", plain_date_time.iso_year(), plain_date_time.iso_month(), plain_date_time.iso_day(), plain_date_time.iso_hour(), plain_date_time.iso_minute(), plain_date_time.iso_second(), plain_date_time.iso_millisecond(), plain_date_time.iso_microsecond(), plain_date_time.iso_nanosecond());
 }
 
+static void print_temporal_plain_month_day(JS::Object const& object, HashTable<JS::Object*>&)
+{
+    auto& plain_month_day = static_cast<JS::Temporal::PlainMonthDay const&>(object);
+    print_type("Temporal.PlainMonthDay");
+    // Also has an [[ISOYear]] internal slot, but showing that here seems rather unexpected.
+    out(" \033[34;1m{:02}-{:02}\033[0m", plain_month_day.iso_month(), plain_month_day.iso_day());
+}
+
 static void print_temporal_plain_time(JS::Object const& object, HashTable<JS::Object*>&)
 {
     auto& plain_time = static_cast<JS::Temporal::PlainTime const&>(object);
@@ -625,6 +634,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_temporal_plain_date(object, seen_objects);
         if (is<JS::Temporal::PlainDateTime>(object))
             return print_temporal_plain_date_time(object, seen_objects);
+        if (is<JS::Temporal::PlainMonthDay>(object))
+            return print_temporal_plain_month_day(object, seen_objects);
         if (is<JS::Temporal::PlainTime>(object))
             return print_temporal_plain_time(object, seen_objects);
         if (is<JS::Temporal::PlainYearMonth>(object))
