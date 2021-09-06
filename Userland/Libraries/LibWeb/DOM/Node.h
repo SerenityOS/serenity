@@ -182,6 +182,9 @@ public:
     i32 id() const { return m_id; }
     static Node* from_id(i32 node_id);
 
+    void replace_all(RefPtr<Node>);
+    void string_replace_all(String const&);
+
 protected:
     Node(Document&, NodeType);
 

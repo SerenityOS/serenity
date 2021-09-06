@@ -718,4 +718,31 @@ bool Node::is_shadow_including_inclusive_ancestor_of(Node const& other) const
     return other.is_shadow_including_inclusive_descendant_of(*this);
 }
 
+// https://dom.spec.whatwg.org/#concept-node-replace-all
+void Node::replace_all(RefPtr<Node> node)
+{
+    // FIXME: Let removedNodes be parent’s children. (Current unused so not included)
+    // FIXME: Let addedNodes be the empty set. (Currently unused so not included)
+    // FIXME: If node is a DocumentFragment node, then set addedNodes to node’s children.
+    // FIXME: Otherwise, if node is non-null, set addedNodes to « node ».
+
+    remove_all_children(true);
+
+    if (node)
+        insert_before(*node, nullptr, true);
+
+    // FIXME: If either addedNodes or removedNodes is not empty, then queue a tree mutation record for parent with addedNodes, removedNodes, null, and null.
+}
+
+// https://dom.spec.whatwg.org/#string-replace-all
+void Node::string_replace_all(String const& string)
+{
+    RefPtr<Node> node;
+
+    if (!string.is_empty())
+        node = make_ref_counted<Text>(document(), string);
+
+    replace_all(node);
+}
+
 }
