@@ -44,6 +44,8 @@
 #include <LibJS/Runtime/Intl/DisplayNamesConstructor.h>
 #include <LibJS/Runtime/Intl/DisplayNamesPrototype.h>
 #include <LibJS/Runtime/Intl/Intl.h>
+#include <LibJS/Runtime/Intl/ListFormatConstructor.h>
+#include <LibJS/Runtime/Intl/ListFormatPrototype.h>
 #include <LibJS/Runtime/Intl/LocaleConstructor.h>
 #include <LibJS/Runtime/Intl/LocalePrototype.h>
 #include <LibJS/Runtime/IteratorPrototype.h>
