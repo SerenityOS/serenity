@@ -81,7 +81,7 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
     } else if (fs_type == "proc"sv || fs_type == "ProcFS"sv) {
         fs = TRY(ProcFS::try_create());
     } else if (fs_type == "devpts"sv || fs_type == "DevPtsFS"sv) {
-        fs = DevPtsFS::create();
+        fs = TRY(DevPtsFS::try_create());
     } else if (fs_type == "dev"sv || fs_type == "DevFS"sv) {
         fs = DevFS::create();
     } else if (fs_type == "sys"sv || fs_type == "SysFS"sv) {

@@ -11,9 +11,9 @@
 
 namespace Kernel {
 
-NonnullRefPtr<DevPtsFS> DevPtsFS::create()
+KResultOr<NonnullRefPtr<DevPtsFS>> DevPtsFS::try_create()
 {
-    return adopt_ref(*new DevPtsFS);
+    return adopt_nonnull_ref_or_enomem(new (nothrow) DevPtsFS);
 }
 
 DevPtsFS::DevPtsFS()
@@ -26,10 +26,7 @@ DevPtsFS::~DevPtsFS()
 
 KResult DevPtsFS::initialize()
 {
-    m_root_inode = adopt_ref_if_nonnull(new (nothrow) DevPtsFSInode(*this, 1, nullptr));
-    if (!m_root_inode)
-        return ENOMEM;
-
+    m_root_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevPtsFSInode(*this, 1, nullptr)));
     m_root_inode->m_metadata.inode = { fsid(), 1 };
     m_root_inode->m_metadata.mode = 0040555;
     m_root_inode->m_metadata.uid = 0;
@@ -64,8 +61,7 @@ KResultOr<NonnullRefPtr<Inode>> DevPtsFS::get_inode(InodeIdentifier inode_id) co
     auto* device = Device::get_device(201, pty_index);
     VERIFY(device);
 
-    // FIXME: Handle OOM
-    auto inode = adopt_ref(*new DevPtsFSInode(const_cast<DevPtsFS&>(*this), inode_id.index(), static_cast<SlavePTY*>(device)));
+    auto inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevPtsFSInode(const_cast<DevPtsFS&>(*this), inode_id.index(), static_cast<SlavePTY*>(device))));
     inode->m_metadata.inode = inode_id;
     inode->m_metadata.size = 0;
     inode->m_metadata.uid = device->uid();
@@ -74,7 +70,6 @@ KResultOr<NonnullRefPtr<Inode>> DevPtsFS::get_inode(InodeIdentifier inode_id) co
     inode->m_metadata.major_device = device->major();
     inode->m_metadata.minor_device = device->minor();
     inode->m_metadata.mtime = mepoch;
-
     return inode;
 }
 
