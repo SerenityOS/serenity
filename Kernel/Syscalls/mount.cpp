@@ -72,7 +72,7 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
 
         dbgln("mount: attempting to mount {} on {}", description->absolute_path(), target);
 
-        fs = Ext2FS::create(*description);
+        fs = TRY(Ext2FS::try_create(*description));
     } else if (fs_type == "9p"sv || fs_type == "Plan9FS"sv) {
         if (description_or_error.is_error())
             return EBADF;

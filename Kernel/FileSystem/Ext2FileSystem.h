@@ -89,7 +89,7 @@ public:
         FileSize64bits = 1 << 1,
     };
 
-    static NonnullRefPtr<Ext2FS> create(FileDescription&);
+    static KResultOr<NonnullRefPtr<Ext2FS>> try_create(FileDescription&);
 
     virtual ~Ext2FS() override;
     virtual KResult initialize() override;
