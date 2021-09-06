@@ -163,7 +163,11 @@ void AHCIPort::eject()
     // handshake error bit in PxSERR register if CFL is incorrect.
     command_list_entries[unused_command_header.value()].attributes = (size_t)FIS::DwordCount::RegisterHostToDevice | AHCI::CommandHeaderAttributes::P | AHCI::CommandHeaderAttributes::C | AHCI::CommandHeaderAttributes::A;
 
-    auto command_table_region = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()].paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)), "AHCI Command Table", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No).release_value();
+    auto command_table_region_or_error = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()].paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)), "AHCI Command Table", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
+    if (command_table_region_or_error.is_error())
+        TODO();
+    auto command_table_region = command_table_region_or_error.release_value();
+
     auto& command_table = *(volatile AHCI::CommandTable*)command_table_region->vaddr().as_ptr();
     memset(const_cast<u8*>(command_table.command_fis), 0, 64);
     auto& fis = *(volatile FIS::HostToDevice::Register*)command_table.command_fis;
@@ -469,11 +473,13 @@ void AHCIPort::start_request(AsyncBlockDeviceRequest& request)
         return;
     }
 
-    auto success = access_device(request.request_type(), request.block_index(), request.block_count());
-    if (!success) {
+    auto access_result = access_device(request.request_type(), request.block_index(), request.block_count());
+    if (access_result != AsyncDeviceRequest::RequestResult::Started) {
+        VERIFY(access_result != AsyncDeviceRequest::RequestResult::Pending);
+        VERIFY(access_result != AsyncDeviceRequest::RequestResult::Success);
         dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request failure.", representative_port_index());
         locker.unlock();
-        complete_current_request(AsyncDeviceRequest::Failure);
+        complete_current_request(access_result);
         return;
     }
 }
@@ -502,7 +508,7 @@ bool AHCIPort::spin_until_ready() const
     return true;
 }
 
-bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64 lba, u8 block_count)
+AsyncBlockDeviceRequest::RequestResult AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64 lba, u8 block_count)
 {
     VERIFY(m_connected_device);
     VERIFY(is_operable());
@@ -512,7 +518,7 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Do a {}, lba {}, block count {}", representative_port_index(), direction == AsyncBlockDeviceRequest::RequestType::Write ? "write" : "read", lba, block_count);
     if (!spin_until_ready())
-        return false;
+        return AsyncBlockDeviceRequest::RequestResult::Failure;
 
     auto unused_command_header = try_to_find_unused_command_header();
     VERIFY(unused_command_header.has_value());
@@ -530,7 +536,10 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: CLE: ctba={:#08x}, ctbau={:#08x}, prdbc={:#08x}, prdtl={:#04x}, attributes={:#04x}", representative_port_index(), (u32)command_list_entries[unused_command_header.value()].ctba, (u32)command_list_entries[unused_command_header.value()].ctbau, (u32)command_list_entries[unused_command_header.value()].prdbc, (u16)command_list_entries[unused_command_header.value()].prdtl, (u16)command_list_entries[unused_command_header.value()].attributes);
 
-    auto command_table_region = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()].paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)), "AHCI Command Table", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No).release_value();
+    auto command_table_region_or_error = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()].paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)), "AHCI Command Table", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
+    if (command_table_region_or_error.is_error())
+        return AsyncBlockDeviceRequest::RequestResult::MemoryFault;
+    auto command_table_region = command_table_region_or_error.release_value();
     auto& command_table = *(volatile AHCI::CommandTable*)command_table_region->vaddr().as_ptr();
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Allocated command table at {}", representative_port_index(), command_table_region->vaddr());
@@ -585,14 +594,14 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
 
     // The below loop waits until the port is no longer busy before issuing a new command
     if (!spin_until_ready())
-        return false;
+        return AsyncBlockDeviceRequest::RequestResult::Failure;
 
     full_memory_barrier();
     mark_command_header_ready_to_process(unused_command_header.value());
     full_memory_barrier();
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Do a {}, lba {}, block count {} @ {}, ended", representative_port_index(), direction == AsyncBlockDeviceRequest::RequestType::Write ? "write" : "read", lba, block_count, m_dma_buffers[0].paddr());
-    return true;
+    return AsyncBlockDeviceRequest::RequestResult::Started;
 }
 
 bool AHCIPort::identify_device(SpinlockLocker<Spinlock>& main_lock)

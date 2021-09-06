@@ -71,7 +71,7 @@ private:
 
     void start_request(AsyncBlockDeviceRequest&);
     void complete_current_request(AsyncDeviceRequest::RequestResult);
-    bool access_device(AsyncBlockDeviceRequest::RequestType, u64 lba, u8 block_count);
+    AsyncDeviceRequest::RequestResult access_device(AsyncBlockDeviceRequest::RequestType, u64 lba, u8 block_count);
     size_t calculate_descriptors_count(size_t block_count) const;
     [[nodiscard]] Optional<AsyncDeviceRequest::RequestResult> prepare_and_set_scatter_list(AsyncBlockDeviceRequest& request);
 
