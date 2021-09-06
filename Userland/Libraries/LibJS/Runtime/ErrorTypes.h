@@ -62,6 +62,7 @@
     M(NotAnObject, "{} is not an object")                                                                                               \
     M(NotAnObjectOrNull, "{} is neither an object nor null")                                                                            \
     M(NotAnObjectOrString, "{} is neither an object nor a string")                                                                      \
+    M(NotAString, "{} is not a string")                                                                                                 \
     M(NotASymbol, "{} is not a symbol")                                                                                                 \
     M(NotIterable, "{} is not iterable")                                                                                                \
     M(NotObjectCoercible, "{} cannot be converted to an object")                                                                        \
