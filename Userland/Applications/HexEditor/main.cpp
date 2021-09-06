@@ -7,6 +7,7 @@
 
 #include "HexEditorWidget.h"
 #include <LibConfig/Client.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
@@ -38,20 +39,6 @@ int main(int argc, char** argv)
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
 
-    String file_to_edit = (argc > 1) ? Core::File::absolute_path(argv[1]) : "";
-
-    if (!file_to_edit.is_empty()) {
-        if (Core::File::exists(file_to_edit)) {
-            dbgln("unveil for: {}", file_to_edit);
-            if (unveil(file_to_edit.characters(), "r") < 0) {
-                perror("unveil");
-                return 1;
-            }
-        } else {
-            file_to_edit = {};
-        }
-    }
-
     if (unveil("/res", "r") < 0) {
         perror("unveil");
         return 1;
@@ -71,15 +58,16 @@ int main(int argc, char** argv)
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    if (!file_to_edit.is_empty()) {
-        auto file = Core::File::open(file_to_edit, Core::OpenMode::ReadOnly);
+    if (argc > 1) {
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window->window_id(), argv[1]);
 
-        if (file.is_error()) {
-            GUI::MessageBox::show_error(window, String::formatted("Opening \"{}\" failed: {}", file_to_edit, file.error()));
+        if (response.error != 0) {
+            if (response.error != -1)
+                GUI::MessageBox::show_error(window, String::formatted("Opening \"{}\" failed: {}", *response.chosen_file, strerror(response.error)));
             return 1;
         }
 
-        hex_editor_widget.open_file(file.value()->leak_fd(), file_to_edit);
+        hex_editor_widget.open_file(*response.fd, *response.chosen_file);
     }
 
     return app->exec();
