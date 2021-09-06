@@ -21,6 +21,15 @@
 #include <LibCore/File.h>
 #include <LibUnicode/Locale.h>
 
+struct ListPatterns {
+    String type;
+    String style;
+    String start;
+    String middle;
+    String end;
+    String pair;
+};
+
 struct Locale {
     String language;
     Optional<String> territory;
@@ -29,6 +38,7 @@ struct Locale {
     HashMap<String, String> territories;
     HashMap<String, String> scripts;
     HashMap<String, String> currencies;
+    Vector<ListPatterns> list_patterns;
 };
 
 struct CanonicalLanguageID {
@@ -50,6 +60,8 @@ struct UnicodeLocaleData {
     Vector<String> scripts;
     Vector<String> variants;
     Vector<String> currencies;
+    Vector<String> list_pattern_types;
+    Vector<String> list_pattern_styles;
     HashMap<String, String> language_aliases;
     HashMap<String, String> territory_aliases;
     HashMap<String, String> script_aliases;
@@ -293,6 +305,58 @@ static void parse_locale_scripts(String locale_path, UnicodeLocaleData& locale_d
     });
 }
 
+static void parse_locale_list_patters(String misc_path, UnicodeLocaleData& locale_data, Locale& locale)
+{
+    LexicalPath list_patterns_path(move(misc_path));
+    list_patterns_path = list_patterns_path.append("listPatterns.json"sv);
+    VERIFY(Core::File::exists(list_patterns_path.string()));
+
+    auto list_patterns_file_or_error = Core::File::open(list_patterns_path.string(), Core::OpenMode::ReadOnly);
+    VERIFY(!list_patterns_file_or_error.is_error());
+
+    auto list_patterns = JsonParser(list_patterns_file_or_error.value()->read_all()).parse();
+    VERIFY(list_patterns.has_value());
+
+    auto const& main_object = list_patterns->as_object().get("main"sv);
+    auto const& locale_object = main_object.as_object().get(list_patterns_path.parent().basename());
+    auto const& list_patterns_object = locale_object.as_object().get("listPatterns"sv);
+
+    auto list_pattern_type = [](StringView key) {
+        if (key.contains("type-standard"sv))
+            return "conjunction"sv;
+        if (key.contains("type-or"sv))
+            return "disjunction"sv;
+        if (key.contains("type-unit"sv))
+            return "unit"sv;
+        VERIFY_NOT_REACHED();
+    };
+
+    auto list_pattern_style = [](StringView key) {
+        if (key.contains("short"sv))
+            return "short"sv;
+        if (key.contains("narrow"sv))
+            return "narrow"sv;
+        return "long"sv;
+    };
+
+    list_patterns_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
+        auto type = list_pattern_type(key);
+        auto style = list_pattern_style(key);
+
+        auto start = value.as_object().get("start"sv).as_string();
+        auto middle = value.as_object().get("middle"sv).as_string();
+        auto end = value.as_object().get("end"sv).as_string();
+        auto pair = value.as_object().get("2"sv).as_string();
+
+        if (!locale_data.list_pattern_types.contains_slow(type))
+            locale_data.list_pattern_types.append(type);
+        if (!locale_data.list_pattern_styles.contains_slow(style))
+            locale_data.list_pattern_styles.append(style);
+
+        locale.list_patterns.append({ move(type), move(style), move(start), move(middle), move(end), move(pair) });
+    });
+}
+
 static void parse_locale_currencies(String numbers_path, UnicodeLocaleData& locale_data, Locale& locale)
 {
     LexicalPath currencies_path(move(numbers_path));
@@ -333,9 +397,10 @@ static Core::DirIterator path_to_dir_iterator(String path)
     return iterator;
 }
 
-static void parse_all_locales(String core_path, String locale_names_path, String numbers_path, UnicodeLocaleData& locale_data)
+static void parse_all_locales(String core_path, String locale_names_path, String misc_path, String numbers_path, UnicodeLocaleData& locale_data)
 {
     auto locale_names_iterator = path_to_dir_iterator(move(locale_names_path));
+    auto misc_iterator = path_to_dir_iterator(move(misc_path));
     auto numbers_iterator = path_to_dir_iterator(move(numbers_path));
 
     LexicalPath core_supplemental_path(move(core_path));
@@ -354,6 +419,14 @@ static void parse_all_locales(String core_path, String locale_names_path, String
         parse_locale_languages(locale_path, locale);
         parse_locale_territories(locale_path, locale);
         parse_locale_scripts(locale_path, locale_data, locale);
+    }
+
+    while (misc_iterator.has_next()) {
+        auto misc_path = misc_iterator.next_full_path();
+        VERIFY(Core::File::is_directory(misc_path));
+
+        auto& locale = locale_data.locales.ensure(LexicalPath::basename(misc_path));
+        parse_locale_list_patters(misc_path, locale_data, locale);
     }
 
     while (numbers_iterator.has_next()) {
@@ -423,6 +496,8 @@ namespace Unicode {
     generate_enum("ScriptTag"sv, {}, locale_data.scripts);
     generate_enum("Currency"sv, {}, locale_data.currencies);
     generate_enum("Variant"sv, {}, locale_data.variants);
+    generate_enum("ListPatternType"sv, {}, locale_data.list_pattern_types);
+    generate_enum("ListPatternStyle"sv, {}, locale_data.list_pattern_styles);
 
     generator.append(R"~~~(
 namespace Detail {
@@ -443,6 +518,10 @@ Optional<StringView> resolve_script_tag_alias(StringView const& script_tag);
 
 Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency);
 Optional<Currency> currency_from_string(StringView const& currency);
+
+Optional<ListPatterns> get_locale_list_pattern_mapping(StringView locale, StringView list_pattern_type, StringView list_pattern_style);
+Optional<ListPatternType> list_pattern_type_from_string(StringView const& list_pattern_type);
+Optional<ListPatternStyle> list_pattern_style_from_string(StringView const& list_pattern_style);
 
 Optional<StringView> resolve_variant_alias(StringView const& variant);
 Optional<StringView> resolve_subdivision_alias(StringView const& subdivision);
@@ -476,6 +555,15 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
 #include <LibUnicode/UnicodeLocale.h>
 
 namespace Unicode {
+
+struct Patterns {
+    ListPatternType type;
+    ListPatternStyle style;
+    StringView start;
+    StringView middle;
+    StringView end;
+    StringView pair;
+};
 )~~~");
 
     auto format_mapping_name = [](StringView format, StringView name) {
@@ -507,7 +595,7 @@ namespace Unicode {
         generator.append(String::formatted(" }}, {}", list.size()));
     };
 
-    auto append_mapping_list = [&](String name, auto const& keys, auto const& mappings) {
+    auto append_string_list = [&](String name, auto const& keys, auto const& mappings) {
         generator.set("name", name);
         generator.set("size", String::number(keys.size()));
 
@@ -539,21 +627,46 @@ static constexpr Array<StringView, @size@> @name@ { {
 )~~~");
     };
 
-    auto append_mapping = [&](StringView name, StringView format, auto const& keys, auto get_mapping_callback) {
+    auto append_list_patterns = [&](StringView name, Vector<ListPatterns> const& list_patterns) {
+        generator.set("name", name);
+        generator.set("size", String::number(list_patterns.size()));
+
+        generator.append(R"~~~(
+static constexpr Array<Patterns, @size@> @name@ { {)~~~");
+
+        for (auto const& list_pattern : list_patterns) {
+            generator.set("type"sv, String::formatted("ListPatternType::{}", format_identifier({}, list_pattern.type)));
+            generator.set("style"sv, String::formatted("ListPatternStyle::{}", format_identifier({}, list_pattern.style)));
+            generator.set("start"sv, String::formatted("\"{}\"sv", list_pattern.start));
+            generator.set("middle"sv, String::formatted("\"{}\"sv", list_pattern.middle));
+            generator.set("end"sv, String::formatted("\"{}\"sv", list_pattern.end));
+            generator.set("pair"sv, String::formatted("\"{}\"sv", list_pattern.pair));
+
+            generator.append(R"~~~(
+    { @type@, @style@, @start@, @middle@, @end@, @pair@ },)~~~");
+        }
+
+        generator.append(R"~~~(
+} };
+)~~~");
+    };
+
+    auto append_mapping = [&](StringView type, StringView name, StringView format, auto format_list_callback) {
         Vector<String> mapping_names;
 
         for (auto const& locale : locale_data.locales) {
             auto mapping_name = format_mapping_name(format, locale.key);
-            append_mapping_list(mapping_name, keys, get_mapping_callback(locale.value));
+            format_list_callback(mapping_name, locale.value);
             mapping_names.append(move(mapping_name));
         }
 
         quick_sort(mapping_names);
 
+        generator.set("type", type);
         generator.set("name", name);
         generator.set("size", String::number(locale_data.locales.size()));
         generator.append(R"~~~(
-static constexpr Array<Span<StringView const>, @size@> @name@ { {
+static constexpr Array<Span<@type@ const>, @size@> @name@ { {
     )~~~");
 
         constexpr size_t max_values_per_row = 10;
@@ -577,10 +690,11 @@ static constexpr Array<Span<StringView const>, @size@> @name@ { {
 )~~~");
     };
 
-    append_mapping("s_languages"sv, "s_languages_{}", locale_data.languages, [](auto const& value) { return value.languages; });
-    append_mapping("s_territories"sv, "s_territories_{}", locale_data.territories, [](auto const& value) { return value.territories; });
-    append_mapping("s_scripts"sv, "s_scripts_{}", locale_data.scripts, [](auto const& value) { return value.scripts; });
-    append_mapping("s_currencies"sv, "s_currencies_{}", locale_data.currencies, [](auto const& value) { return value.currencies; });
+    append_mapping("StringView"sv, "s_languages"sv, "s_languages_{}", [&](auto const& name, auto const& value) { append_string_list(name, locale_data.languages, value.languages); });
+    append_mapping("StringView"sv, "s_territories"sv, "s_territories_{}", [&](auto const& name, auto const& value) { append_string_list(name, locale_data.territories, value.territories); });
+    append_mapping("StringView"sv, "s_scripts"sv, "s_scripts_{}", [&](auto const& name, auto const& value) { append_string_list(name, locale_data.scripts, value.scripts); });
+    append_mapping("StringView"sv, "s_currencies"sv, "s_currencies_{}", [&](auto const& name, auto const& value) { append_string_list(name, locale_data.currencies, value.currencies); });
+    append_mapping("Patterns"sv, "s_list_patterns"sv, "s_list_patterns_{}", [&](auto const& name, auto const& value) { append_list_patterns(name, value.list_patterns); });
 
     generator.append(R"~~~(
 struct CanonicalLanguageID {
@@ -866,7 +980,35 @@ Optional<StringView> resolve_@enum_snake@_alias(StringView const& @enum_snake@)
     append_alias_search("variant"sv, locale_data.variant_aliases);
     append_alias_search("subdivision"sv, locale_data.subdivision_aliases);
 
+    append_from_string("ListPatternType"sv, "list_pattern_type"sv, locale_data.list_pattern_types);
+    append_from_string("ListPatternStyle"sv, "list_pattern_style"sv, locale_data.list_pattern_styles);
+
     generator.append(R"~~~(
+Optional<ListPatterns> get_locale_list_pattern_mapping(StringView locale, StringView list_pattern_type, StringView list_pattern_style)
+{
+    auto locale_value = locale_from_string(locale);
+    if (!locale_value.has_value())
+        return {};
+
+    auto type_value = list_pattern_type_from_string(list_pattern_type);
+    if (!type_value.has_value())
+        return {};
+
+    auto style_value = list_pattern_style_from_string(list_pattern_style);
+    if (!style_value.has_value())
+        return {};
+
+    auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
+    auto const& locale_list_patterns = s_list_patterns.at(locale_index);
+
+    for (auto const& list_patterns : locale_list_patterns) {
+        if ((list_patterns.type == type_value) && (list_patterns.style == style_value))
+            return ListPatterns { list_patterns.start, list_patterns.middle, list_patterns.end, list_patterns.pair };
+    }
+
+    return {};
+}
+
 void resolve_complex_language_aliases(Unicode::LanguageID& language_id)
 {
     for (auto const& map : s_complex_alias) {
@@ -969,7 +1111,7 @@ int main(int argc, char** argv)
     auto generated_implementation_file = open_file(generated_implementation_path, "-c/--generated-implementation-path", Core::OpenMode::ReadWrite);
 
     UnicodeLocaleData locale_data;
-    parse_all_locales(core_path, locale_names_path, numbers_path, locale_data);
+    parse_all_locales(core_path, locale_names_path, misc_path, numbers_path, locale_data);
 
     generate_unicode_locale_header(generated_header_file, locale_data);
     generate_unicode_locale_implementation(generated_implementation_file, locale_data);
