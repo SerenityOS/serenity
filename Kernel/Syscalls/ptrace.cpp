@@ -185,10 +185,8 @@ KResult Process::poke_user_data(Userspace<u32*> address, u32 data)
         // If the region is shared, we change its vmobject to a PrivateInodeVMObject
         // to prevent the write operation from changing any shared inode data
         VERIFY(region->vmobject().is_shared_inode());
-        auto vmobject = Memory::PrivateInodeVMObject::try_create_with_inode(static_cast<Memory::SharedInodeVMObject&>(region->vmobject()).inode());
-        if (!vmobject)
-            return ENOMEM;
-        region->set_vmobject(vmobject.release_nonnull());
+        auto vmobject = TRY(Memory::PrivateInodeVMObject::try_create_with_inode(static_cast<Memory::SharedInodeVMObject&>(region->vmobject()).inode()));
+        region->set_vmobject(move(vmobject));
         region->set_shared(false);
     }
     const bool was_writable = region->is_writable();

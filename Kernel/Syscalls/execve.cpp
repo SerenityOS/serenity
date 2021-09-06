@@ -165,11 +165,7 @@ struct RequiredLoadRange {
 static KResultOr<RequiredLoadRange> get_required_load_range(FileDescription& program_description)
 {
     auto& inode = *(program_description.inode());
-    auto vmobject = Memory::SharedInodeVMObject::try_create_with_inode(inode);
-    if (!vmobject) {
-        dbgln("get_required_load_range: Unable to allocate SharedInodeVMObject");
-        return ENOMEM;
-    }
+    auto vmobject = TRY(Memory::SharedInodeVMObject::try_create_with_inode(inode));
 
     size_t executable_size = inode.size();
 
@@ -265,11 +261,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
     FlatPtr load_offset, ShouldAllocateTls should_allocate_tls, ShouldAllowSyscalls should_allow_syscalls)
 {
     auto& inode = *(object_description.inode());
-    auto vmobject = Memory::SharedInodeVMObject::try_create_with_inode(inode);
-    if (!vmobject) {
-        dbgln("load_elf_object: Unable to allocate SharedInodeVMObject");
-        return ENOMEM;
-    }
+    auto vmobject = TRY(Memory::SharedInodeVMObject::try_create_with_inode(inode));
 
     if (vmobject->writable_mappings()) {
         dbgln("Refusing to execute a write-mapped program");
