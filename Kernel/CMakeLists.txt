@@ -152,7 +152,7 @@ set(KERNEL_SOURCES
     Memory/PhysicalRegion.cpp
     Memory/PhysicalZone.cpp
     Memory/PrivateInodeVMObject.cpp
-    Memory/ProcessPagingScope.cpp
+        Memory/ScopedAddressSpaceSwitcher.cpp
     Memory/Region.cpp
     Memory/RingBuffer.cpp
     Memory/ScatterGatherList.cpp
