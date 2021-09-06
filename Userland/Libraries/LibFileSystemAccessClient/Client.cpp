@@ -22,6 +22,23 @@ Client& Client::the()
     return *s_the;
 }
 
+Result Client::request_file_read_only_approved(i32 parent_window_id, String const& path)
+{
+    m_promise = Core::Promise<Result>::construct();
+    auto parent_window_server_client_id = GUI::WindowServerConnection::the().expose_client_id();
+    auto child_window_server_client_id = expose_window_server_client_id();
+
+    GUI::WindowServerConnection::the().async_add_window_stealing_for_client(child_window_server_client_id, parent_window_id);
+
+    ScopeGuard guard([parent_window_id, child_window_server_client_id] {
+        GUI::WindowServerConnection::the().async_remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
+    });
+
+    async_request_file_read_only_approved(parent_window_server_client_id, parent_window_id, path);
+
+    return m_promise->await();
+}
+
 Result Client::request_file(i32 parent_window_id, String const& path, Core::OpenMode mode)
 {
     m_promise = Core::Promise<Result>::construct();
