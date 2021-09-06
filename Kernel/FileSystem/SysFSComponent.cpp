@@ -61,14 +61,14 @@ SysFSDirectory::SysFSDirectory(StringView name, SysFSDirectory const& parent_dir
 {
 }
 
-NonnullRefPtr<SysFSInode> SysFSDirectory::to_inode(SysFS const& sysfs_instance) const
+KResultOr<NonnullRefPtr<SysFSInode>> SysFSDirectory::to_inode(SysFS const& sysfs_instance) const
 {
-    return SysFSDirectoryInode::create(sysfs_instance, *this);
+    return TRY(SysFSDirectoryInode::try_create(sysfs_instance, *this));
 }
 
-NonnullRefPtr<SysFSInode> SysFSComponent::to_inode(SysFS const& sysfs_instance) const
+KResultOr<NonnullRefPtr<SysFSInode>> SysFSComponent::to_inode(SysFS const& sysfs_instance) const
 {
-    return SysFSInode::create(sysfs_instance, *this);
+    return SysFSInode::try_create(sysfs_instance, *this);
 }
 
 }

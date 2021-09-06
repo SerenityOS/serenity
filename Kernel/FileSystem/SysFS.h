@@ -60,7 +60,7 @@ class SysFS final : public FileSystem {
 
 public:
     virtual ~SysFS() override;
-    static NonnullRefPtr<SysFS> create();
+    static KResultOr<NonnullRefPtr<SysFS>> try_create();
 
     virtual KResult initialize() override;
     virtual StringView class_name() const override { return "SysFS"sv; }
@@ -70,7 +70,7 @@ public:
 private:
     SysFS();
 
-    NonnullRefPtr<SysFSInode> m_root_inode;
+    RefPtr<SysFSInode> m_root_inode;
 };
 
 class SysFSInode : public Inode {
@@ -78,7 +78,7 @@ class SysFSInode : public Inode {
     friend class SysFSDirectoryInode;
 
 public:
-    static NonnullRefPtr<SysFSInode> create(SysFS const&, SysFSComponent const&);
+    static KResultOr<NonnullRefPtr<SysFSInode>> try_create(SysFS const&, SysFSComponent const&);
     StringView name() const { return m_associated_component->name(); }
 
 protected:
@@ -106,7 +106,7 @@ class SysFSDirectoryInode : public SysFSInode {
     friend class SysFS;
 
 public:
-    static NonnullRefPtr<SysFSDirectoryInode> create(SysFS const&, SysFSComponent const&);
+    static KResultOr<NonnullRefPtr<SysFSDirectoryInode>> try_create(SysFS const&, SysFSComponent const&);
     virtual ~SysFSDirectoryInode() override;
 
     SysFS& fs() { return static_cast<SysFS&>(Inode::fs()); }

@@ -32,7 +32,7 @@ public:
     virtual KResultOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, FileDescription*) { return EROFS; }
     virtual KResult refresh_data(FileDescription&) const { return KSuccess; }
 
-    virtual NonnullRefPtr<SysFSInode> to_inode(SysFS const&) const;
+    virtual KResultOr<NonnullRefPtr<SysFSInode>> to_inode(SysFS const&) const;
 
     InodeIndex component_index() const { return m_component_index; };
 
@@ -51,7 +51,7 @@ public:
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<SysFSComponent> lookup(StringView name) override;
 
-    virtual NonnullRefPtr<SysFSInode> to_inode(SysFS const& sysfs_instance) const override final;
+    virtual KResultOr<NonnullRefPtr<SysFSInode>> to_inode(SysFS const& sysfs_instance) const override final;
 
 protected:
     explicit SysFSDirectory(StringView name);
