@@ -21,7 +21,7 @@ static size_t allocate_inode_index()
 }
 
 SysFSComponent::SysFSComponent(StringView name)
-    : m_name(KString::try_create(name).release_nonnull())
+    : m_name(KString::try_create(name).release_value()) // FIXME: Handle KString allocation failure.
     , m_component_index(allocate_inode_index())
 {
 }

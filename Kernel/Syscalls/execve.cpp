@@ -475,9 +475,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
         return ENOENT;
 
     auto new_process_name = parts.take_last();
-    auto new_main_thread_name = KString::try_create(new_process_name);
-    if (!new_main_thread_name)
-        return ENOMEM;
+    auto new_main_thread_name = TRY(KString::try_create(new_process_name));
 
     auto main_program_metadata = main_program_description->metadata();
 
@@ -598,7 +596,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     // NOTE: Be careful to not trigger any page faults below!
 
     m_name = move(new_process_name);
-    new_main_thread->set_name(new_main_thread_name.release_nonnull());
+    new_main_thread->set_name(move(new_main_thread_name));
 
     {
         ProtectedDataMutationScope scope { *this };

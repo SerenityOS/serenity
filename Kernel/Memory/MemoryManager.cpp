@@ -729,7 +729,10 @@ KResultOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(PhysicalA
 
 KResultOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobject(VirtualRange const& range, VMObject& vmobject, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
-    auto region = TRY(Region::try_create_kernel_only(range, vmobject, 0, KString::try_create(name), access, cacheable));
+    OwnPtr<KString> name_kstring;
+    if (!name.is_null())
+        name_kstring = TRY(KString::try_create(name));
+    auto region = TRY(Region::try_create_kernel_only(range, vmobject, 0, move(name_kstring), access, cacheable));
     TRY(region->map(kernel_page_directory()));
     return region;
 }

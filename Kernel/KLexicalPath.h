@@ -17,6 +17,6 @@ StringView basename(StringView const&);
 StringView dirname(StringView const&);
 Vector<StringView> parts(StringView const&);
 
-OwnPtr<KString> try_join(StringView const&, StringView const&);
+KResultOr<NonnullOwnPtr<KString>> try_join(StringView const&, StringView const&);
 
 }

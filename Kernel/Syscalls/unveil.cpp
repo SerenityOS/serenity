@@ -86,9 +86,7 @@ KResultOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params
         new_unveiled_path = TRY(custody_or_error.value()->try_serialize_absolute_path());
     } else if (custody_or_error.error() == ENOENT && parent_custody && (new_permissions & UnveilAccess::CreateOrRemove)) {
         auto parent_custody_path = TRY(parent_custody->try_serialize_absolute_path());
-        new_unveiled_path = KLexicalPath::try_join(parent_custody_path->view(), KLexicalPath::basename(path->view()));
-        if (!new_unveiled_path)
-            return ENOMEM;
+        new_unveiled_path = TRY(KLexicalPath::try_join(parent_custody_path->view(), KLexicalPath::basename(path->view())));
     } else {
         // FIXME Should this be EINVAL?
         return custody_or_error.error();

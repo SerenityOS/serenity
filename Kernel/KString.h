@@ -16,14 +16,14 @@ class KString {
     AK_MAKE_NONMOVABLE(KString);
 
 public:
-    [[nodiscard]] static OwnPtr<KString> try_create_uninitialized(size_t, char*&);
+    [[nodiscard]] static KResultOr<NonnullOwnPtr<KString>> try_create_uninitialized(size_t, char*&);
     [[nodiscard]] static NonnullOwnPtr<KString> must_create_uninitialized(size_t, char*&);
-    [[nodiscard]] static OwnPtr<KString> try_create(StringView const&);
-    [[nodiscard]] static NonnullOwnPtr<KString> must_create(StringView const&);
+    [[nodiscard]] static KResultOr<NonnullOwnPtr<KString>> try_create(StringView);
+    [[nodiscard]] static NonnullOwnPtr<KString> must_create(StringView);
 
     void operator delete(void*);
 
-    [[nodiscard]] OwnPtr<KString> try_clone() const;
+    [[nodiscard]] KResultOr<NonnullOwnPtr<KString>> try_clone() const;
 
     [[nodiscard]] bool is_empty() const { return m_length == 0; }
     [[nodiscard]] size_t length() const { return m_length; }

@@ -140,8 +140,12 @@ KResultOr<VirtualRange> AddressSpace::try_allocate_range(VirtualAddress vaddr, s
 
 KResultOr<Region*> AddressSpace::try_allocate_split_region(Region const& source_region, VirtualRange const& range, size_t offset_in_vmobject)
 {
+    OwnPtr<KString> region_name;
+    if (!source_region.name().is_null())
+        region_name = TRY(KString::try_create(source_region.name()));
+
     auto new_region = TRY(Region::try_create_user_accessible(
-        range, source_region.vmobject(), offset_in_vmobject, KString::try_create(source_region.name()), source_region.access(), source_region.is_cacheable() ? Region::Cacheable::Yes : Region::Cacheable::No, source_region.is_shared()));
+        range, source_region.vmobject(), offset_in_vmobject, move(region_name), source_region.access(), source_region.is_cacheable() ? Region::Cacheable::Yes : Region::Cacheable::No, source_region.is_shared()));
     auto* region = TRY(add_region(move(new_region)));
     region->set_syscall_region(source_region.is_syscall_region());
     region->set_mmap(source_region.is_mmap());
@@ -157,8 +161,11 @@ KResultOr<Region*> AddressSpace::try_allocate_split_region(Region const& source_
 KResultOr<Region*> AddressSpace::allocate_region(VirtualRange const& range, StringView name, int prot, AllocationStrategy strategy)
 {
     VERIFY(range.is_valid());
+    OwnPtr<KString> region_name;
+    if (!name.is_null())
+        region_name = TRY(KString::try_create(name));
     auto vmobject = TRY(AnonymousVMObject::try_create_with_size(range.size(), strategy));
-    auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), 0, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, false));
+    auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), 0, move(region_name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, false));
     TRY(region->map(page_directory()));
     return add_region(move(region));
 }
@@ -180,7 +187,10 @@ KResultOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange cons
         return EINVAL;
     }
     offset_in_vmobject &= PAGE_MASK;
-    auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), offset_in_vmobject, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, shared));
+    OwnPtr<KString> region_name;
+    if (!name.is_null())
+        region_name = TRY(KString::try_create(name));
+    auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), offset_in_vmobject, move(region_name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, shared));
     auto* added_region = TRY(add_region(move(region)));
     TRY(added_region->map(page_directory()));
     return added_region;

@@ -21,11 +21,10 @@ DevFS::DevFS()
 
 void DevFS::notify_new_device(Device& device)
 {
-    auto name = KString::try_create(device.device_name());
-    VERIFY(name);
-
+    // FIXME: Handle KString allocation failure.
+    auto name = KString::try_create(device.device_name()).release_value();
     MutexLocker locker(m_lock);
-    auto new_device_inode = adopt_ref(*new DevFSDeviceInode(*this, device, name.release_nonnull()));
+    auto new_device_inode = adopt_ref(*new DevFSDeviceInode(*this, device, move(name)));
     m_nodes.append(new_device_inode);
     m_root_inode->m_devices.append(new_device_inode);
 }
@@ -276,10 +275,8 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView
             if (link.name() == name)
                 return EEXIST;
         }
-        auto name_kstring = KString::try_create(name);
-        if (!name_kstring)
-            return ENOMEM;
-        auto new_link_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevFSLinkInode(fs(), name_kstring.release_nonnull())));
+        auto name_kstring = TRY(KString::try_create(name));
+        auto new_link_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevFSLinkInode(fs(), move(name_kstring))));
         if (!m_links.try_ensure_capacity(m_links.size() + 1))
             return ENOMEM;
         if (!fs().m_nodes.try_ensure_capacity(fs().m_nodes.size() + 1))

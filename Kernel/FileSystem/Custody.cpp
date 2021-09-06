@@ -33,15 +33,10 @@ KResultOr<NonnullRefPtr<Custody>> Custody::try_create(Custody* parent, StringVie
             }
         }
 
-        auto name_kstring = KString::try_create(name);
-        if (!name_kstring)
-            return ENOMEM;
-        auto custody = adopt_ref_if_nonnull(new (nothrow) Custody(parent, name_kstring.release_nonnull(), inode, mount_flags));
-        if (!custody)
-            return ENOMEM;
-
+        auto name_kstring = TRY(KString::try_create(name));
+        auto custody = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Custody(parent, move(name_kstring), inode, mount_flags)));
         all_custodies.prepend(*custody);
-        return custody.release_nonnull();
+        return custody;
     });
 }
 
@@ -73,12 +68,8 @@ Custody::~Custody()
 
 KResultOr<NonnullOwnPtr<KString>> Custody::try_serialize_absolute_path() const
 {
-    if (!parent()) {
-        auto string = KString::try_create("/"sv);
-        if (!string)
-            return ENOMEM;
-        return string.release_nonnull();
-    }
+    if (!parent())
+        return KString::try_create("/"sv);
 
     Vector<Custody const*, 32> custody_chain;
     size_t path_length = 0;
@@ -89,9 +80,7 @@ KResultOr<NonnullOwnPtr<KString>> Custody::try_serialize_absolute_path() const
     VERIFY(path_length > 0);
 
     char* buffer;
-    auto string = KString::try_create_uninitialized(path_length - 1, buffer);
-    if (!string)
-        return ENOMEM;
+    auto string = TRY(KString::try_create_uninitialized(path_length - 1, buffer));
     size_t string_index = 0;
     for (size_t custody_index = custody_chain.size() - 1; custody_index > 0; --custody_index) {
         buffer[string_index] = '/';
@@ -102,7 +91,7 @@ KResultOr<NonnullOwnPtr<KString>> Custody::try_serialize_absolute_path() const
     }
     VERIFY(string->length() == string_index);
     buffer[string_index] = 0;
-    return string.release_nonnull();
+    return string;
 }
 
 String Custody::absolute_path() const

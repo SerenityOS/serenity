@@ -60,8 +60,13 @@ KResultOr<NonnullOwnPtr<Region>> Region::try_clone()
             VERIFY(vmobject().is_shared_inode());
 
         // Create a new region backed by the same VMObject.
+
+        OwnPtr<KString> region_name;
+        if (m_name)
+            region_name = TRY(m_name->try_clone());
+
         auto region = TRY(Region::try_create_user_accessible(
-            m_range, m_vmobject, m_offset_in_vmobject, m_name ? m_name->try_clone() : OwnPtr<KString> {}, access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
+            m_range, m_vmobject, m_offset_in_vmobject, move(region_name), access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
         region->set_mmap(m_mmap);
         region->set_shared(m_shared);
         region->set_syscall_region(is_syscall_region());
@@ -75,8 +80,13 @@ KResultOr<NonnullOwnPtr<Region>> Region::try_clone()
 
     // Set up a COW region. The parent (this) region becomes COW as well!
     remap();
+
+    OwnPtr<KString> clone_region_name;
+    if (m_name)
+        clone_region_name = TRY(m_name->try_clone());
+
     auto clone_region = TRY(Region::try_create_user_accessible(
-        m_range, vmobject_clone, m_offset_in_vmobject, m_name ? m_name->try_clone() : OwnPtr<KString> {}, access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
+        m_range, vmobject_clone, m_offset_in_vmobject, move(clone_region_name), access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
 
     if (m_stack) {
         VERIFY(is_readable());

@@ -282,11 +282,8 @@ KResult TmpFSInode::add_child(Inode& child, StringView const& name, mode_t)
     if (name.length() > NAME_MAX)
         return ENAMETOOLONG;
 
-    auto name_kstring = KString::try_create(name);
-    if (!name_kstring)
-        return ENOMEM;
-
-    auto* child_entry = new (nothrow) Child { name_kstring.release_nonnull(), static_cast<TmpFSInode&>(child) };
+    auto name_kstring = TRY(KString::try_create(name));
+    auto* child_entry = new (nothrow) Child { move(name_kstring), static_cast<TmpFSInode&>(child) };
     if (!child_entry)
         return ENOMEM;
 

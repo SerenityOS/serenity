@@ -323,9 +323,7 @@ KResultOr<NonnullRefPtr<FileDescription>> VirtualFileSystem::create(StringView p
 {
     auto basename = KLexicalPath::basename(path);
     auto parent_path = TRY(parent_custody.try_serialize_absolute_path());
-    auto full_path = KLexicalPath::try_join(parent_path->view(), basename);
-    if (!full_path)
-        return ENOMEM;
+    auto full_path = TRY(KLexicalPath::try_join(parent_path->view(), basename));
     TRY(validate_path_against_process_veil(full_path->view(), options));
 
     if (!is_socket(mode) && !is_fifo(mode) && !is_block_device(mode) && !is_character_device(mode)) {

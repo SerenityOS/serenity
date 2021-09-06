@@ -26,20 +26,18 @@ Kernel::KResultOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Use
         return EFAULT;
     }
     char* buffer;
-    auto new_string = Kernel::KString::try_create_uninitialized(length, buffer);
-    if (!new_string)
-        return ENOMEM;
+    auto new_string = TRY(Kernel::KString::try_create_uninitialized(length, buffer));
 
     buffer[length] = '\0';
 
     if (length == 0)
-        return new_string.release_nonnull();
+        return new_string;
 
     if (!Kernel::safe_memcpy(buffer, user_str.unsafe_userspace_ptr(), (size_t)length, fault_at)) {
         dbgln("copy_kstring_from_user({:p}, {}) failed at {} (memcpy)", static_cast<const void*>(user_str.unsafe_userspace_ptr()), user_str_size, VirtualAddress { fault_at });
         return EFAULT;
     }
-    return new_string.release_nonnull();
+    return new_string;
 }
 
 [[nodiscard]] Optional<Time> copy_time_from_user(const timespec* ts_user)
