@@ -40,7 +40,7 @@ struct LoadResult {
     WeakPtr<Memory::Region> stack_region;
 };
 
-static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, String executable_path, int main_program_fd);
+static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, String executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation);
 
 static bool validate_stack_size(const Vector<String>& arguments, const Vector<String>& environment)
 {
@@ -461,6 +461,11 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     auto signal_trampoline_region = TRY(load_result.space->allocate_region_with_vmobject(signal_trampoline_range, g_signal_trampoline_region->vmobject(), 0, "Signal trampoline", PROT_READ | PROT_EXEC, true));
     signal_trampoline_region->set_syscall_region(true);
 
+    // (For dynamically linked executable) Allocate an FD for passing the main executable to the dynamic loader.
+    Optional<ScopedDescriptionAllocation> main_program_fd_allocation;
+    if (interpreter_description)
+        main_program_fd_allocation = TRY(m_fds.allocate());
+
     // We commit to the new executable at this point. There is no turning back!
 
     // Prevent other processes from attaching to us with ptrace while we're doing this.
@@ -521,15 +526,11 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
             file_description_metadata = {};
     });
 
-    int main_program_fd = -1;
-    if (interpreter_description) {
-        auto main_program_fd_wrapper = m_fds.allocate().release_value();
-        VERIFY(main_program_fd_wrapper.fd >= 0);
+    if (main_program_fd_allocation.has_value()) {
         auto seek_result = main_program_description->seek(0, SEEK_SET);
         VERIFY(!seek_result.is_error());
         main_program_description->set_readable(true);
-        m_fds[main_program_fd_wrapper.fd].set(move(main_program_description), FD_CLOEXEC);
-        main_program_fd = main_program_fd_wrapper.fd;
+        m_fds[main_program_fd_allocation->fd].set(move(main_program_description), FD_CLOEXEC);
     }
 
     new_main_thread = nullptr;
@@ -543,7 +544,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     }
     VERIFY(new_main_thread);
 
-    auto auxv = generate_auxiliary_vector(load_result.load_base, load_result.entry_eip, uid(), euid(), gid(), egid(), path, main_program_fd);
+    auto auxv = generate_auxiliary_vector(load_result.load_base, load_result.entry_eip, uid(), euid(), gid(), egid(), path, main_program_fd_allocation);
 
     // NOTE: We create the new stack before disabling interrupts since it will zero-fault
     //       and we don't want to deal with faults after this point.
@@ -627,7 +628,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     return KSuccess;
 }
 
-static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, String executable_path, int main_program_fd)
+static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, String executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation)
 {
     Vector<ELF::AuxiliaryValue> auxv;
     // PHDR/EXECFD
@@ -658,7 +659,8 @@ static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, 
 
     auxv.append({ ELF::AuxiliaryValue::ExecFilename, executable_path });
 
-    auxv.append({ ELF::AuxiliaryValue::ExecFileDescriptor, main_program_fd });
+    if (main_program_fd_allocation.has_value())
+        auxv.append({ ELF::AuxiliaryValue::ExecFileDescriptor, main_program_fd_allocation->fd });
 
     auxv.append({ ELF::AuxiliaryValue::Null, 0L });
     return auxv;
