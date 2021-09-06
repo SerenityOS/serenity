@@ -42,10 +42,7 @@ KResultOr<NonnullRefPtr<Inode>> Process::ProcessProcFSTraits::to_inode(const Pro
     if (!process)
         return ESRCH;
 
-    auto maybe_inode = ProcFSProcessDirectoryInode::try_create(procfs_instance, process->pid());
-    if (maybe_inode.is_error())
-        return maybe_inode.error();
-    return maybe_inode.release_value();
+    return TRY(ProcFSProcessDirectoryInode::try_create(procfs_instance, process->pid()));
 }
 
 KResult Process::ProcessProcFSTraits::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
