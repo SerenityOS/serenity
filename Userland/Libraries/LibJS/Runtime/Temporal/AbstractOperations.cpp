@@ -399,6 +399,46 @@ static HashMap<StringView, StringView> plural_to_singular_units = {
     { "nanoseconds"sv, "nanosecond"sv }
 };
 
+// 13.17 ToLargestTemporalUnit ( normalizedOptions, disallowedUnits, fallback [ , autoValue ] ), https://tc39.es/proposal-temporal/#sec-temporal-tolargesttemporalunit
+Optional<String> to_largest_temporal_unit(GlobalObject& global_object, Object& normalized_options, Vector<StringView> const& disallowed_units, String const& fallback, Optional<String> auto_value)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: disallowedUnits does not contain fallback.
+    // 2. Assert: disallowedUnits does not contain "auto".
+    // 3. Assert: autoValue is not present or fallback is "auto".
+    VERIFY(!auto_value.has_value() || fallback == "auto"sv);
+    // 4. Assert: autoValue is not present or disallowedUnits does not contain autoValue.
+
+    // 5. Let largestUnit be ? GetOption(normalizedOptions, "largestUnit", « String », « "auto", "year", "years", "month", "months", "week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second", "seconds", "millisecond", "milliseconds", "microsecond", "microseconds", "nanosecond", "nanoseconds" », fallback).
+    auto largest_unit_value = get_option(global_object, normalized_options, vm.names.largestUnit, { OptionType::String }, { "auto"sv, "year"sv, "years"sv, "month"sv, "months"sv, "week"sv, "weeks"sv, "day"sv, "days"sv, "hour"sv, "hours"sv, "minute"sv, "minutes"sv, "second"sv, "seconds"sv, "millisecond"sv, "milliseconds"sv, "microsecond"sv, "microseconds"sv, "nanosecond"sv, "nanoseconds"sv }, js_string(vm, fallback));
+    if (vm.exception())
+        return {};
+    auto largest_unit = largest_unit_value.as_string().string();
+
+    // 6. If largestUnit is "auto" and autoValue is present, then
+    if (largest_unit == "auto"sv && auto_value.has_value()) {
+        // a. Return autoValue.
+        return auto_value;
+    }
+
+    // 7. If largestUnit is in the Plural column of Table 12, then
+    if (auto singular_unit = plural_to_singular_units.get(largest_unit); singular_unit.has_value()) {
+        // a. Set largestUnit to the corresponding Singular value of the same row.
+        largest_unit = singular_unit.value();
+    }
+
+    // 8. If disallowedUnits contains largestUnit, then
+    if (disallowed_units.contains_slow(largest_unit)) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, largest_unit, vm.names.largestUnit.as_string());
+        return {};
+    }
+
+    // 9. Return largestUnit.
+    return largest_unit;
+}
+
 // 13.18 ToSmallestTemporalUnit ( normalizedOptions, disallowedUnits, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-tosmallesttemporalunit
 Optional<String> to_smallest_temporal_unit(GlobalObject& global_object, Object& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback)
 {
@@ -426,12 +466,135 @@ Optional<String> to_smallest_temporal_unit(GlobalObject& global_object, Object& 
     // 4. If disallowedUnits contains smallestUnit, then
     if (disallowed_units.contains_slow(smallest_unit)) {
         // a. Throw a RangeError exception.
-        vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, smallest_unit, "smallestUnit");
+        vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, smallest_unit, vm.names.smallestUnit.as_string());
         return {};
     }
 
     // 5. Return smallestUnit.
     return smallest_unit;
+}
+
+// 13.22 ValidateTemporalUnitRange ( largestUnit, smallestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-validatetemporalunitrange
+void validate_temporal_unit_range(GlobalObject& global_object, String const& largest_unit, String const& smallest_unit)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If smallestUnit is "year" and largestUnit is not "year", then
+    if (smallest_unit == "year"sv && largest_unit != "year"sv) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
+        return;
+    }
+    // 2. If smallestUnit is "month" and largestUnit is not "year" or "month", then
+    if (smallest_unit == "month"sv && !largest_unit.is_one_of("year"sv, "month"sv)) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
+        return;
+    }
+    // 3. If smallestUnit is "week" and largestUnit is not one of "year", "month", or "week", then
+    if (smallest_unit == "week"sv && !largest_unit.is_one_of("year"sv, "month"sv, "week"sv)) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
+        return;
+    }
+    // 4. If smallestUnit is "day" and largestUnit is not one of "year", "month", "week", or "day", then
+    if (smallest_unit == "day"sv && !largest_unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv)) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
+        return;
+    }
+    // 5. If smallestUnit is "hour" and largestUnit is not one of "year", "month", "week", "day", or "hour", then
+    if (smallest_unit == "hour"sv && !largest_unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv, "hour"sv)) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
+        return;
+    }
+    // 6. If smallestUnit is "minute" and largestUnit is "second", "millisecond", "microsecond", or "nanosecond", then
+    if (smallest_unit == "minute"sv && largest_unit.is_one_of("second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv)) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
+        return;
+    }
+    // 7. If smallestUnit is "second" and largestUnit is "millisecond", "microsecond", or "nanosecond", then
+    if (smallest_unit == "second"sv && largest_unit.is_one_of("millisecond"sv, "microsecond"sv, "nanosecond"sv)) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
+        return;
+    }
+    // 8. If smallestUnit is "millisecond" and largestUnit is "microsecond" or "nanosecond", then
+    if (smallest_unit == "millisecond"sv && largest_unit.is_one_of("microsecond"sv, "nanosecond"sv)) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
+        return;
+    }
+    // 9. If smallestUnit is "microsecond" and largestUnit is "nanosecond", then
+    if (smallest_unit == "microsecond"sv && largest_unit == "nanosecond"sv) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
+        return;
+    }
+}
+
+// 13.23 LargerOfTwoTemporalUnits ( u1, u2 ), https://tc39.es/proposal-temporal/#sec-temporal-largeroftwotemporalunits
+String larger_of_two_temporal_units(StringView unit1, StringView unit2)
+{
+    // 1. If either u1 or u2 is "year", return "year".
+    if (unit1 == "year"sv || unit2 == "year"sv)
+        return "year"sv;
+    // 2. If either u1 or u2 is "month", return "month".
+    if (unit1 == "month"sv || unit2 == "month"sv)
+        return "month"sv;
+    // 3. If either u1 or u2 is "week", return "week".
+    if (unit1 == "week"sv || unit2 == "week"sv)
+        return "week"sv;
+    // 4. If either u1 or u2 is "day", return "day".
+    if (unit1 == "day"sv || unit2 == "day"sv)
+        return "day"sv;
+    // 5. If either u1 or u2 is "hour", return "hour".
+    if (unit1 == "hour"sv || unit2 == "hour"sv)
+        return "hour"sv;
+    // 6. If either u1 or u2 is "minute", return "minute".
+    if (unit1 == "minute"sv || unit2 == "minute"sv)
+        return "minute"sv;
+    // 7. If either u1 or u2 is "second", return "second".
+    if (unit1 == "second"sv || unit2 == "second"sv)
+        return "second"sv;
+    // 8. If either u1 or u2 is "millisecond", return "millisecond".
+    if (unit1 == "millisecond"sv || unit2 == "millisecond"sv)
+        return "millisecond"sv;
+    // 9. If either u1 or u2 is "microsecond", return "microsecond".
+    if (unit1 == "microsecond"sv || unit2 == "microsecond"sv)
+        return "microsecond"sv;
+    // 10. Return "nanosecond".
+    return "nanosecond"sv;
+}
+
+// 13.25 MaximumTemporalDurationRoundingIncrement ( unit ), https://tc39.es/proposal-temporal/#sec-temporal-maximumtemporaldurationroundingincrement
+Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit)
+{
+    // 1. If unit is "year", "month", "week", or "day", then
+    if (unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv)) {
+        // a. Return undefined.
+        return {};
+    }
+
+    // 2. If unit is "hour", then
+    if (unit == "hour"sv) {
+        // a. Return 24.
+        return 24;
+    }
+
+    // 3. If unit is "minute" or "second", then
+    if (unit.is_one_of("minute"sv, "second"sv)) {
+        // a. Return 60.
+        return 60;
+    }
+
+    // 4. Assert: unit is one of "millisecond", "microsecond", or "nanosecond".
+    VERIFY(unit.is_one_of("millisecond"sv, "microsecond"sv, "nanosecond"sv));
+
+    // 5. Return 1000.
+    return 1000;
 }
 
 // 13.27 FormatSecondsStringPart ( second, millisecond, microsecond, nanosecond, precision ), https://tc39.es/proposal-temporal/#sec-temporal-formatsecondsstringpart
