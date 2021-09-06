@@ -259,7 +259,6 @@ pushd "$DIR/Build/clang/$ARCH"
             -DLLVM_ENABLE_PROJECTS="clang;lld" \
             -DLLVM_INCLUDE_BENCHMARKS=OFF \
             -DLLVM_INCLUDE_TESTS=OFF \
-            -DLLVM_LLVM_BUILD_LLVM_DYLIB=ON \
             -DLLVM_LINK_LLVM_DYLIB=ON \
             -DLLVM_INSTALL_UTILS=OFF \
             ${dev:+"-DLLVM_CCACHE_BUILD=ON"} || exit 1
