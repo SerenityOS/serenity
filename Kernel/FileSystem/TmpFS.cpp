@@ -149,9 +149,7 @@ KResultOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserO
     VERIFY(!is_directory());
     VERIFY(offset >= 0);
 
-    auto result = prepare_to_write_data();
-    if (result.is_error())
-        return result;
+    TRY(prepare_to_write_data());
 
     off_t old_size = m_metadata.size;
     off_t new_size = m_metadata.size;
