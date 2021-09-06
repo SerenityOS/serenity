@@ -184,7 +184,8 @@ protected:
     }
     virtual bool output(KBufferBuilder& builder) override
     {
-        builder.appendff("{}\n", value());
+        if (builder.appendff("{}\n", value()).is_error())
+            return false;
         return true;
     }
 };

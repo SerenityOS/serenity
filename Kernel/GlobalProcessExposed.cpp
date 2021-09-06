@@ -336,7 +336,8 @@ private:
     ProcFSSelfProcessDirectory();
     virtual bool acquire_link(KBufferBuilder& builder) override
     {
-        builder.appendff("{}", Process::current().pid().value());
+        if (builder.appendff("{}", Process::current().pid().value()).is_error())
+            return false;
         return true;
     }
 };
@@ -559,8 +560,10 @@ private:
     virtual bool output(KBufferBuilder& builder) override
     {
         InterruptDisabler disabler;
-        for (char ch : ConsoleDevice::the().logbuffer())
-            builder.append(ch);
+        for (char ch : ConsoleDevice::the().logbuffer()) {
+            if (builder.append(ch).is_error())
+                return false;
+        }
         return true;
     }
 };
@@ -664,7 +667,8 @@ private:
     ProcFSUptime();
     virtual bool output(KBufferBuilder& builder) override
     {
-        builder.appendff("{}\n", TimeManagement::the().uptime_ms() / 1000);
+        if (builder.appendff("{}\n", TimeManagement::the().uptime_ms() / 1000).is_error())
+            return false;
         return true;
     }
 };
@@ -676,8 +680,10 @@ private:
     ProcFSCommandLine();
     virtual bool output(KBufferBuilder& builder) override
     {
-        builder.append(kernel_command_line().string());
-        builder.append('\n');
+        if (builder.append(kernel_command_line().string()).is_error())
+            return false;
+        if (builder.append('\n').is_error())
+            return false;
         return true;
     }
 };
@@ -739,7 +745,8 @@ private:
     {
         if (!Process::current().is_superuser())
             return false;
-        builder.append(String::number(kernel_load_base));
+        if (builder.append(String::number(kernel_load_base)).is_error())
+            return false;
         return true;
     }
 };

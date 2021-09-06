@@ -45,68 +45,73 @@ KBufferBuilder::KBufferBuilder()
 {
 }
 
-void KBufferBuilder::append_bytes(ReadonlyBytes bytes)
+KResult KBufferBuilder::append_bytes(ReadonlyBytes bytes)
 {
     if (!check_expand(bytes.size()))
-        return;
+        return ENOMEM;
     memcpy(insertion_ptr(), bytes.data(), bytes.size());
     m_size += bytes.size();
+    return KSuccess;
 }
 
-void KBufferBuilder::append(const StringView& str)
+KResult KBufferBuilder::append(const StringView& str)
 {
     if (str.is_empty())
-        return;
+        return KSuccess;
     if (!check_expand(str.length()))
-        return;
+        return ENOMEM;
     memcpy(insertion_ptr(), str.characters_without_null_termination(), str.length());
     m_size += str.length();
+    return KSuccess;
 }
 
-void KBufferBuilder::append(const char* characters, int length)
+KResult KBufferBuilder::append(const char* characters, int length)
 {
     if (!length)
-        return;
+        return KSuccess;
     if (!check_expand(length))
-        return;
+        return ENOMEM;
     memcpy(insertion_ptr(), characters, length);
     m_size += length;
+    return KSuccess;
 }
 
-void KBufferBuilder::append(char ch)
+KResult KBufferBuilder::append(char ch)
 {
     if (!check_expand(1))
-        return;
+        return ENOMEM;
     insertion_ptr()[0] = ch;
     m_size += 1;
+    return KSuccess;
 }
 
-void KBufferBuilder::append_escaped_for_json(const StringView& string)
+KResult KBufferBuilder::append_escaped_for_json(const StringView& string)
 {
     for (auto ch : string) {
         switch (ch) {
         case '\e':
-            append("\\u001B");
+            TRY(append("\\u001B"));
             break;
         case '\b':
-            append("\\b");
+            TRY(append("\\b"));
             break;
         case '\n':
-            append("\\n");
+            TRY(append("\\n"));
             break;
         case '\t':
-            append("\\t");
+            TRY(append("\\t"));
             break;
         case '\"':
-            append("\\\"");
+            TRY(append("\\\""));
             break;
         case '\\':
-            append("\\\\");
+            TRY(append("\\\\"));
             break;
         default:
-            append(ch);
+            TRY(append(ch));
         }
     }
+    return KSuccess;
 }
 
 }

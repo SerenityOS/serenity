@@ -57,7 +57,7 @@ KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(FileDescription* descriptio
         VERIFY(nread <= sizeof(buffer));
         if (nread == 0)
             break;
-        builder.append((const char*)buffer, nread);
+        TRY(builder.append((const char*)buffer, nread));
         offset += nread;
         if (nread < sizeof(buffer))
             break;
