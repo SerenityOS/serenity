@@ -87,7 +87,7 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
     } else if (fs_type == "sys"sv || fs_type == "SysFS"sv) {
         fs = SysFS::create();
     } else if (fs_type == "tmp"sv || fs_type == "TmpFS"sv) {
-        fs = TmpFS::create();
+        fs = TRY(TmpFS::try_create());
     } else if (fs_type == "iso9660"sv || fs_type == "ISO9660FS"sv) {
         if (description_or_error.is_error())
             return EBADF;

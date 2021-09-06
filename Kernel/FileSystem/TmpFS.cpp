@@ -10,9 +10,9 @@
 
 namespace Kernel {
 
-RefPtr<TmpFS> TmpFS::create()
+KResultOr<NonnullRefPtr<TmpFS>> TmpFS::try_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) TmpFS);
+    return adopt_nonnull_ref_or_enomem(new (nothrow) TmpFS);
 }
 
 TmpFS::TmpFS()
@@ -25,9 +25,7 @@ TmpFS::~TmpFS()
 
 KResult TmpFS::initialize()
 {
-    m_root_inode = TmpFSInode::create_root(*this);
-    if (!m_root_inode)
-        return ENOMEM;
+    m_root_inode = TRY(TmpFSInode::try_create_root(*this));
     return KSuccess;
 }
 
@@ -84,15 +82,14 @@ TmpFSInode::~TmpFSInode()
 {
 }
 
-RefPtr<TmpFSInode> TmpFSInode::create(TmpFS& fs, const InodeMetadata& metadata, InodeIdentifier parent)
+KResultOr<NonnullRefPtr<TmpFSInode>> TmpFSInode::try_create(TmpFS& fs, InodeMetadata const& metadata, InodeIdentifier parent)
 {
-    auto inode = adopt_ref_if_nonnull(new (nothrow) TmpFSInode(fs, metadata, parent));
-    if (inode)
-        fs.register_inode(*inode);
+    auto inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) TmpFSInode(fs, metadata, parent)));
+    fs.register_inode(inode);
     return inode;
 }
 
-RefPtr<TmpFSInode> TmpFSInode::create_root(TmpFS& fs)
+KResultOr<NonnullRefPtr<TmpFSInode>> TmpFSInode::try_create_root(TmpFS& fs)
 {
     InodeMetadata metadata;
     auto now = kgettimeofday().to_truncated_seconds();
@@ -100,7 +97,7 @@ RefPtr<TmpFSInode> TmpFSInode::create_root(TmpFS& fs)
     metadata.ctime = now;
     metadata.mtime = now;
     metadata.mode = S_IFDIR | S_ISVTX | 0777;
-    return create(fs, metadata, { fs.fsid(), 1 });
+    return try_create(fs, metadata, { fs.fsid(), 1 });
 }
 
 InodeMetadata TmpFSInode::metadata() const
@@ -272,13 +269,9 @@ KResultOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t
     metadata.ctime = now;
     metadata.mtime = now;
 
-    auto child = TmpFSInode::create(fs(), metadata, identifier());
-    if (!child)
-        return ENOMEM;
-    auto result = add_child(*child, name, mode);
-    if (result.is_error())
-        return result;
-    return child.release_nonnull();
+    auto child = TRY(TmpFSInode::try_create(fs(), metadata, identifier()));
+    TRY(add_child(*child, name, mode));
+    return child;
 }
 
 KResult TmpFSInode::add_child(Inode& child, StringView const& name, mode_t)

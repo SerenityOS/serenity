@@ -19,7 +19,7 @@ class TmpFS final : public FileSystem {
 
 public:
     virtual ~TmpFS() override;
-    static RefPtr<TmpFS> create();
+    static KResultOr<NonnullRefPtr<TmpFS>> try_create();
     virtual KResult initialize() override;
 
     virtual StringView class_name() const override { return "TmpFS"sv; }
@@ -71,8 +71,8 @@ public:
 
 private:
     TmpFSInode(TmpFS& fs, const InodeMetadata& metadata, InodeIdentifier parent);
-    static RefPtr<TmpFSInode> create(TmpFS&, const InodeMetadata& metadata, InodeIdentifier parent);
-    static RefPtr<TmpFSInode> create_root(TmpFS&);
+    static KResultOr<NonnullRefPtr<TmpFSInode>> try_create(TmpFS&, InodeMetadata const& metadata, InodeIdentifier parent);
+    static KResultOr<NonnullRefPtr<TmpFSInode>> try_create_root(TmpFS&);
     void notify_watchers();
 
     struct Child {
