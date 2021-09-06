@@ -3,6 +3,7 @@ set(SOURCES
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     set(SOURCES
         ${SOURCES}
+        Arch/aarch64/init.cpp
         Arch/aarch64/boot.S
     )
 else()
