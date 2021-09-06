@@ -170,7 +170,7 @@ public:
     void set_executable(bool b) { set_access_bit(Access::Execute, b); }
 
     void set_page_directory(PageDirectory&);
-    [[nodiscard]] bool map(PageDirectory&, ShouldFlushTLB = ShouldFlushTLB::Yes);
+    KResult map(PageDirectory&, ShouldFlushTLB = ShouldFlushTLB::Yes);
     enum class ShouldDeallocateVirtualRange {
         No,
         Yes,

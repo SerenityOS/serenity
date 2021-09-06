@@ -338,11 +338,9 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
 
         // Map the new regions using our page directory (they were just allocated and don't have one).
         for (auto* adjacent_region : adjacent_regions) {
-            if (!adjacent_region->map(address_space().page_directory()))
-                return ENOMEM;
+            TRY(adjacent_region->map(address_space().page_directory()));
         }
-        if (!new_region->map(address_space().page_directory()))
-            return ENOMEM;
+        TRY(new_region->map(address_space().page_directory()));
         return 0;
     }
 
@@ -401,11 +399,9 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
 
             // Map the new region using our page directory (they were just allocated and don't have one) if any.
             if (adjacent_regions.size())
-                if (!adjacent_regions[0]->map(address_space().page_directory()))
-                    return ENOMEM;
+                TRY(adjacent_regions[0]->map(address_space().page_directory()));
 
-            if (!new_region->map(address_space().page_directory()))
-                return ENOMEM;
+            TRY(new_region->map(address_space().page_directory()));
         }
 
         return 0;

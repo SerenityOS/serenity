@@ -95,8 +95,7 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
             dbgln_if(FORK_DEBUG, "fork: cloning Region({}) '{}' @ {}", region, region->name(), region->vaddr());
             auto region_clone = TRY(region->try_clone());
             auto* child_region = TRY(child->address_space().add_region(move(region_clone)));
-            if (!child_region->map(child->address_space().page_directory(), Memory::ShouldFlushTLB::No))
-                return ENOMEM;
+            TRY(child_region->map(child->address_space().page_directory(), Memory::ShouldFlushTLB::No));
 
             if (region == m_master_tls_region.unsafe_ptr())
                 child->m_master_tls_region = child_region;
