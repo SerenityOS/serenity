@@ -23,14 +23,11 @@ KResultOr<FlatPtr> Process::sys$getrandom(Userspace<void*> buffer, size_t buffer
     auto data_buffer = UserOrKernelBuffer::for_user_buffer(buffer, buffer_size);
     if (!data_buffer.has_value())
         return EFAULT;
-    auto result = data_buffer.value().write_buffered<1024>(buffer_size, [&](Bytes bytes) {
+
+    return TRY(data_buffer.value().write_buffered<1024>(buffer_size, [&](Bytes bytes) {
         get_good_random_bytes(bytes);
         return bytes.size();
-    });
-    if (result.is_error())
-        return result.error();
-    else
-        return result.release_value();
+    }));
 }
 
 }
