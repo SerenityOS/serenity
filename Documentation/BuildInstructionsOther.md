@@ -47,6 +47,7 @@ stdenv.mkDerivation {
     patch
     ccache
     rsync
+    unzip
 
     # Example Build-time Additional Dependencies
     pkgconfig
@@ -55,6 +56,7 @@ stdenv.mkDerivation {
     # Example Run-time Additional Dependencies
     openssl
     x11
+    qemu
     # glibc
   ];
   hardeningDisable = [ "format" "fortify" ];
