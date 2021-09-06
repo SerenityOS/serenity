@@ -77,7 +77,7 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
         if (description_or_error.is_error())
             return EBADF;
         auto description = description_or_error.release_value();
-        fs = Plan9FS::create(*description);
+        fs = TRY(Plan9FS::try_create(*description));
     } else if (fs_type == "proc"sv || fs_type == "ProcFS"sv) {
         fs = TRY(ProcFS::try_create());
     } else if (fs_type == "devpts"sv || fs_type == "DevPtsFS"sv) {
