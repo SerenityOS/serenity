@@ -24,6 +24,7 @@ public:
     static bool test_and_initialize();
     static bool check_for_exisiting_periodic_timers();
     static HPET& the();
+    static PhysicalAddress find_acpi_hpet_registers_block(PhysicalAddress hpet_table);
 
     u64 frequency() const { return m_frequency; }
     u64 raw_counter_ticks_to_ns(u64) const;
@@ -60,12 +61,10 @@ private:
     void set_comparators_to_optimal_interrupt_state(size_t timers_count);
 
     u64 nanoseconds_to_raw_ticks() const;
-
-    PhysicalAddress find_acpi_hpet_registers_block();
-    explicit HPET(PhysicalAddress acpi_hpet);
+    HPET(NonnullOwnPtr<Memory::Region>&&, PhysicalAddress acpi_hpet, PhysicalAddress hpet_registers_block);
     PhysicalAddress m_physical_acpi_hpet_table;
-    PhysicalAddress m_physical_acpi_hpet_registers;
-    OwnPtr<Memory::Region> m_hpet_mmio_region;
+    PhysicalAddress m_physical_hpet_registers;
+    NonnullOwnPtr<Memory::Region> m_hpet_mmio_region;
 
     u64 m_main_counter_last_read { 0 };
     u64 m_main_counter_drift { 0 };

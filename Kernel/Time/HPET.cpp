@@ -124,10 +124,10 @@ UNMAP_AFTER_INIT bool HPET::test_and_initialize()
         return false;
     dmesgln("HPET @ {}", hpet_table.value());
 
-    auto sdt = Memory::map_typed<ACPI::Structures::HPET>(hpet_table.value());
-
-    // Note: HPET is only usable from System Memory
-    VERIFY(sdt->event_timer_block.address_space == (u8)ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
+    auto hpet_registers_block = find_acpi_hpet_registers_block(hpet_table.value());
+    auto hpet_registers_region = MM.allocate_kernel_region(hpet_registers_block.page_base(), PAGE_SIZE, "HPET MMIO", Memory::Region::Access::ReadWrite);
+    if (hpet_registers_region.is_error())
+        return false;
 
     if (TimeManagement::is_hpet_periodic_mode_allowed()) {
         if (!check_for_exisiting_periodic_timers()) {
@@ -135,7 +135,8 @@ UNMAP_AFTER_INIT bool HPET::test_and_initialize()
             return false;
         }
     }
-    new HPET(PhysicalAddress(hpet));
+
+    new HPET(hpet_registers_region.release_value(), hpet_table.value(), hpet_registers_block);
     return true;
 }
 
@@ -382,21 +383,22 @@ void HPET::set_comparators_to_optimal_interrupt_state(size_t)
     VERIFY_NOT_REACHED();
 }
 
-PhysicalAddress HPET::find_acpi_hpet_registers_block()
+PhysicalAddress HPET::find_acpi_hpet_registers_block(PhysicalAddress acpi_hpet_table)
 {
-    auto sdt = Memory::map_typed<const volatile ACPI::Structures::HPET>(m_physical_acpi_hpet_table);
+    VERIFY(!acpi_hpet_table.is_null());
+    auto sdt = Memory::map_typed<const volatile ACPI::Structures::HPET>(acpi_hpet_table);
     VERIFY(sdt->event_timer_block.address_space == (u8)ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
     return PhysicalAddress(sdt->event_timer_block.address);
 }
 
 const HPETRegistersBlock& HPET::registers() const
 {
-    return *(const HPETRegistersBlock*)m_hpet_mmio_region->vaddr().offset(m_physical_acpi_hpet_registers.offset_in_page()).as_ptr();
+    return *(const HPETRegistersBlock*)m_hpet_mmio_region->vaddr().offset(m_physical_hpet_registers.offset_in_page()).as_ptr();
 }
 
 HPETRegistersBlock& HPET::registers()
 {
-    return *(HPETRegistersBlock*)m_hpet_mmio_region->vaddr().offset(m_physical_acpi_hpet_registers.offset_in_page()).as_ptr();
+    return *(HPETRegistersBlock*)m_hpet_mmio_region->vaddr().offset(m_physical_hpet_registers.offset_in_page()).as_ptr();
 }
 
 u64 HPET::raw_counter_ticks_to_ns(u64 raw_ticks) const
@@ -410,10 +412,10 @@ u64 HPET::ns_to_raw_counter_ticks(u64 ns) const
     return (ns * 1000000ull) / (u64)registers().capabilities.main_counter_tick_period;
 }
 
-UNMAP_AFTER_INIT HPET::HPET(PhysicalAddress acpi_hpet)
+UNMAP_AFTER_INIT HPET::HPET(NonnullOwnPtr<Memory::Region>&& hpet_mmio_region, PhysicalAddress acpi_hpet, PhysicalAddress hpet_registers)
     : m_physical_acpi_hpet_table(acpi_hpet)
-    , m_physical_acpi_hpet_registers(find_acpi_hpet_registers_block())
-    , m_hpet_mmio_region(MM.allocate_kernel_region(m_physical_acpi_hpet_registers.page_base(), PAGE_SIZE, "HPET MMIO", Memory::Region::Access::ReadWrite).release_value())
+    , m_physical_hpet_registers(hpet_registers)
+    , m_hpet_mmio_region(move(hpet_mmio_region))
 {
     s_hpet = this; // Make available as soon as possible so that IRQs can use it
 
