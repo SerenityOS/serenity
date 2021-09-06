@@ -773,4 +773,26 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
     return image_editor;
 }
 
+void MainWidget::drop_event(GUI::DropEvent& event)
+{
+    if (!event.mime_data().has_urls())
+        return;
+
+    event.accept();
+
+    if (event.mime_data().urls().is_empty())
+        return;
+
+    for (auto& url : event.mime_data().urls()) {
+        if (url.protocol() != "file")
+            continue;
+
+        auto result = FileSystemAccessClient::Client::the().request_file(window()->window_id(), url.path(), Core::OpenMode::ReadOnly);
+        if (result.error != 0)
+            continue;
+
+        open_image_fd(*result.fd, *result.chosen_file);
+    }
+}
+
 }

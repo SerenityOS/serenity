@@ -43,6 +43,8 @@ private:
     ImageEditor* current_image_editor();
     ImageEditor& create_new_editor(NonnullRefPtr<Image>);
 
+    virtual void drop_event(GUI::DropEvent&) override;
+
     ProjectLoader m_loader;
 
     RefPtr<ToolboxWidget> m_toolbox;
