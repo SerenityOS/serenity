@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -111,12 +112,13 @@ void GlyphMapWidget::mousedown_event(GUI::MouseEvent& event)
 {
     GUI::Frame::mousedown_event(event);
 
-    // FIXME: This is a silly loop.
-    for (int glyph = 0; glyph < m_glyph_count; ++glyph) {
-        if (get_outer_rect(glyph).contains(event.position())) {
-            set_selected_glyph(glyph);
-            break;
-        }
+    Gfx::IntPoint map_offset { frame_thickness() - horizontal_scrollbar().value(), frame_thickness() - vertical_scrollbar().value() };
+    auto map_position = event.position() - map_offset;
+    auto col = (map_position.x() - 1) / ((font().max_glyph_width() + m_horizontal_spacing));
+    auto row = (map_position.y() - 1) / ((font().glyph_height() + m_vertical_spacing));
+    auto glyph = row * columns() + col;
+    if (row >= 0 && row < rows() && col >= 0 && col < columns() && glyph < m_glyph_count) {
+        set_selected_glyph(glyph);
     }
 }
 
