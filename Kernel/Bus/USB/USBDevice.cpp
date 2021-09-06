@@ -19,14 +19,9 @@ namespace Kernel::USB {
 KResultOr<NonnullRefPtr<Device>> Device::try_create(USBController const& controller, u8 port, DeviceSpeed speed)
 {
     auto pipe = TRY(Pipe::try_create_pipe(controller, Pipe::Type::Control, Pipe::Direction::Bidirectional, 0, 8, 0));
-
-    auto device = try_make_ref_counted<Device>(controller, port, speed, move(pipe));
-    if (!device)
-        return ENOMEM;
-
+    auto device = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Device(controller, port, speed, move(pipe))));
     TRY(device->enumerate_device());
-
-    return device.release_nonnull();
+    return device;
 }
 
 Device::Device(USBController const& controller, u8 port, DeviceSpeed speed, NonnullOwnPtr<Pipe> default_pipe)
