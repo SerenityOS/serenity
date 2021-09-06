@@ -253,28 +253,22 @@ KResultOr<Memory::Region*> FrameBufferDevice::mmap(Process& process, FileDescrip
 
     RefPtr<Memory::VMObject> vmobject;
     if (m_are_writes_active) {
-        auto maybe_vmobject = m_framebuffer->vmobject().try_clone();
-        if (maybe_vmobject.is_error())
-            return maybe_vmobject.error();
-
-        vmobject = maybe_vmobject.release_value();
+        vmobject = TRY(m_framebuffer->vmobject().try_clone());
     } else {
         vmobject = m_framebuffer_sink_vmobject;
         if (vmobject.is_null())
             return ENOMEM;
     }
 
-    auto result = process.address_space().allocate_region_with_vmobject(
+    m_userspace_mmap_region = TRY(process.address_space().allocate_region_with_vmobject(
         range,
         vmobject.release_nonnull(),
         0,
         "VirtIOGPU Framebuffer",
         prot,
-        shared);
-    if (result.is_error())
-        return result;
-    m_userspace_mmap_region = result.value();
-    return result;
+        shared));
+
+    return m_userspace_mmap_region.unsafe_ptr();
 }
 
 void FrameBufferDevice::deactivate_writes()
