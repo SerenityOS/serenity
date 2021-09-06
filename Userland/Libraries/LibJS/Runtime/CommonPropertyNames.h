@@ -443,6 +443,7 @@ namespace JS {
     P(undefined)                             \
     P(unescape)                              \
     P(unicode)                               \
+    P(until)                                 \
     P(unregister)                            \
     P(unshift)                               \
     P(value)                                 \
