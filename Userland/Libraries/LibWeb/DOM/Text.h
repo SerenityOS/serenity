@@ -19,6 +19,8 @@ public:
     explicit Text(Document&, const String&);
     virtual ~Text() override;
 
+    static NonnullRefPtr<Text> create_with_global_object(Bindings::WindowObject& window, String const& data);
+
     // ^Node
     virtual FlyString node_name() const override { return "#text"; }
     virtual bool is_editable() const override { return m_always_editable || CharacterData::is_editable(); }
