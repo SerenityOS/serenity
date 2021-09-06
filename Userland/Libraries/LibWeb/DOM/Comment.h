@@ -19,6 +19,8 @@ public:
     virtual ~Comment() override;
 
     virtual FlyString node_name() const override { return "#comment"; }
+
+    static NonnullRefPtr<Comment> create_with_global_object(Bindings::WindowObject& window, String const& data);
 };
 
 }
