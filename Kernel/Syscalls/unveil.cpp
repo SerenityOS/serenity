@@ -83,13 +83,9 @@ KResultOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params
     OwnPtr<KString> new_unveiled_path;
     auto custody_or_error = VirtualFileSystem::the().resolve_path_without_veil(path->view(), VirtualFileSystem::the().root_custody(), &parent_custody);
     if (!custody_or_error.is_error()) {
-        new_unveiled_path = custody_or_error.value()->try_create_absolute_path();
-        if (!new_unveiled_path)
-            return ENOMEM;
+        new_unveiled_path = TRY(custody_or_error.value()->try_serialize_absolute_path());
     } else if (custody_or_error.error() == ENOENT && parent_custody && (new_permissions & UnveilAccess::CreateOrRemove)) {
-        auto parent_custody_path = parent_custody->try_create_absolute_path();
-        if (!parent_custody_path)
-            return ENOMEM;
+        auto parent_custody_path = TRY(parent_custody->try_serialize_absolute_path());
         new_unveiled_path = KLexicalPath::try_join(parent_custody_path->view(), KLexicalPath::basename(path->view()));
         if (!new_unveiled_path)
             return ENOMEM;

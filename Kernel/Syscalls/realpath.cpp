@@ -19,10 +19,7 @@ KResultOr<FlatPtr> Process::sys$realpath(Userspace<const Syscall::SC_realpath_pa
 
     auto path = TRY(get_syscall_path_argument(params.path));
     auto custody = TRY(VirtualFileSystem::the().resolve_path(path->view(), current_directory()));
-
-    auto absolute_path = custody->try_create_absolute_path();
-    if (!absolute_path)
-        return ENOMEM;
+    auto absolute_path = TRY(custody->try_serialize_absolute_path());
 
     size_t ideal_size = absolute_path->length() + 1;
     auto size_to_copy = min(ideal_size, params.buffer.size);
