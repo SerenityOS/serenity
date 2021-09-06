@@ -54,9 +54,8 @@ KResult VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int flags
 {
     return m_mounts.with_exclusive([&](auto& mounts) -> KResult {
         auto& inode = mount_point.inode();
-        dbgln("VirtualFileSystem: Mounting {} at {} (inode: {}) with flags {}",
+        dbgln("VirtualFileSystem: Mounting {} at inode {} with flags {}",
             fs.class_name(),
-            mount_point.try_create_absolute_path(),
             inode.identifier(),
             flags);
         // FIXME: check that this is not already a mount point
@@ -69,7 +68,7 @@ KResult VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int flags
 KResult VirtualFileSystem::bind_mount(Custody& source, Custody& mount_point, int flags)
 {
     return m_mounts.with_exclusive([&](auto& mounts) -> KResult {
-        dbgln("VirtualFileSystem: Bind-mounting {} at {}", source.try_create_absolute_path(), mount_point.try_create_absolute_path());
+        dbgln("VirtualFileSystem: Bind-mounting inode {} at inode {}", source.inode().identifier(), mount_point.inode().identifier());
         // FIXME: check that this is not already a mount point
         Mount mount { source.inode(), mount_point, flags };
         mounts.append(move(mount));
@@ -79,7 +78,7 @@ KResult VirtualFileSystem::bind_mount(Custody& source, Custody& mount_point, int
 
 KResult VirtualFileSystem::remount(Custody& mount_point, int new_flags)
 {
-    dbgln("VirtualFileSystem: Remounting {}", mount_point.try_create_absolute_path());
+    dbgln("VirtualFileSystem: Remounting inode {}", mount_point.inode().identifier());
 
     auto* mount = find_mount_for_guest(mount_point.inode().identifier());
     if (!mount)
@@ -323,9 +322,7 @@ KResult VirtualFileSystem::mknod(StringView path, mode_t mode, dev_t dev, Custod
 KResultOr<NonnullRefPtr<FileDescription>> VirtualFileSystem::create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
 {
     auto basename = KLexicalPath::basename(path);
-    auto parent_path = parent_custody.try_create_absolute_path();
-    if (!parent_path)
-        return ENOMEM;
+    auto parent_path = TRY(parent_custody.try_serialize_absolute_path());
     auto full_path = KLexicalPath::try_join(parent_path->view(), basename);
     if (!full_path)
         return ENOMEM;
@@ -764,9 +761,7 @@ KResult VirtualFileSystem::validate_path_against_process_veil(Custody const& cus
 {
     if (Process::current().veil_state() == VeilState::None)
         return KSuccess;
-    auto absolute_path = custody.try_create_absolute_path();
-    if (!absolute_path)
-        return ENOMEM;
+    auto absolute_path = TRY(custody.try_serialize_absolute_path());
     return validate_path_against_process_veil(absolute_path->view(), options);
 }
 

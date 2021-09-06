@@ -71,10 +71,14 @@ Custody::~Custody()
 {
 }
 
-OwnPtr<KString> Custody::try_create_absolute_path() const
+KResultOr<NonnullOwnPtr<KString>> Custody::try_serialize_absolute_path() const
 {
-    if (!parent())
-        return KString::try_create("/"sv);
+    if (!parent()) {
+        auto string = KString::try_create("/"sv);
+        if (!string)
+            return ENOMEM;
+        return string.release_nonnull();
+    }
 
     Vector<Custody const*, 32> custody_chain;
     size_t path_length = 0;
@@ -87,7 +91,7 @@ OwnPtr<KString> Custody::try_create_absolute_path() const
     char* buffer;
     auto string = KString::try_create_uninitialized(path_length - 1, buffer);
     if (!string)
-        return string;
+        return ENOMEM;
     size_t string_index = 0;
     for (size_t custody_index = custody_chain.size() - 1; custody_index > 0; --custody_index) {
         buffer[string_index] = '/';
@@ -98,7 +102,7 @@ OwnPtr<KString> Custody::try_create_absolute_path() const
     }
     VERIFY(string->length() == string_index);
     buffer[string_index] = 0;
-    return string;
+    return string.release_nonnull();
 }
 
 String Custody::absolute_path() const
