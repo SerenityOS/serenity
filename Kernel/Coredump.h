@@ -24,16 +24,16 @@ private:
     Coredump(NonnullRefPtr<Process>, NonnullRefPtr<FileDescription>);
     static KResultOr<NonnullRefPtr<FileDescription>> try_create_target_file(Process const&, StringView output_path);
 
-    [[nodiscard]] KResult write_elf_header();
-    [[nodiscard]] KResult write_program_headers(size_t notes_size);
-    [[nodiscard]] KResult write_regions();
-    [[nodiscard]] KResult write_notes_segment(ByteBuffer&);
+    KResult write_elf_header();
+    KResult write_program_headers(size_t notes_size);
+    KResult write_regions();
+    KResult write_notes_segment(ReadonlyBytes);
 
-    KResultOr<ByteBuffer> create_notes_segment_data() const;
-    KResultOr<ByteBuffer> create_notes_process_data() const;
-    KResultOr<ByteBuffer> create_notes_threads_data() const;
-    KResultOr<ByteBuffer> create_notes_regions_data() const;
-    KResultOr<ByteBuffer> create_notes_metadata_data() const;
+    KResult create_notes_segment_data(auto&) const;
+    KResult create_notes_process_data(auto&) const;
+    KResult create_notes_threads_data(auto&) const;
+    KResult create_notes_regions_data(auto&) const;
+    KResult create_notes_metadata_data(auto&) const;
 
     NonnullRefPtr<Process> m_process;
     NonnullRefPtr<FileDescription> m_description;

@@ -173,23 +173,18 @@ KResult Coredump::write_regions()
     return KSuccess;
 }
 
-KResult Coredump::write_notes_segment(ByteBuffer& notes_segment)
+KResult Coredump::write_notes_segment(ReadonlyBytes notes_segment)
 {
-    TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(notes_segment.data()), notes_segment.size()));
+    TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(notes_segment.data())), notes_segment.size()));
     return KSuccess;
 }
 
-KResultOr<ByteBuffer> Coredump::create_notes_process_data() const
+KResult Coredump::create_notes_process_data(auto& builder) const
 {
-    ByteBuffer process_data;
-
     ELF::Core::ProcessInfo info {};
     info.header.type = ELF::Core::NotesEntryHeader::Type::ProcessInfo;
-    auto ok = process_data.try_append((void*)&info, sizeof(info));
-    if (!ok)
-        return ENOMEM;
+    TRY(builder.append_bytes(ReadonlyBytes { (void*)&info, sizeof(info) }));
 
-    StringBuilder builder;
     {
         JsonObjectSerializer process_obj { builder };
         process_obj.add("pid"sv, m_process->pid().value());
@@ -209,18 +204,12 @@ KResultOr<ByteBuffer> Coredump::create_notes_process_data() const
         }
     }
 
-    builder.append(0);
-    ok = process_data.try_append(builder.string_view().characters_without_null_termination(), builder.length());
-    if (!ok)
-        return ENOMEM;
-
-    return process_data;
+    TRY(builder.append('\0'));
+    return KSuccess;
 }
 
-KResultOr<ByteBuffer> Coredump::create_notes_threads_data() const
+KResult Coredump::create_notes_threads_data(auto& builder) const
 {
-    ByteBuffer threads_data;
-
     for (auto& thread : m_process->threads_for_coredump({})) {
         ELF::Core::ThreadInfo info {};
         info.header.type = ELF::Core::NotesEntryHeader::Type::ThreadInfo;
@@ -229,15 +218,13 @@ KResultOr<ByteBuffer> Coredump::create_notes_threads_data() const
         if (thread.current_trap())
             copy_kernel_registers_into_ptrace_registers(info.regs, thread.get_register_dump_from_stack());
 
-        if (!threads_data.try_append(&info, sizeof(info)))
-            return ENOMEM;
+        TRY(builder.append_bytes(ReadonlyBytes { &info, sizeof(info) }));
     }
-    return threads_data;
+    return KSuccess;
 }
 
-KResultOr<ByteBuffer> Coredump::create_notes_regions_data() const
+KResult Coredump::create_notes_regions_data(auto& builder) const
 {
-    ByteBuffer regions_data;
     size_t region_index = 0;
     for (auto& region : m_process->address_space().regions()) {
         ELF::Core::MemoryRegionInfo info {};
@@ -247,78 +234,46 @@ KResultOr<ByteBuffer> Coredump::create_notes_regions_data() const
         info.region_end = region->vaddr().offset(region->size()).get();
         info.program_header_index = region_index++;
 
-        if (!regions_data.try_ensure_capacity(regions_data.size() + sizeof(info) + region->name().length() + 1))
-            return ENOMEM;
+        TRY(builder.append_bytes(ReadonlyBytes { (void*)&info, sizeof(info) }));
 
-        auto ok = regions_data.try_append((void*)&info, sizeof(info));
         // NOTE: The region name *is* null-terminated, so the following is ok:
         auto name = region->name();
-        if (name.is_empty()) {
-            char null_terminator = '\0';
-            ok = ok && regions_data.try_append(&null_terminator, 1);
-        } else {
-            ok = ok && regions_data.try_append(name.characters_without_null_termination(), name.length() + 1);
-        }
-        VERIFY(ok);
+        if (name.is_empty())
+            TRY(builder.append('\0'));
+        else
+            TRY(builder.append(name.characters_without_null_termination(), name.length() + 1));
     }
-    return regions_data;
+    return KSuccess;
 }
 
-KResultOr<ByteBuffer> Coredump::create_notes_metadata_data() const
+KResult Coredump::create_notes_metadata_data(auto& builder) const
 {
-    ByteBuffer metadata_data;
-
     ELF::Core::Metadata metadata {};
     metadata.header.type = ELF::Core::NotesEntryHeader::Type::Metadata;
-    auto ok = metadata_data.try_append((void*)&metadata, sizeof(metadata));
-    if (!ok)
-        return ENOMEM;
+    TRY(builder.append_bytes(ReadonlyBytes { (void*)&metadata, sizeof(metadata) }));
 
-    StringBuilder builder;
     {
         JsonObjectSerializer metadata_obj { builder };
         m_process->for_each_coredump_property([&](auto& key, auto& value) {
             metadata_obj.add(key.view(), value.view());
         });
     }
-    builder.append(0);
-    ok = metadata_data.try_append(builder.string_view().characters_without_null_termination(), builder.length());
-    if (!ok)
-        return ENOMEM;
-
-    return metadata_data;
+    TRY(builder.append('\0'));
+    return KSuccess;
 }
 
-KResultOr<ByteBuffer> Coredump::create_notes_segment_data() const
+KResult Coredump::create_notes_segment_data(auto& builder) const
 {
-    ByteBuffer notes_buffer;
-
-    if (auto result = create_notes_process_data(); result.is_error())
-        return result;
-    else if (!notes_buffer.try_append(result.value()))
-        return ENOMEM;
-
-    if (auto result = create_notes_threads_data(); result.is_error())
-        return result;
-    else if (!notes_buffer.try_append(result.value()))
-        return ENOMEM;
-
-    if (auto result = create_notes_regions_data(); result.is_error())
-        return result;
-    else if (!notes_buffer.try_append(result.value()))
-        return ENOMEM;
-
-    if (auto result = create_notes_metadata_data(); result.is_error())
-        return result;
-    else if (!notes_buffer.try_append(result.value()))
-        return ENOMEM;
+    TRY(create_notes_process_data(builder));
+    TRY(create_notes_threads_data(builder));
+    TRY(create_notes_regions_data(builder));
+    TRY(create_notes_metadata_data(builder));
 
     ELF::Core::NotesEntryHeader null_entry {};
     null_entry.type = ELF::Core::NotesEntryHeader::Type::Null;
-    if (!notes_buffer.try_append(&null_entry, sizeof(null_entry)))
-        return ENOMEM;
+    TRY(builder.append(ReadonlyBytes { &null_entry, sizeof(null_entry) }));
 
-    return notes_buffer;
+    return KSuccess;
 }
 
 KResult Coredump::write()
@@ -326,11 +281,12 @@ KResult Coredump::write()
     SpinlockLocker lock(m_process->address_space().get_lock());
     ScopedAddressSpaceSwitcher switcher(m_process);
 
-    auto notes_segment = TRY(create_notes_segment_data());
+    KBufferBuilder builder;
+    TRY(create_notes_segment_data(builder));
     TRY(write_elf_header());
-    TRY(write_program_headers(notes_segment.size()));
+    TRY(write_program_headers(builder.bytes().size()));
     TRY(write_regions());
-    TRY(write_notes_segment(notes_segment));
+    TRY(write_notes_segment(builder.bytes()));
 
     return m_description->chmod(0600); // Make coredump file read/writable
 }
