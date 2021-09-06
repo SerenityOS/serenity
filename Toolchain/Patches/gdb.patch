@@ -1,0 +1,40 @@
+diff -ur gdb-10.2-orig/bfd/config.bfd gdb-10.2/bfd/config.bfd
+--- gdb-10.2-orig/bfd/config.bfd	2021-04-25 07:06:26.000000000 +0300
++++ gdb-10.2/bfd/config.bfd	2021-09-07 01:14:58.781960654 +0300
+@@ -224,7 +224,25 @@
+ 
+ case "${targ}" in
+ # START OF targmatch.h
++  i[3-7]86-*-serenity*)
++    targ_defvec=i386_elf32_vec
++    targ_selvecs=
++    ;;
++  arm-*-serenity*)
++    targ_defvec=arm_elf32_le_vec
++    targ_selvecs=
++    ;;
+ #ifdef BFD64
++  x86_64-*-serenity*)
++    targ_defvec=x86_64_elf64_vec
++    targ_selvecs=i386_elf32_vec
++    want64=true
++    ;;
++  aarch64-*-serenity*)
++    targ_defvec=aarch64_elf64_le_vec
++    targ_selvecs=
++    want64=true
++    ;;
+   aarch64-*-darwin*)
+     targ_defvec=aarch64_mach_o_vec
+     targ_selvecs="arm_mach_o_vec mach_o_le_vec mach_o_be_vec mach_o_fat_vec"
+diff -ur gdb-10.2-orig/config.sub gdb-10.2/config.sub
+--- gdb-10.2-orig/config.sub	2021-04-25 07:06:26.000000000 +0300
++++ gdb-10.2/config.sub	2021-09-07 01:20:15.360899801 +0300
+@@ -1339,6 +1339,7 @@
+ 	# Each alternative MUST end in a * to match a version number.
+ 	# sysv* is not here because it comes later, after sysvr4.
+ 	gnu* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
++	     | serenity* \
+ 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]*\
+ 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
+ 	     | sym* | kopensolaris* | plan9* \
