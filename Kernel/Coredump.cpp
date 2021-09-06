@@ -23,52 +23,39 @@
 
 namespace Kernel {
 
-OwnPtr<Coredump> Coredump::create(NonnullRefPtr<Process> process, const String& output_path)
+KResultOr<NonnullOwnPtr<Coredump>> Coredump::try_create(NonnullRefPtr<Process> process, StringView output_path)
 {
     if (!process->is_dumpable()) {
         dbgln("Refusing to generate coredump for non-dumpable process {}", process->pid().value());
-        return {};
+        return EPERM;
     }
 
-    auto fd = create_target_file(process, output_path);
-    if (!fd)
-        return {};
-    return adopt_own_if_nonnull(new (nothrow) Coredump(move(process), fd.release_nonnull()));
+    auto description = TRY(try_create_target_file(process, output_path));
+    return adopt_nonnull_own_or_enomem(new (nothrow) Coredump(move(process), move(description)));
 }
 
-Coredump::Coredump(NonnullRefPtr<Process> process, NonnullRefPtr<FileDescription>&& fd)
+Coredump::Coredump(NonnullRefPtr<Process> process, NonnullRefPtr<FileDescription> description)
     : m_process(move(process))
-    , m_fd(move(fd))
+    , m_description(move(description))
     , m_num_program_headers(m_process->address_space().region_count() + 1) // +1 for NOTE segment
 {
 }
 
-RefPtr<FileDescription> Coredump::create_target_file(const Process& process, const String& output_path)
+KResultOr<NonnullRefPtr<FileDescription>> Coredump::try_create_target_file(Process const& process, StringView output_path)
 {
     auto output_directory = KLexicalPath::dirname(output_path);
-    auto dump_directory = VirtualFileSystem::the().open_directory(output_directory, VirtualFileSystem::the().root_custody());
-    if (dump_directory.is_error()) {
-        dbgln("Can't find directory '{}' for coredump", output_directory);
-        return nullptr;
-    }
-    auto dump_directory_metadata = dump_directory.value()->inode().metadata();
+    auto dump_directory = TRY(VirtualFileSystem::the().open_directory(output_directory, VirtualFileSystem::the().root_custody()));
+    auto dump_directory_metadata = dump_directory->inode().metadata();
     if (dump_directory_metadata.uid != 0 || dump_directory_metadata.gid != 0 || dump_directory_metadata.mode != 040777) {
         dbgln("Refusing to put coredump in sketchy directory '{}'", output_directory);
-        return nullptr;
+        return EINVAL;
     }
-    auto fd_or_error = VirtualFileSystem::the().open(
+    return TRY(VirtualFileSystem::the().open(
         KLexicalPath::basename(output_path),
         O_CREAT | O_WRONLY | O_EXCL,
         S_IFREG, // We will enable reading from userspace when we finish generating the coredump file
-        *dump_directory.value(),
-        UidAndGid { process.uid(), process.gid() });
-
-    if (fd_or_error.is_error()) {
-        dbgln("Failed to open coredump '{}' for writing", output_path);
-        return nullptr;
-    }
-
-    return fd_or_error.value();
+        *dump_directory,
+        UidAndGid { process.uid(), process.gid() }));
 }
 
 KResult Coredump::write_elf_header()
@@ -111,7 +98,7 @@ KResult Coredump::write_elf_header()
     elf_file_header.e_shnum = 0;
     elf_file_header.e_shstrndx = SHN_UNDEF;
 
-    TRY(m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&elf_file_header)), sizeof(ElfW(Ehdr))));
+    TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&elf_file_header)), sizeof(ElfW(Ehdr))));
 
     return KSuccess;
 }
@@ -139,7 +126,7 @@ KResult Coredump::write_program_headers(size_t notes_size)
 
         offset += phdr.p_filesz;
 
-        [[maybe_unused]] auto rc = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&phdr)), sizeof(ElfW(Phdr)));
+        [[maybe_unused]] auto rc = m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&phdr)), sizeof(ElfW(Phdr)));
     }
 
     ElfW(Phdr) notes_pheader {};
@@ -152,7 +139,7 @@ KResult Coredump::write_program_headers(size_t notes_size)
     notes_pheader.p_align = 0;
     notes_pheader.p_flags = 0;
 
-    TRY(m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&notes_pheader)), sizeof(ElfW(Phdr))));
+    TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&notes_pheader)), sizeof(ElfW(Phdr))));
 
     return KSuccess;
 }
@@ -180,7 +167,7 @@ KResult Coredump::write_regions()
                 //       (A page may not be backed by a physical page because it has never been faulted in when the process ran).
                 src_buffer = UserOrKernelBuffer::for_kernel_buffer(zero_buffer);
             }
-            TRY(m_fd->write(src_buffer.value(), PAGE_SIZE));
+            TRY(m_description->write(src_buffer.value(), PAGE_SIZE));
         }
     }
     return KSuccess;
@@ -188,7 +175,7 @@ KResult Coredump::write_regions()
 
 KResult Coredump::write_notes_segment(ByteBuffer& notes_segment)
 {
-    TRY(m_fd->write(UserOrKernelBuffer::for_kernel_buffer(notes_segment.data()), notes_segment.size()));
+    TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(notes_segment.data()), notes_segment.size()));
     return KSuccess;
 }
 
@@ -345,7 +332,7 @@ KResult Coredump::write()
     TRY(write_regions());
     TRY(write_notes_segment(notes_segment));
 
-    return m_fd->chmod(0600); // Make coredump file read/writable
+    return m_description->chmod(0600); // Make coredump file read/writable
 }
 
 }
