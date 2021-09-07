@@ -9,7 +9,7 @@
 #include <AK/StringView.h>
 #include <AK/Trie.h>
 
-TEST_CASE(normal_behaviour)
+TEST_CASE(normal_behavior)
 {
     Trie<char, String> dictionary('/', "");
     constexpr StringView data[] { "test", "example", "foo", "foobar" };

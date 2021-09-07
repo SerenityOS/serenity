@@ -547,7 +547,7 @@ void UHCIController::get_port_status(Badge<UHCIRootHub>, u8 port, HubStatus& hub
 void UHCIController::reset_port(u8 port)
 {
     // We still have to reset the port manually because UHCI does not automatically enable the port after reset.
-    // Additionally, the USB 2.0 specification says the SetPortFeature(PORT_ENABLE) request is not specified and that the _ideal_ behaviour is to return a Request Error.
+    // Additionally, the USB 2.0 specification says the SetPortFeature(PORT_ENABLE) request is not specified and that the _ideal_ behavior is to return a Request Error.
     // Source: USB 2.0 Specification Section 11.24.2.7.1.2
     // This means the hub code cannot rely on using it.
 

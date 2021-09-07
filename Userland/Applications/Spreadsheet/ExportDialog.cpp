@@ -154,17 +154,17 @@ auto CSVExportDialogPage::make_writer() -> Optional<XSV>
         quote_escape,
     };
 
-    auto behaviours = Writer::default_behaviours();
+    auto behaviors = Writer::default_behaviors();
     Vector<String> empty_headers;
     auto* headers = &empty_headers;
 
     if (should_export_headers) {
-        behaviours = behaviours | Writer::WriterBehaviour::WriteHeaders;
+        behaviors = behaviors | Writer::WriterBehavior::WriteHeaders;
         headers = &m_headers;
     }
 
     if (should_quote_all_fields)
-        behaviours = behaviours | Writer::WriterBehaviour::QuoteAll;
+        behaviors = behaviors | Writer::WriterBehavior::QuoteAll;
 
     // Note that the stream is used only by the ctor.
     auto stream = Core::OutputFileStream::open(m_temp_output_file_path);
@@ -172,7 +172,7 @@ auto CSVExportDialogPage::make_writer() -> Optional<XSV>
         dbgln("Cannot open {} for writing: {}", m_temp_output_file_path, stream.error());
         return {};
     }
-    XSV writer(stream.value(), m_data, traits, *headers, behaviours);
+    XSV writer(stream.value(), m_data, traits, *headers, behaviors);
 
     if (stream.value().has_any_error()) {
         dbgln("Write error when making preview");

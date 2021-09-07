@@ -181,7 +181,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
 
         bool is_activation_event = is<UIEvents::MouseEvent>(*event) && event->type() == HTML::EventNames::click;
 
-        if (is_activation_event && target->activation_behaviour)
+        if (is_activation_event && target->activation_behavior)
             activation_target = target;
 
         // FIXME: Let slottable be target, if target is a slottable and is assigned, and null otherwise.
@@ -203,7 +203,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
 
             if (is<Window>(parent)
                 || (is<Node>(parent) && verify_cast<Node>(*target).root().is_shadow_including_inclusive_ancestor_of(verify_cast<Node>(*parent)))) {
-                if (is_activation_event && event->bubbles() && !activation_target && parent->activation_behaviour)
+                if (is_activation_event && event->bubbles() && !activation_target && parent->activation_behavior)
                     activation_target = parent;
 
                 event->append_to_path(*parent, nullptr, related_target, touch_targets, slot_in_closed_tree);
@@ -212,7 +212,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
             } else {
                 target = *parent;
 
-                if (is_activation_event && !activation_target && target->activation_behaviour)
+                if (is_activation_event && !activation_target && target->activation_behavior)
                     activation_target = target;
 
                 event->append_to_path(*parent, target, related_target, touch_targets, slot_in_closed_tree);
@@ -255,8 +255,8 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
             }
         }
 
-        if (activation_target && activation_target->legacy_pre_activation_behaviour)
-            activation_target->legacy_pre_activation_behaviour();
+        if (activation_target && activation_target->legacy_pre_activation_behavior)
+            activation_target->legacy_pre_activation_behavior();
 
         for (ssize_t i = event->path().size() - 1; i >= 0; --i) {
             auto& entry = event->path().at(i);
@@ -298,11 +298,11 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
 
     if (activation_target) {
         if (!event->cancelled()) {
-            // NOTE: Since activation_target is set, it will have activation behaviour.
-            activation_target->activation_behaviour(event);
+            // NOTE: Since activation_target is set, it will have activation behavior.
+            activation_target->activation_behavior(event);
         } else {
-            if (activation_target->legacy_cancelled_activation_behaviour)
-                activation_target->legacy_cancelled_activation_behaviour();
+            if (activation_target->legacy_cancelled_activation_behavior)
+                activation_target->legacy_cancelled_activation_behavior();
         }
     }
 

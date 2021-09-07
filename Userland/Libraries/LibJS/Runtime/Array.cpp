@@ -104,7 +104,7 @@ bool Array::set_length(PropertyDescriptor const& property_descriptor)
     // 15. Let succeeded be ! OrdinaryDefineOwnProperty(A, "length", newLenDesc).
     // 16. If succeeded is false, return false.
     // NOTE: Because the length property does not actually exist calling OrdinaryDefineOwnProperty
-    // will result in unintended behaviour, so instead we only implement here the small subset of
+    // will result in unintended behavior, so instead we only implement here the small subset of
     // checks performed inside of it that would have mattered to us:
 
     // 10.1.6.3 ValidateAndApplyPropertyDescriptor ( O, P, extensible, Desc, current ), https://tc39.es/ecma262/#sec-validateandapplypropertydescriptor

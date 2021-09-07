@@ -260,7 +260,7 @@ private:
     // Most patterns should have no need to ever populate this field.
     Optional<size_t> m_total_number_of_capturing_parenthesis;
 
-    // Keep the Annex B. behaviour behind a flag, the users can enable it by passing the `ECMAScriptFlags::BrowserExtended` flag.
+    // Keep the Annex B. behavior behind a flag, the users can enable it by passing the `ECMAScriptFlags::BrowserExtended` flag.
     bool m_should_use_browser_extended_grammar { false };
 
     // ECMA-262 basically requires that we clear the inner captures of a capture group before trying to match it,

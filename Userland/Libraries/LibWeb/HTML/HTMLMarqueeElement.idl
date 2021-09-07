@@ -1,6 +1,6 @@
 interface HTMLMarqueeElement : HTMLElement {
 
-    [Reflect] attribute DOMString behaviour;
+    [Reflect] attribute DOMString behavior;
     [Reflect=bgcolor] attribute DOMString bgColor;
     [Reflect] attribute DOMString direction;
     [Reflect] attribute DOMString height;

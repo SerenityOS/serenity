@@ -135,16 +135,16 @@ auto CSVImportDialogPage::make_reader() -> Optional<Reader::XSV>
         quote_escape,
     };
 
-    auto behaviours = Reader::default_behaviours() | Reader::ParserBehaviour::Lenient;
+    auto behaviors = Reader::default_behaviors() | Reader::ParserBehavior::Lenient;
 
     if (should_read_headers)
-        behaviours = behaviours | Reader::ParserBehaviour::ReadHeaders;
+        behaviors = behaviors | Reader::ParserBehavior::ReadHeaders;
     if (should_trim_leading)
-        behaviours = behaviours | Reader::ParserBehaviour::TrimLeadingFieldSpaces;
+        behaviors = behaviors | Reader::ParserBehavior::TrimLeadingFieldSpaces;
     if (should_trim_trailing)
-        behaviours = behaviours | Reader::ParserBehaviour::TrimTrailingFieldSpaces;
+        behaviors = behaviors | Reader::ParserBehavior::TrimTrailingFieldSpaces;
 
-    return Reader::XSV(m_csv, move(traits), behaviours);
+    return Reader::XSV(m_csv, move(traits), behaviors);
 };
 
 void CSVImportDialogPage::update_preview()

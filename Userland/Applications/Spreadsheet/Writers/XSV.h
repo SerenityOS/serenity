@@ -16,7 +16,7 @@
 
 namespace Writer {
 
-enum class WriterBehaviour : u32 {
+enum class WriterBehavior : u32 {
     None = 0,
     WriteHeaders = 1,
     AllowNewlinesInFields = WriteHeaders << 1,
@@ -24,14 +24,14 @@ enum class WriterBehaviour : u32 {
     QuoteAll = WriteHeaders << 3,
 };
 
-inline WriterBehaviour operator&(WriterBehaviour left, WriterBehaviour right)
+inline WriterBehavior operator&(WriterBehavior left, WriterBehavior right)
 {
-    return static_cast<WriterBehaviour>(static_cast<u32>(left) & static_cast<u32>(right));
+    return static_cast<WriterBehavior>(static_cast<u32>(left) & static_cast<u32>(right));
 }
 
-inline WriterBehaviour operator|(WriterBehaviour left, WriterBehaviour right)
+inline WriterBehavior operator|(WriterBehavior left, WriterBehavior right)
 {
-    return static_cast<WriterBehaviour>(static_cast<u32>(left) | static_cast<u32>(right));
+    return static_cast<WriterBehavior>(static_cast<u32>(left) | static_cast<u32>(right));
 }
 
 struct WriterTraits {
@@ -54,23 +54,23 @@ enum class WriteError {
 #undef E
 };
 
-constexpr WriterBehaviour default_behaviours()
+constexpr WriterBehavior default_behaviors()
 {
-    return WriterBehaviour::None;
+    return WriterBehavior::None;
 }
 
 template<typename ContainerType, typename HeaderType = Vector<StringView>>
 class XSV {
 public:
-    XSV(OutputStream& output, const ContainerType& data, const WriterTraits& traits, const HeaderType& headers = {}, WriterBehaviour behaviours = default_behaviours())
+    XSV(OutputStream& output, const ContainerType& data, const WriterTraits& traits, const HeaderType& headers = {}, WriterBehavior behaviors = default_behaviors())
         : m_data(data)
         , m_traits(traits)
-        , m_behaviours(behaviours)
+        , m_behaviors(behaviors)
         , m_names(headers)
         , m_output(output)
     {
         if (!headers.is_empty())
-            m_behaviours = m_behaviours | WriterBehaviour::WriteHeaders;
+            m_behaviors = m_behaviors | WriterBehavior::WriteHeaders;
 
         generate();
     }
@@ -101,7 +101,7 @@ private:
 
     void generate()
     {
-        auto with_headers = (m_behaviours & WriterBehaviour::WriteHeaders) != WriterBehaviour::None;
+        auto with_headers = (m_behaviors & WriterBehavior::WriteHeaders) != WriterBehavior::None;
         if (with_headers) {
             write_row(m_names);
             if (m_output.write({ "\n", 1 }) != 1)
@@ -139,12 +139,12 @@ private:
     {
         auto string = String::formatted("{}", FormatIfSupported(entry));
 
-        auto safe_to_write_normally = (m_behaviours & WriterBehaviour::QuoteAll) == WriterBehaviour::None
+        auto safe_to_write_normally = (m_behaviors & WriterBehavior::QuoteAll) == WriterBehavior::None
             && !string.contains("\n")
             && !string.contains(m_traits.separator);
 
         if (safe_to_write_normally) {
-            if ((m_behaviours & WriterBehaviour::QuoteOnlyInFieldStart) == WriterBehaviour::None)
+            if ((m_behaviors & WriterBehavior::QuoteOnlyInFieldStart) == WriterBehavior::None)
                 safe_to_write_normally = !string.contains(m_traits.quote);
             else
                 safe_to_write_normally = !string.starts_with(m_traits.quote);
@@ -190,7 +190,7 @@ private:
 
     const ContainerType& m_data;
     const WriterTraits& m_traits;
-    WriterBehaviour m_behaviours;
+    WriterBehavior m_behaviors;
     const HeaderType& m_names;
     WriteError m_error { WriteError::None };
     OutputStream& m_output;

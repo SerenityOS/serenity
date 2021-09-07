@@ -45,7 +45,7 @@ struct KeyBinding {
 };
 
 struct Configuration {
-    enum RefreshBehaviour {
+    enum RefreshBehavior {
         Lazy,
         Eager,
     };
@@ -80,7 +80,7 @@ struct Configuration {
         set(arg);
     }
 
-    void set(RefreshBehaviour refresh) { refresh_behaviour = refresh; }
+    void set(RefreshBehavior refresh) { refresh_behavior = refresh; }
     void set(OperationMode mode) { operation_mode = mode; }
     void set(SignalHandler mode) { m_signal_mode = mode; }
     void set(const KeyBinding& binding) { keybindings.append(binding); }
@@ -92,7 +92,7 @@ struct Configuration {
 
     static Configuration from_config(const StringView& libname = "line");
 
-    RefreshBehaviour refresh_behaviour { RefreshBehaviour::Lazy };
+    RefreshBehavior refresh_behavior { RefreshBehavior::Lazy };
     SignalHandler m_signal_mode { SignalHandler::WithSignalHandlers };
     OperationMode operation_mode { OperationMode::Unset };
     Vector<KeyBinding> keybindings;

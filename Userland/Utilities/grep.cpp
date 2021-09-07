@@ -110,7 +110,7 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(files, "File(s) to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    // mock grep behaviour: if -e is omitted, use first positional argument as pattern
+    // mock grep behavior: if -e is omitted, use first positional argument as pattern
     if (pattern == nullptr && files.size())
         pattern = files.take_first();
 

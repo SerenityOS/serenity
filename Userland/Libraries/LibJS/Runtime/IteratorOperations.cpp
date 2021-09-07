@@ -115,7 +115,7 @@ void iterator_close(Object& iterator)
     auto& vm = iterator.vm();
     auto& global_object = iterator.global_object();
 
-    // Emulates `completion` behaviour
+    // Emulates `completion` behavior
     auto* completion_exception = vm.exception();
     vm.clear_exception();
     auto unwind_until = vm.unwind_until();

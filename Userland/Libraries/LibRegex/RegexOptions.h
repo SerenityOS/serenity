@@ -34,7 +34,7 @@ enum class AllFlags {
     Multiline = __Regex_Multiline,                               // Handle newline characters. Match each line, one by one.
     SkipTrimEmptyMatches = __Regex_SkipTrimEmptyMatches,         // Do not remove empty capture group results.
     Internal_Stateful = __Regex_Internal_Stateful,               // Make global matches match one result at a time, and further match() calls on the same instance continue where the previous one left off.
-    Internal_BrowserExtended = __Regex_Internal_BrowserExtended, // Only for ECMA262, Enable the behaviours defined in section B.1.4. of the ECMA262 spec.
+    Internal_BrowserExtended = __Regex_Internal_BrowserExtended, // Only for ECMA262, Enable the behaviors defined in section B.1.4. of the ECMA262 spec.
     Last = Internal_BrowserExtended,
 };
 

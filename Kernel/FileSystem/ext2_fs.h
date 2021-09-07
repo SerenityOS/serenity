@@ -473,7 +473,7 @@ struct ext2_inode_large {
 #define EXT2_DFL_CHECKINTERVAL 0  /* Don't use interval check */
 
 /*
- * Behaviour when detecting errors
+ * Behavior when detecting errors
  */
 #define EXT2_ERRORS_CONTINUE 1 /* Continue execution */
 #define EXT2_ERRORS_RO 2       /* Remount fs read-only */
@@ -501,7 +501,7 @@ struct ext2_super_block {
     __s16 s_max_mnt_count;     /* Maximal mount count */
     __u16 s_magic;             /* Magic signature */
     __u16 s_state;             /* File system state */
-    __u16 s_errors;            /* Behaviour when detecting errors */
+    __u16 s_errors;            /* Behavior when detecting errors */
     __u16 s_minor_rev_level;   /* minor revision level */
     __u32 s_lastcheck;         /* time of last check */
     __u32 s_checkinterval;     /* max. time between checks */

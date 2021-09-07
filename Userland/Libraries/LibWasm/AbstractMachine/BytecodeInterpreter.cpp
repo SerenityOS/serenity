@@ -307,7 +307,7 @@ template<typename V, typename T>
 MakeSigned<T> BytecodeInterpreter::checked_signed_truncate(V value)
 {
     if (isnan(value) || isinf(value)) { // "undefined", let's just trap.
-        m_trap = Trap { "Signed truncation undefined behaviour" };
+        m_trap = Trap { "Signed truncation undefined behavior" };
         return 0;
     }
 
@@ -330,7 +330,7 @@ template<typename V, typename T>
 MakeUnsigned<T> BytecodeInterpreter::checked_unsigned_truncate(V value)
 {
     if (isnan(value) || isinf(value)) { // "undefined", let's just trap.
-        m_trap = Trap { "Unsigned truncation undefined behaviour" };
+        m_trap = Trap { "Unsigned truncation undefined behavior" };
         return 0;
     }
     double truncated;

@@ -317,7 +317,7 @@ struct CheckedTruncate {
     AK::Result<ResultT, StringView> operator()(Lhs lhs) const
     {
         if (isnan(lhs) || isinf(lhs)) // "undefined", let's just trap.
-            return "Truncation undefined behaviour"sv;
+            return "Truncation undefined behavior"sv;
 
         Lhs truncated;
         if constexpr (IsSame<float, Lhs>)

@@ -547,7 +547,7 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
         case ConversionSpecifier::Invalid:
         case ConversionSpecifier::Unspecified:
         default:
-            // "undefined behaviour", let's be nice and crash.
+            // "undefined behavior", let's be nice and crash.
             dbgln("Invalid conversion specifier {} in scanf!", (int)conversion_specifier);
             VERIFY_NOT_REACHED();
         case ConversionSpecifier::Decimal:

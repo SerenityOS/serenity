@@ -27,7 +27,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(autoplay)                   \
     __ENUMERATE_HTML_ATTRIBUTE(axis)                       \
     __ENUMERATE_HTML_ATTRIBUTE(background)                 \
-    __ENUMERATE_HTML_ATTRIBUTE(behaviour)                  \
+    __ENUMERATE_HTML_ATTRIBUTE(behavior)                   \
     __ENUMERATE_HTML_ATTRIBUTE(bgcolor)                    \
     __ENUMERATE_HTML_ATTRIBUTE(border)                     \
     __ENUMERATE_HTML_ATTRIBUTE(cellpadding)                \

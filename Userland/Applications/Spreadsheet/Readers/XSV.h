@@ -14,7 +14,7 @@
 
 namespace Reader {
 
-enum class ParserBehaviour : u32 {
+enum class ParserBehavior : u32 {
     None = 0,
     ReadHeaders = 1,
     AllowNewlinesInFields = ReadHeaders << 1,
@@ -27,8 +27,8 @@ enum class ParserBehaviour : u32 {
                                 // - updates previous rows with extra columns
 };
 
-ParserBehaviour operator&(ParserBehaviour left, ParserBehaviour right);
-ParserBehaviour operator|(ParserBehaviour left, ParserBehaviour right);
+ParserBehavior operator&(ParserBehavior left, ParserBehavior right);
+ParserBehavior operator|(ParserBehavior left, ParserBehavior right);
 
 struct ParserTraits {
     String separator;
@@ -52,18 +52,18 @@ enum class ReadError {
 #undef E
 };
 
-constexpr ParserBehaviour default_behaviours()
+constexpr ParserBehavior default_behaviors()
 {
-    return ParserBehaviour::QuoteOnlyInFieldStart;
+    return ParserBehavior::QuoteOnlyInFieldStart;
 }
 
 class XSV {
 public:
-    XSV(StringView source, ParserTraits traits, ParserBehaviour behaviours = default_behaviours())
+    XSV(StringView source, ParserTraits traits, ParserBehavior behaviors = default_behaviors())
         : m_source(source)
         , m_lexer(m_source)
         , m_traits(traits)
-        , m_behaviours(behaviours)
+        , m_behaviors(behaviors)
     {
         parse_preview();
     }
@@ -88,7 +88,7 @@ public:
 
     size_t size() const { return m_rows.size(); }
     Vector<String> headers() const;
-    [[nodiscard]] bool has_explicit_headers() const { return (static_cast<u32>(m_behaviours) & static_cast<u32>(ParserBehaviour::ReadHeaders)) != 0; }
+    [[nodiscard]] bool has_explicit_headers() const { return (static_cast<u32>(m_behaviors) & static_cast<u32>(ParserBehavior::ReadHeaders)) != 0; }
 
     class Row {
     public:
@@ -207,7 +207,7 @@ private:
     StringView m_source;
     GenericLexer m_lexer;
     ParserTraits m_traits;
-    ParserBehaviour m_behaviours;
+    ParserBehavior m_behaviors;
     Vector<Field> m_names;
     Vector<Vector<Field>> m_rows;
     ReadError m_error { ReadError::None };
