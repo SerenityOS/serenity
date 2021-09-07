@@ -18,7 +18,7 @@ TEST_CASE(should_parse_valid_data)
                       1, 2, 3
                       4, 5, 6
                       """x", y"z, 9)~~~";
-        auto csv = Reader::CSV { data, Reader::default_behaviours() | Reader::ParserBehaviour::ReadHeaders | Reader::ParserBehaviour::TrimLeadingFieldSpaces };
+        auto csv = Reader::CSV { data, Reader::default_behaviors() | Reader::ParserBehavior::ReadHeaders | Reader::ParserBehavior::TrimLeadingFieldSpaces };
         csv.parse();
         EXPECT(!csv.has_error());
 
@@ -32,7 +32,7 @@ TEST_CASE(should_parse_valid_data)
                       1     	 , 2, 3
                       4, "5 "       , 6
                       """x", y"z, 9                       )~~~";
-        auto csv = Reader::CSV { data, Reader::default_behaviours() | Reader::ParserBehaviour::ReadHeaders | Reader::ParserBehaviour::TrimLeadingFieldSpaces | Reader::ParserBehaviour::TrimTrailingFieldSpaces };
+        auto csv = Reader::CSV { data, Reader::default_behaviors() | Reader::ParserBehavior::ReadHeaders | Reader::ParserBehavior::TrimLeadingFieldSpaces | Reader::ParserBehavior::TrimTrailingFieldSpaces };
         csv.parse();
         EXPECT(!csv.has_error());
 
@@ -48,7 +48,7 @@ TEST_CASE(should_fail_nicely)
     {
         auto data = R"~~~(Foo, Bar, Baz
                       x, y)~~~";
-        auto csv = Reader::CSV { data, Reader::default_behaviours() | Reader::ParserBehaviour::ReadHeaders | Reader::ParserBehaviour::TrimLeadingFieldSpaces };
+        auto csv = Reader::CSV { data, Reader::default_behaviors() | Reader::ParserBehavior::ReadHeaders | Reader::ParserBehavior::TrimLeadingFieldSpaces };
         csv.parse();
         EXPECT(csv.has_error());
         EXPECT_EQ(csv.error(), Reader::ReadError::NonConformingColumnCount);
@@ -57,7 +57,7 @@ TEST_CASE(should_fail_nicely)
     {
         auto data = R"~~~(Foo, Bar, Baz
                       x, y, "z)~~~";
-        auto csv = Reader::CSV { data, Reader::default_behaviours() | Reader::ParserBehaviour::ReadHeaders | Reader::ParserBehaviour::TrimLeadingFieldSpaces };
+        auto csv = Reader::CSV { data, Reader::default_behaviors() | Reader::ParserBehavior::ReadHeaders | Reader::ParserBehavior::TrimLeadingFieldSpaces };
         csv.parse();
         EXPECT(csv.has_error());
         EXPECT_EQ(csv.error(), Reader::ReadError::QuoteFailure);
@@ -70,7 +70,7 @@ TEST_CASE(should_iterate_rows)
                       1, 2, 3
                       4, 5, 6
                       """x", y"z, 9)~~~";
-    auto csv = Reader::CSV { data, Reader::default_behaviours() | Reader::ParserBehaviour::ReadHeaders | Reader::ParserBehaviour::TrimLeadingFieldSpaces };
+    auto csv = Reader::CSV { data, Reader::default_behaviors() | Reader::ParserBehavior::ReadHeaders | Reader::ParserBehavior::TrimLeadingFieldSpaces };
     csv.parse();
     EXPECT(!csv.has_error());
 
@@ -92,7 +92,7 @@ BENCHMARK_CASE(fairly_big_data)
         memcpy(buf.offset_pointer(row * line.length()), line.characters_without_null_termination(), line.length());
     }
 
-    auto csv = Reader::CSV { (char const*)buf.data(), Reader::default_behaviours() | Reader::ParserBehaviour::ReadHeaders };
+    auto csv = Reader::CSV { (char const*)buf.data(), Reader::default_behaviors() | Reader::ParserBehavior::ReadHeaders };
     csv.parse();
 
     EXPECT(!csv.has_error());

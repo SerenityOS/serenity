@@ -1353,7 +1353,7 @@ void VimEditingEngine::put_after()
         m_editor->set_cursor({ m_editor->cursor().line(), m_editor->current_line().first_non_whitespace_column() });
     } else {
         // FIXME: If attempting to put on the last column a line,
-        // the buffer will bne placed on the next line due to the move_one_left/right behaviour.
+        // the buffer will bne placed on the next line due to the move_one_left/right behavior.
         move_one_right();
         StringBuilder sb = StringBuilder(m_yank_buffer.length() * amount);
         for (auto i = 0; i < amount; i++) {

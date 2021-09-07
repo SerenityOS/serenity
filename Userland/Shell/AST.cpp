@@ -2080,7 +2080,7 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
         } else {
             auto list = option.run(shell);
             option.for_each_entry(shell, [&](auto&& value) {
-                pattern.extend(value->resolve_as_list(nullptr)); // Note: 'nullptr' incurs special behaviour,
+                pattern.extend(value->resolve_as_list(nullptr)); // Note: 'nullptr' incurs special behavior,
                                                                  //       asking the node for a 'raw' value.
                 return IterationDecision::Continue;
             });

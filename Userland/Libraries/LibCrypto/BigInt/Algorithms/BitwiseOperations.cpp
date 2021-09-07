@@ -241,7 +241,7 @@ ALWAYS_INLINE UnsignedBigInteger::Word UnsignedBigIntegerAlgorithms::shift_left_
     VERIFY(num_bits <= UnsignedBigInteger::BITS_IN_WORD);
     u32 result = 0;
 
-    // we need to check for "num_bits != 0" since shifting right by 32 is apparently undefined behaviour!
+    // we need to check for "num_bits != 0" since shifting right by 32 is apparently undefined behavior!
     if (result_word_index > 0 && num_bits != 0) {
         result += number.m_words[result_word_index - 1] >> (UnsignedBigInteger::BITS_IN_WORD - num_bits);
     }

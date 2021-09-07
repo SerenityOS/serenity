@@ -250,11 +250,11 @@ public:
     }
 
     template<typename U = T>
-    HashSetResult set(U&& value, HashSetExistingEntryBehavior existing_entry_behaviour = HashSetExistingEntryBehavior::Replace)
+    HashSetResult set(U&& value, HashSetExistingEntryBehavior existing_entry_behavior = HashSetExistingEntryBehavior::Replace)
     {
         auto& bucket = lookup_for_writing(value);
         if (bucket.used) {
-            if (existing_entry_behaviour == HashSetExistingEntryBehavior::Keep)
+            if (existing_entry_behavior == HashSetExistingEntryBehavior::Keep)
                 return HashSetResult::KeptExistingEntry;
             (*bucket.slot()) = forward<U>(value);
             return HashSetResult::ReplacedExistingEntry;

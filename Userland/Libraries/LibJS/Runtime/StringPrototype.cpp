@@ -252,7 +252,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
     if (n == 0)
         return js_string(vm, String::empty());
 
-    // NOTE: This is an optimization, it is not required by the specification but it produces equivalent behaviour
+    // NOTE: This is an optimization, it is not required by the specification but it produces equivalent behavior
     if (string->is_empty())
         return js_string(vm, String::empty());
 

@@ -22,7 +22,7 @@ test("length is 2", () => {
     });
 });
 
-describe("normal behaviour", () => {
+describe("normal behavior", () => {
     test("Noop", () => {
         TYPED_ARRAYS.forEach(T => {
             const array = new T([1, 2]);
@@ -37,7 +37,7 @@ describe("normal behaviour", () => {
         });
     });
 
-    test("basic behaviour", () => {
+    test("basic behavior", () => {
         TYPED_ARRAYS.forEach(T => {
             const array = new T([1, 2, 3]);
             expect(array.copyWithin(1, 2)).toEqual(array);

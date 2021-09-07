@@ -41,11 +41,11 @@ Configuration Configuration::from_config(const StringView& libname)
     Configuration configuration;
     auto config_file = Core::ConfigFile::open_for_lib(libname);
 
-    // Read behaviour options.
-    auto refresh = config_file->read_entry("behaviour", "refresh", "lazy");
-    auto operation = config_file->read_entry("behaviour", "operation_mode");
-    auto bracketed_paste = config_file->read_bool_entry("behaviour", "bracketed_paste", true);
-    auto default_text_editor = config_file->read_entry("behaviour", "default_text_editor");
+    // Read behavior options.
+    auto refresh = config_file->read_entry("behavior", "refresh", "lazy");
+    auto operation = config_file->read_entry("behavior", "operation_mode");
+    auto bracketed_paste = config_file->read_bool_entry("behavior", "bracketed_paste", true);
+    auto default_text_editor = config_file->read_entry("behavior", "default_text_editor");
 
     Configuration::Flags flags { Configuration::Flags::None };
     if (bracketed_paste)
@@ -184,7 +184,7 @@ void Editor::set_default_keybinds()
 Editor::Editor(Configuration configuration)
     : m_configuration(move(configuration))
 {
-    m_always_refresh = m_configuration.refresh_behaviour == Configuration::RefreshBehaviour::Eager;
+    m_always_refresh = m_configuration.refresh_behavior == Configuration::RefreshBehavior::Eager;
     m_pending_chars = {};
     get_terminal_size();
     m_suggestion_display = make<XtermSuggestionDisplay>(m_num_lines, m_num_columns);
@@ -1024,8 +1024,8 @@ void Editor::handle_read_event()
         ArmedScopeGuard suggestion_cleanup { [this] { cleanup_suggestions(); } };
 
         // Normally ^D. `stty eof \^n` can change it to ^N (or something else), but Serenity doesn't have `stty` yet.
-        // Process this here since the keybinds might override its behaviour.
-        // This only applies when the buffer is empty. at any other time, the behaviour should be configurable.
+        // Process this here since the keybinds might override its behavior.
+        // This only applies when the buffer is empty. at any other time, the behavior should be configurable.
         if (code_point == m_termios.c_cc[VEOF] && m_buffer.size() == 0) {
             finish_edit();
             continue;

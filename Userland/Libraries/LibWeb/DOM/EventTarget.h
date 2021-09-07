@@ -47,11 +47,11 @@ public:
     Vector<EventListenerRegistration>& listeners() { return m_listeners; }
     const Vector<EventListenerRegistration>& listeners() const { return m_listeners; }
 
-    Function<void(const Event&)> activation_behaviour;
+    Function<void(const Event&)> activation_behavior;
 
     // NOTE: These only exist for checkbox and radio input elements.
-    Function<void()> legacy_pre_activation_behaviour;
-    Function<void()> legacy_cancelled_activation_behaviour;
+    Function<void()> legacy_pre_activation_behavior;
+    Function<void()> legacy_cancelled_activation_behavior;
 
 protected:
     explicit EventTarget(Bindings::ScriptExecutionContext&);

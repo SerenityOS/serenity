@@ -112,7 +112,7 @@ describe("errors", () => {
     });
 });
 
-describe("normal behaviour", () => {
+describe("normal behavior", () => {
     test("never calls callback with empty array", () => {
         TYPED_ARRAYS.forEach(T => {
             let callbackCalled = 0;

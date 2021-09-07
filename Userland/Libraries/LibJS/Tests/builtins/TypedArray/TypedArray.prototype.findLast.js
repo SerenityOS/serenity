@@ -44,7 +44,7 @@ describe("errors", () => {
     BIGINT_TYPED_ARRAYS.forEach(T => errorTests(T));
 });
 
-describe("normal behaviour", () => {
+describe("normal behavior", () => {
     test("basic functionality", () => {
         TYPED_ARRAYS.forEach(T => {
             const typedArray = new T([1, 2, 3]);

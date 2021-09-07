@@ -44,7 +44,7 @@ describe("errors", () => {
     BIGINT_TYPED_ARRAYS.forEach(T => errorTests(T));
 });
 
-describe("normal behaviour", () => {
+describe("normal behavior", () => {
     test("never calls callback with empty array", () => {
         function emptyTest(T) {
             var callbackCalled = 0;

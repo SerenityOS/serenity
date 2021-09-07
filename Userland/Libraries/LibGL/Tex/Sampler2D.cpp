@@ -35,7 +35,7 @@ static constexpr float wrap(float value, GLint mode)
     case GL_REPEAT:
         return wrap_repeat(value);
 
-    // FIXME: These clamp modes actually have slightly different behaviour
+    // FIXME: These clamp modes actually have slightly different behavior
     case GL_CLAMP:
     case GL_CLAMP_TO_BORDER:
     case GL_CLAMP_TO_EDGE:
