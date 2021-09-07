@@ -250,7 +250,7 @@ KResultOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(StringView
         return *preopen_fd;
 
     if (metadata.is_fifo()) {
-        auto fifo = inode.fifo();
+        auto fifo = TRY(inode.fifo());
         if (options & O_WRONLY) {
             auto description = TRY(fifo->open_direction_blocking(FIFO::Direction::Writer));
             description->set_rw_mode(options);

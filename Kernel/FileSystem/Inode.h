@@ -94,7 +94,7 @@ public:
     void register_watcher(Badge<InodeWatcher>, InodeWatcher&);
     void unregister_watcher(Badge<InodeWatcher>, InodeWatcher&);
 
-    NonnullRefPtr<FIFO> fifo();
+    KResultOr<NonnullRefPtr<FIFO>> fifo();
 
     KResult can_apply_flock(OpenFileDescription const&, flock const&) const;
     KResult apply_flock(Process const&, OpenFileDescription const&, Userspace<flock const*>);
