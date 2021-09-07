@@ -213,17 +213,17 @@ void ImageEditor::mousemove_event(GUI::MouseEvent& event)
         return;
     }
 
+    auto image_event = event_with_pan_and_scale_applied(event);
+    if (on_image_mouse_position_change) {
+        on_image_mouse_position_change(image_event.position());
+    }
+
     if (!m_active_tool)
         return;
 
     auto layer_event = m_active_layer ? event_adjusted_for_layer(event, *m_active_layer) : event;
-    auto image_event = event_with_pan_and_scale_applied(event);
     Tool::MouseEvent tool_event(Tool::MouseEvent::Action::MouseDown, layer_event, image_event, event);
     m_active_tool->on_mousemove(m_active_layer.ptr(), tool_event);
-
-    if (on_image_mouse_position_change) {
-        on_image_mouse_position_change(image_event.position());
-    }
 }
 
 void ImageEditor::mouseup_event(GUI::MouseEvent& event)
