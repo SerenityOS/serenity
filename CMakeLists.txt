@@ -23,6 +23,13 @@ enable_testing()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+if(NOT COMMAND serenity_option)
+    macro(serenity_option)
+        set(${ARGV})
+    endmacro()
+endif()
+include(serenity_options)
+
 set(SERENITY_ARCH "i686" CACHE STRING "Target architecture for SerenityOS.")
 
 if("${SERENITY_ARCH}" STREQUAL "i686")
@@ -31,22 +38,6 @@ else()
     set(SERENITY_CLANG_ARCH ${SERENITY_ARCH})
 endif()
 
-# Central location for all custom options used in the Serenity build.
-option(ENABLE_ADDRESS_SANITIZER "Enable address sanitizer testing in gcc/clang" OFF)
-option(ENABLE_KERNEL_ADDRESS_SANITIZER "Enable kernel address sanitizer testing in gcc/clang" OFF)
-option(ENABLE_KERNEL_COVERAGE_COLLECTION "Enable KCOV and kernel coverage instrumentation in gcc/clang" OFF)
-option(ENABLE_MEMORY_SANITIZER "Enable memory sanitizer testing in gcc/clang" OFF)
-option(ENABLE_UNDEFINED_SANITIZER "Enable undefined behavior sanitizer testing in gcc/clang" OFF)
-option(ENABLE_FUZZER_SANITIZER "Enable fuzzer sanitizer testing in clang" OFF)
-option(ENABLE_EXTRA_KERNEL_DEBUG_SYMBOLS "Enable -Og and -ggdb3 options for Kernel code for easier debugging" OFF)
-option(ENABLE_ALL_THE_DEBUG_MACROS "Enable all debug macros to validate they still compile" OFF)
-option(ENABLE_ALL_DEBUG_FACILITIES "Enable all noisy debug symbols and options. Not recommended for normal developer use" OFF)
-option(ENABLE_COMPILETIME_FORMAT_CHECK "Enable compiletime format string checks" ON)
-option(ENABLE_PCI_IDS_DOWNLOAD "Enable download of the pci.ids database at build time" ON)
-option(ENABLE_USB_IDS_DOWNLOAD "Enable download of the usb.ids database at build time" ON)
-option(BUILD_LAGOM "Build parts of the system targeting the host OS for fuzzing/testing" OFF)
-option(ENABLE_KERNEL_LTO "Build the kernel with link-time optimization" OFF)
-option(USE_CLANG_TOOLCHAIN "Build the kernel with the experimental Clang toolchain" OFF)
 
 # Meta target to run all code-gen steps in the build.
 add_custom_target(all_generated)
