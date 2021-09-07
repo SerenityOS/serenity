@@ -52,7 +52,6 @@ public:
 
         set_shrink_to_fit(true);
         set_fill_with_background_color(true);
-        set_global_cursor_tracking(true);
         set_greedy_for_hits(true);
     }
 
