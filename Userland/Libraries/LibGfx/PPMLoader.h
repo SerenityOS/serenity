@@ -6,13 +6,14 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
 
 namespace Gfx {
 
 RefPtr<Gfx::Bitmap> load_ppm(const StringView& path);
-RefPtr<Gfx::Bitmap> load_ppm_from_memory(const u8*, size_t);
+RefPtr<Gfx::Bitmap> load_ppm_from_memory(u8 const*, size_t, String const& mmap_name = "<memory>");
 
 struct PPMLoadingContext;
 
