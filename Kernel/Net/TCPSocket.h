@@ -147,7 +147,7 @@ public:
 
     static MutexProtected<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& closing_sockets();
 
-    RefPtr<TCPSocket> create_client(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
+    KResultOr<NonnullRefPtr<TCPSocket>> try_create_client(IPv4Address const& local_address, u16 local_port, IPv4Address const& peer_address, u16 peer_port);
     void set_originator(TCPSocket& originator) { m_originator = originator; }
     bool has_originator() { return !!m_originator; }
     void release_to_originator();
