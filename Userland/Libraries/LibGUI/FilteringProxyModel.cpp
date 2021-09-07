@@ -8,7 +8,7 @@
 
 namespace GUI {
 
-ModelIndex FilteringProxyModel::index(int row, int column, const ModelIndex& parent_index) const
+ModelIndex FilteringProxyModel::index(int row, int column, ModelIndex const& parent_index) const
 {
     int parent_row = parent_index.row();
     if (!parent_index.is_valid())
@@ -17,12 +17,12 @@ ModelIndex FilteringProxyModel::index(int row, int column, const ModelIndex& par
     return create_index(parent_row + row, column);
 }
 
-int FilteringProxyModel::row_count(const ModelIndex&) const
+int FilteringProxyModel::row_count(ModelIndex const&) const
 {
     return m_matching_indices.size();
 }
 
-int FilteringProxyModel::column_count(const ModelIndex& index) const
+int FilteringProxyModel::column_count(ModelIndex const& index) const
 {
     if (!index.is_valid())
         return {};
@@ -33,7 +33,7 @@ int FilteringProxyModel::column_count(const ModelIndex& index) const
     return m_model.column_count(m_matching_indices[index.row()]);
 }
 
-Variant FilteringProxyModel::data(const ModelIndex& index, ModelRole role) const
+Variant FilteringProxyModel::data(ModelIndex const& index, ModelRole role) const
 {
     if (!index.is_valid())
         return {};
@@ -79,7 +79,7 @@ void FilteringProxyModel::filter()
     add_matching(parent_index);
 }
 
-void FilteringProxyModel::set_filter_term(const StringView& term)
+void FilteringProxyModel::set_filter_term(StringView const& term)
 {
     if (m_filter_term == term)
         return;
@@ -87,7 +87,7 @@ void FilteringProxyModel::set_filter_term(const StringView& term)
     invalidate();
 }
 
-ModelIndex FilteringProxyModel::map(const ModelIndex& index) const
+ModelIndex FilteringProxyModel::map(ModelIndex const& index) const
 {
     if (!index.is_valid())
         return {};
@@ -104,7 +104,7 @@ bool FilteringProxyModel::is_searchable() const
     return m_model.is_searchable();
 }
 
-Vector<ModelIndex> FilteringProxyModel::matches(const StringView& searching, unsigned flags, const ModelIndex& index)
+Vector<ModelIndex> FilteringProxyModel::matches(StringView const& searching, unsigned flags, ModelIndex const& index)
 {
     auto found_indices = m_model.matches(searching, flags, index);
     for (size_t i = 0; i < found_indices.size(); i++)

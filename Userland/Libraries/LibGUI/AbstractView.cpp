@@ -85,27 +85,27 @@ void AbstractView::clear_selection()
     m_selection.clear();
 }
 
-void AbstractView::set_selection(const ModelIndex& new_index)
+void AbstractView::set_selection(ModelIndex const& new_index)
 {
     m_selection.set(new_index);
 }
 
-void AbstractView::set_selection_start_index(const ModelIndex& new_index)
+void AbstractView::set_selection_start_index(ModelIndex const& new_index)
 {
     m_selection_start_index = new_index;
 }
 
-void AbstractView::add_selection(const ModelIndex& new_index)
+void AbstractView::add_selection(ModelIndex const& new_index)
 {
     m_selection.add(new_index);
 }
 
-void AbstractView::remove_selection(const ModelIndex& new_index)
+void AbstractView::remove_selection(ModelIndex const& new_index)
 {
     m_selection.remove(new_index);
 }
 
-void AbstractView::toggle_selection(const ModelIndex& new_index)
+void AbstractView::toggle_selection(ModelIndex const& new_index)
 {
     m_selection.toggle(new_index);
 }
@@ -130,7 +130,7 @@ void AbstractView::update_edit_widget_position()
     m_edit_widget->set_relative_rect(m_edit_widget_content_rect.translated(-horizontal_scrollbar().value(), -vertical_scrollbar().value()));
 }
 
-void AbstractView::begin_editing(const ModelIndex& index)
+void AbstractView::begin_editing(ModelIndex const& index)
 {
     VERIFY(is_editable());
     VERIFY(model());
@@ -182,7 +182,7 @@ void AbstractView::stop_editing()
         set_focus(true);
 }
 
-void AbstractView::activate(const ModelIndex& index)
+void AbstractView::activate(ModelIndex const& index)
 {
     if (on_activation)
         on_activation(index);
@@ -205,7 +205,7 @@ void AbstractView::notify_selection_changed(Badge<ModelSelection>)
         update();
 }
 
-NonnullRefPtr<Gfx::Font> AbstractView::font_for_index(const ModelIndex& index) const
+NonnullRefPtr<Gfx::Font> AbstractView::font_for_index(ModelIndex const& index) const
 {
     if (!model())
         return font();
@@ -249,7 +249,7 @@ void AbstractView::mousedown_event(MouseEvent& event)
     update();
 }
 
-void AbstractView::set_hovered_index(const ModelIndex& index)
+void AbstractView::set_hovered_index(ModelIndex const& index)
 {
     if (m_hovered_index == index)
         return;
@@ -682,7 +682,7 @@ void AbstractView::set_searchable(bool searchable)
         stop_highlighted_search_timer();
 }
 
-void AbstractView::draw_item_text(Gfx::Painter& painter, const ModelIndex& index, bool is_selected, const Gfx::IntRect& text_rect, const StringView& item_text, const Gfx::Font& font, Gfx::TextAlignment alignment, Gfx::TextElision elision, size_t search_highlighting_offset)
+void AbstractView::draw_item_text(Gfx::Painter& painter, ModelIndex const& index, bool is_selected, Gfx::IntRect const& text_rect, StringView const& item_text, Gfx::Font const& font, Gfx::TextAlignment alignment, Gfx::TextElision elision, size_t search_highlighting_offset)
 {
     if (m_edit_index == index)
         return;
@@ -702,7 +702,7 @@ void AbstractView::draw_item_text(Gfx::Painter& painter, const ModelIndex& index
 
         // Highlight the text background first
         auto background_searching_length = searching_length;
-        painter.draw_text([&](const Gfx::IntRect& rect, u32) {
+        painter.draw_text([&](Gfx::IntRect const& rect, u32) {
             if (background_searching_length > 0) {
                 background_searching_length--;
                 painter.fill_rect(rect.inflated(0, 2), palette().highlight_searching());
@@ -714,7 +714,7 @@ void AbstractView::draw_item_text(Gfx::Painter& painter, const ModelIndex& index
         auto text_searching_length = searching_length;
         auto highlight_text_color = palette().highlight_searching_text();
         searching_length = searching_text.length();
-        painter.draw_text([&](const Gfx::IntRect& rect, u32 code_point) {
+        painter.draw_text([&](Gfx::IntRect const& rect, u32 code_point) {
             if (text_searching_length > 0) {
                 text_searching_length--;
                 painter.draw_glyph_or_emoji(rect.location(), code_point, font, highlight_text_color);
