@@ -113,12 +113,12 @@ public:
         return adopt_nonnull_own_or_enomem(new (nothrow) KBuffer(impl.release_nonnull()));
     }
 
-    [[nodiscard]] bool is_null() const { return !m_impl; }
+    [[nodiscard]] bool is_null() const { return false; }
 
-    [[nodiscard]] u8* data() { return m_impl ? m_impl->data() : nullptr; }
-    [[nodiscard]] const u8* data() const { return m_impl ? m_impl->data() : nullptr; }
-    [[nodiscard]] size_t size() const { return m_impl ? m_impl->size() : 0; }
-    [[nodiscard]] size_t capacity() const { return m_impl ? m_impl->capacity() : 0; }
+    [[nodiscard]] u8* data() { return m_impl->data(); }
+    [[nodiscard]] const u8* data() const { return m_impl->data(); }
+    [[nodiscard]] size_t size() const { return m_impl->size(); }
+    [[nodiscard]] size_t capacity() const { return m_impl->capacity(); }
 
     [[nodiscard]] void* end_pointer() { return data() + size(); }
     [[nodiscard]] const void* end_pointer() const { return data() + size(); }
@@ -129,12 +129,12 @@ public:
     [[nodiscard]] const KBufferImpl& impl() const { return *m_impl; }
 
 private:
-    explicit KBuffer(RefPtr<KBufferImpl>&& impl)
+    explicit KBuffer(NonnullRefPtr<KBufferImpl> impl)
         : m_impl(move(impl))
     {
     }
 
-    RefPtr<KBufferImpl> m_impl;
+    NonnullRefPtr<KBufferImpl> m_impl;
 };
 
 }
