@@ -103,10 +103,10 @@ add_custom_target(install-ports
 )
 
 add_custom_target(configure-components
-    COMMAND "$<TARGET_FILE:ConfigureComponents>"
+    COMMAND "$<TARGET_FILE:Lagom::ConfigureComponents>"
     USES_TERMINAL
 )
-add_dependencies(configure-components ConfigureComponents)
+add_dependencies(configure-components Lagom::ConfigureComponents)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
