@@ -171,17 +171,14 @@ RefPtr<Gfx::Bitmap> load_bmp(String const& path)
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
         return nullptr;
-    auto bitmap = load_bmp_impl((const u8*)file_or_error.value()->data(), file_or_error.value()->size());
-    if (bitmap)
-        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded BMP: {}", bitmap->size(), LexicalPath::canonicalized_path(path)));
-    return bitmap;
+    return load_bmp_from_memory((u8 const*)file_or_error.value()->data(), file_or_error.value()->size(), LexicalPath::canonicalized_path(path));
 }
 
-RefPtr<Gfx::Bitmap> load_bmp_from_memory(const u8* data, size_t length)
+RefPtr<Gfx::Bitmap> load_bmp_from_memory(u8 const* data, size_t length, String const& mmap_name)
 {
     auto bitmap = load_bmp_impl(data, length);
     if (bitmap)
-        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded BMP: <memory>", bitmap->size()));
+        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded BMP: {}", bitmap->size(), mmap_name));
     return bitmap;
 }
 

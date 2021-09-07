@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
 
@@ -233,7 +234,7 @@ struct DDSHeaderDXT10 {
 };
 
 RefPtr<Gfx::Bitmap> load_dds(String const& path);
-RefPtr<Gfx::Bitmap> load_dds_from_memory(const u8*, size_t);
+RefPtr<Gfx::Bitmap> load_dds_from_memory(u8 const*, size_t, String const& mmap_name = "<memory>");
 
 struct DDSLoadingContext;
 

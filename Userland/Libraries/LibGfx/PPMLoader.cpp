@@ -106,12 +106,9 @@ RefPtr<Gfx::Bitmap> load_ppm(const StringView& path)
     return load<PPMLoadingContext>(path);
 }
 
-RefPtr<Gfx::Bitmap> load_ppm_from_memory(const u8* data, size_t length)
+RefPtr<Gfx::Bitmap> load_ppm_from_memory(u8 const* data, size_t length, String const& mmap_name)
 {
-    auto bitmap = load_impl<PPMLoadingContext>(data, length);
-    if (bitmap)
-        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded PPM: <memory>", bitmap->size()));
-    return bitmap;
+    return load_from_memory<PPMLoadingContext>(data, length, mmap_name);
 }
 
 PPMImageDecoderPlugin::PPMImageDecoderPlugin(const u8* data, size_t size)

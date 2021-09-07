@@ -104,12 +104,9 @@ RefPtr<Gfx::Bitmap> load_pgm(const StringView& path)
     return load<PGMLoadingContext>(path);
 }
 
-RefPtr<Gfx::Bitmap> load_pgm_from_memory(const u8* data, size_t length)
+RefPtr<Gfx::Bitmap> load_pgm_from_memory(u8 const* data, size_t length, String const& mmap_name)
 {
-    auto bitmap = load_impl<PGMLoadingContext>(data, length);
-    if (bitmap)
-        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded PGM: <memory>", bitmap->size()));
-    return bitmap;
+    return load_from_memory<PGMLoadingContext>(data, length, mmap_name);
 }
 
 PGMImageDecoderPlugin::PGMImageDecoderPlugin(const u8* data, size_t size)
