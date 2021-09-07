@@ -287,11 +287,11 @@ function(libweb_js_wrapper class)
         list(GET BINDINGS_TYPES ${iter} bindings_type)
         add_custom_command(
             OUTPUT "${bindings_src}"
-            COMMAND "$<TARGET_FILE:WrapperGenerator>" "--${bindings_type}" "${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl" > "${bindings_src}.tmp"
+            COMMAND "$<TARGET_FILE:Lagom::WrapperGenerator>" "--${bindings_type}" "${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl" > "${bindings_src}.tmp"
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${bindings_src}.tmp" "${bindings_src}"
             COMMAND "${CMAKE_COMMAND}" -E remove "${bindings_src}.tmp"
             VERBATIM
-            DEPENDS WrapperGenerator
+            DEPENDS Lagom::WrapperGenerator
             MAIN_DEPENDENCY ${class}.idl
         )
     endforeach()
@@ -430,11 +430,11 @@ libweb_js_wrapper(URL/URLSearchParams)
 add_custom_command(
     OUTPUT CSS/PropertyID.h
     COMMAND ${CMAKE_COMMAND} -E make_directory CSS
-    COMMAND "$<TARGET_FILE:Generate_CSS_PropertyID_h>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json" > CSS/PropertyID.h.tmp
+    COMMAND "$<TARGET_FILE:Lagom::Generate_CSS_PropertyID_h>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json" > CSS/PropertyID.h.tmp
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/PropertyID.h.tmp CSS/PropertyID.h
     COMMAND "${CMAKE_COMMAND}" -E remove CSS/PropertyID.h.tmp
     VERBATIM
-    DEPENDS Generate_CSS_PropertyID_h
+    DEPENDS Lagom::Generate_CSS_PropertyID_h
     MAIN_DEPENDENCY CSS/Properties.json
 )
 add_custom_target(generate_PropertyID.h DEPENDS CSS/PropertyID.h)
@@ -443,11 +443,11 @@ add_dependencies(all_generated generate_PropertyID.h)
 add_custom_command(
     OUTPUT CSS/PropertyID.cpp
     COMMAND ${CMAKE_COMMAND} -E make_directory CSS
-    COMMAND "$<TARGET_FILE:Generate_CSS_PropertyID_cpp>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json" > CSS/PropertyID.cpp.tmp
+    COMMAND "$<TARGET_FILE:Lagom::Generate_CSS_PropertyID_cpp>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json" > CSS/PropertyID.cpp.tmp
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/PropertyID.cpp.tmp CSS/PropertyID.cpp
     COMMAND "${CMAKE_COMMAND}" -E remove CSS/PropertyID.cpp.tmp
     VERBATIM
-    DEPENDS Generate_CSS_PropertyID_cpp
+    DEPENDS Lagom::Generate_CSS_PropertyID_cpp
     MAIN_DEPENDENCY CSS/Properties.json
 )
 add_custom_target(generate_PropertyID.cpp DEPENDS CSS/PropertyID.cpp)
@@ -456,11 +456,11 @@ add_dependencies(all_generated generate_PropertyID.cpp)
 add_custom_command(
     OUTPUT CSS/ValueID.h
     COMMAND "${CMAKE_COMMAND}" -E make_directory CSS
-    COMMAND "$<TARGET_FILE:Generate_CSS_ValueID_h>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json" > CSS/ValueID.h.tmp
+    COMMAND "$<TARGET_FILE:Lagom::Generate_CSS_ValueID_h>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json" > CSS/ValueID.h.tmp
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/ValueID.h.tmp CSS/ValueID.h
     COMMAND "${CMAKE_COMMAND}" -E remove CSS/ValueID.h.tmp
     VERBATIM
-    DEPENDS Generate_CSS_ValueID_h
+    DEPENDS Lagom::Generate_CSS_ValueID_h
     MAIN_DEPENDENCY CSS/Identifiers.json
 )
 add_custom_target(generate_ValueID.h DEPENDS CSS/ValueID.h)
@@ -469,11 +469,11 @@ add_dependencies(all_generated generate_ValueID.h)
 add_custom_command(
     OUTPUT CSS/ValueID.cpp
     COMMAND "${CMAKE_COMMAND}" -E make_directory CSS
-    COMMAND "$<TARGET_FILE:Generate_CSS_ValueID_cpp>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json" > CSS/ValueID.cpp.tmp
+    COMMAND "$<TARGET_FILE:Lagom::Generate_CSS_ValueID_cpp>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json" > CSS/ValueID.cpp.tmp
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/ValueID.cpp.tmp CSS/ValueID.cpp
     COMMAND "${CMAKE_COMMAND}" -E remove CSS/ValueID.cpp.tmp
     VERBATIM
-    DEPENDS Generate_CSS_ValueID_cpp
+    DEPENDS Lagom::Generate_CSS_ValueID_cpp
     MAIN_DEPENDENCY CSS/Identifiers.json
 )
 add_custom_target(generate_ValueID.cpp DEPENDS CSS/ValueID.cpp)
