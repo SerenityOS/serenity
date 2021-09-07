@@ -31,7 +31,7 @@ enum class LockRank : int {
 
     Thread = 0x008,
 
-    // Process locks are the lowest rank, as they normally are taken
+    // Process locks are the highest rank, as they normally are taken
     // first thing when processing syscalls.
     Process = 0x010,
 };
