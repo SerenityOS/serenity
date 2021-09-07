@@ -61,7 +61,7 @@ void NetworkTask_main(void*)
     NetworkingManagement::the().for_each([&](auto& adapter) {
         dmesgln("NetworkTask: {} network adapter found: hw={}", adapter.class_name(), adapter.mac_address().to_string());
 
-        if (String(adapter.class_name()) == "LoopbackAdapter") {
+        if (adapter.class_name() == "LoopbackAdapter"sv) {
             adapter.set_ipv4_address({ 127, 0, 0, 1 });
             adapter.set_ipv4_netmask({ 255, 0, 0, 0 });
             adapter.set_ipv4_gateway({ 0, 0, 0, 0 });
