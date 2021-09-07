@@ -20,16 +20,6 @@ MagnifierWidget::~MagnifierWidget()
 {
 }
 
-void MagnifierWidget::track_cursor_globally()
-{
-    VERIFY(window());
-    auto window_id = window()->window_id();
-    VERIFY(window_id >= 0);
-
-    set_global_cursor_tracking(true);
-    GUI::WindowServerConnection::the().async_set_global_cursor_tracking(window_id, true);
-}
-
 void MagnifierWidget::set_scale_factor(int scale_factor)
 {
     VERIFY(scale_factor == 2 || scale_factor == 4);

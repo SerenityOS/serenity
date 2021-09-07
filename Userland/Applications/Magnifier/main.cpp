@@ -79,7 +79,5 @@ int main(int argc, char** argv)
 
     window->show();
 
-    magnifier.track_cursor_globally();
-
     return app->exec();
 }
