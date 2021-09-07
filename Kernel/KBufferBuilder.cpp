@@ -46,8 +46,14 @@ OwnPtr<KBuffer> KBufferBuilder::build()
     return move(m_buffer);
 }
 
-KBufferBuilder::KBufferBuilder()
-    : m_buffer(KBuffer::try_create_with_size(4 * MiB, Memory::Region::Access::ReadWrite).release_value())
+KResultOr<KBufferBuilder> KBufferBuilder::try_create()
+{
+    auto buffer = TRY(KBuffer::try_create_with_size(4 * MiB, Memory::Region::Access::ReadWrite));
+    return KBufferBuilder { move(buffer) };
+}
+
+KBufferBuilder::KBufferBuilder(NonnullOwnPtr<KBuffer> buffer)
+    : m_buffer(move(buffer))
 {
 }
 

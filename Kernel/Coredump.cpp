@@ -281,7 +281,7 @@ KResult Coredump::write()
     SpinlockLocker lock(m_process->address_space().get_lock());
     ScopedAddressSpaceSwitcher switcher(m_process);
 
-    KBufferBuilder builder;
+    auto builder = TRY(KBufferBuilder::try_create());
     TRY(create_notes_segment_data(builder));
     TRY(write_elf_header());
     TRY(write_program_headers(builder.bytes().size()));

@@ -6,18 +6,22 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/StringView.h>
 #include <Kernel/KBuffer.h>
 #include <stdarg.h>
 
 namespace Kernel {
 
 class KBufferBuilder {
+    AK_MAKE_NONCOPYABLE(KBufferBuilder);
+
 public:
     using OutputType = KBuffer;
 
-    KBufferBuilder();
+    static KResultOr<KBufferBuilder> try_create();
+
     KBufferBuilder(KBufferBuilder&&) = default;
+    KBufferBuilder& operator=(KBufferBuilder&&) = default;
     ~KBufferBuilder() = default;
 
     KResult append(const StringView&);
@@ -48,6 +52,8 @@ public:
     }
 
 private:
+    explicit KBufferBuilder(NonnullOwnPtr<KBuffer>);
+
     bool check_expand(size_t);
     u8* insertion_ptr()
     {

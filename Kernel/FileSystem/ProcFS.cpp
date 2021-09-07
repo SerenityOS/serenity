@@ -480,7 +480,7 @@ KResultOr<size_t> ProcFSProcessPropertyInode::read_bytes(off_t offset, size_t co
     VERIFY(buffer.user_or_kernel_ptr());
 
     if (!description) {
-        KBufferBuilder builder;
+        auto builder = TRY(KBufferBuilder::try_create());
         auto process = Process::from_pid(associated_pid());
         if (!process)
             return KResult(ESRCH);
@@ -579,7 +579,7 @@ KResult ProcFSProcessPropertyInode::refresh_data(OpenFileDescription& descriptio
         if (!cached_data)
             return ENOMEM;
     }
-    KBufferBuilder builder;
+    auto builder = TRY(KBufferBuilder::try_create());
     TRY(try_to_acquire_data(*process, builder));
     return build_from_cached_data(builder, static_cast<ProcFSInodeData&>(*cached_data));
 }

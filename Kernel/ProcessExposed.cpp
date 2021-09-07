@@ -144,7 +144,7 @@ KResult ProcFSGlobalInformation::refresh_data(OpenFileDescription& description) 
         if (!cached_data)
             return ENOMEM;
     }
-    KBufferBuilder builder;
+    auto builder = TRY(KBufferBuilder::try_create());
     TRY(const_cast<ProcFSGlobalInformation&>(*this).try_generate(builder));
     auto& typed_cached_data = static_cast<ProcFSInodeData&>(*cached_data);
     typed_cached_data.buffer = builder.build();
@@ -157,7 +157,7 @@ KResultOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, User
 {
     VERIFY(offset == 0);
     MutexLocker locker(m_lock);
-    KBufferBuilder builder;
+    auto builder = TRY(KBufferBuilder::try_create());
     if (!const_cast<ProcFSExposedLink&>(*this).acquire_link(builder))
         return KResult(EFAULT);
     auto blob = builder.build();

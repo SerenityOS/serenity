@@ -323,7 +323,7 @@ StringView Plan9FS::Message::Decoder::read_data()
 }
 
 Plan9FS::Message::Message(Plan9FS& fs, Type type)
-    : m_builder()
+    : m_builder(KBufferBuilder::try_create().release_value()) // FIXME: Don't assume KBufferBuilder allocation success.
     , m_tag(fs.allocate_tag())
     , m_type(type)
     , m_have_been_built(false)

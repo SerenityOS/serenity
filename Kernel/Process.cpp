@@ -575,7 +575,12 @@ bool Process::dump_perfcore()
     }
 
     auto& description = *description_or_error.value();
-    KBufferBuilder builder;
+    auto builder_or_error = KBufferBuilder::try_create();
+    if (builder_or_error.is_error()) {
+        dbgln("Failed to generate perfcore for pid {}: Could not allocate KBufferBuilder.", pid());
+        return false;
+    }
+    auto builder = builder_or_error.release_value();
     if (!m_perf_event_buffer->to_json(builder)) {
         dbgln("Failed to generate perfcore for pid {}: Could not serialize performance events to JSON.", pid().value());
         return false;
