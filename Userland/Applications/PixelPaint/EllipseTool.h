@@ -37,7 +37,7 @@ private:
         FromCorner,
     };
 
-    void draw_using(GUI::Painter&, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position);
+    void draw_using(GUI::Painter&, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position, int thickness);
 
     RefPtr<GUI::Widget> m_properties_widget;
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
