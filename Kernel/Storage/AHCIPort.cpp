@@ -103,7 +103,7 @@ void AHCIPort::handle_interrupt()
                 VERIFY(m_current_request);
                 VERIFY(m_current_scatter_list);
                 if (m_current_request->request_type() == AsyncBlockDeviceRequest::Read) {
-                    if (!m_current_request->write_to_buffer(m_current_request->buffer(), m_current_scatter_list->dma_region().as_ptr(), m_connected_device->block_size() * m_current_request->block_count())) {
+                    if (auto result = m_current_request->write_to_buffer(m_current_request->buffer(), m_current_scatter_list->dma_region().as_ptr(), m_connected_device->block_size() * m_current_request->block_count()); result.is_error()) {
                         dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request failure, memory fault occurred when reading in data.", representative_port_index());
                         m_current_scatter_list = nullptr;
                         complete_current_request(AsyncDeviceRequest::MemoryFault);
@@ -445,7 +445,7 @@ Optional<AsyncDeviceRequest::RequestResult> AHCIPort::prepare_and_set_scatter_li
     if (!m_current_scatter_list)
         return AsyncDeviceRequest::Failure;
     if (request.request_type() == AsyncBlockDeviceRequest::Write) {
-        if (!request.read_from_buffer(request.buffer(), m_current_scatter_list->dma_region().as_ptr(), m_connected_device->block_size() * request.block_count())) {
+        if (auto result = request.read_from_buffer(request.buffer(), m_current_scatter_list->dma_region().as_ptr(), m_connected_device->block_size() * request.block_count()); result.is_error()) {
             return AsyncDeviceRequest::MemoryFault;
         }
     }

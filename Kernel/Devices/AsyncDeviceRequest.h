@@ -81,7 +81,7 @@ public:
     void* get_private() const { return m_private; }
 
     template<typename... Args>
-    [[nodiscard]] bool write_to_buffer(UserOrKernelBuffer& buffer, Args... args)
+    KResult write_to_buffer(UserOrKernelBuffer& buffer, Args... args)
     {
         if (in_target_context(buffer))
             return buffer.write(forward<Args>(args)...);
@@ -99,7 +99,7 @@ public:
     }
 
     template<typename... Args>
-    [[nodiscard]] bool read_from_buffer(const UserOrKernelBuffer& buffer, Args... args)
+    KResult read_from_buffer(const UserOrKernelBuffer& buffer, Args... args)
     {
         if (in_target_context(buffer))
             return buffer.read(forward<Args>(args)...);

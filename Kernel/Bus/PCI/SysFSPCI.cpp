@@ -70,8 +70,7 @@ KResultOr<size_t> PCIDeviceAttributeSysFSComponent::read_bytes(off_t offset, siz
         return KSuccess;
 
     ssize_t nread = min(static_cast<off_t>(blob->size() - offset), static_cast<off_t>(count));
-    if (!buffer.write(blob->data() + offset, nread))
-        return KResult(EFAULT);
+    TRY(buffer.write(blob->data() + offset, nread));
     return nread;
 }
 

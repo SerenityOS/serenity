@@ -39,8 +39,7 @@ KResultOr<size_t> MouseDevice::read(FileDescription&, u64, UserOrKernelBuffer& b
         dbgln_if(MOUSE_DEBUG, "PS2 Mouse Read: Filter packets");
 
         size_t bytes_read_from_packet = min(remaining_space_in_buffer, sizeof(MousePacket));
-        if (!buffer.write(&packet, nread, bytes_read_from_packet))
-            return EFAULT;
+        TRY(buffer.write(&packet, nread, bytes_read_from_packet));
         nread += bytes_read_from_packet;
         remaining_space_in_buffer -= bytes_read_from_packet;
 

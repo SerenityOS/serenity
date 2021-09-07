@@ -446,10 +446,7 @@ KResultOr<size_t> ISO9660Inode::read_bytes(off_t offset, size_t size, UserOrKern
             return EIO;
         }
 
-        bool result = buffer_offset.write(block->data() + initial_offset, bytes_to_read);
-        if (!result) {
-            return EFAULT;
-        }
+        TRY(buffer_offset.write(block->data() + initial_offset, bytes_to_read));
 
         nread += bytes_to_read;
         initial_offset = 0;

@@ -156,8 +156,7 @@ KResult BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKernelBu
             // Fill the cache first.
             TRY(read_block(index, nullptr, block_size()));
         }
-        if (!data.read(entry.data + offset, count))
-            return EFAULT;
+        TRY(data.read(entry.data + offset, count));
 
         cache->mark_dirty(entry);
         entry.has_data = true;
@@ -238,8 +237,8 @@ KResult BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuffer* b
             VERIFY(nread == block_size());
             entry.has_data = true;
         }
-        if (buffer && !buffer->write(entry.data + offset, count))
-            return EFAULT;
+        if (buffer)
+            TRY(buffer->write(entry.data + offset, count));
         return KSuccess;
     });
 }

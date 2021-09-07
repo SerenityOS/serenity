@@ -55,28 +55,29 @@ public:
     }
 
     KResultOr<NonnullOwnPtr<KString>> try_copy_into_kstring(size_t) const;
-    [[nodiscard]] bool write(const void* src, size_t offset, size_t len);
-    [[nodiscard]] bool write(const void* src, size_t len)
+    KResult write(const void* src, size_t offset, size_t len);
+    KResult write(const void* src, size_t len)
     {
         return write(src, 0, len);
     }
-    [[nodiscard]] bool write(ReadonlyBytes bytes)
+    KResult write(ReadonlyBytes bytes)
     {
         return write(bytes.data(), bytes.size());
     }
 
-    [[nodiscard]] bool read(void* dest, size_t offset, size_t len) const;
-    [[nodiscard]] bool read(void* dest, size_t len) const
+    KResult read(void* dest, size_t offset, size_t len) const;
+    KResult read(void* dest, size_t len) const
     {
         return read(dest, 0, len);
     }
-    [[nodiscard]] bool read(Bytes bytes) const
+
+    KResult read(Bytes bytes) const
     {
         return read(bytes.data(), bytes.size());
     }
 
-    [[nodiscard]] bool memset(int value, size_t offset, size_t len);
-    [[nodiscard]] bool memset(int value, size_t len)
+    KResult memset(int value, size_t offset, size_t len);
+    KResult memset(int value, size_t len)
     {
         return memset(value, 0, len);
     }
@@ -104,8 +105,7 @@ public:
                 return copied_or_error.error();
             auto copied = copied_or_error.value();
             VERIFY(copied <= to_copy);
-            if (!write(buffer, nwritten, copied))
-                return EFAULT;
+            TRY(write(buffer, nwritten, copied));
             nwritten += copied;
             if (copied < to_copy)
                 break;
@@ -134,8 +134,7 @@ public:
         size_t nread = 0;
         while (nread < len) {
             auto to_copy = min(sizeof(buffer), len - nread);
-            if (!read(buffer, nread, to_copy))
-                return EFAULT;
+            TRY(read(buffer, nread, to_copy));
             ReadonlyBytes read_only_bytes { buffer, to_copy };
             KResultOr<size_t> copied_or_error = f(read_only_bytes);
             if (copied_or_error.is_error())

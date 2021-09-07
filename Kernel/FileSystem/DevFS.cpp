@@ -154,8 +154,7 @@ KResultOr<size_t> DevFSLinkInode::read_bytes(off_t offset, size_t, UserOrKernelB
     MutexLocker locker(m_inode_lock);
     VERIFY(offset == 0);
     VERIFY(m_link);
-    if (!buffer.write(m_link->characters() + offset, m_link->length()))
-        return EFAULT;
+    TRY(buffer.write(m_link->characters() + offset, m_link->length()));
     return m_link->length();
 }
 

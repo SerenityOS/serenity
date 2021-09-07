@@ -138,8 +138,7 @@ KResultOr<size_t> TmpFSInode::read_bytes(off_t offset, size_t size, UserOrKernel
     if (static_cast<off_t>(size) > m_metadata.size - offset)
         size = m_metadata.size - offset;
 
-    if (!buffer.write(m_content->data() + offset, size))
-        return EFAULT;
+    TRY(buffer.write(m_content->data() + offset, size));
     return size;
 }
 
@@ -182,8 +181,7 @@ KResultOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserO
         notify_watchers();
     }
 
-    if (!buffer.read(m_content->data() + offset, size)) // TODO: partial reads?
-        return EFAULT;
+    TRY(buffer.read(m_content->data() + offset, size)); // TODO: partial reads?
 
     did_modify_contents();
     return size;

@@ -842,8 +842,7 @@ KResultOr<size_t> Ext2FSInode::read_bytes(off_t offset, size_t count, UserOrKern
     if (is_symlink() && size() < max_inline_symlink_length) {
         VERIFY(offset == 0);
         size_t nread = min((off_t)size() - offset, static_cast<off_t>(count));
-        if (!buffer.write(((const u8*)m_raw_inode.i_block) + offset, nread))
-            return EFAULT;
+        TRY(buffer.write(((const u8*)m_raw_inode.i_block) + offset, nread));
         return nread;
     }
 
@@ -878,8 +877,7 @@ KResultOr<size_t> Ext2FSInode::read_bytes(off_t offset, size_t count, UserOrKern
         auto buffer_offset = buffer.offset(nread);
         if (block_index.value() == 0) {
             // This is a hole, act as if it's filled with zeroes.
-            if (!buffer_offset.memset(0, num_bytes_to_copy))
-                return EFAULT;
+            TRY(buffer_offset.memset(0, num_bytes_to_copy));
         } else {
             if (auto result = fs().read_block(block_index, &buffer_offset, num_bytes_to_copy, offset_into_block, allow_cache); result.is_error()) {
                 dmesgln("Ext2FSInode[{}]::read_bytes(): Failed to read block {} (index {})", identifier(), block_index.value(), bi);
@@ -982,8 +980,7 @@ KResultOr<size_t> Ext2FSInode::write_bytes(off_t offset, size_t count, const Use
         VERIFY(offset == 0);
         if (max((size_t)(offset + count), (size_t)m_raw_inode.i_size) < max_inline_symlink_length) {
             dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_bytes(): Poking into i_block array for inline symlink ({} bytes)", identifier(), count);
-            if (!data.read(((u8*)m_raw_inode.i_block) + offset, (size_t)count))
-                return EFAULT;
+            TRY(data.read(((u8*)m_raw_inode.i_block) + offset, count));
             if ((size_t)(offset + count) > (size_t)m_raw_inode.i_size)
                 m_raw_inode.i_size = offset + count;
             set_metadata_dirty(true);

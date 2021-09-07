@@ -276,8 +276,7 @@ KResultOr<size_t> SB16::write(FileDescription&, u64, UserOrKernelBuffer const& d
 
     u8 mode = (u8)SampleFormat::Signed | (u8)SampleFormat::Stereo;
 
-    if (!data.read(m_dma_region->vaddr().as_ptr(), length))
-        return EFAULT;
+    TRY(data.read(m_dma_region->vaddr().as_ptr(), length));
     dma_start(length);
 
     // 16-bit single-cycle output.

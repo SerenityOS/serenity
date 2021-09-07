@@ -65,8 +65,8 @@ KResultOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
     auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
     VERIFY(udp_packet.length() >= sizeof(UDPPacket)); // FIXME: This should be rejected earlier.
     size_t read_size = min(buffer_size, udp_packet.length() - sizeof(UDPPacket));
-    if (!buffer.write(udp_packet.payload(), read_size))
-        return set_so_error(EFAULT);
+    if (auto result = buffer.write(udp_packet.payload(), read_size); result.is_error())
+        return set_so_error(result);
     return read_size;
 }
 
@@ -86,8 +86,8 @@ KResultOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_
     udp_packet.set_source_port(local_port());
     udp_packet.set_destination_port(peer_port());
     udp_packet.set_length(udp_buffer_size);
-    if (!data.read(udp_packet.payload(), data_length))
-        return set_so_error(EFAULT);
+    if (auto result = data.read(udp_packet.payload(), data_length); result.is_error())
+        return set_so_error(result);
 
     routing_decision.adapter->fill_in_ipv4_header(*packet, local_address(), routing_decision.next_hop,
         peer_address(), IPv4Protocol::UDP, udp_buffer_size, ttl());

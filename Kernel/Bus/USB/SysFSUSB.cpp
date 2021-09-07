@@ -87,9 +87,7 @@ KResultOr<size_t> SysFSUSBDeviceInformation::read_bytes(off_t offset, size_t cou
         return 0;
 
     ssize_t nread = min(static_cast<off_t>(data_buffer->size() - offset), static_cast<off_t>(count));
-    if (!buffer.write(data_buffer->data() + offset, nread))
-        return KResult(EFAULT);
-
+    TRY(buffer.write(data_buffer->data() + offset, nread));
     return nread;
 }
 

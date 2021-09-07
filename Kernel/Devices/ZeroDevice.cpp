@@ -31,8 +31,7 @@ bool ZeroDevice::can_read(const FileDescription&, size_t) const
 
 KResultOr<size_t> ZeroDevice::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
-    if (!buffer.memset(0, size))
-        return EFAULT;
+    TRY(buffer.memset(0, size));
     return size;
 }
 

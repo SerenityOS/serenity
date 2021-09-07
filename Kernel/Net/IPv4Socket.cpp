@@ -236,9 +236,9 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
             return set_so_error(ENOMEM);
         routing_decision.adapter->fill_in_ipv4_header(*packet, local_address(), routing_decision.next_hop,
             m_peer_address, (IPv4Protocol)protocol(), data_length, m_ttl);
-        if (!data.read(packet->buffer->data() + ipv4_payload_offset, data_length)) {
+        if (auto result = data.read(packet->buffer->data() + ipv4_payload_offset, data_length); result.is_error()) {
             routing_decision.adapter->release_packet_buffer(*packet);
-            return set_so_error(EFAULT);
+            return set_so_error(result);
         }
         routing_decision.adapter->send_packet(packet->bytes());
         routing_decision.adapter->release_packet_buffer(*packet);
@@ -371,8 +371,8 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
 
     if (type() == SOCK_RAW) {
         size_t bytes_written = min(packet.data.value().size(), buffer_length);
-        if (!buffer.write(packet.data.value().data(), bytes_written))
-            return set_so_error(EFAULT);
+        if (auto result = buffer.write(packet.data.value().data(), bytes_written); result.is_error())
+            return set_so_error(result);
         return bytes_written;
     }
 

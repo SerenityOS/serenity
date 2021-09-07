@@ -222,8 +222,9 @@ KResultOr<size_t> FileDescription::get_dir_entries(UserOrKernelBuffer& output_bu
         if (remaining < stream.size()) {
             error = EINVAL;
             return false;
-        } else if (!output_buffer.write(stream.bytes())) {
-            error = EFAULT;
+        }
+        if (auto result = output_buffer.write(stream.bytes()); result.is_error()) {
+            error = result.release_error();
             return false;
         }
         output_buffer = output_buffer.offset(stream.size());
