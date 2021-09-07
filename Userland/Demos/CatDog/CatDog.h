@@ -6,22 +6,23 @@
 
 #include <LibCore/ElapsedTimer.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/MouseTracker.h>
 #include <LibGUI/Widget.h>
 #include <unistd.h>
 
 #pragma once
 
-class CatDog final : public GUI::Widget {
+class CatDog final : public GUI::Widget
+    , GUI::MouseTracker {
     C_OBJECT(CatDog);
 
 public:
     virtual void timer_event(Core::TimerEvent&) override;
     virtual void paint_event(GUI::PaintEvent& event) override;
-    virtual void mousemove_event(GUI::MouseEvent& event) override;
+    virtual void track_mouse_move(Gfx::IntPoint const& point) override;
     virtual void mousedown_event(GUI::MouseEvent& event) override;
     virtual void context_menu_event(GUI::ContextMenuEvent& event) override;
 
-    void track_cursor_globally();
     void start_the_timer() { m_timer.start(); }
 
     Function<void()> on_click;
