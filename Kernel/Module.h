@@ -17,7 +17,7 @@ typedef void* (*ModuleFiniPtr)();
 
 struct Module {
     String name;
-    Vector<KBuffer> sections;
+    NonnullOwnPtrVector<KBuffer> sections;
 
     ModuleInitPtr module_init { nullptr };
     ModuleFiniPtr module_fini { nullptr };

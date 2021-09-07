@@ -284,7 +284,8 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(OpenFileDescription& descrip
 KResultOr<size_t> IPv4Socket::receive_packet_buffered(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> addr, Userspace<socklen_t*> addr_length, Time& packet_timestamp)
 {
     MutexLocker locker(mutex());
-    ReceivedPacket packet;
+    ReceivedPacket taken_packet;
+    ReceivedPacket* packet { nullptr };
     {
         if (m_receive_queue.is_empty()) {
             // FIXME: Shouldn't this return ENOTCONN instead of EOF?
@@ -296,20 +297,22 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(OpenFileDescription& descr
         }
 
         if (!m_receive_queue.is_empty()) {
-            if (flags & MSG_PEEK)
-                packet = m_receive_queue.first();
-            else
-                packet = m_receive_queue.take_first();
+            if (flags & MSG_PEEK) {
+                packet = &m_receive_queue.first();
+            } else {
+                taken_packet = m_receive_queue.take_first();
+                packet = &taken_packet;
+            }
 
             set_can_read(!m_receive_queue.is_empty());
 
             dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket({}): recvfrom without blocking {} bytes, packets in queue: {}",
                 this,
-                packet.data.value().size(),
+                packet->data->size(),
                 m_receive_queue.size());
         }
     }
-    if (!packet.data.has_value()) {
+    if (!packet->data) {
         if (protocol_is_disconnected()) {
             dbgln("IPv4Socket({}) is protocol-disconnected, returning 0 in recvfrom!", this);
             return 0;
@@ -330,28 +333,30 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(OpenFileDescription& descr
         VERIFY(m_can_read);
         VERIFY(!m_receive_queue.is_empty());
 
-        if (flags & MSG_PEEK)
-            packet = m_receive_queue.first();
-        else
-            packet = m_receive_queue.take_first();
+        if (flags & MSG_PEEK) {
+            packet = &m_receive_queue.first();
+        } else {
+            taken_packet = m_receive_queue.take_first();
+            packet = &taken_packet;
+        }
 
         set_can_read(!m_receive_queue.is_empty());
 
         dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket({}): recvfrom with blocking {} bytes, packets in queue: {}",
             this,
-            packet.data.value().size(),
+            packet->data->size(),
             m_receive_queue.size());
     }
-    VERIFY(packet.data.has_value());
+    VERIFY(packet->data);
 
-    packet_timestamp = packet.timestamp;
+    packet_timestamp = packet->timestamp;
 
     if (addr) {
-        dbgln_if(IPV4_SOCKET_DEBUG, "Incoming packet is from: {}:{}", packet.peer_address, packet.peer_port);
+        dbgln_if(IPV4_SOCKET_DEBUG, "Incoming packet is from: {}:{}", packet->peer_address, packet->peer_port);
 
         sockaddr_in out_addr {};
-        memcpy(&out_addr.sin_addr, &packet.peer_address, sizeof(IPv4Address));
-        out_addr.sin_port = htons(packet.peer_port);
+        memcpy(&out_addr.sin_addr, &packet->peer_address, sizeof(IPv4Address));
+        out_addr.sin_port = htons(packet->peer_port);
         out_addr.sin_family = AF_INET;
         Userspace<sockaddr_in*> dest_addr = addr.ptr();
         SOCKET_TRY(copy_to_user(dest_addr, &out_addr));
@@ -362,12 +367,12 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(OpenFileDescription& descr
     }
 
     if (type() == SOCK_RAW) {
-        size_t bytes_written = min(packet.data.value().size(), buffer_length);
-        SOCKET_TRY(buffer.write(packet.data.value().data(), bytes_written));
+        size_t bytes_written = min(packet->data->size(), buffer_length);
+        SOCKET_TRY(buffer.write(packet->data->data(), bytes_written));
         return bytes_written;
     }
 
-    return protocol_receive(ReadonlyBytes { packet.data.value().data(), packet.data.value().size() }, buffer, buffer_length, flags);
+    return protocol_receive(ReadonlyBytes { packet->data->data(), packet->data->size() }, buffer, buffer_length, flags);
 }
 
 KResultOr<size_t> IPv4Socket::recvfrom(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> user_addr, Userspace<socklen_t*> user_addr_length, Time& packet_timestamp)
@@ -421,7 +426,12 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
             dbgln("IPv4Socket({}): did_receive refusing packet since queue is full.", this);
             return false;
         }
-        m_receive_queue.append({ source_address, source_port, packet_timestamp, KBuffer::copy(packet.data(), packet.size()) });
+        auto data_or_error = KBuffer::try_copy(packet.data(), packet.size());
+        if (data_or_error.is_error()) {
+            dbgln("IPv4Socket: did_receive unable to allocate storage for incoming packet.");
+            return false;
+        }
+        m_receive_queue.append({ source_address, source_port, packet_timestamp, data_or_error.release_value() });
         set_can_read(true);
     }
     m_bytes_received += packet_size;
