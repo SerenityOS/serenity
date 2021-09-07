@@ -32,7 +32,7 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
     auto fs_type_string = TRY(try_copy_kstring_from_user(params.fs_type));
     auto fs_type = fs_type_string->view();
 
-    auto description_or_error = fds().file_description(source_fd);
+    auto description_or_error = fds().open_file_description(source_fd);
     if (!description_or_error.is_error())
         dbgln("mount {}: source fd {} @ {}", fs_type, source_fd, target);
     else

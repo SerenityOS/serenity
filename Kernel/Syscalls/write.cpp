@@ -33,7 +33,7 @@ KResultOr<FlatPtr> Process::sys$writev(int fd, Userspace<const struct iovec*> io
             return EINVAL;
     }
 
-    auto description = TRY(fds().file_description(fd));
+    auto description = TRY(fds().open_file_description(fd));
     if (!description->is_writable())
         return EBADF;
 
@@ -101,7 +101,7 @@ KResultOr<FlatPtr> Process::sys$write(int fd, Userspace<const u8*> data, size_t 
         return EINVAL;
 
     dbgln_if(IO_DEBUG, "sys$write({}, {}, {})", fd, data.ptr(), size);
-    auto description = TRY(fds().file_description(fd));
+    auto description = TRY(fds().open_file_description(fd));
     if (!description->is_writable())
         return EBADF;
 

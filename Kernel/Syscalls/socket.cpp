@@ -48,7 +48,7 @@ KResultOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
 KResultOr<FlatPtr> Process::sys$bind(int sockfd, Userspace<const sockaddr*> address, socklen_t address_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    auto description = TRY(fds().file_description(sockfd));
+    auto description = TRY(fds().open_file_description(sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
     auto& socket = *description->socket();
@@ -61,7 +61,7 @@ KResultOr<FlatPtr> Process::sys$listen(int sockfd, int backlog)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     if (backlog < 0)
         return EINVAL;
-    auto description = TRY(fds().file_description(sockfd));
+    auto description = TRY(fds().open_file_description(sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
     auto& socket = *description->socket();
@@ -88,7 +88,7 @@ KResultOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_para
     }
 
     auto fd_allocation = TRY(m_fds.allocate());
-    auto accepting_socket_description = TRY(fds().file_description(accepting_socket_fd));
+    auto accepting_socket_description = TRY(fds().open_file_description(accepting_socket_fd));
     if (!accepting_socket_description->is_socket())
         return ENOTSOCK;
     auto& socket = *accepting_socket_description->socket();
@@ -132,7 +132,7 @@ KResultOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_para
 KResultOr<FlatPtr> Process::sys$connect(int sockfd, Userspace<const sockaddr*> user_address, socklen_t user_address_size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    auto description = TRY(fds().file_description(sockfd));
+    auto description = TRY(fds().open_file_description(sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
     auto& socket = *description->socket();
@@ -146,7 +146,7 @@ KResultOr<FlatPtr> Process::sys$shutdown(int sockfd, int how)
     REQUIRE_PROMISE(stdio);
     if (how & ~SHUT_RDWR)
         return EINVAL;
-    auto description = TRY(fds().file_description(sockfd));
+    auto description = TRY(fds().open_file_description(sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
     auto& socket = *description->socket();
@@ -173,7 +173,7 @@ KResultOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghd
     Userspace<const sockaddr*> user_addr((FlatPtr)msg.msg_name);
     socklen_t addr_length = msg.msg_namelen;
 
-    auto description = TRY(fds().file_description(sockfd));
+    auto description = TRY(fds().open_file_description(sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
     auto& socket = *description->socket();
@@ -207,7 +207,7 @@ KResultOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> us
     Userspace<sockaddr*> user_addr((FlatPtr)msg.msg_name);
     Userspace<socklen_t*> user_addr_length(msg.msg_name ? (FlatPtr)&user_msg.unsafe_userspace_ptr()->msg_namelen : 0);
 
-    auto description = TRY(fds().file_description(sockfd));
+    auto description = TRY(fds().open_file_description(sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
     auto& socket = *description->socket();
@@ -265,7 +265,7 @@ KResult Process::get_sock_or_peer_name(const Params& params)
     if (addrlen_value <= 0)
         return EINVAL;
 
-    auto description = TRY(fds().file_description(params.sockfd));
+    auto description = TRY(fds().open_file_description(params.sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
 
@@ -310,7 +310,7 @@ KResultOr<FlatPtr> Process::sys$getsockopt(Userspace<const Syscall::SC_getsockop
     socklen_t value_size;
     TRY(copy_from_user(&value_size, params.value_size, sizeof(socklen_t)));
 
-    auto description = TRY(fds().file_description(sockfd));
+    auto description = TRY(fds().open_file_description(sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
     auto& socket = *description->socket();
@@ -324,7 +324,7 @@ KResultOr<FlatPtr> Process::sys$setsockopt(Userspace<const Syscall::SC_setsockop
     auto params = TRY(copy_typed_from_user(user_params));
 
     Userspace<const void*> user_value((FlatPtr)params.value);
-    auto description = TRY(fds().file_description(params.sockfd));
+    auto description = TRY(fds().open_file_description(params.sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
     auto& socket = *description->socket();

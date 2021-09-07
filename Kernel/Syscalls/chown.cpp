@@ -13,7 +13,7 @@ KResultOr<FlatPtr> Process::sys$fchown(int fd, UserID uid, GroupID gid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(chown);
-    auto description = TRY(fds().file_description(fd));
+    auto description = TRY(fds().open_file_description(fd));
     return description->chown(uid, gid);
 }
 

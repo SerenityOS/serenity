@@ -14,7 +14,7 @@ KResultOr<FlatPtr> Process::sys$sendfd(int sockfd, int fd)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(sendfd);
-    auto socket_description = TRY(fds().file_description(sockfd));
+    auto socket_description = TRY(fds().open_file_description(sockfd));
     if (!socket_description->is_socket())
         return ENOTSOCK;
     auto& socket = *socket_description->socket();
@@ -23,7 +23,7 @@ KResultOr<FlatPtr> Process::sys$sendfd(int sockfd, int fd)
     if (!socket.is_connected())
         return ENOTCONN;
 
-    auto passing_descriptor = TRY(fds().file_description(fd));
+    auto passing_descriptor = TRY(fds().open_file_description(fd));
     auto& local_socket = static_cast<LocalSocket&>(socket);
     return local_socket.sendfd(*socket_description, *passing_descriptor);
 }
@@ -32,7 +32,7 @@ KResultOr<FlatPtr> Process::sys$recvfd(int sockfd, int options)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(recvfd);
-    auto socket_description = TRY(fds().file_description(sockfd));
+    auto socket_description = TRY(fds().open_file_description(sockfd));
     if (!socket_description->is_socket())
         return ENOTSOCK;
     auto& socket = *socket_description->socket();
