@@ -137,17 +137,56 @@ public:
         return node;
     }
 
-    const T* next_in_pre_order() const
+    T const* next_in_pre_order() const
     {
         return const_cast<TreeNode*>(this)->next_in_pre_order();
     }
 
-    bool is_before(const T& other) const
+    T* previous_in_pre_order()
+    {
+        if (auto* node = previous_sibling()) {
+            while (node->last_child())
+                node = node->last_child();
+
+            return node;
+        }
+
+        return parent();
+    }
+
+    T const* previous_in_pre_order() const
+    {
+        return const_cast<TreeNode*>(this)->previous_in_pre_order();
+    }
+
+    bool is_before(T const& other) const
     {
         if (this == &other)
             return false;
         for (auto* node = this; node; node = node->next_in_pre_order()) {
             if (node == &other)
+                return true;
+        }
+        return false;
+    }
+
+    // https://dom.spec.whatwg.org/#concept-tree-preceding (Object A is 'typename U' and Object B is 'this')
+    template<typename U>
+    bool has_preceding_node_of_type_in_tree_order() const
+    {
+        for (auto* node = previous_in_pre_order(); node; node = node->previous_in_pre_order()) {
+            if (is<U>(node))
+                return true;
+        }
+        return false;
+    }
+
+    // https://dom.spec.whatwg.org/#concept-tree-following (Object A is 'typename U' and Object B is 'this')
+    template<typename U>
+    bool has_following_node_of_type_in_tree_order() const
+    {
+        for (auto* node = next_in_pre_order(); node; node = node->next_in_pre_order()) {
+            if (is<U>(node))
                 return true;
         }
         return false;

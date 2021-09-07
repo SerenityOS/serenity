@@ -242,14 +242,14 @@ ExceptionOr<void> Node::ensure_pre_insertion_validity(NonnullRefPtr<Node> node, 
         if (is<DocumentFragment>(*node)) {
             auto node_element_child_count = verify_cast<DocumentFragment>(*node).child_element_count();
             if ((node_element_child_count > 1 || node->has_child_of_type<Text>())
-                || (node_element_child_count == 1 && (has_child_of_type<Element>() || is<DocumentType>(child.ptr()) /* FIXME: or child is non-null and a doctype is following child. */))) {
+                || (node_element_child_count == 1 && (has_child_of_type<Element>() || is<DocumentType>(child.ptr()) || (child && child->has_following_node_of_type_in_tree_order<DocumentType>())))) {
                 return DOM::HierarchyRequestError::create("Invalid node type for insertion");
             }
         } else if (is<Element>(*node)) {
-            if (has_child_of_type<Element>() || is<DocumentType>(child.ptr()) /* FIXME: or child is non-null and a doctype is following child. */)
+            if (has_child_of_type<Element>() || is<DocumentType>(child.ptr()) || (child && child->has_following_node_of_type_in_tree_order<DocumentType>()))
                 return DOM::HierarchyRequestError::create("Invalid node type for insertion");
         } else if (is<DocumentType>(*node)) {
-            if (has_child_of_type<DocumentType>() /* FIXME: or child is non-null and an element is preceding child */ || (!child && has_child_of_type<Element>()))
+            if (has_child_of_type<DocumentType>() || (child && child->has_preceding_node_of_type_in_tree_order<Element>()) || (!child && has_child_of_type<Element>()))
                 return DOM::HierarchyRequestError::create("Invalid node type for insertion");
         }
     }
@@ -424,14 +424,14 @@ ExceptionOr<NonnullRefPtr<Node>> Node::replace_child(NonnullRefPtr<Node> node, N
         if (is<DocumentFragment>(*node)) {
             auto node_element_child_count = verify_cast<DocumentFragment>(*node).child_element_count();
             if ((node_element_child_count > 1 || node->has_child_of_type<Text>())
-                || (node_element_child_count == 1 && (first_child_of_type<Element>() != child /* FIXME: or a doctype is following child. */))) {
+                || (node_element_child_count == 1 && (first_child_of_type<Element>() != child || child->has_following_node_of_type_in_tree_order<DocumentType>()))) {
                 return DOM::HierarchyRequestError::create("Invalid node type for insertion");
             }
         } else if (is<Element>(*node)) {
-            if (first_child_of_type<Element>() != child /* FIXME: or a doctype is following child. */)
+            if (first_child_of_type<Element>() != child || child->has_following_node_of_type_in_tree_order<DocumentType>())
                 return DOM::HierarchyRequestError::create("Invalid node type for insertion");
         } else if (is<DocumentType>(*node)) {
-            if (first_child_of_type<DocumentType>() != node /* FIXME: or an element is preceding child */)
+            if (first_child_of_type<DocumentType>() != node || child->has_preceding_node_of_type_in_tree_order<Element>())
                 return DOM::HierarchyRequestError::create("Invalid node type for insertion");
         }
     }
