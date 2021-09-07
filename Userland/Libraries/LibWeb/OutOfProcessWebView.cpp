@@ -460,4 +460,9 @@ void OutOfProcessWebView::select_all()
     client().async_select_all();
 }
 
+String OutOfProcessWebView::dump_layout_tree()
+{
+    return client().dump_layout_tree();
+}
+
 }

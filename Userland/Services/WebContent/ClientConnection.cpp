@@ -321,4 +321,17 @@ void ClientConnection::select_all()
     page().client().page_did_change_selection();
 }
 
+Messages::WebContentServer::DumpLayoutTreeResponse ClientConnection::dump_layout_tree()
+{
+    auto* document = page().top_level_browsing_context().document();
+    if (!document)
+        return String { "(no DOM tree)" };
+    auto* layout_root = document->layout_node();
+    if (!layout_root)
+        return String { "(no layout tree)" };
+    StringBuilder builder;
+    Web::dump_tree(builder, *layout_root);
+    return builder.to_string();
+}
+
 }
