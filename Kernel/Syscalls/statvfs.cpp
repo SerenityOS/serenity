@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::do_statvfs(String path, statvfs* buf)
+KResultOr<FlatPtr> Process::do_statvfs(StringView path, statvfs* buf)
 {
     auto custody = TRY(VirtualFileSystem::the().resolve_path(path, current_directory(), nullptr, 0));
     auto& inode = custody->inode();
