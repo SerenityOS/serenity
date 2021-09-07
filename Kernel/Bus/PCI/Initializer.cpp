@@ -21,7 +21,7 @@ static bool test_pci_io();
 
 UNMAP_AFTER_INIT static PCIAccessLevel detect_optimal_access_type(PCIAccessLevel boot_determined)
 {
-    if (!ACPI::is_enabled() || ACPI::Parser::the()->find_table("MCFG").is_null())
+    if (!ACPI::is_enabled() || !ACPI::Parser::the()->find_table("MCFG").has_value())
         return PCIAccessLevel::IOAddressing;
 
     if (boot_determined != PCIAccessLevel::IOAddressing)
@@ -39,7 +39,9 @@ UNMAP_AFTER_INIT void initialize()
 
     switch (detect_optimal_access_type(boot_determined)) {
     case PCIAccessLevel::MemoryAddressing: {
-        auto success = Access::initialize_for_memory_access(ACPI::Parser::the()->find_table("MCFG"));
+        auto mcfg = ACPI::Parser::the()->find_table("MCFG");
+        VERIFY(mcfg.has_value());
+        auto success = Access::initialize_for_memory_access(mcfg.value());
         VERIFY(success);
         break;
     }
