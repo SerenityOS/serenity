@@ -21,7 +21,7 @@ static bool test_pci_io();
 
 UNMAP_AFTER_INIT static PCIAccessLevel detect_optimal_access_type(PCIAccessLevel boot_determined)
 {
-    if (!ACPI::is_enabled() || ACPI::Parser::the()->find_table("MCFG").is_null())
+    if (!ACPI::is_enabled() || !ACPI::Parser::the()->find_table("MCFG").has_value())
         return PCIAccessLevel::IOAddressing;
 
     if (boot_determined != PCIAccessLevel::IOAddressing)
@@ -38,12 +38,18 @@ UNMAP_AFTER_INIT void initialize()
     auto boot_determined = kernel_command_line().pci_access_level();
 
     switch (detect_optimal_access_type(boot_determined)) {
-    case PCIAccessLevel::MappingPerDevice:
-        WindowedMMIOAccess::initialize(ACPI::Parser::the()->find_table("MCFG"));
+    case PCIAccessLevel::MappingPerDevice: {
+        auto mcfg = ACPI::Parser::the()->find_table("MCFG");
+        VERIFY(mcfg.has_value());
+        WindowedMMIOAccess::initialize(mcfg.value());
         break;
-    case PCIAccessLevel::MappingPerBus:
-        MMIOAccess::initialize(ACPI::Parser::the()->find_table("MCFG"));
+    }
+    case PCIAccessLevel::MappingPerBus: {
+        auto mcfg = ACPI::Parser::the()->find_table("MCFG");
+        VERIFY(mcfg.has_value());
+        MMIOAccess::initialize(mcfg.value());
         break;
+    }
     case PCIAccessLevel::IOAddressing:
         IOAccess::initialize();
         break;

@@ -106,8 +106,8 @@ void Parser::set_the(Parser& parser)
 }
 
 static bool match_table_signature(PhysicalAddress table_header, const StringView& signature);
-static PhysicalAddress search_table_in_xsdt(PhysicalAddress xsdt, const StringView& signature);
-static PhysicalAddress search_table_in_rsdt(PhysicalAddress rsdt, const StringView& signature);
+static Optional<PhysicalAddress> search_table_in_xsdt(PhysicalAddress xsdt, const StringView& signature);
+static Optional<PhysicalAddress> search_table_in_rsdt(PhysicalAddress rsdt, const StringView& signature);
 static bool validate_table(const Structures::SDTHeader&, size_t length);
 
 UNMAP_AFTER_INIT void Parser::locate_static_data()
@@ -118,7 +118,7 @@ UNMAP_AFTER_INIT void Parser::locate_static_data()
     init_facs();
 }
 
-UNMAP_AFTER_INIT PhysicalAddress Parser::find_table(const StringView& signature)
+UNMAP_AFTER_INIT Optional<PhysicalAddress> Parser::find_table(const StringView& signature)
 {
     dbgln_if(ACPI_DEBUG, "ACPI: Calling Find Table method!");
     for (auto p_sdt : m_sdt_pointers) {
@@ -134,7 +134,8 @@ UNMAP_AFTER_INIT PhysicalAddress Parser::find_table(const StringView& signature)
 
 UNMAP_AFTER_INIT void Parser::init_facs()
 {
-    m_facs = find_table("FACS");
+    if (auto facs = find_table("FACS"); facs.has_value())
+        m_facs = facs.value();
 }
 
 UNMAP_AFTER_INIT void Parser::init_fadt()
@@ -142,9 +143,7 @@ UNMAP_AFTER_INIT void Parser::init_fadt()
     dmesgln("ACPI: Initializing Fixed ACPI data");
     dmesgln("ACPI: Searching for the Fixed ACPI Data Table");
 
-    m_fadt = find_table("FACP");
-    VERIFY(!m_fadt.is_null());
-
+    m_fadt = find_table("FACP").value();
     auto sdt = Memory::map_typed<const volatile Structures::FADT>(m_fadt);
 
     dbgln_if(ACPI_DEBUG, "ACPI: FADT @ V{}, {}", &sdt, m_fadt);
@@ -382,7 +381,7 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> StaticParsing::find_rsdp()
     return map_bios().find_chunk_starting_with(signature, 16);
 }
 
-UNMAP_AFTER_INIT PhysicalAddress StaticParsing::find_table(PhysicalAddress rsdp_address, const StringView& signature)
+UNMAP_AFTER_INIT Optional<PhysicalAddress> StaticParsing::find_table(PhysicalAddress rsdp_address, const StringView& signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     VERIFY(signature.length() == 4);
@@ -400,7 +399,7 @@ UNMAP_AFTER_INIT PhysicalAddress StaticParsing::find_table(PhysicalAddress rsdp_
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT static PhysicalAddress search_table_in_xsdt(PhysicalAddress xsdt_address, const StringView& signature)
+UNMAP_AFTER_INIT static Optional<PhysicalAddress> search_table_in_xsdt(PhysicalAddress xsdt_address, const StringView& signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     VERIFY(signature.length() == 4);
@@ -423,7 +422,7 @@ static bool match_table_signature(PhysicalAddress table_header, const StringView
     return !strncmp(table->h.sig, signature.characters_without_null_termination(), 4);
 }
 
-UNMAP_AFTER_INIT static PhysicalAddress search_table_in_rsdt(PhysicalAddress rsdt_address, const StringView& signature)
+UNMAP_AFTER_INIT static Optional<PhysicalAddress> search_table_in_rsdt(PhysicalAddress rsdt_address, const StringView& signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     VERIFY(signature.length() == 4);
