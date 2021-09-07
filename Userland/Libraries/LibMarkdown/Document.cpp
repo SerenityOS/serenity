@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2021, Peter Elliott <pelliott@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -75,15 +76,16 @@ OwnPtr<Document> Document::parse(const StringView& str)
     auto lines = lines_vec.begin();
     auto document = make<Document>();
     auto& blocks = document->m_blocks;
-    NonnullOwnPtrVector<Paragraph::Line> paragraph_lines;
+    StringBuilder paragraph_text;
 
     auto flush_paragraph = [&] {
-        if (paragraph_lines.is_empty())
+        if (paragraph_text.is_empty())
             return;
-        auto paragraph = make<Paragraph>(move(paragraph_lines));
+        auto paragraph = make<Paragraph>(Text::parse(paragraph_text.build()));
         document->m_blocks.append(move(paragraph));
-        paragraph_lines.clear();
+        paragraph_text.clear();
     };
+
     while (true) {
         if (lines.is_end())
             break;
@@ -98,7 +100,7 @@ OwnPtr<Document> Document::parse(const StringView& str)
             || helper<Heading>(lines, blocks) || helper<HorizontalRule>(lines, blocks);
 
         if (any) {
-            if (!paragraph_lines.is_empty()) {
+            if (!paragraph_text.is_empty()) {
                 auto last_block = document->m_blocks.take_last();
                 flush_paragraph();
                 document->m_blocks.append(move(last_block));
@@ -106,15 +108,11 @@ OwnPtr<Document> Document::parse(const StringView& str)
             continue;
         }
 
-        auto line = Paragraph::Line::parse(lines);
-        if (!line)
-            return {};
-
-        paragraph_lines.append(line.release_nonnull());
+        paragraph_text.append(*lines++);
+        paragraph_text.append("\n");
     }
 
-    if (!paragraph_lines.is_empty())
-        flush_paragraph();
+    flush_paragraph();
 
     return document;
 }

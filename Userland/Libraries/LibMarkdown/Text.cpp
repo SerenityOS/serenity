@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2021, Peter Elliott <pelliott@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,268 +9,362 @@
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/Text.h>
+#include <ctype.h>
 #include <string.h>
 
 namespace Markdown {
 
-static String unescape(const StringView& text)
+void Text::EmphasisNode::render_to_html(StringBuilder& builder) const
 {
-    StringBuilder builder;
-    for (size_t i = 0; i < text.length(); ++i) {
-        if (text[i] == '\\' && i != text.length() - 1) {
-            builder.append(text[i + 1]);
-            i++;
-            continue;
-        }
-        builder.append(text[i]);
-    }
-    return builder.build();
+    builder.append((strong) ? "<strong>" : "<em>");
+    child->render_to_html(builder);
+    builder.append((strong) ? "</strong>" : "</em>");
 }
 
-Text::Text(String&& text)
+void Text::EmphasisNode::render_for_terminal(StringBuilder&) const
 {
-    m_spans.append({ move(text), Style {} });
+    // FIXME.
+}
+
+size_t Text::EmphasisNode::terminal_length() const
+{
+    return child->terminal_length();
+}
+
+void Text::CodeNode::render_to_html(StringBuilder& builder) const
+{
+    builder.append("<code>");
+    code->render_to_html(builder);
+    builder.append("</code>");
+}
+
+void Text::CodeNode::render_for_terminal(StringBuilder&) const
+{
+    // FIXME.
+}
+
+size_t Text::CodeNode::terminal_length() const
+{
+    return code->terminal_length();
+}
+
+void Text::TextNode::render_to_html(StringBuilder& builder) const
+{
+    builder.append(escape_html_entities(text));
+}
+
+void Text::TextNode::render_for_terminal(StringBuilder&) const
+{
+    // FIXME.
+}
+
+size_t Text::TextNode::terminal_length() const
+{
+    return text.length();
+}
+
+void Text::LinkNode::render_to_html(StringBuilder& builder) const
+{
+    if (is_image) {
+        builder.append("<img src=\"");
+        href->render_to_html(builder);
+        builder.append("\" alt=\"");
+        text->render_to_html(builder);
+        builder.append("\" >");
+    } else {
+        builder.append("<a href=\"");
+        href->render_to_html(builder);
+        builder.append("\">");
+        text->render_to_html(builder);
+        builder.append("</a>");
+    }
+}
+
+void Text::LinkNode::render_for_terminal(StringBuilder&) const
+{
+    // FIXME.
+}
+
+size_t Text::LinkNode::terminal_length() const
+{
+    return text->terminal_length();
+}
+
+void Text::MultiNode::render_to_html(StringBuilder& builder) const
+{
+    for (auto& child : children) {
+        child.render_to_html(builder);
+    }
+}
+
+void Text::MultiNode::render_for_terminal(StringBuilder&) const
+{
+    // FIXME.
+}
+
+size_t Text::MultiNode::terminal_length() const
+{
+    size_t length = 0;
+    for (auto& child : children) {
+        length += child.terminal_length();
+    }
+    return length;
+}
+
+size_t Text::terminal_length() const
+{
+    return m_node->terminal_length();
 }
 
 String Text::render_to_html() const
 {
     StringBuilder builder;
-
-    Vector<String> open_tags;
-    Style current_style;
-
-    for (auto& span : m_spans) {
-        struct TagAndFlag {
-            String tag;
-            bool Style::*flag;
-        };
-        TagAndFlag tags_and_flags[] = {
-            { "em", &Style::emph },
-            { "b", &Style::strong },
-            { "code", &Style::code }
-        };
-        auto it = open_tags.find_if([&](const String& open_tag) {
-            if (open_tag == "a" && current_style.href != span.style.href)
-                return true;
-            if (open_tag == "img" && current_style.img != span.style.img)
-                return true;
-            for (auto& tag_and_flag : tags_and_flags) {
-                if (open_tag == tag_and_flag.tag && !(span.style.*tag_and_flag.flag))
-                    return true;
-            }
-            return false;
-        });
-
-        if (!it.is_end()) {
-            // We found an open tag that should
-            // not be open for the new span. Close
-            // it and all the open tags that follow
-            // it.
-            for (ssize_t j = open_tags.size() - 1; j >= static_cast<ssize_t>(it.index()); --j) {
-                auto& tag = open_tags[j];
-                if (tag == "img") {
-                    builder.append("\" />");
-                    current_style.img = {};
-                    continue;
-                }
-                builder.appendff("</{}>", tag);
-                if (tag == "a") {
-                    current_style.href = {};
-                    continue;
-                }
-                for (auto& tag_and_flag : tags_and_flags)
-                    if (tag == tag_and_flag.tag)
-                        current_style.*tag_and_flag.flag = false;
-            }
-            open_tags.shrink(it.index());
-        }
-        if (current_style.href.is_null() && !span.style.href.is_null()) {
-            open_tags.append("a");
-            builder.appendff("<a href=\"{}\">", span.style.href);
-        }
-        if (current_style.img.is_null() && !span.style.img.is_null()) {
-            open_tags.append("img");
-            builder.appendff("<img src=\"{}\" alt=\"", span.style.img);
-        }
-        for (auto& tag_and_flag : tags_and_flags) {
-            if (current_style.*tag_and_flag.flag != span.style.*tag_and_flag.flag) {
-                open_tags.append(tag_and_flag.tag);
-                builder.appendff("<{}>", tag_and_flag.tag);
-            }
-        }
-
-        current_style = span.style;
-        builder.append(escape_html_entities(span.text));
-    }
-
-    for (ssize_t i = open_tags.size() - 1; i >= 0; --i) {
-        auto& tag = open_tags[i];
-        if (tag == "img") {
-            builder.append("\" />");
-            continue;
-        }
-        builder.appendff("</{}>", tag);
-    }
-
-    return builder.build();
+    m_node->render_to_html(builder);
+    return builder.build().trim(" \n\t");
 }
 
 String Text::render_for_terminal() const
 {
     StringBuilder builder;
-
-    for (auto& span : m_spans) {
-        bool needs_styling = span.style.strong || span.style.emph || span.style.code;
-        if (needs_styling) {
-            builder.append("\033[");
-            bool first = true;
-            if (span.style.strong || span.style.code) {
-                builder.append('1');
-                first = false;
-            }
-            if (span.style.emph) {
-                if (!first)
-                    builder.append(';');
-                builder.append('4');
-            }
-            builder.append('m');
-        }
-
-        if (!span.style.href.is_null()) {
-            if (strstr(span.style.href.characters(), "://") != nullptr) {
-                builder.append("\033]8;;");
-                builder.append(span.style.href);
-                builder.append("\033\\");
-            }
-        }
-
-        builder.append(span.text.characters());
-
-        if (needs_styling)
-            builder.append("\033[0m");
-
-        if (!span.style.href.is_null()) {
-            // When rendering for the terminal, ignore any
-            // non-absolute links, because the user has no
-            // chance to follow them anyway.
-            if (strstr(span.style.href.characters(), "://") != nullptr) {
-                builder.appendff(" <{}>", span.style.href);
-                builder.append("\033]8;;\033\\");
-            }
-        }
-        if (!span.style.img.is_null()) {
-            if (strstr(span.style.img.characters(), "://") != nullptr) {
-                builder.appendff(" <{}>", span.style.img);
-            }
-        }
-    }
-
-    return builder.build();
+    m_node->render_for_terminal(builder);
+    return builder.build().trim(" \n\t");
 }
 
-Optional<Text> Text::parse(const StringView& str)
+Text Text::parse(StringView const& str)
 {
-    Style current_style;
-    size_t current_span_start = 0;
-    int first_span_in_the_current_link = -1;
-    bool current_link_is_actually_img = false;
-    Vector<Span> spans;
+    Text text;
+    auto const tokens = tokenize(str);
+    auto iterator = tokens.begin();
+    text.m_node = parse_sequence(iterator, false);
+    return text;
+}
 
-    auto append_span_if_needed = [&](size_t offset) {
-        VERIFY(current_span_start <= offset);
-        if (current_span_start != offset) {
-            Span span {
-                unescape(str.substring_view(current_span_start, offset - current_span_start)),
-                current_style
-            };
-            spans.append(move(span));
-            current_span_start = offset;
-        }
+Vector<Text::Token> Text::tokenize(StringView const& str)
+{
+    Vector<Token> tokens;
+    StringBuilder current_token;
+
+    auto flush_token = [&](bool left_flanking, bool right_flanking, bool is_run) {
+        if (current_token.is_empty())
+            return;
+
+        tokens.append({
+            current_token.build(),
+            left_flanking,
+            right_flanking,
+            is_run,
+        });
+        current_token.clear();
     };
 
-    for (size_t offset = 0; offset < str.length(); offset++) {
+    for (size_t offset = 0; offset < str.length(); ++offset) {
+        auto has = [&](StringView const& seq) {
+            if (offset + seq.length() > str.length())
+                return false;
+
+            return str.substring_view(offset, seq.length()) == seq;
+        };
+
+        auto expect = [&](StringView const& seq) {
+            VERIFY(has(seq));
+            flush_token(false, false, false);
+            current_token.append(seq);
+            flush_token(false, false, false);
+            offset += seq.length() - 1;
+        };
+
         char ch = str[offset];
 
-        bool is_escape = ch == '\\';
-        if (is_escape && offset != str.length() - 1) {
-            offset++;
-            continue;
+        if (ch == '\\' && offset + 1 < str.length()) {
+            current_token.append(str[offset + 1]);
+            ++offset;
+        } else if (ch == '*' || ch == '_' || ch == '`') {
+            flush_token(false, false, false);
+
+            char delim = ch;
+            size_t run_offset;
+            for (run_offset = offset; run_offset < str.length() && str[run_offset] == delim; ++run_offset) {
+                current_token.append(str[run_offset]);
+            }
+
+            bool left_flanking = run_offset < str.length() && !isspace(str[run_offset]);
+            bool right_flanking = offset > 0 && !isspace(str[offset - 1]);
+            flush_token(left_flanking, right_flanking, true);
+            offset = run_offset - 1;
+
+        } else if (ch == '\n') {
+            flush_token(false, false, false);
+            current_token.append(ch);
+            flush_token(false, false, false);
+        } else if (has("[")) {
+            expect("[");
+        } else if (has("![")) {
+            expect("![");
+        } else if (has("](")) {
+            expect("](");
+        } else if (has(")")) {
+            expect(")");
+        } else {
+            current_token.append(ch);
         }
-
-        bool is_special_character = false;
-        is_special_character |= ch == '`';
-        if (!current_style.code)
-            is_special_character |= ch == '*' || ch == '_' || ch == '[' || ch == ']' || (ch == '!' && offset + 1 < str.length() && str[offset + 1] == '[');
-        if (!is_special_character)
-            continue;
-
-        append_span_if_needed(offset);
-
-        switch (ch) {
-        case '`':
-            current_style.code = !current_style.code;
-            break;
-        case '*':
-        case '_':
-            if (offset + 1 < str.length() && str[offset + 1] == ch) {
-                offset++;
-                current_style.strong = !current_style.strong;
-            } else {
-                current_style.emph = !current_style.emph;
-            }
-            break;
-        case '!':
-            current_link_is_actually_img = true;
-            break;
-        case '[':
-            if constexpr (MARKDOWN_DEBUG) {
-                if (first_span_in_the_current_link != -1)
-                    dbgln("Dropping the outer link");
-            }
-            first_span_in_the_current_link = spans.size();
-            break;
-        case ']': {
-            if (first_span_in_the_current_link == -1) {
-                dbgln_if(MARKDOWN_DEBUG, "Unmatched ]");
-                continue;
-            }
-            ScopeGuard guard = [&] {
-                first_span_in_the_current_link = -1;
-                current_link_is_actually_img = false;
-            };
-            if (offset + 2 >= str.length() || str[offset + 1] != '(')
-                continue;
-            offset += 2;
-            size_t start_of_href = offset;
-
-            do
-                offset++;
-            while (offset < str.length() && str[offset] != ')');
-            if (offset == str.length())
-                offset--;
-
-            const StringView href = str.substring_view(start_of_href, offset - start_of_href);
-            for (size_t i = first_span_in_the_current_link; i < spans.size(); i++) {
-                if (current_link_is_actually_img)
-                    spans[i].style.img = href;
-                else
-                    spans[i].style.href = href;
-            }
-            break;
-        }
-        default:
-            VERIFY_NOT_REACHED();
-        }
-
-        // We've processed the character as a special, so the next offset will
-        // start after it. Note that explicit continue statements skip over this
-        // line, effectively treating the character as not special.
-        current_span_start = offset + 1;
     }
-
-    append_span_if_needed(str.length());
-
-    return Text(move(spans));
+    flush_token(false, false, false);
+    return tokens;
 }
 
+NonnullOwnPtr<Text::MultiNode> Text::parse_sequence(Vector<Token>::ConstIterator& tokens, bool in_link)
+{
+    auto node = make<MultiNode>();
+
+    for (; !tokens.is_end(); ++tokens) {
+        if (tokens->is_run) {
+            switch (tokens->run_char()) {
+            case '*':
+            case '_':
+                node->children.append(parse_emph(tokens, in_link));
+                break;
+            case '`':
+                node->children.append(parse_code(tokens));
+                break;
+            }
+        } else if (!in_link && (*tokens == "[" || *tokens == "![")) {
+            node->children.append(parse_link(tokens));
+        } else if (in_link && *tokens == "](") {
+            return node;
+        } else {
+            node->children.append(make<TextNode>(tokens->data));
+        }
+
+        if (in_link && !tokens.is_end() && *tokens == "](")
+            return node;
+
+        if (tokens.is_end())
+            break;
+    }
+    return node;
+}
+
+bool Text::can_open(Token const& opening)
+{
+    return (opening.run_char() == '*' && opening.left_flanking) || (opening.run_char() == '_' && opening.left_flanking && !opening.right_flanking);
+}
+
+bool Text::can_close_for(Token const& opening, Text::Token const& closing)
+{
+    if (opening.run_char() != closing.run_char())
+        return false;
+
+    if (opening.run_length() != closing.run_length())
+        return false;
+
+    return (opening.run_char() == '*' && closing.right_flanking) || (opening.run_char() == '_' && !closing.left_flanking && closing.right_flanking);
+}
+
+NonnullOwnPtr<Text::Node> Text::parse_emph(Vector<Token>::ConstIterator& tokens, bool in_link)
+{
+    auto opening = *tokens;
+
+    // Check that the opening delimiter run is properly flanking.
+    if (!can_open(opening))
+        return make<TextNode>(opening.data);
+
+    auto child = make<MultiNode>();
+    for (++tokens; !tokens.is_end(); ++tokens) {
+        if (tokens->is_run) {
+            if (can_close_for(opening, *tokens)) {
+                return make<EmphasisNode>(opening.run_length() >= 2, move(child));
+            }
+
+            switch (tokens->run_char()) {
+            case '*':
+            case '_':
+                child->children.append(parse_emph(tokens, in_link));
+                break;
+            case '`':
+                child->children.append(parse_code(tokens));
+                break;
+            }
+        } else if (*tokens == "[" || *tokens == "![") {
+            child->children.append(parse_link(tokens));
+        } else if (in_link && *tokens == "](") {
+            child->children.prepend(make<TextNode>(opening.data));
+            return child;
+        } else {
+            child->children.append(make<TextNode>(tokens->data));
+        }
+
+        if (in_link && !tokens.is_end() && *tokens == "](") {
+            child->children.prepend(make<TextNode>(opening.data));
+            return child;
+        }
+
+        if (tokens.is_end())
+            break;
+    }
+    child->children.prepend(make<TextNode>(opening.data));
+    return child;
+}
+
+NonnullOwnPtr<Text::Node> Text::parse_code(Vector<Token>::ConstIterator& tokens)
+{
+    auto opening = *tokens;
+
+    auto is_closing = [&](Token const& token) {
+        return token.is_run && token.run_char() == '`' && token.run_length() == opening.run_length();
+    };
+
+    bool is_all_whitespace = true;
+    auto code = make<MultiNode>();
+    for (auto iterator = tokens + 1; !iterator.is_end(); ++iterator) {
+        if (is_closing(*iterator)) {
+            tokens = iterator;
+
+            // Strip first and last space, when appropriate.
+            if (!is_all_whitespace) {
+                auto& first = dynamic_cast<TextNode&>(code->children.first());
+                auto& last = dynamic_cast<TextNode&>(code->children.last());
+                if (first.text.starts_with(" ") && last.text.ends_with(" ")) {
+                    first.text = first.text.substring(1);
+                    last.text = last.text.substring(0, last.text.length() - 1);
+                }
+            }
+
+            return make<CodeNode>(move(code));
+        }
+
+        is_all_whitespace = is_all_whitespace && iterator->data.is_whitespace();
+        code->children.append(make<TextNode>((*iterator == "\n") ? " " : iterator->data));
+    }
+
+    return make<TextNode>(opening.data);
+}
+
+NonnullOwnPtr<Text::Node> Text::parse_link(Vector<Token>::ConstIterator& tokens)
+{
+    auto opening = *tokens++;
+    bool is_image = opening == "![";
+
+    auto link_text = parse_sequence(tokens, true);
+
+    if (tokens.is_end() || *tokens != "](") {
+        link_text->children.prepend(make<TextNode>(opening.data));
+        return link_text;
+    }
+    auto seperator = *tokens;
+    VERIFY(seperator == "](");
+
+    auto address = make<MultiNode>();
+    for (auto iterator = tokens + 1; !iterator.is_end(); ++iterator) {
+        if (*iterator == ")") {
+            tokens = iterator;
+            return make<LinkNode>(is_image, move(link_text), move(address));
+        }
+
+        address->children.append(make<TextNode>(iterator->data));
+    }
+
+    link_text->children.prepend(make<TextNode>(opening.data));
+    link_text->children.append(make<TextNode>(seperator.data));
+    return link_text;
+}
 }

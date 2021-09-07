@@ -15,22 +15,8 @@ namespace Markdown {
 
 class Paragraph final : public Block {
 public:
-    class Line {
-    public:
-        explicit Line(Text&& text)
-            : m_text(move(text))
-        {
-        }
-
-        static OwnPtr<Line> parse(Vector<StringView>::ConstIterator& lines);
-        const Text& text() const { return m_text; }
-
-    private:
-        Text m_text;
-    };
-
-    Paragraph(NonnullOwnPtrVector<Line>&& lines)
-        : m_lines(move(lines))
+    Paragraph(Text text)
+        : m_text(move(text))
     {
     }
 
@@ -40,7 +26,7 @@ public:
     virtual String render_for_terminal(size_t view_width = 0) const override;
 
 private:
-    NonnullOwnPtrVector<Line> m_lines;
+    Text m_text;
 };
 
 }

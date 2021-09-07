@@ -53,10 +53,7 @@ OwnPtr<Heading> Heading::parse(Vector<StringView>::ConstIterator& lines)
 
     StringView title_view = line.substring_view(level + 1, line.length() - level - 1);
     auto text = Text::parse(title_view);
-    if (!text.has_value())
-        return {};
-
-    auto heading = make<Heading>(move(text.value()), level);
+    auto heading = make<Heading>(move(text), level);
 
     ++lines;
     return heading;
