@@ -179,7 +179,7 @@ public:
     }
 
     static RefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes);
-    static KResultOr<NonnullRefPtr<Process>> try_create_user_process(RefPtr<Thread>& first_thread, String const& path, UserID, GroupID, Vector<String> arguments, Vector<String> environment, TTY*);
+    static KResultOr<NonnullRefPtr<Process>> try_create_user_process(RefPtr<Thread>& first_thread, StringView path, UserID, GroupID, Vector<String> arguments, Vector<String> environment, TTY*);
     static void register_new(Process&);
 
     bool unref() const;
@@ -441,7 +441,7 @@ public:
     const Vector<String>& arguments() const { return m_arguments; };
     const Vector<String>& environment() const { return m_environment; };
 
-    KResult exec(String path, Vector<String> arguments, Vector<String> environment, int recusion_depth = 0);
+    KResult exec(NonnullOwnPtr<KString> path, Vector<String> arguments, Vector<String> environment, int recusion_depth = 0);
 
     KResultOr<LoadResult> load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header);
 
@@ -538,7 +538,7 @@ private:
 
     KResultOr<FlatPtr> do_statvfs(StringView path, statvfs* buf);
 
-    KResultOr<RefPtr<FileDescription>> find_elf_interpreter_for_executable(String const& path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size);
+    KResultOr<RefPtr<FileDescription>> find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size);
 
     KResult do_kill(Process&, int signal);
     KResult do_killpg(ProcessGroupID pgrp, int signal);

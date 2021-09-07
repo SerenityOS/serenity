@@ -143,13 +143,14 @@ void Process::register_new(Process& process)
     });
 }
 
-KResultOr<NonnullRefPtr<Process>> Process::try_create_user_process(RefPtr<Thread>& first_thread, String const& path, UserID uid, GroupID gid, Vector<String> arguments, Vector<String> environment, TTY* tty)
+KResultOr<NonnullRefPtr<Process>> Process::try_create_user_process(RefPtr<Thread>& first_thread, StringView path, UserID uid, GroupID gid, Vector<String> arguments, Vector<String> environment, TTY* tty)
 {
     auto parts = path.split_view('/');
     if (arguments.is_empty()) {
         arguments.append(parts.last());
     }
 
+    auto path_string = TRY(KString::try_create(path));
     auto name = TRY(KString::try_create(parts.last()));
     auto process = TRY(Process::try_create(first_thread, move(name), uid, gid, ProcessID(0), false, VirtualFileSystem::the().root_custody(), nullptr, tty));
 
@@ -167,7 +168,7 @@ KResultOr<NonnullRefPtr<Process>> Process::try_create_user_process(RefPtr<Thread
     setup_description(1);
     setup_description(2);
 
-    if (auto result = process->exec(path, move(arguments), move(environment)); result.is_error()) {
+    if (auto result = process->exec(move(path_string), move(arguments), move(environment)); result.is_error()) {
         dbgln("Failed to exec {}: {}", path, result);
         first_thread = nullptr;
         return result;
