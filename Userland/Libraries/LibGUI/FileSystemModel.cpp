@@ -738,11 +738,11 @@ void FileSystemModel::set_data(const ModelIndex& index, const Variant& data)
     }
 }
 
-Vector<ModelIndex, 1> FileSystemModel::matches(const StringView& searching, unsigned flags, const ModelIndex& index)
+Vector<ModelIndex> FileSystemModel::matches(const StringView& searching, unsigned flags, const ModelIndex& index)
 {
     Node& node = const_cast<Node&>(this->node(index));
     node.reify_if_needed();
-    Vector<ModelIndex, 1> found_indices;
+    Vector<ModelIndex> found_indices;
     for (auto& child : node.m_children) {
         if (string_matches(child.name, searching, flags)) {
             const_cast<Node&>(child).reify_if_needed();
