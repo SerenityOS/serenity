@@ -115,7 +115,7 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
 
     for (auto& auxv : aux_vector) {
         if (!auxv.optional_string.is_empty()) {
-            m_cpu.push_string(auxv.optional_string.characters());
+            m_cpu.push_string(auxv.optional_string);
             auxv.auxv.a_un.a_ptr = (void*)m_cpu.esp().value();
         }
     }
