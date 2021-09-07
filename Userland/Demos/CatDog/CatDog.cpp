@@ -7,7 +7,6 @@
 #include "CatDog.h"
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
-#include <LibGUI/WindowServerConnection.h>
 
 void CatDog::timer_event(Core::TimerEvent&)
 {
@@ -105,13 +104,14 @@ void CatDog::paint_event(GUI::PaintEvent& event)
     painter.blit(Gfx::IntPoint(0, 0), *m_curr_bmp, m_curr_bmp->rect());
 }
 
-void CatDog::mousemove_event(GUI::MouseEvent& event)
+void CatDog::track_mouse_move(Gfx::IntPoint const& point)
 {
     if (!m_roaming)
         return;
-    if (m_temp_pos == event.position())
+    Gfx::IntPoint relative_point = point - window()->position();
+    if (m_temp_pos == relative_point)
         return;
-    m_temp_pos = event.position();
+    m_temp_pos = relative_point;
     m_timer.start();
     if (m_sleeping) {
         m_curr_bmp = m_alert;
@@ -126,16 +126,6 @@ void CatDog::mousedown_event(GUI::MouseEvent& event)
         return;
     if (on_click)
         on_click();
-}
-
-void CatDog::track_cursor_globally()
-{
-    VERIFY(window());
-    auto window_id = window()->window_id();
-    VERIFY(window_id >= 0);
-
-    set_global_cursor_tracking(true);
-    GUI::WindowServerConnection::the().async_set_global_cursor_tracking(window_id, true);
 }
 
 void CatDog::context_menu_event(GUI::ContextMenuEvent& event)
