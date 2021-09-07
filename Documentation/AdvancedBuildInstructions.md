@@ -26,6 +26,12 @@ following build targets cannot be accessed through the script and have to be use
 directory to `Build/i686` and then running `ninja <target>`:
 
 - `ninja grub-image`: Builds a disk image (`grub_disk_image`) with GRUB
+- `ninja extlinux-image`: Builds a disk image (`extlinux_disk_image`) with extlinux
+- `ninja check-style`: Runs the same linters the CI does to verify project style on changed files
+- `ninja install-ports`: Copies the entire ports tree into the installed rootfs for building ports in Serenity
+- `ninja lint-shell-scripts`: Checks style of shell scripts in the source tree with shellcheck
+- `ninja all_generated`: Builds all generated code. Useful for running analysis tools that can use compile_commands.json without a full system build
+- `ninja configure-components`: See the [Component Configuration](#component-configuration) section below.
 
 ## CMake build options
 
@@ -43,19 +49,103 @@ There are some optional features that can be enabled during compilation that are
 - `BUILD_LAGOM`: builds [Lagom](../Meta/Lagom/ReadMe.md), which makes various SerenityOS libraries and programs available on the host system.
 - `ENABLE_KERNEL_LTO`: builds the kernel with link-time optimization.
 - `INCLUDE_WASM_SPEC_TESTS`: downloads and includes the WebAssembly spec testsuite tests. In order to use this option, you will need to install `prettier` and `wabt`. wabt version 1.0.23 or higher is required to pre-process the WebAssembly spec testsuite.
-- `USE_CLANG_TOOLCHAIN`: uses the alternative Clang-based toolchain for building SerenityOS instead of the established GCC-based one. See the [Clang-based toolchain](#clang-based-toolchain) section below.
+- `SERENITY_TOOLCHAIN`: Specifies whether to use the established GNU toolchain, or the experimental Clang-based toolchain for building SerenityOS. See the [Clang-based toolchain](#clang-based-toolchain) section below.
+- `SERENITY_ARCH`: Specifies which architecture to build for. Currently supported options are `i686` and `x86_64`. `x86_64` requires a separate toolchain build from `i686`.
 - `BUILD_<component>`: builds the specified component, e.g. `BUILD_HEARTS` (note: must be all caps). Check the components.ini file in your build directory for a list of available components. Make sure to run `ninja clean` and `rm -rf Build/i686/Root` after disabling components. These options can be easily configured by using the `ConfigureComponents` utility. See the [Component Configuration](#component-configuration) section below.
 - `BUILD_EVERYTHING`: builds all optional components, overrides other `BUILD_<component>` flags when enabled
 
 Many parts of the SerenityOS codebase have debug functionality, mostly consisting of additional messages printed to the debug console. This is done via the `<component_name>_DEBUG` macros, which can be enabled individually at build time. They are listed in [this file](../Meta/CMake/all_the_debug_macros.cmake).
 
-To toggle a build option, add it to the `cmake` command invocation with a `-D` prefix. To enable it, add `=ON` at the end, or add `=OFF` to disable it. The complete command should look similarly to this:
+To toggle or change a build option, see the [CMake Cache Manipulation](#cmake-cache-manipulation) section below.
+
+## CMake Cache Manipulation
+
+CMake caches variables and options in the binary directory. This allows a developer to tailor variables that are `set()` within the persistent configuration cache.
+
+There are three main ways to manipulate the cache:
+- `cmake path/to/binary/dir -DVAR_NAME=Value`
+- `ccmake` (TUI interface)
+- `cmake-gui`
+
+Options can be set via the initial `cmake` invocation that creates the binary directory to set the initial cache for the binary directory.
+Once the binary directory exists, any of the three options above can be used to change the value of cache variables.
+
+For example, boolean options such as `ENABLE_<setting>` or `<component_name>_DEBUG` can be enabled with the value `ON` and disabled with `OFF`:
 
 ```console
-$ cmake ../.. -G Ninja -DPROCESS_DEBUG=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF
+# Reconfigure an existing binary directory with process debug enabled
+$ cmake -B Build/i686 -DPROCESS_DEBUG=ON
 ```
 
-For the changes to take effect, SerenityOS needs to be recompiled and the disk image needs to be rebuilt.
+For more information on how the CMake cache works, see the CMake guide for [Running CMake](https://cmake.org/runningcmake/). Additional context is available in the CMake documentation for
+[variables](https://cmake.org/cmake/help/latest/manual/cmake-language.7.html#variables) and [set()](https://cmake.org/cmake/help/latest/command/set.html#set-cache-entry).
+
+## SuperBuild configuration
+
+Serenity uses host tools written in idiomatic Serenity C++ to generate code and data for the main target build.
+The "SuperBuild" pattern helps to separate the host build of core Serenity libraries from the target build of the
+entire operating system environment. The SuperBuild allows clear separation of the host and target builds in the project's CMakeLists
+and unifies the approach taken towards different compiler toolchains and architectures.
+
+The recommended way to build and run the system, `./Meta/serenity.sh run`, invokes the SuperBuild equivalently to the commands below:
+
+```console
+$ cmake -GNinja -S Meta/CMake/Superbuild -B Build/superbuild-i686 -DSERENITY_ARCH=i686 -DSERENITY_TOOLCHAIN=GNU
+$ cmake --build Build/superbuild-i686
+$ ninja -C Build/i686 setup-and-run
+```
+
+The CMake configuration of the `superbuild-<arch>` directory configures two [ExternalProjects](https://cmake.org/cmake/help/latest/module/ExternalProject.html).
+The first project is `lagom`, which is the host build of the project. For more information on Lagom, see the [Lagom ReadMe](../Meta/Lagom/ReadMe.md). It is used
+to build all the code generators and other host tools needed for the main Serenity build. The second project is the main build, which compiles the system for the
+target architecture using the selected toolchain.
+
+The `superbuild-<arch>` configuration also generates the [CMake toolchain file](https://cmake.org/cmake/help/latest/manual/cmake-toolchains.7.html#cross-compiling)
+for the selected compiler toolchain and architecture via the `-DSERENITY_ARCH` and `-DSERENITY_TOOLCHAIN` arguments to the SuperBuild configuration step.
+The Serenity project depends on the install step of the Lagom build, as it uses [find_package](https://cmake.org/cmake/help/latest/command/find_package.html) to locate
+the host tools for use in the code generation custom commands.
+
+The SuperBuild build steps are roughly equivalent to the following commands:
+
+```console
+# Generate CMakeToolchain.txt
+mkdir -p Build/i686
+cp Toolchain/CMake/GNUToolchain.txt.in Build/i686/CMakeToolchain.txt
+sed -i 's/@SERENITY_ARCH@/i686/g' Build/i686/CMakeToolchain.txt
+sed -i 's/@SERENITY_SOURCE_DIR@/'"$PWD"'/g' Build/i686/CMakeToolchain.txt
+sed -i 's/@SERENITY_BUILD_DIR@/'"$PWD"'\/Build\/i686/g' Build/i686/CMakeToolchain.txt
+
+# Configure and install Lagom
+cmake -GNinja -S Meta/Lagom -B Build/lagom -DCMAKE_INSTALL_PREFIX=${PWD}/Build/lagom-install
+ninja -C Build/lagom install
+# Configure and install Serenity, pointing it to Lagom's install prefix
+cmake -GNinja -B Build/i686 -DCMAKE_PREFIX_PATH=${PWD}/Build/lagom-install -DSERENITY_ARCH=i686 -DCMAKE_TOOLCHAIN_FILE=${PWD}/Build/i686/CMakeToolchain.txt
+ninja -C Build/i686 install
+```
+
+Directing future `ninja` or `cmake --build` invocations to the `superbuild-<arch>` directory ensures that any headers or cpp files shared between the
+host and target builds will be rebuilt, and the new host tools and libraries will be staged to the lagom-install directory. This is where the superbuild
+differs from manually entering the commands above, it establishes a dependency between the install stage of lagom and the configure/build stages of Serenity.
+
+The main limitation of the SuperBuild is that any non-option CMake cache variables such as component configuration or debug flag settings must be done
+after a build has started. That is, the CMakeCache.txt for the Serenity and Lagom builds is not created until the SuperBuild build starts and reaches the
+proper stage for the build in question. For more information on the CMake cache see the [CMake Cache Manipulation](#cmake-cache-manipulation) section above.
+
+The debug flags might be manipulated after a build per the following commands:
+
+```console
+# Initial build, generate binary directories for both child builds
+$ cmake -GNinja -S Meta/CMake/Superbuild -B Build/superbuild-i686 -DSERENITY_ARCH=i686 -DSERENITY_TOOLCHAIN=GNU
+$ cmake --build Build/superbuild-i686
+
+# Turn on process debug and don't build the browser for the Serenity build
+$ cmake -B Build/i686 -DPROCESS_DEBUG=ON -DBUILD_BROWSER=OFF
+$ ninja -C Build/i686 install
+
+# Build host tests in Lagom build
+$ cmake -S Meta/Lagom -B Build/lagom -DBUILD_LAGOM=ON
+$ ninja -C Build/lagom install
+```
 
 ## Component Configuration
 
@@ -63,7 +153,6 @@ For selecting which components of the system to build and install, a helper prog
 
 It requires `whiptail` as a dependency, which is available on most systems in the `newt` or `libnewt` package. To build and run it, run the following commands from the `Build/i686` directory:
 ```console
-$ cmake ../.. -G Ninja        # Only required if CMake hasn't been run before.
 $ ninja configure-components
 ```
 
@@ -110,5 +199,5 @@ toolchain.
 intervals.  This generally happens if you have more CPU cores than free RAM in gigabytes. To fix this, limit the number
 of parallel compile tasks be setting the `MAKEJOBS` environment variable to a number less than your CPU core count.
 
-Once the build script finishes, you can use it to compile SerenityOS if you enable the `USE_CLANG_TOOLCHAIN` build
-option as shown [above](#cmake-build-options).
+Once the build script finishes, you can use it to compile SerenityOS if you set the `SERENITY_TOOLCHAIN` build
+option to `Clang` as shown [above](#cmake-build-options).
