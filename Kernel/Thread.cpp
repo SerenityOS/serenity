@@ -12,7 +12,7 @@
 #include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/KCOVDevice.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PageDirectory.h>

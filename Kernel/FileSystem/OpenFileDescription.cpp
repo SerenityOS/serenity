@@ -10,10 +10,10 @@
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FIFO.h>
-#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeFile.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
@@ -24,24 +24,24 @@
 
 namespace Kernel {
 
-KResultOr<NonnullRefPtr<FileDescription>> FileDescription::try_create(Custody& custody)
+KResultOr<NonnullRefPtr<OpenFileDescription>> OpenFileDescription::try_create(Custody& custody)
 {
     auto inode_file = TRY(InodeFile::create(custody.inode()));
-    auto description = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FileDescription(move(inode_file))));
+    auto description = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) OpenFileDescription(move(inode_file))));
 
     description->m_custody = custody;
     TRY(description->attach());
     return description;
 }
 
-KResultOr<NonnullRefPtr<FileDescription>> FileDescription::try_create(File& file)
+KResultOr<NonnullRefPtr<OpenFileDescription>> OpenFileDescription::try_create(File& file)
 {
-    auto description = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FileDescription(file)));
+    auto description = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) OpenFileDescription(file)));
     TRY(description->attach());
     return description;
 }
 
-FileDescription::FileDescription(File& file)
+OpenFileDescription::OpenFileDescription(File& file)
     : m_file(file)
 {
     if (file.is_inode())
@@ -50,7 +50,7 @@ FileDescription::FileDescription(File& file)
     m_is_directory = metadata().is_directory();
 }
 
-FileDescription::~FileDescription()
+OpenFileDescription::~OpenFileDescription()
 {
     m_file->detach(*this);
     if (is_fifo())
@@ -64,14 +64,14 @@ FileDescription::~FileDescription()
         m_inode->remove_flocks_for_description(*this);
 }
 
-KResult FileDescription::attach()
+KResult OpenFileDescription::attach()
 {
     if (m_inode)
         TRY(m_inode->attach(*this));
     return m_file->attach(*this);
 }
 
-Thread::FileBlocker::BlockFlags FileDescription::should_unblock(Thread::FileBlocker::BlockFlags block_flags) const
+Thread::FileBlocker::BlockFlags OpenFileDescription::should_unblock(Thread::FileBlocker::BlockFlags block_flags) const
 {
     using BlockFlags = Thread::FileBlocker::BlockFlags;
     BlockFlags unblock_flags = BlockFlags::None;
@@ -92,7 +92,7 @@ Thread::FileBlocker::BlockFlags FileDescription::should_unblock(Thread::FileBloc
     return unblock_flags;
 }
 
-KResult FileDescription::stat(::stat& buffer)
+KResult OpenFileDescription::stat(::stat& buffer)
 {
     MutexLocker locker(m_lock);
     // FIXME: This is due to the Device class not overriding File::stat().
@@ -101,7 +101,7 @@ KResult FileDescription::stat(::stat& buffer)
     return m_file->stat(buffer);
 }
 
-KResultOr<off_t> FileDescription::seek(off_t offset, int whence)
+KResultOr<off_t> OpenFileDescription::seek(off_t offset, int whence)
 {
     MutexLocker locker(m_lock);
     if (!m_file->is_seekable())
@@ -142,21 +142,21 @@ KResultOr<off_t> FileDescription::seek(off_t offset, int whence)
     return m_current_offset;
 }
 
-KResultOr<size_t> FileDescription::read(UserOrKernelBuffer& buffer, u64 offset, size_t count)
+KResultOr<size_t> OpenFileDescription::read(UserOrKernelBuffer& buffer, u64 offset, size_t count)
 {
     if (Checked<u64>::addition_would_overflow(offset, count))
         return EOVERFLOW;
     return m_file->read(*this, offset, buffer, count);
 }
 
-KResultOr<size_t> FileDescription::write(u64 offset, UserOrKernelBuffer const& data, size_t data_size)
+KResultOr<size_t> OpenFileDescription::write(u64 offset, UserOrKernelBuffer const& data, size_t data_size)
 {
     if (Checked<u64>::addition_would_overflow(offset, data_size))
         return EOVERFLOW;
     return m_file->write(*this, offset, data, data_size);
 }
 
-KResultOr<size_t> FileDescription::read(UserOrKernelBuffer& buffer, size_t count)
+KResultOr<size_t> OpenFileDescription::read(UserOrKernelBuffer& buffer, size_t count)
 {
     MutexLocker locker(m_lock);
     if (Checked<off_t>::addition_would_overflow(m_current_offset, count))
@@ -168,7 +168,7 @@ KResultOr<size_t> FileDescription::read(UserOrKernelBuffer& buffer, size_t count
     return nread;
 }
 
-KResultOr<size_t> FileDescription::write(const UserOrKernelBuffer& data, size_t size)
+KResultOr<size_t> OpenFileDescription::write(const UserOrKernelBuffer& data, size_t size)
 {
     MutexLocker locker(m_lock);
     if (Checked<off_t>::addition_would_overflow(m_current_offset, size))
@@ -180,17 +180,17 @@ KResultOr<size_t> FileDescription::write(const UserOrKernelBuffer& data, size_t 
     return nwritten;
 }
 
-bool FileDescription::can_write() const
+bool OpenFileDescription::can_write() const
 {
     return m_file->can_write(*this, offset());
 }
 
-bool FileDescription::can_read() const
+bool OpenFileDescription::can_read() const
 {
     return m_file->can_read(*this, offset());
 }
 
-KResultOr<NonnullOwnPtr<KBuffer>> FileDescription::read_entire_file()
+KResultOr<NonnullOwnPtr<KBuffer>> OpenFileDescription::read_entire_file()
 {
     // HACK ALERT: (This entire function)
     VERIFY(m_file->is_inode());
@@ -198,7 +198,7 @@ KResultOr<NonnullOwnPtr<KBuffer>> FileDescription::read_entire_file()
     return m_inode->read_entire(this);
 }
 
-KResultOr<size_t> FileDescription::get_dir_entries(UserOrKernelBuffer& output_buffer, size_t size)
+KResultOr<size_t> OpenFileDescription::get_dir_entries(UserOrKernelBuffer& output_buffer, size_t size)
 {
     MutexLocker locker(m_lock, Mutex::Mode::Shared);
     if (!is_directory())
@@ -261,90 +261,90 @@ KResultOr<size_t> FileDescription::get_dir_entries(UserOrKernelBuffer& output_bu
     return size - remaining;
 }
 
-bool FileDescription::is_device() const
+bool OpenFileDescription::is_device() const
 {
     return m_file->is_device();
 }
 
-const Device* FileDescription::device() const
+const Device* OpenFileDescription::device() const
 {
     if (!is_device())
         return nullptr;
     return static_cast<const Device*>(m_file.ptr());
 }
 
-Device* FileDescription::device()
+Device* OpenFileDescription::device()
 {
     if (!is_device())
         return nullptr;
     return static_cast<Device*>(m_file.ptr());
 }
 
-bool FileDescription::is_tty() const
+bool OpenFileDescription::is_tty() const
 {
     return m_file->is_tty();
 }
 
-const TTY* FileDescription::tty() const
+const TTY* OpenFileDescription::tty() const
 {
     if (!is_tty())
         return nullptr;
     return static_cast<const TTY*>(m_file.ptr());
 }
 
-TTY* FileDescription::tty()
+TTY* OpenFileDescription::tty()
 {
     if (!is_tty())
         return nullptr;
     return static_cast<TTY*>(m_file.ptr());
 }
 
-bool FileDescription::is_inode_watcher() const
+bool OpenFileDescription::is_inode_watcher() const
 {
     return m_file->is_inode_watcher();
 }
 
-const InodeWatcher* FileDescription::inode_watcher() const
+const InodeWatcher* OpenFileDescription::inode_watcher() const
 {
     if (!is_inode_watcher())
         return nullptr;
     return static_cast<const InodeWatcher*>(m_file.ptr());
 }
 
-InodeWatcher* FileDescription::inode_watcher()
+InodeWatcher* OpenFileDescription::inode_watcher()
 {
     if (!is_inode_watcher())
         return nullptr;
     return static_cast<InodeWatcher*>(m_file.ptr());
 }
 
-bool FileDescription::is_master_pty() const
+bool OpenFileDescription::is_master_pty() const
 {
     return m_file->is_master_pty();
 }
 
-const MasterPTY* FileDescription::master_pty() const
+const MasterPTY* OpenFileDescription::master_pty() const
 {
     if (!is_master_pty())
         return nullptr;
     return static_cast<const MasterPTY*>(m_file.ptr());
 }
 
-MasterPTY* FileDescription::master_pty()
+MasterPTY* OpenFileDescription::master_pty()
 {
     if (!is_master_pty())
         return nullptr;
     return static_cast<MasterPTY*>(m_file.ptr());
 }
 
-KResult FileDescription::close()
+KResult OpenFileDescription::close()
 {
     if (m_file->attach_count() > 0)
         return KSuccess;
     return m_file->close();
 }
 
-KResultOr<NonnullOwnPtr<KString>> FileDescription::try_serialize_absolute_path()
+KResultOr<NonnullOwnPtr<KString>> OpenFileDescription::try_serialize_absolute_path()
 {
     if (m_custody)
         return m_custody->try_serialize_absolute_path();
@@ -352,64 +352,64 @@ KResultOr<NonnullOwnPtr<KString>> FileDescription::try_serialize_absolute_path()
     return KString::try_create(m_file->absolute_path(*this));
 }
 
-String FileDescription::absolute_path() const
+String OpenFileDescription::absolute_path() const
 {
     if (m_custody)
         return m_custody->absolute_path();
     return m_file->absolute_path(*this);
 }
 
-InodeMetadata FileDescription::metadata() const
+InodeMetadata OpenFileDescription::metadata() const
 {
     if (m_inode)
         return m_inode->metadata();
     return {};
 }
 
-KResultOr<Memory::Region*> FileDescription::mmap(Process& process, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+KResultOr<Memory::Region*> OpenFileDescription::mmap(Process& process, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     MutexLocker locker(m_lock);
     return m_file->mmap(process, *this, range, offset, prot, shared);
 }
 
-KResult FileDescription::truncate(u64 length)
+KResult OpenFileDescription::truncate(u64 length)
 {
     MutexLocker locker(m_lock);
     return m_file->truncate(length);
 }
 
-bool FileDescription::is_fifo() const
+bool OpenFileDescription::is_fifo() const
 {
     return m_file->is_fifo();
 }
 
-FIFO* FileDescription::fifo()
+FIFO* OpenFileDescription::fifo()
 {
     if (!is_fifo())
         return nullptr;
     return static_cast<FIFO*>(m_file.ptr());
 }
 
-bool FileDescription::is_socket() const
+bool OpenFileDescription::is_socket() const
 {
     return m_file->is_socket();
 }
 
-Socket* FileDescription::socket()
+Socket* OpenFileDescription::socket()
 {
     if (!is_socket())
         return nullptr;
     return static_cast<Socket*>(m_file.ptr());
 }
 
-const Socket* FileDescription::socket() const
+const Socket* OpenFileDescription::socket() const
 {
     if (!is_socket())
         return nullptr;
     return static_cast<const Socket*>(m_file.ptr());
 }
 
-void FileDescription::set_file_flags(u32 flags)
+void OpenFileDescription::set_file_flags(u32 flags)
 {
     MutexLocker locker(m_lock);
     m_is_blocking = !(flags & O_NONBLOCK);
@@ -418,24 +418,24 @@ void FileDescription::set_file_flags(u32 flags)
     m_file_flags = flags;
 }
 
-KResult FileDescription::chmod(mode_t mode)
+KResult OpenFileDescription::chmod(mode_t mode)
 {
     MutexLocker locker(m_lock);
     return m_file->chmod(*this, mode);
 }
 
-KResult FileDescription::chown(UserID uid, GroupID gid)
+KResult OpenFileDescription::chown(UserID uid, GroupID gid)
 {
     MutexLocker locker(m_lock);
     return m_file->chown(*this, uid, gid);
 }
 
-FileBlockerSet& FileDescription::blocker_set()
+FileBlockerSet& OpenFileDescription::blocker_set()
 {
     return m_file->blocker_set();
 }
 
-KResult FileDescription::apply_flock(Process const& process, Userspace<flock const*> lock)
+KResult OpenFileDescription::apply_flock(Process const& process, Userspace<flock const*> lock)
 {
     if (!m_inode)
         return EBADF;
@@ -443,7 +443,7 @@ KResult FileDescription::apply_flock(Process const& process, Userspace<flock con
     return m_inode->apply_flock(process, *this, lock);
 }
 
-KResult FileDescription::get_flock(Userspace<flock*> lock) const
+KResult OpenFileDescription::get_flock(Userspace<flock*> lock) const
 {
     if (!m_inode)
         return EBADF;

@@ -47,7 +47,7 @@ KResult SysFSUSBDeviceInformation::try_generate(KBufferBuilder& builder)
     return KSuccess;
 }
 
-KResult SysFSUSBDeviceInformation::refresh_data(FileDescription& description) const
+KResult SysFSUSBDeviceInformation::refresh_data(OpenFileDescription& description) const
 {
     MutexLocker lock(m_lock);
     auto& cached_data = description.data();
@@ -63,7 +63,7 @@ KResult SysFSUSBDeviceInformation::refresh_data(FileDescription& description) co
     return KSuccess;
 }
 
-KResultOr<size_t> SysFSUSBDeviceInformation::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
+KResultOr<size_t> SysFSUSBDeviceInformation::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
 {
     dbgln_if(PROCFS_DEBUG, "SysFSUSBDeviceInformation @ {}: read_bytes offset: {} count: {}", name(), offset, count);
 

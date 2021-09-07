@@ -38,12 +38,12 @@ public:
 
 private:
     // ^Inode
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
+    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual void flush_metadata() override;
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, FileDescription*) override;
+    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, OpenFileDescription*) override;
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual KResult add_child(Inode& child, const StringView& name, mode_t) override;
     virtual KResult remove_child(const StringView& name) override;
@@ -89,7 +89,7 @@ public:
         FileSize64bits = 1 << 1,
     };
 
-    static KResultOr<NonnullRefPtr<Ext2FS>> try_create(FileDescription&);
+    static KResultOr<NonnullRefPtr<Ext2FS>> try_create(OpenFileDescription&);
 
     virtual ~Ext2FS() override;
     virtual KResult initialize() override;
@@ -110,7 +110,7 @@ public:
 private:
     TYPEDEF_DISTINCT_ORDERED_ID(unsigned, GroupIndex);
 
-    explicit Ext2FS(FileDescription&);
+    explicit Ext2FS(OpenFileDescription&);
 
     const ext2_super_block& super_block() const { return m_super_block; }
     const ext2_group_desc& group_descriptor(GroupIndex) const;

@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Debug.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
@@ -16,7 +16,7 @@ KResultOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, u32 arg)
     REQUIRE_PROMISE(stdio);
     dbgln_if(IO_DEBUG, "sys$fcntl: fd={}, cmd={}, arg={}", fd, cmd, arg);
     auto description = TRY(fds().file_description(fd));
-    // NOTE: The FD flags are not shared between FileDescription objects.
+    // NOTE: The FD flags are not shared between OpenFileDescription objects.
     //       This means that dup() doesn't copy the FD_CLOEXEC flag!
     switch (cmd) {
     case F_DUPFD: {

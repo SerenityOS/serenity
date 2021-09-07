@@ -31,7 +31,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<ACPISysFSComponent> ACPISysFSComponent::create(St
     return adopt_ref(*new (nothrow) ACPISysFSComponent(name, paddr, table_size));
 }
 
-KResultOr<size_t> ACPISysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription*) const
+KResultOr<size_t> ACPISysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     auto blob = try_to_generate_buffer();
     if (!blob)

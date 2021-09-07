@@ -6,7 +6,7 @@
 
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>

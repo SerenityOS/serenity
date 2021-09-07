@@ -7,7 +7,7 @@
 
 #include <AK/StringView.h>
 #include <Kernel/Arch/PC/BIOS.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/TypedMapping.h>
@@ -29,7 +29,7 @@ UNMAP_AFTER_INIT BIOSSysFSComponent::BIOSSysFSComponent(String name)
 {
 }
 
-KResultOr<size_t> BIOSSysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription*) const
+KResultOr<size_t> BIOSSysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     auto blob = try_to_generate_buffer();
     if (!blob)

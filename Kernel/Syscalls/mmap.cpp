@@ -7,7 +7,7 @@
 
 #include <Kernel/Arch/x86/MSR.h>
 #include <Kernel/Arch/x86/SmapDisabler.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PageDirectory.h>

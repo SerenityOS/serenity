@@ -12,11 +12,11 @@
 
 namespace Kernel {
 
-class FileDescription;
+class OpenFileDescription;
 
 struct SocketPair {
-    NonnullRefPtr<FileDescription> description0;
-    NonnullRefPtr<FileDescription> description1;
+    NonnullRefPtr<OpenFileDescription> description0;
+    NonnullRefPtr<OpenFileDescription> description1;
 };
 
 class LocalSocket final : public Socket {
@@ -26,40 +26,40 @@ public:
     static KResultOr<SocketPair> try_create_connected_pair(int type);
     virtual ~LocalSocket() override;
 
-    KResult sendfd(const FileDescription& socket_description, FileDescription& passing_description);
-    KResultOr<NonnullRefPtr<FileDescription>> recvfd(const FileDescription& socket_description);
+    KResult sendfd(const OpenFileDescription& socket_description, OpenFileDescription& passing_description);
+    KResultOr<NonnullRefPtr<OpenFileDescription>> recvfd(const OpenFileDescription& socket_description);
 
     static void for_each(Function<void(const LocalSocket&)>);
 
     StringView socket_path() const;
-    String absolute_path(const FileDescription& description) const override;
+    String absolute_path(const OpenFileDescription& description) const override;
 
     // ^Socket
     virtual KResult bind(Userspace<const sockaddr*>, socklen_t) override;
-    virtual KResult connect(FileDescription&, Userspace<const sockaddr*>, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
+    virtual KResult connect(OpenFileDescription&, Userspace<const sockaddr*>, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
     virtual KResult listen(size_t) override;
     virtual void get_local_address(sockaddr*, socklen_t*) override;
     virtual void get_peer_address(sockaddr*, socklen_t*) override;
-    virtual KResult attach(FileDescription&) override;
-    virtual void detach(FileDescription&) override;
-    virtual bool can_read(const FileDescription&, size_t) const override;
-    virtual bool can_write(const FileDescription&, size_t) const override;
-    virtual KResultOr<size_t> sendto(FileDescription&, const UserOrKernelBuffer&, size_t, int, Userspace<const sockaddr*>, socklen_t) override;
-    virtual KResultOr<size_t> recvfrom(FileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) override;
-    virtual KResult getsockopt(FileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
-    virtual KResult ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override;
-    virtual KResult chown(FileDescription&, UserID, GroupID) override;
-    virtual KResult chmod(FileDescription&, mode_t) override;
+    virtual KResult attach(OpenFileDescription&) override;
+    virtual void detach(OpenFileDescription&) override;
+    virtual bool can_read(const OpenFileDescription&, size_t) const override;
+    virtual bool can_write(const OpenFileDescription&, size_t) const override;
+    virtual KResultOr<size_t> sendto(OpenFileDescription&, const UserOrKernelBuffer&, size_t, int, Userspace<const sockaddr*>, socklen_t) override;
+    virtual KResultOr<size_t> recvfrom(OpenFileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) override;
+    virtual KResult getsockopt(OpenFileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
+    virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
+    virtual KResult chown(OpenFileDescription&, UserID, GroupID) override;
+    virtual KResult chmod(OpenFileDescription&, mode_t) override;
 
 private:
     explicit LocalSocket(int type, NonnullOwnPtr<DoubleBuffer> client_buffer, NonnullOwnPtr<DoubleBuffer> server_buffer);
     virtual StringView class_name() const override { return "LocalSocket"; }
     virtual bool is_local() const override { return true; }
-    bool has_attached_peer(const FileDescription&) const;
-    DoubleBuffer* receive_buffer_for(FileDescription&);
-    DoubleBuffer* send_buffer_for(FileDescription&);
-    NonnullRefPtrVector<FileDescription>& sendfd_queue_for(const FileDescription&);
-    NonnullRefPtrVector<FileDescription>& recvfd_queue_for(const FileDescription&);
+    bool has_attached_peer(const OpenFileDescription&) const;
+    DoubleBuffer* receive_buffer_for(OpenFileDescription&);
+    DoubleBuffer* send_buffer_for(OpenFileDescription&);
+    NonnullRefPtrVector<OpenFileDescription>& sendfd_queue_for(const OpenFileDescription&);
+    NonnullRefPtrVector<OpenFileDescription>& recvfd_queue_for(const OpenFileDescription&);
 
     void set_connect_side_role(Role connect_side_role, bool force_evaluate_block_conditions = false)
     {
@@ -72,7 +72,7 @@ private:
     KResult try_set_path(StringView);
 
     // An open socket file on the filesystem.
-    RefPtr<FileDescription> m_file;
+    RefPtr<OpenFileDescription> m_file;
 
     UserID m_prebind_uid { 0 };
     GroupID m_prebind_gid { 0 };
@@ -83,9 +83,9 @@ private:
     // an additional role for the connect side and differentiate
     // between them.
     Role m_connect_side_role { Role::None };
-    FileDescription* m_connect_side_fd { nullptr };
+    OpenFileDescription* m_connect_side_fd { nullptr };
 
-    virtual Role role(const FileDescription& description) const override
+    virtual Role role(const OpenFileDescription& description) const override
     {
         if (m_connect_side_fd == &description)
             return m_connect_side_role;
@@ -99,8 +99,8 @@ private:
     NonnullOwnPtr<DoubleBuffer> m_for_client;
     NonnullOwnPtr<DoubleBuffer> m_for_server;
 
-    NonnullRefPtrVector<FileDescription> m_fds_for_client;
-    NonnullRefPtrVector<FileDescription> m_fds_for_server;
+    NonnullRefPtrVector<OpenFileDescription> m_fds_for_client;
+    NonnullRefPtrVector<OpenFileDescription> m_fds_for_server;
 
     IntrusiveListNode<LocalSocket> m_list_node;
 

@@ -104,7 +104,7 @@ private:
     bool m_dirty { false };
 };
 
-BlockBasedFileSystem::BlockBasedFileSystem(FileDescription& file_description)
+BlockBasedFileSystem::BlockBasedFileSystem(OpenFileDescription& file_description)
     : FileBackedFileSystem(file_description)
 {
     VERIFY(file_description.file().is_seekable());

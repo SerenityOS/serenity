@@ -55,7 +55,7 @@ String Device::absolute_path() const
     return String::formatted("/dev/{}", device_name());
 }
 
-String Device::absolute_path(const FileDescription&) const
+String Device::absolute_path(const OpenFileDescription&) const
 {
     return absolute_path();
 }

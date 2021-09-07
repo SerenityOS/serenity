@@ -80,7 +80,7 @@ DevFSInode::DevFSInode(DevFS& fs)
 {
 }
 
-KResultOr<size_t> DevFSInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const
+KResultOr<size_t> DevFSInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
 {
     VERIFY_NOT_REACHED();
 }
@@ -99,7 +99,7 @@ void DevFSInode::flush_metadata()
 {
 }
 
-KResultOr<size_t> DevFSInode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, FileDescription*)
+KResultOr<size_t> DevFSInode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*)
 {
     VERIFY_NOT_REACHED();
 }
@@ -149,7 +149,7 @@ DevFSLinkInode::DevFSLinkInode(DevFS& fs, NonnullOwnPtr<KString> name)
 {
 }
 
-KResultOr<size_t> DevFSLinkInode::read_bytes(off_t offset, size_t, UserOrKernelBuffer& buffer, FileDescription*) const
+KResultOr<size_t> DevFSLinkInode::read_bytes(off_t offset, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(offset == 0);
@@ -170,7 +170,7 @@ InodeMetadata DevFSLinkInode::metadata() const
     return metadata;
 }
 
-KResultOr<size_t> DevFSLinkInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, FileDescription*)
+KResultOr<size_t> DevFSLinkInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription*)
 {
     auto new_string = TRY(buffer.try_copy_into_kstring(count));
 
@@ -326,7 +326,7 @@ StringView DevFSDeviceInode::name() const
     return m_name->view();
 }
 
-KResultOr<size_t> DevFSDeviceInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
+KResultOr<size_t> DevFSDeviceInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!!description);
@@ -352,7 +352,7 @@ InodeMetadata DevFSDeviceInode::metadata() const
     metadata.minor_device = m_attached_device->minor();
     return metadata;
 }
-KResultOr<size_t> DevFSDeviceInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, FileDescription* description)
+KResultOr<size_t> DevFSDeviceInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, OpenFileDescription* description)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!!description);

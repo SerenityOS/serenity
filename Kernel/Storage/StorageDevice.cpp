@@ -7,7 +7,7 @@
 #include <AK/Memory.h>
 #include <AK/StringView.h>
 #include <Kernel/Debug.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Storage/StorageDevice.h>
 #include <Kernel/Storage/StorageManagement.h>
 
@@ -37,7 +37,7 @@ NonnullRefPtr<StorageController> StorageDevice::controller() const
     return m_storage_controller;
 }
 
-KResultOr<size_t> StorageDevice::read(FileDescription&, u64 offset, UserOrKernelBuffer& outbuf, size_t len)
+KResultOr<size_t> StorageDevice::read(OpenFileDescription&, u64 offset, UserOrKernelBuffer& outbuf, size_t len)
 {
     unsigned index = offset / block_size();
     u16 whole_blocks = len / block_size();
@@ -99,12 +99,12 @@ KResultOr<size_t> StorageDevice::read(FileDescription&, u64 offset, UserOrKernel
     return pos + remaining;
 }
 
-bool StorageDevice::can_read(const FileDescription&, size_t offset) const
+bool StorageDevice::can_read(const OpenFileDescription&, size_t offset) const
 {
     return offset < (max_addressable_block() * block_size());
 }
 
-KResultOr<size_t> StorageDevice::write(FileDescription&, u64 offset, const UserOrKernelBuffer& inbuf, size_t len)
+KResultOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const UserOrKernelBuffer& inbuf, size_t len)
 {
     unsigned index = offset / block_size();
     u16 whole_blocks = len / block_size();
@@ -189,7 +189,7 @@ KResultOr<size_t> StorageDevice::write(FileDescription&, u64 offset, const UserO
     return pos + remaining;
 }
 
-bool StorageDevice::can_write(const FileDescription&, size_t offset) const
+bool StorageDevice::can_write(const OpenFileDescription&, size_t offset) const
 {
     return offset < (max_addressable_block() * block_size());
 }

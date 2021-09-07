@@ -20,7 +20,7 @@ class Plan9FS final : public FileBackedFileSystem {
 
 public:
     virtual ~Plan9FS() override;
-    static KResultOr<NonnullRefPtr<Plan9FS>> try_create(FileDescription&);
+    static KResultOr<NonnullRefPtr<Plan9FS>> try_create(OpenFileDescription&);
 
     virtual KResult initialize() override;
 
@@ -46,7 +46,7 @@ public:
     class Message;
 
 private:
-    Plan9FS(FileDescription&);
+    Plan9FS(OpenFileDescription&);
 
     class Blocker;
 
@@ -156,8 +156,8 @@ public:
     // ^Inode
     virtual InodeMetadata metadata() const override;
     virtual void flush_metadata() override;
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, FileDescription*) override;
+    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
+    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, OpenFileDescription*) override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;

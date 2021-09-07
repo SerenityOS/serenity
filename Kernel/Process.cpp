@@ -18,7 +18,7 @@
 #endif
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/FileSystem/Custody.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KSyms.h>
@@ -415,7 +415,7 @@ RefPtr<Process> Process::from_pid(ProcessID pid)
     });
 }
 
-const Process::FileDescriptionAndFlags* Process::FileDescriptions::get_if_valid(size_t i) const
+const Process::OpenFileDescriptionAndFlags* Process::OpenFileDescriptions::get_if_valid(size_t i) const
 {
     SpinlockLocker lock(m_fds_lock);
     if (m_fds_metadatas.size() <= i)
@@ -426,7 +426,7 @@ const Process::FileDescriptionAndFlags* Process::FileDescriptions::get_if_valid(
 
     return nullptr;
 }
-Process::FileDescriptionAndFlags* Process::FileDescriptions::get_if_valid(size_t i)
+Process::OpenFileDescriptionAndFlags* Process::OpenFileDescriptions::get_if_valid(size_t i)
 {
     SpinlockLocker lock(m_fds_lock);
     if (m_fds_metadatas.size() <= i)
@@ -438,20 +438,20 @@ Process::FileDescriptionAndFlags* Process::FileDescriptions::get_if_valid(size_t
     return nullptr;
 }
 
-const Process::FileDescriptionAndFlags& Process::FileDescriptions::at(size_t i) const
+const Process::OpenFileDescriptionAndFlags& Process::OpenFileDescriptions::at(size_t i) const
 {
     SpinlockLocker lock(m_fds_lock);
     VERIFY(m_fds_metadatas[i].is_allocated());
     return m_fds_metadatas[i];
 }
-Process::FileDescriptionAndFlags& Process::FileDescriptions::at(size_t i)
+Process::OpenFileDescriptionAndFlags& Process::OpenFileDescriptions::at(size_t i)
 {
     SpinlockLocker lock(m_fds_lock);
     VERIFY(m_fds_metadatas[i].is_allocated());
     return m_fds_metadatas[i];
 }
 
-KResultOr<NonnullRefPtr<FileDescription>> Process::FileDescriptions::file_description(int fd) const
+KResultOr<NonnullRefPtr<OpenFileDescription>> Process::OpenFileDescriptions::file_description(int fd) const
 {
     SpinlockLocker lock(m_fds_lock);
     if (fd < 0)
@@ -464,7 +464,7 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::FileDescriptions::file_descri
     return description.release_nonnull();
 }
 
-void Process::FileDescriptions::enumerate(Function<void(const FileDescriptionAndFlags&)> callback) const
+void Process::OpenFileDescriptions::enumerate(Function<void(const OpenFileDescriptionAndFlags&)> callback) const
 {
     SpinlockLocker lock(m_fds_lock);
     for (auto& file_description_metadata : m_fds_metadatas) {
@@ -472,7 +472,7 @@ void Process::FileDescriptions::enumerate(Function<void(const FileDescriptionAnd
     }
 }
 
-void Process::FileDescriptions::change_each(Function<void(FileDescriptionAndFlags&)> callback)
+void Process::OpenFileDescriptions::change_each(Function<void(OpenFileDescriptionAndFlags&)> callback)
 {
     SpinlockLocker lock(m_fds_lock);
     for (auto& file_description_metadata : m_fds_metadatas) {
@@ -480,7 +480,7 @@ void Process::FileDescriptions::change_each(Function<void(FileDescriptionAndFlag
     }
 }
 
-size_t Process::FileDescriptions::open_count() const
+size_t Process::OpenFileDescriptions::open_count() const
 {
     size_t count = 0;
     enumerate([&](auto& file_description_metadata) {
@@ -490,7 +490,7 @@ size_t Process::FileDescriptions::open_count() const
     return count;
 }
 
-KResultOr<Process::ScopedDescriptionAllocation> Process::FileDescriptions::allocate(int first_candidate_fd)
+KResultOr<Process::ScopedDescriptionAllocation> Process::OpenFileDescriptions::allocate(int first_candidate_fd)
 {
     SpinlockLocker lock(m_fds_lock);
     for (size_t i = first_candidate_fd; i < max_open(); ++i) {
@@ -764,14 +764,14 @@ RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_d
     return thread;
 }
 
-void Process::FileDescriptionAndFlags::clear()
+void Process::OpenFileDescriptionAndFlags::clear()
 {
     // FIXME: Verify Process::m_fds_lock is locked!
     m_description = nullptr;
     m_flags = 0;
 }
 
-void Process::FileDescriptionAndFlags::set(NonnullRefPtr<FileDescription>&& description, u32 flags)
+void Process::OpenFileDescriptionAndFlags::set(NonnullRefPtr<OpenFileDescription>&& description, u32 flags)
 {
     // FIXME: Verify Process::m_fds_lock is locked!
     m_description = move(description);

@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/FileSystem/AnonymousFile.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Process.h>
 
@@ -28,7 +28,7 @@ KResultOr<FlatPtr> Process::sys$anon_create(size_t size, int options)
     auto new_fd = TRY(m_fds.allocate());
     auto vmobject = TRY(Memory::AnonymousVMObject::try_create_purgeable_with_size(size, AllocationStrategy::Reserve));
     auto anon_file = TRY(AnonymousFile::try_create(move(vmobject)));
-    auto description = TRY(FileDescription::try_create(move(anon_file)));
+    auto description = TRY(OpenFileDescription::try_create(move(anon_file)));
 
     description->set_writable(true);
     description->set_readable(true);

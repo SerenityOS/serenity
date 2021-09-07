@@ -7,7 +7,7 @@
 #include <AK/Atomic.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/FileSystem/FIFO.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
@@ -24,15 +24,15 @@ RefPtr<FIFO> FIFO::try_create(UserID uid)
     return {};
 }
 
-KResultOr<NonnullRefPtr<FileDescription>> FIFO::open_direction(FIFO::Direction direction)
+KResultOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction(FIFO::Direction direction)
 {
-    auto description = TRY(FileDescription::try_create(*this));
+    auto description = TRY(OpenFileDescription::try_create(*this));
     attach(direction);
     description->set_fifo_direction({}, direction);
     return description;
 }
 
-KResultOr<NonnullRefPtr<FileDescription>> FIFO::open_direction_blocking(FIFO::Direction direction)
+KResultOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction_blocking(FIFO::Direction direction)
 {
     MutexLocker locker(m_open_lock);
 
@@ -101,17 +101,17 @@ void FIFO::detach(Direction direction)
     evaluate_block_conditions();
 }
 
-bool FIFO::can_read(const FileDescription&, size_t) const
+bool FIFO::can_read(const OpenFileDescription&, size_t) const
 {
     return !m_buffer->is_empty() || !m_writers;
 }
 
-bool FIFO::can_write(const FileDescription&, size_t) const
+bool FIFO::can_write(const OpenFileDescription&, size_t) const
 {
     return m_buffer->space_for_writing() || !m_readers;
 }
 
-KResultOr<size_t> FIFO::read(FileDescription& fd, u64, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> FIFO::read(OpenFileDescription& fd, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     if (m_buffer->is_empty()) {
         if (!m_writers)
@@ -122,7 +122,7 @@ KResultOr<size_t> FIFO::read(FileDescription& fd, u64, UserOrKernelBuffer& buffe
     return m_buffer->read(buffer, size);
 }
 
-KResultOr<size_t> FIFO::write(FileDescription& fd, u64, const UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> FIFO::write(OpenFileDescription& fd, u64, const UserOrKernelBuffer& buffer, size_t size)
 {
     if (!m_readers) {
         Thread::current()->send_signal(SIGPIPE, &Process::current());
@@ -134,7 +134,7 @@ KResultOr<size_t> FIFO::write(FileDescription& fd, u64, const UserOrKernelBuffer
     return m_buffer->write(buffer, size);
 }
 
-String FIFO::absolute_path(const FileDescription&) const
+String FIFO::absolute_path(const OpenFileDescription&) const
 {
     return String::formatted("fifo:{}", m_fifo_id);
 }

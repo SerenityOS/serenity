@@ -25,7 +25,7 @@ NonnullRefPtr<FramebufferDevice> FramebufferDevice::create(const GraphicsDevice&
     return adopt_ref(*new FramebufferDevice(adapter, output_port_index, paddr, width, height, pitch));
 }
 
-KResultOr<Memory::Region*> FramebufferDevice::mmap(Process& process, FileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+KResultOr<Memory::Region*> FramebufferDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     SpinlockLocker lock(m_activation_lock);
     REQUIRE_PROMISE(video);
@@ -123,7 +123,7 @@ size_t FramebufferDevice::framebuffer_size_in_bytes() const
     return m_framebuffer_pitch * m_framebuffer_height;
 }
 
-KResult FramebufferDevice::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
+KResult FramebufferDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(video);
     switch (request) {

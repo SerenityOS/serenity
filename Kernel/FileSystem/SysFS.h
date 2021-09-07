@@ -83,12 +83,12 @@ public:
 
 protected:
     SysFSInode(SysFS const&, SysFSComponent const&);
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
+    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual void flush_metadata() override;
     virtual InodeMetadata metadata() const override;
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, FileDescription*) override;
+    virtual KResultOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) override;
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual KResult add_child(Inode&, StringView const& name, mode_t) override;
     virtual KResult remove_child(StringView const& name) override;
@@ -96,8 +96,8 @@ protected:
     virtual KResult chown(UserID, GroupID) override;
     virtual KResult truncate(u64) override;
 
-    virtual KResult attach(FileDescription& description) override final;
-    virtual void did_seek(FileDescription&, off_t) override final;
+    virtual KResult attach(OpenFileDescription& description) override final;
+    virtual void did_seek(OpenFileDescription&, off_t) override final;
 
     NonnullRefPtr<SysFSComponent> m_associated_component;
 };

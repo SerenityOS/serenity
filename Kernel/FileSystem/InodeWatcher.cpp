@@ -22,13 +22,13 @@ InodeWatcher::~InodeWatcher()
     (void)close();
 }
 
-bool InodeWatcher::can_read(const FileDescription&, size_t) const
+bool InodeWatcher::can_read(const OpenFileDescription&, size_t) const
 {
     MutexLocker locker(m_lock);
     return !m_queue.is_empty();
 }
 
-KResultOr<size_t> InodeWatcher::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t buffer_size)
+KResultOr<size_t> InodeWatcher::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t buffer_size)
 {
     MutexLocker locker(m_lock);
     if (m_queue.is_empty())
@@ -81,7 +81,7 @@ KResult InodeWatcher::close()
     return KSuccess;
 }
 
-String InodeWatcher::absolute_path(const FileDescription&) const
+String InodeWatcher::absolute_path(const OpenFileDescription&) const
 {
     return String::formatted("InodeWatcher:({})", m_wd_to_watches.size());
 }

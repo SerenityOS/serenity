@@ -24,18 +24,18 @@ UNMAP_AFTER_INIT ZeroDevice::~ZeroDevice()
 {
 }
 
-bool ZeroDevice::can_read(const FileDescription&, size_t) const
+bool ZeroDevice::can_read(const OpenFileDescription&, size_t) const
 {
     return true;
 }
 
-KResultOr<size_t> ZeroDevice::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> ZeroDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     TRY(buffer.memset(0, size));
     return size;
 }
 
-KResultOr<size_t> ZeroDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t size)
+KResultOr<size_t> ZeroDevice::write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t size)
 {
     return size;
 }

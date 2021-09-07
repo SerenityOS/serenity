@@ -184,7 +184,7 @@ KResult Process::procfs_get_fds_stats(KBufferBuilder& builder) const
             return;
         }
         bool cloexec = file_description_metadata.flags() & FD_CLOEXEC;
-        RefPtr<FileDescription> description = file_description_metadata.description();
+        RefPtr<OpenFileDescription> description = file_description_metadata.description();
         auto description_object = array.add_object();
         description_object.add("fd", count);
         description_object.add("absolute_path", description->absolute_path());

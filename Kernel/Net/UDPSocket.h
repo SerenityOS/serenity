@@ -27,7 +27,7 @@ private:
 
     virtual KResultOr<size_t> protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, int flags) override;
     virtual KResultOr<size_t> protocol_send(const UserOrKernelBuffer&, size_t) override;
-    virtual KResult protocol_connect(FileDescription&, ShouldBlock) override;
+    virtual KResult protocol_connect(OpenFileDescription&, ShouldBlock) override;
     virtual KResultOr<u16> protocol_allocate_local_port() override;
     virtual KResult protocol_bind() override;
 };

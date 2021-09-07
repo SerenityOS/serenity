@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-class FileDescription;
+class OpenFileDescription;
 
 class FIFO final : public File {
 public:
@@ -29,8 +29,8 @@ public:
 
     UserID uid() const { return m_uid; }
 
-    KResultOr<NonnullRefPtr<FileDescription>> open_direction(Direction);
-    KResultOr<NonnullRefPtr<FileDescription>> open_direction_blocking(Direction);
+    KResultOr<NonnullRefPtr<OpenFileDescription>> open_direction(Direction);
+    KResultOr<NonnullRefPtr<OpenFileDescription>> open_direction_blocking(Direction);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
@@ -40,12 +40,12 @@ public:
 
 private:
     // ^File
-    virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override;
+    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
+    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual KResult stat(::stat&) const override;
-    virtual bool can_read(const FileDescription&, size_t) const override;
-    virtual bool can_write(const FileDescription&, size_t) const override;
-    virtual String absolute_path(const FileDescription&) const override;
+    virtual bool can_read(const OpenFileDescription&, size_t) const override;
+    virtual bool can_write(const OpenFileDescription&, size_t) const override;
+    virtual String absolute_path(const OpenFileDescription&) const override;
     virtual StringView class_name() const override { return "FIFO"; }
     virtual bool is_fifo() const override { return true; }
 

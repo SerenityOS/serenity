@@ -273,12 +273,12 @@ UNMAP_AFTER_INIT KeyboardDevice::~KeyboardDevice()
 {
 }
 
-bool KeyboardDevice::can_read(const FileDescription&, size_t) const
+bool KeyboardDevice::can_read(const OpenFileDescription&, size_t) const
 {
     return !m_queue.is_empty();
 }
 
-KResultOr<size_t> KeyboardDevice::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> KeyboardDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     size_t nread = 0;
     SpinlockLocker lock(m_queue_lock);
@@ -306,12 +306,12 @@ KResultOr<size_t> KeyboardDevice::read(FileDescription&, u64, UserOrKernelBuffer
     return nread;
 }
 
-KResultOr<size_t> KeyboardDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t)
+KResultOr<size_t> KeyboardDevice::write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t)
 {
     return 0;
 }
 
-KResult KeyboardDevice::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
+KResult KeyboardDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
     switch (request) {
     case KEYBOARD_IOCTL_GET_NUM_LOCK: {

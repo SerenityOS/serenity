@@ -171,12 +171,12 @@ private:
     Vector<DirectoryState> m_directory_stack;
 };
 
-KResultOr<NonnullRefPtr<ISO9660FS>> ISO9660FS::try_create(FileDescription& description)
+KResultOr<NonnullRefPtr<ISO9660FS>> ISO9660FS::try_create(OpenFileDescription& description)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) ISO9660FS(description));
 }
 
-ISO9660FS::ISO9660FS(FileDescription& description)
+ISO9660FS::ISO9660FS(OpenFileDescription& description)
     : BlockBasedFileSystem(description)
 {
     set_block_size(logical_sector_size);
@@ -415,7 +415,7 @@ u32 ISO9660FS::calculate_directory_entry_cache_key(ISO::DirectoryRecordHeader co
     return LittleEndian { record.extent_location.little };
 }
 
-KResultOr<size_t> ISO9660Inode::read_bytes(off_t offset, size_t size, UserOrKernelBuffer& buffer, FileDescription*) const
+KResultOr<size_t> ISO9660Inode::read_bytes(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     MutexLocker inode_locker(m_inode_lock);
 
@@ -514,7 +514,7 @@ void ISO9660Inode::flush_metadata()
 {
 }
 
-KResultOr<size_t> ISO9660Inode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, FileDescription*)
+KResultOr<size_t> ISO9660Inode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*)
 {
     return EROFS;
 }

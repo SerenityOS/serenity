@@ -5,9 +5,9 @@
  */
 
 #include <AK/StringView.h>
-#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeFile.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Memory/PrivateInodeVMObject.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
@@ -26,7 +26,7 @@ InodeFile::~InodeFile()
 {
 }
 
-KResultOr<size_t> InodeFile::read(FileDescription& description, u64 offset, UserOrKernelBuffer& buffer, size_t count)
+KResultOr<size_t> InodeFile::read(OpenFileDescription& description, u64 offset, UserOrKernelBuffer& buffer, size_t count)
 {
     if (Checked<off_t>::addition_would_overflow(offset, count))
         return EOVERFLOW;
@@ -39,7 +39,7 @@ KResultOr<size_t> InodeFile::read(FileDescription& description, u64 offset, User
     return nread;
 }
 
-KResultOr<size_t> InodeFile::write(FileDescription& description, u64 offset, const UserOrKernelBuffer& data, size_t count)
+KResultOr<size_t> InodeFile::write(OpenFileDescription& description, u64 offset, const UserOrKernelBuffer& data, size_t count)
 {
     if (Checked<off_t>::addition_would_overflow(offset, count))
         return EOVERFLOW;
@@ -55,7 +55,7 @@ KResultOr<size_t> InodeFile::write(FileDescription& description, u64 offset, con
     return nwritten;
 }
 
-KResult InodeFile::ioctl(FileDescription& description, unsigned request, Userspace<void*> arg)
+KResult InodeFile::ioctl(OpenFileDescription& description, unsigned request, Userspace<void*> arg)
 {
     switch (request) {
     case FIBMAP: {
@@ -81,7 +81,7 @@ KResult InodeFile::ioctl(FileDescription& description, unsigned request, Userspa
     }
 }
 
-KResultOr<Memory::Region*> InodeFile::mmap(Process& process, FileDescription& description, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+KResultOr<Memory::Region*> InodeFile::mmap(Process& process, OpenFileDescription& description, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
     RefPtr<Memory::InodeVMObject> vmobject;
@@ -92,7 +92,7 @@ KResultOr<Memory::Region*> InodeFile::mmap(Process& process, FileDescription& de
     return process.address_space().allocate_region_with_vmobject(range, vmobject.release_nonnull(), offset, description.absolute_path(), prot, shared);
 }
 
-String InodeFile::absolute_path(const FileDescription& description) const
+String InodeFile::absolute_path(const OpenFileDescription& description) const
 {
     VERIFY_NOT_REACHED();
     VERIFY(description.custody());
@@ -106,14 +106,14 @@ KResult InodeFile::truncate(u64 size)
     return KSuccess;
 }
 
-KResult InodeFile::chown(FileDescription& description, UserID uid, GroupID gid)
+KResult InodeFile::chown(OpenFileDescription& description, UserID uid, GroupID gid)
 {
     VERIFY(description.inode() == m_inode);
     VERIFY(description.custody());
     return VirtualFileSystem::the().chown(*description.custody(), uid, gid);
 }
 
-KResult InodeFile::chmod(FileDescription& description, mode_t mode)
+KResult InodeFile::chmod(OpenFileDescription& description, mode_t mode)
 {
     VERIFY(description.inode() == m_inode);
     VERIFY(description.custody());

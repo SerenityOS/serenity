@@ -9,12 +9,12 @@
 
 namespace Kernel {
 
-KResultOr<NonnullRefPtr<Plan9FS>> Plan9FS::try_create(FileDescription& file_description)
+KResultOr<NonnullRefPtr<Plan9FS>> Plan9FS::try_create(OpenFileDescription& file_description)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) Plan9FS(file_description));
 }
 
-Plan9FS::Plan9FS(FileDescription& file_description)
+Plan9FS::Plan9FS(OpenFileDescription& file_description)
     : FileBackedFileSystem(file_description)
     , m_completion_blocker(*this)
 {
@@ -720,7 +720,7 @@ KResult Plan9FSInode::ensure_open_for_mode(int mode)
     }
 }
 
-KResultOr<size_t> Plan9FSInode::read_bytes(off_t offset, size_t size, UserOrKernelBuffer& buffer, FileDescription*) const
+KResultOr<size_t> Plan9FSInode::read_bytes(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     TRY(const_cast<Plan9FSInode&>(*this).ensure_open_for_mode(O_RDONLY));
 
@@ -752,7 +752,7 @@ KResultOr<size_t> Plan9FSInode::read_bytes(off_t offset, size_t size, UserOrKern
     return nread;
 }
 
-KResultOr<size_t> Plan9FSInode::write_bytes(off_t offset, size_t size, const UserOrKernelBuffer& data, FileDescription*)
+KResultOr<size_t> Plan9FSInode::write_bytes(off_t offset, size_t size, const UserOrKernelBuffer& data, OpenFileDescription*)
 {
     TRY(ensure_open_for_mode(O_WRONLY));
     size = fs().adjust_buffer_size(size);

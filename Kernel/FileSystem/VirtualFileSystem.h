@@ -48,8 +48,8 @@ public:
     KResult remount(Custody& mount_point, int new_flags);
     KResult unmount(Inode& guest_inode);
 
-    KResultOr<NonnullRefPtr<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
-    KResultOr<NonnullRefPtr<FileDescription>> create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
+    KResultOr<NonnullRefPtr<OpenFileDescription>> open(StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
+    KResultOr<NonnullRefPtr<OpenFileDescription>> create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
     KResult mkdir(StringView path, mode_t mode, Custody& base);
     KResult link(StringView old_path, StringView new_path, Custody& base);
     KResult unlink(StringView path, Custody& base);
@@ -77,7 +77,7 @@ public:
     KResultOr<NonnullRefPtr<Custody>> resolve_path_without_veil(StringView path, Custody& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
 
 private:
-    friend class FileDescription;
+    friend class OpenFileDescription;
 
     UnveilNode const& find_matching_unveiled_path(StringView path);
     KResult validate_path_against_process_veil(Custody const& path, int options);

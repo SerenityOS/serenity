@@ -11,8 +11,8 @@
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
-#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KLexicalPath.h>
 #include <Kernel/KSyms.h>
@@ -203,7 +203,7 @@ KResultOr<InodeMetadata> VirtualFileSystem::lookup_metadata(StringView path, Cus
     return custody->inode().metadata();
 }
 
-KResultOr<NonnullRefPtr<FileDescription>> VirtualFileSystem::open(StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> owner)
+KResultOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> owner)
 {
     if ((options & O_CREAT) && (options & O_DIRECTORY))
         return EINVAL;
@@ -288,7 +288,7 @@ KResultOr<NonnullRefPtr<FileDescription>> VirtualFileSystem::open(StringView pat
         TRY(inode.truncate(0));
         TRY(inode.set_mtime(kgettimeofday().to_truncated_seconds()));
     }
-    auto description = TRY(FileDescription::try_create(custody));
+    auto description = TRY(OpenFileDescription::try_create(custody));
     description->set_rw_mode(options);
     description->set_file_flags(options);
     return description;
@@ -319,7 +319,7 @@ KResult VirtualFileSystem::mknod(StringView path, mode_t mode, dev_t dev, Custod
     return parent_inode.create_child(basename, mode, dev, current_process.euid(), current_process.egid()).result();
 }
 
-KResultOr<NonnullRefPtr<FileDescription>> VirtualFileSystem::create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
+KResultOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
 {
     auto basename = KLexicalPath::basename(path);
     auto parent_path = TRY(parent_custody.try_serialize_absolute_path());
@@ -345,7 +345,7 @@ KResultOr<NonnullRefPtr<FileDescription>> VirtualFileSystem::create(StringView p
     auto inode = TRY(parent_inode.create_child(basename, mode, 0, uid, gid));
     auto custody = TRY(Custody::try_create(&parent_custody, basename, inode, parent_custody.mount_flags()));
 
-    auto description = TRY(FileDescription::try_create(move(custody)));
+    auto description = TRY(OpenFileDescription::try_create(move(custody)));
     description->set_rw_mode(options);
     description->set_file_flags(options);
     return description;

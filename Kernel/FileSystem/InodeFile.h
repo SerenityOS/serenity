@@ -27,20 +27,20 @@ public:
     const Inode& inode() const { return *m_inode; }
     Inode& inode() { return *m_inode; }
 
-    virtual bool can_read(const FileDescription&, size_t) const override { return true; }
-    virtual bool can_write(const FileDescription&, size_t) const override { return true; }
+    virtual bool can_read(const OpenFileDescription&, size_t) const override { return true; }
+    virtual bool can_write(const OpenFileDescription&, size_t) const override { return true; }
 
-    virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual KResult ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override;
-    virtual KResultOr<Memory::Region*> mmap(Process&, FileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
+    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
+    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
+    virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
+    virtual KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
     virtual KResult stat(::stat& buffer) const override { return inode().metadata().stat(buffer); }
 
-    virtual String absolute_path(const FileDescription&) const override;
+    virtual String absolute_path(const OpenFileDescription&) const override;
 
     virtual KResult truncate(u64) override;
-    virtual KResult chown(FileDescription&, UserID, GroupID) override;
-    virtual KResult chmod(FileDescription&, mode_t) override;
+    virtual KResult chown(OpenFileDescription&, UserID, GroupID) override;
+    virtual KResult chmod(OpenFileDescription&, mode_t) override;
 
     virtual StringView class_name() const override { return "InodeFile"; }
 

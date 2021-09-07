@@ -37,7 +37,7 @@ class PCIDeviceAttributeSysFSComponent : public SysFSComponent {
 public:
     static NonnullRefPtr<PCIDeviceAttributeSysFSComponent> create(String name, const PCIDeviceSysFSDirectory& device, size_t offset, size_t field_bytes_width);
 
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const override;
+    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
     virtual ~PCIDeviceAttributeSysFSComponent() {};
 
 protected:

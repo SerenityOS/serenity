@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-FileBackedFileSystem::FileBackedFileSystem(FileDescription& file_description)
+FileBackedFileSystem::FileBackedFileSystem(OpenFileDescription& file_description)
     : m_file_description(file_description)
 {
 }

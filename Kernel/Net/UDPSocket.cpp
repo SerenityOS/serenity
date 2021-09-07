@@ -95,7 +95,7 @@ KResultOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_
     return data_length;
 }
 
-KResult UDPSocket::protocol_connect(FileDescription&, ShouldBlock)
+KResult UDPSocket::protocol_connect(OpenFileDescription&, ShouldBlock)
 {
     set_role(Role::Connected);
     set_connected(true);
