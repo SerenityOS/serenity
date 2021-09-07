@@ -162,11 +162,11 @@ KResult Process::procfs_get_unveil_stats(KBufferBuilder& builder) const
 KResult Process::procfs_get_perf_events(KBufferBuilder& builder) const
 {
     InterruptDisabler disabler;
-    if (!const_cast<Process&>(*this).perf_events()) {
+    if (!perf_events()) {
         dbgln("ProcFS: No perf events for {}", pid());
         return KResult(ENOBUFS);
     }
-    return const_cast<Process&>(*this).perf_events()->to_json(builder) ? KSuccess : KResult(EINVAL);
+    return perf_events()->to_json(builder) ? KSuccess : KResult(EINVAL);
 }
 
 KResult Process::procfs_get_fds_stats(KBufferBuilder& builder) const

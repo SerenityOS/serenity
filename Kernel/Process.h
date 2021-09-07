@@ -503,6 +503,7 @@ public:
     const NonnullRefPtrVector<Thread>& threads_for_coredump(Badge<Coredump>) const { return m_threads_for_coredump; }
 
     PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
+    PerformanceEventBuffer const* perf_events() const { return m_perf_event_buffer; }
 
     Memory::AddressSpace& address_space() { return *m_space; }
     Memory::AddressSpace const& address_space() const { return *m_space; }
