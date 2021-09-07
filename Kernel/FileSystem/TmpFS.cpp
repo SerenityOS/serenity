@@ -277,6 +277,7 @@ KResult TmpFSInode::add_child(Inode& child, StringView const& name, mode_t)
         return ENAMETOOLONG;
 
     auto name_kstring = TRY(KString::try_create(name));
+    // Balanced by `delete` in remove_child()
     auto* child_entry = new (nothrow) Child { move(name_kstring), static_cast<TmpFSInode&>(child) };
     if (!child_entry)
         return ENOMEM;
@@ -303,6 +304,8 @@ KResult TmpFSInode::remove_child(StringView const& name)
     child->inode->did_delete_self();
     m_children.remove(*child);
     did_remove_child(child_id, name);
+    // Balanced by `new` in add_child()
+    delete child;
     return KSuccess;
 }
 
