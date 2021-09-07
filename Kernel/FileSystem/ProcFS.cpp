@@ -489,8 +489,7 @@ KResultOr<size_t> ProcFSProcessPropertyInode::read_bytes(off_t offset, size_t co
         if (!data_buffer)
             return KResult(EFAULT);
         ssize_t nread = min(static_cast<off_t>(data_buffer->size() - offset), static_cast<off_t>(count));
-        if (!buffer.write(data_buffer->data() + offset, nread))
-            return KResult(EFAULT);
+        TRY(buffer.write(data_buffer->data() + offset, nread));
         return nread;
     }
     if (!description->data()) {
@@ -507,8 +506,7 @@ KResultOr<size_t> ProcFSProcessPropertyInode::read_bytes(off_t offset, size_t co
         return 0;
 
     ssize_t nread = min(static_cast<off_t>(data_buffer->size() - offset), static_cast<off_t>(count));
-    if (!buffer.write(data_buffer->data() + offset, nread))
-        return KResult(EFAULT);
+    TRY(buffer.write(data_buffer->data() + offset, nread));
 
     return nread;
 }

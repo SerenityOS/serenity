@@ -93,8 +93,7 @@ KResultOr<size_t> StorageDevice::read(FileDescription&, u64 offset, UserOrKernel
         default:
             break;
         }
-        if (!outbuf.write(data.data(), pos, remaining))
-            return EFAULT;
+        TRY(outbuf.write(data.data(), pos, remaining));
     }
 
     return pos + remaining;
@@ -166,8 +165,7 @@ KResultOr<size_t> StorageDevice::write(FileDescription&, u64 offset, const UserO
             }
         }
 
-        if (!inbuf.read(data.data(), pos, remaining))
-            return EFAULT;
+        TRY(inbuf.read(data.data(), pos, remaining));
 
         {
             auto write_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Write, index + whole_blocks, 1, data_buffer, block_size());

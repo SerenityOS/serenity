@@ -169,8 +169,8 @@ KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
     size_t payload_size = raw_ipv4_packet.size() - sizeof(IPv4Packet) - tcp_packet.header_size();
     dbgln_if(TCP_SOCKET_DEBUG, "payload_size {}, will it fit in {}?", payload_size, buffer_size);
     VERIFY(buffer_size >= payload_size);
-    if (!buffer.write(tcp_packet.payload(), payload_size))
-        return set_so_error(EFAULT);
+    if (auto result = buffer.write(tcp_packet.payload(), payload_size); result.is_error())
+        return set_so_error(result);
     return payload_size;
 }
 
@@ -226,9 +226,11 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
         tcp_packet.set_ack_number(m_ack_number);
     }
 
-    if (payload && !payload->read(tcp_packet.payload(), payload_size)) {
-        routing_decision.adapter->release_packet_buffer(*packet);
-        return set_so_error(EFAULT);
+    if (payload) {
+        if (auto result = payload->read(tcp_packet.payload(), payload_size); result.is_error()) {
+            routing_decision.adapter->release_packet_buffer(*packet);
+            return set_so_error(result);
+        }
     }
 
     if (flags & TCPFlags::SYN) {

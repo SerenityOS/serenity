@@ -57,8 +57,7 @@ KResultOr<size_t> DoubleBuffer::write(const UserOrKernelBuffer& data, size_t siz
     MutexLocker locker(m_lock);
     size_t bytes_to_write = min(size, m_space_for_writing);
     u8* write_ptr = m_write_buffer->data + m_write_buffer->size;
-    if (!data.read(write_ptr, bytes_to_write))
-        return EFAULT;
+    TRY(data.read(write_ptr, bytes_to_write));
     m_write_buffer->size += bytes_to_write;
     compute_lockfree_metadata();
     if (m_unblock_callback && !m_empty)
@@ -76,8 +75,7 @@ KResultOr<size_t> DoubleBuffer::read(UserOrKernelBuffer& data, size_t size)
     if (m_read_buffer_index >= m_read_buffer->size)
         return 0;
     size_t nread = min(m_read_buffer->size - m_read_buffer_index, size);
-    if (!data.write(m_read_buffer->data + m_read_buffer_index, nread))
-        return EFAULT;
+    TRY(data.write(m_read_buffer->data + m_read_buffer_index, nread));
     m_read_buffer_index += nread;
     compute_lockfree_metadata();
     if (m_unblock_callback && m_space_for_writing > 0)
@@ -96,8 +94,7 @@ KResultOr<size_t> DoubleBuffer::peek(UserOrKernelBuffer& data, size_t size)
     if (m_read_buffer_index >= m_read_buffer->size)
         return 0;
     size_t nread = min(m_read_buffer->size - m_read_buffer_index, size);
-    if (!data.write(m_read_buffer->data + m_read_buffer_index, nread))
-        return EFAULT;
+    TRY(data.write(m_read_buffer->data + m_read_buffer_index, nread));
     compute_lockfree_metadata();
     if (m_unblock_callback && m_space_for_writing > 0)
         m_unblock_callback();

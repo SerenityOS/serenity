@@ -131,9 +131,7 @@ KResultOr<size_t> ProcFSGlobalInformation::read_bytes(off_t offset, size_t count
         return 0;
 
     ssize_t nread = min(static_cast<off_t>(data_buffer->size() - offset), static_cast<off_t>(count));
-    if (!buffer.write(data_buffer->data() + offset, nread))
-        return KResult(EFAULT);
-
+    TRY(buffer.write(data_buffer->data() + offset, nread));
     return nread;
 }
 
@@ -167,8 +165,7 @@ KResultOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, User
         return KResult(EFAULT);
 
     ssize_t nread = min(static_cast<off_t>(blob->size() - offset), static_cast<off_t>(count));
-    if (!buffer.write(blob->data() + offset, nread))
-        return KResult(EFAULT);
+    TRY(buffer.write(blob->data() + offset, nread));
     return nread;
 }
 
