@@ -261,19 +261,23 @@ static RefPtr<Gfx::Bitmap> load_impl(const u8* data, size_t data_size)
     }
     return context.bitmap;
 }
+
+template<typename TContext>
+static RefPtr<Gfx::Bitmap> load_from_memory(u8 const* data, size_t length, String const& mmap_name)
+{
+    auto bitmap = load_impl<TContext>(data, length);
+    if (bitmap)
+        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded {}: {}", bitmap->size(), TContext::image_type, mmap_name));
+    return bitmap;
+}
+
 template<typename TContext>
 static RefPtr<Gfx::Bitmap> load(const StringView& path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
         return nullptr;
-    auto bitmap = load_impl<TContext>((const u8*)file_or_error.value()->data(), file_or_error.value()->size());
-    if (bitmap)
-        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded {}: {}",
-            bitmap->size(),
-            TContext::image_type,
-            LexicalPath::canonicalized_path(path)));
-    return bitmap;
+    return load_from_memory<TContext>((u8 const*)file_or_error.value()->data(), file_or_error.value()->size(), LexicalPath::canonicalized_path(path));
 }
 
 }
