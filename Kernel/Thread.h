@@ -1276,7 +1276,7 @@ private:
     void relock_process(LockMode, u32);
     void reset_fpu_state();
 
-    mutable RecursiveSpinlock m_lock;
+    mutable RecursiveSpinlock m_lock { LockRank::Thread };
     mutable RecursiveSpinlock m_block_lock;
     NonnullRefPtr<Process> m_process;
     ThreadID m_tid { -1 };
