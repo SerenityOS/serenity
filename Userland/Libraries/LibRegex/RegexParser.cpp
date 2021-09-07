@@ -799,6 +799,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, si
                         last_token = consume();
                     }
                     capture_group_name = StringView(start_token.value().characters_without_null_termination(), capture_group_name_length);
+                    ++m_parser_state.named_capture_groups_count;
 
                 } else if (match(TokenType::EqualSign)) { // positive lookahead
                     consume();
@@ -817,8 +818,11 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, si
                 }
             }
 
-            if (!(m_parser_state.regex_options & AllFlags::SkipSubExprResults || prevent_capture_group))
-                bytecode.insert_bytecode_group_capture_left(m_parser_state.capture_groups_count);
+            auto current_capture_group = m_parser_state.capture_groups_count;
+            if (!(m_parser_state.regex_options & AllFlags::SkipSubExprResults || prevent_capture_group)) {
+                bytecode.insert_bytecode_group_capture_left(current_capture_group);
+                m_parser_state.capture_groups_count++;
+            }
 
             ByteCode capture_group_bytecode;
 
@@ -846,13 +850,10 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, si
             consume(TokenType::RightParen, Error::MismatchingParen);
 
             if (!(m_parser_state.regex_options & AllFlags::SkipSubExprResults || prevent_capture_group)) {
-                if (capture_group_name.has_value()) {
-                    bytecode.insert_bytecode_group_capture_right(m_parser_state.capture_groups_count, capture_group_name.value());
-                    ++m_parser_state.named_capture_groups_count;
-                } else {
-                    bytecode.insert_bytecode_group_capture_right(m_parser_state.capture_groups_count);
-                }
-                ++m_parser_state.capture_groups_count;
+                if (capture_group_name.has_value())
+                    bytecode.insert_bytecode_group_capture_right(current_capture_group, capture_group_name.value());
+                else
+                    bytecode.insert_bytecode_group_capture_right(current_capture_group);
             }
             should_parse_repetition_symbol = true;
             break;
