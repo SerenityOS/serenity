@@ -27,7 +27,7 @@ RectangleTool::~RectangleTool()
 {
 }
 
-void RectangleTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position)
+void RectangleTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position, int thickness)
 {
     Gfx::IntRect rect;
     if (m_draw_mode == DrawMode::FromCenter) {
@@ -42,7 +42,7 @@ void RectangleTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start
         painter.fill_rect(rect, m_editor->color_for(m_drawing_button));
         break;
     case FillMode::Outline:
-        painter.draw_rect_with_thickness(rect, m_editor->color_for(m_drawing_button), m_thickness);
+        painter.draw_rect_with_thickness(rect, m_editor->color_for(m_drawing_button), thickness);
         break;
     case FillMode::Gradient:
         painter.fill_rect_with_gradient(rect, m_editor->primary_color(), m_editor->secondary_color());
@@ -77,7 +77,7 @@ void RectangleTool::on_mouseup(Layer* layer, MouseEvent& event)
 
     if (event.layer_event().button() == m_drawing_button) {
         GUI::Painter painter(layer->bitmap());
-        draw_using(painter, m_rectangle_start_position, m_rectangle_end_position);
+        draw_using(painter, m_rectangle_start_position, m_rectangle_end_position, m_thickness);
         m_drawing_button = GUI::MouseButton::None;
         layer->did_modify_bitmap();
         m_editor->did_complete_action();
