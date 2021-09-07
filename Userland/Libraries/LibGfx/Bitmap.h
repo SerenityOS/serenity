@@ -94,6 +94,7 @@ public:
     [[nodiscard]] static RefPtr<Bitmap> try_create_shareable(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
     [[nodiscard]] static RefPtr<Bitmap> try_create_wrapper(BitmapFormat, const IntSize&, int intrinsic_scale, size_t pitch, void*);
     [[nodiscard]] static RefPtr<Bitmap> try_load_from_file(String const& path, int scale_factor = 1);
+    [[nodiscard]] static RefPtr<Bitmap> try_load_from_fd_and_close(int fd, String const& path, int scale_factor = 1);
     [[nodiscard]] static RefPtr<Bitmap> try_create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, const IntSize&, int intrinsic_scale, const Vector<RGBA32>& palette);
     [[nodiscard]] static RefPtr<Bitmap> try_create_from_serialized_byte_buffer(ByteBuffer&& buffer);
 
