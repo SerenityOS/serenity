@@ -33,8 +33,7 @@ enum class AcpiFeatureLevel {
 
 enum class PCIAccessLevel {
     IOAddressing,
-    MappingPerBus,
-    MappingPerDevice,
+    MemoryAddressing,
 };
 
 enum class AHCIResetMode {

@@ -8,6 +8,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
+#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Storage/AHCIController.h>
 #include <Kernel/Storage/SATADiskDevice.h>

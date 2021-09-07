@@ -5,6 +5,7 @@
  */
 
 #include <AK/MACAddress.h>
+#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
 #include <Kernel/IO.h>
 #include <Kernel/Net/NE2000NetworkAdapter.h>

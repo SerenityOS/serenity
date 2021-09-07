@@ -75,18 +75,37 @@ struct ID {
     }
 };
 
+class Domain {
+public:
+    Domain() = delete;
+    Domain(PhysicalAddress base_address, u8 start_bus, u8 end_bus)
+        : m_base_addr(base_address)
+        , m_start_bus(start_bus)
+        , m_end_bus(end_bus)
+    {
+    }
+    u8 start_bus() const { return m_start_bus; }
+    u8 end_bus() const { return m_end_bus; }
+    PhysicalAddress paddr() const { return m_base_addr; }
+
+private:
+    PhysicalAddress m_base_addr;
+    u8 m_start_bus;
+    u8 m_end_bus;
+};
+
 struct Address {
 public:
     Address() = default;
-    Address(u16 seg)
-        : m_seg(seg)
+    Address(u32 domain)
+        : m_domain(domain)
         , m_bus(0)
         , m_device(0)
         , m_function(0)
     {
     }
-    Address(u16 seg, u8 bus, u8 device, u8 function)
-        : m_seg(seg)
+    Address(u32 domain, u8 bus, u8 device, u8 function)
+        : m_domain(domain)
         , m_bus(bus)
         , m_device(device)
         , m_function(function)
@@ -94,7 +113,7 @@ public:
     }
 
     Address(const Address& address)
-        : m_seg(address.seg())
+        : m_domain(address.domain())
         , m_bus(address.bus())
         , m_device(address.device())
         , m_function(address.function())
@@ -114,14 +133,14 @@ public:
     {
         if (this == &other)
             return true;
-        return m_seg == other.m_seg && m_bus == other.m_bus && m_device == other.m_device && m_function == other.m_function;
+        return m_domain == other.m_domain && m_bus == other.m_bus && m_device == other.m_device && m_function == other.m_function;
     }
     bool operator!=(const Address& other) const
     {
         return !(*this == other);
     }
 
-    u16 seg() const { return m_seg; }
+    u16 domain() const { return m_domain; }
     u8 bus() const { return m_bus; }
     u8 device() const { return m_device; }
     u8 function() const { return m_function; }
@@ -131,45 +150,11 @@ public:
         return 0x80000000u | (m_bus << 16u) | (m_device << 11u) | (m_function << 8u) | (field & 0xfc);
     }
 
-protected:
-    u32 m_seg { 0 };
+private:
+    u32 m_domain { 0 };
     u8 m_bus { 0 };
     u8 m_device { 0 };
     u8 m_function { 0 };
-};
-
-struct ChangeableAddress : public Address {
-    ChangeableAddress()
-        : Address(0)
-    {
-    }
-    explicit ChangeableAddress(u16 seg)
-        : Address(seg)
-    {
-    }
-    ChangeableAddress(u16 seg, u8 bus, u8 device, u8 function)
-        : Address(seg, bus, device, function)
-    {
-    }
-    void set_seg(u16 seg) { m_seg = seg; }
-    void set_bus(u8 bus) { m_bus = bus; }
-    void set_device(u8 device) { m_device = device; }
-    void set_function(u8 function) { m_function = function; }
-    bool operator==(const Address& address)
-    {
-        if (m_seg == address.seg() && m_bus == address.bus() && m_device == address.device() && m_function == address.function())
-            return true;
-        else
-            return false;
-    }
-    const ChangeableAddress& operator=(const Address& address)
-    {
-        set_seg(address.seg());
-        set_bus(address.bus());
-        set_device(address.device());
-        set_function(address.function());
-        return *this;
-    }
 };
 
 class Capability {
@@ -219,42 +204,8 @@ private:
     Vector<Capability> m_capabilities;
 };
 
-ID get_id(PCI::Address);
-bool is_io_space_enabled(Address);
-void enumerate(Function<void(Address, ID)> callback);
-void enable_interrupt_line(Address);
-void disable_interrupt_line(Address);
-u8 get_interrupt_line(Address);
-void raw_access(Address, u32, size_t, u32);
-u32 get_BAR0(Address);
-u32 get_BAR1(Address);
-u32 get_BAR2(Address);
-u32 get_BAR3(Address);
-u32 get_BAR4(Address);
-u32 get_BAR5(Address);
-u32 get_BAR(Address address, u8 bar);
-u8 get_revision_id(Address);
-u8 get_programming_interface(Address);
-u8 get_subclass(Address);
-u8 get_class(Address);
-u16 get_subsystem_id(Address);
-u16 get_subsystem_vendor_id(Address);
-size_t get_BAR_space_size(Address, u8);
-Optional<u8> get_capabilities_pointer(Address);
-Vector<Capability> get_capabilities(Address);
-void enable_bus_mastering(Address);
-void disable_bus_mastering(Address);
-void enable_io_space(Address);
-void disable_io_space(Address);
-void enable_memory_space(Address);
-void disable_memory_space(Address);
-PhysicalID get_physical_id(Address address);
-
 class Access;
-class MMIOAccess;
-class WindowedMMIOAccess;
-class IOAccess;
-class MMIOSegment;
+class Domain;
 class Device;
 }
 
@@ -266,7 +217,7 @@ struct AK::Formatter<Kernel::PCI::Address> : Formatter<FormatString> {
     {
         return Formatter<FormatString>::format(
             builder,
-            "PCI [{:04x}:{:02x}:{:02x}:{:02x}]", value.seg(), value.bus(), value.device(), value.function());
+            "PCI [{:04x}:{:02x}:{:02x}:{:02x}]", value.domain(), value.bus(), value.device(), value.function());
     }
 };
 

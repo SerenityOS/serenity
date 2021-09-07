@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Device.h>
 
 namespace Kernel {

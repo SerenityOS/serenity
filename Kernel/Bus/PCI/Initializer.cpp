@@ -5,10 +5,10 @@
  */
 
 #include <Kernel/ACPI/Parser.h>
-#include <Kernel/Bus/PCI/IOAccess.h>
+#include <Kernel/Bus/PCI/API.h>
+#include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
-#include <Kernel/Bus/PCI/MMIOAccess.h>
-#include <Kernel/Bus/PCI/WindowedMMIOAccess.h>
+#include <Kernel/Bus/PCI/SysFSPCI.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/IO.h>
 #include <Kernel/Panic.h>
@@ -38,15 +38,16 @@ UNMAP_AFTER_INIT void initialize()
     auto boot_determined = kernel_command_line().pci_access_level();
 
     switch (detect_optimal_access_type(boot_determined)) {
-    case PCIAccessLevel::MappingPerDevice:
-        WindowedMMIOAccess::initialize(ACPI::Parser::the()->find_table("MCFG"));
+    case PCIAccessLevel::MemoryAddressing: {
+        auto success = Access::initialize_for_memory_access(ACPI::Parser::the()->find_table("MCFG"));
+        VERIFY(success);
         break;
-    case PCIAccessLevel::MappingPerBus:
-        MMIOAccess::initialize(ACPI::Parser::the()->find_table("MCFG"));
+    }
+    case PCIAccessLevel::IOAddressing: {
+        auto success = Access::initialize_for_io_access();
+        VERIFY(success);
         break;
-    case PCIAccessLevel::IOAddressing:
-        IOAccess::initialize();
-        break;
+    }
     default:
         VERIFY_NOT_REACHED();
     }

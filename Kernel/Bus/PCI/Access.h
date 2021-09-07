@@ -14,77 +14,72 @@
 
 namespace Kernel::PCI {
 
-class PCIBusSysFSDirectory final : public SysFSDirectory {
-public:
-    static void initialize();
-
-private:
-    PCIBusSysFSDirectory();
-};
-
-class PCIDeviceSysFSDirectory final : public SysFSDirectory {
-public:
-    static NonnullRefPtr<PCIDeviceSysFSDirectory> create(const SysFSDirectory&, Address);
-    const Address& address() const { return m_address; }
-
-private:
-    PCIDeviceSysFSDirectory(const SysFSDirectory&, Address);
-
-    Address m_address;
-};
-
-class PCIDeviceAttributeSysFSComponent : public SysFSComponent {
-public:
-    static NonnullRefPtr<PCIDeviceAttributeSysFSComponent> create(String name, const PCIDeviceSysFSDirectory& device, size_t offset, size_t field_bytes_width);
-
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const override;
-    virtual ~PCIDeviceAttributeSysFSComponent() {};
-
-protected:
-    virtual OwnPtr<KBuffer> try_to_generate_buffer() const;
-    PCIDeviceAttributeSysFSComponent(String name, const PCIDeviceSysFSDirectory& device, size_t offset, size_t field_bytes_width);
-    NonnullRefPtr<PCIDeviceSysFSDirectory> m_device;
-    size_t m_offset;
-    size_t m_field_bytes_width;
-};
-
 class Access {
 public:
-    void enumerate(Function<void(Address, ID)>&) const;
+    enum class AccessType {
+        IO,
+        Memory,
+    };
 
-    void enumerate_bus(int type, u8 bus, Function<void(Address, ID)>&, bool recursive);
-    void enumerate_functions(int type, u8 bus, u8 device, u8 function, Function<void(Address, ID)>& callback, bool recursive);
-    void enumerate_device(int type, u8 bus, u8 device, Function<void(Address, ID)>& callback, bool recursive);
+public:
+    static bool initialize_for_memory_access(PhysicalAddress mcfg_table);
+    static bool initialize_for_io_access();
+
+    void fast_enumerate(Function<void(Address, ID)>&) const;
+    void rescan_hardware();
 
     static Access& the();
     static bool is_initialized();
-    virtual uint32_t segment_count() const = 0;
-    virtual uint8_t segment_start_bus(u32 segment) const = 0;
-    virtual uint8_t segment_end_bus(u32 segment) const = 0;
 
-    virtual void write8_field(Address address, u32 field, u8 value) = 0;
-    virtual void write16_field(Address address, u32 field, u16 value) = 0;
-    virtual void write32_field(Address address, u32 field, u32 value) = 0;
-
-    virtual u8 read8_field(Address address, u32 field) = 0;
-    virtual u16 read16_field(Address address, u32 field) = 0;
-    virtual u32 read32_field(Address address, u32 field) = 0;
-
+    void write8_field(Address address, u32 field, u8 value);
+    void write16_field(Address address, u32 field, u16 value);
+    void write32_field(Address address, u32 field, u32 value);
+    u8 read8_field(Address address, u32 field);
+    u16 read16_field(Address address, u32 field);
+    u32 read32_field(Address address, u32 field);
     PhysicalID get_physical_id(Address address) const;
 
-protected:
-    virtual void enumerate_hardware(Function<void(Address, ID)>) = 0;
+private:
+    void enumerate_bus(int type, u8 bus, bool recursive);
+    void enumerate_functions(int type, u8 bus, u8 device, u8 function, bool recursive);
+    void enumerate_device(int type, u8 bus, u8 device, bool recursive);
 
-    u8 early_read8_field(Address address, u32 field);
-    u16 early_read16_field(Address address, u32 field);
-    u32 early_read32_field(Address address, u32 field);
-    u16 early_read_type(Address address);
+    explicit Access(AccessType);
+    bool scan_pci_domains(PhysicalAddress mcfg);
+    Vector<Capability> get_capabilities(Address);
+    Optional<u8> get_capabilities_pointer(Address address);
 
-    Access();
-    virtual ~Access() = default;
+    // IO access (legacy) operations
+    u8 io_read8_field(Address address, u32 field);
+    u16 io_read16_field(Address address, u32 field);
+    u32 io_read32_field(Address address, u32 field);
+    void io_write8_field(Address address, u32, u8);
+    void io_write16_field(Address address, u32, u16);
+    void io_write32_field(Address address, u32, u32);
+    u16 io_read_type(Address address);
 
-    Vector<PhysicalID> m_physical_ids;
+    // Memory-mapped access operations
+    void map_bus_region(u32 domain, u8 bus);
+    u8 memory_read8_field(Address address, u32 field);
+    u16 memory_read16_field(Address address, u32 field);
+    u32 memory_read32_field(Address address, u32 field);
+    void memory_write8_field(Address address, u32, u8);
+    void memory_write16_field(Address address, u32, u16);
+    void memory_write32_field(Address address, u32, u32);
+    u16 memory_read_type(Address address);
+    VirtualAddress get_device_configuration_memory_mapped_space(Address address);
+    Optional<PhysicalAddress> determine_memory_mapped_bus_base_address(u32 domain, u8 bus) const;
+
+    // Data-members for accessing Memory mapped PCI devices' configuration spaces
+    u8 m_mapped_bus { 0 };
+    OwnPtr<Memory::Region> m_mapped_bus_region;
+    HashMap<u32, PCI::Domain> m_domains;
+
+    // General Data-members
+    mutable Mutex m_access_lock;
+    mutable Mutex m_scan_lock;
     Bitmap m_enumerated_buses;
+    AccessType m_access_type;
+    Vector<PhysicalID> m_physical_ids;
 };
-
 }
