@@ -164,7 +164,7 @@ PerformanceEvent& PerformanceEventBuffer::at(size_t index)
 }
 
 template<typename Serializer>
-bool PerformanceEventBuffer::to_json_impl(Serializer& object) const
+KResult PerformanceEventBuffer::to_json_impl(Serializer& object) const
 {
     {
         auto strings = object.add_array("strings");
@@ -263,10 +263,10 @@ bool PerformanceEventBuffer::to_json_impl(Serializer& object) const
     }
     array.finish();
     object.finish();
-    return true;
+    return KSuccess;
 }
 
-bool PerformanceEventBuffer::to_json(KBufferBuilder& builder) const
+KResult PerformanceEventBuffer::to_json(KBufferBuilder& builder) const
 {
     JsonObjectSerializer object(builder);
     return to_json_impl(object);

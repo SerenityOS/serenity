@@ -116,7 +116,7 @@ public:
         return const_cast<PerformanceEventBuffer&>(*this).at(index);
     }
 
-    bool to_json(KBufferBuilder&) const;
+    KResult to_json(KBufferBuilder&) const;
 
     void add_process(const Process&, ProcessEventType event_type);
 
@@ -126,7 +126,7 @@ private:
     explicit PerformanceEventBuffer(NonnullOwnPtr<KBuffer>);
 
     template<typename Serializer>
-    bool to_json_impl(Serializer&) const;
+    KResult to_json_impl(Serializer&) const;
 
     PerformanceEvent& at(size_t index);
 

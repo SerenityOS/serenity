@@ -166,7 +166,7 @@ KResult Process::procfs_get_perf_events(KBufferBuilder& builder) const
         dbgln("ProcFS: No perf events for {}", pid());
         return KResult(ENOBUFS);
     }
-    return perf_events()->to_json(builder) ? KSuccess : KResult(EINVAL);
+    return perf_events()->to_json(builder);
 }
 
 KResult Process::procfs_get_fds_stats(KBufferBuilder& builder) const

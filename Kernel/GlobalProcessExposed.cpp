@@ -721,11 +721,7 @@ private:
     {
         if (!g_global_perf_events)
             return ENOENT;
-
-        // FIXME: to_json() should return a better error.
-        if (!g_global_perf_events->to_json(builder))
-            return ENOMEM;
-
+        TRY(g_global_perf_events->to_json(builder));
         return KSuccess;
     }
 };
