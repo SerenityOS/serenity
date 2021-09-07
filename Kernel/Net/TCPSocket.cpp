@@ -90,21 +90,16 @@ RefPtr<TCPSocket> TCPSocket::from_tuple(const IPv4SocketTuple& tuple)
         return {};
     });
 }
-RefPtr<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address, u16 new_local_port, const IPv4Address& new_peer_address, u16 new_peer_port)
+KResultOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create_client(const IPv4Address& new_local_address, u16 new_local_port, const IPv4Address& new_peer_address, u16 new_peer_port)
 {
     auto tuple = IPv4SocketTuple(new_local_address, new_local_port, new_peer_address, new_peer_port);
-    return sockets_by_tuple().with_exclusive([&](auto& table) -> RefPtr<TCPSocket> {
+    return sockets_by_tuple().with_exclusive([&](auto& table) -> KResultOr<NonnullRefPtr<TCPSocket>> {
         if (table.contains(tuple))
-            return {};
+            return EEXIST;
 
-        auto receive_buffer = try_create_receive_buffer();
-        if (receive_buffer.is_error())
-            return {};
-        auto client_or_error = TCPSocket::try_create(protocol(), receive_buffer.release_value());
-        if (client_or_error.is_error())
-            return {};
+        auto receive_buffer = TRY(try_create_receive_buffer());
+        auto client = TRY(TCPSocket::try_create(protocol(), move(receive_buffer)));
 
-        auto client = client_or_error.release_value();
         client->set_setup_state(SetupState::InProgress);
         client->set_local_address(new_local_address);
         client->set_local_port(new_local_port);

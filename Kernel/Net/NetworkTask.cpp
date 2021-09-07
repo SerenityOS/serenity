@@ -449,11 +449,12 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
             dbgln_if(TCP_DEBUG, "handle_tcp: incoming connection");
             auto& local_address = ipv4_packet.destination();
             auto& peer_address = ipv4_packet.source();
-            auto client = socket->create_client(local_address, tcp_packet.destination_port(), peer_address, tcp_packet.source_port());
-            if (!client) {
-                dmesgln("handle_tcp: couldn't create client socket");
+            auto client_or_error = socket->try_create_client(local_address, tcp_packet.destination_port(), peer_address, tcp_packet.source_port());
+            if (client_or_error.is_error()) {
+                dmesgln("handle_tcp: couldn't create client socket: {}", client_or_error.error());
                 return;
             }
+            auto client = client_or_error.release_value();
             MutexLocker locker(client->mutex());
             dbgln_if(TCP_DEBUG, "handle_tcp: created new client socket with tuple {}", client->tuple().to_string());
             client->set_sequence_number(1000);
