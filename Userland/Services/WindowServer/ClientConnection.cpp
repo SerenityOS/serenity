@@ -663,6 +663,11 @@ void ClientConnection::set_global_cursor_tracking(i32 window_id, bool enabled)
     it->value->set_global_cursor_tracking_enabled(enabled);
 }
 
+void ClientConnection::set_global_mouse_tracking(bool enabled)
+{
+    m_does_global_mouse_tracking = enabled;
+}
+
 void ClientConnection::set_window_cursor(i32 window_id, i32 cursor_type)
 {
     auto it = m_windows.find(window_id);
