@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -100,7 +101,7 @@ void LineTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     auto preview_start = m_editor->layer_position_to_editor_position(*layer, m_line_start_position).to_type<int>();
     auto preview_end = m_editor->layer_position_to_editor_position(*layer, m_line_end_position).to_type<int>();
-    painter.draw_line(preview_start, preview_end, m_editor->color_for(m_drawing_button), m_thickness);
+    painter.draw_line(preview_start, preview_end, m_editor->color_for(m_drawing_button), m_thickness * m_editor->scale());
 }
 
 void LineTool::on_keydown(GUI::KeyEvent& event)
