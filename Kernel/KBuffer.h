@@ -114,12 +114,12 @@ public:
         return adopt_nonnull_own_or_enomem(new (nothrow) KBuffer(impl.release_nonnull()));
     }
 
-    [[nodiscard]] static OwnPtr<KBuffer> try_create_with_bytes(ReadonlyBytes bytes, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
+    static KResultOr<NonnullOwnPtr<KBuffer>> try_create_with_bytes(ReadonlyBytes bytes, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
         auto impl = KBufferImpl::try_create_with_bytes(bytes, access, name, strategy);
         if (!impl)
-            return {};
-        return adopt_own_if_nonnull(new (nothrow) KBuffer(impl.release_nonnull()));
+            return ENOMEM;
+        return adopt_nonnull_own_or_enomem(new (nothrow) KBuffer(impl.release_nonnull()));
     }
 
     [[nodiscard]] static KBuffer copy(const void* data, size_t size, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer")

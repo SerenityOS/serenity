@@ -41,7 +41,7 @@ public:
     virtual ~PCIDeviceAttributeSysFSComponent() {};
 
 protected:
-    virtual OwnPtr<KBuffer> try_to_generate_buffer() const;
+    KResultOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const;
     PCIDeviceAttributeSysFSComponent(String name, const PCIDeviceSysFSDirectory& device, size_t offset, size_t field_bytes_width);
     NonnullRefPtr<PCIDeviceSysFSDirectory> m_device;
     size_t m_offset;

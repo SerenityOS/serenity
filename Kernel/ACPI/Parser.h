@@ -31,7 +31,7 @@ public:
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
 
 protected:
-    OwnPtr<KBuffer> try_to_generate_buffer() const;
+    KResultOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const;
     ACPISysFSComponent(String name, PhysicalAddress, size_t table_size);
 
     PhysicalAddress m_paddr;

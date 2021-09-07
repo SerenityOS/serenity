@@ -33,9 +33,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<ACPISysFSComponent> ACPISysFSComponent::create(St
 
 KResultOr<size_t> ACPISysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
-    auto blob = try_to_generate_buffer();
-    if (!blob)
-        return KResult(EFAULT);
+    auto blob = TRY(try_to_generate_buffer());
 
     if ((size_t)offset >= blob->size())
         return KSuccess;
@@ -45,7 +43,7 @@ KResultOr<size_t> ACPISysFSComponent::read_bytes(off_t offset, size_t count, Use
     return nread;
 }
 
-OwnPtr<KBuffer> ACPISysFSComponent::try_to_generate_buffer() const
+KResultOr<NonnullOwnPtr<KBuffer>> ACPISysFSComponent::try_to_generate_buffer() const
 {
     auto acpi_blob = Memory::map_typed<u8>((m_paddr), m_length);
     return KBuffer::try_create_with_bytes(Span<u8> { acpi_blob.ptr(), m_length });
