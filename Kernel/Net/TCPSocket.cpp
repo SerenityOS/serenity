@@ -150,11 +150,8 @@ TCPSocket::~TCPSocket()
 KResultOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
 {
     // Note: Scratch buffer is only used for SOCK_STREAM sockets.
-    auto scratch_buffer = KBuffer::try_create_with_size(65536);
-    if (!scratch_buffer)
-        return ENOMEM;
-
-    return adopt_nonnull_ref_or_enomem(new (nothrow) TCPSocket(protocol, move(receive_buffer), scratch_buffer.release_nonnull()));
+    auto scratch_buffer = TRY(KBuffer::try_create_with_size(65536));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) TCPSocket(protocol, move(receive_buffer), move(scratch_buffer)));
 }
 
 KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)

@@ -553,9 +553,7 @@ KResult Plan9FS::read_and_dispatch_one_message()
     Header header;
     TRY(do_read(reinterpret_cast<u8*>(&header), sizeof(header)));
 
-    auto buffer = KBuffer::try_create_with_size(header.size, Memory::Region::Access::ReadWrite);
-    if (!buffer)
-        return ENOMEM;
+    auto buffer = TRY(KBuffer::try_create_with_size(header.size, Memory::Region::Access::ReadWrite));
     // Copy the already read header into the buffer.
     memcpy(buffer->data(), &header, sizeof(header));
     TRY(do_read(buffer->data() + sizeof(header), header.size - sizeof(header)));
@@ -567,7 +565,7 @@ KResult Plan9FS::read_and_dispatch_one_message()
         auto completion = optional_completion.value();
         SpinlockLocker lock(completion->lock);
         completion->result = KSuccess;
-        completion->message = adopt_own_if_nonnull(new (nothrow) Message { buffer.release_nonnull() });
+        completion->message = adopt_own_if_nonnull(new (nothrow) Message { move(buffer) });
         completion->completed = true;
 
         m_completions.remove(header.tag);

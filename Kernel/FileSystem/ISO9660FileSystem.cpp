@@ -232,11 +232,7 @@ KResult ISO9660FS::parse_volume_set()
 {
     VERIFY(!m_primary_volume);
 
-    auto block = KBuffer::try_create_with_size(m_logical_block_size, Memory::Region::Access::Read | Memory::Region::Access::Write, "ISO9660FS: Temporary volume descriptor storage");
-    if (!block) {
-        return ENOMEM;
-    }
-
+    auto block = TRY(KBuffer::try_create_with_size(m_logical_block_size, Memory::Region::Access::Read | Memory::Region::Access::Write, "ISO9660FS: Temporary volume descriptor storage"));
     auto block_buffer = UserOrKernelBuffer::for_kernel_buffer(block->data());
 
     auto current_block_index = first_data_area_block;
@@ -392,11 +388,7 @@ KResultOr<NonnullRefPtr<ISO9660FS::DirectoryEntry>> ISO9660FS::directory_entry_f
         return EIO;
     }
 
-    auto blocks = KBuffer::try_create_with_size(data_length, Memory::Region::Access::Read | Memory::Region::Access::Write, "ISO9660FS: Directory traversal buffer");
-    if (!blocks) {
-        return ENOMEM;
-    }
-
+    auto blocks = TRY(KBuffer::try_create_with_size(data_length, Memory::Region::Access::Read | Memory::Region::Access::Write, "ISO9660FS: Directory traversal buffer"));
     auto blocks_buffer = UserOrKernelBuffer::for_kernel_buffer(blocks->data());
     auto did_read = raw_read_blocks(BlockBasedFileSystem::BlockIndex { extent_location }, data_length / logical_block_size(), blocks_buffer);
     if (!did_read) {
@@ -425,10 +417,7 @@ KResultOr<size_t> ISO9660Inode::read_bytes(off_t offset, size_t size, UserOrKern
     if (static_cast<u64>(offset) >= data_length)
         return 0;
 
-    auto block = KBuffer::try_create_with_size(fs().m_logical_block_size);
-    if (!block) {
-        return ENOMEM;
-    }
+    auto block = TRY(KBuffer::try_create_with_size(fs().m_logical_block_size));
     auto block_buffer = UserOrKernelBuffer::for_kernel_buffer(block->data());
 
     size_t total_bytes = min(size, data_length - offset);

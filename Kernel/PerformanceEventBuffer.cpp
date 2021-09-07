@@ -274,10 +274,10 @@ bool PerformanceEventBuffer::to_json(KBufferBuilder& builder) const
 
 OwnPtr<PerformanceEventBuffer> PerformanceEventBuffer::try_create_with_size(size_t buffer_size)
 {
-    auto buffer = KBuffer::try_create_with_size(buffer_size, Memory::Region::Access::ReadWrite, "Performance events", AllocationStrategy::AllocateNow);
-    if (!buffer)
+    auto buffer_or_error = KBuffer::try_create_with_size(buffer_size, Memory::Region::Access::ReadWrite, "Performance events", AllocationStrategy::AllocateNow);
+    if (buffer_or_error.is_error())
         return {};
-    return adopt_own_if_nonnull(new (nothrow) PerformanceEventBuffer(buffer.release_nonnull()));
+    return adopt_own_if_nonnull(new (nothrow) PerformanceEventBuffer(buffer_or_error.release_value()));
 }
 
 void PerformanceEventBuffer::add_process(const Process& process, ProcessEventType event_type)

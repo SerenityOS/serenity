@@ -132,11 +132,7 @@ KResult Ext2FS::initialize()
 
     auto blocks_to_read = ceil_div(m_block_group_count * sizeof(ext2_group_desc), block_size());
     BlockIndex first_block_of_bgdt = block_size() == 1024 ? 2 : 1;
-    m_cached_group_descriptor_table = KBuffer::try_create_with_size(block_size() * blocks_to_read, Memory::Region::Access::ReadWrite, "Ext2FS: Block group descriptors");
-    if (!m_cached_group_descriptor_table) {
-        dbgln("Ext2FS: Failed to allocate memory for group descriptor table");
-        return ENOMEM;
-    }
+    m_cached_group_descriptor_table = TRY(KBuffer::try_create_with_size(block_size() * blocks_to_read, Memory::Region::Access::ReadWrite, "Ext2FS: Block group descriptors"));
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_group_descriptor_table->data());
     TRY(read_blocks(first_block_of_bgdt, blocks_to_read, buffer));
 
@@ -1460,17 +1456,13 @@ KResultOr<Ext2FS::CachedBitmap*> Ext2FS::get_bitmap_block(BlockIndex bitmap_bloc
             return cached_bitmap;
     }
 
-    auto block = KBuffer::try_create_with_size(block_size(), Memory::Region::Access::ReadWrite, "Ext2FS: Cached bitmap block");
-    if (!block)
-        return ENOMEM;
+    auto block = TRY(KBuffer::try_create_with_size(block_size(), Memory::Region::Access::ReadWrite, "Ext2FS: Cached bitmap block"));
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(block->data());
     if (auto result = read_block(bitmap_block_index, &buffer, block_size()); result.is_error()) {
         dbgln("Ext2FS: Failed to load bitmap block {}", bitmap_block_index);
         return result;
     }
-    auto new_bitmap = adopt_own_if_nonnull(new (nothrow) CachedBitmap(bitmap_block_index, block.release_nonnull()));
-    if (!new_bitmap)
-        return ENOMEM;
+    auto new_bitmap = TRY(adopt_nonnull_own_or_enomem(new (nothrow) CachedBitmap(bitmap_block_index, move(block))));
     if (!m_cached_bitmaps.try_append(move(new_bitmap)))
         return ENOMEM;
     return m_cached_bitmaps.last();
