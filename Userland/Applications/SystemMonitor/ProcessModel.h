@@ -56,12 +56,12 @@ public:
     static NonnullRefPtr<ProcessModel> create() { return adopt_ref(*new ProcessModel); }
     virtual ~ProcessModel() override;
 
-    virtual int row_count(const GUI::ModelIndex&) const override;
-    virtual int column_count(const GUI::ModelIndex&) const override;
+    virtual int row_count(GUI::ModelIndex const&) const override;
+    virtual int column_count(GUI::ModelIndex const&) const override;
     virtual String column_name(int column) const override;
-    virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
+    virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
     virtual bool is_searchable() const override { return true; }
-    virtual Vector<GUI::ModelIndex> matches(const StringView&, unsigned = MatchesFlag::AllMatching, const GUI::ModelIndex& = GUI::ModelIndex()) override;
+    virtual Vector<GUI::ModelIndex> matches(StringView const&, unsigned = MatchesFlag::AllMatching, GUI::ModelIndex const& = GUI::ModelIndex()) override;
     virtual bool is_column_sortable(int column_index) const override { return column_index != Column::Icon; }
     void update();
 
@@ -76,10 +76,10 @@ public:
         }
     };
 
-    Function<void(const NonnullOwnPtrVector<CpuInfo>&)> on_cpu_info_change;
+    Function<void(NonnullOwnPtrVector<CpuInfo> const&)> on_cpu_info_change;
     Function<void(int process_count, int thread_count)> on_state_update;
 
-    const NonnullOwnPtrVector<CpuInfo>& cpus() const { return m_cpus; }
+    NonnullOwnPtrVector<CpuInfo> const& cpus() const { return m_cpus; }
 
 private:
     ProcessModel();

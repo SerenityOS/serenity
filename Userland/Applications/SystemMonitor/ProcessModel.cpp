@@ -45,12 +45,12 @@ ProcessModel::~ProcessModel()
 {
 }
 
-int ProcessModel::row_count(const GUI::ModelIndex&) const
+int ProcessModel::row_count(GUI::ModelIndex const&) const
 {
     return m_tids.size();
 }
 
-int ProcessModel::column_count(const GUI::ModelIndex&) const
+int ProcessModel::column_count(GUI::ModelIndex const&) const
 {
     return Column::__Count;
 }
@@ -128,7 +128,7 @@ static String pretty_byte_size(size_t size)
     return String::formatted("{}K", size / 1024);
 }
 
-GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
+GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole role) const
 {
     VERIFY(is_within_range(index));
 
@@ -313,7 +313,7 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     return {};
 }
 
-Vector<GUI::ModelIndex> ProcessModel::matches(const StringView& searching, unsigned flags, const GUI::ModelIndex&)
+Vector<GUI::ModelIndex> ProcessModel::matches(StringView const& searching, unsigned flags, GUI::ModelIndex const&)
 {
     Vector<GUI::ModelIndex> found_indices;
 
