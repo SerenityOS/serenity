@@ -9,6 +9,7 @@
 #include <AK/Assertions.h>
 #include <AK/BitCast.h>
 #include <AK/Forward.h>
+#include <AK/IntrusiveDetails.h>
 #include <AK/Noncopyable.h>
 #include <AK/StdLibExtras.h>
 
@@ -17,20 +18,10 @@ namespace AK {
 namespace Detail {
 template<typename T, typename Container = RawPtr<T>>
 class IntrusiveListNode;
-
-template<typename T, typename Container>
-struct SubstituteIntrusiveListNodeContainerType {
-    using Type = Container;
-};
-
-template<typename T>
-struct SubstituteIntrusiveListNodeContainerType<T, NonnullRefPtr<T>> {
-    using Type = RefPtr<T>;
-};
 }
 
 template<typename T, typename Container = RawPtr<T>>
-using IntrusiveListNode = Detail::IntrusiveListNode<T, typename Detail::SubstituteIntrusiveListNodeContainerType<T, Container>::Type>;
+using IntrusiveListNode = Detail::IntrusiveListNode<T, typename Detail::SubstituteIntrusiveContainerType<T, Container>::Type>;
 
 template<typename T, typename Container>
 class IntrusiveListStorage {
@@ -155,14 +146,6 @@ private:
     static const T* prev(const T* current);
     static T* node_to_value(IntrusiveListNode<T, Container>& node);
     IntrusiveListStorage<T, Container> m_storage;
-};
-
-template<typename Contained, bool _IsRaw>
-struct SelfReferenceIfNeeded {
-    Contained reference = nullptr;
-};
-template<typename Contained>
-struct SelfReferenceIfNeeded<Contained, true> {
 };
 
 namespace Detail {
