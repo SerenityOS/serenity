@@ -313,9 +313,9 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     return {};
 }
 
-Vector<GUI::ModelIndex, 1> ProcessModel::matches(const StringView& searching, unsigned flags, const GUI::ModelIndex&)
+Vector<GUI::ModelIndex> ProcessModel::matches(const StringView& searching, unsigned flags, const GUI::ModelIndex&)
 {
-    Vector<GUI::ModelIndex, 1> found_indices;
+    Vector<GUI::ModelIndex> found_indices;
 
     for (auto& thread : m_threads) {
         if (string_matches(thread.value->current_state.name, searching, flags)) {
