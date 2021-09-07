@@ -19,11 +19,8 @@ inline void DoubleBuffer::compute_lockfree_metadata()
 
 KResultOr<NonnullOwnPtr<DoubleBuffer>> DoubleBuffer::try_create(size_t capacity)
 {
-    auto storage = KBuffer::try_create_with_size(capacity * 2, Memory::Region::Access::ReadWrite, "DoubleBuffer");
-    if (!storage)
-        return ENOMEM;
-
-    return adopt_nonnull_own_or_enomem(new (nothrow) DoubleBuffer(capacity, storage.release_nonnull()));
+    auto storage = TRY(KBuffer::try_create_with_size(capacity * 2, Memory::Region::Access::ReadWrite, "DoubleBuffer"));
+    return adopt_nonnull_own_or_enomem(new (nothrow) DoubleBuffer(capacity, move(storage)));
 }
 
 DoubleBuffer::DoubleBuffer(size_t capacity, NonnullOwnPtr<KBuffer> storage)
