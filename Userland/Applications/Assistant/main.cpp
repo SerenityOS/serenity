@@ -244,6 +244,7 @@ int main(int argc, char** argv)
     text_box.on_return_pressed = [&]() {
         if (!app_state.selected_index.has_value())
             return;
+        lockfile.release();
         app_state.results[app_state.selected_index.value()].activate();
         GUI::Application::the()->quit();
     };
