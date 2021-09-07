@@ -8,7 +8,6 @@ project(
     LANGUAGES C CXX
 )
 
-option(ENABLE_LAGOM_CCACHE "Enable ccache for Lagom builds" OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries instead of static libraries" ON)
 if (ENABLE_OSS_FUZZ)
     set(BUILD_SHARED_LIBS OFF) # Don't use shared libraries on oss-fuzz, for ease of integration with their infrastructure
@@ -25,6 +24,14 @@ get_filename_component(
 )
 
 list(APPEND CMAKE_MODULE_PATH "${SERENITY_PROJECT_ROOT}/Meta/CMake")
+
+if(NOT COMMAND serenity_option)
+    macro(serenity_option)
+        set(${ARGV})
+    endmacro()
+endif()
+
+include(lagom_options)
 
 find_package(Threads REQUIRED)
 
