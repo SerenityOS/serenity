@@ -1,5 +1,3 @@
-option(INCLUDE_WASM_SPEC_TESTS "Download and include the WebAssembly spec testsuite" OFF)
-
 if(INCLUDE_WASM_SPEC_TESTS)
     if (CMAKE_PROJECT_NAME STREQUAL "SerenityOS")
         set(SOURCE_DIR "${SerenityOS_SOURCE_DIR}")
