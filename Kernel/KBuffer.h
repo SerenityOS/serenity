@@ -37,11 +37,6 @@ public:
         return buffer;
     }
 
-    static KResultOr<NonnullOwnPtr<KBuffer>> try_copy(const void* data, size_t size, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer")
-    {
-        return try_create_with_bytes(ReadonlyBytes { data, size }, access, name);
-    }
-
     [[nodiscard]] u8* data() { return m_region->vaddr().as_ptr(); }
     [[nodiscard]] u8 const* data() const { return m_region->vaddr().as_ptr(); }
     [[nodiscard]] size_t size() const { return m_size; }
