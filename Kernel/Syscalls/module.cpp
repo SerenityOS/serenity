@@ -27,9 +27,7 @@ KResultOr<FlatPtr> Process::sys$module_load(Userspace<const char*> user_path, si
     auto description = TRY(VirtualFileSystem::the().open(path->view(), O_RDONLY, 0, current_directory()));
     auto payload = TRY(description->read_entire_file());
 
-    auto storage = KBuffer::try_create_with_bytes(ReadonlyBytes { payload->data(), payload->size() });
-    if (!storage)
-        return ENOMEM;
+    auto storage = TRY(KBuffer::try_create_with_bytes(ReadonlyBytes { payload->data(), payload->size() }));
 
     auto elf_image = try_make<ELF::Image>(storage->data(), storage->size());
     if (!elf_image)

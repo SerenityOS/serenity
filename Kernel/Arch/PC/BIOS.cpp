@@ -31,9 +31,7 @@ UNMAP_AFTER_INIT BIOSSysFSComponent::BIOSSysFSComponent(String name)
 
 KResultOr<size_t> BIOSSysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
-    auto blob = try_to_generate_buffer();
-    if (!blob)
-        return KResult(EFAULT);
+    auto blob = TRY(try_to_generate_buffer());
 
     if ((size_t)offset >= blob->size())
         return KSuccess;
@@ -50,7 +48,7 @@ UNMAP_AFTER_INIT DMIEntryPointExposedBlob::DMIEntryPointExposedBlob(PhysicalAddr
 {
 }
 
-OwnPtr<KBuffer> DMIEntryPointExposedBlob::try_to_generate_buffer() const
+KResultOr<NonnullOwnPtr<KBuffer>> DMIEntryPointExposedBlob::try_to_generate_buffer() const
 {
     auto dmi_blob = Memory::map_typed<u8>((m_dmi_entry_point), m_dmi_entry_point_length);
     return KBuffer::try_create_with_bytes(Span<u8> { dmi_blob.ptr(), m_dmi_entry_point_length });
@@ -68,7 +66,7 @@ UNMAP_AFTER_INIT SMBIOSExposedTable::SMBIOSExposedTable(PhysicalAddress smbios_s
 {
 }
 
-OwnPtr<KBuffer> SMBIOSExposedTable::try_to_generate_buffer() const
+KResultOr<NonnullOwnPtr<KBuffer>> SMBIOSExposedTable::try_to_generate_buffer() const
 {
     auto dmi_blob = Memory::map_typed<u8>((m_smbios_structure_table), m_smbios_structure_table_length);
     return KBuffer::try_create_with_bytes(Span<u8> { dmi_blob.ptr(), m_smbios_structure_table_length });

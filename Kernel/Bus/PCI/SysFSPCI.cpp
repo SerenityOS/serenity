@@ -62,9 +62,7 @@ PCIDeviceAttributeSysFSComponent::PCIDeviceAttributeSysFSComponent(String name, 
 
 KResultOr<size_t> PCIDeviceAttributeSysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
-    auto blob = try_to_generate_buffer();
-    if (!blob)
-        return KResult(EFAULT);
+    auto blob = TRY(try_to_generate_buffer());
 
     if ((size_t)offset >= blob->size())
         return KSuccess;
@@ -74,7 +72,7 @@ KResultOr<size_t> PCIDeviceAttributeSysFSComponent::read_bytes(off_t offset, siz
     return nread;
 }
 
-OwnPtr<KBuffer> PCIDeviceAttributeSysFSComponent::try_to_generate_buffer() const
+KResultOr<NonnullOwnPtr<KBuffer>> PCIDeviceAttributeSysFSComponent::try_to_generate_buffer() const
 {
     String value;
     switch (m_field_bytes_width) {
