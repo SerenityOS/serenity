@@ -22,11 +22,11 @@ function(compile_ipc source output)
     set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
     add_custom_command(
         OUTPUT ${output}
-        COMMAND $<TARGET_FILE:IPCCompiler> ${source} > ${output}.tmp
+        COMMAND $<TARGET_FILE:Lagom::IPCCompiler> ${source} > ${output}.tmp
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${output}.tmp ${output}
         COMMAND "${CMAKE_COMMAND}" -E remove ${output}.tmp
         VERBATIM
-        DEPENDS IPCCompiler
+        DEPENDS Lagom::IPCCompiler
         MAIN_DEPENDENCY ${source}
     )
     get_filename_component(output_name ${output} NAME)
@@ -45,11 +45,11 @@ function(generate_state_machine source header)
         set(output ${CMAKE_CURRENT_BINARY_DIR}/${header})
         add_custom_command(
             OUTPUT ${output}
-            COMMAND $<TARGET_FILE:StateMachineGenerator> ${source} > ${output}.tmp
+            COMMAND $<TARGET_FILE:Lagom::StateMachineGenerator> ${source} > ${output}.tmp
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${output}.tmp ${output}
             COMMAND "${CMAKE_COMMAND}" -E remove ${output}.tmp
             VERBATIM
-            DEPENDS StateMachineGenerator
+            DEPENDS Lagom::StateMachineGenerator
             MAIN_DEPENDENCY ${source}
         )
         add_custom_target(${target_name} DEPENDS ${output})
