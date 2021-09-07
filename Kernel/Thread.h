@@ -1186,6 +1186,9 @@ public:
     void set_idle_thread() { m_is_idle_thread = true; }
     bool is_idle_thread() const { return m_is_idle_thread; }
 
+    void set_crashing() { m_is_crashing = true; }
+    [[nodiscard]] bool is_crashing() const { return m_is_crashing; }
+
     ALWAYS_INLINE u32 enter_profiler()
     {
         return m_nested_profiler_calls.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
@@ -1343,6 +1346,7 @@ private:
     bool m_initialized { false };
     bool m_in_block { false };
     bool m_is_idle_thread { false };
+    bool m_is_crashing { false };
     Atomic<bool> m_have_any_unmasked_pending_signals { false };
     Atomic<u32> m_nested_profiler_calls { 0 };
 
