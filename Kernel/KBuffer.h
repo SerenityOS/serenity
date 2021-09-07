@@ -60,18 +60,6 @@ public:
         return buffer;
     }
 
-    [[nodiscard]] bool expand(size_t new_capacity)
-    {
-        auto new_region_or_error = MM.allocate_kernel_region(Memory::page_round_up(new_capacity), m_region->name(), m_region->access(), m_allocation_strategy);
-        if (new_region_or_error.is_error())
-            return false;
-        auto new_region = new_region_or_error.release_value();
-        if (m_size > 0)
-            memcpy(new_region->vaddr().as_ptr(), data(), min(m_region->size(), m_size));
-        m_region = move(new_region);
-        return true;
-    }
-
     [[nodiscard]] u8* data() { return m_region->vaddr().as_ptr(); }
     [[nodiscard]] const u8* data() const { return m_region->vaddr().as_ptr(); }
     [[nodiscard]] size_t size() const { return m_size; }
