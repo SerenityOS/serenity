@@ -268,7 +268,7 @@ KResult Process::attach_resources(NonnullOwnPtr<Memory::AddressSpace>&& prealloc
         first_thread->detach();
     }
 
-    m_procfs_traits = TRY(ProcessProcFSTraits::try_create({}, make_weak_ptr()));
+    m_procfs_traits = TRY(ProcessProcFSTraits::try_create({}, *this));
     return KSuccess;
 }
 
