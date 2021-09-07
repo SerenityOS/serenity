@@ -126,12 +126,12 @@ void HTMLScriptElement::prepare_script()
         || (!has_type && !has_language)) {
         script_block_type = "text/javascript";
     } else if (has_type) {
-        script_block_type = attribute(HTML::AttributeNames::type).trim_whitespace();
+        script_block_type = attribute(HTML::AttributeNames::type);
     } else if (!attribute(HTML::AttributeNames::language).is_empty()) {
         script_block_type = String::formatted("text/{}", attribute(HTML::AttributeNames::language));
     }
 
-    if (is_javascript_mime_type_essence_match(script_block_type)) {
+    if (is_javascript_mime_type_essence_match(script_block_type.trim_whitespace())) {
         m_script_type = ScriptType::Classic;
     } else if (script_block_type.equals_ignoring_case("module")) {
         m_script_type = ScriptType::Module;
