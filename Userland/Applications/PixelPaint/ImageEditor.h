@@ -52,6 +52,7 @@ public:
 
     float scale() const { return m_scale; }
     void scale_centered_on_position(Gfx::IntPoint const&, float);
+    void fit_image_to_view();
     void reset_scale_and_position();
     void scale_by(float);
 

@@ -342,6 +342,11 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     view_menu.add_action(*m_zoom_in_action);
     view_menu.add_action(*m_zoom_out_action);
     view_menu.add_action(*m_reset_zoom_action);
+    view_menu.add_action(GUI::Action::create(
+        "&Fit Image To View", [&](auto&) {
+            if (auto* editor = current_image_editor())
+                editor->fit_image_to_view();
+        }));
     view_menu.add_separator();
     view_menu.add_action(*m_add_guide_action);
     view_menu.add_action(*m_show_guides_action);
