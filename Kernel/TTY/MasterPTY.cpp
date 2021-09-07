@@ -18,11 +18,11 @@ namespace Kernel {
 
 RefPtr<MasterPTY> MasterPTY::try_create(unsigned int index)
 {
-    auto buffer = DoubleBuffer::try_create();
-    if (!buffer)
+    auto buffer_or_error = DoubleBuffer::try_create();
+    if (buffer_or_error.is_error())
         return {};
 
-    auto master_pty = adopt_ref_if_nonnull(new (nothrow) MasterPTY(index, buffer.release_nonnull()));
+    auto master_pty = adopt_ref_if_nonnull(new (nothrow) MasterPTY(index, buffer_or_error.release_value()));
     if (!master_pty)
         return {};
 

@@ -35,23 +35,21 @@ MutexProtected<IPv4Socket::List>& IPv4Socket::all_sockets()
     return *s_all_sockets;
 }
 
-OwnPtr<DoubleBuffer> IPv4Socket::create_receive_buffer()
+KResultOr<NonnullOwnPtr<DoubleBuffer>> IPv4Socket::try_create_receive_buffer()
 {
     return DoubleBuffer::try_create(256 * KiB);
 }
 
 KResultOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
 {
-    auto receive_buffer = IPv4Socket::create_receive_buffer();
-    if (!receive_buffer)
-        return ENOMEM;
+    auto receive_buffer = TRY(IPv4Socket::try_create_receive_buffer());
 
     if (type == SOCK_STREAM)
-        return TRY(TCPSocket::try_create(protocol, receive_buffer.release_nonnull()));
+        return TRY(TCPSocket::try_create(protocol, move(receive_buffer)));
     if (type == SOCK_DGRAM)
-        return TRY(UDPSocket::try_create(protocol, receive_buffer.release_nonnull()));
+        return TRY(UDPSocket::try_create(protocol, move(receive_buffer)));
     if (type == SOCK_RAW) {
-        auto raw_socket = adopt_ref_if_nonnull(new (nothrow) IPv4Socket(type, protocol, receive_buffer.release_nonnull(), {}));
+        auto raw_socket = adopt_ref_if_nonnull(new (nothrow) IPv4Socket(type, protocol, move(receive_buffer), {}));
         if (raw_socket)
             return raw_socket.release_nonnull();
         return ENOMEM;
