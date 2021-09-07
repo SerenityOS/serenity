@@ -40,7 +40,7 @@ struct LoadResult {
     WeakPtr<Memory::Region> stack_region;
 };
 
-static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, String executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation);
+static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, StringView executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation);
 
 static bool validate_stack_size(const Vector<String>& arguments, const Vector<String>& environment)
 {
@@ -90,10 +90,10 @@ static KResultOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]
         VERIFY(result.is_success());
     };
 
-    auto push_string_on_new_stack = [&new_sp](const String& string) {
+    auto push_string_on_new_stack = [&new_sp](StringView string) {
         new_sp -= round_up_to_power_of_two(string.length() + 1, sizeof(FlatPtr));
         Userspace<FlatPtr*> stack_ptr = new_sp;
-        auto result = copy_to_user(stack_ptr, string.characters(), string.length() + 1);
+        auto result = copy_to_user(stack_ptr, string.characters_without_null_termination(), string.length() + 1);
         VERIFY(result.is_success());
     };
 
@@ -633,7 +633,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     return KSuccess;
 }
 
-static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, String executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation)
+static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, StringView executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation)
 {
     Vector<ELF::AuxiliaryValue> auxv;
     // PHDR/EXECFD
