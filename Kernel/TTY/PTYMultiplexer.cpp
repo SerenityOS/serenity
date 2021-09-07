@@ -42,9 +42,7 @@ KResultOr<NonnullRefPtr<OpenFileDescription>> PTYMultiplexer::open(int options)
             return EBUSY;
 
         auto master_index = freelist.take_last();
-        auto master = MasterPTY::try_create(master_index);
-        if (!master)
-            return ENOMEM;
+        auto master = TRY(MasterPTY::try_create(master_index));
         dbgln_if(PTMX_DEBUG, "PTYMultiplexer::open: Vending master {}", master->index());
         auto description = TRY(OpenFileDescription::try_create(*master));
         description->set_rw_mode(options);
