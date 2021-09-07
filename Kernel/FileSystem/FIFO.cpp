@@ -16,12 +16,10 @@ namespace Kernel {
 
 static Atomic<int> s_next_fifo_id = 1;
 
-RefPtr<FIFO> FIFO::try_create(UserID uid)
+KResultOr<NonnullRefPtr<FIFO>> FIFO::try_create(UserID uid)
 {
-    auto buffer_or_error = DoubleBuffer::try_create();
-    if (buffer_or_error.is_error())
-        return {};
-    return adopt_ref_if_nonnull(new (nothrow) FIFO(uid, buffer_or_error.release_value()));
+    auto buffer = TRY(DoubleBuffer::try_create());
+    return adopt_nonnull_ref_or_enomem(new (nothrow) FIFO(uid, move(buffer)));
 }
 
 KResultOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction(FIFO::Direction direction)

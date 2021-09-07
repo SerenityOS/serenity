@@ -24,7 +24,7 @@ public:
         Writer
     };
 
-    static RefPtr<FIFO> try_create(UserID);
+    static KResultOr<NonnullRefPtr<FIFO>> try_create(UserID);
     virtual ~FIFO() override;
 
     UserID uid() const { return m_uid; }

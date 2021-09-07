@@ -163,19 +163,15 @@ void Inode::unregister_watcher(Badge<InodeWatcher>, InodeWatcher& watcher)
     m_watchers.remove(&watcher);
 }
 
-NonnullRefPtr<FIFO> Inode::fifo()
+KResultOr<NonnullRefPtr<FIFO>> Inode::fifo()
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(metadata().is_fifo());
 
     // FIXME: Release m_fifo when it is closed by all readers and writers
-    if (!m_fifo) {
-        m_fifo = FIFO::try_create(metadata().uid);
-        // FIXME: We need to be able to observe OOM here.
-        VERIFY(!m_fifo.is_null());
-    }
+    if (!m_fifo)
+        m_fifo = TRY(FIFO::try_create(metadata().uid));
 
-    VERIFY(m_fifo);
     return *m_fifo;
 }
 
