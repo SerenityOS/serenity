@@ -425,6 +425,18 @@ void ImageEditor::scale_by(float scale_delta)
     }
 }
 
+void ImageEditor::fit_image_to_view()
+{
+    const float border_ratio = 0.95f;
+    auto image_size = image().size();
+    auto height_ratio = rect().height() / (float)image_size.height();
+    auto width_ratio = rect().width() / (float)image_size.width();
+    m_scale = border_ratio * min(height_ratio, width_ratio);
+
+    m_pan_origin = Gfx::FloatPoint(0, 0);
+    relayout();
+}
+
 void ImageEditor::reset_scale_and_position()
 {
     if (m_scale != 1.0f)
