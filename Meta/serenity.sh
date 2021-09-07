@@ -8,7 +8,7 @@ print_help() {
     cat <<EOF
 Usage: $NAME COMMAND [TARGET] [TOOLCHAIN] [ARGS...]
   Supported TARGETs: aarch64, i686, x86_64, lagom. Defaults to SERENITY_ARCH, or i686 if not set.
-  Supported TOOLCHAINs: gcc, clang. Defaults to gcc if not set.
+  Supported TOOLCHAINs: GNU, Clang. Defaults to GNU if not set.
   Supported COMMANDs:
     build:      Compiles the target binaries, [ARGS...] are passed through to ninja
     install:    Installs the target binary
@@ -89,20 +89,16 @@ else
 fi
 
 case "$1" in
-    gcc|clang)
+    GNU|Clang)
         TOOLCHAIN_TYPE="$1"; shift
         ;;
     *)
-        TOOLCHAIN_TYPE="gcc"
+        TOOLCHAIN_TYPE="GNU"
         ;;
 esac
 
 CMD_ARGS=( "$@" )
-CMAKE_ARGS=()
-
-if [ "$TOOLCHAIN_TYPE" = "clang" ]; then
-    CMAKE_ARGS+=("-DUSE_CLANG_TOOLCHAIN=1")
-fi
+CMAKE_ARGS=( "-DSERENITY_TOOLCHAIN=$TOOLCHAIN_TYPE" )
 
 get_top_dir() {
     git rev-parse --show-toplevel
@@ -129,8 +125,11 @@ is_valid_target() {
 }
 
 create_build_dir() {
-    mkdir -p "$BUILD_DIR"
-    cmake -GNinja "${CMAKE_ARGS[@]}" -S . -B "$BUILD_DIR"
+    if [ "$TARGET" != "lagom" ]; then
+        cmake -GNinja "${CMAKE_ARGS[@]}" -S "$SERENITY_SOURCE_DIR/Meta/CMake/Superbuild" -B "$SUPER_BUILD_DIR"
+    else
+        cmake -GNinja "${CMAKE_ARGS[@]}" -S "$SERENITY_SOURCE_DIR/Meta/Lagom" -B "$SUPER_BUILD_DIR"
+    fi
 }
 
 pick_gcc() {
@@ -170,19 +169,23 @@ cmd_with_target() {
         export SERENITY_SOURCE_DIR
     fi
     local TARGET_TOOLCHAIN=""
-    if [[ "$TOOLCHAIN_TYPE" != "gcc" && "$TARGET" != "lagom" ]]; then
-        # Only append the toolchain if it's not gcc
-        TARGET_TOOLCHAIN="$TOOLCHAIN_TYPE"
+    if [[ "$TOOLCHAIN_TYPE" != "GNU" && "$TARGET" != "lagom" ]]; then
+        # Only append the toolchain if it's not GNU
+        TARGET_TOOLCHAIN=$(echo "$TOOLCHAIN_TYPE" | tr "[:upper:]" "[:lower:]")
     fi
     BUILD_DIR="$SERENITY_SOURCE_DIR/Build/$TARGET$TARGET_TOOLCHAIN"
     if [ "$TARGET" != "lagom" ]; then
         export SERENITY_ARCH="$TARGET"
         TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR/Toolchain/Local/$TARGET_TOOLCHAIN/$TARGET"
+        SUPER_BUILD_DIR="$SERENITY_SOURCE_DIR/Build/superbuild-$TARGET$TARGET_TOOLCHAIN"
+    else
+        SUPER_BUILD_DIR="$BUILD_DIR"
+        CMAKE_ARGS+=("-DCMAKE_INSTALL_PREFIX=$SERENITY_SOURCE_DIR/Build/lagom-install")
     fi
 }
 
 ensure_target() {
-    [ -f "$BUILD_DIR/build.ninja" ] || create_build_dir
+    [ -f "$SUPER_BUILD_DIR/build.ninja" ] || create_build_dir
 }
 
 run_tests() {
@@ -196,16 +199,23 @@ run_tests() {
 }
 
 build_target() {
-    ninja -C "$BUILD_DIR" -- "$@"
+    # With zero args, we are doing a standard "build"
+    # With multiple args, we are doing an install/image/run
+    if [ $# -eq 0 ]; then
+        cmake --build "$SUPER_BUILD_DIR"
+    else
+        ninja -C "$BUILD_DIR" -- "$@"
+    fi
 }
 
 delete_target() {
     [ ! -d "$BUILD_DIR" ] || rm -rf "$BUILD_DIR"
+    [ ! -d "$SUPER_BUILD_DIR" ] || rm -rf "$SUPER_BUILD_DIR"
 }
 
 build_toolchain() {
     echo "build_toolchain: $TOOLCHAIN_DIR"
-    if [ "$TOOLCHAIN_TYPE" = "clang" ]; then
+    if [ "$TOOLCHAIN_TYPE" = "Clang" ]; then
         ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ARCH="$TARGET" ./BuildClang.sh )
     else
         ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ARCH="$TARGET" ./BuildIt.sh )
@@ -265,7 +275,7 @@ run_gdb() {
         GDB_ARGS+=( "$PASS_ARG_TO_GDB" )
     fi
     if [ "$TARGET" = "lagom" ]; then
-        gdb "$BUILD_DIR/Meta/Lagom/$LAGOM_EXECUTABLE" "${GDB_ARGS[@]}"
+        gdb "$BUILD_DIR/$LAGOM_EXECUTABLE" "${GDB_ARGS[@]}"
     else
         if [ -n "$KERNEL_CMD_LINE" ]; then
             export SERENITY_KERNEL_CMDLINE="$KERNEL_CMD_LINE"
@@ -285,7 +295,6 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
             build_target "$@"
             ;;
         install)
-            lagom_unsupported
             build_target
             build_target install
             ;;
@@ -305,7 +314,7 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
         run)
             if [ "$TARGET" = "lagom" ]; then
                 build_target "${CMD_ARGS[0]}"
-                "$BUILD_DIR/Meta/Lagom/${CMD_ARGS[0]}" "${CMD_ARGS[@]:1}"
+                "$BUILD_DIR/${CMD_ARGS[0]}" "${CMD_ARGS[@]:1}"
             else
                 build_target
                 build_target install
@@ -330,7 +339,6 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
             fi
             ;;
         test)
-            # FIXME: can we avoid building everything for host tests?
             build_target
             if [ "$TARGET" = "lagom" ]; then
                 run_tests "${CMD_ARGS[0]}"
