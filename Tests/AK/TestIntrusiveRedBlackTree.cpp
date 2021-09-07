@@ -18,20 +18,21 @@ public:
     {
     }
 
-    IntrusiveRedBlackTreeNode<int> m_tree_node;
+    IntrusiveRedBlackTreeNode<int, IntrusiveTest, RawPtr<IntrusiveTest>> m_tree_node;
     int m_some_value;
 };
+using IntrusiveRBTree = IntrusiveRedBlackTree<int, IntrusiveTest, RawPtr<IntrusiveTest>, &IntrusiveTest::m_tree_node>;
 
 TEST_CASE(construct)
 {
-    IntrusiveRedBlackTree<int, IntrusiveTest, &IntrusiveTest::m_tree_node> empty;
+    IntrusiveRBTree empty;
     EXPECT(empty.is_empty());
     EXPECT(empty.size() == 0);
 }
 
 TEST_CASE(ints)
 {
-    IntrusiveRedBlackTree<int, IntrusiveTest, &IntrusiveTest::m_tree_node> test;
+    IntrusiveRBTree test;
     IntrusiveTest first { 1, 10 };
     test.insert(first);
     IntrusiveTest second { 3, 20 };
@@ -51,7 +52,7 @@ TEST_CASE(ints)
 
 TEST_CASE(largest_smaller_than)
 {
-    IntrusiveRedBlackTree<int, IntrusiveTest, &IntrusiveTest::m_tree_node> test;
+    IntrusiveRBTree test;
     IntrusiveTest first { 1, 10 };
     test.insert(first);
     IntrusiveTest second { 11, 20 };
@@ -71,7 +72,7 @@ TEST_CASE(largest_smaller_than)
 TEST_CASE(key_ordered_iteration)
 {
     constexpr auto amount = 10000;
-    IntrusiveRedBlackTree<int, IntrusiveTest, &IntrusiveTest::m_tree_node> test;
+    IntrusiveRBTree test;
     NonnullOwnPtrVector<IntrusiveTest> m_entries;
     Array<int, amount> keys {};
 
@@ -104,7 +105,7 @@ TEST_CASE(key_ordered_iteration)
 
 TEST_CASE(clear)
 {
-    IntrusiveRedBlackTree<int, IntrusiveTest, &IntrusiveTest::m_tree_node> test;
+    IntrusiveRBTree test;
     NonnullOwnPtrVector<IntrusiveTest> m_entries;
     for (size_t i = 0; i < 1000; i++) {
         auto entry = make<IntrusiveTest>(i, i);
@@ -113,4 +114,82 @@ TEST_CASE(clear)
     }
     test.clear();
     EXPECT_EQ(test.size(), 0u);
+}
+
+class IntrusiveRefPtrTest : public RefCounted<IntrusiveRefPtrTest> {
+public:
+    IntrusiveRefPtrTest(int key)
+        : m_tree_node(key)
+    {
+    }
+
+    IntrusiveRedBlackTreeNode<int, IntrusiveRefPtrTest, RefPtr<IntrusiveRefPtrTest>> m_tree_node;
+};
+using IntrusiveRefPtrRBTree = IntrusiveRedBlackTree<int, IntrusiveRefPtrTest, RefPtr<IntrusiveRefPtrTest>, &IntrusiveRefPtrTest::m_tree_node>;
+
+TEST_CASE(intrusive_ref_ptr_no_ref_leaks)
+{
+    auto item = adopt_ref(*new IntrusiveRefPtrTest(0));
+    EXPECT_EQ(1u, item->ref_count());
+    IntrusiveRefPtrRBTree ref_tree;
+
+    ref_tree.insert(*item);
+    EXPECT_EQ(2u, item->ref_count());
+
+    ref_tree.remove(0);
+    EXPECT_EQ(1u, item->ref_count());
+}
+
+TEST_CASE(intrusive_ref_ptr_clear)
+{
+    auto item = adopt_ref(*new IntrusiveRefPtrTest(0));
+    EXPECT_EQ(1u, item->ref_count());
+    IntrusiveRefPtrRBTree ref_tree;
+
+    ref_tree.insert(*item);
+    EXPECT_EQ(2u, item->ref_count());
+
+    ref_tree.clear();
+    EXPECT_EQ(1u, item->ref_count());
+}
+
+TEST_CASE(intrusive_ref_ptr_destructor)
+{
+    auto item = adopt_ref(*new IntrusiveRefPtrTest(0));
+    EXPECT_EQ(1u, item->ref_count());
+
+    {
+        IntrusiveRefPtrRBTree ref_tree;
+        ref_tree.insert(*item);
+        EXPECT_EQ(2u, item->ref_count());
+    }
+
+    EXPECT_EQ(1u, item->ref_count());
+}
+
+class IntrusiveNonnullRefPtrTest : public RefCounted<IntrusiveNonnullRefPtrTest> {
+public:
+    IntrusiveNonnullRefPtrTest(int key)
+        : m_tree_node(key)
+    {
+    }
+
+    IntrusiveRedBlackTreeNode<int, IntrusiveNonnullRefPtrTest, NonnullRefPtr<IntrusiveNonnullRefPtrTest>> m_tree_node;
+};
+using IntrusiveNonnullRefPtrRBTree = IntrusiveRedBlackTree<int, IntrusiveNonnullRefPtrTest, NonnullRefPtr<IntrusiveNonnullRefPtrTest>, &IntrusiveNonnullRefPtrTest::m_tree_node>;
+
+TEST_CASE(intrusive_nonnull_ref_ptr_intrusive)
+{
+    auto item = adopt_ref(*new IntrusiveNonnullRefPtrTest(0));
+    EXPECT_EQ(1u, item->ref_count());
+    IntrusiveNonnullRefPtrRBTree nonnull_ref_tree;
+
+    nonnull_ref_tree.insert(*item);
+    EXPECT_EQ(2u, item->ref_count());
+    EXPECT(!nonnull_ref_tree.is_empty());
+
+    nonnull_ref_tree.remove(0);
+    EXPECT_EQ(1u, item->ref_count());
+
+    EXPECT(nonnull_ref_tree.is_empty());
 }

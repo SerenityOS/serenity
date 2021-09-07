@@ -6,15 +6,21 @@
 
 #pragma once
 
+#include <AK/IntrusiveDetails.h>
 #include <AK/RedBlackTree.h>
 
 namespace AK {
 
-template<Integral K>
+namespace Detail {
+template<Integral K, typename V, typename Container = RawPtr<V>>
 class IntrusiveRedBlackTreeNode;
+}
 
-template<Integral K, typename V, IntrusiveRedBlackTreeNode<K> V::*member>
-class IntrusiveRedBlackTree final : public BaseRedBlackTree<K> {
+template<Integral K, typename V, typename Container = RawPtr<V>>
+using IntrusiveRedBlackTreeNode = Detail::IntrusiveRedBlackTreeNode<K, V, typename Detail::SubstituteIntrusiveContainerType<V, Container>::Type>;
+
+template<Integral K, typename V, typename Container, IntrusiveRedBlackTreeNode<K, V, Container> V::*member>
+class IntrusiveRedBlackTree : public BaseRedBlackTree<K> {
 
 public:
     IntrusiveRedBlackTree() = default;
@@ -24,9 +30,9 @@ public:
     }
 
     using BaseTree = BaseRedBlackTree<K>;
-    using TreeNode = IntrusiveRedBlackTreeNode<K>;
+    using TreeNode = IntrusiveRedBlackTreeNode<K, V, Container>;
 
-    V* find(K key)
+    Container find(K key)
     {
         auto* node = static_cast<TreeNode*>(BaseTree::find(this->m_root, key));
         if (!node)
@@ -34,7 +40,7 @@ public:
         return node_to_value(*node);
     }
 
-    V* find_largest_not_above(K key)
+    Container find_largest_not_above(K key)
     {
         auto* node = static_cast<TreeNode*>(BaseTree::find_largest_not_above(this->m_root, key));
         if (!node)
@@ -45,7 +51,10 @@ public:
     void insert(V& value)
     {
         auto& node = value.*member;
+        VERIFY(!node.m_in_tree);
         BaseTree::insert(&node);
+        if constexpr (!TreeNode::IsRaw)
+            node.m_self.reference = &value; // Note: Self-reference ensures that the object will keep a ref to itself when the Container is a smart pointer.
         node.m_in_tree = true;
     }
 
@@ -76,7 +85,7 @@ public:
             VERIFY(m_node);
             return *node_to_value(*m_node);
         }
-        ElementType* operator->()
+        auto operator->()
         {
             VERIFY(m_node);
             return node_to_value(*m_node);
@@ -117,6 +126,8 @@ public:
         node->right_child = nullptr;
         node->left_child = nullptr;
         node->m_in_tree = false;
+        if constexpr (!TreeNode::IsRaw)
+            node->m_self.reference = nullptr;
 
         return true;
     }
@@ -139,6 +150,8 @@ private:
         clear_nodes(static_cast<TreeNode*>(node->left_child));
         node->left_child = nullptr;
         node->m_in_tree = false;
+        if constexpr (!TreeNode::IsRaw)
+            node->m_self.reference = nullptr;
     }
 
     static V* node_to_value(TreeNode& node)
@@ -147,7 +160,9 @@ private:
     }
 };
 
-template<Integral K>
+namespace Detail {
+
+template<Integral K, typename V, typename Container>
 class IntrusiveRedBlackTreeNode : public BaseRedBlackTree<K>::Node {
 public:
     IntrusiveRedBlackTreeNode(K key)
@@ -165,10 +180,28 @@ public:
         return m_in_tree;
     }
 
+    static constexpr bool IsRaw = IsPointer<Container>;
+
+#ifndef __clang__
 private:
-    template<Integral TK, typename V, IntrusiveRedBlackTreeNode<TK> V::*member>
-    friend class IntrusiveRedBlackTree;
+    template<Integral TK, typename TV, typename TContainer, IntrusiveRedBlackTreeNode<TK, TV, TContainer> TV::*member>
+    friend class ::AK::IntrusiveRedBlackTree;
+#endif
+
     bool m_in_tree { false };
+    [[no_unique_address]] SelfReferenceIfNeeded<Container, IsRaw> m_self;
+};
+
+}
+
+// Specialise IntrusiveRedBlackTree for NonnullRefPtr
+// By default, red black trees cannot contain null entries anyway, so switch to RefPtr
+// and just make the user-facing functions deref the pointers.
+template<Integral K, typename V, IntrusiveRedBlackTreeNode<K, V, NonnullRefPtr<V>> V::*member>
+class IntrusiveRedBlackTree<K, V, NonnullRefPtr<V>, member> : public IntrusiveRedBlackTree<K, V, RefPtr<V>, member> {
+public:
+    [[nodiscard]] NonnullRefPtr<V> find(K key) const { return IntrusiveRedBlackTree<K, V, RefPtr<V>, member>::find(key).release_nonnull(); }
+    [[nodiscard]] NonnullRefPtr<V> find_largest_not_above(K key) const { return IntrusiveRedBlackTree<K, V, RefPtr<V>, member>::find_largest_not_above(key).release_nonnull(); }
 };
 
 }
