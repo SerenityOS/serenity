@@ -62,20 +62,20 @@ public:
 
     virtual ~Model();
 
-    virtual int row_count(const ModelIndex& = ModelIndex()) const = 0;
-    virtual int column_count(const ModelIndex& = ModelIndex()) const = 0;
+    virtual int row_count(ModelIndex const& = ModelIndex()) const = 0;
+    virtual int column_count(ModelIndex const& = ModelIndex()) const = 0;
     virtual String column_name(int) const { return {}; }
-    virtual Variant data(const ModelIndex&, ModelRole = ModelRole::Display) const = 0;
-    virtual TriState data_matches(const ModelIndex&, const Variant&) const { return TriState::Unknown; }
+    virtual Variant data(ModelIndex const&, ModelRole = ModelRole::Display) const = 0;
+    virtual TriState data_matches(ModelIndex const&, Variant const&) const { return TriState::Unknown; }
     virtual void invalidate();
-    virtual ModelIndex parent_index(const ModelIndex&) const { return {}; }
-    virtual ModelIndex index(int row, int column = 0, const ModelIndex& parent = ModelIndex()) const;
-    virtual bool is_editable(const ModelIndex&) const { return false; }
+    virtual ModelIndex parent_index(ModelIndex const&) const { return {}; }
+    virtual ModelIndex index(int row, int column = 0, ModelIndex const& parent = ModelIndex()) const;
+    virtual bool is_editable(ModelIndex const&) const { return false; }
     virtual bool is_searchable() const { return false; }
-    virtual void set_data(const ModelIndex&, const Variant&) { }
+    virtual void set_data(ModelIndex const&, Variant const&) { }
     virtual int tree_column() const { return 0; }
-    virtual bool accepts_drag(const ModelIndex&, const Vector<String>& mime_types) const;
-    virtual Vector<ModelIndex> matches(const StringView&, unsigned = MatchesFlag::AllMatching, const ModelIndex& = ModelIndex()) { return {}; }
+    virtual bool accepts_drag(ModelIndex const&, Vector<String> const& mime_types) const;
+    virtual Vector<ModelIndex> matches(StringView const&, unsigned = MatchesFlag::AllMatching, ModelIndex const& = ModelIndex()) { return {}; }
 
     virtual bool is_column_sortable([[maybe_unused]] int column_index) const { return true; }
     virtual void sort([[maybe_unused]] int column, SortOrder) { }
@@ -87,7 +87,7 @@ public:
     }
 
     virtual StringView drag_data_type() const { return {}; }
-    virtual RefPtr<Core::MimeData> mime_data(const ModelSelection&) const;
+    virtual RefPtr<Core::MimeData> mime_data(ModelSelection const&) const;
 
     void register_view(Badge<AbstractView>, AbstractView&);
     void unregister_view(Badge<AbstractView>, AbstractView&);
@@ -104,7 +104,7 @@ protected:
     void for_each_client(Function<void(ModelClient&)>);
     void did_update(unsigned flags = UpdateFlag::InvalidateAllIndices);
 
-    static bool string_matches(const StringView& str, const StringView& needle, unsigned flags)
+    static bool string_matches(StringView const& str, StringView const& needle, unsigned flags)
     {
         auto case_sensitivity = (flags & CaseInsensitive) ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive;
         if (flags & MatchFull)
@@ -114,7 +114,7 @@ protected:
         return str.contains(needle, case_sensitivity);
     }
 
-    ModelIndex create_index(int row, int column, const void* data = nullptr) const;
+    ModelIndex create_index(int row, int column, void const* data = nullptr) const;
 
     void begin_insert_rows(ModelIndex const& parent, int first, int last);
     void begin_insert_columns(ModelIndex const& parent, int first, int last);
