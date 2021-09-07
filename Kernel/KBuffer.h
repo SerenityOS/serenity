@@ -118,13 +118,7 @@ public:
     [[nodiscard]] size_t size() const { return m_impl->size(); }
     [[nodiscard]] size_t capacity() const { return m_impl->capacity(); }
 
-    [[nodiscard]] void* end_pointer() { return data() + size(); }
-    [[nodiscard]] const void* end_pointer() const { return data() + size(); }
-
     void set_size(size_t size) { m_impl->set_size(size); }
-
-    [[nodiscard]] KBufferImpl& impl() { return *m_impl; }
-    [[nodiscard]] const KBufferImpl& impl() const { return *m_impl; }
 
 private:
     explicit KBuffer(NonnullRefPtr<KBufferImpl> impl)
