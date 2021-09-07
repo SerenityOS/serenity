@@ -118,14 +118,13 @@ jobs:
           ccache -s
       - name: Create build directory
         run: |
-          mkdir -p ${{ github.workspace }}/Build
-          mkdir -p ${{ github.workspace }}/Build/UCD
-          mkdir -p ${{ github.workspace }}/Build/CLDR
+          mkdir -p ${{ github.workspace }}/Build/${{ matrix.arch }}/UCD
+          mkdir -p ${{ github.workspace }}/Build/${{ matrix.arch }}/CLDR
       - name: UnicodeData cache
         # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
         uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
         with:
-          path: ${{ github.workspace }}/Build/UCD
+          path: ${{ github.workspace }}/Build/${{ matrix.arch }}/UCD
           key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
       - name: UnicodeLocale Cache
         # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
@@ -134,22 +133,38 @@ jobs:
           path: ${{ github.workspace }}/Build/CLDR
           key: UnicodeLocale-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
       - name: Create build environment with extra debug options
-        working-directory: ${{ github.workspace }}/Build
         # Build the entire project with all available debug options turned on, to prevent code rot.
-        # However, it is unweildy and slow to run tests with them enabled, so we will build twice.
-        run: cmake .. -GNinja -DSERENITY_ARCH=${{ matrix.arch }} -DBUILD_LAGOM=ON -DENABLE_ALL_DEBUG_FACILITIES=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+        # However, it is unwieldy and slow to run tests with them enabled, so we will build twice.
+        run: |
+          cmake -S Meta/CMake/Superbuild -B Build/superbuild -GNinja \
+            -DSERENITY_ARCH=${{ matrix.arch }} \
+            -DSERENITY_TOOLCHAIN=GNU \
+            -DBUILD_LAGOM=ON \
+            -DCMAKE_C_COMPILER=gcc-10 \
+            -DCMAKE_CXX_COMPILER=g++-10 \
+            -DENABLE_ALL_DEBUG_FACILITIES=ON \
+            -DENABLE_PCI_IDS_DOWNLOAD=OFF \
+            -DENABLE_USB_IDS_DOWNLOAD=OFF
         if: ${{ matrix.debug-options == 'ALL_DEBUG' }}
       - name: Create build environment
-        working-directory: ${{ github.workspace }}/Build
+        working-directory: ${{ github.workspace }}
         # Note that we do not set BUILD_LAGOM for the normal debug build
         # We build and run the Lagom tests in a separate job, and sanitizer builds take a good while longer than non-sanitized.
-        run: cmake .. -GNinja -DSERENITY_ARCH=${{ matrix.arch }} -DENABLE_UNDEFINED_SANITIZER=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+        run:  |
+          cmake -S Meta/CMake/Superbuild -B Build/superbuild -GNinja \
+            -DSERENITY_ARCH=${{ matrix.arch }} \
+            -DSERENITY_TOOLCHAIN=GNU \
+            -DCMAKE_C_COMPILER=gcc-10 \
+            -DCMAKE_CXX_COMPILER=g++-10 \
+            -DENABLE_UNDEFINED_SANITIZER=ON \
+            -DENABLE_PCI_IDS_DOWNLOAD=OFF \
+            -DENABLE_USB_IDS_DOWNLOAD=OFF
         if: ${{ matrix.debug-options == 'NORMAL_DEBUG' }}
 
       # === ACTUALLY BUILD ===
 
       - name: Build Serenity and Tests
-        working-directory: ${{ github.workspace }}/Build
+        working-directory: ${{ github.workspace }}/Build/superbuild
         run: cmake --build .
       - name: Show ccache stats after build
         run: ccache -s
@@ -159,12 +174,12 @@ jobs:
 
       - name: Create Serenity Rootfs
         if: ${{ matrix.debug-options == 'NORMAL_DEBUG'}}
-        working-directory: ${{ github.workspace }}/Build
+        working-directory: ${{ github.workspace }}/Build/${{ matrix.arch }}
         run: ninja install && ninja image
 
       - name: Run On-Target Tests
         if: ${{ matrix.debug-options == 'NORMAL_DEBUG'}}
-        working-directory: ${{ github.workspace }}/Build
+        working-directory: ${{ github.workspace }}/Build/${{ matrix.arch }}
         env:
           SERENITY_QEMU_CPU: "max,vmx=off"
           SERENITY_KERNEL_CMDLINE: "boot_mode=self-test"
@@ -189,5 +204,5 @@ jobs:
       - name: Print Target Logs
         # Extremely useful if Serenity hangs trying to run one of the tests
         if: ${{ !cancelled() && matrix.debug-options == 'NORMAL_DEBUG'}}
-        working-directory: ${{ github.workspace }}/Build
+        working-directory: ${{ github.workspace }}/Build/${{ matrix.arch }}
         run: '[ ! -e debug.log ] || cat debug.log'

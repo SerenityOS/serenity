@@ -8,9 +8,10 @@ project(
     LANGUAGES C CXX
 )
 
-option(BUILD_SHARED_LIBS "Build shared libraries instead of static libraries" ON)
-if (ENABLE_OSS_FUZZ)
-    set(BUILD_SHARED_LIBS OFF) # Don't use shared libraries on oss-fuzz, for ease of integration with their infrastructure
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS "10.2")
+  message(FATAL_ERROR
+      "A GCC version less than 10.2 was detected (${CMAKE_CXX_COMPILER_VERSION}), this is unsupported.\n"
+      "Please re-read the build instructions documentation, and upgrade your host compiler.\n")
 endif()
 
 # This is required for CMake (when invoked for a Lagom-only build) to
@@ -33,12 +34,22 @@ endif()
 
 include(lagom_options)
 
+if(ENABLE_ALL_THE_DEBUG_MACROS)
+    include(all_the_debug_macros)
+endif()
+
+option(BUILD_SHARED_LIBS "Build shared libraries instead of static libraries" ON)
+if (ENABLE_OSS_FUZZ)
+    set(BUILD_SHARED_LIBS OFF) # Don't use shared libraries on oss-fuzz, for ease of integration with their infrastructure
+endif()
+
 find_package(Threads REQUIRED)
 
 if (ENABLE_LAGOM_CCACHE)
     find_program(CCACHE_PROGRAM ccache)
     if(CCACHE_PROGRAM)
-        set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+        set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}" CACHE FILEPATH "Path to a compiler launcher program, e.g. ccache")
+        set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}" CACHE FILEPATH "Path to a compiler launcher program, e.g. ccache")
     endif()
 endif()
 
@@ -58,7 +69,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 # See slide 100 of the following ppt :^)
 # https://crascit.com/wp-content/uploads/2019/09/Deep-CMake-For-Library-Authors-Craig-Scott-CppCon-2019.pdf
 if (NOT APPLE)
-    set(CMAKE_INSTALL_RPATH $ORIGIN)
+    set(CMAKE_INSTALL_RPATH $ORIGIN:$ORIGIN/../lib)
 endif()
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
@@ -79,7 +90,7 @@ if (ENABLE_UNDEFINED_SANITIZER)
     set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=undefined -fno-sanitize=vptr")
 endif()
 
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang$")
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     # Clang's default constexpr-steps limit is 1048576(2^20), GCC doesn't have one
     add_compile_options(-Wno-overloaded-virtual -Wno-user-defined-literals -fconstexpr-steps=16777216)
 
@@ -88,7 +99,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang$")
         set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=fuzzer")
     endif()
 
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-expansion-to-defined)
 endif()
 
@@ -101,11 +112,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
-# FIXME: This is a hack, because the lagom stuff can be built individually or
-#        in combination with the system, we generate two Debug.h files. One in
-#        Build/AK/Debug.h and the other in Build/Meta/Lagom/AK/Debug.h.
 configure_file(../../AK/Debug.h.in AK/Debug.h @ONLY)
-configure_file(../../Kernel/Debug.h.in Kernel/Debug.h @ONLY)
 
 include_directories(../../)
 include_directories(../../Userland/)
@@ -114,59 +121,36 @@ include_directories(${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # install rules, think about moving to its own helper cmake file
-# Don't install Lagom libs into the target Root/
-# FIXME: Remove this check for 4594
-if (CMAKE_SOURCE_DIR MATCHES ".*/Lagom")
-    include(CMakePackageConfigHelpers)
-    include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
 
-    # find_package(<package>) call for consumers to find this project
-    set(package Lagom)
+# find_package(<package>) call for consumers to find this project
+set(package Lagom)
 
-    write_basic_package_version_file(
-        "${package}ConfigVersion.cmake"
-        COMPATIBILITY SameMajorVersion
-    )
+# Allow package maintainers to freely override the path for the configs
+set(Lagom_INSTALL_CMAKEDIR "${CMAKE_INSTALL_DATADIR}/${package}"
+    CACHE PATH "CMake package config location relative to the install prefix")
+mark_as_advanced(Lagom_INSTALL_CMAKEDIR)
 
-    # Allow package maintainers to freely override the path for the configs
-    set(Lagom_INSTALL_CMAKEDIR "${CMAKE_INSTALL_DATADIR}/${package}"
-        CACHE PATH "CMake package config location relative to the install prefix")
-    mark_as_advanced(Lagom_INSTALL_CMAKEDIR)
+install(
+    FILES "${SERENITY_PROJECT_ROOT}/Meta/CMake/lagom-install-config.cmake"
+    DESTINATION "${Lagom_INSTALL_CMAKEDIR}"
+    RENAME "${package}Config.cmake"
+    COMPONENT Lagom_Development
+)
 
-    install(
-        FILES ${SERENITY_PROJECT_ROOT}/Meta/CMake/lagom-install-config.cmake
-        DESTINATION "${Lagom_INSTALL_CMAKEDIR}"
-        RENAME "${package}Config.cmake"
-        COMPONENT Lagom_Development
-    )
-
-    install(
-        FILES "${PROJECT_BINARY_DIR}/${package}ConfigVersion.cmake"
-        DESTINATION "${Lagom_INSTALL_CMAKEDIR}"
-        COMPONENT Lagom_Development
-    )
-
-    install(
-        EXPORT LagomTargets
-        NAMESPACE Lagom::
-        DESTINATION "${Lagom_INSTALL_CMAKEDIR}"
-        COMPONENT Lagom_Development
-    )
-
-    # Manually install AK
-    install(
-        DIRECTORY "${SERENITY_PROJECT_ROOT}/AK"
-        COMPONENT Lagom_Development
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-        FILES_MATCHING PATTERN "*.h"
-    )
-endif()
+install(
+    EXPORT LagomTargets
+    NAMESPACE Lagom::
+    DESTINATION "${Lagom_INSTALL_CMAKEDIR}"
+    COMPONENT Lagom_Development
+)
 
 function(lagom_lib library fs_name)
     cmake_parse_arguments(LAGOM_LIBRARY "" "" "SOURCES;LIBS" ${ARGN})
     set(target_name "Lagom${library}")
     add_library(${target_name} ${LAGOM_LIBRARY_SOURCES})
-    # alias for pretty exports
+    # alias for parity with exports
     add_library(Lagom::${library} ALIAS ${target_name})
 
     set_target_properties(
@@ -180,29 +164,25 @@ function(lagom_lib library fs_name)
     if (NOT ${target_name} STREQUAL "LagomCore")
         target_link_libraries(${target_name} LagomCore)
     endif()
-    # Don't install Lagom libs into the target Root/
-    # FIXME: Remove this check for 4594
-    if (CMAKE_SOURCE_DIR MATCHES ".*/Lagom")
-        install(
-            TARGETS ${target_name}
-            EXPORT LagomTargets
-            RUNTIME #
-                COMPONENT Lagom_Runtime
-            LIBRARY #
-                COMPONENT Lagom_Runtime
-                NAMELINK_COMPONENT Lagom_Development
-            ARCHIVE #
-                COMPONENT Lagom_Development
-            INCLUDES #
-                DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-        )
-        install(
-            DIRECTORY "${SERENITY_PROJECT_ROOT}/Userland/Libraries/Lib${library}"
+    install(
+        TARGETS ${target_name}
+        EXPORT LagomTargets
+        RUNTIME #
+            COMPONENT Lagom_Runtime
+        LIBRARY #
+            COMPONENT Lagom_Runtime
+            NAMELINK_COMPONENT Lagom_Development
+        ARCHIVE #
             COMPONENT Lagom_Development
+        INCLUDES #
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-            FILES_MATCHING PATTERN "*.h"
-        )
-    endif()
+    )
+    install(
+        DIRECTORY "${SERENITY_PROJECT_ROOT}/Userland/Libraries/Lib${library}"
+        COMPONENT Lagom_Development
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.h"
+    )
 endfunction()
 
 function(lagom_test source)
@@ -228,6 +208,14 @@ lagom_lib(Core core
 if (NOT APPLE)
     target_link_libraries(LagomCore crypt) # Core::Account uses crypt() but it's not in libcrypt on macOS
 endif()
+
+# Manually install AK headers
+install(
+    DIRECTORY "${SERENITY_PROJECT_ROOT}/AK"
+    COMPONENT Lagom_Development
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h"
+)
 
 # Code Generators and other host tools
 # We need to make sure not to build code generators for Fuzzer builds, as they already have their own main.cpp

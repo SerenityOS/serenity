@@ -39,11 +39,10 @@ set_source_files_properties(../Libraries/LibC/stdio.cpp PROPERTIES COMPILE_FLAGS
 
 add_executable(Loader.so ${SOURCES})
 
-if (USE_CLANG_TOOLCHAIN)
-    target_link_libraries(Loader.so clang_rt.builtins-${SERENITY_CLANG_ARCH})
-else()
-    target_link_libraries(Loader.so gcc)
-endif()
-
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_link_libraries(Loader.so PRIVATE gcc)
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+    target_link_libraries(Loader.so PRIVATE "clang_rt.builtins-${SERENITY_CLANG_ARCH}")
+endif ()
 target_link_options(Loader.so PRIVATE LINKER:--no-dynamic-linker)
 install(TARGETS Loader.so RUNTIME DESTINATION usr/lib/)
