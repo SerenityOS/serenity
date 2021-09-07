@@ -119,12 +119,12 @@ UNMAP_AFTER_INIT bool HPET::test_and_initialize()
 {
     VERIFY(!HPET::initialized());
     hpet_initialized = true;
-    auto hpet = ACPI::Parser::the()->find_table("HPET");
-    if (hpet.is_null())
+    auto hpet_table = ACPI::Parser::the()->find_table("HPET");
+    if (!hpet_table.has_value())
         return false;
-    dmesgln("HPET @ {}", hpet);
+    dmesgln("HPET @ {}", hpet_table.value());
 
-    auto sdt = Memory::map_typed<ACPI::Structures::HPET>(hpet);
+    auto sdt = Memory::map_typed<ACPI::Structures::HPET>(hpet_table.value());
 
     // Note: HPET is only usable from System Memory
     VERIFY(sdt->event_timer_block.address_space == (u8)ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
@@ -135,17 +135,17 @@ UNMAP_AFTER_INIT bool HPET::test_and_initialize()
             return false;
         }
     }
-    new HPET(PhysicalAddress(hpet));
+    new HPET(PhysicalAddress(hpet_table.value()));
     return true;
 }
 
 UNMAP_AFTER_INIT bool HPET::check_for_exisiting_periodic_timers()
 {
-    auto hpet = ACPI::Parser::the()->find_table("HPET");
-    if (hpet.is_null())
+    auto hpet_table = ACPI::Parser::the()->find_table("HPET");
+    if (!hpet_table.has_value())
         return false;
 
-    auto sdt = Memory::map_typed<ACPI::Structures::HPET>(hpet);
+    auto sdt = Memory::map_typed<ACPI::Structures::HPET>(hpet_table.value());
     VERIFY(sdt->event_timer_block.address_space == 0);
     auto registers = Memory::map_typed<HPETRegistersBlock>(PhysicalAddress(sdt->event_timer_block.address));
 

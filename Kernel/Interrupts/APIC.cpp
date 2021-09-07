@@ -265,12 +265,12 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
         return false;
     }
     auto madt_address = ACPI::StaticParsing::find_table(rsdp.value(), "APIC");
-    if (madt_address.is_null()) {
+    if (!madt_address.has_value()) {
         dbgln("APIC: MADT table not found");
         return false;
     }
 
-    auto madt = Memory::map_typed<ACPI::Structures::MADT>(madt_address);
+    auto madt = Memory::map_typed<ACPI::Structures::MADT>(madt_address.value());
     size_t entry_index = 0;
     size_t entries_length = madt->h.length - sizeof(ACPI::Structures::MADT);
     auto* madt_entry = madt->entries;
