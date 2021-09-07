@@ -15,7 +15,11 @@ extern "C" {
 
 static void print_location(const SourceLocation&)
 {
+#if ARCH(I386) || ARCH(X86_64)
     asm volatile("cli; hlt");
+#else
+    for (;;) { }
+#endif
 }
 
 void __ubsan_handle_load_invalid_value(const InvalidValueData&, ValueHandle) __attribute__((used));

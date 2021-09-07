@@ -1,4 +1,5 @@
 set(SOURCES
+    UBSanitizer.cpp
 )
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     set(SOURCES
@@ -12,7 +13,6 @@ else()
         Arch/x86/boot.S
         Arch/x86/multiboot.S
         # FIXME: Eventually, some of these should build on aarch64 too.
-        UBSanitizer.cpp
         init.cpp
         ../MiniStdLib.cpp
         ../../Userland/Libraries/LibELF/Relocation.cpp
