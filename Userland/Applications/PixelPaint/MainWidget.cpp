@@ -162,6 +162,14 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             }));
 
     file_menu.add_separator();
+    file_menu.add_action(
+        GUI::Action::create(
+            "&Close Image", { Mod_Ctrl, Key_W }, [&](auto&) {
+                auto* active_widget = m_tab_widget->active_widget();
+                if (!active_widget)
+                    return;
+                m_tab_widget->on_tab_close_click(*active_widget);
+            }));
     file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
