@@ -344,6 +344,14 @@ KResult FileDescription::close()
     return m_file->close();
 }
 
+KResultOr<NonnullOwnPtr<KString>> FileDescription::try_serialize_absolute_path()
+{
+    if (m_custody)
+        return m_custody->try_serialize_absolute_path();
+    // FIXME: Don't go through a String here!
+    return KString::try_create(m_file->absolute_path(*this));
+}
+
 String FileDescription::absolute_path() const
 {
     if (m_custody)

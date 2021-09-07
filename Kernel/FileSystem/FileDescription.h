@@ -64,6 +64,7 @@ public:
 
     KResultOr<NonnullOwnPtr<KBuffer>> read_entire_file();
 
+    KResultOr<NonnullOwnPtr<KString>> try_serialize_absolute_path();
     String absolute_path() const;
 
     bool is_direct() const { return m_direct; }
