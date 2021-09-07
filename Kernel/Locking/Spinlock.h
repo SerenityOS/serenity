@@ -9,7 +9,7 @@
 #include <AK/Atomic.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/x86/Processor.h>
-#include <Kernel/Forward.h>
+#include <Kernel/Locking/LockRank.h>
 
 namespace Kernel {
 
@@ -18,7 +18,10 @@ class Spinlock {
     AK_MAKE_NONMOVABLE(Spinlock);
 
 public:
-    Spinlock() = default;
+    Spinlock(LockRank rank = LockRank::None)
+        : m_rank(rank)
+    {
+    }
 
     ALWAYS_INLINE u32 lock()
     {
@@ -28,17 +31,20 @@ public:
         while (m_lock.exchange(1, AK::memory_order_acquire) != 0) {
             Processor::wait_check();
         }
+        track_lock_acquire(m_rank);
         return prev_flags;
     }
 
     ALWAYS_INLINE void unlock(u32 prev_flags)
     {
         VERIFY(is_locked());
+        track_lock_release(m_rank);
         m_lock.store(0, AK::memory_order_release);
         if (prev_flags & 0x200)
             sti();
         else
             cli();
+
         Processor::leave_critical();
     }
 
@@ -54,6 +60,7 @@ public:
 
 private:
     Atomic<u8> m_lock { 0 };
+    const LockRank m_rank;
 };
 
 class RecursiveSpinlock {
@@ -61,7 +68,10 @@ class RecursiveSpinlock {
     AK_MAKE_NONMOVABLE(RecursiveSpinlock);
 
 public:
-    RecursiveSpinlock() = default;
+    RecursiveSpinlock(LockRank rank = LockRank::None)
+        : m_rank(rank)
+    {
+    }
 
     ALWAYS_INLINE u32 lock()
     {
@@ -77,6 +87,8 @@ public:
             Processor::wait_check();
             expected = 0;
         }
+        if (m_recursions == 0)
+            track_lock_acquire(m_rank);
         m_recursions++;
         return prev_flags;
     }
@@ -85,12 +97,15 @@ public:
     {
         VERIFY(m_recursions > 0);
         VERIFY(m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current()));
-        if (--m_recursions == 0)
+        if (--m_recursions == 0) {
+            track_lock_release(m_rank);
             m_lock.store(0, AK::memory_order_release);
+        }
         if (prev_flags & 0x200)
             sti();
         else
             cli();
+
         Processor::leave_critical();
     }
 
@@ -112,6 +127,7 @@ public:
 private:
     Atomic<FlatPtr> m_lock { 0 };
     u32 m_recursions { 0 };
+    const LockRank m_rank;
 };
 
 template<typename LockType>
