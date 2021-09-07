@@ -16,9 +16,7 @@ String Table::render_for_terminal(size_t view_width) const
     StringBuilder builder;
 
     auto write_aligned = [&](const auto& text, auto width, auto alignment) {
-        size_t original_length = 0;
-        for (auto& span : text.spans())
-            original_length += span.text.length();
+        size_t original_length = text.terminal_length();
         auto string = text.render_for_terminal();
         if (alignment == Alignment::Center) {
             auto padding_length = (width - original_length) / 2;
@@ -137,11 +135,8 @@ OwnPtr<Table> Table::parse(Vector<StringView>::ConstIterator& lines)
     table->m_columns.resize(header_delimiters.size());
 
     for (size_t i = 0; i < header_segments.size(); ++i) {
-        auto text_option = Text::parse(header_segments[i]);
-        if (!text_option.has_value())
-            return {}; // An invalid 'text' in the header should just fail the table parse.
+        auto text = Text::parse(header_segments[i]);
 
-        auto text = text_option.release_value();
         auto& column = table->m_columns[i];
 
         column.header = move(text);
@@ -199,16 +194,10 @@ OwnPtr<Table> Table::parse(Vector<StringView>::ConstIterator& lines)
             if (i >= segments.size()) {
                 // Ran out of segments, but still have headers.
                 // Just make an empty cell.
-                table->m_columns[i].rows.append(Text { "" });
+                table->m_columns[i].rows.append(Text::parse(""));
             } else {
-                auto text_option = Text::parse(segments[i]);
-                // We treat an invalid 'text' as a literal.
-                if (text_option.has_value()) {
-                    auto text = text_option.release_value();
-                    table->m_columns[i].rows.append(move(text));
-                } else {
-                    table->m_columns[i].rows.append(Text { segments[i] });
-                }
+                auto text = Text::parse(segments[i]);
+                table->m_columns[i].rows.append(move(text));
             }
         }
     }

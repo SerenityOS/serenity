@@ -59,10 +59,7 @@ OwnPtr<List> List::parse(Vector<StringView>::ConstIterator& lines)
             return true;
 
         auto text = Text::parse(item_builder.string_view());
-        if (!text.has_value())
-            return false;
-
-        items.append(move(text.value()));
+        items.append(move(text));
 
         item_builder.clear();
         return true;
