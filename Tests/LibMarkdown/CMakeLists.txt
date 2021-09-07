@@ -1,4 +1,4 @@
-include(${SERENITY_PROJECT_ROOT}/Meta/CMake/commonmark_spec.cmake)
+include(commonmark_spec)
 
 set(TEST_SOURCES
     TestCommonmark.cpp
