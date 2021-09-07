@@ -89,11 +89,6 @@ private:
 
 class [[nodiscard]] KBuffer {
 public:
-    explicit KBuffer(RefPtr<KBufferImpl>&& impl)
-        : m_impl(move(impl))
-    {
-    }
-
     static KResultOr<NonnullOwnPtr<KBuffer>> try_create_with_size(size_t size, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
         auto impl = KBufferImpl::try_create_with_size(size, access, name, strategy);
@@ -132,14 +127,13 @@ public:
 
     [[nodiscard]] KBufferImpl& impl() { return *m_impl; }
     [[nodiscard]] const KBufferImpl& impl() const { return *m_impl; }
-    [[nodiscard]] RefPtr<KBufferImpl> take_impl() { return move(m_impl); }
 
-    KBuffer(const ByteBuffer& buffer, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer")
-        : m_impl(KBufferImpl::copy(buffer.data(), buffer.size(), access, name))
+private:
+    explicit KBuffer(RefPtr<KBufferImpl>&& impl)
+        : m_impl(move(impl))
     {
     }
 
-private:
     RefPtr<KBufferImpl> m_impl;
 };
 
