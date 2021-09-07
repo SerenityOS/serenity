@@ -56,17 +56,17 @@ void Model::did_update(unsigned flags)
     });
 }
 
-ModelIndex Model::create_index(int row, int column, const void* data) const
+ModelIndex Model::create_index(int row, int column, void const* data) const
 {
     return ModelIndex(*this, row, column, const_cast<void*>(data));
 }
 
-ModelIndex Model::index(int row, int column, const ModelIndex&) const
+ModelIndex Model::index(int row, int column, ModelIndex const&) const
 {
     return create_index(row, column);
 }
 
-bool Model::accepts_drag(const ModelIndex&, const Vector<String>&) const
+bool Model::accepts_drag(ModelIndex const&, Vector<String> const&) const
 {
     return false;
 }
@@ -81,7 +81,7 @@ void Model::unregister_client(ModelClient& client)
     m_clients.remove(&client);
 }
 
-WeakPtr<PersistentHandle> Model::register_persistent_index(Badge<PersistentModelIndex>, const ModelIndex& index)
+WeakPtr<PersistentHandle> Model::register_persistent_index(Badge<PersistentModelIndex>, ModelIndex const& index)
 {
     if (!index.is_valid())
         return {};
@@ -100,7 +100,7 @@ WeakPtr<PersistentHandle> Model::register_persistent_index(Badge<PersistentModel
     return weak_handle;
 }
 
-RefPtr<Core::MimeData> Model::mime_data(const ModelSelection& selection) const
+RefPtr<Core::MimeData> Model::mime_data(ModelSelection const& selection) const
 {
     auto mime_data = Core::MimeData::construct();
     RefPtr<Gfx::Bitmap> bitmap;
