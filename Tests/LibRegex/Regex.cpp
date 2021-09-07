@@ -485,6 +485,18 @@ TEST_CASE(simple_period_end_benchmark)
     EXPECT_EQ(re.search("hello?", m), true);
 }
 
+TEST_CASE(posix_extended_nested_capture_group)
+{
+    Regex<PosixExtended> re("(h(e(?<llo>llo)))"); // group 0 -> "hello", group 1 -> "ello", group 2/"llo" -> "llo"
+    auto result = re.match("hello");
+    EXPECT(result.success);
+    EXPECT_EQ(result.capture_group_matches.size(), 1u);
+    EXPECT_EQ(result.capture_group_matches[0].size(), 3u);
+    EXPECT_EQ(result.capture_group_matches[0][0].view, "hello"sv);
+    EXPECT_EQ(result.capture_group_matches[0][1].view, "ello"sv);
+    EXPECT_EQ(result.capture_group_matches[0][2].view, "llo"sv);
+}
+
 TEST_CASE(ECMA262_parse)
 {
     struct _test {
