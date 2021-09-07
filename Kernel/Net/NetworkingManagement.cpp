@@ -5,6 +5,7 @@
  */
 
 #include <AK/Singleton.h>
+#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/IO.h>
 #include <Kernel/Memory/AnonymousVMObject.h>

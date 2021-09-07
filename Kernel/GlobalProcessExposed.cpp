@@ -9,7 +9,7 @@
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
-#include <Kernel/Bus/PCI/Access.h>
+#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/ConsoleDevice.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
@@ -615,7 +615,7 @@ private:
         JsonArraySerializer array { builder };
         PCI::enumerate([&array](PCI::Address address, PCI::ID id) {
             auto obj = array.add_object();
-            obj.add("seg", address.seg());
+            obj.add("domain", address.domain());
             obj.add("bus", address.bus());
             obj.add("device", address.device());
             obj.add("function", address.function());
