@@ -14,7 +14,6 @@ class MagnifierWidget final : public GUI::Frame {
 public:
     virtual ~MagnifierWidget();
     void set_scale_factor(int scale_factor);
-    void track_cursor_globally();
 
 private:
     MagnifierWidget();
