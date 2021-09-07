@@ -107,11 +107,12 @@ void RectangleTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     auto start_position = m_editor->layer_position_to_editor_position(*layer, m_rectangle_start_position).to_type<int>();
     auto end_position = m_editor->layer_position_to_editor_position(*layer, m_rectangle_end_position).to_type<int>();
-    draw_using(painter, start_position, end_position);
+    draw_using(painter, start_position, end_position, m_thickness * m_editor->scale());
 }
 
 void RectangleTool::on_keydown(GUI::KeyEvent& event)
 {
+    Tool::on_keydown(event);
     if (event.key() == Key_Escape && m_drawing_button != GUI::MouseButton::None) {
         m_drawing_button = GUI::MouseButton::None;
         m_editor->update();
@@ -140,6 +141,7 @@ GUI::Widget* RectangleTool::get_properties_widget()
         thickness_slider.on_change = [&](int value) {
             m_thickness = value;
         };
+        set_primary_slider(&thickness_slider);
 
         auto& mode_container = m_properties_widget->add<GUI::Widget>();
         mode_container.set_fixed_height(70);
