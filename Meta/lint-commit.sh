@@ -46,5 +46,10 @@ while read -r line; do
   if [[ $line_length -gt 72 ]] && (echo "$line" | grep -P -v -q "$url_pattern"); then
     error "Commit message lines are too long (maximum allowed is 72 characters)"
   fi
+
+  if [[ "$line" == "Signed-off-by: "* ]]; then
+    error "Commit body contains a Signed-off-by tag"
+  fi
+
 done <"$commit_file"
 exit 0
