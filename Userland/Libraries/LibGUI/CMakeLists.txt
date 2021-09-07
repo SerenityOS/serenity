@@ -66,6 +66,7 @@ set(SOURCES
     Model.cpp
     ModelIndex.cpp
     ModelSelection.cpp
+    MouseTracker.cpp
     MultiView.cpp
     Notification.cpp
     OpacitySlider.cpp

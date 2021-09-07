@@ -16,6 +16,7 @@
 #include <LibGUI/EmojiInputDialog.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/MouseTracker.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
@@ -368,6 +369,11 @@ void WindowServerConnection::display_link_notification()
         DisplayLink::notify({});
         m_display_link_notification_pending = false;
     });
+}
+
+void WindowServerConnection::track_mouse_move(Gfx::IntPoint const& mouse_position)
+{
+    MouseTracker::track_mouse_move({}, mouse_position);
 }
 
 void WindowServerConnection::ping()

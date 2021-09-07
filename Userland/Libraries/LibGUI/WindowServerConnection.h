@@ -55,6 +55,7 @@ private:
     virtual void update_system_fonts(String const&, String const&) override;
     virtual void window_state_changed(i32, bool, bool) override;
     virtual void display_link_notification() override;
+    virtual void track_mouse_move(Gfx::IntPoint const&) override;
     virtual void ping() override;
 
     bool m_display_link_notification_pending { false };
