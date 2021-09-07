@@ -90,7 +90,7 @@ protected:
     void set_local_address(IPv4Address address) { m_local_address = address; }
     void set_peer_address(IPv4Address address) { m_peer_address = address; }
 
-    static OwnPtr<DoubleBuffer> create_receive_buffer();
+    static KResultOr<NonnullOwnPtr<DoubleBuffer>> try_create_receive_buffer();
 
 private:
     virtual bool is_ipv4() const override { return true; }

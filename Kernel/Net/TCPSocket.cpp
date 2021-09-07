@@ -97,10 +97,10 @@ RefPtr<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address,
         if (table.contains(tuple))
             return {};
 
-        auto receive_buffer = create_receive_buffer();
-        if (!receive_buffer)
+        auto receive_buffer = try_create_receive_buffer();
+        if (receive_buffer.is_error())
             return {};
-        auto client_or_error = TCPSocket::try_create(protocol(), receive_buffer.release_nonnull());
+        auto client_or_error = TCPSocket::try_create(protocol(), receive_buffer.release_value());
         if (client_or_error.is_error())
             return {};
 

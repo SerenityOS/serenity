@@ -18,10 +18,10 @@ static Atomic<int> s_next_fifo_id = 1;
 
 RefPtr<FIFO> FIFO::try_create(UserID uid)
 {
-    auto buffer = DoubleBuffer::try_create();
-    if (buffer)
-        return adopt_ref_if_nonnull(new (nothrow) FIFO(uid, buffer.release_nonnull()));
-    return {};
+    auto buffer_or_error = DoubleBuffer::try_create();
+    if (buffer_or_error.is_error())
+        return {};
+    return adopt_ref_if_nonnull(new (nothrow) FIFO(uid, buffer_or_error.release_value()));
 }
 
 KResultOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction(FIFO::Direction direction)

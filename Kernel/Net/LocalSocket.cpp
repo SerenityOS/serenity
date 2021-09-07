@@ -36,16 +36,9 @@ void LocalSocket::for_each(Function<void(const LocalSocket&)> callback)
 
 KResultOr<NonnullRefPtr<LocalSocket>> LocalSocket::try_create(int type)
 {
-    auto client_buffer = DoubleBuffer::try_create();
-    if (!client_buffer)
-        return ENOMEM;
-    auto server_buffer = DoubleBuffer::try_create();
-    if (!server_buffer)
-        return ENOMEM;
-    auto socket = adopt_ref_if_nonnull(new (nothrow) LocalSocket(type, client_buffer.release_nonnull(), server_buffer.release_nonnull()));
-    if (socket)
-        return socket.release_nonnull();
-    return ENOMEM;
+    auto client_buffer = TRY(DoubleBuffer::try_create());
+    auto server_buffer = TRY(DoubleBuffer::try_create());
+    return adopt_nonnull_ref_or_enomem(new (nothrow) LocalSocket(type, move(client_buffer), move(server_buffer)));
 }
 
 KResultOr<SocketPair> LocalSocket::try_create_connected_pair(int type)
