@@ -581,7 +581,7 @@ bool Process::dump_perfcore()
         return false;
     }
     auto builder = builder_or_error.release_value();
-    if (!m_perf_event_buffer->to_json(builder)) {
+    if (m_perf_event_buffer->to_json(builder).is_error()) {
         dbgln("Failed to generate perfcore for pid {}: Could not serialize performance events to JSON.", pid().value());
         return false;
     }
