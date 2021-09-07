@@ -9,7 +9,7 @@
 #include <AK/WeakPtr.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Memory/AllocationStrategy.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PageDirectory.h>
@@ -162,7 +162,7 @@ struct RequiredLoadRange {
     FlatPtr end { 0 };
 };
 
-static KResultOr<RequiredLoadRange> get_required_load_range(FileDescription& program_description)
+static KResultOr<RequiredLoadRange> get_required_load_range(OpenFileDescription& program_description)
 {
     auto& inode = *(program_description.inode());
     auto vmobject = TRY(Memory::SharedInodeVMObject::try_create_with_inode(inode));
@@ -192,7 +192,7 @@ static KResultOr<RequiredLoadRange> get_required_load_range(FileDescription& pro
     return range;
 };
 
-static KResultOr<FlatPtr> get_load_offset(const ElfW(Ehdr) & main_program_header, FileDescription& main_program_description, FileDescription* interpreter_description)
+static KResultOr<FlatPtr> get_load_offset(const ElfW(Ehdr) & main_program_header, OpenFileDescription& main_program_description, OpenFileDescription* interpreter_description)
 {
     constexpr FlatPtr load_range_start = 0x08000000;
     constexpr FlatPtr load_range_size = 65536 * PAGE_SIZE; // 2**16 * PAGE_SIZE = 256MB
@@ -251,7 +251,7 @@ enum class ShouldAllowSyscalls {
     Yes,
 };
 
-static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> new_space, FileDescription& object_description,
+static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> new_space, OpenFileDescription& object_description,
     FlatPtr load_offset, ShouldAllocateTls should_allocate_tls, ShouldAllowSyscalls should_allow_syscalls)
 {
     auto& inode = *(object_description.inode());
@@ -404,8 +404,8 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
 }
 
 KResultOr<LoadResult>
-Process::load(NonnullRefPtr<FileDescription> main_program_description,
-    RefPtr<FileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header)
+Process::load(NonnullRefPtr<OpenFileDescription> main_program_description,
+    RefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header)
 {
     auto new_space = TRY(Memory::AddressSpace::try_create(nullptr));
 
@@ -433,8 +433,8 @@ Process::load(NonnullRefPtr<FileDescription> main_program_description,
     return interpreter_load_result;
 }
 
-KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment,
-    RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header)
+KResult Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, Vector<String> arguments, Vector<String> environment,
+    RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header)
 {
     VERIFY(is_user_process());
     VERIFY(!Processor::in_critical());
@@ -707,7 +707,7 @@ static KResultOr<Vector<String>> find_shebang_interpreter_for_executable(char co
     return ENOEXEC;
 }
 
-KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size)
+KResultOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size)
 {
     // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
     String interpreter_path;

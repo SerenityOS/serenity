@@ -18,13 +18,13 @@ MouseDevice::~MouseDevice()
 {
 }
 
-bool MouseDevice::can_read(const FileDescription&, size_t) const
+bool MouseDevice::can_read(const OpenFileDescription&, size_t) const
 {
     SpinlockLocker lock(m_queue_lock);
     return !m_queue.is_empty();
 }
 
-KResultOr<size_t> MouseDevice::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> MouseDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     VERIFY(size > 0);
     size_t nread = 0;
@@ -48,7 +48,7 @@ KResultOr<size_t> MouseDevice::read(FileDescription&, u64, UserOrKernelBuffer& b
     return nread;
 }
 
-KResultOr<size_t> MouseDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t)
+KResultOr<size_t> MouseDevice::write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t)
 {
     return 0;
 }

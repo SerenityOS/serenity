@@ -60,7 +60,7 @@ Memory::MappedROM map_ebda();
 
 class BIOSSysFSComponent : public SysFSComponent {
 public:
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const override;
+    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
 
 protected:
     virtual OwnPtr<KBuffer> try_to_generate_buffer() const = 0;

@@ -84,12 +84,12 @@ DevPtsFSInode::~DevPtsFSInode()
 {
 }
 
-KResultOr<size_t> DevPtsFSInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const
+KResultOr<size_t> DevPtsFSInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
 {
     VERIFY_NOT_REACHED();
 }
 
-KResultOr<size_t> DevPtsFSInode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, FileDescription*)
+KResultOr<size_t> DevPtsFSInode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*)
 {
     VERIFY_NOT_REACHED();
 }

@@ -60,7 +60,7 @@ PCIDeviceAttributeSysFSComponent::PCIDeviceAttributeSysFSComponent(String name, 
 {
 }
 
-KResultOr<size_t> PCIDeviceAttributeSysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription*) const
+KResultOr<size_t> PCIDeviceAttributeSysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     auto blob = try_to_generate_buffer();
     if (!blob)

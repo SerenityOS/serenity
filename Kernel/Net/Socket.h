@@ -23,7 +23,7 @@ enum class ShouldBlock {
     Yes = 1
 };
 
-class FileDescription;
+class OpenFileDescription;
 
 class Socket : public File {
 public:
@@ -68,7 +68,7 @@ public:
     SetupState setup_state() const { return m_setup_state; }
     void set_setup_state(SetupState setup_state);
 
-    virtual Role role(const FileDescription&) const { return m_role; }
+    virtual Role role(const OpenFileDescription&) const { return m_role; }
 
     bool is_connected() const { return m_connected; }
     void set_connected(bool);
@@ -79,17 +79,17 @@ public:
     KResult shutdown(int how);
 
     virtual KResult bind(Userspace<const sockaddr*>, socklen_t) = 0;
-    virtual KResult connect(FileDescription&, Userspace<const sockaddr*>, socklen_t, ShouldBlock) = 0;
+    virtual KResult connect(OpenFileDescription&, Userspace<const sockaddr*>, socklen_t, ShouldBlock) = 0;
     virtual KResult listen(size_t) = 0;
     virtual void get_local_address(sockaddr*, socklen_t*) = 0;
     virtual void get_peer_address(sockaddr*, socklen_t*) = 0;
     virtual bool is_local() const { return false; }
     virtual bool is_ipv4() const { return false; }
-    virtual KResultOr<size_t> sendto(FileDescription&, const UserOrKernelBuffer&, size_t, int flags, Userspace<const sockaddr*>, socklen_t) = 0;
-    virtual KResultOr<size_t> recvfrom(FileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) = 0;
+    virtual KResultOr<size_t> sendto(OpenFileDescription&, const UserOrKernelBuffer&, size_t, int flags, Userspace<const sockaddr*>, socklen_t) = 0;
+    virtual KResultOr<size_t> recvfrom(OpenFileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) = 0;
 
     virtual KResult setsockopt(int level, int option, Userspace<const void*>, socklen_t);
-    virtual KResult getsockopt(FileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>);
+    virtual KResult getsockopt(OpenFileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>);
 
     ProcessID origin_pid() const { return m_origin.pid; }
     UserID origin_uid() const { return m_origin.uid; }
@@ -102,10 +102,10 @@ public:
     Mutex& mutex() { return m_mutex; }
 
     // ^File
-    virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override final;
-    virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override final;
+    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override final;
+    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override final;
     virtual KResult stat(::stat&) const override;
-    virtual String absolute_path(const FileDescription&) const override = 0;
+    virtual String absolute_path(const OpenFileDescription&) const override = 0;
 
     bool has_receive_timeout() const { return m_receive_timeout != Time::zero(); }
     const Time& receive_timeout() const { return m_receive_timeout; }

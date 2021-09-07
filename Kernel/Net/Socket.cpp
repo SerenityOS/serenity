@@ -6,7 +6,7 @@
 
 #include <AK/StringView.h>
 #include <Kernel/Debug.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Net/IPv4Socket.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Net/NetworkingManagement.h>
@@ -133,7 +133,7 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
     }
 }
 
-KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)
+KResult Socket::getsockopt(OpenFileDescription&, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)
 {
     socklen_t size;
     TRY(copy_from_user(&size, value_size.unsafe_userspace_ptr()));
@@ -199,7 +199,7 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<vo
     }
 }
 
-KResultOr<size_t> Socket::read(FileDescription& description, u64, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> Socket::read(OpenFileDescription& description, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     if (is_shut_down_for_reading())
         return 0;
@@ -207,7 +207,7 @@ KResultOr<size_t> Socket::read(FileDescription& description, u64, UserOrKernelBu
     return recvfrom(description, buffer, size, 0, {}, 0, t);
 }
 
-KResultOr<size_t> Socket::write(FileDescription& description, u64, const UserOrKernelBuffer& data, size_t size)
+KResultOr<size_t> Socket::write(OpenFileDescription& description, u64, const UserOrKernelBuffer& data, size_t size)
 {
     if (is_shut_down_for_writing())
         return set_so_error(EPIPE);

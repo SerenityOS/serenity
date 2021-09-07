@@ -86,12 +86,12 @@ void ConsolePort::handle_queue_update(Badge<VirtIO::Console>, u16 queue_index)
     }
 }
 
-bool ConsolePort::can_read(const FileDescription&, size_t) const
+bool ConsolePort::can_read(const OpenFileDescription&, size_t) const
 {
     return m_receive_buffer->used_bytes() > 0;
 }
 
-KResultOr<size_t> ConsolePort::read(FileDescription& desc, u64, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> ConsolePort::read(OpenFileDescription& desc, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     if (!size)
         return 0;
@@ -119,12 +119,12 @@ KResultOr<size_t> ConsolePort::read(FileDescription& desc, u64, UserOrKernelBuff
     return bytes_copied;
 }
 
-bool ConsolePort::can_write(const FileDescription&, size_t) const
+bool ConsolePort::can_write(const OpenFileDescription&, size_t) const
 {
     return m_console.get_queue(m_transmit_queue).has_free_slots() && m_transmit_buffer->has_space();
 }
 
-KResultOr<size_t> ConsolePort::write(FileDescription& desc, u64, const UserOrKernelBuffer& data, size_t size)
+KResultOr<size_t> ConsolePort::write(OpenFileDescription& desc, u64, const UserOrKernelBuffer& data, size_t size)
 {
     if (!size)
         return 0;
@@ -163,7 +163,7 @@ String ConsolePort::device_name() const
     return String::formatted("hvc{}p{}", m_console.device_id(), m_port);
 }
 
-KResultOr<NonnullRefPtr<FileDescription>> ConsolePort::open(int options)
+KResultOr<NonnullRefPtr<OpenFileDescription>> ConsolePort::open(int options)
 {
     if (!m_open)
         m_console.send_open_control_message(m_port, true);

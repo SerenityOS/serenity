@@ -18,17 +18,17 @@
 
 namespace Kernel {
 
-class FileDescriptionData {
+class OpenFileDescriptionData {
 public:
-    virtual ~FileDescriptionData() = default;
+    virtual ~OpenFileDescriptionData() = default;
 };
 
-class FileDescription : public RefCounted<FileDescription> {
-    MAKE_SLAB_ALLOCATED(FileDescription)
+class OpenFileDescription : public RefCounted<OpenFileDescription> {
+    MAKE_SLAB_ALLOCATED(OpenFileDescription)
 public:
-    static KResultOr<NonnullRefPtr<FileDescription>> try_create(Custody&);
-    static KResultOr<NonnullRefPtr<FileDescription>> try_create(File&);
-    ~FileDescription();
+    static KResultOr<NonnullRefPtr<OpenFileDescription>> try_create(Custody&);
+    static KResultOr<NonnullRefPtr<OpenFileDescription>> try_create(File&);
+    ~OpenFileDescription();
 
     Thread::FileBlocker::BlockFlags should_unblock(Thread::FileBlocker::BlockFlags) const;
 
@@ -116,7 +116,7 @@ public:
     FIFO::Direction fifo_direction() const { return m_fifo_direction; }
     void set_fifo_direction(Badge<FIFO>, FIFO::Direction direction) { m_fifo_direction = direction; }
 
-    OwnPtr<FileDescriptionData>& data() { return m_data; }
+    OwnPtr<OpenFileDescriptionData>& data() { return m_data; }
 
     void set_original_inode(Badge<VirtualFileSystem>, NonnullRefPtr<Inode>&& inode) { m_inode = move(inode); }
 
@@ -133,7 +133,7 @@ public:
 
 private:
     friend class VirtualFileSystem;
-    explicit FileDescription(File&);
+    explicit OpenFileDescription(File&);
 
     KResult attach();
 
@@ -148,7 +148,7 @@ private:
 
     off_t m_current_offset { 0 };
 
-    OwnPtr<FileDescriptionData> m_data;
+    OwnPtr<OpenFileDescriptionData> m_data;
 
     u32 m_file_flags { 0 };
 
@@ -160,7 +160,7 @@ private:
     bool m_direct : 1 { false };
     FIFO::Direction m_fifo_direction { FIFO::Direction::Neither };
 
-    Mutex m_lock { "FileDescription" };
+    Mutex m_lock { "OpenFileDescription" };
 };
 
 }

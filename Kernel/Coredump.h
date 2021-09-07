@@ -21,8 +21,8 @@ public:
     KResult write();
 
 private:
-    Coredump(NonnullRefPtr<Process>, NonnullRefPtr<FileDescription>);
-    static KResultOr<NonnullRefPtr<FileDescription>> try_create_target_file(Process const&, StringView output_path);
+    Coredump(NonnullRefPtr<Process>, NonnullRefPtr<OpenFileDescription>);
+    static KResultOr<NonnullRefPtr<OpenFileDescription>> try_create_target_file(Process const&, StringView output_path);
 
     KResult write_elf_header();
     KResult write_program_headers(size_t notes_size);
@@ -36,7 +36,7 @@ private:
     KResult create_notes_metadata_data(auto&) const;
 
     NonnullRefPtr<Process> m_process;
-    NonnullRefPtr<FileDescription> m_description;
+    NonnullRefPtr<OpenFileDescription> m_description;
     const size_t m_num_program_headers;
 };
 

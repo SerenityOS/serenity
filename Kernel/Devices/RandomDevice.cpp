@@ -24,12 +24,12 @@ UNMAP_AFTER_INIT RandomDevice::~RandomDevice()
 {
 }
 
-bool RandomDevice::can_read(const FileDescription&, size_t) const
+bool RandomDevice::can_read(const OpenFileDescription&, size_t) const
 {
     return true;
 }
 
-KResultOr<size_t> RandomDevice::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> RandomDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     return buffer.write_buffered<256>(size, [&](Bytes bytes) {
         get_good_random_bytes(bytes);
@@ -37,7 +37,7 @@ KResultOr<size_t> RandomDevice::read(FileDescription&, u64, UserOrKernelBuffer& 
     });
 }
 
-KResultOr<size_t> RandomDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t size)
+KResultOr<size_t> RandomDevice::write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t size)
 {
     // FIXME: Use input for entropy? I guess that could be a neat feature?
     return size;

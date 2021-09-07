@@ -11,9 +11,9 @@
 #include <AK/StringView.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <Kernel/FileSystem/Custody.h>
-#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
@@ -45,7 +45,7 @@ void Inode::sync()
     }
 }
 
-KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(FileDescription* description) const
+KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(OpenFileDescription* description) const
 {
     KBufferBuilder builder;
 
@@ -267,7 +267,7 @@ static inline bool range_overlap(T start1, T len1, T start2, T len2)
     return ((start1 < start2 + len2) || len2 == 0) && ((start2 < start1 + len1) || len1 == 0);
 }
 
-static inline KResult normalize_flock(FileDescription const& description, flock& lock)
+static inline KResult normalize_flock(OpenFileDescription const& description, flock& lock)
 {
     off_t start;
     switch (lock.l_whence) {
@@ -287,7 +287,7 @@ static inline KResult normalize_flock(FileDescription const& description, flock&
     return KSuccess;
 }
 
-KResult Inode::can_apply_flock(FileDescription const& description, flock const& new_lock) const
+KResult Inode::can_apply_flock(OpenFileDescription const& description, flock const& new_lock) const
 {
     VERIFY(new_lock.l_whence == SEEK_SET);
 
@@ -314,7 +314,7 @@ KResult Inode::can_apply_flock(FileDescription const& description, flock const& 
     return KSuccess;
 }
 
-KResult Inode::apply_flock(Process const& process, FileDescription const& description, Userspace<flock const*> input_lock)
+KResult Inode::apply_flock(Process const& process, OpenFileDescription const& description, Userspace<flock const*> input_lock)
 {
     flock new_lock = {};
     TRY(copy_from_user(&new_lock, input_lock));
@@ -338,7 +338,7 @@ KResult Inode::apply_flock(Process const& process, FileDescription const& descri
     return KSuccess;
 }
 
-KResult Inode::get_flock(FileDescription const& description, Userspace<flock*> reference_lock) const
+KResult Inode::get_flock(OpenFileDescription const& description, Userspace<flock*> reference_lock) const
 {
     flock lookup = {};
     TRY(copy_from_user(&lookup, reference_lock));
@@ -360,7 +360,7 @@ KResult Inode::get_flock(FileDescription const& description, Userspace<flock*> r
     return copy_to_user(reference_lock, &lookup);
 }
 
-void Inode::remove_flocks_for_description(FileDescription const& description)
+void Inode::remove_flocks_for_description(OpenFileDescription const& description)
 {
     MutexLocker locker(m_inode_lock);
 

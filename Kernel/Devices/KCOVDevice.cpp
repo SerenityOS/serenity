@@ -8,7 +8,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/Devices/KCOVInstance.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <LibC/sys/ioctl_numbers.h>
 
 #include <Kernel/Panic.h>
@@ -61,7 +61,7 @@ void KCOVDevice::free_process()
     delete kcov_instance;
 }
 
-KResultOr<NonnullRefPtr<FileDescription>> KCOVDevice::open(int options)
+KResultOr<NonnullRefPtr<OpenFileDescription>> KCOVDevice::open(int options)
 {
     auto pid = Process::current().pid();
     if (proc_instance->get(pid).has_value())
@@ -73,7 +73,7 @@ KResultOr<NonnullRefPtr<FileDescription>> KCOVDevice::open(int options)
     return File::open(options);
 }
 
-KResult KCOVDevice::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
+KResult KCOVDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
     KResult return_value = KSuccess;
     auto thread = Thread::current();
@@ -127,7 +127,7 @@ KResult KCOVDevice::ioctl(FileDescription&, unsigned request, Userspace<void*> a
     return return_value;
 }
 
-KResultOr<Memory::Region*> KCOVDevice::mmap(Process& process, FileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+KResultOr<Memory::Region*> KCOVDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     auto pid = process.pid();
     auto maybe_kcov_instance = proc_instance->get(pid);

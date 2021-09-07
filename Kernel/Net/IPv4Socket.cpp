@@ -7,7 +7,7 @@
 #include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/Debug.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/ICMP.h>
 #include <Kernel/Net/IPv4.h>
@@ -28,7 +28,7 @@ namespace Kernel {
 
 static Singleton<MutexProtected<IPv4Socket::List>> s_all_sockets;
 
-using BlockFlags = Thread::FileDescriptionBlocker::BlockFlags;
+using BlockFlags = Thread::OpenFileDescriptionBlocker::BlockFlags;
 
 MutexProtected<IPv4Socket::List>& IPv4Socket::all_sockets()
 {
@@ -141,7 +141,7 @@ KResult IPv4Socket::listen(size_t backlog)
     return protocol_listen(result.did_allocate);
 }
 
-KResult IPv4Socket::connect(FileDescription& description, Userspace<const sockaddr*> address, socklen_t address_size, ShouldBlock should_block)
+KResult IPv4Socket::connect(OpenFileDescription& description, Userspace<const sockaddr*> address, socklen_t address_size, ShouldBlock should_block)
 {
     if (address_size != sizeof(sockaddr_in))
         return set_so_error(EINVAL);
@@ -166,7 +166,7 @@ KResult IPv4Socket::connect(FileDescription& description, Userspace<const sockad
     return protocol_connect(description, should_block);
 }
 
-bool IPv4Socket::can_read(const FileDescription&, size_t) const
+bool IPv4Socket::can_read(const OpenFileDescription&, size_t) const
 {
     if (m_role == Role::Listener)
         return can_accept();
@@ -175,7 +175,7 @@ bool IPv4Socket::can_read(const FileDescription&, size_t) const
     return m_can_read;
 }
 
-bool IPv4Socket::can_write(const FileDescription&, size_t) const
+bool IPv4Socket::can_write(const OpenFileDescription&, size_t) const
 {
     return true;
 }
@@ -192,7 +192,7 @@ PortAllocationResult IPv4Socket::allocate_local_port_if_needed()
     return { m_local_port, true };
 }
 
-KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer& data, size_t data_length, [[maybe_unused]] int flags, Userspace<const sockaddr*> addr, socklen_t addr_length)
+KResultOr<size_t> IPv4Socket::sendto(OpenFileDescription&, const UserOrKernelBuffer& data, size_t data_length, [[maybe_unused]] int flags, Userspace<const sockaddr*> addr, socklen_t addr_length)
 {
     MutexLocker locker(mutex());
 
@@ -251,7 +251,7 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
     return nsent_or_error;
 }
 
-KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>)
+KResultOr<size_t> IPv4Socket::receive_byte_buffered(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>)
 {
     MutexLocker locker(mutex());
     if (m_receive_buffer->is_empty()) {
@@ -287,7 +287,7 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description
     return nreceived_or_error;
 }
 
-KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> addr, Userspace<socklen_t*> addr_length, Time& packet_timestamp)
+KResultOr<size_t> IPv4Socket::receive_packet_buffered(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> addr, Userspace<socklen_t*> addr_length, Time& packet_timestamp)
 {
     MutexLocker locker(mutex());
     ReceivedPacket packet;
@@ -379,7 +379,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
     return protocol_receive(ReadonlyBytes { packet.data.value().data(), packet.data.value().size() }, buffer, buffer_length, flags);
 }
 
-KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> user_addr, Userspace<socklen_t*> user_addr_length, Time& packet_timestamp)
+KResultOr<size_t> IPv4Socket::recvfrom(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> user_addr, Userspace<socklen_t*> user_addr_length, Time& packet_timestamp)
 {
     if (user_addr_length) {
         socklen_t addr_length;
@@ -450,7 +450,7 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
     return true;
 }
 
-String IPv4Socket::absolute_path(const FileDescription&) const
+String IPv4Socket::absolute_path(const OpenFileDescription&) const
 {
     if (m_role == Role::None)
         return "socket";
@@ -536,7 +536,7 @@ KResult IPv4Socket::setsockopt(int level, int option, Userspace<const void*> use
     }
 }
 
-KResult IPv4Socket::getsockopt(FileDescription& description, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)
+KResult IPv4Socket::getsockopt(OpenFileDescription& description, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)
 {
     if (level != IPPROTO_IP)
         return Socket::getsockopt(description, level, option, value, value_size);
@@ -563,7 +563,7 @@ KResult IPv4Socket::getsockopt(FileDescription& description, int level, int opti
     }
 }
 
-KResult IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
+KResult IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(inet);
 

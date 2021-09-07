@@ -41,7 +41,7 @@ void TTY::set_default_termios()
     memcpy(m_termios.c_cc, ttydefchars, sizeof(ttydefchars));
 }
 
-KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> TTY::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     if (Process::current().pgid() != pgid()) {
         // FIXME: Should we propagate this error path somehow?
@@ -80,7 +80,7 @@ KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, s
     return result;
 }
 
-KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> TTY::write(OpenFileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
 {
     if (m_termios.c_lflag & TOSTOP && Process::current().pgid() != pgid()) {
         [[maybe_unused]] auto rc = Process::current().send_signal(SIGTTOU, nullptr);
@@ -139,7 +139,7 @@ void TTY::process_output(u8 ch, Functor put_char)
     }
 }
 
-bool TTY::can_read(const FileDescription&, size_t) const
+bool TTY::can_read(const OpenFileDescription&, size_t) const
 {
     if (in_canonical_mode()) {
         return m_available_lines > 0;
@@ -147,7 +147,7 @@ bool TTY::can_read(const FileDescription&, size_t) const
     return !m_input_buffer.is_empty();
 }
 
-bool TTY::can_write(const FileDescription&, size_t) const
+bool TTY::can_write(const OpenFileDescription&, size_t) const
 {
     return true;
 }
@@ -454,7 +454,7 @@ KResult TTY::set_termios(const termios& t)
     return rc;
 }
 
-KResult TTY::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
+KResult TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(tty);
     auto& current_process = Process::current();

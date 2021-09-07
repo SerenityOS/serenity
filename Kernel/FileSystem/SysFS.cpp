@@ -96,7 +96,7 @@ SysFSInode::SysFSInode(SysFS const& fs, SysFSComponent const& component)
 {
 }
 
-void SysFSInode::did_seek(FileDescription& description, off_t new_offset)
+void SysFSInode::did_seek(OpenFileDescription& description, off_t new_offset)
 {
     if (new_offset != 0)
         return;
@@ -107,12 +107,12 @@ void SysFSInode::did_seek(FileDescription& description, off_t new_offset)
     }
 }
 
-KResult SysFSInode::attach(FileDescription& description)
+KResult SysFSInode::attach(OpenFileDescription& description)
 {
     return m_associated_component->refresh_data(description);
 }
 
-KResultOr<size_t> SysFSInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* fd) const
+KResultOr<size_t> SysFSInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* fd) const
 {
     return m_associated_component->read_bytes(offset, count, buffer, fd);
 }
@@ -144,7 +144,7 @@ void SysFSInode::flush_metadata()
 {
 }
 
-KResultOr<size_t> SysFSInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, FileDescription* fd)
+KResultOr<size_t> SysFSInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription* fd)
 {
     return m_associated_component->write_bytes(offset, count, buffer, fd);
 }

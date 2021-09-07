@@ -24,7 +24,7 @@ public:
     void flush_writes_impl();
 
 protected:
-    explicit BlockBasedFileSystem(FileDescription&);
+    explicit BlockBasedFileSystem(OpenFileDescription&);
 
     KResult read_block(BlockIndex, UserOrKernelBuffer*, size_t count, size_t offset = 0, bool allow_cache = true) const;
     KResult read_blocks(BlockIndex, unsigned count, UserOrKernelBuffer&, bool allow_cache = true) const;

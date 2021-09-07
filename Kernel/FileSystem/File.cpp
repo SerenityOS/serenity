@@ -7,7 +7,7 @@
 #include <AK/StringView.h>
 #include <AK/Userspace.h>
 #include <Kernel/FileSystem/File.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
@@ -28,9 +28,9 @@ bool File::unref() const
     return true;
 }
 
-KResultOr<NonnullRefPtr<FileDescription>> File::open(int options)
+KResultOr<NonnullRefPtr<OpenFileDescription>> File::open(int options)
 {
-    auto description = FileDescription::try_create(*this);
+    auto description = OpenFileDescription::try_create(*this);
     if (!description.is_error()) {
         description.value()->set_rw_mode(options);
         description.value()->set_file_flags(options);
@@ -43,23 +43,23 @@ KResult File::close()
     return KSuccess;
 }
 
-KResult File::ioctl(FileDescription&, unsigned, Userspace<void*>)
+KResult File::ioctl(OpenFileDescription&, unsigned, Userspace<void*>)
 {
     return ENOTTY;
 }
 
-KResultOr<Memory::Region*> File::mmap(Process&, FileDescription&, Memory::VirtualRange const&, u64, int, bool)
+KResultOr<Memory::Region*> File::mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64, int, bool)
 {
     return ENODEV;
 }
 
-KResult File::attach(FileDescription&)
+KResult File::attach(OpenFileDescription&)
 {
     m_attach_count++;
     return KSuccess;
 }
 
-void File::detach(FileDescription&)
+void File::detach(OpenFileDescription&)
 {
     m_attach_count--;
 }

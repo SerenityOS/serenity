@@ -606,39 +606,39 @@ public:
         virtual bool unblock_if_conditions_are_met(bool, void*) = 0;
     };
 
-    class FileDescriptionBlocker : public FileBlocker {
+    class OpenFileDescriptionBlocker : public FileBlocker {
     public:
-        const FileDescription& blocked_description() const;
+        const OpenFileDescription& blocked_description() const;
 
         virtual bool unblock_if_conditions_are_met(bool, void*) override;
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
         virtual bool setup_blocker() override;
 
     protected:
-        explicit FileDescriptionBlocker(FileDescription&, BlockFlags, BlockFlags&);
+        explicit OpenFileDescriptionBlocker(OpenFileDescription&, BlockFlags, BlockFlags&);
 
     private:
-        NonnullRefPtr<FileDescription> m_blocked_description;
+        NonnullRefPtr<OpenFileDescription> m_blocked_description;
         const BlockFlags m_flags;
         BlockFlags& m_unblocked_flags;
         bool m_did_unblock { false };
     };
 
-    class AcceptBlocker final : public FileDescriptionBlocker {
+    class AcceptBlocker final : public OpenFileDescriptionBlocker {
     public:
-        explicit AcceptBlocker(FileDescription&, BlockFlags&);
+        explicit AcceptBlocker(OpenFileDescription&, BlockFlags&);
         virtual StringView state_string() const override { return "Accepting"sv; }
     };
 
-    class ConnectBlocker final : public FileDescriptionBlocker {
+    class ConnectBlocker final : public OpenFileDescriptionBlocker {
     public:
-        explicit ConnectBlocker(FileDescription&, BlockFlags&);
+        explicit ConnectBlocker(OpenFileDescription&, BlockFlags&);
         virtual StringView state_string() const override { return "Connecting"sv; }
     };
 
-    class WriteBlocker final : public FileDescriptionBlocker {
+    class WriteBlocker final : public OpenFileDescriptionBlocker {
     public:
-        explicit WriteBlocker(FileDescription&, BlockFlags&);
+        explicit WriteBlocker(OpenFileDescription&, BlockFlags&);
         virtual StringView state_string() const override { return "Writing"sv; }
         virtual const BlockTimeout& override_timeout(const BlockTimeout&) override;
 
@@ -646,9 +646,9 @@ public:
         BlockTimeout m_timeout;
     };
 
-    class ReadBlocker final : public FileDescriptionBlocker {
+    class ReadBlocker final : public OpenFileDescriptionBlocker {
     public:
-        explicit ReadBlocker(FileDescription&, BlockFlags&);
+        explicit ReadBlocker(OpenFileDescription&, BlockFlags&);
         virtual StringView state_string() const override { return "Reading"sv; }
         virtual const BlockTimeout& override_timeout(const BlockTimeout&) override;
 
@@ -676,7 +676,7 @@ public:
     class SelectBlocker final : public FileBlocker {
     public:
         struct FDInfo {
-            NonnullRefPtr<FileDescription> description;
+            NonnullRefPtr<OpenFileDescription> description;
             BlockFlags block_flags { BlockFlags::None };
             BlockFlags unblocked_flags { BlockFlags::None };
         };

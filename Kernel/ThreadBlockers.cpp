@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Debug.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
@@ -195,20 +195,20 @@ bool Thread::FutexBlocker::unblock(bool force)
     return true;
 }
 
-Thread::FileDescriptionBlocker::FileDescriptionBlocker(FileDescription& description, BlockFlags flags, BlockFlags& unblocked_flags)
+Thread::OpenFileDescriptionBlocker::OpenFileDescriptionBlocker(OpenFileDescription& description, BlockFlags flags, BlockFlags& unblocked_flags)
     : m_blocked_description(description)
     , m_flags(flags)
     , m_unblocked_flags(unblocked_flags)
 {
 }
 
-bool Thread::FileDescriptionBlocker::setup_blocker()
+bool Thread::OpenFileDescriptionBlocker::setup_blocker()
 {
     m_unblocked_flags = BlockFlags::None;
     return add_to_blocker_set(m_blocked_description->blocker_set());
 }
 
-bool Thread::FileDescriptionBlocker::unblock_if_conditions_are_met(bool from_add_blocker, void*)
+bool Thread::OpenFileDescriptionBlocker::unblock_if_conditions_are_met(bool from_add_blocker, void*)
 {
     auto unblock_flags = m_blocked_description->should_unblock(m_flags);
     if (unblock_flags == BlockFlags::None)
@@ -227,7 +227,7 @@ bool Thread::FileDescriptionBlocker::unblock_if_conditions_are_met(bool from_add
     return true;
 }
 
-void Thread::FileDescriptionBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
+void Thread::OpenFileDescriptionBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
 {
     if (reason == UnblockImmediatelyReason::UnblockConditionAlreadyMet)
         return;
@@ -247,23 +247,23 @@ void Thread::FileDescriptionBlocker::will_unblock_immediately_without_blocking(U
     unblock_if_conditions_are_met(false, nullptr);
 }
 
-const FileDescription& Thread::FileDescriptionBlocker::blocked_description() const
+const OpenFileDescription& Thread::OpenFileDescriptionBlocker::blocked_description() const
 {
     return m_blocked_description;
 }
 
-Thread::AcceptBlocker::AcceptBlocker(FileDescription& description, BlockFlags& unblocked_flags)
-    : FileDescriptionBlocker(description, BlockFlags::Accept | BlockFlags::Exception, unblocked_flags)
+Thread::AcceptBlocker::AcceptBlocker(OpenFileDescription& description, BlockFlags& unblocked_flags)
+    : OpenFileDescriptionBlocker(description, BlockFlags::Accept | BlockFlags::Exception, unblocked_flags)
 {
 }
 
-Thread::ConnectBlocker::ConnectBlocker(FileDescription& description, BlockFlags& unblocked_flags)
-    : FileDescriptionBlocker(description, BlockFlags::Connect | BlockFlags::Exception, unblocked_flags)
+Thread::ConnectBlocker::ConnectBlocker(OpenFileDescription& description, BlockFlags& unblocked_flags)
+    : OpenFileDescriptionBlocker(description, BlockFlags::Connect | BlockFlags::Exception, unblocked_flags)
 {
 }
 
-Thread::WriteBlocker::WriteBlocker(FileDescription& description, BlockFlags& unblocked_flags)
-    : FileDescriptionBlocker(description, BlockFlags::Write | BlockFlags::Exception, unblocked_flags)
+Thread::WriteBlocker::WriteBlocker(OpenFileDescription& description, BlockFlags& unblocked_flags)
+    : OpenFileDescriptionBlocker(description, BlockFlags::Write | BlockFlags::Exception, unblocked_flags)
 {
 }
 
@@ -282,8 +282,8 @@ auto Thread::WriteBlocker::override_timeout(const BlockTimeout& timeout) -> cons
     return timeout;
 }
 
-Thread::ReadBlocker::ReadBlocker(FileDescription& description, BlockFlags& unblocked_flags)
-    : FileDescriptionBlocker(description, BlockFlags::Read | BlockFlags::Exception, unblocked_flags)
+Thread::ReadBlocker::ReadBlocker(OpenFileDescription& description, BlockFlags& unblocked_flags)
+    : OpenFileDescriptionBlocker(description, BlockFlags::Read | BlockFlags::Exception, unblocked_flags)
 {
 }
 

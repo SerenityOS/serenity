@@ -43,7 +43,7 @@ public:
     }
 };
 
-// File is the base class for anything that can be referenced by a FileDescription.
+// File is the base class for anything that can be referenced by a OpenFileDescription.
 //
 // The most important functions in File are:
 //
@@ -77,26 +77,26 @@ public:
     virtual bool unref() const;
     virtual ~File();
 
-    virtual KResultOr<NonnullRefPtr<FileDescription>> open(int options);
+    virtual KResultOr<NonnullRefPtr<OpenFileDescription>> open(int options);
     virtual KResult close();
 
-    virtual bool can_read(const FileDescription&, size_t) const = 0;
-    virtual bool can_write(const FileDescription&, size_t) const = 0;
+    virtual bool can_read(const OpenFileDescription&, size_t) const = 0;
+    virtual bool can_write(const OpenFileDescription&, size_t) const = 0;
 
-    virtual KResult attach(FileDescription&);
-    virtual void detach(FileDescription&);
-    virtual void did_seek(FileDescription&, off_t) { }
-    virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) = 0;
-    virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) = 0;
-    virtual KResult ioctl(FileDescription&, unsigned request, Userspace<void*> arg);
-    virtual KResultOr<Memory::Region*> mmap(Process&, FileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared);
+    virtual KResult attach(OpenFileDescription&);
+    virtual void detach(OpenFileDescription&);
+    virtual void did_seek(OpenFileDescription&, off_t) { }
+    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) = 0;
+    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) = 0;
+    virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg);
+    virtual KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared);
     virtual KResult stat(::stat&) const { return EBADF; }
 
-    virtual String absolute_path(const FileDescription&) const = 0;
+    virtual String absolute_path(const OpenFileDescription&) const = 0;
 
     virtual KResult truncate(u64) { return EINVAL; }
-    virtual KResult chown(FileDescription&, UserID, GroupID) { return EBADF; }
-    virtual KResult chmod(FileDescription&, mode_t) { return EBADF; }
+    virtual KResult chown(OpenFileDescription&, UserID, GroupID) { return EBADF; }
+    virtual KResult chmod(OpenFileDescription&, mode_t) { return EBADF; }
 
     virtual StringView class_name() const = 0;
 

@@ -115,13 +115,13 @@ set(KERNEL_SOURCES
     FileSystem/FIFO.cpp
     FileSystem/File.cpp
     FileSystem/FileBackedFileSystem.cpp
-    FileSystem/FileDescription.cpp
     FileSystem/FileSystem.cpp
     FileSystem/Inode.cpp
     FileSystem/InodeFile.cpp
     FileSystem/InodeWatcher.cpp
     FileSystem/ISO9660FileSystem.cpp
     FileSystem/Mount.cpp
+    FileSystem/OpenFileDescription.cpp
     FileSystem/Plan9FileSystem.cpp
     FileSystem/ProcFS.cpp
     FileSystem/SysFS.cpp
@@ -420,7 +420,7 @@ if (ENABLE_KERNEL_COVERAGE_COLLECTION)
         ../Kernel/Devices/KCOVDevice.cpp
         ../Kernel/Devices/KCOVInstance.cpp
         ../Kernel/FileSystem/File.cpp
-        ../Kernel/FileSystem/FileDescription.cpp
+        ../Kernel/FileSystem/OpenFileDescription.cpp
         ../Kernel/Heap/SlabAllocator.cpp
         ../Kernel/init.cpp
         ../Kernel/SanCov.cpp

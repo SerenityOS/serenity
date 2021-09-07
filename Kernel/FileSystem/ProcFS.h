@@ -54,8 +54,8 @@ protected:
     ProcFS const& procfs() const { return static_cast<ProcFS const&>(Inode::fs()); }
 
     // ^Inode
-    virtual KResult attach(FileDescription& description) = 0;
-    virtual void did_seek(FileDescription&, off_t) = 0;
+    virtual KResult attach(OpenFileDescription& description) = 0;
+    virtual void did_seek(OpenFileDescription&, off_t) = 0;
     virtual void flush_metadata() override final;
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override final;
     virtual KResult add_child(Inode&, const StringView& name, mode_t) override final;
@@ -77,10 +77,10 @@ protected:
     ProcFSGlobalInode(const ProcFS&, const ProcFSExposedComponent&);
 
     // ^Inode
-    virtual KResult attach(FileDescription& description) override final;
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override final;
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, FileDescription*) override final;
-    virtual void did_seek(FileDescription&, off_t) override final;
+    virtual KResult attach(OpenFileDescription& description) override final;
+    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override final;
+    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, OpenFileDescription*) override final;
+    virtual void did_seek(OpenFileDescription&, off_t) override final;
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView) override;
@@ -122,7 +122,7 @@ protected:
     ProcessID associated_pid() const { return m_pid; }
 
     // ^Inode
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, FileDescription*) override final;
+    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, OpenFileDescription*) override final;
 
 private:
     const ProcessID m_pid;
@@ -137,11 +137,11 @@ public:
 private:
     ProcFSProcessDirectoryInode(const ProcFS&, ProcessID);
     // ^Inode
-    virtual KResult attach(FileDescription& description) override;
-    virtual void did_seek(FileDescription&, off_t) override { }
+    virtual KResult attach(OpenFileDescription& description) override;
+    virtual void did_seek(OpenFileDescription&, off_t) override { }
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override final;
+    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override final;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
 };
 
@@ -154,11 +154,11 @@ public:
 private:
     ProcFSProcessSubDirectoryInode(const ProcFS&, SegmentedProcFSIndex::ProcessSubDirectory, ProcessID);
     // ^Inode
-    virtual KResult attach(FileDescription& description) override;
-    virtual void did_seek(FileDescription&, off_t) override;
+    virtual KResult attach(OpenFileDescription& description) override;
+    virtual void did_seek(OpenFileDescription&, off_t) override;
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override final;
+    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override final;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
 
     const SegmentedProcFSIndex::ProcessSubDirectory m_sub_directory_type;
@@ -177,14 +177,14 @@ private:
     ProcFSProcessPropertyInode(const ProcFS&, ThreadID, ProcessID);
     ProcFSProcessPropertyInode(const ProcFS&, unsigned, ProcessID);
     // ^Inode
-    virtual KResult attach(FileDescription& description) override;
-    virtual void did_seek(FileDescription&, off_t) override;
+    virtual KResult attach(OpenFileDescription& description) override;
+    virtual void did_seek(OpenFileDescription&, off_t) override;
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override final;
+    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override final;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override final;
 
-    KResult refresh_data(FileDescription& description);
+    KResult refresh_data(OpenFileDescription& description);
     KResult try_to_acquire_data(Process& process, KBufferBuilder& builder) const;
 
     const SegmentedProcFSIndex::ProcessSubDirectory m_parent_sub_directory_type;

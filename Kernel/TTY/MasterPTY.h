@@ -26,7 +26,7 @@ public:
     void notify_slave_closed(Badge<SlavePTY>);
     bool is_closed() const { return m_closed; }
 
-    virtual String absolute_path(const FileDescription&) const override;
+    virtual String absolute_path(const OpenFileDescription&) const override;
 
     // ^Device
     virtual mode_t required_mode() const override { return 0640; }
@@ -35,13 +35,13 @@ public:
 private:
     explicit MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer);
     // ^CharacterDevice
-    virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual bool can_read(const FileDescription&, size_t) const override;
-    virtual bool can_write(const FileDescription&, size_t) const override;
+    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
+    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
+    virtual bool can_read(const OpenFileDescription&, size_t) const override;
+    virtual bool can_write(const OpenFileDescription&, size_t) const override;
     virtual KResult close() override;
     virtual bool is_master_pty() const override { return true; }
-    virtual KResult ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override;
+    virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
     virtual StringView class_name() const override { return "MasterPTY"; }
 
     RefPtr<SlavePTY> m_slave;

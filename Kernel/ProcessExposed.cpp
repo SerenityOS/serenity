@@ -64,7 +64,7 @@ InodeIndex build_segmented_index_for_thread_stack(ProcessID pid, ThreadID thread
 
 InodeIndex build_segmented_index_for_file_description(ProcessID pid, unsigned fd)
 {
-    return build_segmented_index_with_unknown_property(pid, ProcessSubDirectory::FileDescriptions, fd);
+    return build_segmented_index_with_unknown_property(pid, ProcessSubDirectory::OpenFileDescriptions, fd);
 }
 
 }
@@ -107,7 +107,7 @@ ProcFSExposedLink::ProcFSExposedLink(StringView name)
     : ProcFSExposedComponent(name)
 {
 }
-KResultOr<size_t> ProcFSGlobalInformation::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
+KResultOr<size_t> ProcFSGlobalInformation::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
 {
     dbgln_if(PROCFS_DEBUG, "ProcFSGlobalInformation @ {}: read_bytes offset: {} count: {}", name(), offset, count);
 
@@ -135,7 +135,7 @@ KResultOr<size_t> ProcFSGlobalInformation::read_bytes(off_t offset, size_t count
     return nread;
 }
 
-KResult ProcFSGlobalInformation::refresh_data(FileDescription& description) const
+KResult ProcFSGlobalInformation::refresh_data(OpenFileDescription& description) const
 {
     MutexLocker lock(m_refresh_lock);
     auto& cached_data = description.data();
@@ -153,7 +153,7 @@ KResult ProcFSGlobalInformation::refresh_data(FileDescription& description) cons
     return KSuccess;
 }
 
-KResultOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription*) const
+KResultOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     VERIFY(offset == 0);
     MutexLocker locker(m_lock);

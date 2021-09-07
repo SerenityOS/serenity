@@ -12,7 +12,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/ext2_fs.h>
 #include <Kernel/Process.h>
 #include <Kernel/UnixTypes.h>
@@ -54,12 +54,12 @@ static unsigned divide_rounded_up(unsigned a, unsigned b)
     return (a / b) + (a % b != 0);
 }
 
-KResultOr<NonnullRefPtr<Ext2FS>> Ext2FS::try_create(FileDescription& file_description)
+KResultOr<NonnullRefPtr<Ext2FS>> Ext2FS::try_create(OpenFileDescription& file_description)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) Ext2FS(file_description));
 }
 
-Ext2FS::Ext2FS(FileDescription& file_description)
+Ext2FS::Ext2FS(OpenFileDescription& file_description)
     : BlockBasedFileSystem(file_description)
 {
 }
@@ -827,7 +827,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::get_inode(InodeIdentifier inode) const
     return new_inode;
 }
 
-KResultOr<size_t> Ext2FSInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
+KResultOr<size_t> Ext2FSInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
 {
     MutexLocker inode_locker(m_inode_lock);
     VERIFY(offset >= 0);
@@ -965,7 +965,7 @@ KResult Ext2FSInode::resize(u64 new_size)
     return KSuccess;
 }
 
-KResultOr<size_t> Ext2FSInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& data, FileDescription* description)
+KResultOr<size_t> Ext2FSInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& data, OpenFileDescription* description)
 {
     VERIFY(offset >= 0);
 

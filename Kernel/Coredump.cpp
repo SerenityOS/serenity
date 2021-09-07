@@ -11,7 +11,7 @@
 #include <AK/JsonObjectSerializer.h>
 #include <Kernel/Coredump.h>
 #include <Kernel/FileSystem/Custody.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KLexicalPath.h>
 #include <Kernel/Locking/Spinlock.h>
@@ -34,14 +34,14 @@ KResultOr<NonnullOwnPtr<Coredump>> Coredump::try_create(NonnullRefPtr<Process> p
     return adopt_nonnull_own_or_enomem(new (nothrow) Coredump(move(process), move(description)));
 }
 
-Coredump::Coredump(NonnullRefPtr<Process> process, NonnullRefPtr<FileDescription> description)
+Coredump::Coredump(NonnullRefPtr<Process> process, NonnullRefPtr<OpenFileDescription> description)
     : m_process(move(process))
     , m_description(move(description))
     , m_num_program_headers(m_process->address_space().region_count() + 1) // +1 for NOTE segment
 {
 }
 
-KResultOr<NonnullRefPtr<FileDescription>> Coredump::try_create_target_file(Process const& process, StringView output_path)
+KResultOr<NonnullRefPtr<OpenFileDescription>> Coredump::try_create_target_file(Process const& process, StringView output_path)
 {
     auto output_directory = KLexicalPath::dirname(output_path);
     auto dump_directory = TRY(VirtualFileSystem::the().open_directory(output_directory, VirtualFileSystem::the().root_custody()));

@@ -7,8 +7,8 @@
 
 #include <Kernel/API/InodeWatcherFlags.h>
 #include <Kernel/FileSystem/Custody.h>
-#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
@@ -20,7 +20,7 @@ KResultOr<FlatPtr> Process::sys$create_inode_watcher(u32 flags)
 
     auto fd_allocation = TRY(m_fds.allocate());
     auto watcher = TRY(InodeWatcher::try_create());
-    auto description = TRY(FileDescription::try_create(move(watcher)));
+    auto description = TRY(OpenFileDescription::try_create(move(watcher)));
 
     description->set_readable(true);
     if (flags & static_cast<unsigned>(InodeWatcherFlags::Nonblock))

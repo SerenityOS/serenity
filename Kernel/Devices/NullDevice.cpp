@@ -31,17 +31,17 @@ UNMAP_AFTER_INIT NullDevice::~NullDevice()
 {
 }
 
-bool NullDevice::can_read(const FileDescription&, size_t) const
+bool NullDevice::can_read(const OpenFileDescription&, size_t) const
 {
     return true;
 }
 
-KResultOr<size_t> NullDevice::read(FileDescription&, u64, UserOrKernelBuffer&, size_t)
+KResultOr<size_t> NullDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t)
 {
     return 0;
 }
 
-KResultOr<size_t> NullDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t buffer_size)
+KResultOr<size_t> NullDevice::write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t buffer_size)
 {
     return buffer_size;
 }

@@ -15,7 +15,7 @@
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/InterruptManagement.h>

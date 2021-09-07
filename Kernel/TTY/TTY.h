@@ -21,12 +21,12 @@ class TTY : public CharacterDevice {
 public:
     virtual ~TTY() override;
 
-    virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual bool can_read(const FileDescription&, size_t) const override;
-    virtual bool can_write(const FileDescription&, size_t) const override;
-    virtual KResult ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override final;
-    virtual String absolute_path(const FileDescription&) const override { return tty_name(); }
+    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
+    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
+    virtual bool can_read(const OpenFileDescription&, size_t) const override;
+    virtual bool can_write(const OpenFileDescription&, size_t) const override;
+    virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override final;
+    virtual String absolute_path(const OpenFileDescription&) const override { return tty_name(); }
 
     virtual String const& tty_name() const = 0;
 

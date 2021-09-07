@@ -46,15 +46,15 @@ public:
     InodeIdentifier identifier() const { return { fsid(), index() }; }
     virtual InodeMetadata metadata() const = 0;
 
-    KResultOr<NonnullOwnPtr<KBuffer>> read_entire(FileDescription* = nullptr) const;
+    KResultOr<NonnullOwnPtr<KBuffer>> read_entire(OpenFileDescription* = nullptr) const;
 
-    virtual KResult attach(FileDescription&) { return KSuccess; }
-    virtual void detach(FileDescription&) { }
-    virtual void did_seek(FileDescription&, off_t) { }
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const = 0;
+    virtual KResult attach(OpenFileDescription&) { return KSuccess; }
+    virtual void detach(OpenFileDescription&) { }
+    virtual void did_seek(OpenFileDescription&, off_t) { }
+    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const = 0;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const = 0;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) = 0;
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, FileDescription*) = 0;
+    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, OpenFileDescription*) = 0;
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) = 0;
     virtual KResult add_child(Inode&, const StringView& name, mode_t) = 0;
     virtual KResult remove_child(const StringView& name) = 0;
@@ -70,7 +70,7 @@ public:
     bool bind_socket(LocalSocket&);
     bool unbind_socket();
 
-    virtual FileDescription* preopen_fd() { return nullptr; };
+    virtual OpenFileDescription* preopen_fd() { return nullptr; };
 
     bool is_metadata_dirty() const { return m_metadata_dirty; }
 
@@ -96,10 +96,10 @@ public:
 
     NonnullRefPtr<FIFO> fifo();
 
-    KResult can_apply_flock(FileDescription const&, flock const&) const;
-    KResult apply_flock(Process const&, FileDescription const&, Userspace<flock const*>);
-    KResult get_flock(FileDescription const&, Userspace<flock*>) const;
-    void remove_flocks_for_description(FileDescription const&);
+    KResult can_apply_flock(OpenFileDescription const&, flock const&) const;
+    KResult apply_flock(Process const&, OpenFileDescription const&, Userspace<flock const*>);
+    KResult get_flock(OpenFileDescription const&, Userspace<flock*>) const;
+    void remove_flocks_for_description(OpenFileDescription const&);
 
 protected:
     Inode(FileSystem&, InodeIndex);
@@ -127,7 +127,7 @@ private:
         short type;
         off_t start;
         off_t len;
-        FileDescription const* owner;
+        OpenFileDescription const* owner;
         pid_t pid;
     };
 

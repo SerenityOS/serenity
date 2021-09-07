@@ -157,7 +157,7 @@ public:
 
     virtual KResult close() override;
 
-    virtual bool can_write(const FileDescription&, size_t) const override;
+    virtual bool can_write(const OpenFileDescription&, size_t) const override;
 
     static NetworkOrdered<u16> compute_tcp_checksum(IPv4Address const& source, IPv4Address const& destination, TCPPacket const&, u16 payload_size);
 
@@ -172,7 +172,7 @@ private:
 
     virtual KResultOr<size_t> protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, int flags) override;
     virtual KResultOr<size_t> protocol_send(const UserOrKernelBuffer&, size_t) override;
-    virtual KResult protocol_connect(FileDescription&, ShouldBlock) override;
+    virtual KResult protocol_connect(OpenFileDescription&, ShouldBlock) override;
     virtual KResultOr<u16> protocol_allocate_local_port() override;
     virtual bool protocol_is_disconnected() const override;
     virtual KResult protocol_bind() override;

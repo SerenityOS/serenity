@@ -25,18 +25,18 @@ UNMAP_AFTER_INIT FullDevice::~FullDevice()
 {
 }
 
-bool FullDevice::can_read(const FileDescription&, size_t) const
+bool FullDevice::can_read(const OpenFileDescription&, size_t) const
 {
     return true;
 }
 
-KResultOr<size_t> FullDevice::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> FullDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     TRY(buffer.memset(0, size));
     return size;
 }
 
-KResultOr<size_t> FullDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t size)
+KResultOr<size_t> FullDevice::write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t size)
 {
     if (size == 0)
         return 0;

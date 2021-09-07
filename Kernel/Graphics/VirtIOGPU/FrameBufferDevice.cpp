@@ -148,7 +148,7 @@ void FrameBufferDevice::set_buffer(int buffer_index)
     buffer.dirty_rect = {};
 }
 
-KResult FrameBufferDevice::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
+KResult FrameBufferDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(video);
     switch (request) {
@@ -237,7 +237,7 @@ KResult FrameBufferDevice::ioctl(FileDescription&, unsigned request, Userspace<v
     };
 }
 
-KResultOr<Memory::Region*> FrameBufferDevice::mmap(Process& process, FileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+KResultOr<Memory::Region*> FrameBufferDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     REQUIRE_PROMISE(video);
     if (!shared)

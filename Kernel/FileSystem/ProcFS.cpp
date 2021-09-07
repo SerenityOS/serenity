@@ -9,7 +9,7 @@
 #include <AK/Singleton.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Heap/kmalloc.h>
@@ -115,7 +115,7 @@ ProcFSGlobalInode::ProcFSGlobalInode(const ProcFS& fs, const ProcFSExposedCompon
 {
 }
 
-void ProcFSGlobalInode::did_seek(FileDescription& description, off_t new_offset)
+void ProcFSGlobalInode::did_seek(OpenFileDescription& description, off_t new_offset)
 {
     if (new_offset != 0)
         return;
@@ -126,12 +126,12 @@ void ProcFSGlobalInode::did_seek(FileDescription& description, off_t new_offset)
     }
 }
 
-KResult ProcFSGlobalInode::attach(FileDescription& description)
+KResult ProcFSGlobalInode::attach(OpenFileDescription& description)
 {
     return m_associated_component->refresh_data(description);
 }
 
-KResultOr<size_t> ProcFSGlobalInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* fd) const
+KResultOr<size_t> ProcFSGlobalInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* fd) const
 {
     return m_associated_component->read_bytes(offset, count, buffer, fd);
 }
@@ -164,7 +164,7 @@ InodeMetadata ProcFSGlobalInode::metadata() const
     return metadata;
 }
 
-KResultOr<size_t> ProcFSGlobalInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, FileDescription* fd)
+KResultOr<size_t> ProcFSGlobalInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, OpenFileDescription* fd)
 {
     return m_associated_component->write_bytes(offset, count, buffer, fd);
 }
@@ -236,7 +236,7 @@ ProcFSProcessAssociatedInode::ProcFSProcessAssociatedInode(const ProcFS& fs, Pro
 {
 }
 
-KResultOr<size_t> ProcFSProcessAssociatedInode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, FileDescription*)
+KResultOr<size_t> ProcFSProcessAssociatedInode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*)
 {
     VERIFY_NOT_REACHED();
 }
@@ -251,7 +251,7 @@ ProcFSProcessDirectoryInode::ProcFSProcessDirectoryInode(const ProcFS& procfs, P
 {
 }
 
-KResult ProcFSProcessDirectoryInode::attach(FileDescription&)
+KResult ProcFSProcessDirectoryInode::attach(OpenFileDescription&)
 {
     return KSuccess;
 }
@@ -274,7 +274,7 @@ InodeMetadata ProcFSProcessDirectoryInode::metadata() const
     return metadata;
 }
 
-KResultOr<size_t> ProcFSProcessDirectoryInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const
+KResultOr<size_t> ProcFSProcessDirectoryInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
 {
     VERIFY_NOT_REACHED();
 }
@@ -295,7 +295,7 @@ KResultOr<NonnullRefPtr<Inode>> ProcFSProcessDirectoryInode::lookup(StringView n
     if (!process)
         return ESRCH;
     if (name == "fd"sv)
-        return TRY(ProcFSProcessSubDirectoryInode::try_create(procfs(), SegmentedProcFSIndex::ProcessSubDirectory::FileDescriptions, associated_pid()));
+        return TRY(ProcFSProcessSubDirectoryInode::try_create(procfs(), SegmentedProcFSIndex::ProcessSubDirectory::OpenFileDescriptions, associated_pid()));
     if (name == "stacks"sv)
         return TRY(ProcFSProcessSubDirectoryInode::try_create(procfs(), SegmentedProcFSIndex::ProcessSubDirectory::Stacks, associated_pid()));
     if (name == "unveil"sv)
@@ -303,7 +303,7 @@ KResultOr<NonnullRefPtr<Inode>> ProcFSProcessDirectoryInode::lookup(StringView n
     if (name == "pledge"sv)
         return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::Pledge, associated_pid()));
     if (name == "fds"sv)
-        return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::FileDescriptions, associated_pid()));
+        return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::OpenFileDescriptions, associated_pid()));
     if (name == "exe"sv)
         return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::BinaryLink, associated_pid()));
     if (name == "cwd"sv)
@@ -326,17 +326,17 @@ ProcFSProcessSubDirectoryInode::ProcFSProcessSubDirectoryInode(const ProcFS& pro
 {
 }
 
-KResultOr<size_t> ProcFSProcessSubDirectoryInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const
+KResultOr<size_t> ProcFSProcessSubDirectoryInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
 {
     VERIFY_NOT_REACHED();
 }
 
-KResult ProcFSProcessSubDirectoryInode::attach(FileDescription&)
+KResult ProcFSProcessSubDirectoryInode::attach(OpenFileDescription&)
 {
     return KSuccess;
 }
 
-void ProcFSProcessSubDirectoryInode::did_seek(FileDescription&, off_t)
+void ProcFSProcessSubDirectoryInode::did_seek(OpenFileDescription&, off_t)
 {
     VERIFY_NOT_REACHED();
 }
@@ -366,7 +366,7 @@ KResult ProcFSProcessSubDirectoryInode::traverse_as_directory(Function<bool(File
     if (!process)
         return EINVAL;
     switch (m_sub_directory_type) {
-    case SegmentedProcFSIndex::ProcessSubDirectory::FileDescriptions:
+    case SegmentedProcFSIndex::ProcessSubDirectory::OpenFileDescriptions:
         return process->traverse_file_descriptions_directory(procfs().fsid(), move(callback));
     case SegmentedProcFSIndex::ProcessSubDirectory::Stacks:
         return process->traverse_stacks_directory(procfs().fsid(), move(callback));
@@ -383,7 +383,7 @@ KResultOr<NonnullRefPtr<Inode>> ProcFSProcessSubDirectoryInode::lookup(StringVie
     if (!process)
         return ESRCH;
     switch (m_sub_directory_type) {
-    case SegmentedProcFSIndex::ProcessSubDirectory::FileDescriptions:
+    case SegmentedProcFSIndex::ProcessSubDirectory::OpenFileDescriptions:
         return process->lookup_file_descriptions_directory(procfs(), name);
     case SegmentedProcFSIndex::ProcessSubDirectory::Stacks:
         return process->lookup_stacks_directory(procfs(), name);
@@ -414,7 +414,7 @@ ProcFSProcessPropertyInode::ProcFSProcessPropertyInode(const ProcFS& procfs, Seg
 
 ProcFSProcessPropertyInode::ProcFSProcessPropertyInode(const ProcFS& procfs, unsigned file_description_index, ProcessID pid)
     : ProcFSProcessAssociatedInode(procfs, pid, SegmentedProcFSIndex::build_segmented_index_for_file_description(pid, file_description_index))
-    , m_parent_sub_directory_type(SegmentedProcFSIndex::ProcessSubDirectory::FileDescriptions)
+    , m_parent_sub_directory_type(SegmentedProcFSIndex::ProcessSubDirectory::OpenFileDescriptions)
 {
     m_possible_data.property_index = file_description_index;
 }
@@ -426,11 +426,11 @@ ProcFSProcessPropertyInode::ProcFSProcessPropertyInode(const ProcFS& procfs, Thr
     m_possible_data.property_index = thread_stack_index.value();
 }
 
-KResult ProcFSProcessPropertyInode::attach(FileDescription& description)
+KResult ProcFSProcessPropertyInode::attach(OpenFileDescription& description)
 {
     return refresh_data(description);
 }
-void ProcFSProcessPropertyInode::did_seek(FileDescription& description, off_t offset)
+void ProcFSProcessPropertyInode::did_seek(OpenFileDescription& description, off_t offset)
 {
     if (offset != 0)
         return;
@@ -439,7 +439,7 @@ void ProcFSProcessPropertyInode::did_seek(FileDescription& description, off_t of
 
 static mode_t determine_procfs_process_inode_mode(SegmentedProcFSIndex::ProcessSubDirectory parent_sub_directory_type, SegmentedProcFSIndex::MainProcessProperty main_property)
 {
-    if (parent_sub_directory_type == SegmentedProcFSIndex::ProcessSubDirectory::FileDescriptions)
+    if (parent_sub_directory_type == SegmentedProcFSIndex::ProcessSubDirectory::OpenFileDescriptions)
         return S_IFLNK | 0400;
     if (parent_sub_directory_type == SegmentedProcFSIndex::ProcessSubDirectory::Stacks)
         return S_IFREG | 0400;
@@ -472,7 +472,7 @@ KResult ProcFSProcessPropertyInode::traverse_as_directory(Function<bool(FileSyst
 {
     VERIFY_NOT_REACHED();
 }
-KResultOr<size_t> ProcFSProcessPropertyInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
+KResultOr<size_t> ProcFSProcessPropertyInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
 {
     dbgln_if(PROCFS_DEBUG, "ProcFS ProcessInformation: read_bytes offset: {} count: {}", offset, count);
 
@@ -526,7 +526,7 @@ static KResult build_from_cached_data(KBufferBuilder& builder, ProcFSInodeData& 
 KResult ProcFSProcessPropertyInode::try_to_acquire_data(Process& process, KBufferBuilder& builder) const
 {
     // FIXME: Verify process is already ref-counted
-    if (m_parent_sub_directory_type == SegmentedProcFSIndex::ProcessSubDirectory::FileDescriptions) {
+    if (m_parent_sub_directory_type == SegmentedProcFSIndex::ProcessSubDirectory::OpenFileDescriptions) {
         TRY(process.procfs_get_file_description_link(m_possible_data.property_index, builder));
         return KSuccess;
     }
@@ -541,7 +541,7 @@ KResult ProcFSProcessPropertyInode::try_to_acquire_data(Process& process, KBuffe
         return process.procfs_get_unveil_stats(builder);
     case SegmentedProcFSIndex::MainProcessProperty::Pledge:
         return process.procfs_get_pledge_stats(builder);
-    case SegmentedProcFSIndex::MainProcessProperty::FileDescriptions:
+    case SegmentedProcFSIndex::MainProcessProperty::OpenFileDescriptions:
         return process.procfs_get_fds_stats(builder);
     case SegmentedProcFSIndex::MainProcessProperty::BinaryLink:
         return process.procfs_get_binary_link(builder);
@@ -556,7 +556,7 @@ KResult ProcFSProcessPropertyInode::try_to_acquire_data(Process& process, KBuffe
     }
 }
 
-KResult ProcFSProcessPropertyInode::refresh_data(FileDescription& description)
+KResult ProcFSProcessPropertyInode::refresh_data(OpenFileDescription& description)
 {
     // For process-specific inodes, hold the process's ptrace lock across refresh
     // and refuse to load data if the process is not dumpable.

@@ -8,7 +8,7 @@
 #include <AK/Time.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/RandomDevice.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/IPv4.h>
@@ -394,7 +394,7 @@ KResult TCPSocket::protocol_listen(bool did_allocate_port)
     return KSuccess;
 }
 
-KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock should_block)
+KResult TCPSocket::protocol_connect(OpenFileDescription& description, ShouldBlock should_block)
 {
     MutexLocker locker(mutex());
 
@@ -597,7 +597,7 @@ void TCPSocket::retransmit_packets()
     });
 }
 
-bool TCPSocket::can_write(const FileDescription& file_description, size_t size) const
+bool TCPSocket::can_write(const OpenFileDescription& file_description, size_t size) const
 {
     if (!IPv4Socket::can_write(file_description, size))
         return false;

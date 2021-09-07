@@ -26,7 +26,7 @@ public:
 protected:
     explicit SysFSUSBDeviceInformation(USB::Device& device);
 
-    virtual KResultOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription*) const override;
+    virtual KResultOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
 
     IntrusiveListNode<SysFSUSBDeviceInformation, RefPtr<SysFSUSBDeviceInformation>> m_list_node;
 
@@ -34,7 +34,7 @@ protected:
 
 private:
     KResult try_generate(KBufferBuilder&);
-    virtual KResult refresh_data(FileDescription& description) const override;
+    virtual KResult refresh_data(OpenFileDescription& description) const override;
     mutable Mutex m_lock { "SysFSUSBDeviceInformation" };
 };
 

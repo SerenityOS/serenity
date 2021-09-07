@@ -6,7 +6,7 @@
 
 #include <AK/Memory.h>
 #include <AK/StringView.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Storage/RamdiskController.h>
 #include <Kernel/Storage/RamdiskDevice.h>
 

@@ -27,17 +27,17 @@ UNMAP_AFTER_INIT MemoryDevice::~MemoryDevice()
 {
 }
 
-KResultOr<size_t> MemoryDevice::read(FileDescription&, u64, UserOrKernelBuffer&, size_t)
+KResultOr<size_t> MemoryDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t)
 {
     TODO();
 }
 
-void MemoryDevice::did_seek(FileDescription&, off_t)
+void MemoryDevice::did_seek(OpenFileDescription&, off_t)
 {
     TODO();
 }
 
-KResultOr<Memory::Region*> MemoryDevice::mmap(Process& process, FileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+KResultOr<Memory::Region*> MemoryDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     auto viewed_address = PhysicalAddress(offset);
 

@@ -19,8 +19,8 @@
 #include <AK/Weakable.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/AtomicEdgeAction.h>
-#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/UnveilNode.h>
 #include <Kernel/Forward.h>
 #include <Kernel/FutexQueue.h>
@@ -120,7 +120,7 @@ public:
 
     friend class Thread;
     friend class Coredump;
-    friend class ProcFSProcessFileDescriptions;
+    friend class ProcFSProcessOpenFileDescriptions;
 
     // Helper class to temporarily unprotect a process's protected data so you can write to it.
     class ProtectedDataMutationScope {
@@ -443,7 +443,7 @@ public:
 
     KResult exec(NonnullOwnPtr<KString> path, Vector<String> arguments, Vector<String> environment, int recusion_depth = 0);
 
-    KResultOr<LoadResult> load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header);
+    KResultOr<LoadResult> load(NonnullRefPtr<OpenFileDescription> main_program_description, RefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header);
 
     bool is_superuser() const { return euid() == 0; }
 
@@ -533,12 +533,12 @@ private:
     bool create_perf_events_buffer_if_needed();
     void delete_perf_events_buffer();
 
-    KResult do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header);
-    KResultOr<FlatPtr> do_write(FileDescription&, const UserOrKernelBuffer&, size_t);
+    KResult do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header);
+    KResultOr<FlatPtr> do_write(OpenFileDescription&, const UserOrKernelBuffer&, size_t);
 
     KResultOr<FlatPtr> do_statvfs(StringView path, statvfs* buf);
 
-    KResultOr<RefPtr<FileDescription>> find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size);
+    KResultOr<RefPtr<OpenFileDescription>> find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size);
 
     KResult do_kill(Process&, int signal);
     KResult do_killpg(ProcessGroupID pgrp, int signal);
@@ -554,7 +554,7 @@ private:
 
     void clear_futex_queues_on_exec();
 
-    void setup_socket_fd(int fd, NonnullRefPtr<FileDescription> description, int type);
+    void setup_socket_fd(int fd, NonnullRefPtr<OpenFileDescription> description, int type);
 
 public:
     NonnullRefPtr<ProcessProcFSTraits> procfs_traits() const { return *m_procfs_traits; }
@@ -599,7 +599,7 @@ private:
     OwnPtr<ThreadTracer> m_tracer;
 
 public:
-    class FileDescriptionAndFlags {
+    class OpenFileDescriptionAndFlags {
     public:
         bool is_valid() const { return !m_description.is_null(); }
         bool is_allocated() const { return m_is_allocated; }
@@ -616,30 +616,30 @@ public:
             m_is_allocated = false;
         }
 
-        FileDescription* description() { return m_description; }
-        const FileDescription* description() const { return m_description; }
+        OpenFileDescription* description() { return m_description; }
+        const OpenFileDescription* description() const { return m_description; }
         u32 flags() const { return m_flags; }
         void set_flags(u32 flags) { m_flags = flags; }
 
         void clear();
-        void set(NonnullRefPtr<FileDescription>&&, u32 flags = 0);
+        void set(NonnullRefPtr<OpenFileDescription>&&, u32 flags = 0);
 
     private:
-        RefPtr<FileDescription> m_description;
+        RefPtr<OpenFileDescription> m_description;
         bool m_is_allocated { false };
         u32 m_flags { 0 };
     };
 
     class ScopedDescriptionAllocation;
-    class FileDescriptions {
-        AK_MAKE_NONCOPYABLE(FileDescriptions);
+    class OpenFileDescriptions {
+        AK_MAKE_NONCOPYABLE(OpenFileDescriptions);
         friend class Process;
 
     public:
-        ALWAYS_INLINE const FileDescriptionAndFlags& operator[](size_t i) const { return at(i); }
-        ALWAYS_INLINE FileDescriptionAndFlags& operator[](size_t i) { return at(i); }
+        ALWAYS_INLINE const OpenFileDescriptionAndFlags& operator[](size_t i) const { return at(i); }
+        ALWAYS_INLINE OpenFileDescriptionAndFlags& operator[](size_t i) { return at(i); }
 
-        KResult try_clone(const Kernel::Process::FileDescriptions& other)
+        KResult try_clone(const Kernel::Process::OpenFileDescriptions& other)
         {
             SpinlockLocker lock_other(other.m_fds_lock);
             if (!try_resize(other.m_fds_metadatas.size()))
@@ -651,14 +651,14 @@ public:
             return KSuccess;
         }
 
-        const FileDescriptionAndFlags& at(size_t i) const;
-        FileDescriptionAndFlags& at(size_t i);
+        const OpenFileDescriptionAndFlags& at(size_t i) const;
+        OpenFileDescriptionAndFlags& at(size_t i);
 
-        FileDescriptionAndFlags const* get_if_valid(size_t i) const;
-        FileDescriptionAndFlags* get_if_valid(size_t i);
+        OpenFileDescriptionAndFlags const* get_if_valid(size_t i) const;
+        OpenFileDescriptionAndFlags* get_if_valid(size_t i);
 
-        void enumerate(Function<void(const FileDescriptionAndFlags&)>) const;
-        void change_each(Function<void(FileDescriptionAndFlags&)>);
+        void enumerate(Function<void(const OpenFileDescriptionAndFlags&)>) const;
+        void change_each(Function<void(OpenFileDescriptionAndFlags&)>);
 
         KResultOr<ScopedDescriptionAllocation> allocate(int first_candidate_fd = 0);
         size_t open_count() const;
@@ -676,13 +676,13 @@ public:
             m_fds_metadatas.clear();
         }
 
-        KResultOr<NonnullRefPtr<FileDescription>> file_description(int fd) const;
+        KResultOr<NonnullRefPtr<OpenFileDescription>> file_description(int fd) const;
 
     private:
-        FileDescriptions() = default;
+        OpenFileDescriptions() = default;
         static constexpr size_t m_max_open_file_descriptors { FD_SETSIZE };
         mutable Spinlock m_fds_lock;
-        Vector<FileDescriptionAndFlags> m_fds_metadatas;
+        Vector<OpenFileDescriptionAndFlags> m_fds_metadatas;
     };
 
     class ScopedDescriptionAllocation {
@@ -690,7 +690,7 @@ public:
 
     public:
         ScopedDescriptionAllocation() = default;
-        ScopedDescriptionAllocation(int tracked_fd, FileDescriptionAndFlags* description)
+        ScopedDescriptionAllocation(int tracked_fd, OpenFileDescriptionAndFlags* description)
             : fd(tracked_fd)
             , m_description(description)
         {
@@ -713,7 +713,7 @@ public:
         const int fd { -1 };
 
     private:
-        FileDescriptionAndFlags* m_description { nullptr };
+        OpenFileDescriptionAndFlags* m_description { nullptr };
     };
 
     class ProcessProcFSTraits : public ProcFSExposedComponent {
@@ -742,8 +742,8 @@ public:
         WeakPtr<Process> m_process;
     };
 
-    FileDescriptions& fds() { return m_fds; }
-    const FileDescriptions& fds() const { return m_fds; }
+    OpenFileDescriptions& fds() { return m_fds; }
+    const OpenFileDescriptions& fds() const { return m_fds; }
 
 private:
     SpinlockProtected<Thread::ListInProcess>& thread_list() { return m_thread_list; }
@@ -751,7 +751,7 @@ private:
 
     SpinlockProtected<Thread::ListInProcess> m_thread_list;
 
-    FileDescriptions m_fds;
+    OpenFileDescriptions m_fds;
 
     const bool m_is_kernel_process;
     Atomic<State> m_state { State::Running };

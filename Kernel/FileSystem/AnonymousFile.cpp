@@ -19,7 +19,7 @@ AnonymousFile::~AnonymousFile()
 {
 }
 
-KResultOr<Memory::Region*> AnonymousFile::mmap(Process& process, FileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+KResultOr<Memory::Region*> AnonymousFile::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     if (offset != 0)
         return EINVAL;

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Process.h>
 #include <Kernel/UnixTypes.h>
@@ -19,7 +19,7 @@ namespace Kernel {
             REQUIRE_PROMISE(unix);                \
     } while (0)
 
-void Process::setup_socket_fd(int fd, NonnullRefPtr<FileDescription> description, int type)
+void Process::setup_socket_fd(int fd, NonnullRefPtr<OpenFileDescription> description, int type)
 {
     description->set_readable(true);
     description->set_writable(true);
@@ -40,7 +40,7 @@ KResultOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
         return EACCES;
     auto fd_allocation = TRY(m_fds.allocate());
     auto socket = TRY(Socket::create(domain, type, protocol));
-    auto description = TRY(FileDescription::try_create(socket));
+    auto description = TRY(OpenFileDescription::try_create(socket));
     setup_socket_fd(fd_allocation.fd, move(description), type);
     return fd_allocation.fd;
 }
@@ -113,7 +113,7 @@ KResultOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_para
         TRY(copy_to_user(user_address_size, &address_size));
     }
 
-    auto accepted_socket_description = TRY(FileDescription::try_create(*accepted_socket));
+    auto accepted_socket_description = TRY(OpenFileDescription::try_create(*accepted_socket));
 
     accepted_socket_description->set_readable(true);
     accepted_socket_description->set_writable(true);

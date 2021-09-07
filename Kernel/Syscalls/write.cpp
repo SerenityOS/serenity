@@ -6,7 +6,7 @@
 
 #include <AK/NumericLimits.h>
 #include <Kernel/Debug.h>
-#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
@@ -54,7 +54,7 @@ KResultOr<FlatPtr> Process::sys$writev(int fd, Userspace<const struct iovec*> io
     return nwritten;
 }
 
-KResultOr<FlatPtr> Process::do_write(FileDescription& description, const UserOrKernelBuffer& data, size_t data_size)
+KResultOr<FlatPtr> Process::do_write(OpenFileDescription& description, const UserOrKernelBuffer& data, size_t data_size)
 {
     size_t total_nwritten = 0;
 
