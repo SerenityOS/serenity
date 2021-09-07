@@ -1226,6 +1226,56 @@ bool Thread::should_be_stopped() const
     return process().is_stopped();
 }
 
+void Thread::track_lock_acquire(LockRank rank)
+{
+    // Nothing to do for locks without a rank.
+    if (rank == LockRank::None)
+        return;
+
+    if (m_lock_rank_mask != LockRank::None) {
+        // Verify we are only attempting to take a lock of a higher rank.
+        VERIFY(m_lock_rank_mask > rank);
+    }
+
+    m_lock_rank_mask |= rank;
+}
+
+void Thread::track_lock_release(LockRank rank)
+{
+    // Nothing to do for locks without a rank.
+    if (rank == LockRank::None)
+        return;
+
+    using PrimitiveType = UnderlyingType<LockRank>;
+
+    // The rank value from the caller should only contain a single bit, otherwise
+    // we are disabling the tracking for multiple locks at once which will corrupt
+    // the lock tracking mask, and we will assert somewhere else.
+    auto rank_is_a_single_bit = [](auto rank_enum) -> bool {
+        auto rank = static_cast<PrimitiveType>(rank_enum);
+        auto rank_without_least_significant_bit = rank - 1;
+        return (rank & rank_without_least_significant_bit) == 0;
+    };
+
+    // We can't release locks out of order, as that would violate the ranking.
+    // This is validated by toggling the least significant bit of the mask, and
+    // then bit wise or-ing the rank we are trying to release with the resulting
+    // mask. If the rank we are releasing is truly the highest rank then the mask
+    // we get back will be equal to the current mask of stored on the thread.
+    auto rank_is_in_order = [](auto mask_enum, auto rank_enum) -> bool {
+        auto mask = static_cast<PrimitiveType>(mask_enum);
+        auto rank = static_cast<PrimitiveType>(rank_enum);
+        auto mask_without_least_significant_bit = mask - 1;
+        return ((mask & mask_without_least_significant_bit) | rank) == mask;
+    };
+
+    VERIFY(has_flag(m_lock_rank_mask, rank));
+    VERIFY(rank_is_a_single_bit(rank));
+    VERIFY(rank_is_in_order(m_lock_rank_mask, rank));
+
+    m_lock_rank_mask ^= rank;
+}
+
 }
 
 void AK::Formatter<Kernel::Thread>::format(FormatBuilder& builder, const Kernel::Thread& value)

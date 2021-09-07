@@ -161,6 +161,7 @@ set(KERNEL_SOURCES
     Memory/VirtualRange.cpp
     Memory/VirtualRangeAllocator.cpp
     MiniStdLib.cpp
+    Locking/LockRank.cpp
     Locking/Mutex.cpp
     Net/E1000ENetworkAdapter.cpp
     Net/E1000NetworkAdapter.cpp

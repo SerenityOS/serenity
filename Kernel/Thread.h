@@ -29,6 +29,7 @@
 #include <Kernel/Library/ListedRefCounted.h>
 #include <Kernel/Locking/LockLocation.h>
 #include <Kernel/Locking/LockMode.h>
+#include <Kernel/Locking/LockRank.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Memory/VirtualRange.h>
 #include <Kernel/Scheduler.h>
@@ -1083,6 +1084,9 @@ public:
     u32 saved_critical() const { return m_saved_critical; }
     void save_critical(u32 critical) { m_saved_critical = critical; }
 
+    void track_lock_acquire(LockRank rank);
+    void track_lock_release(LockRank rank);
+
     [[nodiscard]] bool is_active() const { return m_is_active; }
 
     [[nodiscard]] bool is_finalizable() const
@@ -1302,6 +1306,7 @@ private:
     Kernel::Mutex* m_blocking_lock { nullptr };
     u32 m_lock_requested_count { 0 };
     IntrusiveListNode<Thread> m_blocked_threads_list_node;
+    LockRank m_lock_rank_mask { LockRank::None };
 
 #if LOCK_DEBUG
     struct HoldingLockInfo {
