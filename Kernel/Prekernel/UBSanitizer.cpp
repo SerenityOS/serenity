@@ -6,8 +6,6 @@
  */
 
 #include <AK/UBSanitizer.h>
-#include <Kernel/Arch/x86/Processor.h>
-#include <Kernel/KSyms.h>
 
 using namespace AK::UBSanitizer;
 
