@@ -6,7 +6,7 @@
 
 #include <AK/Atomic.h>
 #include <AK/Checked.h>
-#include <Kernel/Bus/PCI/Access.h>
+#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Graphics/Bochs/GraphicsAdapter.h>

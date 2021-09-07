@@ -10,7 +10,7 @@
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
-#include <Kernel/Bus/PCI/Access.h>
+#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
 #include <Kernel/IO.h>
 #include <Kernel/Memory/TypedMapping.h>
