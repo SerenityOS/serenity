@@ -48,7 +48,7 @@ fi
 SERENITY_ARCH="${SERENITY_ARCH:-i686}"
 LLVM_VERSION="${LLVM_VERSION:-12.0.1}"
 
-if [ "$USE_CLANG_TOOLCHAIN" = "1" ]; then
+if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
     TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR"/Toolchain/Local/clang/"$SERENITY_ARCH"
     mkdir -p mnt/usr/lib/clang/"$LLVM_VERSION"/lib/serenity
     $CP "$TOOLCHAIN_DIR"/lib/clang/"$LLVM_VERSION"/lib/serenity/* mnt/usr/lib/clang/"$LLVM_VERSION"/lib/serenity
