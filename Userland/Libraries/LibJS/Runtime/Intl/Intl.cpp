@@ -7,6 +7,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
+#include <LibJS/Runtime/Intl/CollatorConstructor.h>
 #include <LibJS/Runtime/Intl/DateTimeFormatConstructor.h>
 #include <LibJS/Runtime/Intl/DisplayNamesConstructor.h>
 #include <LibJS/Runtime/Intl/Intl.h>
@@ -34,6 +35,7 @@ void Intl::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl"), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_direct_property(vm.names.Collator, global_object.intl_collator_constructor(), attr);
     define_direct_property(vm.names.DateTimeFormat, global_object.intl_date_time_format_constructor(), attr);
     define_direct_property(vm.names.DisplayNames, global_object.intl_display_names_constructor(), attr);
     define_direct_property(vm.names.ListFormat, global_object.intl_list_format_constructor(), attr);
