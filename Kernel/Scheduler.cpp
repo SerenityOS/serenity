@@ -413,7 +413,7 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
     g_finalizer_wait_queue = new WaitQueue;
 
     g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);
-    s_colonel_process = Process::create_kernel_process(idle_thread, "colonel", idle_loop, nullptr, 1, Process::RegisterProcess::No).leak_ref();
+    s_colonel_process = Process::create_kernel_process(idle_thread, KString::must_create("colonel"), idle_loop, nullptr, 1, Process::RegisterProcess::No).leak_ref();
     VERIFY(s_colonel_process);
     VERIFY(idle_thread);
     idle_thread->set_priority(THREAD_PRIORITY_MIN);

@@ -446,12 +446,12 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     if (!validate_stack_size(arguments, environment))
         return E2BIG;
 
-    auto parts = path.split('/');
+    auto parts = path.split_view('/');
     if (parts.is_empty())
         return ENOENT;
 
-    auto new_process_name = parts.take_last();
-    auto new_main_thread_name = TRY(KString::try_create(new_process_name));
+    auto new_process_name = TRY(KString::try_create(parts.last()));
+    auto new_main_thread_name = TRY(new_process_name->try_clone());
 
     auto main_program_metadata = main_program_description->metadata();
 

@@ -172,13 +172,13 @@ public:
     };
 
     template<typename EntryFunction>
-    static RefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, EntryFunction entry, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes)
+    static RefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, EntryFunction entry, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes)
     {
         auto* entry_func = new EntryFunction(move(entry));
         return create_kernel_process(first_thread, move(name), &Process::kernel_process_trampoline<EntryFunction>, entry_func, affinity, do_register);
     }
 
-    static RefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes);
+    static RefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes);
     static KResultOr<NonnullRefPtr<Process>> try_create_user_process(RefPtr<Thread>& first_thread, String const& path, UserID, GroupID, Vector<String> arguments, Vector<String> environment, TTY*);
     static void register_new(Process&);
 
@@ -207,7 +207,7 @@ public:
     static RefPtr<Process> from_pid(ProcessID);
     static SessionID get_sid_from_pgid(ProcessGroupID pgid);
 
-    const String& name() const { return m_name; }
+    StringView name() const { return m_name->view(); }
     ProcessID pid() const { return m_protected_values.pid; }
     SessionID sid() const { return m_protected_values.sid; }
     bool is_session_leader() const { return sid().value() == pid().value(); }
@@ -521,8 +521,8 @@ private:
     bool add_thread(Thread&);
     bool remove_thread(Thread&);
 
-    Process(const String& name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty);
-    static KResultOr<NonnullRefPtr<Process>> try_create(RefPtr<Thread>& first_thread, String const& name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
+    Process(NonnullOwnPtr<KString> name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty);
+    static KResultOr<NonnullRefPtr<Process>> try_create(RefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
     KResult attach_resources(NonnullOwnPtr<Memory::AddressSpace>&&, RefPtr<Thread>& first_thread, Process* fork_parent);
     static ProcessID allocate_pid();
 
@@ -586,7 +586,7 @@ private:
 
     mutable IntrusiveListNode<Process> m_list_node;
 
-    String m_name;
+    NonnullOwnPtr<KString> m_name;
 
     OwnPtr<Memory::AddressSpace> m_space;
 
