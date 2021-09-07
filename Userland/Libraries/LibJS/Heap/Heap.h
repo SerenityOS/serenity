@@ -83,6 +83,8 @@ public:
 
     BlockAllocator& block_allocator() { return m_block_allocator; }
 
+    void uproot_cell(Cell* cell);
+
 private:
     Cell* allocate_cell(size_t);
 
@@ -116,6 +118,8 @@ private:
     MarkedValueList::List m_marked_value_lists;
 
     WeakContainer::List m_weak_containers;
+
+    Vector<Cell*> m_uprooted_cells;
 
     BlockAllocator m_block_allocator;
 
