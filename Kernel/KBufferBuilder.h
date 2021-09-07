@@ -56,7 +56,7 @@ private:
         return m_buffer->data() + m_size;
     }
 
-    RefPtr<KBufferImpl> m_buffer;
+    OwnPtr<KBuffer> m_buffer;
     size_t m_size { 0 };
 };
 

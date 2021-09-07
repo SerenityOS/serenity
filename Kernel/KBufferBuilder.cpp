@@ -21,7 +21,13 @@ inline bool KBufferBuilder::check_expand(size_t size)
     if (Checked<size_t>::addition_would_overflow(new_buffer_size, 1 * MiB))
         return false;
     new_buffer_size = Memory::page_round_up(new_buffer_size + 1 * MiB);
-    return m_buffer->expand(new_buffer_size);
+    auto new_buffer_or_error = KBuffer::try_create_with_size(new_buffer_size);
+    if (new_buffer_or_error.is_error())
+        return false;
+    auto new_buffer = new_buffer_or_error.release_value();
+    memcpy(new_buffer->data(), m_buffer->data(), m_buffer->size());
+    m_buffer = move(new_buffer);
+    return true;
 }
 
 bool KBufferBuilder::flush()
@@ -37,11 +43,11 @@ OwnPtr<KBuffer> KBufferBuilder::build()
     if (!flush())
         return {};
 
-    return try_make<KBuffer>(move(m_buffer));
+    return move(m_buffer);
 }
 
 KBufferBuilder::KBufferBuilder()
-    : m_buffer(KBufferImpl::try_create_with_size(4 * MiB, Memory::Region::Access::ReadWrite))
+    : m_buffer(KBuffer::try_create_with_size(4 * MiB, Memory::Region::Access::ReadWrite).release_value())
 {
 }
 
