@@ -122,9 +122,12 @@ public:
         return adopt_nonnull_own_or_enomem(new (nothrow) KBuffer(impl.release_nonnull()));
     }
 
-    [[nodiscard]] static KBuffer copy(const void* data, size_t size, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer")
+    static KResultOr<NonnullOwnPtr<KBuffer>> try_copy(const void* data, size_t size, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer")
     {
-        return KBuffer(KBufferImpl::copy(data, size, access, name));
+        auto impl = KBufferImpl::copy(data, size, access, name);
+        if (!impl)
+            return ENOMEM;
+        return adopt_nonnull_own_or_enomem(new (nothrow) KBuffer(impl.release_nonnull()));
     }
 
     [[nodiscard]] bool is_null() const { return !m_impl; }

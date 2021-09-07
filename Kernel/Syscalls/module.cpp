@@ -41,13 +41,21 @@ KResultOr<FlatPtr> Process::sys$module_load(Userspace<const char*> user_path, si
     if (!module)
         return ENOMEM;
 
+    KResult section_loading_result = KSuccess;
     elf_image->for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
-        if (!section.size())
+        if (!section.size() || !section_loading_result.is_error())
             return;
-        auto section_storage = KBuffer::copy(section.raw_data(), section.size(), Memory::Region::Access::ReadWriteExecute);
-        section_storage_by_name.set(section.name(), section_storage.data());
+        auto section_storage_or_error = KBuffer::try_copy(section.raw_data(), section.size(), Memory::Region::Access::ReadWriteExecute);
+        if (section_storage_or_error.is_error()) {
+            section_loading_result = section_storage_or_error.error();
+            return;
+        }
+        auto section_storage = section_storage_or_error.release_value();
+        section_storage_by_name.set(section.name(), section_storage->data());
         module->sections.append(move(section_storage));
     });
+    if (section_loading_result.is_error())
+        return section_loading_result;
 
     bool missing_symbols = false;
 

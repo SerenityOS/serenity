@@ -110,7 +110,7 @@ private:
         IPv4Address peer_address;
         u16 peer_port;
         Time timestamp;
-        Optional<KBuffer> data;
+        OwnPtr<KBuffer> data;
     };
 
     SinglyLinkedListWithCount<ReceivedPacket> m_receive_queue;
