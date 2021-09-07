@@ -55,6 +55,14 @@ jobs:
           pattern: '^.+[^.\n](\n.*)*$'
           error: 'Commit title ends in a period'
 
+      - name: Check body for sign off
+        if: ${{ success() || failure() }}
+        uses: tim-actions/commit-message-checker-with-regex@v0.3.1
+        with:
+          commits: ${{ steps.get-pr-commits.outputs.commits }}
+          pattern: '^((?!Signed-off-by: )[\s\S])*$'
+          error: 'Commit body contains a Signed-off-by tag'
+
       - name: Comment on PR
         if: ${{ failure() && !github.event.pull_request.draft }}
         uses: IdanHo/comment-on-pr@5f51df338210754f519f721f8320d8f72525a4d0
