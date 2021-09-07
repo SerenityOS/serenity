@@ -20,12 +20,8 @@ namespace Kernel {
 KResultOr<NonnullRefPtr<Socket>> Socket::create(int domain, int type, int protocol)
 {
     switch (domain) {
-    case AF_LOCAL: {
-        auto socket_or_error = LocalSocket::try_create(type & SOCK_TYPE_MASK);
-        if (socket_or_error.is_error())
-            return socket_or_error.error();
-        return socket_or_error.release_value();
-    }
+    case AF_LOCAL:
+        return TRY(LocalSocket::try_create(type & SOCK_TYPE_MASK));
     case AF_INET:
         return IPv4Socket::create(type & SOCK_TYPE_MASK, protocol);
     default:
@@ -101,10 +97,8 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
         if (user_value_size != IFNAMSIZ)
             return EINVAL;
         auto user_string = static_ptr_cast<const char*>(user_value);
-        auto ifname_or_error = try_copy_kstring_from_user(user_string, user_value_size);
-        if (ifname_or_error.is_error())
-            return ifname_or_error.error();
-        auto device = NetworkingManagement::the().lookup_by_name(ifname_or_error.value()->view());
+        auto ifname = TRY(try_copy_kstring_from_user(user_string, user_value_size));
+        auto device = NetworkingManagement::the().lookup_by_name(ifname->view());
         if (!device)
             return ENODEV;
         m_bound_interface = device;
