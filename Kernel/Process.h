@@ -536,7 +536,7 @@ private:
     KResult do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header);
     KResultOr<FlatPtr> do_write(FileDescription&, const UserOrKernelBuffer&, size_t);
 
-    KResultOr<FlatPtr> do_statvfs(String path, statvfs* buf);
+    KResultOr<FlatPtr> do_statvfs(StringView path, statvfs* buf);
 
     KResultOr<RefPtr<FileDescription>> find_elf_interpreter_for_executable(String const& path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size);
 
