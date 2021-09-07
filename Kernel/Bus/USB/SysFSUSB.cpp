@@ -54,7 +54,7 @@ KResult SysFSUSBDeviceInformation::refresh_data(OpenFileDescription& description
     if (!cached_data) {
         cached_data = TRY(adopt_nonnull_own_or_enomem(new (nothrow) SysFSInodeData));
     }
-    KBufferBuilder builder;
+    auto builder = TRY(KBufferBuilder::try_create());
     TRY(const_cast<SysFSUSBDeviceInformation&>(*this).try_generate(builder));
     auto& typed_cached_data = static_cast<SysFSInodeData&>(*cached_data);
     typed_cached_data.buffer = builder.build();

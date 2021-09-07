@@ -47,7 +47,7 @@ void Inode::sync()
 
 KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(OpenFileDescription* description) const
 {
-    KBufferBuilder builder;
+    auto builder = TRY(KBufferBuilder::try_create());
 
     u8 buffer[4096];
     off_t offset = 0;
