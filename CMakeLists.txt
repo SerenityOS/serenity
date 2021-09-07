@@ -11,15 +11,18 @@ if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "")
     "and that's all there is.")
 endif()
 
-if (CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.2)
-  message(FATAL_ERROR
-      "A GCC version less than 10.2 was detected (${CMAKE_CXX_COMPILER_VERSION}), this is unsupported.\n"
-      "Please re-read the build instructions documentation, and upgrade your host compiler.\n")
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "SerenityOS")
+    message(FATAL_ERROR "System name is not SerenityOS, this is unsupported.\n"
+            "Please re-read the BuildInstructions documentation, and use the superbuild configuration\n")
+endif()
+
+if(SERENITY_ARCH STREQUAL "i686")
+    set(SERENITY_CLANG_ARCH "i386")
+else()
+    set(SERENITY_CLANG_ARCH "${SERENITY_ARCH}")
 endif()
 
 set(CMAKE_INSTALL_MESSAGE NEVER)
-
-enable_testing()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -30,14 +33,19 @@ if(NOT COMMAND serenity_option)
 endif()
 include(serenity_options)
 
-set(SERENITY_ARCH "i686" CACHE STRING "Target architecture for SerenityOS.")
-
-if("${SERENITY_ARCH}" STREQUAL "i686")
-    set(SERENITY_CLANG_ARCH "i386")
-else()
-    set(SERENITY_CLANG_ARCH ${SERENITY_ARCH})
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}" CACHE FILEPATH "Path to a compiler launcher program, e.g. ccache")
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}" CACHE FILEPATH "Path to a compiler launcher program, e.g. ccache")
 endif()
 
+# FIXME: With cmake 3.18, we can change unzip/untar steps to use
+#        file(ARCHIVE_EXTRACT) instead
+find_program(UNZIP unzip REQUIRED)
+find_program(TAR tar REQUIRED)
+
+# Host tools, required to generate files for the build
+find_package(Lagom CONFIG REQUIRED)
 
 # Meta target to run all code-gen steps in the build.
 add_custom_target(all_generated)
@@ -63,21 +71,18 @@ add_custom_target(image
     DEPENDS qemu-image
 )
 
-set(GCC_VERSION 11.2.0)
-set(LLVM_VERSION 12.0.1)
-
 add_custom_target(qemu-image
-    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "USE_CLANG_TOOLCHAIN=$<BOOL:${USE_CLANG_TOOLCHAIN}>" "LLVM_VERSION=${LLVM_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-qemu.sh"
+    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "LLVM_VERSION=${CMAKE_CXX_COMPILER_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-qemu.sh"
     BYPRODUCTS "${CMAKE_BINARY_DIR}/_disk_image"
     USES_TERMINAL
 )
 add_custom_target(grub-image
-    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "USE_CLANG_TOOLCHAIN=$<BOOL:${USE_CLANG_TOOLCHAIN}>" "LLVM_VERSION=${LLVM_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-grub.sh"
+    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "LLVM_VERSION=${CMAKE_CXX_COMPILER_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-grub.sh"
     BYPRODUCTS ${CMAKE_BINARY_DIR}/grub_disk_image
     USES_TERMINAL
 )
 add_custom_target(extlinux-image
-    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "USE_CLANG_TOOLCHAIN=$<BOOL:${USE_CLANG_TOOLCHAIN}>" "LLVM_VERSION=${LLVM_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-extlinux.sh"
+    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "LLVM_VERSION=${CMAKE_CXX_COMPILER_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-extlinux.sh"
     BYPRODUCTS "${CMAKE_BINARY_DIR}/extlinux_disk_image"
     USES_TERMINAL
 )
@@ -92,7 +97,7 @@ add_custom_target(check-style
 )
 
 add_custom_target(install-ports
-    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "${SerenityOS_SOURCE_DIR}/Meta/install-ports-tree.sh"
+    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "${SerenityOS_SOURCE_DIR}/Meta/install-ports-tree.sh"
     USES_TERMINAL
 )
 
@@ -105,18 +110,6 @@ add_dependencies(configure-components Lagom::ConfigureComponents)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-
-add_compile_options(-fsized-deallocation)
-
-add_compile_options(-fno-delete-null-pointer-checks)
-
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    add_compile_options(-Wno-literal-suffix)
-elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang$")
-    add_compile_options(-Wno-overloaded-virtual)
-    add_compile_options(-Wno-user-defined-literals)
-    add_compile_options(-fconstexpr-steps=16777216)
-endif()
 
 if (ENABLE_ALL_DEBUG_FACILITIES)
     set(ENABLE_ALL_THE_DEBUG_MACROS ON)
@@ -141,97 +134,22 @@ endif(ENABLE_ALL_THE_DEBUG_MACROS)
 configure_file(AK/Debug.h.in AK/Debug.h @ONLY)
 configure_file(Kernel/Debug.h.in Kernel/Debug.h @ONLY)
 
-include_directories(Userland/Libraries)
-include_directories(.)
-include_directories(${CMAKE_BINARY_DIR})
-
-add_subdirectory(Meta/Lagom)
-
-find_program(CCACHE_PROGRAM ccache)
-if(CCACHE_PROGRAM)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
-endif()
-
-# FIXME: With cmake 3.18, we can change unzip/untar steps to use
-#        file(ARCHIVE_EXTRACT) instead
-find_program(UNZIP unzip REQUIRED)
-find_program(TAR tar REQUIRED)
-
-unset(CMAKE_SYSROOT)
 set(CMAKE_STAGING_PREFIX ${CMAKE_BINARY_DIR}/Root)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/Root)
 set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_BINARY_DIR}/Root/res)
-
-
-if (${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
-    message("Good job on building cmake!")
-elseif(USE_CLANG_TOOLCHAIN)
-    set(TOOLCHAIN_ROOT ${CMAKE_SOURCE_DIR}/Toolchain/Local/clang/${SERENITY_ARCH}/)
-    set(TOOLCHAIN_PATH ${TOOLCHAIN_ROOT}/bin)
-
-    set(CMAKE_C_COMPILER ${TOOLCHAIN_PATH}/clang)
-    set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PATH}/clang++)
-    set(CMAKE_ASM_COMPILER ${TOOLCHAIN_PATH}/clang)
-    set(CMAKE_LINKER ${TOOLCHAIN_PATH}/ld.lld)
-    set(CMAKE_RANLIB ${TOOLCHAIN_PATH}/llvm-ranlib)
-    set(CMAKE_STRIP ${TOOLCHAIN_PATH}/llvm-strip)
-    set(CMAKE_AR ${TOOLCHAIN_PATH}/llvm-ar)
-    set(CMAKE_CXXFILT ${TOOLCHAIN_PATH}/llvm-cxxfilt)
-    # FIXME: Persuade LLVM maintainers to add `--update-section` to llvm-objcopy, as it's required for the kernel symbol map.
-    set(CMAKE_OBJCOPY ${TOOLCHAIN_ROOT}/binutils/bin/${SERENITY_ARCH}-pc-serenity-objcopy)
-else()
-    set(TOOLCHAIN_ROOT ${SerenityOS_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/)
-    set(TOOLCHAIN_PATH ${TOOLCHAIN_ROOT}/bin)
-    set(TOOLCHAIN_PREFIX ${TOOLCHAIN_PATH}/${SERENITY_ARCH}-pc-serenity-)
-
-    set(CMAKE_C_COMPILER ${TOOLCHAIN_PREFIX}gcc)
-    set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}g++)
-    set(CMAKE_ASM_COMPILER ${TOOLCHAIN_PREFIX}gcc)
-    set(CMAKE_LINKER ${TOOLCHAIN_PREFIX}ld)
-    set(CMAKE_RANLIB ${TOOLCHAIN_PREFIX}gcc-ranlib)
-    set(CMAKE_STRIP ${TOOLCHAIN_PREFIX}strip)
-    set(CMAKE_AR ${TOOLCHAIN_PREFIX}gcc-ar)
-    set(CMAKE_OBJCOPY ${TOOLCHAIN_PREFIX}objcopy)
-    set(CMAKE_CXXFILT ${TOOLCHAIN_PREFIX}c++filt)
-endif()
-
-foreach(lang ASM C CXX OBJC OBJCXX)
-    unset(CMAKE_${lang}_OSX_COMPATIBILITY_VERSION_FLAG)
-    unset(CMAKE_${lang}_OSX_CURRENT_VERSION_FLAG)
-    unset(CMAKE_${lang}_LINK_FLAGS)
-    unset(CMAKE_SHARED_LIBRARY_CREATE_${lang}_FLAGS)
-    unset(CMAKE_SHARED_MODULE_CREATE_${lang}_FLAGS)
-    unset(CMAKE_SHARED_MODULE_LOADER_${lang}_FLAG )
-    unset(CMAKE_${lang}_OSX_DEPLOYMENT_TARGET_FLAG)
-    unset(CMAKE_${lang}_SYSROOT_FLAG)
-    if (CMAKE_SYSTEM_NAME MATCHES Darwin)
-        ## macOS workaround. Use GNU ld flags for SONAMEs.
-        set(CMAKE_${lang}_CREATE_SHARED_LIBRARY
-            "<CMAKE_${lang}_COMPILER> <LANGUAGE_COMPILE_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_${lang}_FLAGS> <LINK_FLAGS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
-        set(CMAKE_SHARED_LIBRARY_SONAME_${lang}_FLAG "-Wl,-soname,")
-    endif()
-endforeach()
-
-set(CMAKE_INSTALL_NAME_TOOL "")
-set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
-set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "-shared -Wl,--hash-style=gnu,-z,relro,-z,now,-z,noexecstack,-z,separate-code")
-set(CMAKE_CXX_LINK_FLAGS "-Wl,--hash-style=gnu,-z,relro,-z,now,-z,noexecstack,-z,max-page-size=0x1000,-z,separate-code")
 
 # We disable it completely because it makes cmake very spammy.
 # This will need to be revisited when the Loader supports RPATH/RUN_PATH.
 set(CMAKE_SKIP_RPATH TRUE)
 
-add_compile_options(-Wformat=2)
-add_compile_options(-fdiagnostics-color=always)
+add_compile_options(-Wall)
+add_compile_options(-Wextra)
 
-if (NOT ${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
+if (NOT CMAKE_HOST_SYSTEM_NAME MATCHES SerenityOS)
     # FIXME: Something makes this go crazy and flag unused variables that aren't flagged as such when building with the toolchain.
     #        Disable -Werror for now.
     add_compile_options(-Werror)
 endif()
-
-add_compile_options(-Wall)
-add_compile_options(-Wextra)
 
 # The following warnings are sorted by the "base" name (the part excluding the initial Wno or W).
 add_compile_options(-Wno-address-of-packed-member)
@@ -254,15 +172,24 @@ add_compile_options(-Wno-unused-command-line-argument)
 add_compile_options(-Wwrite-strings)
 add_compile_options(-Wno-maybe-uninitialized)
 
+add_compile_options(-fdiagnostics-color=always)
+add_compile_options(-fno-delete-null-pointer-checks)
 add_compile_options(-ffile-prefix-map=${SerenityOS_SOURCE_DIR}=.)
 add_compile_options(-fno-exceptions)
 add_compile_options(-ftls-model=initial-exec)
 add_compile_options(-fno-semantic-interposition)
+add_compile_options(-fsized-deallocation)
 add_compile_options(-fstack-clash-protection)
 add_compile_options(-fstack-protector-strong)
 add_compile_options(-g1)
 
-if (USE_CLANG_TOOLCHAIN)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    add_compile_options(-Wno-literal-suffix)
+    add_compile_options(-Wcast-align)
+    add_compile_options(-Wdouble-promotion)
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+    add_compile_options(-Wno-overloaded-virtual)
+    add_compile_options(-Wno-user-defined-literals)
     add_compile_options(-Wno-atomic-alignment)
     add_compile_options(-Wno-c99-designator)
     add_compile_options(-Wno-implicit-const-int-float-conversion)
@@ -270,24 +197,13 @@ if (USE_CLANG_TOOLCHAIN)
     add_compile_options(-Wno-tautological-constant-out-of-range-compare)
     add_compile_options(-Wno-unneeded-internal-declaration)
     add_compile_options(-Wno-unused-function)
-    add_compile_options(-Wno-user-defined-literals)
-    # Without the 'SHELL' prefix, this would get removed through de-duplication with the flags set for the host compiler.
-    # Then, that would come before '-Wextra', so it would not negate the '-Woverloaded-virtual' set by '-Wextra'.
-    add_compile_options(SHELL:-Wno-overloaded-virtual)
-
-    add_compile_options(--sysroot=${CMAKE_BINARY_DIR}/Root)
-    add_compile_options(--target=${SERENITY_CLANG_ARCH}-pc-serenity)
     add_compile_options(-fno-aligned-allocation)
     add_compile_options(-fconstexpr-steps=16777216)
     add_compile_options(-gdwarf-4)
 
-    # FIXME: Why is Clang not picking up this path?
-    link_directories(${TOOLCHAIN_ROOT}/lib/clang/${LLVM_VERSION}/lib/serenity)
-
+    # FIXME: Why can't clang find this path for compiler_rt builtins?
+    link_directories(${TOOLCHAIN_ROOT}/lib/clang/${CMAKE_CXX_COMPILER_VERSION}/lib/serenity)
     add_link_options(LINKER:--allow-shlib-undefined)
-else()
-    add_compile_options(-Wcast-align)
-    add_compile_options(-Wdouble-promotion)
 endif()
 
 add_link_options(LINKER:-z,text)
@@ -306,7 +222,6 @@ if (ENABLE_COMPILETIME_FORMAT_CHECK)
     add_compile_definitions(ENABLE_COMPILETIME_FORMAT_CHECK)
 endif()
 
-add_link_options(--sysroot ${CMAKE_BINARY_DIR}/Root)
 add_link_options(-Wno-unused-command-line-argument)
 
 include_directories(.)
@@ -326,7 +241,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland)
 # FIXME: vptr sanitizing requires.. intense ABI wrangling of std::type_info
 #     And would be better served by porting ubsan_type_hash_itanium.cpp from compiler-rt
 if (ENABLE_UNDEFINED_SANITIZER)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize=vptr")
+    add_compile_options(-fsanitize=undefined -fno-sanitize=vptr)
+    add_link_options(-fsanitize=undefined -fno-sanitize=vptr)
 endif()
 
 add_custom_target(components ALL)

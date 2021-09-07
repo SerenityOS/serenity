@@ -43,10 +43,10 @@ target_compile_options(${PREKERNEL_TARGET} PRIVATE -no-pie -fno-pic -fno-threads
 target_link_options(${PREKERNEL_TARGET} PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld -nostdlib LINKER:--no-pie)
 set_target_properties(${PREKERNEL_TARGET} PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld)
 
-if (USE_CLANG_TOOLCHAIN)
-    target_link_libraries(${PREKERNEL_TARGET} clang_rt.builtins-${SERENITY_CLANG_ARCH} c++abi)
-else()
-    target_link_libraries(${PREKERNEL_TARGET} gcc)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_link_libraries(${PREKERNEL_TARGET} PRIVATE kernel_heap gcc)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+    target_link_libraries(${PREKERNEL_TARGET} PRIVATE kernel_heap "clang_rt.builtins-${SERENITY_CLANG_ARCH}" c++abi)
 endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")

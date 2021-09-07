@@ -360,44 +360,42 @@ else()
     )
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -Wvla -Wnull-dereference")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -ffreestanding -fbuiltin")
-
+add_compile_options(-Wno-unknown-warning-option -Wvla -Wnull-dereference)
+add_compile_options(-fno-rtti -ffreestanding -fbuiltin)
 if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-80387 -mno-mmx -mno-sse -mno-sse2")
+    add_compile_options(-mno-80387 -mno-mmx -mno-sse -mno-sse2)
 endif()
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-asynchronous-unwind-tables")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector-strong")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
+add_compile_options(-fno-asynchronous-unwind-tables)
+add_compile_options(-fstack-protector-strong)
+add_compile_options(-fno-exceptions)
 # FIXME: remove -nodefaultlibs after the next toolchain update
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nodefaultlibs -nostdlib")
+add_compile_options(-nodefaultlibs -nostdlib)
 
-if (USE_CLANG_TOOLCHAIN)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # Apply any flags that are only available on >= GCC 11.1
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "11.1")
+        # Zero any registers used within a function on return (to reduce data lifetime and ROP gadgets).
+        add_compile_options(-fzero-call-used-regs=used-gpr)
+    endif()
+    link_directories(${TOOLCHAIN_ROOT}/${SERENITY_ARCH}-pc-serenity/lib)
+    link_directories(${TOOLCHAIN_ROOT}/lib/gcc/${SERENITY_ARCH}-pc-serenity/${GCC_VERSION}/)
+else() # Assume Clang
     add_compile_options(-Waddress-of-packed-member)
-endif()
-
-# Apply any flags that are only available on >= GCC 11.1
-if (NOT USE_CLANG_TOOLCHAIN AND CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 11.1)
-    # Zero any registers used within a function on return (to reduce data lifetime and ROP gadgets).
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fzero-call-used-regs=used-gpr")
-endif()
-
-if (NOT USE_CLANG_TOOLCHAIN)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdinc -nostdinc++")
+    add_compile_options(-faligned-allocation)
+    
+    add_link_options(LINKER:--build-id=none)
 endif()
 
 macro (set_new_alignment alignment)
-    if (USE_CLANG_TOOLCHAIN)
-        add_compile_options(-faligned-allocation)
-        add_compile_options(-fnew-alignment=${alignment})
-    else()
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         add_compile_options(-faligned-new=${alignment})
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+        add_compile_options(-fnew-alignment=${alignment})
     endif()
 endmacro()
 
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcmodel=large -mno-red-zone")
+    add_compile_options(-mcmodel=large -mno-red-zone)
     set_new_alignment(8)
 else()
     set_new_alignment(4)
@@ -443,41 +441,15 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
 #
 if (ENABLE_KERNEL_ADDRESS_SANITIZER)
     add_compile_options(-fsanitize=kernel-address)
+    add_link_options(-fsanitize=kernel-address)
 endif()
 
 add_compile_definitions(KERNEL)
-
-# HACK: This is a workaround for CLion to grok the kernel sources.
-#       It's needed because CLion doesn't understand the way we switch compilers mid-build.
-add_compile_definitions(__serenity__)
-
 add_link_options(LINKER:-z,notext)
-
-if (USE_CLANG_TOOLCHAIN)
-    add_link_options(LINKER:--build-id=none)
-endif()
 
 if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
 endif()
-
-if (${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
-    include_directories(/usr/local/include/c++/${GCC_VERSION}/)
-elseif (USE_CLANG_TOOLCHAIN)
-    include_directories("${TOOLCHAIN_ROOT}/include/c++/v1")
-else()
-    if (NOT EXISTS ${TOOLCHAIN_ROOT}/${SERENITY_ARCH}-pc-serenity/include/c++/${GCC_VERSION}/)
-        message(FATAL_ERROR "Toolchain version ${GCC_VERSION} (${SERENITY_ARCH}) appears to be missing! Please run: Meta/serenity.sh rebuild-toolchain ${SERENITY_ARCH}")
-    endif()
-    include_directories(${TOOLCHAIN_ROOT}/${SERENITY_ARCH}-pc-serenity/include/c++/${GCC_VERSION}/)
-    include_directories(${TOOLCHAIN_ROOT}/${SERENITY_ARCH}-pc-serenity/include/c++/${GCC_VERSION}/${SERENITY_ARCH}-pc-serenity/)
-endif()
-
-if (NOT USE_CLANG_TOOLCHAIN)
-    link_directories(${TOOLCHAIN_ROOT}/${SERENITY_ARCH}-pc-serenity/lib)
-    link_directories(${TOOLCHAIN_ROOT}/lib/gcc/${SERENITY_ARCH}-pc-serenity/${GCC_VERSION}/)
-endif()
-
 add_executable(Kernel ${SOURCES})
 add_dependencies(Kernel generate_EscapeSequenceStateMachine.h)
 
@@ -490,8 +462,7 @@ add_custom_command(
 )
 
 add_custom_target(generate_kernel_linker_script DEPENDS linker.ld)
-
-target_link_options(Kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_BINARY_DIR}/linker.ld -nostdlib)
+target_link_options(Kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_BINARY_DIR}/linker.ld -nostdlib -nodefaultlibs)
 set_target_properties(Kernel PROPERTIES LINK_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/linker.ld")
 
 if (ENABLE_KERNEL_LTO)
@@ -501,15 +472,12 @@ if (ENABLE_KERNEL_LTO)
 endif()
 
 if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
-    if (USE_CLANG_TOOLCHAIN)
-        target_link_libraries(Kernel kernel_heap clang_rt.builtins-${SERENITY_CLANG_ARCH})
-    else()
-        target_link_libraries(Kernel kernel_heap gcc)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_link_libraries(Kernel PRIVATE kernel_heap gcc)
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+        target_link_libraries(Kernel PRIVATE kernel_heap "clang_rt.builtins-${SERENITY_CLANG_ARCH}")
     endif()
-
-    add_dependencies(Kernel kernel_heap)
 endif()
-
 
 add_custom_command(
     TARGET Kernel POST_BUILD
