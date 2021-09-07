@@ -34,6 +34,8 @@ endpoint WebContentServer
 
     run_javascript(String js_source) =|
 
+    dump_layout_tree() => (String dump)
+
     get_selected_text() => (String selection)
     select_all() =|
 }
