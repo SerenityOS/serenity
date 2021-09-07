@@ -59,7 +59,6 @@ int main(int argc, char** argv)
     context_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     window->show();
-    catdog_widget.track_cursor_globally();
     catdog_widget.start_timer(250, Core::TimerShouldFireWhenNotVisible::Yes);
     catdog_widget.start_the_timer(); // timer for "mouse sleep detection"
 
