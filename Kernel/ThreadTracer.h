@@ -15,7 +15,7 @@ namespace Kernel {
 
 class ThreadTracer {
 public:
-    static OwnPtr<ThreadTracer> create(ProcessID tracer) { return try_make<ThreadTracer>(tracer); }
+    static KResultOr<NonnullOwnPtr<ThreadTracer>> try_create(ProcessID tracer) { return adopt_nonnull_own_or_enomem(new (nothrow) ThreadTracer(tracer)); }
 
     ProcessID tracer_pid() const { return m_tracer_pid; }
     bool has_pending_signal(u32 signal) const { return m_pending_signals & (1 << (signal - 1)); }
@@ -34,9 +34,9 @@ public:
         return m_regs.value();
     }
 
+private:
     explicit ThreadTracer(ProcessID);
 
-private:
     ProcessID m_tracer_pid { -1 };
 
     // This is a bitmap for signals that are sent from the tracer to the tracee
