@@ -71,7 +71,7 @@ KResultOr<FlatPtr> Process::sys$select(Userspace<const Syscall::SC_select_params
         if (block_flags == BlockFlags::None)
             continue;
 
-        auto description = TRY(fds().file_description(fd));
+        auto description = TRY(fds().open_file_description(fd));
         if (!fds_info.try_append({ move(description), block_flags }))
             return ENOMEM;
         if (!selected_fds.try_append(fd))
@@ -154,7 +154,7 @@ KResultOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> u
     Thread::SelectBlocker::FDVector fds_info;
     for (size_t i = 0; i < params.nfds; i++) {
         auto& pfd = fds_copy[i];
-        auto description = TRY(fds().file_description(pfd.fd));
+        auto description = TRY(fds().open_file_description(pfd.fd));
         BlockFlags block_flags = BlockFlags::Exception; // always want POLLERR, POLLHUP, POLLNVAL
         if (pfd.events & POLLIN)
             block_flags |= BlockFlags::Read;

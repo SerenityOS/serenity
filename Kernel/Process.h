@@ -676,7 +676,7 @@ public:
             m_fds_metadatas.clear();
         }
 
-        KResultOr<NonnullRefPtr<OpenFileDescription>> file_description(int fd) const;
+        KResultOr<NonnullRefPtr<OpenFileDescription>> open_file_description(int fd) const;
 
     private:
         OpenFileDescriptions() = default;

@@ -23,7 +23,7 @@ KResultOr<FlatPtr> Process::sys$fchdir(int fd)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(stdio);
-    auto description = TRY(fds().file_description(fd));
+    auto description = TRY(fds().open_file_description(fd));
     if (!description->is_directory())
         return ENOTDIR;
     if (!description->metadata().may_execute(*this))

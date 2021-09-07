@@ -451,7 +451,7 @@ Process::OpenFileDescriptionAndFlags& Process::OpenFileDescriptions::at(size_t i
     return m_fds_metadatas[i];
 }
 
-KResultOr<NonnullRefPtr<OpenFileDescription>> Process::OpenFileDescriptions::file_description(int fd) const
+KResultOr<NonnullRefPtr<OpenFileDescription>> Process::OpenFileDescriptions::open_file_description(int fd) const
 {
     SpinlockLocker lock(m_fds_lock);
     if (fd < 0)

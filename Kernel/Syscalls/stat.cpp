@@ -15,7 +15,7 @@ KResultOr<FlatPtr> Process::sys$fstat(int fd, Userspace<stat*> user_statbuf)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-    auto description = TRY(fds().file_description(fd));
+    auto description = TRY(fds().open_file_description(fd));
     stat buffer = {};
     TRY(description->stat(buffer));
     return copy_to_user(user_statbuf, &buffer);
@@ -33,7 +33,7 @@ KResultOr<FlatPtr> Process::sys$stat(Userspace<const Syscall::SC_stat_params*> u
     if (params.dirfd == AT_FDCWD) {
         base = current_directory();
     } else {
-        auto base_description = TRY(fds().file_description(params.dirfd));
+        auto base_description = TRY(fds().open_file_description(params.dirfd));
         if (!base_description->is_directory())
             return ENOTDIR;
         if (!base_description->custody())
