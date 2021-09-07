@@ -472,7 +472,11 @@ void UHCIController::spawn_port_proc()
 {
     RefPtr<Thread> usb_hotplug_thread;
 
-    Process::create_kernel_process(usb_hotplug_thread, "UHCIHotplug", [&] {
+    auto process_name = KString::try_create("UHCI hotplug");
+    if (process_name.is_error())
+        TODO();
+
+    Process::create_kernel_process(usb_hotplug_thread, process_name.release_value(), [&] {
         for (;;) {
             if (m_root_hub)
                 m_root_hub->check_for_port_updates();

@@ -49,7 +49,7 @@ KResultOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<c
     // We know this thread is not the main_thread,
     // So give it a unique name until the user calls $set_thread_name on it
     // length + 4 to give space for our extra junk at the end
-    StringBuilder builder(m_name.length() + 4);
+    StringBuilder builder(m_name->length() + 4);
     thread->set_name(move(new_thread_name));
 
     if (!is_thread_joinable)

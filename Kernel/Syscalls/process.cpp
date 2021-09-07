@@ -27,10 +27,10 @@ KResultOr<FlatPtr> Process::sys$get_process_name(Userspace<char*> buffer, size_t
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-    if (m_name.length() + 1 > buffer_size)
+    if (m_name->length() + 1 > buffer_size)
         return ENAMETOOLONG;
 
-    return copy_to_user(buffer, m_name.characters(), m_name.length() + 1);
+    return copy_to_user(buffer, m_name->characters(), m_name->length() + 1);
 }
 
 KResultOr<FlatPtr> Process::sys$set_process_name(Userspace<const char*> user_name, size_t user_name_length)
@@ -43,8 +43,7 @@ KResultOr<FlatPtr> Process::sys$set_process_name(Userspace<const char*> user_nam
     // Empty and whitespace-only names only exist to confuse users.
     if (name->view().is_whitespace())
         return EINVAL;
-    // FIXME: There's a String copy here. Process::m_name should be a KString.
-    m_name = name->view();
+    m_name = move(name);
     return 0;
 }
 
