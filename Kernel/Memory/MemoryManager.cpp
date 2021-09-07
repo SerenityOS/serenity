@@ -47,7 +47,7 @@ namespace Kernel::Memory {
 // run. If we do, then Singleton would get re-initialized, causing
 // the memory manager to be initialized twice!
 static MemoryManager* s_the;
-RecursiveSpinlock s_mm_lock;
+RecursiveSpinlock s_mm_lock { LockRank::MemoryManager };
 
 MemoryManager& MemoryManager::the()
 {
