@@ -38,9 +38,16 @@ if(ENABLE_ALL_THE_DEBUG_MACROS)
     include(all_the_debug_macros)
 endif()
 
+# FIXME: BUILD_SHARED_LIBS has a default of OFF, as it's intended to be set by the
+#        user when configuring the project. We should instead change libjs-test262 
+#        and oss-fuzz to set this option on their end, and enable it by default in
+#        Meta/serenity.sh
+#        This is #9867. We can change the oss-fuzz escape hatch to be a FATAL_ERROR
+#        message instead when implementing it.
 option(BUILD_SHARED_LIBS "Build shared libraries instead of static libraries" ON)
 if (ENABLE_OSS_FUZZ)
-    set(BUILD_SHARED_LIBS OFF) # Don't use shared libraries on oss-fuzz, for ease of integration with their infrastructure
+    # Don't use shared libraries on oss-fuzz, for ease of integration with their infrastructure
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries instead of static libraries" FORCE)
 endif()
 
 find_package(Threads REQUIRED)
