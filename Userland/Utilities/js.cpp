@@ -32,6 +32,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Intl/Collator.h>
 #include <LibJS/Runtime/Intl/DateTimeFormat.h>
 #include <LibJS/Runtime/Intl/DisplayNames.h>
 #include <LibJS/Runtime/Intl/ListFormat.h>
@@ -809,6 +810,26 @@ static void print_intl_plural_rules(JS::Object const& object, HashTable<JS::Obje
     print_value(js_string(object.vm(), plural_rules.rounding_type_string()), seen_objects);
 }
 
+static void print_intl_collator(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& collator = static_cast<JS::Intl::Collator const&>(object);
+    print_type("Intl.Collator");
+    out("\n  locale: ");
+    print_value(js_string(object.vm(), collator.locale()), seen_objects);
+    out("\n  usage: ");
+    print_value(js_string(object.vm(), collator.usage_string()), seen_objects);
+    out("\n  sensitivity: ");
+    print_value(js_string(object.vm(), collator.sensitivity_string()), seen_objects);
+    out("\n  caseFirst: ");
+    print_value(js_string(object.vm(), collator.case_first_string()), seen_objects);
+    out("\n  collation: ");
+    print_value(js_string(object.vm(), collator.collation()), seen_objects);
+    out("\n  ignorePunctuation: ");
+    print_value(JS::Value(collator.ignore_punctuation()), seen_objects);
+    out("\n  numeric: ");
+    print_value(JS::Value(collator.numeric()), seen_objects);
+}
+
 static void print_primitive_wrapper_object(FlyString const& name, JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     // BooleanObject, NumberObject, StringObject
@@ -908,6 +929,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_intl_relative_time_format(object, seen_objects);
         if (is<JS::Intl::PluralRules>(object))
             return print_intl_plural_rules(object, seen_objects);
+        if (is<JS::Intl::Collator>(object))
+            return print_intl_collator(object, seen_objects);
         return print_object(object, seen_objects);
     }
 
