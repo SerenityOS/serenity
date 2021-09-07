@@ -1201,12 +1201,6 @@ void WindowManager::process_mouse_event(MouseEvent& event)
         return;
 
     // 2. Send the mouse event to all clients with global cursor tracking enabled.
-    auto& window_stack = current_window_stack();
-    for_each_visible_window_from_front_to_back([&](Window& window) {
-        if (window.global_cursor_tracking() && &window != window_stack.active_input_tracking_window())
-            deliver_mouse_event(window, event, false);
-        return IterationDecision::Continue;
-    });
     ClientConnection::for_each_client([&](ClientConnection& conn) {
         if (conn.does_global_mouse_tracking()) {
             conn.async_track_mouse_move(event.position());

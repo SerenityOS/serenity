@@ -653,16 +653,6 @@ void ClientConnection::set_window_backing_store(i32 window_id, [[maybe_unused]] 
         window.invalidate(false);
 }
 
-void ClientConnection::set_global_cursor_tracking(i32 window_id, bool enabled)
-{
-    auto it = m_windows.find(window_id);
-    if (it == m_windows.end()) {
-        did_misbehave("SetGlobalCursorTracking: Bad window ID");
-        return;
-    }
-    it->value->set_global_cursor_tracking_enabled(enabled);
-}
-
 void ClientConnection::set_global_mouse_tracking(bool enabled)
 {
     m_does_global_mouse_tracking = enabled;

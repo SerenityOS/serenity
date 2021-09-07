@@ -757,22 +757,6 @@ void Widget::set_font_fixed_width(bool fixed_width)
         set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_font().family(), m_font->presentation_size(), m_font->weight()));
 }
 
-void Widget::set_global_cursor_tracking(bool enabled)
-{
-    auto* win = window();
-    if (!win)
-        return;
-    win->set_global_cursor_tracking_widget(enabled ? this : nullptr);
-}
-
-bool Widget::global_cursor_tracking() const
-{
-    auto* win = window();
-    if (!win)
-        return false;
-    return win->global_cursor_tracking_widget() == this;
-}
-
 void Widget::set_min_size(const Gfx::IntSize& size)
 {
     if (m_min_size == size)
