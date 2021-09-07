@@ -58,6 +58,42 @@ TESTJS_GLOBAL_FUNCTION(get_weak_map_size, getWeakMapSize)
     return JS::Value(weak_map->values().size());
 }
 
+TESTJS_GLOBAL_FUNCTION(mark_as_garbage, markAsGarbage)
+{
+    auto argument = vm.argument(0);
+    if (!argument.is_string()) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAString, argument.to_string_without_side_effects());
+        return {};
+    }
+
+    auto& variable_name = argument.as_string();
+
+    // In native functions we don't have a lexical environment so get the outer via the execution stack.
+    auto outer_environment = vm.execution_context_stack().last_matching([&](auto& execution_context) {
+        return execution_context->lexical_environment != nullptr;
+    });
+    if (!outer_environment.has_value()) {
+        vm.throw_exception<JS::ReferenceError>(global_object, JS::ErrorType::UnknownIdentifier, variable_name.string());
+        return {};
+    }
+
+    auto variable = outer_environment.value()->lexical_environment->get_from_environment(variable_name.string());
+    if (!variable.has_value()) {
+        vm.throw_exception<JS::ReferenceError>(global_object, JS::ErrorType::UnknownIdentifier, variable_name.string());
+        return {};
+    }
+
+    if (!variable->value.is_object()) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, String::formatted("Variable with name {}", variable_name.string()));
+        return {};
+    }
+
+    vm.heap().uproot_cell(&variable->value.as_object());
+    outer_environment.value()->lexical_environment->delete_from_environment(variable_name.string());
+
+    return JS::js_undefined();
+}
+
 TESTJS_RUN_FILE_FUNCTION(const String& test_file, JS::Interpreter&)
 {
     if (!test262_parser_tests)

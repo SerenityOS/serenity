@@ -191,9 +191,15 @@ public:
 void Heap::mark_live_cells(const HashTable<Cell*>& roots)
 {
     dbgln_if(HEAP_DEBUG, "mark_live_cells:");
+
     MarkingVisitor visitor;
     for (auto* root : roots)
         visitor.visit(root);
+
+    for (auto& inverse_root : m_uprooted_cells)
+        inverse_root->set_marked(false);
+
+    m_uprooted_cells.clear();
 }
 
 void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measurement_timer)
@@ -325,6 +331,11 @@ void Heap::undefer_gc(Badge<DeferGC>)
             collect_garbage();
         m_should_gc_when_deferral_ends = false;
     }
+}
+
+void Heap::uproot_cell(Cell* cell)
+{
+    m_uprooted_cells.append(cell);
 }
 
 }

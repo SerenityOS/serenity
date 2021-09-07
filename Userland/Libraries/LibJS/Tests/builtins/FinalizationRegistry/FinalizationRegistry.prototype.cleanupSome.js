@@ -3,11 +3,12 @@ test("length is 0", () => {
 });
 
 function registerInDifferentScope(registry) {
-    registry.register({}, {});
+    const target = {};
+    registry.register(target, {});
+    return target;
 }
 
-// Flaky test, investigate and fix :^)
-test.skip("basic functionality", () => {
+test("basic functionality", () => {
     var registry = new FinalizationRegistry(() => {});
 
     var count = 0;
@@ -19,7 +20,8 @@ test.skip("basic functionality", () => {
 
     expect(count).toBe(0);
 
-    registerInDifferentScope(registry);
+    const target = registerInDifferentScope(registry);
+    markAsGarbage("target");
     gc();
 
     registry.cleanupSome(increment);

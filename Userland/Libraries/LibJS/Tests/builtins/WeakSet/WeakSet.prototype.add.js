@@ -17,10 +17,13 @@ test("invalid values", () => {
 
 test("automatic removal of garbage-collected values", () => {
     const weakSet = new WeakSet();
-    {
-        expect(weakSet.add({ a: 1 })).toBe(weakSet);
-        expect(getWeakSetSize(weakSet)).toBe(1);
-    }
+    const item = { a: 1 };
+
+    expect(weakSet.add(item)).toBe(weakSet);
+    expect(getWeakSetSize(weakSet)).toBe(1);
+
+    markAsGarbage("item");
     gc();
+
     expect(getWeakSetSize(weakSet)).toBe(0);
 });

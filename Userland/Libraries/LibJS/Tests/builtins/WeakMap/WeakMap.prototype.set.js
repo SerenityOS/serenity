@@ -21,10 +21,13 @@ test("invalid values", () => {
 
 test("automatic removal of garbage-collected values", () => {
     const weakMap = new WeakMap();
-    {
-        expect(weakMap.set({ a: 1 }, 1)).toBe(weakMap);
-        expect(getWeakMapSize(weakMap)).toBe(1);
-    }
+    const key = { e: 3 };
+
+    expect(weakMap.set(key, 1)).toBe(weakMap);
+    expect(getWeakMapSize(weakMap)).toBe(1);
+
+    markAsGarbage("key");
     gc();
+
     expect(getWeakMapSize(weakMap)).toBe(0);
 });
