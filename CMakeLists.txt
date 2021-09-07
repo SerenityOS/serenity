@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/Meta/CMake")
+
 project(SerenityOS C CXX ASM)
 
 if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "")
@@ -141,7 +144,7 @@ if (ENABLE_ALL_DEBUG_FACILITIES)
 endif()
 
 if (ENABLE_ALL_THE_DEBUG_MACROS)
-    include("${SerenityOS_SOURCE_DIR}/Meta/CMake/all_the_debug_macros.cmake")
+    include(all_the_debug_macros)
 endif(ENABLE_ALL_THE_DEBUG_MACROS)
 
 configure_file(AK/Debug.h.in AK/Debug.h @ONLY)
@@ -335,12 +338,11 @@ if (ENABLE_UNDEFINED_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize=vptr")
 endif()
 
-include(Meta/CMake/wasm_spec_tests.cmake)
-
 add_custom_target(components ALL)
 option(BUILD_EVERYTHING "Build all optional components" ON)
 
-include(Meta/CMake/utils.cmake)
+include(utils)
+include(wasm_spec_tests)
 
 serenity_component(
     Tests

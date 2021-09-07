@@ -24,6 +24,8 @@ get_filename_component(
     ABSOLUTE CACHE
 )
 
+list(APPEND CMAKE_MODULE_PATH "${SERENITY_PROJECT_ROOT}/Meta/CMake")
+
 find_package(Threads REQUIRED)
 
 if (ENABLE_LAGOM_CCACHE)
@@ -33,7 +35,7 @@ if (ENABLE_LAGOM_CCACHE)
     endif()
 endif()
 
-include(${SERENITY_PROJECT_ROOT}/Meta/CMake/wasm_spec_tests.cmake)
+include(wasm_spec_tests)
 
 add_compile_options(-Wno-unknown-warning-option -Wno-literal-suffix -Wno-deprecated-copy)
 add_compile_options(-O2)
@@ -378,7 +380,7 @@ if (BUILD_LAGOM)
     # Unicode
     # Don't include UnicodeData for Fuzzer builds, we didn't build the CodeGenerators
     if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER)
-        include(${SERENITY_PROJECT_ROOT}/Meta/CMake/unicode_data.cmake)
+        include(unicode_data)
     else()
         set(ENABLE_UNICODE_DATABASE_DOWNLOAD OFF)
     endif()
@@ -519,7 +521,7 @@ if (BUILD_LAGOM)
         set_tests_properties(JS PROPERTIES ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT})
 
         # Markdown
-        include(${SERENITY_PROJECT_ROOT}/Meta/CMake/commonmark_spec.cmake)
+        include(commonmark_spec)
         file(GLOB LIBMARKDOWN_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibMarkdown/*.cpp")
         foreach(source ${LIBMARKDOWN_TEST_SOURCES})
             lagom_test(${source} LIBS LagomMarkdown)
