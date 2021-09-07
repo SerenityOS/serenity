@@ -27,7 +27,7 @@ EllipseTool::~EllipseTool()
 {
 }
 
-void EllipseTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position)
+void EllipseTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position, int thickness)
 {
     Gfx::IntRect ellipse_intersecting_rect;
     if (m_draw_mode == DrawMode::FromCenter) {
@@ -39,7 +39,7 @@ void EllipseTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_p
 
     switch (m_fill_mode) {
     case FillMode::Outline:
-        painter.draw_ellipse_intersecting(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button), m_thickness);
+        painter.draw_ellipse_intersecting(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button), thickness);
         break;
     case FillMode::Fill:
         painter.fill_ellipse(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button));
@@ -74,7 +74,7 @@ void EllipseTool::on_mouseup(Layer* layer, MouseEvent& event)
 
     if (event.layer_event().button() == m_drawing_button) {
         GUI::Painter painter(layer->bitmap());
-        draw_using(painter, m_ellipse_start_position, m_ellipse_end_position);
+        draw_using(painter, m_ellipse_start_position, m_ellipse_end_position, m_thickness);
         m_drawing_button = GUI::MouseButton::None;
         m_editor->update();
         m_editor->did_complete_action();
@@ -101,7 +101,7 @@ void EllipseTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     auto preview_start = m_editor->layer_position_to_editor_position(*layer, m_ellipse_start_position).to_type<int>();
     auto preview_end = m_editor->layer_position_to_editor_position(*layer, m_ellipse_end_position).to_type<int>();
-    draw_using(painter, preview_start, preview_end);
+    draw_using(painter, preview_start, preview_end, m_thickness * m_editor->scale());
 }
 
 void EllipseTool::on_keydown(GUI::KeyEvent& event)
