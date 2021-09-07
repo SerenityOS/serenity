@@ -75,7 +75,7 @@ Ping them right away if it's something urgent! If it's less urgent, advertise yo
 
 ### Who are the project maintainers?
 
-The project maintainers at this time are [@awesomekling](https://github.com/awesomekling), [@linusg](https://github.com/linusg), [@alimpfard](https://github.com/alimpfard), [@gunnarbeutner](https://github.com/gunnarbeutner), and [@bgianfo](https://github.com/bgianfo).
+The project maintainers at this time are [@awesomekling](https://github.com/awesomekling), [@linusg](https://github.com/linusg), [@alimpfard](https://github.com/alimpfard), [@gunnarbeutner](https://github.com/gunnarbeutner), [@bgianfo](https://github.com/bgianfo), and [@IdanHo](https://github.com/IdanHo).
 
 Maintainership is by invitation only and does not correlate with any particular metric.
 
