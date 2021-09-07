@@ -132,7 +132,7 @@ public:
     virtual bool is_editable(const ModelIndex&) const override;
     virtual bool is_searchable() const override { return true; }
     virtual void set_data(const ModelIndex&, const Variant&) override;
-    virtual Vector<ModelIndex, 1> matches(const StringView&, unsigned = MatchesFlag::AllMatching, const ModelIndex& = ModelIndex()) override;
+    virtual Vector<ModelIndex> matches(const StringView&, unsigned = MatchesFlag::AllMatching, const ModelIndex& = ModelIndex()) override;
     virtual void invalidate() override;
 
     static String timestamp_string(time_t timestamp)

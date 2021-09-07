@@ -29,7 +29,7 @@ public:
     virtual void invalidate() override;
     virtual ModelIndex index(int row, int column = 0, const ModelIndex& parent = ModelIndex()) const override;
     virtual bool is_searchable() const override;
-    virtual Vector<ModelIndex, 1> matches(const StringView&, unsigned = MatchesFlag::AllMatching, const ModelIndex& = ModelIndex()) override;
+    virtual Vector<ModelIndex> matches(const StringView&, unsigned = MatchesFlag::AllMatching, const ModelIndex& = ModelIndex()) override;
 
     void set_filter_term(const StringView& term);
 

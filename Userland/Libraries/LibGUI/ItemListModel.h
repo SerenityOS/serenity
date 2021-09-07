@@ -78,9 +78,9 @@ public:
     }
 
     virtual bool is_searchable() const override { return true; }
-    virtual Vector<GUI::ModelIndex, 1> matches(StringView const& searching, unsigned flags, GUI::ModelIndex const&) override
+    virtual Vector<GUI::ModelIndex> matches(StringView const& searching, unsigned flags, GUI::ModelIndex const&) override
     {
-        Vector<GUI::ModelIndex, 1> found_indices;
+        Vector<GUI::ModelIndex> found_indices;
         if constexpr (IsTwoDimensional) {
             for (auto it = m_data.begin(); it != m_data.end(); ++it) {
                 for (auto it2d = (*it).begin(); it2d != (*it).end(); ++it2d) {
