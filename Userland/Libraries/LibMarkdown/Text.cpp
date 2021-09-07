@@ -21,9 +21,17 @@ void Text::EmphasisNode::render_to_html(StringBuilder& builder) const
     builder.append((strong) ? "</strong>" : "</em>");
 }
 
-void Text::EmphasisNode::render_for_terminal(StringBuilder&) const
+void Text::EmphasisNode::render_for_terminal(StringBuilder& builder) const
 {
-    // FIXME.
+    if (strong) {
+        builder.append("\e[1m");
+        child->render_for_terminal(builder);
+        builder.append("\e[22m");
+    } else {
+        builder.append("\e[3m");
+        child->render_for_terminal(builder);
+        builder.append("\e[23m");
+    }
 }
 
 size_t Text::EmphasisNode::terminal_length() const
@@ -38,9 +46,11 @@ void Text::CodeNode::render_to_html(StringBuilder& builder) const
     builder.append("</code>");
 }
 
-void Text::CodeNode::render_for_terminal(StringBuilder&) const
+void Text::CodeNode::render_for_terminal(StringBuilder& builder) const
 {
-    // FIXME.
+    builder.append("\e[1m");
+    code->render_for_terminal(builder);
+    builder.append("\e[22m");
 }
 
 size_t Text::CodeNode::terminal_length() const
@@ -53,9 +63,11 @@ void Text::TextNode::render_to_html(StringBuilder& builder) const
     builder.append(escape_html_entities(text));
 }
 
-void Text::TextNode::render_for_terminal(StringBuilder&) const
+void Text::TextNode::render_for_terminal(StringBuilder& builder) const
 {
-    // FIXME.
+    String text_copy = text;
+    text_copy.replace("\n", " ");
+    builder.append(text_copy);
 }
 
 size_t Text::TextNode::terminal_length() const
@@ -80,9 +92,25 @@ void Text::LinkNode::render_to_html(StringBuilder& builder) const
     }
 }
 
-void Text::LinkNode::render_for_terminal(StringBuilder&) const
+void Text::LinkNode::render_for_terminal(StringBuilder& builder) const
 {
-    // FIXME.
+    StringBuilder href_builder;
+    href->render_for_terminal(href_builder);
+    String href_string = href_builder.build();
+
+    bool is_linked = href_string.contains("://");
+    if (is_linked) {
+        builder.append("\e]8;;");
+        builder.append(href_string);
+        builder.append("\e\\");
+    }
+
+    text->render_for_terminal(builder);
+
+    if (is_linked) {
+        builder.appendff(" <{}>", href_string);
+        builder.append("\033]8;;\033\\");
+    }
 }
 
 size_t Text::LinkNode::terminal_length() const
@@ -97,9 +125,11 @@ void Text::MultiNode::render_to_html(StringBuilder& builder) const
     }
 }
 
-void Text::MultiNode::render_for_terminal(StringBuilder&) const
+void Text::MultiNode::render_for_terminal(StringBuilder& builder) const
 {
-    // FIXME.
+    for (auto& child : children) {
+        child.render_for_terminal(builder);
+    }
 }
 
 size_t Text::MultiNode::terminal_length() const
