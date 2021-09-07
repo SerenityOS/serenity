@@ -30,7 +30,12 @@ BlockDevice::~BlockDevice()
 
 bool BlockDevice::read_block(u64 index, UserOrKernelBuffer& buffer)
 {
-    auto read_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index, 1, buffer, 512);
+    auto read_request_or_error = try_make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index, 1, buffer, 512);
+    if (read_request_or_error.is_error()) {
+        dbgln("BlockDevice::read_block({}): try_make_request failed", index);
+        return false;
+    }
+    auto read_request = read_request_or_error.release_value();
     switch (read_request->wait().request_result()) {
     case AsyncDeviceRequest::Success:
         return true;
@@ -51,7 +56,12 @@ bool BlockDevice::read_block(u64 index, UserOrKernelBuffer& buffer)
 
 bool BlockDevice::write_block(u64 index, const UserOrKernelBuffer& buffer)
 {
-    auto write_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Write, index, 1, buffer, 512);
+    auto write_request_or_error = try_make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Write, index, 1, buffer, 512);
+    if (write_request_or_error.is_error()) {
+        dbgln("BlockDevice::write_block({}): try_make_request failed", index);
+        return false;
+    }
+    auto write_request = write_request_or_error.release_value();
     switch (write_request->wait().request_result()) {
     case AsyncDeviceRequest::Success:
         return true;
