@@ -6,15 +6,15 @@
 
 #pragma once
 
+#include <LibGUI/MouseTracker.h>
 #include <LibGUI/Widget.h>
-#include <LibGfx/Point.h>
 
-class EyesWidget final : public GUI::Widget {
+class EyesWidget final : public GUI::Widget
+    , GUI::MouseTracker {
     C_OBJECT(EyesWidget)
 
 public:
     virtual ~EyesWidget();
-    void track_cursor_globally();
 
 private:
     EyesWidget(int num_eyes, int full_rows, int extra)
@@ -25,8 +25,8 @@ private:
         m_eyes_in_row = m_full_rows > 0 ? (num_eyes - m_extra_columns) / m_full_rows : m_extra_columns;
     }
 
-    virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void track_mouse_move(Gfx::IntPoint const&) override;
 
     void render_eyeball(int row, int column, GUI::Painter&) const;
     Gfx::IntPoint pupil_center(Gfx::IntRect& eyeball_bounds) const;

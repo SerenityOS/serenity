@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
     window->resize(75 * (full_rows > 0 ? max_in_row : extra_columns), 100 * (full_rows + (extra_columns > 0 ? 1 : 0)));
     window->set_has_alpha_channel(true);
 
-    auto& eyes = window->set_main_widget<EyesWidget>(num_eyes, full_rows, extra_columns);
+    window->set_main_widget<EyesWidget>(num_eyes, full_rows, extra_columns);
 
     auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
@@ -85,7 +85,6 @@ int main(int argc, char* argv[])
     help_menu.add_action(GUI::CommonActions::make_about_action("Eyes Demo", app_icon, window));
 
     window->show();
-    eyes.track_cursor_globally();
 
     return app->exec();
 }
