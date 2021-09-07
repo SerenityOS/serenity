@@ -12,17 +12,13 @@ command used to initialize the build directory.
 For a full build, pass `-DBUILD_LAGOM=ON` to the CMake command.
 
 ```sh
-mkdir -p Build/lagom
-cd Build/lagom
-cmake ../.. -GNinja -DBUILD_LAGOM=ON
+cmake -GNinja -S Meta/CMake/Superbuild -B Build/superbuild-i686 -DBUILD_LAGOM=ON
 ```
 
 For a Lagom-only build, pass the Lagom directory to CMake. The `BUILD_LAGOM` CMake option is still required.
 
 ```sh
-mkdir BuildLagom
-cd BuildLagom
-cmake ../Meta/Lagom -GNinja -DBUILD_LAGOM=ON
+cmake -GNinja -S Meta/Lagom -B Build/lagom -DBUILD_LAGOM=ON
 ```
 
 In both cases, the tests can be run via ninja after doing a build. Note that `test-js` requires the `SERENITY_SOURCE_DIR` environment variable to be set
@@ -30,8 +26,9 @@ to the root of the serenity source tree when running on a non-SerenityOS host.
 
 ```sh
 # /path/to/serenity repository
-export SERENITY_SOURCE_DIR=${PWD}/..
-ninja && ninja test
+export SERENITY_SOURCE_DIR=${PWD}
+cd Build/lagom
+ninja test
 ```
 
 To see the stdout/stderr output of failing tests, the recommended way is to set the environment variable [`CTEST_OUTPUT_ON_FAILURE`](https://cmake.org/cmake/help/latest/manual/ctest.1.html#options) to 1.
@@ -51,15 +48,13 @@ signed integer overflow. For more info on the sanitizers, check out the Address 
 or the Undefined Sanitizer [documentation](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html) from clang.
 
 Note that a sanitizer build will take significantly longer than a non-santizer build, and will mess with caches in tools such as `ccache`.
-The sanitizers can be enabled with the `-DENABLE_FOO_SANITIZER` set of flags. Sanitizers are only supported for Lagom tests, as SerenityOS support
-for gcc's `libsanitizer` is not yet implemented.
+The sanitizers can be enabled with the `-DENABLE_FOO_SANITIZER` set of flags. For the Serenity target, only the Undefined Sanitizers is supported.
 
 ```sh
-mkdir BuildLagom
-cd BuildLagom
-cmake ../Meta/Lagom -GNinja -DBUILD_LAGOM=ON -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_UNDEFINED_SANITIZER=ON
+cmake -GNinja -S Meta/Lagom -B Build/lagom -DBUILD_LAGOM=ON -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_UNDEFINED_SANITIZER=ON
+cd Build/lagom
 ninja
-CTEST_OUTPUT_ON_FAILURE=1 SERENITY_SOURCE_DIR=${PWD}/.. ninja test
+CTEST_OUTPUT_ON_FAILURE=1 SERENITY_SOURCE_DIR=${PWD}/../.. ninja test
 ```
 
 To ensure that Undefined Sanitizer errors fail the test, the `halt_on_error` flag should be set to 1 in the environment variable `UBSAN_OPTIONS`.
@@ -80,9 +75,9 @@ will run `shutdown -n` after running all the tests.
 For completeness, a basic on-target test run will need the SerenityOS image built and run via QEMU.
 
 ```sh
-mkdir Build/i686
+cmake -GNinja -S Meta/CMake/Superbuild -B Build/superbuild-i686
+cmake --build Build/superbuild-i686
 cd Build/i686
-cmake ../.. -GNinja
 ninja install && ninja image && ninja run
 ```
 
