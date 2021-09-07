@@ -113,8 +113,6 @@ public:
         return adopt_nonnull_own_or_enomem(new (nothrow) KBuffer(impl.release_nonnull()));
     }
 
-    [[nodiscard]] bool is_null() const { return false; }
-
     [[nodiscard]] u8* data() { return m_impl->data(); }
     [[nodiscard]] const u8* data() const { return m_impl->data(); }
     [[nodiscard]] size_t size() const { return m_impl->size(); }
