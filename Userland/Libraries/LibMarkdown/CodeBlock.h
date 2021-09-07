@@ -14,9 +14,9 @@ namespace Markdown {
 
 class CodeBlock final : public Block {
 public:
-    CodeBlock(Text&& style_spec, const String& code)
+    CodeBlock(const String& language, const String& code)
         : m_code(move(code))
-        , m_style_spec(move(style_spec))
+        , m_language(language)
     {
     }
     virtual ~CodeBlock() override { }
@@ -26,11 +26,8 @@ public:
     static OwnPtr<CodeBlock> parse(Vector<StringView>::ConstIterator& lines);
 
 private:
-    String style_language() const;
-    Text::Style style() const;
-
     String m_code;
-    Text m_style_spec;
+    String m_language;
 };
 
 }
