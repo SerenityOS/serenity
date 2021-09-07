@@ -17,9 +17,9 @@ extern u8 end_of_kernel_image[];
 
 namespace Kernel::Memory {
 
-static Singleton<HashMap<FlatPtr, PageDirectory*>> s_cr3_map;
+static Singleton<IntrusiveRedBlackTree<FlatPtr, PageDirectory, RawPtr<PageDirectory>, &PageDirectory::m_tree_node>> s_cr3_map;
 
-static HashMap<FlatPtr, PageDirectory*>& cr3_map()
+static IntrusiveRedBlackTree<FlatPtr, PageDirectory, RawPtr<PageDirectory>, &PageDirectory::m_tree_node>& cr3_map()
 {
     VERIFY_INTERRUPTS_DISABLED();
     return *s_cr3_map;
@@ -28,7 +28,7 @@ static HashMap<FlatPtr, PageDirectory*>& cr3_map()
 RefPtr<PageDirectory> PageDirectory::find_by_cr3(FlatPtr cr3)
 {
     SpinlockLocker lock(s_mm_lock);
-    return cr3_map().get(cr3).value_or({});
+    return cr3_map().find(cr3);
 }
 
 UNMAP_AFTER_INIT NonnullRefPtr<PageDirectory> PageDirectory::must_create_kernel_page_directory()
@@ -132,7 +132,7 @@ KResultOr<NonnullRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace(
     auto* new_pd = MM.quickmap_pd(*directory, 0);
     memcpy(new_pd, &buffer, sizeof(PageDirectoryEntry));
 
-    cr3_map().set(directory->cr3(), directory.ptr());
+    cr3_map().insert(directory->cr3(), directory);
     return directory;
 }
 

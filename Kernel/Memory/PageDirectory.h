@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AK/IntrusiveRedBlackTree.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <Kernel/Forward.h>
@@ -45,6 +46,9 @@ public:
     void set_space(Badge<AddressSpace>, AddressSpace& space) { m_space = &space; }
 
     RecursiveSpinlock& get_lock() { return m_lock; }
+
+    // This has to be public to let the global singleton access the member pointer
+    IntrusiveRedBlackTreeNode<FlatPtr, PageDirectory, RawPtr<PageDirectory>> m_tree_node;
 
 private:
     PageDirectory();
