@@ -130,7 +130,7 @@ void TCPSocket::release_for_accept(RefPtr<TCPSocket> socket)
     [[maybe_unused]] auto rc = queue_connection_from(*socket);
 }
 
-TCPSocket::TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, OwnPtr<KBuffer> scratch_buffer)
+TCPSocket::TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, NonnullOwnPtr<KBuffer> scratch_buffer)
     : IPv4Socket(SOCK_STREAM, protocol, move(receive_buffer), move(scratch_buffer))
 {
     m_last_retransmit_time = kgettimeofday();
@@ -154,7 +154,7 @@ KResultOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create(int protocol, NonnullO
     if (!scratch_buffer)
         return ENOMEM;
 
-    return adopt_nonnull_ref_or_enomem(new (nothrow) TCPSocket(protocol, move(receive_buffer), move(scratch_buffer)));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) TCPSocket(protocol, move(receive_buffer), scratch_buffer.release_nonnull()));
 }
 
 KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)

@@ -165,7 +165,7 @@ protected:
     void set_direction(Direction direction) { m_direction = direction; }
 
 private:
-    explicit TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, OwnPtr<KBuffer> scratch_buffer);
+    explicit TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, NonnullOwnPtr<KBuffer> scratch_buffer);
     virtual StringView class_name() const override { return "TCPSocket"; }
 
     virtual void shut_down_for_writing() override;
