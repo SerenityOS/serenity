@@ -16,7 +16,7 @@ class SlavePTY;
 
 class MasterPTY final : public CharacterDevice {
 public:
-    [[nodiscard]] static RefPtr<MasterPTY> try_create(unsigned index);
+    static KResultOr<NonnullRefPtr<MasterPTY>> try_create(unsigned index);
     virtual ~MasterPTY() override;
 
     unsigned index() const { return m_index; }

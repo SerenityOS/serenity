@@ -16,22 +16,12 @@
 
 namespace Kernel {
 
-RefPtr<MasterPTY> MasterPTY::try_create(unsigned int index)
+KResultOr<NonnullRefPtr<MasterPTY>> MasterPTY::try_create(unsigned int index)
 {
-    auto buffer_or_error = DoubleBuffer::try_create();
-    if (buffer_or_error.is_error())
-        return {};
-
-    auto master_pty = adopt_ref_if_nonnull(new (nothrow) MasterPTY(index, buffer_or_error.release_value()));
-    if (!master_pty)
-        return {};
-
-    auto slave_pty = adopt_ref_if_nonnull(new (nothrow) SlavePTY(*master_pty, index));
-    if (!slave_pty)
-        return {};
-
+    auto buffer = TRY(DoubleBuffer::try_create());
+    auto master_pty = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MasterPTY(index, move(buffer))));
+    auto slave_pty = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SlavePTY(*master_pty, index)));
     master_pty->m_slave = slave_pty;
-
     return master_pty;
 }
 
