@@ -164,8 +164,7 @@ KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
     size_t payload_size = raw_ipv4_packet.size() - sizeof(IPv4Packet) - tcp_packet.header_size();
     dbgln_if(TCP_SOCKET_DEBUG, "payload_size {}, will it fit in {}?", payload_size, buffer_size);
     VERIFY(buffer_size >= payload_size);
-    if (auto result = buffer.write(tcp_packet.payload(), payload_size); result.is_error())
-        return set_so_error(result);
+    SOCKET_TRY(buffer.write(tcp_packet.payload(), payload_size));
     return payload_size;
 }
 

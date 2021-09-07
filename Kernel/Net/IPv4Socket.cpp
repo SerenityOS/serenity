@@ -100,9 +100,8 @@ KResult IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_t addr
     if (address_size != sizeof(sockaddr_in))
         return set_so_error(EINVAL);
 
-    sockaddr_in address;
-    if (copy_from_user(&address, user_address, sizeof(sockaddr_in)).is_error())
-        return set_so_error(EFAULT);
+    sockaddr_in address {};
+    SOCKET_TRY(copy_from_user(&address, user_address, sizeof(sockaddr_in)));
 
     if (address.sin_family != AF_INET)
         return set_so_error(EINVAL);
@@ -145,16 +144,14 @@ KResult IPv4Socket::connect(OpenFileDescription& description, Userspace<const so
         return set_so_error(EINVAL);
     u16 sa_family_copy;
     auto* user_address = reinterpret_cast<const sockaddr*>(address.unsafe_userspace_ptr());
-    if (copy_from_user(&sa_family_copy, &user_address->sa_family, sizeof(u16)).is_error())
-        return set_so_error(EFAULT);
+    SOCKET_TRY(copy_from_user(&sa_family_copy, &user_address->sa_family, sizeof(u16)));
     if (sa_family_copy != AF_INET)
         return set_so_error(EINVAL);
     if (m_role == Role::Connected)
         return set_so_error(EISCONN);
 
-    sockaddr_in safe_address;
-    if (copy_from_user(&safe_address, (const sockaddr_in*)user_address, sizeof(sockaddr_in)).is_error())
-        return set_so_error(EFAULT);
+    sockaddr_in safe_address {};
+    SOCKET_TRY(copy_from_user(&safe_address, (sockaddr_in const*)user_address, sizeof(sockaddr_in)));
 
     m_peer_address = IPv4Address((const u8*)&safe_address.sin_addr.s_addr);
     if (m_peer_address == IPv4Address { 0, 0, 0, 0 })
@@ -198,9 +195,8 @@ KResultOr<size_t> IPv4Socket::sendto(OpenFileDescription&, const UserOrKernelBuf
         return set_so_error(EINVAL);
 
     if (addr) {
-        sockaddr_in ia;
-        if (copy_from_user(&ia, Userspace<const sockaddr_in*>(addr.ptr())).is_error())
-            return set_so_error(EFAULT);
+        sockaddr_in ia {};
+        SOCKET_TRY(copy_from_user(&ia, Userspace<const sockaddr_in*>(addr.ptr())));
 
         if (ia.sin_family != AF_INET) {
             dmesgln("sendto: Bad address family: {} is not AF_INET", ia.sin_family);
@@ -358,19 +354,16 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(OpenFileDescription& descr
         out_addr.sin_port = htons(packet.peer_port);
         out_addr.sin_family = AF_INET;
         Userspace<sockaddr_in*> dest_addr = addr.ptr();
-        if (copy_to_user(dest_addr, &out_addr).is_error())
-            return set_so_error(EFAULT);
+        SOCKET_TRY(copy_to_user(dest_addr, &out_addr));
 
         socklen_t out_length = sizeof(sockaddr_in);
         VERIFY(addr_length);
-        if (copy_to_user(addr_length, &out_length).is_error())
-            return set_so_error(EFAULT);
+        SOCKET_TRY(copy_to_user(addr_length, &out_length));
     }
 
     if (type() == SOCK_RAW) {
         size_t bytes_written = min(packet.data.value().size(), buffer_length);
-        if (auto result = buffer.write(packet.data.value().data(), bytes_written); result.is_error())
-            return set_so_error(result);
+        SOCKET_TRY(buffer.write(packet.data.value().data(), bytes_written));
         return bytes_written;
     }
 
@@ -381,8 +374,7 @@ KResultOr<size_t> IPv4Socket::recvfrom(OpenFileDescription& description, UserOrK
 {
     if (user_addr_length) {
         socklen_t addr_length;
-        if (copy_from_user(&addr_length, user_addr_length.unsafe_userspace_ptr()).is_error())
-            return set_so_error(EFAULT);
+        SOCKET_TRY(copy_from_user(&addr_length, user_addr_length.unsafe_userspace_ptr()));
         if (addr_length < sizeof(sockaddr_in))
             return set_so_error(EINVAL);
     }
