@@ -209,4 +209,13 @@ private:
     RefPtr<SocketType> m_socket;
 };
 
+// This is a special variant of TRY() that also updates the socket's SO_ERROR field on error.
+#define SOCKET_TRY(expression)                           \
+    ({                                                   \
+        auto result = (expression);                      \
+        if (result.is_error())                           \
+            return set_so_error(result.release_error()); \
+        result.release_value();                          \
+    })
+
 }

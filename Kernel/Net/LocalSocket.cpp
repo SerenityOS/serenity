@@ -113,17 +113,12 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
         return set_so_error(EINVAL);
 
     sockaddr_un address = {};
-    if (copy_from_user(&address, user_address, sizeof(sockaddr_un)).is_error())
-        return set_so_error(EFAULT);
+    SOCKET_TRY(copy_from_user(&address, user_address, sizeof(sockaddr_un)));
 
     if (address.sun_family != AF_LOCAL)
         return set_so_error(EINVAL);
 
-    auto path_kstring_or_error = KString::try_create(StringView { address.sun_path, strnlen(address.sun_path, sizeof(address.sun_path)) });
-    if (path_kstring_or_error.is_error())
-        return set_so_error(path_kstring_or_error.error());
-    auto path = path_kstring_or_error.release_value();
-
+    auto path = SOCKET_TRY(KString::try_create(StringView { address.sun_path, strnlen(address.sun_path, sizeof(address.sun_path)) }));
     dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) bind({})", this, path);
 
     mode_t mode = S_IFSOCK | (m_prebind_mode & 0777);
@@ -155,8 +150,7 @@ KResult LocalSocket::connect(OpenFileDescription& description, Userspace<const s
         return set_so_error(EINVAL);
     u16 sa_family_copy;
     auto* user_address = reinterpret_cast<const sockaddr*>(address.unsafe_userspace_ptr());
-    if (copy_from_user(&sa_family_copy, &user_address->sa_family, sizeof(u16)).is_error())
-        return set_so_error(EFAULT);
+    SOCKET_TRY(copy_from_user(&sa_family_copy, &user_address->sa_family, sizeof(u16)));
     if (sa_family_copy != AF_LOCAL)
         return set_so_error(EINVAL);
     if (is_connected())
@@ -166,23 +160,15 @@ KResult LocalSocket::connect(OpenFileDescription& description, Userspace<const s
     {
         auto const& local_address = *reinterpret_cast<sockaddr_un const*>(user_address);
         char safe_address[sizeof(local_address.sun_path) + 1] = { 0 };
-        if (copy_from_user(&safe_address[0], &local_address.sun_path[0], sizeof(safe_address) - 1).is_error())
-            return set_so_error(EFAULT);
+        SOCKET_TRY(copy_from_user(&safe_address[0], &local_address.sun_path[0], sizeof(safe_address) - 1));
         safe_address[sizeof(safe_address) - 1] = '\0';
-        auto path_kstring_or_error = KString::try_create(safe_address);
-        if (path_kstring_or_error.is_error())
-            return set_so_error(path_kstring_or_error.error());
-        maybe_path = path_kstring_or_error.release_value();
+        maybe_path = SOCKET_TRY(KString::try_create(safe_address));
     }
 
     auto path = maybe_path.release_nonnull();
     dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) connect({})", this, *path);
 
-    auto description_or_error = VirtualFileSystem::the().open(path->view(), O_RDWR, 0, Process::current().current_directory());
-    if (description_or_error.is_error())
-        return set_so_error(ECONNREFUSED);
-
-    m_file = move(description_or_error.value());
+    m_file = SOCKET_TRY(VirtualFileSystem::the().open(path->view(), O_RDWR, 0, Process::current().current_directory()));
 
     VERIFY(m_file->inode());
     if (!m_file->inode()->socket())
