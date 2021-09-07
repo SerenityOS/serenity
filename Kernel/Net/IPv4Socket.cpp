@@ -426,7 +426,7 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
             dbgln("IPv4Socket({}): did_receive refusing packet since queue is full.", this);
             return false;
         }
-        auto data_or_error = KBuffer::try_copy(packet.data(), packet.size());
+        auto data_or_error = KBuffer::try_create_with_bytes(packet);
         if (data_or_error.is_error()) {
             dbgln("IPv4Socket: did_receive unable to allocate storage for incoming packet.");
             return false;
