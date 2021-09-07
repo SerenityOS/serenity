@@ -146,10 +146,6 @@ public:
     void update();
     void update(const Gfx::IntRect&);
 
-    void set_global_cursor_tracking_widget(Widget*);
-    Widget* global_cursor_tracking_widget() { return m_global_cursor_tracking_widget.ptr(); }
-    const Widget* global_cursor_tracking_widget() const { return m_global_cursor_tracking_widget.ptr(); }
-
     void set_automatic_cursor_tracking_widget(Widget*);
     Widget* automatic_cursor_tracking_widget() { return m_automatic_cursor_tracking_widget.ptr(); }
     const Widget* automatic_cursor_tracking_widget() const { return m_automatic_cursor_tracking_widget.ptr(); }
@@ -253,7 +249,6 @@ private:
     float m_alpha_hit_threshold { 0.0f };
     RefPtr<Widget> m_main_widget;
     WeakPtr<Widget> m_focused_widget;
-    WeakPtr<Widget> m_global_cursor_tracking_widget;
     WeakPtr<Widget> m_automatic_cursor_tracking_widget;
     WeakPtr<Widget> m_hovered_widget;
     Gfx::IntRect m_rect_when_windowless;

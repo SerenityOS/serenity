@@ -113,7 +113,6 @@ private:
     virtual Messages::WindowServer::GetAppletRectOnScreenResponse get_applet_rect_on_screen(i32) override;
     virtual void invalidate_rect(i32, Vector<Gfx::IntRect> const&, bool) override;
     virtual void did_finish_painting(i32, Vector<Gfx::IntRect> const&) override;
-    virtual void set_global_cursor_tracking(i32, bool) override;
     virtual void set_global_mouse_tracking(bool) override;
     virtual void set_window_opacity(i32, float) override;
     virtual void set_window_backing_store(i32, i32, i32, IPC::File const&, i32, bool, Gfx::IntSize const&, bool) override;

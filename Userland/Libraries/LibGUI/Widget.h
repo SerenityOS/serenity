@@ -223,9 +223,6 @@ public:
     void set_font_weight(unsigned);
     void set_font_fixed_width(bool);
 
-    void set_global_cursor_tracking(bool);
-    bool global_cursor_tracking() const;
-
     void notify_layout_changed(Badge<Layout>);
     void invalidate_layout();
 
