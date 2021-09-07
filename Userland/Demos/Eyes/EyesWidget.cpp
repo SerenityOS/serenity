@@ -8,26 +8,15 @@
 #include <AK/Math.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Palette.h>
 
 EyesWidget::~EyesWidget()
 {
 }
 
-void EyesWidget::track_cursor_globally()
+void EyesWidget::track_mouse_move(Gfx::IntPoint const& point)
 {
-    VERIFY(window());
-    auto window_id = window()->window_id();
-    VERIFY(window_id >= 0);
-
-    set_global_cursor_tracking(true);
-    GUI::WindowServerConnection::the().async_set_global_cursor_tracking(window_id, true);
-}
-
-void EyesWidget::mousemove_event(GUI::MouseEvent& event)
-{
-    m_mouse_position = event.position();
+    m_mouse_position = point - window()->position();
     update();
 }
 
