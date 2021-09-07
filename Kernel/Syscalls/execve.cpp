@@ -275,7 +275,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
     size_t master_tls_alignment = 0;
     FlatPtr load_base_address = 0;
 
-    String elf_name = object_description.absolute_path();
+    auto elf_name = TRY(object_description.try_serialize_absolute_path());
     VERIFY(!Processor::in_critical());
 
     Memory::MemoryManager::enter_address_space(*new_space);
@@ -353,7 +353,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
         auto range_base = VirtualAddress { Memory::page_round_down(program_header.vaddr().offset(load_offset).get()) };
         auto range_end = VirtualAddress { Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()) };
         auto range = TRY(new_space->try_allocate_range(range_base, range_end.get() - range_base.get()));
-        auto region = TRY(new_space->allocate_region_with_vmobject(range, *vmobject, program_header.offset(), elf_name, prot, true));
+        auto region = TRY(new_space->allocate_region_with_vmobject(range, *vmobject, program_header.offset(), elf_name->view(), prot, true));
 
         if (should_allow_syscalls == ShouldAllowSyscalls::Yes)
             region->set_syscall_region(true);
@@ -438,7 +438,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
 {
     VERIFY(is_user_process());
     VERIFY(!Processor::in_critical());
-    auto path = main_program_description->absolute_path();
+    auto path = TRY(main_program_description->try_serialize_absolute_path());
 
     dbgln_if(EXEC_DEBUG, "do_exec: {}", path);
 
@@ -446,7 +446,8 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     if (!validate_stack_size(arguments, environment))
         return E2BIG;
 
-    auto parts = path.split_view('/');
+    // FIXME: split_view() currently allocates (Vector) without checking for failure.
+    auto parts = path->view().split_view('/');
     if (parts.is_empty())
         return ENOENT;
 
@@ -549,7 +550,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     }
     VERIFY(new_main_thread);
 
-    auto auxv = generate_auxiliary_vector(load_result.load_base, load_result.entry_eip, uid(), euid(), gid(), egid(), path, main_program_fd_allocation);
+    auto auxv = generate_auxiliary_vector(load_result.load_base, load_result.entry_eip, uid(), euid(), gid(), egid(), path->view(), main_program_fd_allocation);
 
     // NOTE: We create the new stack before disabling interrupts since it will zero-fault
     //       and we don't want to deal with faults after this point.
@@ -706,7 +707,7 @@ static KResultOr<Vector<String>> find_shebang_interpreter_for_executable(char co
     return ENOEXEC;
 }
 
-KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(String const& path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size)
+KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size)
 {
     // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
     String interpreter_path;
@@ -771,7 +772,7 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
     return nullptr;
 }
 
-KResult Process::exec(String path, Vector<String> arguments, Vector<String> environment, int recursion_depth)
+KResult Process::exec(NonnullOwnPtr<KString> path, Vector<String> arguments, Vector<String> environment, int recursion_depth)
 {
     if (recursion_depth > 2) {
         dbgln("exec({}): SHENANIGANS! recursed too far trying to find #! interpreter", path);
@@ -785,7 +786,7 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
     //        * ET_EXEC binary that just gets loaded
     //        * ET_DYN binary that requires a program interpreter
     //
-    auto description = TRY(VirtualFileSystem::the().open(path, O_EXEC, 0, current_directory()));
+    auto description = TRY(VirtualFileSystem::the().open(path->view(), O_EXEC, 0, current_directory()));
     auto metadata = description->metadata();
 
     if (!metadata.is_regular_file())
@@ -806,8 +807,9 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
     auto shebang_result = find_shebang_interpreter_for_executable(first_page, nread);
     if (!shebang_result.is_error()) {
         auto shebang_words = shebang_result.release_value();
-        auto shebang_path = shebang_words.first();
-        arguments[0] = move(path);
+        auto shebang_path = TRY(KString::try_create(shebang_words.first()));
+        // FIXME: Don't use String.
+        arguments[0] = path->view();
         if (!arguments.try_prepend(move(shebang_words)))
             return ENOMEM;
         return exec(move(shebang_path), move(arguments), move(environment), ++recursion_depth);
@@ -829,7 +831,7 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
     Thread* new_main_thread = nullptr;
     u32 prev_flags = 0;
 
-    auto interpreter_description = TRY(find_elf_interpreter_for_executable(path, *main_program_header, nread, metadata.size));
+    auto interpreter_description = TRY(find_elf_interpreter_for_executable(path->view(), *main_program_header, nread, metadata.size));
     TRY(do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, prev_flags, *main_program_header));
 
     VERIFY_INTERRUPTS_DISABLED();
@@ -869,12 +871,7 @@ KResultOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params
     if (params.arguments.length > ARG_MAX || params.environment.length > ARG_MAX)
         return E2BIG;
 
-    // FIXME: This should use KString.
-    String path;
-    {
-        auto path_arg = TRY(get_syscall_path_argument(params.path));
-        path = path_arg->view();
-    }
+    auto path = TRY(get_syscall_path_argument(params.path));
 
     auto copy_user_strings = [](const auto& list, auto& output) -> KResult {
         if (!list.length)
