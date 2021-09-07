@@ -14,6 +14,14 @@
 
 namespace AK {
 
+// NOTE: If you're here because of an internal compiler error in GCC 10.3.0+,
+//       it's because of the following bug:
+//
+//       https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96745
+//
+//       Make sure you didn't accidentally make your destructor private before
+//       you start bug hunting. :^)
+
 template<typename T>
 class [[nodiscard]] Optional {
 public:
