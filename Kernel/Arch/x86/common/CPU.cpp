@@ -20,6 +20,11 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
 
 [[noreturn]] void abort()
 {
+    // Avoid lock ranking checks on crashing paths, just try to get some debugging messages out.
+    auto thread = Thread::current();
+    if (thread)
+        thread->set_crashing();
+
     // Switch back to the current process's page tables if there are any.
     // Otherwise stack walking will be a disaster.
     if (Process::has_current())

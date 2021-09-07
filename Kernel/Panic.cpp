@@ -10,6 +10,7 @@
 #include <Kernel/IO.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Panic.h>
+#include <Kernel/Thread.h>
 
 namespace Kernel {
 
@@ -25,6 +26,11 @@ namespace Kernel {
 
 void __panic(const char* file, unsigned int line, const char* function)
 {
+    // Avoid lock ranking checks on crashing paths, just try to get some debugging messages out.
+    auto thread = Thread::current();
+    if (thread)
+        thread->set_crashing();
+
     critical_dmesgln("at {}:{} in {}", file, line, function);
     dump_backtrace(PrintToScreen::Yes);
     if (kernel_command_line().boot_mode() == BootMode::SelfTest)
