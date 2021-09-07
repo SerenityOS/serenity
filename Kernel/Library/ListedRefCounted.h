@@ -20,15 +20,19 @@ class ListedRefCounted : public RefCountedBase {
 public:
     bool unref() const
     {
-        bool did_hit_zero = T::all_instances().with([&](auto& list) {
-            if (deref_base())
-                return false;
-            list.remove(const_cast<T&>(static_cast<T const&>(*this)));
-            return true;
+        auto new_ref_count = T::all_instances().with([&](auto& list) {
+            auto new_ref_count = deref_base();
+            if (new_ref_count == 0)
+                list.remove(const_cast<T&>(static_cast<T const&>(*this)));
+            return new_ref_count;
         });
-        if (did_hit_zero)
+        if (new_ref_count == 0) {
+            call_will_be_destroyed_if_present(static_cast<const T*>(this));
             delete const_cast<T*>(static_cast<T const*>(this));
-        return did_hit_zero;
+        } else if (new_ref_count == 1) {
+            call_one_ref_left_if_present(static_cast<T const*>(this));
+        }
+        return new_ref_count == 0;
     }
 };
 
