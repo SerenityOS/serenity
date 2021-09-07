@@ -33,8 +33,11 @@ const DiskPartitionMetadata& DiskPartition::metadata() const
 
 void DiskPartition::start_request(AsyncBlockDeviceRequest& request)
 {
-    request.add_sub_request(m_device->make_request<AsyncBlockDeviceRequest>(request.request_type(),
-        request.block_index() + m_metadata.start_block(), request.block_count(), request.buffer(), request.buffer_size()));
+    auto sub_request_or_error = m_device->try_make_request<AsyncBlockDeviceRequest>(request.request_type(),
+        request.block_index() + m_metadata.start_block(), request.block_count(), request.buffer(), request.buffer_size());
+    if (sub_request_or_error.is_error())
+        TODO();
+    request.add_sub_request(sub_request_or_error.release_value());
 }
 
 KResultOr<size_t> DiskPartition::read(OpenFileDescription& fd, u64 offset, UserOrKernelBuffer& outbuf, size_t len)

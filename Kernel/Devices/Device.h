@@ -48,9 +48,9 @@ public:
     void process_next_queued_request(Badge<AsyncDeviceRequest>, const AsyncDeviceRequest&);
 
     template<typename AsyncRequestType, typename... Args>
-    NonnullRefPtr<AsyncRequestType> make_request(Args&&... args)
+    KResultOr<NonnullRefPtr<AsyncRequestType>> try_make_request(Args&&... args)
     {
-        auto request = adopt_ref(*new AsyncRequestType(*this, forward<Args>(args)...));
+        auto request = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AsyncRequestType(*this, forward<Args>(args)...)));
         SpinlockLocker lock(m_requests_lock);
         bool was_empty = m_requests.is_empty();
         m_requests.append(request);
