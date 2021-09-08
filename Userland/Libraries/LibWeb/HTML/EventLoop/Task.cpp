@@ -9,8 +9,9 @@
 
 namespace Web::HTML {
 
-Task::Task(DOM::Document* document, Function<void()> steps)
-    : m_steps(move(steps))
+Task::Task(Source source, DOM::Document* document, Function<void()> steps)
+    : m_source(source)
+    , m_steps(move(steps))
     , m_document(document)
 {
 }

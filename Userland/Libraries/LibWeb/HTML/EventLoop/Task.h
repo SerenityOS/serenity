@@ -15,20 +15,31 @@ namespace Web::HTML {
 
 class Task {
 public:
-    static NonnullOwnPtr<Task> create(DOM::Document* document, Function<void()> steps)
+    // https://html.spec.whatwg.org/multipage/webappapis.html#generic-task-sources
+    enum class Source {
+        Unspecified,
+        DOMManipulation,
+        UserInteraction,
+        Networking,
+        HistoryTraversal,
+    };
+
+    static NonnullOwnPtr<Task> create(Source source, DOM::Document* document, Function<void()> steps)
     {
-        return adopt_own(*new Task(document, move(steps)));
+        return adopt_own(*new Task(source, document, move(steps)));
     }
     ~Task();
 
+    Source source() const { return m_source; }
     void execute();
 
     DOM::Document* document() { return m_document; }
     DOM::Document const* document() const { return m_document; }
 
 private:
-    Task(DOM::Document*, Function<void()> steps);
+    Task(Source, DOM::Document*, Function<void()> steps);
 
+    Source m_source { Source::Unspecified };
     Function<void()> m_steps;
     RefPtr<DOM::Document> m_document;
 };
