@@ -34,6 +34,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(to_json);
     JS_DECLARE_NATIVE_FUNCTION(value_of);
     JS_DECLARE_NATIVE_FUNCTION(to_zoned_date_time);
+    JS_DECLARE_NATIVE_FUNCTION(to_zoned_date_time_iso);
 };
 
 }

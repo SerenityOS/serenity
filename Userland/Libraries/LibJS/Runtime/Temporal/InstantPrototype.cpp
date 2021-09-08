@@ -49,6 +49,7 @@ void InstantPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toJSON, to_json, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
     define_native_function(vm.names.toZonedDateTime, to_zoned_date_time, 1, attr);
+    define_native_function(vm.names.toZonedDateTimeISO, to_zoned_date_time_iso, 1, attr);
 }
 
 static Instant* typed_this(GlobalObject& global_object)
@@ -565,6 +566,43 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
         return {};
 
     // 10. Return ? CreateTemporalZonedDateTime(instant.[[Nanoseconds]], timeZone, calendar).
+    return create_temporal_zoned_date_time(global_object, instant->nanoseconds(), *time_zone, *calendar);
+}
+
+// 8.3.18 Temporal.Instant.prototype.toZonedDateTimeISO ( item ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tozoneddatetimeiso
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time_iso)
+{
+    auto item = vm.argument(0);
+
+    // 1. Let instant be the this value.
+    // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
+    auto* instant = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. If Type(item) is Object, then
+    if (item.is_object()) {
+        // a. Let timeZoneProperty be ? Get(item, "timeZone").
+        auto time_zone_property = item.as_object().get(vm.names.timeZone);
+        if (vm.exception())
+            return {};
+
+        // b. If timeZoneProperty is not undefined, then
+        if (!time_zone_property.is_undefined()) {
+            // i. Set item to timeZoneProperty.
+            item = time_zone_property;
+        }
+    }
+
+    // 4. Let timeZone be ? ToTemporalTimeZone(item).
+    auto* time_zone = to_temporal_time_zone(global_object, item);
+    if (vm.exception())
+        return {};
+
+    // 5. Let calendar be ! GetISO8601Calendar().
+    auto* calendar = get_iso8601_calendar(global_object);
+
+    // 6. Return ? CreateTemporalZonedDateTime(instant.[[Nanoseconds]], timeZone, calendar).
     return create_temporal_zoned_date_time(global_object, instant->nanoseconds(), *time_zone, *calendar);
 }
 
