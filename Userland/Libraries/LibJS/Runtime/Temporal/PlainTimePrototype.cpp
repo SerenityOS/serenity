@@ -44,6 +44,7 @@ void PlainTimePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_native_function(vm.names.toJSON, to_json, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
@@ -392,6 +393,21 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_string)
 
 // 4.3.21 Temporal.PlainTime.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.tolocalestring
 JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_locale_string)
+{
+    // 1. Let temporalTime be the this value.
+    // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
+    auto* temporal_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // FIXME: Hey spec, this cannot fail...
+    // 3. Return ? TemporalTimeToString(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], "auto").
+    auto string = temporal_time_to_string(temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), "auto"sv);
+    return js_string(vm, move(string));
+}
+
+// 4.3.22 Temporal.PlainTime.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.tojson
+JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_json)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
