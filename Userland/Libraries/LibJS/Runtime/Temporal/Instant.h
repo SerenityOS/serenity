@@ -22,6 +22,7 @@ public:
     virtual ~Instant() override = default;
 
     [[nodiscard]] BigInt const& nanoseconds() const { return m_nanoseconds; }
+    [[nodiscard]] BigInt& nanoseconds() { return m_nanoseconds; }
 
 private:
     virtual void visit_edges(Visitor&) override;
