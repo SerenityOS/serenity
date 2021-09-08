@@ -18,6 +18,9 @@ public:
     explicit CollatorPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
     virtual ~CollatorPrototype() override = default;
+
+private:
+    JS_DECLARE_NATIVE_FUNCTION(resolved_options);
 };
 
 }
