@@ -21,8 +21,13 @@ public:
 
     void spin_until(Function<bool()> goal_condition);
 
+    Task const* currently_running_task() const { return m_currently_running_task; }
+
 private:
     TaskQueue m_task_queue;
+
+    // https://html.spec.whatwg.org/multipage/webappapis.html#currently-running-task
+    Task* m_currently_running_task { nullptr };
 };
 
 EventLoop& main_thread_event_loop();
