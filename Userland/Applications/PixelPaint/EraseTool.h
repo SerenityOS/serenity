@@ -1,35 +1,34 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include "Tool.h"
+#include "BrushTool.h"
 #include <LibGUI/ActionGroup.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Point.h>
 
 namespace PixelPaint {
 
-class EraseTool final : public Tool {
+class EraseTool final : public BrushTool {
 public:
     EraseTool();
     virtual ~EraseTool() override;
 
-    virtual void on_mousedown(Layer*, MouseEvent& event) override;
-    virtual void on_mousemove(Layer*, MouseEvent& event) override;
-    virtual void on_mouseup(Layer*, MouseEvent& event) override;
     virtual GUI::Widget* get_properties_widget() override;
 
+protected:
+    virtual Color color_for(GUI::MouseEvent const& event) override;
+    virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& point) override;
+
 private:
-    Gfx::Color get_color() const;
-    Gfx::IntRect build_rect(Gfx::IntPoint const& pos, Gfx::IntRect const& widget_rect);
     RefPtr<GUI::Widget> m_properties_widget;
 
     bool m_use_secondary_color { false };
-    int m_thickness { 1 };
 };
 
 }

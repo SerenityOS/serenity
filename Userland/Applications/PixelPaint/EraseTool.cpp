@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,59 +27,19 @@ EraseTool::~EraseTool()
 {
 }
 
-Gfx::IntRect EraseTool::build_rect(Gfx::IntPoint const& pos, Gfx::IntRect const& widget_rect)
-{
-    const int eraser_size = m_thickness;
-    const int eraser_radius = eraser_size / 2;
-    const auto ex = pos.x();
-    const auto ey = pos.y();
-    return Gfx::IntRect(ex - eraser_radius, ey - eraser_radius, eraser_size, eraser_size).intersected(widget_rect);
-}
-
-void EraseTool::on_mousedown(Layer* layer, MouseEvent& event)
-{
-    if (!layer)
-        return;
-
-    auto& layer_event = event.layer_event();
-    if (layer_event.button() != GUI::MouseButton::Left && layer_event.button() != GUI::MouseButton::Right)
-        return;
-    Gfx::IntRect r = build_rect(layer_event.position(), layer->rect());
-    GUI::Painter painter(layer->bitmap());
-    painter.clear_rect(r, get_color());
-    layer->did_modify_bitmap(r.inflated(2, 2));
-}
-
-void EraseTool::on_mousemove(Layer* layer, MouseEvent& event)
-{
-    if (!layer)
-        return;
-
-    auto& layer_event = event.layer_event();
-    if (layer_event.buttons() & GUI::MouseButton::Left || layer_event.buttons() & GUI::MouseButton::Right) {
-        Gfx::IntRect r = build_rect(layer_event.position(), layer->rect());
-        GUI::Painter painter(layer->bitmap());
-        painter.clear_rect(r, get_color());
-        layer->did_modify_bitmap(r.inflated(2, 2));
-    }
-}
-
-void EraseTool::on_mouseup(Layer* layer, MouseEvent& event)
-{
-    if (!layer)
-        return;
-
-    auto& layer_event = event.layer_event();
-    if (layer_event.button() != GUI::MouseButton::Left && layer_event.button() != GUI::MouseButton::Right)
-        return;
-    m_editor->did_complete_action();
-}
-
-Color EraseTool::get_color() const
+Color EraseTool::color_for(GUI::MouseEvent const&)
 {
     if (m_use_secondary_color)
         return m_editor->secondary_color();
     return Color(255, 255, 255, 0);
+}
+
+void EraseTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& point)
+{
+    int radius = size() / 2;
+    Gfx::IntRect rect { point.x() - radius, point.y() - radius, size(), size() };
+    GUI::Painter painter(bitmap);
+    painter.clear_rect(rect, color);
 }
 
 GUI::Widget* EraseTool::get_properties_widget()
@@ -87,28 +48,28 @@ GUI::Widget* EraseTool::get_properties_widget()
         m_properties_widget = GUI::Widget::construct();
         m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
-        auto& thickness_container = m_properties_widget->add<GUI::Widget>();
-        thickness_container.set_fixed_height(20);
-        thickness_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto& size_container = m_properties_widget->add<GUI::Widget>();
+        size_container.set_fixed_height(20);
+        size_container.set_layout<GUI::HorizontalBoxLayout>();
 
-        auto& thickness_label = thickness_container.add<GUI::Label>("Size:");
-        thickness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        thickness_label.set_fixed_size(80, 20);
+        auto& size_label = size_container.add<GUI::Label>("Size:");
+        size_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        size_label.set_fixed_size(80, 20);
 
-        auto& thickness_slider = thickness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
-        thickness_slider.set_range(1, 50);
-        thickness_slider.set_value(m_thickness);
+        auto& size_slider = size_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
+        size_slider.set_range(1, 100);
+        size_slider.set_value(size());
 
-        thickness_slider.on_change = [&](int value) {
-            m_thickness = value;
+        size_slider.on_change = [&](int value) {
+            set_size(value);
         };
-        set_primary_slider(&thickness_slider);
+        set_primary_slider(&size_slider);
 
-        auto& checkbox_container = m_properties_widget->add<GUI::Widget>();
-        checkbox_container.set_fixed_height(20);
-        checkbox_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto& secondary_color_container = m_properties_widget->add<GUI::Widget>();
+        secondary_color_container.set_fixed_height(20);
+        secondary_color_container.set_layout<GUI::HorizontalBoxLayout>();
 
-        auto& use_secondary_color_checkbox = checkbox_container.add<GUI::CheckBox>();
+        auto& use_secondary_color_checkbox = secondary_color_container.add<GUI::CheckBox>();
         use_secondary_color_checkbox.set_checked(m_use_secondary_color);
         use_secondary_color_checkbox.set_text("Use secondary color");
         use_secondary_color_checkbox.on_checked = [&](bool checked) {
