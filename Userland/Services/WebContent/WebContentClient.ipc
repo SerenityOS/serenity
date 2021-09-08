@@ -12,7 +12,7 @@ endpoint WebContentClient
     did_request_cursor_change(i32 cursor_type) =|
     did_layout(Gfx::IntSize content_size) =|
     did_change_title(String title) =|
-    did_request_scroll(int wheel_delta) =|
+    did_request_scroll(i32 x_delta, i32 y_delta) =|
     did_request_scroll_into_view(Gfx::IntRect rect) =|
     did_enter_tooltip_area(Gfx::IntPoint content_position, String title) =|
     did_leave_tooltip_area() =|

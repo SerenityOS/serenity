@@ -104,9 +104,9 @@ void PageHost::page_did_change_title(const String& title)
     m_client.async_did_change_title(title);
 }
 
-void PageHost::page_did_request_scroll(int wheel_delta)
+void PageHost::page_did_request_scroll(i32 x_delta, i32 y_delta)
 {
-    m_client.async_did_request_scroll(wheel_delta);
+    m_client.async_did_request_scroll(x_delta, y_delta);
 }
 
 void PageHost::page_did_request_scroll_into_view(const Gfx::IntRect& rect)

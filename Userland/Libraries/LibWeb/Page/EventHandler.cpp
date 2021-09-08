@@ -125,7 +125,7 @@ bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int
     }
 
     if (auto* page = m_frame.page()) {
-        page->client().page_did_request_scroll(wheel_delta);
+        page->client().page_did_request_scroll(0, wheel_delta * 20);
         return true;
     }
 
