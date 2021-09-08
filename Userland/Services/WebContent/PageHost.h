@@ -34,7 +34,6 @@ public:
 
 private:
     // ^PageClient
-    virtual bool is_multi_process() const override { return true; }
     virtual Gfx::Palette palette() const override;
     virtual Gfx::IntRect screen_rect() const override { return m_screen_rect; }
     virtual void page_did_invalidate(const Gfx::IntRect&) override;
