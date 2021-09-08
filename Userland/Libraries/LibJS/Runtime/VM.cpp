@@ -28,13 +28,14 @@
 
 namespace JS {
 
-NonnullRefPtr<VM> VM::create()
+NonnullRefPtr<VM> VM::create(OwnPtr<CustomData> custom_data)
 {
-    return adopt_ref(*new VM);
+    return adopt_ref(*new VM(move(custom_data)));
 }
 
-VM::VM()
+VM::VM(OwnPtr<CustomData> custom_data)
     : m_heap(*this)
+    , m_custom_data(move(custom_data))
 {
     m_empty_string = m_heap.allocate_without_global_object<PrimitiveString>(String::empty());
     for (size_t i = 0; i < 128; ++i) {
@@ -771,6 +772,10 @@ void VM::dump_environment_chain() const
             }
         }
     }
+}
+
+VM::CustomData::~CustomData()
+{
 }
 
 }
