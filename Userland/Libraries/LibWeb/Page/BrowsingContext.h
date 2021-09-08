@@ -52,6 +52,7 @@ public:
 
     void set_needs_display(Gfx::IntRect const&);
 
+    Gfx::IntPoint const& viewport_scroll_offset() const { return m_viewport_scroll_offset; }
     void set_viewport_scroll_offset(Gfx::IntPoint const&);
     Gfx::IntRect viewport_rect() const { return { m_viewport_scroll_offset, m_size }; }
     void set_viewport_rect(Gfx::IntRect const&);

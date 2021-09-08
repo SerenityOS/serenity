@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -71,6 +72,9 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(inner_height_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(parent_getter);
+
+    JS_DECLARE_NATIVE_GETTER(scroll_x_getter);
+    JS_DECLARE_NATIVE_GETTER(scroll_y_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(alert);
     JS_DECLARE_NATIVE_FUNCTION(confirm);
