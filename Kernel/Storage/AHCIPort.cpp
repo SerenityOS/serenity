@@ -77,6 +77,8 @@ void AHCIPort::handle_interrupt()
             m_connected_device->prepare_for_unplug();
             StorageManagement::the().remove_device(*m_connected_device);
             g_ahci_work->queue([this]() {
+                // Note: In the odd case we don't have a device here, assert.
+                VERIFY(m_connected_device);
                 m_connected_device->before_removing();
                 m_connected_device.clear();
             });
