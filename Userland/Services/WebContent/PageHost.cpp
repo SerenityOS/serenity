@@ -109,6 +109,11 @@ void PageHost::page_did_request_scroll(i32 x_delta, i32 y_delta)
     m_client.async_did_request_scroll(x_delta, y_delta);
 }
 
+void PageHost::page_did_request_scroll_to(Gfx::IntPoint const& scroll_position)
+{
+    m_client.async_did_request_scroll_to(scroll_position);
+}
+
 void PageHost::page_did_request_scroll_into_view(const Gfx::IntRect& rect)
 {
     m_client.async_did_request_scroll_into_view(rect);
