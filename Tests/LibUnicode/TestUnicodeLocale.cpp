@@ -138,7 +138,7 @@ TEST_CASE(parse_unicode_locale_id_with_unicode_locale_extension)
             auto const& expected_keyword = expected_extension.keywords[i];
 
             EXPECT_EQ(actual_keyword.key, expected_keyword.key);
-            EXPECT_EQ(actual_keyword.types, expected_keyword.types);
+            EXPECT_EQ(actual_keyword.value, expected_keyword.value);
         }
     };
 
@@ -153,15 +153,15 @@ TEST_CASE(parse_unicode_locale_id_with_unicode_locale_extension)
     fail("en-u-xxxxx-"sv);
     fail("en-u-xxxxxxxxx"sv);
 
-    pass("en-u-xx"sv, { {}, { { "xx"sv, {} } } });
+    pass("en-u-xx"sv, { {}, { { "xx"sv, ""sv } } });
     pass("en-u-xx-yyyy"sv, { {}, { { "xx"sv, { "yyyy"sv } } } });
-    pass("en-u-xx-yyyy-zzzz"sv, { {}, { { "xx"sv, { "yyyy"sv, "zzzz"sv } } } });
-    pass("en-u-xx-yyyy-zzzz-aa"sv, { {}, { { "xx"sv, { "yyyy"sv, "zzzz"sv } }, { "aa"sv, {} } } });
+    pass("en-u-xx-yyyy-zzzz"sv, { {}, { { "xx"sv, "yyyy-zzzz"sv } } });
+    pass("en-u-xx-yyyy-zzzz-aa"sv, { {}, { { "xx"sv, "yyyy-zzzz"sv }, { "aa"sv, ""sv } } });
     pass("en-u-xxx"sv, { { "xxx"sv }, {} });
     pass("en-u-fff-gggg"sv, { { "fff"sv, "gggg"sv }, {} });
-    pass("en-u-fff-xx"sv, { { "fff"sv }, { { "xx"sv, {} } } });
-    pass("en-u-fff-xx-yyyy"sv, { { "fff"sv }, { { "xx"sv, { "yyyy"sv } } } });
-    pass("en-u-fff-gggg-xx-yyyy"sv, { { "fff"sv, "gggg"sv }, { { "xx"sv, { "yyyy"sv } } } });
+    pass("en-u-fff-xx"sv, { { "fff"sv }, { { "xx"sv, ""sv } } });
+    pass("en-u-fff-xx-yyyy"sv, { { "fff"sv }, { { "xx"sv, "yyyy"sv } } });
+    pass("en-u-fff-gggg-xx-yyyy"sv, { { "fff"sv, "gggg"sv }, { { "xx"sv, "yyyy"sv } } });
 }
 
 TEST_CASE(parse_unicode_locale_id_with_transformed_extension)
@@ -192,7 +192,7 @@ TEST_CASE(parse_unicode_locale_id_with_transformed_extension)
             auto const& expected_field = expected_extension.fields[i];
 
             EXPECT_EQ(actual_field.key, expected_field.key);
-            EXPECT_EQ(actual_field.values, expected_field.values);
+            EXPECT_EQ(actual_field.value, expected_field.value);
         }
     };
 
@@ -225,9 +225,9 @@ TEST_CASE(parse_unicode_locale_id_with_transformed_extension)
     pass("en-t-en-us-posix"sv, { Unicode::LanguageID { false, "en"sv, {}, "us"sv, { "posix"sv } }, {} });
     pass("en-t-en-latn-us-posix"sv, { Unicode::LanguageID { false, "en"sv, "latn"sv, "us"sv, { "posix"sv } }, {} });
     pass("en-t-k0-aaa"sv, { {}, { { "k0"sv, { "aaa"sv } } } });
-    pass("en-t-k0-aaa-bbbb"sv, { {}, { { "k0"sv, { "aaa"sv, "bbbb" } } } });
-    pass("en-t-k0-aaa-k1-bbbb"sv, { {}, { { "k0"sv, { "aaa"sv } }, { "k1"sv, { "bbbb"sv } } } });
-    pass("en-t-en-k0-aaa"sv, { Unicode::LanguageID { false, "en"sv }, { { "k0"sv, { "aaa"sv } } } });
+    pass("en-t-k0-aaa-bbbb"sv, { {}, { { "k0"sv, "aaa-bbbb"sv } } });
+    pass("en-t-k0-aaa-k1-bbbb"sv, { {}, { { "k0"sv, { "aaa"sv } }, { "k1"sv, "bbbb"sv } } });
+    pass("en-t-en-k0-aaa"sv, { Unicode::LanguageID { false, "en"sv }, { { "k0"sv, "aaa"sv } } });
 }
 
 TEST_CASE(parse_unicode_locale_id_with_other_extension)
@@ -243,7 +243,7 @@ TEST_CASE(parse_unicode_locale_id_with_other_extension)
 
         auto const& actual_extension = locale_id->extensions[0].get<Unicode::OtherExtension>();
         EXPECT_EQ(actual_extension.key, expected_extension.key);
-        EXPECT_EQ(actual_extension.values, expected_extension.values);
+        EXPECT_EQ(actual_extension.value, expected_extension.value);
     };
 
     fail("en-z"sv);
@@ -259,9 +259,9 @@ TEST_CASE(parse_unicode_locale_id_with_other_extension)
     fail("en-z-aaa-a"sv);
     fail("en-0-aaa-a"sv);
 
-    pass("en-z-aa", { 'z', { "aa"sv } });
-    pass("en-z-aa-bbb", { 'z', { "aa"sv, "bbb"sv } });
-    pass("en-z-aa-bbb-cccccccc", { 'z', { "aa"sv, "bbb"sv, "cccccccc"sv } });
+    pass("en-z-aa", { 'z', "aa"sv });
+    pass("en-z-aa-bbb", { 'z', "aa-bbb"sv });
+    pass("en-z-aa-bbb-cccccccc", { 'z', "aa-bbb-cccccccc"sv });
 }
 
 TEST_CASE(parse_unicode_locale_id_with_private_use_extension)
@@ -320,8 +320,12 @@ TEST_CASE(canonicalize_unicode_locale_id)
     test("EN-U-CCC-BBB-2K-AAA-1K-BBB"sv, "en-u-bbb-ccc-1k-bbb-2k-aaa"sv);
     test("en-u-1k-true"sv, "en-u-1k"sv);
     test("EN-U-1K-TRUE"sv, "en-u-1k"sv);
+    test("en-u-1k-true-abcd"sv, "en-u-1k-true-abcd"sv);
+    test("EN-U-1K-TRUE-ABCD"sv, "en-u-1k-true-abcd"sv);
     test("en-u-kb-yes"sv, "en-u-kb"sv);
     test("EN-U-KB-YES"sv, "en-u-kb"sv);
+    test("en-u-kb-yes-abcd"sv, "en-u-kb-yes-abcd"sv);
+    test("EN-U-KB-YES-ABCD"sv, "en-u-kb-yes-abcd"sv);
     test("en-u-ka-yes"sv, "en-u-ka-yes"sv);
     test("EN-U-KA-YES"sv, "en-u-ka-yes"sv);
     test("en-u-1k-names"sv, "en-u-1k-names"sv);
