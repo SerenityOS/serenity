@@ -18,6 +18,7 @@ typedef uint32_t in_addr_t;
 #define INADDR_ANY ((in_addr_t)0)
 #define INADDR_NONE ((in_addr_t)-1)
 #define INADDR_LOOPBACK 0x7f000001
+#define INADDR_BROADCAST 0xffffffff
 
 #define IN_LOOPBACKNET 127
 
