@@ -172,7 +172,7 @@ set(SOURCES
     Layout/FormattingContext.cpp
     Layout/FrameBox.cpp
     Layout/ImageBox.cpp
-    Layout/InitialContainingBlockBox.cpp
+    Layout/InitialContainingBlock.cpp
     Layout/InlineFormattingContext.cpp
     Layout/InlineNode.cpp
     Layout/Label.cpp

@@ -8,7 +8,7 @@
 #include <AK/StringBuilder.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -99,7 +99,7 @@ GUI::Variant LayoutTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole 
 {
     auto& node = *static_cast<Layout::Node*>(index.internal_data());
     if (role == GUI::ModelRole::Icon) {
-        if (is<Layout::InitialContainingBlockBox>(node))
+        if (is<Layout::InitialContainingBlock>(node))
             return m_document_icon;
         if (is<Layout::TextNode>(node))
             return m_text_icon;

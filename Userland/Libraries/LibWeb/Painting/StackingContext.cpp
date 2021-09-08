@@ -8,7 +8,7 @@
 #include <AK/StringBuilder.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/Box.h>
-#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::Layout {
@@ -128,12 +128,12 @@ void StackingContext::paint(PaintContext& context)
 HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, HitTestType type) const
 {
     HitTestResult result;
-    if (!is<InitialContainingBlockBox>(m_box)) {
+    if (!is<InitialContainingBlock>(m_box)) {
         result = m_box.hit_test(position, type);
     } else {
-        // NOTE: InitialContainingBlockBox::hit_test() merely calls StackingContext::hit_test()
+        // NOTE: InitialContainingBlock::hit_test() merely calls StackingContext::hit_test()
         //       so we call its base class instead.
-        result = verify_cast<InitialContainingBlockBox>(m_box).BlockBox::hit_test(position, type);
+        result = verify_cast<InitialContainingBlock>(m_box).BlockBox::hit_test(position, type);
     }
 
     int z_index = m_box.computed_values().z_index().value_or(0);

@@ -16,7 +16,7 @@
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/InProcessWebView.h>
-#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/BrowsingContext.h>
@@ -299,16 +299,16 @@ bool InProcessWebView::load(const URL& url)
     return page().top_level_browsing_context().loader().load(url, FrameLoader::Type::Navigation);
 }
 
-const Layout::InitialContainingBlockBox* InProcessWebView::layout_root() const
+const Layout::InitialContainingBlock* InProcessWebView::layout_root() const
 {
     return document() ? document()->layout_node() : nullptr;
 }
 
-Layout::InitialContainingBlockBox* InProcessWebView::layout_root()
+Layout::InitialContainingBlock* InProcessWebView::layout_root()
 {
     if (!document())
         return nullptr;
-    return const_cast<Layout::InitialContainingBlockBox*>(document()->layout_node());
+    return const_cast<Layout::InitialContainingBlock*>(document()->layout_node());
 }
 
 void InProcessWebView::page_did_request_scroll_into_view(const Gfx::IntRect& rect)

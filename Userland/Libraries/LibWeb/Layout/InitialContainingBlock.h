@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,10 +11,10 @@
 
 namespace Web::Layout {
 
-class InitialContainingBlockBox final : public BlockBox {
+class InitialContainingBlock final : public BlockBox {
 public:
-    explicit InitialContainingBlockBox(DOM::Document&, NonnullRefPtr<CSS::StyleProperties>);
-    virtual ~InitialContainingBlockBox() override;
+    explicit InitialContainingBlock(DOM::Document&, NonnullRefPtr<CSS::StyleProperties>);
+    virtual ~InitialContainingBlock() override;
 
     const DOM::Document& dom_node() const { return static_cast<const DOM::Document&>(*Node::dom_node()); }
 
@@ -37,6 +37,6 @@ private:
 };
 
 template<>
-inline bool Node::fast_is<InitialContainingBlockBox>() const { return is_initial_containing_block_box(); }
+inline bool Node::fast_is<InitialContainingBlock>() const { return is_initial_containing_block_box(); }
 
 }

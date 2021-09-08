@@ -168,7 +168,7 @@ class Box;
 class ButtonBox;
 class CheckBox;
 class FormattingContext;
-class InitialContainingBlockBox;
+class InitialContainingBlock;
 class InlineFormattingContext;
 class Label;
 class LabelableNode;

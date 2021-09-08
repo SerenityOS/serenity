@@ -10,7 +10,7 @@
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/Layout/BreakNode.h>
-#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/Page.h>

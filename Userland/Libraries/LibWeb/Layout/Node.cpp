@@ -12,7 +12,7 @@
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/FormattingContext.h>
-#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Page/BrowsingContext.h>
@@ -36,7 +36,7 @@ Node::~Node()
 
 bool Node::can_contain_boxes_with_position_absolute() const
 {
-    return computed_values().position() != CSS::Position::Static || is<InitialContainingBlockBox>(*this);
+    return computed_values().position() != CSS::Position::Static || is<InitialContainingBlock>(*this);
 }
 
 const BlockBox* Node::containing_block() const
@@ -120,13 +120,13 @@ BrowsingContext& Node::browsing_context()
     return *document().browsing_context();
 }
 
-const InitialContainingBlockBox& Node::root() const
+const InitialContainingBlock& Node::root() const
 {
     VERIFY(document().layout_node());
     return *document().layout_node();
 }
 
-InitialContainingBlockBox& Node::root()
+InitialContainingBlock& Node::root()
 {
     VERIFY(document().layout_node());
     return *document().layout_node();

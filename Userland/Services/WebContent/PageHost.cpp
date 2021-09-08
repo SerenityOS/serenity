@@ -9,7 +9,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
-#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Page/BrowsingContext.h>
 #include <WebContent/WebContentClientEndpoint.h>
 
@@ -46,7 +46,7 @@ void PageHost::set_palette_impl(const Gfx::PaletteImpl& impl)
     m_palette_impl = impl;
 }
 
-Web::Layout::InitialContainingBlockBox* PageHost::layout_root()
+Web::Layout::InitialContainingBlock* PageHost::layout_root()
 {
     auto* document = page().top_level_browsing_context().document();
     if (!document)
