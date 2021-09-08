@@ -46,7 +46,7 @@
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
-#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TreeBuilder.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Origin.h>
@@ -404,7 +404,7 @@ void Document::update_layout()
 
     if (!m_layout_root) {
         Layout::TreeBuilder tree_builder;
-        m_layout_root = static_ptr_cast<Layout::InitialContainingBlockBox>(tree_builder.build(*this));
+        m_layout_root = static_ptr_cast<Layout::InitialContainingBlock>(tree_builder.build(*this));
     }
 
     Layout::BlockFormattingContext root_formatting_context(*m_layout_root, nullptr);
@@ -442,7 +442,7 @@ void Document::update_style()
 
 RefPtr<Layout::Node> Document::create_layout_node()
 {
-    return adopt_ref(*new Layout::InitialContainingBlockBox(*this, CSS::StyleProperties::create()));
+    return adopt_ref(*new Layout::InitialContainingBlock(*this, CSS::StyleProperties::create()));
 }
 
 void Document::set_link_color(Color color)
@@ -460,14 +460,14 @@ void Document::set_visited_link_color(Color color)
     m_visited_link_color = color;
 }
 
-const Layout::InitialContainingBlockBox* Document::layout_node() const
+const Layout::InitialContainingBlock* Document::layout_node() const
 {
-    return static_cast<const Layout::InitialContainingBlockBox*>(Node::layout_node());
+    return static_cast<const Layout::InitialContainingBlock*>(Node::layout_node());
 }
 
-Layout::InitialContainingBlockBox* Document::layout_node()
+Layout::InitialContainingBlock* Document::layout_node()
 {
-    return static_cast<Layout::InitialContainingBlockBox*>(Node::layout_node());
+    return static_cast<Layout::InitialContainingBlock*>(Node::layout_node());
 }
 
 void Document::set_inspected_node(Node* node)

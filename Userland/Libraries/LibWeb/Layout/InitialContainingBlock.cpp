@@ -1,27 +1,27 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGfx/Painter.h>
 #include <LibWeb/Dump.h>
-#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::Layout {
 
-InitialContainingBlockBox::InitialContainingBlockBox(DOM::Document& document, NonnullRefPtr<CSS::StyleProperties> style)
+InitialContainingBlock::InitialContainingBlock(DOM::Document& document, NonnullRefPtr<CSS::StyleProperties> style)
     : BlockBox(document, &document, move(style))
 {
 }
 
-InitialContainingBlockBox::~InitialContainingBlockBox()
+InitialContainingBlock::~InitialContainingBlock()
 {
 }
 
-void InitialContainingBlockBox::build_stacking_context_tree()
+void InitialContainingBlock::build_stacking_context_tree()
 {
     if (stacking_context())
         return;
@@ -42,18 +42,18 @@ void InitialContainingBlockBox::build_stacking_context_tree()
     });
 }
 
-void InitialContainingBlockBox::paint_all_phases(PaintContext& context)
+void InitialContainingBlock::paint_all_phases(PaintContext& context)
 {
     context.painter().translate(-context.viewport_rect().location());
     stacking_context()->paint(context);
 }
 
-HitTestResult InitialContainingBlockBox::hit_test(const Gfx::IntPoint& position, HitTestType type) const
+HitTestResult InitialContainingBlock::hit_test(const Gfx::IntPoint& position, HitTestType type) const
 {
     return stacking_context()->hit_test(position, type);
 }
 
-void InitialContainingBlockBox::recompute_selection_states()
+void InitialContainingBlock::recompute_selection_states()
 {
     SelectionState state = SelectionState::None;
 
@@ -79,13 +79,13 @@ void InitialContainingBlockBox::recompute_selection_states()
     });
 }
 
-void InitialContainingBlockBox::set_selection(const LayoutRange& selection)
+void InitialContainingBlock::set_selection(const LayoutRange& selection)
 {
     m_selection = selection;
     recompute_selection_states();
 }
 
-void InitialContainingBlockBox::set_selection_end(const LayoutPosition& position)
+void InitialContainingBlock::set_selection_end(const LayoutPosition& position)
 {
     m_selection.set_end(position);
     recompute_selection_states();

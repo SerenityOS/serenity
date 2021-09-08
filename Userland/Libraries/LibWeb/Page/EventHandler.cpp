@@ -12,7 +12,7 @@
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
-#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Page/Page.h>
@@ -97,14 +97,14 @@ EventHandler::~EventHandler()
 {
 }
 
-const Layout::InitialContainingBlockBox* EventHandler::layout_root() const
+const Layout::InitialContainingBlock* EventHandler::layout_root() const
 {
     if (!m_frame.document())
         return nullptr;
     return m_frame.document()->layout_node();
 }
 
-Layout::InitialContainingBlockBox* EventHandler::layout_root()
+Layout::InitialContainingBlock* EventHandler::layout_root()
 {
     if (!m_frame.document())
         return nullptr;

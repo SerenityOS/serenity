@@ -7,7 +7,7 @@
 #include <LibGfx/Painter.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/BlockBox.h>
-#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Layout/TextNode.h>

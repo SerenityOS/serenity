@@ -8,7 +8,7 @@
 #include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/FrameBox.h>
-#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::Layout {
@@ -52,7 +52,7 @@ void FrameBox::paint(PaintContext& context, PaintPhase phase)
         context.painter().translate(absolute_x(), absolute_y());
 
         context.set_viewport_rect({ {}, dom_node().nested_browsing_context()->size() });
-        const_cast<Layout::InitialContainingBlockBox*>(hosted_layout_tree)->paint_all_phases(context);
+        const_cast<Layout::InitialContainingBlock*>(hosted_layout_tree)->paint_all_phases(context);
 
         context.set_viewport_rect(old_viewport_rect);
         context.painter().restore();

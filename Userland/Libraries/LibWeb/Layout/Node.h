@@ -68,8 +68,8 @@ public:
     const BrowsingContext& browsing_context() const;
     BrowsingContext& browsing_context();
 
-    const InitialContainingBlockBox& root() const;
-    InitialContainingBlockBox& root();
+    const InitialContainingBlock& root() const;
+    InitialContainingBlock& root();
 
     bool is_root_element() const;
 

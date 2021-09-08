@@ -9,7 +9,7 @@
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
-#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/ListItemBox.h>
 #include <LibWeb/Layout/ReplacedBox.h>
@@ -28,7 +28,7 @@ BlockFormattingContext::~BlockFormattingContext()
 
 bool BlockFormattingContext::is_initial() const
 {
-    return is<InitialContainingBlockBox>(context_box());
+    return is<InitialContainingBlock>(context_box());
 }
 
 void BlockFormattingContext::run(Box& box, LayoutMode layout_mode)
@@ -526,7 +526,7 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
 {
     auto viewport_rect = context_box().browsing_context().viewport_rect();
 
-    auto& icb = verify_cast<Layout::InitialContainingBlockBox>(context_box());
+    auto& icb = verify_cast<Layout::InitialContainingBlock>(context_box());
     icb.build_stacking_context_tree();
 
     icb.set_width(viewport_rect.width());

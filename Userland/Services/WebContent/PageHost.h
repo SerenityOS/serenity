@@ -63,7 +63,7 @@ private:
 
     explicit PageHost(ClientConnection&);
 
-    Web::Layout::InitialContainingBlockBox* layout_root();
+    Web::Layout::InitialContainingBlock* layout_root();
     void setup_palette();
 
     ClientConnection& m_client;

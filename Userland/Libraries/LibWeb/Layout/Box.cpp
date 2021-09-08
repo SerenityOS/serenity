@@ -394,7 +394,7 @@ StackingContext* Box::enclosing_stacking_context()
         VERIFY(ancestor_box.stacking_context());
         return ancestor_box.stacking_context();
     }
-    // We should always reach the Layout::InitialContainingBlockBox stacking context.
+    // We should always reach the Layout::InitialContainingBlock stacking context.
     VERIFY_NOT_REACHED();
 }
 

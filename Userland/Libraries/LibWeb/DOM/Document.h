@@ -147,8 +147,8 @@ public:
 
     virtual bool is_child_allowed(const Node&) const override;
 
-    const Layout::InitialContainingBlockBox* layout_node() const;
-    Layout::InitialContainingBlockBox* layout_node();
+    const Layout::InitialContainingBlock* layout_node() const;
+    Layout::InitialContainingBlock* layout_node();
 
     void schedule_style_update();
     void schedule_forced_layout();
@@ -309,7 +309,7 @@ private:
 
     RefPtr<Window> m_window;
 
-    RefPtr<Layout::InitialContainingBlockBox> m_layout_root;
+    RefPtr<Layout::InitialContainingBlock> m_layout_root;
 
     Optional<Color> m_link_color;
     Optional<Color> m_active_link_color;

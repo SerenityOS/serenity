@@ -39,8 +39,8 @@ private:
     bool focus_next_element();
     bool focus_previous_element();
 
-    Layout::InitialContainingBlockBox* layout_root();
-    const Layout::InitialContainingBlockBox* layout_root() const;
+    Layout::InitialContainingBlock* layout_root();
+    const Layout::InitialContainingBlock* layout_root() const;
 
     BrowsingContext& m_frame;
 
