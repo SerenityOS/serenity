@@ -1062,8 +1062,9 @@ KResult Ext2FSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEn
 {
     VERIFY(is_directory());
 
-    u8 buffer[max_block_size];
-    auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer);
+    auto block_buffer = TRY(KBuffer::try_create_with_size(max_block_size));
+    auto* buffer = block_buffer->data();
+    auto buf = UserOrKernelBuffer::for_kernel_buffer(block_buffer->data());
 
     auto block_size = fs().block_size();
     auto file_size = size();
