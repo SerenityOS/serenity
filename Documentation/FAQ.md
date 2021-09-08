@@ -32,4 +32,4 @@ No, SerenityOS does not have a package manager. The project uses a monorepo appr
 
 *However* there are ports which can be found in the [Ports directory](../Ports). A port is a piece of software that can optionally be installed, might have not been built by us but supports running on SerenityOS. They act quite similar to packages, coming with an install script each.
 
-Currently when running the system in a virtual machine, ports need to be cross compiled on the host and added to the file system image before booting. Then its also possible to configure the build system to [in- or exclude components](./BuildInstructions.md#component-configuration) from a build.
+Currently when running the system in a virtual machine, ports need to be cross compiled on the host and added to the file system image before booting. Then its also possible to configure the build system to [in- or exclude components](./AdvancedBuildInstructions.md#component-configuration) from a build.
