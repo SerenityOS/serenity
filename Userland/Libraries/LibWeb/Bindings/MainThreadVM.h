@@ -7,8 +7,15 @@
 #pragma once
 
 #include <LibJS/Forward.h>
+#include <LibWeb/HTML/EventLoop/EventLoop.h>
 
 namespace Web::Bindings {
+
+struct WebEngineCustomData final : public JS::VM::CustomData {
+    virtual ~WebEngineCustomData() override { }
+
+    HTML::EventLoop event_loop;
+};
 
 JS::VM& main_thread_vm();
 

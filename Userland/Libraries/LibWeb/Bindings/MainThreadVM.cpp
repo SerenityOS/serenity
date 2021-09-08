@@ -13,7 +13,7 @@ JS::VM& main_thread_vm()
 {
     static RefPtr<JS::VM> vm;
     if (!vm)
-        vm = JS::VM::create();
+        vm = JS::VM::create(make<WebEngineCustomData>());
     return *vm;
 }
 
