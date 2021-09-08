@@ -262,7 +262,7 @@ bool HackStudioWidget::open_file(const String& full_filename, size_t line, size_
     if (auto it = m_open_files.find(filename); it != m_open_files.end()) {
         new_project_file = it->value;
     } else {
-        new_project_file = m_project->get_file(filename);
+        new_project_file = m_project->create_file(filename);
         m_open_files.set(filename, *new_project_file);
         m_open_files_vector.append(filename);
 
@@ -699,7 +699,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
         }
         current_editor_wrapper().save();
 
-        auto new_project_file = m_project->get_file(relative_file_path);
+        auto new_project_file = m_project->create_file(relative_file_path);
         m_open_files.set(relative_file_path, *new_project_file);
         m_open_files_vector.append(relative_file_path);
 
