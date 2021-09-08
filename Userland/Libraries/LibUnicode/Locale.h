@@ -29,7 +29,7 @@ struct LanguageID {
 
 struct Keyword {
     String key {};
-    Vector<String> types {};
+    String value {};
 };
 
 struct LocaleExtension {
@@ -38,8 +38,8 @@ struct LocaleExtension {
 };
 
 struct TransformedField {
-    String key;
-    Vector<String> values {};
+    String key {};
+    String value {};
 };
 
 struct TransformedExtension {
@@ -49,7 +49,7 @@ struct TransformedExtension {
 
 struct OtherExtension {
     char key {};
-    Vector<String> values {};
+    String value {};
 };
 
 using Extension = Variant<LocaleExtension, TransformedExtension, OtherExtension>;
