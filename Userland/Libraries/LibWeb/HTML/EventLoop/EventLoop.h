@@ -20,6 +20,7 @@ public:
     TaskQueue const& task_queue() const { return m_task_queue; }
 
     void spin_until(Function<bool()> goal_condition);
+    void process();
 
     Task const* currently_running_task() const { return m_currently_running_task; }
 
