@@ -8,10 +8,12 @@
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
+#include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/InstantPrototype.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
+#include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 
 namespace JS::Temporal {
 
@@ -46,6 +48,7 @@ void InstantPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_native_function(vm.names.toZonedDateTime, to_zoned_date_time, 1, attr);
 }
 
 static Instant* typed_this(GlobalObject& global_object)
@@ -507,6 +510,62 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::value_of)
     // 1. Throw a TypeError exception.
     vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "Temporal.Instant", "a primitive value");
     return {};
+}
+
+// 8.3.17 Temporal.Instant.prototype.toZonedDateTime ( item ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tozoneddatetime
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
+{
+    auto item = vm.argument(0);
+
+    // 1. Let instant be the this value.
+    // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
+    auto* instant = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. If Type(item) is not Object, then
+    if (!item.is_object()) {
+        // a. Throw a TypeError exception.
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, item);
+        return {};
+    }
+
+    // 4. Let calendarLike be ? Get(item, "calendar").
+    auto calendar_like = item.as_object().get(vm.names.calendar);
+    if (vm.exception())
+        return {};
+
+    // 5. If calendarLike is undefined, then
+    if (calendar_like.is_undefined()) {
+        // a. Throw a TypeError exception.
+        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, vm.names.calendar.as_string());
+        return {};
+    }
+
+    // 6. Let calendar be ? ToTemporalCalendar(calendarLike).
+    auto* calendar = to_temporal_calendar(global_object, calendar_like);
+    if (vm.exception())
+        return {};
+
+    // 7. Let temporalTimeZoneLike be ? Get(item, "timeZone").
+    auto temporal_time_zone_like = item.as_object().get(vm.names.timeZone);
+    if (vm.exception())
+        return {};
+
+    // 8. If temporalTimeZoneLike is undefined, then
+    if (temporal_time_zone_like.is_undefined()) {
+        // a. Throw a TypeError exception.
+        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, vm.names.timeZone.as_string());
+        return {};
+    }
+
+    // 9. Let timeZone be ? ToTemporalTimeZone(temporalTimeZoneLike).
+    auto* time_zone = to_temporal_time_zone(global_object, temporal_time_zone_like);
+    if (vm.exception())
+        return {};
+
+    // 10. Return ? CreateTemporalZonedDateTime(instant.[[Nanoseconds]], timeZone, calendar).
+    return create_temporal_zoned_date_time(global_object, instant->nanoseconds(), *time_zone, *calendar);
 }
 
 }

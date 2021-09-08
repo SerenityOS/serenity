@@ -435,6 +435,7 @@ namespace JS {
     P(toTimeString)                          \
     P(toUpperCase)                           \
     P(toUTCString)                           \
+    P(toZonedDateTime)                       \
     P(trace)                                 \
     P(trim)                                  \
     P(trimEnd)                               \
