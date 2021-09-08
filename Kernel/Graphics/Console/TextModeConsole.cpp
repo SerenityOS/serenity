@@ -113,7 +113,7 @@ void TextModeConsole::show_cursor()
 void TextModeConsole::clear(size_t x, size_t y, size_t length)
 {
     SpinlockLocker lock(m_vga_lock);
-    auto* buf = (u16*)(m_current_vga_window + (x * 2) + (y * width() * 2));
+    auto* buf = (u16*)m_current_vga_window.offset((x * 2) + (y * width() * 2)).as_ptr();
     for (size_t index = 0; index < length; index++) {
         buf[index] = 0x0720;
     }
@@ -141,7 +141,7 @@ void TextModeConsole::write(size_t x, size_t y, char ch, Color background, Color
         return;
     }
 
-    auto* buf = (u16*)(m_current_vga_window + (x * 2) + (y * width() * 2));
+    auto* buf = (u16*)m_current_vga_window.offset((x * 2) + (y * width() * 2)).as_ptr();
     *buf = foreground << 8 | background << 12 | ch;
     m_x = x + 1;
 
