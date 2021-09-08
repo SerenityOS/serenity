@@ -61,7 +61,11 @@ struct ExecutionContext {
 
 class VM : public RefCounted<VM> {
 public:
-    static NonnullRefPtr<VM> create();
+    struct CustomData {
+        virtual ~CustomData();
+    };
+
+    static NonnullRefPtr<VM> create(OwnPtr<CustomData> = {});
     ~VM();
 
     Heap& heap() { return m_heap; }
@@ -272,8 +276,10 @@ public:
 
     void initialize_instance_elements(Object& object, FunctionObject& constructor);
 
+    CustomData* custom_data() { return m_custom_data; }
+
 private:
-    VM();
+    explicit VM(OwnPtr<CustomData>);
 
     void ordinary_call_bind_this(FunctionObject&, ExecutionContext&, Value this_argument);
 
@@ -310,6 +316,8 @@ private:
     bool m_underscore_is_last_value { false };
 
     u32 m_execution_generation { 0 };
+
+    OwnPtr<CustomData> m_custom_data;
 };
 
 template<>
