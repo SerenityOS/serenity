@@ -38,6 +38,9 @@ public:
             : key(key)
         {
         }
+        Node()
+        {
+        }
         virtual ~Node() {};
     };
 
