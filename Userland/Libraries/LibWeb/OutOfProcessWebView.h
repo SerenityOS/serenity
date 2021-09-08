@@ -58,6 +58,7 @@ public:
     void notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor);
     void notify_server_did_change_title(Badge<WebContentClient>, const String&);
     void notify_server_did_request_scroll(Badge<WebContentClient>, i32, i32);
+    void notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint const&);
     void notify_server_did_request_scroll_into_view(Badge<WebContentClient>, const Gfx::IntRect&);
     void notify_server_did_enter_tooltip_area(Badge<WebContentClient>, const Gfx::IntPoint&, const String&);
     void notify_server_did_leave_tooltip_area(Badge<WebContentClient>);

@@ -73,6 +73,11 @@ void WebContentClient::did_request_scroll(i32 x_delta, i32 y_delta)
     m_view.notify_server_did_request_scroll({}, x_delta, y_delta);
 }
 
+void WebContentClient::did_request_scroll_to(Gfx::IntPoint const& scroll_position)
+{
+    m_view.notify_server_did_request_scroll_to({}, scroll_position);
+}
+
 void WebContentClient::did_request_scroll_into_view(Gfx::IntRect const& rect)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidRequestScrollIntoView! rect={}", rect);
