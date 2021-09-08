@@ -31,6 +31,7 @@ set(SOURCES
     Tools/CloneTool.cpp
     Tools/EllipseTool.cpp
     Tools/EraseTool.cpp
+    Tools/FilterTool.cpp
     Tools/GuideTool.cpp
     Tools/LineTool.cpp
     Tools/MoveTool.cpp
