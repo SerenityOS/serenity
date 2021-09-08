@@ -89,9 +89,7 @@ void TextModeConsole::set_cursor(size_t x, size_t y)
 {
     SpinlockLocker main_lock(GraphicsManagement::the().main_vga_lock());
     SpinlockLocker lock(m_vga_lock);
-    m_cursor_x = x;
-    m_cursor_y = y;
-    u16 value = m_current_vga_start_address + (y * width() + x);
+    u16 value = y * width() + x;
     IO::out8(0x3d4, 0x0e);
     IO::out8(0x3d5, MSB(value));
     IO::out8(0x3d4, 0x0f);
@@ -158,18 +156,6 @@ void TextModeConsole::write(size_t x, size_t y, char ch, Color background, Color
 void TextModeConsole::clear_vga_row(u16 row)
 {
     clear(row * width(), width(), width());
-}
-
-void TextModeConsole::set_vga_start_row(u16 row)
-{
-    SpinlockLocker lock(m_vga_lock);
-    m_vga_start_row = row;
-    m_current_vga_start_address = row * width();
-    m_current_vga_window = m_current_vga_window + row * width() * bytes_per_base_glyph();
-    IO::out8(0x3d4, 0x0c);
-    IO::out8(0x3d5, MSB(m_current_vga_start_address));
-    IO::out8(0x3d4, 0x0d);
-    IO::out8(0x3d5, LSB(m_current_vga_start_address));
 }
 
 void TextModeConsole::write(char ch, bool critical)
