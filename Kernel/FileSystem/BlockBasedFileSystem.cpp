@@ -280,8 +280,12 @@ void BlockBasedFileSystem::flush_writes_impl()
         cache->for_each_dirty_entry([&](CacheEntry& entry) {
             auto base_offset = entry.block_index.value() * block_size();
             auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
-            [[maybe_unused]] auto rc = file_description().write(base_offset, entry_data_buffer, block_size());
+            if (auto rc = file_description().write(base_offset, entry_data_buffer, block_size()); rc.is_error()) {
+                if (rc.error() == ErrnoCode::EIO)
+                    return IterationDecision::Break;
+            }
             ++count;
+            return IterationDecision::Continue;
         });
         cache->mark_all_clean();
         dbgln("{}: Flushed {} blocks to disk", class_name(), count);
