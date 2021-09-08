@@ -18,6 +18,12 @@ EventLoop::~EventLoop()
 {
 }
 
+void EventLoop::set_vm(JS::VM& vm)
+{
+    VERIFY(!m_vm);
+    m_vm = &vm;
+}
+
 EventLoop& main_thread_event_loop()
 {
     return static_cast<Bindings::WebEngineCustomData*>(Bindings::main_thread_vm().custom_data())->event_loop;

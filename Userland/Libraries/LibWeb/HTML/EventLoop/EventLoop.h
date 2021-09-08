@@ -35,6 +35,11 @@ public:
 
     Task const* currently_running_task() const { return m_currently_running_task; }
 
+    JS::VM& vm() { return *m_vm; }
+    JS::VM const& vm() const { return *m_vm; }
+
+    void set_vm(JS::VM&);
+
 private:
     Type m_type { Type::Window };
 
@@ -42,6 +47,8 @@ private:
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#currently-running-task
     Task* m_currently_running_task { nullptr };
+
+    JS::VM* m_vm { nullptr };
 };
 
 EventLoop& main_thread_event_loop();
