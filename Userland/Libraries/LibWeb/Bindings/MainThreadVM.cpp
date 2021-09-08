@@ -12,8 +12,10 @@ namespace Web::Bindings {
 JS::VM& main_thread_vm()
 {
     static RefPtr<JS::VM> vm;
-    if (!vm)
+    if (!vm) {
         vm = JS::VM::create(make<WebEngineCustomData>());
+        static_cast<WebEngineCustomData*>(vm->custom_data())->event_loop.set_vm(*vm);
+    }
     return *vm;
 }
 
