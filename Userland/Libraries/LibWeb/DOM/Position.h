@@ -18,8 +18,6 @@ public:
     Position() { }
     Position(Node&, unsigned offset);
 
-    ~Position();
-
     bool is_valid() const { return m_node; }
 
     Node* node() { return m_node; }
