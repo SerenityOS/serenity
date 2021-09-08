@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Ben Jilks <benjyjilks@gmail.com>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -34,8 +35,9 @@ void BrushTool::on_mousedown(Layer* layer, MouseEvent& event)
     if (layer_event.button() != GUI::MouseButton::Left && layer_event.button() != GUI::MouseButton::Right)
         return;
 
+    // Shift+Click draws a line from the last position to current one.
     if (layer_event.shift() && m_has_clicked) {
-        draw_line(layer->bitmap(), m_editor->color_for(layer_event), m_last_position, layer_event.position());
+        draw_line(layer->bitmap(), color_for(layer_event), m_last_position, layer_event.position());
         auto modified_rect = Gfx::IntRect::from_two_points(m_last_position, layer_event.position()).inflated(m_size * 2, m_size * 2);
         layer->did_modify_bitmap(modified_rect);
         m_last_position = layer_event.position();
@@ -45,7 +47,7 @@ void BrushTool::on_mousedown(Layer* layer, MouseEvent& event)
     const int first_draw_opacity = 10;
 
     for (int i = 0; i < first_draw_opacity; ++i)
-        draw_point(layer->bitmap(), m_editor->color_for(layer_event), layer_event.position());
+        draw_point(layer->bitmap(), color_for(layer_event), layer_event.position());
 
     layer->did_modify_bitmap(Gfx::IntRect::centered_on(layer_event.position(), Gfx::IntSize { m_size * 2, m_size * 2 }));
     m_last_position = layer_event.position();
@@ -61,7 +63,7 @@ void BrushTool::on_mousemove(Layer* layer, MouseEvent& event)
     if (!(layer_event.buttons() & GUI::MouseButton::Left || layer_event.buttons() & GUI::MouseButton::Right))
         return;
 
-    draw_line(layer->bitmap(), m_editor->color_for(layer_event), m_last_position, layer_event.position());
+    draw_line(layer->bitmap(), color_for(layer_event), m_last_position, layer_event.position());
 
     auto modified_rect = Gfx::IntRect::from_two_points(m_last_position, layer_event.position()).inflated(m_size * 2, m_size * 2);
 
@@ -78,17 +80,22 @@ void BrushTool::on_mouseup(Layer*, MouseEvent&)
     }
 }
 
+Color BrushTool::color_for(GUI::MouseEvent const& event)
+{
+    return m_editor->color_for(event);
+}
+
 void BrushTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& point)
 {
-    for (int y = point.y() - m_size; y < point.y() + m_size; y++) {
-        for (int x = point.x() - m_size; x < point.x() + m_size; x++) {
+    for (int y = point.y() - size(); y < point.y() + size(); y++) {
+        for (int x = point.x() - size(); x < point.x() + size(); x++) {
             auto distance = point.distance_from({ x, y });
             if (x < 0 || x >= bitmap.width() || y < 0 || y >= bitmap.height())
                 continue;
-            if (distance >= m_size)
+            if (distance >= size())
                 continue;
 
-            auto falloff = (1.0 - double { distance / m_size }) * (1.0 / (100 - m_hardness));
+            auto falloff = (1.0 - double { distance / size() }) * (1.0 / (100 - hardness()));
             auto pixel_color = color;
             pixel_color.set_alpha(falloff * 255);
             bitmap.set_pixel(x, y, bitmap.get_pixel(x, y).blend(pixel_color));
@@ -148,7 +155,7 @@ GUI::Widget* BrushTool::get_properties_widget()
         size_slider.set_value(m_size);
 
         size_slider.on_change = [&](int value) {
-            m_size = value;
+            set_size(value);
         };
         set_primary_slider(&size_slider);
 
@@ -165,7 +172,7 @@ GUI::Widget* BrushTool::get_properties_widget()
         hardness_slider.set_value(m_hardness);
 
         hardness_slider.on_change = [&](int value) {
-            m_hardness = value;
+            set_hardness(value);
         };
         set_secondary_slider(&hardness_slider);
     }
