@@ -305,7 +305,7 @@ static void parse_locale_scripts(String locale_path, UnicodeLocaleData& locale_d
     });
 }
 
-static void parse_locale_list_patters(String misc_path, UnicodeLocaleData& locale_data, Locale& locale)
+static void parse_locale_list_patterns(String misc_path, UnicodeLocaleData& locale_data, Locale& locale)
 {
     LexicalPath list_patterns_path(move(misc_path));
     list_patterns_path = list_patterns_path.append("listPatterns.json"sv);
@@ -449,7 +449,7 @@ static void parse_all_locales(String core_path, String locale_names_path, String
             continue;
 
         auto& locale = locale_data.locales.ensure(*language);
-        parse_locale_list_patters(misc_path, locale_data, locale);
+        parse_locale_list_patterns(misc_path, locale_data, locale);
     }
 
     while (numbers_iterator.has_next()) {
