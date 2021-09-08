@@ -10,6 +10,17 @@
 
 namespace Kernel {
 
+KResult DeviceFile::attach_new_file_blocker()
+{
+    VERIFY(!m_blocker_set);
+    auto device = m_device.strong_ref();
+    if (!device)
+        return KResult(EIO);
+    m_device_blocker_set = device->blocker_set();
+    VERIFY(m_device_blocker_set);
+    return KSuccess;
+}
+
 DeviceFile::DeviceFile(const Device& device)
     : m_is_block_device(device.is_block_device())
     , m_is_character_device(device.is_character_device())
@@ -26,6 +37,7 @@ DeviceFile::DeviceFile(const Device& device)
 KResultOr<NonnullRefPtr<DeviceFile>> DeviceFile::try_create(const Device& device)
 {
     auto file = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DeviceFile(device)));
+    TRY(file->attach_new_file_blocker());
     return file;
 }
 
@@ -55,11 +67,7 @@ bool DeviceFile::is_master_pty() const
 
 FileBlockerSet& DeviceFile::blocker_set()
 {
-    auto device = m_device.strong_ref();
-    if (!device) {
-        return File::blocker_set();
-    }
-    return device->blocker_set();
+    return *m_device_blocker_set;
 }
 void DeviceFile::did_seek(OpenFileDescription& description, off_t offset)
 {

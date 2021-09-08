@@ -17,6 +17,13 @@
 
 namespace Kernel {
 
+KResult File::attach_new_file_blocker()
+{
+    VERIFY(!m_blocker_set);
+    m_blocker_set = adopt_ref_if_nonnull(new FileBlockerSet);
+    return m_blocker_set ? KSuccess : KResult(ENOMEM);
+}
+
 File::File()
 {
 }

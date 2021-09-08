@@ -181,6 +181,7 @@ Device::Device(unsigned major, unsigned minor)
 
 void Device::after_inserting()
 {
+    m_blocker_set = adopt_ref_if_nonnull(new FileBlockerSet).release_nonnull();
     DeviceManagement::the().after_inserting_device({}, *this);
     VERIFY(!m_sysfs_component);
     auto sys_fs_component = SysFSDeviceComponent::must_create(*this);

@@ -21,7 +21,9 @@ namespace Kernel {
 
 class File;
 
-class FileBlockerSet final : public Thread::BlockerSet {
+class FileBlockerSet final
+    : public RefCounted<FileBlockerSet>
+    , public Thread::BlockerSet {
 public:
     FileBlockerSet() { }
 
@@ -87,6 +89,7 @@ public:
     virtual ~File();
 
     virtual KResultOr<NonnullRefPtr<OpenFileDescription>> open(int options);
+    virtual KResult attach_new_file_blocker();
     virtual KResult close();
 
     virtual bool can_read(const OpenFileDescription&, size_t) const = 0;
@@ -136,7 +139,7 @@ public:
     const InodeWatcher* as_inode_watcher() const;
     InodeWatcher* as_inode_watcher();
 
-    virtual FileBlockerSet& blocker_set() { return m_blocker_set; }
+    virtual FileBlockerSet& blocker_set() { return *m_blocker_set; }
 
     size_t attach_count() const { return m_attach_count; }
 
@@ -164,8 +167,9 @@ protected:
         blocker_set().unblock_all_blockers_whose_conditions_are_met();
     }
 
+    RefPtr<FileBlockerSet> m_blocker_set;
+
 private:
-    FileBlockerSet m_blocker_set;
     size_t m_attach_count { 0 };
 };
 

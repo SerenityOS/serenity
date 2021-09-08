@@ -14,7 +14,9 @@ namespace Kernel {
 
 KResultOr<NonnullRefPtr<InodeWatcher>> InodeWatcher::try_create()
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) InodeWatcher);
+    auto inode_watcher = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) InodeWatcher));
+    TRY(inode_watcher->attach_new_file_blocker());
+    return inode_watcher;
 }
 
 InodeWatcher::~InodeWatcher()

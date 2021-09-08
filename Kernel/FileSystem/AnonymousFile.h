@@ -15,7 +15,9 @@ class AnonymousFile final : public File {
 public:
     static KResultOr<NonnullRefPtr<AnonymousFile>> try_create(NonnullRefPtr<Memory::AnonymousVMObject> vmobject)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousFile(move(vmobject)));
+        auto anonymous_file = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousFile(move(vmobject))));
+        TRY(anonymous_file->attach_new_file_blocker());
+        return anonymous_file;
     }
 
     virtual ~AnonymousFile() override;

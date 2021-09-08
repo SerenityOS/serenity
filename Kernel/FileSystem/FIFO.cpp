@@ -19,7 +19,9 @@ static Atomic<int> s_next_fifo_id = 1;
 KResultOr<NonnullRefPtr<FIFO>> FIFO::try_create(UserID uid)
 {
     auto buffer = TRY(DoubleBuffer::try_create());
-    return adopt_nonnull_ref_or_enomem(new (nothrow) FIFO(uid, move(buffer)));
+    auto fifo = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FIFO(uid, move(buffer))));
+    TRY(fifo->attach_new_file_blocker());
+    return fifo;
 }
 
 KResultOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction(FIFO::Direction direction)

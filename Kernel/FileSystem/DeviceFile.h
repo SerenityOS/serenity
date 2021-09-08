@@ -27,7 +27,7 @@ public:
     virtual ~DeviceFile() override {};
 
     static KResultOr<NonnullRefPtr<DeviceFile>> try_create(const Device&);
-
+    virtual KResult attach_new_file_blocker() override;
     virtual FileBlockerSet& blocker_set() override;
 
     virtual void did_seek(OpenFileDescription&, off_t) override;
@@ -77,6 +77,7 @@ private:
     const String m_absolute_path;
     explicit DeviceFile(const Device&);
     WeakPtr<Device> m_device;
+    RefPtr<FileBlockerSet> m_device_blocker_set;
 };
 
 }

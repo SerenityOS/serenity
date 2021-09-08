@@ -79,7 +79,7 @@ public:
     const CharacterDevice* as_character_device() const;
     CharacterDevice* as_character_device();
 
-    virtual FileBlockerSet& blocker_set() { return m_blocker_set; }
+    virtual FileBlockerSet& blocker_set() { return *m_blocker_set; }
 
     unsigned major() const { return m_major; }
     unsigned minor() const { return m_minor; }
@@ -92,7 +92,8 @@ public:
     ALWAYS_INLINE void do_evaluate_device_block_conditions(Badge<DeviceFile>)
     {
         VERIFY(!Processor::current_in_irq());
-        m_blocker_set.unblock_all_blockers_whose_conditions_are_met();
+        VERIFY(m_blocker_set);
+        m_blocker_set->unblock_all_blockers_whose_conditions_are_met();
     }
     void process_next_queued_request(Badge<AsyncDeviceRequest>, const AsyncDeviceRequest&);
 
@@ -131,7 +132,8 @@ protected:
     ALWAYS_INLINE void do_evaluate_block_conditions()
     {
         VERIFY(!Processor::current_in_irq());
-        m_blocker_set.unblock_all_blockers_whose_conditions_are_met();
+        VERIFY(m_blocker_set);
+        m_blocker_set->unblock_all_blockers_whose_conditions_are_met();
     }
 
 private:
@@ -145,7 +147,7 @@ private:
     Spinlock m_requests_lock;
     DoublyLinkedList<RefPtr<AsyncDeviceRequest>> m_requests;
     RefPtr<SysFSDeviceComponent> m_sysfs_component;
-    FileBlockerSet m_blocker_set;
+    RefPtr<FileBlockerSet> m_blocker_set;
 };
 
 }
