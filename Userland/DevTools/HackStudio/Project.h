@@ -26,7 +26,7 @@ public:
     String name() const { return LexicalPath::basename(m_root_path); }
     String root_path() const { return m_root_path; }
 
-    NonnullRefPtr<ProjectFile> get_file(const String& path) const;
+    NonnullRefPtr<ProjectFile> create_file(const String& path) const;
 
     void for_each_text_file(Function<void(const ProjectFile&)>) const;
 
