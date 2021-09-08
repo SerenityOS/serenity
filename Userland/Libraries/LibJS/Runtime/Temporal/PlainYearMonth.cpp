@@ -31,7 +31,7 @@ void PlainYearMonth::visit_edges(Visitor& visitor)
 }
 
 // 9.5.2 RegulateISOYearMonth ( year, month, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulateisoyearmonth
-Optional<ISOYearMonth> regulate_iso_year_month(GlobalObject& global_object, double year, double month, String const& overflow)
+Optional<ISOYearMonth> regulate_iso_year_month(GlobalObject& global_object, double year, double month, StringView overflow)
 {
     auto& vm = global_object.vm();
 

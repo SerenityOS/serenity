@@ -162,7 +162,7 @@ PlainDate* to_temporal_date(GlobalObject& global_object, Value item, Object* opt
 }
 
 // 3.5.4 RegulateISODate ( year, month, day, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulateisodate
-Optional<ISODate> regulate_iso_date(GlobalObject& global_object, double year, double month, double day, String const& overflow)
+Optional<ISODate> regulate_iso_date(GlobalObject& global_object, double year, double month, double day, StringView overflow)
 {
     auto& vm = global_object.vm();
     // 1. Assert: year, month, and day are integers.
@@ -380,7 +380,7 @@ Optional<String> temporal_date_to_string(GlobalObject& global_object, PlainDate&
 }
 
 // 3.5.9 AddISODate ( year, month, day, years, months, weeks, days, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-addisodate
-Optional<ISODate> add_iso_date(GlobalObject& global_object, i32 year, u8 month, u8 day, double years, double months, double weeks, double days, String const& overflow)
+Optional<ISODate> add_iso_date(GlobalObject& global_object, i32 year, u8 month, u8 day, double years, double months, double weeks, double days, StringView overflow)
 {
     auto& vm = global_object.vm();
 
