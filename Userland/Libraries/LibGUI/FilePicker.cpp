@@ -160,21 +160,6 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
         on_file_return();
     };
 
-    m_view->on_selection_change = [this] {
-        auto index = m_view->selection().first();
-        auto& filter_model = (SortingProxyModel&)*m_view->model();
-        auto local_index = filter_model.map_to_source(index);
-        const FileSystemModel::Node& node = m_model->node(local_index);
-        LexicalPath path { node.full_path() };
-
-        auto should_open_folder = m_mode == Mode::OpenFolder;
-        if (should_open_folder == node.is_directory()) {
-            m_filename_textbox->set_text(node.name);
-        } else if (m_mode != Mode::Save) {
-            m_filename_textbox->clear();
-        }
-    };
-
     m_context_menu = GUI::Menu::construct();
     m_context_menu->add_action(GUI::Action::create_checkable(
         "Show dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
@@ -194,11 +179,27 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
     ok_button.on_click = [this](auto) {
         on_file_return();
     };
+    ok_button.set_enabled(!m_filename_textbox->text().is_empty());
 
     auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
     cancel_button.set_text("Cancel");
     cancel_button.on_click = [this](auto) {
         done(ExecCancel);
+    };
+
+    m_view->on_selection_change = [this, &ok_button] {
+        auto index = m_view->selection().first();
+        auto& filter_model = (SortingProxyModel&)*m_view->model();
+        auto local_index = filter_model.map_to_source(index);
+        const FileSystemModel::Node& node = m_model->node(local_index);
+
+        auto should_open_folder = m_mode == Mode::OpenFolder;
+        if (should_open_folder == node.is_directory()) {
+            m_filename_textbox->set_text(node.name);
+        } else if (m_mode != Mode::Save) {
+            m_filename_textbox->clear();
+        }
+        ok_button.set_enabled(!m_filename_textbox->text().is_empty());
     };
 
     m_view->on_activation = [this](auto& index) {
