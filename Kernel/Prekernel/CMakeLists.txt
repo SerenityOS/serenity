@@ -39,7 +39,7 @@ set_target_properties(${PREKERNEL_TARGET} PROPERTIES LINK_DEPENDS ${CMAKE_CURREN
 if (USE_CLANG_TOOLCHAIN)
     target_link_libraries(${PREKERNEL_TARGET} clang_rt.builtins-${SERENITY_CLANG_ARCH} c++abi)
 else()
-    target_link_libraries(${PREKERNEL_TARGET} gcc supc++)
+    target_link_libraries(${PREKERNEL_TARGET} gcc)
 endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
