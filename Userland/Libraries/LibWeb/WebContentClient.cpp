@@ -68,9 +68,9 @@ void WebContentClient::did_change_title(String const& title)
     m_view.notify_server_did_change_title({}, title);
 }
 
-void WebContentClient::did_request_scroll(int wheel_delta)
+void WebContentClient::did_request_scroll(i32 x_delta, i32 y_delta)
 {
-    m_view.notify_server_did_request_scroll({}, wheel_delta);
+    m_view.notify_server_did_request_scroll({}, x_delta, y_delta);
 }
 
 void WebContentClient::did_request_scroll_into_view(Gfx::IntRect const& rect)
