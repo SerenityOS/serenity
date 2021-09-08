@@ -39,7 +39,8 @@ private:
     explicit TextModeConsole(const VGACompatibleAdapter&);
 
     mutable Spinlock m_vga_lock;
-    u8* m_current_vga_window { nullptr };
+
+    VirtualAddress m_current_vga_window;
 };
 
 }
