@@ -379,11 +379,12 @@ Value WithStatement::execute(Interpreter& interpreter, GlobalObject& global_obje
 
     // 6. Let C be the result of evaluating Statement.
     auto result = interpreter.execute_statement(global_object, m_body).value_or(js_undefined());
-    if (interpreter.exception())
-        return {};
 
     // 7. Set the running execution context's LexicalEnvironment to oldEnv.
     interpreter.vm().running_execution_context().lexical_environment = old_environment;
+
+    if (interpreter.exception())
+        return {};
 
     // 8. Return Completion(UpdateEmpty(C, undefined)).
     return result;

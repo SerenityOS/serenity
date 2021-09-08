@@ -15,10 +15,31 @@ test("basic with statement functionality", () => {
     }
 
     expect(object.bar).toBe(2);
+    expect(() => foo).toThrowWithMessage(ReferenceError, "'foo' is not defined");
 
     expect(bar).toBe(99);
 });
 
 test("syntax error in strict mode", () => {
     expect("'use strict'; with (foo) {}").not.toEval();
+});
+
+test("restores lexical environment even when exception is thrown", () => {
+    var object = {
+        foo: 1,
+        get bar() {
+            throw Error();
+        },
+    };
+
+    try {
+        with (object) {
+            expect(foo).toBe(1);
+            bar;
+        }
+        expect().fail();
+    } catch (e) {
+        expect(() => foo).toThrowWithMessage(ReferenceError, "'foo' is not defined");
+    }
+    expect(() => foo).toThrowWithMessage(ReferenceError, "'foo' is not defined");
 });
