@@ -71,7 +71,7 @@ struct TemporalTimeZone {
 };
 
 struct SecondsStringPrecision {
-    Variant<String, u8> precision;
+    Variant<StringView, u8> precision;
     String unit;
     u32 increment;
 };
@@ -88,11 +88,11 @@ u64 to_temporal_rounding_increment(GlobalObject&, Object& normalized_options, Op
 Optional<SecondsStringPrecision> to_seconds_string_precision(GlobalObject&, Object& normalized_options);
 Optional<String> to_largest_temporal_unit(GlobalObject&, Object& normalized_options, Vector<StringView> const& disallowed_units, String const& fallback, Optional<String> auto_value);
 Optional<String> to_smallest_temporal_unit(GlobalObject&, Object& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback);
-void validate_temporal_unit_range(GlobalObject&, String const& largest_unit, String const& smallest_unit);
+void validate_temporal_unit_range(GlobalObject&, StringView largest_unit, StringView smallest_unit);
 String larger_of_two_temporal_units(StringView, StringView);
 Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit);
 void reject_temporal_calendar_type(GlobalObject&, Object&);
-String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<String, u8> const& precision);
+String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision);
 double constrain_to_range(double x, double minimum, double maximum);
 BigInt* round_number_to_increment(GlobalObject&, BigInt const&, u64 increment, StringView rounding_mode);
 Optional<ISODateTime> parse_iso_date_time(GlobalObject&, String const& iso_string);

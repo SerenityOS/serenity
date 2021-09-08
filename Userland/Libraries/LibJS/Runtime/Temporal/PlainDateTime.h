@@ -55,7 +55,7 @@ Optional<ISODateTime> interpret_temporal_date_time_fields(GlobalObject&, Object&
 PlainDateTime* to_temporal_date_time(GlobalObject&, Value item, Object* options = nullptr);
 ISODateTime balance_iso_date_time(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, i64 nanosecond);
 PlainDateTime* create_temporal_date_time(GlobalObject&, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Object& calendar, FunctionObject* new_target = nullptr);
-Optional<String> temporal_date_time_to_string(GlobalObject&, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Value calendar, Variant<String, u8> const& precision, StringView show_calendar);
+Optional<String> temporal_date_time_to_string(GlobalObject&, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Value calendar, Variant<StringView, u8> const& precision, StringView show_calendar);
 i8 compare_iso_date_time(i32 year1, u8 month1, u8 day1, u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, i32 year2, u8 month2, u8 day2, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2);
 
 }

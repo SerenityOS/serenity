@@ -248,7 +248,7 @@ BigInt* round_temporal_instant(GlobalObject& global_object, BigInt const& nanose
 }
 
 // 8.5.9 TemporalInstantToString ( instant, timeZone, precision ), https://tc39.es/proposal-temporal/#sec-temporal-temporalinstanttostring
-Optional<String> temporal_instant_to_string(GlobalObject& global_object, Instant& instant, Value time_zone, Variant<String, u8> const& precision)
+Optional<String> temporal_instant_to_string(GlobalObject& global_object, Instant& instant, Value time_zone, Variant<StringView, u8> const& precision)
 {
     auto& vm = global_object.vm();
 

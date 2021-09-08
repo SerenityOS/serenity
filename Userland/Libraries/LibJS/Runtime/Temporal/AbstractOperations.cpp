@@ -319,7 +319,7 @@ Optional<SecondsStringPrecision> to_seconds_string_precision(GlobalObject& globa
     // 2. If smallestUnit is "minute", then
     if (smallest_unit == "minute"sv) {
         // a. Return the Record { [[Precision]]: "minute", [[Unit]]: "minute", [[Increment]]: 1 }.
-        return SecondsStringPrecision { .precision = String { "minute"sv }, .unit = "minute"sv, .increment = 1 };
+        return SecondsStringPrecision { .precision = "minute"sv, .unit = "minute"sv, .increment = 1 };
     }
 
     // 3. If smallestUnit is "second", then
@@ -358,7 +358,7 @@ Optional<SecondsStringPrecision> to_seconds_string_precision(GlobalObject& globa
     if (digits_variant->has<String>()) {
         VERIFY(digits_variant->get<String>() == "auto"sv);
         // a. Return the Record { [[Precision]]: "auto", [[Unit]]: "nanosecond", [[Increment]]: 1 }.
-        return SecondsStringPrecision { .precision = String { "auto"sv }, .unit = "nanosecond"sv, .increment = 1 };
+        return SecondsStringPrecision { .precision = "auto"sv, .unit = "nanosecond"sv, .increment = 1 };
     }
 
     auto digits = digits_variant->get<u8>();
@@ -478,7 +478,7 @@ Optional<String> to_smallest_temporal_unit(GlobalObject& global_object, Object& 
 }
 
 // 13.22 ValidateTemporalUnitRange ( largestUnit, smallestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-validatetemporalunitrange
-void validate_temporal_unit_range(GlobalObject& global_object, String const& largest_unit, String const& smallest_unit)
+void validate_temporal_unit_range(GlobalObject& global_object, StringView largest_unit, StringView smallest_unit)
 {
     auto& vm = global_object.vm();
 
@@ -615,16 +615,16 @@ void reject_temporal_calendar_type(GlobalObject& global_object, Object& object)
 }
 
 // 13.27 FormatSecondsStringPart ( second, millisecond, microsecond, nanosecond, precision ), https://tc39.es/proposal-temporal/#sec-temporal-formatsecondsstringpart
-String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<String, u8> const& precision)
+String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision)
 {
     // 1. Assert: second, millisecond, microsecond and nanosecond are integers.
 
     // Non-standard sanity check
-    if (precision.has<String>())
-        VERIFY(precision.get<String>().is_one_of("minute"sv, "auto"sv));
+    if (precision.has<StringView>())
+        VERIFY(precision.get<StringView>().is_one_of("minute"sv, "auto"sv));
 
     // 2. If precision is "minute", return "".
-    if (precision.has<String>() && precision.get<String>() == "minute"sv)
+    if (precision.has<StringView>() && precision.get<StringView>() == "minute"sv)
         return String::empty();
 
     // 3. Let secondsString be the string-concatenation of the code unit 0x003A (COLON) and second formatted as a two-digit decimal number, padded to the left with zeroes if necessary.
@@ -636,7 +636,7 @@ String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u
     String fraction_string;
 
     // 5. If precision is "auto", then
-    if (precision.has<String>() && precision.get<String>() == "auto"sv) {
+    if (precision.has<StringView>() && precision.get<StringView>() == "auto"sv) {
         // a. If fraction is 0, return secondsString.
         if (fraction == 0)
             return seconds_string;

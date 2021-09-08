@@ -477,7 +477,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_locale_string)
         return {};
 
     // 3. Return ? TemporalInstantToString(instant, undefined, "auto").
-    auto string = temporal_instant_to_string(global_object, *instant, js_undefined(), String { "auto"sv });
+    auto string = temporal_instant_to_string(global_object, *instant, js_undefined(), "auto"sv);
     if (vm.exception())
         return {};
 
@@ -494,7 +494,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_json)
         return {};
 
     // 3. Return ? TemporalInstantToString(instant, undefined, "auto").
-    auto string = temporal_instant_to_string(global_object, *instant, js_undefined(), String { "auto"sv });
+    auto string = temporal_instant_to_string(global_object, *instant, js_undefined(), "auto"sv);
     if (vm.exception())
         return {};
 
