@@ -333,7 +333,7 @@ Plan9FS::Message::Message(Plan9FS& fs, Type type)
 }
 
 Plan9FS::Message::Message(NonnullOwnPtr<KBuffer>&& buffer)
-    : m_built { move(buffer), Decoder({ buffer->data(), buffer->size() }) }
+    : m_built { move(buffer), Decoder({ buffer->bytes() }) }
     , m_have_been_built(true)
 {
     u32 size;

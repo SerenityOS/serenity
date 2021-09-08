@@ -75,8 +75,7 @@ KResultOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Custody& base, RefPtr<C
     // contents as a path and resolves that. That is, it
     // behaves exactly how you would expect a symlink to work.
     auto contents = TRY(read_entire());
-    auto path = StringView(contents->data(), contents->size());
-    return VirtualFileSystem::the().resolve_path(path, base, out_parent, options, symlink_recursion_level);
+    return VirtualFileSystem::the().resolve_path(StringView { contents->bytes() }, base, out_parent, options, symlink_recursion_level);
 }
 
 Inode::Inode(FileSystem& fs, InodeIndex index)

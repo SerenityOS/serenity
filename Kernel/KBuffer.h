@@ -42,6 +42,9 @@ public:
     [[nodiscard]] size_t size() const { return m_size; }
     [[nodiscard]] size_t capacity() const { return m_region->size(); }
 
+    [[nodiscard]] ReadonlyBytes bytes() const { return { data(), size() }; }
+    [[nodiscard]] Bytes bytes() { return { data(), size() }; }
+
     void set_size(size_t size)
     {
         VERIFY(size <= capacity());

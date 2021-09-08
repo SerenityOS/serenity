@@ -34,7 +34,7 @@ struct PacketWithTimestamp : public RefCounted<PacketWithTimestamp> {
     {
     }
 
-    ReadonlyBytes bytes() { return { buffer->data(), buffer->size() }; };
+    ReadonlyBytes bytes() { return buffer->bytes(); }
 
     NonnullOwnPtr<KBuffer> buffer;
     Time timestamp;
