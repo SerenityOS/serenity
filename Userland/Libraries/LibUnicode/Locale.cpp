@@ -468,8 +468,7 @@ static void perform_hard_coded_key_value_substitutions(String& key, String& valu
     // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/timezone.xml
     // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/transform.xml
     //
-    // There doesn't seem to be a counterpart in the JSON export. Since there aren't many such
-    // aliases, until an XML parser is implemented, those aliases are implemented here.
+    // There isn't yet a counterpart in the JSON export. See: https://unicode-org.atlassian.net/browse/CLDR-14571
     if ((key == "ca"sv) && (value == "islamicc"sv)) {
         value = "islamic-civil"sv;
     } else if (key.is_one_of("kb"sv, "kc"sv, "kh"sv, "kk"sv, "kn"sv) && (value == "yes"sv)) {
