@@ -436,6 +436,7 @@ namespace JS {
     P(toUpperCase)                           \
     P(toUTCString)                           \
     P(toZonedDateTime)                       \
+    P(toZonedDateTimeISO)                    \
     P(trace)                                 \
     P(trim)                                  \
     P(trimEnd)                               \
