@@ -108,7 +108,7 @@ void Game::keydown_event(GUI::KeyEvent& event)
     }
 }
 
-void Game::mousemove_event(GUI::MouseEvent& event)
+void Game::track_mouse_move(Gfx::IntPoint const& point)
 {
     if (m_up_key_held || m_down_key_held) {
         // We're using the keyboard to move the paddle, the cursor is doing something else
@@ -118,7 +118,8 @@ void Game::mousemove_event(GUI::MouseEvent& event)
     if (m_cursor_paddle_target_y.has_value())
         update(cursor_paddle_target_rect());
 
-    m_cursor_paddle_target_y = clamp(event.y() - m_player1_paddle.rect.height() / 2, 0.f, game_height - m_player1_paddle.rect.height());
+    auto relative_point = point - window()->position();
+    m_cursor_paddle_target_y = clamp(relative_point.y() - m_player1_paddle.rect.height() / 2, 0.f, game_height - m_player1_paddle.rect.height());
     if (m_player1_paddle.rect.y() > *m_cursor_paddle_target_y) {
         m_player1_paddle.moving_up = true;
         m_player1_paddle.moving_down = false;

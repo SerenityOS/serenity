@@ -9,6 +9,7 @@
 #include <AK/Optional.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/MouseTracker.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Bitmap.h>
@@ -17,7 +18,8 @@
 
 namespace Pong {
 
-class Game final : public GUI::Widget {
+class Game final : public GUI::Widget
+    , GUI::MouseTracker {
     C_OBJECT(Game);
 
 public:
@@ -32,8 +34,8 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keyup_event(GUI::KeyEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
-    virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
+    virtual void track_mouse_move(Gfx::IntPoint const&) override;
 
     void reset();
     void reset_ball(int serve_to_player);
