@@ -764,7 +764,7 @@ KResult VirtualFileSystem::validate_path_against_process_veil(StringView path, i
 {
     if (Process::current().veil_state() == VeilState::None)
         return KSuccess;
-    if (path == "/usr/lib/Loader.so")
+    if (options == O_EXEC && path == "/usr/lib/Loader.so")
         return KSuccess;
 
     VERIFY(path.starts_with('/'));
