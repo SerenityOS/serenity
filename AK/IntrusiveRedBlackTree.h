@@ -52,7 +52,7 @@ public:
     {
         auto& node = value.*member;
         VERIFY(!node.m_in_tree);
-        node.key = key;
+        static_cast<typename BaseTree::Node&>(node).key = key;
         BaseTree::insert(&node);
         if constexpr (!TreeNode::IsRaw)
             node.m_self.reference = &value; // Note: Self-reference ensures that the object will keep a ref to itself when the Container is a smart pointer.
@@ -174,6 +174,11 @@ public:
     [[nodiscard]] bool is_in_tree() const
     {
         return m_in_tree;
+    }
+
+    [[nodiscard]] K key() const
+    {
+        return BaseRedBlackTree<K>::Node::key;
     }
 
     static constexpr bool IsRaw = IsPointer<Container>;
