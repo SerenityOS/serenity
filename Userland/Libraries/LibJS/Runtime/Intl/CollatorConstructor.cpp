@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Intl/Collator.h>
@@ -145,6 +146,9 @@ void CollatorConstructor::initialize(GlobalObject& global_object)
     // 10.2.1 Intl.Collator.prototype, https://tc39.es/ecma402/#sec-intl.collator.prototype
     define_direct_property(vm.names.prototype, global_object.intl_collator_prototype(), 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
+
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
 }
 
 // 10.1.2 Intl.Collator ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.collator
@@ -174,6 +178,21 @@ ThrowCompletionOr<Object*> CollatorConstructor::construct(FunctionObject& new_ta
 
     // 6. Return ? InitializeCollator(collator, locales, options).
     return TRY(initialize_collator(global_object, *collator, locales, options));
+}
+
+// 10.2.2 Intl.Collator.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-intl.collator.supportedlocalesof
+JS_DEFINE_NATIVE_FUNCTION(CollatorConstructor::supported_locales_of)
+{
+    auto locales = vm.argument(0);
+    auto options = vm.argument(1);
+
+    // 1. Let availableLocales be %Collator%.[[AvailableLocales]].
+
+    // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
+    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales));
+
+    // 3. Return ? SupportedLocales(availableLocales, requestedLocales, options).
+    return TRY(supported_locales(global_object, requested_locales, options));
 }
 
 }
