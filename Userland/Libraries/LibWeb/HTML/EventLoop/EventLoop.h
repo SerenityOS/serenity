@@ -13,8 +13,19 @@ namespace Web::HTML {
 
 class EventLoop {
 public:
+    enum class Type {
+        // https://html.spec.whatwg.org/multipage/webappapis.html#window-event-loop
+        Window,
+        // https://html.spec.whatwg.org/multipage/webappapis.html#worker-event-loop
+        Worker,
+        // https://html.spec.whatwg.org/multipage/webappapis.html#worklet-event-loop
+        Worklet,
+    };
+
     EventLoop();
     ~EventLoop();
+
+    Type type() const { return m_type; }
 
     TaskQueue& task_queue() { return m_task_queue; }
     TaskQueue const& task_queue() const { return m_task_queue; }
@@ -25,6 +36,8 @@ public:
     Task const* currently_running_task() const { return m_currently_running_task; }
 
 private:
+    Type m_type { Type::Window };
+
     TaskQueue m_task_queue;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#currently-running-task
