@@ -35,7 +35,7 @@ public:
     void register_viewport_client(ViewportClient&);
     void unregister_viewport_client(ViewportClient&);
 
-    bool is_top_level() const { return this == &m_top_level_browsing_context; }
+    bool is_top_level() const { return this == &top_level_browsing_context(); }
     bool is_focused_context() const;
 
     DOM::Document const* document() const { return m_document; }
@@ -63,8 +63,8 @@ public:
 
     void scroll_to_anchor(String const&);
 
-    BrowsingContext& top_level_browsing_context() { return m_top_level_browsing_context; }
-    BrowsingContext const& top_level_browsing_context() const { return m_top_level_browsing_context; }
+    BrowsingContext& top_level_browsing_context() { return *m_top_level_browsing_context; }
+    BrowsingContext const& top_level_browsing_context() const { return *m_top_level_browsing_context; }
 
     DOM::Element* host_element() { return m_host_element; }
     DOM::Element const* host_element() const { return m_host_element; }
@@ -98,7 +98,10 @@ private:
     void reset_cursor_blink_cycle();
 
     WeakPtr<Page> m_page;
-    BrowsingContext& m_top_level_browsing_context;
+
+    // NOTE: We expect there to always be a top-level browsing context as long as we exist.
+    //       The use of WeakPtr is for safety in case we get something wrong.
+    WeakPtr<BrowsingContext> m_top_level_browsing_context;
 
     FrameLoader m_loader;
     EventHandler m_event_handler;
