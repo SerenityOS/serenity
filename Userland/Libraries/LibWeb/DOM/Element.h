@@ -15,6 +15,7 @@
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/HTML/AttributeNames.h>
+#include <LibWeb/HTML/EventLoop/Task.h>
 #include <LibWeb/HTML/TagNames.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/QualifiedName.h>
@@ -103,6 +104,8 @@ public:
     {
         m_custom_properties.set(custom_property_name, style_property);
     }
+
+    void queue_an_element_task(HTML::Task::Source, Function<void()>);
 
 protected:
     RefPtr<Layout::Node> create_layout_node() override;
