@@ -48,10 +48,11 @@ public:
         return node_to_value(*node);
     }
 
-    void insert(V& value)
+    void insert(K key, V& value)
     {
         auto& node = value.*member;
         VERIFY(!node.m_in_tree);
+        node.key = key;
         BaseTree::insert(&node);
         if constexpr (!TreeNode::IsRaw)
             node.m_self.reference = &value; // Note: Self-reference ensures that the object will keep a ref to itself when the Container is a smart pointer.
@@ -165,11 +166,6 @@ namespace Detail {
 template<Integral K, typename V, typename Container>
 class IntrusiveRedBlackTreeNode : public BaseRedBlackTree<K>::Node {
 public:
-    IntrusiveRedBlackTreeNode(K key)
-        : BaseRedBlackTree<K>::Node(key)
-    {
-    }
-
     ~IntrusiveRedBlackTreeNode()
     {
         VERIFY(!is_in_tree());
