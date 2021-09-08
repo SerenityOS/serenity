@@ -7,6 +7,8 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <LibCore/Forward.h>
+#include <LibJS/Forward.h>
 #include <LibWeb/HTML/EventLoop/TaskQueue.h>
 
 namespace Web::HTML {
@@ -40,6 +42,8 @@ public:
 
     void set_vm(JS::VM&);
 
+    void schedule();
+
 private:
     Type m_type { Type::Window };
 
@@ -49,6 +53,8 @@ private:
     Task* m_currently_running_task { nullptr };
 
     JS::VM* m_vm { nullptr };
+
+    RefPtr<Core::Timer> m_system_event_loop_timer;
 };
 
 EventLoop& main_thread_event_loop();

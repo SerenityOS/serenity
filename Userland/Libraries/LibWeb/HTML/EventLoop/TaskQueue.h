@@ -13,7 +13,7 @@ namespace Web::HTML {
 
 class TaskQueue {
 public:
-    TaskQueue();
+    explicit TaskQueue(HTML::EventLoop&);
     ~TaskQueue();
 
     bool is_empty() const { return m_tasks.is_empty(); }
@@ -22,6 +22,8 @@ public:
     OwnPtr<HTML::Task> take_first_runnable() { return m_tasks.dequeue(); }
 
 private:
+    HTML::EventLoop& m_event_loop;
+
     Queue<NonnullOwnPtr<HTML::Task>> m_tasks;
 };
 
