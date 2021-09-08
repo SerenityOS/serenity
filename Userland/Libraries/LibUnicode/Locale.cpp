@@ -211,6 +211,7 @@ static Optional<LocaleExtension> parse_unicode_locale_extension(GenericLexer& le
         case ParseState::ParsingKeyword: {
             // keyword = key (sep type)?
             Keyword keyword { .key = *segment };
+            Vector<StringView> keyword_values;
 
             if (!is_key(*segment)) {
                 lexer.retreat(segment->length() + 1);
@@ -227,8 +228,12 @@ static Optional<LocaleExtension> parse_unicode_locale_extension(GenericLexer& le
                     break;
                 }
 
-                keyword.types.append(*type);
+                keyword_values.append(*type);
             }
+
+            StringBuilder builder;
+            builder.join('-', keyword_values);
+            keyword.value = builder.build();
 
             locale_extension.keywords.append(move(keyword));
             break;
@@ -283,6 +288,7 @@ static Optional<TransformedExtension> parse_transformed_extension(GenericLexer& 
         case ParseState::ParsingField: {
             // tfield = tkey tvalue;
             TransformedField field { .key = *segment };
+            Vector<StringView> field_values;
 
             if (!is_transformed_key(*segment)) {
                 lexer.retreat(segment->length() + 1);
@@ -299,11 +305,15 @@ static Optional<TransformedExtension> parse_transformed_extension(GenericLexer& 
                     break;
                 }
 
-                field.values.append(*value);
+                field_values.append(*value);
             }
 
-            if (field.values.is_empty())
+            if (field_values.is_empty())
                 return {};
+
+            StringBuilder builder;
+            builder.join('-', field_values);
+            field.value = builder.build();
 
             transformed_extension.fields.append(move(field));
             break;
@@ -325,6 +335,7 @@ static Optional<OtherExtension> parse_other_extension(char key, GenericLexer& le
     //
     // other_extensions = sep [alphanum-[tTuUxX]] (sep alphanum{2,8})+ ;
     OtherExtension other_extension { .key = key };
+    Vector<StringView> other_values;
 
     if (!is_ascii_alphanumeric(key) || (key == 'x') || (key == 'X'))
         return {};
@@ -339,11 +350,16 @@ static Optional<OtherExtension> parse_other_extension(char key, GenericLexer& le
             break;
         }
 
-        other_extension.values.append(*segment);
+        other_values.append(*segment);
     }
 
-    if (other_extension.values.is_empty())
+    if (other_values.is_empty())
         return {};
+
+    StringBuilder builder;
+    builder.join('-', other_values);
+    other_extension.value = builder.build();
+
     return other_extension;
 }
 
@@ -469,8 +485,11 @@ static void perform_hard_coded_key_value_substitutions(String& key, String& valu
     // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/transform.xml
     //
     // There isn't yet a counterpart in the JSON export. See: https://unicode-org.atlassian.net/browse/CLDR-14571
-    if ((key == "ca"sv) && (value == "islamicc"sv)) {
-        value = "islamic-civil"sv;
+    if (key == "ca"sv) {
+        if (value == "islamicc"sv)
+            value = "islamic-civil"sv;
+        else if (value == "ethiopic-amete-alem"sv)
+            value = "ethioaa"sv;
     } else if (key.is_one_of("kb"sv, "kc"sv, "kh"sv, "kk"sv, "kn"sv) && (value == "yes"sv)) {
         value = "true"sv;
     } else if (key == "ks"sv) {
@@ -519,20 +538,6 @@ static void perform_hard_coded_key_value_substitutions(String& key, String& valu
         else if (value == "zulu"sv) value = "utc"sv;
         // clang-format on
     }
-}
-
-static void perform_hard_coded_key_multi_value_substitutions(String const& key, Vector<String>& values)
-{
-    // Similar to perform_hard_coded_key_value_substitutions, some aliases depend on multiple
-    // variants being present in the original locale. Those are canonicalized separately here.
-    // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/calendar.xml
-    if ((key != "ca"sv) || (values.size() != 3))
-        return;
-
-    static Vector<String> ethiopic_amete_alem { "ethiopic"sv, "amete"sv, "alem"sv };
-
-    if (values == ethiopic_amete_alem)
-        values = { "ethioaa"sv };
 }
 
 static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
@@ -589,39 +594,32 @@ static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
         }
     };
 
-    auto canonicalize_key_value_list = [&](auto& key, auto& values, bool remove_true_values) {
+    auto canonicalize_key_value_list = [&](auto& key, auto& value, bool remove_true_values) {
         key = key.to_lowercase();
+        value = value.to_lowercase();
 
-        auto raw_values = move(values);
+        perform_hard_coded_key_value_substitutions(key, value);
 
-        for (auto& value : raw_values) {
-            value = value.to_lowercase();
-            perform_hard_coded_key_value_substitutions(key, value);
-
-            // Note: The spec says to remove "true" type and tfield values but that is believed to be a bug in the spec
-            // because, for tvalues, that would result in invalid syntax:
-            //     https://unicode-org.atlassian.net/browse/CLDR-14318
-            // This has also been noted by test262:
-            //     https://github.com/tc39/test262/blob/18bb955771669541c56c28748603f6afdb2e25ff/test/intl402/Intl/getCanonicalLocales/transformed-ext-canonical.js
-            if (remove_true_values && (value == "true"sv))
-                continue;
-
-            if (key.is_one_of("sd"sv, "rg"sv)) {
-                if (auto alias = resolve_subdivision_alias(value); alias.has_value()) {
-                    auto aliases = alias->split_view(' ');
-
-                    // FIXME: Subdivision subtags do not appear in the CLDR likelySubtags.json file.
-                    //        Implement the spec's recommendation of using just the first alias for now,
-                    //        but we should determine if there's anything else needed here.
-                    values.append(aliases[0].to_string());
-                    continue;
-                }
-            }
-
-            values.append(move(value));
+        // Note: The spec says to remove "true" type and tfield values but that is believed to be a bug in the spec
+        // because, for tvalues, that would result in invalid syntax:
+        //     https://unicode-org.atlassian.net/browse/CLDR-14318
+        // This has also been noted by test262:
+        //     https://github.com/tc39/test262/blob/18bb955771669541c56c28748603f6afdb2e25ff/test/intl402/Intl/getCanonicalLocales/transformed-ext-canonical.js
+        if (remove_true_values && (value == "true"sv)) {
+            value = {};
+            return;
         }
 
-        perform_hard_coded_key_multi_value_substitutions(key, values);
+        if (key.is_one_of("sd"sv, "rg"sv)) {
+            if (auto alias = resolve_subdivision_alias(value); alias.has_value()) {
+                auto aliases = alias->split_view(' ');
+
+                // FIXME: Subdivision subtags do not appear in the CLDR likelySubtags.json file.
+                //        Implement the spec's recommendation of using just the first alias for now,
+                //        but we should determine if there's anything else needed here.
+                value = aliases[0].to_string();
+            }
+        }
     };
 
     canonicalize_language(locale_id.language_id, false);
@@ -643,7 +641,7 @@ static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
                 for (auto& attribute : ext.attributes)
                     attribute = attribute.to_lowercase();
                 for (auto& keyword : ext.keywords)
-                    canonicalize_key_value_list(keyword.key, keyword.types, true);
+                    canonicalize_key_value_list(keyword.key, keyword.value, true);
 
                 quick_sort(ext.attributes);
                 quick_sort(ext.keywords, [](auto const& a, auto const& b) { return a.key < b.key; });
@@ -653,14 +651,13 @@ static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
                     canonicalize_language(*ext.language, true);
 
                 for (auto& field : ext.fields)
-                    canonicalize_key_value_list(field.key, field.values, false);
+                    canonicalize_key_value_list(field.key, field.value, false);
 
                 quick_sort(ext.fields, [](auto const& a, auto const& b) { return a.key < b.key; });
             },
             [&](OtherExtension& ext) {
                 ext.key = static_cast<char>(to_ascii_lowercase(ext.key));
-                for (auto& value : ext.values)
-                    value = value.to_lowercase();
+                ext.value = ext.value.to_lowercase();
             });
     }
 
@@ -674,7 +671,7 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID& locale_id)
     StringBuilder builder;
 
     auto append_sep_and_string = [&](Optional<String> const& string) {
-        if (!string.has_value())
+        if (!string.has_value() || string->is_empty())
             return;
         builder.appendff("-{}", *string);
     };
@@ -690,13 +687,6 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID& locale_id)
     for (auto const& variant : locale_id.language_id.variants)
         append_sep_and_string(variant);
 
-    auto append_key_value_list = [&](auto const& key, auto& values) {
-        append_sep_and_string(key);
-
-        for (auto& value : values)
-            append_sep_and_string(value);
-    };
-
     for (auto const& extension : locale_id.extensions) {
         extension.visit(
             [&](LocaleExtension const& ext) {
@@ -704,8 +694,10 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID& locale_id)
 
                 for (auto const& attribute : ext.attributes)
                     append_sep_and_string(attribute);
-                for (auto const& keyword : ext.keywords)
-                    append_key_value_list(keyword.key, keyword.types);
+                for (auto const& keyword : ext.keywords) {
+                    append_sep_and_string(keyword.key);
+                    append_sep_and_string(keyword.value);
+                }
             },
             [&](TransformedExtension const& ext) {
                 builder.append("-t"sv);
@@ -718,13 +710,14 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID& locale_id)
                         append_sep_and_string(variant);
                 }
 
-                for (auto const& field : ext.fields)
-                    append_key_value_list(field.key, field.values);
+                for (auto const& field : ext.fields) {
+                    append_sep_and_string(field.key);
+                    append_sep_and_string(field.value);
+                }
             },
             [&](OtherExtension const& ext) {
                 builder.appendff("-{:c}", to_ascii_lowercase(ext.key));
-                for (auto const& value : ext.values)
-                    append_sep_and_string(value);
+                append_sep_and_string(ext.value);
             });
     }
 
@@ -947,17 +940,11 @@ String LocaleID::to_string() const
     StringBuilder builder;
 
     auto append_segment = [&](Optional<String> const& segment) {
-        if (!segment.has_value())
+        if (!segment.has_value() || segment->is_empty())
             return;
         if (!builder.is_empty())
             builder.append('-');
         builder.append(*segment);
-    };
-
-    auto append_key_value_list = [&](auto const& key, auto const& values) {
-        append_segment(key);
-        for (auto const& value : values)
-            append_segment(value);
     };
 
     append_segment(language_id.to_string());
@@ -968,20 +955,23 @@ String LocaleID::to_string() const
                 builder.append("-u"sv);
                 for (auto const& attribute : ext.attributes)
                     append_segment(attribute);
-                for (auto const& keyword : ext.keywords)
-                    append_key_value_list(keyword.key, keyword.types);
+                for (auto const& keyword : ext.keywords) {
+                    append_segment(keyword.key);
+                    append_segment(keyword.value);
+                }
             },
             [&](TransformedExtension const& ext) {
                 builder.append("-t"sv);
                 if (ext.language.has_value())
                     append_segment(ext.language->to_string());
-                for (auto const& field : ext.fields)
-                    append_key_value_list(field.key, field.values);
+                for (auto const& field : ext.fields) {
+                    append_segment(field.key);
+                    append_segment(field.value);
+                }
             },
             [&](OtherExtension const& ext) {
                 builder.appendff("-{}", ext.key);
-                for (auto const& value : ext.values)
-                    append_segment(value);
+                append_segment(ext.value);
             });
     }
 

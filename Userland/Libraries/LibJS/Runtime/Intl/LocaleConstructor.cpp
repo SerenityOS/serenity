@@ -6,7 +6,6 @@
 
 #include <AK/Optional.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
@@ -193,9 +192,7 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
             entry = &(*it);
 
             // ii. Let value be entry.[[Value]].
-            StringBuilder builder;
-            builder.join('-', entry->types);
-            value = builder.build();
+            value = entry->value;
         }
         // c. Else,
         //     i. Let entry be empty.
@@ -213,12 +210,12 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
             // iii. If entry is not empty, then
             if (entry != nullptr) {
                 // 1. Set entry.[[Value]] to value.
-                entry->types = value->split('-');
+                entry->value = *value;
             }
             // iv. Else,
             else {
                 // 1. Append the Record { [[Key]]: key, [[Value]]: value } to keywords.
-                keywords.append({ key, value->split('-') });
+                keywords.append({ key, *value });
             }
         }
 
