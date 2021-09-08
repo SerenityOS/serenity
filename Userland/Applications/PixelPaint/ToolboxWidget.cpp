@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +11,7 @@
 #include "Tools/CloneTool.h"
 #include "Tools/EllipseTool.h"
 #include "Tools/EraseTool.h"
+#include "Tools/FilterTool.h"
 #include "Tools/GuideTool.h"
 #include "Tools/LineTool.h"
 #include "Tools/MoveTool.h"
@@ -85,6 +87,7 @@ void ToolboxWidget::setup_tools()
     add_tool("Rectangle Select", "rectangle-select", { 0, Key_R }, make<RectangleSelectTool>());
     add_tool("Guides", "guides", { 0, Key_G }, make<GuideTool>());
     add_tool("Clone Tool", "clone", { 0, Key_C }, make<CloneTool>());
+    add_tool("Filter", "filter", { 0, Key_F }, make<FilterTool>());
 }
 
 }
