@@ -19,6 +19,8 @@ public:
     TaskQueue& task_queue() { return m_task_queue; }
     TaskQueue const& task_queue() const { return m_task_queue; }
 
+    void spin_until(Function<bool()> goal_condition);
+
 private:
     TaskQueue m_task_queue;
 };
