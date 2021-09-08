@@ -65,7 +65,6 @@ private:
 
 class PageClient {
 public:
-    virtual bool is_multi_process() const = 0;
     virtual Gfx::Palette palette() const = 0;
     virtual Gfx::IntRect screen_rect() const = 0;
     virtual void page_did_set_document_in_top_level_browsing_context(DOM::Document*) { }

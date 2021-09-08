@@ -63,7 +63,6 @@ private:
     virtual void did_scroll() override;
 
     // ^Web::PageClient
-    virtual bool is_multi_process() const override { return false; }
     virtual Gfx::Palette palette() const override { return GUI::AbstractScrollableWidget::palette(); }
     virtual Gfx::IntRect screen_rect() const override { return GUI::Desktop::the().rect(); }
     virtual void page_did_change_title(const String&) override;
