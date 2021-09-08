@@ -42,6 +42,7 @@ void PlainTimePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.toPlainDateTime, to_plain_date_time, 1, attr);
     define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
+    define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
@@ -353,6 +354,39 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::get_iso_fields)
 
     // 11. Return fields.
     return fields;
+}
+
+// 4.3.20 Temporal.PlainTime.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.tostring
+JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_string)
+{
+    // 1. Let temporalTime be the this value.
+    // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
+    auto* temporal_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Set options to ? GetOptionsObject(options).
+    auto* options = get_options_object(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 4. Let precision be ? ToSecondsStringPrecision(options).
+    auto precision = to_seconds_string_precision(global_object, *options);
+    if (vm.exception())
+        return {};
+
+    // 5. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
+    auto rounding_mode = to_temporal_rounding_mode(global_object, *options, "trunc"sv);
+    if (vm.exception())
+        return {};
+
+    // 6. Let roundResult be ! RoundTime(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], precision.[[Increment]], precision.[[Unit]], roundingMode).
+    auto round_result = round_time(global_object, temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), precision->increment, precision->unit, *rounding_mode);
+
+    // FIXME: Hey spec, this cannot fail...
+    // 7. Return ? TemporalTimeToString(roundResult.[[Hour]], roundResult.[[Minute]], roundResult.[[Second]], roundResult.[[Millisecond]], roundResult.[[Microsecond]], roundResult.[[Nanosecond]], precision.[[Precision]]).
+    auto string = temporal_time_to_string(round_result.hour, round_result.minute, round_result.second, round_result.millisecond, round_result.microsecond, round_result.nanosecond, precision->precision);
+    return js_string(vm, move(string));
 }
 
 // 4.3.23 Temporal.PlainTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.valueof

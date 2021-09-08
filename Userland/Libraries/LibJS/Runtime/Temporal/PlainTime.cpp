@@ -412,6 +412,21 @@ Optional<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject& global_o
     return result;
 }
 
+// 4.5.10 TemporalTimeToString ( hour, minute, second, millisecond, microsecond, nanosecond, precision ), https://tc39.es/proposal-temporal/#sec-temporal-temporaltimetostring
+String temporal_time_to_string(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision)
+{
+    // 1. Assert: hour, minute, second, millisecond, microsecond and nanosecond are integers.
+
+    // 2. Let hour be hour formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 3. Let minute be minute formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+
+    // 4. Let seconds be ! FormatSecondsStringPart(second, millisecond, microsecond, nanosecond, precision).
+    auto seconds = format_seconds_string_part(second, millisecond, microsecond, nanosecond, precision);
+
+    // 5. Return the string-concatenation of hour, the code unit 0x003A (COLON), minute, and seconds.
+    return String::formatted("{:02}:{:02}{}", hour, minute, seconds);
+}
+
 // 4.5.11 CompareTemporalTime ( h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2 ), https://tc39.es/proposal-temporal/#sec-temporal-comparetemporaltime
 i8 compare_temporal_time(u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2)
 {
@@ -467,6 +482,109 @@ i8 compare_temporal_time(u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16
 
     // 14. Return 0.
     return 0;
+}
+
+// 4.5.13 RoundTime ( hour, minute, second, millisecond, microsecond, nanosecond, increment, unit, roundingMode [ , dayLengthNs ] ), https://tc39.es/proposal-temporal/#sec-temporal-roundtime
+DaysAndTime round_time(GlobalObject& global_object, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, u64 increment, StringView unit, StringView rounding_mode, Optional<double> day_length_ns)
+{
+    // 1. Assert: hour, minute, second, millisecond, microsecond, nanosecond, and increment are integers.
+
+    // 2. Let fractionalSecond be nanosecond × 10−9 + microsecond × 10−6 + millisecond × 10−3 + second.
+    double fractional_second = nanosecond * 0.000000001 + microsecond * 0.000001 + millisecond * 0.001 + second;
+    double quantity;
+
+    // 3. If unit is "day", then
+    if (unit == "day"sv) {
+        // a. If dayLengthNs is not present, set it to 8.64 × 10^13.
+        if (!day_length_ns.has_value())
+            day_length_ns = 86400000000000;
+
+        // b. Let quantity be (((((hour × 60 + minute) × 60 + second) × 1000 + millisecond) × 1000 + microsecond) × 1000 + nanosecond) / dayLengthNs.
+        quantity = (((((hour * 60 + minute) * 60 + second) * 1000 + millisecond) * 1000 + microsecond) * 1000 + nanosecond) / *day_length_ns;
+    }
+    // 4. Else if unit is "hour", then
+    else if (unit == "hour"sv) {
+        // a. Let quantity be (fractionalSecond / 60 + minute) / 60 + hour.
+        quantity = (fractional_second / 60 + minute) / 60 + hour;
+    }
+    // 5. Else if unit is "minute", then
+    else if (unit == "minute"sv) {
+        // a. Let quantity be fractionalSecond / 60 + minute.
+        quantity = fractional_second / 60 + minute;
+    }
+    // 6. Else if unit is "second", then
+    else if (unit == "second"sv) {
+        // a. Let quantity be fractionalSecond.
+        quantity = fractional_second;
+    }
+    // 7. Else if unit is "millisecond", then
+    else if (unit == "millisecond"sv) {
+        // a. Let quantity be nanosecond × 10−6 + microsecond × 10−3 + millisecond.
+        quantity = nanosecond * 0.000001 + 0.001 * microsecond + millisecond;
+    }
+    // 8. Else if unit is "microsecond", then
+    else if (unit == "microsecond"sv) {
+        // a. Let quantity be nanosecond × 10−3 + microsecond.
+        quantity = nanosecond * 0.001 + microsecond;
+    }
+    // 9. Else,
+    else {
+        // a. Assert: unit is "nanosecond".
+        VERIFY(unit == "nanosecond"sv);
+
+        // b. Let quantity be nanosecond.
+        quantity = nanosecond;
+    }
+
+    // FIXME: This doesn't seem right...
+    auto* quantity_bigint = js_bigint(global_object.vm(), Crypto::SignedBigInteger::create_from((u64)quantity));
+
+    // 10. Let result be ! RoundNumberToIncrement(quantity, increment, roundingMode).
+    auto* result = round_number_to_increment(global_object, *quantity_bigint, increment, rounding_mode);
+
+    auto result_i64 = (i64)result->big_integer().to_double();
+
+    // If unit is "day", then
+    if (unit == "day"sv) {
+        // a. Return the Record { [[Days]]: result, [[Hour]]: 0, [[Minute]]: 0, [[Second]]: 0, [[Millisecond]]: 0, [[Microsecond]]: 0, [[Nanosecond]]: 0 }.
+        return DaysAndTime { .days = (i32)result_i64, .hour = 0, .minute = 0, .second = 0, .millisecond = 0, .microsecond = 0, .nanosecond = 0 };
+    }
+
+    // 12. If unit is "hour", then
+    if (unit == "hour"sv) {
+        // a. Return ! BalanceTime(result, 0, 0, 0, 0, 0).
+        return balance_time(result_i64, 0, 0, 0, 0, 0);
+    }
+
+    // 13. If unit is "minute", then
+    if (unit == "minute"sv) {
+        // a. Return ! BalanceTime(hour, result, 0, 0, 0, 0).
+        return balance_time(hour, result_i64, 0, 0, 0, 0);
+    }
+
+    // 14. If unit is "second", then
+    if (unit == "second"sv) {
+        // a. Return ! BalanceTime(hour, minute, result, 0, 0, 0).
+        return balance_time(hour, minute, result_i64, 0, 0, 0);
+    }
+
+    // 15. If unit is "millisecond", then
+    if (unit == "millisecond"sv) {
+        // a. Return ! BalanceTime(hour, minute, second, result, 0, 0).
+        return balance_time(hour, minute, second, result_i64, 0, 0);
+    }
+
+    // 16. If unit is "microsecond", then
+    if (unit == "microsecond"sv) {
+        // a. Return ! BalanceTime(hour, minute, second, millisecond, result, 0).
+        return balance_time(hour, minute, second, millisecond, result_i64, 0);
+    }
+
+    // 17. Assert: unit is "nanosecond".
+    VERIFY(unit == "nanosecond"sv);
+
+    // 18. Return ! BalanceTime(hour, minute, second, millisecond, microsecond, result).
+    return balance_time(hour, minute, second, millisecond, microsecond, result_i64);
 }
 
 }
