@@ -28,6 +28,11 @@ protected:
 private:
     RefPtr<GUI::Widget> m_properties_widget;
 
+    enum class DrawMode {
+        Pencil,
+        Brush,
+    };
+    DrawMode m_draw_mode { DrawMode::Brush };
     bool m_use_secondary_color { false };
 };
 
