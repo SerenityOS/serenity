@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,6 +30,7 @@
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/Page/BrowsingContext.h>
+#include <LibWeb/Page/Page.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
 #include <LibWeb/Bindings/WindowObjectHelper.h>
@@ -73,6 +75,12 @@ void WindowObject::initialize_global_object()
     define_native_function("btoa", btoa, 1, attr);
 
     define_native_function("getComputedStyle", get_computed_style, 1, attr);
+
+    // FIXME: These properties should be [Replaceable] according to the spec, but [Writable+Configurable] is the closest we have.
+    define_native_accessor("scrollX", scroll_x_getter, {}, attr);
+    define_native_accessor("pageXOffset", scroll_x_getter, {}, attr);
+    define_native_accessor("scrollY", scroll_y_getter, {}, attr);
+    define_native_accessor("pageYOffset", scroll_y_getter, {}, attr);
 
     // Legacy
     define_native_accessor("event", event_getter, {}, JS::Attribute::Enumerable);
@@ -456,6 +464,28 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_computed_style)
     }
 
     return wrap(global_object, impl->get_computed_style(static_cast<ElementWrapper*>(object)->impl()));
+}
+
+// https://www.w3.org/TR/cssom-view/#dom-window-scrollx
+JS_DEFINE_NATIVE_GETTER(WindowObject::scroll_x_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    if (!impl->page())
+        return JS::Value(0);
+    return JS::Value(impl->page()->top_level_browsing_context().viewport_scroll_offset().x());
+}
+
+// https://www.w3.org/TR/cssom-view/#dom-window-scrolly
+JS_DEFINE_NATIVE_GETTER(WindowObject::scroll_y_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    if (!impl->page())
+        return JS::Value(0);
+    return JS::Value(impl->page()->top_level_browsing_context().viewport_scroll_offset().y());
 }
 
 }
