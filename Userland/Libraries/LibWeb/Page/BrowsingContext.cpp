@@ -108,7 +108,7 @@ void BrowsingContext::set_viewport_rect(Gfx::IntRect const& rect)
 
     if (did_change) {
         for (auto* client : m_viewport_clients)
-            client->frame_did_set_viewport_rect(rect);
+            client->browsing_context_did_set_viewport_rect(rect);
     }
 }
 
@@ -123,7 +123,7 @@ void BrowsingContext::set_size(Gfx::IntSize const& size)
     }
 
     for (auto* client : m_viewport_clients)
-        client->frame_did_set_viewport_rect(viewport_rect());
+        client->browsing_context_did_set_viewport_rect(viewport_rect());
 }
 
 void BrowsingContext::set_viewport_scroll_offset(Gfx::IntPoint const& offset)
@@ -133,7 +133,7 @@ void BrowsingContext::set_viewport_scroll_offset(Gfx::IntPoint const& offset)
     m_viewport_scroll_offset = offset;
 
     for (auto* client : m_viewport_clients)
-        client->frame_did_set_viewport_rect(viewport_rect());
+        client->browsing_context_did_set_viewport_rect(viewport_rect());
 }
 
 void BrowsingContext::set_needs_display(Gfx::IntRect const& rect)
