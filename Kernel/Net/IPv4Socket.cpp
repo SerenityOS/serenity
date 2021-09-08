@@ -372,7 +372,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(OpenFileDescription& descr
         return bytes_written;
     }
 
-    return protocol_receive(ReadonlyBytes { packet->data->data(), packet->data->size() }, buffer, buffer_length, flags);
+    return protocol_receive(packet->data->bytes(), buffer, buffer_length, flags);
 }
 
 KResultOr<size_t> IPv4Socket::recvfrom(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> user_addr, Userspace<socklen_t*> user_addr_length, Time& packet_timestamp)

@@ -48,7 +48,7 @@ public:
     {
         if (!m_buffer)
             return {};
-        return ReadonlyBytes { m_buffer->data(), m_buffer->size() };
+        return m_buffer->bytes();
     }
 
 private:
