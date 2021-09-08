@@ -195,7 +195,6 @@ class PageClient;
 class PaintContext;
 class Resource;
 class ResourceLoader;
-class StackingContext;
 }
 
 namespace Web::XHR {
