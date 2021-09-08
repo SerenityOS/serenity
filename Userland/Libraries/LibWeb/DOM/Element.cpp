@@ -16,6 +16,7 @@
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InlineNode.h>
@@ -375,6 +376,15 @@ void Element::make_html_uppercased_qualified_name()
         m_html_uppercased_qualified_name = qualified_name().to_uppercase();
     else
         m_html_uppercased_qualified_name = qualified_name();
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#queue-an-element-task
+void Element::queue_an_element_task(HTML::Task::Source source, Function<void()> steps)
+{
+    auto task = HTML::Task::create(source, &document(), [strong_this = NonnullRefPtr(*this), steps = move(steps)] {
+        steps();
+    });
+    HTML::main_thread_event_loop().task_queue().add(move(task));
 }
 
 }
