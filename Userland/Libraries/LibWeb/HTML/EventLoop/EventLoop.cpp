@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/Timer.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
@@ -11,11 +12,24 @@
 namespace Web::HTML {
 
 EventLoop::EventLoop()
+    : m_task_queue(*this)
 {
 }
 
 EventLoop::~EventLoop()
 {
+}
+
+void EventLoop::schedule()
+{
+    if (!m_system_event_loop_timer) {
+        m_system_event_loop_timer = Core::Timer::create_single_shot(0, [this] {
+            process();
+        });
+    }
+
+    if (!m_system_event_loop_timer->is_active())
+        m_system_event_loop_timer->restart();
 }
 
 void EventLoop::set_vm(JS::VM& vm)
@@ -65,6 +79,9 @@ void EventLoop::process()
 
     // 2. Let oldestTask be the first runnable task in taskQueue, and remove it from taskQueue.
     auto oldest_task = task_queue.take_first_runnable();
+
+    // FIXME: Figure out if we need to be here when there's no task.
+    VERIFY(oldest_task);
 
     // 3. Set the event loop's currently running task to oldestTask.
     m_currently_running_task = oldest_task.ptr();
@@ -145,6 +162,10 @@ void EventLoop::process()
     // FIXME:        3. Update the rendering of that dedicated worker to reflect the current state.
 
     // FIXME:     2. If there are no tasks in the event loop's task queues and the WorkerGlobalScope object's closing flag is true, then destroy the event loop, aborting these steps, resuming the run a worker steps described in the Web workers section below.
+
+    // If there are tasks in the queue, schedule a new round of processing. :^)
+    if (!m_task_queue.is_empty())
+        schedule();
 }
 
 }

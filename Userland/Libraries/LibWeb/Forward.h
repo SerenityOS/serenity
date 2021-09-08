@@ -65,6 +65,7 @@ class CanvasRenderingContext2D;
 class CloseEvent;
 class DOMParser;
 struct EventHandler;
+class EventLoop;
 class HTMLAnchorElement;
 class HTMLAreaElement;
 class HTMLAudioElement;
