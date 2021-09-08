@@ -345,7 +345,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format_to_parts)
     return format_list_to_parts(global_object, *list_format, string_list);
 }
 
-// 3.4.5 Intl.ListFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype.resolvedoptions
+// 13.4.5 Intl.ListFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype.resolvedoptions
 JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::resolved_options)
 {
     // 1. Let lf be the this value.

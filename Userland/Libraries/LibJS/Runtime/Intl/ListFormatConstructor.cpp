@@ -114,7 +114,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatConstructor::supported_locales_of)
     auto locales = vm.argument(0);
     auto options = vm.argument(1);
 
-    // 1. Let availableLocales be %DisplayNames%.[[AvailableLocales]].
+    // 1. Let availableLocales be %ListFormat%.[[AvailableLocales]].
 
     // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = canonicalize_locale_list(global_object, locales);
