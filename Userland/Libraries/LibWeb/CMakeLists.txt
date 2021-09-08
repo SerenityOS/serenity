@@ -71,6 +71,9 @@ set(SOURCES
     HTML/BrowsingContextContainer.cpp
     HTML/CanvasRenderingContext2D.cpp
     HTML/DOMParser.cpp
+    HTML/EventLoop/EventLoop.cpp
+    HTML/EventLoop/Task.cpp
+    HTML/EventLoop/TaskQueue.cpp
     HTML/EventNames.cpp
     HTML/FormAssociatedElement.cpp
     HTML/GlobalEventHandlers.cpp
