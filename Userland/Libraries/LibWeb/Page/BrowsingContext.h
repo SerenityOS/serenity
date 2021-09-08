@@ -91,12 +91,11 @@ public:
     HashMap<URL, size_t> const& frame_nesting_levels() const { return m_frame_nesting_levels; }
 
 private:
+    explicit BrowsingContext(Page&, DOM::Element* host_element, BrowsingContext& top_level_browsing_context);
     explicit BrowsingContext(DOM::Element& host_element, BrowsingContext& top_level_browsing_context);
     explicit BrowsingContext(Page&);
 
     void reset_cursor_blink_cycle();
-
-    void setup();
 
     WeakPtr<Page> m_page;
     BrowsingContext& m_top_level_browsing_context;
