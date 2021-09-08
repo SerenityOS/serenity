@@ -26,6 +26,7 @@ private:
     int m_size { 20 };
     int m_hardness { 80 };
     bool m_was_drawing { false };
+    bool m_has_clicked { false };
     Gfx::IntPoint m_last_position;
 
     void draw_line(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& start, Gfx::IntPoint const& end);
