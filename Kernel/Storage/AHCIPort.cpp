@@ -75,6 +75,8 @@ void AHCIPort::handle_interrupt()
         clear_sata_error_register();
         if ((m_port_registers.ssts & 0xf) != 3) {
             g_ahci_work->queue([this]() {
+                // Note: In the odd case we don't have a device here, assert.
+                VERIFY(m_connected_device);
                 m_connected_device->before_removing();
                 m_connected_device.clear();
             });
