@@ -82,6 +82,10 @@ void WindowObject::initialize_global_object()
     define_native_accessor("scrollY", scroll_y_getter, {}, attr);
     define_native_accessor("pageYOffset", scroll_y_getter, {}, attr);
 
+    define_native_function("scroll", scroll, 2, attr);
+    define_native_function("scrollTo", scroll, 2, attr);
+    define_native_function("scrollBy", scroll_by, 2, attr);
+
     // Legacy
     define_native_accessor("event", event_getter, {}, JS::Attribute::Enumerable);
 
@@ -486,6 +490,154 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::scroll_y_getter)
     if (!impl->page())
         return JS::Value(0);
     return JS::Value(impl->page()->top_level_browsing_context().viewport_scroll_offset().y());
+}
+
+enum class ScrollBehavior {
+    Auto,
+    Smooth
+};
+
+// https://www.w3.org/TR/cssom-view/#perform-a-scroll
+static void perform_a_scroll(Page& page, double x, double y, ScrollBehavior)
+{
+    // FIXME: Stop any existing smooth-scrolls
+    // FIXME: Implement smooth-scroll
+    page.client().page_did_request_scroll_to({ x, y });
+}
+
+// https://www.w3.org/TR/cssom-view/#dom-window-scroll
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    if (!impl->page())
+        return {};
+    auto& page = *impl->page();
+
+    auto viewport_rect = page.top_level_browsing_context().viewport_rect();
+    auto x_value = JS::Value(viewport_rect.x());
+    auto y_value = JS::Value(viewport_rect.y());
+    String behavior_string = "auto";
+
+    if (vm.argument_count() == 1) {
+        auto* options = vm.argument(0).to_object(global_object);
+        if (vm.exception())
+            return {};
+
+        auto left = options->get("left");
+        if (vm.exception())
+            return {};
+        if (!left.is_undefined())
+            x_value = left;
+
+        auto top = options->get("top");
+        if (vm.exception())
+            return {};
+        if (!top.is_undefined())
+            y_value = top;
+
+        auto behavior_string_value = options->get("behavior");
+        if (vm.exception())
+            return {};
+        if (!behavior_string_value.is_undefined())
+            behavior_string = behavior_string_value.to_string(global_object);
+        if (vm.exception())
+            return {};
+        if (behavior_string != "smooth" && behavior_string != "auto") {
+            vm.throw_exception<JS::TypeError>(global_object, "Behavior is not one of 'smooth' or 'auto'");
+            return {};
+        }
+
+    } else if (vm.argument_count() >= 2) {
+        // We ignore arguments 2+ in line with behavior of Chrome and Firefox
+        x_value = vm.argument(0);
+        y_value = vm.argument(1);
+    }
+
+    ScrollBehavior behavior = (behavior_string == "smooth") ? ScrollBehavior::Smooth : ScrollBehavior::Auto;
+
+    double x = x_value.to_double(global_object);
+    if (vm.exception())
+        return {};
+    x = JS::Value(x).is_finite_number() ? x : 0.0;
+
+    double y = y_value.to_double(global_object);
+    if (vm.exception())
+        return {};
+    y = JS::Value(y).is_finite_number() ? y : 0.0;
+
+    // FIXME: Are we calculating the viewport in the way this function expects?
+    // FIXME: Handle overflow-directions other than top-left to bottom-right
+
+    perform_a_scroll(page, x, y, behavior);
+    return JS::js_undefined();
+}
+
+// https://www.w3.org/TR/cssom-view/#dom-window-scrollby
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_by)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    if (!impl->page())
+        return {};
+    auto& page = *impl->page();
+
+    JS::Object* options = nullptr;
+
+    if (vm.argument_count() == 0) {
+        options = JS::Object::create(global_object, nullptr);
+    } else if (vm.argument_count() == 1) {
+        options = vm.argument(0).to_object(global_object);
+        if (vm.exception())
+            return {};
+    } else if (vm.argument_count() >= 2) {
+        // We ignore arguments 2+ in line with behavior of Chrome and Firefox
+        options = JS::Object::create(global_object, nullptr);
+        options->set("left", vm.argument(0), ShouldThrowExceptions::No);
+        options->set("top", vm.argument(1), ShouldThrowExceptions::No);
+        options->set("behavior", JS::js_string(vm, "auto"), ShouldThrowExceptions::No);
+    }
+
+    auto left_value = options->get("left");
+    if (vm.exception())
+        return {};
+    auto left = left_value.to_double(global_object);
+    if (vm.exception())
+        return {};
+
+    auto top_value = options->get("top");
+    if (vm.exception())
+        return {};
+    auto top = top_value.to_double(global_object);
+    if (vm.exception())
+        return {};
+
+    left = JS::Value(left).is_finite_number() ? left : 0.0;
+    top = JS::Value(top).is_finite_number() ? top : 0.0;
+
+    auto current_scroll_position = page.top_level_browsing_context().viewport_scroll_offset();
+    left = left + current_scroll_position.x();
+    top = top + current_scroll_position.y();
+
+    auto behavior_string_value = options->get("behavior");
+    if (vm.exception())
+        return {};
+    auto behavior_string = behavior_string_value.is_undefined() ? "auto" : behavior_string_value.to_string(global_object);
+    if (vm.exception())
+        return {};
+    if (behavior_string != "smooth" && behavior_string != "auto") {
+        vm.throw_exception<JS::TypeError>(global_object, "Behavior is not one of 'smooth' or 'auto'");
+        return {};
+    }
+    ScrollBehavior behavior = (behavior_string == "smooth") ? ScrollBehavior::Smooth : ScrollBehavior::Auto;
+
+    // FIXME: Spec wants us to call scroll(options) here.
+    //        The only difference is that would invoke the viewport calculations that scroll()
+    //        is not actually doing yet, so this is the same for now.
+    perform_a_scroll(page, left, top, behavior);
+    return JS::js_undefined();
 }
 
 }

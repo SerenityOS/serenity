@@ -75,6 +75,8 @@ private:
 
     JS_DECLARE_NATIVE_GETTER(scroll_x_getter);
     JS_DECLARE_NATIVE_GETTER(scroll_y_getter);
+    JS_DECLARE_NATIVE_FUNCTION(scroll);
+    JS_DECLARE_NATIVE_FUNCTION(scroll_by);
 
     JS_DECLARE_NATIVE_FUNCTION(alert);
     JS_DECLARE_NATIVE_FUNCTION(confirm);
