@@ -299,6 +299,8 @@ void FrameLoader::resource_did_load()
 
     if (!url.fragment().is_empty())
         browsing_context().scroll_to_anchor(url.fragment());
+    else
+        browsing_context().set_viewport_scroll_offset({ 0, 0 });
 
     if (auto* host_element = browsing_context().host_element()) {
         // FIXME: Perhaps in the future we'll have a better common base class for <frame> and <iframe>
