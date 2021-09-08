@@ -18,10 +18,6 @@ Position::Position(Node& node, unsigned offset)
 {
 }
 
-Position::~Position()
-{
-}
-
 String Position::to_string() const
 {
     if (!node())
