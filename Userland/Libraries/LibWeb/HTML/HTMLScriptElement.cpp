@@ -243,11 +243,12 @@ void HTMLScriptElement::prepare_script()
     if (has_attribute(HTML::AttributeNames::src)) {
         // 1. Let src be the value of the element's src attribute.
         auto src = attribute(HTML::AttributeNames::src);
-        // FIXME: 2. If src is the empty string, queue a task to fire an event named error at the element, and return.
+        // 2. If src is the empty string, queue a task to fire an event named error at the element, and return.
         if (src.is_empty()) {
             dbgln("HTMLScriptElement: Refusing to run script because the src attribute is empty.");
-            // FIXME: Queue a task to do this.
-            dispatch_event(DOM::Event::create(HTML::EventNames::error));
+            queue_an_element_task(HTML::Task::Source::Unspecified, [this] {
+                dispatch_event(DOM::Event::create(HTML::EventNames::error));
+            });
             return;
         }
         // 3. Set the element's from an external file flag.
@@ -258,8 +259,9 @@ void HTMLScriptElement::prepare_script()
         // 5. If the previous step failed, queue a task to fire an event named error at the element, and return. Otherwise, let url be the resulting URL record.
         if (!url.is_valid()) {
             dbgln("HTMLScriptElement: Refusing to run script because the src URL '{}' is invalid.", url);
-            // FIXME: Queue a task to do this.
-            dispatch_event(DOM::Event::create(HTML::EventNames::error));
+            queue_an_element_task(HTML::Task::Source::Unspecified, [this] {
+                dispatch_event(DOM::Event::create(HTML::EventNames::error));
+            });
             return;
         }
 
