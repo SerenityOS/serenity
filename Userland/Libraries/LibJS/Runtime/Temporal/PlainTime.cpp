@@ -134,6 +134,54 @@ PlainTime* to_temporal_time(GlobalObject& global_object, Value item, Optional<St
     return create_temporal_time(global_object, result->hour, result->minute, result->second, result->millisecond, result->microsecond, result->nanosecond);
 }
 
+// 4.5.3 ToPartialTime ( temporalTimeLike ), https://tc39.es/proposal-temporal/#sec-temporal-topartialtime
+Optional<PartialUnregulatedTemporalTime> to_partial_time(GlobalObject& global_object, Object& temporal_time_like)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(temporalTimeLike) is Object.
+
+    // 2. Let result be the Record { [[Hour]]: undefined, [[Minute]]: undefined, [[Second]]: undefined, [[Millisecond]]: undefined, [[Microsecond]]: undefined, [[Nanosecond]]: undefined }.
+    auto result = PartialUnregulatedTemporalTime {};
+
+    // 3. Let any be false.
+    bool any = false;
+
+    // 4. For each row of Table 3, except the header row, in table order, do
+    for (auto& [internal_slot, property] : temporal_time_like_properties<PartialUnregulatedTemporalTime, Optional<double>>(vm)) {
+        // a. Let property be the Property value of the current row.
+
+        // b. Let value be ? Get(temporalTimeLike, property).
+        auto value = temporal_time_like.get(property);
+        if (vm.exception())
+            return {};
+
+        // c. If value is not undefined, then
+        if (!value.is_undefined()) {
+            // i. Set any to true.
+            any = true;
+
+            // ii. Set value to ? ToIntegerThrowOnInfinity(value).
+            auto value_number = to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite);
+            if (vm.exception())
+                return {};
+
+            // iii. Set result's internal slot whose name is the Internal Slot value of the current row to value.
+            result.*internal_slot = value_number;
+        }
+    }
+
+    // 5. If any is false, then
+    if (!any) {
+        // a. Throw a TypeError exception.
+        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalInvalidPlainTimeLikeObject);
+        return {};
+    }
+
+    // 6. Return result.
+    return result;
+}
+
 // 4.5.4 RegulateTime ( hour, minute, second, millisecond, microsecond, nanosecond, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulatetime
 Optional<TemporalTime> regulate_time(GlobalObject& global_object, double hour, double minute, double second, double millisecond, double microsecond, double nanosecond, StringView overflow)
 {

@@ -191,12 +191,14 @@
     M(TemporalInvalidPlainDateTime, "Invalid plain date time")                                                                          \
     M(TemporalInvalidPlainMonthDay, "Invalid plain month day")                                                                          \
     M(TemporalInvalidPlainTime, "Invalid plain time")                                                                                   \
+    M(TemporalInvalidPlainTimeLikeObject, "Invalid plain time-like object")                                                             \
     M(TemporalInvalidPlainYearMonth, "Invalid plain year month")                                                                        \
     M(TemporalInvalidTime, "Invalid time")                                                                                              \
     M(TemporalInvalidTimeZoneName, "Invalid time zone name")                                                                            \
     M(TemporalInvalidUnitRange, "Invalid unit range, {} is larger than {}")                                                             \
     M(TemporalMissingOptionsObject, "Required options object is missing or undefined")                                                  \
     M(TemporalMissingRequiredProperty, "Required property {} is missing or undefined")                                                  \
+    M(TemporalPlainTimeWithArgumentMustNotHave, "Argument must not have a defined {} property")                                         \
     M(TemporalPropertyMustBeFinite, "Property must not be Infinity")                                                                    \
     M(TemporalPropertyMustBePositiveInteger, "Property must be a positive integer")                                                     \
     M(ThisHasNotBeenInitialized, "|this| has not been initialized")                                                                     \

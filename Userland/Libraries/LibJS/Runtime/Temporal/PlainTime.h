@@ -60,6 +60,15 @@ struct UnregulatedTemporalTime {
     double nanosecond;
 };
 
+struct PartialUnregulatedTemporalTime {
+    Optional<double> hour;
+    Optional<double> minute;
+    Optional<double> second;
+    Optional<double> millisecond;
+    Optional<double> microsecond;
+    Optional<double> nanosecond;
+};
+
 // Table 3: Properties of a TemporalTimeLike, https://tc39.es/proposal-temporal/#table-temporal-temporaltimelike-properties
 
 template<typename StructT, typename ValueT>
@@ -82,6 +91,7 @@ auto temporal_time_like_properties = [](VM& vm) {
 };
 
 PlainTime* to_temporal_time(GlobalObject&, Value item, Optional<StringView> overflow = {});
+Optional<PartialUnregulatedTemporalTime> to_partial_time(GlobalObject&, Object& temporal_time_like);
 Optional<TemporalTime> regulate_time(GlobalObject&, double hour, double minute, double second, double millisecond, double microsecond, double nanosecond, StringView overflow);
 bool is_valid_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond);
 DaysAndTime balance_time(i64 hour, i64 minute, i64 second, i64 millisecond, i64 microsecond, i64 nanosecond);

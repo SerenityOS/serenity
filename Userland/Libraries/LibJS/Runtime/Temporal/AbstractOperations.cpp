@@ -7,6 +7,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/DateTimeLexer.h>
+#include <AK/TypeCasts.h>
 #include <AK/Variant.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/PropertyName.h>
@@ -14,8 +15,10 @@
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
+#include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/PlainTime.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
+#include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 
 namespace JS::Temporal {
 
@@ -595,6 +598,20 @@ Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit)
 
     // 5. Return 1000.
     return 1000;
+}
+
+// 13.26 RejectTemporalCalendarType ( object ), https://tc39.es/proposal-temporal/#sec-temporal-rejecttemporalcalendartype
+void reject_temporal_calendar_type(GlobalObject& global_object, Object& object)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(object) is Object.
+
+    // 2. If object has an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], [[InitializedTemporalMonthDay]], [[InitializedTemporalTime]], [[InitializedTemporalYearMonth]], or [[InitializedTemporalZonedDateTime]] internal slot, then
+    if (is<PlainDate>(object) || is<PlainDateTime>(object) || is<PlainMonthDay>(object) || is<PlainTime>(object) || is<PlainYearMonth>(object) || is<ZonedDateTime>(object)) {
+        // a. Throw a TypeError exception.
+        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalPlainTimeWithArgumentMustNotHave, "calendar or timeZone");
+    }
 }
 
 // 13.27 FormatSecondsStringPart ( second, millisecond, microsecond, nanosecond, precision ), https://tc39.es/proposal-temporal/#sec-temporal-formatsecondsstringpart
