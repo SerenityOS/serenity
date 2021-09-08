@@ -30,7 +30,7 @@ public:
     class ViewportClient {
     public:
         virtual ~ViewportClient() { }
-        virtual void frame_did_set_viewport_rect(const Gfx::IntRect&) = 0;
+        virtual void frame_did_set_viewport_rect(Gfx::IntRect const&) = 0;
     };
     void register_viewport_client(ViewportClient&);
     void unregister_viewport_client(ViewportClient&);
@@ -38,41 +38,41 @@ public:
     bool is_top_level() const { return this == &m_top_level_browsing_context; }
     bool is_focused_context() const;
 
-    const DOM::Document* document() const { return m_document; }
+    DOM::Document const* document() const { return m_document; }
     DOM::Document* document() { return m_document; }
 
     void set_document(DOM::Document*);
 
     Page* page() { return m_page; }
-    const Page* page() const { return m_page; }
+    Page const* page() const { return m_page; }
 
-    const Gfx::IntSize& size() const { return m_size; }
-    void set_size(const Gfx::IntSize&);
+    Gfx::IntSize const& size() const { return m_size; }
+    void set_size(Gfx::IntSize const&);
 
-    void set_needs_display(const Gfx::IntRect&);
+    void set_needs_display(Gfx::IntRect const&);
 
-    void set_viewport_scroll_offset(const Gfx::IntPoint&);
+    void set_viewport_scroll_offset(Gfx::IntPoint const&);
     Gfx::IntRect viewport_rect() const { return { m_viewport_scroll_offset, m_size }; }
-    void set_viewport_rect(const Gfx::IntRect&);
+    void set_viewport_rect(Gfx::IntRect const&);
 
     FrameLoader& loader() { return m_loader; }
-    const FrameLoader& loader() const { return m_loader; }
+    FrameLoader const& loader() const { return m_loader; }
 
     EventHandler& event_handler() { return m_event_handler; }
-    const EventHandler& event_handler() const { return m_event_handler; }
+    EventHandler const& event_handler() const { return m_event_handler; }
 
-    void scroll_to_anchor(const String&);
+    void scroll_to_anchor(String const&);
 
     BrowsingContext& top_level_browsing_context() { return m_top_level_browsing_context; }
     BrowsingContext const& top_level_browsing_context() const { return m_top_level_browsing_context; }
 
     DOM::Element* host_element() { return m_host_element; }
-    const DOM::Element* host_element() const { return m_host_element; }
+    DOM::Element const* host_element() const { return m_host_element; }
 
-    Gfx::IntPoint to_top_level_position(const Gfx::IntPoint&);
-    Gfx::IntRect to_top_level_rect(const Gfx::IntRect&);
+    Gfx::IntPoint to_top_level_position(Gfx::IntPoint const&);
+    Gfx::IntRect to_top_level_rect(Gfx::IntRect const&);
 
-    const DOM::Position& cursor_position() const { return m_cursor_position; }
+    DOM::Position const& cursor_position() const { return m_cursor_position; }
     void set_cursor_position(DOM::Position);
     bool increment_cursor_position_offset();
     bool decrement_cursor_position_offset();

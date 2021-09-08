@@ -88,7 +88,7 @@ void BrowsingContext::set_document(DOM::Document* document)
         m_page->client().page_did_set_document_in_top_level_browsing_context(m_document);
 }
 
-void BrowsingContext::set_viewport_rect(const Gfx::IntRect& rect)
+void BrowsingContext::set_viewport_rect(Gfx::IntRect const& rect)
 {
     bool did_change = false;
 
@@ -112,7 +112,7 @@ void BrowsingContext::set_viewport_rect(const Gfx::IntRect& rect)
     }
 }
 
-void BrowsingContext::set_size(const Gfx::IntSize& size)
+void BrowsingContext::set_size(Gfx::IntSize const& size)
 {
     if (m_size == size)
         return;
@@ -126,7 +126,7 @@ void BrowsingContext::set_size(const Gfx::IntSize& size)
         client->frame_did_set_viewport_rect(viewport_rect());
 }
 
-void BrowsingContext::set_viewport_scroll_offset(const Gfx::IntPoint& offset)
+void BrowsingContext::set_viewport_scroll_offset(Gfx::IntPoint const& offset)
 {
     if (m_viewport_scroll_offset == offset)
         return;
@@ -136,7 +136,7 @@ void BrowsingContext::set_viewport_scroll_offset(const Gfx::IntPoint& offset)
         client->frame_did_set_viewport_rect(viewport_rect());
 }
 
-void BrowsingContext::set_needs_display(const Gfx::IntRect& rect)
+void BrowsingContext::set_needs_display(Gfx::IntRect const& rect)
 {
     if (!viewport_rect().intersects(rect))
         return;
@@ -151,7 +151,7 @@ void BrowsingContext::set_needs_display(const Gfx::IntRect& rect)
         host_element()->layout_node()->set_needs_display();
 }
 
-void BrowsingContext::scroll_to_anchor(const String& fragment)
+void BrowsingContext::scroll_to_anchor(String const& fragment)
 {
     if (!document())
         return;
@@ -186,14 +186,14 @@ void BrowsingContext::scroll_to_anchor(const String& fragment)
         m_page->client().page_did_request_scroll_into_view(enclosing_int_rect(float_rect));
 }
 
-Gfx::IntRect BrowsingContext::to_top_level_rect(const Gfx::IntRect& a_rect)
+Gfx::IntRect BrowsingContext::to_top_level_rect(Gfx::IntRect const& a_rect)
 {
     auto rect = a_rect;
     rect.set_location(to_top_level_position(a_rect.location()));
     return rect;
 }
 
-Gfx::IntPoint BrowsingContext::to_top_level_position(const Gfx::IntPoint& a_position)
+Gfx::IntPoint BrowsingContext::to_top_level_position(Gfx::IntPoint const& a_position)
 {
     auto position = a_position;
     for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
@@ -279,7 +279,7 @@ void BrowsingContext::select_all()
     if (!layout_root)
         return;
 
-    const Layout::Node* first_layout_node = layout_root;
+    Layout::Node const* first_layout_node = layout_root;
 
     for (;;) {
         auto* next = first_layout_node->next_in_pre_order();
@@ -290,9 +290,9 @@ void BrowsingContext::select_all()
             break;
     }
 
-    const Layout::Node* last_layout_node = first_layout_node;
+    Layout::Node const* last_layout_node = first_layout_node;
 
-    for (const Layout::Node* layout_node = first_layout_node; layout_node; layout_node = layout_node->next_in_pre_order()) {
+    for (Layout::Node const* layout_node = first_layout_node; layout_node; layout_node = layout_node->next_in_pre_order()) {
         if (is<Layout::TextNode>(*layout_node))
             last_layout_node = layout_node;
     }
