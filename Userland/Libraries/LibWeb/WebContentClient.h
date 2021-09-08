@@ -36,7 +36,7 @@ private:
     virtual void did_request_cursor_change(i32) override;
     virtual void did_layout(Gfx::IntSize const&) override;
     virtual void did_change_title(String const&) override;
-    virtual void did_request_scroll(int) override;
+    virtual void did_request_scroll(i32, i32) override;
     virtual void did_request_scroll_into_view(Gfx::IntRect const&) override;
     virtual void did_enter_tooltip_area(Gfx::IntPoint const&, String const&) override;
     virtual void did_leave_tooltip_area() override;
