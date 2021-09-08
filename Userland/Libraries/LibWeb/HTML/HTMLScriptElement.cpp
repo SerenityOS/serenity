@@ -196,11 +196,14 @@ void HTMLScriptElement::prepare_script()
     // 16. If the script element has an event attribute and a for attribute, and the script's type is "classic", then:
     if (m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::event) && has_attribute(HTML::AttributeNames::for_)) {
         // 1. Let for be the value of the for attribute.
-        auto for_ = attribute(HTML::AttributeNames::for_).trim_whitespace();
-        // 2. Let event be the value of the event attribute.
-        auto event = attribute(HTML::AttributeNames::event).trim_whitespace();
+        auto for_ = attribute(HTML::AttributeNames::for_);
 
-        // FIXME: 3. Strip leading and trailing ASCII whitespace from event and for.
+        // 2. Let event be the value of the event attribute.
+        auto event = attribute(HTML::AttributeNames::event);
+
+        // 3. Strip leading and trailing ASCII whitespace from event and for.
+        for_ = for_.trim_whitespace();
+        event = event.trim_whitespace();
 
         // 4. If for is not an ASCII case-insensitive match for the string "window", then return. The script is not executed.
         if (!for_.equals_ignoring_case("window")) {
