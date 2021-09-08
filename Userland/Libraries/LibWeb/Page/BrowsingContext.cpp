@@ -18,30 +18,12 @@
 
 namespace Web {
 
-BrowsingContext::BrowsingContext(DOM::Element& host_element, BrowsingContext& top_level_browsing_context)
-    : m_page(*top_level_browsing_context.page())
+BrowsingContext::BrowsingContext(Page& page, DOM::Element* host_element, BrowsingContext& top_level_browsing_context)
+    : m_page(page)
     , m_top_level_browsing_context(top_level_browsing_context)
     , m_loader(*this)
     , m_event_handler({}, *this)
     , m_host_element(host_element)
-{
-    setup();
-}
-
-BrowsingContext::BrowsingContext(Page& page)
-    : m_page(page)
-    , m_top_level_browsing_context(*this)
-    , m_loader(*this)
-    , m_event_handler({}, *this)
-{
-    setup();
-}
-
-BrowsingContext::~BrowsingContext()
-{
-}
-
-void BrowsingContext::setup()
 {
     m_cursor_blink_timer = Core::Timer::construct(500, [this] {
         if (!is_focused_context())
@@ -51,6 +33,20 @@ void BrowsingContext::setup()
             m_cursor_position.node()->layout_node()->set_needs_display();
         }
     });
+}
+
+BrowsingContext::BrowsingContext(DOM::Element& host_element, BrowsingContext& top_level_browsing_context)
+    : BrowsingContext(*top_level_browsing_context.page(), &host_element, top_level_browsing_context)
+{
+}
+
+BrowsingContext::BrowsingContext(Page& page)
+    : BrowsingContext(page, nullptr, *this)
+{
+}
+
+BrowsingContext::~BrowsingContext()
+{
 }
 
 void BrowsingContext::did_edit(Badge<EditEventHandler>)
