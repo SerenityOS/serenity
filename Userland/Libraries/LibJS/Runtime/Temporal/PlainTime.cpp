@@ -374,7 +374,7 @@ PlainTime* create_temporal_time(GlobalObject& global_object, u8 hour, u8 minute,
 }
 
 // 4.5.9 ToTemporalTimeRecord ( temporalTimeLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimerecord
-Optional<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject& global_object, Object& temporal_time_like)
+Optional<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject& global_object, Object const& temporal_time_like)
 {
     auto& vm = global_object.vm();
 
