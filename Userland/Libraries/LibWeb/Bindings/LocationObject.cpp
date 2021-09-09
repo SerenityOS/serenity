@@ -50,7 +50,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_setter)
     auto new_href = vm.argument(0).to_string(global_object);
     if (vm.exception())
         return {};
-    auto href_url = window.impl().associated_document().complete_url(new_href);
+    auto href_url = window.impl().associated_document().parse_url(new_href);
     if (!href_url.is_valid()) {
         vm.throw_exception<JS::URIError>(global_object, String::formatted("Invalid URL '{}'", new_href));
         return {};

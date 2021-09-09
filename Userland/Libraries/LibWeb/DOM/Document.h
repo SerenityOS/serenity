@@ -69,7 +69,7 @@ public:
 
     bool is_scripting_enabled() const { return true; }
 
-    URL complete_url(const String&) const;
+    URL parse_url(String const&) const;
 
     CSS::StyleResolver& style_resolver() { return *m_style_resolver; }
     const CSS::StyleResolver& style_resolver() const { return *m_style_resolver; }

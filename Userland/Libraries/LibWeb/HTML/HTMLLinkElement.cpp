@@ -32,7 +32,7 @@ void HTMLLinkElement::inserted()
     HTMLElement::inserted();
 
     if (m_relationship & Relationship::Stylesheet && !(m_relationship & Relationship::Alternate)) {
-        m_css_loader.load_from_url(document().complete_url(href()));
+        m_css_loader.load_from_url(document().parse_url(href()));
         if (auto sheet = m_css_loader.style_sheet())
             document().style_sheets().add_sheet(sheet.release_nonnull());
     }

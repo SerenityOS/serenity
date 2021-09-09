@@ -65,7 +65,7 @@ void HTMLImageElement::parse_attribute(const FlyString& name, const String& valu
     HTMLElement::parse_attribute(name, value);
 
     if (name == HTML::AttributeNames::src && !value.is_empty())
-        m_image_loader.load(document().complete_url(value));
+        m_image_loader.load(document().parse_url(value));
 }
 
 RefPtr<Layout::Node> HTMLImageElement::create_layout_node()

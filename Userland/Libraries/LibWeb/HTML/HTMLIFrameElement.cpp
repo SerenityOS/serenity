@@ -49,7 +49,7 @@ void HTMLIFrameElement::load_src(const String& value)
     if (value.is_null())
         return;
 
-    auto url = document().complete_url(value);
+    auto url = document().parse_url(value);
     if (!url.is_valid()) {
         dbgln("iframe failed to load URL: Invalid URL: {}", value);
         return;

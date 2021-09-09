@@ -75,7 +75,7 @@ void HTMLFormElement::submit_form(RefPtr<HTMLElement> submitter, bool from_submi
             return;
     }
 
-    URL url(document().complete_url(action()));
+    URL url(document().parse_url(action()));
 
     if (!url.is_valid()) {
         dbgln("Failed to submit form: Invalid URL: {}", action());
