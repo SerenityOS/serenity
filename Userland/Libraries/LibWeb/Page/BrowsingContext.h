@@ -15,6 +15,7 @@
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
 #include <LibWeb/DOM/Position.h>
+#include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/TreeNode.h>
@@ -23,7 +24,7 @@ namespace Web {
 
 class BrowsingContext : public TreeNode<BrowsingContext> {
 public:
-    static NonnullRefPtr<BrowsingContext> create_nested(DOM::Element& host_element, BrowsingContext& top_level_browsing_context) { return adopt_ref(*new BrowsingContext(host_element, top_level_browsing_context)); }
+    static NonnullRefPtr<BrowsingContext> create_nested(HTML::BrowsingContextContainer& container, BrowsingContext& top_level_browsing_context) { return adopt_ref(*new BrowsingContext(container, top_level_browsing_context)); }
     static NonnullRefPtr<BrowsingContext> create(Page& page) { return adopt_ref(*new BrowsingContext(page)); }
     ~BrowsingContext();
 
@@ -66,8 +67,8 @@ public:
     BrowsingContext& top_level_browsing_context() { return *m_top_level_browsing_context; }
     BrowsingContext const& top_level_browsing_context() const { return *m_top_level_browsing_context; }
 
-    DOM::Element* host_element() { return m_host_element; }
-    DOM::Element const* host_element() const { return m_host_element; }
+    HTML::BrowsingContextContainer* container() { return m_container; }
+    HTML::BrowsingContextContainer const* container() const { return m_container; }
 
     Gfx::IntPoint to_top_level_position(Gfx::IntPoint const&);
     Gfx::IntRect to_top_level_rect(Gfx::IntRect const&);
@@ -91,8 +92,8 @@ public:
     HashMap<URL, size_t> const& frame_nesting_levels() const { return m_frame_nesting_levels; }
 
 private:
-    explicit BrowsingContext(Page&, DOM::Element* host_element, BrowsingContext& top_level_browsing_context);
-    explicit BrowsingContext(DOM::Element& host_element, BrowsingContext& top_level_browsing_context);
+    explicit BrowsingContext(Page&, HTML::BrowsingContextContainer*, BrowsingContext& top_level_browsing_context);
+    explicit BrowsingContext(HTML::BrowsingContextContainer&, BrowsingContext& top_level_browsing_context);
     explicit BrowsingContext(Page&);
 
     void reset_cursor_blink_cycle();
@@ -106,7 +107,7 @@ private:
     FrameLoader m_loader;
     EventHandler m_event_handler;
 
-    WeakPtr<DOM::Element> m_host_element;
+    WeakPtr<HTML::BrowsingContextContainer> m_container;
     RefPtr<DOM::Document> m_document;
     Gfx::IntSize m_size;
     Gfx::IntPoint m_viewport_scroll_offset;
