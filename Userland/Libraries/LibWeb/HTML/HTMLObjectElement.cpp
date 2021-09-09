@@ -38,7 +38,7 @@ void HTMLObjectElement::parse_attribute(const FlyString& name, const String& val
     HTMLElement::parse_attribute(name, value);
 
     if (name == HTML::AttributeNames::data)
-        m_image_loader.load(document().complete_url(value));
+        m_image_loader.load(document().parse_url(value));
 }
 
 RefPtr<Layout::Node> HTMLObjectElement::create_layout_node()

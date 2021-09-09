@@ -381,9 +381,11 @@ CSS::Repeat Document::background_repeat_y() const
     return body_layout_node->computed_values().background_repeat_y();
 }
 
-URL Document::complete_url(const String& string) const
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#parse-a-url
+URL Document::parse_url(String const& url) const
 {
-    return m_url.complete_url(string);
+    // FIXME: Make sure we do this according to spec.
+    return m_url.complete_url(url);
 }
 
 void Document::invalidate_layout()

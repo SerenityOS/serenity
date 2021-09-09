@@ -220,7 +220,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
 
     if (button == GUI::MouseButton::Right && is<HTML::HTMLImageElement>(*node)) {
         auto& image_element = verify_cast<HTML::HTMLImageElement>(*node);
-        auto image_url = image_element.document().complete_url(image_element.src());
+        auto image_url = image_element.document().parse_url(image_element.src());
         if (auto* page = m_frame.page())
             page->client().page_did_request_image_context_menu(m_frame.to_top_level_position(position), image_url, "", modifiers, image_element.bitmap());
         return true;
@@ -228,7 +228,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
 
     if (RefPtr<HTML::HTMLAnchorElement> link = node->enclosing_link_element()) {
         auto href = link->href();
-        auto url = document->complete_url(href);
+        auto url = document->parse_url(href);
         dbgln("Web::EventHandler: Clicking on a link to {}", url);
         if (button == GUI::MouseButton::Left) {
             if (href.starts_with("javascript:")) {
@@ -346,7 +346,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
                 page->client().page_did_leave_tooltip_area();
             }
             if (is_hovering_link)
-                page->client().page_did_hover_link(document.complete_url(hovered_link_element->href()));
+                page->client().page_did_hover_link(document.parse_url(hovered_link_element->href()));
             else
                 page->client().page_did_unhover_link();
         }

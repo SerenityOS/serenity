@@ -255,7 +255,7 @@ void HTMLScriptElement::prepare_script()
         m_from_an_external_file = true;
 
         // 4. Parse src relative to the element's node document.
-        auto url = document().complete_url(src);
+        auto url = document().parse_url(src);
         // 5. If the previous step failed, queue a task to fire an event named error at the element, and return. Otherwise, let url be the resulting URL record.
         if (!url.is_valid()) {
             dbgln("HTMLScriptElement: Refusing to run script because the src URL '{}' is invalid.", url);
