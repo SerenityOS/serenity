@@ -34,6 +34,6 @@ private:
     Object& m_calendar;    // [[Calendar]]
 };
 
-ZonedDateTime* create_temporal_zoned_date_time(GlobalObject&, BigInt& epoch_nanoseconds, Object& time_zone, Object& calendar, FunctionObject* new_target = nullptr);
+ZonedDateTime* create_temporal_zoned_date_time(GlobalObject&, BigInt& epoch_nanoseconds, Object& time_zone, Object& calendar, FunctionObject const* new_target = nullptr);
 
 }

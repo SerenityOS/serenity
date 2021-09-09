@@ -37,7 +37,7 @@ const auto INSTANT_NANOSECONDS_MIN = "-8640000000000000000000"_sbigint;
 const auto INSTANT_NANOSECONDS_MAX = "8640000000000000000000"_sbigint;
 
 bool is_valid_epoch_nanoseconds(BigInt const& epoch_nanoseconds);
-Instant* create_temporal_instant(GlobalObject&, BigInt& nanoseconds, FunctionObject* new_target = nullptr);
+Instant* create_temporal_instant(GlobalObject&, BigInt& nanoseconds, FunctionObject const* new_target = nullptr);
 Instant* to_temporal_instant(GlobalObject&, Value item);
 BigInt* parse_temporal_instant(GlobalObject&, String const& iso_string);
 i32 compare_epoch_nanoseconds(BigInt const&, BigInt const&);
