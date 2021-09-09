@@ -44,6 +44,8 @@ int getrusage(int who, struct rusage* usage);
 #define RLIMIT_STACK 6
 #define RLIMIT_AS 7
 
+#define RLIM_NLIMITS 8
+
 #define RLIM_INFINITY SIZE_MAX
 
 typedef size_t rlim_t;
