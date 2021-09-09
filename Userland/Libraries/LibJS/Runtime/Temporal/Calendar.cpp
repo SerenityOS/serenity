@@ -1034,7 +1034,7 @@ u8 iso_day(Object& temporal_object)
 }
 
 // 12.1.45 DefaultMergeFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-defaultmergefields
-Object* default_merge_fields(GlobalObject& global_object, Object& fields, Object& additional_fields)
+Object* default_merge_fields(GlobalObject& global_object, Object const& fields, Object const& additional_fields)
 {
     auto& vm = global_object.vm();
 
