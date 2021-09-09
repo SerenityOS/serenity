@@ -194,13 +194,13 @@ KResult Coredump::create_notes_process_data(auto& builder) const
         {
             auto arguments_array = process_obj.add_array("arguments"sv);
             for (auto& argument : m_process->arguments())
-                arguments_array.add(argument);
+                arguments_array.add(argument.view());
         }
 
         {
             auto environment_array = process_obj.add_array("environment"sv);
             for (auto& variable : m_process->environment())
-                environment_array.add(variable);
+                environment_array.add(variable.view());
         }
     }
 
