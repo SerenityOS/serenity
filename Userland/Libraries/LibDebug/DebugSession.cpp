@@ -409,13 +409,13 @@ void DebugSession::update_loaded_libs()
     VERIFY(json.has_value());
 
     auto vm_entries = json.value().as_array();
-    Regex<PosixExtended> re("(.+): \\.text");
+    Regex<PosixExtended> segment_name_re("(.+): ");
 
-    auto get_path_to_object = [&re](String const& vm_name) -> Optional<String> {
+    auto get_path_to_object = [&segment_name_re](String const& vm_name) -> Optional<String> {
         if (vm_name == "/usr/lib/Loader.so")
             return vm_name;
         RegexResult result;
-        auto rc = re.search(vm_name, result);
+        auto rc = segment_name_re.search(vm_name, result);
         if (!rc)
             return {};
         auto lib_name = result.capture_group_matches.at(0).at(0).view.string_view().to_string();
@@ -440,14 +440,17 @@ void DebugSession::update_loaded_libs()
         if (lib_name == "libgcc_s.so")
             return IterationDecision::Continue;
 
-        if (m_loaded_libraries.contains(lib_name))
+        FlatPtr base_address = entry.as_object().get("address").to_addr();
+        if (auto it = m_loaded_libraries.find(lib_name); it != m_loaded_libraries.end()) {
+            // We expect the VM regions to be sorted by address.
+            VERIFY(base_address >= it->value->base_address);
             return IterationDecision::Continue;
+        }
 
-        auto file_or_error = MappedFile ::map(object_path.value());
+        auto file_or_error = MappedFile::map(object_path.value());
         if (file_or_error.is_error())
             return IterationDecision::Continue;
 
-        FlatPtr base_address = entry.as_object().get("address").to_addr();
         auto image = make<ELF::Image>(file_or_error.value()->bytes());
         auto debug_info = make<DebugInfo>(*image, m_source_root, base_address);
         auto lib = make<LoadedLibrary>(lib_name, file_or_error.release_value(), move(image), move(debug_info), base_address);
