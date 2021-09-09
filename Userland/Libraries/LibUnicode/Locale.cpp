@@ -475,7 +475,7 @@ Optional<LocaleID> parse_unicode_locale_id(StringView locale)
     return locale_id;
 }
 
-static void perform_hard_coded_key_value_substitutions(String& key, String& value)
+static void perform_hard_coded_key_value_substitutions(StringView key, String& value)
 {
     // FIXME: In the XML export of CLDR, there are some aliases defined in the following files:
     // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/calendar.xml
@@ -540,6 +540,33 @@ static void perform_hard_coded_key_value_substitutions(String& key, String& valu
     }
 }
 
+void canonicalize_unicode_extension_values(StringView key, String& value, bool remove_true)
+{
+    value = value.to_lowercase();
+    perform_hard_coded_key_value_substitutions(key, value);
+
+    // Note: The spec says to remove "true" type and tfield values but that is believed to be a bug in the spec
+    // because, for tvalues, that would result in invalid syntax:
+    //     https://unicode-org.atlassian.net/browse/CLDR-14318
+    // This has also been noted by test262:
+    //     https://github.com/tc39/test262/blob/18bb955771669541c56c28748603f6afdb2e25ff/test/intl402/Intl/getCanonicalLocales/transformed-ext-canonical.js
+    if (remove_true && (value == "true"sv)) {
+        value = {};
+        return;
+    }
+
+    if (key.is_one_of("sd"sv, "rg"sv)) {
+        if (auto alias = resolve_subdivision_alias(value); alias.has_value()) {
+            auto aliases = alias->split_view(' ');
+
+            // FIXME: Subdivision subtags do not appear in the CLDR likelySubtags.json file.
+            //        Implement the spec's recommendation of using just the first alias for now,
+            //        but we should determine if there's anything else needed here.
+            value = aliases[0].to_string();
+        }
+    }
+}
+
 static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
 {
     auto canonicalize_language = [](LanguageID& language_id, bool force_lowercase) {
@@ -594,34 +621,6 @@ static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
         }
     };
 
-    auto canonicalize_key_value_list = [&](auto& key, auto& value, bool remove_true_values) {
-        key = key.to_lowercase();
-        value = value.to_lowercase();
-
-        perform_hard_coded_key_value_substitutions(key, value);
-
-        // Note: The spec says to remove "true" type and tfield values but that is believed to be a bug in the spec
-        // because, for tvalues, that would result in invalid syntax:
-        //     https://unicode-org.atlassian.net/browse/CLDR-14318
-        // This has also been noted by test262:
-        //     https://github.com/tc39/test262/blob/18bb955771669541c56c28748603f6afdb2e25ff/test/intl402/Intl/getCanonicalLocales/transformed-ext-canonical.js
-        if (remove_true_values && (value == "true"sv)) {
-            value = {};
-            return;
-        }
-
-        if (key.is_one_of("sd"sv, "rg"sv)) {
-            if (auto alias = resolve_subdivision_alias(value); alias.has_value()) {
-                auto aliases = alias->split_view(' ');
-
-                // FIXME: Subdivision subtags do not appear in the CLDR likelySubtags.json file.
-                //        Implement the spec's recommendation of using just the first alias for now,
-                //        but we should determine if there's anything else needed here.
-                value = aliases[0].to_string();
-            }
-        }
-    };
-
     canonicalize_language(locale_id.language_id, false);
 
     quick_sort(locale_id.extensions, [](auto const& left, auto const& right) {
@@ -640,8 +639,11 @@ static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
             [&](LocaleExtension& ext) {
                 for (auto& attribute : ext.attributes)
                     attribute = attribute.to_lowercase();
-                for (auto& keyword : ext.keywords)
-                    canonicalize_key_value_list(keyword.key, keyword.value, true);
+
+                for (auto& keyword : ext.keywords) {
+                    keyword.key = keyword.key.to_lowercase();
+                    canonicalize_unicode_extension_values(keyword.key, keyword.value, true);
+                }
 
                 quick_sort(ext.attributes);
                 quick_sort(ext.keywords, [](auto const& a, auto const& b) { return a.key < b.key; });
@@ -650,8 +652,10 @@ static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
                 if (ext.language.has_value())
                     canonicalize_language(*ext.language, true);
 
-                for (auto& field : ext.fields)
-                    canonicalize_key_value_list(field.key, field.value, false);
+                for (auto& field : ext.fields) {
+                    field.key = field.key.to_lowercase();
+                    canonicalize_unicode_extension_values(field.key, field.value, false);
+                }
 
                 quick_sort(ext.fields, [](auto const& a, auto const& b) { return a.key < b.key; });
             },
