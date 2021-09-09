@@ -184,6 +184,7 @@ set(SOURCES
     Runtime/WeakSet.cpp
     Runtime/WeakSetConstructor.cpp
     Runtime/WeakSetPrototype.cpp
+    Script.cpp
     SyntaxHighlighter.cpp
     Token.cpp
 )
