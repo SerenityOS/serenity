@@ -13,10 +13,11 @@ Once installed, you will need to make sure the distribution you want to use (and
 
 ## Dependencies
 
-Make sure to install:
+Fresh installations of WSL2 need these packages to perform a fresh build properly:
 
-* `sudo apt install unzip`
-* `sudo apt install build-essential`
+```bash
+$ sudo apt install unzip build-essential ninja-build g++-10 libmpc-dev libgmp3-dev git cmake
+```
 
 ## Note on filesystems
 
