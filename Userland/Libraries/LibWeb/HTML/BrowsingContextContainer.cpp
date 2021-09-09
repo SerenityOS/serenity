@@ -35,9 +35,9 @@ void BrowsingContextContainer::inserted()
 
 Origin BrowsingContextContainer::content_origin() const
 {
-    if (!m_nested_browsing_context || !m_nested_browsing_context->document())
+    if (!m_nested_browsing_context || !m_nested_browsing_context->active_document())
         return {};
-    return m_nested_browsing_context->document()->origin();
+    return m_nested_browsing_context->active_document()->origin();
 }
 
 bool BrowsingContextContainer::may_access_from_origin(const Origin& origin) const
@@ -47,7 +47,7 @@ bool BrowsingContextContainer::may_access_from_origin(const Origin& origin) cons
 
 const DOM::Document* BrowsingContextContainer::content_document() const
 {
-    return m_nested_browsing_context ? m_nested_browsing_context->document() : nullptr;
+    return m_nested_browsing_context ? m_nested_browsing_context->active_document() : nullptr;
 }
 
 void BrowsingContextContainer::nested_browsing_context_did_load(Badge<FrameLoader>)

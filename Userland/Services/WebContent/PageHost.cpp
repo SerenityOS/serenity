@@ -48,7 +48,7 @@ void PageHost::set_palette_impl(const Gfx::PaletteImpl& impl)
 
 Web::Layout::InitialContainingBlock* PageHost::layout_root()
 {
-    auto* document = page().top_level_browsing_context().document();
+    auto* document = page().top_level_browsing_context().active_document();
     if (!document)
         return nullptr;
     return document->layout_node();
