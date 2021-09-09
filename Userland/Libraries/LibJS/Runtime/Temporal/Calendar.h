@@ -29,7 +29,7 @@ private:
     String m_identifier; // [[Identifier]]
 };
 
-Calendar* create_temporal_calendar(GlobalObject&, String const& identifier, FunctionObject* new_target = nullptr);
+Calendar* create_temporal_calendar(GlobalObject&, String const& identifier, FunctionObject const* new_target = nullptr);
 bool is_builtin_calendar(String const& identifier);
 Calendar* get_builtin_calendar(GlobalObject&, String const& identifier);
 Calendar* get_iso8601_calendar(GlobalObject&);

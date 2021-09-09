@@ -30,7 +30,7 @@ void PlainMonthDay::visit_edges(Visitor& visitor)
 }
 
 // 10.5.2 CreateTemporalMonthDay ( isoMonth, isoDay, calendar, referenceISOYear [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalmonthday
-PlainMonthDay* create_temporal_month_day(GlobalObject& global_object, u8 iso_month, u8 iso_day, Object& calendar, i32 reference_iso_year, FunctionObject* new_target)
+PlainMonthDay* create_temporal_month_day(GlobalObject& global_object, u8 iso_month, u8 iso_day, Object& calendar, i32 reference_iso_year, FunctionObject const* new_target)
 {
     auto& vm = global_object.vm();
 

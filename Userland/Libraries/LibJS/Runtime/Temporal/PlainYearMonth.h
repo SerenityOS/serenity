@@ -45,7 +45,7 @@ bool is_valid_iso_month(u8 month);
 bool iso_year_month_within_limits(i32 year, u8 month);
 ISOYearMonth balance_iso_year_month(double year, double month);
 ISOYearMonth constrain_iso_year_month(double year, double month);
-PlainYearMonth* create_temporal_year_month(GlobalObject&, i32 iso_year, u8 iso_month, Object& calendar, u8 reference_iso_day, FunctionObject* new_target = nullptr);
+PlainYearMonth* create_temporal_year_month(GlobalObject&, i32 iso_year, u8 iso_month, Object& calendar, u8 reference_iso_day, FunctionObject const* new_target = nullptr);
 Optional<String> temporal_year_month_to_string(GlobalObject&, PlainYearMonth&, StringView show_calendar);
 
 }

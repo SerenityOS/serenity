@@ -31,7 +31,7 @@ void ZonedDateTime::visit_edges(Cell::Visitor& visitor)
 }
 
 // 6.5.3 CreateTemporalZonedDateTime ( epochNanoseconds, timeZone, calendar [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalzoneddatetime
-ZonedDateTime* create_temporal_zoned_date_time(GlobalObject& global_object, BigInt& epoch_nanoseconds, Object& time_zone, Object& calendar, FunctionObject* new_target)
+ZonedDateTime* create_temporal_zoned_date_time(GlobalObject& global_object, BigInt& epoch_nanoseconds, Object& time_zone, Object& calendar, FunctionObject const* new_target)
 {
     auto& vm = global_object.vm();
 

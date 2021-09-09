@@ -40,7 +40,7 @@ struct ISODate {
     u8 day;
 };
 
-PlainDate* create_temporal_date(GlobalObject&, i32 iso_year, u8 iso_month, u8 iso_day, Object& calendar, FunctionObject* new_target = nullptr);
+PlainDate* create_temporal_date(GlobalObject&, i32 iso_year, u8 iso_month, u8 iso_day, Object& calendar, FunctionObject const* new_target = nullptr);
 PlainDate* to_temporal_date(GlobalObject&, Value item, Object* options = nullptr);
 Optional<ISODate> regulate_iso_date(GlobalObject&, double year, double month, double day, StringView overflow);
 bool is_valid_iso_date(i32 year, u8 month, u8 day);
