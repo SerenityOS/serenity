@@ -72,6 +72,6 @@ i32 iso_year(Object& temporal_object);
 u8 iso_month(Object& temporal_object);
 String iso_month_code(Object& temporal_object);
 u8 iso_day(Object& temporal_object);
-Object* default_merge_fields(GlobalObject&, Object& fields, Object& additional_fields);
+Object* default_merge_fields(GlobalObject&, Object const& fields, Object const& additional_fields);
 
 }
