@@ -948,4 +948,18 @@ String Document::dump_dom_tree_as_json() const
     return builder.to_string();
 }
 
+// https://html.spec.whatwg.org/multipage/semantics.html#has-a-style-sheet-that-is-blocking-scripts
+bool Document::has_a_style_sheet_that_is_blocking_scripts() const
+{
+    // A Document has a style sheet that is blocking scripts if its script-blocking style sheet counter is greater than 0,
+    if (m_script_blocking_style_sheet_counter > 0)
+        return true;
+
+    // ...or if that Document has a non-null browsing context whose container document is non-null and has a script-blocking style sheet counter greater than 0.
+    if (!browsing_context() || !browsing_context()->container_document())
+        return false;
+
+    return browsing_context()->container_document()->m_script_blocking_style_sheet_counter > 0;
+}
+
 }

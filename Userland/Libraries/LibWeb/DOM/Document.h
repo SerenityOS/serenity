@@ -270,6 +270,8 @@ public:
 
     String dump_dom_tree_as_json() const;
 
+    bool has_a_style_sheet_that_is_blocking_scripts() const;
+
 private:
     explicit Document(const URL&);
 
@@ -347,6 +349,9 @@ private:
     bool m_should_invalidate_styles_on_attribute_changes { true };
 
     u32 m_ignore_destructive_writes_counter { 0 };
+
+    // https://html.spec.whatwg.org/multipage/semantics.html#script-blocking-style-sheet-counter
+    u32 m_script_blocking_style_sheet_counter { 0 };
 };
 
 }
