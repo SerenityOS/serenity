@@ -1062,6 +1062,26 @@ Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_
     return TemporalTimeZone { .z = false, .offset = offset, .name = name };
 }
 
+// 13.45 ParseTemporalYearMonthString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalyearmonthstring
+Optional<TemporalYearMonth> parse_temporal_year_month_string(GlobalObject& global_object, String const& iso_string)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(isoString) is String.
+
+    // 2. If isoString does not satisfy the syntax of a TemporalYearMonthString (see 13.33), then
+    // a. Throw a RangeError exception.
+    // TODO
+
+    // 3. Let result be ? ParseISODateTime(isoString).
+    auto result = parse_iso_date_time(global_object, iso_string);
+    if (vm.exception())
+        return {};
+
+    // 4. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Calendar]]: result.[[Calendar]] }.
+    return TemporalYearMonth { .year = result->year, .month = result->month, .day = result->day, .calendar = move(result->calendar) };
+}
+
 // 13.46 ToPositiveInteger ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-topositiveinteger
 double to_positive_integer(GlobalObject& global_object, Value argument)
 {

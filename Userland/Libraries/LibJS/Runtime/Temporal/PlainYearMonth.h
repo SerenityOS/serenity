@@ -39,6 +39,7 @@ struct ISOYearMonth {
     u8 reference_iso_day;
 };
 
+PlainYearMonth* to_temporal_year_month(GlobalObject& global_object, Value item, Object* options = nullptr);
 Optional<ISOYearMonth> regulate_iso_year_month(GlobalObject&, double year, double month, StringView overflow);
 bool is_valid_iso_month(u8 month);
 bool iso_year_month_within_limits(i32 year, u8 month);
