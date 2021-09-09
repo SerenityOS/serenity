@@ -201,7 +201,7 @@ void ArgsParser::print_usage(FILE* file, const char* argv0)
 
     if (m_general_help != nullptr && m_general_help[0] != '\0') {
         outln(file, "\nDescription:");
-        outln(file, m_general_help);
+        outln(file, "{}", m_general_help);
     }
 
     if (!m_options.is_empty())

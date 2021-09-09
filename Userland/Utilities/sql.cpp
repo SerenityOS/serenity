@@ -191,7 +191,7 @@ int main()
     sql_client->on_next_result = [&](int, Vector<String> const& row) {
         StringBuilder builder;
         builder.join(", ", row);
-        outln(builder.build());
+        outln("{}", builder.build());
     };
 
     sql_client->on_results_exhausted = [&](int, int total_rows) {
