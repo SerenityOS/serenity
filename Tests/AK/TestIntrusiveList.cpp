@@ -15,7 +15,7 @@ public:
     IntrusiveTestItem() = default;
     IntrusiveListNode<IntrusiveTestItem> m_list_node;
 };
-using IntrusiveTestList = IntrusiveList<IntrusiveTestItem, RawPtr<IntrusiveTestItem>, &IntrusiveTestItem::m_list_node>;
+using IntrusiveTestList = IntrusiveList<&IntrusiveTestItem::m_list_node>;
 
 TEST_CASE(construct)
 {
@@ -91,7 +91,7 @@ public:
     IntrusiveRefPtrItem() = default;
     IntrusiveListNode<IntrusiveRefPtrItem, RefPtr<IntrusiveRefPtrItem>> m_list_node;
 };
-using IntrusiveRefPtrList = IntrusiveList<IntrusiveRefPtrItem, RefPtr<IntrusiveRefPtrItem>, &IntrusiveRefPtrItem::m_list_node>;
+using IntrusiveRefPtrList = IntrusiveList<&IntrusiveRefPtrItem::m_list_node>;
 
 TEST_CASE(intrusive_ref_ptr_no_ref_leaks)
 {
@@ -138,7 +138,7 @@ public:
     IntrusiveNonnullRefPtrItem() = default;
     IntrusiveListNode<IntrusiveNonnullRefPtrItem, NonnullRefPtr<IntrusiveNonnullRefPtrItem>> m_list_node;
 };
-using IntrusiveNonnullRefPtrList = IntrusiveList<IntrusiveNonnullRefPtrItem, NonnullRefPtr<IntrusiveNonnullRefPtrItem>, &IntrusiveNonnullRefPtrItem::m_list_node>;
+using IntrusiveNonnullRefPtrList = IntrusiveList<&IntrusiveNonnullRefPtrItem::m_list_node>;
 
 TEST_CASE(intrusive_nonnull_ref_ptr_intrusive)
 {

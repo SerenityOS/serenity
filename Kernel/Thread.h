@@ -1372,8 +1372,8 @@ private:
     mutable IntrusiveListNode<Thread> m_global_thread_list_node;
 
 public:
-    using ListInProcess = IntrusiveList<Thread, RawPtr<Thread>, &Thread::m_process_thread_list_node>;
-    using GlobalList = IntrusiveList<Thread, RawPtr<Thread>, &Thread::m_global_thread_list_node>;
+    using ListInProcess = IntrusiveList<&Thread::m_process_thread_list_node>;
+    using GlobalList = IntrusiveList<&Thread::m_global_thread_list_node>;
 
     static SpinlockProtected<GlobalList>& all_instances();
 };

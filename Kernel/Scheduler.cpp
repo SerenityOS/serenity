@@ -38,7 +38,7 @@ Atomic<bool> g_finalizer_has_work { false };
 READONLY_AFTER_INIT static Process* s_colonel_process;
 
 struct ThreadReadyQueue {
-    IntrusiveList<Thread, RawPtr<Thread>, &Thread::m_ready_queue_node> thread_list;
+    IntrusiveList<&Thread::m_ready_queue_node> thread_list;
 };
 
 struct ThreadReadyQueues {

@@ -220,7 +220,7 @@ private:
     bool m_invalidated_cursor { false };
     bool m_overlay_rects_changed { false };
 
-    IntrusiveList<Overlay, RawPtr<Overlay>, &Overlay::m_list_node> m_overlay_list;
+    IntrusiveList<&Overlay::m_list_node> m_overlay_list;
     Gfx::DisjointRectSet m_overlay_rects;
     Gfx::DisjointRectSet m_dirty_screen_rects;
     Gfx::DisjointRectSet m_opaque_wallpaper_rects;

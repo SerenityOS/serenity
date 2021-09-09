@@ -89,7 +89,7 @@ private:
     IntrusiveListNode<PhysicalZone> m_list_node;
 
 public:
-    using List = IntrusiveList<PhysicalZone, RawPtr<PhysicalZone>, &PhysicalZone::m_list_node>;
+    using List = IntrusiveList<&PhysicalZone::m_list_node>;
 };
 
 }

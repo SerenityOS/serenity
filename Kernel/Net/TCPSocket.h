@@ -225,7 +225,7 @@ private:
     IntrusiveListNode<TCPSocket> m_retransmit_list_node;
 
 public:
-    using RetransmitList = IntrusiveList<TCPSocket, RawPtr<TCPSocket>, &TCPSocket::m_retransmit_list_node>;
+    using RetransmitList = IntrusiveList<&TCPSocket::m_retransmit_list_node>;
     static MutexProtected<TCPSocket::RetransmitList>& sockets_for_retransmit();
 };
 

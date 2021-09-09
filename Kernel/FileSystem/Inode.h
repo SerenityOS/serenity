@@ -134,7 +134,7 @@ private:
     Vector<Flock> m_flocks;
 
 public:
-    using AllInstancesList = IntrusiveList<Inode, RawPtr<Inode>, &Inode::m_inode_list_node>;
+    using AllInstancesList = IntrusiveList<&Inode::m_inode_list_node>;
     static SpinlockProtected<Inode::AllInstancesList>& all_instances();
 };
 

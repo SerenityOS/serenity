@@ -33,7 +33,7 @@ private:
     IntrusiveListNode<USBController, NonnullRefPtr<USBController>> m_controller_list_node;
 
 public:
-    using List = IntrusiveList<USBController, NonnullRefPtr<USBController>, &USBController::m_controller_list_node>;
+    using List = IntrusiveList<&USBController::m_controller_list_node>;
 };
 
 }

@@ -79,7 +79,7 @@ private:
         NonnullOwnPtr<KString> name;
         NonnullRefPtr<TmpFSInode> inode;
         IntrusiveListNode<Child> list_node {};
-        using List = IntrusiveList<Child, RawPtr<Child>, &Child::list_node>;
+        using List = IntrusiveList<&Child::list_node>;
     };
 
     Child* find_child_by_name(StringView);

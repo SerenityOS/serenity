@@ -14,9 +14,9 @@
 
 namespace Core {
 
-IntrusiveList<Object, RawPtr<Object>, &Object::m_all_objects_list_node>& Object::all_objects()
+IntrusiveList<&Object::m_all_objects_list_node>& Object::all_objects()
 {
-    static IntrusiveList<Object, RawPtr<Object>, &Object::m_all_objects_list_node> objects;
+    static IntrusiveList<&Object::m_all_objects_list_node> objects;
     return objects;
 }
 

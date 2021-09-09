@@ -75,5 +75,5 @@ struct ChunkedBlock : public CommonHeader {
     size_t used_chunks() const { return chunk_capacity() - m_free_chunks; }
     size_t chunk_capacity() const { return (block_size - sizeof(ChunkedBlock)) / m_size; }
 
-    using List = IntrusiveList<ChunkedBlock, RawPtr<ChunkedBlock>, &ChunkedBlock::m_list_node>;
+    using List = IntrusiveList<&ChunkedBlock::m_list_node>;
 };

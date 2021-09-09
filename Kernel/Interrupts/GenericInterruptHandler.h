@@ -68,6 +68,6 @@ private:
     IntrusiveListNode<GenericInterruptHandler> m_list_node;
 
 public:
-    using List = IntrusiveList<GenericInterruptHandler, RawPtr<GenericInterruptHandler>, &GenericInterruptHandler::m_list_node>;
+    using List = IntrusiveList<&GenericInterruptHandler::m_list_node>;
 };
 }

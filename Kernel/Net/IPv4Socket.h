@@ -133,7 +133,7 @@ private:
     IntrusiveListNode<IPv4Socket> m_list_node;
 
 public:
-    using List = IntrusiveList<IPv4Socket, RawPtr<IPv4Socket>, &IPv4Socket::m_list_node>;
+    using List = IntrusiveList<&IPv4Socket::m_list_node>;
 
     static MutexProtected<IPv4Socket::List>& all_sockets();
 };

@@ -111,7 +111,7 @@ private:
     // FIXME: Make this configurable
     static constexpr size_t max_packet_buffers = 1024;
 
-    using PacketList = IntrusiveList<PacketWithTimestamp, RefPtr<PacketWithTimestamp>, &PacketWithTimestamp::packet_node>;
+    using PacketList = IntrusiveList<&PacketWithTimestamp::packet_node>;
 
     PacketList m_packet_queue;
     size_t m_packet_queue_size { 0 };
