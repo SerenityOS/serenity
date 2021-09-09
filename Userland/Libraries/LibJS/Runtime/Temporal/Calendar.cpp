@@ -732,7 +732,7 @@ String build_iso_month_code(u8 month)
 }
 
 // 12.1.37 ResolveISOMonth ( fields ), https://tc39.es/proposal-temporal/#sec-temporal-resolveisomonth
-double resolve_iso_month(GlobalObject& global_object, Object& fields)
+double resolve_iso_month(GlobalObject& global_object, Object const& fields)
 {
     auto& vm = global_object.vm();
 
