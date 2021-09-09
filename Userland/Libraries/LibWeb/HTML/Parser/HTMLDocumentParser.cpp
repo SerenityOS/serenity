@@ -15,6 +15,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
@@ -1907,11 +1908,16 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
                 auto the_script = document().take_pending_parsing_blocking_script({});
                 m_tokenizer.set_blocked(true);
 
-                // FIXME: If the parser's Document has a style sheet that is blocking scripts
-                //        or the script's "ready to be parser-executed" flag is not set:
-                //        spin the event loop until the parser's Document has no style sheet
-                //        that is blocking scripts and the script's "ready to be parser-executed"
-                //        flag is set.
+                // If the parser's Document has a style sheet that is blocking scripts
+                // or the script's "ready to be parser-executed" flag is not set:
+                // spin the event loop until the parser's Document has no style sheet
+                // that is blocking scripts and the script's "ready to be parser-executed"
+                // flag is set.
+                if (m_document->has_a_style_sheet_that_is_blocking_scripts() || !script->is_ready_to_be_parser_executed()) {
+                    main_thread_event_loop().spin_until([&] {
+                        return !m_document->has_a_style_sheet_that_is_blocking_scripts() && script->is_ready_to_be_parser_executed();
+                    });
+                }
 
                 if (the_script->failed_to_load())
                     return;
