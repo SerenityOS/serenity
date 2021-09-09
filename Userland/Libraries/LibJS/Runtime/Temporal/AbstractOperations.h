@@ -70,6 +70,13 @@ struct TemporalTimeZone {
     Optional<String> name;
 };
 
+struct TemporalYearMonth {
+    i32 year;
+    u8 month;
+    u8 day;
+    Optional<String> calendar = {};
+};
+
 struct SecondsStringPrecision {
     Variant<StringView, u8> precision;
     String unit;
@@ -103,6 +110,7 @@ Optional<ISODateTime> parse_temporal_date_time_string(GlobalObject&, String cons
 Optional<TemporalDuration> parse_temporal_duration_string(GlobalObject&, String const& iso_string);
 Optional<TemporalTime> parse_temporal_time_string(GlobalObject&, String const& iso_string);
 Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject&, String const& iso_string);
+Optional<TemporalYearMonth> parse_temporal_year_month_string(GlobalObject&, String const& iso_string);
 double to_positive_integer(GlobalObject&, Value argument);
 Object* prepare_temporal_fields(GlobalObject&, Object& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields);
 
