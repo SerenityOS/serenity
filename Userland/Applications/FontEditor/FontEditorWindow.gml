@@ -207,15 +207,6 @@
                         text: "Fixed width"
                         autosize: true
                     }
-
-                    @GUI::Widget {
-                        fixed_width: 12
-                    }
-
-                    @GUI::ComboBox {
-                        name: "type_combobox"
-                        model_only: true
-                    }
                 }
             }
         }
