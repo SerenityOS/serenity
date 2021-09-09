@@ -18,12 +18,12 @@
 
 namespace Web {
 
-BrowsingContext::BrowsingContext(Page& page, DOM::Element* host_element, BrowsingContext& top_level_browsing_context)
+BrowsingContext::BrowsingContext(Page& page, HTML::BrowsingContextContainer* container, BrowsingContext& top_level_browsing_context)
     : m_page(page)
     , m_top_level_browsing_context(top_level_browsing_context)
     , m_loader(*this)
     , m_event_handler({}, *this)
-    , m_host_element(host_element)
+    , m_container(container)
 {
     m_cursor_blink_timer = Core::Timer::construct(500, [this] {
         if (!is_focused_context())
@@ -35,8 +35,8 @@ BrowsingContext::BrowsingContext(Page& page, DOM::Element* host_element, Browsin
     });
 }
 
-BrowsingContext::BrowsingContext(DOM::Element& host_element, BrowsingContext& top_level_browsing_context)
-    : BrowsingContext(*top_level_browsing_context.page(), &host_element, top_level_browsing_context)
+BrowsingContext::BrowsingContext(HTML::BrowsingContextContainer& container, BrowsingContext& top_level_browsing_context)
+    : BrowsingContext(*top_level_browsing_context.page(), &container, top_level_browsing_context)
 {
 }
 
@@ -147,8 +147,8 @@ void BrowsingContext::set_needs_display(Gfx::IntRect const& rect)
         return;
     }
 
-    if (host_element() && host_element()->layout_node())
-        host_element()->layout_node()->set_needs_display();
+    if (container() && container()->layout_node())
+        container()->layout_node()->set_needs_display();
 }
 
 void BrowsingContext::scroll_to_anchor(String const& fragment)
@@ -199,11 +199,11 @@ Gfx::IntPoint BrowsingContext::to_top_level_position(Gfx::IntPoint const& a_posi
     for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
         if (ancestor->is_top_level())
             break;
-        if (!ancestor->host_element())
+        if (!ancestor->container())
             return {};
-        if (!ancestor->host_element()->layout_node())
+        if (!ancestor->container()->layout_node())
             return {};
-        position.translate_by(ancestor->host_element()->layout_node()->box_type_agnostic_position().to_type<int>());
+        position.translate_by(ancestor->container()->layout_node()->box_type_agnostic_position().to_type<int>());
     }
     return position;
 }

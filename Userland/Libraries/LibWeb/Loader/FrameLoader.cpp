@@ -302,10 +302,8 @@ void FrameLoader::resource_did_load()
     else
         browsing_context().set_viewport_scroll_offset({ 0, 0 });
 
-    if (auto* host_element = browsing_context().host_element()) {
-        // FIXME: Perhaps in the future we'll have a better common base class for <frame> and <iframe>
-        verify_cast<HTML::HTMLIFrameElement>(*host_element).nested_browsing_context_did_load({});
-    }
+    if (auto* container = browsing_context().container())
+        container->nested_browsing_context_did_load({});
 
     if (auto* page = browsing_context().page())
         page->client().page_did_finish_loading(url);
