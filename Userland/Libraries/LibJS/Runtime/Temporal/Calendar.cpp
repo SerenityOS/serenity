@@ -439,7 +439,7 @@ Object* get_temporal_calendar_with_iso_default(GlobalObject& global_object, Obje
 }
 
 // 12.1.24 DateFromFields ( calendar, fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-datefromfields
-PlainDate* date_from_fields(GlobalObject& global_object, Object& calendar, Object& fields, Object& options)
+PlainDate* date_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const& options)
 {
     auto& vm = global_object.vm();
 
@@ -465,7 +465,7 @@ PlainDate* date_from_fields(GlobalObject& global_object, Object& calendar, Objec
 }
 
 // 12.1.25 YearMonthFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-yearmonthfromfields
-PlainYearMonth* year_month_from_fields(GlobalObject& global_object, Object& calendar, Object& fields, Object* options)
+PlainYearMonth* year_month_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const* options)
 {
     auto& vm = global_object.vm();
 
@@ -495,7 +495,7 @@ PlainYearMonth* year_month_from_fields(GlobalObject& global_object, Object& cale
 }
 
 // 12.1.26 MonthDayFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-monthdayfromfields
-PlainMonthDay* month_day_from_fields(GlobalObject& global_object, Object& calendar, Object& fields, Object* options)
+PlainMonthDay* month_day_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const* options)
 {
     auto& vm = global_object.vm();
 
@@ -793,7 +793,7 @@ double resolve_iso_month(GlobalObject& global_object, Object& fields)
 }
 
 // 12.1.38 ISODateFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isodatefromfields
-Optional<ISODate> iso_date_from_fields(GlobalObject& global_object, Object& fields, Object& options)
+Optional<ISODate> iso_date_from_fields(GlobalObject& global_object, Object const& fields, Object const& options)
 {
     auto& vm = global_object.vm();
 
@@ -841,7 +841,7 @@ Optional<ISODate> iso_date_from_fields(GlobalObject& global_object, Object& fiel
 }
 
 // 12.1.39 ISOYearMonthFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthfromfields
-Optional<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_object, Object& fields, Object& options)
+Optional<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_object, Object const& fields, Object const& options)
 {
     auto& vm = global_object.vm();
 
@@ -883,7 +883,7 @@ Optional<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_object, O
 }
 
 // 12.1.40 ISOMonthDayFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthdayfromfields
-Optional<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_object, Object& fields, Object& options)
+Optional<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_object, Object const& fields, Object const& options)
 {
     auto& vm = global_object.vm();
 
