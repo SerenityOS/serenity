@@ -112,7 +112,7 @@ Optional<TemporalTime> parse_temporal_time_string(GlobalObject&, String const& i
 Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject&, String const& iso_string);
 Optional<TemporalYearMonth> parse_temporal_year_month_string(GlobalObject&, String const& iso_string);
 double to_positive_integer(GlobalObject&, Value argument);
-Object* prepare_temporal_fields(GlobalObject&, Object& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields);
+Object* prepare_temporal_fields(GlobalObject&, Object const& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields);
 
 // 13.46 ToIntegerThrowOnInfinity ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-tointegerthrowoninfinity
 template<typename... Args>

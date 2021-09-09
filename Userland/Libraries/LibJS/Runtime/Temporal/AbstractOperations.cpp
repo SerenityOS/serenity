@@ -1104,7 +1104,7 @@ double to_positive_integer(GlobalObject& global_object, Value argument)
 }
 
 // 13.48 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
-Object* prepare_temporal_fields(GlobalObject& global_object, Object& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields)
+Object* prepare_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields)
 {
     auto& vm = global_object.vm();
 
