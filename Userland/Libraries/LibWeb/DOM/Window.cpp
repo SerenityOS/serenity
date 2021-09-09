@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -40,20 +40,20 @@ void Window::set_wrapper(Badge<Bindings::WindowObject>, Bindings::WindowObject& 
     m_wrapper = wrapper.make_weak_ptr();
 }
 
-void Window::alert(const String& message)
+void Window::alert(String const& message)
 {
     if (auto* page = this->page())
         page->client().page_did_request_alert(message);
 }
 
-bool Window::confirm(const String& message)
+bool Window::confirm(String const& message)
 {
     if (auto* page = this->page())
         return page->client().page_did_request_confirm(message);
     return false;
 }
 
-String Window::prompt(const String& message, const String& default_)
+String Window::prompt(String const& message, String const& default_)
 {
     if (auto* page = this->page())
         return page->client().page_did_request_prompt(message, default_);
@@ -118,7 +118,7 @@ i32 Window::request_animation_frame(JS::FunctionObject& callback)
     static double fake_timestamp = 0;
 
     i32 link_id = GUI::DisplayLink::register_callback([handle = make_handle(&callback)](i32 link_id) {
-        auto& function = const_cast<JS::FunctionObject&>(static_cast<const JS::FunctionObject&>(*handle.cell()));
+        auto& function = const_cast<JS::FunctionObject&>(static_cast<JS::FunctionObject const&>(*handle.cell()));
         auto& vm = function.vm();
         fake_timestamp += 10;
         [[maybe_unused]] auto rc = vm.call(function, JS::js_undefined(), JS::Value(fake_timestamp));
@@ -137,7 +137,7 @@ void Window::cancel_animation_frame(i32 id)
     GUI::DisplayLink::unregister_callback(id);
 }
 
-void Window::did_set_location_href(Badge<Bindings::LocationObject>, const URL& new_href)
+void Window::did_set_location_href(Badge<Bindings::LocationObject>, URL const& new_href)
 {
     auto* frame = document().browsing_context();
     if (!frame)
