@@ -540,7 +540,7 @@ Gfx::Glyph ScaledFont::glyph(u32 code_point) const
     return Gfx::Glyph(bitmap, metrics.left_side_bearing, metrics.advance_width, metrics.ascender);
 }
 
-u8 ScaledFont::glyph_width(size_t code_point) const
+u8 ScaledFont::glyph_width(u32 code_point) const
 {
     auto id = glyph_id_for_code_point(code_point);
     auto metrics = glyph_metrics(id);
