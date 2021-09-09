@@ -64,6 +64,6 @@ private:
     IntrusiveListNode<Device, NonnullRefPtr<Device>> m_hub_child_node;
 
 public:
-    using List = IntrusiveList<Device, NonnullRefPtr<Device>, &Device::m_hub_child_node>;
+    using List = IntrusiveList<&Device::m_hub_child_node>;
 };
 }

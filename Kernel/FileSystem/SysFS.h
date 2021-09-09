@@ -81,7 +81,7 @@ private:
 };
 
 class SysFSComponentRegistry {
-    using DevicesList = MutexProtected<IntrusiveList<SysFSDeviceComponent, NonnullRefPtr<SysFSDeviceComponent>, &SysFSDeviceComponent::m_list_node>>;
+    using DevicesList = MutexProtected<IntrusiveList<&SysFSDeviceComponent::m_list_node>>;
 
 public:
     static SysFSComponentRegistry& the();

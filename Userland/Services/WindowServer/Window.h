@@ -469,7 +469,7 @@ private:
     RefPtr<Animation> m_animation;
 
 public:
-    using List = IntrusiveList<Window, RawPtr<Window>, &Window::m_list_node>;
+    using List = IntrusiveList<&Window::m_list_node>;
 };
 
 }

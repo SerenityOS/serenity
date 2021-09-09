@@ -807,7 +807,7 @@ private:
     u8 m_protected_values_padding[PAGE_SIZE - sizeof(ProtectedValues)];
 
 public:
-    using List = IntrusiveListRelaxedConst<Process, RawPtr<Process>, &Process::m_list_node>;
+    using List = IntrusiveListRelaxedConst<&Process::m_list_node>;
 };
 
 // Note: Process object should be 2 pages of 4096 bytes each.

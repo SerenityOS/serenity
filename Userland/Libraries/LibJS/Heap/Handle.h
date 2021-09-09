@@ -35,7 +35,7 @@ private:
     IntrusiveListNode<HandleImpl> m_list_node;
 
 public:
-    using List = IntrusiveList<HandleImpl, RawPtr<HandleImpl>, &HandleImpl::m_list_node>;
+    using List = IntrusiveList<&HandleImpl::m_list_node>;
 };
 
 template<class T>

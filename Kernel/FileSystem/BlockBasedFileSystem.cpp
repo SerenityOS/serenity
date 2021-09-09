@@ -97,8 +97,8 @@ public:
 private:
     BlockBasedFileSystem& m_fs;
     mutable HashMap<BlockBasedFileSystem::BlockIndex, CacheEntry*> m_hash;
-    mutable IntrusiveList<CacheEntry, RawPtr<CacheEntry>, &CacheEntry::list_node> m_clean_list;
-    mutable IntrusiveList<CacheEntry, RawPtr<CacheEntry>, &CacheEntry::list_node> m_dirty_list;
+    mutable IntrusiveList<&CacheEntry::list_node> m_clean_list;
+    mutable IntrusiveList<&CacheEntry::list_node> m_dirty_list;
     NonnullOwnPtr<KBuffer> m_cached_block_data;
     NonnullOwnPtr<KBuffer> m_entries;
     bool m_dirty { false };

@@ -137,7 +137,7 @@ public:
     JsonValue property(String const& name) const;
     const HashMap<String, NonnullOwnPtr<Property>>& properties() const { return m_properties; }
 
-    static IntrusiveList<Object, RawPtr<Object>, &Object::m_all_objects_list_node>& all_objects();
+    static IntrusiveList<&Object::m_all_objects_list_node>& all_objects();
 
     void dispatch_event(Core::Event&, Object* stay_within = nullptr);
 

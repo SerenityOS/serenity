@@ -39,7 +39,7 @@ private:
     IntrusiveListNode<MarkedValueList> m_list_node;
 
 public:
-    using List = IntrusiveList<MarkedValueList, RawPtr<MarkedValueList>, &MarkedValueList::m_list_node>;
+    using List = IntrusiveList<&MarkedValueList::m_list_node>;
 };
 
 }

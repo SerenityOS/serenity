@@ -77,7 +77,7 @@ private:
 
 public:
     IntrusiveListNode<Timer> m_list_node;
-    using List = IntrusiveList<Timer, RawPtr<Timer>, &Timer::m_list_node>;
+    using List = IntrusiveList<&Timer::m_list_node>;
 };
 
 class TimerQueue {

@@ -143,7 +143,7 @@ protected:
     DevTmpFSDirectoryInode(DevTmpFS&, NonnullOwnPtr<KString> name);
     // ^Inode
     OwnPtr<KString> m_name;
-    IntrusiveList<DevTmpFSInode, NonnullRefPtr<DevTmpFSInode>, &DevTmpFSInode::m_list_node> m_nodes;
+    IntrusiveList<&DevTmpFSInode::m_list_node> m_nodes;
 
 private:
     explicit DevTmpFSDirectoryInode(DevTmpFS&);

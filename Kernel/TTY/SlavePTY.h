@@ -49,7 +49,7 @@ private:
     mutable IntrusiveListNode<SlavePTY> m_list_node;
 
 public:
-    using List = IntrusiveList<SlavePTY, RawPtr<SlavePTY>, &SlavePTY::m_list_node>;
+    using List = IntrusiveList<&SlavePTY::m_list_node>;
     static SpinlockProtected<SlavePTY::List>& all_instances();
 };
 

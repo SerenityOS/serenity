@@ -27,7 +27,7 @@ private:
     IntrusiveListNode<WeakContainer> m_list_node;
 
 public:
-    using List = IntrusiveList<WeakContainer, RawPtr<WeakContainer>, &WeakContainer::m_list_node>;
+    using List = IntrusiveList<&WeakContainer::m_list_node>;
 };
 
 }

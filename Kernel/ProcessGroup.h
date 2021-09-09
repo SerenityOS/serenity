@@ -40,7 +40,7 @@ private:
     ProcessGroupID m_pgid;
 
 public:
-    using List = IntrusiveList<ProcessGroup, RawPtr<ProcessGroup>, &ProcessGroup::m_list_node>;
+    using List = IntrusiveList<&ProcessGroup::m_list_node>;
 };
 
 SpinlockProtected<ProcessGroup::List>& process_groups();

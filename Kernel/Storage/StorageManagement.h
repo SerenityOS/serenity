@@ -51,7 +51,7 @@ private:
     String m_boot_argument;
     WeakPtr<BlockDevice> m_boot_block_device;
     NonnullRefPtrVector<StorageController> m_controllers;
-    IntrusiveList<StorageDevice, RefPtr<StorageDevice>, &StorageDevice::m_list_node> m_storage_devices;
+    IntrusiveList<&StorageDevice::m_list_node> m_storage_devices;
 };
 
 }

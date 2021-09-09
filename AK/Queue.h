@@ -76,7 +76,7 @@ private:
         IntrusiveListNode<QueueSegment> node;
     };
 
-    IntrusiveList<QueueSegment, RawPtr<QueueSegment>, &QueueSegment::node> m_segments;
+    IntrusiveList<&QueueSegment::node> m_segments;
     size_t m_index_into_first { 0 };
     size_t m_size { 0 };
 };
