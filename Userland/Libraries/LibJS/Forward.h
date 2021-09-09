@@ -79,7 +79,8 @@
 #define JS_ENUMERATE_INTL_OBJECTS                                                               \
     __JS_ENUMERATE(DisplayNames, display_names, DisplayNamesPrototype, DisplayNamesConstructor) \
     __JS_ENUMERATE(ListFormat, list_format, ListFormatPrototype, ListFormatConstructor)         \
-    __JS_ENUMERATE(Locale, locale, LocalePrototype, LocaleConstructor)
+    __JS_ENUMERATE(Locale, locale, LocalePrototype, LocaleConstructor)                          \
+    __JS_ENUMERATE(NumberFormat, number_format, NumberFormatPrototype, NumberFormatConstructor)
 
 #define JS_ENUMERATE_TEMPORAL_OBJECTS                                                                    \
     __JS_ENUMERATE(Calendar, calendar, CalendarPrototype, CalendarConstructor)                           \

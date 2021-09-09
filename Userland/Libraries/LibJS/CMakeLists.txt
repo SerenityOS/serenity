@@ -83,6 +83,9 @@ set(SOURCES
     Runtime/Intl/Locale.cpp
     Runtime/Intl/LocaleConstructor.cpp
     Runtime/Intl/LocalePrototype.cpp
+    Runtime/Intl/NumberFormat.cpp
+    Runtime/Intl/NumberFormatConstructor.cpp
+    Runtime/Intl/NumberFormatPrototype.cpp
     Runtime/IteratorOperations.cpp
     Runtime/IteratorPrototype.cpp
     Runtime/JSONObject.cpp
