@@ -20,7 +20,7 @@
 namespace JS::Temporal {
 
 // 8 Temporal.Instant Objects, https://tc39.es/proposal-temporal/#sec-temporal-instant-objects
-Instant::Instant(BigInt& nanoseconds, Object& prototype)
+Instant::Instant(BigInt const& nanoseconds, Object& prototype)
     : Object(prototype)
     , m_nanoseconds(nanoseconds)
 {
@@ -49,7 +49,7 @@ bool is_valid_epoch_nanoseconds(BigInt const& epoch_nanoseconds)
 }
 
 // 8.5.2 CreateTemporalInstant ( epochNanoseconds [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalinstant
-Instant* create_temporal_instant(GlobalObject& global_object, BigInt& epoch_nanoseconds, FunctionObject const* new_target)
+Instant* create_temporal_instant(GlobalObject& global_object, BigInt const& epoch_nanoseconds, FunctionObject const* new_target)
 {
     auto& vm = global_object.vm();
 
