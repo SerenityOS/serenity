@@ -18,16 +18,16 @@ namespace JS {
 class Script : public RefCounted<Script> {
 public:
     ~Script();
-    static NonnullRefPtr<Script> create(GlobalObject&, NonnullRefPtr<ASTNode> parse_node);
+    static NonnullRefPtr<Script> parse(StringView source_text, GlobalObject&);
 
     GlobalObject& global_object() { return *m_global_object.cell(); }
-    ASTNode const& parse_node() const { return *m_parse_node; }
+    Program const& parse_node() const { return *m_parse_node; }
 
 private:
-    Script(GlobalObject&, NonnullRefPtr<ASTNode>);
+    Script(GlobalObject&, NonnullRefPtr<Program>);
 
     Handle<GlobalObject> m_global_object;
-    NonnullRefPtr<ASTNode> m_parse_node;
+    NonnullRefPtr<Program> m_parse_node;
 };
 
 }
