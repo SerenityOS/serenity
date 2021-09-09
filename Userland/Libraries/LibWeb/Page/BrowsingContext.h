@@ -24,8 +24,8 @@ namespace Web {
 
 class BrowsingContext : public TreeNode<BrowsingContext> {
 public:
-    static NonnullRefPtr<BrowsingContext> create_nested(HTML::BrowsingContextContainer& container, BrowsingContext& top_level_browsing_context) { return adopt_ref(*new BrowsingContext(container, top_level_browsing_context)); }
-    static NonnullRefPtr<BrowsingContext> create(Page& page) { return adopt_ref(*new BrowsingContext(page)); }
+    static NonnullRefPtr<BrowsingContext> create_nested(Page& page, HTML::BrowsingContextContainer& container) { return adopt_ref(*new BrowsingContext(page, &container)); }
+    static NonnullRefPtr<BrowsingContext> create(Page& page) { return adopt_ref(*new BrowsingContext(page, nullptr)); }
     ~BrowsingContext();
 
     class ViewportClient {
@@ -36,7 +36,7 @@ public:
     void register_viewport_client(ViewportClient&);
     void unregister_viewport_client(ViewportClient&);
 
-    bool is_top_level() const { return this == &top_level_browsing_context(); }
+    bool is_top_level() const { return !container(); }
     bool is_focused_context() const;
 
     DOM::Document const* active_document() const { return m_active_document; }
@@ -64,8 +64,15 @@ public:
 
     void scroll_to_anchor(String const&);
 
-    BrowsingContext& top_level_browsing_context() { return *m_top_level_browsing_context; }
-    BrowsingContext const& top_level_browsing_context() const { return *m_top_level_browsing_context; }
+    BrowsingContext& top_level_browsing_context()
+    {
+        BrowsingContext* context = this;
+        while (context->parent())
+            context = context->parent();
+        return *context;
+    }
+
+    BrowsingContext const& top_level_browsing_context() const { return const_cast<BrowsingContext*>(this)->top_level_browsing_context(); }
 
     HTML::BrowsingContextContainer* container() { return m_container; }
     HTML::BrowsingContextContainer const* container() const { return m_container; }
@@ -95,17 +102,11 @@ public:
     DOM::Document const* container_document() const;
 
 private:
-    explicit BrowsingContext(Page&, HTML::BrowsingContextContainer*, BrowsingContext& top_level_browsing_context);
-    explicit BrowsingContext(HTML::BrowsingContextContainer&, BrowsingContext& top_level_browsing_context);
-    explicit BrowsingContext(Page&);
+    explicit BrowsingContext(Page&, HTML::BrowsingContextContainer*);
 
     void reset_cursor_blink_cycle();
 
     WeakPtr<Page> m_page;
-
-    // NOTE: We expect there to always be a top-level browsing context as long as we exist.
-    //       The use of WeakPtr is for safety in case we get something wrong.
-    WeakPtr<BrowsingContext> m_top_level_browsing_context;
 
     FrameLoader m_loader;
     EventHandler m_event_handler;

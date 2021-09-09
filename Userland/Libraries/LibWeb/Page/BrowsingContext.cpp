@@ -18,9 +18,8 @@
 
 namespace Web {
 
-BrowsingContext::BrowsingContext(Page& page, HTML::BrowsingContextContainer* container, BrowsingContext& top_level_browsing_context)
+BrowsingContext::BrowsingContext(Page& page, HTML::BrowsingContextContainer* container)
     : m_page(page)
-    , m_top_level_browsing_context(top_level_browsing_context)
     , m_loader(*this)
     , m_event_handler({}, *this)
     , m_container(container)
@@ -33,16 +32,6 @@ BrowsingContext::BrowsingContext(Page& page, HTML::BrowsingContextContainer* con
             m_cursor_position.node()->layout_node()->set_needs_display();
         }
     });
-}
-
-BrowsingContext::BrowsingContext(HTML::BrowsingContextContainer& container, BrowsingContext& top_level_browsing_context)
-    : BrowsingContext(*top_level_browsing_context.page(), &container, top_level_browsing_context)
-{
-}
-
-BrowsingContext::BrowsingContext(Page& page)
-    : BrowsingContext(page, nullptr, *this)
-{
 }
 
 BrowsingContext::~BrowsingContext()
