@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,12 +36,12 @@ public:
     Page* page();
     Page const* page() const;
 
-    const Document& document() const { return m_document; }
+    Document const& document() const { return m_document; }
     Document& document() { return m_document; }
 
-    void alert(const String&);
-    bool confirm(const String&);
-    String prompt(const String&, const String&);
+    void alert(String const&);
+    bool confirm(String const&);
+    String prompt(String const&, String const&);
     i32 request_animation_frame(JS::FunctionObject&);
     void cancel_animation_frame(i32);
 
@@ -53,11 +53,11 @@ public:
     int inner_width() const;
     int inner_height() const;
 
-    void did_set_location_href(Badge<Bindings::LocationObject>, const URL& new_href);
+    void did_set_location_href(Badge<Bindings::LocationObject>, URL const& new_href);
     void did_call_location_reload(Badge<Bindings::LocationObject>);
 
     Bindings::WindowObject* wrapper() { return m_wrapper; }
-    const Bindings::WindowObject* wrapper() const { return m_wrapper; }
+    Bindings::WindowObject const* wrapper() const { return m_wrapper; }
 
     void set_wrapper(Badge<Bindings::WindowObject>, Bindings::WindowObject&);
 
@@ -69,7 +69,7 @@ public:
 
     CSS::Screen& screen() { return *m_screen; }
 
-    const Event* current_event() const { return m_current_event; }
+    Event const* current_event() const { return m_current_event; }
     void set_current_event(Event* event) { m_current_event = event; }
 
 private:
