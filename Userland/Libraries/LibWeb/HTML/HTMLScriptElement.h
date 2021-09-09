@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +8,7 @@
 
 #include <AK/Function.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/Scripting/Script.h>
 
 namespace Web::HTML {
 
@@ -61,8 +62,9 @@ private:
 
     Function<void()> m_script_ready_callback;
 
-    String m_source_text;
     String m_script_filename;
+
+    RefPtr<Script> m_script;
 };
 
 }

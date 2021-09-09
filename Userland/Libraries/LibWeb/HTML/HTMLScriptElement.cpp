@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,8 +12,10 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
+#include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web::HTML {
@@ -49,9 +51,9 @@ void HTMLScriptElement::execute_script()
         return;
     }
 
-    // FIXME: 3. If the script's script is null for scriptElement, then fire an event named error at scriptElement, and return.
-    if (m_source_text.is_null()) {
-        dbgln("HTMLScriptElement: Refusing to run script because the script source is null.");
+    // 3. If the script's script is null for scriptElement, then fire an event named error at scriptElement, and return.
+    if (!m_script) {
+        dbgln("HTMLScriptElement: Refusing to run script because the script's script is null.");
         dispatch_event(DOM::Event::create(HTML::EventNames::error));
         return;
     }
@@ -79,8 +81,8 @@ void HTMLScriptElement::execute_script()
         else
             dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running inline script");
 
-        // FIXME: 3. Run the classic script given by the script's script for scriptElement.
-        document().run_javascript(m_source_text, m_script_filename);
+        // 3. Run the classic script given by the script's script for scriptElement.
+        verify_cast<ClassicScript>(*m_script).run();
 
         // Set document's currentScript attribute to oldCurrentScript.
         document().set_current_script({}, old_current_script);
@@ -297,7 +299,14 @@ void HTMLScriptElement::prepare_script()
                         dbgln("HTMLScriptElement: Failed to load {}", url);
                         return;
                     }
-                    m_source_text = String::copy(data);
+                    // FIXME: This is a hack to ensure that there's a global object.
+                    document().interpreter();
+
+                    // FIXME: This is all ad-hoc and needs work.
+                    auto script = ClassicScript::create(data, *document().window().wrapper(), URL());
+
+                    // When the chosen algorithm asynchronously completes, set the script's script to the result. At that time, the script is ready.
+                    m_script = script;
                     script_became_ready();
                 },
                 [this](auto&, auto) {
@@ -315,9 +324,16 @@ void HTMLScriptElement::prepare_script()
         // 2. Switch on the script's type:
         if (m_script_type == ScriptType::Classic) {
             // -> "classic"
-            // FIXME: 1. Let script be the result of creating a classic script using source text, settings object, base URL, and options.
-            // FIXME: 2. Set the script's script to script.
-            m_source_text = source_text;
+            // 1. Let script be the result of creating a classic script using source text, settings object, base URL, and options.
+
+            // FIXME: This is a hack to ensure that there's a global object.
+            document().interpreter();
+
+            // FIXME: Pass settings, base URL and options.
+            auto script = ClassicScript::create(source_text, *document().window().wrapper(), URL());
+
+            // 2. Set the script's script to script.
+            m_script = script;
 
             // 3. The script is ready.
             script_became_ready();
