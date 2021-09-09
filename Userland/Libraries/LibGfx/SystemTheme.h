@@ -89,6 +89,19 @@ namespace Gfx {
     C(Window)                      \
     C(WindowText)
 
+#define ENUMERATE_METRIC_ROLES(C) \
+    C(TitleHeight)                \
+    C(TitleButtonWidth)           \
+    C(TitleButtonHeight)
+
+#define ENUMERATE_PATH_ROLES(C) \
+    C(TitleButtonIcons)         \
+    C(InactiveWindowShadow)     \
+    C(ActiveWindowShadow)       \
+    C(TaskbarShadow)            \
+    C(MenuShadow)               \
+    C(TooltipShadow)
+
 enum class ColorRole {
     NoRole,
 
@@ -121,21 +134,24 @@ inline const char* to_string(ColorRole role)
 
 enum class MetricRole {
     NoRole,
-    TitleHeight,
-    TitleButtonWidth,
-    TitleButtonHeight,
-    __Count,
+
+#undef __ENUMERATE_METRIC_ROLE
+#define __ENUMERATE_METRIC_ROLE(role) role,
+    ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
+#undef __ENUMERATE_METRIC_ROLE
+
+        __Count,
 };
 
 enum class PathRole {
     NoRole,
-    TitleButtonIcons,
-    InactiveWindowShadow,
-    ActiveWindowShadow,
-    TaskbarShadow,
-    MenuShadow,
-    TooltipShadow,
-    __Count,
+
+#undef __ENUMERATE_PATH_ROLE
+#define __ENUMERATE_PATH_ROLE(role) role,
+    ENUMERATE_PATH_ROLES(__ENUMERATE_PATH_ROLE)
+#undef __ENUMERATE_PATH_ROLE
+
+        __Count,
 };
 
 struct SystemTheme {
