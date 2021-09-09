@@ -41,10 +41,11 @@ private:
     Gfx::IntRect get_outer_rect(int glyph) const;
 
     RefPtr<Gfx::BitmapFont> m_font;
-    int m_glyph_count { 384 };
+    int m_glyph_count { 0x110000 };
     int m_columns { 32 };
     int m_rows { 12 };
     int m_horizontal_spacing { 2 };
     int m_vertical_spacing { 2 };
     int m_selected_glyph { 0 };
+    int m_visible_glyphs { 0 };
 };
