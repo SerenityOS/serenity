@@ -174,7 +174,7 @@ Value get_option(GlobalObject& global_object, Object const& options, PropertyNam
 
 // 13.4 GetStringOrNumberOption ( options, property, stringValues, minimum, maximum, fallback ), https://tc39.es/proposal-temporal/#sec-getstringornumberoption
 template<typename NumberType>
-Optional<Variant<String, NumberType>> get_string_or_number_option(GlobalObject& global_object, Object& options, PropertyName const& property, Vector<StringView> const& string_values, NumberType minimum, NumberType maximum, Value fallback)
+Optional<Variant<String, NumberType>> get_string_or_number_option(GlobalObject& global_object, Object const& options, PropertyName const& property, Vector<StringView> const& string_values, NumberType minimum, NumberType maximum, Value fallback)
 {
     auto& vm = global_object.vm();
 
