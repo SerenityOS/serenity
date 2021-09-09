@@ -223,13 +223,16 @@ StringView CommandLine::userspace_init() const
     return lookup("init"sv).value_or("/bin/SystemServer"sv);
 }
 
-Vector<String> CommandLine::userspace_init_args() const
+NonnullOwnPtrVector<KString> CommandLine::userspace_init_args() const
 {
-    auto init_args = lookup("init_args"sv).value_or(""sv).to_string().split(';');
-    if (!init_args.is_empty())
-        init_args.prepend(userspace_init());
+    NonnullOwnPtrVector<KString> args;
 
-    return init_args;
+    auto init_args = lookup("init_args"sv).value_or(""sv).split_view(';');
+    if (!init_args.is_empty())
+        args.prepend(KString::must_create(userspace_init()));
+    for (auto& init_arg : init_args)
+        args.append(KString::must_create(init_arg));
+    return args;
 }
 
 UNMAP_AFTER_INIT size_t CommandLine::switch_to_tty() const

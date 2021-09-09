@@ -179,7 +179,7 @@ public:
     }
 
     static RefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes);
-    static KResultOr<NonnullRefPtr<Process>> try_create_user_process(RefPtr<Thread>& first_thread, StringView path, UserID, GroupID, Vector<String> arguments, Vector<String> environment, TTY*);
+    static KResultOr<NonnullRefPtr<Process>> try_create_user_process(RefPtr<Thread>& first_thread, StringView path, UserID, GroupID, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, TTY*);
     static void register_new(Process&);
 
     bool unref() const;
@@ -438,10 +438,10 @@ public:
     Custody* executable() { return m_executable.ptr(); }
     const Custody* executable() const { return m_executable.ptr(); }
 
-    const Vector<String>& arguments() const { return m_arguments; };
-    const Vector<String>& environment() const { return m_environment; };
+    NonnullOwnPtrVector<KString> const& arguments() const { return m_arguments; };
+    NonnullOwnPtrVector<KString> const& environment() const { return m_environment; };
 
-    KResult exec(NonnullOwnPtr<KString> path, Vector<String> arguments, Vector<String> environment, int recusion_depth = 0);
+    KResult exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, int recusion_depth = 0);
 
     KResultOr<LoadResult> load(NonnullRefPtr<OpenFileDescription> main_program_description, RefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header);
 
@@ -534,7 +534,7 @@ private:
     bool create_perf_events_buffer_if_needed();
     void delete_perf_events_buffer();
 
-    KResult do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header);
+    KResult do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header);
     KResultOr<FlatPtr> do_write(OpenFileDescription&, const UserOrKernelBuffer&, size_t);
 
     KResultOr<FlatPtr> do_statvfs(StringView path, statvfs* buf);
@@ -763,8 +763,8 @@ private:
     RefPtr<Custody> m_executable;
     RefPtr<Custody> m_cwd;
 
-    Vector<String> m_arguments;
-    Vector<String> m_environment;
+    NonnullOwnPtrVector<KString> m_arguments;
+    NonnullOwnPtrVector<KString> m_environment;
 
     RefPtr<TTY> m_tty;
 

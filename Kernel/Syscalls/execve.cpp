@@ -42,7 +42,7 @@ struct LoadResult {
 
 static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, StringView executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation);
 
-static bool validate_stack_size(const Vector<String>& arguments, const Vector<String>& environment)
+static bool validate_stack_size(NonnullOwnPtrVector<KString> const& arguments, NonnullOwnPtrVector<KString>& environment)
 {
     size_t total_arguments_size = 0;
     size_t total_environment_size = 0;
@@ -68,8 +68,8 @@ static bool validate_stack_size(const Vector<String>& arguments, const Vector<St
     return true;
 }
 
-static KResultOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] ThreadRegisters& regs, Memory::Region& region, Vector<String> arguments,
-    Vector<String> environment, Vector<ELF::AuxiliaryValue> auxiliary_values)
+static KResultOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] ThreadRegisters& regs, Memory::Region& region, NonnullOwnPtrVector<KString> const& arguments,
+    NonnullOwnPtrVector<KString> const& environment, Vector<ELF::AuxiliaryValue> auxiliary_values)
 {
     FlatPtr new_sp = region.range().end().get();
 
@@ -99,14 +99,14 @@ static KResultOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]
 
     Vector<FlatPtr> argv_entries;
     for (auto& argument : arguments) {
-        push_string_on_new_stack(argument);
+        push_string_on_new_stack(argument.view());
         if (!argv_entries.try_append(new_sp))
             return ENOMEM;
     }
 
     Vector<FlatPtr> env_entries;
     for (auto& variable : environment) {
-        push_string_on_new_stack(variable);
+        push_string_on_new_stack(variable.view());
         if (!env_entries.try_append(new_sp))
             return ENOMEM;
     }
@@ -433,7 +433,7 @@ Process::load(NonnullRefPtr<OpenFileDescription> main_program_description,
     return interpreter_load_result;
 }
 
-KResult Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, Vector<String> arguments, Vector<String> environment,
+KResult Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment,
     RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header)
 {
     VERIFY(is_user_process());
@@ -514,8 +514,8 @@ KResult Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_descrip
     Memory::MemoryManager::enter_address_space(*m_space);
 
     m_executable = main_program_description->custody();
-    m_arguments = arguments;
-    m_environment = environment;
+    m_arguments = move(arguments);
+    m_environment = move(environment);
 
     m_veil_state = VeilState::None;
     m_unveiled_paths.clear();
@@ -554,7 +554,7 @@ KResult Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_descrip
 
     // NOTE: We create the new stack before disabling interrupts since it will zero-fault
     //       and we don't want to deal with faults after this point.
-    auto make_stack_result = make_userspace_context_for_main_thread(new_main_thread->regs(), *load_result.stack_region.unsafe_ptr(), move(arguments), move(environment), move(auxv));
+    auto make_stack_result = make_userspace_context_for_main_thread(new_main_thread->regs(), *load_result.stack_region.unsafe_ptr(), m_arguments, m_environment, move(auxv));
     if (make_stack_result.is_error())
         return make_stack_result.error();
     FlatPtr new_userspace_sp = make_stack_result.value();
@@ -672,12 +672,12 @@ static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, 
     return auxv;
 }
 
-static KResultOr<Vector<String>> find_shebang_interpreter_for_executable(char const first_page[], size_t nread)
+static KResultOr<NonnullOwnPtrVector<KString>> find_shebang_interpreter_for_executable(char const first_page[], size_t nread)
 {
     int word_start = 2;
-    int word_length = 0;
+    size_t word_length = 0;
     if (nread > 2 && first_page[0] == '#' && first_page[1] == '!') {
-        Vector<String> interpreter_words;
+        NonnullOwnPtrVector<KString> interpreter_words;
 
         for (size_t i = 2; i < nread; ++i) {
             if (first_page[i] == '\n') {
@@ -690,15 +690,18 @@ static KResultOr<Vector<String>> find_shebang_interpreter_for_executable(char co
 
             if (first_page[i] == ' ') {
                 if (word_length > 0) {
-                    interpreter_words.append(String(&first_page[word_start], word_length));
+                    auto word = TRY(KString::try_create(StringView { &first_page[word_start], word_length }));
+                    interpreter_words.append(move(word));
                 }
                 word_length = 0;
                 word_start = i + 1;
             }
         }
 
-        if (word_length > 0)
-            interpreter_words.append(String(&first_page[word_start], word_length));
+        if (word_length > 0) {
+            auto word = TRY(KString::try_create(StringView { &first_page[word_start], word_length }));
+            interpreter_words.append(move(word));
+        }
 
         if (!interpreter_words.is_empty())
             return interpreter_words;
@@ -772,7 +775,7 @@ KResultOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executa
     return nullptr;
 }
 
-KResult Process::exec(NonnullOwnPtr<KString> path, Vector<String> arguments, Vector<String> environment, int recursion_depth)
+KResult Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, int recursion_depth)
 {
     if (recursion_depth > 2) {
         dbgln("exec({}): SHENANIGANS! recursed too far trying to find #! interpreter", path);
@@ -807,9 +810,8 @@ KResult Process::exec(NonnullOwnPtr<KString> path, Vector<String> arguments, Vec
     auto shebang_result = find_shebang_interpreter_for_executable(first_page, nread);
     if (!shebang_result.is_error()) {
         auto shebang_words = shebang_result.release_value();
-        auto shebang_path = TRY(KString::try_create(shebang_words.first()));
-        // FIXME: Don't use String.
-        arguments[0] = path->view();
+        auto shebang_path = TRY(shebang_words.first().try_clone());
+        arguments.ptr_at(0) = move(path);
         if (!arguments.try_prepend(move(shebang_words)))
             return ENOMEM;
         return exec(move(shebang_path), move(arguments), move(environment), ++recursion_depth);
@@ -886,18 +888,16 @@ KResultOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params
         TRY(copy_from_user(strings.data(), list.strings, size.value()));
         for (size_t i = 0; i < list.length; ++i) {
             auto string = TRY(try_copy_kstring_from_user(strings[i]));
-            // FIXME: Don't convert to String here, use KString all the way.
-            auto ak_string = String(string->view());
-            if (!output.try_append(move(ak_string)))
+            if (!output.try_append(move(string)))
                 return ENOMEM;
         }
         return KSuccess;
     };
 
-    Vector<String> arguments;
+    NonnullOwnPtrVector<KString> arguments;
     TRY(copy_user_strings(params.arguments, arguments));
 
-    Vector<String> environment;
+    NonnullOwnPtrVector<KString> environment;
     TRY(copy_user_strings(params.environment, environment));
 
     auto result = exec(move(path), move(arguments), move(environment));

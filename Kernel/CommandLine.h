@@ -7,9 +7,11 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <Kernel/KString.h>
 
 namespace Kernel {
 
@@ -76,7 +78,7 @@ public:
     [[nodiscard]] bool disable_virtio() const;
     [[nodiscard]] AHCIResetMode ahci_reset_mode() const;
     [[nodiscard]] StringView userspace_init() const;
-    [[nodiscard]] Vector<String> userspace_init_args() const;
+    [[nodiscard]] NonnullOwnPtrVector<KString> userspace_init_args() const;
     [[nodiscard]] StringView root_device() const;
     [[nodiscard]] size_t switch_to_tty() const;
 

@@ -143,11 +143,13 @@ void Process::register_new(Process& process)
     });
 }
 
-KResultOr<NonnullRefPtr<Process>> Process::try_create_user_process(RefPtr<Thread>& first_thread, StringView path, UserID uid, GroupID gid, Vector<String> arguments, Vector<String> environment, TTY* tty)
+KResultOr<NonnullRefPtr<Process>> Process::try_create_user_process(RefPtr<Thread>& first_thread, StringView path, UserID uid, GroupID gid, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, TTY* tty)
 {
     auto parts = path.split_view('/');
     if (arguments.is_empty()) {
-        arguments.append(parts.last());
+        auto last_part = TRY(KString::try_create(parts.last()));
+        if (!arguments.try_append(move(last_part)))
+            return ENOMEM;
     }
 
     auto path_string = TRY(KString::try_create(path));
