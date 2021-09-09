@@ -18,17 +18,16 @@ class Instant final : public Object {
     JS_OBJECT(Instant, Object);
 
 public:
-    Instant(BigInt& nanoseconds, Object& prototype);
+    Instant(BigInt const& nanoseconds, Object& prototype);
     virtual ~Instant() override = default;
 
     [[nodiscard]] BigInt const& nanoseconds() const { return m_nanoseconds; }
-    [[nodiscard]] BigInt& nanoseconds() { return m_nanoseconds; }
 
 private:
     virtual void visit_edges(Visitor&) override;
 
     // 8.4 Properties of Temporal.Instant Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-instant-instances
-    BigInt& m_nanoseconds; // [[Nanoseconds]]
+    BigInt const& m_nanoseconds; // [[Nanoseconds]]
 };
 
 // -86400 * 10^17
@@ -37,7 +36,7 @@ const auto INSTANT_NANOSECONDS_MIN = "-8640000000000000000000"_sbigint;
 const auto INSTANT_NANOSECONDS_MAX = "8640000000000000000000"_sbigint;
 
 bool is_valid_epoch_nanoseconds(BigInt const& epoch_nanoseconds);
-Instant* create_temporal_instant(GlobalObject&, BigInt& nanoseconds, FunctionObject const* new_target = nullptr);
+Instant* create_temporal_instant(GlobalObject&, BigInt const& nanoseconds, FunctionObject const* new_target = nullptr);
 Instant* to_temporal_instant(GlobalObject&, Value item);
 BigInt* parse_temporal_instant(GlobalObject&, String const& iso_string);
 i32 compare_epoch_nanoseconds(BigInt const&, BigInt const&);

@@ -13,7 +13,7 @@
 namespace JS::Temporal {
 
 // 6 Temporal.ZonedDateTime Objects, https://tc39.es/proposal-temporal/#sec-temporal-zoneddatetime-objects
-ZonedDateTime::ZonedDateTime(BigInt& nanoseconds, Object& time_zone, Object& calendar, Object& prototype)
+ZonedDateTime::ZonedDateTime(BigInt const& nanoseconds, Object& time_zone, Object& calendar, Object& prototype)
     : Object(prototype)
     , m_nanoseconds(nanoseconds)
     , m_time_zone(time_zone)
@@ -31,7 +31,7 @@ void ZonedDateTime::visit_edges(Cell::Visitor& visitor)
 }
 
 // 6.5.3 CreateTemporalZonedDateTime ( epochNanoseconds, timeZone, calendar [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalzoneddatetime
-ZonedDateTime* create_temporal_zoned_date_time(GlobalObject& global_object, BigInt& epoch_nanoseconds, Object& time_zone, Object& calendar, FunctionObject const* new_target)
+ZonedDateTime* create_temporal_zoned_date_time(GlobalObject& global_object, BigInt const& epoch_nanoseconds, Object& time_zone, Object& calendar, FunctionObject const* new_target)
 {
     auto& vm = global_object.vm();
 
