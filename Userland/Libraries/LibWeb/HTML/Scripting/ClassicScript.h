@@ -15,15 +15,27 @@ namespace Web::HTML {
 class ClassicScript final : public Script {
 public:
     ~ClassicScript();
-    static NonnullRefPtr<ClassicScript> create(URL base_url, RefPtr<JS::Script>);
+
+    enum class MutedErrors {
+        No,
+        Yes,
+    };
+    static NonnullRefPtr<ClassicScript> create(StringView source, JS::GlobalObject&, URL base_url, MutedErrors = MutedErrors::No);
 
     JS::Script* script_record() { return m_script_record; }
     JS::Script const* script_record() const { return m_script_record; }
 
+    enum class RethrowErrors {
+        No,
+        Yes,
+    };
+    JS::Value run(RethrowErrors = RethrowErrors::No);
+
 private:
-    explicit ClassicScript(URL base_url, RefPtr<JS::Script>);
+    explicit ClassicScript(URL base_url);
 
     RefPtr<JS::Script> m_script_record;
+    MutedErrors m_muted_errors { MutedErrors::No };
 };
 
 }
