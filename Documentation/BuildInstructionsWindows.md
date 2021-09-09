@@ -11,6 +11,14 @@ Once installed, you will need to make sure the distribution you want to use (and
 - `wsl --set-version <distro> <version>` is used to convert a distro to another version, and<br/>
 - `wsl --set-default-version 2` will set the default version for all new distros (if desired.)<br/>
 
+## Dependencies
+
+Fresh installations of WSL2 need these packages to perform a fresh build properly:
+
+```bash
+$ sudo apt install unzip build-essential ninja-build g++-10 libmpc-dev libgmp3-dev git cmake
+```
+
 ## Note on filesystems
 
 WSL2 filesystem performance for IO heavy tasks (such as compiling a large C++ project) on the host Windows filesystem is
