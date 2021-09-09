@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -1174,8 +1174,7 @@ FILE* popen(const char* command, const char* type)
 
     int pipe_fds[2];
 
-    int rc = pipe(pipe_fds);
-    if (rc < 0) {
+    if (pipe(pipe_fds) < 0) {
         ScopedValueRollback rollback(errno);
         perror("pipe");
         return nullptr;
@@ -1190,16 +1189,14 @@ FILE* popen(const char* command, const char* type)
         return nullptr;
     } else if (child_pid == 0) {
         if (*type == 'r') {
-            int rc = dup2(pipe_fds[1], STDOUT_FILENO);
-            if (rc < 0) {
+            if (dup2(pipe_fds[1], STDOUT_FILENO) < 0) {
                 perror("dup2");
                 exit(1);
             }
             close(pipe_fds[0]);
             close(pipe_fds[1]);
         } else if (*type == 'w') {
-            int rc = dup2(pipe_fds[0], STDIN_FILENO);
-            if (rc < 0) {
+            if (dup2(pipe_fds[0], STDIN_FILENO) < 0) {
                 perror("dup2");
                 exit(1);
             }
@@ -1207,8 +1204,7 @@ FILE* popen(const char* command, const char* type)
             close(pipe_fds[1]);
         }
 
-        int rc = execl("/bin/sh", "sh", "-c", command, nullptr);
-        if (rc < 0)
+        if (execl("/bin/sh", "sh", "-c", command, nullptr) < 0)
             perror("execl");
         exit(1);
     }
@@ -1232,19 +1228,17 @@ int pclose(FILE* stream)
     VERIFY(stream->popen_child() != 0);
 
     int wstatus = 0;
-    int rc = waitpid(stream->popen_child(), &wstatus, 0);
-    if (rc < 0)
-        return rc;
+    if (waitpid(stream->popen_child(), &wstatus, 0) < 0)
+        return -1;
 
     return wstatus;
 }
 
 int remove(const char* pathname)
 {
-    int rc = unlink(pathname);
-    if (rc < 0 && errno == EISDIR)
+    if (unlink(pathname) < 0 && errno == EISDIR)
         return rmdir(pathname);
-    return rc;
+    return 0;
 }
 
 int scanf(const char* fmt, ...)
