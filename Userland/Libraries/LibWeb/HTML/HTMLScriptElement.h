@@ -61,7 +61,7 @@ private:
 
     Function<void()> m_script_ready_callback;
 
-    String m_script_source;
+    String m_source_text;
     String m_script_filename;
 };
 

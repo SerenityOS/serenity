@@ -45,7 +45,7 @@ void HTMLScriptElement::execute_script()
         return;
     }
 
-    if (m_script_source.is_null()) {
+    if (m_source_text.is_null()) {
         dbgln("HTMLScriptElement: Refusing to run script because the script source is null.");
         dispatch_event(DOM::Event::create(HTML::EventNames::error));
         return;
@@ -70,7 +70,7 @@ void HTMLScriptElement::execute_script()
         else
             dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running inline script");
 
-        document().run_javascript(m_script_source, m_script_filename);
+        document().run_javascript(m_source_text, m_script_filename);
 
         document().set_current_script({}, old_current_script);
     } else {
@@ -280,7 +280,7 @@ void HTMLScriptElement::prepare_script()
                         dbgln("HTMLScriptElement: Failed to load {}", url);
                         return;
                     }
-                    m_script_source = String::copy(data);
+                    m_source_text = String::copy(data);
                     script_became_ready();
                 },
                 [this](auto&, auto) {
@@ -300,7 +300,7 @@ void HTMLScriptElement::prepare_script()
             // -> "classic"
             // FIXME: 1. Let script be the result of creating a classic script using source text, settings object, base URL, and options.
             // FIXME: 2. Set the script's script to script.
-            m_script_source = source_text;
+            m_source_text = source_text;
 
             // 3. The script is ready.
             script_became_ready();
