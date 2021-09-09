@@ -110,7 +110,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    outln(final_path);
+    outln("{}", final_path);
     free(final_path);
     return 0;
 }
