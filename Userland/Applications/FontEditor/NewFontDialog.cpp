@@ -134,29 +134,13 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
 
     m_name_textbox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::TextBox>("name_textbox");
     m_family_textbox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::TextBox>("family_textbox");
-    m_type_combobox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::ComboBox>("type_combobox");
-    m_type_info_label = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::Label>("type_info_label");
     m_weight_combobox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::ComboBox>("weight_combobox");
     m_presentation_spinbox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::SpinBox>("presentation_spinbox");
-
-    m_type_info_label->set_text("\xE2\x84\xB9\t");
-    m_type_info_label->set_tooltip("Font type governs maximum glyph count");
 
     for (auto& it : GUI::font_weight_names)
         m_font_weight_list.append(it.name);
     m_weight_combobox->set_model(*GUI::ItemListModel<String>::create(m_font_weight_list));
     m_weight_combobox->set_selected_index(3);
-
-    StringBuilder type_count;
-    for (int i = 0; i < Gfx::FontTypes::__Count; i++) {
-        type_count.appendff("{} ({})",
-            Gfx::BitmapFont::type_name_by_type(static_cast<Gfx::FontTypes>(i)),
-            Gfx::BitmapFont::glyph_count_by_type(static_cast<Gfx::FontTypes>(i)));
-        m_font_type_list.append(type_count.to_string());
-        type_count.clear();
-    }
-    m_type_combobox->set_model(*GUI::ItemListModel<String>::create(m_font_type_list));
-    m_type_combobox->set_selected_index(0);
 
     m_presentation_spinbox->set_value(12);
 
@@ -225,7 +209,6 @@ void NewFontDialog::save_metadata()
     m_new_font_metadata.name = m_name_textbox->text();
     m_new_font_metadata.family = m_family_textbox->text();
     m_new_font_metadata.weight = GUI::name_to_weight(m_weight_combobox->text());
-    m_new_font_metadata.type = static_cast<Gfx::FontTypes>(m_type_combobox->selected_index());
     m_new_font_metadata.presentation_size = m_presentation_spinbox->value();
 
     m_new_font_metadata.baseline = m_baseline_spinbox->value();

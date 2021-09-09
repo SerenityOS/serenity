@@ -52,7 +52,8 @@ int main(int argc, char** argv)
 
     RefPtr<Gfx::BitmapFont> edited_font;
     if (path == nullptr) {
-        edited_font = static_ptr_cast<Gfx::BitmapFont>(Gfx::FontDatabase::default_font().clone());
+        auto bitmap_font = static_ptr_cast<Gfx::BitmapFont>(Gfx::FontDatabase::default_font().clone());
+        edited_font = static_ptr_cast<Gfx::BitmapFont>(bitmap_font->unmasked_character_set());
     } else {
         auto bitmap_font = Gfx::BitmapFont::load_from_file(path);
         if (!bitmap_font) {
@@ -60,7 +61,7 @@ int main(int argc, char** argv)
             GUI::MessageBox::show(nullptr, message, "Font Editor", GUI::MessageBox::Type::Error);
             return 1;
         }
-        edited_font = static_ptr_cast<Gfx::BitmapFont>(bitmap_font->clone());
+        edited_font = static_ptr_cast<Gfx::BitmapFont>(bitmap_font->unmasked_character_set());
         if (!edited_font) {
             String message = String::formatted("Couldn't load font: {}\n", path);
             GUI::MessageBox::show(nullptr, message, "Font Editor", GUI::MessageBox::Type::Error);

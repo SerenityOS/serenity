@@ -4,7 +4,7 @@
     }
 
     @GUI::Widget {
-        fixed_height: 160
+        fixed_height: 138
         layout: @GUI::VerticalBoxLayout {
         }
 
@@ -40,29 +40,6 @@
 
         @GUI::HorizontalSeparator {
             fixed_height: 22
-        }
-
-        @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout {
-            }
-
-            @GUI::Label {
-                fixed_width: 100
-                text_alignment: "CenterLeft"
-                text: "Type:"
-            }
-
-            @GUI::ComboBox {
-                name: "type_combobox"
-                fixed_width: 180
-                model_only: true
-            }
-
-            @GUI::Label {
-                name: "type_info_label"
-                text_alignment: "CenterLeft"
-                autosize: true
-            }
         }
 
         @GUI::Widget {

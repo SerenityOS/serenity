@@ -25,7 +25,6 @@ void GlyphMapWidget::initialize(Gfx::BitmapFont& mutable_font)
     if (m_font == mutable_font)
         return;
     m_font = mutable_font;
-    m_glyph_count = mutable_font.glyph_count();
     m_selected_glyph = 0;
     vertical_scrollbar().set_step(font().glyph_height() + m_vertical_spacing);
 }
@@ -33,6 +32,8 @@ void GlyphMapWidget::initialize(Gfx::BitmapFont& mutable_font)
 void GlyphMapWidget::resize_event(GUI::ResizeEvent& event)
 {
     int event_width = event.size().width() - this->vertical_scrollbar().width() - (frame_thickness() * 2) - m_horizontal_spacing;
+    int event_height = event.size().height() - (frame_thickness() * 2);
+    m_visible_glyphs = (event_width * event_height) / (font().max_glyph_width() * font().glyph_height());
     m_columns = max(event_width / (font().max_glyph_width() + m_horizontal_spacing), 1);
     m_rows = ceil_div(m_glyph_count, m_columns);
 
@@ -90,7 +91,10 @@ void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
     painter.set_font(font());
     painter.fill_rect(widget_inner_rect(), palette().inactive_window_title());
 
-    for (int glyph = 0; glyph < m_glyph_count; ++glyph) {
+    int scroll_steps = this->vertical_scrollbar().value() / this->vertical_scrollbar().step();
+    int first_visible_glyph = scroll_steps * columns();
+
+    for (int glyph = first_visible_glyph; glyph <= first_visible_glyph + m_visible_glyphs && glyph < m_glyph_count; ++glyph) {
         Gfx::IntRect outer_rect = get_outer_rect(glyph);
         Gfx::IntRect inner_rect(
             outer_rect.x() + m_horizontal_spacing / 2,
@@ -99,9 +103,9 @@ void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
             font().glyph_height());
         if (glyph == m_selected_glyph) {
             painter.fill_rect(outer_rect, is_focused() ? palette().selection() : palette().inactive_selection());
-            if (m_font->contains_glyph(glyph))
+            if (m_font->raw_glyph_width(glyph))
                 painter.draw_glyph(inner_rect.location(), glyph, is_focused() ? palette().selection_text() : palette().inactive_selection_text());
-        } else if (m_font->contains_glyph(glyph)) {
+        } else if (m_font->raw_glyph_width(glyph)) {
             painter.fill_rect(outer_rect, palette().base());
             painter.draw_glyph(inner_rect.location(), glyph, palette().base_text());
         }
