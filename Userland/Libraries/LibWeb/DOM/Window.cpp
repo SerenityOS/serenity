@@ -25,7 +25,7 @@ NonnullRefPtr<Window> Window::create_with_document(Document& document)
 
 Window::Window(Document& document)
     : EventTarget(static_cast<Bindings::ScriptExecutionContext&>(document))
-    , m_document(document)
+    , m_associated_document(document)
     , m_performance(make<HighResolutionTime::Performance>(*this))
     , m_screen(CSS::Screen::create(*this))
 {
@@ -139,7 +139,7 @@ void Window::cancel_animation_frame(i32 id)
 
 void Window::did_set_location_href(Badge<Bindings::LocationObject>, URL const& new_href)
 {
-    auto* frame = document().browsing_context();
+    auto* frame = associated_document().browsing_context();
     if (!frame)
         return;
     frame->loader().load(new_href, FrameLoader::Type::Navigation);
@@ -147,10 +147,10 @@ void Window::did_set_location_href(Badge<Bindings::LocationObject>, URL const& n
 
 void Window::did_call_location_reload(Badge<Bindings::LocationObject>)
 {
-    auto* frame = document().browsing_context();
+    auto* frame = associated_document().browsing_context();
     if (!frame)
         return;
-    frame->loader().load(document().url(), FrameLoader::Type::Reload);
+    frame->loader().load(associated_document().url(), FrameLoader::Type::Reload);
 }
 
 bool Window::dispatch_event(NonnullRefPtr<Event> event)
@@ -165,26 +165,26 @@ JS::Object* Window::create_wrapper(JS::GlobalObject& global_object)
 
 int Window::inner_width() const
 {
-    if (!document().layout_node())
+    if (!associated_document().layout_node())
         return 0;
-    return document().layout_node()->width();
+    return associated_document().layout_node()->width();
 }
 
 int Window::inner_height() const
 {
-    if (!document().layout_node())
+    if (!associated_document().layout_node())
         return 0;
-    return document().layout_node()->height();
+    return associated_document().layout_node()->height();
 }
 
 Page* Window::page()
 {
-    return document().page();
+    return associated_document().page();
 }
 
 Page const* Window::page() const
 {
-    return document().page();
+    return associated_document().page();
 }
 
 }

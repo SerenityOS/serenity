@@ -43,7 +43,7 @@ JS::Value ImageConstructor::call()
 JS::Value ImageConstructor::construct(FunctionObject&)
 {
     auto& window = static_cast<WindowObject&>(global_object());
-    auto& document = window.impl().document();
+    auto& document = window.impl().associated_document();
     auto image_element = DOM::create_element(document, HTML::TagNames::img, Namespace::HTML);
 
     if (vm().argument_count() > 0) {

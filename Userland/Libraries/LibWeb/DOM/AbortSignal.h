@@ -34,7 +34,7 @@ public:
 
     static NonnullRefPtr<AbortSignal> create_with_global_object(Bindings::WindowObject& window_object)
     {
-        return AbortSignal::create(window_object.impl().document());
+        return AbortSignal::create(window_object.impl().associated_document());
     }
 
     virtual ~AbortSignal() override;
