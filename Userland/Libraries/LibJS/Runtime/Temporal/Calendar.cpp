@@ -29,7 +29,7 @@ Calendar::Calendar(String identifier, Object& prototype)
 }
 
 // 12.1.1 CreateTemporalCalendar ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalcalendar
-Calendar* create_temporal_calendar(GlobalObject& global_object, String const& identifier, FunctionObject* new_target)
+Calendar* create_temporal_calendar(GlobalObject& global_object, String const& identifier, FunctionObject const* new_target)
 {
     auto& vm = global_object.vm();
 

@@ -86,7 +86,7 @@ String parse_temporal_time_zone(GlobalObject& global_object, String const& strin
 }
 
 // 11.6.2 CreateTemporalTimeZone ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaltimezone
-TimeZone* create_temporal_time_zone(GlobalObject& global_object, String const& identifier, FunctionObject* new_target)
+TimeZone* create_temporal_time_zone(GlobalObject& global_object, String const& identifier, FunctionObject const* new_target)
 {
     auto& vm = global_object.vm();
 

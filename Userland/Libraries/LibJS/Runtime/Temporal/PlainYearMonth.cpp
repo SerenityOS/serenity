@@ -223,7 +223,7 @@ ISOYearMonth constrain_iso_year_month(double year, double month)
 }
 
 // 9.5.7 CreateTemporalYearMonth ( isoYear, isoMonth, calendar, referenceISODay [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalyearmonth
-PlainYearMonth* create_temporal_year_month(GlobalObject& global_object, i32 iso_year, u8 iso_month, Object& calendar, u8 reference_iso_day, FunctionObject* new_target)
+PlainYearMonth* create_temporal_year_month(GlobalObject& global_object, i32 iso_year, u8 iso_month, Object& calendar, u8 reference_iso_day, FunctionObject const* new_target)
 {
     auto& vm = global_object.vm();
 

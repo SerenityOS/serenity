@@ -36,7 +36,7 @@ bool is_valid_time_zone_name(String const& time_zone);
 String canonicalize_time_zone_name(String const& time_zone);
 String default_time_zone();
 String parse_temporal_time_zone(GlobalObject&, String const&);
-TimeZone* create_temporal_time_zone(GlobalObject&, String const& identifier, FunctionObject* new_target = nullptr);
+TimeZone* create_temporal_time_zone(GlobalObject&, String const& identifier, FunctionObject const* new_target = nullptr);
 Optional<ISODateTime> get_iso_parts_from_epoch(BigInt const& epoch_nanoseconds);
 i64 get_iana_time_zone_offset_nanoseconds(BigInt const& epoch_nanoseconds, String const& time_zone_identifier);
 double parse_time_zone_offset_string(GlobalObject&, String const&);
