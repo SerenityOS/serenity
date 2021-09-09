@@ -17,9 +17,9 @@ extern u8 end_of_kernel_image[];
 
 namespace Kernel::Memory {
 
-static Singleton<IntrusiveRedBlackTree<FlatPtr, PageDirectory, RawPtr<PageDirectory>, &PageDirectory::m_tree_node>> s_cr3_map;
+static Singleton<IntrusiveRedBlackTree<&PageDirectory::m_tree_node>> s_cr3_map;
 
-static IntrusiveRedBlackTree<FlatPtr, PageDirectory, RawPtr<PageDirectory>, &PageDirectory::m_tree_node>& cr3_map()
+static IntrusiveRedBlackTree<&PageDirectory::m_tree_node>& cr3_map()
 {
     VERIFY_INTERRUPTS_DISABLED();
     return *s_cr3_map;

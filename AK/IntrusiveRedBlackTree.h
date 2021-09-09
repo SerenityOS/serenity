@@ -9,17 +9,24 @@
 #include <AK/IntrusiveDetails.h>
 #include <AK/RedBlackTree.h>
 
-namespace AK {
+namespace AK::Detail {
 
-namespace Detail {
 template<Integral K, typename V, typename Container = RawPtr<V>>
 class IntrusiveRedBlackTreeNode;
-}
+
+struct ExtractIntrusiveRedBlackTreeTypes {
+    template<typename K, typename V, typename Container, typename T>
+    static K key(IntrusiveRedBlackTreeNode<K, V, Container> T::*x);
+    template<typename K, typename V, typename Container, typename T>
+    static V value(IntrusiveRedBlackTreeNode<K, V, Container> T::*x);
+    template<typename K, typename V, typename Container, typename T>
+    static Container container(IntrusiveRedBlackTreeNode<K, V, Container> T::*x);
+};
 
 template<Integral K, typename V, typename Container = RawPtr<V>>
-using IntrusiveRedBlackTreeNode = Detail::IntrusiveRedBlackTreeNode<K, V, typename Detail::SubstituteIntrusiveContainerType<V, Container>::Type>;
+using SubstitutedIntrusiveRedBlackTreeNode = IntrusiveRedBlackTreeNode<K, V, typename Detail::SubstituteIntrusiveContainerType<V, Container>::Type>;
 
-template<Integral K, typename V, typename Container, IntrusiveRedBlackTreeNode<K, V, Container> V::*member>
+template<Integral K, typename V, typename Container, SubstitutedIntrusiveRedBlackTreeNode<K, V, Container> V::*member>
 class IntrusiveRedBlackTree : public BaseRedBlackTree<K> {
 
 public:
@@ -30,7 +37,7 @@ public:
     }
 
     using BaseTree = BaseRedBlackTree<K>;
-    using TreeNode = IntrusiveRedBlackTreeNode<K, V, Container>;
+    using TreeNode = SubstitutedIntrusiveRedBlackTreeNode<K, V, Container>;
 
     Container find(K key)
     {
@@ -161,8 +168,6 @@ private:
     }
 };
 
-namespace Detail {
-
 template<Integral K, typename V, typename Container>
 class IntrusiveRedBlackTreeNode : public BaseRedBlackTree<K>::Node {
 public:
@@ -185,25 +190,37 @@ public:
 
 #ifndef __clang__
 private:
-    template<Integral TK, typename TV, typename TContainer, IntrusiveRedBlackTreeNode<TK, TV, TContainer> TV::*member>
-    friend class ::AK::IntrusiveRedBlackTree;
+    template<Integral TK, typename TV, typename TContainer, SubstitutedIntrusiveRedBlackTreeNode<TK, TV, TContainer> TV::*member>
+    friend class ::AK::Detail::IntrusiveRedBlackTree;
 #endif
 
     bool m_in_tree { false };
     [[no_unique_address]] SelfReferenceIfNeeded<Container, IsRaw> m_self;
 };
 
-}
-
 // Specialise IntrusiveRedBlackTree for NonnullRefPtr
 // By default, red black trees cannot contain null entries anyway, so switch to RefPtr
 // and just make the user-facing functions deref the pointers.
-template<Integral K, typename V, IntrusiveRedBlackTreeNode<K, V, NonnullRefPtr<V>> V::*member>
+template<Integral K, typename V, SubstitutedIntrusiveRedBlackTreeNode<K, V, NonnullRefPtr<V>> V::*member>
 class IntrusiveRedBlackTree<K, V, NonnullRefPtr<V>, member> : public IntrusiveRedBlackTree<K, V, RefPtr<V>, member> {
 public:
     [[nodiscard]] NonnullRefPtr<V> find(K key) const { return IntrusiveRedBlackTree<K, V, RefPtr<V>, member>::find(key).release_nonnull(); }
     [[nodiscard]] NonnullRefPtr<V> find_largest_not_above(K key) const { return IntrusiveRedBlackTree<K, V, RefPtr<V>, member>::find_largest_not_above(key).release_nonnull(); }
 };
+
+}
+
+namespace AK {
+
+template<Integral K, typename V, typename Container = RawPtr<K>>
+using IntrusiveRedBlackTreeNode = Detail::SubstitutedIntrusiveRedBlackTreeNode<K, V, Container>;
+
+template<auto member>
+using IntrusiveRedBlackTree = Detail::IntrusiveRedBlackTree<
+    decltype(Detail::ExtractIntrusiveRedBlackTreeTypes::key(member)),
+    decltype(Detail::ExtractIntrusiveRedBlackTreeTypes::value(member)),
+    decltype(Detail::ExtractIntrusiveRedBlackTreeTypes::container(member)),
+    member>;
 
 }
 
