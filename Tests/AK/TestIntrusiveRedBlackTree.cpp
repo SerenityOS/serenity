@@ -20,7 +20,7 @@ public:
     IntrusiveRedBlackTreeNode<int, IntrusiveTest, RawPtr<IntrusiveTest>> m_tree_node;
     int m_some_value;
 };
-using IntrusiveRBTree = IntrusiveRedBlackTree<int, IntrusiveTest, RawPtr<IntrusiveTest>, &IntrusiveTest::m_tree_node>;
+using IntrusiveRBTree = IntrusiveRedBlackTree<&IntrusiveTest::m_tree_node>;
 
 TEST_CASE(construct)
 {
@@ -123,7 +123,7 @@ public:
 
     IntrusiveRedBlackTreeNode<int, IntrusiveRefPtrTest, RefPtr<IntrusiveRefPtrTest>> m_tree_node;
 };
-using IntrusiveRefPtrRBTree = IntrusiveRedBlackTree<int, IntrusiveRefPtrTest, RefPtr<IntrusiveRefPtrTest>, &IntrusiveRefPtrTest::m_tree_node>;
+using IntrusiveRefPtrRBTree = IntrusiveRedBlackTree<&IntrusiveRefPtrTest::m_tree_node>;
 
 TEST_CASE(intrusive_ref_ptr_no_ref_leaks)
 {
@@ -173,7 +173,7 @@ public:
 
     IntrusiveRedBlackTreeNode<int, IntrusiveNonnullRefPtrTest, NonnullRefPtr<IntrusiveNonnullRefPtrTest>> m_tree_node;
 };
-using IntrusiveNonnullRefPtrRBTree = IntrusiveRedBlackTree<int, IntrusiveNonnullRefPtrTest, NonnullRefPtr<IntrusiveNonnullRefPtrTest>, &IntrusiveNonnullRefPtrTest::m_tree_node>;
+using IntrusiveNonnullRefPtrRBTree = IntrusiveRedBlackTree<&IntrusiveNonnullRefPtrTest::m_tree_node>;
 
 TEST_CASE(intrusive_nonnull_ref_ptr_intrusive)
 {
