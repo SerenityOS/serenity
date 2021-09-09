@@ -145,6 +145,16 @@ int main(int argc, char** argv)
             theme->write_entry("Colors", to_string(role), preview_widget.preview_palette().color(role).to_string());
         }
 
+#define __ENUMERATE_METRIC_ROLE(role) \
+    theme->write_num_entry("Metrics", #role, preview_widget.preview_palette().metric(Gfx::MetricRole::role));
+        ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
+#undef __ENUMERATE_METRIC_ROLE
+
+#define __ENUMERATE_PATH_ROLE(role) \
+    theme->write_entry("Paths", #role, preview_widget.preview_palette().path(Gfx::PathRole::role));
+        ENUMERATE_PATH_ROLES(__ENUMERATE_PATH_ROLE)
+#undef __ENUMERATE_PATH_ROLE
+
         theme->sync();
     };
 
