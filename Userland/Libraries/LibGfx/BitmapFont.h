@@ -17,20 +17,13 @@
 
 namespace Gfx {
 
-// Note: Perhaps put glyph count directly in header
-// and sidestep FontType conflation/sync maintenance
-enum FontTypes {
-    Default = 0,
-    LatinExtendedA,
-    Cyrillic,
-    Hebrew,
-    __Count
-};
-
 class BitmapFont final : public Font {
 public:
     NonnullRefPtr<Font> clone() const override;
-    static NonnullRefPtr<BitmapFont> create(u8 glyph_height, u8 glyph_width, bool fixed, FontTypes type);
+    static NonnullRefPtr<BitmapFont> create(u8 glyph_height, u8 glyph_width, bool fixed, size_t glyph_count);
+
+    NonnullRefPtr<BitmapFont> masked_character_set() const;
+    NonnullRefPtr<BitmapFont> unmasked_character_set() const;
 
     static RefPtr<BitmapFont> load_from_file(String const& path);
     bool write_to_file(String const& path);
@@ -44,15 +37,9 @@ public:
     void set_weight(u16 weight) { m_weight = weight; }
 
     Glyph glyph(u32 code_point) const override;
-    bool contains_glyph(u32 code_point) const override { return code_point < (u32)glyph_count() && m_glyph_widths[code_point] > 0; }
+    Glyph raw_glyph(u32 code_point) const;
+    bool contains_glyph(u32 code_point) const override;
 
-    u8 glyph_width(size_t ch) const override
-    {
-        if (is_ascii(ch) && !is_ascii_printable(ch))
-            return 0;
-
-        return m_fixed_width ? m_glyph_width : m_glyph_widths[ch];
-    }
     ALWAYS_INLINE int glyph_or_emoji_width(u32 code_point) const override
     {
         if (m_fixed_width)
@@ -62,7 +49,8 @@ public:
     u8 glyph_height() const override { return m_glyph_height; }
     int x_height() const override { return m_x_height; }
 
-    u8 raw_glyph_width(size_t ch) const { return m_glyph_widths[ch]; }
+    u8 glyph_width(u32 code_point) const override;
+    u8 raw_glyph_width(u32 code_point) const { return m_glyph_widths[code_point]; }
 
     u8 min_glyph_width() const override { return m_min_glyph_width; }
     u8 max_glyph_width() const override { return m_max_glyph_width; }
@@ -95,16 +83,17 @@ public:
     u8 glyph_spacing() const override { return m_glyph_spacing; }
     void set_glyph_spacing(u8 spacing) { m_glyph_spacing = spacing; }
 
-    void set_glyph_width(size_t ch, u8 width)
+    void set_glyph_width(u32 code_point, u8 width)
     {
         VERIFY(m_glyph_widths);
-        m_glyph_widths[ch] = width;
+        m_glyph_widths[code_point] = width;
     }
 
     size_t glyph_count() const override { return m_glyph_count; }
+    Optional<size_t> glyph_index(u32 code_point) const;
 
-    FontTypes type() { return m_type; }
-    void set_type(FontTypes type);
+    u16 range_size() const { return m_range_mask_size; }
+    bool is_range_empty(u32 code_point) const { return !(m_range_mask[code_point / 256 / 8] & 1 << (code_point / 256 % 8)); }
 
     String family() const override { return m_family; }
     void set_family(String family) { m_family = move(family); }
@@ -112,11 +101,10 @@ public:
 
     String qualified_name() const override;
 
-    static size_t glyph_count_by_type(FontTypes type);
-    static String type_name_by_type(FontTypes type);
-
 private:
-    BitmapFont(String name, String family, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, FontTypes type, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, bool owns_arrays = false);
+    BitmapFont(String name, String family, u32* rows, u8* widths, bool is_fixed_width,
+        u8 glyph_width, u8 glyph_height, u8 glyph_spacing, u16 range_mask_size, u8* range_mask,
+        u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, bool owns_arrays = false);
 
     static RefPtr<BitmapFont> load_from_memory(u8 const*);
 
@@ -128,10 +116,13 @@ private:
 
     String m_name;
     String m_family;
-    FontTypes m_type;
-    size_t m_glyph_count { 256 };
+    size_t m_glyph_count { 0 };
 
-    unsigned* m_rows { nullptr };
+    u16 m_range_mask_size { 0 };
+    u8* m_range_mask { nullptr };
+    Vector<Optional<size_t>> m_range_indices;
+
+    u32* m_rows { nullptr };
     u8* m_glyph_widths { nullptr };
     RefPtr<MappedFile> m_mapped_file;
 
