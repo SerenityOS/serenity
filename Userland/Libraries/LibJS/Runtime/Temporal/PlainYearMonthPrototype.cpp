@@ -40,6 +40,7 @@ void PlainYearMonthPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.eraYear, era_year_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
@@ -215,6 +216,36 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::era_year_getter)
 
     // 4. Return ? CalendarEraYear(calendar, plainYearMonth).
     return calendar_era_year(global_object, calendar, *plain_year_month);
+}
+
+// 9.3.16 Temporal.PlainYearMonth.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.equals
+JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::equals)
+{
+    // 1. Let yearMonth be the this value.
+    // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
+    auto* year_month = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Set other to ? ToTemporalYearMonth(other).
+    auto* other = to_temporal_year_month(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 4. If yearMonth.[[ISOYear]] ≠ other.[[ISOYear]], return false.
+    if (year_month->iso_year() != other->iso_year())
+        return Value(false);
+
+    // 5. If yearMonth.[[ISOMonth]] ≠ other.[[ISOMonth]], return false.
+    if (year_month->iso_month() != other->iso_month())
+        return Value(false);
+
+    // 6. If yearMonth.[[ISODay]] ≠ other.[[ISODay]], return false.
+    if (year_month->iso_day() != other->iso_day())
+        return Value(false);
+
+    // 7. Return ? CalendarEquals(yearMonth.[[Calendar]], other.[[Calendar]]).
+    return Value(calendar_equals(global_object, year_month->calendar(), other->calendar()));
 }
 
 // 9.3.17 Temporal.PlainYearMonth.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tostring
