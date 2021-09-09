@@ -1,9 +1,11 @@
 /*
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/TypeCasts.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
@@ -31,6 +33,7 @@ void PlainYearMonthConstructor::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.from, from, 1, attr);
+    define_native_function(vm.names.compare, compare, 2, attr);
 }
 
 // 9.1.1 Temporal.PlainYearMonth ( isoYear, isoMonth [ , calendarLike [ , referenceISODay ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth
@@ -117,6 +120,23 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthConstructor::from)
 
     // 3. Return ? ToTemporalYearMonth(item, options).
     return to_temporal_year_month(global_object, item, options);
+}
+
+// 9.2.3 Temporal.PlainYearMonth.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.compare
+JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthConstructor::compare)
+{
+    // 1. Set one to ? ToTemporalYearMonth(one).
+    auto* one = to_temporal_year_month(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 2. Set two to ? ToTemporalYearMonth(one).
+    auto* two = to_temporal_year_month(global_object, vm.argument(1));
+    if (vm.exception())
+        return {};
+
+    // 3. Return 𝔽(! CompareISODate(one.[[ISOYear]], one.[[ISOMonth]], one.[[ISODay]], two.[[ISOYear]], two.[[ISOMonth]], two.[[ISODay]])).
+    return Value(compare_iso_date(one->iso_year(), one->iso_month(), one->iso_day(), two->iso_year(), two->iso_month(), two->iso_day()));
 }
 
 }
