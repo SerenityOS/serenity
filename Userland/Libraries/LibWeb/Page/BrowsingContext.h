@@ -39,10 +39,10 @@ public:
     bool is_top_level() const { return this == &top_level_browsing_context(); }
     bool is_focused_context() const;
 
-    DOM::Document const* document() const { return m_document; }
-    DOM::Document* document() { return m_document; }
+    DOM::Document const* active_document() const { return m_active_document; }
+    DOM::Document* active_document() { return m_active_document; }
 
-    void set_document(DOM::Document*);
+    void set_active_document(DOM::Document*);
 
     Page* page() { return m_page; }
     Page const* page() const { return m_page; }
@@ -111,7 +111,7 @@ private:
     EventHandler m_event_handler;
 
     WeakPtr<HTML::BrowsingContextContainer> m_container;
-    RefPtr<DOM::Document> m_document;
+    RefPtr<DOM::Document> m_active_document;
     Gfx::IntSize m_size;
     Gfx::IntPoint m_viewport_scroll_offset;
 

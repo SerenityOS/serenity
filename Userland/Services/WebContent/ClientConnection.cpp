@@ -171,19 +171,19 @@ void ClientConnection::key_down(i32 key, unsigned int modifiers, u32 code_point)
 void ClientConnection::debug_request(const String& request, const String& argument)
 {
     if (request == "dump-dom-tree") {
-        if (auto* doc = page().top_level_browsing_context().document())
+        if (auto* doc = page().top_level_browsing_context().active_document())
             Web::dump_tree(*doc);
     }
 
     if (request == "dump-layout-tree") {
-        if (auto* doc = page().top_level_browsing_context().document()) {
+        if (auto* doc = page().top_level_browsing_context().active_document()) {
             if (auto* icb = doc->layout_node())
                 Web::dump_tree(*icb);
         }
     }
 
     if (request == "dump-style-sheets") {
-        if (auto* doc = page().top_level_browsing_context().document()) {
+        if (auto* doc = page().top_level_browsing_context().active_document()) {
             for (auto& sheet : doc->style_sheets().sheets()) {
                 Web::dump_sheet(sheet);
             }
@@ -211,21 +211,21 @@ void ClientConnection::debug_request(const String& request, const String& argume
 
 void ClientConnection::get_source()
 {
-    if (auto* doc = page().top_level_browsing_context().document()) {
+    if (auto* doc = page().top_level_browsing_context().active_document()) {
         async_did_get_source(doc->url(), doc->source());
     }
 }
 
 void ClientConnection::inspect_dom_tree()
 {
-    if (auto* doc = page().top_level_browsing_context().document()) {
+    if (auto* doc = page().top_level_browsing_context().active_document()) {
         async_did_get_dom_tree(doc->dump_dom_tree_as_json());
     }
 }
 
 Messages::WebContentServer::InspectDomNodeResponse ClientConnection::inspect_dom_node(i32 node_id)
 {
-    if (auto* doc = page().top_level_browsing_context().document()) {
+    if (auto* doc = page().top_level_browsing_context().active_document()) {
         Web::DOM::Node* node = Web::DOM::Node::from_id(node_id);
         if (!node || (&node->document() != doc)) {
             doc->set_inspected_node(nullptr);
@@ -262,7 +262,7 @@ Messages::WebContentServer::InspectDomNodeResponse ClientConnection::inspect_dom
 
 Messages::WebContentServer::GetHoveredNodeIdResponse ClientConnection::get_hovered_node_id()
 {
-    if (auto* document = page().top_level_browsing_context().document()) {
+    if (auto* document = page().top_level_browsing_context().active_document()) {
         auto hovered_node = document->hovered_node();
         if (hovered_node)
             return hovered_node->id();
@@ -272,7 +272,7 @@ Messages::WebContentServer::GetHoveredNodeIdResponse ClientConnection::get_hover
 
 void ClientConnection::initialize_js_console(Badge<PageHost>)
 {
-    auto* document = page().top_level_browsing_context().document();
+    auto* document = page().top_level_browsing_context().active_document();
     auto interpreter = document->interpreter().make_weak_ptr();
     if (m_interpreter.ptr() == interpreter.ptr())
         return;
@@ -290,10 +290,10 @@ void ClientConnection::js_console_input(const String& js_source)
 
 void ClientConnection::run_javascript(String const& js_source)
 {
-    if (!page().top_level_browsing_context().document())
+    if (!page().top_level_browsing_context().active_document())
         return;
 
-    auto& interpreter = page().top_level_browsing_context().document()->interpreter();
+    auto& interpreter = page().top_level_browsing_context().active_document()->interpreter();
 
     auto parser = JS::Parser(JS::Lexer(js_source));
     auto program = parser.parse_program();
@@ -323,7 +323,7 @@ void ClientConnection::select_all()
 
 Messages::WebContentServer::DumpLayoutTreeResponse ClientConnection::dump_layout_tree()
 {
-    auto* document = page().top_level_browsing_context().document();
+    auto* document = page().top_level_browsing_context().active_document();
     if (!document)
         return String { "(no DOM tree)" };
     auto* layout_root = document->layout_node();

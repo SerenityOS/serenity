@@ -278,9 +278,9 @@ void InProcessWebView::keydown_event(GUI::KeyEvent& event)
 
 URL InProcessWebView::url() const
 {
-    if (!page().top_level_browsing_context().document())
+    if (!page().top_level_browsing_context().active_document())
         return {};
-    return page().top_level_browsing_context().document()->url();
+    return page().top_level_browsing_context().active_document()->url();
 }
 
 void InProcessWebView::reload()
@@ -319,22 +319,22 @@ void InProcessWebView::page_did_request_scroll_into_view(const Gfx::IntRect& rec
 
 void InProcessWebView::load_empty_document()
 {
-    page().top_level_browsing_context().set_document(nullptr);
+    page().top_level_browsing_context().set_active_document(nullptr);
 }
 
 DOM::Document* InProcessWebView::document()
 {
-    return page().top_level_browsing_context().document();
+    return page().top_level_browsing_context().active_document();
 }
 
 const DOM::Document* InProcessWebView::document() const
 {
-    return page().top_level_browsing_context().document();
+    return page().top_level_browsing_context().active_document();
 }
 
 void InProcessWebView::set_document(DOM::Document* document)
 {
-    page().top_level_browsing_context().set_document(document);
+    page().top_level_browsing_context().set_active_document(document);
 }
 
 void InProcessWebView::did_scroll()

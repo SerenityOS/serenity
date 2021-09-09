@@ -213,7 +213,7 @@ void FrameLoader::load_html(const StringView& html, const URL& url)
     auto document = DOM::Document::create(url);
     HTML::HTMLDocumentParser parser(document, html, "utf-8");
     parser.run(url);
-    browsing_context().set_document(&parser.document());
+    browsing_context().set_active_document(&parser.document());
 }
 
 // FIXME: Use an actual templating engine (our own one when it's built, preferably
@@ -233,7 +233,7 @@ void FrameLoader::load_error_page(const URL& failed_url, const String& error)
             generator.append(data);
             auto document = HTML::parse_html_document(generator.as_string_view(), failed_url, "utf-8");
             VERIFY(document);
-            browsing_context().set_document(document);
+            browsing_context().set_active_document(document);
         },
         [](auto& error, auto) {
             dbgln("Failed to load error page: {}", error);
@@ -285,7 +285,7 @@ void FrameLoader::resource_did_load()
     document->set_encoding(resource()->encoding());
     document->set_content_type(resource()->mime_type());
 
-    browsing_context().set_document(document);
+    browsing_context().set_active_document(document);
 
     if (!parse_document(*document, resource()->encoded_data())) {
         load_error_page(url, "Failed to parse content.");

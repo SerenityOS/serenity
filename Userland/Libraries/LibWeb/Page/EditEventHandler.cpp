@@ -92,7 +92,7 @@ void EditEventHandler::handle_delete(DOM::Range& range)
     // FIXME: When nodes are removed from the DOM, the associated layout nodes become stale and still
     //        remain in the layout tree. This has to be fixed, this just causes everything to be recomputed
     //        which really hurts performance.
-    m_frame.document()->force_layout();
+    m_frame.active_document()->force_layout();
 
     m_frame.did_edit({});
 }
@@ -114,7 +114,7 @@ void EditEventHandler::handle_insert(DOM::Position position, u32 code_point)
     // FIXME: When nodes are removed from the DOM, the associated layout nodes become stale and still
     //        remain in the layout tree. This has to be fixed, this just causes everything to be recomputed
     //        which really hurts performance.
-    m_frame.document()->force_layout();
+    m_frame.active_document()->force_layout();
 
     m_frame.did_edit({});
 }

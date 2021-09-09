@@ -66,26 +66,26 @@ bool BrowsingContext::is_focused_context() const
     return m_page && &m_page->focused_context() == this;
 }
 
-void BrowsingContext::set_document(DOM::Document* document)
+void BrowsingContext::set_active_document(DOM::Document* document)
 {
-    if (m_document == document)
+    if (m_active_document == document)
         return;
 
     m_cursor_position = {};
 
-    if (m_document)
-        m_document->detach_from_browsing_context({}, *this);
+    if (m_active_document)
+        m_active_document->detach_from_browsing_context({}, *this);
 
-    m_document = document;
+    m_active_document = document;
 
-    if (m_document) {
-        m_document->attach_to_browsing_context({}, *this);
+    if (m_active_document) {
+        m_active_document->attach_to_browsing_context({}, *this);
         if (m_page && is_top_level())
-            m_page->client().page_did_change_title(m_document->title());
+            m_page->client().page_did_change_title(m_active_document->title());
     }
 
     if (m_page)
-        m_page->client().page_did_set_document_in_top_level_browsing_context(m_document);
+        m_page->client().page_did_set_document_in_top_level_browsing_context(m_active_document);
 }
 
 void BrowsingContext::set_viewport_rect(Gfx::IntRect const& rect)
@@ -94,9 +94,9 @@ void BrowsingContext::set_viewport_rect(Gfx::IntRect const& rect)
 
     if (m_size != rect.size()) {
         m_size = rect.size();
-        if (m_document) {
-            m_document->window().dispatch_event(DOM::Event::create(UIEvents::EventNames::resize));
-            m_document->update_layout();
+        if (active_document()) {
+            active_document()->window().dispatch_event(DOM::Event::create(UIEvents::EventNames::resize));
+            active_document()->update_layout();
         }
         did_change = true;
     }
@@ -117,9 +117,9 @@ void BrowsingContext::set_size(Gfx::IntSize const& size)
     if (m_size == size)
         return;
     m_size = size;
-    if (m_document) {
-        m_document->window().dispatch_event(DOM::Event::create(UIEvents::EventNames::resize));
-        m_document->update_layout();
+    if (active_document()) {
+        active_document()->window().dispatch_event(DOM::Event::create(UIEvents::EventNames::resize));
+        active_document()->update_layout();
     }
 
     for (auto* client : m_viewport_clients)
@@ -153,12 +153,12 @@ void BrowsingContext::set_needs_display(Gfx::IntRect const& rect)
 
 void BrowsingContext::scroll_to_anchor(String const& fragment)
 {
-    if (!document())
+    if (!active_document())
         return;
 
-    auto element = document()->get_element_by_id(fragment);
+    auto element = active_document()->get_element_by_id(fragment);
     if (!element) {
-        auto candidates = document()->get_elements_by_name(fragment);
+        auto candidates = active_document()->get_elements_by_name(fragment);
         for (auto& candidate : candidates->collect_matching_elements()) {
             if (is<HTML::HTMLAnchorElement>(*candidate)) {
                 element = verify_cast<HTML::HTMLAnchorElement>(*candidate);
@@ -168,7 +168,7 @@ void BrowsingContext::scroll_to_anchor(String const& fragment)
     }
 
     // FIXME: This is overly aggressive and should be something more like a "update_layout_if_needed()"
-    document()->force_layout();
+    active_document()->force_layout();
 
     if (!element || !element->layout_node())
         return;
@@ -227,9 +227,9 @@ void BrowsingContext::set_cursor_position(DOM::Position position)
 String BrowsingContext::selected_text() const
 {
     StringBuilder builder;
-    if (!m_document)
+    if (!active_document())
         return {};
-    auto* layout_root = m_document->layout_node();
+    auto* layout_root = active_document()->layout_node();
     if (!layout_root)
         return {};
     if (!layout_root->selection().is_valid())
@@ -273,9 +273,9 @@ String BrowsingContext::selected_text() const
 
 void BrowsingContext::select_all()
 {
-    if (!m_document)
+    if (!active_document())
         return;
-    auto* layout_root = m_document->layout_node();
+    auto* layout_root = active_document()->layout_node();
     if (!layout_root)
         return;
 

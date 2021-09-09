@@ -362,8 +362,8 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::top_getter)
     if (!this_browsing_context)
         return JS::js_null();
 
-    VERIFY(this_browsing_context->top_level_browsing_context().document());
-    auto& top_window = this_browsing_context->top_level_browsing_context().document()->window();
+    VERIFY(this_browsing_context->top_level_browsing_context().active_document());
+    auto& top_window = this_browsing_context->top_level_browsing_context().active_document()->window();
     return top_window.wrapper();
 }
 
@@ -379,8 +379,8 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::parent_getter)
         return JS::js_null();
 
     if (this_browsing_context->parent()) {
-        VERIFY(this_browsing_context->parent()->document());
-        auto& parent_window = this_browsing_context->parent()->document()->window();
+        VERIFY(this_browsing_context->parent()->active_document());
+        auto& parent_window = this_browsing_context->parent()->active_document()->window();
         return parent_window.wrapper();
     }
     VERIFY(this_browsing_context == &this_browsing_context->top_level_browsing_context());

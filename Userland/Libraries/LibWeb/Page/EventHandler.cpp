@@ -99,16 +99,16 @@ EventHandler::~EventHandler()
 
 const Layout::InitialContainingBlock* EventHandler::layout_root() const
 {
-    if (!m_frame.document())
+    if (!m_frame.active_document())
         return nullptr;
-    return m_frame.document()->layout_node();
+    return m_frame.active_document()->layout_node();
 }
 
 Layout::InitialContainingBlock* EventHandler::layout_root()
 {
-    if (!m_frame.document())
+    if (!m_frame.active_document())
         return nullptr;
-    return m_frame.document()->layout_node();
+    return m_frame.active_document()->layout_node();
 }
 
 bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int buttons, unsigned int modifiers, int wheel_delta)
@@ -182,7 +182,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         return true;
     }
 
-    NonnullRefPtr document = *m_frame.document();
+    NonnullRefPtr document = *m_frame.active_document();
     RefPtr<DOM::Node> node;
 
     {
@@ -279,7 +279,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         return true;
     }
 
-    auto& document = *m_frame.document();
+    auto& document = *m_frame.active_document();
 
     bool hovered_node_changed = false;
     bool is_hovering_link = false;
@@ -356,13 +356,13 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
 
 bool EventHandler::focus_next_element()
 {
-    if (!m_frame.document())
+    if (!m_frame.active_document())
         return false;
-    auto* element = m_frame.document()->focused_element();
+    auto* element = m_frame.active_document()->focused_element();
     if (!element) {
-        element = m_frame.document()->first_child_of_type<DOM::Element>();
+        element = m_frame.active_document()->first_child_of_type<DOM::Element>();
         if (element && element->is_focusable()) {
-            m_frame.document()->set_focused_element(element);
+            m_frame.active_document()->set_focused_element(element);
             return true;
         }
     }
@@ -370,7 +370,7 @@ bool EventHandler::focus_next_element()
     for (element = element->next_element_in_pre_order(); element && !element->is_focusable(); element = element->next_element_in_pre_order())
         ;
 
-    m_frame.document()->set_focused_element(element);
+    m_frame.active_document()->set_focused_element(element);
     return element;
 }
 
@@ -398,7 +398,7 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
     if (layout_root()->selection().is_valid()) {
         auto range = layout_root()->selection().to_dom_range()->normalized();
         if (range->start_container()->is_editable()) {
-            m_frame.document()->layout_node()->set_selection({});
+            m_frame.active_document()->layout_node()->set_selection({});
 
             // FIXME: This doesn't work for some reason?
             m_frame.set_cursor_position({ *range->start_container(), range->start_offset() });
