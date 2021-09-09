@@ -19,7 +19,7 @@ Screen::Screen(DOM::Window& window)
 
 Gfx::IntRect Screen::screen_rect() const
 {
-    return m_window.document().page()->screen_rect();
+    return m_window.page()->screen_rect();
 }
 
 }

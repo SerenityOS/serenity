@@ -33,6 +33,9 @@ public:
     virtual bool dispatch_event(NonnullRefPtr<Event>) override;
     virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
 
+    Page* page();
+    Page const* page() const;
+
     const Document& document() const { return m_document; }
     Document& document() { return m_document; }
 
