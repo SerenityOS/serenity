@@ -67,7 +67,7 @@ Duration* to_temporal_duration(GlobalObject& global_object, Value item)
 }
 
 // 7.5.2 ToTemporalDurationRecord ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldurationrecord
-TemporalDuration to_temporal_duration_record(GlobalObject& global_object, Object& temporal_duration_like)
+TemporalDuration to_temporal_duration_record(GlobalObject& global_object, Object const& temporal_duration_like)
 {
     auto& vm = global_object.vm();
 
@@ -75,7 +75,7 @@ TemporalDuration to_temporal_duration_record(GlobalObject& global_object, Object
 
     // 2. If temporalDurationLike has an [[InitializedTemporalDuration]] internal slot, then
     if (is<Duration>(temporal_duration_like)) {
-        auto& duration = static_cast<Duration&>(temporal_duration_like);
+        auto& duration = static_cast<Duration const&>(temporal_duration_like);
 
         // a. Return the Record { [[Years]]: temporalDurationLike.[[Years]], [[Months]]: temporalDurationLike.[[Months]], [[Weeks]]: temporalDurationLike.[[Weeks]], [[Days]]: temporalDurationLike.[[Days]], [[Hours]]: temporalDurationLike.[[Hours]], [[Minutes]]: temporalDurationLike.[[Minutes]], [[Seconds]]: temporalDurationLike.[[Seconds]], [[Milliseconds]]: temporalDurationLike.[[Milliseconds]], [[Microseconds]]: temporalDurationLike.[[Microseconds]], [[Nanoseconds]]: temporalDurationLike.[[Nanoseconds]] }.
         return TemporalDuration { .years = duration.years(), .months = duration.months(), .weeks = duration.weeks(), .days = duration.days(), .hours = duration.hours(), .minutes = duration.minutes(), .seconds = duration.seconds(), .milliseconds = duration.milliseconds(), .microseconds = duration.microseconds(), .nanoseconds = duration.nanoseconds() };

@@ -108,7 +108,7 @@ auto temporal_duration_like_properties = [](VM& vm) {
 };
 
 Duration* to_temporal_duration(GlobalObject&, Value item);
-TemporalDuration to_temporal_duration_record(GlobalObject&, Object& temporal_duration_like);
+TemporalDuration to_temporal_duration_record(GlobalObject&, Object const& temporal_duration_like);
 i8 duration_sign(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 bool is_valid_duration(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 PartialDuration to_partial_duration(GlobalObject&, Value temporal_duration_like);
