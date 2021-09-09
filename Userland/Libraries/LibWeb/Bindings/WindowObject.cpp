@@ -97,7 +97,7 @@ void WindowObject::visit_edges(Visitor& visitor)
 
 Origin WindowObject::origin() const
 {
-    return impl().document().origin();
+    return impl().associated_document().origin();
 }
 
 static DOM::Window* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
@@ -358,7 +358,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::top_getter)
     if (!impl)
         return {};
 
-    auto* this_browsing_context = impl->document().browsing_context();
+    auto* this_browsing_context = impl->associated_document().browsing_context();
     if (!this_browsing_context)
         return JS::js_null();
 
@@ -374,7 +374,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::parent_getter)
     if (!impl)
         return {};
 
-    auto* this_browsing_context = impl->document().browsing_context();
+    auto* this_browsing_context = impl->associated_document().browsing_context();
     if (!this_browsing_context)
         return JS::js_null();
 
@@ -392,7 +392,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::document_getter)
     auto* impl = impl_from(vm, global_object);
     if (!impl)
         return {};
-    return wrap(global_object, impl->document());
+    return wrap(global_object, impl->associated_document());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::performance_getter)

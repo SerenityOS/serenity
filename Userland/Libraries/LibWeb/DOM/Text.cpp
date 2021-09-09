@@ -27,7 +27,7 @@ RefPtr<Layout::Node> Text::create_layout_node()
 // https://dom.spec.whatwg.org/#dom-text-text
 NonnullRefPtr<Text> Text::create_with_global_object(Bindings::WindowObject& window, String const& data)
 {
-    return make_ref_counted<Text>(window.impl().document(), data);
+    return make_ref_counted<Text>(window.impl().associated_document(), data);
 }
 
 }

@@ -62,7 +62,7 @@ DOM::ExceptionOr<NonnullRefPtr<WebSocket>> WebSocket::create_with_global_object(
 }
 
 WebSocket::WebSocket(DOM::Window& window, URL& url)
-    : EventTarget(static_cast<Bindings::ScriptExecutionContext&>(window.document()))
+    : EventTarget(static_cast<Bindings::ScriptExecutionContext&>(window.associated_document()))
     , m_window(window)
 {
     // FIXME: Integrate properly with FETCH as per https://fetch.spec.whatwg.org/#websocket-opening-handshake

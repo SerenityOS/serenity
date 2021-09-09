@@ -110,7 +110,7 @@ JS_DEFINE_NATIVE_GETTER(ConsoleGlobalObject::inspected_node_getter)
 
     auto console_global_object = static_cast<ConsoleGlobalObject*>(this_object);
     auto& window = console_global_object->m_window_object->impl();
-    auto* inspected_node = window.document().inspected_node();
+    auto* inspected_node = window.associated_document().inspected_node();
     if (!inspected_node)
         return JS::js_undefined();
 

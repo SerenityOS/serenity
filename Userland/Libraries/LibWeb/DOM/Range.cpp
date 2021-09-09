@@ -13,7 +13,7 @@ namespace Web::DOM {
 
 NonnullRefPtr<Range> Range::create(Window& window)
 {
-    return Range::create(window.document());
+    return Range::create(window.associated_document());
 }
 
 NonnullRefPtr<Range> Range::create(Document& document)

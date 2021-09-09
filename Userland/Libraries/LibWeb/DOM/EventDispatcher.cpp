@@ -162,7 +162,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
         target_override = target;
     } else {
         // NOTE: This can be done because legacy_target_override is only set for events targeted at Window.
-        target_override = verify_cast<Window>(*target).document();
+        target_override = verify_cast<Window>(*target).associated_document();
     }
 
     RefPtr<EventTarget> activation_target;

@@ -36,8 +36,8 @@ public:
     Page* page();
     Page const* page() const;
 
-    Document const& document() const { return m_document; }
-    Document& document() { return m_document; }
+    Document const& associated_document() const { return m_associated_document; }
+    Document& associated_document() { return m_associated_document; }
 
     void alert(String const&);
     bool confirm(String const&);
@@ -75,7 +75,9 @@ public:
 private:
     explicit Window(Document&);
 
-    Document& m_document;
+    // https://html.spec.whatwg.org/multipage/window-object.html#concept-document-window
+    Document& m_associated_document;
+
     WeakPtr<Bindings::WindowObject> m_wrapper;
 
     IDAllocator m_timer_id_allocator;

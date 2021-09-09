@@ -25,7 +25,7 @@
 namespace Web::XHR {
 
 XMLHttpRequest::XMLHttpRequest(DOM::Window& window)
-    : XMLHttpRequestEventTarget(static_cast<Bindings::ScriptExecutionContext&>(window.document()))
+    : XMLHttpRequestEventTarget(static_cast<Bindings::ScriptExecutionContext&>(window.associated_document()))
     , m_window(window)
 {
 }
@@ -119,7 +119,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(const String& method, const String& 
 
     auto normalized_method = normalize_method(method);
 
-    auto parsed_url = m_window->document().complete_url(url);
+    auto parsed_url = m_window->associated_document().complete_url(url);
     if (!parsed_url.is_valid())
         return DOM::SyntaxError::create("Invalid URL");
 
@@ -166,14 +166,14 @@ DOM::ExceptionOr<void> XMLHttpRequest::send()
 
     // FIXME: If body is not null, then:
 
-    URL request_url = m_window->document().complete_url(m_url.to_string());
-    dbgln("XHR send from {} to {}", m_window->document().url(), request_url);
+    URL request_url = m_window->associated_document().complete_url(m_url.to_string());
+    dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);
 
     // TODO: Add support for preflight requests to support CORS requests
     Origin request_url_origin = Origin(request_url.protocol(), request_url.host(), request_url.port());
 
-    if (!m_window->document().origin().is_same(request_url_origin)) {
-        dbgln("XHR failed to load: Same-Origin Policy violation: {} may not load {}", m_window->document().url(), request_url);
+    if (!m_window->associated_document().origin().is_same(request_url_origin)) {
+        dbgln("XHR failed to load: Same-Origin Policy violation: {} may not load {}", m_window->associated_document().url(), request_url);
         auto weak_this = make_weak_ptr();
         if (!weak_this)
             return {};
