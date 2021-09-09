@@ -1236,8 +1236,11 @@ int pclose(FILE* stream)
 
 int remove(const char* pathname)
 {
-    if (unlink(pathname) < 0 && errno == EISDIR)
-        return rmdir(pathname);
+    if (unlink(pathname) < 0) {
+        if (errno == EISDIR)
+            return rmdir(pathname);
+        return -1;
+    }
     return 0;
 }
 
