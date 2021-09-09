@@ -40,7 +40,7 @@ TEST_CASE(test_clone)
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
+    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
 
     auto new_font = font->clone();
     EXPECT(!new_font->name().is_null());
@@ -53,7 +53,7 @@ TEST_CASE(test_set_name)
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
+    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
 
     const char* name = "my newly created font";
     font->set_name(name);
@@ -66,7 +66,7 @@ TEST_CASE(test_set_family)
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
+    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
 
     const char* family = "my newly created font family";
     font->set_family(family);
@@ -79,7 +79,7 @@ TEST_CASE(test_set_glyph_width)
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
+    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
 
     size_t ch = 123;
     font->set_glyph_width(ch, glyph_width);
@@ -91,7 +91,7 @@ TEST_CASE(test_set_glyph_spacing)
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
+    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
 
     u8 glyph_spacing = 8;
     font->set_glyph_spacing(glyph_spacing);
@@ -99,23 +99,11 @@ TEST_CASE(test_set_glyph_spacing)
     EXPECT(font->glyph_spacing() == glyph_spacing);
 }
 
-TEST_CASE(test_set_type)
-{
-    u8 glyph_height = 1;
-    u8 glyph_width = 1;
-    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
-
-    auto type = Gfx::FontTypes::Default;
-    font->set_type(type);
-
-    EXPECT(font->type() == type);
-}
-
 TEST_CASE(test_width)
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
+    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
 
     EXPECT(font->width("A") == glyph_width);
 }
@@ -124,8 +112,7 @@ TEST_CASE(test_glyph_or_emoji_width)
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
-    font->set_type(Gfx::FontTypes::Default);
+    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
 
     EXPECT(font->glyph_or_emoji_width(0));
 }
@@ -140,7 +127,7 @@ TEST_CASE(test_write_to_file)
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
+    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
 
     char path[] = "/tmp/new.font.XXXXXX";
     EXPECT(mkstemp(path) != -1);
