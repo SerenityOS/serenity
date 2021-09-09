@@ -105,7 +105,7 @@ private:
     IntrusiveListNode<LocalSocket> m_list_node;
 
 public:
-    using List = IntrusiveList<LocalSocket, RawPtr<LocalSocket>, &LocalSocket::m_list_node>;
+    using List = IntrusiveList<&LocalSocket::m_list_node>;
 };
 
 }

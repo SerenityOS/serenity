@@ -69,7 +69,7 @@ public:
     }
 
 private:
-    using BlockedThreadList = IntrusiveList<Thread, RawPtr<Thread>, &Thread::m_blocked_threads_list_node>;
+    using BlockedThreadList = IntrusiveList<&Thread::m_blocked_threads_list_node>;
 
     ALWAYS_INLINE BlockedThreadList& thread_list_for_mode(Mode mode)
     {

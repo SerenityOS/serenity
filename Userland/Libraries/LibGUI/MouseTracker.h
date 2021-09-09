@@ -26,7 +26,7 @@ protected:
 
 private:
     IntrusiveListNode<MouseTracker> m_list_node;
-    using List = IntrusiveList<MouseTracker, RawPtr<MouseTracker>, &MouseTracker::m_list_node>;
+    using List = IntrusiveList<&MouseTracker::m_list_node>;
     static List s_trackers;
 };
 

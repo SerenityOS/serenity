@@ -43,7 +43,7 @@ public:
 private:
     const size_t m_cell_size;
 
-    using BlockList = IntrusiveList<HeapBlock, RawPtr<HeapBlock>, &HeapBlock::m_list_node>;
+    using BlockList = IntrusiveList<&HeapBlock::m_list_node>;
     BlockList m_full_blocks;
     BlockList m_usable_blocks;
 };

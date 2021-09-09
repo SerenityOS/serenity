@@ -73,7 +73,7 @@ private:
     Region::ListInVMObject m_regions;
 
 public:
-    using AllInstancesList = IntrusiveList<VMObject, RawPtr<VMObject>, &VMObject::m_list_node>;
+    using AllInstancesList = IntrusiveList<&VMObject::m_list_node>;
     static SpinlockProtected<VMObject::AllInstancesList>& all_instances();
 };
 

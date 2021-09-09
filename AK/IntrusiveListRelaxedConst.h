@@ -9,6 +9,7 @@
 #include <AK/IntrusiveList.h>
 
 namespace AK {
+namespace Detail {
 
 template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
 class IntrusiveListRelaxedConst : public IntrusiveList<T, Container, member> {
@@ -23,6 +24,14 @@ public:
     Iterator begin() const { return const_cast<IntrusiveListRelaxedConst*>(this)->IntrusiveList<T, Container, member>::begin(); }
     Iterator end() const { return Iterator {}; }
 };
+
+}
+
+template<auto member>
+using IntrusiveListRelaxedConst = Detail::IntrusiveListRelaxedConst<
+    decltype(Detail::ExtractIntrusiveListTypes::value(member)),
+    decltype(Detail::ExtractIntrusiveListTypes::container(member)),
+    member>;
 
 }
 

@@ -50,7 +50,7 @@ private:
     mutable IntrusiveListNode<Custody> m_all_custodies_list_node;
 
 public:
-    using AllCustodiesList = IntrusiveList<Custody, RawPtr<Custody>, &Custody::m_all_custodies_list_node>;
+    using AllCustodiesList = IntrusiveList<&Custody::m_all_custodies_list_node>;
 };
 
 }
