@@ -211,7 +211,7 @@ Optional<Variant<String, NumberType>> get_string_or_number_option(GlobalObject& 
 }
 
 // 13.6 ToTemporalOverflow ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloverflow
-Optional<String> to_temporal_overflow(GlobalObject& global_object, Object& normalized_options)
+Optional<String> to_temporal_overflow(GlobalObject& global_object, Object const& normalized_options)
 {
     auto& vm = global_object.vm();
 
@@ -225,7 +225,7 @@ Optional<String> to_temporal_overflow(GlobalObject& global_object, Object& norma
 }
 
 // 13.8 ToTemporalRoundingMode ( normalizedOptions, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingmode
-Optional<String> to_temporal_rounding_mode(GlobalObject& global_object, Object& normalized_options, String const& fallback)
+Optional<String> to_temporal_rounding_mode(GlobalObject& global_object, Object const& normalized_options, String const& fallback)
 {
     auto& vm = global_object.vm();
 
@@ -239,7 +239,7 @@ Optional<String> to_temporal_rounding_mode(GlobalObject& global_object, Object& 
 }
 
 // 13.11 ToShowCalendarOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-toshowcalendaroption
-Optional<String> to_show_calendar_option(GlobalObject& global_object, Object& normalized_options)
+Optional<String> to_show_calendar_option(GlobalObject& global_object, Object const& normalized_options)
 {
     auto& vm = global_object.vm();
 
@@ -253,7 +253,7 @@ Optional<String> to_show_calendar_option(GlobalObject& global_object, Object& no
 }
 
 // 13.14 ToTemporalRoundingIncrement ( normalizedOptions, dividend, inclusive ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingincrement
-u64 to_temporal_rounding_increment(GlobalObject& global_object, Object& normalized_options, Optional<double> dividend, bool inclusive)
+u64 to_temporal_rounding_increment(GlobalObject& global_object, Object const& normalized_options, Optional<double> dividend, bool inclusive)
 {
     auto& vm = global_object.vm();
 
@@ -307,7 +307,7 @@ u64 to_temporal_rounding_increment(GlobalObject& global_object, Object& normaliz
 }
 
 // 13.16 ToSecondsStringPrecision ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-tosecondsstringprecision
-Optional<SecondsStringPrecision> to_seconds_string_precision(GlobalObject& global_object, Object& normalized_options)
+Optional<SecondsStringPrecision> to_seconds_string_precision(GlobalObject& global_object, Object const& normalized_options)
 {
     auto& vm = global_object.vm();
 
@@ -403,7 +403,7 @@ static HashMap<StringView, StringView> plural_to_singular_units = {
 };
 
 // 13.17 ToLargestTemporalUnit ( normalizedOptions, disallowedUnits, fallback [ , autoValue ] ), https://tc39.es/proposal-temporal/#sec-temporal-tolargesttemporalunit
-Optional<String> to_largest_temporal_unit(GlobalObject& global_object, Object& normalized_options, Vector<StringView> const& disallowed_units, String const& fallback, Optional<String> auto_value)
+Optional<String> to_largest_temporal_unit(GlobalObject& global_object, Object const& normalized_options, Vector<StringView> const& disallowed_units, String const& fallback, Optional<String> auto_value)
 {
     auto& vm = global_object.vm();
 
@@ -443,7 +443,7 @@ Optional<String> to_largest_temporal_unit(GlobalObject& global_object, Object& n
 }
 
 // 13.18 ToSmallestTemporalUnit ( normalizedOptions, disallowedUnits, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-tosmallesttemporalunit
-Optional<String> to_smallest_temporal_unit(GlobalObject& global_object, Object& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback)
+Optional<String> to_smallest_temporal_unit(GlobalObject& global_object, Object const& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback)
 {
     auto& vm = global_object.vm();
 
