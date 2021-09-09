@@ -91,6 +91,9 @@ public:
     void set_frame_nesting_levels(HashMap<URL, size_t> frame_nesting_levels) { m_frame_nesting_levels = move(frame_nesting_levels); };
     HashMap<URL, size_t> const& frame_nesting_levels() const { return m_frame_nesting_levels; }
 
+    DOM::Document* container_document();
+    DOM::Document const* container_document() const;
+
 private:
     explicit BrowsingContext(Page&, HTML::BrowsingContextContainer*, BrowsingContext& top_level_browsing_context);
     explicit BrowsingContext(HTML::BrowsingContextContainer&, BrowsingContext& top_level_browsing_context);
