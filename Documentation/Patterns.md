@@ -39,8 +39,8 @@ private:
     IntrusiveListNode<Region> m_vmobject_list_node;
 
 public:
-    using ListInMemoryManager = IntrusiveList<Region, RawPtr<Region>, &Region::m_memory_manager_list_node>;
-    using ListInVMObject = IntrusiveList<Region, RawPtr<Region>, &Region::m_vmobject_list_node>;
+    using ListInMemoryManager = IntrusiveList<&Region::m_memory_manager_list_node>;
+    using ListInVMObject = IntrusiveList<&Region::m_vmobject_list_node>;
 };
 ```
 
