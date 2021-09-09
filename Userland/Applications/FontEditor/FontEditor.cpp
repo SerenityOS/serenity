@@ -22,6 +22,7 @@
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/FontPickerWeightModel.h>
 #include <LibGUI/GroupBox.h>
+#include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
@@ -269,6 +270,53 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     });
     m_show_metadata_action->set_checked(true);
     m_show_metadata_action->set_status_tip("Show or hide metadata about the current font");
+    m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png"), [&](auto&) {
+        String input;
+        if (GUI::InputBox::show(window(), input, "Hexadecimal:", "Go to Glyph") == GUI::InputBox::ExecOK && !input.is_empty()) {
+            int code_point = strtoul(&input[0], nullptr, 16);
+            code_point = clamp(code_point, 0x0000, 0x10FFFF);
+            m_glyph_map_widget->set_focus(true);
+            m_glyph_map_widget->set_selected_glyph(code_point);
+            m_glyph_map_widget->scroll_to_glyph(code_point);
+        }
+    });
+    m_go_to_glyph_action->set_status_tip("Go to the specified code point");
+    m_previous_glyph_action = GUI::Action::create("Pre&vious Glyph", { Mod_Alt, Key_Left }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"), [&](auto&) {
+        bool search_wrapped = false;
+        for (int i = m_glyph_map_widget->selected_glyph() - 1;; --i) {
+            if (i < 0 && !search_wrapped) {
+                i = 0x10FFFF;
+                search_wrapped = true;
+            } else if (i < 0 && search_wrapped) {
+                break;
+            }
+            if (m_edited_font->raw_glyph_width(i) > 0) {
+                m_glyph_map_widget->set_focus(true);
+                m_glyph_map_widget->set_selected_glyph(i);
+                m_glyph_map_widget->scroll_to_glyph(i);
+                break;
+            }
+        }
+    });
+    m_previous_glyph_action->set_status_tip("Seek the previous visible glyph");
+    m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, Key_Right }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"), [&](auto&) {
+        bool search_wrapped = false;
+        for (int i = m_glyph_map_widget->selected_glyph() + 1;; ++i) {
+            if (i > 0x10FFFF && !search_wrapped) {
+                i = 0;
+                search_wrapped = true;
+            } else if (i > 0x10FFFF && search_wrapped) {
+                break;
+            }
+            if (m_edited_font->raw_glyph_width(i) > 0) {
+                m_glyph_map_widget->set_focus(true);
+                m_glyph_map_widget->set_selected_glyph(i);
+                m_glyph_map_widget->scroll_to_glyph(i);
+                break;
+            }
+        }
+    });
+    m_next_glyph_action->set_status_tip("Seek the next visible glyph");
 
     toolbar.add_action(*m_new_action);
     toolbar.add_action(*m_open_action);
@@ -283,6 +331,10 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     toolbar.add_action(*m_redo_action);
     toolbar.add_separator();
     toolbar.add_action(*m_open_preview_action);
+    toolbar.add_separator();
+    toolbar.add_action(*m_previous_glyph_action);
+    toolbar.add_action(*m_next_glyph_action);
+    toolbar.add_action(*m_go_to_glyph_action);
 
     m_scale_five_action = GUI::Action::create_checkable("500%", { Mod_Ctrl, Key_1 }, [&](auto&) {
         m_glyph_editor_widget->set_scale(5);
@@ -525,6 +577,10 @@ void FontEditorWidget::initialize_menubar(GUI::Window& window)
     edit_menu.add_action(*m_copy_action);
     edit_menu.add_action(*m_paste_action);
     edit_menu.add_action(*m_delete_action);
+    edit_menu.add_separator();
+    edit_menu.add_action(*m_previous_glyph_action);
+    edit_menu.add_action(*m_next_glyph_action);
+    edit_menu.add_action(*m_go_to_glyph_action);
 
     auto& view_menu = window.add_menu("&View");
     view_menu.add_action(*m_open_preview_action);

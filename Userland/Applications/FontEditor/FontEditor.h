@@ -61,6 +61,10 @@ private:
     RefPtr<UndoGlyph> m_undo_glyph;
     OwnPtr<GUI::UndoStack> m_undo_stack;
 
+    RefPtr<GUI::Action> m_go_to_glyph_action;
+    RefPtr<GUI::Action> m_previous_glyph_action;
+    RefPtr<GUI::Action> m_next_glyph_action;
+
     RefPtr<GUI::Action> m_open_preview_action;
     RefPtr<GUI::Action> m_show_metadata_action;
 
