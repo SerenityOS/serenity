@@ -42,20 +42,20 @@ void Window::set_wrapper(Badge<Bindings::WindowObject>, Bindings::WindowObject& 
 
 void Window::alert(const String& message)
 {
-    if (auto* page = m_document.page())
+    if (auto* page = this->page())
         page->client().page_did_request_alert(message);
 }
 
 bool Window::confirm(const String& message)
 {
-    if (auto* page = m_document.page())
+    if (auto* page = this->page())
         return page->client().page_did_request_confirm(message);
     return false;
 }
 
 String Window::prompt(const String& message, const String& default_)
 {
-    if (auto* page = m_document.page())
+    if (auto* page = this->page())
         return page->client().page_did_request_prompt(message, default_);
     return {};
 }
@@ -175,6 +175,16 @@ int Window::inner_height() const
     if (!document().layout_node())
         return 0;
     return document().layout_node()->height();
+}
+
+Page* Window::page()
+{
+    return document().page();
+}
+
+Page const* Window::page() const
+{
+    return document().page();
 }
 
 }
