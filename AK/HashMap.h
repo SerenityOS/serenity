@@ -134,8 +134,10 @@ public:
     V& ensure(const K& key)
     {
         auto it = find(key);
-        if (it == end())
-            set(key, V());
+        if (it != end())
+            return it->value;
+        auto result = set(key, V());
+        VERIFY(result == HashSetResult::InsertedNewEntry);
         return find(key)->value;
     }
 
@@ -143,9 +145,10 @@ public:
     V& ensure(K const& key, Callback initialization_callback)
     {
         auto it = find(key);
-        if (it == end()) {
-            set(key, initialization_callback());
-        }
+        if (it != end())
+            return it->value;
+        auto result = set(key, initialization_callback());
+        VERIFY(result == HashSetResult::InsertedNewEntry);
         return find(key)->value;
     }
 
