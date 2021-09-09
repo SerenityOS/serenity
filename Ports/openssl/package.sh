@@ -8,7 +8,7 @@ files="https://ftp.nluug.nl/security/openssl/openssl-${version}.tar.gz openssl-$
 auth_type=sha256
 
 depends="zlib"
-configopts="--prefix=/usr/local -DOPENSSL_SYS_SERENITY=1 gcc zlib no-tests no-threads no-asm"
+configopts="--prefix=/usr/local -DOPENSSL_SYS_SERENITY=1 -DOPENSSL_USE_IPV6=0 gcc zlib no-tests no-threads no-asm"
 
 configure() {
     run ./"$configscript" $configopts
