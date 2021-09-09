@@ -30,6 +30,78 @@ void PlainYearMonth::visit_edges(Visitor& visitor)
     visitor.visit(&m_calendar);
 }
 
+// 9.5.1 ToTemporalYearMonth ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalyearmonth
+PlainYearMonth* to_temporal_year_month(GlobalObject& global_object, Value item, Object* options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If options is not present, set options to ! OrdinaryObjectCreate(null).
+    if (!options)
+        options = Object::create(global_object, nullptr);
+
+    // 2. Assert: Type(options) is Object.
+
+    // 3. If Type(item) is Object, then
+    if (item.is_object()) {
+        auto& item_object = item.as_object();
+
+        // a. If item has an [[InitializedTemporalYearMonth]] internal slot, then
+        if (is<PlainYearMonth>(item_object)) {
+            // i. Return item.
+            return static_cast<PlainYearMonth*>(&item_object);
+        }
+
+        // b. Let calendar be ? GetTemporalCalendarWithISODefault(item).
+        auto* calendar = get_temporal_calendar_with_iso_default(global_object, item_object);
+        if (vm.exception())
+            return {};
+
+        // c. Let fieldNames be ? CalendarFields(calendar, « "month", "monthCode", "year" »).
+        auto field_names = calendar_fields(global_object, *calendar, { "month"sv, "monthCode"sv, "year"sv });
+        if (vm.exception())
+            return {};
+
+        // d. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
+        auto* fields = prepare_temporal_fields(global_object, item_object, field_names, {});
+        if (vm.exception())
+            return {};
+
+        // e. Return ? YearMonthFromFields(calendar, fields, options).
+        return year_month_from_fields(global_object, *calendar, *fields, options);
+    }
+
+    // 4. Perform ? ToTemporalOverflow(options).
+    (void)to_temporal_overflow(global_object, *options);
+    if (vm.exception())
+        return {};
+
+    // 5. Let string be ? ToString(item).
+    auto string = item.to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    // 6. Let result be ? ParseTemporalYearMonthString(string).
+    auto result = parse_temporal_year_month_string(global_object, string);
+    if (vm.exception())
+        return {};
+
+    // 7. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
+    auto* calendar = to_temporal_calendar_with_iso_default(global_object, result->calendar.has_value() ? js_string(vm, *result->calendar) : js_undefined());
+    if (vm.exception())
+        return {};
+
+    // 8. Set result to ? CreateTemporalYearMonth(result.[[Year]], result.[[Month]], calendar, result.[[Day]]).
+    auto* creation_result = create_temporal_year_month(global_object, result->year, result->month, *calendar, result->day);
+    if (vm.exception())
+        return {};
+
+    // 9. Let canonicalYearMonthOptions be ! OrdinaryObjectCreate(null).
+    auto* canonical_year_month_options = Object::create(global_object, nullptr);
+
+    // 10. Return ? YearMonthFromFields(calendar, result, canonicalYearMonthOptions).
+    return year_month_from_fields(global_object, *calendar, *creation_result, canonical_year_month_options);
+}
+
 // 9.5.2 RegulateISOYearMonth ( year, month, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulateisoyearmonth
 Optional<ISOYearMonth> regulate_iso_year_month(GlobalObject& global_object, double year, double month, StringView overflow)
 {
