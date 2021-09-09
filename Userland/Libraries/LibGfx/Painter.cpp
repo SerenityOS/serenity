@@ -1216,7 +1216,7 @@ void Painter::draw_glyph_or_emoji(IntPoint const& point, u32 code_point, Font co
     auto* emoji = Emoji::emoji_for_code_point(code_point);
     if (emoji == nullptr) {
         dbgln_if(EMOJI_DEBUG, "Failed to find an emoji for code_point {}", code_point);
-        draw_glyph(point, '?', font, color);
+        draw_glyph(point, 0xFFFD, font, color);
         return;
     }
 
