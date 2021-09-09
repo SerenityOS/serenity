@@ -103,7 +103,7 @@ Object* get_options_object(GlobalObject& global_object, Value options)
 }
 
 // 13.3 GetOption ( options, property, types, values, fallback ), https://tc39.es/proposal-temporal/#sec-getoption
-Value get_option(GlobalObject& global_object, Object& options, PropertyName const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback)
+Value get_option(GlobalObject& global_object, Object const& options, PropertyName const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback)
 {
     VERIFY(property.is_string());
 
