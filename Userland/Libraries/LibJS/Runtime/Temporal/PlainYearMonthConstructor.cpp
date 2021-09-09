@@ -28,6 +28,9 @@ void PlainYearMonthConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.temporal_plain_year_month_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
+
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.from, from, 1, attr);
 }
 
 // 9.1.1 Temporal.PlainYearMonth ( isoYear, isoMonth [ , calendarLike [ , referenceISODay ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth
@@ -87,6 +90,33 @@ Value PlainYearMonthConstructor::construct(FunctionObject& new_target)
 
     // 7. Return ? CreateTemporalYearMonth(y, m, calendar, ref, NewTarget).
     return create_temporal_year_month(global_object, y, m, *calendar, ref, &new_target);
+}
+
+// 9.2.2 Temporal.PlainYearMonth.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.from
+JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthConstructor::from)
+{
+    // 1. Set options to ? GetOptionsObject(options).
+    auto* options = get_options_object(global_object, vm.argument(1));
+    if (vm.exception())
+        return {};
+
+    auto item = vm.argument(0);
+
+    // 2. If Type(item) is Object and item has an [[InitializedTemporalYearMonth]] internal slot, then
+    if (item.is_object() && is<PlainYearMonth>(item.as_object())) {
+        // a. Perform ? ToTemporalOverflow(options).
+        (void)to_temporal_overflow(global_object, *options);
+        if (vm.exception())
+            return {};
+
+        auto& plain_year_month_object = static_cast<PlainYearMonth&>(item.as_object());
+
+        // b. Return ? CreateTemporalYearMonth(item.[[ISOYear]], item.[[ISOMonth]], item.[[Calendar]], item.[[ISODay]]).
+        return create_temporal_year_month(global_object, plain_year_month_object.iso_year(), plain_year_month_object.iso_month(), plain_year_month_object.calendar(), plain_year_month_object.iso_day());
+    }
+
+    // 3. Return ? ToTemporalYearMonth(item, options).
+    return to_temporal_year_month(global_object, item, options);
 }
 
 }
