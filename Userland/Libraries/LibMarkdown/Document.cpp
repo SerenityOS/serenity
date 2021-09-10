@@ -92,6 +92,7 @@ OwnPtr<Document> Document::parse(const StringView& str)
 
         if ((*lines).is_empty()) {
             ++lines;
+
             flush_paragraph();
             continue;
         }
@@ -108,8 +109,9 @@ OwnPtr<Document> Document::parse(const StringView& str)
             continue;
         }
 
+        if (!paragraph_text.is_empty())
+            paragraph_text.append("\n");
         paragraph_text.append(*lines++);
-        paragraph_text.append("\n");
     }
 
     flush_paragraph();
