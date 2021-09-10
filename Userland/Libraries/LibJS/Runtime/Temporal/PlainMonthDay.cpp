@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,8 +9,11 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
+#include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/PlainMonthDay.h>
 #include <LibJS/Runtime/Temporal/PlainMonthDayConstructor.h>
+#include <LibJS/Runtime/Temporal/PlainTime.h>
+#include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 
 namespace JS::Temporal {
 
@@ -27,6 +31,111 @@ void PlainMonthDay::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(&m_calendar);
+}
+
+// 10.5.1 ToTemporalMonthDay ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalmonthday
+PlainMonthDay* to_temporal_month_day(GlobalObject& global_object, Value item, Object const* options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If options is not present, set options to ! OrdinaryObjectCreate(null).
+    if (!options)
+        options = Object::create(global_object, nullptr);
+
+    // 2. Let referenceISOYear be 1972 (the first leap year after the Unix epoch).
+    i32 reference_iso_year = 1972;
+
+    // 3. If Type(item) is Object, then
+    if (item.is_object()) {
+        auto& item_object = item.as_object();
+
+        // a. If item has an [[InitializedTemporalMonthDay]] internal slot, then
+        if (is<PlainMonthDay>(item_object)) {
+            // i. Return item.
+            return static_cast<PlainMonthDay*>(&item_object);
+        }
+
+        Object* calendar = nullptr;
+        bool calendar_absent;
+
+        // b. If item has an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], [[InitializedTemporalTime]], [[InitializedTemporalYearMonth]], or [[InitializedTemporalZonedDateTime]] internal slot, then
+        //      i. Let calendar be item.[[Calendar]].
+        //      ii. Let calendarAbsent be false.
+        if (is<PlainDate>(item_object)) {
+            calendar = &static_cast<PlainDate&>(item_object).calendar();
+            calendar_absent = false;
+        } else if (is<PlainDateTime>(item_object)) {
+            calendar = &static_cast<PlainDateTime&>(item_object).calendar();
+            calendar_absent = false;
+        } else if (is<PlainMonthDay>(item_object)) {
+            calendar = &static_cast<PlainMonthDay&>(item_object).calendar();
+            calendar_absent = false;
+        } else if (is<PlainTime>(item_object)) {
+            calendar = &static_cast<PlainTime&>(item_object).calendar();
+            calendar_absent = false;
+        } else if (is<PlainYearMonth>(item_object)) {
+            calendar = &static_cast<PlainYearMonth&>(item_object).calendar();
+            calendar_absent = false;
+        } else if (is<ZonedDateTime>(item_object)) {
+            calendar = &static_cast<ZonedDateTime&>(item_object).calendar();
+            calendar_absent = false;
+        } else {
+            // i. Let calendar be ? Get(item, "calendar").
+            auto calendar_value = item_object.get(vm.names.calendar);
+            if (vm.exception())
+                return {};
+
+            // ii. If calendar is undefined, then
+            //      1. Let calendarAbsent be true.
+            // iii. Else,
+            //      1. Let calendarAbsent be false.
+            calendar_absent = calendar_value.is_undefined();
+
+            // iv. Set calendar to ? ToTemporalCalendarWithISODefault(calendar).
+            calendar = to_temporal_calendar_with_iso_default(global_object, calendar_value);
+            if (vm.exception())
+                return {};
+        }
+
+        // d. Let fieldNames be ? CalendarFields(calendar, « "day", "month", "monthCode", "year" »).
+        auto field_names = calendar_fields(global_object, *calendar, { "day"sv, "month"sv, "monthCode"sv, "year"sv });
+        if (vm.exception())
+            return {};
+
+        // e. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
+        auto* fields = prepare_temporal_fields(global_object, item_object, field_names, {});
+        if (vm.exception())
+            return {};
+
+        // f. Let month be ? Get(fields, "month").
+        auto month = fields->get(vm.names.month);
+        if (vm.exception())
+            return {};
+
+        // g. Let monthCode be ? Get(fields, "monthCode").
+        auto month_code = fields->get(vm.names.monthCode);
+        if (vm.exception())
+            return {};
+
+        // h. Let year be ? Get(fields, "year").
+        auto year = fields->get(vm.names.year);
+        if (vm.exception())
+            return {};
+
+        // i. If calendarAbsent is true, and month is not undefined, and monthCode is undefined and year is undefined, then
+        if (calendar_absent && !month.is_undefined() && month_code.is_undefined() && year.is_undefined()) {
+            // i. Perform ! CreateDataPropertyOrThrow(fields, "year", 𝔽(referenceISOYear)).
+            fields->create_data_property_or_throw(vm.names.year, Value(reference_iso_year));
+        }
+
+        // j. Return ? MonthDayFromFields(calendar, fields, options).
+        return month_day_from_fields(global_object, *calendar, *fields, options);
+    }
+
+    // FIXME: The spec has an issue in this part which makes it unimplementable, namely:
+    //        - ParseTemporalMonthDayString doesn't return a [[Calendar]] field, which is required in step 7.
+    //        This is a known issue, see https://github.com/tc39/proposal-temporal/issues/1502
+    TODO();
 }
 
 // 10.5.2 CreateTemporalMonthDay ( isoMonth, isoDay, calendar, referenceISOYear [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalmonthday
