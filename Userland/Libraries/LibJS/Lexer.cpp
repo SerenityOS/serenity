@@ -141,7 +141,7 @@ Lexer::Lexer(StringView source, StringView filename, size_t line_number, size_t 
 void Lexer::consume()
 {
     auto did_reach_eof = [this] {
-        if (m_position != m_source.length())
+        if (m_position < m_source.length())
             return false;
         m_eof = true;
         m_current_char = '\0';
