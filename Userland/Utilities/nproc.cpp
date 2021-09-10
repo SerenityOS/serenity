@@ -22,7 +22,8 @@ int main()
         return 1;
     }
 
-    auto json = JsonValue::from_string({ file->read_all() });
+    auto buffer = file->read_all();
+    auto json = JsonValue::from_string({ buffer });
     auto cpuinfo_array = json.value().as_array();
     outln("{}", cpuinfo_array.size());
 
