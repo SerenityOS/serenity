@@ -58,6 +58,20 @@ size_t Text::CodeNode::terminal_length() const
     return code->terminal_length();
 }
 
+void Text::BreakNode::render_to_html(StringBuilder& builder) const
+{
+    builder.append("<br />");
+}
+
+void Text::BreakNode::render_for_terminal(StringBuilder&) const
+{
+}
+
+size_t Text::BreakNode::terminal_length() const
+{
+    return 0;
+}
+
 void Text::TextNode::render_to_html(StringBuilder& builder) const
 {
     builder.append(escape_html_entities(text));
@@ -212,6 +226,8 @@ Vector<Text::Token> Text::tokenize(StringView const& str)
         flush_run(false, false, false, false, false);
     };
 
+    bool in_space = false;
+
     for (size_t offset = 0; offset < str.length(); ++offset) {
         auto has = [&](StringView const& seq) {
             if (offset + seq.length() > str.length())
@@ -229,6 +245,10 @@ Vector<Text::Token> Text::tokenize(StringView const& str)
         };
 
         char ch = str[offset];
+        if (ch != ' ' && in_space) {
+            flush_token();
+            in_space = false;
+        }
 
         if (ch == '\\' && offset + 1 < str.length()) {
             current_token.append(str[offset + 1]);
@@ -249,6 +269,12 @@ Vector<Text::Token> Text::tokenize(StringView const& str)
                 true);
             offset = run_offset - 1;
 
+        } else if (ch == ' ') {
+            if (!in_space) {
+                flush_token();
+                in_space = true;
+            }
+            current_token.append(ch);
         } else if (has("\n")) {
             expect("\n");
         } else if (has("[")) {
@@ -272,7 +298,11 @@ NonnullOwnPtr<Text::MultiNode> Text::parse_sequence(Vector<Token>::ConstIterator
     auto node = make<MultiNode>();
 
     for (; !tokens.is_end(); ++tokens) {
-        if (tokens->is_run) {
+        if (tokens->is_space()) {
+            node->children.append(parse_break(tokens));
+        } else if (*tokens == "\n") {
+            node->children.append(parse_newline(tokens));
+        } else if (tokens->is_run) {
             switch (tokens->run_char()) {
             case '*':
             case '_':
@@ -296,6 +326,29 @@ NonnullOwnPtr<Text::MultiNode> Text::parse_sequence(Vector<Token>::ConstIterator
         if (tokens.is_end())
             break;
     }
+    return node;
+}
+
+NonnullOwnPtr<Text::Node> Text::parse_break(Vector<Token>::ConstIterator& tokens)
+{
+    auto next_tok = tokens + 1;
+    if (next_tok.is_end() || *next_tok != "\n")
+        return make<TextNode>(tokens->data);
+
+    if (tokens->data.length() >= 2)
+        return make<BreakNode>();
+
+    return make<MultiNode>();
+}
+
+NonnullOwnPtr<Text::Node> Text::parse_newline(Vector<Token>::ConstIterator& tokens)
+{
+    auto node = make<TextNode>(tokens->data);
+    auto next_tok = tokens + 1;
+    if (!next_tok.is_end() && next_tok->is_space())
+        // Skip whitespace after newline.
+        ++tokens;
+
     return node;
 }
 
@@ -325,7 +378,11 @@ NonnullOwnPtr<Text::Node> Text::parse_emph(Vector<Token>::ConstIterator& tokens,
 
     auto child = make<MultiNode>();
     for (++tokens; !tokens.is_end(); ++tokens) {
-        if (tokens->is_run) {
+        if (tokens->is_space()) {
+            child->children.append(parse_break(tokens));
+        } else if (*tokens == "\n") {
+            child->children.append(parse_newline(tokens));
+        } else if (tokens->is_run) {
             if (can_close_for(opening, *tokens)) {
                 return make<EmphasisNode>(opening.run_length() >= 2, move(child));
             }
