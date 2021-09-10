@@ -135,7 +135,7 @@ UNMAP_AFTER_INIT bool HPET::test_and_initialize()
             return false;
         }
     }
-    new HPET(PhysicalAddress(hpet_table.value()));
+    new (nothrow) HPET(PhysicalAddress(hpet_table.value()));
     return true;
 }
 

@@ -22,7 +22,7 @@ public:
 
     void queue(void (*function)(void*), void* data = nullptr, void (*free_data)(void*) = nullptr)
     {
-        auto* item = new WorkItem; // TODO: use a pool
+        auto* item = new (nothrow) WorkItem; // TODO: use a pool
         item->function = [function, data, free_data] {
             function(data);
             if (free_data)
@@ -34,7 +34,7 @@ public:
     template<typename Function>
     void queue(Function function)
     {
-        auto* item = new WorkItem; // TODO: use a pool
+        auto* item = new (nothrow) WorkItem; // TODO: use a pool
         item->function = Function(function);
         do_queue(item);
     }

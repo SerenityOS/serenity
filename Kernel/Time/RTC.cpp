@@ -16,7 +16,7 @@ namespace Kernel {
 
 NonnullRefPtr<RealTimeClock> RealTimeClock::create(Function<void(const RegisterState&)> callback)
 {
-    return adopt_ref(*new RealTimeClock(move(callback)));
+    return adopt_ref(*new (nothrow) RealTimeClock(move(callback)));
 }
 RealTimeClock::RealTimeClock(Function<void(const RegisterState&)> callback)
     : HardwareTimer(IRQ_TIMER, move(callback))

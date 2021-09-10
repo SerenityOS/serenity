@@ -13,7 +13,7 @@ namespace Kernel::Graphics {
 
 UNMAP_AFTER_INIT NonnullRefPtr<TextModeConsole> TextModeConsole::initialize(const VGACompatibleAdapter& adapter)
 {
-    return adopt_ref(*new TextModeConsole(adapter));
+    return adopt_ref(*new (nothrow) TextModeConsole(adapter));
 }
 
 UNMAP_AFTER_INIT TextModeConsole::TextModeConsole(const VGACompatibleAdapter& adapter)

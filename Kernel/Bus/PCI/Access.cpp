@@ -41,7 +41,8 @@ UNMAP_AFTER_INIT bool Access::initialize_for_memory_access(PhysicalAddress mcfg_
         return false;
 
     InterruptDisabler disabler;
-    auto* access = new Access(Access::AccessType::Memory);
+    auto* access = new (nothrow) Access(Access::AccessType::Memory);
+    VERIFY(access);
     if (!access->scan_pci_domains(mcfg_table))
         return false;
     access->rescan_hardware();
@@ -85,7 +86,8 @@ UNMAP_AFTER_INIT bool Access::initialize_for_io_access()
     if (Access::is_initialized()) {
         return false;
     }
-    auto* access = new Access(Access::AccessType::IO);
+    auto* access = new (nothrow) Access(Access::AccessType::IO);
+    VERIFY(access);
     access->rescan_hardware();
     dbgln_if(PCI_DEBUG, "PCI: IO access initialised.");
     return true;

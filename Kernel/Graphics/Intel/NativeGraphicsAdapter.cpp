@@ -47,7 +47,7 @@ RefPtr<IntelNativeGraphicsAdapter> IntelNativeGraphicsAdapter::initialize(PCI::A
     VERIFY(id.vendor_id == 0x8086);
     if (!is_supported_model(id.device_id))
         return {};
-    return adopt_ref(*new IntelNativeGraphicsAdapter(address));
+    return adopt_ref(*new (nothrow) IntelNativeGraphicsAdapter(address));
 }
 
 static size_t compute_dac_multiplier(size_t pixel_clock_in_khz)

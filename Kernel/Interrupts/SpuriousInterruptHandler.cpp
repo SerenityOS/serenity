@@ -12,7 +12,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT void SpuriousInterruptHandler::initialize(u8 interrupt_number)
 {
-    auto* handler = new SpuriousInterruptHandler(interrupt_number);
+    auto* handler = new (nothrow) SpuriousInterruptHandler(interrupt_number);
     handler->register_interrupt_handler();
 }
 

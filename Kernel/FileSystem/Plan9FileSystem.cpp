@@ -586,7 +586,7 @@ KResult Plan9FS::post_message_and_wait_for_a_reply(Message& message)
 {
     auto request_type = message.type();
     auto tag = message.tag();
-    auto completion = adopt_ref(*new ReceiveCompletion(tag));
+    auto completion = adopt_ref(*new (nothrow) ReceiveCompletion(tag));
     TRY(post_message(message, completion));
     if (Thread::current()->block<Plan9FS::Blocker>({}, *this, message, completion).was_interrupted())
         return EINTR;

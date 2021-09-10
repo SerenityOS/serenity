@@ -15,7 +15,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<I8042Controller> I8042Controller::initialize()
 {
-    return adopt_ref(*new I8042Controller());
+    return adopt_ref(*new (nothrow) I8042Controller());
 }
 
 RefPtr<MouseDevice> I8042Controller::mouse() const

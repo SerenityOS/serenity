@@ -15,7 +15,7 @@ unsigned Console::next_device_id = 0;
 
 UNMAP_AFTER_INIT NonnullRefPtr<Console> Console::must_create(PCI::Address address)
 {
-    return adopt_ref_if_nonnull(new Console(address)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) Console(address)).release_nonnull();
 }
 
 UNMAP_AFTER_INIT void Console::initialize()

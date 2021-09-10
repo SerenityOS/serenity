@@ -22,7 +22,7 @@ namespace Kernel {
 
 NonnullRefPtr<FramebufferDevice> FramebufferDevice::create(const GraphicsDevice& adapter, size_t output_port_index, PhysicalAddress paddr, size_t width, size_t height, size_t pitch)
 {
-    auto device = adopt_ref(*new FramebufferDevice(adapter, output_port_index, paddr, width, height, pitch));
+    auto device = adopt_ref(*new (nothrow) FramebufferDevice(adapter, output_port_index, paddr, width, height, pitch));
     device->after_inserting();
     return device;
 }

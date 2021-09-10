@@ -22,7 +22,7 @@ MutexProtected<HashMap<u32, Device*>>& Device::all_devices()
 
 NonnullRefPtr<SysFSDeviceComponent> SysFSDeviceComponent::must_create(Device const& device)
 {
-    return adopt_ref_if_nonnull(new SysFSDeviceComponent(device)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSDeviceComponent(device)).release_nonnull();
 }
 SysFSDeviceComponent::SysFSDeviceComponent(Device const& device)
     : SysFSComponent(String::formatted("{}:{}", device.major(), device.minor()))
@@ -33,7 +33,7 @@ SysFSDeviceComponent::SysFSDeviceComponent(Device const& device)
 
 UNMAP_AFTER_INIT NonnullRefPtr<SysFSDevicesDirectory> SysFSDevicesDirectory::must_create(SysFSRootDirectory const& root_directory)
 {
-    auto devices_directory = adopt_ref_if_nonnull(new SysFSDevicesDirectory(root_directory)).release_nonnull();
+    auto devices_directory = adopt_ref_if_nonnull(new (nothrow) SysFSDevicesDirectory(root_directory)).release_nonnull();
     devices_directory->m_components.append(SysFSBlockDevicesDirectory::must_create(*devices_directory));
     devices_directory->m_components.append(SysFSCharacterDevicesDirectory::must_create(*devices_directory));
     return devices_directory;
@@ -45,7 +45,7 @@ SysFSDevicesDirectory::SysFSDevicesDirectory(SysFSRootDirectory const& root_dire
 
 NonnullRefPtr<SysFSBlockDevicesDirectory> SysFSBlockDevicesDirectory::must_create(SysFSDevicesDirectory const& devices_directory)
 {
-    return adopt_ref_if_nonnull(new SysFSBlockDevicesDirectory(devices_directory)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSBlockDevicesDirectory(devices_directory)).release_nonnull();
 }
 SysFSBlockDevicesDirectory::SysFSBlockDevicesDirectory(SysFSDevicesDirectory const& devices_directory)
     : SysFSDirectory("block"sv, devices_directory)
@@ -81,7 +81,7 @@ RefPtr<SysFSComponent> SysFSBlockDevicesDirectory::lookup(StringView name)
 
 NonnullRefPtr<SysFSCharacterDevicesDirectory> SysFSCharacterDevicesDirectory::must_create(SysFSDevicesDirectory const& devices_directory)
 {
-    return adopt_ref_if_nonnull(new SysFSCharacterDevicesDirectory(devices_directory)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSCharacterDevicesDirectory(devices_directory)).release_nonnull();
 }
 SysFSCharacterDevicesDirectory::SysFSCharacterDevicesDirectory(SysFSDevicesDirectory const& devices_directory)
     : SysFSDirectory("char"sv, devices_directory)

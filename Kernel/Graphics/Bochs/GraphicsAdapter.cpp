@@ -59,7 +59,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<BochsGraphicsAdapter> BochsGraphicsAdapter::initi
 {
     PCI::ID id = PCI::get_id(address);
     VERIFY((id.vendor_id == PCI::VendorID::QEMUOld && id.device_id == 0x1111) || (id.vendor_id == PCI::VendorID::VirtualBox && id.device_id == 0xbeef));
-    return adopt_ref(*new BochsGraphicsAdapter(address));
+    return adopt_ref(*new (nothrow) BochsGraphicsAdapter(address));
 }
 
 UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address pci_address)

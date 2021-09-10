@@ -514,7 +514,7 @@ GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number)
 
 static void revert_to_unused_handler(u8 interrupt_number)
 {
-    auto handler = new UnhandledInterruptHandler(interrupt_number);
+    auto handler = new (nothrow) UnhandledInterruptHandler(interrupt_number);
     handler->register_interrupt_handler();
 }
 
@@ -808,7 +808,7 @@ UNMAP_AFTER_INIT void idt_init()
     register_interrupt_handler(0xff, interrupt_255_asm_entry);
 
     for (u8 i = 0; i < GENERIC_INTERRUPT_HANDLERS_COUNT; ++i) {
-        auto* handler = new UnhandledInterruptHandler(i);
+        auto* handler = new (nothrow) UnhandledInterruptHandler(i);
         handler->register_interrupt_handler();
     }
 

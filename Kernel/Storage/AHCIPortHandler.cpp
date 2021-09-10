@@ -11,7 +11,7 @@ namespace Kernel {
 
 NonnullRefPtr<AHCIPortHandler> AHCIPortHandler::create(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
 {
-    return adopt_ref(*new AHCIPortHandler(controller, irq, taken_ports));
+    return adopt_ref(*new (nothrow) AHCIPortHandler(controller, irq, taken_ports));
 }
 
 AHCIPortHandler::AHCIPortHandler(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)

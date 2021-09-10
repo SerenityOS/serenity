@@ -16,7 +16,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT void SharedIRQHandler::initialize(u8 interrupt_number)
 {
-    auto* handler = new SharedIRQHandler(interrupt_number);
+    auto* handler = new (nothrow) SharedIRQHandler(interrupt_number);
     handler->register_interrupt_handler();
     handler->disable_interrupt_vector();
 }

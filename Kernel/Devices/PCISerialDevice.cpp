@@ -26,7 +26,7 @@ UNMAP_AFTER_INIT void PCISerialDevice::detect()
             auto bar_base = PCI::get_BAR(address, board_definition.pci_bar) & ~1;
             auto port_base = IOAddress(bar_base + board_definition.first_offset);
             for (size_t i = 0; i < board_definition.port_count; i++) {
-                auto serial_device = new SerialDevice(port_base.offset(board_definition.port_size * i), current_device_minor++);
+                auto serial_device = new (nothrow) SerialDevice(port_base.offset(board_definition.port_size * i), current_device_minor++);
                 if (board_definition.baud_rate != SerialDevice::Baud::Baud38400) // non-default baud
                     serial_device->set_baud(board_definition.baud_rate);
 

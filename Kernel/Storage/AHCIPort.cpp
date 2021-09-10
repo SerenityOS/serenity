@@ -22,7 +22,7 @@ namespace Kernel {
 
 NonnullRefPtr<AHCIPort> AHCIPort::create(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
 {
-    return adopt_ref(*new AHCIPort(handler, registers, port_index));
+    return adopt_ref(*new (nothrow) AHCIPort(handler, registers, port_index));
 }
 
 AHCIPort::AHCIPort(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, u32 port_index)

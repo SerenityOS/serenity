@@ -57,7 +57,7 @@ bool NetworkTask::is_current()
 
 void NetworkTask_main(void*)
 {
-    delayed_ack_sockets = new HashTable<RefPtr<TCPSocket>>;
+    delayed_ack_sockets = new (nothrow) HashTable<RefPtr<TCPSocket>>;
 
     WaitQueue packet_wait_queue;
     int pending_packets = 0;

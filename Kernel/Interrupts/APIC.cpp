@@ -70,7 +70,7 @@ public:
 
     static void initialize(u8 interrupt_number)
     {
-        auto* handler = new APICIPIInterruptHandler(interrupt_number);
+        auto* handler = new (nothrow) APICIPIInterruptHandler(interrupt_number);
         handler->register_interrupt_handler();
     }
 
@@ -101,7 +101,7 @@ public:
 
     static void initialize(u8 interrupt_number)
     {
-        auto* handler = new APICErrInterruptHandler(interrupt_number);
+        auto* handler = new (nothrow) APICErrInterruptHandler(interrupt_number);
         handler->register_interrupt_handler();
     }
 

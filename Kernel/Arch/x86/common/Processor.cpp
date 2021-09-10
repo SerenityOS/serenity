@@ -358,7 +358,7 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
             detect_hypervisor();
     }
 
-    m_info = new ProcessorInfo(*this);
+    m_info = new (nothrow) ProcessorInfo(*this);
 
     {
         // We need to prevent races between APs starting up at the same time
@@ -790,8 +790,8 @@ UNMAP_AFTER_INIT void Processor::smp_enable()
     size_t msg_pool_size = Processor::count() * 100u;
     size_t msg_entries_cnt = Processor::count();
 
-    auto msgs = new ProcessorMessage[msg_pool_size];
-    auto msg_entries = new ProcessorMessageEntry[msg_pool_size * msg_entries_cnt];
+    auto msgs = new (nothrow) ProcessorMessage[msg_pool_size];
+    auto msg_entries = new (nothrow) ProcessorMessageEntry[msg_pool_size * msg_entries_cnt];
     size_t msg_entry_i = 0;
     for (size_t i = 0; i < msg_pool_size; i++, msg_entry_i += msg_entries_cnt) {
         auto& msg = msgs[i];
@@ -1063,7 +1063,8 @@ DeferredCallEntry* Processor::deferred_call_get_free()
         return entry;
     }
 
-    auto* entry = new DeferredCallEntry;
+    auto* entry = new (nothrow) DeferredCallEntry;
+    VERIFY(entry);
     new (entry->handler_storage) DeferredCallEntry::HandlerFunction;
     entry->was_allocated = true;
     return entry;

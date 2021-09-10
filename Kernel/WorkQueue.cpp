@@ -16,7 +16,7 @@ WorkQueue* g_io_work;
 
 UNMAP_AFTER_INIT void WorkQueue::initialize()
 {
-    g_io_work = new WorkQueue("IO WorkQueue");
+    g_io_work = new (nothrow) WorkQueue("IO WorkQueue");
 }
 
 UNMAP_AFTER_INIT WorkQueue::WorkQueue(StringView name)

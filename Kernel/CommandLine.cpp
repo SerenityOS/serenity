@@ -36,7 +36,8 @@ const CommandLine& kernel_command_line()
 UNMAP_AFTER_INIT void CommandLine::initialize()
 {
     VERIFY(!s_the);
-    s_the = new CommandLine(s_cmd_line);
+    s_the = new (nothrow) CommandLine(s_cmd_line);
+    VERIFY(s_the);
     dmesgln("Kernel Commandline: {}", kernel_command_line().string());
     // Validate the boot mode the user passed in.
     (void)s_the->boot_mode(Validate::Yes);

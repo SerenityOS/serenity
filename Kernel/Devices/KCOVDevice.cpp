@@ -20,7 +20,7 @@ HashMap<ThreadID, KCOVInstance*>* KCOVDevice::thread_instance;
 
 UNMAP_AFTER_INIT NonnullRefPtr<KCOVDevice> KCOVDevice::must_create()
 {
-    auto device = adopt_ref(*new KCOVDevice);
+    auto device = adopt_ref(*new (nothrow) KCOVDevice);
     device->after_inserting();
     return device;
 }
@@ -28,8 +28,8 @@ UNMAP_AFTER_INIT NonnullRefPtr<KCOVDevice> KCOVDevice::must_create()
 UNMAP_AFTER_INIT KCOVDevice::KCOVDevice()
     : BlockDevice(30, 0)
 {
-    proc_instance = new HashMap<ProcessID, KCOVInstance*>();
-    thread_instance = new HashMap<ThreadID, KCOVInstance*>();
+    proc_instance = new (nothrow) HashMap<ProcessID, KCOVInstance*>();
+    thread_instance = new (nothrow) HashMap<ThreadID, KCOVInstance*>();
     dbgln("KCOVDevice created");
 }
 
@@ -68,7 +68,7 @@ KResultOr<NonnullRefPtr<OpenFileDescription>> KCOVDevice::open(int options)
     auto pid = Process::current().pid();
     if (proc_instance->get(pid).has_value())
         return EBUSY; // This process already open()ed the kcov device
-    auto kcov_instance = new KCOVInstance(pid);
+    auto kcov_instance = new (nothrow) KCOVInstance(pid);
     kcov_instance->set_state(KCOVInstance::OPENED);
     proc_instance->set(pid, kcov_instance);
 

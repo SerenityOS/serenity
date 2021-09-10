@@ -129,7 +129,7 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_pic_mode()
     dmesgln("Interrupts: Switch to Legacy PIC mode");
     InterruptDisabler disabler;
     m_smp_enabled = false;
-    m_interrupt_controllers[0] = adopt_ref(*new PIC());
+    m_interrupt_controllers[0] = adopt_ref(*new (nothrow) PIC());
     SpuriousInterruptHandler::initialize(7);
     SpuriousInterruptHandler::initialize(15);
     for (auto& irq_controller : m_interrupt_controllers) {
@@ -187,7 +187,7 @@ UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
 
     int irq_controller_count = 0;
     if (madt->flags & PCAT_COMPAT_FLAG) {
-        m_interrupt_controllers[0] = adopt_ref(*new PIC());
+        m_interrupt_controllers[0] = adopt_ref(*new (nothrow) PIC());
         irq_controller_count++;
     }
     size_t entry_index = 0;

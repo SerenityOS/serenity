@@ -15,7 +15,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<MemoryDevice> MemoryDevice::must_create()
 {
-    auto device = adopt_ref(*new MemoryDevice);
+    auto device = adopt_ref(*new (nothrow) MemoryDevice);
     device->after_inserting();
     return device;
 }

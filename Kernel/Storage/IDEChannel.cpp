@@ -24,12 +24,12 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(const IDEController& controller, IOAddressGroup io_group, ChannelType type)
 {
-    return adopt_ref(*new IDEChannel(controller, io_group, type));
+    return adopt_ref(*new (nothrow) IDEChannel(controller, io_group, type));
 }
 
 UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(const IDEController& controller, u8 irq, IOAddressGroup io_group, ChannelType type)
 {
-    return adopt_ref(*new IDEChannel(controller, irq, io_group, type));
+    return adopt_ref(*new (nothrow) IDEChannel(controller, irq, io_group, type));
 }
 
 RefPtr<StorageDevice> IDEChannel::master_device() const

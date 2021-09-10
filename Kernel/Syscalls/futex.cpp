@@ -64,7 +64,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
             return it->value;
         if (create_if_not_found) {
             *did_create = true;
-            auto futex_queue = adopt_ref(*new FutexQueue);
+            auto futex_queue = adopt_ref(*new (nothrow) FutexQueue);
             auto result = queues->set(user_address, futex_queue);
             VERIFY(result == AK::HashSetResult::InsertedNewEntry);
             return futex_queue;

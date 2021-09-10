@@ -441,7 +441,7 @@ class ProcessorSpecific {
 public:
     static void initialize()
     {
-        Processor::current().set_specific(T::processor_specific_data_id(), new T);
+        Processor::current().set_specific(T::processor_specific_data_id(), new (nothrow) T);
     }
     static T& get()
     {

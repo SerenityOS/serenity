@@ -174,7 +174,8 @@ public:
     template<typename EntryFunction>
     static RefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, EntryFunction entry, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes)
     {
-        auto* entry_func = new EntryFunction(move(entry));
+        auto* entry_func = new (nothrow) EntryFunction(move(entry));
+        VERIFY(entry_func)
         return create_kernel_process(first_thread, move(name), &Process::kernel_process_trampoline<EntryFunction>, entry_func, affinity, do_register);
     }
 

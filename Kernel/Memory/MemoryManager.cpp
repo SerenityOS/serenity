@@ -606,7 +606,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize(u32 cpu)
     ProcessorSpecific<MemoryManagerData>::initialize();
 
     if (cpu == 0) {
-        new MemoryManager;
+        new (nothrow) MemoryManager;
         kmalloc_enable_expand();
     }
 }

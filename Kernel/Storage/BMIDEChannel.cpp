@@ -15,12 +15,12 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<BMIDEChannel> BMIDEChannel::create(const IDEController& ide_controller, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
 {
-    return adopt_ref(*new BMIDEChannel(ide_controller, io_group, type));
+    return adopt_ref(*new (nothrow) BMIDEChannel(ide_controller, io_group, type));
 }
 
 UNMAP_AFTER_INIT NonnullRefPtr<BMIDEChannel> BMIDEChannel::create(const IDEController& ide_controller, u8 irq, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
 {
-    return adopt_ref(*new BMIDEChannel(ide_controller, irq, io_group, type));
+    return adopt_ref(*new (nothrow) BMIDEChannel(ide_controller, irq, io_group, type));
 }
 
 UNMAP_AFTER_INIT BMIDEChannel::BMIDEChannel(const IDEController& controller, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)

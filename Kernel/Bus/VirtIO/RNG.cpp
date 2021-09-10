@@ -11,7 +11,7 @@ namespace Kernel::VirtIO {
 
 UNMAP_AFTER_INIT NonnullRefPtr<RNG> RNG::must_create(PCI::Address address)
 {
-    return adopt_ref_if_nonnull(new RNG(address)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) RNG(address)).release_nonnull();
 }
 
 UNMAP_AFTER_INIT void RNG::initialize()

@@ -13,7 +13,7 @@ namespace Kernel {
 
 NonnullRefPtr<RamdiskController> RamdiskController::initialize()
 {
-    return adopt_ref(*new RamdiskController());
+    return adopt_ref(*new (nothrow) RamdiskController());
 }
 
 bool RamdiskController::reset()

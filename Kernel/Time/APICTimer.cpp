@@ -17,7 +17,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT APICTimer* APICTimer::initialize(u8 interrupt_number, HardwareTimerBase& calibration_source)
 {
-    auto timer = adopt_ref(*new APICTimer(interrupt_number, nullptr));
+    auto timer = adopt_ref(*new (nothrow) APICTimer(interrupt_number, nullptr));
     timer->register_interrupt_handler();
     if (!timer->calibrate(calibration_source)) {
         return nullptr;

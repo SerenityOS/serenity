@@ -32,7 +32,7 @@ void DirtyRect::union_rect(size_t x, size_t y, size_t width, size_t height)
 
 NonnullRefPtr<Console> Console::initialize(RefPtr<FrameBufferDevice> const& framebuffer_device)
 {
-    return adopt_ref(*new Console(framebuffer_device));
+    return adopt_ref(*new (nothrow) Console(framebuffer_device));
 }
 
 Console::Console(RefPtr<FrameBufferDevice> const& framebuffer_device)
@@ -55,7 +55,7 @@ void Console::flush(size_t x, size_t y, size_t width, size_t height)
 
 void Console::enqueue_refresh_timer()
 {
-    NonnullRefPtr<Timer> refresh_timer = adopt_ref(*new Timer());
+    NonnullRefPtr<Timer> refresh_timer = adopt_ref(*new (nothrow) Timer());
     refresh_timer->setup(CLOCK_MONOTONIC, refresh_interval, [this]() {
         auto rect = m_dirty_rect;
         if (rect.is_dirty()) {

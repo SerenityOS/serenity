@@ -72,7 +72,7 @@ ProcessID Process::allocate_pid()
 
 UNMAP_AFTER_INIT void Process::initialize()
 {
-    g_modules = new HashMap<String, OwnPtr<Module>>;
+    g_modules = new (nothrow) HashMap<String, OwnPtr<Module>>;
 
     next_pid.store(0, AK::MemoryOrder::memory_order_release);
 

@@ -17,7 +17,7 @@ namespace Kernel {
 
 NonnullRefPtr<AHCIController> AHCIController::initialize(PCI::Address address)
 {
-    return adopt_ref(*new AHCIController(address));
+    return adopt_ref(*new (nothrow) AHCIController(address));
 }
 
 bool AHCIController::reset()

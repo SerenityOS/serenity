@@ -45,7 +45,7 @@ public:
     template<typename ParserType>
     static void initialize(PhysicalAddress rsdp)
     {
-        set_the(*new ParserType(rsdp));
+        set_the(*new (nothrow) ParserType(rsdp));
     }
 
     virtual Optional<PhysicalAddress> find_table(const StringView& signature);

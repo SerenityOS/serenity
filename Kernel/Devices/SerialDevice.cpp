@@ -21,16 +21,16 @@ UNMAP_AFTER_INIT NonnullRefPtr<SerialDevice> SerialDevice::must_create(size_t co
     SerialDevice* device = nullptr;
     switch (com_number) {
     case 0:
-        device = new SerialDevice(IOAddress(SERIAL_COM1_ADDR), 64);
+        device = new (nothrow) SerialDevice(IOAddress(SERIAL_COM1_ADDR), 64);
         break;
     case 1:
-        device = new SerialDevice(IOAddress(SERIAL_COM2_ADDR), 65);
+        device = new (nothrow) SerialDevice(IOAddress(SERIAL_COM2_ADDR), 65);
         break;
     case 2:
-        device = new SerialDevice(IOAddress(SERIAL_COM3_ADDR), 66);
+        device = new (nothrow) SerialDevice(IOAddress(SERIAL_COM3_ADDR), 66);
         break;
     case 3:
-        device = new SerialDevice(IOAddress(SERIAL_COM4_ADDR), 67);
+        device = new (nothrow) SerialDevice(IOAddress(SERIAL_COM4_ADDR), 67);
         break;
     default:
         break;
