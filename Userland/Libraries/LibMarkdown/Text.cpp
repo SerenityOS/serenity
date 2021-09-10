@@ -9,6 +9,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/Text.h>
+#include <LibMarkdown/Visitor.h>
 #include <ctype.h>
 #include <string.h>
 
@@ -39,6 +40,15 @@ size_t Text::EmphasisNode::terminal_length() const
     return child->terminal_length();
 }
 
+RecursionDecision Text::EmphasisNode::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+
+    return child->walk(visitor);
+}
+
 void Text::CodeNode::render_to_html(StringBuilder& builder) const
 {
     builder.append("<code>");
@@ -58,6 +68,15 @@ size_t Text::CodeNode::terminal_length() const
     return code->terminal_length();
 }
 
+RecursionDecision Text::CodeNode::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+
+    return code->walk(visitor);
+}
+
 void Text::BreakNode::render_to_html(StringBuilder& builder) const
 {
     builder.append("<br />");
@@ -70,6 +89,15 @@ void Text::BreakNode::render_for_terminal(StringBuilder&) const
 size_t Text::BreakNode::terminal_length() const
 {
     return 0;
+}
+
+RecursionDecision Text::BreakNode::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+    // Normalize return value
+    return RecursionDecision::Continue;
 }
 
 void Text::TextNode::render_to_html(StringBuilder& builder) const
@@ -93,6 +121,18 @@ size_t Text::TextNode::terminal_length() const
     }
 
     return text.length();
+}
+
+RecursionDecision Text::TextNode::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+    rd = visitor.visit(text);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+    // Normalize return value
+    return RecursionDecision::Continue;
 }
 
 void Text::LinkNode::render_to_html(StringBuilder& builder) const
@@ -134,6 +174,17 @@ size_t Text::LinkNode::terminal_length() const
     return text->terminal_length();
 }
 
+RecursionDecision Text::LinkNode::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+
+    // Don't recurse on href.
+
+    return text->walk(visitor);
+}
+
 void Text::MultiNode::render_to_html(StringBuilder& builder) const
 {
     for (auto& child : children) {
@@ -157,6 +208,21 @@ size_t Text::MultiNode::terminal_length() const
     return length;
 }
 
+RecursionDecision Text::MultiNode::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+
+    for (auto const& child : children) {
+        rd = child.walk(visitor);
+        if (rd == RecursionDecision::Break)
+            return rd;
+    }
+
+    return RecursionDecision::Continue;
+}
+
 size_t Text::terminal_length() const
 {
     return m_node->terminal_length();
@@ -174,6 +240,15 @@ String Text::render_for_terminal() const
     StringBuilder builder;
     m_node->render_for_terminal(builder);
     return builder.build().trim(" \n\t");
+}
+
+RecursionDecision Text::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+
+    return m_node->walk(visitor);
 }
 
 Text Text::parse(StringView const& str)

@@ -7,6 +7,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/MarkupGenerator.h>
 #include <LibMarkdown/CodeBlock.h>
+#include <LibMarkdown/Visitor.h>
 #include <LibRegex/Regex.h>
 
 namespace Markdown {
@@ -52,6 +53,22 @@ String CodeBlock::render_for_terminal(size_t) const
     builder.append("\n\n");
 
     return builder.build();
+}
+
+RecursionDecision CodeBlock::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+
+    rd = visitor.visit(m_code);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+
+    // Don't recurse on m_language and m_style.
+
+    // Normalize return value.
+    return RecursionDecision::Continue;
 }
 
 static Regex<ECMA262> style_spec_re("\\s*([\\*_]*)\\s*([^\\*_\\s]*).*");
