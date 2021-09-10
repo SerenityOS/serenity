@@ -291,10 +291,16 @@ float StyleProperties::line_height(const Layout::Node& layout_node) const
 
 Optional<int> StyleProperties::z_index() const
 {
-    auto value = property(CSS::PropertyID::ZIndex);
-    if (!value.has_value())
+    auto maybe_value = property(CSS::PropertyID::ZIndex);
+    if (!maybe_value.has_value())
         return {};
-    return static_cast<int>(value.value()->to_length().raw_value());
+    auto& value = maybe_value.value();
+
+    if (value->is_auto())
+        return 0;
+    if (value->is_numeric())
+        return static_cast<int>(static_cast<NumericStyleValue&>(*value).value());
+    return {};
 }
 
 Optional<float> StyleProperties::opacity() const
