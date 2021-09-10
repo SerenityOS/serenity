@@ -220,6 +220,8 @@ public:
 
     [[nodiscard]] bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
 
+    [[nodiscard]] size_t count(StringView const& needle) const { return StringUtils::count(*this, needle); }
+
     template<typename... Ts>
     [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of(Ts&&... strings) const
     {

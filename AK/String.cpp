@@ -382,22 +382,6 @@ int String::replace(const String& needle, const String& replacement, bool all_oc
     return positions.size();
 }
 
-size_t String::count(const String& needle) const
-{
-    size_t count = 0;
-    size_t start = 0, pos;
-    for (;;) {
-        const char* ptr = strstr(characters() + start, needle.characters());
-        if (!ptr)
-            break;
-
-        pos = ptr - characters();
-        count++;
-        start = pos + 1;
-    }
-    return count;
-}
-
 String String::reverse() const
 {
     StringBuilder reversed_string(length());
