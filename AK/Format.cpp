@@ -787,11 +787,15 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams& params)
 
 #ifdef __serenity__
 #    ifdef KERNEL
-    if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
-        auto& thread = *Kernel::Thread::current();
-        builder.appendff("\033[34;1m[#{} {}({}:{})]\033[0m: ", Kernel::Processor::current_id(), thread.process().name(), thread.pid().value(), thread.tid().value());
+    if (Kernel::Processor::is_initialized()) {
+        if (Kernel::Thread::current()) {
+            auto& thread = *Kernel::Thread::current();
+            builder.appendff("\033[34;1m[#{} {}({}:{})]\033[0m: ", Kernel::Processor::current_id(), thread.process().name(), thread.pid().value(), thread.tid().value());
+        } else {
+            builder.appendff("\033[34;1m[#{} Kernel]\033[0m: ", Kernel::Processor::current_id());
+        }
     } else {
-        builder.appendff("\033[34;1m[#{} Kernel]\033[0m: ", Kernel::Processor::current_id());
+        builder.appendff("\033[34;1m[Kernel]\033[0m: ");
     }
 #    else
     static TriState got_process_name = TriState::Unknown;
