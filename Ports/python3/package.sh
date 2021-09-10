@@ -18,8 +18,7 @@ icon_file="../launcher.ico" # This is an older icon that's downloaded separately
 # We could also add `openssl` here, but the _ssl modules doesn't build at the moment 
 depends="bzip2 libffi libuuid ncurses readline sqlite termcap zlib"
 
-# FIXME: --enable-optimizations results in lots of __gcov_* linker errors
-configopts="--disable-ipv6 --without-ensurepip ac_cv_file__dev_ptmx=no ac_cv_file__dev_ptc=no"
+configopts="--enable-optimizations --disable-ipv6 --without-ensurepip ac_cv_file__dev_ptmx=no ac_cv_file__dev_ptc=no"
 
 export CC="${CC} --sysroot=${SERENITY_INSTALL_ROOT}"
 export BLDSHARED="${CC} -shared"
