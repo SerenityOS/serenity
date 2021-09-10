@@ -19,7 +19,6 @@ set(KERNEL_HEAP_SOURCES
 )
 
 set(KERNEL_SOURCES
-    ACPI/DynamicParser.cpp
     ACPI/Initialize.cpp
     ACPI/MultiProcessorParser.cpp
     ACPI/Parser.cpp

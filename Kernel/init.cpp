@@ -5,9 +5,9 @@
  */
 
 #include <AK/Types.h>
-#include <Kernel/ACPI/DynamicParser.h>
 #include <Kernel/ACPI/Initialize.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
+#include <Kernel/ACPI/Parser.h>
 #include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/BootInfo.h>
