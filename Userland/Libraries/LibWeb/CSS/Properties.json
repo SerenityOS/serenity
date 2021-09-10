@@ -6,7 +6,10 @@
   },
   "background-color": {
     "inherited": false,
-    "initial": "transparent"
+    "initial": "transparent",
+    "quirks": [
+      "hashless-hex-color"
+    ]
   },
   "background-image": {
     "inherited": false,
@@ -14,7 +17,10 @@
   },
   "background-position": {
     "inherited": false,
-    "initial": "0% 0%"
+    "initial": "0% 0%",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "background-repeat": {
     "longhands": [
@@ -69,7 +75,10 @@
   },
   "border-bottom-color": {
     "initial": "currentColor",
-    "inherited": false
+    "inherited": false,
+    "quirks": [
+      "hashless-hex-color"
+    ]
   },
   "border-bottom-left-radius": {
     "initial": "0",
@@ -85,7 +94,10 @@
   },
   "border-bottom-width": {
     "initial": "medium",
-    "inherited": false
+    "inherited": false,
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "border-color": {
     "longhands": [
@@ -93,6 +105,9 @@
       "border-right-color",
       "border-bottom-color",
       "border-left-color"
+    ],
+    "quirks": [
+      "hashless-hex-color"
     ]
   },
   "border-collapse": {
@@ -101,7 +116,10 @@
   },
   "border-left-color": {
     "initial": "currentColor",
-    "inherited": false
+    "inherited": false,
+    "quirks": [
+      "hashless-hex-color"
+    ]
   },
   "border-left-style": {
     "initial": "none",
@@ -109,7 +127,10 @@
   },
   "border-left-width": {
     "initial": "medium",
-    "inherited": false
+    "inherited": false,
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "border-radius": {
     "longhands": [
@@ -121,7 +142,10 @@
   },
   "border-right-color": {
     "initial": "currentColor",
-    "inherited": false
+    "inherited": false,
+    "quirks": [
+      "hashless-hex-color"
+    ]
   },
   "border-right-style": {
     "initial": "none",
@@ -129,11 +153,17 @@
   },
   "border-right-width": {
     "initial": "medium",
-    "inherited": false
+    "inherited": false,
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "border-spacing": {
     "inherited": true,
-    "initial": "0"
+    "initial": "0",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "border-style": {
     "longhands": [
@@ -145,7 +175,10 @@
   },
   "border-top-color": {
     "initial": "currentColor",
-    "inherited": false
+    "inherited": false,
+    "quirks": [
+      "hashless-hex-color"
+    ]
   },
   "border-top-left-radius": {
     "initial": "0",
@@ -161,7 +194,10 @@
   },
   "border-top-width": {
     "initial": "medium",
-    "inherited": false
+    "inherited": false,
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "border-width": {
     "longhands": [
@@ -169,11 +205,17 @@
       "border-right-width",
       "border-bottom-width",
       "border-left-width"
+    ],
+    "quirks": [
+      "unitless-length"
     ]
   },
   "bottom": {
     "inherited": false,
-    "initial": "auto"
+    "initial": "auto",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "box-shadow":{
     "inherited": false,
@@ -189,11 +231,17 @@
   },
   "clip": {
     "inherited": true,
-    "initial": "auto"
+    "initial": "auto",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "color": {
     "inherited": true,
-    "initial": ""
+    "initial": "",
+    "quirks": [
+      "hashless-hex-color"
+    ]
   },
   "cursor": {
     "inherited": true,
@@ -258,7 +306,10 @@
   },
   "font-size": {
     "inherited": true,
-    "initial": "medium"
+    "initial": "medium",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "font-style": {
     "inherited": true,
@@ -274,7 +325,10 @@
   },
   "height": {
     "inherited": false,
-    "initial": "auto"
+    "initial": "auto",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "justify-content": {
     "inherited": false,
@@ -282,11 +336,17 @@
   },
   "left": {
     "inherited": false,
-    "initial": "auto"
+    "initial": "auto",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "letter-spacing": {
     "inherited": true,
-    "initial": "normal"
+    "initial": "normal",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "line-height": {
     "inherited": true,
@@ -318,39 +378,66 @@
       "margin-right",
       "margin-bottom",
       "margin-left"
+    ],
+    "quirks": [
+      "unitless-length"
     ]
   },
   "margin-bottom": {
     "inherited": false,
-    "initial": "0"
+    "initial": "0",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "margin-left": {
     "inherited": false,
-    "initial": "0"
+    "initial": "0",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "margin-right": {
     "inherited": false,
-    "initial": "0"
+    "initial": "0",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "margin-top": {
     "inherited": false,
-    "initial": "0"
+    "initial": "0",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "max-height": {
     "inherited": false,
-    "initial": "none"
+    "initial": "none",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "max-width": {
     "inherited": false,
-    "initial": "none"
+    "initial": "none",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "min-height": {
     "inherited": false,
-    "initial": "auto"
+    "initial": "auto",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "min-width": {
     "inherited": false,
-    "initial": "auto"
+    "initial": "auto",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "opacity": {
     "inherited": false,
@@ -378,23 +465,38 @@
       "padding-right",
       "padding-bottom",
       "padding-left"
+    ],
+    "quirks": [
+      "unitless-length"
     ]
   },
   "padding-bottom": {
     "inherited": false,
-    "initial": "0"
+    "initial": "0",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "padding-left": {
     "inherited": false,
-    "initial": "0"
+    "initial": "0",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "padding-right": {
     "inherited": false,
-    "initial": "0"
+    "initial": "0",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "padding-top": {
     "inherited": false,
-    "initial": "0"
+    "initial": "0",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "position": {
     "inherited": false,
@@ -402,7 +504,10 @@
   },
   "right": {
     "inherited": false,
-    "initial": "auto"
+    "initial": "auto",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "text-align": {
     "inherited": true,
@@ -437,7 +542,10 @@
   },
   "text-indent": {
     "inherited": true,
-    "initial": "0"
+    "initial": "0",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "text-transform": {
     "inherited": true,
@@ -445,11 +553,17 @@
   },
   "top": {
     "inherited": false,
-    "initial": "auto"
+    "initial": "auto",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "vertical-align": {
     "inherited": false,
-    "initial": "baseline"
+    "initial": "baseline",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "visibility": {
     "inherited": true,
@@ -457,7 +571,10 @@
   },
   "width": {
     "inherited": false,
-    "initial": "auto"
+    "initial": "auto",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "white-space": {
     "inherited": true,
@@ -465,7 +582,10 @@
   },
   "word-spacing": {
     "inherited": true,
-    "initial": "normal"
+    "initial": "normal",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "z-index": {
     "inherited": false,
