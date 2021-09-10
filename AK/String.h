@@ -286,7 +286,7 @@ public:
     }
 
     int replace(const String& needle, const String& replacement, bool all_occurrences = false);
-    [[nodiscard]] size_t count(const String& needle) const;
+    [[nodiscard]] size_t count(StringView const& needle) const { return StringUtils::count(*this, needle); }
     [[nodiscard]] String reverse() const;
 
     template<typename... Ts>
