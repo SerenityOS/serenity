@@ -49,6 +49,7 @@ public:
     RefPtr<StorageDevice> connected_device() const { return m_connected_device; }
 
     bool reset();
+    void after_hot_plug_event();
     UNMAP_AFTER_INIT bool initialize_without_reset();
     void handle_interrupt();
 

@@ -26,6 +26,7 @@ void AHCIPortHandler::initialize()
             auto port = AHCIPort::create(*this, static_cast<volatile AHCI::PortRegisters&>(m_parent_controller->hba().port_regs[index]), index);
             m_handled_ports.set(index, port);
             port->reset();
+            port->after_hot_plug_event();
         }
         return;
     }
@@ -33,6 +34,7 @@ void AHCIPortHandler::initialize()
         auto port = AHCIPort::create(*this, static_cast<volatile AHCI::PortRegisters&>(m_parent_controller->hba().port_regs[index]), index);
         m_handled_ports.set(index, port);
         port->initialize_without_reset();
+        port->after_hot_plug_event();
     }
 }
 

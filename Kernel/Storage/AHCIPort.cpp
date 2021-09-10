@@ -65,6 +65,14 @@ void AHCIPort::clear_sata_error_register() const
     m_port_registers.serr = m_port_registers.serr;
 }
 
+void AHCIPort::after_hot_plug_event()
+{
+    VERIFY(!Processor::current_in_irq());
+    VERIFY_INTERRUPTS_ENABLED();
+    if (m_connected_device)
+        StorageManagement::enumerate_disk_partitions_on_new_device(*m_connected_device);
+}
+
 void AHCIPort::handle_interrupt()
 {
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Interrupt handled, PxIS {}", representative_port_index(), m_interrupt_status.raw_value());
@@ -83,6 +91,7 @@ void AHCIPort::handle_interrupt()
         } else {
             g_ahci_work->queue([this]() {
                 reset();
+                after_hot_plug_event();
             });
         }
         return;
@@ -320,11 +329,6 @@ bool AHCIPort::initialize(SpinlockLocker<Spinlock>& main_lock)
         // FIXME: We don't support ATAPI devices yet, so for now we don't "create" them
         if (!is_atapi_attached()) {
             m_connected_device = ATADiskDevice::create(m_parent_handler->hba_controller(), { m_port_index, 0 }, 0, logical_sector_size, max_addressable_sector);
-            g_io_work->queue([this]() {
-                // Note: We must do this from a WorkQueue because the Spinlock prevents from IRQs
-                // to happen, thus preventing reading from the drive if used outside of WorkQueue scope.
-                StorageManagement::enumerate_disk_partitions_on_new_device(*m_connected_device);
-            });
         } else {
             dbgln("AHCI Port {}: Ignoring ATAPI devices for now as we don't currently support them.", representative_port_index());
         }

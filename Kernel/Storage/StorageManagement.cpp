@@ -127,9 +127,9 @@ void StorageManagement::determine_boot_device_with_defined_prefix(StringView pre
 
     size_t partition_index = index_parts[1].to_uint(TrimWhitespace::No).value();
     // Note: We start counting from 0 in partition_index.
-    if (devices[storage_device_index].partitions().size() < (partition_index + 1))
-        return;
-    m_boot_block_device = devices[storage_device_index].partitions()[partition_index];
+    if (devices[storage_device_index].partitions().size() > (partition_index)) {
+        m_boot_block_device = devices[storage_device_index].partitions()[partition_index];
+    }
 }
 
 UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
