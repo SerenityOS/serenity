@@ -188,3 +188,14 @@ extern "C" void kernelcriticalputstr(const char* characters, size_t length)
     for (size_t i = 0; i < length; ++i)
         critical_console_out(characters[i]);
 }
+
+extern "C" void kernelearlyputstr(const char* characters, size_t length)
+{
+    if (!characters)
+        return;
+    // NOTE: We do not lock the log lock here, as this function is called before this or any other processor was initialized, meaning:
+    //  A) The $gs base was not setup yet, so we cannot enter into critical sections, and as a result we cannot use SpinLocks
+    //  B) No other processors may try to print at the same time anyway
+    for (size_t i = 0; i < length; ++i)
+        internal_dbgputch(characters[i]);
+}
