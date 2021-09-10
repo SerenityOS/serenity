@@ -60,4 +60,6 @@ uint16_t internet_checksum(const void* ptr, size_t count);
 
 int emuctl(uintptr_t command, uintptr_t arg0, uintptr_t arg1);
 
+int serenity_open(char const* path, size_t path_length, int options, ...);
+
 __END_DECLS
