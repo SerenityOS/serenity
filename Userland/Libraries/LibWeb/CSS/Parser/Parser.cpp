@@ -2872,22 +2872,8 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, PropertyID property_id, StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, PropertyID, StyleComponentValueRule const& component_value)
 {
-    // FIXME: Figure out if we still need takes_integer_value, and if so, move this information
-    // into Properties.json.
-    auto takes_integer_value = [](PropertyID property_id) -> bool {
-        return property_id == PropertyID::ZIndex
-            || property_id == PropertyID::FontWeight
-            || property_id == PropertyID::Custom;
-    };
-    if (takes_integer_value(property_id) && component_value.is(Token::Type::Number)) {
-        auto number = component_value.token();
-        if (number.m_number_type == Token::NumberType::Integer) {
-            return LengthStyleValue::create(Length::make_px(number.to_integer()));
-        }
-    }
-
     if (auto builtin = parse_builtin_value(context, component_value))
         return builtin;
 
