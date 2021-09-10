@@ -24,6 +24,7 @@ struct LocaleOptions {
 
 struct LocaleResult {
     String locale;
+    String data_locale;
 };
 
 struct PatternPartition {
@@ -42,7 +43,7 @@ Object* coerce_options_to_object(GlobalObject& global_object, Value options);
 Value get_option(GlobalObject& global_object, Value options, PropertyName const& property, Value::Type type, Vector<StringView> const& values, Fallback fallback);
 Vector<PatternPartition> partition_pattern(StringView pattern);
 String insert_unicode_extension_and_canonicalize(Unicode::LocaleID locale_id, Unicode::LocaleExtension extension);
-LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptions const& options, Vector<StringView> relevant_extension_keys);
+LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptions const& options, Vector<StringView> const& relevant_extension_keys);
 Value canonical_code_for_display_names(GlobalObject&, DisplayNames::Type type, StringView code);
 
 }

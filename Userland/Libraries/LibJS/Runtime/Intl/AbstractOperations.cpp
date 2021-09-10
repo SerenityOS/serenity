@@ -325,8 +325,15 @@ String insert_unicode_extension_and_canonicalize(Unicode::LocaleID locale, Unico
     return JS::Intl::canonicalize_unicode_locale_id(locale);
 }
 
+template<typename T>
+static auto& find_key_in_value(T& value, StringView key)
+{
+    // If you hit this point, you must add any missing keys from [[RelevantExtensionKeys]] to LocaleOptions and LocaleResult.
+    VERIFY_NOT_REACHED();
+}
+
 // 9.2.7 ResolveLocale ( availableLocales, requestedLocales, options, relevantExtensionKeys, localeData ), https://tc39.es/ecma402/#sec-resolvelocale
-LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptions const& options, [[maybe_unused]] Vector<StringView> relevant_extension_keys)
+LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptions const& options, Vector<StringView> const& relevant_extension_keys)
 {
     // 1. Let matcher be options.[[localeMatcher]].
     auto const& matcher = options.locale_matcher;
@@ -350,49 +357,121 @@ LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptio
     LocaleResult result {};
 
     // 6. Set result.[[dataLocale]] to foundLocale.
+    result.data_locale = found_locale;
 
-    // FIXME: Currently, the only caller to this method has an empty [[RelevantExtensionKeys]] internal slot,
-    //        so this block isn't testable. When a caller has a non-empty slot, implement the below steps.
-    //
     // 7. If r has an [[extension]] field, then
-    //     a. Let components be ! UnicodeExtensionComponents(r.[[extension]]).
-    //     b. Let keywords be components.[[Keywords]].
+    Vector<Unicode::Keyword> keywords;
+    for (auto& extension : matcher_result.extensions) {
+        if (!extension.has<Unicode::LocaleExtension>())
+            continue;
+
+        // a. Let components be ! UnicodeExtensionComponents(r.[[extension]]).
+        auto& components = extension.get<Unicode::LocaleExtension>();
+        // b. Let keywords be components.[[Keywords]].
+        keywords = move(components.keywords);
+
+        break;
+    }
+
     // 8. Let supportedExtension be "-u".
+    Unicode::LocaleExtension supported_extension {};
+
     // 9. For each element key of relevantExtensionKeys, do
-    //     a. Let foundLocaleData be localeData.[[<foundLocale>]].
-    //     b. Assert: Type(foundLocaleData) is Record.
-    //     c. Let keyLocaleData be foundLocaleData.[[<key>]].
-    //     d. Assert: Type(keyLocaleData) is List.
-    //     e. Let value be keyLocaleData[0].
-    //     f. Assert: Type(value) is either String or Null.
-    //     g. Let supportedExtensionAddition be "".
-    //     h. If r has an [[extension]] field, then
-    //         i. If keywords contains an element whose [[Key]] is the same as key, then
-    //             1. Let entry be the element of keywords whose [[Key]] is the same as key.
-    //             2. Let requestedValue be entry.[[Value]].
-    //             3. If requestedValue is not the empty String, then
-    //                 a. If keyLocaleData contains requestedValue, then
-    //                     i. Let value be requestedValue.
-    //                     ii. Let supportedExtensionAddition be the string-concatenation of "-", key, "-", and value.
-    //             4. Else if keyLocaleData contains "true", then
-    //                 a. Let value be "true".
-    //                 b. Let supportedExtensionAddition be the string-concatenation of "-" and key.
-    //     i. If options has a field [[<key>]], then
-    //         i. Let optionsValue be options.[[<key>]].
-    //         ii. Assert: Type(optionsValue) is either String, Undefined, or Null.
-    //         iii. If Type(optionsValue) is String, then
-    //             1. Let optionsValue be the string optionsValue after performing the algorithm steps to transform Unicode extension values to canonical syntax per Unicode Technical Standard #35 LDML § 3.2.1 Canonical Unicode Locale Identifiers, treating key as ukey and optionsValue as uvalue productions.
-    //             2. Let optionsValue be the string optionsValue after performing the algorithm steps to replace Unicode extension values with their canonical form per Unicode Technical Standard #35 LDML § 3.2.1 Canonical Unicode Locale Identifiers, treating key as ukey and optionsValue as uvalue productions.
-    //             3. If optionsValue is the empty String, then
-    //                 a. Let optionsValue be "true".
-    //         iv. If keyLocaleData contains optionsValue, then
-    //             1. If SameValue(optionsValue, value) is false, then
-    //                 a. Let value be optionsValue.
-    //                 b. Let supportedExtensionAddition be "".
-    //     j. Set result.[[<key>]] to value.
-    //     k. Append supportedExtensionAddition to supportedExtension.
+    for (auto const& key : relevant_extension_keys) {
+        // a. Let foundLocaleData be localeData.[[<foundLocale>]].
+        // b. Assert: Type(foundLocaleData) is Record.
+        // c. Let keyLocaleData be foundLocaleData.[[<key>]].
+        // d. Assert: Type(keyLocaleData) is List.
+        auto key_locale_data = Unicode::get_locale_key_mapping(found_locale, key);
+
+        // e. Let value be keyLocaleData[0].
+        // f. Assert: Type(value) is either String or Null.
+        Optional<String> value;
+        if (!key_locale_data.is_empty())
+            value = key_locale_data[0];
+
+        // g. Let supportedExtensionAddition be "".
+        Optional<Unicode::Keyword> supported_extension_addition {};
+
+        // h. If r has an [[extension]] field, then
+        for (auto& entry : keywords) {
+            // i. If keywords contains an element whose [[Key]] is the same as key, then
+            if (entry.key != key)
+                continue;
+
+            // 1. Let entry be the element of keywords whose [[Key]] is the same as key.
+            // 2. Let requestedValue be entry.[[Value]].
+            auto requested_value = entry.value;
+
+            // 3. If requestedValue is not the empty String, then
+            if (!requested_value.is_empty()) {
+                // a. If keyLocaleData contains requestedValue, then
+                if (key_locale_data.contains_slow(requested_value)) {
+                    // i. Let value be requestedValue.
+                    value = move(requested_value);
+
+                    // ii. Let supportedExtensionAddition be the string-concatenation of "-", key, "-", and value.
+                    supported_extension_addition = Unicode::Keyword { key, move(entry.value) };
+                }
+            }
+            // 4. Else if keyLocaleData contains "true", then
+            else if (key_locale_data.contains_slow("true"sv)) {
+                // a. Let value be "true".
+                value = "true"sv;
+
+                // b. Let supportedExtensionAddition be the string-concatenation of "-" and key.
+                supported_extension_addition = Unicode::Keyword { key, {} };
+            }
+
+            break;
+        }
+
+        // i. If options has a field [[<key>]], then
+        // i. Let optionsValue be options.[[<key>]].
+        // ii. Assert: Type(optionsValue) is either String, Undefined, or Null.
+        auto options_value = find_key_in_value(options, key);
+
+        // iii. If Type(optionsValue) is String, then
+        if (options_value.has_value()) {
+            // 1. Let optionsValue be the string optionsValue after performing the algorithm steps to transform Unicode extension values to canonical syntax per Unicode Technical Standard #35 LDML § 3.2.1 Canonical Unicode Locale Identifiers, treating key as ukey and optionsValue as uvalue productions.
+            // 2. Let optionsValue be the string optionsValue after performing the algorithm steps to replace Unicode extension values with their canonical form per Unicode Technical Standard #35 LDML § 3.2.1 Canonical Unicode Locale Identifiers, treating key as ukey and optionsValue as uvalue productions.
+            Unicode::canonicalize_unicode_extension_values(key, *options_value, true);
+
+            // 3. If optionsValue is the empty String, then
+            if (options_value->is_empty()) {
+                // a. Let optionsValue be "true".
+                options_value = "true"sv;
+            }
+        }
+
+        // iv. If keyLocaleData contains optionsValue, then
+        if (options_value.has_value() && key_locale_data.contains_slow(*options_value)) {
+            // 1. If SameValue(optionsValue, value) is false, then
+            if (options_value != value) {
+                // a. Let value be optionsValue.
+                value = move(options_value);
+
+                // b. Let supportedExtensionAddition be "".
+                supported_extension_addition.clear();
+            }
+        }
+
+        // j. Set result.[[<key>]] to value.
+        find_key_in_value(result, key) = move(value);
+
+        // k. Append supportedExtensionAddition to supportedExtension.
+        if (supported_extension_addition.has_value())
+            supported_extension.keywords.append(supported_extension_addition.release_value());
+    }
+
     // 10. If the number of elements in supportedExtension is greater than 2, then
-    //     a. Let foundLocale be InsertUnicodeExtensionAndCanonicalize(foundLocale, supportedExtension).
+    if (!supported_extension.keywords.is_empty()) {
+        auto locale_id = Unicode::parse_unicode_locale_id(found_locale);
+        VERIFY(locale_id.has_value());
+
+        // a. Let foundLocale be InsertUnicodeExtensionAndCanonicalize(foundLocale, supportedExtension).
+        found_locale = insert_unicode_extension_and_canonicalize(locale_id.release_value(), move(supported_extension));
+    }
 
     // 11. Set result.[[locale]] to foundLocale.
     result.locale = move(found_locale);
