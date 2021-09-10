@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/TypeCasts.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
@@ -28,6 +29,9 @@ void PlainMonthDayConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.temporal_plain_month_day_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
+
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.from, from, 1, attr);
 }
 
 // 10.1.1 Temporal.PlainMonthDay ( isoMonth, isoDay [ , calendarLike [ , referenceISOYear ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday
@@ -87,6 +91,33 @@ Value PlainMonthDayConstructor::construct(FunctionObject& new_target)
 
     // 7. Return ? CreateTemporalMonthDay(m, d, calendar, ref, NewTarget).
     return create_temporal_month_day(global_object, m, d, *calendar, ref, &new_target);
+}
+
+// 10.2.2 Temporal.PlainMonthDay.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.from
+JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayConstructor::from)
+{
+    // 1. Set options to ? GetOptionsObject(options).
+    auto* options = get_options_object(global_object, vm.argument(1));
+    if (vm.exception())
+        return {};
+
+    auto item = vm.argument(0);
+
+    // 2. If Type(item) is Object and item has an [[InitializedTemporalMonthDay]] internal slot, then
+    if (item.is_object() && is<PlainMonthDay>(item.as_object())) {
+        // a. Perform ? ToTemporalOverflow(options).
+        (void)to_temporal_overflow(global_object, *options);
+        if (vm.exception())
+            return {};
+
+        auto& plain_month_day_object = static_cast<PlainMonthDay&>(item.as_object());
+
+        // b. Return ? CreateTemporalMonthDay(item.[[ISOMonth]], item.[[ISODay]], item.[[Calendar]], item.[[ISOYear]]).
+        return create_temporal_month_day(global_object, plain_month_day_object.iso_month(), plain_month_day_object.iso_day(), plain_month_day_object.calendar(), plain_month_day_object.iso_year());
+    }
+
+    // 3. Return ? ToTemporalMonthDay(item, options).
+    return to_temporal_month_day(global_object, item, options);
 }
 
 }
