@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/POSIX/fcntl.h>
+#include <Kernel/API/Syscall.h>
 #include <arpa/inet.h>
 #include <errno.h>
 #include <serenity.h>
@@ -147,5 +149,28 @@ u16 internet_checksum(const void* ptr, size_t count)
 int emuctl(uintptr_t command, uintptr_t arg0, uintptr_t arg1)
 {
     return syscall(SC_emuctl, command, arg0, arg1);
+}
+
+int serenity_open(char const* path, size_t path_length, int options, ...)
+{
+    if (!path) {
+        errno = EFAULT;
+        return -1;
+    }
+
+    if (path_length > INT32_MAX) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    va_list ap;
+    va_start(ap, options);
+    auto mode = (mode_t)va_arg(ap, unsigned);
+    va_end(ap);
+
+    Syscall::SC_open_params params { AT_FDCWD, { path, path_length }, options, mode };
+    int rc = syscall(SC_open, &params);
+
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 }
