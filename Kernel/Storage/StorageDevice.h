@@ -43,6 +43,7 @@ public:
     virtual bool can_write() const override;
 
     virtual void before_removing() override;
+    void after_hotplug();
 
     NonnullRefPtrVector<DiskPartition> partitions() const { return m_partitions; }
 

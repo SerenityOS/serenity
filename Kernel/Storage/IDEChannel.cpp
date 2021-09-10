@@ -409,10 +409,10 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
         ATADevice::Address address = { m_channel_type == ChannelType::Primary ? static_cast<u8>(0) : static_cast<u8>(1), static_cast<u8>(i) };
         if (i == 0) {
             m_master = ATADiskDevice::create(m_parent_controller, address, capabilities, 512, max_addressable_block);
-            StorageManagement::enumerate_disk_partitions_on_new_device(*m_master);
+            m_master->after_hotplug();
         } else {
             m_slave = ATADiskDevice::create(m_parent_controller, address, capabilities, 512, max_addressable_block);
-            StorageManagement::enumerate_disk_partitions_on_new_device(*m_slave);
+            m_slave->after_hotplug();
         }
     }
 }

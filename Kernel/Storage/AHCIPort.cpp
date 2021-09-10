@@ -70,7 +70,7 @@ void AHCIPort::after_hot_plug_event()
     VERIFY(!Processor::current_in_irq());
     VERIFY_INTERRUPTS_ENABLED();
     if (m_connected_device)
-        StorageManagement::enumerate_disk_partitions_on_new_device(*m_connected_device);
+        m_connected_device->after_hotplug();
 }
 
 void AHCIPort::handle_interrupt()

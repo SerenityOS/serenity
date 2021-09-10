@@ -191,6 +191,11 @@ void StorageDevice::before_removing()
     Device::before_removing();
 }
 
+void StorageDevice::after_hotplug()
+{
+    StorageManagement::enumerate_disk_partitions_on_new_device(*this);
+}
+
 bool StorageDevice::can_write() const
 {
     return true;
