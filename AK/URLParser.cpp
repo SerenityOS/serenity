@@ -203,15 +203,12 @@ URL URLParser::parse(Badge<URL>, StringView const& raw_input, URL const* base_ur
     if (start_index >= end_index)
         return {};
 
-    auto processed_input = raw_input.substring_view(start_index, end_index - start_index);
+    String processed_input = raw_input.substring_view(start_index, end_index - start_index);
 
     // NOTE: This replaces all tab and newline characters with nothing.
     if (processed_input.contains("\t") || processed_input.contains("\n")) {
         report_validation_error();
-        String processed_input_string(processed_input);
-        processed_input_string.replace("\t", "", true);
-        processed_input_string.replace("\n", "", true);
-        processed_input = processed_input_string;
+        processed_input = processed_input.replace("\t", "", true).replace("\n", "", true);
     }
 
     State state = State::SchemeStart;

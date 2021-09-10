@@ -285,7 +285,7 @@ public:
         return { characters(), length() };
     }
 
-    int replace(const String& needle, const String& replacement, bool all_occurrences = false);
+    [[nodiscard]] String replace(const StringView& needle, const StringView& replacement, bool all_occurrences = false) const { return StringUtils::replace(*this, needle, replacement, all_occurrences); }
     [[nodiscard]] size_t count(StringView const& needle) const { return StringUtils::count(*this, needle); }
     [[nodiscard]] String reverse() const;
 

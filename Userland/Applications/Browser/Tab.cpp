@@ -40,11 +40,8 @@ namespace Browser {
 
 URL url_from_user_input(const String& input)
 {
-    if (input.starts_with("?") && !g_search_engine.is_null()) {
-        auto url = g_search_engine;
-        url.replace("{}", URL::percent_encode(input.substring_view(1)));
-        return URL(url);
-    }
+    if (input.starts_with("?") && !g_search_engine.is_null())
+        return URL(g_search_engine.replace("{}", URL::percent_encode(input.substring_view(1))));
 
     auto url = URL(input);
     if (url.is_valid())

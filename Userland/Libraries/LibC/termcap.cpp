@@ -114,9 +114,7 @@ int tgetnum(const char* id)
 static Vector<char> s_tgoto_buffer;
 char* tgoto([[maybe_unused]] const char* cap, [[maybe_unused]] int col, [[maybe_unused]] int row)
 {
-    auto cap_str = String(cap);
-    cap_str.replace("%p1%d", String::number(col));
-    cap_str.replace("%p2%d", String::number(row));
+    auto cap_str = StringView(cap).replace("%p1%d", String::number(col)).replace("%p2%d", String::number(row));
 
     s_tgoto_buffer.clear_with_capacity();
     s_tgoto_buffer.ensure_capacity(cap_str.length());

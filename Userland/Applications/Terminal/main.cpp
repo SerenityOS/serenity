@@ -162,8 +162,7 @@ static RefPtr<GUI::Window> create_settings_window(VT::TerminalWidget& terminal)
     Core::DirIterator iterator("/res/terminal-colors", Core::DirIterator::SkipParentAndBaseDir);
     while (iterator.has_next()) {
         auto path = iterator.next_path();
-        path.replace(".ini", "");
-        color_scheme_names.append(path);
+        color_scheme_names.append(path.replace(".ini", ""));
     }
     quick_sort(color_scheme_names);
     auto& color_scheme_combo = *settings.find_descendant_of_type_named<GUI::ComboBox>("color_scheme_combo");
@@ -199,11 +198,8 @@ static RefPtr<GUI::Window> create_find_window(VT::TerminalWidget& terminal)
     auto& find_textbox = find.add<GUI::TextBox>();
     find_textbox.set_fixed_width(230);
     find_textbox.set_focus(true);
-    if (terminal.has_selection()) {
-        String selected_text = terminal.selected_text();
-        selected_text.replace("\n", " ", true);
-        find_textbox.set_text(selected_text);
-    }
+    if (terminal.has_selection())
+        find_textbox.set_text(terminal.selected_text().replace("\n", " ", true));
     auto& find_backwards = find.add<GUI::Button>();
     find_backwards.set_fixed_width(25);
     find_backwards.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png"));
