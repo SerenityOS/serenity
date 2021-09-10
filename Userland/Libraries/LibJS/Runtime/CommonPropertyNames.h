@@ -96,6 +96,7 @@ namespace JS {
     P(clz32)                                 \
     P(codePointAt)                           \
     P(collation)                             \
+    P(compactDisplay)                        \
     P(compareExchange)                       \
     P(compile)                               \
     P(concat)                                \
@@ -110,6 +111,9 @@ namespace JS {
     P(count)                                 \
     P(countReset)                            \
     P(create)                                \
+    P(currency)                              \
+    P(currencyDisplay)                       \
+    P(currencySign)                          \
     P(dateAdd)                               \
     P(dateFromFields)                        \
     P(day)                                   \
@@ -293,6 +297,11 @@ namespace JS {
     P(milliseconds)                          \
     P(min)                                   \
     P(minimize)                              \
+    P(maximumFractionDigits)                 \
+    P(maximumSignificantDigits)              \
+    P(minimumFractionDigits)                 \
+    P(minimumIntegerDigits)                  \
+    P(minimumSignificantDigits)              \
     P(minute)                                \
     P(minutes)                               \
     P(month)                                 \
@@ -306,6 +315,7 @@ namespace JS {
     P(nanoseconds)                           \
     P(negated)                               \
     P(next)                                  \
+    P(notation)                              \
     P(now)                                   \
     P(numberingSystem)                       \
     P(numeric)                               \
@@ -382,6 +392,7 @@ namespace JS {
     P(setYear)                               \
     P(shift)                                 \
     P(sign)                                  \
+    P(signDisplay)                           \
     P(sin)                                   \
     P(since)                                 \
     P(sinh)                                  \
@@ -448,9 +459,12 @@ namespace JS {
     P(undefined)                             \
     P(unescape)                              \
     P(unicode)                               \
+    P(unit)                                  \
+    P(unitDisplay)                           \
     P(until)                                 \
     P(unregister)                            \
     P(unshift)                               \
+    P(useGrouping)                           \
     P(value)                                 \
     P(valueOf)                               \
     P(values)                                \
