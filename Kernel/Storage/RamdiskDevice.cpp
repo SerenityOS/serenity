@@ -14,7 +14,10 @@ namespace Kernel {
 
 NonnullRefPtr<RamdiskDevice> RamdiskDevice::create(const RamdiskController& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor)
 {
-    return adopt_ref(*new RamdiskDevice(controller, move(region), major, minor));
+    auto device_or_error = try_create_device<RamdiskDevice>(controller, move(region), major, minor);
+    // FIXME: Find a way to propagate errors
+    VERIFY(!device_or_error.is_error());
+    return device_or_error.release_value();
 }
 
 RamdiskDevice::RamdiskDevice(const RamdiskController& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor)

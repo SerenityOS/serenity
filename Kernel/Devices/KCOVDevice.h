@@ -25,6 +25,9 @@ public:
     KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
     KResultOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
 
+    // FIXME: We expose this constructor to make try_create_device helper to work
+    KCOVDevice();
+
 protected:
     virtual StringView class_name() const override { return "KCOVDevice"; }
 
@@ -34,9 +37,6 @@ protected:
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return EINVAL; }
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return EINVAL; }
     virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
-
-private:
-    KCOVDevice();
 };
 
 }

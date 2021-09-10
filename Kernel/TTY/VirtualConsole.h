@@ -84,9 +84,11 @@ public:
 
     void emit_char(char);
 
-private:
+    // FIXME: We expose these constructors to make try_create_device helper to work
     explicit VirtualConsole(const unsigned index);
     VirtualConsole(const unsigned index, const CircularQueue<char, 16384>&);
+
+private:
     // ^KeyboardClient
     virtual void on_key_pressed(KeyEvent) override;
 

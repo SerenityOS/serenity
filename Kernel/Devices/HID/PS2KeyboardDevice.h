@@ -35,9 +35,10 @@ public:
         enable_irq();
     }
 
-private:
+    // FIXME: We expose this constructor to make try_create_device helper to work
     explicit PS2KeyboardDevice(const I8042Controller&);
 
+private:
     // ^IRQHandler
     virtual bool handle_irq(const RegisterState&) override;
 

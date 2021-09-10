@@ -26,8 +26,9 @@ NonnullRefPtr<SysFSDeviceComponent> SysFSDeviceComponent::must_create(Device con
 }
 SysFSDeviceComponent::SysFSDeviceComponent(Device const& device)
     : SysFSComponent(String::formatted("{}:{}", device.major(), device.minor()))
-    , m_associated_device(device)
+    , m_block_device(device.is_block_device())
 {
+    VERIFY(device.is_block_device() || device.is_character_device());
 }
 
 UNMAP_AFTER_INIT NonnullRefPtr<SysFSDevicesDirectory> SysFSDevicesDirectory::must_create(SysFSRootDirectory const& root_directory)
@@ -58,7 +59,7 @@ KResult SysFSBlockDevicesDirectory::traverse_as_directory(unsigned fsid, Functio
 
     SysFSComponentRegistry::the().devices_list().with_exclusive([&](auto& list) -> void {
         for (auto& exposed_device : list) {
-            if (!exposed_device.device().is_block_device())
+            if (!exposed_device.is_block_device())
                 continue;
             callback({ exposed_device.name(), { fsid, exposed_device.component_index() }, 0 });
         }
@@ -69,7 +70,7 @@ RefPtr<SysFSComponent> SysFSBlockDevicesDirectory::lookup(StringView name)
 {
     return SysFSComponentRegistry::the().devices_list().with_exclusive([&](auto& list) -> RefPtr<SysFSComponent> {
         for (auto& exposed_device : list) {
-            if (!exposed_device.device().is_block_device())
+            if (!exposed_device.is_block_device())
                 continue;
             if (exposed_device.name() == name)
                 return exposed_device;
@@ -94,7 +95,7 @@ KResult SysFSCharacterDevicesDirectory::traverse_as_directory(unsigned fsid, Fun
 
     SysFSComponentRegistry::the().devices_list().with_exclusive([&](auto& list) -> void {
         for (auto& exposed_device : list) {
-            if (!exposed_device.device().is_character_device())
+            if (exposed_device.is_block_device())
                 continue;
             callback({ exposed_device.name(), { fsid, exposed_device.component_index() }, 0 });
         }
@@ -105,7 +106,7 @@ RefPtr<SysFSComponent> SysFSCharacterDevicesDirectory::lookup(StringView name)
 {
     return SysFSComponentRegistry::the().devices_list().with_exclusive([&](auto& list) -> RefPtr<SysFSComponent> {
         for (auto& exposed_device : list) {
-            if (!exposed_device.device().is_character_device())
+            if (exposed_device.is_block_device())
                 continue;
             if (exposed_device.name() == name)
                 return exposed_device;
@@ -145,6 +146,11 @@ Device::Device(unsigned major, unsigned minor)
         VERIFY(!map.contains(device_id));
         map.set(device_id, this);
     });
+}
+
+void Device::after_inserting()
+{
+    VERIFY(!m_sysfs_component);
     auto sys_fs_component = SysFSDeviceComponent::must_create(*this);
     m_sysfs_component = sys_fs_component;
     SysFSComponentRegistry::the().devices_list().with_exclusive([&](auto& list) -> void {
@@ -154,12 +160,11 @@ Device::Device(unsigned major, unsigned minor)
 
 void Device::before_removing()
 {
-    auto sys_fs_component = m_sysfs_component.strong_ref();
-    VERIFY(sys_fs_component);
-    SysFSComponentRegistry::the().devices_list().with_exclusive([&](auto& list) -> void {
-        list.remove(*sys_fs_component);
-    });
     m_state = State::BeingRemoved;
+    VERIFY(m_sysfs_component);
+    SysFSComponentRegistry::the().devices_list().with_exclusive([&](auto& list) -> void {
+        list.remove(*m_sysfs_component);
+    });
 }
 
 Device::~Device()

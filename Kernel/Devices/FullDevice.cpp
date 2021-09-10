@@ -13,7 +13,10 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<FullDevice> FullDevice::must_create()
 {
-    return adopt_ref(*new FullDevice);
+    auto full_device_or_error = try_create_device<FullDevice>();
+    // FIXME: Find a way to propagate errors
+    VERIFY(!full_device_or_error.is_error());
+    return full_device_or_error.release_value();
 }
 
 UNMAP_AFTER_INIT FullDevice::FullDevice()

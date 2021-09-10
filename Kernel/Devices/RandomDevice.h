@@ -16,9 +16,10 @@ public:
     static NonnullRefPtr<RandomDevice> must_create();
     virtual ~RandomDevice() override;
 
-private:
+    // FIXME: We expose this constructor to make try_create_device helper to work
     RandomDevice();
 
+private:
     // ^CharacterDevice
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;

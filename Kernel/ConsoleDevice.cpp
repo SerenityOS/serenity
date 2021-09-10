@@ -20,6 +20,7 @@ static Kernel::Spinlock g_console_lock;
 UNMAP_AFTER_INIT void ConsoleDevice::initialize()
 {
     s_the.ensure_instance();
+    s_the->after_inserting();
 }
 
 ConsoleDevice& ConsoleDevice::the()

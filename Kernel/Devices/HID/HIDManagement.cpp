@@ -112,6 +112,7 @@ UNMAP_AFTER_INIT void HIDManagement::enumerate()
     m_i8042_controller->detect_devices();
     if (m_i8042_controller->mouse())
         m_hid_devices.append(m_i8042_controller->mouse().release_nonnull());
+
     if (m_i8042_controller->keyboard())
         m_hid_devices.append(m_i8042_controller->keyboard().release_nonnull());
 }

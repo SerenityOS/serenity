@@ -16,9 +16,10 @@ public:
     static NonnullRefPtr<FullDevice> must_create();
     virtual ~FullDevice() override;
 
-private:
+    // FIXME: We expose this constructor to make try_create_device helper to work
     FullDevice();
 
+private:
     // ^CharacterDevice
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;

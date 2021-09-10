@@ -22,7 +22,10 @@ namespace Kernel {
 
 NonnullRefPtr<FramebufferDevice> FramebufferDevice::create(const GraphicsDevice& adapter, size_t output_port_index, PhysicalAddress paddr, size_t width, size_t height, size_t pitch)
 {
-    return adopt_ref(*new FramebufferDevice(adapter, output_port_index, paddr, width, height, pitch));
+    auto framebuffer_device_or_error = try_create_device<FramebufferDevice>(adapter, output_port_index, paddr, width, height, pitch);
+    // FIXME: Find a way to propagate errors
+    VERIFY(!framebuffer_device_or_error.is_error());
+    return framebuffer_device_or_error.release_value();
 }
 
 KResultOr<Memory::Region*> FramebufferDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
