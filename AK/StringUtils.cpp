@@ -427,6 +427,34 @@ String to_titlecase(StringView const& str)
     return builder.to_string();
 }
 
+String replace(StringView const& str, StringView const& needle, StringView const& replacement, bool all_occurrences)
+{
+    if (str.is_empty())
+        return str;
+
+    Vector<size_t> positions;
+    if (all_occurrences) {
+        positions = str.find_all(needle);
+        if (!positions.size())
+            return str;
+    } else {
+        auto pos = str.find(needle);
+        if (!pos.has_value())
+            return str;
+        positions.append(pos.value());
+    }
+
+    StringBuilder replaced_string;
+    size_t last_position = 0;
+    for (auto& position : positions) {
+        replaced_string.append(str.substring_view(last_position, position - last_position));
+        replaced_string.append(replacement);
+        last_position = position + needle.length();
+    }
+    replaced_string.append(str.substring_view(last_position, str.length() - last_position));
+    return replaced_string.build();
+}
+
 // TODO: Benchmark against KMP (AK/MemMem.h) and switch over if it's faster for short strings too
 size_t count(StringView const& str, StringView const& needle)
 {

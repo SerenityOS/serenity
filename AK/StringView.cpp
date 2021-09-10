@@ -245,4 +245,9 @@ bool StringView::operator==(const String& string) const
 
 String StringView::to_string() const { return String { *this }; }
 
+String StringView::replace(const StringView& needle, const StringView& replacement, bool all_occurrences) const
+{
+    return StringUtils::replace(*this, needle, replacement, all_occurrences);
+}
+
 }

@@ -84,12 +84,7 @@ static String escape_regexp_pattern(const RegExpObject& regexp_object)
     if (pattern.is_empty())
         return "(?:)";
     // FIXME: Check u flag and escape accordingly
-    pattern.replace("\n", "\\n", true);
-    pattern.replace("\r", "\\r", true);
-    pattern.replace(LINE_SEPARATOR_STRING, "\\u2028", true);
-    pattern.replace(PARAGRAPH_SEPARATOR_STRING, "\\u2029", true);
-    pattern.replace("/", "\\/", true);
-    return pattern;
+    return pattern.replace("\n", "\\n", true).replace("\r", "\\r", true).replace(LINE_SEPARATOR_STRING, "\\u2028", true).replace(PARAGRAPH_SEPARATOR_STRING, "\\u2029", true).replace("/", "\\/", true);
 }
 
 // 22.2.5.2.3 AdvanceStringIndex ( S, index, unicode ), https://tc39.es/ecma262/#sec-advancestringindex

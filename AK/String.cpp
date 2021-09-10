@@ -352,36 +352,6 @@ bool String::equals_ignoring_case(const StringView& other) const
     return StringUtils::equals_ignoring_case(view(), other);
 }
 
-int String::replace(const String& needle, const String& replacement, bool all_occurrences)
-{
-    if (is_empty())
-        return 0;
-
-    Vector<size_t> positions;
-    if (all_occurrences) {
-        positions = find_all(needle);
-    } else {
-        auto pos = find(needle);
-        if (!pos.has_value())
-            return 0;
-        positions.append(pos.value());
-    }
-
-    if (!positions.size())
-        return 0;
-
-    StringBuilder b;
-    size_t lastpos = 0;
-    for (auto& pos : positions) {
-        b.append(substring_view(lastpos, pos - lastpos));
-        b.append(replacement);
-        lastpos = pos + needle.length();
-    }
-    b.append(substring_view(lastpos, length() - lastpos));
-    m_impl = StringImpl::create(b.build().characters());
-    return positions.size();
-}
-
 String String::reverse() const
 {
     StringBuilder reversed_string(length());

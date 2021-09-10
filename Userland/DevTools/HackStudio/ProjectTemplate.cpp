@@ -90,8 +90,7 @@ Result<void, String> ProjectTemplate::create_project(const String& name, const S
         dbgln("Running post-create script '{}'", postcreate_script_path);
 
         // Generate a namespace-safe project name (replace hyphens with underscores)
-        String namespace_safe(name.characters());
-        namespace_safe.replace("-", "_", true);
+        auto namespace_safe = name.replace("-", "_", true);
 
         pid_t child_pid;
         const char* argv[] = { postcreate_script_path.characters(), name.characters(), path.characters(), namespace_safe.characters(), nullptr };

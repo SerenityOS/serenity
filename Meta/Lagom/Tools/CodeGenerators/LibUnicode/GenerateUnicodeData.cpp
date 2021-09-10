@@ -201,7 +201,7 @@ static void parse_special_casing(Core::File& file, UnicodeData& unicode_data)
 
             if (!casing.locale.is_empty())
                 casing.locale = String::formatted("{:c}{}", to_ascii_uppercase(casing.locale[0]), casing.locale.substring_view(1));
-            casing.condition.replace("_", "", true);
+            casing.condition = casing.condition.replace("_", "", true);
 
             if (!casing.condition.is_empty() && !unicode_data.conditions.contains_slow(casing.condition))
                 unicode_data.conditions.append(casing.condition);
