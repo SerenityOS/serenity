@@ -399,7 +399,8 @@ int main(int argc, char* argv[])
                                 first = false;
                             else
                                 argument_builder.append(", "sv);
-                            argument_builder.append(StringView(stream.copy_into_contiguous_buffer()).trim_whitespace());
+                            ByteBuffer buffer = stream.copy_into_contiguous_buffer();
+                            argument_builder.append(StringView(buffer).trim_whitespace());
                         }
                         dbgln("[wasm runtime] Stub function {} was called with the following arguments: {}", name, argument_builder.to_string());
                         Vector<Wasm::Value> result;
