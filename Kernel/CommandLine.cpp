@@ -142,7 +142,9 @@ UNMAP_AFTER_INIT AcpiFeatureLevel CommandLine::acpi_feature_level() const
         return AcpiFeatureLevel::Limited;
     if (value == "off"sv)
         return AcpiFeatureLevel::Disabled;
-    return AcpiFeatureLevel::Enabled;
+    if (value == "on"sv)
+        return AcpiFeatureLevel::Enabled;
+    PANIC("Unknown ACPI feature level: {}", value);
 }
 
 UNMAP_AFTER_INIT HPETMode CommandLine::hpet_mode() const
