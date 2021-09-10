@@ -1,16 +1,16 @@
 test("labeled plain scope", () => {
-    test: {
+    notused: test: alsonotused: {
         let o = 1;
         expect(o).toBe(1);
-        break test;
+        unused: break test;
         expect().fail();
     }
 });
 
 test("break on plain scope from inner scope", () => {
-    outer: {
+    notused: outer: alsonotused: {
         {
-            break outer;
+            unused: break outer;
         }
         expect().fail();
     }
@@ -18,7 +18,7 @@ test("break on plain scope from inner scope", () => {
 
 test("labeled for loop with break", () => {
     let counter = 0;
-    outer: for (a of [1, 2, 3]) {
+    notused: outer: alsonotused: for (a of [1, 2, 3]) {
         for (b of [4, 5, 6]) {
             if (a === 2 && b === 5) break outer;
             counter++;
@@ -29,7 +29,7 @@ test("labeled for loop with break", () => {
 
 test("labeled for loop with continue", () => {
     let counter = 0;
-    outer: for (a of [1, 2, 3]) {
+    notused: outer: alsonotused: for (a of [1, 2, 3]) {
         for (b of [4, 5, 6]) {
             if (b === 6) continue outer;
             counter++;
@@ -38,10 +38,61 @@ test("labeled for loop with continue", () => {
     expect(counter).toBe(6);
 });
 
-test("invalid label across scope", () => {
-    expect(`
-        label: {
-            (() => { break label; });
+test("break on try catch statement", () => {
+    let entered = false;
+    label1: label2: label3: try {
+        entered = true;
+        break label2;
+        expect().fail();
+    } catch (e) {
+        expect().fail();
+    }
+    expect(entered).toBeTrue();
+});
+
+test("can break on every label", () => {
+    let i = 0;
+    label0: label1: label2: for (; i < 3; i++) {
+        block: {
+            break block;
+            expect().fail();
         }
-    `).not.toEval();
+        if (i === 0) continue label0;
+        if (i === 1) continue label1;
+        if (i === 2) continue label2;
+        expect().fail();
+    }
+    expect(i).toBe(3);
+});
+
+test("invalid label usage", () => {
+    expect(() =>
+        eval(`
+            label: {
+                (() => {
+                    break label;
+                });
+            }
+        `)
+    ).toThrowWithMessage(SyntaxError, "Label 'label' not found");
+    expect(() =>
+        eval(`
+            label: {
+                while (false) {
+                    continue label;
+                }
+            }
+        `),
+    ).toThrowWithMessage(
+        SyntaxError,
+        "labelled continue statement cannot use non iterating statement"
+    );
+
+    expect(() =>
+        eval(`
+            label: label: {
+                break label;
+            }
+        `),
+    ).toThrowWithMessage(SyntaxError, "Label 'label' has already been declared");
 });

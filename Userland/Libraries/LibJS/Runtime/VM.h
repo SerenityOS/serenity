@@ -193,11 +193,13 @@ public:
         m_unwind_until = ScopeType::None;
         m_unwind_until_label = {};
     }
-    bool should_unwind_until(ScopeType type, FlyString const& label) const
+    bool should_unwind_until(ScopeType type, Vector<FlyString> const& labels) const
     {
         if (m_unwind_until_label.is_null())
             return m_unwind_until == type;
-        return m_unwind_until == type && m_unwind_until_label == label;
+        return m_unwind_until == type && any_of(labels.begin(), labels.end(), [&](FlyString const& label) {
+            return m_unwind_until_label == label;
+        });
     }
     bool should_unwind() const { return m_unwind_until != ScopeType::None; }
 

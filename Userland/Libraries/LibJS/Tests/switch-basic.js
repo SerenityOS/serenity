@@ -100,6 +100,10 @@ describe("basic switch tests", () => {
 describe("errors", () => {
     test("syntax errors", () => {
         expect("switch () {}").not.toEval();
+        expect("switch () { case 1: continue; }").not.toEval();
+        expect("switch () { case 1: break doesnotexist; }").not.toEval();
+        expect("label: switch () { case 1: break not_the_right_label; }").not.toEval();
+        expect("label: switch () { case 1: continue label; }").not.toEval();
         expect("switch (foo) { bar }").not.toEval();
         expect("switch (foo) { default: default: }").not.toEval();
     });

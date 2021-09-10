@@ -395,9 +395,9 @@ Value WhileStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
         if (interpreter.exception())
             return {};
         if (interpreter.vm().should_unwind()) {
-            if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
+            if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_labels)) {
                 interpreter.vm().stop_unwind();
-            } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
+            } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_labels)) {
                 interpreter.vm().stop_unwind();
                 break;
             } else {
@@ -421,9 +421,9 @@ Value DoWhileStatement::execute(Interpreter& interpreter, GlobalObject& global_o
         if (interpreter.exception())
             return {};
         if (interpreter.vm().should_unwind()) {
-            if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
+            if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_labels)) {
                 interpreter.vm().stop_unwind();
-            } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
+            } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_labels)) {
                 interpreter.vm().stop_unwind();
                 break;
             } else {
@@ -477,9 +477,9 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
             if (interpreter.exception())
                 return {};
             if (interpreter.vm().should_unwind()) {
-                if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
+                if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_labels)) {
                     interpreter.vm().stop_unwind();
-                } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
+                } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_labels)) {
                     interpreter.vm().stop_unwind();
                     break;
                 } else {
@@ -498,9 +498,9 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
             if (interpreter.exception())
                 return {};
             if (interpreter.vm().should_unwind()) {
-                if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
+                if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_labels)) {
                     interpreter.vm().stop_unwind();
-                } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
+                } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_labels)) {
                     interpreter.vm().stop_unwind();
                     break;
                 } else {
@@ -570,9 +570,9 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
             if (interpreter.exception())
                 return {};
             if (interpreter.vm().should_unwind()) {
-                if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
+                if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_labels)) {
                     interpreter.vm().stop_unwind();
-                } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
+                } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_labels)) {
                     interpreter.vm().stop_unwind();
                     break;
                 } else {
@@ -613,9 +613,9 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
         if (interpreter.exception())
             return IterationDecision::Break;
         if (interpreter.vm().should_unwind()) {
-            if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
+            if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_labels)) {
                 interpreter.vm().stop_unwind();
-            } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
+            } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_labels)) {
                 interpreter.vm().stop_unwind();
                 return IterationDecision::Break;
             } else {
@@ -2329,6 +2329,11 @@ void ThrowStatement::dump(int indent) const
     argument().dump(indent + 1);
 }
 
+void TryStatement::add_label(FlyString string)
+{
+    m_block->add_label(move(string));
+}
+
 Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
@@ -2410,6 +2415,7 @@ Value ThrowStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     return {};
 }
 
+// 14.12.2 Runtime Semantics: CaseBlockEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-caseblockevaluation
 Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
@@ -2460,10 +2466,10 @@ Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
             if (interpreter.exception())
                 return {};
             if (interpreter.vm().should_unwind()) {
-                if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
+                if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_labels)) {
                     // No stop_unwind(), the outer loop will handle that - we just need to break out of the switch/case.
                     return last_value;
-                } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
+                } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_labels)) {
                     interpreter.vm().stop_unwind();
                     return last_value;
                 } else {

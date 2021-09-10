@@ -246,7 +246,7 @@ private:
 
         Vector<Vector<FunctionNode::Parameter>&> function_parameters;
 
-        HashMap<StringView, bool> labels_in_scope;
+        HashMap<StringView, Optional<Position>> labels_in_scope;
         bool strict_mode { false };
         bool allow_super_property_lookup { false };
         bool allow_super_constructor_call { false };

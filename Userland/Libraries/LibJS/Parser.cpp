@@ -573,7 +573,6 @@ RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction all
     };
 
     if (m_state.current_token.value() == "yield"sv && (m_state.strict_mode || m_state.in_generator_function_context)) {
-        syntax_error("'yield' label not allowed in this context");
         return {};
     }
 
@@ -585,6 +584,9 @@ RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction all
     if (!match_statement())
         return {};
 
+    state_rollback_guard.disarm();
+    discard_saved_state();
+
     if (match(TokenType::Function) && (allow_function == AllowLabelledFunction::No || m_state.strict_mode)) {
         syntax_error("Not allowed to declare a function here");
         return {};
@@ -595,8 +597,10 @@ RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction all
 
     RefPtr<Statement> labelled_statement;
 
+    auto is_iteration_statement = false;
+
     if (match(TokenType::Function)) {
-        m_state.labels_in_scope.set(identifier, false);
+        m_state.labels_in_scope.set(identifier, {});
         auto function_declaration = parse_function_node<FunctionDeclaration>();
         m_state.current_scope->function_declarations.append(function_declaration);
         auto hoisting_target = m_state.current_scope->get_current_function_scope();
@@ -606,16 +610,23 @@ RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction all
 
         labelled_statement = move(function_declaration);
     } else {
-        auto is_iteration_statement = match(TokenType::For) || match(TokenType::Do) || match(TokenType::While);
-        m_state.labels_in_scope.set(identifier, is_iteration_statement);
-        labelled_statement = parse_statement();
+        m_state.labels_in_scope.set(identifier, {});
+        labelled_statement = parse_statement(allow_function);
+        if (is<IterationStatement>(*labelled_statement)) {
+            is_iteration_statement = true;
+            static_cast<IterationStatement&>(*labelled_statement).add_label(identifier);
+        } else if (is<LabelableStatement>(*labelled_statement)) {
+            static_cast<LabelableStatement&>(*labelled_statement).add_label(identifier);
+        }
+    }
+
+    if (!is_iteration_statement) {
+        if (auto entry = m_state.labels_in_scope.find(identifier); entry != m_state.labels_in_scope.end() && entry->value.has_value())
+            syntax_error("labelled continue statement cannot use non iterating statement", m_state.labels_in_scope.get(identifier).value());
     }
 
     m_state.labels_in_scope.remove(identifier);
 
-    labelled_statement->set_label(identifier);
-    state_rollback_guard.disarm();
-    discard_saved_state();
     return labelled_statement.release_nonnull();
 }
 
@@ -2366,11 +2377,14 @@ NonnullRefPtr<ContinueStatement> Parser::parse_continue_statement()
         return create_ast_node<ContinueStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, target_label);
     }
     if (match(TokenType::Identifier) && !m_state.current_token.trivia_contains_line_terminator()) {
+        auto label_position = position();
         target_label = consume().value();
 
         auto label = m_state.labels_in_scope.find(target_label);
-        if (label == m_state.labels_in_scope.end() || !label->value)
+        if (label == m_state.labels_in_scope.end())
             syntax_error(String::formatted("Label '{}' not found or invalid", target_label));
+        else
+            label->value = label_position;
     }
     consume_or_insert_semicolon();
     return create_ast_node<ContinueStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, target_label);
