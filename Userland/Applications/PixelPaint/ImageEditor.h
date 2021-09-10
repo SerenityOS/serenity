@@ -45,6 +45,7 @@ public:
     {
         m_guides.remove_first_matching([&](auto& entry) { return &guide == entry.ptr(); });
     }
+    void clear_guides() { m_guides.clear(); }
 
     void layers_did_change();
 
