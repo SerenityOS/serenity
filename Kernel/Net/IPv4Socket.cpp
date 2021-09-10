@@ -312,7 +312,8 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(OpenFileDescription& descr
                 m_receive_queue.size());
         }
     }
-    if (!packet->data) {
+
+    if (!packet) {
         if (protocol_is_disconnected()) {
             dbgln("IPv4Socket({}) is protocol-disconnected, returning 0 in recvfrom!", this);
             return 0;
