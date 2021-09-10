@@ -48,6 +48,7 @@ public:
     StringView(const String&);
     StringView(const FlyString&);
 
+    explicit StringView(ByteBuffer&&) = delete;
     explicit StringView(String&&) = delete;
 
     [[nodiscard]] constexpr bool is_null() const { return !m_characters; }
