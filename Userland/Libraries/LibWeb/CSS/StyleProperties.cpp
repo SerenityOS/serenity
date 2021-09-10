@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -298,14 +299,21 @@ Optional<int> StyleProperties::z_index() const
 
 Optional<float> StyleProperties::opacity() const
 {
-    auto value = property(CSS::PropertyID::Opacity);
-    if (!value.has_value())
+    auto maybe_value = property(CSS::PropertyID::Opacity);
+    if (!maybe_value.has_value())
         return {};
+    auto& value = maybe_value.value();
 
-    if (auto length = value.value()->to_length(); length.is_percentage())
-        return clamp(static_cast<float>(length.raw_value() / 100), 0.0f, 1.0f);
-    else
-        return clamp(static_cast<float>(length.raw_value()), 0.0f, 1.0f);
+    if (value->is_numeric())
+        return clamp(static_cast<NumericStyleValue&>(*value).value(), 0.0f, 1.0f);
+
+    if (value->is_length()) {
+        auto length = value->to_length();
+        if (length.is_percentage())
+            return clamp(length.raw_value() / 100.0f, 0.0f, 1.0f);
+    }
+
+    return {};
 }
 
 Optional<CSS::FlexDirection> StyleProperties::flex_direction() const
