@@ -242,7 +242,7 @@ public:
 
     void set_global_cursor_tracking_enabled(bool);
     void set_automatic_cursor_tracking_enabled(bool enabled) { m_automatic_cursor_tracking_enabled = enabled; }
-    bool global_cursor_tracking() const { return m_global_cursor_tracking_enabled || m_automatic_cursor_tracking_enabled; }
+    bool is_automatic_cursor_tracking() const { return m_automatic_cursor_tracking_enabled; }
 
     bool has_alpha_channel() const { return m_has_alpha_channel; }
     void set_has_alpha_channel(bool value);
@@ -409,7 +409,6 @@ private:
     Gfx::DisjointRectSet m_transparency_wallpaper_rects;
     HashMap<Window*, Gfx::DisjointRectSet> m_affected_transparency_rects;
     WindowType m_type { WindowType::Normal };
-    bool m_global_cursor_tracking_enabled { false };
     bool m_automatic_cursor_tracking_enabled { false };
     bool m_visible { true };
     bool m_has_alpha_channel { false };

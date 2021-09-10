@@ -597,11 +597,6 @@ void Window::handle_keydown_event(const KeyEvent& event)
     m_client->async_key_down(m_window_id, (u32)event.code_point(), (u32)event.key(), event.modifiers(), (u32)event.scancode());
 }
 
-void Window::set_global_cursor_tracking_enabled(bool enabled)
-{
-    m_global_cursor_tracking_enabled = enabled;
-}
-
 void Window::set_visible(bool b)
 {
     if (m_visible == b)

@@ -1182,7 +1182,7 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
         return;
     }
 
-    if (!window.global_cursor_tracking()) {
+    if (!window.is_automatic_cursor_tracking()) {
         deliver_mouse_event(window, event, true);
     }
 
@@ -1205,6 +1205,14 @@ void WindowManager::process_mouse_event(MouseEvent& event)
         if (conn.does_global_mouse_tracking()) {
             conn.async_track_mouse_move(event.position());
         }
+    });
+    // The active input tracking window is excluded here because we're sending the event to it
+    // in the next step.
+    auto& window_stack = current_window_stack();
+    for_each_visible_window_from_front_to_back([&](Window& window) {
+        if (window.is_automatic_cursor_tracking() && &window != window_stack.active_input_tracking_window())
+            deliver_mouse_event(window, event, false);
+        return IterationDecision::Continue;
     });
 
     // 3. If there's an active input tracking window, all mouse events go there.
