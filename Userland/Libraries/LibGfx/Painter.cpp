@@ -1088,16 +1088,17 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, const IntRe
     }
 
     bool has_opacity = opacity != 1.0f;
-    int hscale = (src_rect.width() * (1 << 16)) / dst_rect.width();
-    int vscale = (src_rect.height() * (1 << 16)) / dst_rect.height();
-    int src_left = src_rect.left() * (1 << 16);
-    int src_top = src_rect.top() * (1 << 16);
+    i64 shift = (i64)1 << 32;
+    i64 hscale = (src_rect.width() * shift) / dst_rect.width();
+    i64 vscale = (src_rect.height() * shift) / dst_rect.height();
+    i64 src_left = src_rect.left() * shift;
+    i64 src_top = src_rect.top() * shift;
 
     for (int y = clipped_rect.top(); y <= clipped_rect.bottom(); ++y) {
         auto* scanline = (Color*)target.scanline(y);
         for (int x = clipped_rect.left(); x <= clipped_rect.right(); ++x) {
-            auto scaled_x = ((x - dst_rect.x()) * hscale + src_left) >> 16;
-            auto scaled_y = ((y - dst_rect.y()) * vscale + src_top) >> 16;
+            auto scaled_x = ((x - dst_rect.x()) * hscale + src_left) >> 32;
+            auto scaled_y = ((y - dst_rect.y()) * vscale + src_top) >> 32;
             auto src_pixel = get_pixel(source, scaled_x, scaled_y);
             if (has_opacity)
                 src_pixel.set_alpha(src_pixel.alpha() * opacity);
