@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2020-2021, Liav A. <liavalb@hotmail.co.il>
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -24,6 +24,13 @@ static Parser* s_acpi_parser;
 Parser* Parser::the()
 {
     return s_acpi_parser;
+}
+
+void Parser::must_initialize(PhysicalAddress rsdp, PhysicalAddress fadt, u8 irq_number)
+{
+    VERIFY(!s_acpi_parser);
+    s_acpi_parser = new (nothrow) Parser(rsdp, fadt, irq_number);
+    VERIFY(s_acpi_parser);
 }
 
 UNMAP_AFTER_INIT NonnullRefPtr<ACPISysFSComponent> ACPISysFSComponent::create(String name, PhysicalAddress paddr, size_t table_size)
@@ -96,12 +103,6 @@ void Parser::enumerate_static_tables(Function<void(const StringView&, PhysicalAd
     }
 }
 
-void Parser::set_the(Parser& parser)
-{
-    VERIFY(!s_acpi_parser);
-    s_acpi_parser = &parser;
-}
-
 static bool match_table_signature(PhysicalAddress table_header, const StringView& signature);
 static Optional<PhysicalAddress> search_table_in_xsdt(PhysicalAddress xsdt, const StringView& signature);
 static Optional<PhysicalAddress> search_table_in_rsdt(PhysicalAddress rsdt, const StringView& signature);
@@ -111,8 +112,7 @@ UNMAP_AFTER_INIT void Parser::locate_static_data()
 {
     locate_main_system_description_table();
     initialize_main_system_description_table();
-    init_fadt();
-    init_facs();
+    process_fadt_data();
 }
 
 UNMAP_AFTER_INIT Optional<PhysicalAddress> Parser::find_table(const StringView& signature)
@@ -129,24 +129,26 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> Parser::find_table(const StringView& 
     return {};
 }
 
-UNMAP_AFTER_INIT void Parser::init_facs()
+bool Parser::handle_irq(const RegisterState&)
 {
-    if (auto facs = find_table("FACS"); facs.has_value())
-        m_facs = facs.value();
+    TODO();
 }
 
-UNMAP_AFTER_INIT void Parser::init_fadt()
+UNMAP_AFTER_INIT void Parser::enable_aml_parsing()
+{
+    // FIXME: When enabled, do other things to "parse AML".
+    m_can_process_bytecode = true;
+}
+
+UNMAP_AFTER_INIT void Parser::process_fadt_data()
 {
     dmesgln("ACPI: Initializing Fixed ACPI data");
-    dmesgln("ACPI: Searching for the Fixed ACPI Data Table");
 
-    m_fadt = find_table("FACP").value();
-    auto sdt = Memory::map_typed<const volatile Structures::FADT>(m_fadt);
+    VERIFY(!m_fadt.is_null());
+    dbgln_if(ACPI_DEBUG, "ACPI: FADT @ {}", m_fadt);
 
-    dbgln_if(ACPI_DEBUG, "ACPI: FADT @ V{}, {}", &sdt, m_fadt);
-
-    auto* header = &sdt.ptr()->h;
-    dmesgln("ACPI: Fixed ACPI data, Revision {}, length: {} bytes", (size_t)header->revision, (size_t)header->length);
+    auto sdt = Memory::map_typed<Structures::FADT>(m_fadt);
+    dmesgln("ACPI: Fixed ACPI data, Revision {}, length: {} bytes", (size_t)sdt->h.revision, (size_t)sdt->h.length);
     dmesgln("ACPI: DSDT {}", PhysicalAddress(sdt->dsdt_ptr));
     m_x86_specific_flags.cmos_rtc_not_present = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::CMOS_RTC_Not_Present);
 
@@ -350,8 +352,10 @@ UNMAP_AFTER_INIT void Parser::locate_main_system_description_table()
     }
 }
 
-UNMAP_AFTER_INIT Parser::Parser(PhysicalAddress rsdp)
-    : m_rsdp(rsdp)
+UNMAP_AFTER_INIT Parser::Parser(PhysicalAddress rsdp, PhysicalAddress fadt, u8 irq_number)
+    : IRQHandler(irq_number)
+    , m_rsdp(rsdp)
+    , m_fadt(fadt)
 {
     dmesgln("ACPI: Using RSDP @ {}", rsdp);
     locate_static_data();
@@ -431,26 +435,6 @@ UNMAP_AFTER_INIT static Optional<PhysicalAddress> search_table_in_rsdt(PhysicalA
             return PhysicalAddress((PhysicalPtr)rsdt->table_ptrs[i]);
     }
     return {};
-}
-
-void Parser::enable_aml_interpretation()
-{
-    VERIFY_NOT_REACHED();
-}
-
-void Parser::enable_aml_interpretation(File&)
-{
-    VERIFY_NOT_REACHED();
-}
-
-void Parser::enable_aml_interpretation(u8*, u32)
-{
-    VERIFY_NOT_REACHED();
-}
-
-void Parser::disable_aml_interpretation()
-{
-    VERIFY_NOT_REACHED();
 }
 
 }
