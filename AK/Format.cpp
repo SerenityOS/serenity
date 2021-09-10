@@ -817,6 +817,14 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams& params)
 
     const auto string = builder.string_view();
 
+#ifdef __serenity__
+#    ifdef KERNEL
+    if (!Kernel::Processor::is_initialized()) {
+        kernelearlyputstr(string.characters_without_null_termination(), string.length());
+        return;
+    }
+#    endif
+#endif
     dbgputstr(string.characters_without_null_termination(), string.length());
 }
 
