@@ -790,6 +790,15 @@ Optional<StringView> get_locale_currency_mapping([[maybe_unused]] StringView loc
 #endif
 }
 
+Vector<StringView> get_locale_key_mapping([[maybe_unused]] StringView locale, [[maybe_unused]] StringView keyword)
+{
+#if ENABLE_UNICODE_DATA
+    if (auto values = Detail::get_locale_key_mapping(locale, keyword); values.has_value())
+        return values->split_view(',');
+#endif
+    return {};
+}
+
 Optional<ListPatterns> get_locale_list_patterns([[maybe_unused]] StringView locale, [[maybe_unused]] StringView type, [[maybe_unused]] StringView style)
 {
 #if ENABLE_UNICODE_DATA

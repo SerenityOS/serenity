@@ -38,6 +38,7 @@ struct Locale {
     HashMap<String, String> territories;
     HashMap<String, String> scripts;
     HashMap<String, String> currencies;
+    HashMap<String, String> keywords;
     Vector<ListPatterns> list_patterns;
 };
 
@@ -60,6 +61,7 @@ struct UnicodeLocaleData {
     Vector<String> scripts;
     Vector<String> variants;
     Vector<String> currencies;
+    Vector<String> keywords;
     Vector<String> list_pattern_types;
     Vector<String> list_pattern_styles;
     HashMap<String, String> language_aliases;
@@ -382,6 +384,43 @@ static void parse_locale_currencies(String numbers_path, UnicodeLocaleData& loca
     });
 }
 
+static void parse_numeric_keywords(String locale_numbers_path, UnicodeLocaleData& locale_data, Locale& locale)
+{
+    static constexpr StringView key = "nu"sv;
+
+    LexicalPath numbers_path(move(locale_numbers_path));
+    numbers_path = numbers_path.append("numbers.json"sv);
+    VERIFY(Core::File::exists(numbers_path.string()));
+
+    auto numbers_file_or_error = Core::File::open(numbers_path.string(), Core::OpenMode::ReadOnly);
+    VERIFY(!numbers_file_or_error.is_error());
+
+    auto numbers = JsonParser(numbers_file_or_error.value()->read_all()).parse();
+    VERIFY(numbers.has_value());
+
+    auto const& main_object = numbers->as_object().get("main"sv);
+    auto const& locale_object = main_object.as_object().get(numbers_path.parent().basename());
+    auto const& locale_numbers_object = locale_object.as_object().get("numbers"sv);
+    auto const& default_numbering_system_object = locale_numbers_object.as_object().get("defaultNumberingSystem"sv);
+    auto const& other_numbering_systems_object = locale_numbers_object.as_object().get("otherNumberingSystems"sv);
+
+    Vector<String> keyword_values {};
+    keyword_values.append(default_numbering_system_object.as_string());
+
+    other_numbering_systems_object.as_object().for_each_member([&](auto const&, JsonValue const& value) {
+        auto keyword_value = value.as_string();
+        if (!keyword_values.contains_slow(keyword_value))
+            keyword_values.append(move(keyword_value));
+    });
+
+    StringBuilder builder;
+    builder.join(',', keyword_values);
+    locale.keywords.set(key, builder.build());
+
+    if (!locale_data.keywords.contains_slow(key))
+        locale_data.keywords.append(key);
+}
+
 static Core::DirIterator path_to_dir_iterator(String path)
 {
     LexicalPath lexical_path(move(path));
@@ -462,6 +501,7 @@ static void parse_all_locales(String core_path, String locale_names_path, String
 
         auto& locale = locale_data.locales.ensure(*language);
         parse_locale_currencies(numbers_path, locale_data, locale);
+        parse_numeric_keywords(numbers_path, locale_data, locale);
     }
 }
 
@@ -522,6 +562,7 @@ namespace Unicode {
     generate_enum("Territory"sv, {}, locale_data.territories);
     generate_enum("ScriptTag"sv, {}, locale_data.scripts);
     generate_enum("Currency"sv, {}, locale_data.currencies);
+    generate_enum("Key"sv, {}, locale_data.keywords);
     generate_enum("Variant"sv, {}, locale_data.variants);
     generate_enum("ListPatternType"sv, {}, locale_data.list_pattern_types);
     generate_enum("ListPatternStyle"sv, {}, locale_data.list_pattern_styles);
@@ -545,6 +586,9 @@ Optional<StringView> resolve_script_tag_alias(StringView const& script_tag);
 
 Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency);
 Optional<Currency> currency_from_string(StringView const& currency);
+
+Optional<StringView> get_locale_key_mapping(StringView locale, StringView key);
+Optional<Key> key_from_string(StringView const& key);
 
 Optional<ListPatterns> get_locale_list_pattern_mapping(StringView locale, StringView list_pattern_type, StringView list_pattern_style);
 Optional<ListPatternType> list_pattern_type_from_string(StringView const& list_pattern_type);
@@ -721,6 +765,7 @@ static constexpr Array<Span<@type@ const>, @size@> @name@ { {
     append_mapping("StringView"sv, "s_territories"sv, "s_territories_{}", [&](auto const& name, auto const& value) { append_string_list(name, locale_data.territories, value.territories); });
     append_mapping("StringView"sv, "s_scripts"sv, "s_scripts_{}", [&](auto const& name, auto const& value) { append_string_list(name, locale_data.scripts, value.scripts); });
     append_mapping("StringView"sv, "s_currencies"sv, "s_currencies_{}", [&](auto const& name, auto const& value) { append_string_list(name, locale_data.currencies, value.currencies); });
+    append_mapping("StringView"sv, "s_keywords"sv, "s_keywords_{}", [&](auto const& name, auto const& value) { append_string_list(name, locale_data.keywords, value.keywords); });
     append_mapping("Patterns"sv, "s_list_patterns"sv, "s_list_patterns_{}", [&](auto const& name, auto const& value) { append_list_patterns(name, value.list_patterns); });
 
     generator.append(R"~~~(
@@ -1003,6 +1048,9 @@ Optional<StringView> resolve_@enum_snake@_alias(StringView const& @enum_snake@)
 
     append_mapping_search("Currency"sv, "currency"sv, "s_currencies"sv);
     append_from_string("Currency"sv, "currency"sv, locale_data.currencies);
+
+    append_mapping_search("Key"sv, "key"sv, "s_keywords"sv);
+    append_from_string("Key"sv, "key"sv, locale_data.keywords);
 
     append_alias_search("variant"sv, locale_data.variant_aliases);
     append_alias_search("subdivision"sv, locale_data.subdivision_aliases);
