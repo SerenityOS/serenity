@@ -8,8 +8,9 @@
 
 namespace Web::HTML {
 
-Script::Script(URL base_url)
+Script::Script(URL base_url, String filename)
     : m_base_url(move(base_url))
+    , m_filename(move(filename))
 {
 }
 

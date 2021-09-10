@@ -18,7 +18,7 @@ namespace JS {
 class Script : public RefCounted<Script> {
 public:
     ~Script();
-    static NonnullRefPtr<Script> parse(StringView source_text, GlobalObject&);
+    static NonnullRefPtr<Script> parse(StringView source_text, GlobalObject&, StringView filename = {});
 
     GlobalObject& global_object() { return *m_global_object.cell(); }
     Program const& parse_node() const { return *m_parse_node; }

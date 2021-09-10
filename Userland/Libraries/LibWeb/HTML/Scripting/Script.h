@@ -17,12 +17,14 @@ public:
     virtual ~Script();
 
     URL const& base_url() const { return m_base_url; }
+    String const& filename() const { return m_filename; }
 
 protected:
-    explicit Script(URL base_url);
+    Script(URL base_url, String filename);
 
 private:
     URL m_base_url;
+    String m_filename;
 };
 
 }

@@ -303,7 +303,7 @@ void HTMLScriptElement::prepare_script()
                     document().interpreter();
 
                     // FIXME: This is all ad-hoc and needs work.
-                    auto script = ClassicScript::create(data, *document().window().wrapper(), URL());
+                    auto script = ClassicScript::create(url.to_string(), data, *document().window().wrapper(), URL());
 
                     // When the chosen algorithm asynchronously completes, set the script's script to the result. At that time, the script is ready.
                     m_script = script;
@@ -330,7 +330,7 @@ void HTMLScriptElement::prepare_script()
             document().interpreter();
 
             // FIXME: Pass settings, base URL and options.
-            auto script = ClassicScript::create(source_text, *document().window().wrapper(), URL());
+            auto script = ClassicScript::create(m_document->url().to_string(), source_text, *document().window().wrapper(), URL());
 
             // 2. Set the script's script to script.
             m_script = script;

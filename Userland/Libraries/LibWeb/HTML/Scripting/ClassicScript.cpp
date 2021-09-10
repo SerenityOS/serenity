@@ -10,7 +10,7 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-classic-script
-NonnullRefPtr<ClassicScript> ClassicScript::create(StringView source, JS::GlobalObject& global_object, URL base_url, MutedErrors muted_errors)
+NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView source, JS::GlobalObject& global_object, URL base_url, MutedErrors muted_errors)
 {
     // 1. If muted errors was not provided, let it be false. (NOTE: This is taken care of by the default argument.)
 
@@ -21,7 +21,7 @@ NonnullRefPtr<ClassicScript> ClassicScript::create(StringView source, JS::Global
     // FIXME: 3. If scripting is disabled for settings, then set source to the empty string.
 
     // 4. Let script be a new classic script that this algorithm will subsequently initialize.
-    auto script = adopt_ref(*new ClassicScript(move(base_url)));
+    auto script = adopt_ref(*new ClassicScript(move(base_url), move(filename)));
 
     // FIXME: 5. Set script's settings object to settings.
 
@@ -35,7 +35,7 @@ NonnullRefPtr<ClassicScript> ClassicScript::create(StringView source, JS::Global
     // FIXME: 9. Set script's parse error and error to rethrow to null.
 
     // 10. Let result be ParseScript(source, settings's Realm, script).
-    auto result = JS::Script::parse(source, global_object);
+    auto result = JS::Script::parse(source, global_object, script->filename());
 
     // FIXME: 11. If result is a list of errors, then:
     //            1. Set script's parse error and its error to rethrow to result[0].
@@ -61,8 +61,8 @@ JS::Value ClassicScript::run(RethrowErrors rethrow_errors)
     return vm.last_value();
 }
 
-ClassicScript::ClassicScript(URL base_url)
-    : Script(move(base_url))
+ClassicScript::ClassicScript(URL base_url, String filename)
+    : Script(move(base_url), move(filename))
 {
 }
 
