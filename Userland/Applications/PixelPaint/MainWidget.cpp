@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
+ * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -345,6 +346,12 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     view_menu.add_separator();
     view_menu.add_action(*m_add_guide_action);
     view_menu.add_action(*m_show_guides_action);
+
+    view_menu.add_action(GUI::Action::create(
+        "Clear Guides", [&](auto&) {
+            if (auto* editor = current_image_editor())
+                editor->clear_guides();
+        }));
 
     auto& tool_menu = window.add_menu("&Tool");
     m_toolbox->for_each_tool([&](auto& tool) {
@@ -813,5 +820,4 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         open_image_fd(*result.fd, *result.chosen_file);
     }
 }
-
 }
