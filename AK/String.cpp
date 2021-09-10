@@ -371,6 +371,8 @@ String escape_html_entities(const StringView& html)
             builder.append("&gt;");
         else if (html[i] == '&')
             builder.append("&amp;");
+        else if (html[i] == '"')
+            builder.append("&quot;");
         else
             builder.append(html[i]);
     }
