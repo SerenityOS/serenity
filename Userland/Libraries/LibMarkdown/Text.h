@@ -55,6 +55,13 @@ public:
         virtual size_t terminal_length() const override;
     };
 
+    class BreakNode : public Node {
+    public:
+        virtual void render_to_html(StringBuilder& builder) const override;
+        virtual void render_for_terminal(StringBuilder& builder) const override;
+        virtual size_t terminal_length() const override;
+    };
+
     class TextNode : public Node {
     public:
         String text;
@@ -128,6 +135,10 @@ private:
             VERIFY(is_run);
             return data.length();
         }
+        bool is_space() const
+        {
+            return data[0] == ' ';
+        }
         bool operator==(StringView const& str) const { return str == data; }
     };
 
@@ -137,6 +148,8 @@ private:
     static bool can_close_for(Token const& opening, Token const& closing);
 
     static NonnullOwnPtr<MultiNode> parse_sequence(Vector<Token>::ConstIterator& tokens, bool in_link);
+    static NonnullOwnPtr<Node> parse_break(Vector<Token>::ConstIterator& tokens);
+    static NonnullOwnPtr<Node> parse_newline(Vector<Token>::ConstIterator& tokens);
     static NonnullOwnPtr<Node> parse_emph(Vector<Token>::ConstIterator& tokens, bool in_link);
     static NonnullOwnPtr<Node> parse_code(Vector<Token>::ConstIterator& tokens);
     static NonnullOwnPtr<Node> parse_link(Vector<Token>::ConstIterator& tokens);
