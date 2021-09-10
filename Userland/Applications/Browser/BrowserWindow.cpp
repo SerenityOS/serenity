@@ -280,7 +280,7 @@ void BrowserWindow::build_menus()
             return;
         }
 
-        int argument_count = search_engine.replace("{}", "{}", true);
+        auto argument_count = search_engine.count("{}"sv);
         if (argument_count != 1) {
             GUI::MessageBox::show(this, "Invalid format, must contain '{}' once!", "Error", GUI::MessageBox::Type::Error);
             m_disable_search_engine_action->activate();
