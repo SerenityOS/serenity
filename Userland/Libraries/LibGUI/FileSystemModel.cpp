@@ -12,6 +12,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
+#include <LibGUI/AbstractView.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/Painter.h>
@@ -420,6 +421,16 @@ void FileSystemModel::handle_file_event(Core::FileWatcherEvent const& event)
         parent->m_children.remove(index.row());
 
         end_delete_rows();
+
+        for_each_view([&](AbstractView& view) {
+            view.selection().remove_matching([&](auto& selection_index) {
+                return selection_index.internal_data() == index.internal_data();
+            });
+            if (view.cursor_index().internal_data() == index.internal_data()) {
+                view.set_cursor({}, GUI::AbstractView::SelectionUpdate::None);
+            }
+        });
+
         break;
     }
     case Core::FileWatcherEvent::Type::MetadataModified: {
