@@ -128,9 +128,7 @@ String serialize_astring(StringView string)
     // Try to quote
     auto can_be_quoted = !(string.contains('\n') || string.contains('\r'));
     if (can_be_quoted) {
-        auto escaped_str = string.to_string();
-        escaped_str.replace("\\", "\\\\");
-        escaped_str.replace("\"", "\\\"");
+        auto escaped_str = string.replace("\\", "\\\\").replace("\"", "\\\"");
         return String::formatted("\"{}\"", escaped_str);
     }
 

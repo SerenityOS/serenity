@@ -507,7 +507,7 @@ static void parse_all_locales(String core_path, String locale_names_path, String
 
 static String format_identifier(StringView owner, String identifier)
 {
-    identifier.replace("-"sv, "_"sv, true);
+    identifier = identifier.replace("-"sv, "_"sv, true);
 
     if (all_of(identifier, is_ascii_digit))
         return String::formatted("{}_{}", owner[0], identifier);
@@ -638,8 +638,7 @@ struct Patterns {
 )~~~");
 
     auto format_mapping_name = [](StringView format, StringView name) {
-        auto mapping_name = name.to_lowercase_string();
-        mapping_name.replace("-"sv, "_"sv, true);
+        auto mapping_name = name.to_lowercase_string().replace("-"sv, "_"sv, true);
         return String::formatted(format, mapping_name);
     };
 

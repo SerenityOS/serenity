@@ -1141,11 +1141,10 @@ static Value create_html(GlobalObject& global_object, Value string, const String
         auto value_string = value.to_string(global_object);
         if (vm.exception())
             return {};
-        value_string.replace("\"", "&quot;", true);
         builder.append(' ');
         builder.append(attribute);
         builder.append("=\"");
-        builder.append(value_string);
+        builder.append(value_string.replace("\"", "&quot;", true));
         builder.append('"');
     }
     builder.append('>');

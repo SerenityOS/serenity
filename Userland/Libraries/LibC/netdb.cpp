@@ -425,9 +425,7 @@ void endservent()
 static bool fill_getserv_buffers(const char* line, ssize_t read)
 {
     // Splitting the line by tab delimiter and filling the servent buffers name, port, and protocol members.
-    String string_line = String(line, read);
-    string_line.replace(" ", "\t", true);
-    auto split_line = string_line.split('\t');
+    auto split_line = StringView(line, read).replace(" ", "\t", true).split('\t');
 
     // This indicates an incorrect file format.
     // Services file entries should always at least contain
@@ -450,11 +448,7 @@ static bool fill_getserv_buffers(const char* line, ssize_t read)
     __getserv_port_buffer = number.value();
 
     // Remove any annoying whitespace at the end of the protocol.
-    port_protocol_split[1].replace(" ", "", true);
-    port_protocol_split[1].replace("\t", "", true);
-    port_protocol_split[1].replace("\n", "", true);
-
-    __getserv_protocol_buffer = port_protocol_split[1];
+    __getserv_protocol_buffer = port_protocol_split[1].replace(" ", "", true).replace("\t", "", true).replace("\n", "", true);
     __getserv_alias_list_buffer.clear();
 
     // If there are aliases for the service, we will fill the alias list buffer.
@@ -610,8 +604,7 @@ void endprotoent()
 static bool fill_getproto_buffers(const char* line, ssize_t read)
 {
     String string_line = String(line, read);
-    string_line.replace(" ", "\t", true);
-    auto split_line = string_line.split('\t');
+    auto split_line = string_line.replace(" ", "\t", true).split('\t');
 
     // This indicates an incorrect file format. Protocols file entries should
     // always have at least a name and a protocol.

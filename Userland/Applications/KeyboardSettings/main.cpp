@@ -83,8 +83,7 @@ int main(int argc, char** argv)
 
     while (iterator.has_next()) {
         auto name = iterator.next_path();
-        name.replace(".json", "");
-        character_map_files.append(name);
+        character_map_files.append(name.replace(".json", ""));
     }
     quick_sort(character_map_files);
 

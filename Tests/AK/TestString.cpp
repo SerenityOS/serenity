@@ -146,25 +146,21 @@ TEST_CASE(flystring)
 TEST_CASE(replace)
 {
     String test_string = "Well, hello Friends!";
-    u32 replacements = test_string.replace("Friends", "Testers");
-    EXPECT(replacements == 1);
+
+    test_string = test_string.replace("Friends", "Testers");
     EXPECT(test_string == "Well, hello Testers!");
 
-    replacements = test_string.replace("ell", "e're", true);
-    EXPECT(replacements == 2);
+    test_string = test_string.replace("ell", "e're", true);
     EXPECT(test_string == "We're, he'reo Testers!");
 
-    replacements = test_string.replace("!", " :^)");
-    EXPECT(replacements == 1);
+    test_string = test_string.replace("!", " :^)");
     EXPECT(test_string == "We're, he'reo Testers :^)");
 
     test_string = String("111._.111._.111");
-    replacements = test_string.replace("111", "|||", true);
-    EXPECT(replacements == 3);
+    test_string = test_string.replace("111", "|||", true);
     EXPECT(test_string == "|||._.|||._.|||");
 
-    replacements = test_string.replace("|||", "111");
-    EXPECT(replacements == 1);
+    test_string = test_string.replace("|||", "111");
     EXPECT(test_string == "111._.|||._.|||");
 }
 

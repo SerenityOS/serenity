@@ -27,10 +27,7 @@ static String make_input_acceptable_cpp(String const& input)
         return builder.to_string();
     }
 
-    String input_without_dashes = input;
-    input_without_dashes.replace("-", "_");
-
-    return input_without_dashes;
+    return input.replace("-", "_");
 }
 
 static void report_parsing_error(StringView message, StringView filename, StringView input, size_t offset)

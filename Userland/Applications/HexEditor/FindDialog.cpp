@@ -76,8 +76,7 @@ Result<ByteBuffer, String> FindDialog::process_input(String text_value, OptionId
     }
 
     case OPTION_HEX_VALUE: {
-        text_value.replace(" ", "", true);
-        auto decoded = decode_hex(text_value.substring_view(0, text_value.length()));
+        auto decoded = decode_hex(text_value.replace(" ", "", true));
         if (!decoded.has_value())
             return String("Input contains invalid hex values.");
 

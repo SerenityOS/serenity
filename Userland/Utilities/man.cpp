@@ -114,15 +114,11 @@ int main(int argc, char* argv[])
     auto file = Core::File::construct();
     file->set_filename(make_path(section));
 
-    String pager_command = pager;
-    if (!pager) {
-        String clean_name(name);
-        String clean_section(section);
-
-        clean_name.replace("'", "'\\''");
-        clean_section.replace("'", "'\\''");
-        pager_command = String::formatted("less -P 'Manual Page {}({}) line %l?e (END):.'", clean_name, clean_section);
-    }
+    String pager_command;
+    if (pager)
+        pager_command = pager;
+    else
+        pager_command = String::formatted("less -P 'Manual Page {}({}) line %l?e (END):.'", StringView(name).replace("'", "'\\''"), StringView(section).replace("'", "'\\''"));
     pid_t pager_pid = pipe_to_pager(pager_command);
 
     if (!file->open(Core::OpenMode::ReadOnly)) {

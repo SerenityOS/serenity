@@ -71,6 +71,7 @@ Optional<size_t> find_any_of(StringView const& haystack, StringView const& needl
 String to_snakecase(const StringView&);
 String to_titlecase(StringView const&);
 
+String replace(StringView const&, StringView const& needle, StringView const& replacement, bool all_occurrences = false);
 size_t count(StringView const&, StringView const& needle);
 
 }

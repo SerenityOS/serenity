@@ -220,6 +220,7 @@ public:
 
     [[nodiscard]] bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
 
+    [[nodiscard]] String replace(const StringView& needle, const StringView& replacement, bool all_occurrences = false) const;
     [[nodiscard]] size_t count(StringView const& needle) const { return StringUtils::count(*this, needle); }
 
     template<typename... Ts>
