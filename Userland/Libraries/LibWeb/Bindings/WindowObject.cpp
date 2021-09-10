@@ -11,7 +11,9 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibTextCodec/Decoder.h>
+#include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
+#include <LibWeb/Bindings/ElementWrapper.h>
 #include <LibWeb/Bindings/EventTargetConstructor.h>
 #include <LibWeb/Bindings/EventTargetPrototype.h>
 #include <LibWeb/Bindings/EventWrapper.h>
@@ -69,6 +71,8 @@ void WindowObject::initialize_global_object()
     define_native_function("cancelAnimationFrame", cancel_animation_frame, 1, attr);
     define_native_function("atob", atob, 1, attr);
     define_native_function("btoa", btoa, 1, attr);
+
+    define_native_function("getComputedStyle", get_computed_style, 1, attr);
 
     // Legacy
     define_native_accessor("event", event_getter, {}, JS::Attribute::Enumerable);
@@ -435,6 +439,23 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::inner_height_getter)
     if (!impl)
         return {};
     return JS::Value(impl->inner_height());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_computed_style)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    auto* object = vm.argument(0).to_object(global_object);
+    if (vm.exception())
+        return {};
+
+    if (!is<ElementWrapper>(object)) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "DOM element");
+        return {};
+    }
+
+    return wrap(global_object, impl->get_computed_style(static_cast<ElementWrapper*>(object)->impl()));
 }
 
 }

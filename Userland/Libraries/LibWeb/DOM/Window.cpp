@@ -187,4 +187,12 @@ Page const* Window::page() const
     return associated_document().page();
 }
 
+NonnullRefPtr<CSS::CSSStyleDeclaration> Window::get_computed_style(DOM::Element& element) const
+{
+    dbgln("Generating CSS computed style for {} @ {:p}", element.node_name(), &element);
+    Vector<CSS::StyleProperty> properties;
+    HashMap<String, CSS::StyleProperty> custom_properties;
+    return CSS::CSSStyleDeclaration::create(move(properties), move(custom_properties));
+}
+
 }
