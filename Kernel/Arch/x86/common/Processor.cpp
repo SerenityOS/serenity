@@ -177,11 +177,8 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
 
     if (has_feature(CPUFeature::NX)) {
         // Turn on IA32_EFER.NXE
-        asm volatile(
-            "movl $0xc0000080, %ecx\n"
-            "rdmsr\n"
-            "orl $0x800, %eax\n"
-            "wrmsr\n");
+        MSR ia32_efer(MSR_IA32_EFER);
+        ia32_efer.set(ia32_efer.get() | 0x800);
     }
 
     if (has_feature(CPUFeature::SMEP)) {
