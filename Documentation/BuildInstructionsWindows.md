@@ -11,6 +11,9 @@ Once installed, you will need to make sure the distribution you want to use (and
 - `wsl --set-version <distro> <version>` is used to convert a distro to another version, and<br/>
 - `wsl --set-default-version 2` will set the default version for all new distros (if desired.)<br/>
 
+Next, go to [BuildInstructions.md](https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md#prerequisites)
+and follow the instructions for your chosen Linux environment, to get the needed build tools.
+
 ## Note on filesystems
 
 WSL2 filesystem performance for IO heavy tasks (such as compiling a large C++ project) on the host Windows filesystem is
@@ -21,11 +24,8 @@ The recommendation from the Microsoft team on that issue is:
 
 > If it's at all possible, store your projects in the Linux file system in WSL2.
 
-In practice, this means cloning and building the project to somewhere such as `/home/username/serenity`.
-
-## Setting up build tools
-
-Please see the general build instructions for a list of tools you need to install in your WSL Linux environment.
+In practice, this means cloning and building the project to somewhere such as `/home/username/serenity`. You can then
+access the linux filesystem at `\\wsl$`, so for example, the project would be at `\\wsl$\home\username\serenity`.
 
 ## Setting up QEMU
 
