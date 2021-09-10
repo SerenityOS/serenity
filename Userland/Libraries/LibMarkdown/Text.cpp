@@ -79,13 +79,19 @@ void Text::TextNode::render_to_html(StringBuilder& builder) const
 
 void Text::TextNode::render_for_terminal(StringBuilder& builder) const
 {
-    String text_copy = text;
-    text_copy.replace("\n", " ");
-    builder.append(text_copy);
+    if (collapsible && (text == "\n" || text.is_whitespace())) {
+        builder.append(" ");
+    } else {
+        builder.append(text);
+    }
 }
 
 size_t Text::TextNode::terminal_length() const
 {
+    if (collapsible && text.is_whitespace()) {
+        return 1;
+    }
+
     return text.length();
 }
 
@@ -445,7 +451,7 @@ NonnullOwnPtr<Text::Node> Text::parse_code(Vector<Token>::ConstIterator& tokens)
         }
 
         is_all_whitespace = is_all_whitespace && iterator->data.is_whitespace();
-        code->children.append(make<TextNode>((*iterator == "\n") ? " " : iterator->data));
+        code->children.append(make<TextNode>((*iterator == "\n") ? " " : iterator->data, false));
     }
 
     return make<TextNode>(opening.data);

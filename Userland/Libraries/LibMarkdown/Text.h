@@ -65,9 +65,17 @@ public:
     class TextNode : public Node {
     public:
         String text;
+        bool collapsible;
 
         TextNode(StringView const& text)
             : text(text)
+            , collapsible(true)
+        {
+        }
+
+        TextNode(StringView const& text, bool collapsible)
+            : text(text)
+            , collapsible(collapsible)
         {
         }
 
