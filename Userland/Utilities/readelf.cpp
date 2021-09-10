@@ -412,6 +412,8 @@ int main(int argc, char** argv)
         display_elf_header = true;
         display_program_headers = true;
         display_section_headers = true;
+        display_dynamic_symbol_table = true;
+        display_dynamic_section = true;
         display_core_notes = true;
         display_relocations = true;
         display_unwind_info = true;
