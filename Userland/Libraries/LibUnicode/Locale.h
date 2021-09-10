@@ -137,6 +137,7 @@ Optional<StringView> get_locale_language_mapping(StringView locale, StringView l
 Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory);
 Optional<StringView> get_locale_script_mapping(StringView locale, StringView script);
 Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency);
+Vector<StringView> get_locale_key_mapping(StringView locale, StringView keyword);
 Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView type, StringView style);
 
 Optional<StringView> resolve_language_alias(StringView language);
