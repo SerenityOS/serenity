@@ -2418,19 +2418,41 @@ Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
     if (interpreter.exception())
         return {};
 
-    bool falling_through = false;
-    auto last_value = js_undefined();
+    Optional<size_t> first_passing_case;
 
-    for (auto& switch_case : m_cases) {
-        if (!falling_through && switch_case.test()) {
+    for (size_t i = 0; i < m_cases.size(); ++i) {
+        auto& switch_case = m_cases[i];
+        if (switch_case.test()) {
             auto test_result = switch_case.test()->execute(interpreter, global_object);
             if (interpreter.exception())
                 return {};
-            if (!strict_eq(discriminant_result, test_result))
-                continue;
+            if (strict_eq(discriminant_result, test_result)) {
+                first_passing_case = i;
+                break;
+            }
         }
-        falling_through = true;
+    }
 
+    // FIXME: we could optimize and store the location of the default case in a member variable.
+    if (!first_passing_case.has_value()) {
+        for (size_t i = 0; i < m_cases.size(); ++i) {
+            auto& switch_case = m_cases[i];
+            if (!switch_case.test()) {
+                first_passing_case = i;
+                break;
+            }
+        }
+    }
+
+    auto last_value = js_undefined();
+
+    if (!first_passing_case.has_value()) {
+        return last_value;
+    }
+    VERIFY(first_passing_case.value() < m_cases.size());
+
+    for (size_t i = first_passing_case.value(); i < m_cases.size(); ++i) {
+        auto& switch_case = m_cases[i];
         for (auto& statement : switch_case.consequent()) {
             auto value = statement.execute(interpreter, global_object);
             if (!value.is_empty())
