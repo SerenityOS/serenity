@@ -12,10 +12,10 @@
 namespace JS {
 
 // 16.1.5 ParseScript ( sourceText, realm, hostDefined ), https://tc39.es/ecma262/#sec-parse-script
-NonnullRefPtr<Script> Script::parse(StringView source_text, GlobalObject& global_object)
+NonnullRefPtr<Script> Script::parse(StringView source_text, GlobalObject& global_object, StringView filename)
 {
     // 1. Let body be ParseText(sourceText, Script).
-    auto body = Parser(Lexer(source_text)).parse_program();
+    auto body = Parser(Lexer(source_text, filename)).parse_program();
 
     // FIXME: 2. If body is a List of errors, return body.
 
