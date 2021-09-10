@@ -32,6 +32,9 @@
     M(InOperatorWithObject, "'in' operator must be used on an object")                                                                  \
     M(InstanceOfOperatorBadPrototype, "'prototype' property of {} is not an object")                                                    \
     M(IntlInvalidLanguageTag, "{} is not a structurally valid language tag")                                                            \
+    M(IntlMinimumExceedsMaximum, "Minimum value {} is larger than maximum value {}")                                                    \
+    M(IntlNumberIsNaNOrOutOfRange, "Value {} is NaN or is not between {} and {}")                                                       \
+    M(IntlOptionUndefined, "Option {} must be defined when option {} is {}")                                                            \
     M(InvalidAssignToConst, "Invalid assignment to const variable")                                                                     \
     M(InvalidCodePoint, "Invalid code point {}, must be an integer no less than 0 and no greater than 0x10FFFF")                        \
     M(InvalidFormat, "Invalid {} format")                                                                                               \

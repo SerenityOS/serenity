@@ -6,7 +6,9 @@
 
 #include <AK/AllOf.h>
 #include <AK/AnyOf.h>
+#include <AK/Array.h>
 #include <AK/CharacterTypes.h>
+#include <AK/Find.h>
 #include <AK/Function.h>
 #include <AK/QuickSort.h>
 #include <AK/TypeCasts.h>
@@ -121,7 +123,7 @@ String canonicalize_unicode_locale_id(Unicode::LocaleID& locale)
 }
 
 // 6.3.1 IsWellFormedCurrencyCode ( currency ), https://tc39.es/ecma402/#sec-canonicalcodefordisplaynames
-static bool is_well_formed_currency_code(StringView currency)
+bool is_well_formed_currency_code(StringView currency)
 {
     // 1. Let normalized be the result of mapping currency to upper case as described in 6.1.
     // 2. If the number of elements in normalized is not 3, return false.
@@ -133,6 +135,53 @@ static bool is_well_formed_currency_code(StringView currency)
         return false;
 
     // 4. Return true.
+    return true;
+}
+
+// 6.5.1 IsWellFormedUnitIdentifier ( unitIdentifier ), https://tc39.es/ecma402/#sec-iswellformedunitidentifier
+bool is_well_formed_unit_identifier(StringView unit_identifier)
+{
+    // 6.5.2 IsSanctionedSimpleUnitIdentifier ( unitIdentifier ), https://tc39.es/ecma402/#sec-iswellformedunitidentifier
+    constexpr auto is_sanctioned_simple_unit_identifier = [](StringView unit_identifier) {
+        // 1. If unitIdentifier is listed in Table 2 below, return true.
+        // 2. Else, return false.
+        static constexpr auto sanctioned_units = AK::Array { "acre"sv, "bit"sv, "byte"sv, "celsius"sv, "centimeter"sv, "day"sv, "degree"sv, "fahrenheit"sv, "fluid-ounce"sv, "foot"sv, "gallon"sv, "gigabit"sv, "gigabyte"sv, "gram"sv, "hectare"sv, "hour"sv, "inch"sv, "kilobit"sv, "kilobyte"sv, "kilogram"sv, "kilometer"sv, "liter"sv, "megabit"sv, "megabyte"sv, "meter"sv, "mile"sv, "mile-scandinavian"sv, "milliliter"sv, "millimeter"sv, "millisecond"sv, "minute"sv, "month"sv, "ounce"sv, "percent"sv, "petabyte"sv, "pound"sv, "second"sv, "stone"sv, "terabit"sv, "terabyte"sv, "week"sv, "yard"sv, "year"sv };
+        return find(sanctioned_units.begin(), sanctioned_units.end(), unit_identifier) != sanctioned_units.end();
+    };
+
+    // 1. If the result of IsSanctionedSimpleUnitIdentifier(unitIdentifier) is true, then
+    if (is_sanctioned_simple_unit_identifier(unit_identifier)) {
+        // a. Return true.
+        return true;
+    }
+
+    auto indices = unit_identifier.find_all("-per-"sv);
+
+    // 2. If the substring "-per-" does not occur exactly once in unitIdentifier, then
+    if (indices.size() != 1) {
+        // a. Return false.
+        return false;
+    }
+
+    // 3. Let numerator be the substring of unitIdentifier from the beginning to just before "-per-".
+    auto numerator = unit_identifier.substring_view(0, indices[0]);
+
+    // 4. If the result of IsSanctionedSimpleUnitIdentifier(numerator) is false, then
+    if (!is_sanctioned_simple_unit_identifier(numerator)) {
+        // a. Return false.
+        return false;
+    }
+
+    // 5. Let denominator be the substring of unitIdentifier from just after "-per-" to the end.
+    auto denominator = unit_identifier.substring_view(indices[0] + 5);
+
+    // 6. If the result of IsSanctionedSimpleUnitIdentifier(denominator) is false, then
+    if (!is_sanctioned_simple_unit_identifier(denominator)) {
+        // a. Return false.
+        return false;
+    }
+
+    // 7. Return true.
     return true;
 }
 
@@ -328,6 +377,9 @@ String insert_unicode_extension_and_canonicalize(Unicode::LocaleID locale, Unico
 template<typename T>
 static auto& find_key_in_value(T& value, StringView key)
 {
+    if (key == "nu"sv)
+        return value.nu;
+
     // If you hit this point, you must add any missing keys from [[RelevantExtensionKeys]] to LocaleOptions and LocaleResult.
     VERIFY_NOT_REACHED();
 }
@@ -613,6 +665,45 @@ Value get_option(GlobalObject& global_object, Value options, PropertyName const&
 
     // 8. Return value.
     return value;
+}
+
+// 9.2.14 DefaultNumberOption ( value, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-defaultnumberoption
+Optional<int> default_number_option(GlobalObject& global_object, Value value, int minimum, int maximum, Optional<int> fallback)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If value is undefined, return fallback.
+    if (value.is_undefined())
+        return fallback;
+
+    // 2. Let value be ? ToNumber(value).
+    value = value.to_number(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. If value is NaN or less than minimum or greater than maximum, throw a RangeError exception.
+    if (value.is_nan() || (value.as_double() < minimum) || (value.as_double() > maximum)) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::IntlNumberIsNaNOrOutOfRange, value, minimum, maximum);
+        return {};
+    }
+
+    // 4. Return floor(value).
+    return floor(value.as_double());
+}
+
+// 9.2.15 GetNumberOption ( options, property, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-getnumberoption
+Optional<int> get_number_option(GlobalObject& global_object, Object& options, PropertyName const& property, int minimum, int maximum, Optional<int> fallback)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(options) is Object.
+    // 2. Let value be ? Get(options, property).
+    auto value = options.get(property);
+    if (vm.exception())
+        return {};
+
+    // 3. Return ? DefaultNumberOption(value, minimum, maximum, fallback).
+    return default_number_option(global_object, value, minimum, maximum, fallback);
 }
 
 // 9.2.16 PartitionPattern ( pattern ), https://tc39.es/ecma402/#sec-partitionpattern
