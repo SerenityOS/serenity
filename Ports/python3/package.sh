@@ -16,7 +16,7 @@ launcher_run_in_terminal="true"
 icon_file="../launcher.ico" # This is an older icon that's downloaded separately, so we need to go outside of $workdir
 
 # We could also add `openssl` here, but the _ssl modules doesn't build at the moment 
-depends="bzip2 libffi ncurses readline sqlite termcap zlib"
+depends="bzip2 libffi libuuid ncurses readline sqlite termcap zlib"
 
 # FIXME: --enable-optimizations results in lots of __gcov_* linker errors
 configopts="--disable-ipv6 --without-ensurepip ac_cv_file__dev_ptmx=no ac_cv_file__dev_ptc=no"
