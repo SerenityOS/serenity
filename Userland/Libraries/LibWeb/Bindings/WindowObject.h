@@ -84,6 +84,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(atob);
     JS_DECLARE_NATIVE_FUNCTION(btoa);
 
+    JS_DECLARE_NATIVE_FUNCTION(get_computed_style);
+
     NonnullRefPtr<DOM::Window> m_impl;
 
     HashMap<String, JS::Object*> m_prototypes;

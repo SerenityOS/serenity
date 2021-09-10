@@ -72,6 +72,8 @@ public:
     Event const* current_event() const { return m_current_event; }
     void set_current_event(Event* event) { m_current_event = event; }
 
+    NonnullRefPtr<CSS::CSSStyleDeclaration> get_computed_style(DOM::Element&) const;
+
 private:
     explicit Window(Document&);
 
