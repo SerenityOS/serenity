@@ -6,6 +6,7 @@
 
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/Heading.h>
+#include <LibMarkdown/Visitor.h>
 
 namespace Markdown {
 
@@ -33,6 +34,15 @@ String Heading::render_for_terminal(size_t) const
     }
 
     return builder.build();
+}
+
+RecursionDecision Heading::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+
+    return m_text.walk(visitor);
 }
 
 OwnPtr<Heading> Heading::parse(LineIterator& lines)

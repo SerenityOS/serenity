@@ -8,6 +8,7 @@
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/Document.h>
 #include <LibMarkdown/LineIterator.h>
+#include <LibMarkdown/Visitor.h>
 
 namespace Markdown {
 
@@ -39,6 +40,15 @@ String Document::render_to_inline_html() const
 String Document::render_for_terminal(size_t view_width) const
 {
     return m_container->render_for_terminal(view_width);
+}
+
+RecursionDecision Document::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+
+    return m_container->walk(visitor);
 }
 
 OwnPtr<Document> Document::parse(const StringView& str)

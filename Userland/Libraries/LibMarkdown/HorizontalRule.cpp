@@ -7,6 +7,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/HorizontalRule.h>
+#include <LibMarkdown/Visitor.h>
 
 namespace Markdown {
 
@@ -22,6 +23,15 @@ String HorizontalRule::render_for_terminal(size_t view_width) const
         builder.append('-');
     builder.append("\n\n");
     return builder.to_string();
+}
+
+RecursionDecision HorizontalRule::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+    // Normalize return value.
+    return RecursionDecision::Continue;
 }
 
 OwnPtr<HorizontalRule> HorizontalRule::parse(LineIterator& lines)

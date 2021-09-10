@@ -10,7 +10,9 @@
 #include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
+#include <AK/RecursionDecision.h>
 #include <AK/String.h>
+#include <LibMarkdown/Forward.h>
 
 namespace Markdown {
 
@@ -21,6 +23,7 @@ public:
         virtual void render_to_html(StringBuilder& builder) const = 0;
         virtual void render_for_terminal(StringBuilder& builder) const = 0;
         virtual size_t terminal_length() const = 0;
+        virtual RecursionDecision walk(Visitor&) const = 0;
 
         virtual ~Node() { }
     };
@@ -39,6 +42,7 @@ public:
         virtual void render_to_html(StringBuilder& builder) const override;
         virtual void render_for_terminal(StringBuilder& builder) const override;
         virtual size_t terminal_length() const override;
+        virtual RecursionDecision walk(Visitor&) const override;
     };
 
     class CodeNode : public Node {
@@ -53,6 +57,7 @@ public:
         virtual void render_to_html(StringBuilder& builder) const override;
         virtual void render_for_terminal(StringBuilder& builder) const override;
         virtual size_t terminal_length() const override;
+        virtual RecursionDecision walk(Visitor&) const override;
     };
 
     class BreakNode : public Node {
@@ -60,6 +65,7 @@ public:
         virtual void render_to_html(StringBuilder& builder) const override;
         virtual void render_for_terminal(StringBuilder& builder) const override;
         virtual size_t terminal_length() const override;
+        virtual RecursionDecision walk(Visitor&) const override;
     };
 
     class TextNode : public Node {
@@ -82,6 +88,7 @@ public:
         virtual void render_to_html(StringBuilder& builder) const override;
         virtual void render_for_terminal(StringBuilder& builder) const override;
         virtual size_t terminal_length() const override;
+        virtual RecursionDecision walk(Visitor&) const override;
     };
 
     class LinkNode : public Node {
@@ -100,6 +107,7 @@ public:
         virtual void render_to_html(StringBuilder& builder) const override;
         virtual void render_for_terminal(StringBuilder& builder) const override;
         virtual size_t terminal_length() const override;
+        virtual RecursionDecision walk(Visitor&) const override;
     };
 
     class MultiNode : public Node {
@@ -109,12 +117,14 @@ public:
         virtual void render_to_html(StringBuilder& builder) const override;
         virtual void render_for_terminal(StringBuilder& builder) const override;
         virtual size_t terminal_length() const override;
+        virtual RecursionDecision walk(Visitor&) const override;
     };
 
     size_t terminal_length() const;
 
     String render_to_html() const;
     String render_for_terminal() const;
+    RecursionDecision walk(Visitor&) const;
 
     static Text parse(StringView const&);
 

@@ -6,6 +6,7 @@
 
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/BlockQuote.h>
+#include <LibMarkdown/Visitor.h>
 
 namespace Markdown {
 
@@ -22,6 +23,15 @@ String BlockQuote::render_for_terminal(size_t view_width) const
 {
     // FIXME: Rewrite the whole terminal renderer to make blockquote rendering possible
     return m_contents->render_for_terminal(view_width);
+}
+
+RecursionDecision BlockQuote::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+
+    return m_contents->walk(visitor);
 }
 
 OwnPtr<BlockQuote> BlockQuote::parse(LineIterator& lines)

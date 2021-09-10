@@ -6,6 +6,7 @@
 
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/Paragraph.h>
+#include <LibMarkdown/Visitor.h>
 
 namespace Markdown {
 
@@ -32,6 +33,15 @@ String Paragraph::render_for_terminal(size_t) const
     builder.append(m_text.render_for_terminal());
     builder.append("\n\n");
     return builder.build();
+}
+
+RecursionDecision Paragraph::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+
+    return m_text.walk(visitor);
 }
 
 }
