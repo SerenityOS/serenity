@@ -32,6 +32,7 @@ enum class ProcessorSpecificDataID {
 #    define MSR_FS_BASE 0xc0000100
 #    define MSR_GS_BASE 0xc0000101
 #endif
+#define MSR_IA32_EFER 0xc0000080
 
 // FIXME: Find a better place for these
 extern "C" void thread_context_first_enter(void);
