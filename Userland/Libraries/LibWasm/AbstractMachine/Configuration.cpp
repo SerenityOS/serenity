@@ -88,7 +88,8 @@ void Configuration::dump_stack()
     {
         DuplexMemoryStream memory_stream;
         Printer { memory_stream }.print(vs...);
-        dbgln(format.view(), StringView(memory_stream.copy_into_contiguous_buffer()).trim_whitespace());
+        ByteBuffer buffer = memory_stream.copy_into_contiguous_buffer();
+        dbgln(format.view(), StringView(buffer).trim_whitespace());
     };
     for (auto const& entry : stack().entries()) {
         entry.visit(
