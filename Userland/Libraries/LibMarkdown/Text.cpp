@@ -169,12 +169,31 @@ Text Text::parse(StringView const& str)
     return text;
 }
 
+static bool flanking(StringView const& str, size_t start, size_t end, int dir)
+{
+    ssize_t next = ((dir > 0) ? end : start) + dir;
+    if (next < 0 || next >= (ssize_t)str.length())
+        return false;
+
+    if (isspace(str[next]))
+        return false;
+
+    if (!ispunct(str[next]))
+        return true;
+
+    ssize_t prev = ((dir > 0) ? start : end) - dir;
+    if (prev < 0 || prev >= (ssize_t)str.length())
+        return true;
+
+    return isspace(str[prev]) || ispunct(str[prev]);
+}
+
 Vector<Text::Token> Text::tokenize(StringView const& str)
 {
     Vector<Token> tokens;
     StringBuilder current_token;
 
-    auto flush_token = [&](bool left_flanking, bool right_flanking, bool is_run) {
+    auto flush_run = [&](bool left_flanking, bool right_flanking, bool punct_before, bool punct_after, bool is_run) {
         if (current_token.is_empty())
             return;
 
@@ -182,9 +201,15 @@ Vector<Text::Token> Text::tokenize(StringView const& str)
             current_token.build(),
             left_flanking,
             right_flanking,
+            punct_before,
+            punct_after,
             is_run,
         });
         current_token.clear();
+    };
+
+    auto flush_token = [&]() {
+        flush_run(false, false, false, false, false);
     };
 
     for (size_t offset = 0; offset < str.length(); ++offset) {
@@ -197,9 +222,9 @@ Vector<Text::Token> Text::tokenize(StringView const& str)
 
         auto expect = [&](StringView const& seq) {
             VERIFY(has(seq));
-            flush_token(false, false, false);
+            flush_token();
             current_token.append(seq);
-            flush_token(false, false, false);
+            flush_token();
             offset += seq.length() - 1;
         };
 
@@ -209,7 +234,7 @@ Vector<Text::Token> Text::tokenize(StringView const& str)
             current_token.append(str[offset + 1]);
             ++offset;
         } else if (ch == '*' || ch == '_' || ch == '`') {
-            flush_token(false, false, false);
+            flush_token();
 
             char delim = ch;
             size_t run_offset;
@@ -217,15 +242,15 @@ Vector<Text::Token> Text::tokenize(StringView const& str)
                 current_token.append(str[run_offset]);
             }
 
-            bool left_flanking = run_offset < str.length() && !isspace(str[run_offset]);
-            bool right_flanking = offset > 0 && !isspace(str[offset - 1]);
-            flush_token(left_flanking, right_flanking, true);
+            flush_run(flanking(str, offset, run_offset - 1, +1),
+                flanking(str, offset, run_offset - 1, -1),
+                offset > 0 && ispunct(str[offset - 1]),
+                run_offset < str.length() && ispunct(str[run_offset]),
+                true);
             offset = run_offset - 1;
 
-        } else if (ch == '\n') {
-            flush_token(false, false, false);
-            current_token.append(ch);
-            flush_token(false, false, false);
+        } else if (has("\n")) {
+            expect("\n");
         } else if (has("[")) {
             expect("[");
         } else if (has("![")) {
@@ -238,7 +263,7 @@ Vector<Text::Token> Text::tokenize(StringView const& str)
             current_token.append(ch);
         }
     }
-    flush_token(false, false, false);
+    flush_token();
     return tokens;
 }
 
@@ -276,7 +301,7 @@ NonnullOwnPtr<Text::MultiNode> Text::parse_sequence(Vector<Token>::ConstIterator
 
 bool Text::can_open(Token const& opening)
 {
-    return (opening.run_char() == '*' && opening.left_flanking) || (opening.run_char() == '_' && opening.left_flanking && !opening.right_flanking);
+    return (opening.run_char() == '*' && opening.left_flanking) || (opening.run_char() == '_' && opening.left_flanking && (!opening.right_flanking || opening.punct_before));
 }
 
 bool Text::can_close_for(Token const& opening, Text::Token const& closing)
@@ -287,7 +312,7 @@ bool Text::can_close_for(Token const& opening, Text::Token const& closing)
     if (opening.run_length() != closing.run_length())
         return false;
 
-    return (opening.run_char() == '*' && closing.right_flanking) || (opening.run_char() == '_' && !closing.left_flanking && closing.right_flanking);
+    return (opening.run_char() == '*' && closing.right_flanking) || (opening.run_char() == '_' && closing.right_flanking && (!closing.left_flanking || closing.punct_after));
 }
 
 NonnullOwnPtr<Text::Node> Text::parse_emph(Vector<Token>::ConstIterator& tokens, bool in_link)
