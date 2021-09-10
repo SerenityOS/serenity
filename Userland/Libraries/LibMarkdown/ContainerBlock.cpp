@@ -12,6 +12,7 @@
 #include <LibMarkdown/List.h>
 #include <LibMarkdown/Paragraph.h>
 #include <LibMarkdown/Table.h>
+#include <LibMarkdown/Visitor.h>
 
 namespace Markdown {
 
@@ -48,6 +49,21 @@ String ContainerBlock::render_for_terminal(size_t view_width) const
     }
 
     return builder.build();
+}
+
+RecursionDecision ContainerBlock::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+
+    for (auto const& block : m_blocks) {
+        rd = block.walk(visitor);
+        if (rd == RecursionDecision::Break)
+            return rd;
+    }
+
+    return RecursionDecision::Continue;
 }
 
 template<typename BlockType>

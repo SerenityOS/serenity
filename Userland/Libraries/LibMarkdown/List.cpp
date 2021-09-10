@@ -8,6 +8,7 @@
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/List.h>
 #include <LibMarkdown/Paragraph.h>
+#include <LibMarkdown/Visitor.h>
 
 namespace Markdown {
 
@@ -52,6 +53,21 @@ String List::render_for_terminal(size_t) const
     builder.append("\n");
 
     return builder.build();
+}
+
+RecursionDecision List::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+
+    for (auto const& block : m_items) {
+        rd = block->walk(visitor);
+        if (rd == RecursionDecision::Break)
+            return rd;
+    }
+
+    return RecursionDecision::Continue;
 }
 
 OwnPtr<List> List::parse(LineIterator& lines)

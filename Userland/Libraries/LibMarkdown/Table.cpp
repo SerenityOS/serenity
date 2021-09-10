@@ -7,6 +7,7 @@
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/Table.h>
+#include <LibMarkdown/Visitor.h>
 
 namespace Markdown {
 
@@ -94,6 +95,21 @@ String Table::render_to_html(bool) const
     builder.append("</table>");
 
     return builder.to_string();
+}
+
+RecursionDecision Table::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+
+    for (auto const& column : m_columns) {
+        rd = column.walk(visitor);
+        if (rd == RecursionDecision::Break)
+            return rd;
+    }
+
+    return RecursionDecision::Continue;
 }
 
 OwnPtr<Table> Table::parse(LineIterator& lines)
@@ -205,6 +221,25 @@ OwnPtr<Table> Table::parse(LineIterator& lines)
     table->m_row_count = row_count;
 
     return table;
+}
+
+RecursionDecision Table::Column::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+
+    rd = header.walk(visitor);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+
+    for (auto const& row : rows) {
+        rd = row.walk(visitor);
+        if (rd == RecursionDecision::Break)
+            return rd;
+    }
+
+    return RecursionDecision::Continue;
 }
 
 }
