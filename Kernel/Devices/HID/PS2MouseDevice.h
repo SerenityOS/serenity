@@ -32,8 +32,10 @@ public:
         enable_irq();
     }
 
-protected:
+    // FIXME: We expose this constructor to make try_create_device helper to work
     explicit PS2MouseDevice(const I8042Controller&);
+
+protected:
     // ^IRQHandler
     virtual bool handle_irq(const RegisterState&) override;
 

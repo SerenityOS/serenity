@@ -16,9 +16,11 @@ UNMAP_AFTER_INIT RefPtr<VMWareMouseDevice> VMWareMouseDevice::try_to_initialize(
         return {};
     if (!VMWareBackdoor::the()->vmmouse_is_absolute())
         return {};
-    auto device = adopt_ref(*new VMWareMouseDevice(ps2_controller));
-    if (device->initialize())
-        return device;
+    auto mouse_device_or_error = try_create_device<VMWareMouseDevice>(ps2_controller);
+    // FIXME: Find a way to propagate errors
+    VERIFY(!mouse_device_or_error.is_error());
+    if (mouse_device_or_error.value()->initialize())
+        return mouse_device_or_error.release_value();
     return {};
 }
 

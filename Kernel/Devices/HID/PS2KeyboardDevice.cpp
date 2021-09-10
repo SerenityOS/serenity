@@ -83,9 +83,11 @@ bool PS2KeyboardDevice::handle_irq(const RegisterState&)
 
 UNMAP_AFTER_INIT RefPtr<PS2KeyboardDevice> PS2KeyboardDevice::try_to_initialize(const I8042Controller& ps2_controller)
 {
-    auto device = adopt_ref(*new PS2KeyboardDevice(ps2_controller));
-    if (device->initialize())
-        return device;
+    auto keyboard_device_or_error = try_create_device<PS2KeyboardDevice>(ps2_controller);
+    // FIXME: Find a way to propagate errors
+    VERIFY(!keyboard_device_or_error.is_error());
+    if (keyboard_device_or_error.value()->initialize())
+        return keyboard_device_or_error.release_value();
     return nullptr;
 }
 

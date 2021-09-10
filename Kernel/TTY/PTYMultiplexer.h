@@ -20,10 +20,7 @@ public:
     PTYMultiplexer();
     virtual ~PTYMultiplexer() override;
 
-    static void initialize()
-    {
-        the();
-    }
+    static void initialize();
     static PTYMultiplexer& the();
 
     // ^CharacterDevice

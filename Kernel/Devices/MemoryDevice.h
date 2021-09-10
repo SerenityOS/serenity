@@ -21,8 +21,10 @@ public:
 
     virtual KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
 
-private:
+    // FIXME: We expose this constructor to make try_create_device helper to work
     MemoryDevice();
+
+private:
     virtual StringView class_name() const override { return "MemoryDevice"; }
     virtual bool can_read(const OpenFileDescription&, size_t) const override { return true; }
     virtual bool can_write(const OpenFileDescription&, size_t) const override { return false; }

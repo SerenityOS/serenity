@@ -28,8 +28,10 @@ bool SlavePTY::unref() const
         m_list_node.remove();
         return true;
     });
-    if (did_hit_zero)
+    if (did_hit_zero) {
+        const_cast<SlavePTY&>(*this).before_removing();
         delete this;
+    }
     return did_hit_zero;
 }
 

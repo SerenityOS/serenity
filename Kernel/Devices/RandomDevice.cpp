@@ -12,7 +12,10 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<RandomDevice> RandomDevice::must_create()
 {
-    return adopt_ref(*new RandomDevice);
+    auto random_device_or_error = try_create_device<RandomDevice>();
+    // FIXME: Find a way to propagate errors
+    VERIFY(!random_device_or_error.is_error());
+    return random_device_or_error.release_value();
 }
 
 UNMAP_AFTER_INIT RandomDevice::RandomDevice()

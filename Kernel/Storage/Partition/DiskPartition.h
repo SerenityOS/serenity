@@ -28,10 +28,11 @@ public:
 
     const DiskPartitionMetadata& metadata() const;
 
+    // FIXME: We expose this constructor to make try_create_device helper to work
+    DiskPartition(BlockDevice&, unsigned, DiskPartitionMetadata);
+
 private:
     virtual StringView class_name() const override;
-
-    DiskPartition(BlockDevice&, unsigned, DiskPartitionMetadata);
 
     WeakPtr<BlockDevice> m_device;
     DiskPartitionMetadata m_metadata;

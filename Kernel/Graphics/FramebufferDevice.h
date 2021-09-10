@@ -32,6 +32,9 @@ public:
     virtual ~FramebufferDevice() {};
     KResult initialize();
 
+    // FIXME: We expose this constructor to make try_create_device helper to work
+    FramebufferDevice(const GraphicsDevice&, size_t, PhysicalAddress, size_t, size_t, size_t);
+
 private:
     // ^File
     virtual StringView class_name() const override { return "FramebufferDevice"; }
@@ -41,8 +44,6 @@ private:
     virtual void start_request(AsyncBlockDeviceRequest& request) override final { request.complete(AsyncDeviceRequest::Failure); }
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return EINVAL; }
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return EINVAL; }
-
-    FramebufferDevice(const GraphicsDevice&, size_t, PhysicalAddress, size_t, size_t, size_t);
 
     PhysicalAddress m_framebuffer_address;
     size_t m_framebuffer_pitch { 0 };
