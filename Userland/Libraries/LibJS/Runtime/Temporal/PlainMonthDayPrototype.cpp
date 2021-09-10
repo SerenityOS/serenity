@@ -33,6 +33,7 @@ void PlainMonthDayPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.day, day_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
@@ -96,6 +97,36 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::day_getter)
 
     // 4. Return 𝔽(? CalendarDay(calendar, monthDay)).
     return Value(calendar_day(global_object, calendar, *month_day));
+}
+
+// 10.3.7 Temporal.PlainMonthDay.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.equals
+JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::equals)
+{
+    // 1. Let monthDay be the this value.
+    // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
+    auto* month_day = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Set other to ? ToTemporalMonthDay(other).
+    auto* other = to_temporal_month_day(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 4. If monthDay.[[ISOMonth]] ≠ other.[[ISOMonth]], return false.
+    if (month_day->iso_month() != other->iso_month())
+        return Value(false);
+
+    // 5. If monthDay.[[ISODay]] ≠ other.[[ISODay]], return false.
+    if (month_day->iso_day() != other->iso_day())
+        return Value(false);
+
+    // 6. If monthDay.[[ISOYear]] ≠ other.[[ISOYear]], return false.
+    if (month_day->iso_year() != other->iso_year())
+        return Value(false);
+
+    // 7. Return ? CalendarEquals(monthDay.[[Calendar]], other.[[Calendar]]).
+    return Value(calendar_equals(global_object, month_day->calendar(), other->calendar()));
 }
 
 // 10.3.8 Temporal.PlainMonthDay.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.tostring
