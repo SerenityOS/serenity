@@ -26,7 +26,8 @@ ProcessModel::ProcessModel()
 
     auto file = Core::File::construct("/proc/cpuinfo");
     if (file->open(Core::OpenMode::ReadOnly)) {
-        auto json = JsonValue::from_string({ file->read_all() });
+        auto buffer = file->read_all();
+        auto json = JsonValue::from_string({ buffer });
         auto cpuinfo_array = json.value().as_array();
         cpuinfo_array.for_each([&](auto& value) {
             auto& cpu_object = value.as_object();
