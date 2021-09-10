@@ -27,6 +27,7 @@ Lexer::Lexer(StringView source, StringView filename, size_t line_number, size_t 
     , m_filename(filename)
     , m_line_number(line_number)
     , m_line_column(line_column)
+    , m_parsed_identifiers(adopt_ref(*new ParsedIdentifiers))
 {
     if (s_keywords.is_empty()) {
         s_keywords.set("await", TokenType::Await);
@@ -602,8 +603,7 @@ Token Lexer::next()
         } while (code_point.has_value());
 
         identifier = builder.build();
-        if (!m_parsed_identifiers.contains_slow(*identifier))
-            m_parsed_identifiers.append(*identifier);
+        m_parsed_identifiers->identifiers.set(*identifier);
 
         auto it = s_keywords.find(identifier->hash(), [&](auto& entry) { return entry.key == identifier; });
         if (it == s_keywords.end())

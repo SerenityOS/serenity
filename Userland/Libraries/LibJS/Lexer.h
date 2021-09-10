@@ -82,9 +82,13 @@ private:
     static HashMap<String, TokenType> s_two_char_tokens;
     static HashMap<char, TokenType> s_single_char_tokens;
 
-    // Resolved identifiers must be kept alive for the duration of the parsing stage, otherwise
-    // the only references to these strings are deleted by the Token destructor.
-    Vector<FlyString> m_parsed_identifiers;
+    struct ParsedIdentifiers : public RefCounted<ParsedIdentifiers> {
+        // Resolved identifiers must be kept alive for the duration of the parsing stage, otherwise
+        // the only references to these strings are deleted by the Token destructor.
+        HashTable<FlyString> identifiers;
+    };
+
+    RefPtr<ParsedIdentifiers> m_parsed_identifiers;
 };
 
 }
