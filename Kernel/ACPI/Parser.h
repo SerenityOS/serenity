@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2020-2021, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,7 +9,9 @@
 #include <AK/Types.h>
 #include <Kernel/ACPI/Definitions.h>
 #include <Kernel/ACPI/Initialize.h>
+#include <Kernel/CommandLine.h>
 #include <Kernel/FileSystem/SysFSComponent.h>
+#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/VirtualAddress.h>
@@ -38,22 +40,23 @@ protected:
     size_t m_length;
 };
 
-class Parser {
+class Parser final : public IRQHandler {
 public:
     static Parser* the();
 
-    template<typename ParserType>
-    static void initialize(PhysicalAddress rsdp)
-    {
-        set_the(*new ParserType(rsdp));
-    }
+    static void must_initialize(PhysicalAddress rsdp, PhysicalAddress fadt, u8 irq_number);
 
-    virtual Optional<PhysicalAddress> find_table(const StringView& signature);
+    virtual StringView purpose() const override { return "ACPI Parser"; }
+    virtual bool handle_irq(const RegisterState&) override;
 
-    virtual void try_acpi_reboot();
-    virtual bool can_reboot();
-    virtual void try_acpi_shutdown();
-    virtual bool can_shutdown() { return false; }
+    Optional<PhysicalAddress> find_table(const StringView& signature);
+
+    void try_acpi_reboot();
+    bool can_reboot();
+    void try_acpi_shutdown();
+    bool can_shutdown() { return false; }
+
+    void enable_aml_parsing();
 
     PhysicalAddress rsdp() const { return m_rsdp; }
     PhysicalAddress main_system_description_table() const { return m_main_system_description_table; }
@@ -69,25 +72,17 @@ public:
     const FADTFlags::HardwareFeatures& hardware_features() const { return m_hardware_flags; }
     const FADTFlags::x86_Specific_Flags& x86_specific_flags() const { return m_x86_specific_flags; }
 
-    virtual void enable_aml_interpretation();
-    virtual void enable_aml_interpretation(File&);
-    virtual void enable_aml_interpretation(u8*, u32);
-    virtual void disable_aml_interpretation();
-
-protected:
-    explicit Parser(PhysicalAddress rsdp);
-    virtual ~Parser() = default;
+    ~Parser() {};
 
 private:
-    static void set_the(Parser&);
+    Parser(PhysicalAddress rsdp, PhysicalAddress fadt, u8 irq_number);
 
     void locate_static_data();
     void locate_main_system_description_table();
     void initialize_main_system_description_table();
     size_t get_table_size(PhysicalAddress);
     u8 get_table_revision(PhysicalAddress);
-    void init_fadt();
-    void init_facs();
+    void process_fadt_data();
 
     bool validate_reset_register();
     void access_generic_address(const Structures::GenericAddressStructure&, u32 value);
@@ -97,9 +92,9 @@ private:
 
     Vector<PhysicalAddress> m_sdt_pointers;
     PhysicalAddress m_fadt;
-    PhysicalAddress m_facs;
 
     bool m_xsdt_supported { false };
+    bool m_can_process_bytecode { false };
     FADTFlags::HardwareFeatures m_hardware_flags;
     FADTFlags::x86_Specific_Flags m_x86_specific_flags;
 };
