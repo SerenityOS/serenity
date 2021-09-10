@@ -23,7 +23,7 @@ public:
     // ^I8042Device
     virtual void irq_handle_byte_read(u8 byte) override;
 
-private:
+    // FIXME: We expose this constructor to make try_create_device helper to work
     explicit VMWareMouseDevice(const I8042Controller&);
 };
 

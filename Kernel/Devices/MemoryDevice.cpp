@@ -15,7 +15,10 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<MemoryDevice> MemoryDevice::must_create()
 {
-    return adopt_ref(*new MemoryDevice);
+    auto memory_device_or_error = try_create_device<MemoryDevice>();
+    // FIXME: Find a way to propagate errors
+    VERIFY(!memory_device_or_error.is_error());
+    return memory_device_or_error.release_value();
 }
 
 UNMAP_AFTER_INIT MemoryDevice::MemoryDevice()

@@ -174,9 +174,11 @@ void PS2MouseDevice::set_sample_rate(u8 rate)
 
 UNMAP_AFTER_INIT RefPtr<PS2MouseDevice> PS2MouseDevice::try_to_initialize(const I8042Controller& ps2_controller)
 {
-    auto device = adopt_ref(*new PS2MouseDevice(ps2_controller));
-    if (device->initialize())
-        return device;
+    auto mouse_device_or_error = try_create_device<PS2MouseDevice>(ps2_controller);
+    // FIXME: Find a way to propagate errors
+    VERIFY(!mouse_device_or_error.is_error());
+    if (mouse_device_or_error.value()->initialize())
+        return mouse_device_or_error.release_value();
     return nullptr;
 }
 
