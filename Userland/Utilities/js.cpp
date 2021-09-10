@@ -32,6 +32,7 @@
 #include <LibJS/Runtime/Intl/DisplayNames.h>
 #include <LibJS/Runtime/Intl/ListFormat.h>
 #include <LibJS/Runtime/Intl/Locale.h>
+#include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Map.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NumberObject.h>
@@ -590,6 +591,70 @@ static void print_intl_list_format(JS::Object const& object, HashTable<JS::Objec
     print_value(js_string(object.vm(), list_format.style_string()), seen_objects);
 }
 
+static void print_intl_number_format(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& number_format = static_cast<JS::Intl::NumberFormat const&>(object);
+    print_type("Intl.NumberFormat");
+    out("\n  locale: ");
+    print_value(js_string(object.vm(), number_format.locale()), seen_objects);
+    out("\n  dataLocale: ");
+    print_value(js_string(object.vm(), number_format.data_locale()), seen_objects);
+    out("\n  numberingSystem: ");
+    print_value(js_string(object.vm(), number_format.numbering_system()), seen_objects);
+    out("\n  style: ");
+    print_value(js_string(object.vm(), number_format.style_string()), seen_objects);
+    if (number_format.has_currency()) {
+        out("\n  currency: ");
+        print_value(js_string(object.vm(), number_format.currency()), seen_objects);
+    }
+    if (number_format.has_currency_display()) {
+        out("\n  currencyDisplay: ");
+        print_value(js_string(object.vm(), number_format.currency_display_string()), seen_objects);
+    }
+    if (number_format.has_currency_sign()) {
+        out("\n  currencySign: ");
+        print_value(js_string(object.vm(), number_format.currency_sign_string()), seen_objects);
+    }
+    if (number_format.has_unit()) {
+        out("\n  unit: ");
+        print_value(js_string(object.vm(), number_format.unit()), seen_objects);
+    }
+    if (number_format.has_unit_display()) {
+        out("\n  unitDisplay: ");
+        print_value(js_string(object.vm(), number_format.unit_display_string()), seen_objects);
+    }
+    out("\n  minimumIntegerDigits: ");
+    print_value(JS::Value(number_format.min_integer_digits()), seen_objects);
+    if (number_format.has_min_fraction_digits()) {
+        out("\n  minimumFractionDigits: ");
+        print_value(JS::Value(number_format.min_fraction_digits()), seen_objects);
+    }
+    if (number_format.has_max_fraction_digits()) {
+        out("\n  maximumFractionDigits: ");
+        print_value(JS::Value(number_format.max_fraction_digits()), seen_objects);
+    }
+    if (number_format.has_min_significant_digits()) {
+        out("\n  minimumSignificantDigits: ");
+        print_value(JS::Value(number_format.min_significant_digits()), seen_objects);
+    }
+    if (number_format.has_max_significant_digits()) {
+        out("\n  maximumSignificantDigits: ");
+        print_value(JS::Value(number_format.max_significant_digits()), seen_objects);
+    }
+    out("\n  useGrouping: ");
+    print_value(JS::Value(number_format.use_grouping()), seen_objects);
+    out("\n  roundingType: ");
+    print_value(js_string(object.vm(), number_format.rounding_type_string()), seen_objects);
+    out("\n  notation: ");
+    print_value(js_string(object.vm(), number_format.notation_string()), seen_objects);
+    if (number_format.has_compact_display()) {
+        out("\n  compactDisplay: ");
+        print_value(js_string(object.vm(), number_format.compact_display_string()), seen_objects);
+    }
+    out("\n  signDisplay: ");
+    print_value(js_string(object.vm(), number_format.sign_display_string()), seen_objects);
+}
+
 static void print_primitive_wrapper_object(FlyString const& name, JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     // BooleanObject, NumberObject, StringObject
@@ -673,6 +738,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_intl_locale(object, seen_objects);
         if (is<JS::Intl::ListFormat>(object))
             return print_intl_list_format(object, seen_objects);
+        if (is<JS::Intl::NumberFormat>(object))
+            return print_intl_number_format(object, seen_objects);
         return print_object(object, seen_objects);
     }
 
