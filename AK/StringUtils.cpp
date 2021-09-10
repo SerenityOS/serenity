@@ -427,6 +427,20 @@ String to_titlecase(StringView const& str)
     return builder.to_string();
 }
 
+// TODO: Benchmark against KMP (AK/MemMem.h) and switch over if it's faster for short strings too
+size_t count(StringView const& str, StringView const& needle)
+{
+    if (needle.is_empty())
+        return str.length();
+
+    size_t count = 0;
+    for (size_t i = 0; i < str.length() - needle.length() + 1; ++i) {
+        if (str.substring_view(i).starts_with(needle))
+            count++;
+    }
+    return count;
+}
+
 }
 
 }
