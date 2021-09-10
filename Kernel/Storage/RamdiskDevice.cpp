@@ -14,7 +14,9 @@ namespace Kernel {
 
 NonnullRefPtr<RamdiskDevice> RamdiskDevice::create(const RamdiskController& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor)
 {
-    return adopt_ref(*new RamdiskDevice(controller, move(region), major, minor));
+    auto device = adopt_ref(*new RamdiskDevice(controller, move(region), major, minor));
+    device->after_inserting();
+    return device;
 }
 
 RamdiskDevice::RamdiskDevice(const RamdiskController& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor)

@@ -89,6 +89,7 @@ UNMAP_AFTER_INIT void SB16::detect()
 UNMAP_AFTER_INIT void SB16::create()
 {
     s_the.ensure_instance();
+    s_the->after_inserting();
 }
 
 SB16& SB16::the()

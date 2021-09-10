@@ -15,6 +15,7 @@ static Singleton<NullDevice> s_the;
 UNMAP_AFTER_INIT void NullDevice::initialize()
 {
     s_the.ensure_instance();
+    s_the->after_inserting();
 }
 
 NullDevice& NullDevice::the()

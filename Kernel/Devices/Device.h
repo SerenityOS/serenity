@@ -46,7 +46,8 @@ public:
     GroupID gid() const { return m_gid; }
 
     virtual bool is_device() const override { return true; }
-    virtual void before_removing();
+    virtual void before_removing() override;
+    virtual void after_inserting();
 
     static void for_each(Function<void(Device&)>);
     static Device* get_device(unsigned major, unsigned minor);
@@ -82,7 +83,7 @@ private:
 
     Spinlock m_requests_lock;
     DoublyLinkedList<RefPtr<AsyncDeviceRequest>> m_requests;
-    WeakPtr<SysFSDeviceComponent> m_sysfs_component;
+    RefPtr<SysFSDeviceComponent> m_sysfs_component;
 };
 
 }

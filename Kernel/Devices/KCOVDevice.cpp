@@ -20,7 +20,9 @@ HashMap<ThreadID, KCOVInstance*>* KCOVDevice::thread_instance;
 
 UNMAP_AFTER_INIT NonnullRefPtr<KCOVDevice> KCOVDevice::must_create()
 {
-    return adopt_ref(*new KCOVDevice);
+    auto device = adopt_ref(*new KCOVDevice);
+    device->after_inserting();
+    return device;
 }
 
 UNMAP_AFTER_INIT KCOVDevice::KCOVDevice()

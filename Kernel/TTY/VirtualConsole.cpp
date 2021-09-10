@@ -103,12 +103,16 @@ void VirtualConsole::set_graphical(bool graphical)
 
 UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create(size_t index)
 {
-    return adopt_ref(*new VirtualConsole(index));
+    auto device = adopt_ref(*new VirtualConsole(index));
+    device->after_inserting();
+    return device;
 }
 
 UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create_with_preset_log(size_t index, const CircularQueue<char, 16384>& log)
 {
-    return adopt_ref(*new VirtualConsole(index, log));
+    auto device = adopt_ref(*new VirtualConsole(index, log));
+    device->after_inserting();
+    return device;
 }
 
 UNMAP_AFTER_INIT void VirtualConsole::initialize()

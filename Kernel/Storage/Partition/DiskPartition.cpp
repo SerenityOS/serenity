@@ -12,7 +12,9 @@ namespace Kernel {
 
 NonnullRefPtr<DiskPartition> DiskPartition::create(BlockDevice& device, unsigned minor_number, DiskPartitionMetadata metadata)
 {
-    return adopt_ref(*new DiskPartition(device, minor_number, metadata));
+    auto partition = adopt_ref(*new DiskPartition(device, minor_number, metadata));
+    partition->after_inserting();
+    return partition;
 }
 
 DiskPartition::DiskPartition(BlockDevice& device, unsigned minor_number, DiskPartitionMetadata metadata)

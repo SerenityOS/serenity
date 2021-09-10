@@ -13,7 +13,9 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<FullDevice> FullDevice::must_create()
 {
-    return adopt_ref(*new FullDevice);
+    auto device = adopt_ref(*new FullDevice);
+    device->after_inserting();
+    return device;
 }
 
 UNMAP_AFTER_INIT FullDevice::FullDevice()

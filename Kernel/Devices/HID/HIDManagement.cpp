@@ -110,10 +110,17 @@ UNMAP_AFTER_INIT void HIDManagement::enumerate()
         return;
     m_i8042_controller = I8042Controller::initialize();
     m_i8042_controller->detect_devices();
-    if (m_i8042_controller->mouse())
-        m_hid_devices.append(m_i8042_controller->mouse().release_nonnull());
-    if (m_i8042_controller->keyboard())
-        m_hid_devices.append(m_i8042_controller->keyboard().release_nonnull());
+    if (m_i8042_controller->mouse()) {
+        auto mouse_device = m_i8042_controller->mouse().release_nonnull();
+        mouse_device->after_inserting();
+        m_hid_devices.append(mouse_device);
+    }
+
+    if (m_i8042_controller->keyboard()) {
+        auto keyboard_device = m_i8042_controller->keyboard().release_nonnull();
+        keyboard_device->after_inserting();
+        m_hid_devices.append(keyboard_device);
+    }
 }
 
 UNMAP_AFTER_INIT void HIDManagement::initialize()

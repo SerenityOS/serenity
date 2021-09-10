@@ -35,6 +35,12 @@ UNMAP_AFTER_INIT PTYMultiplexer::~PTYMultiplexer()
 {
 }
 
+void PTYMultiplexer::initialize()
+{
+    the();
+    the().after_inserting();
+}
+
 KResultOr<NonnullRefPtr<OpenFileDescription>> PTYMultiplexer::open(int options)
 {
     return m_freelist.with_exclusive([&](auto& freelist) -> KResultOr<NonnullRefPtr<OpenFileDescription>> {

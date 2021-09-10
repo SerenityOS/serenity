@@ -12,7 +12,9 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<RandomDevice> RandomDevice::must_create()
 {
-    return adopt_ref(*new RandomDevice);
+    auto device = adopt_ref(*new RandomDevice);
+    device->after_inserting();
+    return device;
 }
 
 UNMAP_AFTER_INIT RandomDevice::RandomDevice()
