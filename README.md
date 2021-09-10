@@ -149,7 +149,7 @@ Join our Discord server: [SerenityOS Discord](https://discord.gg/serenityos)
 * **Peter Elliott** - [Petelliott](https://github.com/Petelliott)
 * **Karol Kosek** - [krkk](https://github.com/krkk)
 
-(And many more!) The people listed above have landed more than 100 commits in the project. :^)
+([And many more!](https://github.com/SerenityOS/serenity/graphs/contributors)) The people listed above have landed more than 100 commits in the project. :^)
 
 ## License
 
