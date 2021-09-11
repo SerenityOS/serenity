@@ -114,7 +114,7 @@ int main(int argc, char** argv)
             size_t peer_address_size = sizeof(peer_address);
             int result = recvfrom(fd, &response, sizeof(response), 0, (sockaddr*)&peer_address, (socklen_t*)&peer_address_size);
             if (result < 0) {
-                if (result == EAGAIN)
+                if (errno == EAGAIN)
                     return -1;
                 continue;
             }
