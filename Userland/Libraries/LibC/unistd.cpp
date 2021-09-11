@@ -715,18 +715,6 @@ int fsync(int fd)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int halt()
-{
-    int rc = syscall(SC_halt);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
-int reboot()
-{
-    int rc = syscall(SC_reboot);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 int mount(int source_fd, const char* target, const char* fs_type, int flags)
 {
     if (!target || !fs_type) {
