@@ -6,6 +6,7 @@
  */
 
 #include "MainWidget.h"
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibFileSystemAccessClient/Client.h>
@@ -26,6 +27,7 @@ int main(int argc, char** argv)
     }
 
     auto app = GUI::Application::construct(argc, argv);
+    Config::pledge_domains("PixelPaint");
 
     const char* image_file = nullptr;
     Core::ArgsParser args_parser;
