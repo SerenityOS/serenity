@@ -174,6 +174,7 @@ private:
     virtual ErrorOr<size_t> protocol_send(const UserOrKernelBuffer&, size_t) override;
     virtual ErrorOr<void> protocol_connect(OpenFileDescription&, ShouldBlock) override;
     virtual ErrorOr<u16> protocol_allocate_local_port() override;
+    virtual ErrorOr<size_t> protocol_size(ReadonlyBytes raw_ipv4_packet) override;
     virtual bool protocol_is_disconnected() const override;
     virtual ErrorOr<void> protocol_bind() override;
     virtual ErrorOr<void> protocol_listen(bool did_allocate_port) override;

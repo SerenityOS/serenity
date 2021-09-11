@@ -774,7 +774,15 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
         return ioctl_arp();
 
     case FIONREAD: {
-        int readable = m_receive_buffer->immediately_readable();
+        int readable = 0;
+        if (buffer_mode() == BufferMode::Bytes) {
+            readable = static_cast<int>(m_receive_buffer->immediately_readable());
+        } else {
+            if (m_receive_queue.size() != 0u) {
+                readable = static_cast<int>(TRY(protocol_size(m_receive_queue.first().data->bytes())));
+            }
+        }
+
         return copy_to_user(static_ptr_cast<int*>(arg), &readable);
     }
     }

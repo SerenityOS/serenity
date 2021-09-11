@@ -59,6 +59,13 @@ ErrorOr<NonnullRefPtr<UDPSocket>> UDPSocket::try_create(int protocol, NonnullOwn
     return adopt_nonnull_ref_or_enomem(new (nothrow) UDPSocket(protocol, move(receive_buffer)));
 }
 
+ErrorOr<size_t> UDPSocket::protocol_size(ReadonlyBytes raw_ipv4_packet)
+{
+    auto& ipv4_packet = *(const IPv4Packet*)(raw_ipv4_packet.data());
+    auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
+    return udp_packet.length() - sizeof(UDPPacket);
+}
+
 ErrorOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)
 {
     auto& ipv4_packet = *(const IPv4Packet*)(raw_ipv4_packet.data());

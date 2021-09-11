@@ -161,6 +161,13 @@ ErrorOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create(int protocol, NonnullOwn
     return adopt_nonnull_ref_or_enomem(new (nothrow) TCPSocket(protocol, move(receive_buffer), move(scratch_buffer)));
 }
 
+ErrorOr<size_t> TCPSocket::protocol_size(ReadonlyBytes raw_ipv4_packet)
+{
+    auto& ipv4_packet = *reinterpret_cast<const IPv4Packet*>(raw_ipv4_packet.data());
+    auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
+    return raw_ipv4_packet.size() - sizeof(IPv4Packet) - tcp_packet.header_size();
+}
+
 ErrorOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)
 {
     auto& ipv4_packet = *reinterpret_cast<const IPv4Packet*>(raw_ipv4_packet.data());
