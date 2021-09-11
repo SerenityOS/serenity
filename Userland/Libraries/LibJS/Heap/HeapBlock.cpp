@@ -36,7 +36,7 @@ HeapBlock::HeapBlock(Heap& heap, size_t cell_size)
     , m_cell_size(cell_size)
 {
     VERIFY(cell_size >= sizeof(FreelistEntry));
-    ASAN_POISON_MEMORY_REGION(m_storage, block_size);
+    ASAN_POISON_MEMORY_REGION(m_storage, block_size - sizeof(HeapBlock));
 }
 
 void HeapBlock::deallocate(Cell* cell)
