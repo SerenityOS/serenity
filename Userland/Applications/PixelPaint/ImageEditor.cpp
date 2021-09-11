@@ -562,13 +562,27 @@ void ImageEditor::scale_by(float scale_delta)
 
 void ImageEditor::fit_image_to_view()
 {
+    auto viewport_rect = rect();
+    m_pan_origin = Gfx::FloatPoint(0, 0);
+
+    if (m_show_rulers) {
+        viewport_rect = {
+            viewport_rect.x() + m_ruler_thickness,
+            viewport_rect.y() + m_ruler_thickness,
+            viewport_rect.width() - m_ruler_thickness,
+            viewport_rect.height() - m_ruler_thickness
+        };
+    }
+
     const float border_ratio = 0.95f;
     auto image_size = image().size();
-    auto height_ratio = rect().height() / (float)image_size.height();
-    auto width_ratio = rect().width() / (float)image_size.width();
+    auto height_ratio = viewport_rect.height() / (float)image_size.height();
+    auto width_ratio = viewport_rect.width() / (float)image_size.width();
     m_scale = border_ratio * min(height_ratio, width_ratio);
 
-    m_pan_origin = Gfx::FloatPoint(0, 0);
+    float offset = m_show_rulers ? -m_ruler_thickness / (m_scale * 2.0f) : 0.0f;
+    m_pan_origin = Gfx::FloatPoint(offset, offset);
+
     relayout();
 }
 
