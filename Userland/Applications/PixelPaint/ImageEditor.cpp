@@ -98,6 +98,24 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
 
     if (!m_selection.is_empty())
         m_selection.paint(painter);
+
+    const float pixel_grid_threshold = 15.0f;
+    if (m_scale > pixel_grid_threshold) {
+        auto grid_rect = m_editor_image_rect.intersected(event.rect());
+        auto image_rect = enclosing_int_rect(editor_rect_to_image_rect(grid_rect)).inflated(1, 1);
+
+        for (auto i = image_rect.left(); i < image_rect.right(); i++) {
+            auto start_point = image_position_to_editor_position({ i, image_rect.top() }).to_type<int>();
+            auto end_point = image_position_to_editor_position({ i, image_rect.bottom() }).to_type<int>();
+            painter.draw_line(start_point, end_point, Color::LightGray);
+        }
+
+        for (auto i = image_rect.top(); i < image_rect.bottom(); i++) {
+            auto start_point = image_position_to_editor_position({ image_rect.left(), i }).to_type<int>();
+            auto end_point = image_position_to_editor_position({ image_rect.right(), i }).to_type<int>();
+            painter.draw_line(start_point, end_point, Color::LightGray);
+        }
+    }
 }
 
 Gfx::FloatRect ImageEditor::layer_rect_to_editor_rect(Layer const& layer, Gfx::IntRect const& layer_rect) const
