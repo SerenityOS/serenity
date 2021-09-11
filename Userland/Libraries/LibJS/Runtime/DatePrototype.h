@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Date.h>
+#include <LibJS/Runtime/PrototypeObject.h>
 
 namespace JS {
 
-class DatePrototype final : public Object {
-    JS_OBJECT(DatePrototype, Object);
+class DatePrototype final : public PrototypeObject<DatePrototype, Date> {
+    JS_PROTOTYPE_OBJECT(DatePrototype, Date, Date);
 
 public:
     explicit DatePrototype(GlobalObject&);
