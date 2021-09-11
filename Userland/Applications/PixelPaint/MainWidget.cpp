@@ -812,6 +812,7 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
 
     m_tab_widget->set_active_widget(&image_editor);
     image_editor.set_focus(true);
+    image_editor.fit_image_to_view();
     return image_editor;
 }
 
