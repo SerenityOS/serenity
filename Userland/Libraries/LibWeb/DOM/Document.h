@@ -274,6 +274,8 @@ public:
 
     bool has_a_style_sheet_that_is_blocking_scripts() const;
 
+    bool is_fully_active() const;
+
 private:
     explicit Document(const URL&);
 
