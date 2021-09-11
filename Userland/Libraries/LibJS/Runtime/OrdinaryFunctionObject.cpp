@@ -98,6 +98,7 @@ void OrdinaryFunctionObject::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_environment);
+    visitor.visit(m_realm);
 }
 
 FunctionEnvironment* OrdinaryFunctionObject::create_environment(FunctionObject& function_being_invoked)
