@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibJS/Runtime/PrototypeObject.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/Utf16String.h>
 
@@ -14,8 +15,8 @@ namespace JS {
 Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16String string);
 size_t advance_string_index(Utf16View const& string, size_t index, bool unicode);
 
-class RegExpPrototype final : public Object {
-    JS_OBJECT(RegExpPrototype, Object);
+class RegExpPrototype final : public PrototypeObject<RegExpPrototype, RegExpObject> {
+    JS_PROTOTYPE_OBJECT(RegExpPrototype, RegExpObject, RegExp);
 
 public:
     explicit RegExpPrototype(GlobalObject&);
