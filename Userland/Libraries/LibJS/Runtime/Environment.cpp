@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/Environment.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/VM.h>
 
 namespace JS {
@@ -23,6 +24,7 @@ void Environment::initialize(GlobalObject& global_object)
 void Environment::visit_edges(Visitor& visitor)
 {
     Cell::visit_edges(visitor);
+    visitor.visit(m_global_object);
     visitor.visit(m_outer_environment);
 }
 
