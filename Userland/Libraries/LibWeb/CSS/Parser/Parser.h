@@ -40,8 +40,12 @@ public:
     DOM::Document* document() const { return m_document; }
     URL complete_url(String const&) const;
 
+    PropertyID current_property_id() const { return m_current_property_id; }
+    void set_current_property_id(PropertyID property_id) { m_current_property_id = property_id; }
+
 private:
     DOM::Document* m_document { nullptr };
+    PropertyID m_current_property_id { PropertyID::Invalid };
 };
 
 template<typename T>

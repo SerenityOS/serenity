@@ -2756,6 +2756,7 @@ RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
 
 RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<StyleComponentValueRule>& tokens)
 {
+    m_context.set_current_property_id(property_id);
     Vector<StyleComponentValueRule> component_values;
 
     while (tokens.has_next_token()) {
