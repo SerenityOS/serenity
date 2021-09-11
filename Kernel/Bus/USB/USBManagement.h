@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <Kernel/Bus/USB/USBController.h>
 
 namespace Kernel::USB {

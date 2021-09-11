@@ -6,7 +6,10 @@
 
 #pragma once
 
+#include <AK/IntrusiveList.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/USB/USBPipe.h>
 

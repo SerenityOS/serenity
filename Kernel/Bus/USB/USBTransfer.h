@@ -10,7 +10,6 @@
 #include <AK/RefPtr.h>
 #include <Kernel/Bus/USB/PacketTypes.h>
 #include <Kernel/Bus/USB/USBPipe.h>
-#include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Memory/Region.h>
 
