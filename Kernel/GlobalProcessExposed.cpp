@@ -15,13 +15,11 @@
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
-#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/Net/LocalSocket.h>
-#include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Net/TCPSocket.h>

@@ -12,7 +12,6 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/API/KResult.h>
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
