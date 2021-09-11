@@ -99,10 +99,6 @@ public:
 
     RefPtr<StyleValue> parse_as_css_value(PropertyID);
 
-    // FIXME: These want to be private, but StyleResolver still uses them for now.
-    RefPtr<StyleValue> parse_css_value(PropertyID, TokenStream<StyleComponentValueRule>&);
-    static RefPtr<StyleValue> parse_css_value(ParsingContext const&, PropertyID, StyleComponentValueRule const&);
-
 private:
     template<typename T>
     NonnullRefPtr<CSSStyleSheet> parse_a_stylesheet(TokenStream<T>&);
@@ -172,6 +168,8 @@ private:
     static Optional<Length> parse_length(ParsingContext const&, StyleComponentValueRule const&);
     static Optional<URL> parse_url_function(ParsingContext const&, StyleComponentValueRule const&);
 
+    RefPtr<StyleValue> parse_css_value(PropertyID, TokenStream<StyleComponentValueRule>&);
+    static RefPtr<StyleValue> parse_css_value(ParsingContext const&, StyleComponentValueRule const&);
     static RefPtr<StyleValue> parse_builtin_value(ParsingContext const&, StyleComponentValueRule const&);
     static RefPtr<StyleValue> parse_dynamic_value(ParsingContext const&, StyleComponentValueRule const&);
     static RefPtr<StyleValue> parse_length_value(ParsingContext const&, StyleComponentValueRule const&);
@@ -183,7 +181,7 @@ private:
     static RefPtr<StyleValue> parse_background_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
     static RefPtr<StyleValue> parse_background_image_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
     static RefPtr<StyleValue> parse_background_repeat_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
-    static RefPtr<StyleValue> parse_border_value(ParsingContext const&, PropertyID, Vector<StyleComponentValueRule> const&);
+    static RefPtr<StyleValue> parse_border_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
     static RefPtr<StyleValue> parse_border_radius_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
     static RefPtr<StyleValue> parse_border_radius_shorthand_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
     static RefPtr<StyleValue> parse_box_shadow_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);

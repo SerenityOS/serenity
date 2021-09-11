@@ -1804,7 +1804,7 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
             break;
         }
 
-        auto value = parse_css_value(context, PropertyID::Background, part);
+        auto value = parse_css_value(context, part);
         if (!value) {
             return nullptr;
         }
@@ -1834,7 +1834,7 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
 
             // Check following value, if it's also a repeat, set both.
             if (i + 1 < component_values.size()) {
-                auto next_value = parse_css_value(context, PropertyID::Background, component_values[i + 1]);
+                auto next_value = parse_css_value(context, component_values[i + 1]);
                 if (next_value && is_background_repeat(*next_value)) {
                     ++i;
                     repeat_x = value.release_nonnull();
@@ -1866,7 +1866,7 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
 RefPtr<StyleValue> Parser::parse_background_image_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
     if (component_values.size() == 1) {
-        auto maybe_value = parse_css_value(context, PropertyID::BackgroundImage, component_values.first());
+        auto maybe_value = parse_css_value(context, component_values.first());
         if (!maybe_value)
             return nullptr;
         auto value = maybe_value.release_nonnull();
@@ -1888,7 +1888,7 @@ RefPtr<StyleValue> Parser::parse_background_repeat_value(ParsingContext const& c
     };
 
     if (component_values.size() == 1) {
-        auto maybe_value = parse_css_value(context, PropertyID::BackgroundRepeat, component_values.first());
+        auto maybe_value = parse_css_value(context, component_values.first());
         if (!maybe_value)
             return nullptr;
         auto value = maybe_value.release_nonnull();
@@ -1905,8 +1905,8 @@ RefPtr<StyleValue> Parser::parse_background_repeat_value(ParsingContext const& c
     }
 
     if (component_values.size() == 2) {
-        auto maybe_x_value = parse_css_value(context, PropertyID::BackgroundRepeatX, component_values[0]);
-        auto maybe_y_value = parse_css_value(context, PropertyID::BackgroundRepeatY, component_values[1]);
+        auto maybe_x_value = parse_css_value(context, component_values[0]);
+        auto maybe_y_value = parse_css_value(context, component_values[1]);
         if (!maybe_x_value || !maybe_y_value)
             return nullptr;
 
@@ -1924,7 +1924,7 @@ RefPtr<StyleValue> Parser::parse_background_repeat_value(ParsingContext const& c
     return nullptr;
 }
 
-RefPtr<StyleValue> Parser::parse_border_value(ParsingContext const& context, PropertyID property_id, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_border_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
     auto is_line_style = [](StyleValue const& value) -> bool {
         switch (value.to_identifier()) {
@@ -1965,7 +1965,7 @@ RefPtr<StyleValue> Parser::parse_border_value(ParsingContext const& context, Pro
     RefPtr<StyleValue> border_style;
 
     for (auto& part : component_values) {
-        auto value = parse_css_value(context, property_id, part);
+        auto value = parse_css_value(context, part);
         if (!value)
             return nullptr;
 
@@ -2167,7 +2167,7 @@ RefPtr<StyleValue> Parser::parse_flex_value(ParsingContext const& context, Vecto
     };
 
     if (component_values.size() == 1) {
-        auto value = parse_css_value(context, PropertyID::Flex, component_values[0]);
+        auto value = parse_css_value(context, component_values[0]);
         if (!value)
             return nullptr;
 
@@ -2190,7 +2190,7 @@ RefPtr<StyleValue> Parser::parse_flex_value(ParsingContext const& context, Vecto
     RefPtr<StyleValue> flex_basis;
 
     for (size_t i = 0; i < component_values.size(); ++i) {
-        auto value = parse_css_value(context, PropertyID::Flex, component_values[i]);
+        auto value = parse_css_value(context, component_values[i]);
         if (!value)
             return nullptr;
 
@@ -2209,7 +2209,7 @@ RefPtr<StyleValue> Parser::parse_flex_value(ParsingContext const& context, Vecto
 
             // Flex-shrink may optionally follow directly after.
             if (i + 1 < component_values.size()) {
-                auto second_value = parse_css_value(context, PropertyID::Flex, component_values[i + 1]);
+                auto second_value = parse_css_value(context, component_values[i + 1]);
                 if (second_value && is_flex_grow_or_shrink(*second_value)) {
                     flex_shrink = second_value.release_nonnull();
                     i++;
@@ -2270,7 +2270,7 @@ RefPtr<StyleValue> Parser::parse_flex_flow_value(ParsingContext const& context, 
     RefPtr<StyleValue> flex_wrap;
 
     for (auto& part : component_values) {
-        auto value = parse_css_value(context, PropertyID::FlexFlow, part);
+        auto value = parse_css_value(context, part);
         if (!value)
             return nullptr;
         if (is_flex_direction(*value)) {
@@ -2369,7 +2369,7 @@ RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vecto
     int normal_count = 0;
 
     for (size_t i = 0; i < component_values.size(); ++i) {
-        auto value = parse_css_value(context, PropertyID::Font, component_values[i]);
+        auto value = parse_css_value(context, component_values[i]);
         if (!value)
             return nullptr;
 
@@ -2398,7 +2398,7 @@ RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vecto
             if (i + 2 < component_values.size()) {
                 auto maybe_solidus = component_values[i + 1];
                 if (maybe_solidus.is(Token::Type::Delim) && maybe_solidus.token().delim() == "/"sv) {
-                    auto maybe_line_height = parse_css_value(context, PropertyID::Font, component_values[i + 2]);
+                    auto maybe_line_height = parse_css_value(context, component_values[i + 2]);
                     if (!(maybe_line_height && is_line_height(*maybe_line_height)))
                         return nullptr;
                     line_height = maybe_line_height.release_nonnull();
@@ -2485,7 +2485,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(ParsingContext const& context
         }
         if (part.is(Token::Type::Ident)) {
             // If this is a valid identifier, it's NOT a custom-ident and can't be part of a larger name.
-            auto maybe_ident = parse_css_value(context, PropertyID::FontFamily, part);
+            auto maybe_ident = parse_css_value(context, part);
             if (maybe_ident) {
                 // CSS-wide keywords are not allowed
                 if (maybe_ident->is_builtin())
@@ -2577,7 +2577,7 @@ RefPtr<StyleValue> Parser::parse_list_style_value(ParsingContext const& context,
     int found_nones = 0;
 
     for (auto& part : component_values) {
-        auto value = parse_css_value(context, PropertyID::ListStyle, part);
+        auto value = parse_css_value(context, part);
         if (!value)
             return nullptr;
 
@@ -2652,7 +2652,7 @@ RefPtr<StyleValue> Parser::parse_overflow_value(ParsingContext const& context, V
     };
 
     if (component_values.size() == 1) {
-        auto maybe_value = parse_css_value(context, PropertyID::Overflow, component_values.first());
+        auto maybe_value = parse_css_value(context, component_values.first());
         if (!maybe_value)
             return nullptr;
         auto value = maybe_value.release_nonnull();
@@ -2662,8 +2662,8 @@ RefPtr<StyleValue> Parser::parse_overflow_value(ParsingContext const& context, V
     }
 
     if (component_values.size() == 2) {
-        auto maybe_x_value = parse_css_value(context, PropertyID::OverflowX, component_values[0]);
-        auto maybe_y_value = parse_css_value(context, PropertyID::OverflowY, component_values[1]);
+        auto maybe_x_value = parse_css_value(context, component_values[0]);
+        auto maybe_y_value = parse_css_value(context, component_values[1]);
 
         if (!maybe_x_value || !maybe_y_value)
             return nullptr;
@@ -2714,7 +2714,7 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(ParsingContext const& con
     // FIXME: Implement 'text-decoration-thickness' parameter. https://www.w3.org/TR/css-text-decor-4/#text-decoration-width-property
 
     for (auto& part : component_values) {
-        auto value = parse_css_value(context, PropertyID::TextDecoration, part);
+        auto value = parse_css_value(context, part);
         if (!value)
             return nullptr;
 
@@ -2804,7 +2804,7 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
     case PropertyID::BorderLeft:
     case PropertyID::BorderRight:
     case PropertyID::BorderTop:
-        if (auto parsed_value = parse_border_value(m_context, property_id, component_values))
+        if (auto parsed_value = parse_border_value(m_context, component_values))
             return parsed_value;
         break;
     case PropertyID::BorderTopLeftRadius:
@@ -2855,13 +2855,13 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
     }
 
     if (component_values.size() == 1)
-        return parse_css_value(m_context, property_id, component_values.first());
+        return parse_css_value(m_context, component_values.first());
 
     // We have multiple values, so treat them as a StyleValueList.
     // FIXME: Specify in Properties.json whether to permit this for each property.
     NonnullRefPtrVector<StyleValue> parsed_values;
     for (auto& component_value : component_values) {
-        auto parsed = parse_css_value(m_context, property_id, component_value);
+        auto parsed = parse_css_value(m_context, component_value);
         if (!parsed)
             return {};
         parsed_values.append(parsed.release_nonnull());
@@ -2872,7 +2872,7 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, PropertyID, StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, StyleComponentValueRule const& component_value)
 {
     if (auto builtin = parse_builtin_value(context, component_value))
         return builtin;
