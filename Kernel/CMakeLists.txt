@@ -127,6 +127,7 @@ set(KERNEL_SOURCES
     Firmware/ACPI/MultiProcessorParser.cpp
     Firmware/ACPI/Parser.cpp
     Firmware/BIOS.cpp
+    Firmware/PowerStateSwitch.cpp
     Firmware/SysFSFirmware.cpp
     FutexQueue.cpp
     Interrupts/APIC.cpp
@@ -240,7 +241,6 @@ set(KERNEL_SOURCES
     Syscalls/sendfd.cpp
     Syscalls/setpgid.cpp
     Syscalls/setuid.cpp
-    Syscalls/shutdown.cpp
     Syscalls/sigaction.cpp
     Syscalls/socket.cpp
     Syscalls/stat.cpp

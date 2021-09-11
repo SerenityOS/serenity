@@ -387,8 +387,6 @@ public:
     KResultOr<FlatPtr> sys$kill_thread(pid_t tid, int signal);
     KResultOr<FlatPtr> sys$rename(Userspace<const Syscall::SC_rename_params*>);
     KResultOr<FlatPtr> sys$mknod(Userspace<const Syscall::SC_mknod_params*>);
-    KResultOr<FlatPtr> sys$halt();
-    KResultOr<FlatPtr> sys$reboot();
     KResultOr<FlatPtr> sys$realpath(Userspace<const Syscall::SC_realpath_params*>);
     KResultOr<FlatPtr> sys$getrandom(Userspace<void*>, size_t, unsigned int);
     KResultOr<FlatPtr> sys$getkeymap(Userspace<const Syscall::SC_getkeymap_params*>);

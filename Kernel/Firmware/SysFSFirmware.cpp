@@ -6,6 +6,7 @@
 
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Firmware/BIOS.h>
+#include <Kernel/Firmware/PowerStateSwitch.h>
 #include <Kernel/Firmware/SysFSFirmware.h>
 #include <Kernel/Sections.h>
 
@@ -24,8 +25,10 @@ void FirmwareSysFSDirectory::create_components()
     VERIFY(!bios_directory_or_error.is_error());
     auto acpi_directory_or_error = ACPI::ACPISysFSDirectory::try_create(*this);
     VERIFY(!acpi_directory_or_error.is_error());
+    auto power_state_switch_node = PowerStateSwitchNode::must_create(*this);
     m_components.append(bios_directory_or_error.release_value());
     m_components.append(acpi_directory_or_error.release_value());
+    m_components.append(power_state_switch_node);
 }
 
 UNMAP_AFTER_INIT FirmwareSysFSDirectory::FirmwareSysFSDirectory()
