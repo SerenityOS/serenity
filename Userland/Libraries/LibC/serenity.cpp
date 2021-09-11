@@ -18,18 +18,6 @@ int disown(pid_t pid)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int module_load(const char* path, size_t path_length)
-{
-    int rc = syscall(SC_module_load, path, path_length);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
-int module_unload(const char* name, size_t name_length)
-{
-    int rc = syscall(SC_module_unload, name, name_length);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 int profiling_enable(pid_t pid, uint64_t event_mask)
 {
     int rc = syscall(SC_profiling_enable, pid, event_mask);
