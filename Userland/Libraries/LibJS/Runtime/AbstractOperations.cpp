@@ -109,7 +109,7 @@ FunctionObject* species_constructor(GlobalObject& global_object, Object const& o
 }
 
 // 7.3.24 GetFunctionRealm ( obj ), https://tc39.es/ecma262/#sec-getfunctionrealm
-GlobalObject* get_function_realm(GlobalObject& global_object, FunctionObject const& function)
+Realm* get_function_realm(GlobalObject& global_object, FunctionObject const& function)
 {
     auto& vm = global_object.vm();
 
@@ -118,7 +118,7 @@ GlobalObject* get_function_realm(GlobalObject& global_object, FunctionObject con
     // 2. If obj has a [[Realm]] internal slot, then
     if (function.realm()) {
         // a. Return obj.[[Realm]].
-        return &function.global_object();
+        return function.realm();
     }
 
     // 3. If obj is a bound function exotic object, then
@@ -151,7 +151,7 @@ GlobalObject* get_function_realm(GlobalObject& global_object, FunctionObject con
     }
 
     // 5. Return the current Realm Record.
-    return &global_object;
+    return vm.current_realm();
 }
 
 // 10.1.6.2 IsCompatiblePropertyDescriptor ( Extensible, Desc, Current ), https://tc39.es/ecma262/#sec-iscompatiblepropertydescriptor
@@ -320,7 +320,7 @@ Object* get_prototype_from_constructor(GlobalObject& global_object, FunctionObje
         auto* realm = get_function_realm(global_object, constructor);
         if (vm.exception())
             return nullptr;
-        prototype = (realm->*intrinsic_default_prototype)();
+        prototype = (realm->global_object().*intrinsic_default_prototype)();
     }
     return &prototype.as_object();
 }
