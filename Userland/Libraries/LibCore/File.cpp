@@ -497,7 +497,7 @@ Result<void, OSError> File::link_file(String const& dst_path, String const& src_
         ++duplicate_count;
     }
     if (duplicate_count != 0) {
-        return link_file(src_path, get_duplicate_name(dst_path, duplicate_count));
+        return link_file(get_duplicate_name(dst_path, duplicate_count), src_path);
     }
     int rc = symlink(src_path.characters(), dst_path.characters());
     if (rc < 0) {
