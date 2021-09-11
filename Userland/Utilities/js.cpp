@@ -830,7 +830,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView const& source
             }
 
             if (s_run_bytecode) {
-                JS::Bytecode::Interpreter bytecode_interpreter(interpreter.global_object());
+                JS::Bytecode::Interpreter bytecode_interpreter(interpreter.global_object(), interpreter.realm());
                 bytecode_interpreter.run(unit);
             } else {
                 return true;
