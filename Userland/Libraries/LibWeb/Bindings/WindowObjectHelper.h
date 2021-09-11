@@ -182,6 +182,8 @@
 #include <LibWeb/Bindings/HTMLUnknownElementPrototype.h>
 #include <LibWeb/Bindings/HTMLVideoElementConstructor.h>
 #include <LibWeb/Bindings/HTMLVideoElementPrototype.h>
+#include <LibWeb/Bindings/HistoryConstructor.h>
+#include <LibWeb/Bindings/HistoryPrototype.h>
 #include <LibWeb/Bindings/ImageConstructor.h>
 #include <LibWeb/Bindings/ImageDataConstructor.h>
 #include <LibWeb/Bindings/ImageDataPrototype.h>
@@ -259,6 +261,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(Element)                   \
     ADD_WINDOW_OBJECT_INTERFACE(Event)                     \
     ADD_WINDOW_OBJECT_INTERFACE(EventTarget)               \
+    ADD_WINDOW_OBJECT_INTERFACE(History)                   \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLAnchorElement)         \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLAreaElement)           \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLAudioElement)          \

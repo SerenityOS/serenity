@@ -19,6 +19,7 @@
 #include <LibWeb/Bindings/EventTargetPrototype.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/EventWrapperFactory.h>
+#include <LibWeb/Bindings/HistoryWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
@@ -57,6 +58,7 @@ void WindowObject::initialize_global_object()
     define_native_accessor("top", top_getter, nullptr, JS::Attribute::Enumerable);
     define_native_accessor("parent", parent_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("document", document_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor("history", history_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("performance", performance_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("screen", screen_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("innerWidth", inner_width_getter, {}, JS::Attribute::Enumerable);
@@ -638,6 +640,14 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_by)
     //        is not actually doing yet, so this is the same for now.
     perform_a_scroll(page, left, top, behavior);
     return JS::js_undefined();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::history_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    return wrap(global_object, impl->associated_document().history());
 }
 
 }

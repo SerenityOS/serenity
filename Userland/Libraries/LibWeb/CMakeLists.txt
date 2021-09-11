@@ -77,6 +77,7 @@ set(SOURCES
     HTML/EventNames.cpp
     HTML/FormAssociatedElement.cpp
     HTML/GlobalEventHandlers.cpp
+    HTML/History.cpp
     HTML/HTMLAnchorElement.cpp
     HTML/HTMLAreaElement.cpp
     HTML/HTMLAudioElement.cpp
@@ -329,6 +330,7 @@ libweb_js_wrapper(DOM/Text)
 libweb_js_wrapper(HTML/CanvasRenderingContext2D)
 libweb_js_wrapper(HTML/CloseEvent)
 libweb_js_wrapper(HTML/DOMParser)
+libweb_js_wrapper(HTML/History)
 libweb_js_wrapper(HTML/HTMLAnchorElement)
 libweb_js_wrapper(HTML/HTMLAreaElement)
 libweb_js_wrapper(HTML/HTMLAudioElement)
