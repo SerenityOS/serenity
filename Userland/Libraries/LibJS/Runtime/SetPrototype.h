@@ -6,12 +6,13 @@
 
 #pragma once
 
+#include <LibJS/Runtime/PrototypeObject.h>
 #include <LibJS/Runtime/Set.h>
 
 namespace JS {
 
-class SetPrototype final : public Object {
-    JS_OBJECT(SetPrototype, Object);
+class SetPrototype final : public PrototypeObject<SetPrototype, Set> {
+    JS_PROTOTYPE_OBJECT(SetPrototype, Set, Set);
 
 public:
     SetPrototype(GlobalObject&);
