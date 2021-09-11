@@ -68,6 +68,9 @@ public:
     void set_visualize_leading_whitespace(bool);
     bool visualize_leading_whitespace() const { return m_visualize_leading_whitespace; }
 
+    bool is_cursor_line_highlighted() const { return m_cursor_line_highlighting; }
+    void set_cursor_line_highlighting(bool);
+
     virtual bool is_automatic_indentation_enabled() const final { return m_automatic_indentation_enabled; }
     void set_automatic_indentation_enabled(bool enabled) { m_automatic_indentation_enabled = enabled; }
 
@@ -337,6 +340,7 @@ private:
     WrappingMode m_wrapping_mode { WrappingMode::NoWrap };
     bool m_visualize_trailing_whitespace { true };
     bool m_visualize_leading_whitespace { false };
+    bool m_cursor_line_highlighting { true };
     int m_line_spacing { 4 };
     size_t m_soft_tab_width { 4 };
     int m_horizontal_content_padding { 3 };
