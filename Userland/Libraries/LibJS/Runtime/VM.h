@@ -42,6 +42,7 @@ struct ScopeFrame {
     bool pushed_environment { false };
 };
 
+// 9.4 Execution Contexts, https://tc39.es/ecma262/#sec-execution-contexts
 struct ExecutionContext {
     explicit ExecutionContext(Heap& heap)
         : arguments(heap)
@@ -56,6 +57,7 @@ struct ExecutionContext {
     Object* arguments_object { nullptr };
     Environment* lexical_environment { nullptr };
     Environment* variable_environment { nullptr };
+    Realm* realm { nullptr };
     bool is_strict_mode { false };
 };
 
@@ -145,6 +147,11 @@ public:
 
     Environment const* variable_environment() const { return running_execution_context().variable_environment; }
     Environment* variable_environment() { return running_execution_context().variable_environment; }
+
+    // https://tc39.es/ecma262/#current-realm
+    // The value of the Realm component of the running execution context is also called the current Realm Record.
+    Realm const* current_realm() const { return running_execution_context().realm; }
+    Realm* current_realm() { return running_execution_context().realm; }
 
     bool in_strict_mode() const;
 
