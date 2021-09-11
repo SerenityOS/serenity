@@ -27,6 +27,7 @@
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
+#include <LibWeb/HTML/History.h>
 
 namespace Web::DOM {
 
@@ -276,6 +277,8 @@ public:
 
     bool is_fully_active() const;
 
+    NonnullRefPtr<HTML::History> history() const { return m_history; }
+
 private:
     explicit Document(const URL&);
 
@@ -356,6 +359,8 @@ private:
 
     // https://html.spec.whatwg.org/multipage/semantics.html#script-blocking-style-sheet-counter
     u32 m_script_blocking_style_sheet_counter { 0 };
+
+    NonnullRefPtr<HTML::History> m_history;
 };
 
 }

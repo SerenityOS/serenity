@@ -64,6 +64,7 @@ Document::Document(const URL& url)
     , m_url(url)
     , m_window(Window::create_with_document(*this))
     , m_implementation(DOMImplementation::create(*this))
+    , m_history(HTML::History::create(*this))
 {
     m_style_update_timer = Core::Timer::create_single_shot(0, [this] {
         update_style();
