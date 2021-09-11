@@ -6,11 +6,13 @@
 
 #pragma once
 
+#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/FileSystem/SysFSComponent.h>
 #include <Kernel/Firmware/ACPI/Definitions.h>
 #include <Kernel/Firmware/ACPI/Initialize.h>
+#include <Kernel/Firmware/SysFSFirmware.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/PhysicalAddress.h>
@@ -20,10 +22,10 @@ namespace Kernel::ACPI {
 
 class ACPISysFSDirectory : public SysFSDirectory {
 public:
-    static void initialize();
+    static KResultOr<NonnullRefPtr<ACPISysFSDirectory>> try_create(FirmwareSysFSDirectory& firmware_directory);
 
 private:
-    ACPISysFSDirectory();
+    explicit ACPISysFSDirectory(FirmwareSysFSDirectory& firmware_directory);
 };
 
 class ACPISysFSComponent : public SysFSComponent {

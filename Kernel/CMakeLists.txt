@@ -127,6 +127,7 @@ set(KERNEL_SOURCES
     Firmware/ACPI/MultiProcessorParser.cpp
     Firmware/ACPI/Parser.cpp
     Firmware/BIOS.cpp
+    Firmware/SysFSFirmware.cpp
     FutexQueue.cpp
     Interrupts/APIC.cpp
     Interrupts/GenericInterruptHandler.cpp

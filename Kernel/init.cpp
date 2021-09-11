@@ -30,7 +30,7 @@
 #include <Kernel/Firmware/ACPI/Initialize.h>
 #include <Kernel/Firmware/ACPI/MultiProcessorParser.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Firmware/BIOS.h>
+#include <Kernel/Firmware/SysFSFirmware.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/Heap/kmalloc.h>
@@ -300,9 +300,7 @@ void init_stage2(void*)
     auto boot_profiling = kernel_command_line().is_boot_profiling_enabled();
 
     USB::USBManagement::initialize();
-
-    BIOSSysFSDirectory::initialize();
-    ACPI::ACPISysFSDirectory::initialize();
+    FirmwareSysFSDirectory::initialize();
 
     VirtIO::detect();
 

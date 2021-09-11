@@ -7,9 +7,11 @@
 
 #pragma once
 
+#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/FileSystem/SysFS.h>
+#include <Kernel/Firmware/SysFSFirmware.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Memory/MappedROM.h>
 #include <Kernel/Memory/Region.h>
@@ -92,12 +94,12 @@ private:
 
 class BIOSSysFSDirectory : public SysFSDirectory {
 public:
-    static void initialize();
+    static KResultOr<NonnullRefPtr<BIOSSysFSDirectory>> try_create(FirmwareSysFSDirectory&);
 
     void create_components();
 
 private:
-    BIOSSysFSDirectory();
+    explicit BIOSSysFSDirectory(FirmwareSysFSDirectory&);
 
     void set_dmi_64_bit_entry_initialization_values();
     void set_dmi_32_bit_entry_initialization_values();
