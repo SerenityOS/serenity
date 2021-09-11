@@ -399,7 +399,7 @@ Value perform_eval(Value x, GlobalObject& caller_realm, CallerMode strict_caller
     if (direct == EvalMode::Direct)
         return interpreter.execute_statement(caller_realm, program).value_or(js_undefined());
 
-    TemporaryChange scope_change(vm.running_execution_context().lexical_environment, static_cast<Environment*>(&caller_realm.environment()));
+    TemporaryChange scope_change(vm.running_execution_context().lexical_environment, static_cast<Environment*>(&interpreter.realm().global_environment()));
     TemporaryChange scope_change_strict(vm.running_execution_context().is_strict_mode, strict_caller == CallerMode::Strict);
     return interpreter.execute_statement(caller_realm, program).value_or(js_undefined());
 }

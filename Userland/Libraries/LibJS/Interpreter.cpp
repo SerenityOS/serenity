@@ -37,6 +37,8 @@ Interpreter::~Interpreter()
 
 void Interpreter::run(GlobalObject& global_object, const Program& program)
 {
+    // FIXME: Why does this receive a GlobalObject? Interpreter has one already, and this might not be in sync with the Realm's GlobalObject.
+
     auto& vm = this->vm();
     VERIFY(!vm.exception());
 
@@ -49,8 +51,8 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     execution_context.this_value = &global_object;
     static FlyString global_execution_context_name = "(global execution context)";
     execution_context.function_name = global_execution_context_name;
-    execution_context.lexical_environment = &global_object.environment();
-    execution_context.variable_environment = &global_object.environment();
+    execution_context.lexical_environment = &realm().global_environment();
+    execution_context.variable_environment = &realm().global_environment();
     VERIFY(!vm.exception());
     execution_context.is_strict_mode = program.is_strict_mode();
     vm.push_execution_context(execution_context, global_object);

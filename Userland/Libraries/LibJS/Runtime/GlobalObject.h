@@ -21,8 +21,6 @@ public:
 
     virtual ~GlobalObject() override;
 
-    GlobalEnvironment& environment() { return *m_environment; }
-
     Console& console() { return *m_console; }
 
     Shape* empty_object_shape() { return m_empty_object_shape; }
@@ -99,8 +97,6 @@ private:
 
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
     GeneratorObjectPrototype* m_generator_object_prototype { nullptr };
-
-    GlobalEnvironment* m_environment { nullptr };
 
     FunctionObject* m_array_prototype_values_function { nullptr };
     FunctionObject* m_eval_function { nullptr };
