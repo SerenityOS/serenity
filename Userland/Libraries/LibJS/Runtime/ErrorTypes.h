@@ -57,11 +57,9 @@
     M(JsonMalformed, "Malformed JSON string")                                                                                           \
     M(NegativeExponent, "Exponent must be positive")                                                                                    \
     M(NonExtensibleDefine, "Cannot define property {} on non-extensible object")                                                        \
-    M(NotA, "Not an object of type {}")                                                                                                 \
     M(NotAConstructor, "{} is not a constructor")                                                                                       \
     M(NotAFunction, "{} is not a function")                                                                                             \
     M(NotAFunctionNoParam, "Not a function")                                                                                            \
-    M(NotAn, "Not an {} object")                                                                                                        \
     M(NotAnObject, "{} is not an object")                                                                                               \
     M(NotAnObjectOfType, "Not an object of type {}")                                                                                    \
     M(NotAnObjectOrNull, "{} is neither an object nor null")                                                                            \
