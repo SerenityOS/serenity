@@ -8,10 +8,10 @@
 #include <AK/Memory.h>
 #include <AK/Singleton.h>
 #include <AK/Types.h>
-#include <Kernel/ACPI/Parser.h>
 #include <Kernel/Arch/x86/MSR.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>

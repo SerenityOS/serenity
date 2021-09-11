@@ -6,9 +6,9 @@
  */
 
 #include <AK/StringView.h>
-#include <Kernel/ACPI/MultiProcessorParser.h>
-#include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Firmware/ACPI/MultiProcessorParser.h>
+#include <Kernel/Firmware/BIOS.h>
 #include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>

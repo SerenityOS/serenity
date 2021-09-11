@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/ACPI/Parser.h>
 #include <Kernel/CommandLine.h>
+#include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
 
