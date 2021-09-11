@@ -65,6 +65,73 @@ test("can break on every label", () => {
     expect(i).toBe(3);
 });
 
+test("can use certain 'keywords' as labels", () => {
+    let i = 0;
+
+    yield: {
+        i++;
+        break yield;
+        expect().fail();
+    }
+
+    await: {
+        i++;
+        break await;
+        expect().fail();
+    }
+
+    async: {
+        i++;
+        break async;
+        expect().fail();
+    }
+
+    let: {
+        i++;
+        break let;
+        expect().fail();
+    }
+
+    // prettier-ignore
+    l\u0065t: {
+        i++;
+        break let;
+        expect().fail();
+    }
+
+    private: {
+        i++;
+        break private;
+        expect().fail();
+    }
+
+    expect(i).toBe(6);
+
+    expect(`const: { break const; }`).not.toEval();
+});
+
+test("can use certain 'keywords' even in strict mode", () => {
+    "use strict";
+
+    let i = 0;
+    await: {
+        i++;
+        break await;
+        expect().fail();
+    }
+
+    async: {
+        i++;
+        break async;
+        expect().fail();
+    }
+    expect(i).toBe(2);
+
+    expect(`'use strict'; let: { break let; }`).not.toEval();
+
+    expect(`'use strict'; l\u0065t: { break l\u0065t; }`).not.toEval();
+});
+
 test("invalid label usage", () => {
     expect(() =>
         eval(`
@@ -75,6 +142,7 @@ test("invalid label usage", () => {
             }
         `)
     ).toThrowWithMessage(SyntaxError, "Label 'label' not found");
+
     expect(() =>
         eval(`
             label: {
@@ -82,7 +150,7 @@ test("invalid label usage", () => {
                     continue label;
                 }
             }
-        `),
+        `)
     ).toThrowWithMessage(
         SyntaxError,
         "labelled continue statement cannot use non iterating statement"
@@ -93,6 +161,6 @@ test("invalid label usage", () => {
             label: label: {
                 break label;
             }
-        `),
+        `)
     ).toThrowWithMessage(SyntaxError, "Label 'label' has already been declared");
 });
