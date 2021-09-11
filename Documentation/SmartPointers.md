@@ -9,7 +9,7 @@ The reason for using these pointers is to make it explicit through code who owns
 
 
 ----
-## OwnPtr<T> and NonnullOwnPtr<T>
+## OwnPtr\<T\> and NonnullOwnPtr\<T\>
 
 `OwnPtr` is used for single-owner objects. An object held in an `OwnPtr` is owned by that `OwnPtr`, and not by anybody else.
 
@@ -68,7 +68,7 @@ In this case, the *non-throwing* `new` should be used to construct the raw point
 **Note:** Always prefer the helper functions to manual construction.
 
 ----
-## RefPtr<T> and NonnullRefPtr<T>
+## RefPtr\<T\> and NonnullRefPtr\<T\>
 
 `RefPtr` is used for multiple-owner objects. An object held by a `RefPtr` is owned together by every pointer pointing to that object.
 
@@ -132,7 +132,7 @@ In this case, the *non-throwing* `new` should be used to construct the raw point
 **Note:** Always prefer the helper functions to manual construction.
 
 ----
-## WeakPtr<T>
+## WeakPtr\<T\>
 
 `WeakPtr` is used for objects that somebody else owns. When the pointee of a `WeakPtr` is deleted, the `WeakPtr` will magically become null.
 
