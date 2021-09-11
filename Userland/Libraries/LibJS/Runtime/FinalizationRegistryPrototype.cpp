@@ -10,7 +10,7 @@
 namespace JS {
 
 FinalizationRegistryPrototype::FinalizationRegistryPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -32,22 +32,10 @@ FinalizationRegistryPrototype::~FinalizationRegistryPrototype()
 {
 }
 
-FinalizationRegistry* FinalizationRegistryPrototype::typed_this(VM& vm, GlobalObject& global_object)
-{
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return nullptr;
-    if (!is<FinalizationRegistry>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "FinalizationRegistry");
-        return nullptr;
-    }
-    return static_cast<FinalizationRegistry*>(this_object);
-}
-
 // @STAGE 2@ FinalizationRegistry.prototype.cleanupSome ( [ callback ] ), https://github.com/tc39/proposal-cleanup-some/blob/master/spec/finalization-registry.html
 JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::cleanup_some)
 {
-    auto* finalization_registry = typed_this(vm, global_object);
+    auto* finalization_registry = typed_this_object(global_object);
     if (!finalization_registry)
         return {};
 
@@ -65,7 +53,7 @@ JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::cleanup_some)
 // 26.2.3.2 FinalizationRegistry.prototype.register ( target, heldValue [ , unregisterToken ] ), https://tc39.es/ecma262/#sec-finalization-registry.prototype.register
 JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::register_)
 {
-    auto* finalization_registry = typed_this(vm, global_object);
+    auto* finalization_registry = typed_this_object(global_object);
     if (!finalization_registry)
         return {};
 
@@ -95,7 +83,7 @@ JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::register_)
 // 26.2.3.3 FinalizationRegistry.prototype.unregister ( unregisterToken ), https://tc39.es/ecma262/#sec-finalization-registry.prototype.unregister
 JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::unregister)
 {
-    auto* finalization_registry = typed_this(vm, global_object);
+    auto* finalization_registry = typed_this_object(global_object);
     if (!finalization_registry)
         return {};
 
