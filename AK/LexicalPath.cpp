@@ -121,6 +121,14 @@ String LexicalPath::canonicalized_path(String path)
     return builder.to_string();
 }
 
+String LexicalPath::absolute_path(String dir_path, String target)
+{
+    if (LexicalPath(target).is_absolute()) {
+        return LexicalPath::canonicalized_path(target);
+    }
+    return LexicalPath::canonicalized_path(join(dir_path, target).string());
+}
+
 String LexicalPath::relative_path(StringView const& a_path, StringView const& a_prefix)
 {
     if (!a_path.starts_with('/') || !a_prefix.starts_with('/')) {
