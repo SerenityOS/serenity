@@ -7,11 +7,12 @@
 #pragma once
 
 #include <LibJS/Runtime/Map.h>
+#include <LibJS/Runtime/PrototypeObject.h>
 
 namespace JS {
 
-class MapPrototype final : public Object {
-    JS_OBJECT(MapPrototype, Object);
+class MapPrototype final : public PrototypeObject<MapPrototype, Map> {
+    JS_PROTOTYPE_OBJECT(MapPrototype, Map, Map);
 
 public:
     MapPrototype(GlobalObject&);
