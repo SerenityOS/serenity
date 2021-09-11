@@ -9,7 +9,6 @@
 #include <AK/Endian.h>
 #include <AK/HashFunctions.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/StringHash.h>
 #include <AK/StringView.h>

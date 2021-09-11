@@ -6,11 +6,7 @@
 
 #pragma once
 
-#include <AK/Badge.h>
 #include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <Kernel/API/KResult.h>

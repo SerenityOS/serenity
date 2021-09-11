@@ -7,14 +7,12 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/ByteBuffer.h>
 #include <AK/RefCounted.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KBuffer.h>
-#include <Kernel/VirtualAddress.h>
 
 namespace Kernel {
 

@@ -8,14 +8,11 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/Debug.h>
-#include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/ProcFS.h>
-#include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
-#include <LibC/errno_numbers.h>
 
 namespace Kernel {
 

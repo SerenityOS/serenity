@@ -14,13 +14,11 @@
 #include <Kernel/FileSystem/InodeFile.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
-#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/UnixTypes.h>
-#include <LibC/errno_numbers.h>
 
 namespace Kernel {
 

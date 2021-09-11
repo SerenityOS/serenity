@@ -9,7 +9,6 @@
 #include <AK/Atomic.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/KBufferBuilder.h>
 
 namespace Kernel {
 
