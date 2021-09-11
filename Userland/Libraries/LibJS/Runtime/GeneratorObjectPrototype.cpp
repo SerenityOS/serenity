@@ -5,25 +5,13 @@
  */
 
 #include <LibJS/Bytecode/Interpreter.h>
-#include <LibJS/Runtime/GeneratorObject.h>
 #include <LibJS/Runtime/GeneratorObjectPrototype.h>
+#include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
 
-static GeneratorObject* typed_this(VM& vm, GlobalObject& global_object)
-{
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
-    if (!is<GeneratorObject>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Generator");
-        return nullptr;
-    }
-    return static_cast<GeneratorObject*>(this_object);
-}
-
 GeneratorObjectPrototype::GeneratorObjectPrototype(GlobalObject& global_object)
-    : Object(*global_object.iterator_prototype())
+    : PrototypeObject(*global_object.iterator_prototype())
 {
 }
 
@@ -47,7 +35,7 @@ GeneratorObjectPrototype::~GeneratorObjectPrototype()
 // 27.5.1.2 Generator.prototype.next ( value ), https://tc39.es/ecma262/#sec-generator.prototype.next
 JS_DEFINE_NATIVE_FUNCTION(GeneratorObjectPrototype::next)
 {
-    auto generator_object = typed_this(vm, global_object);
+    auto generator_object = typed_this_object(global_object);
     if (!generator_object)
         return {};
     return generator_object->next_impl(vm, global_object, {});
@@ -56,7 +44,7 @@ JS_DEFINE_NATIVE_FUNCTION(GeneratorObjectPrototype::next)
 // 27.5.1.3 Generator.prototype.next ( value ), https://tc39.es/ecma262/#sec-generator.prototype.return
 JS_DEFINE_NATIVE_FUNCTION(GeneratorObjectPrototype::return_)
 {
-    auto generator_object = typed_this(vm, global_object);
+    auto generator_object = typed_this_object(global_object);
     if (!generator_object)
         return {};
     generator_object->set_done();
@@ -66,7 +54,7 @@ JS_DEFINE_NATIVE_FUNCTION(GeneratorObjectPrototype::return_)
 // 27.5.1.4 Generator.prototype.next ( value ), https://tc39.es/ecma262/#sec-generator.prototype.throw
 JS_DEFINE_NATIVE_FUNCTION(GeneratorObjectPrototype::throw_)
 {
-    auto generator_object = typed_this(vm, global_object);
+    auto generator_object = typed_this_object(global_object);
     if (!generator_object)
         return {};
     return generator_object->next_impl(vm, global_object, vm.argument(0));

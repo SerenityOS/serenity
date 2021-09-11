@@ -6,13 +6,14 @@
 
 #pragma once
 
-#include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/GeneratorObject.h>
+#include <LibJS/Runtime/PrototypeObject.h>
 
 namespace JS {
 
 // 27.5.1 %GeneratorFunction.prototype.prototype%, https://tc39.es/ecma262/#sec-properties-of-generator-prototype
-class GeneratorObjectPrototype final : public Object {
-    JS_OBJECT(GeneratorObjectPrototype, Object);
+class GeneratorObjectPrototype final : public PrototypeObject<GeneratorObjectPrototype, GeneratorObject> {
+    JS_PROTOTYPE_OBJECT(GeneratorObjectPrototype, GeneratorObject, Generator);
 
 public:
     explicit GeneratorObjectPrototype(GlobalObject&);

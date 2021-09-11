@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/OrdinaryFunctionObject.h>
 
