@@ -40,6 +40,8 @@ int main(int argc, char** argv)
     VERIFY(json.has_value());
     VERIFY(json.value().is_object());
 
+    auto& properties = json.value().as_object();
+
     StringBuilder builder;
     SourceGenerator generator { builder };
 
@@ -55,7 +57,7 @@ PropertyID property_id_from_string(const StringView& string)
 {
 )~~~");
 
-    json.value().as_object().for_each_member([&](auto& name, auto& value) {
+    properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
 
         auto member_generator = generator.fork();
@@ -75,7 +77,7 @@ const char* string_from_property_id(PropertyID property_id) {
     switch (property_id) {
 )~~~");
 
-    json.value().as_object().for_each_member([&](auto& name, auto& value) {
+    properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
 
         auto member_generator = generator.fork();
@@ -98,7 +100,7 @@ bool is_inherited_property(PropertyID property_id)
     switch (property_id) {
 )~~~");
 
-    json.value().as_object().for_each_member([&](auto& name, auto& value) {
+    properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
 
         bool inherited = false;
@@ -129,7 +131,7 @@ bool is_pseudo_property(PropertyID property_id)
     switch (property_id) {
 )~~~");
 
-    json.value().as_object().for_each_member([&](auto& name, auto& value) {
+    properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
 
         bool pseudo = false;
@@ -162,7 +164,7 @@ RefPtr<StyleValue> property_initial_value(PropertyID property_id)
         ParsingContext parsing_context;
 )~~~");
 
-    json.value().as_object().for_each_member([&](auto& name, auto& value) {
+    properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
 
         if (value.as_object().has("initial")) {
@@ -183,6 +185,50 @@ RefPtr<StyleValue> property_initial_value(PropertyID property_id)
     generator.append(R"~~~(
     }
     return initial_values.get(property_id).value_or(nullptr);
+}
+
+bool property_has_quirk(PropertyID property_id, Quirk quirk)
+{
+    switch (property_id) {
+)~~~");
+
+    properties.for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+        if (value.as_object().has("quirks")) {
+            auto& quirks_value = value.as_object().get("quirks");
+            VERIFY(quirks_value.is_array());
+            auto& quirks = quirks_value.as_array();
+
+            if (!quirks.is_empty()) {
+                auto property_generator = generator.fork();
+                property_generator.set("name:titlecase", title_casify(name));
+                property_generator.append(R"~~~(
+    case PropertyID::@name:titlecase@: {
+        switch (quirk) {
+)~~~");
+                for (auto& quirk : quirks.values()) {
+                    VERIFY(quirk.is_string());
+                    auto quirk_generator = property_generator.fork();
+                    quirk_generator.set("quirk:titlecase", title_casify(quirk.as_string()));
+                    quirk_generator.append(R"~~~(
+        case Quirk::@quirk:titlecase@:
+            return true;
+)~~~");
+                }
+                property_generator.append(R"~~~(
+        default:
+            return false;
+        }
+    }
+)~~~");
+            }
+        }
+    });
+
+    generator.append(R"~~~(
+    default:
+        return false;
+    }
 }
 
 } // namespace Web::CSS
