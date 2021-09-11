@@ -85,21 +85,6 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
         painter.draw_rect(enclosing_int_rect(image_rect_to_editor_rect(m_active_layer->relative_rect())).inflated(2, 2), Color::Black);
     }
 
-    if (m_show_guides) {
-        for (auto& guide : m_guides) {
-            if (guide.orientation() == Guide::Orientation::Horizontal) {
-                int y_coordinate = (int)image_position_to_editor_position({ 0.0f, guide.offset() }).y();
-                painter.draw_line({ 0, y_coordinate }, { rect().width(), y_coordinate }, Color::Cyan, 1, Gfx::Painter::LineStyle::Dashed, Color::LightGray);
-            } else if (guide.orientation() == Guide::Orientation::Vertical) {
-                int x_coordinate = (int)image_position_to_editor_position({ guide.offset(), 0.0f }).x();
-                painter.draw_line({ x_coordinate, 0 }, { x_coordinate, rect().height() }, Color::Cyan, 1, Gfx::Painter::LineStyle::Dashed, Color::LightGray);
-            }
-        }
-    }
-
-    if (!m_selection.is_empty())
-        m_selection.paint(painter);
-
     const float pixel_grid_threshold = 15.0f;
     if (m_show_pixel_grid && m_scale > pixel_grid_threshold) {
         auto grid_rect = m_editor_image_rect.intersected(event.rect());
@@ -117,6 +102,21 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
             painter.draw_line(start_point, end_point, Color::LightGray);
         }
     }
+
+    if (m_show_guides) {
+        for (auto& guide : m_guides) {
+            if (guide.orientation() == Guide::Orientation::Horizontal) {
+                int y_coordinate = (int)image_position_to_editor_position({ 0.0f, guide.offset() }).y();
+                painter.draw_line({ 0, y_coordinate }, { rect().width(), y_coordinate }, Color::Cyan, 1, Gfx::Painter::LineStyle::Dashed, Color::LightGray);
+            } else if (guide.orientation() == Guide::Orientation::Vertical) {
+                int x_coordinate = (int)image_position_to_editor_position({ guide.offset(), 0.0f }).x();
+                painter.draw_line({ x_coordinate, 0 }, { x_coordinate, rect().height() }, Color::Cyan, 1, Gfx::Painter::LineStyle::Dashed, Color::LightGray);
+            }
+        }
+    }
+
+    if (!m_selection.is_empty())
+        m_selection.paint(painter);
 }
 
 Gfx::FloatRect ImageEditor::layer_rect_to_editor_rect(Layer const& layer, Gfx::IntRect const& layer_rect) const
