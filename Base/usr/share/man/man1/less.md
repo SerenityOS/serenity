@@ -68,7 +68,7 @@ character. For instance, `\\%l` would render as `%l`.
 
 All other characters are treated normally.
 
-#### examples
+#### Examples
 
 `less`'s current default prompt: `'?f%f :.(line %l)?e (END):.'`
 

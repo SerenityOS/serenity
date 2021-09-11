@@ -74,9 +74,9 @@ Date:   Mon Jan 20 22:12:04 2020 +0100
 Kernel: Add a basic implementation of unveil()
 ```
 
-### syscall call-from verification
+### Syscall call-from verification
 
-[syscall call-from verification](https://marc.info/?l=openbsd-tech&m=157488907117170&w=2) is
+[Syscall call-from verification](https://marc.info/?l=openbsd-tech&m=157488907117170&w=2) is
 a mitigation which originated from OpenBSD.
 In short the kernel checks that all syscalls originate
 from the address of the system's libc. This makes attacks
