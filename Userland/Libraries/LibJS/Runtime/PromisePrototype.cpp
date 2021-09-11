@@ -17,7 +17,7 @@
 namespace JS {
 
 PromisePrototype::PromisePrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -35,22 +35,10 @@ void PromisePrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.Promise.as_string()), Attribute::Configurable);
 }
 
-static Promise* promise_from(VM& vm, GlobalObject& global_object)
-{
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return nullptr;
-    if (!is<Promise>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, vm.names.Promise);
-        return nullptr;
-    }
-    return static_cast<Promise*>(this_object);
-}
-
 // 27.2.5.4 Promise.prototype.then ( onFulfilled, onRejected ), https://tc39.es/ecma262/#sec-promise.prototype.then
 JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::then)
 {
-    auto* promise = promise_from(vm, global_object);
+    auto* promise = typed_this_object(global_object);
     if (!promise)
         return {};
     auto on_fulfilled = vm.argument(0);
