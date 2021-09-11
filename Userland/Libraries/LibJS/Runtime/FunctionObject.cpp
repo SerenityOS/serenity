@@ -93,8 +93,10 @@ void FunctionObject::visit_edges(Visitor& visitor)
     for (auto argument : m_bound_arguments)
         visitor.visit(argument);
 
-    for (auto& field : m_fields)
+    for (auto& field : m_fields) {
+        field.name.visit_edges(visitor);
         visitor.visit(field.initializer);
+    }
 }
 
 }
