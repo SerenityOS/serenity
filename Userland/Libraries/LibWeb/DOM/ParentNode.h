@@ -22,8 +22,8 @@ public:
     RefPtr<Element> last_element_child();
     u32 child_element_count() const;
 
-    RefPtr<Element> query_selector(const StringView&);
-    NonnullRefPtrVector<Element> query_selector_all(const StringView&);
+    ExceptionOr<RefPtr<Element>> query_selector(StringView);
+    ExceptionOr<NonnullRefPtrVector<Element>> query_selector_all(StringView);
 
 protected:
     ParentNode(Document& document, NodeType type)

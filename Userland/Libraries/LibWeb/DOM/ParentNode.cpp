@@ -11,11 +11,11 @@
 
 namespace Web::DOM {
 
-RefPtr<Element> ParentNode::query_selector(const StringView& selector_text)
+ExceptionOr<RefPtr<Element>> ParentNode::query_selector(StringView selector_text)
 {
     auto maybe_selectors = parse_selector(CSS::ParsingContext(*this), selector_text);
     if (!maybe_selectors.has_value())
-        return {};
+        return DOM::SyntaxError::create("Failed to parse selector");
 
     auto selectors = maybe_selectors.value();
 
@@ -36,11 +36,11 @@ RefPtr<Element> ParentNode::query_selector(const StringView& selector_text)
     return result;
 }
 
-NonnullRefPtrVector<Element> ParentNode::query_selector_all(const StringView& selector_text)
+ExceptionOr<NonnullRefPtrVector<Element>> ParentNode::query_selector_all(StringView selector_text)
 {
     auto maybe_selectors = parse_selector(CSS::ParsingContext(*this), selector_text);
     if (!maybe_selectors.has_value())
-        return {};
+        return DOM::SyntaxError::create("Failed to parse selector");
 
     auto selectors = maybe_selectors.value();
 
