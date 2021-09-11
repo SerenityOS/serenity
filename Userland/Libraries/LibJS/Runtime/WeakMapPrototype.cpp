@@ -11,7 +11,7 @@
 namespace JS {
 
 WeakMapPrototype::WeakMapPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -34,22 +34,10 @@ WeakMapPrototype::~WeakMapPrototype()
 {
 }
 
-WeakMap* WeakMapPrototype::typed_this(VM& vm, GlobalObject& global_object)
-{
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
-    if (!is<WeakMap>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "WeakMap");
-        return nullptr;
-    }
-    return static_cast<WeakMap*>(this_object);
-}
-
 // 24.3.3.2 WeakMap.prototype.delete ( key ), https://tc39.es/ecma262/#sec-weakmap.prototype.delete
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::delete_)
 {
-    auto* weak_map = typed_this(vm, global_object);
+    auto* weak_map = typed_this_object(global_object);
     if (!weak_map)
         return {};
     auto value = vm.argument(0);
@@ -61,7 +49,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::delete_)
 // 24.3.3.3 WeakMap.prototype.get ( key ), https://tc39.es/ecma262/#sec-weakmap.prototype.get
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::get)
 {
-    auto* weak_map = typed_this(vm, global_object);
+    auto* weak_map = typed_this_object(global_object);
     if (!weak_map)
         return {};
     auto value = vm.argument(0);
@@ -77,7 +65,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::get)
 // 24.3.3.4 WeakMap.prototype.has ( key ), https://tc39.es/ecma262/#sec-weakmap.prototype.has
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::has)
 {
-    auto* weak_map = typed_this(vm, global_object);
+    auto* weak_map = typed_this_object(global_object);
     if (!weak_map)
         return {};
     auto value = vm.argument(0);
@@ -90,7 +78,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::has)
 // 24.3.3.5 WeakMap.prototype.set ( key, value ), https://tc39.es/ecma262/#sec-weakmap.prototype.set
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::set)
 {
-    auto* weak_map = typed_this(vm, global_object);
+    auto* weak_map = typed_this_object(global_object);
     if (!weak_map)
         return {};
     auto value = vm.argument(0);
