@@ -53,7 +53,7 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     execution_context.function_name = global_execution_context_name;
     execution_context.lexical_environment = &realm().global_environment();
     execution_context.variable_environment = &realm().global_environment();
-    VERIFY(!vm.exception());
+    execution_context.realm = &realm();
     execution_context.is_strict_mode = program.is_strict_mode();
     vm.push_execution_context(execution_context, global_object);
     VERIFY(!vm.exception());

@@ -11,6 +11,7 @@
 
 namespace JS {
 
+// 10.2 ECMAScript Function Objects, https://tc39.es/ecma262/#sec-ecmascript-function-objects
 class FunctionObject : public Object {
     JS_OBJECT(Function, Object);
 
@@ -48,7 +49,7 @@ public:
     virtual Environment* environment() { return nullptr; }
 
     // [[Realm]]
-    virtual GlobalObject* realm() const { return nullptr; }
+    virtual Realm* realm() const { return nullptr; }
 
     enum class ThisMode : u8 {
         Lexical,

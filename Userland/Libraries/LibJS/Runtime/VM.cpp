@@ -479,6 +479,8 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
             return {};
     }
 
+    // FIXME: prepare_for_ordinary_call() is not supposed to receive a BoundFunction, ProxyObject, etc. - ever.
+    //        This needs to be moved to NativeFunction/OrdinaryFunctionObject's construct() (10.2.2 [[Construct]])
     ExecutionContext callee_context(heap());
     prepare_for_ordinary_call(function, callee_context, &new_target);
     if (exception())
@@ -597,9 +599,17 @@ void VM::prepare_for_ordinary_call(FunctionObject& function, ExecutionContext& c
     callee_context.function_name = function.name();
 
     // 4. Let calleeRealm be F.[[Realm]].
+    auto* callee_realm = function.realm();
+    // FIXME: See FIXME in VM::call_internal() / VM::construct().
+    if (!callee_realm)
+        callee_realm = current_realm();
+    VERIFY(callee_realm);
+
     // 5. Set the Realm of calleeContext to calleeRealm.
+    callee_context.realm = callee_realm;
+
     // 6. Set the ScriptOrModule of calleeContext to F.[[ScriptOrModule]].
-    // FIXME: Our execution context struct currently does not track these items.
+    // FIXME: Our execution context struct currently does not track this item.
 
     // 7. Let localEnv be NewFunctionEnvironment(F, newTarget).
     // FIXME: This should call NewFunctionEnvironment instead of the ad-hoc FunctionObject::create_environment()
@@ -643,8 +653,7 @@ void VM::ordinary_call_bind_this(FunctionObject& function, ExecutionContext& cal
     if (function.is_strict_mode()) {
         this_value = this_argument;
     } else if (this_argument.is_nullish()) {
-        // FIXME: Make function.realm() an actual Realm, then this will become less horrendous.
-        auto& global_environment = interpreter().realm().global_environment();
+        auto& global_environment = callee_realm->global_environment();
         this_value = &global_environment.global_this_value();
     } else {
         this_value = this_argument.to_object(function.global_object());
@@ -668,6 +677,8 @@ Value VM::call_internal(FunctionObject& function, Value this_value, Optional<Mar
         return call_internal(bound_function.target_function(), bound_function.bound_this(), move(with_bound_arguments));
     }
 
+    // FIXME: prepare_for_ordinary_call() is not supposed to receive a BoundFunction, ProxyObject, etc. - ever.
+    //        This needs to be moved to NativeFunction/OrdinaryFunctionObject's construct() (10.2.2 [[Construct]])
     ExecutionContext callee_context(heap());
     prepare_for_ordinary_call(function, callee_context, nullptr);
     if (exception())
