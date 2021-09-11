@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/PrototypeObject.h>
+#include <LibJS/Runtime/RegExpStringIterator.h>
 
 namespace JS {
 
-class RegExpStringIteratorPrototype final : public Object {
-    JS_OBJECT(RegExpStringIteratorPrototype, Object)
+class RegExpStringIteratorPrototype final : public PrototypeObject<RegExpStringIteratorPrototype, RegExpStringIterator> {
+    JS_PROTOTYPE_OBJECT(RegExpStringIteratorPrototype, RegExpStringIterator, RegExpStringIterator);
 
 public:
     explicit RegExpStringIteratorPrototype(GlobalObject&);
