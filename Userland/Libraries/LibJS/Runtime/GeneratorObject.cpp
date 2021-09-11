@@ -46,8 +46,7 @@ void GeneratorObject::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_environment);
     visitor.visit(m_generating_function);
-    if (m_previous_value.is_object())
-        visitor.visit(&m_previous_value.as_object());
+    visitor.visit(m_previous_value);
 }
 
 Value GeneratorObject::next_impl(VM& vm, GlobalObject& global_object, Optional<Value> value_to_throw)
