@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibJS/Runtime/PrototypeObject.h>
 
 namespace JS {
 
-class ArrayBufferPrototype final : public Object {
-    JS_OBJECT(ArrayBufferPrototype, Object);
+class ArrayBufferPrototype final : public PrototypeObject<ArrayBufferPrototype, ArrayBuffer> {
+    JS_PROTOTYPE_OBJECT(ArrayBufferPrototype, ArrayBuffer, ArrayBuffer);
 
 public:
     explicit ArrayBufferPrototype(GlobalObject&);
