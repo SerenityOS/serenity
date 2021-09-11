@@ -88,8 +88,8 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
 
     const float pixel_grid_threshold = 15.0f;
     if (m_show_pixel_grid && m_scale > pixel_grid_threshold) {
-        auto grid_rect = m_editor_image_rect.intersected(event.rect());
-        auto image_rect = enclosing_int_rect(editor_rect_to_image_rect(grid_rect)).inflated(1, 1);
+        auto event_image_rect = enclosing_int_rect(editor_rect_to_image_rect(event.rect())).inflated(1, 1);
+        auto image_rect = m_image->rect().inflated(1, 1).intersected(event_image_rect);
 
         for (auto i = image_rect.left(); i < image_rect.right(); i++) {
             auto start_point = image_position_to_editor_position({ i, image_rect.top() }).to_type<int>();
