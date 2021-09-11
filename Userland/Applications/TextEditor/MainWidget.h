@@ -104,6 +104,7 @@ private:
 
     RefPtr<GUI::Action> m_visualize_trailing_whitespace_action;
     RefPtr<GUI::Action> m_visualize_leading_whitespace_action;
+    RefPtr<GUI::Action> m_cursor_line_highlighting_action;
 
     GUI::ActionGroup m_soft_tab_width_actions;
     RefPtr<GUI::Action> m_soft_tab_1_width_action;

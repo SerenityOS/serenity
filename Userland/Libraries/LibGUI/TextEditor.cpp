@@ -511,7 +511,7 @@ void TextEditor::paint_event(PaintEvent& event)
 
         size_t visual_line_index = 0;
         for_each_visual_line(line_index, [&](Gfx::IntRect const& visual_line_rect, auto& visual_line_text, size_t start_of_visual_line, [[maybe_unused]] bool is_last_visual_line) {
-            if (is_multi_line() && line_index == m_cursor.line())
+            if (is_multi_line() && line_index == m_cursor.line() && is_cursor_line_highlighted())
                 painter.fill_rect(visual_line_rect, widget_background_color.darkened(0.9f));
             if constexpr (TEXTEDITOR_DEBUG)
                 painter.draw_rect(visual_line_rect, Color::Cyan);
@@ -1970,6 +1970,14 @@ void TextEditor::set_gutter_visible(bool visible)
         return;
     m_gutter_visible = visible;
     recompute_all_visual_lines();
+    update();
+}
+
+void TextEditor::set_cursor_line_highlighting(bool highlighted)
+{
+    if (m_cursor_line_highlighting == highlighted)
+        return;
+    m_cursor_line_highlighting = highlighted;
     update();
 }
 
