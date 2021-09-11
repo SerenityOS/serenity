@@ -40,7 +40,7 @@ static ArrayBuffer* array_buffer_object_from(VM& vm, GlobalObject& global_object
     // ArrayBuffer.prototype.* deliberately don't coerce |this| value to object.
     auto this_value = vm.this_value(global_object);
     if (!this_value.is_object() || !is<ArrayBuffer>(this_value.as_object())) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAn, "ArrayBuffer");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "ArrayBuffer");
         return nullptr;
     }
     return static_cast<ArrayBuffer*>(&this_value.as_object());

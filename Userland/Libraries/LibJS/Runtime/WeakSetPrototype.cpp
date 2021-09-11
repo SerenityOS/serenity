@@ -39,7 +39,7 @@ WeakSet* WeakSetPrototype::typed_this(VM& vm, GlobalObject& global_object)
     if (!this_object)
         return {};
     if (!is<WeakSet>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "WeakSet");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "WeakSet");
         return nullptr;
     }
     return static_cast<WeakSet*>(this_object);

@@ -52,7 +52,7 @@ static Value this_number_value(GlobalObject& global_object, Value value)
     if (value.is_object() && is<NumberObject>(value.as_object()))
         return static_cast<NumberObject&>(value.as_object()).value_of();
     auto& vm = global_object.vm();
-    vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Number");
+    vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Number");
     return {};
 }
 

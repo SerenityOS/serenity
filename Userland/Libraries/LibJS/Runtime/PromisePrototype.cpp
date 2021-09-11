@@ -41,7 +41,7 @@ static Promise* promise_from(VM& vm, GlobalObject& global_object)
     if (!this_object)
         return nullptr;
     if (!is<Promise>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, vm.names.Promise);
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, vm.names.Promise);
         return nullptr;
     }
     return static_cast<Promise*>(this_object);

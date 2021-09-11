@@ -22,7 +22,7 @@ static DisplayNames* typed_this(GlobalObject& global_object)
         return nullptr;
 
     if (!is<DisplayNames>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Intl.DisplayNames");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Intl.DisplayNames");
         return nullptr;
     }
 

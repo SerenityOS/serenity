@@ -80,7 +80,7 @@ static ZonedDateTime* typed_this(GlobalObject& global_object)
     if (!this_object)
         return {};
     if (!is<ZonedDateTime>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Temporal.ZonedDateTime");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.ZonedDateTime");
         return {};
     }
     return static_cast<ZonedDateTime*>(this_object);

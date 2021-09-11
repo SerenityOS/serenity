@@ -456,7 +456,7 @@ PlainDate* date_from_fields(GlobalObject& global_object, Object& calendar, Objec
     if (!date_object)
         return {};
     if (!is<PlainDate>(date_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Temporal.PlainDate");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainDate");
         return {};
     }
 
@@ -486,7 +486,7 @@ PlainYearMonth* year_month_from_fields(GlobalObject& global_object, Object& cale
     if (!year_month_object)
         return {};
     if (!is<PlainYearMonth>(year_month_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Temporal.PlainYearMonth");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainYearMonth");
         return {};
     }
 
@@ -516,7 +516,7 @@ PlainMonthDay* month_day_from_fields(GlobalObject& global_object, Object& calend
     if (!month_day_object)
         return {};
     if (!is<PlainMonthDay>(month_day_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Temporal.PlainMonthDay");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainMonthDay");
         return {};
     }
 

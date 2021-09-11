@@ -23,7 +23,7 @@ TypedArrayBase* typed_array_from(GlobalObject& global_object, Value typed_array_
     if (!this_object)
         return nullptr;
     if (!this_object->is_typed_array()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "TypedArray");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "TypedArray");
         return nullptr;
     }
 
@@ -36,7 +36,7 @@ void validate_typed_array(GlobalObject& global_object, TypedArrayBase& typed_arr
     auto& vm = global_object.vm();
 
     if (!typed_array.is_typed_array())
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "TypedArray");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "TypedArray");
     else if (typed_array.viewed_array_buffer()->is_detached())
         vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 }
@@ -246,7 +246,7 @@ TypedArrayBase* typed_array_create(GlobalObject& global_object, FunctionObject& 
     if (vm.exception())
         return nullptr;
     if (!new_typed_array.is_object() || !new_typed_array.as_object().is_typed_array()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "TypedArray");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "TypedArray");
         return nullptr;
     }
     auto& typed_array = static_cast<TypedArrayBase&>(new_typed_array.as_object());

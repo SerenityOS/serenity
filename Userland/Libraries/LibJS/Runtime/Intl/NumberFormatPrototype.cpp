@@ -20,7 +20,7 @@ static NumberFormat* typed_this(GlobalObject& global_object)
         return nullptr;
 
     if (!is<NumberFormat>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Intl.NumberFormat");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Intl.NumberFormat");
         return nullptr;
     }
 

@@ -55,7 +55,7 @@ static PlainYearMonth* typed_this(GlobalObject& global_object)
     if (!this_object)
         return {};
     if (!is<PlainYearMonth>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Temporal.PlainYearMonth");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainYearMonth");
         return {};
     }
     return static_cast<PlainYearMonth*>(this_object);

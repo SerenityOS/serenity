@@ -35,7 +35,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakRefPrototype::deref)
     if (!this_object)
         return {};
     if (!is<WeakRef>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "WeakRef");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "WeakRef");
         return {};
     }
     auto& weak_ref = static_cast<WeakRef&>(*this_object);

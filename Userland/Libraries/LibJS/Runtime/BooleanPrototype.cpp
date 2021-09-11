@@ -37,7 +37,7 @@ JS_DEFINE_NATIVE_FUNCTION(BooleanPrototype::to_string)
     if (this_value.is_boolean())
         return js_string(vm, this_value.as_bool() ? "true" : "false");
     if (!this_value.is_object() || !is<BooleanObject>(this_value.as_object())) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Boolean");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Boolean");
         return {};
     }
 
@@ -52,7 +52,7 @@ JS_DEFINE_NATIVE_FUNCTION(BooleanPrototype::value_of)
     if (this_value.is_boolean())
         return this_value;
     if (!this_value.is_object() || !is<BooleanObject>(this_value.as_object())) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Boolean");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Boolean");
         return {};
     }
 

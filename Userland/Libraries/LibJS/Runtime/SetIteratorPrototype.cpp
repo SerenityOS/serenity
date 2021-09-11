@@ -39,7 +39,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetIteratorPrototype::next)
 {
     auto this_value = vm.this_value(global_object);
     if (!this_value.is_object() || !is<SetIterator>(this_value.as_object())) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Set Iterator");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Set Iterator");
         return {};
     }
 
