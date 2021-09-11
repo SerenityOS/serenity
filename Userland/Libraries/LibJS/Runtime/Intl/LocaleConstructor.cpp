@@ -42,7 +42,7 @@ static Optional<String> get_string_option(GlobalObject& global_object, Object co
 {
     auto& vm = global_object.vm();
 
-    auto option = get_option(global_object, &options, property, Value::Type::String, values, Empty {});
+    auto option = get_option(global_object, options, property, Value::Type::String, values, Empty {});
     if (vm.exception())
         return {};
     if (option.is_undefined())
@@ -274,8 +274,8 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto tag = vm.argument(0);
-    auto options = vm.argument(1);
+    auto tag_value = vm.argument(0);
+    auto options_value = vm.argument(1);
 
     // 2. Let relevantExtensionKeys be %Locale%.[[RelevantExtensionKeys]].
     auto const& relevant_extension_keys = locale_relevant_extension_keys();
@@ -292,32 +292,32 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
         return {};
 
     // 7. If Type(tag) is not String or Object, throw a TypeError exception.
-    if (!tag.is_string() && !tag.is_object()) {
+    if (!tag_value.is_string() && !tag_value.is_object()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOrString, "tag"sv);
         return {};
     }
 
     // 8. If Type(tag) is Object and tag has an [[InitializedLocale]] internal slot, then
-    if (tag.is_object() && is<Locale>(tag.as_object())) {
+    if (tag_value.is_object() && is<Locale>(tag_value.as_object())) {
         // a. Let tag be tag.[[Locale]].
-        auto const& tag_object = static_cast<Locale const&>(tag.as_object());
-        tag = js_string(vm, tag_object.locale());
+        auto const& tag_object = static_cast<Locale const&>(tag_value.as_object());
+        tag_value = js_string(vm, tag_object.locale());
     }
     // 9. Else,
     else {
         // a. Let tag be ? ToString(tag).
-        tag = tag.to_primitive_string(global_object);
+        tag_value = tag_value.to_primitive_string(global_object);
         if (vm.exception())
             return {};
     }
 
     // 10. Set options to ? CoerceOptionsToObject(options).
-    options = coerce_options_to_object(global_object, options);
+    auto* options = coerce_options_to_object(global_object, options_value);
     if (vm.exception())
         return {};
 
     // 11. Set tag to ? ApplyOptionsToTag(tag, options).
-    auto canonicalized_tag = apply_options_to_tag(global_object, tag.as_string().string(), options.as_object());
+    auto canonicalized_tag = apply_options_to_tag(global_object, tag_value.as_string().string(), *options);
     if (vm.exception())
         return {};
 
@@ -328,7 +328,7 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
     // 14. If calendar is not undefined, then
     //     a. If calendar does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
     // 15. Set opt.[[ca]] to calendar.
-    opt.ca = get_string_option(global_object, options.as_object(), vm.names.calendar, Unicode::is_type_identifier);
+    opt.ca = get_string_option(global_object, *options, vm.names.calendar, Unicode::is_type_identifier);
     if (vm.exception())
         return {};
 
@@ -336,24 +336,24 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
     // 17. If collation is not undefined, then
     //     a. If collation does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
     // 18. Set opt.[[co]] to collation.
-    opt.co = get_string_option(global_object, options.as_object(), vm.names.collation, Unicode::is_type_identifier);
+    opt.co = get_string_option(global_object, *options, vm.names.collation, Unicode::is_type_identifier);
     if (vm.exception())
         return {};
 
     // 19. Let hc be ? GetOption(options, "hourCycle", "string", « "h11", "h12", "h23", "h24" », undefined).
     // 20. Set opt.[[hc]] to hc.
-    opt.hc = get_string_option(global_object, options.as_object(), vm.names.hourCycle, nullptr, { "h11"sv, "h12"sv, "h23"sv, "h24"sv });
+    opt.hc = get_string_option(global_object, *options, vm.names.hourCycle, nullptr, { "h11"sv, "h12"sv, "h23"sv, "h24"sv });
     if (vm.exception())
         return {};
 
     // 21. Let kf be ? GetOption(options, "caseFirst", "string", « "upper", "lower", "false" », undefined).
     // 22. Set opt.[[kf]] to kf.
-    opt.kf = get_string_option(global_object, options.as_object(), vm.names.caseFirst, nullptr, { "upper"sv, "lower"sv, "false"sv });
+    opt.kf = get_string_option(global_object, *options, vm.names.caseFirst, nullptr, { "upper"sv, "lower"sv, "false"sv });
     if (vm.exception())
         return {};
 
     // 23. Let kn be ? GetOption(options, "numeric", "boolean", undefined, undefined).
-    auto kn = get_option(global_object, options, vm.names.numeric, Value::Type::Boolean, {}, Empty {});
+    auto kn = get_option(global_object, *options, vm.names.numeric, Value::Type::Boolean, {}, Empty {});
     if (vm.exception())
         return {};
 
@@ -366,7 +366,7 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
     // 27. If numberingSystem is not undefined, then
     //     a. If numberingSystem does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
     // 28. Set opt.[[nu]] to numberingSystem.
-    opt.nu = get_string_option(global_object, options.as_object(), vm.names.numberingSystem, Unicode::is_type_identifier);
+    opt.nu = get_string_option(global_object, *options, vm.names.numberingSystem, Unicode::is_type_identifier);
     if (vm.exception())
         return {};
 

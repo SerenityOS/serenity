@@ -582,7 +582,7 @@ Array* supported_locales(GlobalObject& global_object, Vector<String> const& requ
         return {};
 
     // 2. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
-    auto matcher = get_option(global_object, options_object, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv);
+    auto matcher = get_option(global_object, *options_object, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv);
     if (vm.exception())
         return {};
 
@@ -617,15 +617,13 @@ Object* coerce_options_to_object(GlobalObject& global_object, Value options)
 }
 
 // 9.2.13 GetOption ( options, property, type, values, fallback ), https://tc39.es/ecma402/#sec-getoption
-Value get_option(GlobalObject& global_object, Value options, PropertyName const& property, Value::Type type, Vector<StringView> const& values, Fallback fallback)
+Value get_option(GlobalObject& global_object, Object const& options, PropertyName const& property, Value::Type type, Vector<StringView> const& values, Fallback fallback)
 {
     auto& vm = global_object.vm();
 
     // 1. Assert: Type(options) is Object.
-    VERIFY(options.is_object());
-
     // 2. Let value be ? Get(options, property).
-    auto value = options.get(global_object, property);
+    auto value = options.get(property);
     if (vm.exception())
         return {};
 
