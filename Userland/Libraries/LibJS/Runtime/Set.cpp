@@ -24,7 +24,7 @@ Set::~Set()
 
 void Set::visit_edges(Cell::Visitor& visitor)
 {
-    Object::visit_edges(visitor);
+    Base::visit_edges(visitor);
     for (auto& value : m_values)
         visitor.visit(value);
 }

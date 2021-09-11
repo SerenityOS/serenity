@@ -150,7 +150,7 @@ void SheetGlobalObject::initialize_global_object()
 
 void SheetGlobalObject::visit_edges(Visitor& visitor)
 {
-    GlobalObject::visit_edges(visitor);
+    Base::visit_edges(visitor);
     for (auto& it : m_sheet.cells()) {
         if (it.value->exception())
             visitor.visit(it.value->exception());

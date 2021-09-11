@@ -59,7 +59,7 @@ void WebAssemblyInstanceObject::initialize(JS::GlobalObject& global_object)
 
 void WebAssemblyInstanceObject::visit_edges(Visitor& visitor)
 {
-    Object::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(m_exports_object);
 }
 

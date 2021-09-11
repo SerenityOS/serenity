@@ -27,7 +27,7 @@ SymbolObject::~SymbolObject()
 
 void SymbolObject::visit_edges(Cell::Visitor& visitor)
 {
-    Object::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(&m_symbol);
 }
 

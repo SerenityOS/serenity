@@ -85,7 +85,7 @@ void FunctionObject::InstanceField::define_field(VM& vm, Object& receiver) const
 
 void FunctionObject::visit_edges(Visitor& visitor)
 {
-    Object::visit_edges(visitor);
+    Base::visit_edges(visitor);
 
     visitor.visit(m_home_object);
     visitor.visit(m_bound_this);

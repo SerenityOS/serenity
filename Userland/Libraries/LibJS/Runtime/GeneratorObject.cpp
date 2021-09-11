@@ -43,7 +43,7 @@ GeneratorObject::~GeneratorObject()
 
 void GeneratorObject::visit_edges(Cell::Visitor& visitor)
 {
-    Object::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(m_environment);
     visitor.visit(m_generating_function);
     if (m_previous_value.is_object())
