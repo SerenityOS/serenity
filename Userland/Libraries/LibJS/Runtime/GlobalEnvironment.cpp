@@ -13,8 +13,10 @@
 
 namespace JS {
 
-GlobalEnvironment::GlobalEnvironment(GlobalObject& global_object)
+// 9.1.2.5 NewGlobalEnvironment ( G, thisValue ), https://tc39.es/ecma262/#sec-newglobalenvironment
+GlobalEnvironment::GlobalEnvironment(GlobalObject& global_object, Object& this_value)
     : Environment(nullptr)
+    , m_global_this_value(&this_value)
 {
     m_object_record = global_object.heap().allocate<ObjectEnvironment>(global_object, global_object, ObjectEnvironment::IsWithEnvironment::No, nullptr);
     m_declarative_record = global_object.heap().allocate<DeclarativeEnvironment>(global_object);
@@ -24,6 +26,7 @@ void GlobalEnvironment::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_object_record);
+    visitor.visit(m_global_this_value);
     visitor.visit(m_declarative_record);
 }
 
@@ -46,11 +49,6 @@ bool GlobalEnvironment::delete_from_environment(FlyString const& name)
 }
 
 Value GlobalEnvironment::get_this_binding(GlobalObject&) const
-{
-    return &global_object();
-}
-
-Value GlobalEnvironment::global_this_value() const
 {
     return &global_object();
 }
