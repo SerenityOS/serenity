@@ -157,6 +157,8 @@ private:
     int m_ruler_thickness { 20 };
     int m_mouse_indicator_triangle_size { 5 };
 
+    float m_pixel_grid_threshold { 15.0f };
+
     Gfx::StandardCursor m_active_cursor { Gfx::StandardCursor::None };
 
     Selection m_selection;
