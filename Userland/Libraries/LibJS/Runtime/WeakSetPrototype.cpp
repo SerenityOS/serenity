@@ -11,7 +11,7 @@
 namespace JS {
 
 WeakSetPrototype::WeakSetPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -33,22 +33,10 @@ WeakSetPrototype::~WeakSetPrototype()
 {
 }
 
-WeakSet* WeakSetPrototype::typed_this(VM& vm, GlobalObject& global_object)
-{
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
-    if (!is<WeakSet>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "WeakSet");
-        return nullptr;
-    }
-    return static_cast<WeakSet*>(this_object);
-}
-
 // 24.4.3.1 WeakSet.prototype.add ( value ), https://tc39.es/ecma262/#sec-weakset.prototype.add
 JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::add)
 {
-    auto* weak_set = typed_this(vm, global_object);
+    auto* weak_set = typed_this_object(global_object);
     if (!weak_set)
         return {};
     auto value = vm.argument(0);
@@ -63,7 +51,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::add)
 // 24.4.3.3 WeakSet.prototype.delete ( value ), https://tc39.es/ecma262/#sec-weakset.prototype.delete
 JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::delete_)
 {
-    auto* weak_set = typed_this(vm, global_object);
+    auto* weak_set = typed_this_object(global_object);
     if (!weak_set)
         return {};
     auto value = vm.argument(0);
@@ -75,7 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::delete_)
 // 24.4.3.4 WeakSet.prototype.has ( value ), https://tc39.es/ecma262/#sec-weakset.prototype.has
 JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::has)
 {
-    auto* weak_set = typed_this(vm, global_object);
+    auto* weak_set = typed_this_object(global_object);
     if (!weak_set)
         return {};
     auto value = vm.argument(0);
