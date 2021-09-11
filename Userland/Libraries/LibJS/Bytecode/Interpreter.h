@@ -22,13 +22,14 @@ using RegisterWindow = Vector<Value>;
 
 class Interpreter {
 public:
-    explicit Interpreter(GlobalObject&);
+    Interpreter(GlobalObject&, Realm&);
     ~Interpreter();
 
     // FIXME: Remove this thing once we don't need it anymore!
     static Interpreter* current();
 
     GlobalObject& global_object() { return m_global_object; }
+    Realm& realm() { return m_realm; }
     VM& vm() { return m_vm; }
 
     Value run(Bytecode::Executable const&, Bytecode::BasicBlock const* entry_point = nullptr);
@@ -74,6 +75,7 @@ private:
 
     VM& m_vm;
     GlobalObject& m_global_object;
+    Realm& m_realm;
     NonnullOwnPtrVector<RegisterWindow> m_register_windows;
     Optional<BasicBlock const*> m_pending_jump;
     Value m_return_value;

@@ -11,7 +11,6 @@
 #include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/OrdinaryFunctionObject.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/Shape.h>
@@ -23,7 +22,7 @@ NonnullOwnPtr<Interpreter> Interpreter::create_with_existing_global_object(Globa
 {
     DeferGC defer_gc(global_object.heap());
     auto interpreter = adopt_own(*new Interpreter(global_object.vm()));
-    interpreter->m_global_object = make_handle(static_cast<Object*>(&global_object));
+    interpreter->m_global_object = make_handle(&global_object);
     return interpreter;
 }
 
@@ -78,6 +77,16 @@ GlobalObject& Interpreter::global_object()
 const GlobalObject& Interpreter::global_object() const
 {
     return static_cast<const GlobalObject&>(*m_global_object.cell());
+}
+
+Realm& Interpreter::realm()
+{
+    return static_cast<Realm&>(*m_realm.cell());
+}
+
+const Realm& Interpreter::realm() const
+{
+    return static_cast<const Realm&>(*m_realm.cell());
 }
 
 void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type, GlobalObject& global_object)
