@@ -428,7 +428,7 @@ Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueTyp
             }
         }
 
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAn, "Exported function");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Exported function");
         return {};
     }
     case Wasm::ValueType::ExternReference:
