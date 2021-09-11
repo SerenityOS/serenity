@@ -27,10 +27,10 @@ GlobalObject* get_function_realm(GlobalObject&, FunctionObject const&);
 bool is_compatible_property_descriptor(bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);
 bool validate_and_apply_property_descriptor(Object*, PropertyName const&, bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);
 Object* get_prototype_from_constructor(GlobalObject&, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)());
-Object* create_unmapped_arguments_object(GlobalObject&, Vector<Value> const& arguments);
-Object* create_mapped_arguments_object(GlobalObject&, FunctionObject&, Vector<FunctionNode::Parameter> const&, Vector<Value> const& arguments, Environment&);
+Object* create_unmapped_arguments_object(GlobalObject&, Span<Value> arguments);
+Object* create_mapped_arguments_object(GlobalObject&, FunctionObject&, Vector<FunctionNode::Parameter> const&, Span<Value> arguments, Environment&);
 Value canonical_numeric_index_string(GlobalObject&, PropertyName const&);
-String get_substitution(GlobalObject&, Utf16View const& matched, Utf16View const& str, size_t position, Vector<Value> const& captures, Value named_captures, Value replacement);
+String get_substitution(GlobalObject&, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement);
 
 enum class CallerMode {
     Strict,
