@@ -6,12 +6,13 @@
 
 #pragma once
 
+#include <LibJS/Runtime/PrototypeObject.h>
 #include <LibJS/Runtime/WeakMap.h>
 
 namespace JS {
 
-class WeakMapPrototype final : public Object {
-    JS_OBJECT(WeakMapPrototype, Object);
+class WeakMapPrototype final : public PrototypeObject<WeakMapPrototype, WeakMap> {
+    JS_PROTOTYPE_OBJECT(WeakMapPrototype, WeakMap, WeakMap);
 
 public:
     WeakMapPrototype(GlobalObject&);
