@@ -183,6 +183,13 @@ public:
         if (cell.is_marked())
             return;
         dbgln_if(HEAP_DEBUG, "  ! {}", &cell);
+
+        if (cell.state() == Cell::State::Zombie) {
+            dbgln("BUG! Marking a zombie cell, {} @ {:p}", cell.class_name(), &cell);
+            cell.vm().dump_backtrace();
+            VERIFY_NOT_REACHED();
+        }
+
         cell.set_marked(true);
         cell.visit_edges(*this);
     }
@@ -223,7 +230,12 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
                 dbgln_if(HEAP_DEBUG, "  ~ {}", cell);
                 if (should_store_swept_cells)
                     swept_cells.append(cell);
-                block.deallocate(cell);
+                if (m_zombify_dead_cells) {
+                    cell->set_state(Cell::State::Zombie);
+                    cell->did_become_zombie();
+                } else {
+                    block.deallocate(cell);
+                }
                 ++collected_cells;
                 collected_cell_bytes += block.cell_size();
             } else {

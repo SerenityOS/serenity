@@ -24,9 +24,12 @@ public:
     bool is_marked() const { return m_mark; }
     void set_marked(bool b) { m_mark = b; }
 
+    virtual void did_become_zombie() { }
+
     enum class State {
         Live,
         Dead,
+        Zombie,
     };
 
     State state() const { return m_state; }

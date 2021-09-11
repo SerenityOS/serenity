@@ -111,6 +111,7 @@ static consteval size_t __testjs_last() { return (AK::Detail::IntegralConstant<s
 static constexpr auto TOP_LEVEL_TEST_NAME = "__$$TOP_LEVEL$$__";
 extern RefPtr<JS::VM> g_vm;
 extern bool g_collect_on_every_allocation;
+extern bool g_zombify_dead_cells;
 extern bool g_run_bytecode;
 extern bool g_dump_bytecode;
 extern String g_currently_running_test;
@@ -266,6 +267,7 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
     JS::VM::InterpreterExecutionScope scope(*interpreter);
 
     interpreter->heap().set_should_collect_on_every_allocation(g_collect_on_every_allocation);
+    interpreter->heap().set_zombify_dead_cells(g_zombify_dead_cells);
 
     if (g_run_file) {
         auto result = g_run_file(test_path, *interpreter);

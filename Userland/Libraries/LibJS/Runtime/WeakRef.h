@@ -31,6 +31,7 @@ public:
 
 private:
     virtual void visit_edges(Visitor&) override;
+    virtual void did_become_zombie() override { deregister(); }
 
     Object* m_value { nullptr };
     u32 m_last_execution_generation { 0 };
