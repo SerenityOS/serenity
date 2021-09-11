@@ -248,6 +248,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     case SC_futex:
         return virt$futex(arg1);
     case SC_map_time_page:
+    case SC_perf_register_string:
+    case SC_perf_event:
         return -ENOSYS;
     default:
         reportln("\n=={}==  \033[31;1mUnimplemented syscall: {}\033[0m, {:p}", getpid(), Syscall::to_string((Syscall::Function)function), function);
