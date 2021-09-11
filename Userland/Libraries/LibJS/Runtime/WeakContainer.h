@@ -15,7 +15,7 @@ public:
     explicit WeakContainer(Heap&);
     virtual ~WeakContainer();
 
-    virtual void remove_swept_cells(Badge<Heap>, Vector<Cell*>&) = 0;
+    virtual void remove_swept_cells(Badge<Heap>, Span<Cell*>) = 0;
 
 protected:
     void deregister();

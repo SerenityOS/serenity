@@ -251,7 +251,7 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
     }
 
     for (auto& weak_container : m_weak_containers)
-        weak_container.remove_swept_cells({}, swept_cells);
+        weak_container.remove_swept_cells({}, swept_cells.span());
 
     if constexpr (HEAP_DEBUG) {
         for_each_block([&](auto& block) {

@@ -23,7 +23,7 @@ WeakSet::~WeakSet()
 {
 }
 
-void WeakSet::remove_swept_cells(Badge<Heap>, Vector<Cell*>& cells)
+void WeakSet::remove_swept_cells(Badge<Heap>, Span<Cell*> cells)
 {
     for (auto* cell : cells)
         m_values.remove(cell);

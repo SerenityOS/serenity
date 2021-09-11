@@ -42,10 +42,10 @@ bool FinalizationRegistry::remove_by_token(Object& unregister_token)
     return removed;
 }
 
-void FinalizationRegistry::remove_swept_cells(Badge<Heap>, Vector<Cell*>& cells)
+void FinalizationRegistry::remove_swept_cells(Badge<Heap>, Span<Cell*> cells)
 {
     auto any_cells_were_swept = false;
-    for (auto cell : cells) {
+    for (auto* cell : cells) {
         for (auto& record : m_records) {
             if (record.target != cell)
                 continue;
