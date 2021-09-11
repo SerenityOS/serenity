@@ -24,6 +24,8 @@ protected:
         : Object(prototype)
     {
     }
+
+    virtual void did_become_zombie() override { revoke_weak_ptrs(); }
 };
 
 }
