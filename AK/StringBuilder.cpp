@@ -148,9 +148,6 @@ void StringBuilder::append_escaped_for_json(StringView const& string)
 {
     for (auto ch : string) {
         switch (ch) {
-        case '\e':
-            append("\\u001B");
-            break;
         case '\b':
             append("\\b");
             break;
@@ -167,7 +164,10 @@ void StringBuilder::append_escaped_for_json(StringView const& string)
             append("\\\\");
             break;
         default:
-            append(ch);
+            if (ch >= 0 && ch <= 0x1f)
+                append(String::formatted("\\u{:04x}", ch));
+            else
+                append(ch);
         }
     }
 }
