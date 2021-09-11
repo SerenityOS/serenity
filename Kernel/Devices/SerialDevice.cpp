@@ -18,24 +18,30 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<SerialDevice> SerialDevice::must_create(size_t com_number)
 {
-    SerialDevice* device = nullptr;
+    // FIXME: This way of blindly doing release_value is really not a good thing, find
+    // a way to propagate errors back.
+    RefPtr<SerialDevice> serial_device;
     switch (com_number) {
-    case 0:
-        device = new SerialDevice(IOAddress(SERIAL_COM1_ADDR), 64);
+    case 0: {
+        serial_device = try_create_device<SerialDevice>(IOAddress(SERIAL_COM1_ADDR), 64).release_value();
         break;
-    case 1:
-        device = new SerialDevice(IOAddress(SERIAL_COM2_ADDR), 65);
+    }
+    case 1: {
+        serial_device = try_create_device<SerialDevice>(IOAddress(SERIAL_COM2_ADDR), 65).release_value();
         break;
-    case 2:
-        device = new SerialDevice(IOAddress(SERIAL_COM3_ADDR), 66);
+    }
+    case 2: {
+        serial_device = try_create_device<SerialDevice>(IOAddress(SERIAL_COM3_ADDR), 66).release_value();
         break;
-    case 3:
-        device = new SerialDevice(IOAddress(SERIAL_COM4_ADDR), 67);
+    }
+    case 3: {
+        serial_device = try_create_device<SerialDevice>(IOAddress(SERIAL_COM4_ADDR), 67).release_value();
         break;
+    }
     default:
         break;
     }
-    return adopt_ref_if_nonnull(device).release_nonnull();
+    return serial_device.release_nonnull();
 }
 
 UNMAP_AFTER_INIT SerialDevice::SerialDevice(IOAddress base_addr, unsigned minor)

@@ -102,10 +102,12 @@ public:
         DataReady = 0x01 << 0
     };
 
+    // FIXME: We expose this constructor to make try_create_device helper to work
+    SerialDevice(IOAddress base_addr, unsigned minor);
+
 private:
     friend class PCISerialDevice;
 
-    SerialDevice(IOAddress base_addr, unsigned minor);
 
     // ^CharacterDevice
     virtual StringView class_name() const override { return "SerialDevice"; }
