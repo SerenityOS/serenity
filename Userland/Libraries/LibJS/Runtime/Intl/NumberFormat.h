@@ -170,4 +170,9 @@ private:
     SignDisplay m_sign_display { SignDisplay::Invalid };    // [[SignDisplay]]
 };
 
+void set_number_format_digit_options(GlobalObject& global_object, NumberFormat& intl_object, Object const& options, int default_min_fraction_digits, int default_max_fraction_digits, NumberFormat::Notation notation);
+NumberFormat* initialize_number_format(GlobalObject& global_object, NumberFormat& number_format, Value locales_value, Value options_value);
+int currency_digits(StringView currency);
+void set_number_format_unit_options(GlobalObject& global_object, NumberFormat& intl_object, Object const& options);
+
 }
