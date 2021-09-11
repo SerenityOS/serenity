@@ -85,15 +85,10 @@ TEST_CASE(test_efault)
 
     // Test the page just below where the user VM ends.
     jerk_page = (u8*)mmap((void*)(user_range_ceiling - PAGE_SIZE), PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, 0, 0);
-    EXPECT_EQ(jerk_page, MAP_FAILED);
-    EXPECT_EQ(errno, EFAULT);
+    EXPECT_EQ(jerk_page, (u8*)(user_range_ceiling - PAGE_SIZE));
 
-    // Test the page just before that
-    jerk_page = (u8*)mmap((void*)(user_range_ceiling - (2 * PAGE_SIZE)), PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, -1, 0);
-    EXPECT_EQ(jerk_page, (u8*)(user_range_ceiling - (2 * PAGE_SIZE)));
-
-    EXPECT_OK(read, jerk_page, 4096);
-    EXPECT_EFAULT(read, jerk_page, 4097);
+    EXPECT_OK(read, jerk_page, PAGE_SIZE);
+    EXPECT_EFAULT(read, jerk_page, PAGE_SIZE + 1);
 
     // Test something that would wrap around the 2^32 mark.
     EXPECT_EFAULT(read, jerk_page, 0x50000000);
