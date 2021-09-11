@@ -9,13 +9,12 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
-#include <LibJS/Runtime/SetIterator.h>
 #include <LibJS/Runtime/SetIteratorPrototype.h>
 
 namespace JS {
 
 SetIteratorPrototype::SetIteratorPrototype(GlobalObject& global_object)
-    : Object(*global_object.iterator_prototype())
+    : PrototypeObject(*global_object.iterator_prototype())
 {
 }
 
@@ -37,27 +36,24 @@ SetIteratorPrototype::~SetIteratorPrototype()
 // 24.2.5.2.1 %SetIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%setiteratorprototype%.next
 JS_DEFINE_NATIVE_FUNCTION(SetIteratorPrototype::next)
 {
-    auto this_value = vm.this_value(global_object);
-    if (!this_value.is_object() || !is<SetIterator>(this_value.as_object())) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Set Iterator");
+    auto* set_iterator = typed_this_value(global_object);
+    if (vm.exception())
         return {};
-    }
 
-    auto& set_iterator = static_cast<SetIterator&>(this_value.as_object());
-    if (set_iterator.done())
+    if (set_iterator->done())
         return create_iterator_result_object(global_object, js_undefined(), true);
 
-    auto& set = set_iterator.set();
-    if (set_iterator.m_iterator == set.values().end()) {
-        set_iterator.m_done = true;
+    auto& set = set_iterator->set();
+    if (set_iterator->m_iterator == set.values().end()) {
+        set_iterator->m_done = true;
         return create_iterator_result_object(global_object, js_undefined(), true);
     }
 
-    auto iteration_kind = set_iterator.iteration_kind();
+    auto iteration_kind = set_iterator->iteration_kind();
     VERIFY(iteration_kind != Object::PropertyKind::Key);
 
-    auto value = *set_iterator.m_iterator;
-    ++set_iterator.m_iterator;
+    auto value = *set_iterator->m_iterator;
+    ++set_iterator->m_iterator;
     if (iteration_kind == Object::PropertyKind::Value)
         return create_iterator_result_object(global_object, value, false);
 
