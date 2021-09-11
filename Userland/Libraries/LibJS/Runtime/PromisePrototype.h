@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/PrototypeObject.h>
 
 namespace JS {
 
-class PromisePrototype final : public Object {
-    JS_OBJECT(PromisePrototype, Object);
+class PromisePrototype final : public PrototypeObject<PromisePrototype, Promise> {
+    JS_PROTOTYPE_OBJECT(PromisePrototype, Promise, Promise);
 
 public:
     PromisePrototype(GlobalObject&);
