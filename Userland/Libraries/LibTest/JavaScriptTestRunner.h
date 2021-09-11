@@ -326,7 +326,7 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
             }
         }
 
-        JS::Bytecode::Interpreter bytecode_interpreter(interpreter->global_object());
+        JS::Bytecode::Interpreter bytecode_interpreter(interpreter->global_object(), interpreter->realm());
         bytecode_interpreter.run(unit);
     } else {
         interpreter->run(interpreter->global_object(), *m_test_program);
@@ -348,7 +348,7 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
             }
         }
 
-        JS::Bytecode::Interpreter bytecode_interpreter(interpreter->global_object());
+        JS::Bytecode::Interpreter bytecode_interpreter(interpreter->global_object(), interpreter->realm());
         bytecode_interpreter.run(unit);
     } else {
         interpreter->run(interpreter->global_object(), *file_program.value());

@@ -23,6 +23,8 @@ public:
         return vm.heap().allocate_without_global_object<Realm>();
     }
 
+    void set_global_object(GlobalObject&, Object* this_value = nullptr);
+
     [[nodiscard]] GlobalObject& global_object() const { return *m_global_object; }
     [[nodiscard]] GlobalEnvironment& global_environment() const { return *m_global_environment; }
 

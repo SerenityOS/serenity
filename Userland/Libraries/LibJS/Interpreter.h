@@ -18,7 +18,9 @@
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Exception.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/MarkedValueList.h>
+#include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -37,8 +39,12 @@ public:
         DeferGC defer_gc(vm.heap());
         auto interpreter = adopt_own(*new Interpreter(vm));
         VM::InterpreterExecutionScope scope(*interpreter);
-        interpreter->m_global_object = make_handle(static_cast<Object*>(interpreter->heap().allocate_without_global_object<GlobalObjectType>(forward<Args>(args)...)));
-        static_cast<GlobalObjectType*>(interpreter->m_global_object.cell())->initialize_global_object();
+        auto* global_object = static_cast<GlobalObject*>(interpreter->heap().allocate_without_global_object<GlobalObjectType>(forward<Args>(args)...));
+        auto* realm = Realm::create(vm);
+        realm->set_global_object(*global_object, global_object);
+        interpreter->m_global_object = make_handle(global_object);
+        interpreter->m_realm = make_handle(realm);
+        static_cast<GlobalObjectType*>(global_object)->initialize_global_object();
         return interpreter;
     }
 
@@ -50,6 +56,9 @@ public:
 
     GlobalObject& global_object();
     const GlobalObject& global_object() const;
+
+    Realm& realm();
+    Realm const& realm() const;
 
     ALWAYS_INLINE VM& vm() { return *m_vm; }
     ALWAYS_INLINE const VM& vm() const { return *m_vm; }
@@ -91,7 +100,8 @@ private:
 
     NonnullRefPtr<VM> m_vm;
 
-    Handle<Object> m_global_object;
+    Handle<GlobalObject> m_global_object;
+    Handle<Realm> m_realm;
 };
 
 }

@@ -22,9 +22,10 @@ Interpreter* Interpreter::current()
     return s_current;
 }
 
-Interpreter::Interpreter(GlobalObject& global_object)
+Interpreter::Interpreter(GlobalObject& global_object, Realm& realm)
     : m_vm(global_object.vm())
     , m_global_object(global_object)
+    , m_realm(realm)
 {
     VERIFY(!s_current);
     s_current = this;
