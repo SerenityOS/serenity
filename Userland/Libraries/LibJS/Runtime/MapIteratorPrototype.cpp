@@ -9,13 +9,12 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
-#include <LibJS/Runtime/MapIterator.h>
 #include <LibJS/Runtime/MapIteratorPrototype.h>
 
 namespace JS {
 
 MapIteratorPrototype::MapIteratorPrototype(GlobalObject& global_object)
-    : Object(*global_object.iterator_prototype())
+    : PrototypeObject(*global_object.iterator_prototype())
 {
 }
 
@@ -35,26 +34,23 @@ MapIteratorPrototype::~MapIteratorPrototype()
 // 24.1.5.2.1 %MapIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next
 JS_DEFINE_NATIVE_FUNCTION(MapIteratorPrototype::next)
 {
-    auto this_value = vm.this_value(global_object);
-    if (!this_value.is_object() || !is<MapIterator>(this_value.as_object())) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Map Iterator");
+    auto* map_iterator = typed_this_value(global_object);
+    if (vm.exception())
         return {};
-    }
 
-    auto& map_iterator = static_cast<MapIterator&>(this_value.as_object());
-    if (map_iterator.done())
+    if (map_iterator->done())
         return create_iterator_result_object(global_object, js_undefined(), true);
 
-    auto& map = map_iterator.map();
-    if (map_iterator.m_iterator == map.entries().end()) {
-        map_iterator.m_done = true;
+    auto& map = map_iterator->map();
+    if (map_iterator->m_iterator == map.entries().end()) {
+        map_iterator->m_done = true;
         return create_iterator_result_object(global_object, js_undefined(), true);
     }
 
-    auto iteration_kind = map_iterator.iteration_kind();
+    auto iteration_kind = map_iterator->iteration_kind();
 
-    auto entry = *map_iterator.m_iterator;
-    ++map_iterator.m_iterator;
+    auto entry = *map_iterator->m_iterator;
+    ++map_iterator->m_iterator;
     if (iteration_kind == Object::PropertyKind::Key)
         return create_iterator_result_object(global_object, entry.key, false);
     else if (iteration_kind == Object::PropertyKind::Value)

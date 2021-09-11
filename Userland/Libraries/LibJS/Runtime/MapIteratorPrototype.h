@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/MapIterator.h>
+#include <LibJS/Runtime/PrototypeObject.h>
 
 namespace JS {
 
-class MapIteratorPrototype final : public Object {
-    JS_OBJECT(MapIteratorPrototype, Object)
+class MapIteratorPrototype final : public PrototypeObject<MapIteratorPrototype, MapIterator> {
+    JS_PROTOTYPE_OBJECT(MapIteratorPrototype, MapIterator, MapIterator);
 
 public:
     MapIteratorPrototype(GlobalObject&);
