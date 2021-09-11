@@ -63,10 +63,10 @@ Value PromiseAllResolveElementFunction::resolve_element()
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    m_values.values[m_index] = vm.argument(0);
+    m_values.values()[m_index] = vm.argument(0);
 
     if (--m_remaining_elements.value == 0) {
-        auto values_array = Array::create_from(global_object, m_values.values);
+        auto values_array = Array::create_from(global_object, m_values.values());
         return vm.call(*m_capability.resolve, js_undefined(), values_array);
     }
 
@@ -92,10 +92,10 @@ Value PromiseAllSettledResolveElementFunction::resolve_element()
     object->create_data_property_or_throw(vm.names.status, js_string(vm, "fulfilled"sv));
     object->create_data_property_or_throw(vm.names.value, vm.argument(0));
 
-    m_values.values[m_index] = object;
+    m_values.values()[m_index] = object;
 
     if (--m_remaining_elements.value == 0) {
-        auto values_array = Array::create_from(global_object, m_values.values);
+        auto values_array = Array::create_from(global_object, m_values.values());
         return vm.call(*m_capability.resolve, js_undefined(), values_array);
     }
 
@@ -121,10 +121,10 @@ Value PromiseAllSettledRejectElementFunction::resolve_element()
     object->create_data_property_or_throw(vm.names.status, js_string(vm, "rejected"sv));
     object->create_data_property_or_throw(vm.names.reason, vm.argument(0));
 
-    m_values.values[m_index] = object;
+    m_values.values()[m_index] = object;
 
     if (--m_remaining_elements.value == 0) {
-        auto values_array = Array::create_from(global_object, m_values.values);
+        auto values_array = Array::create_from(global_object, m_values.values());
         return vm.call(*m_capability.resolve, js_undefined(), values_array);
     }
 
@@ -146,10 +146,10 @@ Value PromiseAnyRejectElementFunction::resolve_element()
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    m_values.values[m_index] = vm.argument(0);
+    m_values.values()[m_index] = vm.argument(0);
 
     if (--m_remaining_elements.value == 0) {
-        auto errors_array = Array::create_from(global_object, m_values.values);
+        auto errors_array = Array::create_from(global_object, m_values.values());
 
         auto* error = AggregateError::create(global_object);
         error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true });
