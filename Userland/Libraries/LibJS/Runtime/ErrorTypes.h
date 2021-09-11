@@ -63,6 +63,7 @@
     M(NotAFunctionNoParam, "Not a function")                                                                                            \
     M(NotAn, "Not an {} object")                                                                                                        \
     M(NotAnObject, "{} is not an object")                                                                                               \
+    M(NotAnObjectOfType, "Not an object of type {}")                                                                                    \
     M(NotAnObjectOrNull, "{} is neither an object nor null")                                                                            \
     M(NotAnObjectOrString, "{} is neither an object nor a string")                                                                      \
     M(NotAString, "{} is not a string")                                                                                                 \
