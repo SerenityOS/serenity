@@ -167,6 +167,7 @@ class PromiseResolveThenableJob;
 class PropertyAttributes;
 class PropertyDescriptor;
 class PropertyName;
+class Realm;
 class Reference;
 class ScopeNode;
 class Shape;

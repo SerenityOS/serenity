@@ -116,6 +116,7 @@ set(SOURCES
     Runtime/PropertyDescriptor.cpp
     Runtime/ProxyConstructor.cpp
     Runtime/ProxyObject.cpp
+    Runtime/Realm.cpp
     Runtime/Reference.cpp
     Runtime/ReflectObject.cpp
     Runtime/RegExpConstructor.cpp
