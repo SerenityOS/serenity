@@ -13,6 +13,8 @@ interface Document : Node {
 
     attribute DOMString cookie;
 
+    readonly attribute USVString referrer;
+
     Element? getElementById(DOMString id);
     HTMLCollection getElementsByName(DOMString name);
     HTMLCollection getElementsByTagName(DOMString tagName);

@@ -964,4 +964,10 @@ bool Document::has_a_style_sheet_that_is_blocking_scripts() const
     return browsing_context()->container_document()->m_script_blocking_style_sheet_counter > 0;
 }
 
+String Document::referrer() const
+{
+    // FIXME: Return the document's actual referrer.
+    return "";
+}
+
 }
