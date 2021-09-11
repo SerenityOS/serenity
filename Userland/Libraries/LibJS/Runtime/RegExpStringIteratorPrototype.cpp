@@ -7,14 +7,13 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/RegExpPrototype.h>
-#include <LibJS/Runtime/RegExpStringIterator.h>
 #include <LibJS/Runtime/RegExpStringIteratorPrototype.h>
 #include <LibJS/Runtime/Utf16String.h>
 
 namespace JS {
 
 RegExpStringIteratorPrototype::RegExpStringIteratorPrototype(GlobalObject& global_object)
-    : Object(*global_object.iterator_prototype())
+    : PrototypeObject(*global_object.iterator_prototype())
 {
 }
 
@@ -34,27 +33,24 @@ void RegExpStringIteratorPrototype::initialize(GlobalObject& global_object)
 JS_DEFINE_NATIVE_FUNCTION(RegExpStringIteratorPrototype::next)
 {
     // For details, see the 'closure' of: https://tc39.es/ecma262/#sec-createregexpstringiterator
-    auto this_value = vm.this_value(global_object);
-    if (!this_value.is_object() || !is<RegExpStringIterator>(this_value.as_object())) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "RegExp String Iterator");
+    auto* iterator = typed_this_value(global_object);
+    if (vm.exception())
         return {};
-    }
 
-    auto& iterator = static_cast<RegExpStringIterator&>(this_value.as_object());
-    if (iterator.done())
+    if (iterator->done())
         return create_iterator_result_object(global_object, js_undefined(), true);
 
-    auto match = regexp_exec(global_object, iterator.regexp_object(), iterator.string());
+    auto match = regexp_exec(global_object, iterator->regexp_object(), iterator->string());
     if (vm.exception())
         return {};
 
     if (match.is_null()) {
-        iterator.set_done();
+        iterator->set_done();
         return create_iterator_result_object(global_object, js_undefined(), true);
     }
 
-    if (!iterator.global()) {
-        iterator.set_done();
+    if (!iterator->global()) {
+        iterator->set_done();
         return create_iterator_result_object(global_object, match, false);
     }
 
@@ -69,16 +65,16 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpStringIteratorPrototype::next)
         return {};
 
     if (match_string.is_empty()) {
-        auto last_index_value = iterator.regexp_object().get(vm.names.lastIndex);
+        auto last_index_value = iterator->regexp_object().get(vm.names.lastIndex);
         if (vm.exception())
             return {};
         auto last_index = last_index_value.to_length(global_object);
         if (vm.exception())
             return {};
 
-        last_index = advance_string_index(iterator.string().view(), last_index, iterator.unicode());
+        last_index = advance_string_index(iterator->string().view(), last_index, iterator->unicode());
 
-        iterator.regexp_object().set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes);
+        iterator->regexp_object().set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes);
         if (vm.exception())
             return {};
     }
