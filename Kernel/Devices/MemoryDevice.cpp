@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Memory.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/Devices/MemoryDevice.h>
 #include <Kernel/Firmware/BIOS.h>

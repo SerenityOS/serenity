@@ -8,7 +8,6 @@
 
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/PCI/IDs.h>
-#include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Devices/SerialDevice.h>
 
 namespace Kernel {

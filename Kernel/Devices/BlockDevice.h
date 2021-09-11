@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Weakable.h>
 #include <Kernel/Devices/Device.h>
 
 namespace Kernel {

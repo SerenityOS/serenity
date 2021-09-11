@@ -6,7 +6,6 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/Devices/Device.h>
-#include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Sections.h>
