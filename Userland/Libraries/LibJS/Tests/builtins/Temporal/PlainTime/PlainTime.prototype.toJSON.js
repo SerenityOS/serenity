@@ -13,6 +13,6 @@ describe("errors", () => {
     test("this value must be a Temporal.PlainTime object", () => {
         expect(() => {
             Temporal.PlainTime.prototype.toJSON.call("foo");
-        }).toThrowWithMessage(TypeError, "Not a Temporal.PlainTime");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.PlainTime");
     });
 });

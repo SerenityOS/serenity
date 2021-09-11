@@ -60,6 +60,6 @@ describe("errors", () => {
     test("this value must be a Temporal.Instant object", () => {
         expect(() => {
             Temporal.Instant.prototype.toString.call("foo");
-        }).toThrowWithMessage(TypeError, "Not a Temporal.Instant");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.Instant");
     });
 });

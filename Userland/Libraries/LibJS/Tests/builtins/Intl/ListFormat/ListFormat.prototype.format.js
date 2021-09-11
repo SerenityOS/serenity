@@ -4,7 +4,7 @@ describe("errors", () => {
     test("called on non-ListFormat object", () => {
         expect(() => {
             Intl.ListFormat.prototype.format([]);
-        }).toThrowWithMessage(TypeError, "Not a Intl.ListFormat object");
+        }).toThrowWithMessage(TypeError, "Not an object of type Intl.ListFormat");
     });
 
     test("called with non-string iterable", () => {

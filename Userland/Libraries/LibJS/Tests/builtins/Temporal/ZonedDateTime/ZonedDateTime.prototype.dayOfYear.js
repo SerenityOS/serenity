@@ -10,6 +10,6 @@ describe("errors", () => {
     test("this value must be a Temporal.ZonedDateTime object", () => {
         expect(() => {
             Reflect.get(Temporal.ZonedDateTime.prototype, "dayOfYear", "foo");
-        }).toThrowWithMessage(TypeError, "Not a Temporal.ZonedDateTime");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.ZonedDateTime");
     });
 });

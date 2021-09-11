@@ -27,7 +27,7 @@ describe("errors", () => {
     test("this value must be a Temporal.Calendar object", () => {
         expect(() => {
             Temporal.Calendar.prototype.fields.call("foo");
-        }).toThrowWithMessage(TypeError, "Not a Temporal.Calendar");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.Calendar");
     });
 
     test("iterator values must be strings", () => {

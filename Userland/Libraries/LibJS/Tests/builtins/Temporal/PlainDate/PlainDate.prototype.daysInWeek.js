@@ -9,6 +9,6 @@ describe("errors", () => {
     test("this value must be a Temporal.PlainDate object", () => {
         expect(() => {
             Reflect.get(Temporal.PlainDate.prototype, "daysInWeek", "foo");
-        }).toThrowWithMessage(TypeError, "Not a Temporal.PlainDate");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.PlainDate");
     });
 });

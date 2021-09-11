@@ -54,6 +54,6 @@ describe("errors", () => {
     test("this value must be a Temporal.PlainTime object", () => {
         expect(() => {
             Temporal.PlainTime.prototype.toString.call("foo");
-        }).toThrowWithMessage(TypeError, "Not a Temporal.PlainTime");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.PlainTime");
     });
 });

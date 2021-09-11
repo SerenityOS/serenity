@@ -13,6 +13,6 @@ describe("errors", () => {
     test("this value must be a Temporal.TimeZone object", () => {
         expect(() => {
             Temporal.TimeZone.prototype.toString.call("foo");
-        }).toThrowWithMessage(TypeError, "Not a Temporal.TimeZone");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.TimeZone");
     });
 });

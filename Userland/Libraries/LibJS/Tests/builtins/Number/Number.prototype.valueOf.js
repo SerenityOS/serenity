@@ -14,7 +14,7 @@ describe("errors", () => {
         [true, [], {}, Symbol("foo"), "bar", 1n].forEach(value => {
             expect(() => Number.prototype.valueOf.call(value)).toThrowWithMessage(
                 TypeError,
-                "Not a Number object"
+                "Not an object of type Number"
             );
         });
     });

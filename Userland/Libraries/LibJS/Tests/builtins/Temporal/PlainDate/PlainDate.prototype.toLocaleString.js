@@ -18,6 +18,6 @@ describe("errors", () => {
     test("this value must be a Temporal.PlainDate object", () => {
         expect(() => {
             Temporal.PlainDate.prototype.toLocaleString.call("foo");
-        }).toThrowWithMessage(TypeError, "Not a Temporal.PlainDate");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.PlainDate");
     });
 });
