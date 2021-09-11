@@ -24,7 +24,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::grow)
         return {};
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object || !is<WebAssemblyMemoryObject>(this_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WebAssembly.Memory");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Memory");
         return {};
     }
     auto* memory_object = static_cast<WebAssemblyMemoryObject*>(this_object);
@@ -46,7 +46,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::buffer_getter)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object || !is<WebAssemblyMemoryObject>(this_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WebAssembly.Memory");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Memory");
         return {};
     }
     auto* memory_object = static_cast<WebAssemblyMemoryObject*>(this_object);

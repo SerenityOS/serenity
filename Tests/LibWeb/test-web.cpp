@@ -61,7 +61,7 @@ TESTJS_GLOBAL_FUNCTION(after_initial_page_load, afterInitialPageLoad)
     auto function = vm.argument(0);
     if (!function.is_function()) {
         dbgln("afterInitialPageLoad argument is not a function");
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Function");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
         return {};
     }
 
@@ -76,7 +76,7 @@ TESTJS_GLOBAL_FUNCTION(before_initial_page_load, beforeInitialPageLoad)
     auto function = vm.argument(0);
     if (!function.is_function()) {
         dbgln("beforeInitialPageLoad argument is not a function");
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Function");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
         return {};
     }
 
