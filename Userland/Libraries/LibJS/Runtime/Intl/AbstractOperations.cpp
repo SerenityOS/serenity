@@ -690,7 +690,7 @@ Optional<int> default_number_option(GlobalObject& global_object, Value value, in
 }
 
 // 9.2.15 GetNumberOption ( options, property, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-getnumberoption
-Optional<int> get_number_option(GlobalObject& global_object, Object& options, PropertyName const& property, int minimum, int maximum, Optional<int> fallback)
+Optional<int> get_number_option(GlobalObject& global_object, Object const& options, PropertyName const& property, int minimum, int maximum, Optional<int> fallback)
 {
     auto& vm = global_object.vm();
 
