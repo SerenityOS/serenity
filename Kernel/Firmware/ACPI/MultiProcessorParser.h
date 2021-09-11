@@ -7,9 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/Memory/Region.h>
 #include <Kernel/PhysicalAddress.h>
-#include <Kernel/VirtualAddress.h>
 
 namespace Kernel {
 namespace MultiProcessor {
