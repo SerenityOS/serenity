@@ -84,6 +84,7 @@ protected:
     virtual ErrorOr<size_t> protocol_send(const UserOrKernelBuffer&, size_t) { return ENOTIMPL; }
     virtual ErrorOr<void> protocol_connect(OpenFileDescription&, ShouldBlock) { return {}; }
     virtual ErrorOr<u16> protocol_allocate_local_port() { return ENOPROTOOPT; }
+    virtual ErrorOr<size_t> protocol_size(ReadonlyBytes /* raw_ipv4_packet */) { return ENOTIMPL; }
     virtual bool protocol_is_disconnected() const { return false; }
 
     virtual void shut_down_for_reading() override;
