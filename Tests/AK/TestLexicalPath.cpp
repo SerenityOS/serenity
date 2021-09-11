@@ -128,6 +128,19 @@ TEST_CASE(trailing_slash)
     EXPECT_EQ(path.parts_view().size(), 2u);
 }
 
+TEST_CASE(resolve_absolute_path)
+{
+    EXPECT_EQ(LexicalPath::absolute_path("/home/anon", "foo.txt"), "/home/anon/foo.txt");
+    EXPECT_EQ(LexicalPath::absolute_path("/home/anon/", "foo.txt"), "/home/anon/foo.txt");
+    EXPECT_EQ(LexicalPath::absolute_path("/home/anon", "././foo.txt"), "/home/anon/foo.txt");
+    EXPECT_EQ(LexicalPath::absolute_path("/home/anon/quux", "../foo.txt"), "/home/anon/foo.txt");
+    EXPECT_EQ(LexicalPath::absolute_path("/home/anon/quux", "../test/foo.txt"), "/home/anon/test/foo.txt");
+    EXPECT_EQ(LexicalPath::absolute_path("quux", "../test/foo.txt"), "test/foo.txt");
+    EXPECT_EQ(LexicalPath::absolute_path("quux", "../../test/foo.txt"), "../test/foo.txt");
+    EXPECT_EQ(LexicalPath::absolute_path("quux/bar", "../../test/foo.txt"), "test/foo.txt");
+    EXPECT_EQ(LexicalPath::absolute_path("quux/bar/", "../../test/foo.txt"), "test/foo.txt");
+}
+
 TEST_CASE(has_extension)
 {
     {
