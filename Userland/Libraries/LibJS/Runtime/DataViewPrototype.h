@@ -7,11 +7,12 @@
 #pragma once
 
 #include <LibJS/Runtime/DataView.h>
+#include <LibJS/Runtime/PrototypeObject.h>
 
 namespace JS {
 
-class DataViewPrototype final : public Object {
-    JS_OBJECT(DataViewPrototype, Object);
+class DataViewPrototype final : public PrototypeObject<DataViewPrototype, DataView> {
+    JS_PROTOTYPE_OBJECT(DataViewPrototype, DataView, DataView);
 
 public:
     DataViewPrototype(GlobalObject&);
