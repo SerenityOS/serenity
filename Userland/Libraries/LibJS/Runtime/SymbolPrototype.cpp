@@ -48,7 +48,7 @@ static Value this_symbol_value(GlobalObject& global_object, Value value)
     if (value.is_object() && is<SymbolObject>(value.as_object()))
         return static_cast<SymbolObject&>(value.as_object()).value_of();
     auto& vm = global_object.vm();
-    vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Symbol");
+    vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Symbol");
     return {};
 }
 

@@ -49,7 +49,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
     if (!this_object)
         return {};
     if (!this_object->is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Function");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
         return {};
     }
     auto& function = static_cast<FunctionObject&>(*this_object);
@@ -70,7 +70,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
     if (!this_object)
         return {};
     if (!this_object->is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Function");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
         return {};
     }
     auto& this_function = static_cast<FunctionObject&>(*this_object);
@@ -92,7 +92,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
     if (!this_object)
         return {};
     if (!this_object->is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Function");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
         return {};
     }
     auto& function = static_cast<FunctionObject&>(*this_object);
@@ -112,7 +112,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
     if (!this_object)
         return {};
     if (!this_object->is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Function");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
         return {};
     }
     String function_name;

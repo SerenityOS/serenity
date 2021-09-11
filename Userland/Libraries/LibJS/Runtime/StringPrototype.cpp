@@ -175,7 +175,7 @@ static Value this_string_value(GlobalObject& global_object, Value value)
     if (value.is_object() && is<StringObject>(value.as_object()))
         return static_cast<StringObject&>(value.as_object()).value_of();
     auto& vm = global_object.vm();
-    vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "String");
+    vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "String");
     return {};
 }
 

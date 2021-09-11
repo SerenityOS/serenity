@@ -36,7 +36,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpStringIteratorPrototype::next)
     // For details, see the 'closure' of: https://tc39.es/ecma262/#sec-createregexpstringiterator
     auto this_value = vm.this_value(global_object);
     if (!this_value.is_object() || !is<RegExpStringIterator>(this_value.as_object())) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "RegExp String Iterator");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "RegExp String Iterator");
         return {};
     }
 
