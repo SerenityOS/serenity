@@ -50,6 +50,7 @@ class VirtualConsole final : public TTY
     , public VT::TerminalClient {
     AK_MAKE_ETERNAL
     friend class ConsoleManagement;
+    friend class DeviceManagement;
     friend class ConsoleImpl;
     friend class VT::Terminal;
 
@@ -84,11 +85,9 @@ public:
 
     void emit_char(char);
 
-    // FIXME: We expose these constructors to make try_create_device helper to work
+private:
     explicit VirtualConsole(const unsigned index);
     VirtualConsole(const unsigned index, const CircularQueue<char, 16384>&);
-
-private:
     // ^KeyboardClient
     virtual void on_key_pressed(KeyEvent) override;
 

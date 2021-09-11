@@ -12,14 +12,15 @@ namespace Kernel {
 
 class ZeroDevice final : public CharacterDevice {
     AK_MAKE_ETERNAL
+    friend class DeviceManagement;
+
 public:
     static NonnullRefPtr<ZeroDevice> must_create();
     virtual ~ZeroDevice() override;
 
-    // FIXME: We expose this constructor to make try_create_device helper to work
+private:
     ZeroDevice();
 
-private:
     // ^CharacterDevice
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;

@@ -12,14 +12,15 @@ namespace Kernel {
 
 class NullDevice final : public CharacterDevice {
     AK_MAKE_ETERNAL
+    friend class DeviceManagement;
+
 public:
-    NullDevice();
     virtual ~NullDevice() override;
 
-    static void initialize();
-    static NullDevice& the();
+    static NonnullRefPtr<NullDevice> must_initialize();
 
 private:
+    NullDevice();
     // ^CharacterDevice
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;

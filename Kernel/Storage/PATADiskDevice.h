@@ -20,6 +20,7 @@ class IDEController;
 class IDEChannel;
 class PATADiskDevice final : public StorageDevice {
     friend class IDEController;
+    friend class DeviceManagement;
     AK_MAKE_ETERNAL
 public:
     // Type of drive this IDEDiskDevice is on the ATA channel.
@@ -44,10 +45,9 @@ public:
     virtual void start_request(AsyncBlockDeviceRequest&) override;
     virtual String storage_name() const override;
 
-    // FIXME: We expose this constructor to make try_create_device helper to work
+private:
     PATADiskDevice(const IDEController&, IDEChannel&, DriveType, InterfaceType, u16, u64);
 
-private:
     // ^DiskDevice
     virtual StringView class_name() const override;
 

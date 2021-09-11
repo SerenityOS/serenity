@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/IO.h>
 #include <Kernel/Sections.h>
@@ -23,19 +24,19 @@ UNMAP_AFTER_INIT NonnullRefPtr<SerialDevice> SerialDevice::must_create(size_t co
     RefPtr<SerialDevice> serial_device;
     switch (com_number) {
     case 0: {
-        serial_device = try_create_device<SerialDevice>(IOAddress(SERIAL_COM1_ADDR), 64).release_value();
+        serial_device = DeviceManagement::try_create_device<SerialDevice>(IOAddress(SERIAL_COM1_ADDR), 64).release_value();
         break;
     }
     case 1: {
-        serial_device = try_create_device<SerialDevice>(IOAddress(SERIAL_COM2_ADDR), 65).release_value();
+        serial_device = DeviceManagement::try_create_device<SerialDevice>(IOAddress(SERIAL_COM2_ADDR), 65).release_value();
         break;
     }
     case 2: {
-        serial_device = try_create_device<SerialDevice>(IOAddress(SERIAL_COM3_ADDR), 66).release_value();
+        serial_device = DeviceManagement::try_create_device<SerialDevice>(IOAddress(SERIAL_COM3_ADDR), 66).release_value();
         break;
     }
     case 3: {
-        serial_device = try_create_device<SerialDevice>(IOAddress(SERIAL_COM4_ADDR), 67).release_value();
+        serial_device = DeviceManagement::try_create_device<SerialDevice>(IOAddress(SERIAL_COM4_ADDR), 67).release_value();
         break;
     }
     default:
