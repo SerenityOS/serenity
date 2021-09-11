@@ -94,7 +94,7 @@ private:
 
 // 27.2.4.2.3 Promise.allSettled Reject Element Functions, https://tc39.es/ecma262/#sec-promise.allsettled-reject-element-functions
 class PromiseAllSettledRejectElementFunction final : public PromiseResolvingElementFunction {
-    JS_OBJECT(PromiseResolvingFunction, NativeFunction);
+    JS_OBJECT(PromiseResolvingFunction, PromiseResolvingElementFunction);
 
 public:
     static PromiseAllSettledRejectElementFunction* create(GlobalObject&, size_t, PromiseValueList&, PromiseCapability, RemainingElements&);
@@ -108,7 +108,7 @@ private:
 
 // 27.2.4.3.2 Promise.any Reject Element Functions, https://tc39.es/ecma262/#sec-promise.any-reject-element-functions
 class PromiseAnyRejectElementFunction final : public PromiseResolvingElementFunction {
-    JS_OBJECT(PromiseResolvingFunction, NativeFunction);
+    JS_OBJECT(PromiseResolvingFunction, PromiseResolvingElementFunction);
 
 public:
     static PromiseAnyRejectElementFunction* create(GlobalObject&, size_t, PromiseValueList&, PromiseCapability, RemainingElements&);
