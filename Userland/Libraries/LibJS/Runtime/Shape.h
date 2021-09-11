@@ -88,6 +88,7 @@ public:
 private:
     virtual const char* class_name() const override { return "Shape"; }
     virtual void visit_edges(Visitor&) override;
+    virtual void did_become_zombie() override;
 
     Shape* get_or_prune_cached_forward_transition(TransitionKey const&);
     void ensure_property_table() const;
