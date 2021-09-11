@@ -395,6 +395,9 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             return focus_next_element();
     }
 
+    if (!layout_root())
+        return false;
+
     if (layout_root()->selection().is_valid()) {
         auto range = layout_root()->selection().to_dom_range()->normalized();
         if (range->start_container()->is_editable()) {
