@@ -74,5 +74,5 @@ All other characters are treated normally.
 
 ## See Also
 
-* [more(1)](more.md) For a simpler pager that less implements.
-* [man(1)](man.md) For serenity's manual pager, that uses less.
+* [`more`(1)](more.md) For a simpler pager that less implements.
+* [`man`(1)](man.md) For serenity's manual pager, that uses less.

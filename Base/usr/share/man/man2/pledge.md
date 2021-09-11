@@ -20,7 +20,7 @@ Note that `pledge()` can be called repeatedly to remove previously-pledged promi
 
 `promises` are applied to the current process, and will also be inherited by children created by [`fork`(2)](fork.md).
 
-`execpromises` are applied if/when a new process image is created with [`exec(2)`](exec.md).
+`execpromises` are applied if/when a new process image is created with [`exec`(2)](exec.md).
 
 If `promises` or `execpromises` is null, the corresponding value is unchanged.
 
@@ -35,26 +35,26 @@ If the process later attempts to use any system functionality it has previously 
 * `id`: Ability to change UID/GID
 * `tty`: TTY related functionality
 * `proc`: Process and scheduling related functionality
-* `exec`: The [`exec(2)`](exec.md) syscall
+* `exec`: The [`exec`(2)](exec.md) syscall
 * `unix`: UNIX local domain sockets
 * `inet`: IPv4 domain sockets
-* `accept`: May use [`accept(2)`](accept.md) to accept incoming socket connections on already listening sockets (\*)
+* `accept`: May use [`accept`(2)](accept.md) to accept incoming socket connections on already listening sockets (\*)
 * `rpath`: "Read" filesystem access
 * `wpath`: "Write" filesystem access
 * `cpath`: "Create" filesystem access
 * `dpath`: Creating new device files
 * `chown`: Changing file owner/group
 * `fattr`: Changing file attributes/permissions
-* `chroot`: The [`chroot(2)`](chroot.md) syscall (\*)
-* `video`: May use [`ioctl(2)`](ioctl.md) and [`mmap(2)`](mmap.md) on framebuffer video devices
+* `chroot`: The [`chroot`(2)](chroot.md) syscall (\*)
+* `video`: May use [`ioctl`(2)](ioctl.md) and [`mmap`(2)](mmap.md) on framebuffer video devices
 * `settime`: Changing the system time and date
 * `setkeymap`: Changing the system keyboard layout (\*)
 * `sigaction`: Change signal handlers and dispositions (\*)
 * `sendfd`: Send file descriptors over a local socket
 * `recvfd`: Receive file descriptors over a local socket
-* `ptrace`: The [`ptrace(2)`](ptrace.md) syscall (\*)
-* `prot_exec`: [`mmap(2)`](mmap.md) and [`mprotect(2)`](mprotect.md) with `PROT_EXEC`
-* `map_fixed`: [`mmap(2)`](mmap.md) with `MAP_FIXED` (\*)
+* `ptrace`: The [`ptrace`(2)](ptrace.md) syscall (\*)
+* `prot_exec`: [`mmap`(2)](mmap.md) and [`mprotect`(2)](mprotect.md) with `PROT_EXEC`
+* `map_fixed`: [`mmap`(2)](mmap.md) with `MAP_FIXED` (\*)
 
 Promises marked with an asterisk (\*) are SerenityOS specific extensions not supported by the original OpenBSD `pledge()`.
 
