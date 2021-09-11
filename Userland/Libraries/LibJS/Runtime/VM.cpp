@@ -757,8 +757,15 @@ void VM::promise_rejection_tracker(const Promise& promise, Promise::RejectionOpe
 
 void VM::dump_backtrace() const
 {
-    for (ssize_t i = m_execution_context_stack.size() - 1; i >= 0; --i)
-        dbgln("-> {}", m_execution_context_stack[i]->function_name);
+    for (ssize_t i = m_execution_context_stack.size() - 1; i >= 0; --i) {
+        auto& frame = m_execution_context_stack[i];
+        if (frame->current_node) {
+            auto& source_range = frame->current_node->source_range();
+            dbgln("-> {} @ {}:{},{}", frame->function_name, source_range.filename, source_range.start.line, source_range.start.column);
+        } else {
+            dbgln("-> {}", frame->function_name);
+        }
+    }
 }
 
 void VM::dump_environment_chain() const
