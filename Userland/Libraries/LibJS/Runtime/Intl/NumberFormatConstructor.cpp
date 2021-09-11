@@ -24,7 +24,7 @@ static Vector<StringView> const& number_format_relevant_extension_keys()
 }
 
 // 15.1.1 SetNumberFormatDigitOptions ( intlObj, options, mnfdDefault, mxfdDefault, notation ), https://tc39.es/ecma402/#sec-setnfdigitoptions
-static void set_number_format_digit_options(GlobalObject& global_object, NumberFormat& intl_object, Object& options, int default_min_fraction_digits, int default_max_fraction_digits, NumberFormat::Notation notation)
+static void set_number_format_digit_options(GlobalObject& global_object, NumberFormat& intl_object, Object const& options, int default_min_fraction_digits, int default_max_fraction_digits, NumberFormat::Notation notation)
 {
     auto& vm = global_object.vm();
 
@@ -147,7 +147,7 @@ static int currency_digits(StringView currency)
 }
 
 // 15.1.13 SetNumberFormatUnitOptions ( intlObj, options ), https://tc39.es/ecma402/#sec-setnumberformatunitoptions
-static void set_number_format_unit_options(GlobalObject& global_object, NumberFormat& intl_object, Object& options)
+static void set_number_format_unit_options(GlobalObject& global_object, NumberFormat& intl_object, Object const& options)
 {
     auto& vm = global_object.vm();
 
