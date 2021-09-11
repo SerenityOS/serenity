@@ -4,14 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Array.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Hex.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
-#include <AK/Vector.h>
 
 namespace AK {
 

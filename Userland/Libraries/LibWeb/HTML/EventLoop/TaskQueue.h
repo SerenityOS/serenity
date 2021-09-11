@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/OwnPtr.h>
 #include <AK/Queue.h>
 #include <LibWeb/HTML/EventLoop/Task.h>
 

@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Concepts.h>
-#include <AK/StdLibExtraDetails.h>
 #include <AK/Types.h>
 
 namespace AK {

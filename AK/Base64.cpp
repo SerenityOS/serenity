@@ -10,7 +10,6 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
-#include <AK/Types.h>
 #include <AK/Vector.h>
 
 namespace AK {
