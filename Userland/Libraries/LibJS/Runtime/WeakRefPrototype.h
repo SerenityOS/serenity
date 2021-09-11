@@ -6,12 +6,13 @@
 
 #pragma once
 
+#include <LibJS/Runtime/PrototypeObject.h>
 #include <LibJS/Runtime/WeakRef.h>
 
 namespace JS {
 
-class WeakRefPrototype final : public Object {
-    JS_OBJECT(WeakRefPrototype, Object);
+class WeakRefPrototype final : public PrototypeObject<WeakRefPrototype, WeakRef> {
+    JS_PROTOTYPE_OBJECT(WeakRefPrototype, WeakRef, WeakRef);
 
 public:
     WeakRefPrototype(GlobalObject&);
