@@ -12,7 +12,7 @@
 namespace JS {
 
 MapPrototype::MapPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -42,22 +42,10 @@ MapPrototype::~MapPrototype()
 {
 }
 
-Map* MapPrototype::typed_this(VM& vm, GlobalObject& global_object)
-{
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
-    if (!is<Map>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Map");
-        return nullptr;
-    }
-    return static_cast<Map*>(this_object);
-}
-
 // 24.1.3.1 Map.prototype.clear ( ), https://tc39.es/ecma262/#sec-map.prototype.clear
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::clear)
 {
-    auto* map = typed_this(vm, global_object);
+    auto* map = typed_this_object(global_object);
     if (!map)
         return {};
     map->entries().clear();
@@ -67,7 +55,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::clear)
 // 24.1.3.3 Map.prototype.delete ( key ), https://tc39.es/ecma262/#sec-map.prototype.delete
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::delete_)
 {
-    auto* map = typed_this(vm, global_object);
+    auto* map = typed_this_object(global_object);
     if (!map)
         return {};
     return Value(map->entries().remove(vm.argument(0)));
@@ -76,7 +64,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::delete_)
 // 24.1.3.4 Map.prototype.entries ( ), https://tc39.es/ecma262/#sec-map.prototype.entries
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::entries)
 {
-    auto* map = typed_this(vm, global_object);
+    auto* map = typed_this_object(global_object);
     if (!map)
         return {};
 
@@ -86,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::entries)
 // 24.1.3.5 Map.prototype.forEach ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-map.prototype.foreach
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::for_each)
 {
-    auto* map = typed_this(vm, global_object);
+    auto* map = typed_this_object(global_object);
     if (!map)
         return {};
     if (!vm.argument(0).is_function()) {
@@ -105,7 +93,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::for_each)
 // 24.1.3.6 Map.prototype.get ( key ), https://tc39.es/ecma262/#sec-map.prototype.get
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::get)
 {
-    auto* map = typed_this(vm, global_object);
+    auto* map = typed_this_object(global_object);
     if (!map)
         return {};
     auto result = map->entries().get(vm.argument(0));
@@ -117,7 +105,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::get)
 // 24.1.3.7 Map.prototype.has ( key ), https://tc39.es/ecma262/#sec-map.prototype.has
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::has)
 {
-    auto* map = typed_this(vm, global_object);
+    auto* map = typed_this_object(global_object);
     if (!map)
         return {};
     auto& entries = map->entries();
@@ -127,7 +115,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::has)
 // 24.1.3.8 Map.prototype.keys ( ), https://tc39.es/ecma262/#sec-map.prototype.keys
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::keys)
 {
-    auto* map = typed_this(vm, global_object);
+    auto* map = typed_this_object(global_object);
     if (!map)
         return {};
 
@@ -137,7 +125,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::keys)
 // 24.1.3.9 Map.prototype.set ( key, value ), https://tc39.es/ecma262/#sec-map.prototype.set
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::set)
 {
-    auto* map = typed_this(vm, global_object);
+    auto* map = typed_this_object(global_object);
     if (!map)
         return {};
     auto key = vm.argument(0);
@@ -150,7 +138,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::set)
 // 24.1.3.11 Map.prototype.values ( ), https://tc39.es/ecma262/#sec-map.prototype.values
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::values)
 {
-    auto* map = typed_this(vm, global_object);
+    auto* map = typed_this_object(global_object);
     if (!map)
         return {};
 
@@ -160,7 +148,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::values)
 // 24.1.3.10 get Map.prototype.size, https://tc39.es/ecma262/#sec-get-map.prototype.size
 JS_DEFINE_NATIVE_GETTER(MapPrototype::size_getter)
 {
-    auto* map = typed_this(vm, global_object);
+    auto* map = typed_this_object(global_object);
     if (!map)
         return {};
     return Value(map->entries().size());
