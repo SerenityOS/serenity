@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -100,7 +101,7 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
         m_selection.paint(painter);
 
     const float pixel_grid_threshold = 15.0f;
-    if (m_scale > pixel_grid_threshold) {
+    if (m_show_pixel_grid && m_scale > pixel_grid_threshold) {
         auto grid_rect = m_editor_image_rect.intersected(event.rect());
         auto image_rect = enclosing_int_rect(editor_rect_to_image_rect(grid_rect)).inflated(1, 1);
 
@@ -351,6 +352,14 @@ void ImageEditor::set_guide_visibility(bool show_guides)
     if (on_set_guide_visibility)
         on_set_guide_visibility(m_show_guides);
 
+    update();
+}
+
+void ImageEditor::set_pixel_grid_visibility(bool show_pixel_grid)
+{
+    if (m_show_pixel_grid == show_pixel_grid)
+        return;
+    m_show_pixel_grid = show_pixel_grid;
     update();
 }
 
