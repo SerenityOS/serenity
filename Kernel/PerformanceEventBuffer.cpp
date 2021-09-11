@@ -169,7 +169,7 @@ KResult PerformanceEventBuffer::to_json_impl(Serializer& object) const
     {
         auto strings = object.add_array("strings");
         for (auto& it : m_strings) {
-            strings.add(it.view());
+            strings.add(it->view());
         }
     }
 
@@ -309,7 +309,7 @@ KResultOr<FlatPtr> PerformanceEventBuffer::register_string(NonnullOwnPtr<KString
 {
     FlatPtr string_id = m_strings.size();
 
-    if (!m_strings.try_append(move(string)))
+    if (m_strings.try_set(move(string)) == AK::HashSetResult::Failed)
         return ENOBUFS;
 
     return string_id;
