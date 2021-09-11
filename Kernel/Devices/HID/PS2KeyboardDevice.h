@@ -6,15 +6,10 @@
 
 #pragma once
 
-#include <AK/CircularQueue.h>
-#include <AK/DoublyLinkedList.h>
 #include <AK/Types.h>
-#include <Kernel/API/KeyCode.h>
 #include <Kernel/Devices/HID/I8042Controller.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/Random.h>
-#include <LibKeyboard/CharacterMap.h>
 
 namespace Kernel {
 

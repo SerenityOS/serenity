@@ -8,13 +8,9 @@
 #pragma once
 
 #include <AK/CircularQueue.h>
-#include <AK/DoublyLinkedList.h>
 #include <AK/Types.h>
 #include <Kernel/API/KeyCode.h>
-#include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Devices/HID/HIDDevice.h>
-#include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/Random.h>
 
 namespace Kernel {
 

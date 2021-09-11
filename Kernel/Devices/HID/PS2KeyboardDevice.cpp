@@ -5,13 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/Singleton.h>
 #include <AK/Types.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Devices/HID/PS2KeyboardDevice.h>
-#include <Kernel/IO.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/WorkQueue.h>
