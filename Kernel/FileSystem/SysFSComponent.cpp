@@ -26,6 +26,11 @@ SysFSComponent::SysFSComponent(StringView name)
 {
 }
 
+mode_t SysFSComponent::permissions() const
+{
+    return S_IRUSR | S_IRGRP | S_IROTH;
+}
+
 KResult SysFSDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(SysFSComponentRegistry::the().get_lock());

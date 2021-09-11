@@ -140,7 +140,7 @@ InodeMetadata SysFSInode::metadata() const
     // NOTE: No locking required as m_associated_component or its component index will never change during our lifetime.
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
-    metadata.mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
+    metadata.mode = S_IFREG | m_associated_component->permissions();
     metadata.uid = 0;
     metadata.gid = 0;
     metadata.size = 0;
