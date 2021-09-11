@@ -11,7 +11,7 @@
 namespace JS {
 
 DataViewPrototype::DataViewPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -54,22 +54,12 @@ DataViewPrototype::~DataViewPrototype()
 {
 }
 
-static DataView* typed_this(VM& vm, GlobalObject& global_object)
-{
-    auto this_value = vm.this_value(global_object);
-    if (!this_value.is_object() || !is<DataView>(this_value.as_object())) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, vm.names.DataView);
-        return nullptr;
-    }
-    return static_cast<DataView*>(&this_value.as_object());
-}
-
 // 25.3.1.1 GetViewValue ( view, requestIndex, isLittleEndian, type ), https://tc39.es/ecma262/#sec-getviewvalue
 template<typename T>
 static Value get_view_value(GlobalObject& global_object, Value request_index, Value is_little_endian)
 {
     auto& vm = global_object.vm();
-    auto* view = typed_this(vm, global_object);
+    auto* view = DataViewPrototype::typed_this_value(global_object);
     if (!view)
         return {};
 
@@ -108,7 +98,7 @@ template<typename T>
 static Value set_view_value(GlobalObject& global_object, Value request_index, Value is_little_endian, Value value)
 {
     auto& vm = global_object.vm();
-    auto* view = typed_this(vm, global_object);
+    auto* view = DataViewPrototype::typed_this_value(global_object);
     if (!view)
         return {};
 
@@ -265,7 +255,7 @@ JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::set_uint_32)
 // 25.3.4.1 get DataView.prototype.buffer, https://tc39.es/ecma262/#sec-get-dataview.prototype.buffer
 JS_DEFINE_NATIVE_GETTER(DataViewPrototype::buffer_getter)
 {
-    auto* data_view = typed_this(vm, global_object);
+    auto* data_view = typed_this_value(global_object);
     if (!data_view)
         return {};
     return data_view->viewed_array_buffer();
@@ -274,7 +264,7 @@ JS_DEFINE_NATIVE_GETTER(DataViewPrototype::buffer_getter)
 // 25.3.4.2 get DataView.prototype.byteLength, https://tc39.es/ecma262/#sec-get-dataview.prototype.bytelength
 JS_DEFINE_NATIVE_GETTER(DataViewPrototype::byte_length_getter)
 {
-    auto* data_view = typed_this(vm, global_object);
+    auto* data_view = typed_this_value(global_object);
     if (!data_view)
         return {};
     if (data_view->viewed_array_buffer()->is_detached()) {
@@ -287,7 +277,7 @@ JS_DEFINE_NATIVE_GETTER(DataViewPrototype::byte_length_getter)
 // 25.3.4.3 get DataView.prototype.byteOffset, https://tc39.es/ecma262/#sec-get-dataview.prototype.byteoffset
 JS_DEFINE_NATIVE_GETTER(DataViewPrototype::byte_offset_getter)
 {
-    auto* data_view = typed_this(vm, global_object);
+    auto* data_view = typed_this_value(global_object);
     if (!data_view)
         return {};
     if (data_view->viewed_array_buffer()->is_detached()) {
