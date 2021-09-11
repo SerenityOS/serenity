@@ -8,6 +8,7 @@
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
 #include <Kernel/Bus/USB/USBPipe.h>
 #include <Kernel/Bus/USB/USBTransfer.h>
+#include <Kernel/StdLib.h>
 
 namespace Kernel::USB {
 

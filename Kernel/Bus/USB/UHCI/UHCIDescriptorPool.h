@@ -11,7 +11,6 @@
 #include <AK/Stack.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/Region.h>
-#include <Kernel/StdLib.h>
 
 namespace Kernel::USB {
 

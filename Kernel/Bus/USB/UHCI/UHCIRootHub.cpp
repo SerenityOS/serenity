@@ -11,6 +11,7 @@
 #include <Kernel/Bus/USB/USBEndpoint.h>
 #include <Kernel/Bus/USB/USBHub.h>
 #include <Kernel/Bus/USB/USBRequest.h>
+#include <Kernel/StdLib.h>
 
 namespace Kernel::USB {
 

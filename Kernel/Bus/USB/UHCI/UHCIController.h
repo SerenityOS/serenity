@@ -17,9 +17,6 @@
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/Memory/AnonymousVMObject.h>
-#include <Kernel/Process.h>
-#include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel::USB {
 
