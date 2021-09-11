@@ -23,7 +23,7 @@
 namespace JS {
 
 RegExpPrototype::RegExpPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -54,28 +54,6 @@ void RegExpPrototype::initialize(GlobalObject& global_object)
 
 RegExpPrototype::~RegExpPrototype()
 {
-}
-
-static Object* this_object_from(VM& vm, GlobalObject& global_object)
-{
-    auto this_value = vm.this_value(global_object);
-    if (!this_value.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, this_value.to_string_without_side_effects());
-        return {};
-    }
-    return &this_value.as_object();
-}
-
-static RegExpObject* regexp_object_from(VM& vm, GlobalObject& global_object)
-{
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return nullptr;
-    if (!is<RegExpObject>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "RegExp");
-        return nullptr;
-    }
-    return static_cast<RegExpObject*>(this_object);
 }
 
 static String escape_regexp_pattern(const RegExpObject& regexp_object)
@@ -342,7 +320,7 @@ Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16Strin
 #define __JS_ENUMERATE(flagName, flag_name, flag_char)                                            \
     JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flag_name)                                           \
     {                                                                                             \
-        auto* regexp_object = this_object_from(vm, global_object);                                \
+        auto* regexp_object = this_object(global_object);                                         \
         if (!regexp_object)                                                                       \
             return {};                                                                            \
                                                                                                   \
@@ -362,17 +340,17 @@ JS_ENUMERATE_REGEXP_FLAGS
 // 22.2.5.4 get RegExp.prototype.flags, https://tc39.es/ecma262/#sec-get-regexp.prototype.flags
 JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flags)
 {
-    auto this_object = this_object_from(vm, global_object);
-    if (!this_object)
+    auto* regexp_object = this_object(global_object);
+    if (!regexp_object)
         return {};
 
     StringBuilder builder(8);
 
-#define __JS_ENUMERATE(flagName, flag_name, flag_char)           \
-    auto flag_##flag_name = this_object->get(vm.names.flagName); \
-    if (vm.exception())                                          \
-        return {};                                               \
-    if (flag_##flag_name.to_boolean())                           \
+#define __JS_ENUMERATE(flagName, flag_name, flag_char)             \
+    auto flag_##flag_name = regexp_object->get(vm.names.flagName); \
+    if (vm.exception())                                            \
+        return {};                                                 \
+    if (flag_##flag_name.to_boolean())                             \
         builder.append(#flag_char);
     JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
@@ -383,7 +361,7 @@ JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flags)
 // 22.2.5.12 get RegExp.prototype.source, https://tc39.es/ecma262/#sec-get-regexp.prototype.source
 JS_DEFINE_NATIVE_GETTER(RegExpPrototype::source)
 {
-    auto* regexp_object = this_object_from(vm, global_object);
+    auto* regexp_object = this_object(global_object);
     if (!regexp_object)
         return {};
 
@@ -400,7 +378,7 @@ JS_DEFINE_NATIVE_GETTER(RegExpPrototype::source)
 // 22.2.5.2 RegExp.prototype.exec ( string ), https://tc39.es/ecma262/#sec-regexp.prototype.exec
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
 {
-    auto* regexp_object = regexp_object_from(vm, global_object);
+    auto* regexp_object = typed_this_object(global_object);
     if (!regexp_object)
         return {};
 
@@ -414,7 +392,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
 // 22.2.5.15 RegExp.prototype.test ( S ), https://tc39.es/ecma262/#sec-regexp.prototype.test
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
 {
-    auto* regexp_object = this_object_from(vm, global_object);
+    auto* regexp_object = this_object(global_object);
     if (!regexp_object)
         return {};
 
@@ -432,18 +410,18 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
 // 22.2.5.16 RegExp.prototype.toString ( ), https://tc39.es/ecma262/#sec-regexp.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 {
-    auto this_object = this_object_from(vm, global_object);
-    if (!this_object)
+    auto* regexp_object = this_object(global_object);
+    if (!regexp_object)
         return {};
 
-    auto source_attr = this_object->get(vm.names.source);
+    auto source_attr = regexp_object->get(vm.names.source);
     if (vm.exception())
         return {};
     auto pattern = source_attr.to_string(global_object);
     if (vm.exception())
         return {};
 
-    auto flags_attr = this_object->get(vm.names.flags);
+    auto flags_attr = regexp_object->get(vm.names.flags);
     if (vm.exception())
         return {};
     auto flags = flags_attr.to_string(global_object);
@@ -456,7 +434,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 // 22.2.5.7 RegExp.prototype [ @@match ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@match
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 {
-    auto* regexp_object = this_object_from(vm, global_object);
+    auto* regexp_object = this_object(global_object);
     if (!regexp_object)
         return {};
 
@@ -529,7 +507,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 // 22.2.5.8 RegExp.prototype [ @@matchAll ] ( string ), https://tc39.es/ecma262/#sec-regexp-prototype-matchall
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 {
-    auto* regexp_object = this_object_from(vm, global_object);
+    auto* regexp_object = this_object(global_object);
     if (!regexp_object)
         return {};
 
@@ -581,7 +559,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     auto string_value = vm.argument(0);
     auto replace_value = vm.argument(1);
 
-    auto* regexp_object = this_object_from(vm, global_object);
+    auto* regexp_object = this_object(global_object);
     if (!regexp_object)
         return {};
     auto string = string_value.to_utf16_string(global_object);
@@ -750,7 +728,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 // 22.2.5.11 RegExp.prototype [ @@search ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@search
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
 {
-    auto* regexp_object = this_object_from(vm, global_object);
+    auto* regexp_object = this_object(global_object);
     if (!regexp_object)
         return {};
 
@@ -797,7 +775,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
 // 22.2.5.13 RegExp.prototype [ @@split ] ( string, limit ), https://tc39.es/ecma262/#sec-regexp.prototype-@@split
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 {
-    auto* regexp_object = this_object_from(vm, global_object);
+    auto* regexp_object = this_object(global_object);
     if (!regexp_object)
         return {};
 
@@ -919,7 +897,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 // B.2.4.1 RegExp.prototype.compile ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp.prototype.compile
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::compile)
 {
-    auto* regexp_object = regexp_object_from(vm, global_object);
+    auto* regexp_object = typed_this_object(global_object);
     if (!regexp_object)
         return {};
 
