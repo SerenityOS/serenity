@@ -19,11 +19,7 @@ set(KERNEL_HEAP_SOURCES
 )
 
 set(KERNEL_SOURCES
-    ACPI/Initialize.cpp
-    ACPI/MultiProcessorParser.cpp
-    ACPI/Parser.cpp
     AddressSanitizer.cpp
-    Arch/PC/BIOS.cpp
     Arch/x86/SmapDisabler.h
     Bus/PCI/Access.cpp
     Bus/PCI/API.cpp
@@ -127,6 +123,10 @@ set(KERNEL_SOURCES
     FileSystem/SysFSComponent.cpp
     FileSystem/TmpFS.cpp
     FileSystem/VirtualFileSystem.cpp
+    Firmware/ACPI/Initialize.cpp
+    Firmware/ACPI/MultiProcessorParser.cpp
+    Firmware/ACPI/Parser.cpp
+    Firmware/BIOS.cpp
     FutexQueue.cpp
     Interrupts/APIC.cpp
     Interrupts/GenericInterruptHandler.cpp

@@ -6,10 +6,10 @@
 
 #include <AK/ByteReader.h>
 #include <AK/HashTable.h>
-#include <Kernel/ACPI/Definitions.h>
 #include <Kernel/API/KResult.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Firmware/ACPI/Definitions.h>
 #include <Kernel/IO.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/Region.h>

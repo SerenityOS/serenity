@@ -5,10 +5,10 @@
  */
 
 #include <AK/Singleton.h>
-#include <Kernel/ACPI/Parser.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Devices/HID/I8042Controller.h>
+#include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {

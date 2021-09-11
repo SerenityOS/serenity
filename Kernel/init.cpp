@@ -5,10 +5,6 @@
  */
 
 #include <AK/Types.h>
-#include <Kernel/ACPI/Initialize.h>
-#include <Kernel/ACPI/MultiProcessorParser.h>
-#include <Kernel/ACPI/Parser.h>
-#include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/BootInfo.h>
 #include <Kernel/Bus/PCI/Access.h>
@@ -31,6 +27,10 @@
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/Firmware/ACPI/Initialize.h>
+#include <Kernel/Firmware/ACPI/MultiProcessorParser.h>
+#include <Kernel/Firmware/ACPI/Parser.h>
+#include <Kernel/Firmware/BIOS.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/Heap/kmalloc.h>
