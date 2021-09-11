@@ -7,7 +7,6 @@
 
 #include <AK/Function.h>
 #include <LibJS/Runtime/AbstractOperations.h>
-#include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/ArrayBufferConstructor.h>
 #include <LibJS/Runtime/ArrayBufferPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -15,7 +14,7 @@
 namespace JS {
 
 ArrayBufferPrototype::ArrayBufferPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -35,21 +34,10 @@ ArrayBufferPrototype::~ArrayBufferPrototype()
 {
 }
 
-static ArrayBuffer* array_buffer_object_from(VM& vm, GlobalObject& global_object)
-{
-    // ArrayBuffer.prototype.* deliberately don't coerce |this| value to object.
-    auto this_value = vm.this_value(global_object);
-    if (!this_value.is_object() || !is<ArrayBuffer>(this_value.as_object())) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "ArrayBuffer");
-        return nullptr;
-    }
-    return static_cast<ArrayBuffer*>(&this_value.as_object());
-}
-
 // 25.1.5.3 ArrayBuffer.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice
 JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 {
-    auto array_buffer_object = array_buffer_object_from(vm, global_object);
+    auto array_buffer_object = typed_this_value(global_object);
     if (!array_buffer_object)
         return {};
 
@@ -126,7 +114,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 // 25.1.5.1 get ArrayBuffer.prototype.byteLength, https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength
 JS_DEFINE_NATIVE_GETTER(ArrayBufferPrototype::byte_length_getter)
 {
-    auto array_buffer_object = array_buffer_object_from(vm, global_object);
+    auto array_buffer_object = typed_this_value(global_object);
     if (!array_buffer_object)
         return {};
 
