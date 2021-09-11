@@ -375,9 +375,9 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
                 return possible_match.value().value;
             if (!context.arguments_object) {
                 if (context.function->is_strict_mode() || !context.function->has_simple_parameter_list()) {
-                    context.arguments_object = create_unmapped_arguments_object(global_object, context.arguments);
+                    context.arguments_object = create_unmapped_arguments_object(global_object, context.arguments.span());
                 } else {
-                    context.arguments_object = create_mapped_arguments_object(global_object, *context.function, verify_cast<OrdinaryFunctionObject>(context.function)->parameters(), context.arguments, *lexical_environment());
+                    context.arguments_object = create_mapped_arguments_object(global_object, *context.function, verify_cast<OrdinaryFunctionObject>(context.function)->parameters(), context.arguments.span(), *lexical_environment());
                 }
             }
             return context.arguments_object;

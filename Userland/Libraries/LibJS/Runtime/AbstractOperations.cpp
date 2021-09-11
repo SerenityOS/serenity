@@ -405,7 +405,7 @@ Value perform_eval(Value x, GlobalObject& caller_realm, CallerMode strict_caller
 }
 
 // 10.4.4.6 CreateUnmappedArgumentsObject ( argumentsList ), https://tc39.es/ecma262/#sec-createunmappedargumentsobject
-Object* create_unmapped_arguments_object(GlobalObject& global_object, Vector<Value> const& arguments)
+Object* create_unmapped_arguments_object(GlobalObject& global_object, Span<Value> arguments)
 {
     auto& vm = global_object.vm();
 
@@ -449,7 +449,7 @@ Object* create_unmapped_arguments_object(GlobalObject& global_object, Vector<Val
 }
 
 // 10.4.4.7 CreateMappedArgumentsObject ( func, formals, argumentsList, env ), https://tc39.es/ecma262/#sec-createmappedargumentsobject
-Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObject& function, Vector<FunctionNode::Parameter> const& formals, Vector<Value> const& arguments, Environment& environment)
+Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObject& function, Vector<FunctionNode::Parameter> const& formals, Span<Value> arguments, Environment& environment)
 {
     auto& vm = global_object.vm();
 
@@ -570,7 +570,7 @@ Value canonical_numeric_index_string(GlobalObject& global_object, PropertyName c
 }
 
 // 22.1.3.17.1 GetSubstitution ( matched, str, position, captures, namedCaptures, replacement ), https://tc39.es/ecma262/#sec-getsubstitution
-String get_substitution(GlobalObject& global_object, Utf16View const& matched, Utf16View const& str, size_t position, Vector<Value> const& captures, Value named_captures, Value replacement)
+String get_substitution(GlobalObject& global_object, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement)
 {
     auto& vm = global_object.vm();
 
