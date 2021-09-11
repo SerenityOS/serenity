@@ -70,6 +70,8 @@ public:
         ExceptZero,
     };
 
+    static Vector<StringView> const& relevant_extension_keys(); // [[RelevantExtensionKeys]]
+
     NumberFormat(Object& prototype);
     virtual ~NumberFormat() override = default;
 
