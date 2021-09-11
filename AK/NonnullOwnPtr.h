@@ -176,7 +176,7 @@ template<typename T>
 struct Traits<NonnullOwnPtr<T>> : public GenericTraits<NonnullOwnPtr<T>> {
     using PeekType = T*;
     using ConstPeekType = const T*;
-    static unsigned hash(const NonnullOwnPtr<T>& p) { return int_hash((u32)p.ptr()); }
+    static unsigned hash(const NonnullOwnPtr<T>& p) { return ptr_hash((FlatPtr)p.ptr()); }
     static bool equals(const NonnullOwnPtr<T>& a, const NonnullOwnPtr<T>& b) { return a.ptr() == b.ptr(); }
 };
 
