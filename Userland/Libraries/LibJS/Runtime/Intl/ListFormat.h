@@ -6,8 +6,12 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <AK/Variant.h>
+#include <AK/Vector.h>
+#include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS::Intl {
@@ -49,5 +53,13 @@ private:
     Type m_type { Type::Invalid };    // [[Type]]
     Style m_style { Style::Invalid }; // [[Style]]
 };
+
+using Placeables = HashMap<StringView, Variant<PatternPartition, Vector<PatternPartition>>>;
+
+Vector<PatternPartition> deconstruct_pattern(StringView pattern, Placeables placeables);
+Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, Vector<String> const& list);
+String format_list(ListFormat const& list_format, Vector<String> const& list);
+Array* format_list_to_parts(GlobalObject& global_object, ListFormat const& list_format, Vector<String> const& list);
+Vector<String> string_list_from_iterable(GlobalObject& global_object, Value iterable);
 
 }
