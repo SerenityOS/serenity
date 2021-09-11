@@ -13,7 +13,7 @@
 
 namespace Core {
 
-Result<String, OSError> get_password(const StringView& prompt)
+Result<SecretString, OSError> get_password(const StringView& prompt)
 {
     if (write(STDOUT_FILENO, prompt.characters_without_null_termination(), prompt.length()) < 0)
         return OSError(errno);
@@ -44,8 +44,6 @@ Result<String, OSError> get_password(const StringView& prompt)
     // Remove trailing '\n' read by getline().
     password[line_length - 1] = '\0';
 
-    String s(password);
-    free(password);
-    return s;
+    return SecretString::take_ownership(password, line_length);
 }
 }

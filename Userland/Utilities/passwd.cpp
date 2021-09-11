@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ScopeGuard.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/GetPassword.h>
@@ -114,7 +115,7 @@ int main(int argc, char** argv)
             return 1;
         }
 
-        if (new_password.value() != new_password_retype.value()) {
+        if (new_password.value().view() != new_password_retype.value().view()) {
             warnln("Sorry, passwords don't match.");
             warnln("Password for user {} unchanged.", target_account.username());
             return 1;
