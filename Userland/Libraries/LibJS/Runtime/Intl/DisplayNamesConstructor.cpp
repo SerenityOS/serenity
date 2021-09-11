@@ -50,8 +50,8 @@ Value DisplayNamesConstructor::construct(FunctionObject& new_target)
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto locales = vm.argument(0);
-    auto options = vm.argument(1);
+    auto locale_value = vm.argument(0);
+    auto options_value = vm.argument(1);
 
     // 2. Let displayNames be ? OrdinaryCreateFromConstructor(NewTarget, "%DisplayNames.prototype%", « [[InitializedDisplayNames]], [[Locale]], [[Style]], [[Type]], [[Fallback]], [[Fields]] »).
     auto* display_names = ordinary_create_from_constructor<DisplayNames>(global_object, new_target, &GlobalObject::intl_display_names_prototype);
@@ -59,18 +59,18 @@ Value DisplayNamesConstructor::construct(FunctionObject& new_target)
         return {};
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = canonicalize_locale_list(global_object, locales);
+    auto requested_locales = canonicalize_locale_list(global_object, locale_value);
     if (vm.exception())
         return {};
 
     // 4. If options is undefined, throw a TypeError exception.
-    if (options.is_undefined()) {
+    if (options_value.is_undefined()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::IsUndefined, "options"sv);
         return {};
     }
 
     // 5. Set options to ? GetOptionsObject(options).
-    options = Temporal::get_options_object(global_object, options);
+    auto* options = Temporal::get_options_object(global_object, options_value);
     if (vm.exception())
         return {};
 
@@ -80,7 +80,7 @@ Value DisplayNamesConstructor::construct(FunctionObject& new_target)
     // 7. Let localeData be %DisplayNames%.[[LocaleData]].
 
     // 8. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
-    auto matcher = get_option(global_object, options, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv);
+    auto matcher = get_option(global_object, *options, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv);
     if (vm.exception())
         return {};
 
@@ -91,7 +91,7 @@ Value DisplayNamesConstructor::construct(FunctionObject& new_target)
     auto result = resolve_locale(requested_locales, opt, {});
 
     // 11. Let style be ? GetOption(options, "style", "string", « "narrow", "short", "long" », "long").
-    auto style = get_option(global_object, options, vm.names.style, Value::Type::String, { "narrow"sv, "short"sv, "long"sv }, "long"sv);
+    auto style = get_option(global_object, *options, vm.names.style, Value::Type::String, { "narrow"sv, "short"sv, "long"sv }, "long"sv);
     if (vm.exception())
         return {};
 
@@ -99,7 +99,7 @@ Value DisplayNamesConstructor::construct(FunctionObject& new_target)
     display_names->set_style(style.as_string().string());
 
     // 13. Let type be ? GetOption(options, "type", "string", « "language", "region", "script", "currency" », undefined).
-    auto type = get_option(global_object, options, vm.names.type, Value::Type::String, { "language"sv, "region"sv, "script"sv, "currency"sv }, Empty {});
+    auto type = get_option(global_object, *options, vm.names.type, Value::Type::String, { "language"sv, "region"sv, "script"sv, "currency"sv }, Empty {});
     if (vm.exception())
         return {};
 
@@ -113,7 +113,7 @@ Value DisplayNamesConstructor::construct(FunctionObject& new_target)
     display_names->set_type(type.as_string().string());
 
     // 16. Let fallback be ? GetOption(options, "fallback", "string", « "code", "none" », "code").
-    auto fallback = get_option(global_object, options, vm.names.fallback, Value::Type::String, { "code"sv, "none"sv }, "code"sv);
+    auto fallback = get_option(global_object, *options, vm.names.fallback, Value::Type::String, { "code"sv, "none"sv }, "code"sv);
     if (vm.exception())
         return {};
 

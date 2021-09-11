@@ -155,7 +155,7 @@ static void set_number_format_unit_options(GlobalObject& global_object, NumberFo
     // 2. Assert: Type(options) is Object.
 
     // 3. Let style be ? GetOption(options, "style", "string", « "decimal", "percent", "currency", "unit" », "decimal").
-    auto style = get_option(global_object, &options, vm.names.style, Value::Type::String, { "decimal"sv, "percent"sv, "currency"sv, "unit"sv }, "decimal"sv);
+    auto style = get_option(global_object, options, vm.names.style, Value::Type::String, { "decimal"sv, "percent"sv, "currency"sv, "unit"sv }, "decimal"sv);
     if (vm.exception())
         return;
 
@@ -163,7 +163,7 @@ static void set_number_format_unit_options(GlobalObject& global_object, NumberFo
     intl_object.set_style(style.as_string().string());
 
     // 5. Let currency be ? GetOption(options, "currency", "string", undefined, undefined).
-    auto currency = get_option(global_object, &options, vm.names.currency, Value::Type::String, {}, Empty {});
+    auto currency = get_option(global_object, options, vm.names.currency, Value::Type::String, {}, Empty {});
     if (vm.exception())
         return;
 
@@ -183,17 +183,17 @@ static void set_number_format_unit_options(GlobalObject& global_object, NumberFo
     }
 
     // 8. Let currencyDisplay be ? GetOption(options, "currencyDisplay", "string", « "code", "symbol", "narrowSymbol", "name" », "symbol").
-    auto currency_display = get_option(global_object, &options, vm.names.currencyDisplay, Value::Type::String, { "code"sv, "symbol"sv, "narrowSymbol"sv, "name"sv }, "symbol"sv);
+    auto currency_display = get_option(global_object, options, vm.names.currencyDisplay, Value::Type::String, { "code"sv, "symbol"sv, "narrowSymbol"sv, "name"sv }, "symbol"sv);
     if (vm.exception())
         return;
 
     // 9. Let currencySign be ? GetOption(options, "currencySign", "string", « "standard", "accounting" », "standard").
-    auto currency_sign = get_option(global_object, &options, vm.names.currencySign, Value::Type::String, { "standard"sv, "accounting"sv }, "standard"sv);
+    auto currency_sign = get_option(global_object, options, vm.names.currencySign, Value::Type::String, { "standard"sv, "accounting"sv }, "standard"sv);
     if (vm.exception())
         return;
 
     // 10. Let unit be ? GetOption(options, "unit", "string", undefined, undefined).
-    auto unit = get_option(global_object, &options, vm.names.unit, Value::Type::String, {}, Empty {});
+    auto unit = get_option(global_object, options, vm.names.unit, Value::Type::String, {}, Empty {});
     if (vm.exception())
         return;
 
@@ -213,7 +213,7 @@ static void set_number_format_unit_options(GlobalObject& global_object, NumberFo
     }
 
     // 13. Let unitDisplay be ? GetOption(options, "unitDisplay", "string", « "short", "narrow", "long" », "short").
-    auto unit_display = get_option(global_object, &options, vm.names.unitDisplay, Value::Type::String, { "short"sv, "narrow"sv, "long"sv }, "short"sv);
+    auto unit_display = get_option(global_object, options, vm.names.unitDisplay, Value::Type::String, { "short"sv, "narrow"sv, "long"sv }, "short"sv);
     if (vm.exception())
         return;
 
@@ -241,17 +241,17 @@ static void set_number_format_unit_options(GlobalObject& global_object, NumberFo
 }
 
 // 15.1.2 InitializeNumberFormat ( numberFormat, locales, options ), https://tc39.es/ecma402/#sec-initializenumberformat
-static NumberFormat* initialize_number_format(GlobalObject& global_object, NumberFormat& number_format, Value locales, Value options)
+static NumberFormat* initialize_number_format(GlobalObject& global_object, NumberFormat& number_format, Value locales_value, Value options_value)
 {
     auto& vm = global_object.vm();
 
     // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = canonicalize_locale_list(global_object, locales);
+    auto requested_locales = canonicalize_locale_list(global_object, locales_value);
     if (vm.exception())
         return {};
 
     // 2. Set options to ? CoerceOptionsToObject(options).
-    options = coerce_options_to_object(global_object, options);
+    auto* options = coerce_options_to_object(global_object, options_value);
     if (vm.exception())
         return {};
 
@@ -259,7 +259,7 @@ static NumberFormat* initialize_number_format(GlobalObject& global_object, Numbe
     LocaleOptions opt {};
 
     // 4. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
-    auto matcher = get_option(global_object, options, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv);
+    auto matcher = get_option(global_object, *options, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv);
     if (vm.exception())
         return {};
 
@@ -267,7 +267,7 @@ static NumberFormat* initialize_number_format(GlobalObject& global_object, Numbe
     opt.locale_matcher = matcher;
 
     // 6. Let numberingSystem be ? GetOption(options, "numberingSystem", "string", undefined, undefined).
-    auto numbering_system = get_option(global_object, options, vm.names.numberingSystem, Value::Type::String, {}, Empty {});
+    auto numbering_system = get_option(global_object, *options, vm.names.numberingSystem, Value::Type::String, {}, Empty {});
     if (vm.exception())
         return {};
 
@@ -297,7 +297,7 @@ static NumberFormat* initialize_number_format(GlobalObject& global_object, Numbe
     number_format.set_numbering_system(result.nu.release_value());
 
     // 14. Perform ? SetNumberFormatUnitOptions(numberFormat, options).
-    set_number_format_unit_options(global_object, number_format, options.as_object());
+    set_number_format_unit_options(global_object, number_format, *options);
     if (vm.exception())
         return {};
 
@@ -334,7 +334,7 @@ static NumberFormat* initialize_number_format(GlobalObject& global_object, Numbe
     }
 
     // 18. Let notation be ? GetOption(options, "notation", "string", « "standard", "scientific", "engineering", "compact" », "standard").
-    auto notation = get_option(global_object, options, vm.names.notation, Value::Type::String, { "standard"sv, "scientific"sv, "engineering"sv, "compact"sv }, "standard"sv);
+    auto notation = get_option(global_object, *options, vm.names.notation, Value::Type::String, { "standard"sv, "scientific"sv, "engineering"sv, "compact"sv }, "standard"sv);
     if (vm.exception())
         return {};
 
@@ -342,12 +342,12 @@ static NumberFormat* initialize_number_format(GlobalObject& global_object, Numbe
     number_format.set_notation(notation.as_string().string());
 
     // 20. Perform ? SetNumberFormatDigitOptions(numberFormat, options, mnfdDefault, mxfdDefault, notation).
-    set_number_format_digit_options(global_object, number_format, options.as_object(), default_min_fraction_digits, default_max_fraction_digits, number_format.notation());
+    set_number_format_digit_options(global_object, number_format, *options, default_min_fraction_digits, default_max_fraction_digits, number_format.notation());
     if (vm.exception())
         return {};
 
     // 21. Let compactDisplay be ? GetOption(options, "compactDisplay", "string", « "short", "long" », "short").
-    auto compact_display = get_option(global_object, options, vm.names.compactDisplay, Value::Type::String, { "short"sv, "long"sv }, "short"sv);
+    auto compact_display = get_option(global_object, *options, vm.names.compactDisplay, Value::Type::String, { "short"sv, "long"sv }, "short"sv);
     if (vm.exception())
         return {};
 
@@ -358,7 +358,7 @@ static NumberFormat* initialize_number_format(GlobalObject& global_object, Numbe
     }
 
     // 23. Let useGrouping be ? GetOption(options, "useGrouping", "boolean", undefined, true).
-    auto use_grouping = get_option(global_object, options, vm.names.useGrouping, Value::Type::Boolean, {}, true);
+    auto use_grouping = get_option(global_object, *options, vm.names.useGrouping, Value::Type::Boolean, {}, true);
     if (vm.exception())
         return {};
 
@@ -366,7 +366,7 @@ static NumberFormat* initialize_number_format(GlobalObject& global_object, Numbe
     number_format.set_use_grouping(use_grouping.as_bool());
 
     // 25. Let signDisplay be ? GetOption(options, "signDisplay", "string", « "auto", "never", "always", "exceptZero" », "auto").
-    auto sign_display = get_option(global_object, options, vm.names.signDisplay, Value::Type::String, { "auto"sv, "never"sv, "always"sv, "exceptZero"sv }, "auto"sv);
+    auto sign_display = get_option(global_object, *options, vm.names.signDisplay, Value::Type::String, { "auto"sv, "never"sv, "always"sv, "exceptZero"sv }, "auto"sv);
     if (vm.exception())
         return {};
 
