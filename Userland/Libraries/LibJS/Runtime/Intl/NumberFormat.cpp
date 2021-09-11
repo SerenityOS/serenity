@@ -12,6 +12,14 @@
 
 namespace JS::Intl {
 
+Vector<StringView> const& NumberFormat::relevant_extension_keys()
+{
+    // 15.3.3 Internal slots, https://tc39.es/ecma402/#sec-intl.numberformat-internal-slots
+    // The value of the [[RelevantExtensionKeys]] internal slot is « "nu" ».
+    static Vector<StringView> relevant_extension_keys { "nu"sv };
+    return relevant_extension_keys;
+}
+
 // 15 NumberFormat Objects, https://tc39.es/ecma402/#numberformat-objects
 NumberFormat::NumberFormat(Object& prototype)
     : Object(prototype)
@@ -230,14 +238,6 @@ StringView NumberFormat::sign_display_string() const
     }
 }
 
-static Vector<StringView> const& number_format_relevant_extension_keys()
-{
-    // 15.3.3 Internal slots, https://tc39.es/ecma402/#sec-intl.numberformat-internal-slots
-    // The value of the [[RelevantExtensionKeys]] internal slot is « "nu" ».
-    static Vector<StringView> relevant_extension_keys { "nu"sv };
-    return relevant_extension_keys;
-}
-
 // 15.1.1 SetNumberFormatDigitOptions ( intlObj, options, mnfdDefault, mxfdDefault, notation ), https://tc39.es/ecma402/#sec-setnfdigitoptions
 void set_number_format_digit_options(GlobalObject& global_object, NumberFormat& intl_object, Object const& options, int default_min_fraction_digits, int default_max_fraction_digits, NumberFormat::Notation notation)
 {
@@ -396,7 +396,7 @@ NumberFormat* initialize_number_format(GlobalObject& global_object, NumberFormat
 
     // 9. Let localeData be %NumberFormat%.[[LocaleData]].
     // 10. Let r be ResolveLocale(%NumberFormat%.[[AvailableLocales]], requestedLocales, opt, %NumberFormat%.[[RelevantExtensionKeys]], localeData).
-    auto result = resolve_locale(requested_locales, opt, number_format_relevant_extension_keys());
+    auto result = resolve_locale(requested_locales, opt, NumberFormat::relevant_extension_keys());
 
     // 11. Set numberFormat.[[Locale]] to r.[[locale]].
     number_format.set_locale(move(result.locale));
