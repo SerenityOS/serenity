@@ -63,4 +63,33 @@ struct Formatter<OwnPtr<Kernel::KString>> : Formatter<StringView> {
     }
 };
 
+template<>
+struct Traits<NonnullOwnPtr<Kernel::KString>> : public GenericTraits<NonnullOwnPtr<Kernel::KString>> {
+    using PeekType = Kernel::KString*;
+    using ConstPeekType = Kernel::KString const*;
+    static unsigned hash(NonnullOwnPtr<Kernel::KString> const& p) { return string_hash(p->characters(), p->length()); }
+    static bool equals(NonnullOwnPtr<Kernel::KString> const& a, NonnullOwnPtr<Kernel::KString> const& b) { return a->view() == b->view(); }
+};
+
+template<>
+struct Traits<OwnPtr<Kernel::KString>> : public GenericTraits<OwnPtr<Kernel::KString>> {
+    using PeekType = Kernel::KString*;
+    using ConstPeekType = Kernel::KString const*;
+    static unsigned hash(OwnPtr<Kernel::KString> const& p)
+    {
+        if (!p)
+            return ptr_hash(nullptr);
+        return string_hash(p->characters(), p->length());
+    }
+    static bool equals(OwnPtr<Kernel::KString> const& a, OwnPtr<Kernel::KString> const& b)
+    {
+        if (!a || !b)
+            return a.ptr() == b.ptr();
+        if (a == b)
+            return true;
+
+        return a->view() == b->view();
+    }
+};
+
 }
