@@ -13,5 +13,5 @@ test("basic functionality", () => {
 test("errors on non-boolean |this|", () => {
     expect(() => {
         Boolean.prototype.toString.call("foo");
-    }).toThrowWithMessage(TypeError, "Not a Boolean object");
+    }).toThrowWithMessage(TypeError, "Not an object of type Boolean");
 });

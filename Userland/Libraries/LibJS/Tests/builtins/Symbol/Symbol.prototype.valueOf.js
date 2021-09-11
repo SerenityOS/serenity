@@ -11,5 +11,5 @@ test("basic functionality", () => {
 test("|this| must be a symbol", () => {
     expect(() => {
         Symbol.prototype.valueOf.call("foo");
-    }).toThrowWithMessage(TypeError, "Not a Symbol object");
+    }).toThrowWithMessage(TypeError, "Not an object of type Symbol");
 });

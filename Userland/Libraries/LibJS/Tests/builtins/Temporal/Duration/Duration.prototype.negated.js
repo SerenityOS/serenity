@@ -37,6 +37,6 @@ describe("errors", () => {
     test("this value must be a Temporal.Duration object", () => {
         expect(() => {
             Temporal.Duration.prototype.negated.call("foo");
-        }).toThrowWithMessage(TypeError, "Not a Temporal.Duration");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.Duration");
     });
 });

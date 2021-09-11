@@ -10,6 +10,6 @@ describe("errors", () => {
     test("this value must be a Temporal.PlainDateTime object", () => {
         expect(() => {
             Reflect.get(Temporal.PlainDateTime.prototype, "calendar", "foo");
-        }).toThrowWithMessage(TypeError, "Not a Temporal.PlainDateTime");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.PlainDateTime");
     });
 });

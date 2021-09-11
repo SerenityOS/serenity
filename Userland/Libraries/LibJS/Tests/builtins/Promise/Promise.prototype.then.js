@@ -6,7 +6,7 @@ describe("errors", () => {
     test("this value must be a Promise", () => {
         expect(() => {
             Promise.prototype.then.call({});
-        }).toThrowWithMessage(TypeError, "Not a Promise");
+        }).toThrowWithMessage(TypeError, "Not an object of type Promise");
     });
 });
 

@@ -10,6 +10,6 @@ describe("errors", () => {
     test("this value must be a Temporal.PlainMonthDay object", () => {
         expect(() => {
             Reflect.get(Temporal.PlainMonthDay.prototype, "calendar", "foo");
-        }).toThrowWithMessage(TypeError, "Not a Temporal.PlainMonthDay");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.PlainMonthDay");
     });
 });

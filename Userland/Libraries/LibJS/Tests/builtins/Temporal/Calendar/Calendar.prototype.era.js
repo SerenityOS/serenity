@@ -14,7 +14,7 @@ describe("errors", () => {
     test("this value must be a Temporal.Calendar object", () => {
         expect(() => {
             Temporal.Calendar.prototype.era.call("foo");
-        }).toThrowWithMessage(TypeError, "Not a Temporal.Calendar");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.Calendar");
     });
 
     test("argument must be date-like", () => {
