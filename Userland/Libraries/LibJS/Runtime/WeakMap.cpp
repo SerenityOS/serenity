@@ -29,4 +29,11 @@ void WeakMap::remove_swept_cells(Badge<Heap>, Span<Cell*> cells)
         m_values.remove(cell);
 }
 
+void WeakMap::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    for (auto& entry : m_values)
+        visitor.visit(entry.value);
+}
+
 }
