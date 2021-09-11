@@ -10,8 +10,28 @@
             margins: [8]
         }
 
-        @GUI::OpacitySlider {
-            name: "opacity_slider"
+        @GUI::GroupBox {
+            max_height: 30
+
+            layout: @GUI::HorizontalBoxLayout {
+                margins: [8]
+            }
+
+            @GUI::OpacitySlider {
+                name: "opacity_slider"
+                tooltip: "Opacity Slider"
+            }
+
+            @GUI::VerticalSeparator {
+            }
+
+            @GUI::ValueSlider {
+                name: "opacity_value_slider"
+                min: 0
+                max: 100
+                value: 100
+                tooltip: "Value Slider"
+            }
         }
 
         @GUI::HorizontalSeparator {

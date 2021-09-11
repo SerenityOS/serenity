@@ -25,6 +25,7 @@
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
+#include <LibGUI/ValueSlider.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
@@ -217,6 +218,15 @@ GalleryWidget::GalleryWidget()
 
     m_opacity_slider->on_change = [&](auto percent) {
         m_opacity_imagewidget->set_opacity_percent(percent);
+        m_opacity_value_slider->set_value(percent);
+    };
+
+    m_opacity_value_slider = sliders_tab.find_descendant_of_type_named<GUI::ValueSlider>("opacity_value_slider");
+    m_opacity_value_slider->set_range(0, 100);
+
+    m_opacity_value_slider->on_change = [&](auto percent) {
+        m_opacity_imagewidget->set_opacity_percent(percent);
+        m_opacity_slider->set_value(percent);
     };
 
     auto& wizards_tab = tab_widget.add_tab<GUI::Widget>("Wizards");
