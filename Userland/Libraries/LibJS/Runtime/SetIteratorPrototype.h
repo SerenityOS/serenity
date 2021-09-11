@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/PrototypeObject.h>
+#include <LibJS/Runtime/SetIterator.h>
 
 namespace JS {
 
-class SetIteratorPrototype final : public Object {
-    JS_OBJECT(SetIteratorPrototype, Object)
+class SetIteratorPrototype final : public PrototypeObject<SetIteratorPrototype, SetIterator> {
+    JS_PROTOTYPE_OBJECT(SetIteratorPrototype, SetIterator, SetIterator);
 
 public:
     SetIteratorPrototype(GlobalObject&);
