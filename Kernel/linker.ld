@@ -87,7 +87,7 @@ SECTIONS
         start_of_kernel_bss = .;
         *(page_tables)
         *(COMMON)
-        *(.bss)
+        *(.bss*)
         end_of_kernel_bss = .;
 
         . = ALIGN(4K);
