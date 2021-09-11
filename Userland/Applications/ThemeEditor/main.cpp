@@ -88,7 +88,7 @@ int main(int argc, char** argv)
 
     auto app_icon = GUI::Icon::default_icon("app-theme-editor");
 
-    Gfx::Palette preview_palette = file_to_edit ? Gfx::Palette(Gfx::PaletteImpl::create_with_anonymous_buffer(Gfx::load_system_theme(*path))) : app->palette();
+    Gfx::Palette startup_preview_palette = file_to_edit ? Gfx::Palette(Gfx::PaletteImpl::create_with_anonymous_buffer(Gfx::load_system_theme(*path))) : app->palette();
 
     auto window = GUI::Window::construct();
 
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
     main_widget.set_fill_with_background_color(true);
     main_widget.set_layout<GUI::VerticalBoxLayout>();
 
-    auto& preview_widget = main_widget.add<ThemeEditor::PreviewWidget>(preview_palette);
+    auto& preview_widget = main_widget.add<ThemeEditor::PreviewWidget>(startup_preview_palette);
     preview_widget.set_fixed_size(480, 360);
 
     auto& horizontal_container = main_widget.add<GUI::Widget>();
@@ -126,7 +126,7 @@ int main(int argc, char** argv)
         preview_palette.set_color(role, color_input.color());
         preview_widget.set_preview_palette(preview_palette);
     };
-    color_input.set_color(preview_palette.color(Gfx::ColorRole::Window));
+    color_input.set_color(startup_preview_palette.color(Gfx::ColorRole::Window));
 
     auto& file_menu = window->add_menu("&File");
 
