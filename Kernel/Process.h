@@ -393,8 +393,6 @@ public:
     KResultOr<FlatPtr> sys$getrandom(Userspace<void*>, size_t, unsigned int);
     KResultOr<FlatPtr> sys$getkeymap(Userspace<const Syscall::SC_getkeymap_params*>);
     KResultOr<FlatPtr> sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*>);
-    KResultOr<FlatPtr> sys$module_load(Userspace<const char*> path, size_t path_length);
-    KResultOr<FlatPtr> sys$module_unload(Userspace<const char*> name, size_t name_length);
     KResultOr<FlatPtr> sys$profiling_enable(pid_t, u64);
     KResultOr<FlatPtr> sys$profiling_disable(pid_t);
     KResultOr<FlatPtr> sys$profiling_free_buffer(pid_t);

@@ -16,9 +16,6 @@ __BEGIN_DECLS
 
 int disown(pid_t);
 
-int module_load(const char* path, size_t path_length);
-int module_unload(const char* name, size_t name_length);
-
 int profiling_enable(pid_t, uint64_t);
 int profiling_disable(pid_t);
 int profiling_free_buffer(pid_t);

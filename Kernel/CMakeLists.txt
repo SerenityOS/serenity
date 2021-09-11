@@ -219,7 +219,6 @@ set(KERNEL_SOURCES
     Syscalls/mkdir.cpp
     Syscalls/mknod.cpp
     Syscalls/mmap.cpp
-    Syscalls/module.cpp
     Syscalls/mount.cpp
     Syscalls/open.cpp
     Syscalls/perf_event.cpp
@@ -528,4 +527,3 @@ serenity_install_headers(Kernel)
 serenity_install_sources(Kernel)
 
 add_subdirectory(Prekernel)
-add_subdirectory(Modules)

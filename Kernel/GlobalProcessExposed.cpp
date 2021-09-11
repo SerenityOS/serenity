@@ -20,7 +20,6 @@
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/KBufferBuilder.h>
-#include <Kernel/Module.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
@@ -682,33 +681,7 @@ private:
         return KSuccess;
     }
 };
-class ProcFSModules final : public ProcFSGlobalInformation {
-public:
-    static NonnullRefPtr<ProcFSModules> must_create();
 
-    virtual mode_t required_mode() const override { return 0400; }
-
-private:
-    ProcFSModules();
-    virtual KResult try_generate(KBufferBuilder& builder) override
-    {
-        extern HashMap<String, OwnPtr<Module>>* g_modules;
-        JsonArraySerializer array { builder };
-        for (auto& it : *g_modules) {
-            auto obj = array.add_object();
-            obj.add("name", it.value->name);
-            obj.add("module_init", it.value->module_init);
-            obj.add("module_fini", it.value->module_fini);
-            u32 size = 0;
-            for (auto& section : it.value->sections) {
-                size += section.capacity();
-            }
-            obj.add("size", size);
-        }
-        array.finish();
-        return KSuccess;
-    }
-};
 class ProcFSProfile final : public ProcFSGlobalInformation {
 public:
     static NonnullRefPtr<ProcFSProfile> must_create();
@@ -791,10 +764,6 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSCommandLine> ProcFSCommandLine::must_create
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSCommandLine).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSModules> ProcFSModules::must_create()
-{
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSModules).release_nonnull();
-}
 UNMAP_AFTER_INIT NonnullRefPtr<ProcFSProfile> ProcFSProfile::must_create()
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSProfile).release_nonnull();
@@ -853,10 +822,6 @@ UNMAP_AFTER_INIT ProcFSCommandLine::ProcFSCommandLine()
     : ProcFSGlobalInformation("cmdline"sv)
 {
 }
-UNMAP_AFTER_INIT ProcFSModules::ProcFSModules()
-    : ProcFSGlobalInformation("modules"sv)
-{
-}
 UNMAP_AFTER_INIT ProcFSProfile::ProcFSProfile()
     : ProcFSGlobalInformation("profile"sv)
 {
@@ -896,7 +861,6 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSRootDirectory> ProcFSRootDirectory::must_cr
     directory->m_components.append(ProcFSDevices::must_create());
     directory->m_components.append(ProcFSUptime::must_create());
     directory->m_components.append(ProcFSCommandLine::must_create());
-    directory->m_components.append(ProcFSModules::must_create());
     directory->m_components.append(ProcFSProfile::must_create());
     directory->m_components.append(ProcFSKernelBase::must_create());
 
