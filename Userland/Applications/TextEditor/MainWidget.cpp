@@ -478,8 +478,6 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_no_wrapping_action->set_checked(true);
 
-    view_menu.add_separator();
-
     m_soft_tab_width_actions.set_exclusive(true);
     auto& soft_tab_width_menu = view_menu.add_submenu("&Tab Width");
     m_soft_tab_1_width_action = GUI::Action::create_checkable("1", [&](auto&) {
@@ -514,14 +512,16 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     view_menu.add_separator();
 
-    m_visualize_trailing_whitespace_action = GUI::Action::create_checkable("&Visualize Trailing Whitespace", [&](auto&) {
+    m_visualize_trailing_whitespace_action = GUI::Action::create_checkable("T&railing Whitespace", [&](auto&) {
         m_editor->set_visualize_trailing_whitespace(m_visualize_trailing_whitespace_action->is_checked());
     });
-    m_visualize_leading_whitespace_action = GUI::Action::create_checkable("Visualize &Leading Whitespace", [&](auto&) {
+    m_visualize_leading_whitespace_action = GUI::Action::create_checkable("L&eading Whitespace", [&](auto&) {
         m_editor->set_visualize_leading_whitespace(m_visualize_leading_whitespace_action->is_checked());
     });
 
     m_visualize_trailing_whitespace_action->set_checked(true);
+    m_visualize_trailing_whitespace_action->set_status_tip("Visualize trailing whitespace");
+    m_visualize_leading_whitespace_action->set_status_tip("Visualize leading whitespace");
 
     view_menu.add_action(*m_visualize_trailing_whitespace_action);
     view_menu.add_action(*m_visualize_leading_whitespace_action);
