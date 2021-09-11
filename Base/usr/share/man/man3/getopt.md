@@ -27,7 +27,7 @@ int getopt_long(int argc, char** argv, const char* short_options, const struct o
 ## Description
 
 `getopt()` and `getopt_long()` parse options according to the syntax specified
-in [`getopt`(5)](../getopt.md). `getopt()` only supports short options;
+in [`getopt`(5)](../man5/getopt.md). `getopt()` only supports short options;
 `getopt_long()` supports both short and long options.
 
 One invocation of either function extracts at most one option from command line
