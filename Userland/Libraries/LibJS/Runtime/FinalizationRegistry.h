@@ -34,6 +34,7 @@ public:
 
 private:
     virtual void visit_edges(Visitor& visitor) override;
+    virtual void did_become_zombie() override { deregister(); }
 
     FunctionObject* m_cleanup_callback { nullptr };
 

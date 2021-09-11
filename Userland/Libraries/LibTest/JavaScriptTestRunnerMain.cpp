@@ -18,6 +18,7 @@ namespace JS {
 
 RefPtr<::JS::VM> g_vm;
 bool g_collect_on_every_allocation = false;
+bool g_zombify_dead_cells = false;
 bool g_run_bytecode = false;
 bool g_dump_bytecode = false;
 String g_currently_running_test;
@@ -109,6 +110,7 @@ int main(int argc, char** argv)
     });
     args_parser.add_option(print_json, "Show results as JSON", "json", 'j');
     args_parser.add_option(g_collect_on_every_allocation, "Collect garbage after every allocation", "collect-often", 'g');
+    args_parser.add_option(g_zombify_dead_cells, "Zombify dead cells (to catch missing GC marks)", "zombify-dead-cells", 'z');
     args_parser.add_option(g_run_bytecode, "Use the bytecode interpreter", "run-bytecode", 'b');
     args_parser.add_option(g_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd');
     args_parser.add_option(test_glob, "Only run tests matching the given glob", "filter", 'f', "glob");

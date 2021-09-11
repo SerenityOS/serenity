@@ -69,6 +69,8 @@ public:
     bool should_collect_on_every_allocation() const { return m_should_collect_on_every_allocation; }
     void set_should_collect_on_every_allocation(bool b) { m_should_collect_on_every_allocation = b; }
 
+    void set_zombify_dead_cells(bool b) { m_zombify_dead_cells = b; }
+
     void did_create_handle(Badge<HandleImpl>, HandleImpl&);
     void did_destroy_handle(Badge<HandleImpl>, HandleImpl&);
 
@@ -127,6 +129,7 @@ private:
     bool m_should_gc_when_deferral_ends { false };
 
     bool m_collecting_garbage { false };
+    bool m_zombify_dead_cells { false };
 };
 
 }

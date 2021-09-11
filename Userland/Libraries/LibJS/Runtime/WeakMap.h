@@ -30,6 +30,8 @@ public:
     virtual void remove_swept_cells(Badge<Heap>, Span<Cell*>) override;
 
 private:
+    virtual void did_become_zombie() override { deregister(); }
+
     HashMap<Cell*, Value> m_values; // This stores Cell pointers instead of Object pointers to aide with sweeping
 };
 
