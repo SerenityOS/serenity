@@ -291,6 +291,8 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
     if (vm.exception())
         return {};
 
+    String tag;
+
     // 7. If Type(tag) is not String or Object, throw a TypeError exception.
     if (!tag_value.is_string() && !tag_value.is_object()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOrString, "tag"sv);
@@ -301,12 +303,12 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
     if (tag_value.is_object() && is<Locale>(tag_value.as_object())) {
         // a. Let tag be tag.[[Locale]].
         auto const& tag_object = static_cast<Locale const&>(tag_value.as_object());
-        tag_value = js_string(vm, tag_object.locale());
+        tag = tag_object.locale();
     }
     // 9. Else,
     else {
         // a. Let tag be ? ToString(tag).
-        tag_value = tag_value.to_primitive_string(global_object);
+        tag = tag_value.to_string(global_object);
         if (vm.exception())
             return {};
     }
@@ -317,8 +319,9 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
         return {};
 
     // 11. Set tag to ? ApplyOptionsToTag(tag, options).
-    auto canonicalized_tag = apply_options_to_tag(global_object, tag_value.as_string().string(), *options);
-    if (vm.exception())
+    if (auto applied_tag = apply_options_to_tag(global_object, tag, *options); applied_tag.has_value())
+        tag = applied_tag.release_value();
+    else
         return {};
 
     // 12. Let opt be a new Record.
@@ -371,7 +374,7 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
         return {};
 
     // 29. Let r be ! ApplyUnicodeExtensionToTag(tag, opt, relevantExtensionKeys).
-    auto result = apply_unicode_extension_to_tag(*canonicalized_tag, move(opt), relevant_extension_keys);
+    auto result = apply_unicode_extension_to_tag(tag, move(opt), relevant_extension_keys);
 
     // 30. Set locale.[[Locale]] to r.[[locale]].
     locale->set_locale(move(result.locale));
