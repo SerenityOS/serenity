@@ -35,11 +35,11 @@ UNMAP_AFTER_INIT PCIDeviceSysFSDirectory::PCIDeviceSysFSDirectory(const SysFSDir
 UNMAP_AFTER_INIT void PCIBusSysFSDirectory::initialize()
 {
     auto pci_directory = adopt_ref(*new (nothrow) PCIBusSysFSDirectory());
-    SysFSComponentRegistry::the().register_new_component(pci_directory);
+    SysFSComponentRegistry::the().register_new_bus_directory(pci_directory);
 }
 
 UNMAP_AFTER_INIT PCIBusSysFSDirectory::PCIBusSysFSDirectory()
-    : SysFSDirectory("pci", SysFSComponentRegistry::the().root_directory())
+    : SysFSDirectory("pci", SysFSComponentRegistry::the().buses_directory())
 {
     PCI::enumerate([&](const Address& address, ID) {
         auto pci_device = PCI::PCIDeviceSysFSDirectory::create(*this, address);
