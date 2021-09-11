@@ -302,7 +302,11 @@ inline bool is_user_range(VirtualAddress vaddr, size_t size)
 {
     if (vaddr.offset(size) < vaddr)
         return false;
-    return is_user_address(vaddr) && is_user_address(vaddr.offset(size));
+    if (!is_user_address(vaddr))
+        return false;
+    if (size <= 1)
+        return true;
+    return is_user_address(vaddr.offset(size - 1));
 }
 
 inline bool is_user_range(VirtualRange const& range)
