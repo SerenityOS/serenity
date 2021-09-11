@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Debug.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Storage/Partition/DiskPartition.h>
 
@@ -12,7 +13,7 @@ namespace Kernel {
 
 NonnullRefPtr<DiskPartition> DiskPartition::create(BlockDevice& device, unsigned minor_number, DiskPartitionMetadata metadata)
 {
-    auto partition_or_error = try_create_device<DiskPartition>(device, minor_number, metadata);
+    auto partition_or_error = DeviceManagement::try_create_device<DiskPartition>(device, minor_number, metadata);
     // FIXME: Find a way to propagate errors
     VERIFY(!partition_or_error.is_error());
     return partition_or_error.release_value();

@@ -5,6 +5,7 @@
  */
 
 #include <AK/StringView.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/IDEChannel.h>
@@ -15,7 +16,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<PATADiskDevice> PATADiskDevice::create(const IDEController& controller, IDEChannel& channel, DriveType type, InterfaceType interface_type, u16 capabilities, u64 max_addressable_block)
 {
-    auto device_or_error = try_create_device<PATADiskDevice>(controller, channel, type, interface_type, capabilities, max_addressable_block);
+    auto device_or_error = DeviceManagement::try_create_device<PATADiskDevice>(controller, channel, type, interface_type, capabilities, max_addressable_block);
     // FIXME: Find a way to propagate errors
     VERIFY(!device_or_error.is_error());
     return device_or_error.release_value();

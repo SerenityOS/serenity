@@ -6,6 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/NonnullOwnPtr.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/Devices/KCOVInstance.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
@@ -20,7 +21,7 @@ HashMap<ThreadID, KCOVInstance*>* KCOVDevice::thread_instance;
 
 UNMAP_AFTER_INIT NonnullRefPtr<KCOVDevice> KCOVDevice::must_create()
 {
-    auto kcov_device_or_error = try_create_device<KCOVDevice>();
+    auto kcov_device_or_error = DeviceManagement::try_create_device<KCOVDevice>();
     // FIXME: Find a way to propagate errors
     VERIFY(!kcov_device_or_error.is_error());
     return kcov_device_or_error.release_value();

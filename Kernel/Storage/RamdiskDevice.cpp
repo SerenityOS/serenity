@@ -6,6 +6,7 @@
 
 #include <AK/Memory.h>
 #include <AK/StringView.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Storage/RamdiskController.h>
 #include <Kernel/Storage/RamdiskDevice.h>
@@ -14,7 +15,7 @@ namespace Kernel {
 
 NonnullRefPtr<RamdiskDevice> RamdiskDevice::create(const RamdiskController& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor)
 {
-    auto device_or_error = try_create_device<RamdiskDevice>(controller, move(region), major, minor);
+    auto device_or_error = DeviceManagement::try_create_device<RamdiskDevice>(controller, move(region), major, minor);
     // FIXME: Find a way to propagate errors
     VERIFY(!device_or_error.is_error());
     return device_or_error.release_value();

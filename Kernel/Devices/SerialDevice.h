@@ -13,6 +13,8 @@ namespace Kernel {
 
 class SerialDevice final : public CharacterDevice {
     AK_MAKE_ETERNAL
+    friend class DeviceManagement;
+
 public:
     static NonnullRefPtr<SerialDevice> must_create(size_t com_number);
 
@@ -102,10 +104,9 @@ public:
         DataReady = 0x01 << 0
     };
 
-    // FIXME: We expose this constructor to make try_create_device helper to work
+private:
     SerialDevice(IOAddress base_addr, unsigned minor);
 
-private:
     friend class PCISerialDevice;
 
     // ^CharacterDevice

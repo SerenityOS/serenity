@@ -9,6 +9,7 @@
 #include <AK/StringBuilder.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/FileSystem.h>
@@ -270,7 +271,7 @@ KResultOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(StringView
     if (metadata.is_device()) {
         if (custody.mount_flags() & MS_NODEV)
             return EACCES;
-        auto device = Device::get_device(metadata.major_device, metadata.minor_device);
+        auto device = DeviceManagement::the().get_device(metadata.major_device, metadata.minor_device);
         if (device == nullptr) {
             return ENODEV;
         }

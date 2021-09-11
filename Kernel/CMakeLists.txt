@@ -48,6 +48,7 @@ set(KERNEL_SOURCES
     Devices/BlockDevice.cpp
     Devices/CharacterDevice.cpp
     Devices/Device.cpp
+    Devices/DeviceManagement.cpp
     Devices/FullDevice.cpp
     Devices/KCOVDevice.cpp
     Devices/KCOVInstance.cpp
