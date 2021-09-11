@@ -14,7 +14,7 @@ class GlobalEnvironment final : public Environment {
     JS_ENVIRONMENT(GlobalEnvironment, Environment);
 
 public:
-    explicit GlobalEnvironment(GlobalObject&);
+    GlobalEnvironment(GlobalObject&, Object& this_value);
 
     virtual Optional<Variable> get_from_environment(FlyString const&) const override;
     virtual bool put_into_environment(FlyString const&, Variable) override;
@@ -30,12 +30,8 @@ public:
     virtual Value get_binding_value(GlobalObject&, FlyString const& name, bool strict) override;
     virtual bool delete_binding(GlobalObject&, FlyString const& name) override;
 
-    Value global_this_value() const;
-
-    // [[ObjectRecord]]
     ObjectEnvironment& object_record() { return *m_object_record; }
-
-    // [[DeclarativeRecord]]
+    Object& global_this_value() { return *m_global_this_value; }
     DeclarativeEnvironment& declarative_record() { return *m_declarative_record; }
 
     bool has_var_declaration(FlyString const& name) const;
@@ -50,12 +46,13 @@ private:
     virtual bool is_global_environment() const override { return true; }
     virtual void visit_edges(Visitor&) override;
 
-    ObjectEnvironment* m_object_record { nullptr };
-    DeclarativeEnvironment* m_declarative_record { nullptr };
-
-    Vector<FlyString> m_var_names;
+    ObjectEnvironment* m_object_record { nullptr };           // [[ObjectRecord]]
+    Object* m_global_this_value { nullptr };                  // [[GlobalThisValue]]
+    DeclarativeEnvironment* m_declarative_record { nullptr }; // [[DeclarativeRecord]]
+    Vector<FlyString> m_var_names;                            // [[VarNames]]
 };
 
 template<>
 inline bool Environment::fast_is<GlobalEnvironment>() const { return is_global_environment(); }
+
 }

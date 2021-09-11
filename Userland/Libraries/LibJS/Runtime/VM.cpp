@@ -647,7 +647,7 @@ void VM::ordinary_call_bind_this(FunctionObject& function, ExecutionContext& cal
         this_value = this_argument;
     } else if (this_argument.is_nullish()) {
         auto& global_environment = callee_realm->environment();
-        this_value = global_environment.global_this_value();
+        this_value = &global_environment.global_this_value();
     } else {
         this_value = this_argument.to_object(function.global_object());
     }
