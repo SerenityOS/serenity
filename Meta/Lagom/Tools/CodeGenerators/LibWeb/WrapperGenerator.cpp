@@ -550,11 +550,22 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     // FIXME: Add support for optional, nullable and default values to all types
     if (parameter.type.is_string()) {
         if (!optional) {
-            scoped_generator.append(R"~~~(
+            if (!parameter.type.nullable) {
+                scoped_generator.append(R"~~~(
     auto @cpp_name@ = @js_name@@js_suffix@.to_string(global_object, @legacy_null_to_empty_string@);
     if (vm.exception())
         @return_statement@
 )~~~");
+            } else {
+                scoped_generator.append(R"~~~(
+    String @cpp_name@;
+    if (!@js_name@@js_suffix@.is_nullish()) {
+        @cpp_name@ = @js_name@@js_suffix@.to_string(global_object, @legacy_null_to_empty_string@);
+        if (vm.exception())
+            @return_statement@
+    }
+)~~~");
+            }
         } else {
             scoped_generator.append(R"~~~(
     String @cpp_name@;
@@ -563,7 +574,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (vm.exception())
             @return_statement@
     })~~~");
-            if (optional_default_value.has_value()) {
+            if (optional_default_value.has_value() && (!parameter.type.nullable || optional_default_value.value() != "null")) {
                 scoped_generator.append(R"~~~( else {
         @cpp_name@ = @parameter.optional_default_value@;
     }
