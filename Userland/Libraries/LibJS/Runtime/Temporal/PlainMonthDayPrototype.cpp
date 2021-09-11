@@ -48,7 +48,7 @@ static PlainMonthDay* typed_this(GlobalObject& global_object)
     if (!this_object)
         return {};
     if (!is<PlainMonthDay>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Temporal.PlainMonthDay");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainMonthDay");
         return {};
     }
     return static_cast<PlainMonthDay*>(this_object);

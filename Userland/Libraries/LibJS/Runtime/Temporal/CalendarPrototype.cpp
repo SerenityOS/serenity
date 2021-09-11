@@ -68,7 +68,7 @@ static Calendar* typed_this(GlobalObject& global_object)
     if (!this_object)
         return {};
     if (!is<Calendar>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Temporal.Calendar");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.Calendar");
         return {};
     }
     return static_cast<Calendar*>(this_object);

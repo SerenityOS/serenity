@@ -69,7 +69,7 @@ static PlainDate* typed_this(GlobalObject& global_object)
     if (!this_object)
         return {};
     if (!is<PlainDate>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Temporal.PlainDate");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainDate");
         return {};
     }
     return static_cast<PlainDate*>(this_object);

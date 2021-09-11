@@ -21,7 +21,7 @@ static Locale* typed_this(GlobalObject& global_object)
         return nullptr;
 
     if (!is<Locale>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Intl.Locale");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Intl.Locale");
         return nullptr;
     }
 

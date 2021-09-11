@@ -55,7 +55,7 @@ static PlainTime* typed_this(GlobalObject& global_object)
     if (!this_object)
         return {};
     if (!is<PlainTime>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Temporal.PlainTime");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainTime");
         return {};
     }
     return static_cast<PlainTime*>(this_object);

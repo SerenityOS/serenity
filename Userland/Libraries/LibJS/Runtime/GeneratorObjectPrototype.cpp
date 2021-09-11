@@ -16,7 +16,7 @@ static GeneratorObject* typed_this(VM& vm, GlobalObject& global_object)
     if (!this_object)
         return {};
     if (!is<GeneratorObject>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Generator");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Generator");
         return nullptr;
     }
     return static_cast<GeneratorObject*>(this_object);

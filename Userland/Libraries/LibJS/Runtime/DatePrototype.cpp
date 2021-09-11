@@ -27,7 +27,7 @@ static Date* typed_this(VM& vm, GlobalObject& global_object)
     if (!this_object)
         return nullptr;
     if (!is<Date>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Date");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Date");
         return nullptr;
     }
     return static_cast<Date*>(this_object);

@@ -72,7 +72,7 @@ static RegExpObject* regexp_object_from(VM& vm, GlobalObject& global_object)
     if (!this_object)
         return nullptr;
     if (!is<RegExpObject>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "RegExp");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "RegExp");
         return nullptr;
     }
     return static_cast<RegExpObject*>(this_object);
@@ -325,7 +325,7 @@ Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16Strin
     }
 
     if (!is<RegExpObject>(regexp_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "RegExp");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "RegExp");
         return {};
     }
 
@@ -339,22 +339,22 @@ Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16Strin
 // 22.2.5.9 get RegExp.prototype.multiline, https://tc39.es/ecma262/#sec-get-regexp.prototype.multiline
 // 22.2.5.14 get RegExp.prototype.sticky, https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky
 // 22.2.5.17 get RegExp.prototype.unicode, https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode
-#define __JS_ENUMERATE(flagName, flag_name, flag_char)                               \
-    JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flag_name)                              \
-    {                                                                                \
-        auto* regexp_object = this_object_from(vm, global_object);                   \
-        if (!regexp_object)                                                          \
-            return {};                                                               \
-                                                                                     \
-        if (!is<RegExpObject>(regexp_object)) {                                      \
-            if (same_value(regexp_object, global_object.regexp_prototype()))         \
-                return js_undefined();                                               \
-            vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "RegExp"); \
-            return {};                                                               \
-        }                                                                            \
-                                                                                     \
-        auto const& flags = static_cast<RegExpObject*>(regexp_object)->flags();      \
-        return Value(flags.contains(#flag_char##sv));                                \
+#define __JS_ENUMERATE(flagName, flag_name, flag_char)                                            \
+    JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flag_name)                                           \
+    {                                                                                             \
+        auto* regexp_object = this_object_from(vm, global_object);                                \
+        if (!regexp_object)                                                                       \
+            return {};                                                                            \
+                                                                                                  \
+        if (!is<RegExpObject>(regexp_object)) {                                                   \
+            if (same_value(regexp_object, global_object.regexp_prototype()))                      \
+                return js_undefined();                                                            \
+            vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "RegExp"); \
+            return {};                                                                            \
+        }                                                                                         \
+                                                                                                  \
+        auto const& flags = static_cast<RegExpObject*>(regexp_object)->flags();                   \
+        return Value(flags.contains(#flag_char##sv));                                             \
     }
 JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
@@ -390,7 +390,7 @@ JS_DEFINE_NATIVE_GETTER(RegExpPrototype::source)
     if (!is<RegExpObject>(regexp_object)) {
         if (same_value(regexp_object, global_object.regexp_prototype()))
             return js_string(vm, "(?:)");
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "RegExp");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "RegExp");
         return {};
     }
 

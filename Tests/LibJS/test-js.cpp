@@ -38,7 +38,7 @@ TESTJS_GLOBAL_FUNCTION(get_weak_set_size, getWeakSetSize)
     if (!object)
         return {};
     if (!is<JS::WeakSet>(object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WeakSet");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WeakSet");
         return {};
     }
     auto* weak_set = static_cast<JS::WeakSet*>(object);
@@ -51,7 +51,7 @@ TESTJS_GLOBAL_FUNCTION(get_weak_map_size, getWeakMapSize)
     if (!object)
         return {};
     if (!is<JS::WeakMap>(object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WeakMap");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WeakMap");
         return {};
     }
     auto* weak_map = static_cast<JS::WeakMap*>(object);

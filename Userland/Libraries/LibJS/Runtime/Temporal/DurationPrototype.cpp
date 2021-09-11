@@ -54,7 +54,7 @@ static Duration* typed_this(GlobalObject& global_object)
     if (!this_object)
         return {};
     if (!is<Duration>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Temporal.Duration");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.Duration");
         return {};
     }
     return static_cast<Duration*>(this_object);

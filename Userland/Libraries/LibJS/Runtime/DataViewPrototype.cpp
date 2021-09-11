@@ -58,7 +58,7 @@ static DataView* typed_this(VM& vm, GlobalObject& global_object)
 {
     auto this_value = vm.this_value(global_object);
     if (!this_value.is_object() || !is<DataView>(this_value.as_object())) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, vm.names.DataView);
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, vm.names.DataView);
         return nullptr;
     }
     return static_cast<DataView*>(&this_value.as_object());

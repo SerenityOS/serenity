@@ -37,7 +37,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapIteratorPrototype::next)
 {
     auto this_value = vm.this_value(global_object);
     if (!this_value.is_object() || !is<MapIterator>(this_value.as_object())) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Map Iterator");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Map Iterator");
         return {};
     }
 

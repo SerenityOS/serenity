@@ -48,7 +48,7 @@ Map* MapPrototype::typed_this(VM& vm, GlobalObject& global_object)
     if (!this_object)
         return {};
     if (!is<Map>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Map");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Map");
         return nullptr;
     }
     return static_cast<Map*>(this_object);

@@ -28,7 +28,7 @@ static ListFormat* typed_this(GlobalObject& global_object)
         return nullptr;
 
     if (!is<ListFormat>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Intl.ListFormat");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Intl.ListFormat");
         return nullptr;
     }
 

@@ -38,7 +38,7 @@ FinalizationRegistry* FinalizationRegistryPrototype::typed_this(VM& vm, GlobalOb
     if (!this_object)
         return nullptr;
     if (!is<FinalizationRegistry>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "FinalizationRegistry");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "FinalizationRegistry");
         return nullptr;
     }
     return static_cast<FinalizationRegistry*>(this_object);
