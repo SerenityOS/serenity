@@ -111,7 +111,7 @@ int main(int argc, char** argv)
 
     Optional<String> path = {};
 
-    auto save_to_result = [&](FileSystemAccessClient::Result result) {
+    auto save_to_result = [&](FileSystemAccessClient::Result const& result) {
         if (result.error != 0)
             return;
 
