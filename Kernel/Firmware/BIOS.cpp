@@ -90,11 +90,11 @@ UNMAP_AFTER_INIT void BIOSSysFSDirectory::set_dmi_32_bit_entry_initialization_va
     m_smbios_structure_table_length = smbios_entry.ptr()->legacy_structure.smboios_table_length;
 }
 
-UNMAP_AFTER_INIT void BIOSSysFSDirectory::initialize()
+UNMAP_AFTER_INIT KResultOr<NonnullRefPtr<BIOSSysFSDirectory>> BIOSSysFSDirectory::try_create(FirmwareSysFSDirectory& firmware_directory)
 {
-    auto bios_directory = adopt_ref(*new (nothrow) BIOSSysFSDirectory());
-    SysFSComponentRegistry::the().register_new_component(bios_directory);
+    auto bios_directory = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) BIOSSysFSDirectory(firmware_directory)));
     bios_directory->create_components();
+    return bios_directory;
 }
 
 void BIOSSysFSDirectory::create_components()
@@ -126,8 +126,8 @@ UNMAP_AFTER_INIT void BIOSSysFSDirectory::initialize_dmi_exposer()
     dbgln("BIOSSysFSDirectory: Data table @ {}", m_smbios_structure_table);
 }
 
-UNMAP_AFTER_INIT BIOSSysFSDirectory::BIOSSysFSDirectory()
-    : SysFSDirectory("bios", SysFSComponentRegistry::the().root_directory())
+UNMAP_AFTER_INIT BIOSSysFSDirectory::BIOSSysFSDirectory(FirmwareSysFSDirectory& firmware_directory)
+    : SysFSDirectory("bios", firmware_directory)
 {
     auto entry_32bit = find_dmi_entry32bit_point();
     if (entry_32bit.has_value()) {

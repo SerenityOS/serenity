@@ -7,6 +7,7 @@
 
 #include <AK/Format.h>
 #include <AK/StringView.h>
+#include <AK/Try.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
@@ -63,14 +64,14 @@ UNMAP_AFTER_INIT ACPISysFSComponent::ACPISysFSComponent(String name, PhysicalAdd
 {
 }
 
-UNMAP_AFTER_INIT void ACPISysFSDirectory::initialize()
+UNMAP_AFTER_INIT KResultOr<NonnullRefPtr<ACPISysFSDirectory>> ACPISysFSDirectory::try_create(FirmwareSysFSDirectory& firmware_directory)
 {
-    auto acpi_directory = adopt_ref(*new (nothrow) ACPISysFSDirectory());
-    SysFSComponentRegistry::the().register_new_component(acpi_directory);
+    auto acpi_directory = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ACPISysFSDirectory(firmware_directory)));
+    return acpi_directory;
 }
 
-UNMAP_AFTER_INIT ACPISysFSDirectory::ACPISysFSDirectory()
-    : SysFSDirectory("acpi", SysFSComponentRegistry::the().root_directory())
+UNMAP_AFTER_INIT ACPISysFSDirectory::ACPISysFSDirectory(FirmwareSysFSDirectory& firmware_directory)
+    : SysFSDirectory("acpi", firmware_directory)
 {
     NonnullRefPtrVector<SysFSComponent> components;
     size_t ssdt_count = 0;
