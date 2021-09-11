@@ -6,12 +6,13 @@
 
 #pragma once
 
+#include <LibJS/Runtime/PrototypeObject.h>
 #include <LibJS/Runtime/WeakSet.h>
 
 namespace JS {
 
-class WeakSetPrototype final : public Object {
-    JS_OBJECT(WeakSetPrototype, Object);
+class WeakSetPrototype final : public PrototypeObject<WeakSetPrototype, WeakSet> {
+    JS_PROTOTYPE_OBJECT(WeakSetPrototype, WeakSet, WeakSet);
 
 public:
     WeakSetPrototype(GlobalObject&);
