@@ -100,16 +100,17 @@ void MulticastDNS::announce()
         response.add_answer(answer);
     }
 
-    if (emit_packet(response) < 0)
+    if (emit_packet(response).is_error())
         perror("Failed to emit response packet");
 }
 
-ssize_t MulticastDNS::emit_packet(const DNSPacket& packet, const sockaddr_in* destination)
+ErrorOr<size_t> MulticastDNS::emit_packet(const DNSPacket& packet, const sockaddr_in* destination)
 {
     auto buffer = packet.to_byte_buffer();
     if (!destination)
         destination = &mdns_addr;
-    return sendto(fd(), buffer.data(), buffer.size(), 0, (const sockaddr*)destination, sizeof(*destination));
+
+    return send(buffer, *destination);
 }
 
 Vector<IPv4Address> MulticastDNS::local_addresses() const
@@ -148,7 +149,7 @@ Vector<DNSAnswer> MulticastDNS::lookup(const DNSName& name, DNSRecordType record
     request.set_recursion_desired(false);
     request.add_question({ name, record_type, DNSRecordClass::IN, false });
 
-    if (emit_packet(request) < 0) {
+    if (emit_packet(request).is_error()) {
         perror("failed to emit request packet");
         return {};
     }

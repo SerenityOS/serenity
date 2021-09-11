@@ -102,4 +102,18 @@ Optional<u16> UDPServer::local_port() const
     return ntohs(address.sin_port);
 }
 
+ErrorOr<size_t> UDPServer::send(ReadonlyBytes buffer, sockaddr_in const& to)
+{
+    if (m_fd < 0) {
+        return Error::from_errno(EBADF);
+    }
+
+    auto result = ::sendto(m_fd, buffer.data(), buffer.size(), 0, (sockaddr const*)&to, sizeof(to));
+    if (result < 0) {
+        return Error::from_errno(errno);
+    }
+
+    return result;
+}
+
 }

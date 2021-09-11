@@ -58,7 +58,9 @@ void DNSServer::handle_client()
         response.set_code(DNSPacket::Code::NOERROR);
 
     buffer = response.to_byte_buffer();
-    sendto(fd(), buffer.data(), buffer.size(), 0, (const sockaddr*)&client_address, sizeof(client_address));
+
+    // FIXME: We should be handling errors here.
+    [[maybe_unused]] auto result = send(buffer, client_address);
 }
 
 }
