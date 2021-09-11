@@ -129,8 +129,6 @@ void GlobalObject::initialize_global_object()
     m_object_prototype = heap().allocate_without_global_object<ObjectPrototype>(*this);
     m_function_prototype = heap().allocate_without_global_object<FunctionPrototype>(*this);
 
-    m_environment = heap().allocate<GlobalEnvironment>(*this, *this, *this);
-
     m_new_object_shape = vm.heap().allocate_without_global_object<Shape>(*this);
     m_new_object_shape->set_prototype_without_transition(m_object_prototype);
 
@@ -293,7 +291,6 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_new_ordinary_function_prototype_object_shape);
     visitor.visit(m_proxy_constructor);
     visitor.visit(m_generator_object_prototype);
-    visitor.visit(m_environment);
     visitor.visit(m_array_prototype_values_function);
     visitor.visit(m_eval_function);
     visitor.visit(m_temporal_time_zone_prototype_get_offset_nanoseconds_for_function);
