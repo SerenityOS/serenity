@@ -101,9 +101,6 @@ KResult KBufferBuilder::append_escaped_for_json(const StringView& string)
 {
     for (auto ch : string) {
         switch (ch) {
-        case '\e':
-            TRY(append("\\u001B"));
-            break;
         case '\b':
             TRY(append("\\b"));
             break;
@@ -120,7 +117,10 @@ KResult KBufferBuilder::append_escaped_for_json(const StringView& string)
             TRY(append("\\\\"));
             break;
         default:
-            TRY(append(ch));
+            if (ch >= 0 && ch <= 0x1f)
+                TRY(append(String::formatted("\\u{:04x}", ch)));
+            else
+                TRY(append(ch));
         }
     }
     return KSuccess;
