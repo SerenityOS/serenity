@@ -12,6 +12,7 @@
 #include "Layer.h"
 #include "MoveTool.h"
 #include "Tool.h"
+#include <LibConfig/Client.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/DisjointRectSet.h>
@@ -29,6 +30,7 @@ ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
     m_undo_stack = make<GUI::UndoStack>();
     m_undo_stack->push(make<ImageUndoCommand>(*m_image));
     m_image->add_client(*this);
+    m_pixel_grid_threshold = (float)Config::read_i32("PixelPaint", "PixelGrid", "Threshold", 15);
 }
 
 ImageEditor::~ImageEditor()
@@ -86,8 +88,7 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
         painter.draw_rect(enclosing_int_rect(image_rect_to_editor_rect(m_active_layer->relative_rect())).inflated(2, 2), Color::Black);
     }
 
-    const float pixel_grid_threshold = 15.0f;
-    if (m_show_pixel_grid && m_scale > pixel_grid_threshold) {
+    if (m_show_pixel_grid && m_scale > m_pixel_grid_threshold) {
         auto event_image_rect = enclosing_int_rect(editor_rect_to_image_rect(event.rect())).inflated(1, 1);
         auto image_rect = m_image->rect().inflated(1, 1).intersected(event_image_rect);
 
