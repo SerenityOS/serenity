@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 
 namespace Kernel {
