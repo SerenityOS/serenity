@@ -108,7 +108,6 @@ public:
 private:
     friend class PCISerialDevice;
 
-
     // ^CharacterDevice
     virtual StringView class_name() const override { return "SerialDevice"; }
 
