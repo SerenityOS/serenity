@@ -357,6 +357,15 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             if (auto* editor = current_image_editor())
                 editor->clear_guides();
         }));
+    view_menu.add_separator();
+
+    auto show_pixel_grid_action = GUI::Action::create_checkable(
+        "Show Pixel Grid", [&](auto& action) {
+            if (auto* editor = current_image_editor())
+                editor->set_pixel_grid_visibility(action.is_checked());
+        });
+    show_pixel_grid_action->set_checked(true);
+    view_menu.add_action(*show_pixel_grid_action);
 
     auto& tool_menu = window.add_menu("&Tool");
     m_toolbox->for_each_tool([&](auto& tool) {
