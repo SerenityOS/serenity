@@ -717,6 +717,10 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         @return_statement@
     }
 )~~~");
+    } else if (parameter.type.name == "any") {
+        scoped_generator.append(R"~~~(
+    auto @cpp_name@ = @js_name@@js_suffix@;
+)~~~");
     } else {
         dbgln("Unimplemented JS-to-C++ conversion: {}", parameter.type.name);
         VERIFY_NOT_REACHED();
