@@ -31,6 +31,7 @@ public:
 
 private:
     virtual void did_become_zombie() override { deregister(); }
+    void visit_edges(Visitor&) override;
 
     HashMap<Cell*, Value> m_values; // This stores Cell pointers instead of Object pointers to aide with sweeping
 };
