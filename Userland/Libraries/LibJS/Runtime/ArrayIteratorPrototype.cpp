@@ -6,7 +6,6 @@
 
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/ArrayIterator.h>
 #include <LibJS/Runtime/ArrayIteratorPrototype.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -16,7 +15,7 @@
 namespace JS {
 
 ArrayIteratorPrototype::ArrayIteratorPrototype(GlobalObject& global_object)
-    : Object(*global_object.iterator_prototype())
+    : PrototypeObject(*global_object.iterator_prototype())
 {
 }
 
@@ -39,21 +38,18 @@ ArrayIteratorPrototype::~ArrayIteratorPrototype()
 // FIXME: This seems to be CreateArrayIterator (https://tc39.es/ecma262/#sec-createarrayiterator) instead of %ArrayIteratorPrototype%.next.
 JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
 {
-    auto this_value = vm.this_value(global_object);
-    if (!this_value.is_object() || !is<ArrayIterator>(this_value.as_object())) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Array Iterator");
+    auto* iterator = typed_this_value(global_object);
+    if (vm.exception())
         return {};
-    }
-    auto& this_object = this_value.as_object();
-    auto& iterator = static_cast<ArrayIterator&>(this_object);
-    auto target_array = iterator.array();
+
+    auto target_array = iterator->array();
     if (target_array.is_undefined())
         return create_iterator_result_object(global_object, js_undefined(), true);
     VERIFY(target_array.is_object());
     auto& array = target_array.as_object();
 
-    auto index = iterator.index();
-    auto iteration_kind = iterator.iteration_kind();
+    auto index = iterator->index();
+    auto iteration_kind = iterator->iteration_kind();
 
     size_t length;
 
@@ -73,11 +69,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
     }
 
     if (index >= length) {
-        iterator.m_array = js_undefined();
+        iterator->m_array = js_undefined();
         return create_iterator_result_object(global_object, js_undefined(), true);
     }
 
-    iterator.m_index++;
+    iterator->m_index++;
     if (iteration_kind == Object::PropertyKind::Key)
         return create_iterator_result_object(global_object, Value(static_cast<i32>(index)), false);
 

@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/ArrayIterator.h>
+#include <LibJS/Runtime/PrototypeObject.h>
 
 namespace JS {
 
-class ArrayIteratorPrototype final : public Object {
-    JS_OBJECT(ArrayIteratorPrototype, Object)
+class ArrayIteratorPrototype final : public PrototypeObject<ArrayIteratorPrototype, ArrayIterator> {
+    JS_PROTOTYPE_OBJECT(ArrayIteratorPrototype, ArrayIterator, ArrayIterator);
 
 public:
     ArrayIteratorPrototype(GlobalObject&);
