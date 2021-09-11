@@ -130,6 +130,10 @@ int main(int argc, char** argv)
 
     auto& file_menu = window->add_menu("&File");
 
+    preview_widget.on_theme_load_from_file = [&](String const& new_path) {
+        path = new_path;
+    };
+
     auto save_to_result = [&](FileSystemAccessClient::Result const& result) {
         if (result.error != 0)
             return;

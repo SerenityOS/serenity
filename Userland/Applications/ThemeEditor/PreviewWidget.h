@@ -23,6 +23,8 @@ public:
     void set_preview_palette(const Gfx::Palette&);
     void set_theme_from_file(String const& path, int fd);
 
+    Function<void(String const&)> on_theme_load_from_file;
+
 private:
     explicit PreviewWidget(const Gfx::Palette&);
 
