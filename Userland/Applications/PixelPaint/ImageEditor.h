@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -94,6 +95,9 @@ public:
     void set_guide_visibility(bool show_guides);
     Function<void(bool)> on_set_guide_visibility;
 
+    bool pixel_grid_visibility() const { return m_show_pixel_grid; }
+    void set_pixel_grid_visibility(bool show_pixel_grid);
+
 private:
     explicit ImageEditor(NonnullRefPtr<Image>);
 
@@ -127,6 +131,7 @@ private:
 
     NonnullRefPtrVector<Guide> m_guides;
     bool m_show_guides { true };
+    bool m_show_pixel_grid { true };
 
     Tool* m_active_tool { nullptr };
 
