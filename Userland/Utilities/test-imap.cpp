@@ -22,7 +22,7 @@ int main(int argc, char** argv)
     bool tls { false };
 
     String username;
-    String password;
+    Core::SecretString password;
 
     bool interactive_password;
 
@@ -40,17 +40,17 @@ int main(int argc, char** argv)
             warnln("{}", password_or_err.error().string());
             return 1;
         }
-        password = password_or_err.value();
+        password = password_or_err.release_value();
     } else {
         auto standard_input = Core::File::standard_input();
-        password = standard_input->read_all();
+        password = Core::SecretString::take_ownership(standard_input->read_all());
     }
 
     Core::EventLoop loop;
     auto client = IMAP::Client(host, port, tls);
     client.connect()->await();
 
-    auto response = client.login(username, password)->await().release_value();
+    auto response = client.login(username, password.view())->await().release_value();
     outln("[LOGIN] Login response: {}", response.response_text());
 
     response = move(client.send_simple_command(IMAP::CommandType::Capability)->await().value().get<IMAP::SolidResponse>());
