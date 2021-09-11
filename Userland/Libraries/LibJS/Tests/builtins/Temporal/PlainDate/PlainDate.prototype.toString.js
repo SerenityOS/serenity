@@ -39,7 +39,7 @@ describe("errors", () => {
     test("this value must be a Temporal.PlainDate object", () => {
         expect(() => {
             Temporal.PlainDate.prototype.toString.call("foo");
-        }).toThrowWithMessage(TypeError, "Not a Temporal.PlainDate");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.PlainDate");
     });
 
     test("calendarName option must be one of 'auto', 'always', 'never'", () => {

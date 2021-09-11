@@ -10,6 +10,6 @@ describe("errors", () => {
     test("this value must be a Date object", () => {
         expect(() => {
             Date.prototype.toTemporalInstant.call(123);
-        }).toThrowWithMessage(TypeError, "Not a Date object");
+        }).toThrowWithMessage(TypeError, "Not an object of type Date");
     });
 });

@@ -144,6 +144,6 @@ describe("errors", () => {
     test("does not accept non-function values", () => {
         expect(() => {
             Function.prototype.bind.call("foo");
-        }).toThrowWithMessage(TypeError, "Not a Function object");
+        }).toThrowWithMessage(TypeError, "Not an object of type Function");
     });
 });

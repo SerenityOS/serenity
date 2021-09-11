@@ -89,7 +89,7 @@ describe("errors", () => {
 
             expect(() => {
                 result = new TypedArray().filter(() => {});
-            }).toThrowWithMessage(TypeError, "Not a TypedArray object");
+            }).toThrowWithMessage(TypeError, "Not an object of type TypedArray");
 
             expect(result).toBeUndefined();
         });
@@ -105,7 +105,7 @@ describe("errors", () => {
 
             expect(() => {
                 result = new TypedArray().filter(() => {});
-            }).toThrowWithMessage(TypeError, "Not a TypedArray object");
+            }).toThrowWithMessage(TypeError, "Not an object of type TypedArray");
 
             expect(result).toBeUndefined();
         });

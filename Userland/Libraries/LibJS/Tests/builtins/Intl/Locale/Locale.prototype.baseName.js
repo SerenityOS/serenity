@@ -2,7 +2,7 @@ describe("errors", () => {
     test("called on non-Locale object", () => {
         expect(() => {
             Intl.Locale.prototype.baseName;
-        }).toThrowWithMessage(TypeError, "Not a Intl.Locale object");
+        }).toThrowWithMessage(TypeError, "Not an object of type Intl.Locale");
     });
 });
 

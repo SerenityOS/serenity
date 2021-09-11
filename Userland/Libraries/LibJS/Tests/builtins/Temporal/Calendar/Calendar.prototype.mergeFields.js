@@ -35,7 +35,7 @@ describe("errors", () => {
     test("this value must be a Temporal.Calendar object", () => {
         expect(() => {
             Temporal.Calendar.prototype.mergeFields.call("foo");
-        }).toThrowWithMessage(TypeError, "Not a Temporal.Calendar");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.Calendar");
     });
 
     test("fields argument must be coercible to object", () => {

@@ -6,5 +6,5 @@ test("basic functionality", () => {
 test("calling with non-BigInt |this|", () => {
     expect(() => {
         BigInt.prototype.toLocaleString.call("foo");
-    }).toThrowWithMessage(TypeError, "Not a BigInt object");
+    }).toThrowWithMessage(TypeError, "Not an object of type BigInt");
 });

@@ -18,6 +18,6 @@ describe("errors", () => {
     test("this value must be a Temporal.PlainMonthDay object", () => {
         expect(() => {
             Temporal.PlainMonthDay.prototype.toJSON.call("foo");
-        }).toThrowWithMessage(TypeError, "Not a Temporal.PlainMonthDay");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.PlainMonthDay");
     });
 });

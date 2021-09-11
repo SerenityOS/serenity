@@ -12,6 +12,6 @@ describe("errors", () => {
     test("this value must be a Temporal.Duration object", () => {
         expect(() => {
             Reflect.get(Temporal.Duration.prototype, "sign", "foo");
-        }).toThrowWithMessage(TypeError, "Not a Temporal.Duration");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.Duration");
     });
 });
