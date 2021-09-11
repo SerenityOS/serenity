@@ -5,6 +5,7 @@
  */
 
 #include <AK/StringView.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/DevTmpFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 
@@ -321,7 +322,7 @@ KResultOr<size_t> DevTmpFSDeviceInode::read_bytes(off_t offset, size_t count, Us
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!!description);
-    RefPtr<Device> device = Device::get_device(m_major_number, m_minor_number);
+    RefPtr<Device> device = DeviceManagement::the().get_device(m_major_number, m_minor_number);
     if (!device)
         return KResult(ENODEV);
     if (!device->can_read(*description, offset))
@@ -336,7 +337,7 @@ KResultOr<size_t> DevTmpFSDeviceInode::write_bytes(off_t offset, size_t count, c
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!!description);
-    RefPtr<Device> device = Device::get_device(m_major_number, m_minor_number);
+    RefPtr<Device> device = DeviceManagement::the().get_device(m_major_number, m_minor_number);
     if (!device)
         return KResult(ENODEV);
     if (!device->can_write(*description, offset))

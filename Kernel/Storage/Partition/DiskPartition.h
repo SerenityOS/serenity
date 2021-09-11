@@ -14,6 +14,8 @@
 namespace Kernel {
 
 class DiskPartition final : public BlockDevice {
+    friend class DeviceManagement;
+
 public:
     static NonnullRefPtr<DiskPartition> create(BlockDevice&, unsigned, DiskPartitionMetadata);
     virtual ~DiskPartition();
@@ -28,10 +30,8 @@ public:
 
     const DiskPartitionMetadata& metadata() const;
 
-    // FIXME: We expose this constructor to make try_create_device helper to work
-    DiskPartition(BlockDevice&, unsigned, DiskPartitionMetadata);
-
 private:
+    DiskPartition(BlockDevice&, unsigned, DiskPartitionMetadata);
     virtual StringView class_name() const override;
 
     WeakPtr<BlockDevice> m_device;

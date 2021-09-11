@@ -13,6 +13,7 @@
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Coredump.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
 #    include <Kernel/Devices/KCOVDevice.h>
 #endif
@@ -156,7 +157,7 @@ KResultOr<NonnullRefPtr<Process>> Process::try_create_user_process(RefPtr<Thread
         first_thread = nullptr;
         return ENOMEM;
     }
-    auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : NullDevice::the();
+    auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : DeviceManagement::the().null_device();
     auto description = TRY(device_to_use_as_tty.open(O_RDWR));
     auto setup_description = [&process, &description](int fd) {
         process->m_fds.m_fds_metadatas[fd].allocate();

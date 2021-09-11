@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/VMWareMouseDevice.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/Sections.h>
@@ -16,7 +17,7 @@ UNMAP_AFTER_INIT RefPtr<VMWareMouseDevice> VMWareMouseDevice::try_to_initialize(
         return {};
     if (!VMWareBackdoor::the()->vmmouse_is_absolute())
         return {};
-    auto mouse_device_or_error = try_create_device<VMWareMouseDevice>(ps2_controller);
+    auto mouse_device_or_error = DeviceManagement::try_create_device<VMWareMouseDevice>(ps2_controller);
     // FIXME: Find a way to propagate errors
     VERIFY(!mouse_device_or_error.is_error());
     if (mouse_device_or_error.value()->initialize())

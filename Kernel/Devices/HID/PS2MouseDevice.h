@@ -17,6 +17,8 @@ namespace Kernel {
 class PS2MouseDevice : public IRQHandler
     , public MouseDevice
     , public I8042Device {
+    friend class DeviceManagement;
+
 public:
     static RefPtr<PS2MouseDevice> try_to_initialize(const I8042Controller&);
     bool initialize();
@@ -32,10 +34,9 @@ public:
         enable_irq();
     }
 
-    // FIXME: We expose this constructor to make try_create_device helper to work
+protected:
     explicit PS2MouseDevice(const I8042Controller&);
 
-protected:
     // ^IRQHandler
     virtual bool handle_irq(const RegisterState&) override;
 

@@ -5,6 +5,7 @@
  */
 
 #include <AK/Memory.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/ZeroDevice.h>
 #include <Kernel/Sections.h>
 
@@ -12,7 +13,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<ZeroDevice> ZeroDevice::must_create()
 {
-    auto zero_device_or_error = try_create_device<ZeroDevice>();
+    auto zero_device_or_error = DeviceManagement::try_create_device<ZeroDevice>();
     // FIXME: Find a way to propagate errors
     VERIFY(!zero_device_or_error.is_error());
     return zero_device_or_error.release_value();

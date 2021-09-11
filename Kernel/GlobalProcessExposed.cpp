@@ -12,6 +12,7 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/ConsoleDevice.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
@@ -640,7 +641,7 @@ private:
     virtual KResult try_generate(KBufferBuilder& builder) override
     {
         JsonArraySerializer array { builder };
-        Device::for_each([&array](auto& device) {
+        DeviceManagement::the().for_each([&array](auto& device) {
             auto obj = array.add_object();
             obj.add("major", device.major());
             obj.add("minor", device.minor());

@@ -13,6 +13,7 @@
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/CommandLine.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/FullDevice.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Devices/KCOVDevice.h>
@@ -182,7 +183,10 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 
     load_kernel_symbol_table();
 
+    DeviceManagement::initialize();
     SysFSComponentRegistry::initialize();
+    DeviceManagement::the().attach_null_device(*NullDevice::must_initialize());
+
     ConsoleDevice::initialize();
     s_bsp_processor.initialize(0);
 
@@ -281,7 +285,6 @@ void init_stage2(void*)
 
     VirtualFileSystem::initialize();
 
-    NullDevice::initialize();
     if (!get_serial_debug())
         (void)SerialDevice::must_create(0).leak_ref();
     (void)SerialDevice::must_create(1).leak_ref();

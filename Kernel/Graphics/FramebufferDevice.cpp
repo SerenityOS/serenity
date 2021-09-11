@@ -6,6 +6,7 @@
 
 #include <AK/Checked.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -22,7 +23,7 @@ namespace Kernel {
 
 NonnullRefPtr<FramebufferDevice> FramebufferDevice::create(const GraphicsDevice& adapter, size_t output_port_index, PhysicalAddress paddr, size_t width, size_t height, size_t pitch)
 {
-    auto framebuffer_device_or_error = try_create_device<FramebufferDevice>(adapter, output_port_index, paddr, width, height, pitch);
+    auto framebuffer_device_or_error = DeviceManagement::try_create_device<FramebufferDevice>(adapter, output_port_index, paddr, width, height, pitch);
     // FIXME: Find a way to propagate errors
     VERIFY(!framebuffer_device_or_error.is_error());
     return framebuffer_device_or_error.release_value();

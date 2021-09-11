@@ -6,19 +6,12 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/Devices/Device.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/SysFS.h>
-#include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
-
-static Singleton<MutexProtected<HashMap<u32, Device*>>> s_all_devices;
-
-MutexProtected<HashMap<u32, Device*>>& Device::all_devices()
-{
-    return *s_all_devices;
-}
 
 NonnullRefPtr<SysFSDeviceComponent> SysFSDeviceComponent::must_create(Device const& device)
 {
@@ -115,41 +108,15 @@ RefPtr<SysFSComponent> SysFSCharacterDevicesDirectory::lookup(StringView name)
     });
 }
 
-void Device::for_each(Function<void(Device&)> callback)
-{
-    all_devices().with_exclusive([&](auto& map) -> void {
-        for (auto& entry : map)
-            callback(*entry.value);
-    });
-}
-
-Device* Device::get_device(unsigned major, unsigned minor)
-{
-    return all_devices().with_exclusive([&](auto& map) -> Device* {
-        auto it = map.find(encoded_device(major, minor));
-        if (it == map.end())
-            return nullptr;
-        return it->value;
-    });
-}
-
 Device::Device(unsigned major, unsigned minor)
     : m_major(major)
     , m_minor(minor)
 {
-    u32 device_id = encoded_device(major, minor);
-    all_devices().with_exclusive([&](auto& map) -> void {
-        auto it = map.find(device_id);
-        if (it != map.end()) {
-            dbgln("Already registered {},{}: {}", major, minor, it->value->class_name());
-        }
-        VERIFY(!map.contains(device_id));
-        map.set(device_id, this);
-    });
 }
 
 void Device::after_inserting()
 {
+    DeviceManagement::the().after_inserting_device({}, *this);
     VERIFY(!m_sysfs_component);
     auto sys_fs_component = SysFSDeviceComponent::must_create(*this);
     m_sysfs_component = sys_fs_component;
@@ -160,21 +127,17 @@ void Device::after_inserting()
 
 void Device::before_removing()
 {
-    m_state = State::BeingRemoved;
     VERIFY(m_sysfs_component);
     SysFSComponentRegistry::the().devices_list().with_exclusive([&](auto& list) -> void {
         list.remove(*m_sysfs_component);
     });
+    DeviceManagement::the().before_device_removal({}, *this);
+    m_state = State::BeingRemoved;
 }
 
 Device::~Device()
 {
     VERIFY(m_state == State::BeingRemoved);
-    u32 device_id = encoded_device(m_major, m_minor);
-    all_devices().with_exclusive([&](auto& map) -> void {
-        VERIFY(map.contains(device_id));
-        map.remove(encoded_device(m_major, m_minor));
-    });
 }
 
 String Device::absolute_path() const
