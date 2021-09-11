@@ -1482,26 +1482,30 @@ Optional<Length> Parser::parse_length(ParsingContext const& context, StyleCompon
             type = Length::Type::In;
         } else if (unit_string.equals_ignoring_case("Q")) {
             type = Length::Type::Q;
-        } else if (context.in_quirks_mode()) {
-            type = Length::Type::Px;
+        } else {
+            return {};
         }
 
         numeric_value = try_parse_float(length_string);
-    } else if (component_value.is(Token::Type::Number)) {
-        auto value_string = component_value.token().m_value.string_view();
-        if (value_string == "0") {
-            type = Length::Type::Px;
-            numeric_value = 0;
-        } else if (context.in_quirks_mode()) {
-            type = Length::Type::Px;
-            numeric_value = try_parse_float(value_string);
-        }
     } else if (component_value.is(Token::Type::Percentage)) {
         type = Length::Type::Percentage;
         auto value_string = component_value.token().m_value.string_view();
         numeric_value = try_parse_float(value_string);
     } else if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto")) {
         return Length::make_auto();
+    } else if (component_value.is(Token::Type::Number)) {
+        auto value_string = component_value.token().m_value.string_view();
+        if (value_string == "0") {
+            type = Length::Type::Px;
+            numeric_value = 0;
+        } else if (context.in_quirks_mode() && property_has_quirk(context.current_property_id(), Quirk::UnitlessLength)) {
+            // https://quirks.spec.whatwg.org/#quirky-length-value
+            // FIXME: Disallow quirk when inside a CSS sub-expression (like `calc()`)
+            // "The <quirky-length> value must not be supported in arguments to CSS expressions other than the rect()
+            // expression, and must not be supported in the supports() static method of the CSS interface."
+            type = Length::Type::Px;
+            numeric_value = try_parse_float(value_string);
+        }
     }
 
     if (!numeric_value.has_value())
