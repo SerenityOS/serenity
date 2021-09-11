@@ -413,15 +413,15 @@ Reference VM::get_identifier_reference(Environment* environment, FlyString name,
 
     // FIXME: The remainder of this function is non-conforming.
 
-    auto& global_object = environment->global_object();
     for (; environment && environment->outer_environment(); environment = environment->outer_environment()) {
         auto possible_match = environment->get_from_environment(name);
         if (possible_match.has_value())
             return Reference { *environment, move(name), strict };
     }
 
-    if (global_object.environment().has_binding(name) || !in_strict_mode()) {
-        return Reference { global_object.environment(), move(name), strict };
+    auto& global_environment = interpreter().realm().global_environment();
+    if (global_environment.has_binding(name) || !in_strict_mode()) {
+        return Reference { global_environment, move(name), strict };
     }
 
     return Reference { Reference::BaseType::Unresolvable, move(name), strict };
@@ -646,7 +646,8 @@ void VM::ordinary_call_bind_this(FunctionObject& function, ExecutionContext& cal
     if (function.is_strict_mode()) {
         this_value = this_argument;
     } else if (this_argument.is_nullish()) {
-        auto& global_environment = callee_realm->environment();
+        // FIXME: Make function.realm() an actual Realm, then this will become less horrendous.
+        auto& global_environment = interpreter().realm().global_environment();
         this_value = &global_environment.global_this_value();
     } else {
         this_value = this_argument.to_object(function.global_object());
