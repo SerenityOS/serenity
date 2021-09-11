@@ -13,6 +13,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Painter.h>
@@ -33,20 +34,6 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(image_file, "Image file to open", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
-
-    String file_to_edit_full_path;
-
-    if (image_file) {
-        file_to_edit_full_path = Core::File::absolute_path(image_file);
-        VERIFY(!file_to_edit_full_path.is_empty());
-        if (Core::File::exists(file_to_edit_full_path)) {
-            dbgln("unveil for: {}", file_to_edit_full_path);
-            if (unveil(file_to_edit_full_path.characters(), "r") < 0) {
-                perror("unveil");
-                return 1;
-            }
-        }
-    }
 
     if (unveil("/res", "r") < 0) {
         perror("unveil");
@@ -83,12 +70,6 @@ int main(int argc, char** argv)
     auto& main_widget = window->set_main_widget<PixelPaint::MainWidget>();
     main_widget.initialize_menubar(*window);
 
-    if (Core::File::exists(file_to_edit_full_path)) {
-        main_widget.open_image_file(file_to_edit_full_path);
-    } else {
-        main_widget.create_default_image();
-    }
-
     auto& statusbar = *main_widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     app->on_action_enter = [&statusbar](GUI::Action& action) {
@@ -103,5 +84,18 @@ int main(int argc, char** argv)
     };
 
     window->show();
+
+    if (image_file) {
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window->window_id(), image_file);
+        if (response.error != 0) {
+            if (response.error != -1)
+                GUI::MessageBox::show_error(window, String::formatted("Opening \"{}\" failed: {}", *response.chosen_file, strerror(response.error)));
+            return 1;
+        }
+        main_widget.open_image_fd(*response.fd, *response.chosen_file);
+    } else {
+        main_widget.create_default_image();
+    }
+
     return app->exec();
 }
