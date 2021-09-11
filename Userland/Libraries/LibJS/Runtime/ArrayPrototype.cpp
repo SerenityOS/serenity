@@ -20,6 +20,7 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/ObjectPrototype.h>
+#include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -122,11 +123,12 @@ static Object* array_species_create(GlobalObject& global_object, Object& origina
         return {};
     if (constructor.is_constructor()) {
         auto& constructor_function = constructor.as_function();
+        auto* this_realm = vm.current_realm();
         auto* constructor_realm = get_function_realm(global_object, constructor_function);
         if (vm.exception())
             return {};
-        if (constructor_realm != &global_object) {
-            if (&constructor_function == constructor_realm->array_constructor())
+        if (constructor_realm != this_realm) {
+            if (&constructor_function == constructor_realm->global_object().array_constructor())
                 constructor = js_undefined();
         }
     }
