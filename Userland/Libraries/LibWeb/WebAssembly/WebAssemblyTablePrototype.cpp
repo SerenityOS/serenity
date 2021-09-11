@@ -26,7 +26,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::grow)
         return {};
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object || !is<WebAssemblyTableObject>(this_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WebAssembly.Table");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
         return {};
     }
     auto* table_object = static_cast<WebAssemblyTableObject*>(this_object);
@@ -65,7 +65,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::get)
 
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object || !is<WebAssemblyTableObject>(this_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WebAssembly.Table");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
         return {};
     }
     auto* table_object = static_cast<WebAssemblyTableObject*>(this_object);
@@ -95,7 +95,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::set)
 
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object || !is<WebAssemblyTableObject>(this_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WebAssembly.Table");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
         return {};
     }
     auto* table_object = static_cast<WebAssemblyTableObject*>(this_object);
@@ -130,7 +130,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::length_getter)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object || !is<WebAssemblyTableObject>(this_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WebAssembly.Table");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
         return {};
     }
     auto* table_object = static_cast<WebAssemblyTableObject*>(this_object);

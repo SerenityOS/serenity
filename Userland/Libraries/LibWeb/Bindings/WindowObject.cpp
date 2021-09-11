@@ -133,7 +133,7 @@ static DOM::Window* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
     VERIFY(this_object);
 
     if (StringView("WindowObject") != this_object->class_name()) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WindowObject");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WindowObject");
         return nullptr;
     }
     return &static_cast<WindowObject*>(this_object)->impl();
@@ -463,7 +463,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_computed_style)
         return {};
 
     if (!is<ElementWrapper>(object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "DOM element");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "DOM element");
         return {};
     }
 

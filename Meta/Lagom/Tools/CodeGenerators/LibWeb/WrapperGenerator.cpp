@@ -579,7 +579,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     RefPtr<EventListener> @cpp_name@;
     if (!@js_name@@js_suffix@.is_nullish()) {
         if (!@js_name@@js_suffix@.is_function()) {
-            vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Function");
+            vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
             @return_statement@
         }
         @cpp_name@ = adopt_ref(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
@@ -588,7 +588,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         } else {
             scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_function()) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Function");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
         @return_statement@
     }
     auto @cpp_name@ = adopt_ref(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
@@ -602,7 +602,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         @return_statement@
 
     if (!is<@parameter.type.name@Wrapper>(@cpp_name@_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "@parameter.type.name@");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
         @return_statement@
     }
 
@@ -617,7 +617,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             @return_statement@
 
         if (!is<@parameter.type.name@Wrapper>(@cpp_name@_object)) {
-            vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "@parameter.type.name@");
+            vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
             @return_statement@
         }
 
@@ -1568,7 +1568,7 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
 
         generator.append(R"~~~(
     if (!is<@wrapper_class@>(this_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "@fully_qualified_name@");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@fully_qualified_name@");
         return nullptr;
     }
 

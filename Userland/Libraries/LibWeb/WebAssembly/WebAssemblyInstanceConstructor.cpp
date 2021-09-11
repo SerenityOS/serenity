@@ -39,7 +39,7 @@ JS::Value WebAssemblyInstanceConstructor::construct(FunctionObject&)
         return {};
 
     if (!is<WebAssemblyModuleObject>(module_argument)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WebAssembly.Module");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Module");
         return {};
     }
 
