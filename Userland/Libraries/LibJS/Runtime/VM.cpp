@@ -576,7 +576,7 @@ Value VM::get_new_target()
 }
 
 // 10.2.1.1 PrepareForOrdinaryCall ( F, newTarget ), https://tc39.es/ecma262/#sec-prepareforordinarycall
-void VM::prepare_for_ordinary_call(FunctionObject& function, ExecutionContext& callee_context, Value new_target)
+void VM::prepare_for_ordinary_call(FunctionObject& function, ExecutionContext& callee_context, [[maybe_unused]] Object* new_target)
 {
     // NOTE: This is a LibJS specific hack for NativeFunction to inherit the strictness of its caller.
     // FIXME: I feel like we should be able to get rid of this.
@@ -585,46 +585,43 @@ void VM::prepare_for_ordinary_call(FunctionObject& function, ExecutionContext& c
     else
         callee_context.is_strict_mode = function.is_strict_mode();
 
-    // 1. Assert: Type(newTarget) is Undefined or Object.
-    VERIFY(new_target.is_undefined() || new_target.is_object());
-
-    // 2. Let callerContext be the running execution context.
-    // 3. Let calleeContext be a new ECMAScript code execution context.
+    // 1. Let callerContext be the running execution context.
+    // 2. Let calleeContext be a new ECMAScript code execution context.
 
     // NOTE: In the specification, PrepareForOrdinaryCall "returns" a new callee execution context.
     // To avoid heap allocations, we put our ExecutionContext objects on the C++ stack instead.
     // Whoever calls us should put an ExecutionContext on their stack and pass that as the `callee_context`.
 
-    // 4. Set the Function of calleeContext to F.
+    // 3. Set the Function of calleeContext to F.
     callee_context.function = &function;
     callee_context.function_name = function.name();
 
-    // 5. Let calleeRealm be F.[[Realm]].
-    // 6. Set the Realm of calleeContext to calleeRealm.
-    // 7. Set the ScriptOrModule of calleeContext to F.[[ScriptOrModule]].
+    // 4. Let calleeRealm be F.[[Realm]].
+    // 5. Set the Realm of calleeContext to calleeRealm.
+    // 6. Set the ScriptOrModule of calleeContext to F.[[ScriptOrModule]].
     // FIXME: Our execution context struct currently does not track these items.
 
-    // 8. Let localEnv be NewFunctionEnvironment(F, newTarget).
+    // 7. Let localEnv be NewFunctionEnvironment(F, newTarget).
     // FIXME: This should call NewFunctionEnvironment instead of the ad-hoc FunctionObject::create_environment()
     auto* local_environment = function.create_environment(function);
 
-    // 9. Set the LexicalEnvironment of calleeContext to localEnv.
+    // 8. Set the LexicalEnvironment of calleeContext to localEnv.
     callee_context.lexical_environment = local_environment;
 
-    // 10. Set the VariableEnvironment of calleeContext to localEnv.
+    // 9. Set the VariableEnvironment of calleeContext to localEnv.
     callee_context.variable_environment = local_environment;
 
-    // 11. Set the PrivateEnvironment of calleeContext to F.[[PrivateEnvironment]].
+    // 10. Set the PrivateEnvironment of calleeContext to F.[[PrivateEnvironment]].
     // FIXME: We currently don't support private environments.
 
-    // 12. If callerContext is not already suspended, suspend callerContext.
+    // 11. If callerContext is not already suspended, suspend callerContext.
     // FIXME: We don't have this concept yet.
 
-    // 13. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
+    // 12. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
     push_execution_context(callee_context, function.global_object());
 
-    // 14. NOTE: Any exception objects produced after this point are associated with calleeRealm.
-    // 15. Return calleeContext. (See NOTE above about how contexts are allocated on the C++ stack.)
+    // 13. NOTE: Any exception objects produced after this point are associated with calleeRealm.
+    // 14. Return calleeContext. (See NOTE above about how contexts are allocated on the C++ stack.)
 }
 
 // 10.2.1.2 OrdinaryCallBindThis ( F, calleeContext, thisArgument ), https://tc39.es/ecma262/#sec-ordinarycallbindthis
@@ -672,7 +669,7 @@ Value VM::call_internal(FunctionObject& function, Value this_value, Optional<Mar
     }
 
     ExecutionContext callee_context(heap());
-    prepare_for_ordinary_call(function, callee_context, js_undefined());
+    prepare_for_ordinary_call(function, callee_context, nullptr);
     if (exception())
         return {};
 
