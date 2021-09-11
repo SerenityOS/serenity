@@ -7,11 +7,12 @@
 #pragma once
 
 #include <LibJS/Runtime/FinalizationRegistry.h>
+#include <LibJS/Runtime/PrototypeObject.h>
 
 namespace JS {
 
-class FinalizationRegistryPrototype final : public Object {
-    JS_OBJECT(FinalizationRegistryPrototype, Object);
+class FinalizationRegistryPrototype final : public PrototypeObject<FinalizationRegistryPrototype, FinalizationRegistry> {
+    JS_PROTOTYPE_OBJECT(FinalizationRegistryPrototype, FinalizationRegistry, FinalizationRegistry);
 
 public:
     FinalizationRegistryPrototype(GlobalObject&);
@@ -19,8 +20,6 @@ public:
     virtual ~FinalizationRegistryPrototype() override;
 
 private:
-    static FinalizationRegistry* typed_this(VM&, GlobalObject&);
-
     JS_DECLARE_NATIVE_FUNCTION(cleanup_some);
     JS_DECLARE_NATIVE_FUNCTION(register_);
     JS_DECLARE_NATIVE_FUNCTION(unregister);
