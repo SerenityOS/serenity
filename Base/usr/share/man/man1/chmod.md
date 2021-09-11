@@ -44,6 +44,5 @@ $ chmod g=r script.sh
 
 ## See also
 
-* [`chgrp`(1)](chmod.md)
+* [`chgrp`(1)](chgrp.md)
 * [`chown`(1)](chown.md)
-* [`chmod`(2)](../man2/chmod.md)

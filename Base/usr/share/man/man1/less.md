@@ -19,7 +19,7 @@ but largely incompatible with
 
 ## Options
 
-* `-P`, `--prompt`: Set the prompt format string. See [Prompts](#Prompts) for more details.
+* `-P`, `--prompt`: Set the prompt format string. See [Prompts](#prompts) for more details.
 * `-X`, `--no-init`: Don't switch to the xterm alternate buffer on startup.
 * `-e`, `--quit-at-eof`: Immediately exit less when the last line of the document is reached.
 * `-m`, `--emulate-more`: Apply `-Xe`, set the prompt to `--More--`, and disable

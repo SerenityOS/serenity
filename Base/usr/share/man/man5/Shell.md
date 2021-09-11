@@ -57,7 +57,7 @@ Note that heredocs _must_ be listed in the same order as they are used after a s
 
 ##### Variable Reference
 Any sequence of _Identifier_ characters, or a _Special Variable_ following a `$`.
-Variables may be followed by a _Slice_ (see [Slice](#Slice))
+Variables may be followed by a _Slice_ (see [Slice](#slice))
 
 ##### Slice
 Variables may be sliced into, which will allow the user to select a subset of entries in the contents of the variable.
