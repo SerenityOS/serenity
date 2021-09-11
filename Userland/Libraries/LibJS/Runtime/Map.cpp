@@ -24,7 +24,7 @@ Map::~Map()
 
 void Map::visit_edges(Cell::Visitor& visitor)
 {
-    Object::visit_edges(visitor);
+    Base::visit_edges(visitor);
     for (auto& value : m_entries) {
         visitor.visit(value.key);
         visitor.visit(value.value);

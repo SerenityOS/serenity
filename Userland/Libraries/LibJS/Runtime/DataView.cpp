@@ -27,7 +27,7 @@ DataView::~DataView()
 
 void DataView::visit_edges(Visitor& visitor)
 {
-    Object::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(m_viewed_array_buffer);
 }
 

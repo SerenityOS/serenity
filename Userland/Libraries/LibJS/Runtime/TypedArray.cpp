@@ -263,7 +263,7 @@ TypedArrayBase* typed_array_create(GlobalObject& global_object, FunctionObject& 
 
 void TypedArrayBase::visit_edges(Visitor& visitor)
 {
-    Object::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(m_viewed_array_buffer);
 }
 

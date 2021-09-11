@@ -75,7 +75,7 @@ void FinalizationRegistry::cleanup(FunctionObject* callback)
 
 void FinalizationRegistry::visit_edges(Cell::Visitor& visitor)
 {
-    Object::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(m_cleanup_callback);
     for (auto& record : m_records) {
         visitor.visit(record.held_value);

@@ -26,7 +26,7 @@ RegExpStringIterator::RegExpStringIterator(Object& prototype, Object& regexp_obj
 
 void RegExpStringIterator::visit_edges(Cell::Visitor& visitor)
 {
-    Object::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(&m_regexp_object);
 }
 

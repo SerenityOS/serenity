@@ -41,7 +41,7 @@ void WeakRef::remove_swept_cells(Badge<Heap>, Span<Cell*> cells)
 
 void WeakRef::visit_edges(Visitor& visitor)
 {
-    Object::visit_edges(visitor);
+    Base::visit_edges(visitor);
 
     if (vm().execution_generation() == m_last_execution_generation)
         visitor.visit(m_value);

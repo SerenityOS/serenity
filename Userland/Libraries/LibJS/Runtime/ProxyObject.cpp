@@ -1023,7 +1023,7 @@ Value ProxyObject::construct(FunctionObject& new_target)
 
 void ProxyObject::visit_edges(Cell::Visitor& visitor)
 {
-    FunctionObject::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(&m_target);
     visitor.visit(&m_handler);
 }
