@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Value.h>
@@ -15,8 +16,13 @@ NativeFunction* NativeFunction::create(GlobalObject& global_object, const FlyStr
     return global_object.heap().allocate<NativeFunction>(global_object, name, move(function), *global_object.function_prototype());
 }
 
+// FIXME: m_realm is supposed to be the realm argument of CreateBuiltinFunction, or the current
+//        Realm Record. The former is not something that's commonly used or we support, the
+//        latter is impossible as no ExecutionContext exists when most NativeFunctions are created...
+
 NativeFunction::NativeFunction(Object& prototype)
     : FunctionObject(prototype)
+    , m_realm(&vm().interpreter().realm())
 {
 }
 
@@ -24,12 +30,14 @@ NativeFunction::NativeFunction(FlyString name, Function<Value(VM&, GlobalObject&
     : FunctionObject(prototype)
     , m_name(move(name))
     , m_native_function(move(native_function))
+    , m_realm(&vm().interpreter().realm())
 {
 }
 
 NativeFunction::NativeFunction(FlyString name, Object& prototype)
     : FunctionObject(prototype)
     , m_name(move(name))
+    , m_realm(&vm().interpreter().realm())
 {
 }
 

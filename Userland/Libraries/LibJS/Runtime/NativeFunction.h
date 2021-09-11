@@ -29,7 +29,7 @@ public:
 
     virtual bool is_strict_mode() const override;
 
-    GlobalObject* realm() const override { return &global_object(); }
+    virtual Realm* realm() const override { return m_realm; }
 
 protected:
     NativeFunction(FlyString name, Object& prototype);
@@ -41,6 +41,7 @@ private:
 
     FlyString m_name;
     Function<Value(VM&, GlobalObject&)> m_native_function;
+    Realm* m_realm { nullptr };
 };
 
 template<>

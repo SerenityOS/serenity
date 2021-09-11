@@ -118,7 +118,7 @@ GlobalObject* get_function_realm(GlobalObject& global_object, FunctionObject con
     // 2. If obj has a [[Realm]] internal slot, then
     if (function.realm()) {
         // a. Return obj.[[Realm]].
-        return function.realm();
+        return &function.global_object();
     }
 
     // 3. If obj is a bound function exotic object, then

@@ -36,8 +36,7 @@ public:
     auto& bytecode_executable() const { return m_bytecode_executable; }
 
     virtual Environment* environment() override { return m_environment; }
-
-    GlobalObject* realm() const override { return m_realm; }
+    virtual Realm* realm() const override { return m_realm; }
 
 protected:
     virtual bool is_strict_mode() const final { return m_is_strict; }
@@ -54,7 +53,7 @@ private:
     const Vector<FunctionNode::Parameter> m_parameters;
     Optional<Bytecode::Executable> m_bytecode_executable;
     Environment* m_environment { nullptr };
-    GlobalObject* m_realm { nullptr };
+    Realm* m_realm { nullptr };
     i32 m_function_length { 0 };
     FunctionKind m_kind { FunctionKind::Regular };
     bool m_is_strict { false };
