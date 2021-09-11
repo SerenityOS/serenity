@@ -7,6 +7,7 @@
 #include <AK/Endian.h>
 #include <AK/Types.h>
 #include <LibCrypto/Hash/SHA1.h>
+#include <string.h>
 
 namespace Crypto {
 namespace Hash {
@@ -63,7 +64,7 @@ inline void SHA1::transform(const u8* data)
     c = 0;
     d = 0;
     e = 0;
-    __builtin_memset(blocks, 0, 16 * sizeof(u32));
+    explicit_bzero(blocks, 16 * sizeof(u32));
 }
 
 void SHA1::update(const u8* message, size_t length)

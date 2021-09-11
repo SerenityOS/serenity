@@ -6,6 +6,7 @@
 
 #include <AK/Types.h>
 #include <LibCrypto/Hash/MD5.h>
+#include <string.h>
 
 static constexpr u32 F(u32 x, u32 y, u32 z) { return (x & y) | ((~x) & z); };
 static constexpr u32 G(u32 x, u32 y, u32 z) { return (x & z) | ((~z) & y); };
@@ -199,7 +200,7 @@ void MD5::transform(const u8* block)
     m_C += c;
     m_D += d;
 
-    __builtin_memset(x, 0, sizeof(x));
+    explicit_bzero(x, sizeof(x));
 }
 
 }
