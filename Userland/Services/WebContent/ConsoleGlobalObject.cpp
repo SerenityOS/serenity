@@ -104,7 +104,7 @@ JS_DEFINE_NATIVE_GETTER(ConsoleGlobalObject::inspected_node_getter)
         return JS::js_null();
 
     if (!is<ConsoleGlobalObject>(this_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "ConsoleGlobalObject");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "ConsoleGlobalObject");
         return {};
     }
 
