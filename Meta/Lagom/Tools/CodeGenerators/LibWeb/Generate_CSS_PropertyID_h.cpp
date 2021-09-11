@@ -76,6 +76,14 @@ bool is_inherited_property(PropertyID);
 bool is_pseudo_property(PropertyID);
 RefPtr<StyleValue> property_initial_value(PropertyID);
 
+enum class Quirk {
+    // https://quirks.spec.whatwg.org/#the-hashless-hex-color-quirk
+    HashlessHexColor,
+    // https://quirks.spec.whatwg.org/#the-unitless-length-quirk
+    UnitlessLength,
+};
+bool property_has_quirk(PropertyID, Quirk);
+
 } // namespace Web::CSS
 
 namespace AK {
