@@ -8,6 +8,7 @@
 
 #include <AK/Optional.h>
 #include <AK/String.h>
+#include <AK/Vector.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibUnicode/Forward.h>
@@ -19,6 +20,8 @@ class Locale final : public Object {
 
 public:
     static Locale* create(GlobalObject&, Unicode::LocaleID const&);
+
+    static Vector<StringView> const& relevant_extension_keys(); // [[RelevantExtensionKeys]]
 
     Locale(Object& prototype);
     Locale(Unicode::LocaleID const&, Object& prototype);
