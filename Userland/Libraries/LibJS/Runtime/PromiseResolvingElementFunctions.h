@@ -24,15 +24,19 @@ struct RemainingElements final : public Cell {
     u64 value { 0 };
 };
 
-struct PromiseValueList final : public Cell {
+class PromiseValueList final : public Cell {
+public:
     PromiseValueList()
-        : values(heap())
     {
     }
 
+    Vector<Value>& values() { return m_values; }
+    Vector<Value> const& values() const { return m_values; }
+
+private:
     virtual const char* class_name() const override { return "PromiseValueList"; }
 
-    MarkedValueList values;
+    Vector<Value> m_values;
 };
 
 class PromiseResolvingElementFunction : public NativeFunction {

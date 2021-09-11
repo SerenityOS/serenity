@@ -111,7 +111,7 @@ static Value perform_promise_common(GlobalObject& global_object, Object& iterato
             return {};
         }
 
-        values->values.append(js_undefined());
+        values->values().append(js_undefined());
 
         auto next_promise = vm.call(promise_resolve.as_function(), constructor, next_value);
         if (vm.exception())
@@ -135,7 +135,7 @@ static Value perform_promise_all(GlobalObject& global_object, Object& iterator_r
     return perform_promise_common(
         global_object, iterator_record, constructor, result_capability, promise_resolve,
         [&](PromiseValueList& values) -> Value {
-            auto values_array = Array::create_from(global_object, values.values);
+            auto values_array = Array::create_from(global_object, values.values());
 
             (void)vm.call(*result_capability.resolve, js_undefined(), values_array);
             if (vm.exception())
@@ -159,7 +159,7 @@ static Value perform_promise_all_settled(GlobalObject& global_object, Object& it
     return perform_promise_common(
         global_object, iterator_record, constructor, result_capability, promise_resolve,
         [&](PromiseValueList& values) -> Value {
-            auto values_array = Array::create_from(global_object, values.values);
+            auto values_array = Array::create_from(global_object, values.values());
 
             (void)vm.call(*result_capability.resolve, js_undefined(), values_array);
             if (vm.exception())
@@ -186,7 +186,7 @@ static Value perform_promise_any(GlobalObject& global_object, Object& iterator_r
     return perform_promise_common(
         global_object, iterator_record, constructor, result_capability, promise_resolve,
         [&](PromiseValueList& errors) -> Value {
-            auto errors_array = Array::create_from(global_object, errors.values);
+            auto errors_array = Array::create_from(global_object, errors.values());
 
             auto* error = AggregateError::create(global_object);
             error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true });
