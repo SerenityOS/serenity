@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <AK/Types.h>
-
 struct MousePacket {
     int x { 0 };
     int y { 0 };

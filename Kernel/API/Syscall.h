@@ -8,7 +8,6 @@
 
 #include <AK/StringView.h>
 #include <AK/Types.h>
-#include <AK/Userspace.h>
 
 #ifdef __serenity__
 #    include <LibC/fd_set.h>
