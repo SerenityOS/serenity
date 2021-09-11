@@ -50,6 +50,5 @@ Optional<int> get_number_option(GlobalObject& global_object, Object& options, Pr
 Vector<PatternPartition> partition_pattern(StringView pattern);
 String insert_unicode_extension_and_canonicalize(Unicode::LocaleID locale_id, Unicode::LocaleExtension extension);
 LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptions const& options, Vector<StringView> const& relevant_extension_keys);
-Value canonical_code_for_display_names(GlobalObject&, DisplayNames::Type type, StringView code);
 
 }
