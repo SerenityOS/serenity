@@ -30,6 +30,8 @@ public:
         return receive(size, saddr);
     };
 
+    ErrorOr<size_t> send(ReadonlyBytes, sockaddr_in const& to);
+
     Optional<IPv4Address> local_address() const;
     Optional<u16> local_port() const;
 
