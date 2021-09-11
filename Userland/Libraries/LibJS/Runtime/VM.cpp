@@ -403,12 +403,12 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
 }
 
 // 9.1.2.1 GetIdentifierReference ( env, name, strict ), https://tc39.es/ecma262/#sec-getidentifierreference
-Reference VM::get_identifier_reference(Environment* environment, FlyString const& name, bool strict)
+Reference VM::get_identifier_reference(Environment* environment, FlyString name, bool strict)
 {
     // 1. If env is the value null, then
     if (!environment) {
         // a. Return the Reference Record { [[Base]]: unresolvable, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
-        return Reference { Reference::BaseType::Unresolvable, name, strict };
+        return Reference { Reference::BaseType::Unresolvable, move(name), strict };
     }
 
     // FIXME: The remainder of this function is non-conforming.
@@ -417,14 +417,14 @@ Reference VM::get_identifier_reference(Environment* environment, FlyString const
     for (; environment && environment->outer_environment(); environment = environment->outer_environment()) {
         auto possible_match = environment->get_from_environment(name);
         if (possible_match.has_value())
-            return Reference { *environment, name, strict };
+            return Reference { *environment, move(name), strict };
     }
 
     if (global_object.environment().has_binding(name) || !in_strict_mode()) {
-        return Reference { global_object.environment(), name, strict };
+        return Reference { global_object.environment(), move(name), strict };
     }
 
-    return Reference { Reference::BaseType::Unresolvable, name, strict };
+    return Reference { Reference::BaseType::Unresolvable, move(name), strict };
 }
 
 // 9.4.2 ResolveBinding ( name [ , env ] ), https://tc39.es/ecma262/#sec-resolvebinding

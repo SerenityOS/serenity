@@ -143,7 +143,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
             auto property_name = member_expression.computed_property_name(interpreter, global_object);
             if (!property_name.is_valid())
                 return {};
-            auto reference = Reference { super_base, property_name, super_base, vm.in_strict_mode() };
+            auto reference = Reference { super_base, move(property_name), super_base, vm.in_strict_mode() };
             callee = reference.get_value(global_object);
             if (vm.exception())
                 return {};
@@ -805,7 +805,7 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
         return Reference {};
 
     auto strict = interpreter.vm().in_strict_mode();
-    return Reference { object_value, property_name, {}, strict };
+    return Reference { object_value, move(property_name), {}, strict };
 }
 
 Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
