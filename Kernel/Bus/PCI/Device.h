@@ -10,7 +10,9 @@
 #include <Kernel/Bus/PCI/Definitions.h>
 
 namespace Kernel {
-class PCI::Device {
+namespace PCI {
+
+class Device {
 public:
     Address pci_address() const { return m_pci_address; };
 
@@ -33,4 +35,6 @@ protected:
 private:
     Address m_pci_address;
 };
+
+}
 }
