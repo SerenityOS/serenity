@@ -14,9 +14,10 @@ namespace Markdown {
 
 class CodeBlock final : public Block {
 public:
-    CodeBlock(const String& language, const String& code)
+    CodeBlock(String const& language, String const& style, String const& code)
         : m_code(move(code))
         , m_language(language)
+        , m_style(style)
     {
     }
     virtual ~CodeBlock() override { }
@@ -28,6 +29,7 @@ public:
 private:
     String m_code;
     String m_language;
+    String m_style;
 };
 
 }
