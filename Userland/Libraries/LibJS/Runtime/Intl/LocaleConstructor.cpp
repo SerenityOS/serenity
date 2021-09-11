@@ -25,18 +25,6 @@ struct LocaleAndKeys {
     Optional<String> nu;
 };
 
-static Vector<StringView> const& locale_relevant_extension_keys()
-{
-    // 14.2.2 Internal slots, https://tc39.es/ecma402/#sec-intl.locale-internal-slots
-    // The value of the [[RelevantExtensionKeys]] internal slot is « "ca", "co", "hc", "kf", "kn", "nu" ».
-    // If %Collator%.[[RelevantExtensionKeys]] does not contain "kf", then remove "kf" from %Locale%.[[RelevantExtensionKeys]].
-    // If %Collator%.[[RelevantExtensionKeys]] does not contain "kn", then remove "kn" from %Locale%.[[RelevantExtensionKeys]].
-
-    // FIXME: We do not yet have an Intl.Collator object. For now, we behave as if "kf" and "kn" exist, as test262 depends on it.
-    static Vector<StringView> relevant_extension_keys { "ca"sv, "co"sv, "hc"sv, "kf"sv, "kn"sv, "nu"sv };
-    return relevant_extension_keys;
-}
-
 // Note: This is not an AO in the spec. This just serves to abstract very similar steps in ApplyOptionsToTag and the Intl.Locale constructor.
 static Optional<String> get_string_option(GlobalObject& global_object, Object const& options, PropertyName const& property, Function<bool(StringView)> validator, Vector<StringView> const& values = {})
 {
@@ -278,7 +266,7 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
     auto options_value = vm.argument(1);
 
     // 2. Let relevantExtensionKeys be %Locale%.[[RelevantExtensionKeys]].
-    auto const& relevant_extension_keys = locale_relevant_extension_keys();
+    auto const& relevant_extension_keys = Locale::relevant_extension_keys();
 
     // 3. Let internalSlotsList be « [[InitializedLocale]], [[Locale]], [[Calendar]], [[Collation]], [[HourCycle]], [[NumberingSystem]] ».
     // 4. If relevantExtensionKeys contains "kf", then
