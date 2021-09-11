@@ -130,8 +130,13 @@ int main(int argc, char** argv)
 
     auto& file_menu = window->add_menu("&File");
 
+    auto update_window_title = [&] {
+        window->set_title(String::formatted("{} - Theme Editor", path.value_or("Untitled")));
+    };
+
     preview_widget.on_theme_load_from_file = [&](String const& new_path) {
         path = new_path;
+        update_window_title();
     };
 
     auto save_to_result = [&](FileSystemAccessClient::Result const& result) {
@@ -139,6 +144,7 @@ int main(int argc, char** argv)
             return;
 
         path = result.chosen_file;
+        update_window_title();
 
         auto theme = Core::ConfigFile::open(*result.chosen_file, *result.fd);
         for (auto role : color_roles) {
@@ -184,10 +190,11 @@ int main(int argc, char** argv)
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Theme Editor", app_icon, window));
 
+    update_window_title();
+
     window->resize(480, 385);
     window->set_resizable(false);
     window->show();
-    window->set_title("Theme Editor");
     window->set_icon(app_icon.bitmap_for_size(16));
     return app->exec();
 }
