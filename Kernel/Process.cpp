@@ -25,7 +25,6 @@
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
-#include <Kernel/Module.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
@@ -45,7 +44,6 @@ static void create_signal_trampoline();
 RecursiveSpinlock g_profiling_lock;
 static Atomic<pid_t> next_pid;
 static Singleton<SpinlockProtected<Process::List>> s_processes;
-READONLY_AFTER_INIT HashMap<String, OwnPtr<Module>>* g_modules;
 READONLY_AFTER_INIT Memory::Region* g_signal_trampoline_region;
 
 static Singleton<MutexProtected<String>> s_hostname;
@@ -72,8 +70,6 @@ ProcessID Process::allocate_pid()
 
 UNMAP_AFTER_INIT void Process::initialize()
 {
-    g_modules = new HashMap<String, OwnPtr<Module>>;
-
     next_pid.store(0, AK::MemoryOrder::memory_order_release);
 
     // Note: This is called before scheduling is initialized, and before APs are booted.
