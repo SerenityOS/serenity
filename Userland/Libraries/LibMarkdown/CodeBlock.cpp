@@ -7,6 +7,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/MarkupGenerator.h>
 #include <LibMarkdown/CodeBlock.h>
+#include <LibRegex/Regex.h>
 
 namespace Markdown {
 
@@ -16,10 +17,15 @@ String CodeBlock::render_to_html() const
 
     builder.append("<pre>");
 
+    if (m_style.length() >= 2)
+        builder.append("<strong>");
+    else if (m_style.length() >= 2)
+        builder.append("<em>");
+
     if (m_language.is_empty())
         builder.append("<code>");
     else
-        builder.appendff("<code class=\"{}\">", escape_html_entities(m_language));
+        builder.appendff("<code class=\"language-{}\">", escape_html_entities(m_language));
 
     if (m_language == "js")
         builder.append(JS::MarkupGenerator::html_from_source(m_code));
@@ -27,6 +33,11 @@ String CodeBlock::render_to_html() const
         builder.append(escape_html_entities(m_code));
 
     builder.append("\n</code>");
+
+    if (m_style.length() >= 2)
+        builder.append("</strong>");
+    else if (m_style.length() >= 2)
+        builder.append("</em>");
 
     builder.append("</pre>\n");
 
@@ -43,6 +54,8 @@ String CodeBlock::render_for_terminal(size_t) const
     return builder.build();
 }
 
+static Regex<ECMA262> style_spec_re("\\s*([\\*_]*)\\s*([^\\*_\\s]*).*");
+
 OwnPtr<CodeBlock> CodeBlock::parse(Vector<StringView>::ConstIterator& lines)
 {
     if (lines.is_end())
@@ -54,7 +67,21 @@ OwnPtr<CodeBlock> CodeBlock::parse(Vector<StringView>::ConstIterator& lines)
     if (!line.starts_with(tick_tick_tick))
         return {};
 
+    // Our Markdown extension: we allow
+    // specifying a style and a language
+    // for a code block, like so:
+    //
+    // ```**sh**
+    // $ echo hello friends!
+    // ````
+    //
+    // The code block will be made bold,
+    // and if possible syntax-highlighted
+    // as appropriate for a shell script.
     StringView style_spec = line.substring_view(3, line.length() - 3);
+    auto matches = style_spec_re.match(style_spec);
+    auto style = matches.capture_group_matches[0][0].view.string_view();
+    auto language = matches.capture_group_matches[0][1].view.string_view();
 
     ++lines;
 
@@ -74,7 +101,7 @@ OwnPtr<CodeBlock> CodeBlock::parse(Vector<StringView>::ConstIterator& lines)
         first = false;
     }
 
-    return make<CodeBlock>(style_spec, builder.build());
+    return make<CodeBlock>(language, style, builder.build());
 }
 
 }
