@@ -106,7 +106,6 @@ enum class NeedsBigProcessLock {
     S(getsockopt, NeedsBigProcessLock::Yes)                 \
     S(gettid, NeedsBigProcessLock::No)                      \
     S(getuid, NeedsBigProcessLock::Yes)                     \
-    S(halt, NeedsBigProcessLock::Yes)                       \
     S(inode_watcher_add_watch, NeedsBigProcessLock::Yes)    \
     S(inode_watcher_remove_watch, NeedsBigProcessLock::Yes) \
     S(ioctl, NeedsBigProcessLock::Yes)                      \
@@ -144,7 +143,6 @@ enum class NeedsBigProcessLock {
     S(readlink, NeedsBigProcessLock::Yes)                   \
     S(readv, NeedsBigProcessLock::Yes)                      \
     S(realpath, NeedsBigProcessLock::Yes)                   \
-    S(reboot, NeedsBigProcessLock::Yes)                     \
     S(recvfd, NeedsBigProcessLock::Yes)                     \
     S(recvmsg, NeedsBigProcessLock::Yes)                    \
     S(rename, NeedsBigProcessLock::Yes)                     \
