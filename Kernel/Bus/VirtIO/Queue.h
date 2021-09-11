@@ -6,9 +6,12 @@
 
 #pragma once
 
+#include <AK/Optional.h>
+#include <AK/OwnPtr.h>
 #include <Kernel/Locking/Spinlock.h>
-#include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/ScatterGatherList.h>
+#include <Kernel/Memory/PhysicalPage.h>
+#include <Kernel/Memory/Region.h>
+#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel::VirtIO {
 

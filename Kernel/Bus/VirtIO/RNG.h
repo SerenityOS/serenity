@@ -8,7 +8,6 @@
 
 #include <AK/RefCounted.h>
 #include <Kernel/Bus/VirtIO/Device.h>
-#include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Random.h>
 
 namespace Kernel::VirtIO {

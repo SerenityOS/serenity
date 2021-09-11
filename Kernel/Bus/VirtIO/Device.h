@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/NonnullOwnPtrVector.h>
-#include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
 #include <Kernel/IO.h>
