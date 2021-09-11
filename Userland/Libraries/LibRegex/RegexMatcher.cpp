@@ -11,6 +11,10 @@
 #include <LibRegex/RegexMatcher.h>
 #include <LibRegex/RegexParser.h>
 
+#ifdef __serenity__
+#    include <serenity.h>
+#endif
+
 #if REGEX_DEBUG
 #    include <LibRegex/RegexDebug.h>
 #endif
@@ -115,6 +119,11 @@ RegexResult Matcher<Parser>::match(RegexStringView const& view, Optional<typenam
 template<typename Parser>
 RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optional<typename ParserTraits<Parser>::OptionsType> regex_options) const
 {
+#ifdef __serenity__
+    auto perf_string_id = perf_register_string(m_pattern->pattern_value.characters(), m_pattern->pattern_value.length());
+    perf_event(PERF_EVENT_SIGNPOST, perf_string_id, 0);
+#endif
+
     // If the pattern *itself* isn't stateful, reset any changes to start_offset.
     if (!((AllFlags)m_regex_options.value() & AllFlags::Internal_Stateful))
         m_pattern->start_offset = 0;
