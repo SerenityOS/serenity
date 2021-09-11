@@ -22,17 +22,17 @@ public:
     };
 
     Reference() { }
-    Reference(BaseType type, PropertyName const& name, bool strict)
+    Reference(BaseType type, PropertyName name, bool strict)
         : m_base_type(type)
-        , m_name(name)
+        , m_name(move(name))
         , m_strict(strict)
     {
     }
 
-    Reference(Value base, PropertyName const& name, Value this_value, bool strict = false)
+    Reference(Value base, PropertyName name, Value this_value, bool strict = false)
         : m_base_type(BaseType::Value)
         , m_base_value(base)
-        , m_name(name)
+        , m_name(move(name))
         , m_this_value(this_value)
         , m_strict(strict)
     {
@@ -44,10 +44,10 @@ public:
         }
     }
 
-    Reference(Environment& base, FlyString const& referenced_name, bool strict = false)
+    Reference(Environment& base, FlyString referenced_name, bool strict = false)
         : m_base_type(BaseType::Environment)
         , m_base_environment(&base)
-        , m_name(referenced_name)
+        , m_name(move(referenced_name))
         , m_strict(strict)
     {
     }

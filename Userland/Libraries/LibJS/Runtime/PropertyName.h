@@ -70,15 +70,15 @@ public:
         : m_type(Type::String)
         , m_string(FlyString(string))
     {
-        VERIFY(!string.is_null());
+        VERIFY(!m_string.is_null());
     }
 
-    PropertyName(FlyString const& string, StringMayBeNumber string_may_be_number = StringMayBeNumber::Yes)
+    PropertyName(FlyString string, StringMayBeNumber string_may_be_number = StringMayBeNumber::Yes)
         : m_type(Type::String)
         , m_string_may_be_number(string_may_be_number == StringMayBeNumber::Yes)
-        , m_string(string)
+        , m_string(move(string))
     {
-        VERIFY(!string.is_null());
+        VERIFY(!m_string.is_null());
     }
 
     PropertyName(Symbol& symbol)
