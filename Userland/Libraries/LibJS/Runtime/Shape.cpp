@@ -221,4 +221,9 @@ FLATTEN void Shape::add_property_without_transition(PropertyName const& property
     add_property_without_transition(property_name.to_string_or_symbol(), attributes);
 }
 
+void Shape::did_become_zombie()
+{
+    revoke_weak_ptrs();
+}
+
 }
