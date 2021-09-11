@@ -63,13 +63,5 @@ Result<void, String> ProjectLoader::try_load_from_fd_and_close(int fd, StringVie
     m_image = image;
     return {};
 }
-Result<void, String> ProjectLoader::try_load_from_path(StringView path)
-{
-    auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
-    if (file_or_error.is_error())
-        return String::formatted("Unable to open file because: {}", file_or_error.release_error());
-
-    return try_load_from_fd_and_close(file_or_error.release_value()->leak_fd(), path);
-}
 
 }

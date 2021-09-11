@@ -34,7 +34,6 @@ public:
     void initialize_menubar(GUI::Window&);
 
     void open_image_fd(int fd, String const& path);
-    void open_image_file(String const& path);
     void create_default_image();
 
 private:

@@ -719,18 +719,6 @@ void MainWidget::open_image_fd(int fd, String const& path)
     m_layer_list_widget->set_image(&image);
 }
 
-void MainWidget::open_image_file(String const& path)
-{
-    auto try_load = m_loader.try_load_from_path(path);
-    if (try_load.is_error()) {
-        GUI::MessageBox::show_error(window(), String::formatted("Unable to open file: {}", path));
-        return;
-    }
-    auto& image = *m_loader.release_image();
-    create_new_editor(image);
-    m_layer_list_widget->set_image(&image);
-}
-
 void MainWidget::create_default_image()
 {
     auto image = Image::try_create_with_size({ 480, 360 });
