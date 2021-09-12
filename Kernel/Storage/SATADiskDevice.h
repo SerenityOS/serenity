@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/Locking/Mutex.h>
 #include <Kernel/Storage/AHCIPort.h>
 #include <Kernel/Storage/StorageDevice.h>
 

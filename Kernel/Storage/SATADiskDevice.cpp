@@ -5,7 +5,6 @@
  */
 
 #include <AK/StringView.h>
-#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Storage/AHCIController.h>
 #include <Kernel/Storage/IDEChannel.h>
 #include <Kernel/Storage/SATADiskDevice.h>

@@ -7,7 +7,6 @@
 #include <AK/Singleton.h>
 #include <AK/UUID.h>
 #include <Kernel/Bus/PCI/API.h>
-#include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
