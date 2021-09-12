@@ -903,8 +903,7 @@ int Shell::builtin_time(int argc, const char** argv)
 
     int exit_code = 1;
     for (int i = 0; i < number_of_iterations; ++i) {
-        Core::ElapsedTimer timer;
-        timer.start();
+        auto timer = Core::ElapsedTimer::start_new();
         for (auto& job : run_commands(commands)) {
             block_on_job(job);
             exit_code = job.exit_code();
