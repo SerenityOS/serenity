@@ -8,7 +8,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
-#include <AK/Endian.h>
 #include <AK/HashMap.h>
 #include <AK/IPv4Address.h>
 #include <AK/MACAddress.h>

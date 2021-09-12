@@ -6,9 +6,7 @@
 
 #include "DHCPv4Client.h"
 #include <AK/Debug.h>
-#include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonParser.h>
 #include <AK/Random.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>

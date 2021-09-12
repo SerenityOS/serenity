@@ -5,10 +5,7 @@
  */
 
 #include "DHCPv4Client.h"
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/LocalServer.h>
 #include <stdio.h>
 #include <unistd.h>
 
