@@ -7,6 +7,7 @@
 #include "ToolboxWidget.h"
 #include "BrushTool.h"
 #include "BucketTool.h"
+#include "CloneTool.h"
 #include "EllipseTool.h"
 #include "EraseTool.h"
 #include "GuideTool.h"
@@ -81,6 +82,7 @@ void ToolboxWidget::setup_tools()
     add_tool("Zoom", "zoom", { 0, Key_Z }, make<ZoomTool>());
     add_tool("Rectangle Select", "rectangle-select", { 0, Key_R }, make<RectangleSelectTool>());
     add_tool("Guides", "guides", { 0, Key_G }, make<GuideTool>());
+    add_tool("Clone Tool", "clone", { 0, Key_C }, make<CloneTool>());
 }
 
 }
