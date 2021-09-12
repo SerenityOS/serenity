@@ -8,7 +8,6 @@
 #include <AK/Assertions.h>
 #include <AK/HashTable.h>
 #include <LibRegex/Regex.h>
-#include <Userland/DevTools/HackStudio/LanguageServers/ClientConnection.h>
 
 namespace LanguageServers::Shell {
 

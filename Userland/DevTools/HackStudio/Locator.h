@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/Widget.h>
 
 namespace HackStudio {

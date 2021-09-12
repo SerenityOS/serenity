@@ -7,9 +7,7 @@
 #include "ProjectTemplate.h"
 #include <AK/LexicalPath.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <fcntl.h>
 #include <spawn.h>

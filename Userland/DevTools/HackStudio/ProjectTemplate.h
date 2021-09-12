@@ -6,12 +6,10 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
 #include <AK/LexicalPath.h>
 #include <AK/RefCounted.h>
 #include <AK/Result.h>
 #include <AK/String.h>
-#include <AK/Weakable.h>
 #include <LibGUI/Icon.h>
 
 namespace HackStudio {

@@ -6,7 +6,6 @@
 
 #include "TerminalWrapper.h"
 #include <AK/String.h>
-#include <LibCore/ConfigFile.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/MessageBox.h>
 #include <LibVT/TerminalWidget.h>

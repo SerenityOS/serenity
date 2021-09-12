@@ -5,7 +5,6 @@
  */
 
 #include "Project.h"
-#include "HackStudio.h"
 #include <LibCore/File.h>
 
 namespace HackStudio {

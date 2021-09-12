@@ -12,7 +12,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/Notification.h>
 #include <LibGUI/Window.h>
 #include <fcntl.h>
