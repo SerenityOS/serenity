@@ -486,6 +486,8 @@ public:
     ConstIterator find_largest_not_above_iterator(K key) const
     {
         auto node = static_cast<Node*>(BaseTree::find_largest_not_above(this->m_root, key));
+        if (!node)
+            return end();
         return ConstIterator(node, static_cast<Node*>(BaseTree::predecessor(node)));
     }
 
