@@ -5,7 +5,6 @@
  */
 
 #include <AK/CharacterTypes.h>
-#include <AK/Utf8View.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/LineBox.h>
 #include <LibWeb/Layout/Node.h>

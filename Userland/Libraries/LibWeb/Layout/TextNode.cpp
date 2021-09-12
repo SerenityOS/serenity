@@ -8,7 +8,6 @@
 #include <AK/StringBuilder.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/Label.h>
 #include <LibWeb/Layout/TextNode.h>

@@ -7,7 +7,6 @@
 #pragma once
 
 #include <LibWeb/Layout/SVGBox.h>
-#include <LibWeb/SVG/SVGElement.h>
 #include <LibWeb/SVG/SVGGraphicsElement.h>
 
 namespace Web::Layout {

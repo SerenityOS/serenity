@@ -8,7 +8,6 @@
 #include <LibGfx/Filters/FastBoxBlurFilter.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/Box.h>

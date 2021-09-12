@@ -5,7 +5,6 @@
  */
 
 #include <LibGUI/Event.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/DOM/Document.h>

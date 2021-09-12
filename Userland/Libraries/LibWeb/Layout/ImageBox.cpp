@@ -8,7 +8,6 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/Layout/ImageBox.h>
-#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::Layout {
 

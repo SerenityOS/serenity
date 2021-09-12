@@ -8,7 +8,6 @@
 
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/SVG/SVGElement.h>
-#include <LibWeb/SVG/SVGGraphicsElement.h>
 
 namespace Web::Layout {
 

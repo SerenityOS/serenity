@@ -6,7 +6,6 @@
  */
 
 #include <AK/StdLibExtras.h>
-#include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/FlexFormattingContext.h>

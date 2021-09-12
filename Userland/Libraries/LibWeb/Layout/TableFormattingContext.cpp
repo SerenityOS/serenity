@@ -6,13 +6,11 @@
 
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/Layout/Box.h>
-#include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableFormattingContext.h>
 #include <LibWeb/Layout/TableRowBox.h>
 #include <LibWeb/Layout/TableRowGroupBox.h>
-#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::Layout {
 
