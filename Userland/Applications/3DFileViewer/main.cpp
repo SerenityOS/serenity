@@ -153,8 +153,7 @@ void GLContextWidget::mousewheel_event(GUI::MouseEvent& event)
 
 void GLContextWidget::timer_event(Core::TimerEvent&)
 {
-    Core::ElapsedTimer timer;
-    timer.start();
+    auto timer = Core::ElapsedTimer::start_new();
 
     glCallList(m_init_list);
 
