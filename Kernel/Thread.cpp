@@ -1246,13 +1246,11 @@ void Thread::track_lock_release(LockRank rank)
     if (rank == LockRank::None)
         return;
 
-    using PrimitiveType = UnderlyingType<LockRank>;
-
     // The rank value from the caller should only contain a single bit, otherwise
     // we are disabling the tracking for multiple locks at once which will corrupt
     // the lock tracking mask, and we will assert somewhere else.
     auto rank_is_a_single_bit = [](auto rank_enum) -> bool {
-        auto rank = static_cast<PrimitiveType>(rank_enum);
+        auto rank = to_underlying(rank_enum);
         auto rank_without_least_significant_bit = rank - 1;
         return (rank & rank_without_least_significant_bit) == 0;
     };
@@ -1263,8 +1261,8 @@ void Thread::track_lock_release(LockRank rank)
     // mask. If the rank we are releasing is truly the highest rank then the mask
     // we get back will be equal to the current mask of stored on the thread.
     auto rank_is_in_order = [](auto mask_enum, auto rank_enum) -> bool {
-        auto mask = static_cast<PrimitiveType>(mask_enum);
-        auto rank = static_cast<PrimitiveType>(rank_enum);
+        auto mask = to_underlying(mask_enum);
+        auto rank = to_underlying(rank_enum);
         auto mask_without_least_significant_bit = mask - 1;
         return ((mask & mask_without_least_significant_bit) | rank) == mask;
     };
