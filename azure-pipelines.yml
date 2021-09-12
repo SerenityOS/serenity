@@ -1,5 +1,8 @@
 trigger:
-  - master
+  batch: true
+  branches:
+    include:
+    - master
 
 jobs:
   - template: Meta/Azure/Lagom.yml
