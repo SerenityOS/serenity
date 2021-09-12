@@ -7,7 +7,6 @@
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
-#include <Kernel/WaitQueue.h>
 #include <Kernel/WorkQueue.h>
 
 namespace Kernel {

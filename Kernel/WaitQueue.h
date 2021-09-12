@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <AK/Atomic.h>
-#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Thread.h>
 
 namespace Kernel {
