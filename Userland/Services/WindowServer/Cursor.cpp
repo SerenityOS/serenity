@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LexicalPath.h>
 #include <WindowServer/Cursor.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WindowManager.h>

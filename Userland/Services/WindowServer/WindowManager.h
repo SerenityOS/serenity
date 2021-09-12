@@ -7,13 +7,9 @@
 #pragma once
 
 #include "WindowStack.h"
-#include <AK/HashMap.h>
-#include <AK/HashTable.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/ElapsedTimer.h>
-#include <LibGfx/Color.h>
-#include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>

@@ -10,13 +10,9 @@
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
-#include <AK/OwnPtr.h>
-#include <AK/WeakPtr.h>
-#include <LibCore/Object.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
 #include <LibIPC/ClientConnection.h>
-#include <WindowServer/Event.h>
 #include <WindowServer/Menu.h>
 #include <WindowServer/ScreenLayout.h>
 #include <WindowServer/WindowClientEndpoint.h>

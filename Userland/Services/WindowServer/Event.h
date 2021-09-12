@@ -11,8 +11,6 @@
 #include <LibCore/Event.h>
 #include <LibCore/MimeData.h>
 #include <LibGfx/Rect.h>
-#include <WindowServer/Cursor.h>
-#include <WindowServer/WindowType.h>
 
 namespace WindowServer {
 

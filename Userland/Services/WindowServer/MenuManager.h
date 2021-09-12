@@ -7,10 +7,7 @@
 #pragma once
 
 #include "Menu.h"
-#include "Menubar.h"
 #include "Window.h"
-#include <AK/HashMap.h>
-#include <AK/StringBuilder.h>
 
 namespace WindowServer {
 

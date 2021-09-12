@@ -12,7 +12,6 @@
 #include "Screen.h"
 #include "Window.h"
 #include "WindowManager.h"
-#include <AK/CharacterTypes.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Font.h>

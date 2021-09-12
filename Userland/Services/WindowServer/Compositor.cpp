@@ -7,19 +7,14 @@
 #include "Compositor.h"
 #include "Animation.h"
 #include "ClientConnection.h"
-#include "Event.h"
 #include "EventLoop.h"
-#include "MultiScaleBitmaps.h"
 #include "Screen.h"
 #include "Window.h"
 #include "WindowManager.h"
 #include <AK/Debug.h>
 #include <AK/Memory.h>
-#include <AK/ScopeGuard.h>
 #include <LibCore/Timer.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
-#include <LibGfx/StylePainter.h>
 #include <LibThreading/BackgroundAction.h>
 
 namespace WindowServer {

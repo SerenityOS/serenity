@@ -7,7 +7,6 @@
 #include <AK/Debug.h>
 #include <Kernel/API/MousePacket.h>
 #include <WindowServer/ClientConnection.h>
-#include <WindowServer/Cursor.h>
 #include <WindowServer/EventLoop.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WMClientConnection.h>

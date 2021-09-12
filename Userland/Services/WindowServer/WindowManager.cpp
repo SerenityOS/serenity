@@ -14,10 +14,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Font.h>
-#include <LibGfx/StylePainter.h>
-#include <LibGfx/SystemTheme.h>
 #include <WindowServer/AppletManager.h>
 #include <WindowServer/Button.h>
 #include <WindowServer/ClientConnection.h>

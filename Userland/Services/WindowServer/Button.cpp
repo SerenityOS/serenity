@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <WindowServer/Button.h>

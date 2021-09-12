@@ -9,7 +9,6 @@
 #include <AK/QuickSort.h>
 #include <LibCore/EventLoop.h>
 #include <LibGfx/Painter.h>
-#include <WindowServer/MenuManager.h>
 
 namespace WindowServer {
 

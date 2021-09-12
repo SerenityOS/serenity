@@ -14,7 +14,6 @@
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
-#include <WindowServer/Cursor.h>
 #include <WindowServer/Event.h>
 #include <WindowServer/MenuItem.h>
 

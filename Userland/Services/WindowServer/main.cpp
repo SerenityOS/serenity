@@ -13,7 +13,6 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibGfx/Palette.h>
-#include <LibGfx/SystemTheme.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>

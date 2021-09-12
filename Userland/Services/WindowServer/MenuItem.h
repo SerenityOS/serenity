@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Function.h>
 #include <AK/String.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>

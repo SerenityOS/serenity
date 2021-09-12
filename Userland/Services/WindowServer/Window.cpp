@@ -14,7 +14,6 @@
 #include "Screen.h"
 #include "WindowManager.h"
 #include <AK/Badge.h>
-#include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 
 namespace WindowServer {

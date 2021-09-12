@@ -10,8 +10,6 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <Kernel/API/KeyCode.h>
-#include <LibGfx/Bitmap.h>
-#include <LibGfx/Color.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
 
