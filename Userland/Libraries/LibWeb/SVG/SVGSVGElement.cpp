@@ -4,10 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/Painter.h>
-#include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/Event.h>
 #include <LibWeb/Layout/SVGSVGBox.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 

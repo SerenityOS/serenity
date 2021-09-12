@@ -7,7 +7,6 @@
 #pragma once
 
 #include <LibGfx/Path.h>
-#include <LibWeb/DOM/Node.h>
 #include <LibWeb/SVG/SVGElement.h>
 #include <LibWeb/SVG/TagNames.h>
 

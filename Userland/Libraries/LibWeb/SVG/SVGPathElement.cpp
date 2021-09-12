@@ -7,10 +7,8 @@
 #include <AK/Debug.h>
 #include <AK/ExtraMathConstants.h>
 #include <AK/StringBuilder.h>
-#include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/Event.h>
 #include <LibWeb/Layout/SVGPathBox.h>
 #include <LibWeb/SVG/SVGPathElement.h>
 #include <ctype.h>
