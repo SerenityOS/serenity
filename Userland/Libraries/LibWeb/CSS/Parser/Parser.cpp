@@ -1284,15 +1284,16 @@ Optional<StyleProperty> Parser::convert_to_style_property(StyleDeclarationRule& 
 
     auto value_token_stream = TokenStream(declaration.m_values);
     auto value = parse_css_value(property_id, value_token_stream);
-    if (!value) {
-        dbgln("CSS property '{}' has no value.", property_name);
+    if (value.is_error()) {
+        if (value.error() != ParsingResult::IncludesIgnoredVendorPrefix)
+            dbgln("Unable to parse value for CSS property '{}'", property_name);
         return {};
     }
 
     if (property_id == PropertyID::Custom) {
-        return StyleProperty { property_id, value.release_nonnull(), declaration.m_name, declaration.m_important };
+        return StyleProperty { property_id, value.release_value(), declaration.m_name, declaration.m_important };
     } else {
-        return StyleProperty { property_id, value.release_nonnull(), {}, declaration.m_important };
+        return StyleProperty { property_id, value.release_value(), {}, declaration.m_important };
     }
 }
 
@@ -2727,10 +2728,13 @@ RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
 {
     auto component_values = parse_as_list_of_component_values();
     auto tokens = TokenStream(component_values);
-    return parse_css_value(property_id, tokens);
+    auto parsed_value = parse_css_value(property_id, tokens);
+    if (parsed_value.is_error())
+        return {};
+    return parsed_value.release_value();
 }
 
-RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<StyleComponentValueRule>& tokens)
+Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value(PropertyID property_id, TokenStream<StyleComponentValueRule>& tokens)
 {
     m_context.set_current_property_id(property_id);
     Vector<StyleComponentValueRule> component_values;
@@ -2746,30 +2750,33 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
         if (token.is(Token::Type::Whitespace))
             continue;
 
+        if (token.is(Token::Type::Ident) && has_ignored_vendor_prefix(token.token().ident()))
+            return ParsingResult::IncludesIgnoredVendorPrefix;
+
         component_values.append(token);
     }
 
     if (component_values.is_empty())
-        return {};
+        return ParsingResult::SyntaxError;
 
     if (component_values.size() == 1) {
         if (auto parsed_value = parse_builtin_value(m_context, component_values.first()))
-            return parsed_value;
+            return parsed_value.release_nonnull();
     }
 
     // Special-case property handling
     switch (property_id) {
     case PropertyID::Background:
         if (auto parsed_value = parse_background_value(m_context, component_values))
-            return parsed_value;
+            return parsed_value.release_nonnull();
         break;
     case PropertyID::BackgroundImage:
         if (auto parsed_value = parse_background_image_value(m_context, component_values))
-            return parsed_value;
+            return parsed_value.release_nonnull();
         break;
     case PropertyID::BackgroundRepeat:
         if (auto parsed_value = parse_background_repeat_value(m_context, component_values))
-            return parsed_value;
+            return parsed_value.release_nonnull();
         break;
     case PropertyID::Border:
     case PropertyID::BorderBottom:
@@ -2777,57 +2784,60 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
     case PropertyID::BorderRight:
     case PropertyID::BorderTop:
         if (auto parsed_value = parse_border_value(m_context, component_values))
-            return parsed_value;
+            return parsed_value.release_nonnull();
         break;
     case PropertyID::BorderTopLeftRadius:
     case PropertyID::BorderTopRightRadius:
     case PropertyID::BorderBottomRightRadius:
     case PropertyID::BorderBottomLeftRadius:
         if (auto parsed_value = parse_border_radius_value(m_context, component_values))
-            return parsed_value;
+            return parsed_value.release_nonnull();
         break;
     case PropertyID::BorderRadius:
         if (auto parsed_value = parse_border_radius_shorthand_value(m_context, component_values))
-            return parsed_value;
+            return parsed_value.release_nonnull();
         break;
     case PropertyID::BoxShadow:
-        if (auto parsed_box_shadow = parse_box_shadow_value(m_context, component_values))
-            return parsed_box_shadow;
+        if (auto parsed_value = parse_box_shadow_value(m_context, component_values))
+            return parsed_value.release_nonnull();
         break;
     case PropertyID::Flex:
         if (auto parsed_value = parse_flex_value(m_context, component_values))
-            return parsed_value;
+            return parsed_value.release_nonnull();
         break;
     case PropertyID::FlexFlow:
         if (auto parsed_value = parse_flex_flow_value(m_context, component_values))
-            return parsed_value;
+            return parsed_value.release_nonnull();
         break;
     case PropertyID::Font:
         if (auto parsed_value = parse_font_value(m_context, component_values))
-            return parsed_value;
+            return parsed_value.release_nonnull();
         break;
     case PropertyID::FontFamily:
         if (auto parsed_value = parse_font_family_value(m_context, component_values))
-            return parsed_value;
+            return parsed_value.release_nonnull();
         break;
     case PropertyID::ListStyle:
         if (auto parsed_value = parse_list_style_value(m_context, component_values))
-            return parsed_value;
+            return parsed_value.release_nonnull();
         break;
     case PropertyID::Overflow:
         if (auto parsed_value = parse_overflow_value(m_context, component_values))
-            return parsed_value;
+            return parsed_value.release_nonnull();
         break;
     case PropertyID::TextDecoration:
         if (auto parsed_value = parse_text_decoration_value(m_context, component_values))
-            return parsed_value;
+            return parsed_value.release_nonnull();
         break;
     default:
         break;
     }
 
-    if (component_values.size() == 1)
-        return parse_css_value(m_context, component_values.first());
+    if (component_values.size() == 1) {
+        if (auto parsed_value = parse_css_value(m_context, component_values.first()))
+            return parsed_value.release_nonnull();
+        return ParsingResult::SyntaxError;
+    }
 
     // We have multiple values, so treat them as a StyleValueList.
     // FIXME: Specify in Properties.json whether to permit this for each property.
@@ -2835,13 +2845,13 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
     for (auto& component_value : component_values) {
         auto parsed = parse_css_value(m_context, component_value);
         if (!parsed)
-            return {};
+            return ParsingResult::SyntaxError;
         parsed_values.append(parsed.release_nonnull());
     }
     if (!parsed_values.is_empty())
-        return StyleValueList::create(move(parsed_values));
+        return { StyleValueList::create(move(parsed_values)) };
 
-    return {};
+    return ParsingResult::SyntaxError;
 }
 
 RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, StyleComponentValueRule const& component_value)
