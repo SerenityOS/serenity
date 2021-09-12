@@ -499,7 +499,7 @@ void dump_style_rule(StringBuilder& builder, CSS::CSSStyleRule const& rule)
         dump_selector(builder, selector);
     }
     builder.append("  Declarations:\n");
-    for (auto& property : rule.declaration().properties()) {
+    for (auto& property : verify_cast<CSS::PropertyOwningCSSStyleDeclaration>(rule.declaration()).properties()) {
         builder.appendff("    {}: '{}'\n", CSS::string_from_property_id(property.property_id), property.value->to_string());
     }
 }

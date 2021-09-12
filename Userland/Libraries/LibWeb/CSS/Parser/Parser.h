@@ -86,7 +86,7 @@ public:
     // Used in @supports conditions. [CSS3-CONDITIONAL]
     Optional<StyleProperty> parse_as_declaration();
     // For the contents of a style attribute, which parses text into the contents of a single style rule.
-    RefPtr<CSSStyleDeclaration> parse_as_list_of_declarations();
+    RefPtr<PropertyOwningCSSStyleDeclaration> parse_as_list_of_declarations();
     // For things that need to consume a single value, like the parsing rules for attr().
     Optional<StyleComponentValueRule> parse_as_component_value();
     // For the contents of presentational attributes, which parse text into a single declaration’s value, or for parsing a stand-alone selector [SELECT] or list of Media Queries [MEDIAQ], as in Selectors API or the media HTML attribute.
@@ -109,7 +109,7 @@ private:
     template<typename T>
     Optional<StyleProperty> parse_a_declaration(TokenStream<T>&);
     template<typename T>
-    RefPtr<CSSStyleDeclaration> parse_a_list_of_declarations(TokenStream<T>&);
+    RefPtr<PropertyOwningCSSStyleDeclaration> parse_a_list_of_declarations(TokenStream<T>&);
     template<typename T>
     Optional<StyleComponentValueRule> parse_a_component_value(TokenStream<T>&);
     template<typename T>
@@ -160,7 +160,7 @@ private:
     [[nodiscard]] NonnullRefPtr<StyleFunctionRule> consume_a_function(TokenStream<T>&);
 
     [[nodiscard]] RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
-    [[nodiscard]] RefPtr<CSSStyleDeclaration> convert_to_declaration(NonnullRefPtr<StyleBlockRule>);
+    [[nodiscard]] RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_declaration(NonnullRefPtr<StyleBlockRule>);
     [[nodiscard]] Optional<StyleProperty> convert_to_style_property(StyleDeclarationRule&);
 
     static Optional<float> try_parse_float(StringView string);
@@ -228,7 +228,7 @@ private:
 namespace Web {
 
 RefPtr<CSS::CSSStyleSheet> parse_css(CSS::ParsingContext const&, StringView const&);
-RefPtr<CSS::CSSStyleDeclaration> parse_css_declaration(CSS::ParsingContext const&, StringView const&);
+RefPtr<CSS::PropertyOwningCSSStyleDeclaration> parse_css_declaration(CSS::ParsingContext const&, StringView const&);
 RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const&, StringView const&, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
 Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const&, StringView const&);
 

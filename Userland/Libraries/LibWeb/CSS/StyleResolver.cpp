@@ -514,7 +514,7 @@ StyleResolver::CustomPropertyResolutionTuple StyleResolver::resolve_custom_prope
         if (match.specificity < parent_resolved.specificity)
             continue;
 
-        auto custom_property_style = match.rule->declaration().custom_property(custom_property_name);
+        auto custom_property_style = verify_cast<PropertyOwningCSSStyleDeclaration>(match.rule->declaration()).custom_property(custom_property_name);
         if (custom_property_style.has_value()) {
             element.add_custom_property(custom_property_name, { custom_property_style.value(), match.specificity });
             return { custom_property_style.value(), match.specificity };
@@ -548,7 +548,7 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(DOM::Element& elemen
     sort_matching_rules(matching_rules);
 
     for (auto& match : matching_rules) {
-        for (auto& property : match.rule->declaration().properties()) {
+        for (auto& property : verify_cast<PropertyOwningCSSStyleDeclaration>(match.rule->declaration()).properties()) {
             auto property_value = property.value;
             if (property.value->is_custom_property()) {
                 auto prop = reinterpret_cast<CSS::CustomStyleValue const*>(property.value.ptr());
@@ -562,7 +562,7 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(DOM::Element& elemen
         }
     }
 
-    if (auto* inline_style = element.inline_style()) {
+    if (auto* inline_style = verify_cast<ElementInlineCSSStyleDeclaration>(element.inline_style())) {
         for (auto& property : inline_style->properties()) {
             set_property_expanding_shorthands(style, property.property_id, property.value, m_document);
         }
