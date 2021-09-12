@@ -6,7 +6,6 @@
 
 #include "NotificationWindow.h"
 #include <AK/HashMap.h>
-#include <AK/Vector.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Label.h>

@@ -7,7 +7,6 @@
 #include "ClientConnection.h"
 #include <LibCore/LocalServer.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)

@@ -5,7 +5,6 @@
  */
 
 #include "MCTSTree.h"
-#include <AK/String.h>
 #include <stdlib.h>
 
 MCTSTree::MCTSTree(const Chess::Board& board, MCTSTree* parent)

@@ -6,7 +6,6 @@
 
 #include <ImageDecoder/ClientConnection.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/LocalServer.h>
 #include <LibIPC/ClientConnection.h>
 
 int main(int, char**)

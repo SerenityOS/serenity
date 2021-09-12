@@ -8,7 +8,6 @@
 
 #include <AK/String.h>
 #include <AK/StringView.h>
-#include <AK/Types.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/TCPSocket.h>
 

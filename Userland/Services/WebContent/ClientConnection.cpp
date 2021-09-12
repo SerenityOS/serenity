@@ -9,13 +9,11 @@
 #include <AK/JsonObject.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/FontDatabase.h>
-#include <LibGfx/SystemTheme.h>
 #include <LibJS/Console.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>

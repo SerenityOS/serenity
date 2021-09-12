@@ -8,7 +8,6 @@
 #include <AK/Function.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
-#include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>

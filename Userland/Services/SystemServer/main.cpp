@@ -6,7 +6,6 @@
 
 #include "Service.h"
 #include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>

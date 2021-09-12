@@ -10,9 +10,6 @@
 #include "ClientConnection.h"
 #include "FadingProperty.h"
 #include <AK/Atomic.h>
-#include <AK/Badge.h>
-#include <AK/ByteBuffer.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/Queue.h>
 #include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>

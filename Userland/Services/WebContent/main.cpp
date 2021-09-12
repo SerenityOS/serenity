@@ -5,7 +5,6 @@
  */
 
 #include <LibCore/EventLoop.h>
-#include <LibCore/LocalServer.h>
 #include <LibIPC/ClientConnection.h>
 #include <WebContent/ClientConnection.h>
 
