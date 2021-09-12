@@ -16,6 +16,7 @@ public:
     virtual ~CloneTool() override = default;
 
     virtual GUI::Widget* get_properties_widget() override;
+    virtual Gfx::StandardCursor cursor() override;
 
 protected:
     virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& point) override;
