@@ -8,10 +8,8 @@
 #include "BrushTool.h"
 #include "ImageEditor.h"
 #include "Layer.h"
-#include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/Painter.h>
 #include <LibGUI/ValueSlider.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Rect.h>

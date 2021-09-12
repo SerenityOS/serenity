@@ -14,7 +14,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/ValueSlider.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Rect.h>
 
 namespace PixelPaint {
 

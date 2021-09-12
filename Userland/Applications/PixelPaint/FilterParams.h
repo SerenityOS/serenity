@@ -6,13 +6,11 @@
 
 #pragma once
 
-#include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Painter.h>
 #include <LibGUI/TextBox.h>
 #include <LibGfx/Filters/BoxBlurFilter.h>
 #include <LibGfx/Filters/GenericConvolutionFilter.h>

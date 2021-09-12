@@ -8,10 +8,8 @@
 #include "EllipseTool.h"
 #include "ImageEditor.h"
 #include "Layer.h"
-#include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/ValueSlider.h>

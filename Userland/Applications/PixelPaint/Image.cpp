@@ -12,9 +12,7 @@
 #include <AK/Base64.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
-#include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/BMPWriter.h>
