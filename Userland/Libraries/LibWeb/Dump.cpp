@@ -52,16 +52,16 @@ void dump_tree(StringBuilder& builder, DOM::Node const& node)
     }
     ++indent;
     if (is<DOM::Element>(node) && verify_cast<DOM::Element>(node).shadow_root()) {
-        dump_tree(*verify_cast<DOM::Element>(node).shadow_root());
+        dump_tree(builder, *verify_cast<DOM::Element>(node).shadow_root());
     }
     if (is<DOM::ParentNode>(node)) {
         if (!is<HTML::HTMLTemplateElement>(node)) {
-            static_cast<DOM::ParentNode const&>(node).for_each_child([](auto& child) {
-                dump_tree(child);
+            static_cast<DOM::ParentNode const&>(node).for_each_child([&](auto& child) {
+                dump_tree(builder, child);
             });
         } else {
             auto& template_element = verify_cast<HTML::HTMLTemplateElement>(node);
-            dump_tree(template_element.content());
+            dump_tree(builder, template_element.content());
         }
     }
     --indent;
