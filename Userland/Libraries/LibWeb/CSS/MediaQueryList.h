@@ -42,6 +42,9 @@ public:
     virtual bool dispatch_event(NonnullRefPtr<DOM::Event>) override;
     virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
 
+    void add_listener(RefPtr<DOM::EventListener> listener);
+    void remove_listener(RefPtr<DOM::EventListener> listener);
+
 private:
     MediaQueryList(DOM::Document&, String);
 
