@@ -10,7 +10,6 @@
 #include "TrackManager.h"
 #include <AK/Math.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Scrollbar.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 

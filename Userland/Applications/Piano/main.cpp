@@ -10,8 +10,6 @@
 #include "AudioPlayerLoop.h"
 #include "MainWidget.h"
 #include "TrackManager.h"
-#include <AK/Queue.h>
-#include <LibAudio/Buffer.h>
 #include <LibAudio/ClientConnection.h>
 #include <LibAudio/WavWriter.h>
 #include <LibCore/EventLoop.h>
@@ -19,7 +17,6 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 
