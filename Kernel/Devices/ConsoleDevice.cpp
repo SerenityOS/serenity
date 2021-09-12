@@ -5,7 +5,7 @@
  */
 
 #include <AK/Singleton.h>
-#include <Kernel/ConsoleDevice.h>
+#include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/IO.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Sections.h>

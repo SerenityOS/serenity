@@ -11,7 +11,7 @@
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/CommandLine.h>
-#include <Kernel/ConsoleDevice.h>
+#include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/FileSystem/Custody.h>
