@@ -7,7 +7,6 @@
 #pragma once
 
 #include "Player.h"
-#include <AK/Function.h>
 #include <LibGUI/Frame.h>
 
 namespace Hearts {

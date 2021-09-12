@@ -10,13 +10,10 @@
 #include "SettingsDialog.h"
 #include <Games/Hearts/HeartsGML.h>
 #include <LibConfig/Client.h>
-#include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
-#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>

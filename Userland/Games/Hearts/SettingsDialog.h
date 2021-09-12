@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Types.h>
 #include <LibGUI/Dialog.h>
 
 class SettingsDialog : public GUI::Dialog {
