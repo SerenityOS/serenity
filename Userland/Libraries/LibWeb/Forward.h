@@ -298,6 +298,7 @@ class HTMLUnknownElementWrapper;
 class HTMLVideoElementWrapper;
 class ImageDataWrapper;
 class LocationObject;
+class MediaQueryListWrapper;
 class MessageEventWrapper;
 class MouseEventWrapper;
 class NodeWrapper;
