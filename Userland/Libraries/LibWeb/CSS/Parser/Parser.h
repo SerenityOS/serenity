@@ -38,7 +38,7 @@ public:
 
     bool in_quirks_mode() const;
     DOM::Document* document() const { return m_document; }
-    URL complete_url(String const&) const;
+    AK::URL complete_url(String const&) const;
 
     PropertyID current_property_id() const { return m_current_property_id; }
     void set_current_property_id(PropertyID property_id) { m_current_property_id = property_id; }
@@ -172,7 +172,7 @@ private:
     static Optional<float> try_parse_float(StringView string);
     static Optional<Color> parse_color(ParsingContext const&, StyleComponentValueRule const&);
     static Optional<Length> parse_length(ParsingContext const&, StyleComponentValueRule const&);
-    static Optional<URL> parse_url_function(ParsingContext const&, StyleComponentValueRule const&);
+    static Optional<AK::URL> parse_url_function(ParsingContext const&, StyleComponentValueRule const&);
 
     Result<NonnullRefPtr<StyleValue>, ParsingResult> parse_css_value(PropertyID, TokenStream<StyleComponentValueRule>&);
     static RefPtr<StyleValue> parse_css_value(ParsingContext const&, StyleComponentValueRule const&);

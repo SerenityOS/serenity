@@ -10,7 +10,7 @@
 
 namespace Web {
 
-LoadRequest LoadRequest::create_for_url_on_page(const URL& url, Page* page)
+LoadRequest LoadRequest::create_for_url_on_page(const AK::URL& url, Page* page)
 {
     LoadRequest request;
     request.set_url(url);

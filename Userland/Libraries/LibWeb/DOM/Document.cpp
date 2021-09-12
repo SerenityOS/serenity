@@ -57,7 +57,7 @@
 
 namespace Web::DOM {
 
-Document::Document(const URL& url)
+Document::Document(const AK::URL& url)
     : ParentNode(*this, NodeType::DOCUMENT_NODE)
     , m_style_resolver(make<CSS::StyleResolver>(*this))
     , m_style_sheets(CSS::StyleSheetList::create(*this))
@@ -383,7 +383,7 @@ CSS::Repeat Document::background_repeat_y() const
 }
 
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#parse-a-url
-URL Document::parse_url(String const& url) const
+AK::URL Document::parse_url(String const& url) const
 {
     // FIXME: Make sure we do this according to spec.
     return m_url.complete_url(url);

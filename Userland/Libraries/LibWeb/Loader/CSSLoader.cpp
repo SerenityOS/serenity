@@ -30,7 +30,7 @@ void CSSLoader::load_from_text(const String& text)
     load_next_import_if_needed();
 }
 
-void CSSLoader::load_from_url(const URL& url)
+void CSSLoader::load_from_url(const AK::URL& url)
 {
     m_style_sheet = CSS::CSSStyleSheet::create({});
     m_style_sheet->set_owner_node(&m_owner_element);

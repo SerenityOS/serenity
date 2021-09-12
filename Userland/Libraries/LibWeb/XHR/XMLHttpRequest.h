@@ -77,7 +77,7 @@ private:
     bool m_send { false };
 
     String m_method;
-    URL m_url;
+    AK::URL m_url;
 
     HashMap<String, String, CaseInsensitiveStringTraits> m_request_headers;
     HashMap<String, String, CaseInsensitiveStringTraits> m_response_headers;

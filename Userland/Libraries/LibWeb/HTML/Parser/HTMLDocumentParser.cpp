@@ -93,7 +93,7 @@ static Vector<FlyString> s_quirks_public_ids = {
     "-//WebTechs//DTD Mozilla HTML//"
 };
 
-RefPtr<DOM::Document> parse_html_document(const StringView& data, const URL& url, const String& encoding)
+RefPtr<DOM::Document> parse_html_document(const StringView& data, const AK::URL& url, const String& encoding)
 {
     auto document = DOM::Document::create(url);
     HTMLDocumentParser parser(document, data, encoding);
@@ -116,7 +116,7 @@ HTMLDocumentParser::~HTMLDocumentParser()
     m_document->set_should_invalidate_styles_on_attribute_changes(true);
 }
 
-void HTMLDocumentParser::run(const URL& url)
+void HTMLDocumentParser::run(const AK::URL& url)
 {
     m_document->set_url(url);
     m_document->set_source(m_tokenizer.source());

@@ -45,7 +45,7 @@ class Document
 public:
     using WrapperType = Bindings::DocumentWrapper;
 
-    static NonnullRefPtr<Document> create(const URL& url = "about:blank")
+    static NonnullRefPtr<Document> create(const AK::URL& url = "about:blank")
     {
         return adopt_ref(*new Document(url));
     }
@@ -64,15 +64,15 @@ public:
     bool should_invalidate_styles_on_attribute_changes() const { return m_should_invalidate_styles_on_attribute_changes; }
     void set_should_invalidate_styles_on_attribute_changes(bool b) { m_should_invalidate_styles_on_attribute_changes = b; }
 
-    void set_url(const URL& url) { m_url = url; }
-    URL url() const { return m_url; }
+    void set_url(const AK::URL& url) { m_url = url; }
+    AK::URL url() const { return m_url; }
 
     Origin origin() const;
     void set_origin(const Origin& origin);
 
     bool is_scripting_enabled() const { return true; }
 
-    URL parse_url(String const&) const;
+    AK::URL parse_url(String const&) const;
 
     CSS::StyleResolver& style_resolver() { return *m_style_resolver; }
     const CSS::StyleResolver& style_resolver() const { return *m_style_resolver; }
@@ -282,7 +282,7 @@ public:
     Bindings::LocationObject* location();
 
 private:
-    explicit Document(const URL&);
+    explicit Document(const AK::URL&);
 
     // ^DOM::Node
     virtual RefPtr<Layout::Node> create_layout_node() override;
@@ -316,7 +316,7 @@ private:
     RefPtr<Node> m_hovered_node;
     RefPtr<Node> m_inspected_node;
     WeakPtr<BrowsingContext> m_browsing_context;
-    URL m_url;
+    AK::URL m_url;
 
     RefPtr<Window> m_window;
 

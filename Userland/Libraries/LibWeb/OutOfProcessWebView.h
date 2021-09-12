@@ -23,10 +23,10 @@ class OutOfProcessWebView final
 public:
     virtual ~OutOfProcessWebView() override;
 
-    URL url() const { return m_url; }
-    void load(const URL&);
+    AK::URL url() const { return m_url; }
+    void load(const AK::URL&);
 
-    void load_html(const StringView&, const URL&);
+    void load_html(const StringView&, const AK::URL&);
     void load_empty_document();
 
     void debug_request(const String& request, const String& argument = {});
@@ -62,26 +62,26 @@ public:
     void notify_server_did_request_scroll_into_view(Badge<WebContentClient>, const Gfx::IntRect&);
     void notify_server_did_enter_tooltip_area(Badge<WebContentClient>, const Gfx::IntPoint&, const String&);
     void notify_server_did_leave_tooltip_area(Badge<WebContentClient>);
-    void notify_server_did_hover_link(Badge<WebContentClient>, const URL&);
+    void notify_server_did_hover_link(Badge<WebContentClient>, const AK::URL&);
     void notify_server_did_unhover_link(Badge<WebContentClient>);
-    void notify_server_did_click_link(Badge<WebContentClient>, const URL&, const String& target, unsigned modifiers);
-    void notify_server_did_middle_click_link(Badge<WebContentClient>, const URL&, const String& target, unsigned modifiers);
-    void notify_server_did_start_loading(Badge<WebContentClient>, const URL&);
-    void notify_server_did_finish_loading(Badge<WebContentClient>, const URL&);
+    void notify_server_did_click_link(Badge<WebContentClient>, const AK::URL&, const String& target, unsigned modifiers);
+    void notify_server_did_middle_click_link(Badge<WebContentClient>, const AK::URL&, const String& target, unsigned modifiers);
+    void notify_server_did_start_loading(Badge<WebContentClient>, const AK::URL&);
+    void notify_server_did_finish_loading(Badge<WebContentClient>, const AK::URL&);
     void notify_server_did_request_context_menu(Badge<WebContentClient>, const Gfx::IntPoint&);
-    void notify_server_did_request_link_context_menu(Badge<WebContentClient>, const Gfx::IntPoint&, const URL&, const String& target, unsigned modifiers);
-    void notify_server_did_request_image_context_menu(Badge<WebContentClient>, const Gfx::IntPoint&, const URL&, const String& target, unsigned modifiers, const Gfx::ShareableBitmap&);
+    void notify_server_did_request_link_context_menu(Badge<WebContentClient>, const Gfx::IntPoint&, const AK::URL&, const String& target, unsigned modifiers);
+    void notify_server_did_request_image_context_menu(Badge<WebContentClient>, const Gfx::IntPoint&, const AK::URL&, const String& target, unsigned modifiers, const Gfx::ShareableBitmap&);
     void notify_server_did_request_alert(Badge<WebContentClient>, const String& message);
     bool notify_server_did_request_confirm(Badge<WebContentClient>, const String& message);
     String notify_server_did_request_prompt(Badge<WebContentClient>, const String& message, const String& default_);
-    void notify_server_did_get_source(const URL& url, const String& source);
+    void notify_server_did_get_source(const AK::URL& url, const String& source);
     void notify_server_did_get_dom_tree(const String& dom_tree);
     void notify_server_did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style);
     void notify_server_did_output_js_console_message(i32 message_index);
     void notify_server_did_get_js_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages);
     void notify_server_did_change_favicon(const Gfx::Bitmap& favicon);
-    String notify_server_did_request_cookie(Badge<WebContentClient>, const URL& url, Cookie::Source source);
-    void notify_server_did_set_cookie(Badge<WebContentClient>, const URL& url, const Cookie::ParsedCookie& cookie, Cookie::Source source);
+    String notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Cookie::Source source);
+    void notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, const Cookie::ParsedCookie& cookie, Cookie::Source source);
 
 private:
     OutOfProcessWebView();
@@ -108,7 +108,7 @@ private:
 
     void handle_web_content_process_crash();
 
-    URL m_url;
+    AK::URL m_url;
 
     struct ClientState {
         RefPtr<WebContentClient> client;

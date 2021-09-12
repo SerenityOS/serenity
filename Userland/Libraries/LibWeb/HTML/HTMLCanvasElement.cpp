@@ -92,7 +92,7 @@ String HTMLCanvasElement::to_data_url(const String& type, [[maybe_unused]] Optio
     if (type != "image/png")
         return {};
     auto encoded_bitmap = Gfx::PNGWriter::encode(*m_bitmap);
-    return URL::create_with_data(type, encode_base64(encoded_bitmap), true).to_string();
+    return AK::URL::create_with_data(type, encode_base64(encoded_bitmap), true).to_string();
 }
 
 }

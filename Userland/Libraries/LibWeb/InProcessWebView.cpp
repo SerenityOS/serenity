@@ -72,13 +72,13 @@ void InProcessWebView::page_did_set_document_in_top_level_browsing_context(DOM::
     update();
 }
 
-void InProcessWebView::page_did_start_loading(const URL& url)
+void InProcessWebView::page_did_start_loading(const AK::URL& url)
 {
     if (on_load_start)
         on_load_start(url);
 }
 
-void InProcessWebView::page_did_finish_loading(const URL& url)
+void InProcessWebView::page_did_finish_loading(const AK::URL& url)
 {
     if (on_load_finish)
         on_load_finish(url);
@@ -100,13 +100,13 @@ void InProcessWebView::page_did_request_context_menu(const Gfx::IntPoint& conten
         on_context_menu_request(screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
-void InProcessWebView::page_did_request_link_context_menu(const Gfx::IntPoint& content_position, const URL& url, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers)
+void InProcessWebView::page_did_request_link_context_menu(const Gfx::IntPoint& content_position, const AK::URL& url, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers)
 {
     if (on_link_context_menu_request)
         on_link_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
-void InProcessWebView::page_did_request_image_context_menu(const Gfx::IntPoint& content_position, const URL& url, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers, const Gfx::Bitmap* bitmap)
+void InProcessWebView::page_did_request_image_context_menu(const Gfx::IntPoint& content_position, const AK::URL& url, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers, const Gfx::Bitmap* bitmap)
 {
     if (!on_image_context_menu_request)
         return;
@@ -116,13 +116,13 @@ void InProcessWebView::page_did_request_image_context_menu(const Gfx::IntPoint& 
     on_image_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)), shareable_bitmap);
 }
 
-void InProcessWebView::page_did_click_link(const URL& url, const String& target, unsigned modifiers)
+void InProcessWebView::page_did_click_link(const AK::URL& url, const String& target, unsigned modifiers)
 {
     if (on_link_click)
         on_link_click(url, target, modifiers);
 }
 
-void InProcessWebView::page_did_middle_click_link(const URL& url, const String& target, unsigned modifiers)
+void InProcessWebView::page_did_middle_click_link(const AK::URL& url, const String& target, unsigned modifiers)
 {
     if (on_link_middle_click)
         on_link_middle_click(url, target, modifiers);
@@ -138,7 +138,7 @@ void InProcessWebView::page_did_leave_tooltip_area()
     GUI::Application::the()->hide_tooltip();
 }
 
-void InProcessWebView::page_did_hover_link(const URL& url)
+void InProcessWebView::page_did_hover_link(const AK::URL& url)
 {
     if (on_link_hover)
         on_link_hover(url);
@@ -276,7 +276,7 @@ void InProcessWebView::keydown_event(GUI::KeyEvent& event)
     event.accept();
 }
 
-URL InProcessWebView::url() const
+AK::URL InProcessWebView::url() const
 {
     if (!page().top_level_browsing_context().active_document())
         return {};
@@ -288,12 +288,12 @@ void InProcessWebView::reload()
     load(url());
 }
 
-void InProcessWebView::load_html(const StringView& html, const URL& url)
+void InProcessWebView::load_html(const StringView& html, const AK::URL& url)
 {
     page().top_level_browsing_context().loader().load_html(html, url);
 }
 
-bool InProcessWebView::load(const URL& url)
+bool InProcessWebView::load(const AK::URL& url)
 {
     set_override_cursor(Gfx::StandardCursor::None);
     return page().top_level_browsing_context().loader().load(url, FrameLoader::Type::Navigation);
@@ -372,14 +372,14 @@ String InProcessWebView::page_did_request_prompt(const String& message, const St
     return {};
 }
 
-String InProcessWebView::page_did_request_cookie(const URL& url, Cookie::Source source)
+String InProcessWebView::page_did_request_cookie(const AK::URL& url, Cookie::Source source)
 {
     if (on_get_cookie)
         return on_get_cookie(url, source);
     return {};
 }
 
-void InProcessWebView::page_did_set_cookie(const URL& url, const Cookie::ParsedCookie& cookie, Cookie::Source source)
+void InProcessWebView::page_did_set_cookie(const AK::URL& url, const Cookie::ParsedCookie& cookie, Cookie::Source source)
 {
     if (on_set_cookie)
         on_set_cookie(url, cookie, source);

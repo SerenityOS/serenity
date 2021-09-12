@@ -16,14 +16,14 @@ class CSSImportRule : public CSSRule {
     AK_MAKE_NONMOVABLE(CSSImportRule);
 
 public:
-    static NonnullRefPtr<CSSImportRule> create(URL url)
+    static NonnullRefPtr<CSSImportRule> create(AK::URL url)
     {
         return adopt_ref(*new CSSImportRule(move(url)));
     }
 
     ~CSSImportRule();
 
-    const URL& url() const { return m_url; }
+    const AK::URL& url() const { return m_url; }
 
     bool has_import_result() const { return !m_style_sheet.is_null(); }
     RefPtr<CSSStyleSheet> loaded_style_sheet() { return m_style_sheet; }
@@ -34,9 +34,9 @@ public:
     virtual Type type() const { return Type::Import; };
 
 private:
-    explicit CSSImportRule(URL);
+    explicit CSSImportRule(AK::URL);
 
-    URL m_url;
+    AK::URL m_url;
     RefPtr<CSSStyleSheet> m_style_sheet;
 };
 

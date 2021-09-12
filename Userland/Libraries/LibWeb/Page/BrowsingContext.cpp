@@ -311,12 +311,12 @@ void BrowsingContext::unregister_viewport_client(ViewportClient& client)
     VERIFY(was_removed);
 }
 
-void BrowsingContext::register_frame_nesting(URL const& url)
+void BrowsingContext::register_frame_nesting(AK::URL const& url)
 {
     m_frame_nesting_levels.ensure(url)++;
 }
 
-bool BrowsingContext::is_frame_nesting_allowed(URL const& url) const
+bool BrowsingContext::is_frame_nesting_allowed(AK::URL const& url) const
 {
     return m_frame_nesting_levels.get(url).value_or(0) < 3;
 }

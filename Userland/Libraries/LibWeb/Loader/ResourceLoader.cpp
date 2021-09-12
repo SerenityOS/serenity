@@ -218,7 +218,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
         error_callback(not_implemented_error, {});
 }
 
-void ResourceLoader::load(const URL& url, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
+void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
 {
     LoadRequest request;
     request.set_url(url);

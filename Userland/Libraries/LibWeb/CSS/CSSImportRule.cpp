@@ -10,7 +10,7 @@
 
 namespace Web::CSS {
 
-CSSImportRule::CSSImportRule(URL url)
+CSSImportRule::CSSImportRule(AK::URL url)
     : m_url(move(url))
 {
 }

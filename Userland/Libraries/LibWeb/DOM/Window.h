@@ -54,7 +54,7 @@ public:
     int inner_width() const;
     int inner_height() const;
 
-    void did_set_location_href(Badge<Bindings::LocationObject>, URL const& new_href);
+    void did_set_location_href(Badge<Bindings::LocationObject>, AK::URL const& new_href);
     void did_call_location_reload(Badge<Bindings::LocationObject>);
 
     Bindings::WindowObject* wrapper() { return m_wrapper; }

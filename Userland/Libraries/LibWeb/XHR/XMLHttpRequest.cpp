@@ -167,7 +167,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send()
 
     // FIXME: If body is not null, then:
 
-    URL request_url = m_window->associated_document().parse_url(m_url.to_string());
+    AK::URL request_url = m_window->associated_document().parse_url(m_url.to_string());
     dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);
 
     // TODO: Add support for preflight requests to support CORS requests

@@ -16,14 +16,14 @@ class Script : public RefCounted<Script> {
 public:
     virtual ~Script();
 
-    URL const& base_url() const { return m_base_url; }
+    AK::URL const& base_url() const { return m_base_url; }
     String const& filename() const { return m_filename; }
 
 protected:
-    Script(URL base_url, String filename);
+    Script(AK::URL base_url, String filename);
 
 private:
-    URL m_base_url;
+    AK::URL m_base_url;
     String m_filename;
 };
 

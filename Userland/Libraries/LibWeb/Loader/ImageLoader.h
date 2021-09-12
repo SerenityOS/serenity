@@ -16,7 +16,7 @@ class ImageLoader : public ImageResourceClient {
 public:
     ImageLoader(DOM::Element& owner_element);
 
-    void load(const URL&);
+    void load(const AK::URL&);
 
     const Gfx::Bitmap* bitmap(size_t index) const;
     size_t current_frame_index() const { return m_current_frame_index; }
