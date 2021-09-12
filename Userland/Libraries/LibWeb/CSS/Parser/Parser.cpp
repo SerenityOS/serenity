@@ -637,6 +637,16 @@ Result<Selector::SimpleSelector, Parser::SelectorParsingResult> Parser::parse_si
         }
     }
 
+    // Whitespace is not required between the compound-selector and a combinator.
+    // So, if we see a combinator, return that this compound-selector is done, instead of a syntax error.
+    if (first_value.is(Token::Type::Delim)) {
+        auto delim = first_value.token().delim();
+        if ((delim == ">"sv) || (delim == "+"sv) || (delim == "~"sv) || (delim == "|"sv)) {
+            tokens.reconsume_current_input_token();
+            return SelectorParsingResult::Done;
+        }
+    }
+
     dbgln_if(CSS_PARSER_DEBUG, "!!! Invalid simple selector!");
     return SelectorParsingResult::SyntaxError;
 }
