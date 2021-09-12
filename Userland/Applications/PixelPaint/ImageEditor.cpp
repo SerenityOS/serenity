@@ -442,6 +442,14 @@ void ImageEditor::set_active_tool(Tool* tool)
     }
 }
 
+void ImageEditor::update_tool_cursor()
+{
+    if (m_active_tool) {
+        m_active_cursor = m_active_tool->cursor();
+        set_override_cursor(m_active_cursor);
+    }
+}
+
 void ImageEditor::set_guide_visibility(bool show_guides)
 {
     if (m_show_guides == show_guides)
