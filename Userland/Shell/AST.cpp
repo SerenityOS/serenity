@@ -8,7 +8,6 @@
 #include "Shell.h"
 #include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>
-#include <AK/ScopedValueRollback.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>

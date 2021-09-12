@@ -9,9 +9,7 @@
 #include "Forward.h"
 #include <AK/Forward.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibCore/ElapsedTimer.h>
 
 namespace Shell {
 

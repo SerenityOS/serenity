@@ -11,11 +11,9 @@
 #include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <LibCore/ElapsedTimer.h>
-#include <LibCore/Object.h>
 
 namespace Shell {
 

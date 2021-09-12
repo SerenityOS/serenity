@@ -10,7 +10,6 @@
 #include <AK/Function.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 
 namespace Shell {

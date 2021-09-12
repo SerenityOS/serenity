@@ -12,10 +12,8 @@
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
 #include <LibLine/Editor.h>
 #include <termios.h>
