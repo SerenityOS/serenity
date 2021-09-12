@@ -5,13 +5,14 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Platform.h>
 #include <AK/StackInfo.h>
 #include <stdio.h>
 #include <string.h>
 
 #ifdef __serenity__
 #    include <serenity.h>
-#elif defined(__linux__) or defined(__APPLE__)
+#elif defined(__linux__) or defined(AK_OS_MACOS)
 #    include <pthread.h>
 #endif
 
@@ -36,7 +37,7 @@ StackInfo::StackInfo()
         VERIFY_NOT_REACHED();
     }
     pthread_attr_destroy(&attr);
-#elif __APPLE__
+#elif defined(AK_OS_MACOS)
     // NOTE: !! On MacOS, pthread_get_stackaddr_np gives the TOP of the stack, not the bottom!
     FlatPtr top_of_stack = (FlatPtr)pthread_get_stackaddr_np(pthread_self());
     m_size = (size_t)pthread_get_stacksize_np(pthread_self());
