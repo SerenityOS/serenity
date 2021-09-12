@@ -30,6 +30,9 @@ public:
 
     Origin origin() const;
 
+    LocationObject* location_object() { return m_location_object; }
+    LocationObject const* location_object() const { return m_location_object; }
+
     JS::Object* web_prototype(const String& class_name) { return m_prototypes.get(class_name).value_or(nullptr); }
     JS::NativeFunction* web_constructor(const String& class_name) { return m_constructors.get(class_name).value_or(nullptr); }
 
@@ -95,6 +98,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(get_computed_style);
 
     NonnullRefPtr<DOM::Window> m_impl;
+
+    LocationObject* m_location_object;
 
     HashMap<String, JS::Object*> m_prototypes;
     HashMap<String, JS::NativeFunction*> m_constructors;

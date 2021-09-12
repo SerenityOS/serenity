@@ -2,6 +2,9 @@ interface Document : Node {
 
     constructor();
 
+    // FIXME: These attributes currently don't do anything.
+    [PutForwards=href, LegacyUnforgeable] readonly attribute Location? location;
+
     readonly attribute DOMImplementation implementation;
 
     readonly attribute DOMString characterSet;
