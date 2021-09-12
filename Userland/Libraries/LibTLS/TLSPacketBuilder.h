@@ -8,7 +8,6 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/ByteReader.h>
-#include <AK/Endian.h>
 #include <AK/Types.h>
 
 namespace TLS {
