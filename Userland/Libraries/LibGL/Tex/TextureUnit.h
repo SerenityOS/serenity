@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/OwnPtr.h>
 #include <LibGL/Tex/Texture2D.h>
 
 namespace GL {

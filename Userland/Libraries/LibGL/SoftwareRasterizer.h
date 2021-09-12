@@ -9,7 +9,6 @@
 #include "DepthBuffer.h"
 #include "GL/gl.h"
 #include "GLStruct.h"
-#include "Tex/Texture2D.h"
 #include "Tex/TextureUnit.h"
 #include <AK/Array.h>
 #include <AK/OwnPtr.h>

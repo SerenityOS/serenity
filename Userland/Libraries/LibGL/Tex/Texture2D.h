@@ -10,13 +10,10 @@
 #include "Texture.h"
 
 #include <AK/Array.h>
-#include <AK/RefCounted.h>
 #include <AK/Vector.h>
 #include <LibGL/GL/gl.h>
 #include <LibGL/Tex/MipMap.h>
 #include <LibGL/Tex/Sampler2D.h>
-#include <LibGfx/Vector2.h>
-#include <LibGfx/Vector4.h>
 
 namespace GL {
 

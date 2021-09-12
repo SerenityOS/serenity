@@ -7,16 +7,12 @@
 
 #include "SoftwareGLContext.h"
 #include "GLStruct.h"
-#include "SoftwareRasterizer.h"
 #include <AK/Assertions.h>
 #include <AK/Debug.h>
 #include <AK/Format.h>
-#include <AK/QuickSort.h>
 #include <AK/TemporaryChange.h>
-#include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Painter.h>
 #include <LibGfx/Vector4.h>
 
 using AK::dbgln;

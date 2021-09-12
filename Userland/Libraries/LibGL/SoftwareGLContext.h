@@ -20,7 +20,6 @@
 #include <AK/Vector.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix4x4.h>
-#include <LibGfx/Vector3.h>
 
 namespace GL {
 

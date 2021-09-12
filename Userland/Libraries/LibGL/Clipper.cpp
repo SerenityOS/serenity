@@ -5,8 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
-#include <AK/ScopeGuard.h>
 #include <LibGL/Clipper.h>
 
 namespace GL {
