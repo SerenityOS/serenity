@@ -13,7 +13,6 @@
 #include <LibCore/File.h>
 #include <LibRegex/Regex.h>
 #include <stdlib.h>
-#include <sys/mman.h>
 
 namespace Debug {
 

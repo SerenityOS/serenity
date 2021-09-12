@@ -9,7 +9,6 @@
 #include "CompilationUnit.h"
 
 #include <AK/MemoryStream.h>
-#include <LibDebug/DebugInfo.h>
 
 namespace Debug::Dwarf {
 
