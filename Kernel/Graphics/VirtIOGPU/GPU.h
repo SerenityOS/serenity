@@ -10,7 +10,6 @@
 #include <AK/DistinctNumeric.h>
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
-#include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/Protocol.h>
 
 #define VIRTIO_GPU_F_VIRGL (1 << 0)

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/BinaryBufferWriter.h>
 #include <Kernel/Graphics/VirtIOGPU/Console.h>
 #include <Kernel/Graphics/VirtIOGPU/FrameBufferDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/GPU.h>
