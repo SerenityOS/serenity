@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 
 namespace Kernel {

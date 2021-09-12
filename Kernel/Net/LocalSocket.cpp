@@ -15,7 +15,6 @@
 #include <Kernel/Process.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/UnixTypes.h>
-#include <LibC/errno_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {

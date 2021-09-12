@@ -7,8 +7,6 @@
 #include <AK/Singleton.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/CommandLine.h>
-#include <Kernel/IO.h>
-#include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/E1000ENetworkAdapter.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
