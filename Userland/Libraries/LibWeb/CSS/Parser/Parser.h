@@ -100,7 +100,7 @@ public:
     RefPtr<StyleValue> parse_as_css_value(PropertyID);
 
 private:
-    enum class SelectorParsingResult {
+    enum class ParsingResult {
         Done,
         IncludesIgnoredVendorPrefix,
         SyntaxError,
@@ -123,13 +123,13 @@ private:
     template<typename T>
     Vector<Vector<StyleComponentValueRule>> parse_a_comma_separated_list_of_component_values(TokenStream<T>&);
     template<typename T>
-    Result<SelectorList, SelectorParsingResult> parse_a_selector(TokenStream<T>&);
+    Result<SelectorList, ParsingResult> parse_a_selector(TokenStream<T>&);
     template<typename T>
-    Result<SelectorList, SelectorParsingResult> parse_a_relative_selector(TokenStream<T>&);
+    Result<SelectorList, ParsingResult> parse_a_relative_selector(TokenStream<T>&);
     template<typename T>
-    Result<SelectorList, SelectorParsingResult> parse_a_selector_list(TokenStream<T>&);
+    Result<SelectorList, ParsingResult> parse_a_selector_list(TokenStream<T>&);
     template<typename T>
-    Result<SelectorList, SelectorParsingResult> parse_a_relative_selector_list(TokenStream<T>&);
+    Result<SelectorList, ParsingResult> parse_a_relative_selector_list(TokenStream<T>&);
 
     Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>&);
 
@@ -212,10 +212,10 @@ private:
     static OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> parse_calc_number_sum_part_with_operator(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
     static OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_expression(ParsingContext const&, Vector<StyleComponentValueRule> const&);
 
-    Result<NonnullRefPtr<Selector>, SelectorParsingResult> parse_complex_selector(TokenStream<StyleComponentValueRule>&, bool allow_starting_combinator);
-    Result<Selector::CompoundSelector, SelectorParsingResult> parse_compound_selector(TokenStream<StyleComponentValueRule>&);
+    Result<NonnullRefPtr<Selector>, ParsingResult> parse_complex_selector(TokenStream<StyleComponentValueRule>&, bool allow_starting_combinator);
+    Result<Selector::CompoundSelector, ParsingResult> parse_compound_selector(TokenStream<StyleComponentValueRule>&);
     Optional<Selector::Combinator> parse_selector_combinator(TokenStream<StyleComponentValueRule>&);
-    Result<Selector::SimpleSelector, SelectorParsingResult> parse_simple_selector(TokenStream<StyleComponentValueRule>&);
+    Result<Selector::SimpleSelector, ParsingResult> parse_simple_selector(TokenStream<StyleComponentValueRule>&);
 
     static bool has_ignored_vendor_prefix(StringView const&);
 
