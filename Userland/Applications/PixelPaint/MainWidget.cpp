@@ -336,6 +336,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     // Save this so other methods can use it
     m_show_guides_action = GUI::Action::create_checkable(
         "Show Guides", [&](auto& action) {
+            Config::write_bool("PixelPaint", "Guides", "Show", action.is_checked());
             if (auto* editor = current_image_editor()) {
                 editor->set_guide_visibility(action.is_checked());
             }
@@ -363,6 +364,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     auto show_pixel_grid_action = GUI::Action::create_checkable(
         "Show Pixel Grid", [&](auto& action) {
+            Config::write_bool("PixelPaint", "PixelGrid", "Show", action.is_checked());
             if (auto* editor = current_image_editor())
                 editor->set_pixel_grid_visibility(action.is_checked());
         });
@@ -371,6 +373,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_show_rulers_action = GUI::Action::create_checkable(
         "Show Rulers", { Mod_Ctrl, Key_R }, [&](auto& action) {
+            Config::write_bool("PixelPaint", "Rulers", "Show", action.is_checked());
             if (auto* editor = current_image_editor()) {
                 editor->set_ruler_visibility(action.is_checked());
             }
