@@ -39,6 +39,7 @@ public:
     virtual String absolute_path(const OpenFileDescription&) const override;
 
     virtual KResult truncate(u64) override;
+    virtual KResult sync() override;
     virtual KResult chown(OpenFileDescription&, UserID, GroupID) override;
     virtual KResult chmod(OpenFileDescription&, mode_t) override;
 

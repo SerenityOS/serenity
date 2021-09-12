@@ -709,10 +709,10 @@ void sysbeep()
     syscall(SC_beep);
 }
 
-int fsync([[maybe_unused]] int fd)
+int fsync(int fd)
 {
-    dbgln("FIXME: Implement fsync()");
-    return 0;
+    int rc = syscall(SC_fsync, fd);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int halt()
