@@ -19,7 +19,6 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Icon.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGfx/Bitmap.h>

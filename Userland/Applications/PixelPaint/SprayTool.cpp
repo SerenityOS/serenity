@@ -8,11 +8,8 @@
 #include "ImageEditor.h"
 #include "Layer.h"
 #include <AK/Math.h>
-#include <AK/Queue.h>
-#include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ValueSlider.h>
 #include <LibGfx/Bitmap.h>

@@ -8,7 +8,6 @@
 #pragma once
 
 #include "BrushTool.h"
-#include <LibGUI/ActionGroup.h>
 #include <LibGfx/Point.h>
 
 namespace PixelPaint {

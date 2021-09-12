@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "Guide.h"
 #include "Image.h"
 #include "ImageEditor.h"
 #include "Layer.h"

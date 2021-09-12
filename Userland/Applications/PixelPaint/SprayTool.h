@@ -8,8 +8,6 @@
 
 #include "Tool.h"
 #include <LibCore/Timer.h>
-#include <LibGUI/ActionGroup.h>
-#include <LibGUI/Painter.h>
 
 namespace PixelPaint {
 
