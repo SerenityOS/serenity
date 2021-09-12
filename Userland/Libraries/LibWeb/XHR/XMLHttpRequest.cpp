@@ -18,6 +18,7 @@
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Origin.h>
+#include <LibWeb/Page/Page.h>
 #include <LibWeb/XHR/EventNames.h>
 #include <LibWeb/XHR/ProgressEvent.h>
 #include <LibWeb/XHR/XMLHttpRequest.h>
@@ -172,7 +173,11 @@ DOM::ExceptionOr<void> XMLHttpRequest::send()
     // TODO: Add support for preflight requests to support CORS requests
     Origin request_url_origin = Origin(request_url.protocol(), request_url.host(), request_url.port());
 
-    if (!m_window->associated_document().origin().is_same(request_url_origin)) {
+    bool should_enforce_same_origin_policy = true;
+    if (auto* page = m_window->page())
+        should_enforce_same_origin_policy = page->is_same_origin_policy_enabled();
+
+    if (should_enforce_same_origin_policy && !m_window->associated_document().origin().is_same(request_url_origin)) {
         dbgln("XHR failed to load: Same-Origin Policy violation: {} may not load {}", m_window->associated_document().url(), request_url);
         auto weak_this = make_weak_ptr();
         if (!weak_this)

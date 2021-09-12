@@ -56,11 +56,16 @@ public:
     Gfx::Palette palette() const;
     Gfx::IntRect screen_rect() const;
 
+    bool is_same_origin_policy_enabled() const { return m_same_origin_policy_enabled; }
+    void set_same_origin_policy_enabled(bool b) { m_same_origin_policy_enabled = b; }
+
 private:
     PageClient& m_client;
 
     RefPtr<BrowsingContext> m_top_level_browsing_context;
     WeakPtr<BrowsingContext> m_focused_context;
+
+    bool m_same_origin_policy_enabled { true };
 };
 
 class PageClient {

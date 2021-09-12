@@ -9,6 +9,7 @@
 #include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/Page/BrowsingContext.h>
+#include <LibWeb/Page/Page.h>
 
 namespace Web::HTML {
 
@@ -43,6 +44,10 @@ Origin BrowsingContextContainer::content_origin() const
 
 bool BrowsingContextContainer::may_access_from_origin(const Origin& origin) const
 {
+    if (auto* page = document().page()) {
+        if (!page->is_same_origin_policy_enabled())
+            return true;
+    }
     return origin.is_same(content_origin());
 }
 
