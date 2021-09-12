@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <LibMarkdown/Block.h>
 #include <LibMarkdown/Text.h>

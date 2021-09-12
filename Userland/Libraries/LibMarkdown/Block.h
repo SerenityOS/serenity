@@ -6,8 +6,7 @@
 
 #pragma once
 
-#include <AK/StringView.h>
-#include <AK/Vector.h>
+#include <AK/Types.h>
 
 namespace Markdown {
 
