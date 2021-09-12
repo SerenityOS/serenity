@@ -979,4 +979,16 @@ bool Document::is_fully_active() const
     return browsing_context() && browsing_context()->active_document() == this && (browsing_context()->is_top_level() || browsing_context()->container_document()->is_fully_active());
 }
 
+// https://html.spec.whatwg.org/multipage/history.html#dom-document-location
+Bindings::LocationObject* Document::location()
+{
+    // The Document object's location attribute's getter must return this Document object's relevant global object's Location object,
+    // if this Document object is fully active, and null otherwise.
+
+    if (!is_fully_active())
+        return nullptr;
+
+    return window().wrapper()->location_object();
+}
+
 }

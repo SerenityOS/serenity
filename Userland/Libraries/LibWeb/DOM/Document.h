@@ -279,6 +279,8 @@ public:
 
     NonnullRefPtr<HTML::History> history() const { return m_history; }
 
+    Bindings::LocationObject* location();
+
 private:
     explicit Document(const URL&);
 

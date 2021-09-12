@@ -92,8 +92,12 @@ void WindowObject::initialize_global_object()
     // Legacy
     define_native_accessor("event", event_getter, event_setter, JS::Attribute::Enumerable);
 
+    m_location_object = heap().allocate<LocationObject>(*this, *this);
+
     define_direct_property("navigator", heap().allocate<NavigatorObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    define_direct_property("location", heap().allocate<LocationObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
+
+    // NOTE: location is marked as [LegacyUnforgeable], meaning it isn't configurable.
+    define_direct_property("location", m_location_object, JS::Attribute::Enumerable);
 
     // WebAssembly "namespace"
     define_direct_property("WebAssembly", heap().allocate<WebAssemblyObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
@@ -108,6 +112,7 @@ WindowObject::~WindowObject()
 void WindowObject::visit_edges(Visitor& visitor)
 {
     GlobalObject::visit_edges(visitor);
+    visitor.visit(m_location_object);
     for (auto& it : m_prototypes)
         visitor.visit(it.value);
     for (auto& it : m_constructors)
