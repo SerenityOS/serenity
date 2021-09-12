@@ -25,6 +25,14 @@ MoveTool::~MoveTool()
 
 void MoveTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
+    if (event.image_event().button() == GUI::MouseButton::Right && !m_is_panning) {
+        m_is_panning = true;
+        m_event_origin = event.raw_event().position();
+        m_saved_pan_origin = m_editor->pan_origin();
+        m_editor->set_override_cursor(Gfx::StandardCursor::Drag);
+        return;
+    }
+
     if (!layer)
         return;
 
@@ -41,6 +49,15 @@ void MoveTool::on_mousedown(Layer* layer, MouseEvent& event)
 
 void MoveTool::on_mousemove(Layer* layer, MouseEvent& event)
 {
+    if (m_is_panning) {
+        auto& raw_event = event.raw_event();
+        auto delta = raw_event.position() - m_event_origin;
+        m_editor->set_pan_origin(m_saved_pan_origin.translated(
+            -delta.x(),
+            -delta.y()));
+        return;
+    }
+
     if (!layer)
         return;
 
@@ -54,6 +71,12 @@ void MoveTool::on_mousemove(Layer* layer, MouseEvent& event)
 
 void MoveTool::on_mouseup(Layer* layer, MouseEvent& event)
 {
+    if (event.image_event().button() == GUI::MouseButton::Right && m_is_panning) {
+        m_is_panning = false;
+        m_editor->set_override_cursor(cursor());
+        return;
+    }
+
     if (!layer)
         return;
 
