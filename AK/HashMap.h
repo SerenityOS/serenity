@@ -165,6 +165,16 @@ public:
         return list;
     }
 
+    [[nodiscard]] u32 hash() const
+    {
+        u32 hash = 0;
+        for (auto& it : *this) {
+            auto entry_hash = pair_int_hash(it.key.hash(), it.value.hash());
+            hash = pair_int_hash(hash, entry_hash);
+        }
+        return hash;
+    }
+
 private:
     HashTableType m_table;
 };
