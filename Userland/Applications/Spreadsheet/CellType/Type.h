@@ -10,7 +10,6 @@
 #include "../Forward.h"
 #include <AK/Forward.h>
 #include <AK/String.h>
-#include <LibGfx/Color.h>
 #include <LibGfx/TextAlignment.h>
 #include <LibJS/Forward.h>
 

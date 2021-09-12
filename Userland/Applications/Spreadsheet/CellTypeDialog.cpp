@@ -22,7 +22,6 @@
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
-#include <LibGfx/FontDatabase.h>
 #include <LibJS/SyntaxHighlighter.h>
 
 REGISTER_WIDGET(Spreadsheet, ConditionsView);

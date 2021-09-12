@@ -7,8 +7,6 @@
 #pragma once
 
 #include <AK/JsonObject.h>
-#include <LibGUI/Dialog.h>
-#include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibWeb/OutOfProcessWebView.h>
 

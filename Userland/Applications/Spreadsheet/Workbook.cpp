@@ -8,11 +8,8 @@
 #include "ExportDialog.h"
 #include "ImportDialog.h"
 #include "JSIntegration.h"
-#include "Readers/CSV.h"
-#include <AK/ByteBuffer.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
-#include <LibGUI/TextBox.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace Spreadsheet {

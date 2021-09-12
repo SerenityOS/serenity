@@ -12,11 +12,8 @@
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
-#include <AK/WeakPtr.h>
-#include <AK/Weakable.h>
 #include <LibCore/Object.h>
 #include <LibJS/Interpreter.h>
 

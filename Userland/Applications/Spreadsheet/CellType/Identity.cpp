@@ -6,7 +6,6 @@
 
 #include "Identity.h"
 #include "../Cell.h"
-#include "../Spreadsheet.h"
 
 namespace Spreadsheet {
 

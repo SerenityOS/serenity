@@ -5,9 +5,7 @@
  */
 
 #include "CellSyntaxHighlighter.h"
-#include <LibGUI/TextEditor.h>
 #include <LibGfx/Palette.h>
-#include <LibJS/Lexer.h>
 
 namespace Spreadsheet {
 

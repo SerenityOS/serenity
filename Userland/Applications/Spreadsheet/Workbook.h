@@ -8,7 +8,6 @@
 
 #include "Forward.h"
 #include "Spreadsheet.h"
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/Result.h>
 
 namespace Spreadsheet {
