@@ -216,6 +216,8 @@ private:
     Optional<Selector::Combinator> parse_selector_combinator(TokenStream<StyleComponentValueRule>&);
     Result<Selector::SimpleSelector, SelectorParsingResult> parse_simple_selector(TokenStream<StyleComponentValueRule>&);
 
+    static bool has_ignored_vendor_prefix(StringView const&);
+
     ParsingContext m_context;
 
     Tokenizer m_tokenizer;
