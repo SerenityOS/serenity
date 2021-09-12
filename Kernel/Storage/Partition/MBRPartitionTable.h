@@ -9,7 +9,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/RefPtr.h>
 #include <AK/Result.h>
-#include <AK/Vector.h>
 #include <Kernel/Storage/Partition/PartitionTable.h>
 
 namespace Kernel {

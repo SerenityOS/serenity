@@ -9,8 +9,6 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Result.h>
-#include <AK/Vector.h>
-#include <Kernel/Storage/Partition/DiskPartition.h>
 #include <Kernel/Storage/Partition/MBRPartitionTable.h>
 
 namespace Kernel {

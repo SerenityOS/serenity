@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
 #include <Kernel/Storage/Partition/EBRPartitionTable.h>
 
 namespace Kernel {

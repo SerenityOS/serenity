@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/RefPtr.h>
 #include <AK/UUID.h>
 #include <Kernel/Devices/BlockDevice.h>
 

@@ -9,7 +9,6 @@
 #include <AK/RefPtr.h>
 #include <AK/Result.h>
 #include <AK/Types.h>
-#include <AK/Vector.h>
 #include <Kernel/Storage/Partition/MBRPartitionTable.h>
 
 namespace Kernel {
