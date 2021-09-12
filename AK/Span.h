@@ -144,7 +144,7 @@ public:
     {
         // make sure we're not told to write past the end
         VERIFY(offset + data_size <= size());
-        __builtin_memcpy(this->data() + offset, data, data_size);
+        __builtin_memmove(this->data() + offset, data, data_size);
     }
 
     ALWAYS_INLINE constexpr size_t copy_to(Span<RemoveConst<T>> other) const
