@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "GitRepo.h"
 #include <AK/LexicalPath.h>
 #include <AK/NonnullRefPtr.h>
 #include <LibGUI/Model.h>

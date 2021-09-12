@@ -9,8 +9,6 @@
 #include "ProjectTemplatesModel.h"
 #include <DevTools/HackStudio/ProjectTemplate.h>
 
-#include <AK/Result.h>
-#include <AK/Vector.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/Label.h>

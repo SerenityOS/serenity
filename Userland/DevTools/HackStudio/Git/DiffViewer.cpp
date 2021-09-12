@@ -6,10 +6,7 @@
 
 #include "DiffViewer.h"
 #include <AK/Debug.h>
-#include <LibDiff/Hunks.h>
-#include <LibGUI/AbstractView.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Scrollbar.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>

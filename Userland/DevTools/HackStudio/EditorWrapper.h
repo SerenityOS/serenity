@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "Debugger/BreakpointCallback.h"
 #include "Git/GitRepo.h"
 #include "LanguageClient.h"
 #include <AK/Function.h>

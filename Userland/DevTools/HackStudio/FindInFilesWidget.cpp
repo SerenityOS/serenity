@@ -6,7 +6,6 @@
 
 #include "FindInFilesWidget.h"
 #include "HackStudio.h"
-#include "Project.h"
 #include <AK/StringBuilder.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>

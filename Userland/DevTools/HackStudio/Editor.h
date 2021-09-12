@@ -8,7 +8,6 @@
 #pragma once
 
 #include "CodeDocument.h"
-#include "Debugger/BreakpointCallback.h"
 #include "LanguageClient.h"
 #include <AK/Assertions.h>
 #include <AK/Optional.h>

@@ -8,13 +8,11 @@
 #include "GitFilesModel.h"
 #include <LibCore/File.h>
 #include <LibDiff/Format.h>
-#include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
 
