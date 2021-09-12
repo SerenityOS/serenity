@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibTest/TestCase.h>
+#include <LibTest/Macros.h> // intentionally first -- we redefine VERIFY and friends in here
 
 #include <AK/Format.h>
 #include <LibTest/TestSuite.h>

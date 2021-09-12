@@ -9,7 +9,6 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
@@ -17,7 +16,6 @@
 #include <AK/Result.h>
 #include <AK/Tuple.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Interpreter.h>
