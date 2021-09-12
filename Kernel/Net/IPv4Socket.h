@@ -6,12 +6,10 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
 #include <AK/SinglyLinkedListWithCount.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Locking/MutexProtected.h>
-#include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/IPv4SocketTuple.h>
 #include <Kernel/Net/Socket.h>
 
