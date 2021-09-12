@@ -34,4 +34,9 @@ int ElapsedTimer::elapsed() const
     return diff.tv_sec * 1000 + diff.tv_usec / 1000;
 }
 
+Time ElapsedTimer::elapsed_time() const
+{
+    return Time::from_milliseconds(elapsed());
+}
+
 }
