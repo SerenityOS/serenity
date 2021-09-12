@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/URL.h>
 #include <LibCore/Forward.h>
 

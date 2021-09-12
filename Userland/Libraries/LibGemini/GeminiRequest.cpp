@@ -6,7 +6,6 @@
 
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
-#include <LibGemini/GeminiJob.h>
 #include <LibGemini/GeminiRequest.h>
 
 namespace Gemini {

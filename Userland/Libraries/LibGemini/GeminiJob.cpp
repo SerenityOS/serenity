@@ -5,9 +5,7 @@
  */
 
 #include <AK/Debug.h>
-#include <LibCore/EventLoop.h>
 #include <LibGemini/GeminiJob.h>
-#include <LibGemini/GeminiResponse.h>
 #include <LibTLS/TLSv12.h>
 #include <stdio.h>
 #include <unistd.h>

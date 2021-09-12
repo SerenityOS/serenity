@@ -6,9 +6,7 @@
 
 #pragma once
 
-#include <LibCore/NetworkJob.h>
 #include <LibGemini/GeminiRequest.h>
-#include <LibGemini/GeminiResponse.h>
 #include <LibGemini/Job.h>
 #include <LibTLS/TLSv12.h>
 

@@ -7,7 +7,6 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <AK/Vector.h>
 #include <LibGemini/Document.h>
 
 namespace Gemini {
