@@ -8,7 +8,6 @@
 #include <AK/Array.h>
 #include <AK/NumericLimits.h>
 #include <AK/ScopeGuard.h>
-#include <AK/String.h>
 #include <stdlib.h>
 
 Game::Game(size_t grid_size, size_t target_tile, bool evil_ai)

@@ -8,7 +8,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
-#include <LibGfx/Palette.h>
 
 BoardView::BoardView(Game::Board const* board)
     : m_board(board)
