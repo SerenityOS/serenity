@@ -90,7 +90,7 @@ Value FunctionConstructor::construct(FunctionObject& new_target)
     Interpreter* interpreter = vm().interpreter_if_exists();
 
     if (!interpreter) {
-        local_interpreter = Interpreter::create_with_existing_global_object(global_object());
+        local_interpreter = Interpreter::create_with_existing_realm(*realm());
         interpreter = local_interpreter.ptr();
     }
 
