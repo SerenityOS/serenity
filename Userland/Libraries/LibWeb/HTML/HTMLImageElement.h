@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/OwnPtr.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/Loader/ImageLoader.h>

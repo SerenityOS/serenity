@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/HTML/HTMLElement.h>
 

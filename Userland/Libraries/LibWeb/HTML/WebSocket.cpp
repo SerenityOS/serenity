@@ -12,7 +12,6 @@
 #include <LibProtocol/WebSocketClient.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/WebSocketWrapper.h>
-#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
@@ -24,7 +23,6 @@
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/WebSocket.h>
-#include <LibWeb/Origin.h>
 
 namespace Web::HTML {
 

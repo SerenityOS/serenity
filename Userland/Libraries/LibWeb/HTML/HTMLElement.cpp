@@ -5,11 +5,8 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
-#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
