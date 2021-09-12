@@ -13,7 +13,6 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
-#include <LibGfx/Palette.h>
 
 class SquareButton final : public GUI::Button {
     C_OBJECT(SquareButton);

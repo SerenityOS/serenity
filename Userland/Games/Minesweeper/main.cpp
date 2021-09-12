@@ -13,7 +13,6 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/Window.h>
 #include <stdio.h>
