@@ -10,7 +10,6 @@
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/SlavePTY.h>
-#include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 

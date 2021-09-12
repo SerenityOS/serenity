@@ -10,7 +10,6 @@
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
-#include <LibC/errno_numbers.h>
 
 namespace Kernel {
 

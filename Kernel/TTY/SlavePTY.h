@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/TTY/TTY.h>
 
 namespace Kernel {

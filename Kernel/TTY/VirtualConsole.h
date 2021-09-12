@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include <AK/Noncopyable.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <Kernel/API/KeyCode.h>
@@ -17,8 +15,6 @@
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/TTY/TTY.h>
 #include <LibVT/Attribute.h>
-#include <LibVT/Color.h>
-#include <LibVT/Position.h>
 #include <LibVT/Terminal.h>
 
 namespace Kernel {

@@ -9,7 +9,6 @@
 #include <AK/CircularDeque.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/DoubleBuffer.h>
 #include <Kernel/ProcessGroup.h>
 #include <Kernel/UnixTypes.h>
 
