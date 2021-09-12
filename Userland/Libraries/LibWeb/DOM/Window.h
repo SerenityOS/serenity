@@ -12,6 +12,7 @@
 #include <AK/RefPtr.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/CSS/MediaQueryList.h>
 #include <LibWeb/CSS/Screen.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventTarget.h>
@@ -73,6 +74,7 @@ public:
     void set_current_event(Event* event) { m_current_event = event; }
 
     NonnullRefPtr<CSS::CSSStyleDeclaration> get_computed_style(DOM::Element&) const;
+    NonnullRefPtr<CSS::MediaQueryList> match_media(String);
 
 private:
     explicit Window(Document&);

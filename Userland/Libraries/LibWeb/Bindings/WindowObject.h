@@ -96,6 +96,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(btoa);
 
     JS_DECLARE_NATIVE_FUNCTION(get_computed_style);
+    JS_DECLARE_NATIVE_FUNCTION(match_media);
 
     NonnullRefPtr<DOM::Window> m_impl;
 
