@@ -99,7 +99,7 @@ private:
 
     NonnullRefPtr<DOM::Window> m_impl;
 
-    LocationObject* m_location_object;
+    LocationObject* m_location_object { nullptr };
 
     HashMap<String, JS::Object*> m_prototypes;
     HashMap<String, JS::NativeFunction*> m_constructors;
