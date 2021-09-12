@@ -6,6 +6,7 @@
 
 #include <AK/Checked.h>
 #include <AK/Try.h>
+#include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
@@ -15,7 +16,6 @@
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
-#include <LibC/errno_numbers.h>
 
 #define MAX_RESOLUTION_WIDTH 4096
 #define MAX_RESOLUTION_HEIGHT 2160
