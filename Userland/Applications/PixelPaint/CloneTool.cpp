@@ -52,6 +52,13 @@ void CloneTool::draw_line(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::Int
     BrushTool::draw_line(bitmap, color, start, end);
 }
 
+Gfx::StandardCursor CloneTool::cursor()
+{
+    if (m_is_selecting_location)
+        return Gfx::StandardCursor::Eyedropper;
+    return Gfx::StandardCursor::Crosshair;
+}
+
 void CloneTool::on_mousemove(Layer* layer, MouseEvent& event)
 {
     auto& image_event = event.image_event();
@@ -112,6 +119,7 @@ void CloneTool::on_keydown(GUI::KeyEvent& event)
     Tool::on_keydown(event);
     if (event.key() == KeyCode::Key_Alt && !m_is_selecting_location) {
         m_is_selecting_location = true;
+        m_editor->update_tool_cursor();
         return;
     }
 }
@@ -120,6 +128,7 @@ void CloneTool::on_keyup(GUI::KeyEvent& event)
 {
     if (m_is_selecting_location && event.key() == KeyCode::Key_Alt) {
         m_is_selecting_location = false;
+        m_editor->update_tool_cursor();
         return;
     }
 }
