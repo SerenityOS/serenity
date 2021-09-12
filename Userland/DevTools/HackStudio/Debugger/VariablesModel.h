@@ -9,7 +9,6 @@
 #include "Debugger.h"
 #include <AK/NonnullOwnPtr.h>
 #include <LibGUI/Model.h>
-#include <LibGUI/TreeView.h>
 #include <sys/arch/i386/regs.h>
 
 namespace HackStudio {

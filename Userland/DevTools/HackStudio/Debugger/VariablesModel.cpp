@@ -5,7 +5,6 @@
  */
 
 #include "VariablesModel.h"
-#include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 
 namespace HackStudio {

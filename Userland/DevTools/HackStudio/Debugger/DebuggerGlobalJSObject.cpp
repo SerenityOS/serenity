@@ -8,7 +8,6 @@
 #include "Debugger.h"
 #include "DebuggerVariableJSObject.h"
 #include <LibJS/Runtime/Object.h>
-#include <LibJS/Runtime/ProxyObject.h>
 
 namespace HackStudio {
 

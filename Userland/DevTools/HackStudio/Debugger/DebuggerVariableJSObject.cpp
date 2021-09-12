@@ -8,7 +8,6 @@
 #include "DebuggerVariableJSObject.h"
 #include "Debugger.h"
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/PropertyName.h>
 
 namespace HackStudio {
