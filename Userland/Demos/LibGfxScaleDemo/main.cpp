@@ -8,15 +8,12 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Palette.h>
-#include <LibGfx/Path.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibGfx/WindowTheme.h>
 #include <unistd.h>

@@ -6,9 +6,6 @@
 
 #include "GalleryWidget.h"
 #include <LibGUI/Application.h>
-#include <LibGUI/BoxLayout.h>
-#include <LibGUI/Button.h>
-#include <LibGUI/Frame.h>
 #include <LibGUI/MessageBox.h>
 #include <unistd.h>
 

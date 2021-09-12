@@ -7,8 +7,6 @@
 #include "DemoWizardDialog.h"
 #include <Demos/WidgetGallery/DemoWizardPage1GML.h>
 #include <Demos/WidgetGallery/DemoWizardPage2GML.h>
-#include <LibGUI/BoxLayout.h>
-#include <LibGUI/Button.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Wizards/WizardDialog.h>
 

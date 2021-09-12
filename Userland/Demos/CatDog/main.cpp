@@ -12,7 +12,6 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
 
 int main(int argc, char** argv)
