@@ -91,4 +91,15 @@ bool PropertyOwningCSSStyleDeclaration::set_property(PropertyID property_id, Str
     return true;
 }
 
+String CSSStyleDeclaration::get_property_value(StringView property_name) const
+{
+    auto property_id = property_id_from_string(property_name);
+    if (property_id == CSS::PropertyID::Invalid)
+        return {};
+    auto maybe_property = property(property_id);
+    if (!maybe_property.has_value())
+        return {};
+    return maybe_property->value->to_string();
+}
+
 }

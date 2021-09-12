@@ -4,4 +4,6 @@ interface CSSStyleDeclaration {
     readonly attribute unsigned long length;
     CSSOMString item(unsigned long index);
 
+    CSSOMString getPropertyValue(CSSOMString property);
+
 };
