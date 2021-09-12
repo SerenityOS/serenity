@@ -105,8 +105,8 @@ T const& TokenStream<T>::current_token()
 template<typename T>
 void TokenStream<T>::reconsume_current_input_token()
 {
-    VERIFY(m_iterator_offset >= 0);
-    --m_iterator_offset;
+    if (m_iterator_offset >= 0)
+        --m_iterator_offset;
 }
 
 template<typename T>
