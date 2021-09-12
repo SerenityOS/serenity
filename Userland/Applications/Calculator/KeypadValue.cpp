@@ -6,7 +6,6 @@
 
 #include "KeypadValue.h"
 #include <AK/Math.h>
-#include <AK/String.h>
 
 KeypadValue::KeypadValue(i64 value, u8 decimal_places)
     : m_value(value)

@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Math.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 
 class KeypadValue {
