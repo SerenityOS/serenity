@@ -187,7 +187,11 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
         done(ExecCancel);
     };
 
-    m_view->on_selection_change = [this, &ok_button] {
+    m_filename_textbox->on_change = [&] {
+        ok_button.set_enabled(!m_filename_textbox->text().is_empty());
+    };
+
+    m_view->on_selection_change = [this] {
         auto index = m_view->selection().first();
         auto& filter_model = (SortingProxyModel&)*m_view->model();
         auto local_index = filter_model.map_to_source(index);
@@ -199,7 +203,6 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
         } else if (m_mode != Mode::Save) {
             m_filename_textbox->clear();
         }
-        ok_button.set_enabled(!m_filename_textbox->text().is_empty());
     };
 
     m_view->on_activation = [this](auto& index) {
