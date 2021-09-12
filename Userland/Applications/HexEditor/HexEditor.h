@@ -11,12 +11,8 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/StdLibExtras.h>
 #include <LibGUI/AbstractScrollableWidget.h>
-#include <LibGfx/Font.h>
-#include <LibGfx/TextAlignment.h>
 
 class HexEditor : public GUI::AbstractScrollableWidget {
     C_OBJECT(HexEditor)

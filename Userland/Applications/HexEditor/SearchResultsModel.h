@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <AK/Hex.h>
-#include <AK/NonnullRefPtr.h>
 #include <AK/String.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>

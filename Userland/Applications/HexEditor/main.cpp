@@ -9,7 +9,6 @@
 #include <LibConfig/Client.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Icon.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <stdio.h>
 #include <unistd.h>

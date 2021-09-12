@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Result.h>
 #include <AK/Vector.h>
 #include <LibGUI/Dialog.h>
 

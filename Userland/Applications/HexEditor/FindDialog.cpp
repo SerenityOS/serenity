@@ -9,7 +9,6 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <Applications/HexEditor/FindDialogGML.h>
-#include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/RadioButton.h>

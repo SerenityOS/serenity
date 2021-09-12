@@ -10,13 +10,8 @@
 #include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
-#include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>
-#include <LibGUI/Menu.h>
-#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Scrollbar.h>
-#include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
