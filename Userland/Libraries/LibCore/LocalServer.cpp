@@ -104,7 +104,7 @@ bool LocalServer::listen(const String& address)
     fcntl(m_fd, F_SETFD, FD_CLOEXEC);
 #endif
     VERIFY(m_fd >= 0);
-#ifndef __APPLE__
+#ifndef AK_OS_MACOS
     rc = fchmod(m_fd, 0600);
     if (rc < 0) {
         perror("fchmod");
