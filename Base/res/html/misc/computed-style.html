@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+#foo {
+    color: magenta;
+}
+#invisible {
+    display: none;
+    color: blue;
+}
+#visible {
+    display: block;
+    color: red;
+}
+</style>
+</style>
+</head>
+<body>
+<div id=foo>Some text</div>
+<div id=bar style="color: green">Other text</div>
+<div id=invisible>You cannot see me</div>
+<div id=visible>You CAN see me</div>
+<script>
+// #foo
+var foo = document.getElementById("foo");
+var fooStyle = window.getComputedStyle(foo);
+console.log(fooStyle.color);
+
+// #bar
+var bar = document.getElementById("bar");
+var barStyle = bar.style;
+console.log(barStyle.color);
+
+// #invisible
+var invisible = document.getElementById("invisible");
+var invisibleStyle = getComputedStyle(invisible);
+console.log(invisibleStyle.display)
+console.log(invisibleStyle.color)
+
+// #visible
+var visible = document.getElementById("visible");
+var visibleStyle = getComputedStyle(visible);
+console.log(visibleStyle.display)
+console.log(visibleStyle.color)
+</script>
+</body>
+</html>
