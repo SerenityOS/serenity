@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Noncopyable.h>
-#include <AK/WeakPtr.h>
 #include <LibGUI/TextDocument.h>
 #include <LibGfx/Palette.h>
 #include <LibSyntax/HighlighterClient.h>

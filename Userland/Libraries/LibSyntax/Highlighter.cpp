@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGUI/TextEditor.h>
 #include <LibGfx/Color.h>
 #include <LibSyntax/Highlighter.h>
 
