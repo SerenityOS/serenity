@@ -102,6 +102,7 @@ public:
 private:
     enum class SelectorParsingResult {
         Done,
+        IncludesIgnoredVendorPrefix,
         SyntaxError,
     };
 
