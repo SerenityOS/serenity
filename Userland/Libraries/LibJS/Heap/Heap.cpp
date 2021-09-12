@@ -90,8 +90,7 @@ void Heap::collect_garbage(CollectionType collection_type, bool print_report)
     perf_event(PERF_EVENT_SIGNPOST, gc_perf_string_id, global_gc_counter++);
 #endif
 
-    Core::ElapsedTimer collection_measurement_timer;
-    collection_measurement_timer.start();
+    auto collection_measurement_timer = Core::ElapsedTimer::start_new();
     if (collection_type == CollectionType::CollectGarbage) {
         if (m_gc_deferrals) {
             m_should_gc_when_deferral_ends = true;
