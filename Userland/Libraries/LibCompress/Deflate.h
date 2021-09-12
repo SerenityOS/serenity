@@ -10,7 +10,6 @@
 #include <AK/BitStream.h>
 #include <AK/ByteBuffer.h>
 #include <AK/CircularDuplexStream.h>
-#include <AK/Endian.h>
 #include <AK/Vector.h>
 #include <LibCompress/DeflateTables.h>
 
