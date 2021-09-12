@@ -6,10 +6,8 @@
  */
 
 #include <AK/NonnullOwnPtr.h>
-#include <AK/Variant.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::CSS {

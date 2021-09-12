@@ -6,7 +6,6 @@
 
 #include <LibGfx/Rect.h>
 #include <LibWeb/CSS/Screen.h>
-#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Page/Page.h>
 

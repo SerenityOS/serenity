@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>

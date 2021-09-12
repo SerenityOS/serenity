@@ -6,11 +6,9 @@
  */
 
 #include <AK/TypeCasts.h>
-#include <LibCore/DirIterator.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/FontCache.h>
-#include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/Node.h>
 
 namespace Web::CSS {
