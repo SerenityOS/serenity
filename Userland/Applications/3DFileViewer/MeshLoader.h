@@ -6,10 +6,8 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <LibCore/File.h>
 
-#include "Common.h"
 #include "Mesh.h"
 
 class MeshLoader {

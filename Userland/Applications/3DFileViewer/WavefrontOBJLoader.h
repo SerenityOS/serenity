@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 
 #include "Mesh.h"

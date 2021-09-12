@@ -11,11 +11,9 @@
 #include <LibGL/GLContext.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
