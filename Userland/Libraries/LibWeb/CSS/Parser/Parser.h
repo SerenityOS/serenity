@@ -174,7 +174,7 @@ private:
     static Optional<Length> parse_length(ParsingContext const&, StyleComponentValueRule const&);
     static Optional<URL> parse_url_function(ParsingContext const&, StyleComponentValueRule const&);
 
-    RefPtr<StyleValue> parse_css_value(PropertyID, TokenStream<StyleComponentValueRule>&);
+    Result<NonnullRefPtr<StyleValue>, ParsingResult> parse_css_value(PropertyID, TokenStream<StyleComponentValueRule>&);
     static RefPtr<StyleValue> parse_css_value(ParsingContext const&, StyleComponentValueRule const&);
     static RefPtr<StyleValue> parse_builtin_value(ParsingContext const&, StyleComponentValueRule const&);
     static RefPtr<StyleValue> parse_dynamic_value(ParsingContext const&, StyleComponentValueRule const&);
