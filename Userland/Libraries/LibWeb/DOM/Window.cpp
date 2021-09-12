@@ -6,6 +6,7 @@
 
 #include <LibGUI/DisplayLink.h>
 #include <LibJS/Runtime/FunctionObject.h>
+#include <LibWeb/CSS/ComputedCSSStyleDeclaration.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
@@ -189,10 +190,7 @@ Page const* Window::page() const
 
 NonnullRefPtr<CSS::CSSStyleDeclaration> Window::get_computed_style(DOM::Element& element) const
 {
-    dbgln("Generating CSS computed style for {} @ {:p}", element.node_name(), &element);
-    Vector<CSS::StyleProperty> properties;
-    HashMap<String, CSS::StyleProperty> custom_properties;
-    return CSS::PropertyOwningCSSStyleDeclaration::create(move(properties), move(custom_properties));
+    return CSS::ComputedCSSStyleDeclaration::create(element);
 }
 
 NonnullRefPtr<CSS::MediaQueryList> Window::match_media(String media)

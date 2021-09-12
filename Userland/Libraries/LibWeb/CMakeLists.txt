@@ -17,6 +17,7 @@ set(SOURCES
     CSS/CSSStyleDeclaration.cpp
     CSS/CSSStyleRule.cpp
     CSS/CSSStyleSheet.cpp
+    CSS/ComputedCSSStyleDeclaration.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Length.cpp
     CSS/MediaQueryList.cpp
