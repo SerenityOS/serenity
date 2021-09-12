@@ -58,7 +58,7 @@ int main(int argc, char** argv)
             return 1;
         }
 
-        if (!account.authenticate(password.value().characters())) {
+        if (!account.authenticate(password.value())) {
             warnln("Incorrect or disabled password.");
             return 1;
         }
