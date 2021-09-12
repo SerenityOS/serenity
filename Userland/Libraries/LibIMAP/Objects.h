@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <AK/Format.h>
-#include <AK/Function.h>
 #include <AK/Tuple.h>
 #include <AK/Variant.h>
 #include <LibCore/DateTime.h>
