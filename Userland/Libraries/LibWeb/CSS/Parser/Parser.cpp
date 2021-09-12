@@ -1197,7 +1197,9 @@ Optional<URL> Parser::parse_url_function(ParsingContext const& context, StyleCom
 RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
 {
     if (rule->m_type == StyleRule::Type::At) {
-        if (rule->m_name.equals_ignoring_case("import"sv) && !rule->prelude().is_empty()) {
+        if (has_ignored_vendor_prefix(rule->m_name)) {
+            return {};
+        } else if (rule->m_name.equals_ignoring_case("import"sv) && !rule->prelude().is_empty()) {
 
             Optional<URL> url;
             for (auto& token : rule->prelude()) {
