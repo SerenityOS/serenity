@@ -6,10 +6,6 @@
 
 #pragma once
 
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <LibCore/LocalSocket.h>
 #include <LibGUI/Model.h>
 
 namespace Inspector {

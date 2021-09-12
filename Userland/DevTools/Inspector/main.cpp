@@ -14,7 +14,6 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/ProcessChooser.h>

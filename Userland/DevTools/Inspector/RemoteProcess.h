@@ -8,7 +8,6 @@
 
 #include "InspectorServerClient.h"
 #include <AK/NonnullOwnPtrVector.h>
-#include <LibCore/LocalSocket.h>
 
 namespace Inspector {
 
