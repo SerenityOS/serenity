@@ -22,7 +22,7 @@ NativeFunction* NativeFunction::create(GlobalObject& global_object, const FlyStr
 
 NativeFunction::NativeFunction(Object& prototype)
     : FunctionObject(prototype)
-    , m_realm(&vm().interpreter().realm())
+    , m_realm(vm().interpreter_if_exists() ? &vm().interpreter().realm() : nullptr)
 {
 }
 
@@ -30,14 +30,14 @@ NativeFunction::NativeFunction(FlyString name, Function<Value(VM&, GlobalObject&
     : FunctionObject(prototype)
     , m_name(move(name))
     , m_native_function(move(native_function))
-    , m_realm(&vm().interpreter().realm())
+    , m_realm(vm().interpreter_if_exists() ? &vm().interpreter().realm() : nullptr)
 {
 }
 
 NativeFunction::NativeFunction(FlyString name, Object& prototype)
     : FunctionObject(prototype)
     , m_name(move(name))
-    , m_realm(&vm().interpreter().realm())
+    , m_realm(vm().interpreter_if_exists() ? &vm().interpreter().realm() : nullptr)
 {
 }
 
