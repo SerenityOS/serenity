@@ -11,8 +11,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Window.h>
 
-namespace Web {
-namespace Bindings {
+namespace Web::Bindings {
 
 LocationObject::LocationObject(JS::GlobalObject& global_object)
     : Object(*global_object.object_prototype())
@@ -118,6 +117,25 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::reload)
     return JS::js_undefined();
 }
 
+// https://html.spec.whatwg.org/multipage/history.html#location-setprototypeof
+bool LocationObject::internal_set_prototype_of(Object* prototype)
+{
+    // 1. Return ! SetImmutablePrototype(this, V).
+    return set_immutable_prototype(prototype);
+}
+
+// https://html.spec.whatwg.org/multipage/history.html#location-isextensible
+bool LocationObject::internal_is_extensible() const
+{
+    // 1. Return true.
+    return true;
+}
+
+// https://html.spec.whatwg.org/multipage/history.html#location-preventextensions
+bool LocationObject::internal_prevent_extensions()
+{
+    // 1. Return false.
+    return false;
 }
 
 }
