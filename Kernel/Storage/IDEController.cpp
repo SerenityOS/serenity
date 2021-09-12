@@ -4,11 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/API.h>
-#include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/BMIDEChannel.h>
 #include <Kernel/Storage/IDEController.h>

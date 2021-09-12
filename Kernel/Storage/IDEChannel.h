@@ -22,11 +22,8 @@
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/Mutex.h>
-#include <Kernel/Memory/PhysicalPage.h>
-#include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
 #include <Kernel/Storage/StorageDevice.h>
-#include <Kernel/WaitQueue.h>
 
 namespace Kernel {
 

@@ -5,7 +5,6 @@
  */
 
 #include <AK/StringView.h>
-#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/IDEChannel.h>
 #include <Kernel/Storage/IDEController.h>

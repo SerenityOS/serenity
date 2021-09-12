@@ -8,23 +8,17 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
-#include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/Devices/Device.h>
-#include <Kernel/IO.h>
-#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/Spinlock.h>
-#include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Memory/ScatterGatherList.h>
-#include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/AHCI.h>
 #include <Kernel/Storage/AHCIPortHandler.h>
 #include <Kernel/Storage/StorageDevice.h>
-#include <Kernel/WaitQueue.h>
 
 namespace Kernel {
 
