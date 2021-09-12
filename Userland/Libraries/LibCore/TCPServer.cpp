@@ -75,7 +75,7 @@ void TCPServer::set_blocking(bool blocking)
     VERIFY(flags == 0);
 }
 
-RefPtr<TCPSocket> TCPServer::accept()
+ErrorOr<Stream::TCPSocket> TCPServer::accept()
 {
     VERIFY(m_listening);
     sockaddr_in in;
@@ -87,17 +87,20 @@ RefPtr<TCPSocket> TCPServer::accept()
 #endif
 
     if (accepted_fd < 0) {
-        perror("accept");
-        return nullptr;
+        return Error::from_errno(errno);
     }
 
+    auto socket = TRY(Stream::TCPSocket::adopt_fd(accepted_fd));
+
 #ifdef AK_OS_MACOS
-    int option = 1;
-    (void)ioctl(m_fd, FIONBIO, &option);
-    (void)fcntl(accepted_fd, F_SETFD, FD_CLOEXEC);
+    // FIXME: Ideally, we should let the caller decide whether it wants the
+    //        socket to be nonblocking or not, but there are currently places
+    //        which depend on this.
+    TRY(socket.set_blocking(false));
+    TRY(socket.set_close_on_exec(true));
 #endif
 
-    return TCPSocket::construct(accepted_fd);
+    return socket;
 }
 
 Optional<IPv4Address> TCPServer::local_address() const

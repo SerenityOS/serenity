@@ -109,32 +109,39 @@ int main(int argc, char** argv)
     server->on_ready_to_accept = [&next_id, &clients, &server, command] {
         int id = next_id++;
 
-        auto client_socket = server->accept();
-        if (!client_socket) {
-            perror("accept");
+        ErrorOr<Core::Stream::TCPSocket> maybe_client_socket = server->accept();
+        if (maybe_client_socket.is_error()) {
+            warnln("accept: {}", maybe_client_socket.error());
             return;
         }
+        auto client_socket = maybe_client_socket.release_value();
 
         int ptm_fd = posix_openpt(O_RDWR);
         if (ptm_fd < 0) {
             perror("posix_openpt");
-            client_socket->close();
+            client_socket.close();
             return;
         }
         if (grantpt(ptm_fd) < 0) {
             perror("grantpt");
-            client_socket->close();
+            client_socket.close();
             return;
         }
         if (unlockpt(ptm_fd) < 0) {
             perror("unlockpt");
-            client_socket->close();
+            client_socket.close();
             return;
         }
 
         run_command(ptm_fd, command);
 
-        auto client = Client::create(id, move(client_socket), ptm_fd);
+        auto maybe_client = Client::create(id, move(client_socket), ptm_fd);
+        if (maybe_client.is_error()) {
+            warnln("Failed to create the client: {}", maybe_client.error());
+            return;
+        }
+
+        auto client = maybe_client.release_value();
         client->on_exit = [&clients, id] {
             Core::deferred_invoke([&clients, id] { clients.remove(id); });
         };

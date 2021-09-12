@@ -9,6 +9,7 @@
 #include <AK/IPv4Address.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
+#include <LibCore/Stream.h>
 
 namespace Core {
 
@@ -21,7 +22,7 @@ public:
     bool listen(const IPv4Address& address, u16 port);
     void set_blocking(bool blocking);
 
-    RefPtr<TCPSocket> accept();
+    ErrorOr<Stream::TCPSocket> accept();
 
     Optional<IPv4Address> local_address() const;
     Optional<u16> local_port() const;

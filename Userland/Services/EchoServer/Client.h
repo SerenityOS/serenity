@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <LibCore/TCPSocket.h>
+#include <LibCore/Stream.h>
 
 class Client : public RefCounted<Client> {
 public:
-    static NonnullRefPtr<Client> create(int id, RefPtr<Core::TCPSocket> socket)
+    static NonnullRefPtr<Client> create(int id, Core::Stream::TCPSocket socket)
     {
         return adopt_ref(*new Client(id, move(socket)));
     }
@@ -18,12 +18,12 @@ public:
     Function<void()> on_exit;
 
 protected:
-    Client(int id, RefPtr<Core::TCPSocket> socket);
+    Client(int id, Core::Stream::TCPSocket socket);
 
-    void drain_socket();
+    ErrorOr<void> drain_socket();
     void quit();
 
 private:
     int m_id { 0 };
-    RefPtr<Core::TCPSocket> m_socket;
+    Core::Stream::TCPSocket m_socket;
 };
