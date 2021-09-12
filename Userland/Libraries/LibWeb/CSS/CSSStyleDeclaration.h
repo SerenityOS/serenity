@@ -34,6 +34,8 @@ public:
     virtual Optional<StyleProperty> property(PropertyID) const = 0;
     virtual bool set_property(PropertyID, StringView css_text) = 0;
 
+    String get_property_value(StringView property) const;
+
 protected:
     CSSStyleDeclaration() { }
 };
