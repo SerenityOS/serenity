@@ -12,6 +12,13 @@
 
 namespace Core {
 
+ElapsedTimer ElapsedTimer::start_new()
+{
+    ElapsedTimer timer;
+    timer.start();
+    return timer;
+}
+
 void ElapsedTimer::start()
 {
     m_valid = true;
