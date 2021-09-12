@@ -32,7 +32,6 @@ public:
 
 private:
     void convert_string_view_to_uuid(const StringView&);
-    void fill_buffer(ByteBuffer);
 
     Array<u8, 16> m_uuid_buffer {};
 };
