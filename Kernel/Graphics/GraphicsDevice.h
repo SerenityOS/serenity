@@ -6,11 +6,9 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 class GraphicsDevice : public RefCounted<GraphicsDevice> {

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Checked.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
@@ -12,7 +11,6 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
-#include <LibC/errno_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 
 #define MAX_RESOLUTION_WIDTH 4096

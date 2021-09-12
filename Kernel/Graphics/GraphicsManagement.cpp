@@ -13,8 +13,6 @@
 #include <Kernel/Graphics/Intel/NativeGraphicsAdapter.h>
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
-#include <Kernel/IO.h>
-#include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Sections.h>
 

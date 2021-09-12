@@ -9,13 +9,11 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <AK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/Graphics/GraphicsDevice.h>
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
-#include <Kernel/Memory/Region.h>
 
 namespace Kernel {
 
