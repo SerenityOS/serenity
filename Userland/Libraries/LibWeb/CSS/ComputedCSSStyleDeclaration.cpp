@@ -98,6 +98,7 @@ Optional<StyleProperty> ComputedCSSStyleDeclaration::property(PropertyID propert
         };
     }
     default:
+        dbgln("FIXME: Computed style for the '{}' property was requested", string_from_property_id(property_id));
         return {};
     }
 }
