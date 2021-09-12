@@ -8,10 +8,7 @@
 
 #include <AK/URL.h>
 #include <AK/Vector.h>
-#include <LibCore/Object.h>
-#include <LibCore/TCPSocket.h>
 #include <LibTLS/TLSv12.h>
-#include <LibWebSocket/Message.h>
 
 namespace WebSocket {
 

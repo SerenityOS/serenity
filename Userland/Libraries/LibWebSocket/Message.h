@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
-#include <AK/Optional.h>
 
 namespace WebSocket {
 
