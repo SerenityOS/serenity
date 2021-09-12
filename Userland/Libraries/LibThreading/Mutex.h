@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
-#include <AK/Types.h>
 #include <pthread.h>
 
 namespace Threading {
