@@ -6,9 +6,7 @@
 
 #pragma once
 
-#include "BitStream.h"
 #include "Enums.h"
-#include "ProbabilityTables.h"
 #include "SyntaxElementCounter.h"
 
 namespace Video::VP9 {

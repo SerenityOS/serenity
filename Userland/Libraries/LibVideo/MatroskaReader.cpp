@@ -8,7 +8,6 @@
 #include <AK/Function.h>
 #include <AK/MappedFile.h>
 #include <AK/Optional.h>
-#include <AK/Utf8View.h>
 
 namespace Video {
 
