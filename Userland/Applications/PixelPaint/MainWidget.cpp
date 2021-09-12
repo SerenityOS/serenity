@@ -12,6 +12,7 @@
 #include "EditGuideDialog.h"
 #include "FilterParams.h"
 #include <Applications/PixelPaint/PixelPaintWindowGML.h>
+#include <LibConfig/Client.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
 #include <LibFileSystemAccessClient/Client.h>
@@ -339,7 +340,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 editor->set_guide_visibility(action.is_checked());
             }
         });
-    m_show_guides_action->set_checked(true);
+    m_show_guides_action->set_checked(Config::read_bool("PixelPaint", "Guides", "Show", true));
 
     view_menu.add_action(*m_zoom_in_action);
     view_menu.add_action(*m_zoom_out_action);
@@ -365,7 +366,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             if (auto* editor = current_image_editor())
                 editor->set_pixel_grid_visibility(action.is_checked());
         });
-    show_pixel_grid_action->set_checked(true);
+    show_pixel_grid_action->set_checked(Config::read_bool("PixelPaint", "PixelGrid", "Show", true));
     view_menu.add_action(*show_pixel_grid_action);
 
     m_show_rulers_action = GUI::Action::create_checkable(
@@ -374,7 +375,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 editor->set_ruler_visibility(action.is_checked());
             }
         });
-    m_show_rulers_action->set_checked(true);
+    m_show_rulers_action->set_checked(Config::read_bool("PixelPaint", "Rulers", "Show", true));
     view_menu.add_action(*m_show_rulers_action);
 
     auto& tool_menu = window.add_menu("&Tool");

@@ -30,7 +30,12 @@ ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
     m_undo_stack = make<GUI::UndoStack>();
     m_undo_stack->push(make<ImageUndoCommand>(*m_image));
     m_image->add_client(*this);
+
     m_pixel_grid_threshold = (float)Config::read_i32("PixelPaint", "PixelGrid", "Threshold", 15);
+    m_show_pixel_grid = Config::read_bool("PixelPaint", "PixelGrid", "Show", true);
+
+    m_show_rulers = Config::read_bool("PixelPaint", "Rulers", "Show", true);
+    m_show_guides = Config::read_bool("PixelPaint", "Guides", "Show", true);
 }
 
 ImageEditor::~ImageEditor()
