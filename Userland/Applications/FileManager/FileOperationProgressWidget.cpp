@@ -14,7 +14,6 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Progressbar.h>
-#include <LibGUI/Window.h>
 
 namespace FileManager {
 

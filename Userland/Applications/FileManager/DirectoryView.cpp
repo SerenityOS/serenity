@@ -12,7 +12,6 @@
 #include <AK/StringBuilder.h>
 #include <LibConfig/Client.h>
 #include <LibCore/File.h>
-#include <LibCore/MimeData.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/InputBox.h>

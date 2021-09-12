@@ -13,11 +13,8 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/FileIconProvider.h>
-#include <LibGUI/FilePicker.h>
-#include <LibGUI/IconView.h>
 #include <LibGUI/LinkLabel.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/TabWidget.h>
 #include <grp.h>
 #include <pwd.h>

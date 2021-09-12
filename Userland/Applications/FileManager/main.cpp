@@ -28,7 +28,6 @@
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Progressbar.h>
@@ -39,7 +38,6 @@
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Palette.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>

@@ -11,7 +11,6 @@
 #include <LibGUI/Dialog.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/ImageWidget.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>
 
 class PropertiesWindow final : public GUI::Window {
