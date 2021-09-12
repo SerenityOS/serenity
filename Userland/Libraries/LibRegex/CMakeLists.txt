@@ -3,6 +3,7 @@ set(SOURCES
     RegexByteCode.cpp
     RegexLexer.cpp
     RegexMatcher.cpp
+    RegexOptimizer.cpp
     RegexParser.cpp
 )
 
