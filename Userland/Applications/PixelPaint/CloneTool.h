@@ -22,6 +22,8 @@ protected:
     virtual void draw_line(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& start, Gfx::IntPoint const& end) override;
 
     virtual void on_mousedown(Layer*, MouseEvent&) override;
+    virtual void on_mousemove(Layer*, MouseEvent&) override;
+    virtual void on_second_paint(Layer const*, GUI::PaintEvent&) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
     virtual void on_keyup(GUI::KeyEvent&) override;
 
@@ -31,6 +33,8 @@ private:
     Optional<Gfx::IntPoint> m_sample_location;
     Optional<Gfx::IntPoint> m_cursor_offset;
     bool m_is_selecting_location { false };
+
+    Gfx::Color m_marker_color { Gfx::Color::Green };
 };
 
 }
