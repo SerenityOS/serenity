@@ -8,7 +8,6 @@
 #include "ViewWidget.h"
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
