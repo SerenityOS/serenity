@@ -8,20 +8,15 @@
 #include "BrowserWindow.h"
 #include "CookieJar.h"
 #include "Tab.h"
-#include "WindowActions.h"
-#include <AK/StringBuilder.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/BoxLayout.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/TabWidget.h>
-#include <LibWeb/HTML/WebSocket.h>
 #include <LibWeb/Loader/ContentFilter.h>
-#include <LibWeb/Loader/ResourceLoader.h>
 #include <stdio.h>
 #include <unistd.h>
 

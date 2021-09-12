@@ -10,7 +10,6 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Traits.h>
-#include <LibCore/DateTime.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Forward.h>
 

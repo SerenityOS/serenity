@@ -11,8 +11,6 @@
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TreeView.h>
-#include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOMTreeModel.h>
 #include <LibWeb/OutOfProcessWebView.h>
 #include <LibWeb/StylePropertiesModel.h>

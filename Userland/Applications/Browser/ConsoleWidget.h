@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "History.h"
 #include <LibGUI/Widget.h>
 #include <LibWeb/OutOfProcessWebView.h>
 

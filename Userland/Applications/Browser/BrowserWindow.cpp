@@ -8,9 +8,7 @@
 #include "BrowserWindow.h"
 #include "BookmarksBarWidget.h"
 #include "Browser.h"
-#include "ConsoleWidget.h"
 #include "CookieJar.h"
-#include "InspectorWidget.h"
 #include "Tab.h"
 #include <Applications/Browser/BrowserWindowGML.h>
 #include <LibConfig/Client.h>
@@ -21,7 +19,6 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/Statusbar.h>
@@ -30,7 +27,6 @@
 #include <LibGUI/Widget.h>
 #include <LibJS/Interpreter.h>
 #include <LibWeb/Dump.h>
-#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/OutOfProcessWebView.h>
 

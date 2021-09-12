@@ -8,10 +8,8 @@
 
 #include "History.h"
 #include <AK/URL.h>
-#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/ShareableBitmap.h>
-#include <LibHTTP/HttpJob.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {

@@ -17,7 +17,6 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Palette.h>
 
 namespace Browser {
 
