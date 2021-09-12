@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Forward.h"
 #include "RegexOptions.h"
 
 #include <AK/FlyString.h>
@@ -514,6 +515,7 @@ struct MatchInput {
     mutable Vector<size_t> saved_positions;
     mutable Vector<size_t> saved_code_unit_positions;
     mutable HashMap<u64, u64> checkpoints;
+    mutable Optional<size_t> fork_to_replace;
 };
 
 struct MatchState {
@@ -522,6 +524,7 @@ struct MatchState {
     size_t string_position_in_code_units { 0 };
     size_t instruction_position { 0 };
     size_t fork_at_position { 0 };
+    Optional<size_t> initiating_fork;
     Vector<Match> matches;
     Vector<Vector<Match>> capture_group_matches;
     Vector<u64> repetition_marks;

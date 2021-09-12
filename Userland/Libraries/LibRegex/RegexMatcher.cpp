@@ -39,6 +39,7 @@ Regex<Parser>::Regex(String pattern, typename ParserTraits<Parser>::OptionsType 
     Parser parser(lexer, regex_options);
     parser_result = parser.parse();
 
+    run_optimization_passes();
     if (parser_result.error == regex::Error::NoError)
         matcher = make<Matcher<Parser>>(this, regex_options);
 }
@@ -48,6 +49,7 @@ Regex<Parser>::Regex(regex::Parser::Result parse_result, String pattern, typenam
     : pattern_value(move(pattern))
     , parser_result(move(parse_result))
 {
+    run_optimization_passes();
     if (parser_result.error == regex::Error::NoError)
         matcher = make<Matcher<Parser>>(this, regex_options);
 }
@@ -370,11 +372,35 @@ public:
         return m_first == nullptr;
     }
 
+    auto reverse_begin() { return ReverseIterator(m_last); }
+    auto reverse_end() { return ReverseIterator(); }
+
 private:
     struct Node {
         T value;
         Node* next { nullptr };
         Node* previous { nullptr };
+    };
+
+    struct ReverseIterator {
+        ReverseIterator() = default;
+        explicit ReverseIterator(Node* node)
+            : m_node(node)
+        {
+        }
+
+        T* operator->() { return &m_node->value; }
+        T& operator*() { return m_node->value; }
+        bool operator==(ReverseIterator const& it) const { return m_node == it.m_node; }
+        ReverseIterator& operator++()
+        {
+            if (m_node)
+                m_node = m_node->previous;
+            return *this;
+        }
+
+    private:
+        Node* m_node;
     };
 
     UniformBumpAllocator<Node, true, 2 * MiB> m_allocator;
@@ -413,15 +439,48 @@ Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& sta
         state.instruction_position += opcode.size();
 
         switch (result) {
-        case ExecutionResult::Fork_PrioLow:
-            states_to_try_next.append(state);
-            states_to_try_next.last().instruction_position = state.fork_at_position;
+        case ExecutionResult::Fork_PrioLow: {
+            bool found = false;
+            if (input.fork_to_replace.has_value()) {
+                for (auto it = states_to_try_next.reverse_begin(); it != states_to_try_next.reverse_end(); ++it) {
+                    if (it->initiating_fork == input.fork_to_replace.value()) {
+                        (*it) = state;
+                        it->instruction_position = state.fork_at_position;
+                        it->initiating_fork = *input.fork_to_replace;
+                        found = true;
+                        break;
+                    }
+                }
+                input.fork_to_replace.clear();
+            }
+            if (!found) {
+                states_to_try_next.append(state);
+                states_to_try_next.last().initiating_fork = state.instruction_position - opcode.size();
+                states_to_try_next.last().instruction_position = state.fork_at_position;
+            }
             continue;
-        case ExecutionResult::Fork_PrioHigh:
-            states_to_try_next.append(state);
+        }
+        case ExecutionResult::Fork_PrioHigh: {
+            bool found = false;
+            if (input.fork_to_replace.has_value()) {
+                for (auto it = states_to_try_next.reverse_begin(); it != states_to_try_next.reverse_end(); ++it) {
+                    if (it->initiating_fork == input.fork_to_replace.value()) {
+                        (*it) = state;
+                        it->initiating_fork = *input.fork_to_replace;
+                        found = true;
+                        break;
+                    }
+                }
+                input.fork_to_replace.clear();
+            }
+            if (!found) {
+                states_to_try_next.append(state);
+                states_to_try_next.last().initiating_fork = state.instruction_position - opcode.size();
+            }
             state.instruction_position = state.fork_at_position;
             ++recursion_level;
             continue;
+        }
         case ExecutionResult::Continue:
             continue;
         case ExecutionResult::Succeeded:

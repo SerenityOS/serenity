@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "RegexBytecodeStreamOptimizer.h"
 #include "RegexMatch.h"
 #include "RegexOptions.h"
 
@@ -30,6 +31,8 @@ using ByteCodeValueType = u64;
     __ENUMERATE_OPCODE(JumpNonEmpty)               \
     __ENUMERATE_OPCODE(ForkJump)                   \
     __ENUMERATE_OPCODE(ForkStay)                   \
+    __ENUMERATE_OPCODE(ForkReplaceJump)            \
+    __ENUMERATE_OPCODE(ForkReplaceStay)            \
     __ENUMERATE_OPCODE(FailForks)                  \
     __ENUMERATE_OPCODE(SaveLeftCaptureGroup)       \
     __ENUMERATE_OPCODE(SaveRightCaptureGroup)      \
@@ -306,7 +309,7 @@ public:
         VERIFY_NOT_REACHED();
     }
 
-    void insert_bytecode_alternation(ByteCode&& left, ByteCode&& right)
+    void insert_bytecode_alternation(ByteCode left, ByteCode right)
     {
 
         // FORKJUMP _ALT
@@ -316,21 +319,8 @@ public:
         // REGEXP ALT1
         // LABEL _END
 
-        ByteCode byte_code;
-
-        empend(static_cast<ByteCodeValueType>(OpCodeId::ForkJump));
-        empend(right.size() + 2); // Jump to the _ALT label
-
-        extend(right);
-
-        empend(static_cast<ByteCodeValueType>(OpCodeId::Jump));
-        empend(left.size()); // Jump to the _END label
-
-        // LABEL _ALT = bytecode.size() + 2
-
-        extend(left);
-
-        // LABEL _END = alterantive_bytecode.size
+        // Optimisation: Eliminate extra work by unifying common pre-and-postfix exprs.
+        Optimizer::append_alternation(*this, left, right);
     }
 
     template<typename T>
@@ -625,7 +615,7 @@ public:
     }
 };
 
-class OpCode_ForkJump final : public OpCode {
+class OpCode_ForkJump : public OpCode {
 public:
     ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ForkJump; }
@@ -637,7 +627,13 @@ public:
     }
 };
 
-class OpCode_ForkStay final : public OpCode {
+class OpCode_ForkReplaceJump final : public OpCode_ForkJump {
+public:
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
+    ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ForkReplaceJump; }
+};
+
+class OpCode_ForkStay : public OpCode {
 public:
     ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ForkStay; }
@@ -647,6 +643,12 @@ public:
     {
         return String::formatted("offset={} [&{}], sp: {}", offset(), state().instruction_position + size() + offset(), state().string_position);
     }
+};
+
+class OpCode_ForkReplaceStay final : public OpCode_ForkStay {
+public:
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
+    ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ForkReplaceStay; }
 };
 
 class OpCode_CheckBegin final : public OpCode {
@@ -725,6 +727,7 @@ public:
     ALWAYS_INLINE size_t arguments_size() const { return argument(1); }
     String const arguments_string() const override;
     Vector<String> const variable_arguments_to_string(Optional<MatchInput> input = {}) const;
+    Vector<CompareTypeAndValuePair> flat_compares() const;
 
 private:
     ALWAYS_INLINE static void compare_char(MatchInput const& input, MatchState& state, u32 ch1, bool inverse, bool& inverse_matched);

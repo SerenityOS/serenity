@@ -24,6 +24,15 @@
 
 namespace regex {
 
+namespace Detail {
+
+struct Block {
+    size_t start;
+    size_t end;
+};
+
+}
+
 static constexpr const size_t c_max_recursion = 5000;
 static constexpr const size_t c_match_preallocation_count = 0;
 
@@ -217,6 +226,12 @@ public:
         RegexResult result = matcher->match(views, AllOptions { regex_options.value_or({}) } | AllFlags::SkipSubExprResults);
         return result.success;
     }
+
+private:
+    void run_optimization_passes();
+    using BasicBlockList = Vector<Detail::Block>;
+    BasicBlockList split_basic_blocks();
+    void attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&);
 };
 
 // free standing functions for match, search and has_match
