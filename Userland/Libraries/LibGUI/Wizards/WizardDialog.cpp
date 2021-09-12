@@ -11,7 +11,6 @@
 #include <LibGUI/Wizards/AbstractWizardPage.h>
 #include <LibGUI/Wizards/WizardDialog.h>
 #include <LibGfx/Orientation.h>
-#include <LibGfx/SystemTheme.h>
 
 namespace GUI {
 

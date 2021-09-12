@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibGUI/Action.h>
 #include <LibGUI/TextEditor.h>
 
 namespace GUI {

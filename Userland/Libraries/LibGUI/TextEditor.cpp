@@ -19,13 +19,11 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/RegularEditingEngine.h>
-#include <LibGUI/Scrollbar.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
-#include <LibGfx/Palette.h>
 #include <LibSyntax/Highlighter.h>
 #include <fcntl.h>
 #include <stdio.h>

@@ -5,7 +5,6 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
@@ -19,9 +18,7 @@
 #include <LibGUI/MouseTracker.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
-#include <LibGfx/Bitmap.h>
 #include <LibGfx/FontDatabase.h>
-#include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
 
 namespace GUI {

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Function.h>
 #include <LibGUI/AbstractSlider.h>
 
 namespace GUI {

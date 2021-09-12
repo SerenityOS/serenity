@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Wizards/AbstractWizardPage.h>

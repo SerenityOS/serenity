@@ -21,7 +21,6 @@
 #include <LibGUI/ModelSelection.h>
 #include <LibGUI/Variant.h>
 #include <LibGfx/Forward.h>
-#include <LibGfx/TextAlignment.h>
 
 namespace GUI {
 

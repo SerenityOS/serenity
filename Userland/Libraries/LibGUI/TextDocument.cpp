@@ -9,7 +9,6 @@
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
-#include <LibCore/Timer.h>
 #include <LibGUI/TextDocument.h>
 #include <LibRegex/Regex.h>
 

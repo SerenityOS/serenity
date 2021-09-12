@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/ModelIndex.h>

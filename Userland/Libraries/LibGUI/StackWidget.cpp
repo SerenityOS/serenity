@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGUI/BoxLayout.h>
 #include <LibGUI/StackWidget.h>
-#include <LibGUI/Window.h>
 
 REGISTER_WIDGET(GUI, StackWidget);
 

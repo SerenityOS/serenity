@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Optional.h>
-#include <LibCore/Object.h>
 #include <LibGUI/EditingEngine.h>
 #include <LibGUI/TextRange.h>
 

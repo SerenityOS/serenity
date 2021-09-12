@@ -7,7 +7,6 @@
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/IDAllocator.h>
-#include <AK/JsonObject.h>
 #include <AK/NeverDestroyed.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/EventLoop.h>

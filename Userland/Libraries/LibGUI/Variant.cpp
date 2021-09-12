@@ -6,7 +6,6 @@
 
 #include <AK/FlyString.h>
 #include <AK/JsonValue.h>
-#include <AK/RefPtr.h>
 #include <LibGUI/Variant.h>
 
 namespace GUI {

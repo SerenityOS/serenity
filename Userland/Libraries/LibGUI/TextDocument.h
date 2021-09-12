@@ -17,7 +17,6 @@
 #include <LibGUI/Forward.h>
 #include <LibGUI/TextRange.h>
 #include <LibGUI/UndoStack.h>
-#include <LibGfx/Color.h>
 #include <LibGfx/TextAttributes.h>
 #include <LibRegex/Regex.h>
 
