@@ -192,7 +192,7 @@ NonnullRefPtr<CSS::CSSStyleDeclaration> Window::get_computed_style(DOM::Element&
     dbgln("Generating CSS computed style for {} @ {:p}", element.node_name(), &element);
     Vector<CSS::StyleProperty> properties;
     HashMap<String, CSS::StyleProperty> custom_properties;
-    return CSS::CSSStyleDeclaration::create(move(properties), move(custom_properties));
+    return CSS::PropertyOwningCSSStyleDeclaration::create(move(properties), move(custom_properties));
 }
 
 NonnullRefPtr<CSS::MediaQueryList> Window::match_media(String media)

@@ -22,6 +22,7 @@ class CSSStyleRule;
 class CSSStyleSheet;
 class ElementInlineCSSStyleDeclaration;
 class Length;
+class PropertyOwningCSSStyleDeclaration;
 class Screen;
 class Selector;
 class StyleProperties;

@@ -1085,13 +1085,13 @@ Optional<StyleProperty> Parser::parse_a_declaration(TokenStream<T>& tokens)
     return {};
 }
 
-RefPtr<CSSStyleDeclaration> Parser::parse_as_list_of_declarations()
+RefPtr<PropertyOwningCSSStyleDeclaration> Parser::parse_as_list_of_declarations()
 {
     return parse_a_list_of_declarations(m_token_stream);
 }
 
 template<typename T>
-RefPtr<CSSStyleDeclaration> Parser::parse_a_list_of_declarations(TokenStream<T>& tokens)
+RefPtr<PropertyOwningCSSStyleDeclaration> Parser::parse_a_list_of_declarations(TokenStream<T>& tokens)
 {
     dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_as_list_of_declarations");
 
@@ -1119,7 +1119,7 @@ RefPtr<CSSStyleDeclaration> Parser::parse_a_list_of_declarations(TokenStream<T>&
         }
     }
 
-    return CSSStyleDeclaration::create(move(properties), move(custom_properties));
+    return PropertyOwningCSSStyleDeclaration::create(move(properties), move(custom_properties));
 }
 
 Optional<StyleComponentValueRule> Parser::parse_as_component_value()
@@ -1295,7 +1295,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
     return {};
 }
 
-RefPtr<CSSStyleDeclaration> Parser::convert_to_declaration(NonnullRefPtr<StyleBlockRule> block)
+RefPtr<PropertyOwningCSSStyleDeclaration> Parser::convert_to_declaration(NonnullRefPtr<StyleBlockRule> block)
 {
     dbgln_if(CSS_PARSER_DEBUG, "Parser::convert_to_declaration");
 
@@ -3487,10 +3487,10 @@ RefPtr<CSS::CSSStyleSheet> parse_css(CSS::ParsingContext const& context, StringV
     return parser.parse_as_stylesheet();
 }
 
-RefPtr<CSS::CSSStyleDeclaration> parse_css_declaration(CSS::ParsingContext const& context, StringView const& css)
+RefPtr<CSS::PropertyOwningCSSStyleDeclaration> parse_css_declaration(CSS::ParsingContext const& context, StringView const& css)
 {
     if (css.is_empty())
-        return CSS::CSSStyleDeclaration::create({}, {});
+        return CSS::PropertyOwningCSSStyleDeclaration::create({}, {});
     CSS::Parser parser(context, css);
     return parser.parse_as_list_of_declarations();
 }
