@@ -6,7 +6,6 @@
 
 #include "AnalogClock.h"
 #include <LibCore/DateTime.h>
-#include <LibGUI/Application.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>
