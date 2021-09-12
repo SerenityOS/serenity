@@ -115,8 +115,7 @@ Fire::~Fire()
 void Fire::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);
-    Core::ElapsedTimer timer;
-    timer.start();
+    auto timer = Core::ElapsedTimer::start_new();
 
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
