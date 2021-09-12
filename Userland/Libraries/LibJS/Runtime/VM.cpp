@@ -20,7 +20,6 @@
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/OrdinaryFunctionObject.h>
-#include <LibJS/Runtime/PromiseReaction.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/TemporaryClearException.h>

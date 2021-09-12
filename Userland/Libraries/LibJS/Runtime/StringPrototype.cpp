@@ -6,16 +6,13 @@
  */
 
 #include <AK/Checked.h>
-#include <AK/Function.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf16View.h>
-#include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
-#include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/StringIterator.h>
 #include <LibJS/Runtime/StringObject.h>

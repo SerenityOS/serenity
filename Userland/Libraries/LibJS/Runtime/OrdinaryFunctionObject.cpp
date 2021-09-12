@@ -7,7 +7,6 @@
 #include <AK/Debug.h>
 #include <AK/Function.h>
 #include <LibJS/AST.h>
-#include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Interpreter.h>
@@ -17,7 +16,6 @@
 #include <LibJS/Runtime/GeneratorObject.h>
 #include <LibJS/Runtime/GeneratorObjectPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/OrdinaryFunctionObject.h>
 #include <LibJS/Runtime/Value.h>
 

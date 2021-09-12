@@ -8,7 +8,6 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
-#include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainYearMonth.h>
 #include <LibJS/Runtime/Temporal/PlainYearMonthConstructor.h>
 

@@ -12,7 +12,6 @@
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateConstructor.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
-#include <LibJS/Runtime/Temporal/PlainYearMonth.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 

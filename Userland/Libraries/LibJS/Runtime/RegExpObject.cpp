@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/Value.h>

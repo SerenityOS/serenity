@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Shape.h>
 

@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/FlyString.h>
-#include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/Value.h>
 

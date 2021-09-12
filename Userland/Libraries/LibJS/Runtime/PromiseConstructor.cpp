@@ -5,7 +5,6 @@
  */
 
 #include <AK/Function.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/AggregateError.h>
 #include <LibJS/Runtime/Array.h>

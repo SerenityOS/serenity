@@ -12,7 +12,6 @@
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Function.h>
-#include <AK/Result.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
