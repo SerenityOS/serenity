@@ -14,9 +14,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Result.h>
 #include <AK/String.h>
-#include <AK/Traits.h>
 #include <AK/Utf32View.h>
-#include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>

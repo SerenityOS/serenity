@@ -7,7 +7,6 @@
 #include <AK/BinarySearch.h>
 #include <AK/FileStream.h>
 #include <AK/Function.h>
-#include <AK/StringBuilder.h>
 #include <LibLine/SuggestionDisplay.h>
 #include <LibLine/VT.h>
 #include <stdio.h>

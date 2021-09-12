@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Forward.h>
-#include <AK/String.h>
 #include <LibLine/StringMetrics.h>
 #include <LibLine/SuggestionManager.h>
 #include <stdlib.h>
