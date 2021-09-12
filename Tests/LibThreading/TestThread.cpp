@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibTest/TestCase.h>
 #include <LibThreading/Thread.h>
 #include <unistd.h>
 
