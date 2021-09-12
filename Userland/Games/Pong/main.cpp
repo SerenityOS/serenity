@@ -8,9 +8,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Bitmap.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)
