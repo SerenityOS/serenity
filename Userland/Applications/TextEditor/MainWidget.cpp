@@ -5,7 +5,6 @@
  */
 
 #include "MainWidget.h"
-#include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <Applications/TextEditor/TextEditorWindowGML.h>
@@ -14,7 +13,6 @@
 #include <LibCpp/SyntaxHighlighter.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
-#include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/FilePicker.h>
@@ -23,7 +21,6 @@
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/RegularEditingEngine.h>
 #include <LibGUI/Statusbar.h>

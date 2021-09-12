@@ -9,10 +9,7 @@
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibCore/StandardPaths.h>
 #include <LibFileSystemAccessClient/Client.h>
-#include <LibGUI/Menubar.h>
-#include <LibGUI/MessageBox.h>
 
 using namespace TextEditor;
 
