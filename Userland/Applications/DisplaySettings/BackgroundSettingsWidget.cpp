@@ -6,12 +6,9 @@
  */
 
 #include "BackgroundSettingsWidget.h"
-#include <AK/StringBuilder.h>
 #include <Applications/DisplaySettings/BackgroundSettingsGML.h>
 #include <LibCore/ConfigFile.h>
 #include <LibDesktop/Launcher.h>
-#include <LibGUI/Application.h>
-#include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/ComboBox.h>
@@ -20,9 +17,7 @@
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/IconView.h>
 #include <LibGUI/ItemListModel.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Palette.h>
-#include <LibGfx/SystemTheme.h>
 
 // Including this after to avoid LibIPC errors
 #include <LibConfig/Client.h>

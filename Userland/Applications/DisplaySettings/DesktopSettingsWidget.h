@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibCore/Timer.h>
 #include <LibGUI/SpinBox.h>
 
 namespace DisplaySettings {

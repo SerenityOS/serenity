@@ -7,14 +7,12 @@
 
 #include "MonitorSettingsWidget.h"
 #include <Applications/DisplaySettings/MonitorSettingsGML.h>
-#include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/WindowServerConnection.h>
-#include <LibGfx/SystemTheme.h>
 
 namespace DisplaySettings {
 

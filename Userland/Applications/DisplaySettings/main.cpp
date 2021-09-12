@@ -15,7 +15,6 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/Window.h>
 #include <stdio.h>

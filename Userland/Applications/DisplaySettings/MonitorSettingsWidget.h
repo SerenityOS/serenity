@@ -7,8 +7,6 @@
 #pragma once
 
 #include "MonitorWidget.h"
-#include <LibCore/Timer.h>
-#include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/RadioButton.h>
 #include <WindowServer/ScreenLayout.h>
