@@ -57,10 +57,8 @@ int main(int argc, char** argv)
         break;
     }
 
-    Core::ElapsedTimer timer;
-
     outln("allocating memory ({} bytes)...", count);
-    timer.start();
+    auto timer = Core::ElapsedTimer::start_new();
     char* ptr = (char*)malloc(count);
     if (!ptr) {
         outln("failed.");
@@ -71,11 +69,9 @@ int main(int argc, char** argv)
     auto pages = count / PAGE_SIZE;
     auto step = pages / 10;
 
-    Core::ElapsedTimer timer2;
-
     outln("writing one byte to each page of allocated memory...");
     timer.start();
-    timer2.start();
+    auto timer2 = Core::ElapsedTimer::start_new();
     for (int i = 0; i < pages; ++i) {
         ptr[i * PAGE_SIZE] = 1;
 
