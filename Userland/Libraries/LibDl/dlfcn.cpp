@@ -5,7 +5,6 @@
  */
 
 #include <AK/String.h>
-#include <AK/Types.h>
 #include <LibDl/dlfcn.h>
 #include <LibDl/dlfcn_integration.h>
 #include <string.h>

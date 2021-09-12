@@ -8,9 +8,6 @@
 
 #include <ConfigServer/ConfigClientEndpoint.h>
 #include <ConfigServer/ConfigServerEndpoint.h>
-#include <LibCore/File.h>
-#include <LibCore/Promise.h>
-#include <LibCore/StandardPaths.h>
 #include <LibIPC/ServerConnection.h>
 
 namespace Config {

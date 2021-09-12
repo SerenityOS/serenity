@@ -5,7 +5,6 @@
  */
 
 #include <AK/Checked.h>
-#include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/MappedFile.h>
