@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/HashMap.h>
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/MapIterator.h>
 #include <LibJS/Runtime/MapPrototype.h>

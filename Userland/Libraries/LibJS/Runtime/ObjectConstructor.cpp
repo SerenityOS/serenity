@@ -12,8 +12,6 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/ObjectConstructor.h>
-#include <LibJS/Runtime/ProxyObject.h>
-#include <LibJS/Runtime/Shape.h>
 
 namespace JS {
 

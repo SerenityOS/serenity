@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS {

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/BooleanPrototype.h>
 #include <LibJS/Runtime/Error.h>

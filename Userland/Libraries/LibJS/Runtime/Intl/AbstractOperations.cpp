@@ -9,7 +9,6 @@
 #include <AK/Array.h>
 #include <AK/CharacterTypes.h>
 #include <AK/Find.h>
-#include <AK/Function.h>
 #include <AK/QuickSort.h>
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/Array.h>

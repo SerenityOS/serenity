@@ -5,9 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
 #include <LibJS/AST.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Exception.h>
 #include <LibJS/Runtime/VM.h>
 

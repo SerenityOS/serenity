@@ -6,7 +6,6 @@
 
 #include <AK/Atomic.h>
 #include <AK/ByteBuffer.h>
-#include <AK/Endian.h>
 #include <LibJS/Runtime/AtomicsObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>

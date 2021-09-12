@@ -8,13 +8,11 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/HashMap.h>
 #include <AK/String.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/IndexedProperties.h>
 #include <LibJS/Runtime/MarkedValueList.h>
-#include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/PropertyDescriptor.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Shape.h>

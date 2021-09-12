@@ -15,7 +15,6 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/ArgumentsObject.h>
-#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BoundFunction.h>
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
 #include <LibJS/Runtime/ErrorTypes.h>
@@ -29,7 +28,6 @@
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/Reference.h>
-#include <LibJS/Runtime/Utf16String.h>
 
 namespace JS {
 

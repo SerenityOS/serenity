@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/VM.h>
 

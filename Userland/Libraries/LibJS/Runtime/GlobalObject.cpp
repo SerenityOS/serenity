@@ -10,8 +10,6 @@
 #include <AK/Platform.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Console.h>
-#include <LibJS/Heap/DeferGC.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/AggregateErrorConstructor.h>
 #include <LibJS/Runtime/AggregateErrorPrototype.h>
@@ -100,7 +98,6 @@
 #include <LibJS/Runtime/Temporal/ZonedDateTimeConstructor.h>
 #include <LibJS/Runtime/Temporal/ZonedDateTimePrototype.h>
 #include <LibJS/Runtime/TypedArray.h>
-#include <LibJS/Runtime/TypedArrayConstructor.h>
 #include <LibJS/Runtime/TypedArrayPrototype.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/Runtime/WeakMapConstructor.h>
