@@ -6,7 +6,6 @@
 
 #include <AK/MappedFile.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>

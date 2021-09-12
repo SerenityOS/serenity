@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/RefPtr.h>
 #include <LibCore/ArgsParser.h>
 #include <errno.h>
 #include <stdio.h>

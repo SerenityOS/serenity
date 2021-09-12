@@ -9,8 +9,6 @@
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
-#include <LibCore/Notifier.h>
 #include <LibLine/Editor.h>
 #include <LibProtocol/WebSocket.h>
 #include <LibProtocol/WebSocketClient.h>

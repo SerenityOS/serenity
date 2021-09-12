@@ -5,8 +5,6 @@
  */
 
 #include <AK/HashMap.h>
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <AK/Vector.h>

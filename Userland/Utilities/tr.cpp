@@ -5,7 +5,6 @@
  */
 
 #include <AK/GenericLexer.h>
-#include <AK/Optional.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <ctype.h>

@@ -7,7 +7,6 @@
 
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>

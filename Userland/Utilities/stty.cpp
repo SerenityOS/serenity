@@ -6,7 +6,6 @@
 
 #define __USE_MISC
 #define TTYDEFCHARS
-#include <AK/Array.h>
 #include <AK/Optional.h>
 #include <AK/Result.h>
 #include <AK/ScopeGuard.h>

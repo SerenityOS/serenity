@@ -6,7 +6,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/Debug.h>
-#include <AK/Iterator.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <stdio.h>

@@ -6,7 +6,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/LexicalPath.h>
-#include <AK/Span.h>
 #include <AK/Vector.h>
 #include <LibArchive/TarStream.h>
 #include <LibCompress/Gzip.h>
