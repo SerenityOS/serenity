@@ -36,8 +36,7 @@ void ChessEngine::handle_go(const GoCommand& command)
 
     srand(get_random<u32>());
 
-    Core::ElapsedTimer elapsed_time;
-    elapsed_time.start();
+    auto elapsed_time = Core::ElapsedTimer::start_new();
 
     MCTSTree mcts(m_board);
 
