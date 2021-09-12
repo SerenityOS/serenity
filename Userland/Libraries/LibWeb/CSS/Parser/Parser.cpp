@@ -503,7 +503,7 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
             } else if (pseudo_name.equals_ignoring_case("first-line")) {
                 simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLine;
             } else {
-                dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-element: '{}'", pseudo_name);
+                dbgln("Unrecognized pseudo-element: '::{}'", pseudo_name);
                 return ParsingResult::SyntaxError;
             }
 
@@ -571,7 +571,7 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                 simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
                 simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLine;
             } else {
-                dbgln_if(CSS_PARSER_DEBUG, "Unknown pseudo class: '{}'", pseudo_name);
+                dbgln("Unrecognized pseudo-class: ':{}'", pseudo_name);
                 return ParsingResult::SyntaxError;
             }
 
@@ -610,7 +610,7 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                     return ParsingResult::SyntaxError;
                 }
             } else {
-                dbgln_if(CSS_PARSER_DEBUG, "Unknown pseudo class: '{}'()", pseudo_function.name());
+                dbgln("Unrecognized pseudo-class function: ':{}'()", pseudo_function.name());
                 return ParsingResult::SyntaxError;
             }
 
@@ -1222,7 +1222,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
             else
                 dbgln("Unable to parse url from @import rule");
         } else {
-            dbgln("Unrecognized CSS at-rule: {}", rule->m_name);
+            dbgln("Unrecognized CSS at-rule: @{}", rule->m_name);
         }
 
         // FIXME: More at rules!
@@ -1234,14 +1234,15 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
         if (selectors.is_error()) {
             if (selectors.error() != ParsingResult::IncludesIgnoredVendorPrefix) {
                 dbgln("CSSParser: style rule selectors invalid; discarding.");
-                prelude_stream.dump_all_tokens();
+                if constexpr (CSS_PARSER_DEBUG) {
+                    prelude_stream.dump_all_tokens();
+                }
             }
             return {};
         }
 
         if (selectors.value().is_empty()) {
             dbgln("CSSParser: empty selector; discarding.");
-            prelude_stream.dump_all_tokens();
             return {};
         }
 
