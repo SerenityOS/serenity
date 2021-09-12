@@ -162,7 +162,7 @@ bool FrameLoader::load(LoadRequest& request, Type type)
         return true;
 
     if (url.protocol() == "http" || url.protocol() == "https") {
-        URL favicon_url;
+        AK::URL favicon_url;
         favicon_url.set_protocol(url.protocol());
         favicon_url.set_host(url.host());
         favicon_url.set_port(url.port());
@@ -195,7 +195,7 @@ bool FrameLoader::load(LoadRequest& request, Type type)
     return true;
 }
 
-bool FrameLoader::load(const URL& url, Type type)
+bool FrameLoader::load(const AK::URL& url, Type type)
 {
     dbgln_if(SPAM_DEBUG, "FrameLoader::load: {}", url);
 
@@ -208,7 +208,7 @@ bool FrameLoader::load(const URL& url, Type type)
     return load(request, type);
 }
 
-void FrameLoader::load_html(const StringView& html, const URL& url)
+void FrameLoader::load_html(const StringView& html, const AK::URL& url)
 {
     auto document = DOM::Document::create(url);
     HTML::HTMLDocumentParser parser(document, html, "utf-8");
@@ -219,7 +219,7 @@ void FrameLoader::load_html(const StringView& html, const URL& url)
 // FIXME: Use an actual templating engine (our own one when it's built, preferably
 // with a way to check these usages at compile time)
 
-void FrameLoader::load_error_page(const URL& failed_url, const String& error)
+void FrameLoader::load_error_page(const AK::URL& failed_url, const String& error)
 {
     auto error_page_url = "file:///res/html/error.html";
     ResourceLoader::the().load(

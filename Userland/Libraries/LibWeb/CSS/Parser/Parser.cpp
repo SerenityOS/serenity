@@ -50,9 +50,9 @@ bool ParsingContext::in_quirks_mode() const
     return m_document ? m_document->in_quirks_mode() : false;
 }
 
-URL ParsingContext::complete_url(String const& addr) const
+AK::URL ParsingContext::complete_url(String const& addr) const
 {
-    return m_document ? m_document->url().complete_url(addr) : URL::create_with_url_or_path(addr);
+    return m_document ? m_document->url().complete_url(addr) : AK::URL::create_with_url_or_path(addr);
 }
 
 template<typename T>
@@ -1159,7 +1159,7 @@ Vector<Vector<StyleComponentValueRule>> Parser::parse_a_comma_separated_list_of_
     return lists;
 }
 
-Optional<URL> Parser::parse_url_function(ParsingContext const& context, StyleComponentValueRule const& component_value)
+Optional<AK::URL> Parser::parse_url_function(ParsingContext const& context, StyleComponentValueRule const& component_value)
 {
     // FIXME: Handle list of media queries. https://www.w3.org/TR/css-cascade-3/#conditional-import
     // FIXME: Handle data: urls (RFC2397)
@@ -1201,7 +1201,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
             return {};
         } else if (rule->m_name.equals_ignoring_case("import"sv) && !rule->prelude().is_empty()) {
 
-            Optional<URL> url;
+            Optional<AK::URL> url;
             for (auto& token : rule->prelude()) {
                 if (token.is(Token::Type::Whitespace))
                     continue;

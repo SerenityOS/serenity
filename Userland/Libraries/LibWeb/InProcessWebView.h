@@ -24,7 +24,7 @@ class InProcessWebView final
 public:
     virtual ~InProcessWebView() override;
 
-    void load_html(const StringView&, const URL&);
+    void load_html(const StringView&, const AK::URL&);
     void load_empty_document();
 
     DOM::Document* document();
@@ -36,9 +36,9 @@ public:
     Layout::InitialContainingBlock* layout_root();
 
     void reload();
-    bool load(const URL&);
+    bool load(const AK::URL&);
 
-    URL url() const;
+    AK::URL url() const;
 
     void set_should_show_line_box_borders(bool value) { m_should_show_line_box_borders = value; }
 
@@ -67,18 +67,18 @@ private:
     virtual Gfx::IntRect screen_rect() const override { return GUI::Desktop::the().rect(); }
     virtual void page_did_change_title(const String&) override;
     virtual void page_did_set_document_in_top_level_browsing_context(DOM::Document*) override;
-    virtual void page_did_start_loading(const URL&) override;
-    virtual void page_did_finish_loading(const URL&) override;
+    virtual void page_did_start_loading(const AK::URL&) override;
+    virtual void page_did_finish_loading(const AK::URL&) override;
     virtual void page_did_change_selection() override;
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) override;
     virtual void page_did_request_context_menu(const Gfx::IntPoint&) override;
-    virtual void page_did_request_link_context_menu(const Gfx::IntPoint&, const URL&, const String& target, unsigned modifiers) override;
-    virtual void page_did_request_image_context_menu(const Gfx::IntPoint&, const URL&, const String& target, unsigned modifiers, const Gfx::Bitmap*) override;
-    virtual void page_did_click_link(const URL&, const String& target, unsigned modifiers) override;
-    virtual void page_did_middle_click_link(const URL&, const String& target, unsigned modifiers) override;
+    virtual void page_did_request_link_context_menu(const Gfx::IntPoint&, const AK::URL&, const String& target, unsigned modifiers) override;
+    virtual void page_did_request_image_context_menu(const Gfx::IntPoint&, const AK::URL&, const String& target, unsigned modifiers, const Gfx::Bitmap*) override;
+    virtual void page_did_click_link(const AK::URL&, const String& target, unsigned modifiers) override;
+    virtual void page_did_middle_click_link(const AK::URL&, const String& target, unsigned modifiers) override;
     virtual void page_did_enter_tooltip_area(const Gfx::IntPoint&, const String&) override;
     virtual void page_did_leave_tooltip_area() override;
-    virtual void page_did_hover_link(const URL&) override;
+    virtual void page_did_hover_link(const AK::URL&) override;
     virtual void page_did_unhover_link() override;
     virtual void page_did_invalidate(const Gfx::IntRect&) override;
     virtual void page_did_change_favicon(const Gfx::Bitmap&) override;
@@ -87,8 +87,8 @@ private:
     virtual void page_did_request_alert(const String&) override;
     virtual bool page_did_request_confirm(const String&) override;
     virtual String page_did_request_prompt(const String&, const String&) override;
-    virtual String page_did_request_cookie(const URL&, Cookie::Source) override;
-    virtual void page_did_set_cookie(const URL&, const Cookie::ParsedCookie&, Cookie::Source) override;
+    virtual String page_did_request_cookie(const AK::URL&, Cookie::Source) override;
+    virtual void page_did_set_cookie(const AK::URL&, const Cookie::ParsedCookie&, Cookie::Source) override;
 
     void layout_and_sync_size();
 

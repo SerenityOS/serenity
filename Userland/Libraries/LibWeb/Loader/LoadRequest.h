@@ -21,12 +21,12 @@ public:
     {
     }
 
-    static LoadRequest create_for_url_on_page(const URL& url, Page* page);
+    static LoadRequest create_for_url_on_page(const AK::URL& url, Page* page);
 
     bool is_valid() const { return m_url.is_valid(); }
 
-    const URL& url() const { return m_url; }
-    void set_url(const URL& url) { m_url = url; }
+    const AK::URL& url() const { return m_url; }
+    void set_url(const AK::URL& url) { m_url = url; }
 
     const String& method() const { return m_method; }
     void set_method(const String& method) { m_method = method; }
@@ -65,7 +65,7 @@ public:
     const HashMap<String, String>& headers() const { return m_headers; }
 
 private:
-    URL m_url;
+    AK::URL m_url;
     String m_method { "GET" };
     HashMap<String, String> m_headers;
     ByteBuffer m_body;

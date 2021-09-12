@@ -30,7 +30,7 @@ private:
     virtual void die() override;
 
     virtual void did_paint(Gfx::IntRect const&, i32) override;
-    virtual void did_finish_loading(URL const&) override;
+    virtual void did_finish_loading(AK::URL const&) override;
     virtual void did_invalidate_content_rect(Gfx::IntRect const&) override;
     virtual void did_change_selection() override;
     virtual void did_request_cursor_change(i32) override;
@@ -41,15 +41,15 @@ private:
     virtual void did_request_scroll_into_view(Gfx::IntRect const&) override;
     virtual void did_enter_tooltip_area(Gfx::IntPoint const&, String const&) override;
     virtual void did_leave_tooltip_area() override;
-    virtual void did_hover_link(URL const&) override;
+    virtual void did_hover_link(AK::URL const&) override;
     virtual void did_unhover_link() override;
-    virtual void did_click_link(URL const&, String const&, unsigned) override;
-    virtual void did_middle_click_link(URL const&, String const&, unsigned) override;
-    virtual void did_start_loading(URL const&) override;
+    virtual void did_click_link(AK::URL const&, String const&, unsigned) override;
+    virtual void did_middle_click_link(AK::URL const&, String const&, unsigned) override;
+    virtual void did_start_loading(AK::URL const&) override;
     virtual void did_request_context_menu(Gfx::IntPoint const&) override;
-    virtual void did_request_link_context_menu(Gfx::IntPoint const&, URL const&, String const&, unsigned) override;
-    virtual void did_request_image_context_menu(Gfx::IntPoint const&, URL const&, String const&, unsigned, Gfx::ShareableBitmap const&) override;
-    virtual void did_get_source(URL const&, String const&) override;
+    virtual void did_request_link_context_menu(Gfx::IntPoint const&, AK::URL const&, String const&, unsigned) override;
+    virtual void did_request_image_context_menu(Gfx::IntPoint const&, AK::URL const&, String const&, unsigned, Gfx::ShareableBitmap const&) override;
+    virtual void did_get_source(AK::URL const&, String const&) override;
     virtual void did_get_dom_tree(String const&) override;
     virtual void did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style) override;
     virtual void did_output_js_console_message(i32 message_index) override;
@@ -58,8 +58,8 @@ private:
     virtual void did_request_alert(String const&) override;
     virtual Messages::WebContentClient::DidRequestConfirmResponse did_request_confirm(String const&) override;
     virtual Messages::WebContentClient::DidRequestPromptResponse did_request_prompt(String const&, String const&) override;
-    virtual Messages::WebContentClient::DidRequestCookieResponse did_request_cookie(URL const&, u8) override;
-    virtual void did_set_cookie(URL const&, Web::Cookie::ParsedCookie const&, u8) override;
+    virtual Messages::WebContentClient::DidRequestCookieResponse did_request_cookie(AK::URL const&, u8) override;
+    virtual void did_set_cookie(AK::URL const&, Web::Cookie::ParsedCookie const&, u8) override;
 
     OutOfProcessWebView& m_view;
 };

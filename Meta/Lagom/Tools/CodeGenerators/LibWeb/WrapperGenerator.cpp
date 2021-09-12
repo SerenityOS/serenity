@@ -437,7 +437,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (namespace_.is_one_of("CSS", "DOM", "HTML", "UIEvents", "HighResolutionTime", "NavigationTiming", "SVG", "XHR")) {
+    if (namespace_.is_one_of("CSS", "DOM", "HTML", "UIEvents", "HighResolutionTime", "NavigationTiming", "SVG", "XHR", "URL")) {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::");
@@ -968,6 +968,8 @@ static void generate_header(IDL::Interface const& interface)
 #    include <LibWeb/SVG/@name@.h>
 #elif __has_include(<LibWeb/XHR/@name@.h>)
 #    include <LibWeb/XHR/@name@.h>
+#elif __has_include(<LibWeb/URL/@name@.h>)
+#    include <LibWeb/URL/@name@.h>
 #endif
 )~~~");
 
@@ -1235,6 +1237,8 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #    include <LibWeb/SVG/@name@.h>
 #elif __has_include(<LibWeb/XHR/@name@.h>)
 #    include <LibWeb/XHR/@name@.h>
+#elif __has_include(<LibWeb/URL/@name@.h>)
+#    include <LibWeb/URL/@name@.h>
 #endif
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
@@ -1504,6 +1508,8 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #    include <LibWeb/SVG/@name@.h>
 #elif __has_include(<LibWeb/XHR/@name@.h>)
 #    include <LibWeb/XHR/@name@.h>
+#elif __has_include(<LibWeb/URL/@name@.h>)
+#    include <LibWeb/URL/@name@.h>
 #endif
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
@@ -1512,6 +1518,7 @@ using namespace Web::DOM;
 using namespace Web::HTML;
 using namespace Web::NavigationTiming;
 using namespace Web::XHR;
+using namespace Web::URL;
 
 namespace Web::Bindings {
 

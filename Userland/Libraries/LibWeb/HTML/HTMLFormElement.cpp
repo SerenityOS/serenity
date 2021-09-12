@@ -12,7 +12,7 @@
 #include <LibWeb/HTML/SubmitEvent.h>
 #include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/Page.h>
-#include <LibWeb/URLEncoder.h>
+#include <LibWeb/URL/URL.h>
 
 namespace Web::HTML {
 
@@ -75,7 +75,7 @@ void HTMLFormElement::submit_form(RefPtr<HTMLElement> submitter, bool from_submi
             return;
     }
 
-    URL url(document().parse_url(action()));
+    AK::URL url(document().parse_url(action()));
 
     if (!url.is_valid()) {
         dbgln("Failed to submit form: Invalid URL: {}", action());
@@ -96,7 +96,7 @@ void HTMLFormElement::submit_form(RefPtr<HTMLElement> submitter, bool from_submi
         return;
     }
 
-    Vector<URLQueryParam> parameters;
+    Vector<URL::QueryParam> parameters;
 
     for_each_in_inclusive_subtree_of_type<HTMLInputElement>([&](auto& input) {
         if (!input.name().is_null() && (input.type() != "submit" || &input == submitter))
@@ -105,14 +105,14 @@ void HTMLFormElement::submit_form(RefPtr<HTMLElement> submitter, bool from_submi
     });
 
     if (effective_method == "get") {
-        url.set_query(urlencode(parameters, URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded));
+        url.set_query(url_encode(parameters, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded));
     }
 
     LoadRequest request;
     request.set_url(url);
 
     if (effective_method == "post") {
-        auto body = urlencode(parameters, URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded).to_byte_buffer();
+        auto body = url_encode(parameters, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded).to_byte_buffer();
         request.set_method("POST");
         request.set_header("Content-Type", "application/x-www-form-urlencoded");
         request.set_header("Content-Length", String::number(body.size()));
