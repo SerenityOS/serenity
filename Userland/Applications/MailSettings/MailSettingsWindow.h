@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 
 class MailSettingsWindow final : public GUI::Window {

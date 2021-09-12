@@ -11,7 +11,6 @@
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)

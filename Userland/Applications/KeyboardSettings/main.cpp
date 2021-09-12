@@ -19,8 +19,6 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/WindowServerConnection.h>
-#include <LibKeyboard/CharacterMap.h>
 #include <spawn.h>
 
 // Including this after to avoid LibIPC errors
