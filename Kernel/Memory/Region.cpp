@@ -5,7 +5,6 @@
  */
 
 #include <AK/Memory.h>
-#include <AK/StringView.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Memory/AnonymousVMObject.h>

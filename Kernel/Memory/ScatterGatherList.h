@@ -6,11 +6,8 @@
 
 #pragma once
 
-#include <AK/Vector.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
-#include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel::Memory {
 

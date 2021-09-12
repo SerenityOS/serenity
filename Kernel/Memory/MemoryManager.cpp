@@ -9,18 +9,15 @@
 #include <AK/StringView.h>
 #include <Kernel/BootInfo.h>
 #include <Kernel/CMOS.h>
-#include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Memory/PhysicalRegion.h>
-#include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
-#include <Kernel/StdLib.h>
 
 extern u8 start_of_kernel_image[];
 extern u8 end_of_kernel_image[];

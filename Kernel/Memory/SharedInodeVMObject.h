@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Bitmap.h>
 #include <Kernel/Memory/InodeVMObject.h>
 #include <Kernel/UnixTypes.h>
 
