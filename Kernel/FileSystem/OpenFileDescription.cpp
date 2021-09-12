@@ -383,6 +383,12 @@ KResult OpenFileDescription::truncate(u64 length)
     return m_file->truncate(length);
 }
 
+KResult OpenFileDescription::sync()
+{
+    MutexLocker locker(m_lock);
+    return m_file->sync();
+}
+
 bool OpenFileDescription::is_fifo() const
 {
     return m_file->is_fifo();

@@ -122,6 +122,7 @@ public:
     void set_original_custody(Badge<VirtualFileSystem>, Custody& custody);
 
     KResult truncate(u64);
+    KResult sync();
 
     off_t offset() const { return m_current_offset; }
 
