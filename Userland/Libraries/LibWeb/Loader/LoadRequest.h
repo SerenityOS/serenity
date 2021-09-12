@@ -8,7 +8,9 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/HashMap.h>
+#include <AK/Time.h>
 #include <AK/URL.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {
@@ -31,6 +33,9 @@ public:
 
     const ByteBuffer& body() const { return m_body; }
     void set_body(const ByteBuffer& body) { m_body = body; }
+
+    void start_timer() { m_load_timer.start(); };
+    Time load_time() const { return m_load_timer.elapsed_time(); }
 
     unsigned hash() const
     {
@@ -64,6 +69,7 @@ private:
     String m_method { "GET" };
     HashMap<String, String> m_headers;
     ByteBuffer m_body;
+    Core::ElapsedTimer m_load_timer;
 };
 
 }
