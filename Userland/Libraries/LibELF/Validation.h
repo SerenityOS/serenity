@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/String.h>
-#include <LibC/elf.h>
 
 namespace ELF {
 

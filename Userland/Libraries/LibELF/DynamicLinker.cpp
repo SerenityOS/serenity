@@ -20,7 +20,6 @@
 #include <LibC/unistd.h>
 #include <LibDl/dlfcn.h>
 #include <LibDl/dlfcn_integration.h>
-#include <LibELF/AuxiliaryVector.h>
 #include <LibELF/DynamicLinker.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>

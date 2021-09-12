@@ -12,7 +12,6 @@
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <Kernel/VirtualAddress.h>
-#include <LibC/elf.h>
 #include <LibC/link.h>
 
 namespace ELF {

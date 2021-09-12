@@ -8,7 +8,6 @@
 #include <AK/Debug.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <LibC/elf.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Hashes.h>

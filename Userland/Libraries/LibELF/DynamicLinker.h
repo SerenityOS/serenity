@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Result.h>
-#include <AK/Vector.h>
 #include <LibELF/DynamicObject.h>
 
 namespace ELF {
