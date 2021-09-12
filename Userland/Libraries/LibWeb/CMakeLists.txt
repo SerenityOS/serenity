@@ -229,7 +229,7 @@ set(SOURCES
     StylePropertiesModel.cpp
     UIEvents/EventNames.cpp
     UIEvents/MouseEvent.cpp
-    URLEncoder.cpp
+    URL/URL.cpp
     WebAssembly/WebAssemblyInstanceConstructor.cpp
     WebAssembly/WebAssemblyInstanceObject.cpp
     WebAssembly/WebAssemblyInstanceObjectPrototype.cpp

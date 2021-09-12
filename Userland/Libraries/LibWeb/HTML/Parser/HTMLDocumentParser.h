@@ -39,7 +39,7 @@ namespace Web::HTML {
     __ENUMERATE_INSERTION_MODE(AfterAfterBody)  \
     __ENUMERATE_INSERTION_MODE(AfterAfterFrameset)
 
-RefPtr<DOM::Document> parse_html_document(const StringView&, const URL&, const String& encoding);
+RefPtr<DOM::Document> parse_html_document(const StringView&, const AK::URL&, const String& encoding);
 
 class HTMLDocumentParser {
 public:
@@ -48,7 +48,7 @@ public:
 
     static NonnullOwnPtr<HTMLDocumentParser> create_with_uncertain_encoding(DOM::Document&, const ByteBuffer& input);
 
-    void run(const URL&);
+    void run(const AK::URL&);
 
     DOM::Document& document();
 

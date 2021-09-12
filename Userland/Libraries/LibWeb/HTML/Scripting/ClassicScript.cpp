@@ -10,7 +10,7 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-classic-script
-NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView source, JS::Realm& realm, URL base_url, MutedErrors muted_errors)
+NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView source, JS::Realm& realm, AK::URL base_url, MutedErrors muted_errors)
 {
     // 1. If muted errors was not provided, let it be false. (NOTE: This is taken care of by the default argument.)
 
@@ -61,7 +61,7 @@ JS::Value ClassicScript::run(RethrowErrors rethrow_errors)
     return vm.last_value();
 }
 
-ClassicScript::ClassicScript(URL base_url, String filename)
+ClassicScript::ClassicScript(AK::URL base_url, String filename)
     : Script(move(base_url), move(filename))
 {
 }

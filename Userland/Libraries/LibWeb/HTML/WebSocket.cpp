@@ -41,7 +41,7 @@ WebSocketClientManager::WebSocketClientManager()
 {
 }
 
-RefPtr<Protocol::WebSocket> WebSocketClientManager::connect(const URL& url)
+RefPtr<Protocol::WebSocket> WebSocketClientManager::connect(const AK::URL& url)
 {
     return m_websocket_client->connect(url);
 }
@@ -49,7 +49,7 @@ RefPtr<Protocol::WebSocket> WebSocketClientManager::connect(const URL& url)
 // https://html.spec.whatwg.org/multipage/web-sockets.html#the-websocket-interface
 DOM::ExceptionOr<NonnullRefPtr<WebSocket>> WebSocket::create_with_global_object(Bindings::WindowObject& window, const String& url)
 {
-    URL url_record(url);
+    AK::URL url_record(url);
     if (!url_record.is_valid())
         return DOM::SyntaxError::create("Invalid URL");
     if (!url_record.protocol().is_one_of("ws", "wss"))
@@ -61,7 +61,7 @@ DOM::ExceptionOr<NonnullRefPtr<WebSocket>> WebSocket::create_with_global_object(
     return WebSocket::create(window.impl(), url_record);
 }
 
-WebSocket::WebSocket(DOM::Window& window, URL& url)
+WebSocket::WebSocket(DOM::Window& window, AK::URL& url)
     : EventTarget(static_cast<Bindings::ScriptExecutionContext&>(window.associated_document()))
     , m_window(window)
 {

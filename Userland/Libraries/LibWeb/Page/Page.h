@@ -41,10 +41,10 @@ public:
 
     void set_focused_browsing_context(Badge<EventHandler>, BrowsingContext&);
 
-    void load(const URL&);
+    void load(const AK::URL&);
     void load(LoadRequest&);
 
-    void load_html(const StringView&, const URL&);
+    void load_html(const StringView&, const AK::URL&);
 
     bool handle_mouseup(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
     bool handle_mousedown(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
@@ -74,18 +74,18 @@ public:
     virtual Gfx::IntRect screen_rect() const = 0;
     virtual void page_did_set_document_in_top_level_browsing_context(DOM::Document*) { }
     virtual void page_did_change_title(const String&) { }
-    virtual void page_did_start_loading(const URL&) { }
-    virtual void page_did_finish_loading(const URL&) { }
+    virtual void page_did_start_loading(const AK::URL&) { }
+    virtual void page_did_finish_loading(const AK::URL&) { }
     virtual void page_did_change_selection() { }
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) { }
     virtual void page_did_request_context_menu(const Gfx::IntPoint&) { }
-    virtual void page_did_request_link_context_menu(const Gfx::IntPoint&, const URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }
-    virtual void page_did_request_image_context_menu(const Gfx::IntPoint&, const URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers, const Gfx::Bitmap*) { }
-    virtual void page_did_click_link(const URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }
-    virtual void page_did_middle_click_link(const URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }
+    virtual void page_did_request_link_context_menu(const Gfx::IntPoint&, const AK::URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }
+    virtual void page_did_request_image_context_menu(const Gfx::IntPoint&, const AK::URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers, const Gfx::Bitmap*) { }
+    virtual void page_did_click_link(const AK::URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }
+    virtual void page_did_middle_click_link(const AK::URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }
     virtual void page_did_enter_tooltip_area(const Gfx::IntPoint&, const String&) { }
     virtual void page_did_leave_tooltip_area() { }
-    virtual void page_did_hover_link(const URL&) { }
+    virtual void page_did_hover_link(const AK::URL&) { }
     virtual void page_did_unhover_link() { }
     virtual void page_did_invalidate(const Gfx::IntRect&) { }
     virtual void page_did_change_favicon(const Gfx::Bitmap&) { }
@@ -96,8 +96,8 @@ public:
     virtual void page_did_request_alert(const String&) { }
     virtual bool page_did_request_confirm(const String&) { return false; }
     virtual String page_did_request_prompt(const String&, const String&) { return {}; }
-    virtual String page_did_request_cookie(const URL&, Cookie::Source) { return {}; }
-    virtual void page_did_set_cookie(const URL&, const Cookie::ParsedCookie&, Cookie::Source) { }
+    virtual String page_did_request_cookie(const AK::URL&, Cookie::Source) { return {}; }
+    virtual void page_did_set_cookie(const AK::URL&, const Cookie::ParsedCookie&, Cookie::Source) { }
 
 protected:
     virtual ~PageClient() = default;

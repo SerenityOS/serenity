@@ -204,6 +204,9 @@ class XMLHttpRequest;
 class XMLHttpRequestEventTarget;
 }
 
+namespace Web::URL {
+}
+
 namespace Web::Bindings {
 class AbortControllerWrapper;
 class AbortSignalWrapper;

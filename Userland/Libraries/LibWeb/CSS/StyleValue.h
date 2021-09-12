@@ -651,7 +651,7 @@ class ImageStyleValue final
     : public StyleValue
     , public ImageResourceClient {
 public:
-    static NonnullRefPtr<ImageStyleValue> create(const URL& url, DOM::Document& document) { return adopt_ref(*new ImageStyleValue(url, document)); }
+    static NonnullRefPtr<ImageStyleValue> create(const AK::URL& url, DOM::Document& document) { return adopt_ref(*new ImageStyleValue(url, document)); }
     virtual ~ImageStyleValue() override { }
 
     String to_string() const override { return String::formatted("Image({})", m_url.to_string()); }
@@ -659,12 +659,12 @@ public:
     const Gfx::Bitmap* bitmap() const { return m_bitmap; }
 
 private:
-    ImageStyleValue(const URL&, DOM::Document&);
+    ImageStyleValue(const AK::URL&, DOM::Document&);
 
     // ^ResourceClient
     virtual void resource_did_load() override;
 
-    URL m_url;
+    AK::URL m_url;
     WeakPtr<DOM::Document> m_document;
     RefPtr<Gfx::Bitmap> m_bitmap;
 };

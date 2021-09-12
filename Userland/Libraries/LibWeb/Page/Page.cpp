@@ -31,7 +31,7 @@ void Page::set_focused_browsing_context(Badge<EventHandler>, BrowsingContext& br
     m_focused_context = browsing_context.make_weak_ptr();
 }
 
-void Page::load(const URL& url)
+void Page::load(const AK::URL& url)
 {
     top_level_browsing_context().loader().load(url, FrameLoader::Type::Navigation);
 }
@@ -41,7 +41,7 @@ void Page::load(LoadRequest& request)
     top_level_browsing_context().loader().load(request, FrameLoader::Type::Navigation);
 }
 
-void Page::load_html(const StringView& html, const URL& url)
+void Page::load_html(const StringView& html, const AK::URL& url)
 {
     top_level_browsing_context().loader().load_html(html, url);
 }
