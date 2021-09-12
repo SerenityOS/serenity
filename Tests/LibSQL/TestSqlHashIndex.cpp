@@ -6,9 +6,7 @@
 
 #include <LibSQL/HashIndex.h>
 #include <LibSQL/Heap.h>
-#include <LibSQL/Meta.h>
 #include <LibSQL/Tuple.h>
-#include <LibSQL/Value.h>
 #include <LibTest/TestCase.h>
 #include <unistd.h>
 

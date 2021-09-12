@@ -11,7 +11,6 @@
 #include <LibSQL/Database.h>
 #include <LibSQL/Row.h>
 #include <LibSQL/SQLResult.h>
-#include <LibSQL/Value.h>
 #include <LibTest/TestCase.h>
 
 namespace {

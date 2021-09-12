@@ -6,8 +6,6 @@
 
 #include <unistd.h>
 
-#include <LibSQL/Meta.h>
-#include <LibSQL/Row.h>
 #include <LibSQL/Tuple.h>
 #include <LibSQL/Value.h>
 #include <LibTest/TestCase.h>

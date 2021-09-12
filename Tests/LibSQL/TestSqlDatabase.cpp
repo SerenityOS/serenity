@@ -7,12 +7,10 @@
 #include <unistd.h>
 
 #include <AK/ScopeGuard.h>
-#include <LibSQL/BTree.h>
 #include <LibSQL/Database.h>
 #include <LibSQL/Heap.h>
 #include <LibSQL/Meta.h>
 #include <LibSQL/Row.h>
-#include <LibSQL/Value.h>
 #include <LibTest/TestCase.h>
 
 NonnullRefPtr<SQL::SchemaDef> setup_schema(SQL::Database&);

@@ -7,7 +7,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Optional.h>
 #include <AK/Result.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
