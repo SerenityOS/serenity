@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/ByteBuffer.h>
 #include <AK/FileStream.h>
 #include <AK/Function.h>
 #include <AK/MemoryStream.h>

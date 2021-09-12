@@ -12,7 +12,6 @@
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
-#include <LibCore/Notifier.h>
 #include <LibIPC/Forward.h>
 
 namespace Protocol {
