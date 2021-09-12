@@ -12,7 +12,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <Kernel/API/KeyCode.h>
-#include <Kernel/ConsoleDevice.h>
+#include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/TTY/TTY.h>
