@@ -10,12 +10,10 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/Painter.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Color.h>
 #include <LibGfx/FontDatabase.h>
 
 static const char* short_month_names[] = {
