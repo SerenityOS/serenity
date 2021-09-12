@@ -83,8 +83,7 @@ void Cube::paint_event(GUI::PaintEvent& event)
 
 void Cube::timer_event(Core::TimerEvent&)
 {
-    Core::ElapsedTimer timer;
-    timer.start();
+    auto timer = Core::ElapsedTimer::start_new();
 
     const FloatVector3 vertices[8] {
         { -1, -1, -1 },
