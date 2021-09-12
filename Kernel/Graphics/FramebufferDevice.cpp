@@ -6,6 +6,7 @@
 
 #include <AK/Checked.h>
 #include <AK/Try.h>
+#include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
@@ -14,7 +15,6 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
-#include <LibC/errno_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {

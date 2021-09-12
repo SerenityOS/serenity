@@ -9,6 +9,7 @@
 #include <AK/MemoryStream.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringView.h>
+#include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
@@ -16,7 +17,6 @@
 #include <Kernel/FileSystem/ext2_fs.h>
 #include <Kernel/Process.h>
 #include <Kernel/UnixTypes.h>
-#include <LibC/errno_numbers.h>
 
 namespace Kernel {
 

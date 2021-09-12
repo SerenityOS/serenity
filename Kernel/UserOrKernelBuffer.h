@@ -9,10 +9,10 @@
 
 #include <AK/Types.h>
 #include <AK/Userspace.h>
+#include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/UnixTypes.h>
-#include <LibC/errno_numbers.h>
 
 namespace Kernel {
 

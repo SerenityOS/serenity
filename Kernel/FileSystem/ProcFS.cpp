@@ -7,6 +7,7 @@
  */
 
 #include <AK/Singleton.h>
+#include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
@@ -15,7 +16,6 @@
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
-#include <LibC/errno_numbers.h>
 
 namespace Kernel {
 

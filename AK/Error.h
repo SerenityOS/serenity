@@ -12,7 +12,7 @@
 #include <AK/Variant.h>
 
 #if defined(__serenity__) && defined(KERNEL)
-#    include <LibC/errno_numbers.h>
+#    include <LibC/errno_codes.h>
 #else
 #    include <errno.h>
 #endif

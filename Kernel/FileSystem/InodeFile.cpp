@@ -5,6 +5,7 @@
  */
 
 #include <AK/StringView.h>
+#include <Kernel/API/POSIX/errno.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeFile.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
@@ -12,7 +13,6 @@
 #include <Kernel/Memory/PrivateInodeVMObject.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Process.h>
-#include <LibC/errno_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {

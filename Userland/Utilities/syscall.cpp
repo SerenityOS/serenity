@@ -9,7 +9,7 @@
 #include <AK/Iterator.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <errno_numbers.h>
+#include <errno_codes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

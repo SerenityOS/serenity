@@ -17,6 +17,7 @@
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
 #    include <Kernel/Devices/KCOVDevice.h>
 #endif
+#include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
@@ -34,7 +35,6 @@
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Thread.h>
 #include <Kernel/ThreadTracer.h>
-#include <LibC/errno_numbers.h>
 #include <LibC/limits.h>
 
 namespace Kernel {
