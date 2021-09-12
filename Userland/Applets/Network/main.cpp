@@ -6,7 +6,6 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Menu.h>

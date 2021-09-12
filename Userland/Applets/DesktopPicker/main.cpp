@@ -6,7 +6,6 @@
 
 #include "DesktopStatusWindow.h"
 #include <LibGUI/Application.h>
-#include <LibGUI/Painter.h>
 #include <LibGUI/WindowManagerServerConnection.h>
 #include <WindowServer/Window.h>
 #include <serenity.h>
