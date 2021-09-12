@@ -23,7 +23,6 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/ProcessChooser.h>

@@ -8,9 +8,7 @@
 
 #include "Profile.h"
 #include <AK/Function.h>
-#include <AK/Optional.h>
 #include <LibGUI/Model.h>
-#include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Color.h>
 

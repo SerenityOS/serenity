@@ -6,7 +6,6 @@
 
 #include "SamplesModel.h"
 #include "Profile.h"
-#include <AK/StringBuilder.h>
 
 namespace Profiler {
 

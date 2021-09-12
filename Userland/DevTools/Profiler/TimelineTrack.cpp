@@ -9,7 +9,6 @@
 #include "TimelineView.h"
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
-#include <LibGfx/Palette.h>
 
 namespace Profiler {
 
