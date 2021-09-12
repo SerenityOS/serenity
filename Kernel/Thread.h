@@ -8,7 +8,6 @@
 
 #include <AK/Concepts.h>
 #include <AK/EnumBits.h>
-#include <AK/HashMap.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
@@ -23,7 +22,6 @@
 #include <Kernel/Arch/x86/RegisterState.h>
 #include <Kernel/Arch/x86/SafeMem.h>
 #include <Kernel/Debug.h>
-#include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KString.h>
 #include <Kernel/Library/ListedRefCounted.h>
