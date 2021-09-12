@@ -9,7 +9,6 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Time/HPETComparator.h>
-#include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
 
