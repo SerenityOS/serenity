@@ -5,8 +5,6 @@
  */
 
 #include <AK/Debug.h>
-#include <LibCore/EventLoop.h>
-#include <LibHTTP/HttpResponse.h>
 #include <LibHTTP/HttpsJob.h>
 #include <LibTLS/TLSv12.h>
 #include <stdio.h>

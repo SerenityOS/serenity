@@ -8,7 +8,6 @@
 #include <LibCompress/Gzip.h>
 #include <LibCompress/Zlib.h>
 #include <LibCore/Event.h>
-#include <LibCore/TCPSocket.h>
 #include <LibHTTP/HttpResponse.h>
 #include <LibHTTP/Job.h>
 #include <stdio.h>

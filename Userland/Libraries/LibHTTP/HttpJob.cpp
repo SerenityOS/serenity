@@ -7,7 +7,6 @@
 #include <AK/Debug.h>
 #include <LibCore/TCPSocket.h>
 #include <LibHTTP/HttpJob.h>
-#include <LibHTTP/HttpResponse.h>
 #include <stdio.h>
 #include <unistd.h>
 

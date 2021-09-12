@@ -6,11 +6,7 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <LibCore/NetworkJob.h>
-#include <LibCore/TCPSocket.h>
 #include <LibHTTP/HttpRequest.h>
-#include <LibHTTP/HttpResponse.h>
 #include <LibHTTP/Job.h>
 
 namespace HTTP {
