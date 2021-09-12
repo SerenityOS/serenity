@@ -8,7 +8,6 @@
 
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
-#include <AK/SinglyLinkedList.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Op.h>

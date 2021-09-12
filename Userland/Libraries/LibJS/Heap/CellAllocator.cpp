@@ -5,7 +5,6 @@
  */
 
 #include <AK/Badge.h>
-#include <LibJS/Heap/BlockAllocator.h>
 #include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Heap/HeapBlock.h>

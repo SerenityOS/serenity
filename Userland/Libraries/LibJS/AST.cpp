@@ -7,7 +7,6 @@
 
 #include <AK/Demangle.h>
 #include <AK/HashMap.h>
-#include <AK/HashTable.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
@@ -15,7 +14,6 @@
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
-#include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/Error.h>
@@ -26,10 +24,8 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/OrdinaryFunctionObject.h>
-#include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/RegExpObject.h>
-#include <LibJS/Runtime/Shape.h>
 #include <typeinfo>
 
 namespace JS {

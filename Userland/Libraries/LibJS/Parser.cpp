@@ -8,7 +8,6 @@
 #include "Parser.h"
 #include <AK/Array.h>
 #include <AK/CharacterTypes.h>
-#include <AK/HashTable.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
 #include <AK/TemporaryChange.h>

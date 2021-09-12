@@ -7,7 +7,6 @@
 #include <AK/Badge.h>
 #include <AK/Debug.h>
 #include <AK/HashTable.h>
-#include <AK/StackInfo.h>
 #include <AK/TemporaryChange.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibJS/Heap/CellAllocator.h>
@@ -15,7 +14,6 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Heap/HeapBlock.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/WeakContainer.h>
 #include <setjmp.h>
 

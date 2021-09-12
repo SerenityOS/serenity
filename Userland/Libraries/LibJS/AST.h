@@ -8,9 +8,7 @@
 #pragma once
 
 #include <AK/FlyString.h>
-#include <AK/HashMap.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/Variant.h>

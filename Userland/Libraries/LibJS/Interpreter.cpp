@@ -12,8 +12,6 @@
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/OrdinaryFunctionObject.h>
-#include <LibJS/Runtime/Reference.h>
-#include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {

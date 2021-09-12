@@ -7,8 +7,6 @@
 #pragma once
 
 #include <AK/IntrusiveList.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/HeapBlock.h>
 

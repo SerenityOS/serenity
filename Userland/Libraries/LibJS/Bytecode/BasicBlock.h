@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/String.h>
 #include <LibJS/Forward.h>
 

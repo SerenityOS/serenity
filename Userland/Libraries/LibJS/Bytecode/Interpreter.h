@@ -11,7 +11,6 @@
 #include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Forward.h>
-#include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/Exception.h>
 #include <LibJS/Runtime/Value.h>

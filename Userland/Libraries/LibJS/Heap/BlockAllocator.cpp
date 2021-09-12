@@ -5,7 +5,6 @@
  */
 
 #include <AK/Platform.h>
-#include <AK/Vector.h>
 #include <LibJS/Heap/BlockAllocator.h>
 #include <LibJS/Heap/HeapBlock.h>
 #include <sys/mman.h>
