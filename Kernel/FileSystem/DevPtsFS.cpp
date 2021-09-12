@@ -6,7 +6,6 @@
  */
 
 #include <Kernel/FileSystem/DevPtsFS.h>
-#include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/TTY/SlavePTY.h>
 
 namespace Kernel {

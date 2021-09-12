@@ -14,7 +14,6 @@
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/UnixTypes.h>
-#include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
 

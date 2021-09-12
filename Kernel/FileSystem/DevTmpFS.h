@@ -10,7 +10,6 @@
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
-#include <Kernel/TTY/SlavePTY.h>
 
 namespace Kernel {
 

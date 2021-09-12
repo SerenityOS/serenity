@@ -15,7 +15,6 @@
 #include <Kernel/Forward.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/UserOrKernelBuffer.h>
-#include <Kernel/VirtualAddress.h>
 
 namespace Kernel {
 
