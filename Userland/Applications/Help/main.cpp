@@ -18,7 +18,6 @@
 #include <LibGUI/FilteringProxyModel.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Statusbar.h>
