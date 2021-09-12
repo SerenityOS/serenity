@@ -6,7 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Checked.h>
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <string.h>

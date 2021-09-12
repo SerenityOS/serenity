@@ -8,7 +8,6 @@
 
 #include <AK/Array.h>
 #include <AK/String.h>
-#include <AK/StringView.h>
 #include <AK/Types.h>
 #include <AK/Utf16View.h>
 

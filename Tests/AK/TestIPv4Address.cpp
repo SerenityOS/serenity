@@ -6,7 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Endian.h>
 #include <AK/IPv4Address.h>
 
 TEST_CASE(should_default_contructor_with_0s)

@@ -6,7 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/ByteBuffer.h>
 #include <AK/Utf8View.h>
 
 TEST_CASE(decode_ascii)

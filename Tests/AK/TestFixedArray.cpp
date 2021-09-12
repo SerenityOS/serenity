@@ -7,7 +7,6 @@
 #include <LibTest/TestSuite.h>
 
 #include <AK/FixedArray.h>
-#include <AK/String.h>
 
 TEST_CASE(construct)
 {
