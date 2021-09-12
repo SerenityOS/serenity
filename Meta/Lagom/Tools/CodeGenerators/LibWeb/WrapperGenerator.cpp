@@ -843,6 +843,11 @@ static void generate_return_statement(SourceGenerator& generator, IDL::Type cons
 
     return retval.callback.cell();
 )~~~");
+    } else if (return_type.name == "Location") {
+        // Location is special cased as it is already a JS::Object.
+        scoped_generator.append(R"~~~(
+    return JS::Value(retval);
+)~~~");
     } else {
         scoped_generator.append(R"~~~(
     return wrap(global_object, const_cast<@return_type@&>(*retval));
@@ -1440,6 +1445,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/HTMLTableCaptionElementWrapper.h>
 #include <LibWeb/Bindings/HTMLTableSectionElementWrapper.h>
 #include <LibWeb/Bindings/ImageDataWrapper.h>
+#include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/PerformanceTimingWrapper.h>
 #include <LibWeb/Bindings/RangeWrapper.h>
