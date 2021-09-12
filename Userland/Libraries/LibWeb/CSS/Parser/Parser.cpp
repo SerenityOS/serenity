@@ -491,6 +491,8 @@ Result<Selector::SimpleSelector, Parser::SelectorParsingResult> Parser::parse_si
             }
 
             auto pseudo_name = name_token.token().ident();
+            if (has_ignored_vendor_prefix(pseudo_name))
+                return SelectorParsingResult::IncludesIgnoredVendorPrefix;
 
             if (pseudo_name.equals_ignoring_case("after")) {
                 simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::After;
@@ -518,6 +520,9 @@ Result<Selector::SimpleSelector, Parser::SelectorParsingResult> Parser::parse_si
 
         if (pseudo_class_token.is(Token::Type::Ident)) {
             auto pseudo_name = pseudo_class_token.token().ident();
+            if (has_ignored_vendor_prefix(pseudo_name))
+                return SelectorParsingResult::IncludesIgnoredVendorPrefix;
+
             if (pseudo_name.equals_ignoring_case("active")) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Active;
             } else if (pseudo_name.equals_ignoring_case("checked")) {
@@ -1223,8 +1228,17 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
     } else {
         auto prelude_stream = TokenStream(rule->m_prelude);
         auto selectors = parse_a_selector(prelude_stream);
-        if (selectors.is_error() || selectors.value().is_empty()) {
-            dbgln("CSSParser: style rule selectors invalid; discarding.");
+
+        if (selectors.is_error()) {
+            if (selectors.error() != SelectorParsingResult::IncludesIgnoredVendorPrefix) {
+                dbgln("CSSParser: style rule selectors invalid; discarding.");
+                prelude_stream.dump_all_tokens();
+            }
+            return {};
+        }
+
+        if (selectors.value().is_empty()) {
+            dbgln("CSSParser: empty selector; discarding.");
             prelude_stream.dump_all_tokens();
             return {};
         }
