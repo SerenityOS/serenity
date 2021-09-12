@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringView.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/DoubleBuffer.h>
 

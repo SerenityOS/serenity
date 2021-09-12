@@ -9,7 +9,6 @@
 #include <AK/Types.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Locking/Mutex.h>
-#include <Kernel/Thread.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
