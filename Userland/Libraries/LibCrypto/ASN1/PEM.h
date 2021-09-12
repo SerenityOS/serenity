@@ -7,8 +7,6 @@
 #pragma once
 
 #include <AK/Span.h>
-#include <LibCrypto/ASN1/ASN1.h>
-#include <LibCrypto/ASN1/DER.h>
 
 namespace Crypto {
 

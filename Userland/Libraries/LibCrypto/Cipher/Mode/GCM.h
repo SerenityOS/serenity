@@ -6,10 +6,8 @@
 
 #pragma once
 
-#include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <AK/StringView.h>
 #include <LibCrypto/Authentication/GHash.h>
 #include <LibCrypto/Cipher/Mode/CTR.h>
 #include <LibCrypto/Verification.h>

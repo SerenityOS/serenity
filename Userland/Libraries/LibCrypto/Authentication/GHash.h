@@ -9,7 +9,6 @@
 #include <AK/ByteReader.h>
 #include <AK/String.h>
 #include <AK/Types.h>
-#include <LibCrypto/Hash/HashFunction.h>
 
 namespace Crypto {
 namespace Authentication {

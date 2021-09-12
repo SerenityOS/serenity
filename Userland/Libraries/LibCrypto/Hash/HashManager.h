@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <AK/Optional.h>
-#include <AK/OwnPtr.h>
 #include <AK/Variant.h>
 #include <LibCrypto/Hash/HashFunction.h>
 #include <LibCrypto/Hash/MD5.h>
