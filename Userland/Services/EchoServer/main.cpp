@@ -52,15 +52,15 @@ int main(int argc, char** argv)
     server->on_ready_to_accept = [&next_id, &clients, &server] {
         int id = next_id++;
 
-        auto client_socket = server->accept();
-        if (!client_socket) {
-            perror("accept");
+        auto maybe_client_socket = server->accept();
+        if (maybe_client_socket.is_error()) {
+            warnln("accept: {}", maybe_client_socket.error());
             return;
         }
 
         outln("Client {} connected", id);
 
-        auto client = Client::create(id, move(client_socket));
+        auto client = Client::create(id, maybe_client_socket.release_value());
         client->on_exit = [&clients, id] {
             Core::deferred_invoke([&clients, id] {
                 clients.remove(id);

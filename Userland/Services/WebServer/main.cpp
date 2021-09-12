@@ -72,9 +72,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto server = TRY(Core::TCPServer::try_create());
 
     server->on_ready_to_accept = [&] {
-        auto client_socket = server->accept();
-        VERIFY(client_socket);
-        auto client = WebServer::Client::construct(client_socket.release_nonnull(), server);
+        auto maybe_client_socket = server->accept();
+        if (maybe_client_socket.is_error()) {
+            warnln("Failed to accept the client: {}", maybe_client_socket.error());
+            return;
+        }
+
+        auto maybe_buffered_socket = Core::Stream::BufferedTCPSocket::create(maybe_client_socket.release_value());
+        if (maybe_buffered_socket.is_error()) {
+            warnln("Could not obtain a buffered socket for the client: {}", maybe_buffered_socket.error());
+            return;
+        }
+
+        VERIFY(!maybe_buffered_socket.value().set_blocking(true).is_error());
+        auto client = WebServer::Client::construct(maybe_buffered_socket.release_value(), server);
         client->start();
     };
 

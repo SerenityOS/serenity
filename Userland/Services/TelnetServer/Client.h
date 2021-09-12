@@ -10,38 +10,35 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <LibCore/Notifier.h>
-#include <LibCore/TCPSocket.h>
+#include <LibCore/Stream.h>
 
 #include "Command.h"
 #include "Parser.h"
 
 class Client : public RefCounted<Client> {
 public:
-    static NonnullRefPtr<Client> create(int id, RefPtr<Core::TCPSocket> socket, int ptm_fd)
-    {
-        return adopt_ref(*new Client(id, move(socket), ptm_fd));
-    }
+    static ErrorOr<NonnullRefPtr<Client>> create(int id, Core::Stream::TCPSocket socket, int ptm_fd);
 
     Function<void()> on_exit;
 
-protected:
-    Client(int id, RefPtr<Core::TCPSocket> socket, int ptm_fd);
+private:
+    Client(int id, Core::Stream::TCPSocket socket, int ptm_fd);
 
-    void drain_socket();
-    void drain_pty();
+    ErrorOr<void> drain_socket();
+    ErrorOr<void> drain_pty();
+    ErrorOr<void> handle_command(Command const& command);
+    ErrorOr<void> send_data(StringView str);
+    ErrorOr<void> send_command(Command command);
+    ErrorOr<void> send_commands(Vector<Command> commands);
+
     void handle_data(StringView);
-    void handle_command(const Command& command);
     void handle_error();
-    void send_data(StringView str);
-    void send_command(Command command);
-    void send_commands(Vector<Command> commands);
     void quit();
 
-private:
     // client id
     int m_id { 0 };
     // client resources
-    RefPtr<Core::TCPSocket> m_socket;
+    Core::Stream::TCPSocket m_socket;
     Parser m_parser;
     // pty resources
     int m_ptm_fd { -1 };

@@ -7,8 +7,9 @@
 #pragma once
 
 #include <LibCore/Object.h>
-#include <LibCore/TCPSocket.h>
+#include <LibCore/Stream.h>
 #include <LibHTTP/Forward.h>
+#include <LibHTTP/HttpRequest.h>
 
 namespace WebServer {
 
@@ -19,18 +20,18 @@ public:
     void start();
 
 private:
-    Client(NonnullRefPtr<Core::TCPSocket>, Core::Object* parent);
+    Client(Core::Stream::BufferedTCPSocket, Core::Object* parent);
 
-    void handle_request(ReadonlyBytes);
-    void send_response(InputStream&, HTTP::HttpRequest const&, String const& content_type);
-    void send_redirect(StringView redirect, HTTP::HttpRequest const&);
-    void send_error_response(unsigned code, HTTP::HttpRequest const&, Vector<String> const& headers = {});
+    ErrorOr<bool> handle_request(ReadonlyBytes);
+    ErrorOr<void> send_response(InputStream&, HTTP::HttpRequest const&, String const& content_type);
+    ErrorOr<void> send_redirect(StringView redirect, HTTP::HttpRequest const&);
+    ErrorOr<void> send_error_response(unsigned code, HTTP::HttpRequest const&, Vector<String> const& headers = {});
     void die();
     void log_response(unsigned code, HTTP::HttpRequest const&);
-    void handle_directory_listing(String const& requested_path, String const& real_path, HTTP::HttpRequest const&);
+    ErrorOr<void> handle_directory_listing(String const& requested_path, String const& real_path, HTTP::HttpRequest const&);
     bool verify_credentials(Vector<HTTP::HttpRequest::Header> const&);
 
-    NonnullRefPtr<Core::TCPSocket> m_socket;
+    Core::Stream::BufferedTCPSocket m_socket;
 };
 
 }
