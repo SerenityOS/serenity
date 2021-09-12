@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <LibCore/SecretString.h>
 #include <pwd.h>
 #ifndef AK_OS_BSD_GENERIC
 #    include <shadow.h>
@@ -36,7 +37,7 @@ public:
     static Result<Account, String> from_name(const char* username, Read options = Read::All);
     static Result<Account, String> from_uid(uid_t uid, Read options = Read::All);
 
-    bool authenticate(const char* password) const;
+    bool authenticate(SecretString const& password) const;
     bool login() const;
 
     String username() const { return m_username; }

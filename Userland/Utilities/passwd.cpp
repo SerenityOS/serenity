@@ -90,7 +90,7 @@ int main(int argc, char** argv)
                 return 1;
             }
 
-            if (!target_account.authenticate(current_password.value().characters())) {
+            if (!target_account.authenticate(current_password.value())) {
                 warnln("Incorrect or disabled password.");
                 warnln("Password for user {} unchanged.", target_account.username());
                 return 1;
