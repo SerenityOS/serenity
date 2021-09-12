@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/Debug.h>
-#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
