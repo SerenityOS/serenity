@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
 #include <LibDl/dlfcn.h>
 #include <LibDl/dlfcn_integration.h>
 #include <pthread.h>

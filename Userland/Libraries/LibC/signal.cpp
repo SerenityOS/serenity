@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
 #include <assert.h>
 #include <errno.h>
 #include <setjmp.h>
