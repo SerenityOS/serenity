@@ -7,8 +7,6 @@
 #pragma once
 
 #include "AK/Forward.h"
-#include "LibGUI/Label.h"
-#include "Music.h"
 #include <AK/FixedPoint.h>
 #include <AK/Format.h>
 #include <AK/Types.h>
