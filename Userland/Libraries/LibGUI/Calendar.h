@@ -10,7 +10,6 @@
 #include <AK/String.h>
 #include <LibCore/DateTime.h>
 #include <LibGUI/Frame.h>
-#include <LibGUI/Widget.h>
 
 namespace GUI {
 

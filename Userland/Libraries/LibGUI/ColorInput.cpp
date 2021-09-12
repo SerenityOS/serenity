@@ -4,11 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/Timer.h>
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ColorPicker.h>
 #include <LibGUI/Painter.h>
-#include <LibGfx/Palette.h>
 
 REGISTER_WIDGET(GUI, ColorInput)
 

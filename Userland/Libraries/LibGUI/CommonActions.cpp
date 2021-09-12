@@ -6,7 +6,6 @@
 
 #include <AK/Function.h>
 #include <AK/String.h>
-#include <AK/WeakPtr.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Icon.h>

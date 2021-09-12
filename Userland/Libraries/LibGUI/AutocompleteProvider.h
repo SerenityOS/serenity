@@ -9,7 +9,6 @@
 #include <LibGUI/Forward.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
-#include <LibIPC/Decoder.h>
 
 namespace GUI {
 

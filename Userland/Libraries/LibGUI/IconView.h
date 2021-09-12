@@ -9,7 +9,6 @@
 #include <AK/IterationDecision.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/Forward.h>
-#include <LibGUI/Variant.h>
 
 namespace GUI {
 

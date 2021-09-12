@@ -4,16 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Vector.h>
 #include <LibGUI/AbstractTableView.h>
-#include <LibGUI/Action.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/HeaderView.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Model.h>
-#include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Palette.h>
 
 namespace GUI {
 

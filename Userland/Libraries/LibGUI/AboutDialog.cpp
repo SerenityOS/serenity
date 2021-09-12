@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringBuilder.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>

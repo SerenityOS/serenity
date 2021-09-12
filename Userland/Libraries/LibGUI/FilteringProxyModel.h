@@ -7,10 +7,8 @@
 #pragma once
 
 #include <AK/NonnullRefPtr.h>
-#include <AK/Optional.h>
 #include <AK/String.h>
 #include <LibGUI/Model.h>
-#include <LibGUI/TextBox.h>
 
 namespace GUI {
 

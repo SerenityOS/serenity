@@ -4,12 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Action.h>
-#include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CommonLocationsProvider.h>
 #include <LibGUI/FileIconProvider.h>
@@ -24,8 +22,6 @@
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Toolbar.h>
-#include <LibGfx/FontDatabase.h>
-#include <LibGfx/Palette.h>
 #include <string.h>
 #include <unistd.h>
 

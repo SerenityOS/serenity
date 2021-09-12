@@ -6,15 +6,12 @@
 
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
-#include <AK/Vector.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/DragOperation.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Scrollbar.h>
-#include <LibGUI/TextBox.h>
 #include <LibGfx/Palette.h>
 
 namespace GUI {

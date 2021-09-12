@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibGUI/AbstractButton.h>
 #include <LibGUI/Dialog.h>
 
 namespace GUI {

@@ -6,9 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
-#include <LibGUI/Painter.h>
 #include <LibGUI/Slider.h>
-#include <LibGfx/Palette.h>
 
 namespace GUI {
 

@@ -10,7 +10,6 @@
 #include <AK/Function.h>
 #include <AK/HashTable.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
