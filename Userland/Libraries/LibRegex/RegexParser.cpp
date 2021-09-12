@@ -7,13 +7,10 @@
 
 #include "RegexParser.h"
 #include "RegexDebug.h"
-#include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <AK/StringUtils.h>
 #include <AK/TemporaryChange.h>
-#include <AK/Utf16View.h>
 #include <LibUnicode/CharacterTypes.h>
 
 namespace regex {

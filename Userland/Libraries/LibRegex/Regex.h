@@ -8,4 +8,3 @@
 
 #include <LibRegex/Forward.h>
 #include <LibRegex/RegexDebug.h>
-#include <LibRegex/RegexMatcher.h>

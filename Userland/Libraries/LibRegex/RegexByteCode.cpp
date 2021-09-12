@@ -6,7 +6,6 @@
 
 #include "RegexByteCode.h"
 #include "AK/StringBuilder.h"
-#include "RegexDebug.h"
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <LibUnicode/CharacterTypes.h>

@@ -7,14 +7,9 @@
 #pragma once
 
 #include "RegexMatch.h"
-#include "RegexOptions.h"
 
-#include <AK/Format.h>
 #include <AK/Forward.h>
-#include <AK/HashMap.h>
-#include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
-#include <AK/Traits.h>
 #include <AK/TypeCasts.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>

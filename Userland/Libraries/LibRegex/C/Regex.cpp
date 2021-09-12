@@ -5,7 +5,6 @@
  */
 
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <LibRegex/Regex.h>
 #include <ctype.h>
 #include <stdio.h>
