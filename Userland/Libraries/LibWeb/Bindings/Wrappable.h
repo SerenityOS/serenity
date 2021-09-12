@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/WeakPtr.h>
-#include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Forward.h>
 
