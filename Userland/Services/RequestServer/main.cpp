@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/OwnPtr.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/LocalServer.h>
 #include <LibIPC/ClientConnection.h>
 #include <LibTLS/Certificate.h>
 #include <RequestServer/ClientConnection.h>

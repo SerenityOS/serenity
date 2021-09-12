@@ -5,7 +5,6 @@
  */
 
 #include <LibGemini/GeminiJob.h>
-#include <LibGemini/GeminiResponse.h>
 #include <RequestServer/GeminiRequest.h>
 
 namespace RequestServer {

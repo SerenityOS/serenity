@@ -5,7 +5,6 @@
  */
 
 #include <AK/Badge.h>
-#include <AK/ByteBuffer.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>

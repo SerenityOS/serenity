@@ -10,7 +10,6 @@
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Optional.h>
-#include <AK/RefCounted.h>
 #include <AK/URL.h>
 #include <RequestServer/Forward.h>
 
