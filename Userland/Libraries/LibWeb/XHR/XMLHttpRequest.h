@@ -11,7 +11,6 @@
 #include <AK/URL.h>
 #include <AK/Weakable.h>
 #include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/XHR/XMLHttpRequestEventTarget.h>

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
 #include <LibIPC/ServerConnection.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <WebContent/WebContentClientEndpoint.h>

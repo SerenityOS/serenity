@@ -7,7 +7,6 @@
 #pragma once
 
 #include <LibWeb/Bindings/EventTargetWrapperFactory.h>
-#include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/EventTarget.h>
 
 namespace Web::XHR {

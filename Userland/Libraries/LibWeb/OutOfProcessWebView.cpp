@@ -12,11 +12,9 @@
 #include <LibGUI/InputBox.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Scrollbar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
-#include <LibGfx/SystemTheme.h>
 
 REGISTER_WIDGET(Web, OutOfProcessWebView)
 

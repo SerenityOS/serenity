@@ -12,7 +12,6 @@
 #include <AK/Noncopyable.h>
 #include <AK/RefCounted.h>
 #include <AK/URL.h>
-#include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/Forward.h>

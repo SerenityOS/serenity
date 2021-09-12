@@ -6,12 +6,9 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/Noncopyable.h>
 #include <AK/RefPtr.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Timer.h>
-#include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
 #include <LibWeb/DOM/Position.h>

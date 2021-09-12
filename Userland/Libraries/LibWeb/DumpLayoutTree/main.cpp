@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/ArgsParser.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Window.h>
 #include <LibWeb/OutOfProcessWebView.h>
