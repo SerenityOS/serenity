@@ -319,8 +319,8 @@ void ImageEditor::mousemove_event(GUI::MouseEvent& event)
     if (event.buttons() & GUI::MouseButton::Middle) {
         auto delta = event.position() - m_click_position;
         m_pan_origin = m_saved_pan_origin.translated(
-            -delta.x() / m_scale,
-            -delta.y() / m_scale);
+            -delta.x(),
+            -delta.y());
 
         relayout();
         return;
@@ -536,16 +536,24 @@ void ImageEditor::clamped_scale(float scale_delta)
 void ImageEditor::scale_centered_on_position(Gfx::IntPoint const& position, float scale_delta)
 {
     auto old_scale = m_scale;
-    clamped_scale(scale_delta);
+    auto image_coord_of_position = editor_position_to_image_position(position);
 
-    Gfx::FloatPoint focus_point {
-        m_pan_origin.x() - (position.x() - width() / 2.0f) / old_scale,
-        m_pan_origin.y() - (position.y() - height() / 2.0f) / old_scale
+    auto image_size = m_image->size();
+    Gfx::FloatPoint offset_from_center_in_image_coords = {
+        image_coord_of_position.x() - image_size.width() / 2.0f,
+        image_coord_of_position.y() - image_size.height() / 2.0f
+    };
+    Gfx::FloatPoint offset_from_center_in_editor_coords = {
+        position.x() - width() / 2.0f,
+        position.y() - height() / 2.0f
     };
 
-    m_pan_origin = Gfx::FloatPoint(
-        focus_point.x() - m_scale / old_scale * (focus_point.x() - m_pan_origin.x()),
-        focus_point.y() - m_scale / old_scale * (focus_point.y() - m_pan_origin.y()));
+    clamped_scale(scale_delta);
+
+    m_pan_origin = {
+        offset_from_center_in_image_coords.x() * m_scale - offset_from_center_in_editor_coords.x(),
+        offset_from_center_in_image_coords.y() * m_scale - offset_from_center_in_editor_coords.y()
+    };
 
     if (old_scale != m_scale)
         relayout();
@@ -588,8 +596,8 @@ void ImageEditor::relayout()
     m_editor_image_rect.set_size(new_size);
 
     Gfx::IntPoint new_location;
-    new_location.set_x((width() / 2) - (new_size.width() / 2) - (m_pan_origin.x() * m_scale));
-    new_location.set_y((height() / 2) - (new_size.height() / 2) - (m_pan_origin.y() * m_scale));
+    new_location.set_x((width() / 2) - (new_size.width() / 2) - (m_pan_origin.x()));
+    new_location.set_y((height() / 2) - (new_size.height() / 2) - (m_pan_origin.y()));
     m_editor_image_rect.set_location(new_location);
 
     update();
