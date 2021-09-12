@@ -7,9 +7,7 @@
 #pragma once
 
 #include <LibJS/Runtime/Object.h>
-#include <LibWasm/AbstractMachine/AbstractMachine.h>
 #include <LibWeb/Forward.h>
-#include <LibWeb/WebAssembly/WebAssemblyInstanceObjectPrototype.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
 namespace Web::Bindings {

@@ -17,7 +17,6 @@
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/TypedArray.h>
-#include <LibWasm/AbstractMachine/Interpreter.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyInstanceConstructor.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>

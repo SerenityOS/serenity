@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "WebAssemblyModuleConstructor.h"
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/VM.h>

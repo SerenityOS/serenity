@@ -5,12 +5,10 @@
  */
 
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyModuleConstructor.h>
 #include <LibWeb/WebAssembly/WebAssemblyModuleObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyModulePrototype.h>
-#include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
 namespace Web::Bindings {
 

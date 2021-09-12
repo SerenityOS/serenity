@@ -5,7 +5,6 @@
  */
 
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyTableConstructor.h>

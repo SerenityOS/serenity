@@ -4,12 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ScopeGuard.h>
-#include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/ArrayBuffer.h>
-#include <LibJS/Runtime/BigInt.h>
-#include <LibJS/Runtime/TypedArray.h>
-#include <LibWasm/AbstractMachine/Interpreter.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyInstanceObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyMemoryPrototype.h>
