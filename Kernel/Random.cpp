@@ -7,7 +7,6 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/Arch/x86/Processor.h>
-#include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Time/HPET.h>

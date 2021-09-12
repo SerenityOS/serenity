@@ -6,13 +6,9 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
-#include <AK/Function.h>
-#include <AK/IntrusiveList.h>
 #include <AK/Types.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/Spinlock.h>
-#include <Kernel/Time/TimeManagement.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {

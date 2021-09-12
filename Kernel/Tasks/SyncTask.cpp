@@ -8,7 +8,6 @@
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/SyncTask.h>
-#include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
 
