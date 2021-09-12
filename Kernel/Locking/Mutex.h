@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Assertions.h>
-#include <AK/Atomic.h>
 #include <AK/HashMap.h>
 #include <AK/Types.h>
 #include <Kernel/Forward.h>

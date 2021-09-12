@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/Debug.h>
-#include <Kernel/KSyms.h>
 #include <Kernel/Locking/LockLocation.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/Spinlock.h>
