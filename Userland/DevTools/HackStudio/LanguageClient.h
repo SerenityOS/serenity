@@ -9,12 +9,10 @@
 #include "AutoCompleteResponse.h"
 #include "Language.h"
 #include <AK/Forward.h>
-#include <AK/LexicalPath.h>
 #include <AK/Types.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <LibCore/ElapsedTimer.h>
-#include <LibCpp/Preprocessor.h>
 #include <LibIPC/ServerConnection.h>
 
 #include <DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>

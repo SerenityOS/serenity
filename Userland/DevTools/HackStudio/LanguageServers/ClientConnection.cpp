@@ -8,7 +8,6 @@
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <LibCore/File.h>
-#include <LibGUI/TextDocument.h>
 
 namespace LanguageServers {
 

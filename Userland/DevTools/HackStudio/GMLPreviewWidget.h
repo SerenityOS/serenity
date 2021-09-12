@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/LexicalPath.h>
 #include <LibGUI/Widget.h>
 
 namespace HackStudio {

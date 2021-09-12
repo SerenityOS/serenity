@@ -22,7 +22,6 @@
 #include "TerminalWrapper.h"
 #include "ToDoEntriesWidget.h"
 #include <LibGUI/ActionGroup.h>
-#include <LibGUI/Scrollbar.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Widget.h>
 #include <LibThreading/Thread.h>
