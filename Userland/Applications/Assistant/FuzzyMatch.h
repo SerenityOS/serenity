@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/String.h>
-#include <AK/Tuple.h>
 
 namespace Assistant {
 

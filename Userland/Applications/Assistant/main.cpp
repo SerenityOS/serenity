@@ -11,10 +11,8 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Event.h>
-#include <LibGUI/Icon.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/Painter.h>
 #include <LibGUI/TextBox.h>
 #include <LibGfx/Palette.h>
 #include <LibThreading/Mutex.h>
