@@ -166,8 +166,7 @@ void FileProvider::build_filesystem_cache()
     Threading::BackgroundAction<int>::create(
         [this](auto&) {
             String slash = "/";
-            Core::ElapsedTimer timer;
-            timer.start();
+            auto timer = Core::ElapsedTimer::start_new();
             while (!m_work_queue.is_empty()) {
                 auto base_directory = m_work_queue.dequeue();
 
