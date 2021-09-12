@@ -62,6 +62,13 @@ public:
         if (!m_head_chunk)
             return;
         for_each_chunk([this](auto chunk) {
+            if (!s_unused_allocation_cache) {
+                auto next_chunk = ((ChunkHeader const*)chunk)->next_chunk;
+                if (!next_chunk) {
+                    s_unused_allocation_cache = chunk;
+                    return;
+                }
+            }
             if constexpr (use_mmap) {
                 munmap((void*)chunk, m_chunk_size);
             } else {
@@ -91,18 +98,22 @@ protected:
         // dbgln("Allocated {} entries in previous chunk and have {} unusable bytes", m_allocations_in_previous_chunk, m_chunk_size - m_byte_offset_into_current_chunk);
         // m_allocations_in_previous_chunk = 0;
         void* new_chunk;
-        if constexpr (use_mmap) {
-#ifdef __serenity__
-            new_chunk = serenity_mmap(nullptr, m_chunk_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_RANDOMIZED | MAP_PRIVATE, 0, 0, m_chunk_size, "BumpAllocator Chunk");
-#else
-            new_chunk = mmap(nullptr, m_chunk_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
-#endif
-            if (new_chunk == MAP_FAILED)
-                return false;
+        if (s_unused_allocation_cache) {
+            new_chunk = (void*)exchange(s_unused_allocation_cache, 0);
         } else {
-            new_chunk = kmalloc(m_chunk_size);
-            if (!new_chunk)
-                return false;
+            if constexpr (use_mmap) {
+#ifdef __serenity__
+                new_chunk = serenity_mmap(nullptr, m_chunk_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_RANDOMIZED | MAP_PRIVATE, 0, 0, m_chunk_size, "BumpAllocator Chunk");
+#else
+                new_chunk = mmap(nullptr, m_chunk_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+#endif
+                if (new_chunk == MAP_FAILED)
+                    return false;
+            } else {
+                new_chunk = kmalloc(m_chunk_size);
+                if (!new_chunk)
+                    return false;
+            }
         }
 
         auto& new_header = *(ChunkHeader*)new_chunk;
@@ -134,7 +145,7 @@ protected:
     FlatPtr m_current_chunk { 0 };
     size_t m_byte_offset_into_current_chunk { 0 };
     size_t m_chunk_size { 0 };
-    // size_t m_allocations_in_previous_chunk { 0 };
+    static FlatPtr s_unused_allocation_cache;
 };
 
 template<typename T, bool use_mmap = false, size_t chunk_size = use_mmap ? 4 * MiB : 4 * KiB>
@@ -171,6 +182,9 @@ public:
         });
     }
 };
+
+template<bool use_mmap, size_t size>
+inline FlatPtr BumpAllocator<use_mmap, size>::s_unused_allocation_cache { 0 };
 
 }
 
