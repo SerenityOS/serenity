@@ -8,6 +8,7 @@
 #include <LibTest/TestCase.h> // import first, to prevent warning of VERIFY* redefinition
 
 #include <AK/StringBuilder.h>
+#include <AK/Tuple.h>
 #include <LibRegex/Regex.h>
 #include <LibRegex/RegexDebug.h>
 #include <stdio.h>
@@ -886,4 +887,22 @@ BENCHMARK_CASE(fork_performance)
     Regex<ECMA262> re("(?:aa)*");
     auto result = re.match(g_lots_of_a_s);
     EXPECT_EQ(result.success, true);
+}
+
+TEST_CASE(optimizer_atomic_groups)
+{
+    Array tests {
+        // Fork -> ForkReplace
+        Tuple { "a*b"sv, "aaaaa"sv, false },
+        Tuple { "a+b"sv, "aaaaa"sv, false },
+        // Alternative fuse
+        Tuple { "(abcfoo|abcbar|abcbaz).*x"sv, "abcbarx"sv, true },
+        Tuple { "(a|a)"sv, "a"sv, true },
+    };
+
+    for (auto& test : tests) {
+        Regex<ECMA262> re(test.get<0>());
+        auto result = re.match(test.get<1>());
+        EXPECT_EQ(result.success, test.get<2>());
+    }
 }

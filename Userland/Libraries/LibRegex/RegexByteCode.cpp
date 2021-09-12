@@ -245,9 +245,23 @@ ALWAYS_INLINE ExecutionResult OpCode_ForkJump::execute(MatchInput const&, MatchS
     return ExecutionResult::Fork_PrioHigh;
 }
 
+ALWAYS_INLINE ExecutionResult OpCode_ForkReplaceJump::execute(MatchInput const& input, MatchState& state) const
+{
+    state.fork_at_position = state.instruction_position + size() + offset();
+    input.fork_to_replace = state.instruction_position;
+    return ExecutionResult::Fork_PrioHigh;
+}
+
 ALWAYS_INLINE ExecutionResult OpCode_ForkStay::execute(MatchInput const&, MatchState& state) const
 {
     state.fork_at_position = state.instruction_position + size() + offset();
+    return ExecutionResult::Fork_PrioLow;
+}
+
+ALWAYS_INLINE ExecutionResult OpCode_ForkReplaceStay::execute(MatchInput const& input, MatchState& state) const
+{
+    state.fork_at_position = state.instruction_position + size() + offset();
+    input.fork_to_replace = state.instruction_position;
     return ExecutionResult::Fork_PrioLow;
 }
 
@@ -778,6 +792,40 @@ String const OpCode_Compare::arguments_string() const
     return String::formatted("argc={}, args={} ", arguments_count(), arguments_size());
 }
 
+Vector<CompareTypeAndValuePair> OpCode_Compare::flat_compares() const
+{
+    Vector<CompareTypeAndValuePair> result;
+
+    size_t offset { state().instruction_position + 3 };
+
+    for (size_t i = 0; i < arguments_count(); ++i) {
+        auto compare_type = (CharacterCompareType)m_bytecode->at(offset++);
+
+        if (compare_type == CharacterCompareType::Char) {
+            auto ch = m_bytecode->at(offset++);
+            result.append({ compare_type, ch });
+        } else if (compare_type == CharacterCompareType::Reference) {
+            auto ref = m_bytecode->at(offset++);
+            result.append({ compare_type, ref });
+        } else if (compare_type == CharacterCompareType::String) {
+            auto& length = m_bytecode->at(offset++);
+            if (length > 0)
+                result.append({ compare_type, m_bytecode->at(offset) });
+            StringBuilder str_builder;
+            offset += length;
+        } else if (compare_type == CharacterCompareType::CharClass) {
+            auto character_class = m_bytecode->at(offset++);
+            result.append({ compare_type, character_class });
+        } else if (compare_type == CharacterCompareType::CharRange) {
+            auto value = m_bytecode->at(offset++);
+            result.append({ compare_type, value });
+        } else {
+            result.append({ compare_type, 0 });
+        }
+    }
+    return result;
+}
+
 Vector<String> const OpCode_Compare::variable_arguments_to_string(Optional<MatchInput> input) const
 {
     Vector<String> result;
@@ -834,7 +882,7 @@ Vector<String> const OpCode_Compare::variable_arguments_to_string(Optional<Match
                     input.value().view.substring_view(string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
         } else if (compare_type == CharacterCompareType::CharRange) {
             auto value = (CharRange)m_bytecode->at(offset++);
-            result.empend(String::formatted("ch_range='{:c}'-'{:c}'", value.from, value.to));
+            result.empend(String::formatted("ch_range={:x}-{:x}", value.from, value.to));
             if (!view.is_null() && view.length() > state().string_position)
                 result.empend(String::formatted(
                     "compare against: '{}'",
@@ -896,6 +944,16 @@ ALWAYS_INLINE ExecutionResult OpCode_JumpNonEmpty::execute(MatchInput const& inp
 
         if (form == OpCodeId::ForkStay)
             return ExecutionResult::Fork_PrioLow;
+
+        if (form == OpCodeId::ForkReplaceStay) {
+            input.fork_to_replace = state.instruction_position;
+            return ExecutionResult::Fork_PrioLow;
+        }
+
+        if (form == OpCodeId::ForkReplaceJump) {
+            input.fork_to_replace = state.instruction_position;
+            return ExecutionResult::Fork_PrioHigh;
+        }
     }
 
     return ExecutionResult::Continue;
