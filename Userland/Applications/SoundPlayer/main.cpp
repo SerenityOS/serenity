@@ -15,9 +15,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/CharacterBitmap.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)

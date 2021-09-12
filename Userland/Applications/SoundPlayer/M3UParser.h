@@ -9,7 +9,6 @@
 #include <AK/Optional.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
-#include <AK/StringView.h>
 #include <AK/Vector.h>
 
 // Extended M3U fields (de facto standard)

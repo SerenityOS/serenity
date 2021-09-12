@@ -8,7 +8,6 @@
 
 #include "PlaybackManager.h"
 #include "PlaylistWidget.h"
-#include "VisualizationBase.h"
 #include <AK/RefPtr.h>
 
 struct PlayerState {

@@ -9,7 +9,6 @@
 
 #include "BarsVisualizationWidget.h"
 #include "Common.h"
-#include "PlaybackManager.h"
 #include "Player.h"
 #include <AK/NonnullRefPtr.h>
 #include <LibAudio/ClientConnection.h>

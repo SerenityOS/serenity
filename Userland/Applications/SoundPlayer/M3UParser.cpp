@@ -8,7 +8,6 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/ScopeGuard.h>
-#include <AK/Utf8View.h>
 
 M3UParser::M3UParser()
 {
