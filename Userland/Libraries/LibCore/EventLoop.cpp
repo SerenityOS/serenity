@@ -16,7 +16,6 @@
 #include <AK/Time.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/LocalServer.h>
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>

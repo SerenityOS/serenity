@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Buffered.h>
-#include <AK/ByteBuffer.h>
 #include <AK/Stream.h>
 #include <LibCore/File.h>
 

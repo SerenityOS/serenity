@@ -14,7 +14,6 @@
 #include <AK/RefCounted.h>
 #include <AK/Result.h>
 #include <AK/String.h>
-#include <Kernel/API/InodeWatcherEvent.h>
 #include <Kernel/API/InodeWatcherFlags.h>
 #include <LibCore/Notifier.h>
 

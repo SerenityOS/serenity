@@ -5,7 +5,6 @@
  */
 
 #include <LibCore/AnonymousBuffer.h>
-#include <LibIPC/File.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/mman.h>
