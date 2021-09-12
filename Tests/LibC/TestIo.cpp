@@ -6,7 +6,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/Types.h>
 #include <LibCore/File.h>
 #include <LibTest/TestCase.h>
 #include <fcntl.h>
