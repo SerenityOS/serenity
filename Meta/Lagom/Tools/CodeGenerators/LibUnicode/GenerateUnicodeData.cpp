@@ -13,7 +13,6 @@
 #include <AK/QuickSort.h>
 #include <AK/SourceGenerator.h>
 #include <AK/String.h>
-#include <AK/StringUtils.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>

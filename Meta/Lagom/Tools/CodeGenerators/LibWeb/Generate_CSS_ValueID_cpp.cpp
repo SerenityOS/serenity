@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
 #include <AK/JsonObject.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>

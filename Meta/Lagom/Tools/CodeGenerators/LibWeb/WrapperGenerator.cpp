@@ -6,7 +6,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/GenericLexer.h>
 #include <AK/HashMap.h>
@@ -1041,12 +1040,10 @@ void generate_implementation(IDL::Interface const& interface)
     generator.set("fully_qualified_name", interface.fully_qualified_name);
 
     generator.append(R"~~~(
-#include <AK/FlyString.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
@@ -1071,7 +1068,6 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/EventListener.h>
-#include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/Origin.h>
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
@@ -1195,7 +1191,6 @@ void generate_constructor_implementation(IDL::Interface const& interface)
     generator.set("fully_qualified_name", interface.fully_qualified_name);
 
     generator.append(R"~~~(
-#include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/@constructor_class@.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
@@ -1454,11 +1449,8 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/EventListener.h>
-#include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/EventHandler.h>
-#include <LibWeb/HTML/HTMLElement.h>
-#include <LibWeb/NavigationTiming/PerformanceTiming.h>
 #include <LibWeb/Origin.h>
 
 #if __has_include(<LibWeb/Bindings/@prototype_base_class@.h>)
