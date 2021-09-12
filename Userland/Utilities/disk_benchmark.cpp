@@ -103,8 +103,7 @@ int main(int argc, char** argv)
             Vector<Result> results;
 
             outln("Running: file_size={} block_size={}", file_size, block_size);
-            Core::ElapsedTimer timer;
-            timer.start();
+            auto timer = Core::ElapsedTimer::start_new();
             while (timer.elapsed() < time_per_benchmark * 1000) {
                 out(".");
                 fflush(stdout);
@@ -145,8 +144,7 @@ Optional<Result> benchmark(const String& filename, int file_size, int block_size
 
     Result result;
 
-    Core::ElapsedTimer timer;
-    timer.start();
+    auto timer = Core::ElapsedTimer::start_new();
 
     ssize_t total_written = 0;
     for (ssize_t j = 0; j < file_size; j += block_size) {
