@@ -9,7 +9,6 @@
 #include "Engine.h"
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/Optional.h>
 #include <LibChess/Chess.h>
 #include <LibGUI/Frame.h>
 #include <LibGfx/Bitmap.h>
