@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/RefCounted.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Graphics/GraphicsDevice.h>
 

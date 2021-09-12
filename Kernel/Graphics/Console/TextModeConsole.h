@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
 #include <AK/Types.h>
 #include <Kernel/Graphics/Console/VGAConsole.h>
 #include <Kernel/Locking/Spinlock.h>

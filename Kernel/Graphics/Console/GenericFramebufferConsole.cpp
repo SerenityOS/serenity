@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
-#include <Kernel/TTY/ConsoleManagement.h>
 
 namespace Kernel::Graphics {
 
