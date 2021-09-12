@@ -10,11 +10,9 @@
 #include "SimpleRegion.h"
 #include "SoftCPU.h"
 #include <AK/Debug.h>
-#include <AK/FileStream.h>
 #include <AK/Format.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
-#include <AK/StringUtils.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>

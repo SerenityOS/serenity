@@ -11,8 +11,6 @@
 #include "ValueWithShadow.h"
 
 #include <AK/BitCast.h>
-#include <AK/NumericLimits.h>
-#include <AK/UFixedBigInt.h>
 
 #include <unistd.h>
 

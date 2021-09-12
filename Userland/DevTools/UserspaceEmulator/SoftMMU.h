@@ -8,7 +8,6 @@
 
 #include "Region.h"
 #include "ValueWithShadow.h"
-#include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>

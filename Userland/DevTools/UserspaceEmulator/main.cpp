@@ -10,7 +10,6 @@
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <fcntl.h>
 #include <pthread.h>
