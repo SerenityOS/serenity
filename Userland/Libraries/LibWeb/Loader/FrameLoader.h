@@ -27,7 +27,7 @@ public:
     ~FrameLoader();
 
     bool load(const URL&, Type);
-    bool load(const LoadRequest&, Type);
+    bool load(LoadRequest&, Type);
 
     void load_html(const StringView&, const URL&);
 

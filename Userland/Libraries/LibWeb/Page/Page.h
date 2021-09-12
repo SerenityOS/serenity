@@ -42,7 +42,7 @@ public:
     void set_focused_browsing_context(Badge<EventHandler>, BrowsingContext&);
 
     void load(const URL&);
-    void load(const LoadRequest&);
+    void load(LoadRequest&);
 
     void load_html(const StringView&, const URL&);
 

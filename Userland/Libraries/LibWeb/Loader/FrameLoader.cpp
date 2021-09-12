@@ -137,7 +137,7 @@ bool FrameLoader::parse_document(DOM::Document& document, const ByteBuffer& data
     return false;
 }
 
-bool FrameLoader::load(const LoadRequest& request, Type type)
+bool FrameLoader::load(LoadRequest& request, Type type)
 {
     if (!request.is_valid()) {
         load_error_page(request.url(), "Invalid request");
