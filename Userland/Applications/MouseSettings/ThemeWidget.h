@@ -8,10 +8,8 @@
 
 #include <LibGUI/Model.h>
 #include <LibGUI/Window.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/CursorParams.h>
 
-#include "DoubleClickArrowWidget.h"
 #include "LibGUI/FilePicker.h"
 
 class MouseCursorModel final : public GUI::Model {

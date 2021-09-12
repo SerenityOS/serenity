@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <LibGUI/Window.h>
-
 #include "DoubleClickArrowWidget.h"
 
 class MouseWidget final : public GUI::Widget {

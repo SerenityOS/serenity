@@ -7,7 +7,6 @@
  */
 
 #include "MouseSettingsWindow.h"
-#include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <unistd.h>

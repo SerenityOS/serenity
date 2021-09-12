@@ -11,7 +11,6 @@
 #include <LibGUI/Slider.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/WindowServerConnection.h>
-#include <WindowServer/Screen.h>
 #include <WindowServer/WindowManager.h>
 
 constexpr double speed_slider_scale = 100.0;

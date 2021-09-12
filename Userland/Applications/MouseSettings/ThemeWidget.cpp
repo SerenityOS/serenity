@@ -8,7 +8,6 @@
 
 #include <Applications/MouseSettings/ThemeWidgetGML.h>
 #include <LibCore/DirIterator.h>
-#include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
