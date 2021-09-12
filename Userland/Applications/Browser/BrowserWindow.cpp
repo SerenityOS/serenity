@@ -377,6 +377,15 @@ void BrowserWindow::build_menus()
     spoof_user_agent_menu.add_action(custom_user_agent);
     m_user_agent_spoof_actions.add_action(custom_user_agent);
 
+    debug_menu.add_separator();
+    auto same_origin_policy_action = GUI::Action::create_checkable(
+        "Enable Same &Origin Policy", [this](auto& action) {
+            active_tab().m_web_content_view->debug_request("same-origin-policy", action.is_checked() ? "on" : "off");
+        },
+        this);
+    same_origin_policy_action->set_checked(true);
+    debug_menu.add_action(same_origin_policy_action);
+
     auto& help_menu = add_menu("&Help");
     help_menu.add_action(WindowActions::the().about_action());
 }

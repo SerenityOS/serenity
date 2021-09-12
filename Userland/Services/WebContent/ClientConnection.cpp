@@ -207,6 +207,10 @@ void ClientConnection::debug_request(const String& request, const String& argume
     if (request == "spoof-user-agent") {
         Web::ResourceLoader::the().set_user_agent(argument);
     }
+
+    if (request == "same-origin-policy") {
+        m_page_host->page().set_same_origin_policy_enabled(argument == "on");
+    }
 }
 
 void ClientConnection::get_source()
