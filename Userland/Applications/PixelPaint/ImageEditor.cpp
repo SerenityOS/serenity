@@ -568,6 +568,15 @@ void ImageEditor::scale_by(float scale_delta)
     }
 }
 
+void ImageEditor::set_pan_origin(Gfx::FloatPoint const& pan_origin)
+{
+    if (m_pan_origin == pan_origin)
+        return;
+
+    m_pan_origin = pan_origin;
+    relayout();
+}
+
 void ImageEditor::fit_image_to_view()
 {
     auto viewport_rect = rect();

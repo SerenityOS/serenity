@@ -58,6 +58,9 @@ public:
     void reset_scale_and_position();
     void scale_by(float);
 
+    void set_pan_origin(Gfx::FloatPoint const&);
+    Gfx::FloatPoint pan_origin() const { return m_pan_origin; }
+
     Color primary_color() const { return m_primary_color; }
     void set_primary_color(Color);
 
