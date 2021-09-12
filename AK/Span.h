@@ -218,7 +218,7 @@ public:
         return *this;
     }
 
-    constexpr bool operator==(Span<const T> other) const
+    constexpr bool operator==(Span const& other) const
     {
         if (size() != other.size())
             return false;
