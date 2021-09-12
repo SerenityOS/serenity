@@ -20,7 +20,7 @@
 
 static String make_input_acceptable_cpp(String const& input)
 {
-    if (input.is_one_of("class", "template", "for", "default", "char", "namespace")) {
+    if (input.is_one_of("class", "template", "for", "default", "char", "namespace", "delete")) {
         StringBuilder builder;
         builder.append(input);
         builder.append('_');
@@ -866,13 +866,13 @@ static void generate_function(SourceGenerator& generator, IDL::Function const& f
     function_generator.set("class_name", class_name);
     function_generator.set("interface_fully_qualified_name", interface_fully_qualified_name);
     function_generator.set("function.name", function.name);
-    function_generator.set("function.name:snakecase", function.name.to_snakecase());
+    function_generator.set("function.name:snakecase", make_input_acceptable_cpp(function.name.to_snakecase()));
 
     if (function.extended_attributes.contains("ImplementedAs")) {
         auto implemented_as = function.extended_attributes.get("ImplementedAs").value();
         function_generator.set("function.cpp_name", implemented_as);
     } else {
-        function_generator.set("function.cpp_name", function.name.to_snakecase());
+        function_generator.set("function.cpp_name", make_input_acceptable_cpp(function.name.to_snakecase()));
     }
 
     function_generator.append(R"~~~(
@@ -1167,7 +1167,7 @@ private:
 
     for (auto& function : interface.static_functions) {
         auto function_generator = generator.fork();
-        function_generator.set("function.name:snakecase", function.name.to_snakecase());
+        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(function.name.to_snakecase()));
         function_generator.append(R"~~~(
     JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@);
 )~~~");
@@ -1320,7 +1320,7 @@ define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::
     for (auto& function : interface.static_functions) {
         auto function_generator = generator.fork();
         function_generator.set("function.name", function.name);
-        function_generator.set("function.name:snakecase", function.name.to_snakecase());
+        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(function.name.to_snakecase()));
         function_generator.set("function.length", String::number(function.length()));
 
         function_generator.append(R"~~~(
@@ -1372,7 +1372,7 @@ private:
 
     for (auto& function : interface.functions) {
         auto function_generator = generator.fork();
-        function_generator.set("function.name:snakecase", function.name.to_snakecase());
+        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(function.name.to_snakecase()));
         function_generator.append(R"~~~(
     JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@);
         )~~~");
@@ -1557,7 +1557,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
     for (auto& function : interface.functions) {
         auto function_generator = generator.fork();
         function_generator.set("function.name", function.name);
-        function_generator.set("function.name:snakecase", function.name.to_snakecase());
+        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(function.name.to_snakecase()));
         function_generator.set("function.length", String::number(function.length()));
 
         function_generator.append(R"~~~(
