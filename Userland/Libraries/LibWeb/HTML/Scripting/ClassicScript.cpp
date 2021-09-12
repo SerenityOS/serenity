@@ -10,7 +10,7 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-classic-script
-NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView source, JS::GlobalObject& global_object, URL base_url, MutedErrors muted_errors)
+NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView source, JS::Realm& realm, URL base_url, MutedErrors muted_errors)
 {
     // 1. If muted errors was not provided, let it be false. (NOTE: This is taken care of by the default argument.)
 
@@ -35,7 +35,7 @@ NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView s
     // FIXME: 9. Set script's parse error and error to rethrow to null.
 
     // 10. Let result be ParseScript(source, settings's Realm, script).
-    auto result = JS::Script::parse(source, global_object, script->filename());
+    auto result = JS::Script::parse(source, realm, script->filename());
 
     // FIXME: 11. If result is a list of errors, then:
     //            1. Set script's parse error and its error to rethrow to result[0].
@@ -53,7 +53,7 @@ JS::Value ClassicScript::run(RethrowErrors rethrow_errors)
 {
     (void)rethrow_errors;
 
-    auto interpreter = JS::Interpreter::create_with_existing_global_object(m_script_record->global_object());
+    auto interpreter = JS::Interpreter::create_with_existing_global_object(m_script_record->realm().global_object());
     interpreter->run(interpreter->global_object(), m_script_record->parse_node());
     auto& vm = interpreter->vm();
     if (vm.exception())

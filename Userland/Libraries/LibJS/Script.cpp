@@ -12,7 +12,7 @@
 namespace JS {
 
 // 16.1.5 ParseScript ( sourceText, realm, hostDefined ), https://tc39.es/ecma262/#sec-parse-script
-NonnullRefPtr<Script> Script::parse(StringView source_text, GlobalObject& global_object, StringView filename)
+NonnullRefPtr<Script> Script::parse(StringView source_text, Realm& realm, StringView filename)
 {
     // 1. Let body be ParseText(sourceText, Script).
     auto body = Parser(Lexer(source_text, filename)).parse_program();
@@ -20,11 +20,11 @@ NonnullRefPtr<Script> Script::parse(StringView source_text, GlobalObject& global
     // FIXME: 2. If body is a List of errors, return body.
 
     // 3. Return Script Record { [[Realm]]: realm, [[ECMAScriptCode]]: body, [[HostDefined]]: hostDefined }.
-    return adopt_ref(*new Script(global_object, move(body)));
+    return adopt_ref(*new Script(realm, move(body)));
 }
 
-Script::Script(GlobalObject& global_object, NonnullRefPtr<Program> parse_node)
-    : m_global_object(make_handle(&global_object))
+Script::Script(Realm& realm, NonnullRefPtr<Program> parse_node)
+    : m_realm(make_handle(&realm))
     , m_parse_node(move(parse_node))
 {
 }
