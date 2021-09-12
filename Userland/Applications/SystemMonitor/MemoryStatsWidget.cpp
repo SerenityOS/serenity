@@ -6,14 +6,11 @@
 
 #include "MemoryStatsWidget.h"
 #include "GraphWidget.h"
-#include <AK/JsonObject.h>
 #include <AK/NumberFormat.h>
 #include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/Painter.h>
 #include <LibGfx/FontDatabase.h>
-#include <LibGfx/StylePainter.h>
 #include <stdlib.h>
 
 static MemoryStatsWidget* s_the;
