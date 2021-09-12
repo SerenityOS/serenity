@@ -8,8 +8,6 @@
 #include "WavLoader.h"
 #include "Buffer.h"
 #include <AK/Debug.h>
-#include <AK/NumericLimits.h>
-#include <AK/OwnPtr.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
 

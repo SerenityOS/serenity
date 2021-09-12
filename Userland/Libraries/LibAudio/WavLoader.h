@@ -14,11 +14,9 @@
 #include <AK/Stream.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
-#include <AK/WeakPtr.h>
 #include <LibAudio/Buffer.h>
 #include <LibAudio/Loader.h>
 #include <LibCore/File.h>
-#include <LibCore/FileStream.h>
 
 namespace Audio {
 class Buffer;

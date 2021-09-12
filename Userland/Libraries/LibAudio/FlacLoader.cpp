@@ -8,7 +8,6 @@
 #include "Buffer.h"
 #include <AK/BitStream.h>
 #include <AK/Debug.h>
-#include <AK/FlyString.h>
 #include <AK/Format.h>
 #include <AK/Math.h>
 #include <AK/ScopeGuard.h>

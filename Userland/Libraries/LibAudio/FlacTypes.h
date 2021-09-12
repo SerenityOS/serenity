@@ -9,7 +9,6 @@
 #include "Buffer.h"
 #include <AK/ByteBuffer.h>
 #include <AK/Types.h>
-#include <AK/Variant.h>
 
 namespace Audio {
 
