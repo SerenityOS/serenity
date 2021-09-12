@@ -53,7 +53,7 @@ JS::Value ClassicScript::run(RethrowErrors rethrow_errors)
 {
     (void)rethrow_errors;
 
-    auto interpreter = JS::Interpreter::create_with_existing_global_object(m_script_record->realm().global_object());
+    auto interpreter = JS::Interpreter::create_with_existing_realm(m_script_record->realm());
     interpreter->run(interpreter->global_object(), m_script_record->parse_node());
     auto& vm = interpreter->vm();
     if (vm.exception())

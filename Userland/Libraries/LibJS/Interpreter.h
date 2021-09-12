@@ -48,7 +48,7 @@ public:
         return interpreter;
     }
 
-    static NonnullOwnPtr<Interpreter> create_with_existing_global_object(GlobalObject&);
+    static NonnullOwnPtr<Interpreter> create_with_existing_realm(Realm&);
 
     ~Interpreter();
 

@@ -203,7 +203,7 @@ Value OrdinaryFunctionObject::execute_function_body()
         ast_interpreter = vm.interpreter_if_exists();
 
         if (!ast_interpreter) {
-            local_interpreter = Interpreter::create_with_existing_global_object(global_object());
+            local_interpreter = Interpreter::create_with_existing_realm(*realm());
             ast_interpreter = local_interpreter.ptr();
         }
 
