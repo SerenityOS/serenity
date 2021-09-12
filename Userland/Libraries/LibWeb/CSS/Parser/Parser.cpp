@@ -1312,12 +1312,16 @@ Optional<StyleProperty> Parser::convert_to_style_property(StyleDeclarationRule& 
 
     auto& property_name = declaration.m_name;
     auto property_id = property_id_from_string(property_name);
-    if (property_id == PropertyID::Invalid && property_name.starts_with("--"))
-        property_id = PropertyID::Custom;
 
-    if (property_id == PropertyID::Invalid && !property_name.starts_with("-")) {
-        dbgln("Parser::convert_to_style_property(): Unrecognized property '{}'", property_name);
-        return {};
+    if (property_id == PropertyID::Invalid) {
+        if (property_name.starts_with("--")) {
+            property_id = PropertyID::Custom;
+        } else if (has_ignored_vendor_prefix(property_name)) {
+            return {};
+        } else if (!property_name.starts_with("-")) {
+            dbgln("Parser::convert_to_style_property(): Unrecognized property '{}'", property_name);
+            return {};
+        }
     }
 
     auto value_token_stream = TokenStream(declaration.m_values);
@@ -3473,6 +3477,17 @@ OwnPtr<CalculatedStyleValue::CalcSum> Parser::parse_calc_sum(ParsingContext cons
     tokens.skip_whitespace();
 
     return make<CalculatedStyleValue::CalcSum>(parsed_calc_product.release_nonnull(), move(additional));
+}
+
+bool Parser::has_ignored_vendor_prefix(StringView const& string)
+{
+    if (!string.starts_with('-'))
+        return false;
+    if (string.starts_with("--"))
+        return false;
+    if (string.starts_with("-libweb-"))
+        return false;
+    return true;
 }
 
 }
