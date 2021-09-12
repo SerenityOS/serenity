@@ -7,9 +7,7 @@
 #pragma once
 
 #include <AK/Bitmap.h>
-#include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
-#include <AK/Vector.h>
 #include <AK/kmalloc.h>
 
 namespace Kernel {

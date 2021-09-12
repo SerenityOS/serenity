@@ -21,7 +21,6 @@
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Sections.h>
-#include <Kernel/StdLib.h>
 
 #define CHUNK_SIZE 32
 #define POOL_SIZE (2 * MiB)
