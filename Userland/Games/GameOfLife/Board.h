@@ -8,7 +8,6 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <LibGfx/Point.h>
 #include <stdio.h>
 
 class Board {
