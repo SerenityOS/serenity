@@ -195,4 +195,9 @@ NonnullRefPtr<CSS::CSSStyleDeclaration> Window::get_computed_style(DOM::Element&
     return CSS::CSSStyleDeclaration::create(move(properties), move(custom_properties));
 }
 
+NonnullRefPtr<CSS::MediaQueryList> Window::match_media(String media)
+{
+    return CSS::MediaQueryList::create(associated_document(), move(media));
+}
+
 }

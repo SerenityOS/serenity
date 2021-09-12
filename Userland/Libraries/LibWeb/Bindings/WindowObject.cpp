@@ -21,6 +21,7 @@
 #include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/HistoryWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
+#include <LibWeb/Bindings/MediaQueryListWrapper.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/PerformanceWrapper.h>
@@ -78,6 +79,7 @@ void WindowObject::initialize_global_object()
     define_native_function("btoa", btoa, 1, attr);
 
     define_native_function("getComputedStyle", get_computed_style, 1, attr);
+    define_native_function("matchMedia", match_media, 1, attr);
 
     // FIXME: These properties should be [Replaceable] according to the spec, but [Writable+Configurable] is the closest we have.
     define_native_accessor("scrollX", scroll_x_getter, {}, attr);
@@ -481,6 +483,17 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_computed_style)
     }
 
     return wrap(global_object, impl->get_computed_style(static_cast<ElementWrapper*>(object)->impl()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::match_media)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    auto media = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    return wrap(global_object, impl->match_media(move(media)));
 }
 
 // https://www.w3.org/TR/cssom-view/#dom-window-scrollx
