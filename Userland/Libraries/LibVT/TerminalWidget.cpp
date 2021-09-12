@@ -14,14 +14,12 @@
 #include <AK/Utf8View.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/MimeData.h>
 #include <LibDesktop/AppFile.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/DragOperation.h>
-#include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Scrollbar.h>
@@ -29,7 +27,6 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
-#include <LibGfx/StylePainter.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>

@@ -12,7 +12,6 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Frame.h>
-#include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
 #include <LibVT/Color.h>
 #include <LibVT/Range.h>
