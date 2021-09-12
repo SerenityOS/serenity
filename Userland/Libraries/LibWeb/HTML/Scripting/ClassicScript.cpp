@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/ElapsedTimer.h>
 #include <LibJS/Interpreter.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 
@@ -51,13 +52,16 @@ NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView s
 // https://html.spec.whatwg.org/multipage/webappapis.html#run-a-classic-script
 JS::Value ClassicScript::run(RethrowErrors rethrow_errors)
 {
+    dbgln("ClassicScript: Running script {}", filename());
     (void)rethrow_errors;
 
+    auto timer = Core::ElapsedTimer::start_new();
     auto interpreter = JS::Interpreter::create_with_existing_realm(m_script_record->realm());
     interpreter->run(interpreter->global_object(), m_script_record->parse_node());
     auto& vm = interpreter->vm();
     if (vm.exception())
         vm.clear_exception();
+    dbgln("ClassicScript: Finished running script {}, Duration: {}ms", filename(), timer.elapsed());
     return vm.last_value();
 }
 
