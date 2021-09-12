@@ -19,6 +19,7 @@ set(SOURCES
     CSS/CSSStyleSheet.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Length.cpp
+    CSS/MediaQueryList.cpp
     CSS/Parser/Parser.cpp
     CSS/Parser/StyleRules.cpp
     CSS/Parser/Token.cpp
@@ -306,6 +307,7 @@ endfunction()
 
 libweb_js_wrapper(CSS/CSSStyleDeclaration)
 libweb_js_wrapper(CSS/CSSStyleSheet)
+libweb_js_wrapper(CSS/MediaQueryList)
 libweb_js_wrapper(CSS/Screen)
 libweb_js_wrapper(CSS/StyleSheet)
 libweb_js_wrapper(CSS/StyleSheetList)
