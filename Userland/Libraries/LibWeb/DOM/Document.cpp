@@ -12,13 +12,11 @@
 #include <LibCore/Timer.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
-#include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Comment.h>
-#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/DocumentType.h>

@@ -7,8 +7,6 @@
 #pragma once
 
 #include <AK/FlyString.h>
-#include <AK/Function.h>
-#include <AK/HashMap.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
@@ -18,7 +16,6 @@
 #include <LibJS/Forward.h>
 #include <LibWeb/Bindings/ScriptExecutionContext.h>
 #include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/CSS/StyleSheetList.h>
 #include <LibWeb/Cookie/Cookie.h>

@@ -9,7 +9,6 @@
 #include <AK/IDAllocator.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
-#include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/NodeWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
@@ -19,7 +18,6 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
-#include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/ProcessingInstruction.h>
 #include <LibWeb/DOM/ShadowRoot.h>

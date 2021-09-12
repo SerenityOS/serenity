@@ -5,7 +5,6 @@
  */
 
 #include <LibWeb/DOM/ProcessingInstruction.h>
-#include <LibWeb/Layout/TextNode.h>
 
 namespace Web::DOM {
 
