@@ -24,6 +24,7 @@
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/PerformanceWrapper.h>
+#include <LibWeb/Bindings/Replaceable.h>
 #include <LibWeb/Bindings/ScreenWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Document.h>
@@ -89,7 +90,7 @@ void WindowObject::initialize_global_object()
     define_native_function("scrollBy", scroll_by, 2, attr);
 
     // Legacy
-    define_native_accessor("event", event_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor("event", event_getter, event_setter, JS::Attribute::Enumerable);
 
     define_direct_property("navigator", heap().allocate<NavigatorObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_direct_property("location", heap().allocate<LocationObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
@@ -437,6 +438,11 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::event_getter)
     if (!impl->current_event())
         return JS::js_undefined();
     return wrap(global_object, const_cast<DOM::Event&>(*impl->current_event()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::event_setter)
+{
+    REPLACEABLE_PROPERTY_SETTER(WindowObject, event);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::inner_width_getter)

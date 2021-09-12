@@ -68,6 +68,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(screen_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(event_getter);
+    JS_DECLARE_NATIVE_FUNCTION(event_setter);
 
     JS_DECLARE_NATIVE_FUNCTION(inner_width_getter);
     JS_DECLARE_NATIVE_FUNCTION(inner_height_getter);
