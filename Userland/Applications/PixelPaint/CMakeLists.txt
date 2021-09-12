@@ -11,6 +11,7 @@ compile_gml(EditGuideDialog.gml EditGuideDialogGML.h edit_guide_dialog_gml)
 set(SOURCES
     BrushTool.cpp
     BucketTool.cpp
+    CloneTool.cpp
     CreateNewImageDialog.cpp
     CreateNewLayerDialog.cpp
     EditGuideDialog.cpp
