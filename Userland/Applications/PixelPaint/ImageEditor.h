@@ -36,6 +36,7 @@ public:
 
     Tool* active_tool() { return m_active_tool; }
     void set_active_tool(Tool*);
+    void update_tool_cursor();
 
     void did_complete_action();
     bool undo();
