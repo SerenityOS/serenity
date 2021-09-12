@@ -9,7 +9,6 @@
 #include <AK/String.h>
 #include <LibCore/IODevice.h>
 #include <LibSQL/Heap.h>
-#include <LibSQL/Serializer.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 

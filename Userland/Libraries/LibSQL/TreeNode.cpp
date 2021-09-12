@@ -6,7 +6,6 @@
 
 #include <AK/Debug.h>
 #include <AK/Format.h>
-#include <AK/NonnullOwnPtr.h>
 #include <AK/StringBuilder.h>
 #include <LibSQL/BTree.h>
 #include <LibSQL/Serializer.h>

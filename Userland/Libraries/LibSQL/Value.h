@@ -7,8 +7,6 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/ByteBuffer.h>
-#include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibSQL/Forward.h>

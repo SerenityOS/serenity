@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
 #include <LibSQL/BTree.h>
-#include <LibSQL/Meta.h>
 
 namespace SQL {
 

@@ -5,7 +5,6 @@
  */
 
 #include <LibSQL/HashIndex.h>
-#include <LibSQL/Heap.h>
 #include <LibSQL/Key.h>
 #include <LibSQL/Serializer.h>
 

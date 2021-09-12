@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
 #include <AK/String.h>
 
 namespace SQL {

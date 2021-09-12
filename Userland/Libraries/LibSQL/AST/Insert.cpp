@@ -6,7 +6,6 @@
 
 #include <LibSQL/AST/AST.h>
 #include <LibSQL/Database.h>
-#include <LibSQL/Meta.h>
 #include <LibSQL/Row.h>
 
 namespace SQL::AST {

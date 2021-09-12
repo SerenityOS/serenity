@@ -11,7 +11,6 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
-#include <LibSQL/AST/Token.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/SQLResult.h>
 #include <LibSQL/Type.h>

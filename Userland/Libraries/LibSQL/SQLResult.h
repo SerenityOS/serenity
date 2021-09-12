@@ -6,11 +6,9 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/Vector.h>
 #include <LibCore/Object.h>
 #include <LibSQL/Tuple.h>
-#include <LibSQL/Type.h>
 
 namespace SQL {
 
