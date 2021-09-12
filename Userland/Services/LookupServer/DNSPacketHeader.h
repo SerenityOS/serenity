@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Endian.h>
 #include <AK/Types.h>
 
 namespace LookupServer {

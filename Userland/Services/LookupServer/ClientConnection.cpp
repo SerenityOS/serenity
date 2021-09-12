@@ -5,7 +5,6 @@
  */
 
 #include "ClientConnection.h"
-#include "DNSPacket.h"
 #include "LookupServer.h"
 #include <AK/IPv4Address.h>
 

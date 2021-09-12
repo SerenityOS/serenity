@@ -7,7 +7,6 @@
 #include "MulticastDNS.h"
 #include "DNSPacket.h"
 #include <AK/IPv4Address.h>
-#include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/String.h>

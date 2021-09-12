@@ -8,7 +8,6 @@
 #include "ClientConnection.h"
 #include "DNSPacket.h"
 #include <AK/Debug.h>
-#include <AK/HashMap.h>
 #include <AK/Random.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>

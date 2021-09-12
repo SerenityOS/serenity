@@ -10,7 +10,6 @@
 #include "DNSPacketHeader.h"
 #include <AK/Debug.h>
 #include <AK/MemoryStream.h>
-#include <AK/StringBuilder.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
 

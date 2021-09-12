@@ -5,7 +5,6 @@
  */
 
 #include "DNSAnswer.h"
-#include <AK/Stream.h>
 #include <time.h>
 
 namespace LookupServer {
