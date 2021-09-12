@@ -12,7 +12,6 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <LibIPC/Forward.h>
-#include <LibIPC/Message.h>
 
 namespace IPC {
 
