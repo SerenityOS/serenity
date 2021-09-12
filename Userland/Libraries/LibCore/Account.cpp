@@ -159,7 +159,7 @@ Result<Account, String> Account::from_uid(uid_t uid, Read options)
     return from_passwd(*pwd, *spwd);
 }
 
-bool Account::authenticate(const char* password) const
+bool Account::authenticate(SecretString const& password) const
 {
     // If there was no shadow entry for this account, authentication always fails.
     if (m_password_hash.is_null())
@@ -170,7 +170,7 @@ bool Account::authenticate(const char* password) const
         return true;
 
     // FIXME: Use crypt_r if it can be built in lagom.
-    char* hash = crypt(password, m_password_hash.characters());
+    char* hash = crypt(password.characters(), m_password_hash.characters());
     return hash != nullptr && strcmp(hash, m_password_hash.characters()) == 0;
 }
 

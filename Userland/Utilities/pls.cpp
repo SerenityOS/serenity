@@ -55,7 +55,7 @@ int main(int argc, char** argv)
             }
 
             auto const& password = password_or_error.value();
-            if (!account.authenticate(password.characters())) {
+            if (!account.authenticate(password)) {
                 warnln("Incorrect or disabled password.");
                 return 1;
             }
