@@ -9,7 +9,6 @@
 #include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopeLogger.h>
-#include <LibCpp/Lexer.h>
 
 #define LOG_SCOPE() ScopeLogger<CPP_DEBUG> logger(String::formatted("'{}' - {} ({})", peek().text(), peek().type_as_string(), m_state.token_index))
 

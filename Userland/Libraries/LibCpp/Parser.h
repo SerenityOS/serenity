@@ -10,7 +10,6 @@
 #include "AST.h"
 #include "Preprocessor.h"
 #include <AK/Noncopyable.h>
-#include <LibCpp/Lexer.h>
 
 namespace Cpp {
 
