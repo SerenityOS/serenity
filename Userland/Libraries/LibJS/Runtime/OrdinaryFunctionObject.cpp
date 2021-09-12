@@ -43,7 +43,7 @@ OrdinaryFunctionObject::OrdinaryFunctionObject(GlobalObject& global_object, cons
     , m_body(body)
     , m_parameters(move(parameters))
     , m_environment(parent_scope)
-    , m_realm(vm().current_realm())
+    , m_realm(vm().interpreter_if_exists() ? &vm().interpreter().realm() : nullptr)
     , m_function_length(function_length)
     , m_kind(kind)
     , m_is_strict(is_strict)
