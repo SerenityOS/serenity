@@ -5,7 +5,6 @@
  */
 
 #include "CharacterMap.h"
-#include <AK/StringBuilder.h>
 
 #ifndef KERNEL
 #    include <LibKeyboard/CharacterMapFile.h>
