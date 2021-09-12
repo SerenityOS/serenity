@@ -7,7 +7,6 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
-#include <sys/ioctl_numbers.h>
 #include <sys/kcov.h>
 #include <sys/mman.h>
 #include <unistd.h>

@@ -5,10 +5,8 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
-#include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>

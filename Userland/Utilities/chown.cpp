@@ -5,7 +5,6 @@
  */
 
 #include <AK/String.h>
-#include <AK/Vector.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>

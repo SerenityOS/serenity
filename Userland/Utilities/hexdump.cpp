@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <ctype.h>

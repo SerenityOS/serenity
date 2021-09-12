@@ -6,7 +6,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
 #include <AK/Format.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/StringBuilder.h>
@@ -14,10 +13,8 @@
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibJS/AST.h>
-#include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
-#include <LibJS/Bytecode/PassManager.h>
 #include <LibJS/Console.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
@@ -38,7 +35,6 @@
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/OrdinaryFunctionObject.h>
-#include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Promise.h>
 #include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/RegExpObject.h>

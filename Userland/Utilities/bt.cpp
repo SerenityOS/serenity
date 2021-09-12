@@ -9,7 +9,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibSymbolication/Symbolication.h>
 #include <unistd.h>
 

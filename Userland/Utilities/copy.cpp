@@ -5,7 +5,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>

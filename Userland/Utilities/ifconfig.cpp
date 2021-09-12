@@ -6,7 +6,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/IPv4Address.h>
-#include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/NumberFormat.h>
 #include <AK/String.h>

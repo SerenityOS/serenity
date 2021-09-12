@@ -7,10 +7,8 @@
 #include <AK/Assertions.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
-#include <AK/StringBuilder.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
 #include <LibDebug/DebugSession.h>
 #include <LibELF/Image.h>
 #include <LibX86/Disassembler.h>

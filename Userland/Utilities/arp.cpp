@@ -10,7 +10,6 @@
 #include <AK/MACAddress.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
-#include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <net/if_arp.h>

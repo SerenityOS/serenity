@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringUtils.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <alloca.h>

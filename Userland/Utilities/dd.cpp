@@ -6,7 +6,6 @@
 
 #include <AK/Optional.h>
 #include <AK/String.h>
-#include <AK/Vector.h>
 #include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>

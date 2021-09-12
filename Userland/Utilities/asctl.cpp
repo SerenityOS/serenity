@@ -7,11 +7,9 @@
 
 #include <AK/Variant.h>
 #include <AK/Vector.h>
-#include <LibAudio/Buffer.h>
 #include <LibAudio/ClientConnection.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
 
