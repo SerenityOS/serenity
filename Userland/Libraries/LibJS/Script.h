@@ -10,7 +10,7 @@
 #include <AK/RefCounted.h>
 #include <LibJS/AST.h>
 #include <LibJS/Heap/Handle.h>
-#include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Realm.h>
 
 namespace JS {
 
@@ -18,16 +18,16 @@ namespace JS {
 class Script : public RefCounted<Script> {
 public:
     ~Script();
-    static NonnullRefPtr<Script> parse(StringView source_text, GlobalObject&, StringView filename = {});
+    static NonnullRefPtr<Script> parse(StringView source_text, Realm&, StringView filename = {});
 
-    GlobalObject& global_object() { return *m_global_object.cell(); }
+    Realm& realm() { return *m_realm.cell(); }
     Program const& parse_node() const { return *m_parse_node; }
 
 private:
-    Script(GlobalObject&, NonnullRefPtr<Program>);
+    Script(Realm&, NonnullRefPtr<Program>);
 
-    Handle<GlobalObject> m_global_object;
-    NonnullRefPtr<Program> m_parse_node;
+    Handle<Realm> m_realm;               // [[Realm]]
+    NonnullRefPtr<Program> m_parse_node; // [[ECMAScriptCode]]
 };
 
 }
