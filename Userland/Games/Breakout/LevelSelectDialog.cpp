@@ -8,7 +8,6 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/ListView.h>
 
 namespace Breakout {
 
