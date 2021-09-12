@@ -52,12 +52,29 @@ void CloneTool::draw_line(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::Int
     BrushTool::draw_line(bitmap, color, start, end);
 }
 
+void CloneTool::on_mousemove(Layer* layer, MouseEvent& event)
+{
+    auto& image_event = event.image_event();
+    if (image_event.alt())
+        return;
+
+    if (m_cursor_offset.has_value()) {
+        m_sample_location = image_event.position() - m_cursor_offset.value();
+        // FIXME: This is a really inefficient way to update the marker's location
+        m_editor->update();
+    }
+
+    BrushTool::on_mousemove(layer, event);
+}
+
 void CloneTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
     auto& image_event = event.image_event();
     if (image_event.alt()) {
         m_sample_location = image_event.position();
         m_cursor_offset = {};
+        // FIXME: This is a really dumb way to get the marker to show up
+        m_editor->update();
         return;
     }
 
@@ -68,6 +85,26 @@ void CloneTool::on_mousedown(Layer* layer, MouseEvent& event)
         m_cursor_offset = event.image_event().position() - m_sample_location.value();
 
     BrushTool::on_mousedown(layer, event);
+}
+
+void CloneTool::on_second_paint(Layer const*, GUI::PaintEvent& event)
+{
+    if (!m_sample_location.has_value())
+        return;
+
+    GUI::Painter painter(*m_editor);
+    painter.add_clip_rect(event.rect());
+
+    auto sample_pos = m_editor->image_position_to_editor_position(m_sample_location.value());
+    // We don't want the marker to be a single pixel and hide the color.
+    auto offset = AK::max(2, size() / 2);
+    Gfx::IntRect rect = {
+        (int)sample_pos.x() - offset,
+        (int)sample_pos.y() - offset,
+        offset * 2,
+        offset * 2
+    };
+    painter.draw_ellipse_intersecting(rect, m_marker_color, 1);
 }
 
 void CloneTool::on_keydown(GUI::KeyEvent& event)
