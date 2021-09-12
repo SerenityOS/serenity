@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibCore/ElapsedTimer.h>
 #include <LibGfx/Bitmap.h>
 
 namespace Gfx {

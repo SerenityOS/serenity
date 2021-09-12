@@ -5,10 +5,8 @@
  */
 
 #include <AK/Bitmap.h>
-#include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
-#include <AK/LexicalPath.h>
 #include <AK/Math.h>
 #include <AK/MemoryStream.h>
 #include <AK/String.h>

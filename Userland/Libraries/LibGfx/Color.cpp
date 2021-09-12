@@ -7,9 +7,7 @@
 #include <AK/Assertions.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
-#include <AK/Vector.h>
 #include <LibGfx/Color.h>
-#include <LibGfx/SystemTheme.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
 #include <ctype.h>

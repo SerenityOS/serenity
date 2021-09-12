@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <LibGfx/Forward.h>

@@ -9,7 +9,6 @@
 #include <AK/Memory.h>
 #include <AK/MemoryStream.h>
 #include <AK/Optional.h>
-#include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <LibGfx/BMPLoader.h>
 #include <LibGfx/Bitmap.h>

@@ -8,7 +8,6 @@
 
 #include <AK/Forward.h>
 #include <AK/String.h>
-#include <AK/Types.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGfx/Color.h>

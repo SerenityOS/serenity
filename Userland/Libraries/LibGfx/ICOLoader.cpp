@@ -4,12 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
 #include <AK/MemoryStream.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/Types.h>
 #include <LibGfx/ICOLoader.h>
 #include <LibGfx/PNGLoader.h>

@@ -8,7 +8,6 @@
 
 #include <AK/MappedFile.h>
 #include <AK/String.h>
-#include <AK/Vector.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibGfx/Size.h>

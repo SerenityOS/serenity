@@ -10,7 +10,6 @@
 #include "AK/Forward.h"
 #include "LibGfx/Forward.h"
 #include <AK/String.h>
-#include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibGfx/Font.h>

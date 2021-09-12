@@ -8,7 +8,6 @@
 
 #include <AK/RefPtr.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Size.h>
 
 namespace Gfx {
 

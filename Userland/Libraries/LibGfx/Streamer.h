@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Array.h>
-#include <AK/Endian.h>
 #include <AK/Types.h>
 #include <string.h>
 
