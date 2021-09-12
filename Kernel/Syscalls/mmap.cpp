@@ -7,14 +7,10 @@
 
 #include <Kernel/Arch/x86/MSR.h>
 #include <Kernel/Arch/x86/SmapDisabler.h>
-#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
-#include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Memory/PrivateInodeVMObject.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
-#include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <LibC/limits.h>

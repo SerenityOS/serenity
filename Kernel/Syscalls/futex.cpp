@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
