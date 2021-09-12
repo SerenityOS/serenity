@@ -7,7 +7,6 @@
 #pragma once
 
 #include <LibGUI/Model.h>
-#include <LibIMAP/Objects.h>
 
 struct InboxEntry {
     String from;
