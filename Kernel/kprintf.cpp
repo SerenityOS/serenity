@@ -7,7 +7,7 @@
 #include <AK/PrintfImplementation.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
-#include <Kernel/ConsoleDevice.h>
+#include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/IO.h>
