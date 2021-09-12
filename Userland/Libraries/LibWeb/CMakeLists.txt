@@ -230,6 +230,7 @@ set(SOURCES
     UIEvents/EventNames.cpp
     UIEvents/MouseEvent.cpp
     URL/URL.cpp
+    URL/URLSearchParams.cpp
     WebAssembly/WebAssemblyInstanceConstructor.cpp
     WebAssembly/WebAssemblyInstanceObject.cpp
     WebAssembly/WebAssemblyInstanceObjectPrototype.cpp
@@ -420,6 +421,7 @@ libweb_js_wrapper(UIEvents/UIEvent)
 libweb_js_wrapper(XHR/ProgressEvent)
 libweb_js_wrapper(XHR/XMLHttpRequest)
 libweb_js_wrapper(XHR/XMLHttpRequestEventTarget)
+libweb_js_wrapper(URL/URLSearchParams)
 
 add_custom_command(
     OUTPUT CSS/PropertyID.h

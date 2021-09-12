@@ -227,6 +227,8 @@
 #include <LibWeb/Bindings/TextPrototype.h>
 #include <LibWeb/Bindings/UIEventConstructor.h>
 #include <LibWeb/Bindings/UIEventPrototype.h>
+#include <LibWeb/Bindings/URLSearchParamsConstructor.h>
+#include <LibWeb/Bindings/URLSearchParamsPrototype.h>
 #include <LibWeb/Bindings/WebSocketConstructor.h>
 #include <LibWeb/Bindings/WebSocketPrototype.h>
 #include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
@@ -356,6 +358,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(SVGSVGElement)             \
     ADD_WINDOW_OBJECT_INTERFACE(Text)                      \
     ADD_WINDOW_OBJECT_INTERFACE(UIEvent)                   \
+    ADD_WINDOW_OBJECT_INTERFACE(URLSearchParams)           \
     ADD_WINDOW_OBJECT_INTERFACE(WebSocket)                 \
     ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequest)            \
     ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequestEventTarget) \

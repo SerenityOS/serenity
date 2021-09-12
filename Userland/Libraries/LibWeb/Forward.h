@@ -205,6 +205,7 @@ class XMLHttpRequestEventTarget;
 }
 
 namespace Web::URL {
+class URLSearchParams;
 }
 
 namespace Web::Bindings {
@@ -332,5 +333,7 @@ class XMLHttpRequestEventTargetWrapper;
 class RangeConstructor;
 class RangePrototype;
 class RangeWrapper;
-
+class URLSearchParamsConstructor;
+class URLSearchParamsPrototype;
+class URLSearchParamsWrapper;
 }
