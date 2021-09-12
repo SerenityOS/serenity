@@ -8,7 +8,6 @@
 #include <AK/NumberFormat.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/WindowServerConnection.h>
-#include <LibGfx/Font.h>
 #include <WindowServer/WindowManager.h>
 
 REGISTER_WIDGET(SpaceAnalyzer, TreeMapWidget)
