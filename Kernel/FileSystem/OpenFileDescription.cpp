@@ -6,6 +6,7 @@
  */
 
 #include <AK/MemoryStream.h>
+#include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Custody.h>
@@ -20,7 +21,6 @@
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/UnixTypes.h>
-#include <LibC/errno_numbers.h>
 
 namespace Kernel {
 

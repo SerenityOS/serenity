@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <errno_numbers.h>
+#include <errno_codes.h>
 #include <sys/cdefs.h>
 
 #define __RETURN_WITH_ERRNO(rc, good_ret, bad_ret) \

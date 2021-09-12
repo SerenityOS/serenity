@@ -8,7 +8,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <errno.h>
-#include <errno_numbers.h>
+#include <errno_codes.h>
 #include <grp.h>
 #include <stdio.h>
 #include <stdlib.h>

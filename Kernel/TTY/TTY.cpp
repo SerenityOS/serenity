@@ -6,11 +6,11 @@
 
 #include <AK/ScopeGuard.h>
 #include <AK/StringView.h>
+#include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Process.h>
 #include <Kernel/TTY/TTY.h>
-#include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 #define TTYDEFCHARS
