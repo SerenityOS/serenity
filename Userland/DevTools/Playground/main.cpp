@@ -221,7 +221,8 @@ int main(int argc, char** argv)
     file_menu.add_separator();
 
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
-        app->quit();
+        if (window->on_close_request() == GUI::Window::CloseRequestDecision::Close)
+            app->quit();
     }));
 
     auto& edit_menu = window->add_menu("&Edit");
