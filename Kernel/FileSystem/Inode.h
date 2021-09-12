@@ -87,7 +87,8 @@ public:
     void set_shared_vmobject(Memory::SharedInodeVMObject&);
     RefPtr<Memory::SharedInodeVMObject> shared_vmobject() const;
 
-    static void sync();
+    static void sync_all();
+    void sync();
 
     bool has_watchers() const { return !m_watchers.is_empty(); }
 

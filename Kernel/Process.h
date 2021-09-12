@@ -363,6 +363,7 @@ public:
     KResultOr<FlatPtr> sys$fchmod(int fd, mode_t);
     KResultOr<FlatPtr> sys$chown(Userspace<const Syscall::SC_chown_params*>);
     KResultOr<FlatPtr> sys$fchown(int fd, UserID, GroupID);
+    KResultOr<FlatPtr> sys$fsync(int fd);
     KResultOr<FlatPtr> sys$socket(int domain, int type, int protocol);
     KResultOr<FlatPtr> sys$bind(int sockfd, Userspace<const sockaddr*> addr, socklen_t);
     KResultOr<FlatPtr> sys$listen(int sockfd, int backlog);

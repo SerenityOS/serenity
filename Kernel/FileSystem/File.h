@@ -96,6 +96,7 @@ public:
     virtual String absolute_path(const OpenFileDescription&) const = 0;
 
     virtual KResult truncate(u64) { return EINVAL; }
+    virtual KResult sync() { return EINVAL; }
     virtual KResult chown(OpenFileDescription&, UserID, GroupID) { return EBADF; }
     virtual KResult chmod(OpenFileDescription&, mode_t) { return EBADF; }
 

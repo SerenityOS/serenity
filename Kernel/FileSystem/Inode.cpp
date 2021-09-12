@@ -29,7 +29,7 @@ SpinlockProtected<Inode::AllInstancesList>& Inode::all_instances()
     return s_all_instances;
 }
 
-void Inode::sync()
+void Inode::sync_all()
 {
     NonnullRefPtrVector<Inode, 32> inodes;
     Inode::all_instances().with([&](auto& all_inodes) {
@@ -43,6 +43,13 @@ void Inode::sync()
         VERIFY(inode.is_metadata_dirty());
         inode.flush_metadata();
     }
+}
+
+void Inode::sync()
+{
+    if (is_metadata_dirty())
+        flush_metadata();
+    fs().flush_writes();
 }
 
 KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(OpenFileDescription* description) const

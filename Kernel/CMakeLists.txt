@@ -204,6 +204,7 @@ set(KERNEL_SOURCES
     Syscalls/exit.cpp
     Syscalls/fcntl.cpp
     Syscalls/fork.cpp
+    Syscalls/fsync.cpp
     Syscalls/ftruncate.cpp
     Syscalls/futex.cpp
     Syscalls/get_dir_entries.cpp

@@ -51,7 +51,7 @@ FileSystem::DirectoryEntryView::DirectoryEntryView(const StringView& n, InodeIde
 
 void FileSystem::sync()
 {
-    Inode::sync();
+    Inode::sync_all();
 
     NonnullRefPtrVector<FileSystem, 32> file_systems;
     {
