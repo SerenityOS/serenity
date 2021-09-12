@@ -9,7 +9,6 @@
 #include <AK/Format.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>

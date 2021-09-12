@@ -8,7 +8,6 @@
 
 #include <AK/Debug.h>
 #include <AK/Function.h>
-#include <AK/ScopeGuard.h>
 
 namespace PDF {
 
