@@ -6,6 +6,7 @@
 
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/DOM/Document.h>
@@ -303,7 +304,7 @@ void HTMLScriptElement::prepare_script()
                     document().interpreter();
 
                     // FIXME: This is all ad-hoc and needs work.
-                    auto script = ClassicScript::create(url.to_string(), data, *document().window().wrapper(), URL());
+                    auto script = ClassicScript::create(url.to_string(), data, document().interpreter().realm(), URL());
 
                     // When the chosen algorithm asynchronously completes, set the script's script to the result. At that time, the script is ready.
                     m_script = script;
@@ -330,7 +331,7 @@ void HTMLScriptElement::prepare_script()
             document().interpreter();
 
             // FIXME: Pass settings, base URL and options.
-            auto script = ClassicScript::create(m_document->url().to_string(), source_text, *document().window().wrapper(), URL());
+            auto script = ClassicScript::create(m_document->url().to_string(), source_text, document().interpreter().realm(), URL());
 
             // 2. Set the script's script to script.
             m_script = script;
