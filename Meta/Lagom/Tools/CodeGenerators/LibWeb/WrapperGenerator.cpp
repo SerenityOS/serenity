@@ -136,6 +136,8 @@ struct Interface {
     Vector<Constructor> constructors;
     Vector<Function> functions;
     Vector<Function> static_functions;
+    bool has_stringifier { false };
+    Optional<String> stringifier_attribute;
 
     // Added for convenience after parsing
     String wrapper_class;
@@ -333,6 +335,16 @@ static OwnPtr<Interface> parse_interface(StringView filename, StringView const& 
         interface->constructors.append(Constructor { interface->name, move(parameters) });
     };
 
+    auto parse_stringifier = [&](HashMap<String, String>& extended_attributes) {
+        assert_string("stringifier");
+        interface->has_stringifier = true;
+        if (lexer.next_is("readonly") || lexer.next_is("attribute")) {
+            parse_attribute(extended_attributes);
+            interface->stringifier_attribute = interface->attributes.last().name;
+        }
+        assert_specific(';');
+    };
+
     for (;;) {
         HashMap<String, String> extended_attributes;
 
@@ -355,6 +367,11 @@ static OwnPtr<Interface> parse_interface(StringView filename, StringView const& 
 
         if (lexer.next_is("const")) {
             parse_constant();
+            continue;
+        }
+
+        if (lexer.next_is("stringifier")) {
+            parse_stringifier(extended_attributes);
             continue;
         }
 
@@ -1378,6 +1395,13 @@ private:
         )~~~");
     }
 
+    if (interface.has_stringifier) {
+        auto stringifier_generator = generator.fork();
+        stringifier_generator.append(R"~~~(
+    JS_DECLARE_NATIVE_FUNCTION(to_string);
+        )~~~");
+    }
+
     for (auto& attribute : interface.attributes) {
         auto attribute_generator = generator.fork();
         attribute_generator.set("attribute.name:snakecase", attribute.name.to_snakecase());
@@ -1565,12 +1589,19 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 )~~~");
     }
 
+    if (interface.has_stringifier) {
+        auto stringifier_generator = generator.fork();
+        stringifier_generator.append(R"~~~(
+    define_native_function("toString", to_string, 0, default_attributes);
+)~~~");
+    }
+
     generator.append(R"~~~(
     Object::initialize(global_object);
 }
 )~~~");
 
-    if (!interface.attributes.is_empty() || !interface.functions.is_empty()) {
+    if (!interface.attributes.is_empty() || !interface.functions.is_empty() || interface.has_stringifier) {
         generator.append(R"~~~(
 static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 {
@@ -1701,6 +1732,41 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
     // Implementation: Functions
     for (auto& function : interface.functions) {
         generate_function(generator, function, StaticFunction::No, interface.prototype_class, interface.fully_qualified_name);
+    }
+
+    if (interface.has_stringifier) {
+        auto stringifier_generator = generator.fork();
+        stringifier_generator.set("class_name", interface.prototype_class);
+        if (interface.stringifier_attribute.has_value())
+            stringifier_generator.set("attribute.cpp_getter_name", interface.stringifier_attribute->to_snakecase());
+
+        stringifier_generator.append(R"~~~(
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+
+)~~~");
+        if (interface.stringifier_attribute.has_value()) {
+            stringifier_generator.append(R"~~~(
+    auto retval = impl->@attribute.cpp_getter_name@();
+)~~~");
+        } else {
+            stringifier_generator.append(R"~~~(
+    auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return impl->to_string(); });
+
+    if (should_return_empty(result))
+        return JS::Value();
+
+    auto retval = result.release_value();
+)~~~");
+        }
+        stringifier_generator.append(R"~~~(
+
+    return JS::js_string(vm, move(retval));
+}
+)~~~");
     }
 
     generator.append(R"~~~(
