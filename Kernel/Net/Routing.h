@@ -8,7 +8,6 @@
 
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/NetworkAdapter.h>
-#include <Kernel/Thread.h>
 
 namespace Kernel {
 

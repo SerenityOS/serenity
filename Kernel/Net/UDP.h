@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include <Kernel/Net/IPv4.h>
+#include <AK/Endian.h>
+#include <AK/Types.h>
 
 namespace Kernel {
 
