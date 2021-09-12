@@ -10,10 +10,8 @@
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/FilePicker.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Toolbar.h>

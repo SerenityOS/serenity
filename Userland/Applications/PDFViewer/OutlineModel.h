@@ -7,7 +7,6 @@
 #pragma once
 
 #include <LibGUI/Model.h>
-#include <LibGUI/TreeView.h>
 #include <LibPDF/Document.h>
 
 class OutlineModel final : public GUI::Model {

@@ -5,7 +5,6 @@
  */
 
 #include "PDFViewer.h"
-#include <LibGUI/Action.h>
 #include <LibGUI/Painter.h>
 #include <LibPDF/Renderer.h>
 

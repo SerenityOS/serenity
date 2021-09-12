@@ -10,7 +10,6 @@
 #include "PDFViewer.h"
 #include "SidebarWidget.h"
 #include <LibGUI/Action.h>
-#include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 
 class PDFViewer;
