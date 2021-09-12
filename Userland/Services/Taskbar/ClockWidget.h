@@ -6,9 +6,7 @@
 
 #pragma once
 
-#include <LibCore/DateTime.h>
 #include <LibCore/Timer.h>
-#include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Calendar.h>

@@ -6,10 +6,8 @@
 
 #include "TaskbarButton.h"
 #include "WindowList.h"
-#include <LibGUI/Action.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/WindowManagerServerConnection.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
