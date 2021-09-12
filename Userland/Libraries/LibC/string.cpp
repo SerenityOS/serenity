@@ -6,6 +6,7 @@
 
 #include <AK/Format.h>
 #include <AK/MemMem.h>
+#include <AK/Memory.h>
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
@@ -481,8 +482,6 @@ size_t strxfrm(char* dest, const char* src, size_t n)
 
 void explicit_bzero(void* ptr, size_t size)
 {
-    memset(ptr, 0, size);
-    asm volatile("" ::
-                     : "memory");
+    secure_zero(ptr, size);
 }
 }
