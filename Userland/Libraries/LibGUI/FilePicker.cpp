@@ -179,7 +179,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
     ok_button.on_click = [this](auto) {
         on_file_return();
     };
-    ok_button.set_enabled(!m_filename_textbox->text().is_empty());
+    ok_button.set_enabled(m_mode == Mode::OpenFolder || !m_filename_textbox->text().is_empty());
 
     auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
     cancel_button.set_text("Cancel");
@@ -188,7 +188,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
     };
 
     m_filename_textbox->on_change = [&] {
-        ok_button.set_enabled(!m_filename_textbox->text().is_empty());
+        ok_button.set_enabled(m_mode == Mode::OpenFolder || !m_filename_textbox->text().is_empty());
     };
 
     m_view->on_selection_change = [this] {
