@@ -24,7 +24,6 @@
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SpinBox.h>
@@ -33,7 +32,6 @@
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/BitmapFont.h>
-#include <LibGfx/Palette.h>
 #include <LibGfx/TextDirection.h>
 #include <stdlib.h>
 

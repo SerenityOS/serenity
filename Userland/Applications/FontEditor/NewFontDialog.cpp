@@ -13,7 +13,6 @@
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/FontPickerWeightModel.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TextBox.h>

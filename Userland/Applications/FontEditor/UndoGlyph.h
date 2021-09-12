@@ -7,7 +7,6 @@
 #pragma once
 
 #include <LibGUI/Command.h>
-#include <LibGUI/UndoStack.h>
 #include <LibGfx/BitmapFont.h>
 
 class UndoGlyph : public RefCounted<UndoGlyph> {
