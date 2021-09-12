@@ -9,7 +9,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
-#include <LibGfx/Rect.h>
 
 MagnifierWidget::MagnifierWidget()
 {
