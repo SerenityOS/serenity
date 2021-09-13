@@ -42,7 +42,7 @@ void TLSv12WebSocketConnectionImpl::connect(ConnectionInfo const& connection)
     m_socket->on_tls_certificate_request = [](auto&) {
         // FIXME : Once we handle TLS certificate requests, handle it here as well.
     };
-    bool success = m_socket->connect(connection.url().host(), connection.url().port());
+    bool success = m_socket->connect(connection.url().host(), connection.url().port_or_default());
     if (!success) {
         deferred_invoke([this] {
             on_connection_error();
