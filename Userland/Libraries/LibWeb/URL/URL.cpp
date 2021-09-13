@@ -75,4 +75,9 @@ DOM::ExceptionOr<void> URL::set_href(String const& href)
     return {};
 }
 
+URLSearchParams const* URL::search_params() const
+{
+    return m_query;
+}
+
 }

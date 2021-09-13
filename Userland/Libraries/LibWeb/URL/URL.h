@@ -31,6 +31,8 @@ public:
     String href() const;
     DOM::ExceptionOr<void> set_href(String const&);
 
+    URLSearchParams const* search_params() const;
+
     String to_json() const;
 
     void set_query(Badge<URLSearchParams>, String query) { m_url.set_query(move(query)); }
