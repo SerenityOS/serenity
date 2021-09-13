@@ -13,7 +13,9 @@ interface Element : Node {
     HTMLCollection getElementsByTagName(DOMString tagName);
     HTMLCollection getElementsByClassName(DOMString className);
 
-    [LegacyNullToEmptyString] attribute DOMString innerHTML;
+    // FIXME: This should come from a InnerHTML mixin.
+    [LegacyNullToEmptyString, CEReactions] attribute DOMString innerHTML;
+
     [Reflect] attribute DOMString id;
     [Reflect=class] attribute DOMString className;
 

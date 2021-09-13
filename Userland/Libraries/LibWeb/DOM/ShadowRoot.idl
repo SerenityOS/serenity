@@ -3,4 +3,7 @@ interface ShadowRoot : DocumentFragment {
     readonly attribute DOMString mode;
     readonly attribute Element host;
 
+    // FIXME: This should come from a InnerHTML mixin.
+    [LegacyNullToEmptyString] attribute DOMString innerHTML;
+
 };
