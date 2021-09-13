@@ -19,9 +19,6 @@ ExceptionOr<RefPtr<Element>> ParentNode::query_selector(StringView selector_text
 
     auto selectors = maybe_selectors.value();
 
-    for (auto& selector : selectors)
-        dump_selector(selector);
-
     RefPtr<Element> result;
     for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
         for (auto& selector : selectors) {
@@ -43,9 +40,6 @@ ExceptionOr<NonnullRefPtrVector<Element>> ParentNode::query_selector_all(StringV
         return DOM::SyntaxError::create("Failed to parse selector");
 
     auto selectors = maybe_selectors.value();
-
-    for (auto& selector : selectors)
-        dump_selector(selector);
 
     NonnullRefPtrVector<Element> elements;
     for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
