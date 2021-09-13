@@ -17,7 +17,7 @@ namespace AK {
 
 // FIXME: It could make sense to force users of URL to use URLParser::parse() explicitly instead of using a constructor.
 URL::URL(StringView const& string)
-    : URL(URLParser::parse({}, string))
+    : URL(URLParser::parse(string))
 {
     if constexpr (URL_PARSER_DEBUG) {
         if (m_valid)
@@ -44,7 +44,7 @@ URL URL::complete_url(String const& string) const
     if (!is_valid())
         return {};
 
-    return URLParser::parse({}, string, this);
+    return URLParser::parse(string, this);
 }
 
 void URL::set_scheme(String scheme)

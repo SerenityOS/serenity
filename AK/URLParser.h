@@ -55,7 +55,7 @@ public:
         VERIFY_NOT_REACHED();
     }
 
-    static URL parse(Badge<URL>, StringView const& input, URL const* base_url = nullptr);
+    static URL parse(StringView const& input, URL const* base_url = nullptr, Optional<URL> url = {}, Optional<State> state_override = {});
 
 private:
     static Optional<URL> parse_data_url(StringView const& raw_input);
