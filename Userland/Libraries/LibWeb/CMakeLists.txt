@@ -422,6 +422,7 @@ libweb_js_wrapper(UIEvents/UIEvent)
 libweb_js_wrapper(XHR/ProgressEvent)
 libweb_js_wrapper(XHR/XMLHttpRequest)
 libweb_js_wrapper(XHR/XMLHttpRequestEventTarget)
+libweb_js_wrapper(URL/URL)
 libweb_js_wrapper(URL/URLSearchParams)
 
 add_custom_command(

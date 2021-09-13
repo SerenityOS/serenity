@@ -7,6 +7,7 @@
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
+#include <LibWeb/URL/URL.h>
 #include <LibWeb/URL/URLSearchParams.h>
 
 namespace Web::URL {
@@ -97,11 +98,16 @@ void URLSearchParams::append(String const& name, String const& value)
 
 void URLSearchParams::update()
 {
-    // TODO
     // 1. If query’s URL object is null, then return.
+    if (m_url.is_null())
+        return;
     // 2. Let serializedQuery be the serialization of query’s list.
+    auto serialized_query = to_string();
     // 3. If serializedQuery is the empty string, then set serializedQuery to null.
+    if (serialized_query.is_empty())
+        serialized_query = {};
     // 4. Set query’s URL object’s URL’s query to serializedQuery.
+    m_url->set_query({}, move(serialized_query));
 }
 
 void URLSearchParams::delete_(String const& name)

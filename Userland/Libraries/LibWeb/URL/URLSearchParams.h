@@ -43,12 +43,15 @@ public:
     String to_string();
 
 private:
+    friend class URL;
+
     explicit URLSearchParams(Vector<QueryParam> list)
         : m_list(move(list)) {};
 
     void update();
 
     Vector<QueryParam> m_list;
+    WeakPtr<URL> m_url;
 };
 
 }
