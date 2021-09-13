@@ -615,7 +615,7 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         float used_main_space = 0;
         size_t auto_margins = 0;
         for (auto& flex_item : flex_line.items) {
-            used_main_space += flex_item->cross_size;
+            used_main_space += flex_item->main_size;
             if (is_main_axis_margin_first_auto(flex_item->box))
                 ++auto_margins;
             if (is_main_axis_margin_second_auto(flex_item->box))
