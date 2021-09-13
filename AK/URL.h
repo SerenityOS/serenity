@@ -46,7 +46,7 @@ public:
     {
     }
 
-    bool const& is_valid() const { return m_valid; }
+    bool is_valid() const { return m_valid; }
 
     String const& scheme() const { return m_scheme; }
     String const& protocol() const { return m_scheme; }
@@ -57,7 +57,7 @@ public:
     String const& query() const { return m_query; }
     String const& fragment() const { return m_fragment; }
     u16 port() const { return m_port ? m_port : default_port_for_scheme(m_scheme); }
-    bool const& cannot_be_a_base_url() const { return m_cannot_be_a_base_url; }
+    bool cannot_be_a_base_url() const { return m_cannot_be_a_base_url; }
 
     bool includes_credentials() const { return !m_username.is_empty() || !m_password.is_empty(); }
     bool is_special() const { return is_special_scheme(m_scheme); }
