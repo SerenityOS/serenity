@@ -337,12 +337,14 @@ static OwnPtr<Interface> parse_interface(StringView filename, StringView const& 
 
     auto parse_stringifier = [&](HashMap<String, String>& extended_attributes) {
         assert_string("stringifier");
+        consume_whitespace();
         interface->has_stringifier = true;
         if (lexer.next_is("readonly") || lexer.next_is("attribute")) {
             parse_attribute(extended_attributes);
             interface->stringifier_attribute = interface->attributes.last().name;
+        } else {
+            assert_specific(';');
         }
-        assert_specific(';');
     };
 
     for (;;) {
