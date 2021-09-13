@@ -31,6 +31,14 @@ public:
     String href() const;
     DOM::ExceptionOr<void> set_href(String const&);
 
+    String origin() const;
+
+    String username() const;
+    void set_username(String const&);
+
+    String password() const;
+    void set_password(String const&);
+
     URLSearchParams const* search_params() const;
 
     String to_json() const;

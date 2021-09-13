@@ -2,10 +2,10 @@ interface URL {
     constructor(USVString url, optional USVString base);
 
     stringifier attribute USVString href;
-    // TODO: readonly attribute USVString origin;
+    readonly attribute USVString origin;
     // TODO: attribute USVString protocol;
-    // TODO: attribute USVString username;
-    // TODO: attribute USVString password;
+    attribute USVString username;
+    attribute USVString password;
     // TODO: attribute USVString host;
     // TODO: attribute USVString hostname;
     // TODO: attribute USVString port;
