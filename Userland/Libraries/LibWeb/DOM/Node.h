@@ -186,6 +186,8 @@ public:
     void replace_all(RefPtr<Node>);
     void string_replace_all(String const&);
 
+    bool is_same_node(Node const*) const;
+
 protected:
     Node(Document&, NodeType);
 
