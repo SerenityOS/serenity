@@ -171,16 +171,16 @@ Optional<Glyf::Glyph::ComponentIterator::Item> Glyf::Glyph::ComponentIterator::n
         e = arg1;
         f = arg2;
     } else {
-        TODO();
+        // FIXME: Implement this. There's no TODO() here since many fonts work just fine without this.
     }
     if (flags & (u16)CompositeGlyfFlags::UseMyMetrics) {
         // FIXME: Implement this. There's no TODO() here since many fonts work just fine without this.
     }
     if (flags & (u16)CompositeGlyfFlags::ScaledComponentOffset) {
-        TODO();
+        // FIXME: Implement this. There's no TODO() here since many fonts work just fine without this.
     }
     if (flags & (u16)CompositeGlyfFlags::UnscaledComponentOffset) {
-        TODO();
+        // FIXME: Implement this. There's no TODO() here since many fonts work just fine without this.
     }
     m_has_more = (flags & (u16)CompositeGlyfFlags::MoreComponents);
     return Item {
