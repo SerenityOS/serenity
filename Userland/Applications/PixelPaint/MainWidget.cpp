@@ -680,7 +680,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             editor->did_complete_action();
         }
     }));
-    color_filters_menu.add_action(GUI::Action::create("Invert", [&](auto&) {
+    color_filters_menu.add_action(GUI::Action::create("Invert", { Mod_Ctrl, Key_I }, [&](auto&) {
         auto* editor = current_image_editor();
         if (!editor)
             return;
