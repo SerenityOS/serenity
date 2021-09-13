@@ -81,9 +81,8 @@ public:
 
     NonnullRefPtr<CSS::CSSStyleDeclaration> style_for_bindings();
 
-    // FIXME: innerHTML also appears on shadow roots. https://w3c.github.io/DOM-Parsing/#dom-innerhtml
     String inner_html() const;
-    void set_inner_html(StringView);
+    ExceptionOr<void> set_inner_html(String const&);
 
     bool is_focused() const;
     virtual bool is_focusable() const { return false; }

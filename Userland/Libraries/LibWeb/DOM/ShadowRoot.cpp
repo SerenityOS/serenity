@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ShadowRoot.h>
+#include <LibWeb/DOMParsing/InnerHTML.h>
 #include <LibWeb/Layout/BlockBox.h>
 
 namespace Web::DOM {
@@ -31,6 +33,24 @@ EventTarget* ShadowRoot::get_parent(const Event& event)
 RefPtr<Layout::Node> ShadowRoot::create_layout_node()
 {
     return adopt_ref(*new Layout::BlockBox(document(), this, CSS::ComputedValues {}));
+}
+
+// https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
+String ShadowRoot::inner_html() const
+{
+    return serialize_fragment(/* FIXME: Providing true for the require well-formed flag (which may throw) */);
+}
+
+// https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
+ExceptionOr<void> ShadowRoot::set_inner_html(String const& markup)
+{
+    auto result = DOMParsing::InnerHTML::inner_html_setter(*this, markup);
+    if (result.is_exception())
+        return result.exception();
+
+    set_needs_style_update(true);
+    document().invalidate_layout();
+    return {};
 }
 
 }

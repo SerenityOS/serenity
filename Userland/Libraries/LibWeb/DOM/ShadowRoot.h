@@ -28,6 +28,9 @@ public:
     // NOTE: This is intended for the JS bindings.
     String mode() const { return m_closed ? "closed" : "open"; }
 
+    String inner_html() const;
+    ExceptionOr<void> set_inner_html(String const&);
+
 private:
     // ^Node
     virtual FlyString node_name() const override { return "#shadow-root"; }
