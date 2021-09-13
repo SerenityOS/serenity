@@ -39,6 +39,15 @@ public:
     String password() const;
     void set_password(String const&);
 
+    String host() const;
+    void set_host(String const&);
+
+    String hostname() const;
+    void set_hostname(String const&);
+
+    String port() const;
+    void set_port(String const&);
+
     URLSearchParams const* search_params() const;
 
     String to_json() const;
