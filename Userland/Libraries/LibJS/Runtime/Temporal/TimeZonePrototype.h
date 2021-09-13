@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/PrototypeObject.h>
+#include <LibJS/Runtime/Temporal/TimeZone.h>
 
 namespace JS::Temporal {
 
-class TimeZonePrototype final : public Object {
-    JS_OBJECT(TimeZonePrototype, Object);
+class TimeZonePrototype final : public PrototypeObject<TimeZonePrototype, TimeZone> {
+    JS_PROTOTYPE_OBJECT(TimeZonePrototype, TimeZone, Temporal.TimeZone);
 
 public:
     explicit TimeZonePrototype(GlobalObject&);

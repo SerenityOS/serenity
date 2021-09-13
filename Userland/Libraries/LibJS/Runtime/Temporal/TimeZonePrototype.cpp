@@ -16,7 +16,7 @@ namespace JS::Temporal {
 
 // 11.4 Properties of the Temporal.TimeZone Prototype Object, https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-timezone-prototype-object
 TimeZonePrototype::TimeZonePrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -38,19 +38,6 @@ void TimeZonePrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.TimeZone"), Attribute::Configurable);
 }
 
-static TimeZone* typed_this(GlobalObject& global_object)
-{
-    auto& vm = global_object.vm();
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
-    if (!is<TimeZone>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.TimeZone");
-        return {};
-    }
-    return static_cast<TimeZone*>(this_object);
-}
-
 // 11.4.3 get Temporal.TimeZone.prototype.id, https://tc39.es/proposal-temporal/#sec-get-temporal.timezone.prototype.id
 JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::id_getter)
 {
@@ -66,7 +53,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_nanoseconds_for)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
-    auto* time_zone = typed_this(global_object);
+    auto* time_zone = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -88,7 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_string_for)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
-    auto* time_zone = typed_this(global_object);
+    auto* time_zone = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -129,7 +116,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::to_string)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
-    auto* time_zone = typed_this(global_object);
+    auto* time_zone = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
