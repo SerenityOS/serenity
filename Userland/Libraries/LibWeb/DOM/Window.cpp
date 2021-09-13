@@ -19,6 +19,70 @@
 
 namespace Web::DOM {
 
+class RequestAnimationFrameCallback : public RefCounted<RequestAnimationFrameCallback> {
+public:
+    explicit RequestAnimationFrameCallback(i32 id, Function<void(i32)> handler)
+        : m_id(id)
+        , m_handler(move(handler))
+    {
+    }
+    ~RequestAnimationFrameCallback() { }
+
+    i32 id() const { return m_id; }
+    bool is_cancelled() const { return !m_handler; }
+
+    void cancel() { m_handler = nullptr; }
+    void invoke() { m_handler(m_id); }
+
+private:
+    i32 m_id { 0 };
+    Function<void(i32)> m_handler;
+};
+
+struct RequestAnimationFrameDriver {
+    RequestAnimationFrameDriver()
+    {
+        m_timer = Core::Timer::create_single_shot(16, [this] {
+            auto taken_callbacks = move(m_callbacks);
+            for (auto& it : taken_callbacks) {
+                if (!it.value->is_cancelled())
+                    it.value->invoke();
+            }
+        });
+    }
+
+    NonnullRefPtr<RequestAnimationFrameCallback> add(Function<void(i32)> handler)
+    {
+        auto id = m_id_allocator.allocate();
+        auto callback = adopt_ref(*new RequestAnimationFrameCallback { id, move(handler) });
+        m_callbacks.set(id, callback);
+        if (!m_timer->is_active())
+            m_timer->start();
+        return callback;
+    }
+
+    bool remove(i32 id)
+    {
+        auto it = m_callbacks.find(id);
+        if (it == m_callbacks.end())
+            return false;
+        m_callbacks.remove(it);
+        m_id_allocator.deallocate(id);
+        return true;
+    }
+
+private:
+    HashMap<i32, NonnullRefPtr<RequestAnimationFrameCallback>> m_callbacks;
+    IDAllocator m_id_allocator;
+    RefPtr<Core::Timer> m_timer;
+};
+
+static RequestAnimationFrameDriver& request_animation_frame_driver()
+{
+    static RequestAnimationFrameDriver driver;
+    return driver;
+}
+
 NonnullRefPtr<Window> Window::create_with_document(Document& document)
 {
     return adopt_ref(*new Window(document));
@@ -113,29 +177,27 @@ void Window::clear_interval(i32 timer_id)
     m_timers.remove(timer_id);
 }
 
-i32 Window::request_animation_frame(JS::FunctionObject& callback)
+i32 Window::request_animation_frame(JS::FunctionObject& js_callback)
 {
-    // FIXME: This is extremely fake!
-    static double fake_timestamp = 0;
-
-    i32 link_id = GUI::DisplayLink::register_callback([handle = make_handle(&callback)](i32 link_id) {
-        auto& function = const_cast<JS::FunctionObject&>(static_cast<JS::FunctionObject const&>(*handle.cell()));
+    auto callback = request_animation_frame_driver().add([this, handle = JS::make_handle(&js_callback)](i32 id) mutable {
+        auto& function = *handle.cell();
         auto& vm = function.vm();
-        fake_timestamp += 10;
-        [[maybe_unused]] auto rc = vm.call(function, JS::js_undefined(), JS::Value(fake_timestamp));
+        (void)vm.call(function, JS::js_undefined(), JS::Value((double)Core::DateTime::now().timestamp()));
         if (vm.exception())
             vm.clear_exception();
-        GUI::DisplayLink::unregister_callback(link_id);
+        m_request_animation_frame_callbacks.remove(id);
     });
-
-    // FIXME: Don't hand out raw DisplayLink ID's to JavaScript!
-    return link_id;
+    m_request_animation_frame_callbacks.set(callback->id(), callback);
+    return callback->id();
 }
 
 void Window::cancel_animation_frame(i32 id)
 {
-    // FIXME: We should not be passing untrusted numbers to DisplayLink::unregister_callback()!
-    GUI::DisplayLink::unregister_callback(id);
+    auto it = m_request_animation_frame_callbacks.find(id);
+    if (it == m_request_animation_frame_callbacks.end())
+        return;
+    it->value->cancel();
+    m_request_animation_frame_callbacks.remove(it);
 }
 
 void Window::did_set_location_href(Badge<Bindings::LocationObject>, AK::URL const& new_href)
