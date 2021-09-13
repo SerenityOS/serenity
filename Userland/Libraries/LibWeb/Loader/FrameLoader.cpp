@@ -165,7 +165,7 @@ bool FrameLoader::load(LoadRequest& request, Type type)
         AK::URL favicon_url;
         favicon_url.set_protocol(url.protocol());
         favicon_url.set_host(url.host());
-        favicon_url.set_port(url.port());
+        favicon_url.set_port(url.port_or_default());
         favicon_url.set_paths({ "favicon.ico" });
 
         ResourceLoader::the().load(

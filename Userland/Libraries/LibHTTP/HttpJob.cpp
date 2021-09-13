@@ -26,7 +26,7 @@ void HttpJob::start()
             did_fail(Core::NetworkJob::Error::ConnectionFailed);
         });
     };
-    bool success = m_socket->connect(m_request.url().host(), m_request.url().port());
+    bool success = m_socket->connect(m_request.url().host(), m_request.url().port_or_default());
     if (!success) {
         deferred_invoke([this] {
             return did_fail(Core::NetworkJob::Error::ConnectionFailed);

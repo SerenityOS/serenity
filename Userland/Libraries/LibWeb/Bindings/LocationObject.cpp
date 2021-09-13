@@ -74,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::host_getter)
 {
     auto& window = static_cast<WindowObject&>(global_object);
     auto url = window.impl().associated_document().url();
-    return JS::js_string(vm, String::formatted("{}:{}", url.host(), url.port()));
+    return JS::js_string(vm, String::formatted("{}:{}", url.host(), url.port_or_default()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::hash_getter)

@@ -108,8 +108,8 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
         dbgln("ResourceLoader: Failed load of: \"{}\", \033[32;1mError: {}\033[0m, Duration: {}ms", url, error_message, load_time_ms);
     };
 
-    if (is_port_blocked(url.port())) {
-        log_failure(request, String::formatted("The port #{} is blocked", url.port()));
+    if (is_port_blocked(url.port_or_default())) {
+        log_failure(request, String::formatted("The port #{} is blocked", url.port_or_default()));
         return;
     }
 

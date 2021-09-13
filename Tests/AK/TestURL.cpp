@@ -21,7 +21,7 @@ TEST_CASE(basic)
         EXPECT_EQ(url.is_valid(), true);
         EXPECT_EQ(url.scheme(), "http");
         EXPECT_EQ(url.host(), "www.serenityos.org");
-        EXPECT_EQ(url.port(), 80);
+        EXPECT_EQ(url.port_or_default(), 80);
         EXPECT_EQ(url.path(), "/");
         EXPECT(url.query().is_null());
         EXPECT(url.fragment().is_null());
@@ -31,7 +31,7 @@ TEST_CASE(basic)
         EXPECT_EQ(url.is_valid(), true);
         EXPECT_EQ(url.scheme(), "https");
         EXPECT_EQ(url.host(), "www.serenityos.org");
-        EXPECT_EQ(url.port(), 443);
+        EXPECT_EQ(url.port_or_default(), 443);
         EXPECT_EQ(url.path(), "/index.html");
         EXPECT(url.query().is_null());
         EXPECT(url.fragment().is_null());
@@ -41,7 +41,7 @@ TEST_CASE(basic)
         EXPECT_EQ(url.is_valid(), true);
         EXPECT_EQ(url.scheme(), "https");
         EXPECT_EQ(url.host(), "localhost");
-        EXPECT_EQ(url.port(), 1234);
+        EXPECT_EQ(url.port_or_default(), 1234);
         EXPECT_EQ(url.path(), "/~anon/test/page.html");
         EXPECT(url.query().is_null());
         EXPECT(url.fragment().is_null());
@@ -51,7 +51,7 @@ TEST_CASE(basic)
         EXPECT_EQ(url.is_valid(), true);
         EXPECT_EQ(url.scheme(), "http");
         EXPECT_EQ(url.host(), "www.serenityos.org");
-        EXPECT_EQ(url.port(), 80);
+        EXPECT_EQ(url.port_or_default(), 80);
         EXPECT_EQ(url.path(), "/index.html");
         EXPECT_EQ(url.query(), "");
         EXPECT_EQ(url.fragment(), "");
@@ -61,7 +61,7 @@ TEST_CASE(basic)
         EXPECT_EQ(url.is_valid(), true);
         EXPECT_EQ(url.scheme(), "http");
         EXPECT_EQ(url.host(), "www.serenityos.org");
-        EXPECT_EQ(url.port(), 80);
+        EXPECT_EQ(url.port_or_default(), 80);
         EXPECT_EQ(url.path(), "/index.html");
         EXPECT_EQ(url.query(), "foo=1&bar=2");
         EXPECT(url.fragment().is_null());
@@ -71,7 +71,7 @@ TEST_CASE(basic)
         EXPECT_EQ(url.is_valid(), true);
         EXPECT_EQ(url.scheme(), "http");
         EXPECT_EQ(url.host(), "www.serenityos.org");
-        EXPECT_EQ(url.port(), 80);
+        EXPECT_EQ(url.port_or_default(), 80);
         EXPECT_EQ(url.path(), "/index.html");
         EXPECT(url.query().is_null());
         EXPECT_EQ(url.fragment(), "fragment");
@@ -81,7 +81,7 @@ TEST_CASE(basic)
         EXPECT_EQ(url.is_valid(), true);
         EXPECT_EQ(url.scheme(), "http");
         EXPECT_EQ(url.host(), "www.serenityos.org");
-        EXPECT_EQ(url.port(), 80);
+        EXPECT_EQ(url.port_or_default(), 80);
         EXPECT_EQ(url.path(), "/index.html");
         EXPECT_EQ(url.query(), "foo=1&bar=2&baz=/?");
         EXPECT_EQ(url.fragment(), "frag/ment?test#");
@@ -105,7 +105,7 @@ TEST_CASE(some_bad_urls)
 TEST_CASE(serialization)
 {
     EXPECT_EQ(URL("http://www.serenityos.org/").serialize(), "http://www.serenityos.org/");
-    EXPECT_EQ(URL("http://www.serenityos.org:0/").serialize(), "http://www.serenityos.org/");
+    EXPECT_EQ(URL("http://www.serenityos.org:0/").serialize(), "http://www.serenityos.org:0/");
     EXPECT_EQ(URL("http://www.serenityos.org:80/").serialize(), "http://www.serenityos.org/");
     EXPECT_EQ(URL("http://www.serenityos.org:81/").serialize(), "http://www.serenityos.org:81/");
     EXPECT_EQ(URL("https://www.serenityos.org:443/foo/bar.html?query#fragment").serialize(), "https://www.serenityos.org/foo/bar.html?query#fragment");
@@ -117,7 +117,7 @@ TEST_CASE(file_url_with_hostname)
     EXPECT(url.is_valid());
     EXPECT_EQ(url.scheme(), "file");
     EXPECT_EQ(url.host(), "courage");
-    EXPECT_EQ(url.port(), 0);
+    EXPECT_EQ(url.port_or_default(), 0);
     EXPECT_EQ(url.path(), "/my/file");
     EXPECT_EQ(url.serialize(), "file://courage/my/file");
     EXPECT(url.query().is_null());
@@ -200,7 +200,7 @@ TEST_CASE(mailto_url)
     EXPECT(url.is_valid());
     EXPECT_EQ(url.scheme(), "mailto");
     EXPECT(url.host().is_null());
-    EXPECT_EQ(url.port(), 0);
+    EXPECT_EQ(url.port_or_default(), 0);
     EXPECT_EQ(url.paths().size(), 1u);
     EXPECT_EQ(url.paths()[0], "mail@example.com");
     EXPECT(url.query().is_null());
@@ -291,7 +291,7 @@ TEST_CASE(trailing_slash_with_complete_url)
 TEST_CASE(trailing_port)
 {
     URL url("http://example.com:8086");
-    EXPECT_EQ(url.port(), 8086);
+    EXPECT_EQ(url.port_or_default(), 8086);
 }
 
 TEST_CASE(port_overflow)
@@ -312,7 +312,7 @@ TEST_CASE(create_with_file_scheme)
     auto url = URL::create_with_file_scheme("/home/anon/README.md");
     EXPECT(url.is_valid());
     EXPECT_EQ(url.scheme(), "file");
-    EXPECT_EQ(url.port(), 0);
+    EXPECT_EQ(url.port_or_default(), 0);
     EXPECT_EQ(url.paths().size(), 3u);
     EXPECT_EQ(url.paths()[0], "home");
     EXPECT_EQ(url.paths()[1], "anon");
