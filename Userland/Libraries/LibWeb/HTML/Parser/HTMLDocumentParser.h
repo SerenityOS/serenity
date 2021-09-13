@@ -53,6 +53,7 @@ public:
     DOM::Document& document();
 
     static NonnullRefPtrVector<DOM::Node> parse_html_fragment(DOM::Element& context_element, const StringView&);
+    static String serialize_html_fragment(DOM::Node const& node);
 
     enum class InsertionMode {
 #define __ENUMERATE_INSERTION_MODE(mode) mode,

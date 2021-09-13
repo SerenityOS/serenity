@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,6 +14,7 @@
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/ProcessingInstruction.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
@@ -3052,6 +3054,204 @@ NonnullOwnPtr<HTMLDocumentParser> HTMLDocumentParser::create_with_uncertain_enco
     auto encoding = run_encoding_sniffing_algorithm(input);
     dbgln("The encoding sniffing algorithm returned encoding '{}'", encoding);
     return make<HTMLDocumentParser>(document, input, encoding);
+}
+
+// https://html.spec.whatwg.org/multipage/parsing.html#html-fragment-serialisation-algorithm
+String HTMLDocumentParser::serialize_html_fragment(DOM::Node const& node)
+{
+    // The algorithm takes as input a DOM Element, Document, or DocumentFragment referred to as the node.
+    VERIFY(node.is_element() || node.is_document() || node.is_document_fragment());
+    NonnullRefPtr<DOM::Node> actual_node = node;
+
+    if (is<DOM::Element>(node)) {
+        auto& element = verify_cast<DOM::Element>(node);
+
+        // 1. If the node serializes as void, then return the empty string.
+        //    (NOTE: serializes as void is defined only on elements in the spec)
+        if (element.serializes_as_void())
+            return String::empty();
+
+        // 3. If the node is a template element, then let the node instead be the template element's template contents (a DocumentFragment node).
+        //    (NOTE: This is out of order of the spec to avoid another dynamic cast. The second step just creates a string builder, so it shouldn't matter)
+        if (is<HTML::HTMLTemplateElement>(element))
+            actual_node = verify_cast<HTML::HTMLTemplateElement>(element).content();
+    }
+
+    enum class AttributeMode {
+        No,
+        Yes,
+    };
+
+    auto escape_string = [](StringView const& string, AttributeMode attribute_mode) -> String {
+        // https://html.spec.whatwg.org/multipage/parsing.html#escapingString
+        StringBuilder builder;
+        for (auto& ch : string) {
+            // 1. Replace any occurrence of the "&" character by the string "&amp;".
+            if (ch == '&')
+                builder.append("&amp;");
+            // 2. Replace any occurrences of the U+00A0 NO-BREAK SPACE character by the string "&nbsp;".
+            else if (ch == '\xA0')
+                builder.append("&nbsp;");
+            // 3. If the algorithm was invoked in the attribute mode, replace any occurrences of the """ character by the string "&quot;".
+            else if (ch == '"' && attribute_mode == AttributeMode::Yes)
+                builder.append("&quot;");
+            // 4. If the algorithm was not invoked in the attribute mode, replace any occurrences of the "<" character by the string "&lt;", and any occurrences of the ">" character by the string "&gt;".
+            else if (ch == '<' && attribute_mode == AttributeMode::No)
+                builder.append("&lt;");
+            else if (ch == '>' && attribute_mode == AttributeMode::No)
+                builder.append("&gt;");
+            else
+                builder.append(ch);
+        }
+        return builder.to_string();
+    };
+
+    // 2. Let s be a string, and initialize it to the empty string.
+    StringBuilder builder;
+
+    // 4. For each child node of the node, in tree order, run the following steps:
+    actual_node->for_each_child([&](DOM::Node& current_node) {
+        // 1. Let current node be the child node being processed.
+
+        // 2. Append the appropriate string from the following list to s:
+
+        if (is<DOM::Element>(current_node)) {
+            // -> If current node is an Element
+            auto& element = verify_cast<DOM::Element>(current_node);
+
+            // 1. If current node is an element in the HTML namespace, the MathML namespace, or the SVG namespace, then let tagname be current node's local name.
+            //    Otherwise, let tagname be current node's qualified name.
+            String tag_name;
+
+            if (element.namespace_().is_one_of(Namespace::HTML, Namespace::MathML, Namespace::SVG))
+                tag_name = element.local_name();
+            else
+                tag_name = element.qualified_name();
+
+            // 2. Append a U+003C LESS-THAN SIGN character (<), followed by tagname.
+            builder.append('<');
+            builder.append(tag_name);
+
+            // FIXME: 3. If current node's is value is not null, and the element does not have an is attribute in its attribute list,
+            //           then append the string " is="", followed by current node's is value escaped as described below in attribute mode,
+            //           followed by a U+0022 QUOTATION MARK character (").
+
+            // 4. For each attribute that the element has, append a U+0020 SPACE character, the attribute's serialized name as described below, a U+003D EQUALS SIGN character (=),
+            //    a U+0022 QUOTATION MARK character ("), the attribute's value, escaped as described below in attribute mode, and a second U+0022 QUOTATION MARK character (").
+            //    NOTE: The order of attributes is implementation-defined. The only constraint is that the order must be stable.
+            element.for_each_attribute([&](auto& name, auto& value) {
+                builder.append(' ');
+
+                // An attribute's serialized name for the purposes of the previous paragraph must be determined as follows:
+
+                // FIXME: -> If the attribute has no namespace:
+                //              The attribute's serialized name is the attribute's local name.
+                //           (We currently always do this)
+                builder.append(name);
+
+                // FIXME: -> If the attribute is in the XML namespace:
+                //             The attribute's serialized name is the string "xml:" followed by the attribute's local name.
+
+                // FIXME: -> If the attribute is in the XMLNS namespace and the attribute's local name is xmlns:
+                //             The attribute's serialized name is the string "xmlns".
+
+                // FIXME: -> If the attribute is in the XMLNS namespace and the attribute's local name is not xmlns:
+                //             The attribute's serialized name is the string "xmlns:" followed by the attribute's local name.
+
+                // FIXME: -> If the attribute is in the XLink namespace:
+                //             The attribute's serialized name is the string "xlink:" followed by the attribute's local name.
+
+                // FIXME: -> If the attribute is in some other namespace:
+                //             The attribute's serialized name is the attribute's qualified name.
+
+                builder.append("=\"");
+                builder.append(escape_string(value, AttributeMode::Yes));
+                builder.append('"');
+            });
+
+            // 5. Append a U+003E GREATER-THAN SIGN character (>).
+            builder.append('>');
+
+            // 6. If current node serializes as void, then continue on to the next child node at this point.
+            if (element.serializes_as_void())
+                return IterationDecision::Continue;
+
+            // 7. Append the value of running the HTML fragment serialization algorithm on the current node element (thus recursing into this algorithm for that element),
+            //    followed by a U+003C LESS-THAN SIGN character (<), a U+002F SOLIDUS character (/), tagname again, and finally a U+003E GREATER-THAN SIGN character (>).
+            builder.append(serialize_html_fragment(element));
+            builder.append("</");
+            builder.append(tag_name);
+            builder.append('>');
+
+            return IterationDecision::Continue;
+        }
+
+        if (is<DOM::Text>(current_node)) {
+            // -> If current node is a Text node
+            auto& text_node = verify_cast<DOM::Text>(current_node);
+            auto* parent = current_node.parent();
+
+            if (is<DOM::Element>(parent)) {
+                auto& parent_element = verify_cast<DOM::Element>(*parent);
+
+                // 1. If the parent of current node is a style, script, xmp, iframe, noembed, noframes, or plaintext element,
+                //    or if the parent of current node is a noscript element and scripting is enabled for the node, then append the value of current node's data IDL attribute literally.
+                if (parent_element.local_name().is_one_of(HTML::TagNames::style, HTML::TagNames::script, HTML::TagNames::xmp, HTML::TagNames::iframe, HTML::TagNames::noembed, HTML::TagNames::noframes, HTML::TagNames::plaintext)
+                    || (parent_element.local_name() == HTML::TagNames::noscript && !parent_element.is_scripting_disabled())) {
+                    builder.append(text_node.data());
+                    return IterationDecision::Continue;
+                }
+            }
+
+            // 2. Otherwise, append the value of current node's data IDL attribute, escaped as described below.
+            builder.append(escape_string(text_node.data(), AttributeMode::No));
+            return IterationDecision::Continue;
+        }
+
+        if (is<DOM::Comment>(current_node)) {
+            // -> If current node is a Comment
+            auto& comment_node = verify_cast<DOM::Comment>(current_node);
+
+            // 1. Append the literal string "<!--" (U+003C LESS-THAN SIGN, U+0021 EXCLAMATION MARK, U+002D HYPHEN-MINUS, U+002D HYPHEN-MINUS),
+            //    followed by the value of current node's data IDL attribute, followed by the literal string "-->" (U+002D HYPHEN-MINUS, U+002D HYPHEN-MINUS, U+003E GREATER-THAN SIGN).
+            builder.append("<!--");
+            builder.append(comment_node.data());
+            builder.append("-->");
+            return IterationDecision::Continue;
+        }
+
+        if (is<DOM::ProcessingInstruction>(current_node)) {
+            // -> If current node is a ProcessingInstruction
+            auto& processing_instruction_node = verify_cast<DOM::ProcessingInstruction>(current_node);
+
+            // 1. Append the literal string "<?" (U+003C LESS-THAN SIGN, U+003F QUESTION MARK), followed by the value of current node's target IDL attribute,
+            //    followed by a single U+0020 SPACE character, followed by the value of current node's data IDL attribute, followed by a single U+003E GREATER-THAN SIGN character (>).
+            builder.append("<?");
+            builder.append(processing_instruction_node.target());
+            builder.append(' ');
+            builder.append(processing_instruction_node.data());
+            builder.append('>');
+            return IterationDecision::Continue;
+        }
+
+        if (is<DOM::DocumentType>(current_node)) {
+            // -> If current node is a DocumentType
+            auto& document_type_node = verify_cast<DOM::DocumentType>(current_node);
+
+            // 1. Append the literal string "<!DOCTYPE" (U+003C LESS-THAN SIGN, U+0021 EXCLAMATION MARK, U+0044 LATIN CAPITAL LETTER D, U+004F LATIN CAPITAL LETTER O,
+            //    U+0043 LATIN CAPITAL LETTER C, U+0054 LATIN CAPITAL LETTER T, U+0059 LATIN CAPITAL LETTER Y, U+0050 LATIN CAPITAL LETTER P, U+0045 LATIN CAPITAL LETTER E),
+            //    followed by a space (U+0020 SPACE), followed by the value of current node's name IDL attribute, followed by the literal string ">" (U+003E GREATER-THAN SIGN).
+            builder.append("<!DOCTYPE ");
+            builder.append(document_type_node.name());
+            builder.append('>');
+            return IterationDecision::Continue;
+        }
+
+        return IterationDecision::Continue;
+    });
+
+    // 5. Return s.
+    return builder.to_string();
 }
 
 }

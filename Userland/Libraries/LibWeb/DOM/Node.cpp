@@ -24,6 +24,7 @@
 #include <LibWeb/DOM/ProcessingInstruction.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
@@ -766,6 +767,18 @@ void Node::string_replace_all(String const& string)
         node = make_ref_counted<Text>(document(), string);
 
     replace_all(node);
+}
+
+// https://w3c.github.io/DOM-Parsing/#dfn-fragment-serializing-algorithm
+String Node::serialize_fragment(/* FIXME: Requires well-formed flag */) const
+{
+    // FIXME: Let context document be the value of node's node document.
+
+    // FIXME: If context document is an HTML document, return an HTML serialization of node.
+    //        (We currently always do this)
+    return HTML::HTMLDocumentParser::serialize_html_fragment(*this);
+
+    // FIXME: Otherwise, context document is an XML document; return an XML serialization of node passing the flag require well-formed.
 }
 
 // https://dom.spec.whatwg.org/#dom-node-issamenode
