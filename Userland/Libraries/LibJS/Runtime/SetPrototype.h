@@ -20,8 +20,6 @@ public:
     virtual ~SetPrototype() override;
 
 private:
-    static Set* typed_this(VM&, GlobalObject&);
-
     JS_DECLARE_NATIVE_FUNCTION(add);
     JS_DECLARE_NATIVE_FUNCTION(clear);
     JS_DECLARE_NATIVE_FUNCTION(delete_);
