@@ -196,14 +196,14 @@ void BrowserWindow::build_menus()
             active_tab().show_inspector_window(Tab::InspectorTarget::Document);
         },
         this);
-    m_inspect_dom_tree_action->set_status_tip("Open DOM inspector window for this page");
+    m_inspect_dom_tree_action->set_status_tip("Open inspector window for this page");
 
     m_inspect_dom_node_action = GUI::Action::create(
         "&Inspect Element", [this](auto&) {
             active_tab().show_inspector_window(Tab::InspectorTarget::HoveredElement);
         },
         this);
-    m_inspect_dom_node_action->set_status_tip("Open DOM inspector for this element");
+    m_inspect_dom_node_action->set_status_tip("Open inspector for this element");
 
     auto& inspect_menu = add_menu("&Inspect");
     inspect_menu.add_action(*m_view_source_action);
