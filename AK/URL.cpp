@@ -306,6 +306,34 @@ String URL::serialize_for_display() const
     return builder.to_string();
 }
 
+// https://html.spec.whatwg.org/multipage/origin.html#ascii-serialisation-of-an-origin
+// https://url.spec.whatwg.org/#concept-url-origin
+String URL::serialize_origin() const
+{
+    VERIFY(m_valid);
+
+    if (m_scheme == "blob"sv) {
+        // TODO: 1. If URL’s blob URL entry is non-null, then return URL’s blob URL entry’s environment’s origin.
+        // 2. Let url be the result of parsing URL’s path[0].
+        VERIFY(!m_paths.is_empty());
+        URL url = m_paths[0];
+        // 3. Return a new opaque origin, if url is failure, and url’s origin otherwise.
+        if (!url.is_valid())
+            return "null";
+        return url.serialize_origin();
+    } else if (!m_scheme.is_one_of("ftp"sv, "http"sv, "https"sv, "ws"sv, "wss"sv)) { // file: "Unfortunate as it is, this is left as an exercise to the reader. When in doubt, return a new opaque origin."
+        return "null";
+    }
+
+    StringBuilder builder;
+    builder.append(m_scheme);
+    builder.append("://"sv);
+    builder.append(m_host);
+    if (m_port != 0)
+        builder.append(":{}", m_port);
+    return builder.build();
+}
+
 bool URL::equals(URL const& other, ExcludeFragment exclude_fragments) const
 {
     if (this == &other)

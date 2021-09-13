@@ -81,6 +81,9 @@ public:
     String serialize_for_display() const;
     String to_string() const { return serialize(); }
 
+    // HTML origin
+    String serialize_origin() const;
+
     bool equals(URL const& other, ExcludeFragment = ExcludeFragment::No) const;
 
     URL complete_url(String const&) const;
