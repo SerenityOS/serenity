@@ -33,6 +33,9 @@ public:
 
     String origin() const;
 
+    String protocol() const;
+    void set_protocol(String const&);
+
     String username() const;
     void set_username(String const&);
 
@@ -48,7 +51,16 @@ public:
     String port() const;
     void set_port(String const&);
 
+    String pathname() const;
+    void set_pathname(String const&);
+
+    String search() const;
+    void set_search(String const&);
+
     URLSearchParams const* search_params() const;
+
+    String hash() const;
+    void set_hash(String const&);
 
     String to_json() const;
 
