@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/PrototypeObject.h>
+#include <LibJS/Runtime/Temporal/Duration.h>
 
 namespace JS::Temporal {
 
-class DurationPrototype final : public Object {
-    JS_OBJECT(DurationPrototype, Object);
+class DurationPrototype final : public PrototypeObject<DurationPrototype, Duration> {
+    JS_PROTOTYPE_OBJECT(DurationPrototype, Duration, Temporal.Duration);
 
 public:
     explicit DurationPrototype(GlobalObject&);
