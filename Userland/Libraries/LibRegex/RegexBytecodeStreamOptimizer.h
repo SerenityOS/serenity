@@ -12,7 +12,7 @@ namespace regex {
 
 class Optimizer {
 public:
-    static void append_alternation(ByteCode& target, ByteCode& left, ByteCode& right);
+    static void append_alternation(ByteCode& target, ByteCode&& left, ByteCode&& right);
 };
 
 }

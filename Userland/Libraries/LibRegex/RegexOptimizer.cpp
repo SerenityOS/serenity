@@ -20,6 +20,8 @@ void Regex<Parser>::run_optimization_passes()
     // Rewrite fork loops as atomic groups
     // e.g. a*b -> (ATOMIC a*)b
     attempt_rewrite_loops_as_atomic_groups(split_basic_blocks());
+
+    parser_result.bytecode.flatten();
 }
 
 template<typename Parser>
@@ -413,7 +415,7 @@ void Regex<Parser>::attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&
     }
 }
 
-void Optimizer::append_alternation(ByteCode& target, ByteCode& left, ByteCode& right)
+void Optimizer::append_alternation(ByteCode& target, ByteCode&& left, ByteCode&& right)
 {
     if (left.is_empty()) {
         target.extend(right);
@@ -433,7 +435,7 @@ void Optimizer::append_alternation(ByteCode& target, ByteCode& left, ByteCode& r
         if (left_size != right_size)
             break;
 
-        if (left.span().slice(state.instruction_position, left_size) == right.span().slice(state.instruction_position, right_size))
+        if (left.spans().slice(state.instruction_position, left_size) == right.spans().slice(state.instruction_position, right_size))
             left_skip = state.instruction_position + left_size;
         else
             break;
@@ -441,34 +443,30 @@ void Optimizer::append_alternation(ByteCode& target, ByteCode& left, ByteCode& r
         state.instruction_position += left_size;
     }
 
-    // FIXME: Implement postfix unification too.
-    size_t right_skip = 0;
+    dbgln_if(REGEX_DEBUG, "Skipping {}/{} bytecode entries from {}/{}", left_skip, 0, left.size(), right.size());
 
-    if (left_skip)
-        target.append(left.data(), left_skip);
+    if (left_skip) {
+        target.extend(left.release_slice(0, left_skip));
+        right = right.release_slice(left_skip);
+    }
 
-    dbgln_if(REGEX_DEBUG, "Skipping {}/{} bytecode entries from {}/{}", left_skip, right_skip, left.size(), right.size());
-
-    auto left_slice = left.span().slice(left_skip, left.size() - left_skip - right_skip);
-    auto right_slice = right.span().slice(left_skip, right.size() - left_skip - right_skip);
+    auto left_size = left.size();
 
     target.empend(static_cast<ByteCodeValueType>(OpCodeId::ForkJump));
-    target.empend(right_slice.size() + 2); // Jump to the _ALT label
+    target.empend(right.size() + (left_size ? 2 : 0)); // Jump to the _ALT label
 
-    target.append(right_slice.data(), right_slice.size());
+    target.extend(move(right));
 
-    if (!left_slice.is_empty()) {
+    if (left_size != 0) {
         target.empend(static_cast<ByteCodeValueType>(OpCodeId::Jump));
-        target.empend(left_slice.size()); // Jump to the _END label
+        target.empend(left.size()); // Jump to the _END label
     }
 
     // LABEL _ALT = bytecode.size() + 2
 
-    target.append(left_slice.data(), left_slice.size());
+    target.extend(move(left));
 
     // LABEL _END = alterantive_bytecode.size
-    if (right_skip)
-        target.append(left.span().slice_from_end(right_skip).data(), right_skip);
 }
 
 template void Regex<PosixBasicParser>::run_optimization_passes();
