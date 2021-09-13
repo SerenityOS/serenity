@@ -20,7 +20,7 @@ namespace JS::Temporal {
 
 // 6.3 Properties of the Temporal.ZonedDateTime Prototype Object, https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-zoneddatetime-prototype-object
 ZonedDateTimePrototype::ZonedDateTimePrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -73,25 +73,12 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
 }
 
-static ZonedDateTime* typed_this(GlobalObject& global_object)
-{
-    auto& vm = global_object.vm();
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
-    if (!is<ZonedDateTime>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.ZonedDateTime");
-        return {};
-    }
-    return static_cast<ZonedDateTime*>(this_object);
-}
-
 // 6.3.3 get Temporal.ZonedDateTime.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.calendar
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::calendar_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -104,7 +91,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::time_zone_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -117,7 +104,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::year_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -144,7 +131,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::month_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -171,7 +158,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::month_code_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -198,7 +185,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -225,7 +212,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::hour_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -252,7 +239,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::minute_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -279,7 +266,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::second_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -306,7 +293,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::millisecond_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -333,7 +320,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::microsecond_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -360,7 +347,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::nanosecond_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -387,7 +374,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_seconds_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -406,7 +393,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_milliseconds_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -425,7 +412,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_microseconds_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -444,7 +431,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_nanoseconds_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -457,7 +444,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_of_week_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -484,7 +471,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_of_year_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -511,7 +498,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::week_of_year_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -538,7 +525,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_week_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -565,7 +552,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_month_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -592,7 +579,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_year_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -619,7 +606,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::months_in_year_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -646,7 +633,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::in_leap_year_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -673,7 +660,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_nanoseconds_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -692,7 +679,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -711,7 +698,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::era_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -738,7 +725,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::era_year_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -773,7 +760,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_instant)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -786,7 +773,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_date)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -813,7 +800,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_time)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -840,7 +827,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_date_time)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -859,7 +846,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_year_month)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -896,7 +883,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_month_day)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -933,7 +920,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::get_iso_fields)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
-    auto* zoned_date_time = typed_this(global_object);
+    auto* zoned_date_time = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
