@@ -256,62 +256,10 @@ void Element::set_inner_html(StringView markup)
     document().invalidate_layout();
 }
 
+// https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
 String Element::inner_html() const
 {
-    auto escape_string = [](const StringView& string, bool attribute_mode) -> String {
-        // https://html.spec.whatwg.org/multipage/parsing.html#escapingString
-        StringBuilder builder;
-        for (auto& ch : string) {
-            if (ch == '&')
-                builder.append("&amp;");
-            // FIXME: also replace U+00A0 NO-BREAK SPACE with &nbsp;
-            else if (ch == '"' && attribute_mode)
-                builder.append("&quot;");
-            else if (ch == '<' && !attribute_mode)
-                builder.append("&lt;");
-            else if (ch == '>' && !attribute_mode)
-                builder.append("&gt;");
-            else
-                builder.append(ch);
-        }
-        return builder.to_string();
-    };
-
-    StringBuilder builder;
-
-    Function<void(const Node&)> recurse = [&](auto& node) {
-        for (auto* child = node.first_child(); child; child = child->next_sibling()) {
-            if (child->is_element()) {
-                auto& element = verify_cast<Element>(*child);
-                builder.append('<');
-                builder.append(element.local_name());
-                element.for_each_attribute([&](auto& name, auto& value) {
-                    builder.append(' ');
-                    builder.append(name);
-                    builder.append('=');
-                    builder.append('"');
-                    builder.append(escape_string(value, true));
-                    builder.append('"');
-                });
-                builder.append('>');
-
-                recurse(*child);
-
-                // FIXME: This should be skipped for void elements
-                builder.append("</");
-                builder.append(element.local_name());
-                builder.append('>');
-            }
-            if (child->is_text()) {
-                auto& text = verify_cast<Text>(*child);
-                builder.append(escape_string(text.data(), false));
-            }
-            // FIXME: Also handle Comment, ProcessingInstruction, DocumentType
-        }
-    };
-    recurse(*this);
-
-    return builder.to_string();
+    return serialize_fragment(/* FIXME: Providing true for the require well-formed flag (which may throw) */);
 }
 
 bool Element::is_focused() const
@@ -374,6 +322,18 @@ void Element::queue_an_element_task(HTML::Task::Source source, Function<void()> 
         steps();
     });
     HTML::main_thread_event_loop().task_queue().add(move(task));
+}
+
+// https://html.spec.whatwg.org/multipage/syntax.html#void-elements
+bool Element::is_void_element() const
+{
+    return local_name().is_one_of(HTML::TagNames::area, HTML::TagNames::base, HTML::TagNames::br, HTML::TagNames::col, HTML::TagNames::embed, HTML::TagNames::hr, HTML::TagNames::img, HTML::TagNames::input, HTML::TagNames::link, HTML::TagNames::meta, HTML::TagNames::param, HTML::TagNames::source, HTML::TagNames::track, HTML::TagNames::wbr);
+}
+
+// https://html.spec.whatwg.org/multipage/parsing.html#serializes-as-void
+bool Element::serializes_as_void() const
+{
+    return is_void_element() || local_name().is_one_of(HTML::TagNames::basefont, HTML::TagNames::bgsound, HTML::TagNames::frame, HTML::TagNames::keygen);
 }
 
 }

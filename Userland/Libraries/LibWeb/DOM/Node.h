@@ -183,6 +183,8 @@ public:
     i32 id() const { return m_id; }
     static Node* from_id(i32 node_id);
 
+    String serialize_fragment() const;
+
     void replace_all(RefPtr<Node>);
     void string_replace_all(String const&);
 

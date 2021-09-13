@@ -108,6 +108,9 @@ public:
 
     void queue_an_element_task(HTML::Task::Source, Function<void()>);
 
+    bool is_void_element() const;
+    bool serializes_as_void() const;
+
 protected:
     RefPtr<Layout::Node> create_layout_node() override;
 
