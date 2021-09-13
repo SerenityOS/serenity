@@ -107,7 +107,7 @@ void RectangleTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     auto start_position = m_editor->layer_position_to_editor_position(*layer, m_rectangle_start_position).to_type<int>();
     auto end_position = m_editor->layer_position_to_editor_position(*layer, m_rectangle_end_position).to_type<int>();
-    draw_using(painter, start_position, end_position, m_thickness * m_editor->scale());
+    draw_using(painter, start_position, end_position, AK::max(m_thickness * m_editor->scale(), 1));
 }
 
 void RectangleTool::on_keydown(GUI::KeyEvent& event)
