@@ -6,11 +6,19 @@
 
 #pragma once
 
+#include <AK/URL.h>
+#include <AK/Vector.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/ExceptionOr.h>
-#include <LibWeb/URL/URL.h>
 
 namespace Web::URL {
+
+struct QueryParam {
+    String name;
+    String value;
+};
+String url_encode(const Vector<QueryParam>&, AK::URL::PercentEncodeSet);
+Vector<QueryParam> url_decode(StringView const&);
 
 class URLSearchParams : public Bindings::Wrappable
     , public RefCounted<URLSearchParams> {
