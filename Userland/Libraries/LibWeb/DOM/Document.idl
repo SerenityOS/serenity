@@ -64,6 +64,8 @@ interface Document : Node {
     Element? querySelector(DOMString selectors);
     ArrayFromVector querySelectorAll(DOMString selectors);
 
+    [SameObject] readonly attribute HTMLCollection children;
+
     // FIXME: These should all come from a GlobalEventHandlers mixin
     attribute EventHandler onabort;
     attribute EventHandler onauxclick;

@@ -6,6 +6,7 @@
 
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
+#include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/Dump.h>
 
@@ -73,6 +74,17 @@ u32 ParentNode::child_element_count() const
             ++count;
     }
     return count;
+}
+
+// https://dom.spec.whatwg.org/#dom-parentnode-children
+NonnullRefPtr<HTMLCollection> ParentNode::children()
+{
+    // The children getter steps are to return an HTMLCollection collection rooted at this matching only element children.
+    // FIXME: This should return the same HTMLCollection object every time,
+    //        but that would cause a reference cycle since HTMLCollection refs the root.
+    return HTMLCollection::create(*this, [this](Element const& element) {
+        return is_parent_of(element);
+    });
 }
 
 }
