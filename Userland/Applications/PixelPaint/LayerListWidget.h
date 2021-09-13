@@ -73,7 +73,6 @@ private:
     Gfx::IntPoint m_moving_event_origin;
 
     size_t m_selected_gadget_index { 0 };
-    int m_total_gadget_height { 0 };
 };
 
 }
