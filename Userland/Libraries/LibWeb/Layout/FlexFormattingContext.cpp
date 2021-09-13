@@ -85,15 +85,15 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
     auto has_definite_cross_size = [&is_row](Box& box) {
         return is_row ? box.has_definite_height() : box.has_definite_width();
     };
-    auto specified_main_size = [&is_row, &get_pixel_size](Box& box) {
+    auto specified_main_size = [&is_row](Box& box) {
         return is_row
-            ? get_pixel_size(box, box.computed_values().width())
-            : get_pixel_size(box, box.computed_values().height());
+            ? box.width()
+            : box.height();
     };
-    auto specified_cross_size = [&is_row, &get_pixel_size](Box& box) {
+    auto specified_cross_size = [&is_row](Box& box) {
         return is_row
-            ? get_pixel_size(box, box.computed_values().height())
-            : get_pixel_size(box, box.computed_values().width());
+            ? box.height()
+            : box.width();
     };
     auto has_main_min_size = [&is_row](Box& box) {
         return is_row
