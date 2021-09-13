@@ -29,6 +29,8 @@ public:
             callback(tool);
     }
 
+    Tool* active_tool() const { return m_active_tool; }
+
 private:
     friend class ToolButton;
 
@@ -38,6 +40,7 @@ private:
     RefPtr<GUI::Toolbar> m_toolbar;
     GUI::ActionGroup m_action_group;
     NonnullOwnPtrVector<Tool> m_tools;
+    Tool* m_active_tool { nullptr };
 };
 
 }
