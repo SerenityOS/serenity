@@ -398,6 +398,15 @@ public:
         return nullptr;
     }
 
+    bool is_parent_of(T const& other) const
+    {
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (&other == child)
+                return true;
+        }
+        return false;
+    }
+
     ~TreeNode()
     {
         VERIFY(!m_parent);

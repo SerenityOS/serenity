@@ -12,4 +12,6 @@ interface DocumentFragment : Node {
     Element? querySelector(DOMString selectors);
     ArrayFromVector querySelectorAll(DOMString selectors);
 
+    [SameObject] readonly attribute HTMLCollection children;
+
 };

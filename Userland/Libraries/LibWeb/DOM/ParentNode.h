@@ -25,6 +25,8 @@ public:
     ExceptionOr<RefPtr<Element>> query_selector(StringView);
     ExceptionOr<NonnullRefPtrVector<Element>> query_selector_all(StringView);
 
+    NonnullRefPtr<HTMLCollection> children();
+
 protected:
     ParentNode(Document& document, NodeType type)
         : Node(document, type)
