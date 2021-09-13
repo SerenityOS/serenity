@@ -29,6 +29,7 @@ private:
     RefPtr<GUI::Widget> m_properties_widget;
 
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
+    Gfx::IntPoint m_drag_start_position;
     Gfx::IntPoint m_line_start_position;
     Gfx::IntPoint m_line_end_position;
     int m_thickness { 1 };
