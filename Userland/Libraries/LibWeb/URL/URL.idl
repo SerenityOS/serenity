@@ -6,9 +6,9 @@ interface URL {
     // TODO: attribute USVString protocol;
     attribute USVString username;
     attribute USVString password;
-    // TODO: attribute USVString host;
-    // TODO: attribute USVString hostname;
-    // TODO: attribute USVString port;
+    attribute USVString host;
+    attribute USVString hostname;
+    attribute USVString port;
     // TODO: attribute USVString pathname;
     // TODO: attribute USVString search;
     [SameObject] readonly attribute URLSearchParams searchParams;

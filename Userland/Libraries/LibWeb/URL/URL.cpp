@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/URLParser.h>
 #include <LibWeb/URL/URL.h>
 
 namespace Web::URL {
@@ -109,6 +110,75 @@ void URL::set_password(String const& password)
         return;
     // 2. Set the password given this’s URL and the given value.
     m_url.set_password(AK::URL::percent_encode(password, AK::URL::PercentEncodeSet::Userinfo));
+}
+
+String URL::host() const
+{
+    // 1. Let url be this’s URL.
+    auto& url = m_url;
+    // 2. If url’s host is null, then return the empty string.
+    if (url.host().is_null())
+        return String::empty();
+    // 3. If url’s port is null, return url’s host, serialized.
+    if (!url.port().has_value())
+        return url.host();
+    // 4. Return url’s host, serialized, followed by U+003A (:) and url’s port, serialized.
+    return String::formatted("{}:{}", url.host(), *url.port());
+}
+
+void URL::set_host(const String& host)
+{
+    // 1. If this’s URL’s cannot-be-a-base-URL is true, then return.
+    if (m_url.cannot_be_a_base_url())
+        return;
+    // 2. Basic URL parse the given value with this’s URL as url and host state as state override.
+    auto result_url = URLParser::parse(host, nullptr, m_url, URLParser::State::Host);
+    if (result_url.is_valid())
+        m_url = move(result_url);
+}
+
+String URL::hostname() const
+{
+    // 1. If this’s URL’s host is null, then return the empty string.
+    if (m_url.host().is_null())
+        return String::empty();
+    // 2. Return this’s URL’s host, serialized.
+    return m_url.host();
+}
+
+void URL::set_hostname(String const& hostname)
+{
+    // 1. If this’s URL’s cannot-be-a-base-URL is true, then return.
+    if (m_url.cannot_be_a_base_url())
+        return;
+    // 2. Basic URL parse the given value with this’s URL as url and hostname state as state override.
+    auto result_url = URLParser::parse(hostname, nullptr, m_url, URLParser::State::Hostname);
+    if (result_url.is_valid())
+        m_url = move(result_url);
+}
+
+String URL::port() const
+{
+    // 1. If this’s URL’s port is null, then return the empty string.
+    if (!m_url.port().has_value())
+        return {};
+
+    // 2. Return this’s URL’s port, serialized.
+    return String::formatted("{}", *m_url.port());
+}
+
+void URL::set_port(String const& port)
+{
+    // 1. If this’s URL cannot have a username/password/port, then return.
+    if (m_url.cannot_have_a_username_or_password_or_port())
+        return;
+    // 2. If the given value is the empty string, then set this’s URL’s port to null.
+    if (port.is_empty())
+        m_url.set_port({});
+    // 3. Otherwise, basic URL parse the given value with this’s URL as url and port state as state override.
+    auto result_url = URLParser::parse(port, nullptr, m_url, URLParser::State::Port);
+    if (result_url.is_valid())
+        m_url = move(result_url);
 }
 
 URLSearchParams const* URL::search_params() const
