@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Intl/DisplayNames.h>
+#include <LibJS/Runtime/PrototypeObject.h>
 
 namespace JS::Intl {
 
-class DisplayNamesPrototype final : public Object {
-    JS_OBJECT(DisplayNamesPrototype, Object);
+class DisplayNamesPrototype final : public PrototypeObject<DisplayNamesPrototype, DisplayNames> {
+    JS_PROTOTYPE_OBJECT(DisplayNamesPrototype, DisplayNames, Intl.DisplayNames);
 
 public:
     explicit DisplayNamesPrototype(GlobalObject&);
