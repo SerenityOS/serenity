@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/PrototypeObject.h>
+#include <LibJS/Runtime/Temporal/Calendar.h>
 
 namespace JS::Temporal {
 
-class CalendarPrototype final : public Object {
-    JS_OBJECT(CalendarPrototype, Object);
+class CalendarPrototype final : public PrototypeObject<CalendarPrototype, Calendar> {
+    JS_PROTOTYPE_OBJECT(CalendarPrototype, Calendar, Temporal.Calendar);
 
 public:
     explicit CalendarPrototype(GlobalObject&);

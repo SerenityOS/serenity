@@ -21,7 +21,7 @@ namespace JS::Temporal {
 
 // 12.4 Properties of the Temporal.Calendar Prototype Object, https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-calendar-prototype-object
 CalendarPrototype::CalendarPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -61,19 +61,6 @@ void CalendarPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.eraYear, era_year, 1, attr);
 }
 
-static Calendar* typed_this(GlobalObject& global_object)
-{
-    auto& vm = global_object.vm();
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
-    if (!is<Calendar>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.Calendar");
-        return {};
-    }
-    return static_cast<Calendar*>(this_object);
-}
-
 // 12.4.3 get Temporal.Calendar.prototype.id, https://tc39.es/proposal-temporal/#sec-get-temporal.calendar.prototype.id
 JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::id_getter)
 {
@@ -90,7 +77,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_from_fields)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -124,7 +111,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year_month_from_fields)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -158,7 +145,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_day_from_fields)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -192,7 +179,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_add)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -240,7 +227,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -266,7 +253,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -300,7 +287,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_code)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -326,7 +313,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -352,7 +339,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day_of_week)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -374,7 +361,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day_of_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -396,7 +383,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::week_of_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -418,7 +405,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_week)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -440,7 +427,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_month)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -466,7 +453,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -492,7 +479,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::months_in_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -518,7 +505,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::in_leap_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -546,7 +533,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
 
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -622,7 +609,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::merge_fields)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -648,7 +635,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_string)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -673,7 +660,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::era)
 
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -705,7 +692,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::era_year)
 
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = typed_this(global_object);
+    auto* calendar = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
