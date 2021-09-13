@@ -1,4 +1,8 @@
 {
+  "align-items": {
+    "inherited": false,
+    "initial": "normal"
+  },
   "background": {},
   "background-attachment": {
     "inherited": false,
@@ -217,9 +221,13 @@
       "unitless-length"
     ]
   },
-  "box-shadow":{
+  "box-shadow": {
     "inherited": false,
     "initial": "none"
+  },
+  "box-sizing": {
+    "inherited": false,
+    "initial": "content-box"
   },
   "caption-side": {
     "inherited": true,
@@ -254,6 +262,10 @@
   "display": {
     "inherited": false,
     "initial": "inline"
+  },
+  "fill": {
+    "inherited": true,
+    "initial": "black"
   },
   "flex": {
     "longhands": [
@@ -443,6 +455,26 @@
     "inherited": false,
     "initial": "1"
   },
+  "outline": {
+    "inherited": false,
+    "longhands": [
+      "outline-color",
+      "outline-style",
+      "outline-width"
+    ]
+  },
+  "outline-color": {
+    "inherited": false,
+    "initial": "invert"
+  },
+  "outline-style": {
+    "inherited": false,
+    "initial": "none"
+  },
+  "outline-width": {
+    "inherited": false,
+    "initial": "medium"
+  },
   "overflow": {
     "longhands": [
       "overflow-x",
@@ -497,6 +529,10 @@
     "quirks": [
       "unitless-length"
     ]
+  },
+  "pointer-events": {
+    "inherited": true,
+    "initial": "auto"
   },
   "position": {
     "inherited": false,
@@ -558,6 +594,10 @@
       "unitless-length"
     ]
   },
+  "user-select": {
+    "inherited": false,
+    "initial": "auto"
+  },
   "vertical-align": {
     "inherited": false,
     "initial": "baseline",
@@ -586,6 +626,10 @@
     "quirks": [
       "unitless-length"
     ]
+  },
+  "word-wrap": {
+    "inherited": true,
+    "initial": "normal"
   },
   "z-index": {
     "inherited": false,
