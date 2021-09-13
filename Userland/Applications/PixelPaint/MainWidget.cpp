@@ -577,6 +577,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             Gfx::LaplacianFilter filter;
             if (auto parameters = PixelPaint::FilterParameters<Gfx::LaplacianFilter>::get(false)) {
                 filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
+                layer->did_modify_bitmap(layer->rect());
                 editor->did_complete_action();
             }
         }
@@ -589,6 +590,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             Gfx::LaplacianFilter filter;
             if (auto parameters = PixelPaint::FilterParameters<Gfx::LaplacianFilter>::get(true)) {
                 filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
+                layer->did_modify_bitmap(layer->rect());
                 editor->did_complete_action();
             }
         }
@@ -602,6 +604,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             Gfx::SpatialGaussianBlurFilter<3> filter;
             if (auto parameters = PixelPaint::FilterParameters<Gfx::SpatialGaussianBlurFilter<3>>::get()) {
                 filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
+                layer->did_modify_bitmap(layer->rect());
                 editor->did_complete_action();
             }
         }
@@ -614,6 +617,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             Gfx::SpatialGaussianBlurFilter<5> filter;
             if (auto parameters = PixelPaint::FilterParameters<Gfx::SpatialGaussianBlurFilter<5>>::get()) {
                 filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
+                layer->did_modify_bitmap(layer->rect());
                 editor->did_complete_action();
             }
         }
@@ -626,6 +630,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             Gfx::BoxBlurFilter<3> filter;
             if (auto parameters = PixelPaint::FilterParameters<Gfx::BoxBlurFilter<3>>::get()) {
                 filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
+                layer->did_modify_bitmap(layer->rect());
                 editor->did_complete_action();
             }
         }
@@ -638,6 +643,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             Gfx::BoxBlurFilter<5> filter;
             if (auto parameters = PixelPaint::FilterParameters<Gfx::BoxBlurFilter<5>>::get()) {
                 filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
+                layer->did_modify_bitmap(layer->rect());
                 editor->did_complete_action();
             }
         }
@@ -650,6 +656,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             Gfx::SharpenFilter filter;
             if (auto parameters = PixelPaint::FilterParameters<Gfx::SharpenFilter>::get()) {
                 filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
+                layer->did_modify_bitmap(layer->rect());
                 editor->did_complete_action();
             }
         }
@@ -664,6 +671,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             Gfx::GenericConvolutionFilter<5> filter;
             if (auto parameters = PixelPaint::FilterParameters<Gfx::GenericConvolutionFilter<5>>::get(&window)) {
                 filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
+                layer->did_modify_bitmap(layer->rect());
                 editor->did_complete_action();
             }
         }
@@ -677,6 +685,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         if (auto* layer = editor->active_layer()) {
             Gfx::GrayscaleFilter filter;
             filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect());
+            layer->did_modify_bitmap(layer->rect());
             editor->did_complete_action();
         }
     }));
@@ -687,6 +696,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         if (auto* layer = editor->active_layer()) {
             Gfx::InvertFilter filter;
             filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect());
+            layer->did_modify_bitmap(layer->rect());
             editor->did_complete_action();
         }
     }));
