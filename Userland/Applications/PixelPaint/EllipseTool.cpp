@@ -101,7 +101,7 @@ void EllipseTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     auto preview_start = m_editor->layer_position_to_editor_position(*layer, m_ellipse_start_position).to_type<int>();
     auto preview_end = m_editor->layer_position_to_editor_position(*layer, m_ellipse_end_position).to_type<int>();
-    draw_using(painter, preview_start, preview_end, m_thickness * m_editor->scale());
+    draw_using(painter, preview_start, preview_end, AK::max(m_thickness * m_editor->scale(), 1));
 }
 
 void EllipseTool::on_keydown(GUI::KeyEvent& event)
