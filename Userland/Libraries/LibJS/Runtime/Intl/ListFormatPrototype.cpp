@@ -12,25 +12,9 @@
 
 namespace JS::Intl {
 
-static ListFormat* typed_this(GlobalObject& global_object)
-{
-    auto& vm = global_object.vm();
-
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return nullptr;
-
-    if (!is<ListFormat>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Intl.ListFormat");
-        return nullptr;
-    }
-
-    return static_cast<ListFormat*>(this_object);
-}
-
 // 13.4 Properties of the Intl.ListFormat Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-listformat-prototype-object
 ListFormatPrototype::ListFormatPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -56,7 +40,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format)
 
     // 1. Let lf be the this value.
     // 2. Perform ? RequireInternalSlot(lf, [[InitializedListFormat]]).
-    auto* list_format = typed_this(global_object);
+    auto* list_format = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -77,7 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format_to_parts)
 
     // 1. Let lf be the this value.
     // 2. Perform ? RequireInternalSlot(lf, [[InitializedListFormat]]).
-    auto* list_format = typed_this(global_object);
+    auto* list_format = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -95,7 +79,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::resolved_options)
 {
     // 1. Let lf be the this value.
     // 2. Perform ? RequireInternalSlot(lf, [[InitializedListFormat]]).
-    auto* list_format = typed_this(global_object);
+    auto* list_format = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
