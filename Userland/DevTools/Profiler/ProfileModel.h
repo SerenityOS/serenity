@@ -38,6 +38,8 @@ public:
     virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;
     virtual int tree_column() const override { return Column::StackFrame; }
     virtual bool is_column_sortable(int) const override { return false; }
+    virtual bool is_searchable() const override { return true; }
+    virtual Vector<GUI::ModelIndex> matches(StringView const&, unsigned flags, GUI::ModelIndex const&) override;
 
 private:
     explicit ProfileModel(Profile&);
