@@ -482,7 +482,7 @@ void Tab::show_inspector_window(Browser::Tab::InspectorTarget inspector_target)
     if (!m_dom_inspector_widget) {
         auto window = GUI::Window::construct(&this->window());
         window->resize(300, 500);
-        window->set_title("DOM inspector");
+        window->set_title("Inspector");
         window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"));
         window->on_close = [&]() {
             m_web_content_view->clear_inspected_dom_node();
