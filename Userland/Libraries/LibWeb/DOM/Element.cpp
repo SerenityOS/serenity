@@ -17,6 +17,7 @@
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/DOMParsing/InnerHTML.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Layout/BlockBox.h>
@@ -244,16 +245,15 @@ NonnullRefPtr<CSS::StyleProperties> Element::computed_style()
     return properties;
 }
 
-void Element::set_inner_html(StringView markup)
+ExceptionOr<void> Element::set_inner_html(String const& markup)
 {
-    auto new_children = HTML::HTMLDocumentParser::parse_html_fragment(*this, markup);
-    remove_all_children();
-    while (!new_children.is_empty()) {
-        append_child(new_children.take_first());
-    }
+    auto result = DOMParsing::InnerHTML::inner_html_setter(*this, markup);
+    if (result.is_exception())
+        return result.exception();
 
     set_needs_style_update(true);
     document().invalidate_layout();
+    return {};
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
