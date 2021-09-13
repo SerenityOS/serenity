@@ -108,8 +108,8 @@ void LineTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
 
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
-    auto preview_start = m_editor->layer_position_to_editor_position(*layer, m_line_start_position).to_type<int>();
-    auto preview_end = m_editor->layer_position_to_editor_position(*layer, m_line_end_position).to_type<int>();
+    auto preview_start = editor_stroke_position(m_line_start_position, m_thickness);
+    auto preview_end = editor_stroke_position(m_line_end_position, m_thickness);
     painter.draw_line(preview_start, preview_end, m_editor->color_for(m_drawing_button), AK::max(m_thickness * m_editor->scale(), 1));
 }
 
