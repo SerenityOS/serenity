@@ -227,6 +227,8 @@
 #include <LibWeb/Bindings/TextPrototype.h>
 #include <LibWeb/Bindings/UIEventConstructor.h>
 #include <LibWeb/Bindings/UIEventPrototype.h>
+#include <LibWeb/Bindings/URLConstructor.h>
+#include <LibWeb/Bindings/URLPrototype.h>
 #include <LibWeb/Bindings/URLSearchParamsConstructor.h>
 #include <LibWeb/Bindings/URLSearchParamsPrototype.h>
 #include <LibWeb/Bindings/WebSocketConstructor.h>
@@ -359,6 +361,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(Text)                      \
     ADD_WINDOW_OBJECT_INTERFACE(UIEvent)                   \
     ADD_WINDOW_OBJECT_INTERFACE(URLSearchParams)           \
+    ADD_WINDOW_OBJECT_INTERFACE(URL)                       \
     ADD_WINDOW_OBJECT_INTERFACE(WebSocket)                 \
     ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequest)            \
     ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequestEventTarget) \
