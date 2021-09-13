@@ -53,6 +53,7 @@ void LineTool::on_mousedown(Layer* layer, MouseEvent& event)
 
     m_drawing_button = layer_event.button();
 
+    m_drag_start_position = layer_event.position();
     m_line_start_position = layer_event.position();
     m_line_end_position = layer_event.position();
 
@@ -85,10 +86,17 @@ void LineTool::on_mousemove(Layer* layer, MouseEvent& event)
 
     if (layer_event.shift()) {
         constexpr auto ANGLE_STEP = M_PI / 8;
-        m_line_end_position = constrain_line_angle(m_line_start_position, layer_event.position(), ANGLE_STEP);
+        m_line_end_position = constrain_line_angle(m_drag_start_position, layer_event.position(), ANGLE_STEP);
     } else {
         m_line_end_position = layer_event.position();
     }
+
+    if (layer_event.alt()) {
+        m_line_start_position = m_drag_start_position + (m_drag_start_position - m_line_end_position);
+    } else {
+        m_line_start_position = m_drag_start_position;
+    }
+
     m_editor->update();
 }
 
