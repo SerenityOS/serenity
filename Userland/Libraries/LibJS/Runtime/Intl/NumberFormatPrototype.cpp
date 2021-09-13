@@ -11,25 +11,9 @@
 
 namespace JS::Intl {
 
-static NumberFormat* typed_this(GlobalObject& global_object)
-{
-    auto& vm = global_object.vm();
-
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return nullptr;
-
-    if (!is<NumberFormat>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Intl.NumberFormat");
-        return nullptr;
-    }
-
-    return static_cast<NumberFormat*>(this_object);
-}
-
 // 15.4 Properties of the Intl.NumberFormat Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-numberformat-prototype-object
 NumberFormatPrototype::NumberFormatPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -53,7 +37,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
     // 2. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Set nf to ? UnwrapNumberFormat(nf).
     // 3. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
-    auto* number_format = typed_this(global_object);
+    auto* number_format = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
