@@ -74,7 +74,7 @@ public:
     void set_query(String);
     void set_fragment(String);
     void set_cannot_be_a_base_url(bool value) { m_cannot_be_a_base_url = value; }
-    void append_path(String path) { m_paths.append(path); }
+    void append_path(String path) { m_paths.append(move(path)); }
 
     String path() const;
     String basename() const;
