@@ -55,3 +55,9 @@ private:
 };
 
 }
+
+namespace Web::Bindings {
+
+URLSearchParamsWrapper* wrap(JS::GlobalObject&, URL::URLSearchParams&);
+
+}
