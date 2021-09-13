@@ -145,4 +145,29 @@ GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     return {};
 }
 
+Vector<GUI::ModelIndex> ProfileModel::matches(StringView const& searching, unsigned flags, GUI::ModelIndex const& parent)
+{
+    RemoveReference<decltype(m_profile.roots())>* nodes { nullptr };
+
+    if (!parent.is_valid())
+        nodes = &m_profile.roots();
+    else
+        nodes = &static_cast<ProfileNode*>(parent.internal_data())->children();
+
+    if (!nodes)
+        return {};
+
+    Vector<GUI::ModelIndex> found_indices;
+    for (auto it = nodes->begin(); !it.is_end(); ++it) {
+        GUI::ModelIndex index = this->index(it.index(), StackFrame, parent);
+        if (!string_matches(data(index, GUI::ModelRole::Display).as_string(), searching, flags))
+            continue;
+
+        found_indices.append(index);
+        if (flags & FirstMatchOnly)
+            break;
+    }
+    return found_indices;
+}
+
 }
