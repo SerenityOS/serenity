@@ -12,25 +12,9 @@
 
 namespace JS::Intl {
 
-static Locale* typed_this(GlobalObject& global_object)
-{
-    auto& vm = global_object.vm();
-
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return nullptr;
-
-    if (!is<Locale>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Intl.Locale");
-        return nullptr;
-    }
-
-    return static_cast<Locale*>(this_object);
-}
-
 // 14.3 Properties of the Intl.Locale Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-locale-prototype-object
 LocalePrototype::LocalePrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -65,7 +49,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::maximize)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = typed_this(global_object);
+    auto* locale_object = typed_this_object(global_object);
     if (!locale_object)
         return {};
 
@@ -85,7 +69,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::minimize)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = typed_this(global_object);
+    auto* locale_object = typed_this_object(global_object);
     if (!locale_object)
         return {};
 
@@ -105,7 +89,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::to_string)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = typed_this(global_object);
+    auto* locale_object = typed_this_object(global_object);
     if (!locale_object)
         return {};
 
@@ -118,7 +102,7 @@ JS_DEFINE_NATIVE_GETTER(LocalePrototype::base_name)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = typed_this(global_object);
+    auto* locale_object = typed_this_object(global_object);
     if (!locale_object)
         return {};
 
@@ -142,15 +126,15 @@ JS_DEFINE_NATIVE_GETTER(LocalePrototype::base_name)
 // 14.3.9 get Intl.Locale.prototype.collation, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.collation
 // 14.3.10 get Intl.Locale.prototype.hourCycle, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.hourCycle
 // 14.3.12 get Intl.Locale.prototype.numberingSystem, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.numberingSystem
-#define __JS_ENUMERATE(keyword)                          \
-    JS_DEFINE_NATIVE_GETTER(LocalePrototype::keyword)    \
-    {                                                    \
-        auto* locale_object = typed_this(global_object); \
-        if (!locale_object)                              \
-            return {};                                   \
-        if (!locale_object->has_##keyword())             \
-            return js_undefined();                       \
-        return js_string(vm, locale_object->keyword());  \
+#define __JS_ENUMERATE(keyword)                                 \
+    JS_DEFINE_NATIVE_GETTER(LocalePrototype::keyword)           \
+    {                                                           \
+        auto* locale_object = typed_this_object(global_object); \
+        if (!locale_object)                                     \
+            return {};                                          \
+        if (!locale_object->has_##keyword())                    \
+            return js_undefined();                              \
+        return js_string(vm, locale_object->keyword());         \
     }
 JS_ENUMERATE_LOCALE_KEYWORD_PROPERTIES
 #undef __JS_ENUMERATE
@@ -160,7 +144,7 @@ JS_DEFINE_NATIVE_GETTER(LocalePrototype::numeric)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = typed_this(global_object);
+    auto* locale_object = typed_this_object(global_object);
     if (!locale_object)
         return {};
 
@@ -173,7 +157,7 @@ JS_DEFINE_NATIVE_GETTER(LocalePrototype::language)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = typed_this(global_object);
+    auto* locale_object = typed_this_object(global_object);
     if (!locale_object)
         return {};
 
@@ -192,7 +176,7 @@ JS_DEFINE_NATIVE_GETTER(LocalePrototype::script)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = typed_this(global_object);
+    auto* locale_object = typed_this_object(global_object);
     if (!locale_object)
         return {};
 
@@ -215,7 +199,7 @@ JS_DEFINE_NATIVE_GETTER(LocalePrototype::region)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = typed_this(global_object);
+    auto* locale_object = typed_this_object(global_object);
     if (!locale_object)
         return {};
 
