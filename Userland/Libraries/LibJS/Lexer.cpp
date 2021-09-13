@@ -408,6 +408,11 @@ Optional<u32> Lexer::is_identifier_start(size_t& identifier_length) const
     if (is_ascii_alpha(code_point) || code_point == '_' || code_point == '$')
         return code_point;
 
+    // Optimization: the first codepoint with the ID_Start property after A-Za-z is outside the
+    // ASCII range (0x00AA), so we can skip code_point_has_property() for any ASCII characters.
+    if (is_ascii(code_point))
+        return {};
+
     static auto id_start_category = Unicode::property_from_string("ID_Start"sv);
     if (id_start_category.has_value() && Unicode::code_point_has_property(code_point, *id_start_category))
         return code_point;
@@ -435,6 +440,13 @@ Optional<u32> Lexer::is_identifier_middle(size_t& identifier_length) const
 
     if (is_ascii_alphanumeric(code_point) || (code_point == '$') || (code_point == ZERO_WIDTH_NON_JOINER) || (code_point == ZERO_WIDTH_JOINER))
         return code_point;
+
+    // Optimization: the first codepoint with the ID_Continue property after A-Za-z0-9_ is outside the
+    // ASCII range (0x00AA), so we can skip code_point_has_property() for any ASCII characters.
+    if (code_point == '_')
+        return code_point;
+    if (is_ascii(code_point))
+        return {};
 
     static auto id_continue_category = Unicode::property_from_string("ID_Continue"sv);
     if (id_continue_category.has_value() && Unicode::code_point_has_property(code_point, *id_continue_category))
