@@ -6,6 +6,7 @@
 
 #include <AK/AnyOf.h>
 #include <AK/StringBuilder.h>
+#include <LibWeb/CSS/ComputedCSSStyleDeclaration.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleInvalidator.h>
@@ -229,29 +230,17 @@ void Element::recompute_style()
 
 NonnullRefPtr<CSS::StyleProperties> Element::computed_style()
 {
-    // FIXME: This implementation is not doing anything it's supposed to.
-    auto properties = m_specified_css_values->clone();
-    if (layout_node() && layout_node()->has_style()) {
-        CSS::PropertyID box_model_metrics[] = {
-            CSS::PropertyID::MarginTop,
-            CSS::PropertyID::MarginBottom,
-            CSS::PropertyID::MarginLeft,
-            CSS::PropertyID::MarginRight,
-            CSS::PropertyID::PaddingTop,
-            CSS::PropertyID::PaddingBottom,
-            CSS::PropertyID::PaddingLeft,
-            CSS::PropertyID::PaddingRight,
-            CSS::PropertyID::BorderTopWidth,
-            CSS::PropertyID::BorderBottomWidth,
-            CSS::PropertyID::BorderLeftWidth,
-            CSS::PropertyID::BorderRightWidth,
-        };
-        for (CSS::PropertyID id : box_model_metrics) {
-            auto prop = m_specified_css_values->property(id);
-            if (prop.has_value())
-                properties->set_property(id, prop.value());
-        }
+    auto element_computed_style = CSS::ComputedCSSStyleDeclaration::create(*this);
+    auto properties = CSS::StyleProperties::create();
+
+    for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
+        auto property_id = (CSS::PropertyID)i;
+        auto maybe_value = element_computed_style->property(property_id);
+        if (!maybe_value.has_value())
+            continue;
+        properties->set_property(property_id, maybe_value.release_value().value);
     }
+
     return properties;
 }
 
