@@ -19,6 +19,8 @@
 
 namespace Web::DOM {
 
+class RequestAnimationFrameCallback;
+
 class Window final
     : public RefCounted<Window>
     , public EventTarget {
@@ -90,6 +92,8 @@ private:
     NonnullOwnPtr<HighResolutionTime::Performance> m_performance;
     NonnullRefPtr<CSS::Screen> m_screen;
     RefPtr<Event> m_current_event;
+
+    HashMap<i32, NonnullRefPtr<RequestAnimationFrameCallback>> m_request_animation_frame_callbacks;
 };
 
 }
