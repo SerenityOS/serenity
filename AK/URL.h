@@ -58,6 +58,7 @@ public:
     String const& fragment() const { return m_fragment; }
     u16 port() const { return m_port ? m_port : default_port_for_scheme(m_scheme); }
     bool cannot_be_a_base_url() const { return m_cannot_be_a_base_url; }
+    bool cannot_have_a_username_or_password_or_port() const { return m_host.is_null() || m_host.is_empty() || m_cannot_be_a_base_url || m_scheme == "file"sv; }
 
     bool includes_credentials() const { return !m_username.is_empty() || !m_password.is_empty(); }
     bool is_special() const { return is_special_scheme(m_scheme); }
