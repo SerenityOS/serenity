@@ -53,10 +53,12 @@ void ToolboxWidget::setup_tools()
     auto add_tool = [&](String name, StringView const& icon_name, GUI::Shortcut const& shortcut, NonnullOwnPtr<Tool> tool) {
         auto action = GUI::Action::create_checkable(move(name), shortcut, Gfx::Bitmap::try_load_from_file(String::formatted("/res/icons/pixelpaint/{}.png", icon_name)),
             [this, tool = tool.ptr()](auto& action) {
-                if (action.is_checked())
+                if (action.is_checked()) {
                     on_tool_selection(tool);
-                else
+                    m_active_tool = tool;
+                } else {
                     on_tool_selection(nullptr);
+                }
             });
         m_action_group.add_action(action);
         auto& button = m_toolbar->add_action(action);
