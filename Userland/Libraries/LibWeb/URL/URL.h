@@ -28,6 +28,11 @@ public:
 
     static DOM::ExceptionOr<NonnullRefPtr<URL>> create_with_global_object(Bindings::WindowObject&, const String& url, const String& base);
 
+    String href() const;
+    DOM::ExceptionOr<void> set_href(String const&);
+
+    String to_json() const;
+
     void set_query(Badge<URLSearchParams>, String query) { m_url.set_query(move(query)); }
 
 private:

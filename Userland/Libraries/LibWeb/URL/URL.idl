@@ -1,7 +1,7 @@
 interface URL {
     constructor(USVString url, optional USVString base);
 
-    // TODO: stringifier attribute USVString href;
+    stringifier attribute USVString href;
     // TODO: readonly attribute USVString origin;
     // TODO: attribute USVString protocol;
     // TODO: attribute USVString username;
@@ -14,5 +14,5 @@ interface URL {
     // TODO: [SameObject] readonly attribute URLSearchParams searchParams;
     // TODO: attribute USVString hash;
 
-    // TODO: USVString toJSON();
+    USVString toJSON();
 };

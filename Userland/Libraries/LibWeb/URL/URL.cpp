@@ -44,4 +44,35 @@ DOM::ExceptionOr<NonnullRefPtr<URL>> URL::create_with_global_object(Bindings::Wi
     return result_url;
 }
 
+String URL::href() const
+{
+    // return the serialization of this’s URL.
+    return m_url.serialize();
+}
+
+String URL::to_json() const
+{
+    // return the serialization of this’s URL.
+    return m_url.serialize();
+}
+
+DOM::ExceptionOr<void> URL::set_href(String const& href)
+{
+    // 1. Let parsedURL be the result of running the basic URL parser on the given value.
+    AK::URL parsed_url = href;
+    // 2. If parsedURL is failure, then throw a TypeError.
+    if (!parsed_url.is_valid())
+        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Invalid URL" };
+    // 3. Set this’s URL to parsedURL.
+    m_url = move(parsed_url);
+    // 4. Empty this’s query object’s list.
+    m_query->m_list.clear();
+    // 5. Let query be this’s URL’s query.
+    auto& query = m_url.query();
+    // 6. If query is non-null, then set this’s query object’s list to the result of parsing query.
+    if (!query.is_null())
+        m_query->m_list = url_decode(query);
+    return {};
+}
+
 }
