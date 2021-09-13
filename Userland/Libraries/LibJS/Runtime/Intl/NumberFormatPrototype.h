@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Intl/NumberFormat.h>
+#include <LibJS/Runtime/PrototypeObject.h>
 
 namespace JS::Intl {
 
-class NumberFormatPrototype final : public Object {
-    JS_OBJECT(NumberFormatPrototype, Object);
+class NumberFormatPrototype final : public PrototypeObject<NumberFormatPrototype, NumberFormat> {
+    JS_PROTOTYPE_OBJECT(NumberFormatPrototype, NumberFormat, Intl.NumberFormat);
 
 public:
     explicit NumberFormatPrototype(GlobalObject&);
