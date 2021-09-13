@@ -10,6 +10,7 @@
 #include "RegexMatch.h"
 #include "RegexOptions.h"
 
+#include <AK/DisjointChunks.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/HashMap.h>
@@ -139,7 +140,9 @@ struct CompareTypeAndValuePair {
 
 class OpCode;
 
-class ByteCode : public Vector<ByteCodeValueType> {
+class ByteCode : public DisjointChunks<ByteCodeValueType> {
+    using Base = DisjointChunks<ByteCodeValueType>;
+
 public:
     ByteCode()
     {
@@ -150,6 +153,36 @@ public:
     virtual ~ByteCode() = default;
 
     ByteCode& operator=(ByteCode&&) = default;
+    ByteCode& operator=(Base&& value)
+    {
+        static_cast<Base&>(*this) = move(value);
+        return *this;
+    }
+
+    template<typename... Args>
+    void empend(Args&&... args)
+    {
+        if (is_empty())
+            Base::append({});
+        Base::last_chunk().empend(forward<Args>(args)...);
+    }
+    template<typename T>
+    void append(T&& value)
+    {
+        if (is_empty())
+            Base::append({});
+        Base::last_chunk().append(forward<T>(value));
+    }
+    template<typename T>
+    void prepend(T&& value)
+    {
+        if (is_empty())
+            return append(forward<T>(value));
+        Base::first_chunk().prepend(forward<T>(value));
+    }
+
+    void last_chunk() const = delete;
+    void first_chunk() const = delete;
 
     void insert_bytecode_compare_values(Vector<CompareTypeAndValuePair>&& pairs)
     {
@@ -309,7 +342,7 @@ public:
         VERIFY_NOT_REACHED();
     }
 
-    void insert_bytecode_alternation(ByteCode left, ByteCode right)
+    void insert_bytecode_alternation(ByteCode&& left, ByteCode&& right)
     {
 
         // FORKJUMP _ALT
@@ -320,7 +353,7 @@ public:
         // LABEL _END
 
         // Optimisation: Eliminate extra work by unifying common pre-and-postfix exprs.
-        Optimizer::append_alternation(*this, left, right);
+        Optimizer::append_alternation(*this, move(left), move(right));
     }
 
     template<typename T>
@@ -476,8 +509,7 @@ public:
 
         bytecode.empend(bytecode_to_repeat.size()); // Jump to the _END label
 
-        for (auto& op : bytecode_to_repeat)
-            bytecode.append(move(op));
+        bytecode.extend(move(bytecode_to_repeat));
         // LABEL _END = bytecode.size()
 
         bytecode_to_repeat = move(bytecode);
