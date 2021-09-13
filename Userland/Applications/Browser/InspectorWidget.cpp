@@ -58,18 +58,27 @@ void InspectorWidget::set_inspected_node(GUI::ModelIndex const index)
 
 InspectorWidget::InspectorWidget()
 {
-    set_layout<GUI::VerticalBoxLayout>();
+    set_fill_with_background_color(true);
+
+    auto& layout = set_layout<GUI::VerticalBoxLayout>();
+    layout.set_margins({ 4, 4, 4, 4 });
     auto& splitter = add<GUI::VerticalSplitter>();
 
     auto& top_tab_widget = splitter.add<GUI::TabWidget>();
 
-    m_dom_tree_view = top_tab_widget.add_tab<GUI::TreeView>("DOM");
+    auto& dom_tree_container = top_tab_widget.add_tab<GUI::Widget>("DOM");
+    dom_tree_container.set_layout<GUI::VerticalBoxLayout>();
+    dom_tree_container.layout()->set_margins({ 4, 4, 4, 4 });
+    m_dom_tree_view = dom_tree_container.add<GUI::TreeView>();
     m_dom_tree_view->on_selection_change = [this] {
         const auto& index = m_dom_tree_view->selection().first();
         set_inspected_node(index);
     };
 
-    m_layout_tree_view = top_tab_widget.add_tab<GUI::TreeView>("Layout");
+    auto& layout_tree_container = top_tab_widget.add_tab<GUI::Widget>("Layout");
+    layout_tree_container.set_layout<GUI::VerticalBoxLayout>();
+    layout_tree_container.layout()->set_margins({ 4, 4, 4, 4 });
+    m_layout_tree_view = layout_tree_container.add<GUI::TreeView>();
     m_layout_tree_view->on_selection_change = [this] {
         const auto& index = m_layout_tree_view->selection().first();
         set_inspected_node(index);
@@ -77,8 +86,17 @@ InspectorWidget::InspectorWidget()
 
     auto& bottom_tab_widget = splitter.add<GUI::TabWidget>();
 
-    m_style_table_view = bottom_tab_widget.add_tab<GUI::TableView>("Styles");
-    m_computed_style_table_view = bottom_tab_widget.add_tab<GUI::TableView>("Computed");
+    auto& style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Styles");
+    style_table_container.set_layout<GUI::VerticalBoxLayout>();
+    style_table_container.layout()->set_margins({ 4, 4, 4, 4 });
+    m_style_table_view = style_table_container.add<GUI::TableView>();
+
+    auto& computed_style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Computed");
+    computed_style_table_container.set_layout<GUI::VerticalBoxLayout>();
+    computed_style_table_container.layout()->set_margins({ 4, 4, 4, 4 });
+    m_computed_style_table_view = computed_style_table_container.add<GUI::TableView>();
+
+    m_dom_tree_view->set_focus(true);
 }
 
 InspectorWidget::~InspectorWidget()
