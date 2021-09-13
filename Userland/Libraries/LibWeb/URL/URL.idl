@@ -3,16 +3,16 @@ interface URL {
 
     stringifier attribute USVString href;
     readonly attribute USVString origin;
-    // TODO: attribute USVString protocol;
+    attribute USVString protocol;
     attribute USVString username;
     attribute USVString password;
     attribute USVString host;
     attribute USVString hostname;
     attribute USVString port;
-    // TODO: attribute USVString pathname;
-    // TODO: attribute USVString search;
+    attribute USVString pathname;
+    attribute USVString search;
     [SameObject] readonly attribute URLSearchParams searchParams;
-    // TODO: attribute USVString hash;
+    attribute USVString hash;
 
     USVString toJSON();
 };
