@@ -15,7 +15,7 @@ namespace JS::Temporal {
 
 // 10.3 Properties of the Temporal.PlainMonthDay Prototype Object, https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-plainmonthday-prototype-object
 PlainMonthDayPrototype::PlainMonthDayPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -41,25 +41,12 @@ void PlainMonthDayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
 }
 
-static PlainMonthDay* typed_this(GlobalObject& global_object)
-{
-    auto& vm = global_object.vm();
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
-    if (!is<PlainMonthDay>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainMonthDay");
-        return {};
-    }
-    return static_cast<PlainMonthDay*>(this_object);
-}
-
 // 10.3.3 get Temporal.PlainMonthDay.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.calendar
 JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::calendar_getter)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = typed_this(global_object);
+    auto* month_day = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -72,7 +59,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::month_code_getter)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = typed_this(global_object);
+    auto* month_day = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -88,7 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::day_getter)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = typed_this(global_object);
+    auto* month_day = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -104,7 +91,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::equals)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = typed_this(global_object);
+    auto* month_day = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -134,7 +121,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_string)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = typed_this(global_object);
+    auto* month_day = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -162,7 +149,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_locale_string)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = typed_this(global_object);
+    auto* month_day = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -179,7 +166,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_json)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = typed_this(global_object);
+    auto* month_day = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -204,7 +191,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::get_iso_fields)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = typed_this(global_object);
+    auto* month_day = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
