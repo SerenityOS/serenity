@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/PrototypeObject.h>
+#include <LibJS/Runtime/Temporal/PlainYearMonth.h>
 
 namespace JS::Temporal {
 
-class PlainYearMonthPrototype final : public Object {
-    JS_OBJECT(PlainYearMonthPrototype, Object);
+class PlainYearMonthPrototype final : public PrototypeObject<PlainYearMonthPrototype, PlainYearMonth> {
+    JS_PROTOTYPE_OBJECT(PlainYearMonthPrototype, PlainYearMonth, Temporal.PlainYearMonth);
 
 public:
     explicit PlainYearMonthPrototype(GlobalObject&);
