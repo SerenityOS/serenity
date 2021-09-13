@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Intl/Locale.h>
+#include <LibJS/Runtime/PrototypeObject.h>
 
 namespace JS::Intl {
 
-class LocalePrototype final : public Object {
-    JS_OBJECT(LocalePrototype, Object);
+class LocalePrototype final : public PrototypeObject<LocalePrototype, Locale> {
+    JS_PROTOTYPE_OBJECT(LocalePrototype, Locale, Intl.Locale);
 
 public:
     explicit LocalePrototype(GlobalObject&);
