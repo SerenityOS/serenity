@@ -73,13 +73,8 @@ MainWidget::MainWidget()
         m_palette_widget->set_image_editor(image_editor);
         m_layer_list_widget->set_image(&image_editor.image());
         m_layer_properties_widget->set_layer(image_editor.active_layer());
-        // FIXME: This is badly factored. It transfers tools from the previously active editor to the new one.
-        m_toolbox->template for_each_tool([&](auto& tool) {
-            if (tool.editor()) {
-                tool.editor()->set_active_tool(nullptr);
-                image_editor.set_active_tool(&tool);
-            }
-        });
+        if (auto* active_tool = m_toolbox->active_tool())
+            image_editor.set_active_tool(active_tool);
         m_show_guides_action->set_checked(image_editor.guide_visibility());
         m_show_rulers_action->set_checked(image_editor.ruler_visibility());
     };
