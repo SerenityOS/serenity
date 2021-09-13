@@ -56,8 +56,15 @@ enum class PropertyID {
     Custom,
 )~~~");
 
+    Optional<String> first_property_id;
+    Optional<String> last_property_id;
+
     json.value().as_object().for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
+
+        if (!first_property_id.has_value())
+            first_property_id = name;
+        last_property_id = name;
 
         auto member_generator = generator.fork();
         member_generator.set("name:titlecase", title_casify(name));
@@ -67,6 +74,9 @@ enum class PropertyID {
 )~~~");
     });
 
+    generator.set("first_property_id", title_casify(first_property_id.value()));
+    generator.set("last_property_id", title_casify(last_property_id.value()));
+
     generator.append(R"~~~(
 };
 
@@ -75,6 +85,9 @@ const char* string_from_property_id(PropertyID);
 bool is_inherited_property(PropertyID);
 bool is_pseudo_property(PropertyID);
 RefPtr<StyleValue> property_initial_value(PropertyID);
+
+constexpr PropertyID first_property_id = PropertyID::@first_property_id@;
+constexpr PropertyID last_property_id = PropertyID::@last_property_id@;
 
 enum class Quirk {
     // https://quirks.spec.whatwg.org/#the-hashless-hex-color-quirk
