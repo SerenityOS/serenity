@@ -75,6 +75,42 @@ DOM::ExceptionOr<void> URL::set_href(String const& href)
     return {};
 }
 
+String URL::origin() const
+{
+    // return the serialization of this’s URL’s origin.
+    return m_url.serialize_origin();
+}
+
+String URL::username() const
+{
+    // return this’s URL’s username.
+    return m_url.username();
+}
+
+void URL::set_username(const String& username)
+{
+    // 1. If this’s URL cannot have a username/password/port, then return.
+    if (m_url.cannot_have_a_username_or_password_or_port())
+        return;
+    // 2. Set the username given this’s URL and the given value.
+    m_url.set_username(AK::URL::percent_encode(username, AK::URL::PercentEncodeSet::Userinfo));
+}
+
+String URL::password() const
+{
+    // return this’s URL’s password.
+    return m_url.password();
+}
+
+void URL::set_password(String const& password)
+{
+    // 1. If this’s URL cannot have a username/password/port, then return.
+    if (m_url.cannot_have_a_username_or_password_or_port())
+        return;
+    // 2. Set the password given this’s URL and the given value.
+    m_url.set_password(AK::URL::percent_encode(password, AK::URL::PercentEncodeSet::Userinfo));
+}
+
 URLSearchParams const* URL::search_params() const
 {
     return m_query;
