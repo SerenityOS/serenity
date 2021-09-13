@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Intl/ListFormat.h>
+#include <LibJS/Runtime/PrototypeObject.h>
 
 namespace JS::Intl {
 
-class ListFormatPrototype final : public Object {
-    JS_OBJECT(ListFormatPrototype, Object);
+class ListFormatPrototype final : public PrototypeObject<ListFormatPrototype, ListFormat> {
+    JS_PROTOTYPE_OBJECT(ListFormatPrototype, ListFormat, Intl.ListFormat);
 
 public:
     explicit ListFormatPrototype(GlobalObject&);
