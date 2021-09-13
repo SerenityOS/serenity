@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/NonnullRefPtr.h>
 #include <LibWeb/CSS/ComputedCSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
@@ -371,6 +372,13 @@ static CSS::ValueID to_css_value_id(CSS::ListStyleType value)
     VERIFY_NOT_REACHED();
 }
 
+static NonnullRefPtr<StyleValue> value_or_default(Optional<StyleProperty> property, NonnullRefPtr<StyleValue> default_style)
+{
+    if (property.has_value())
+        return property.value().value;
+    return default_style;
+}
+
 Optional<StyleProperty> ComputedCSSStyleDeclaration::property(PropertyID property_id) const
 {
     const_cast<DOM::Document&>(m_element->document()).force_layout();
@@ -589,25 +597,54 @@ Optional<StyleProperty> ComputedCSSStyleDeclaration::property(PropertyID propert
             .property_id = property_id,
             .value = LengthStyleValue::create(layout_node.computed_values().padding().left),
         };
+    case CSS::PropertyID::BorderRadius: {
+        auto maybe_top_left_radius = property(CSS::PropertyID::BorderTopLeftRadius);
+        auto maybe_top_right_radius = property(CSS::PropertyID::BorderTopRightRadius);
+        auto maybe_bottom_left_radius = property(CSS::PropertyID::BorderBottomLeftRadius);
+        auto maybe_bottom_right_radius = property(CSS::PropertyID::BorderBottomRightRadius);
+        RefPtr<BorderRadiusStyleValue> top_left_radius, top_right_radius, bottom_left_radius, bottom_right_radius;
+        if (maybe_top_left_radius.has_value()) {
+            VERIFY(maybe_top_left_radius.value().value->type() == StyleValue::Type::BorderRadius);
+            top_left_radius = *static_cast<BorderRadiusStyleValue*>(maybe_top_left_radius.value().value.ptr());
+        }
+        if (maybe_top_right_radius.has_value()) {
+            VERIFY(maybe_top_right_radius.value().value->type() == StyleValue::Type::BorderRadius);
+            top_right_radius = *static_cast<BorderRadiusStyleValue*>(maybe_top_right_radius.value().value.ptr());
+        }
+        if (maybe_bottom_left_radius.has_value()) {
+            VERIFY(maybe_bottom_left_radius.value().value->type() == StyleValue::Type::BorderRadius);
+            bottom_left_radius = *static_cast<BorderRadiusStyleValue*>(maybe_bottom_left_radius.value().value.ptr());
+        }
+        if (maybe_bottom_right_radius.has_value()) {
+            VERIFY(maybe_bottom_right_radius.value().value->type() == StyleValue::Type::BorderRadius);
+            bottom_right_radius = *static_cast<BorderRadiusStyleValue*>(maybe_bottom_right_radius.value().value.ptr());
+        }
+
+        return StyleProperty {
+            .property_id = property_id,
+            .value = CombinedBorderRadiusStyleValue::create(top_left_radius.release_nonnull(), top_right_radius.release_nonnull(), bottom_right_radius.release_nonnull(), bottom_left_radius.release_nonnull()),
+        };
+    }
+    // FIXME: The two radius components are not yet stored, as we currently don't actually render them.
     case CSS::PropertyID::BorderBottomLeftRadius:
         return StyleProperty {
             .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().border_bottom_left_radius()),
+            .value = BorderRadiusStyleValue::create(layout_node.computed_values().border_bottom_left_radius(), layout_node.computed_values().border_bottom_left_radius()),
         };
     case CSS::PropertyID::BorderBottomRightRadius:
         return StyleProperty {
             .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().border_bottom_right_radius()),
+            .value = BorderRadiusStyleValue::create(layout_node.computed_values().border_bottom_right_radius(), layout_node.computed_values().border_bottom_right_radius()),
         };
     case CSS::PropertyID::BorderTopLeftRadius:
         return StyleProperty {
             .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().border_top_left_radius()),
+            .value = BorderRadiusStyleValue::create(layout_node.computed_values().border_top_left_radius(), layout_node.computed_values().border_top_left_radius()),
         };
     case CSS::PropertyID::BorderTopRightRadius:
         return StyleProperty {
             .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().border_top_right_radius()),
+            .value = BorderRadiusStyleValue::create(layout_node.computed_values().border_top_right_radius(), layout_node.computed_values().border_top_right_radius()),
         };
     case CSS::PropertyID::OverflowX:
         return StyleProperty {
@@ -639,11 +676,38 @@ Optional<StyleProperty> ComputedCSSStyleDeclaration::property(PropertyID propert
             .property_id = property_id,
             .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().background_repeat_y())),
         };
+    case CSS::PropertyID::BackgroundRepeat: {
+        auto maybe_background_repeat_x = property(CSS::PropertyID::BackgroundRepeatX);
+        auto maybe_background_repeat_y = property(CSS::PropertyID::BackgroundRepeatY);
+        return StyleProperty {
+            .property_id = property_id,
+            .value = BackgroundRepeatStyleValue::create(value_or_default(maybe_background_repeat_x, IdentifierStyleValue::create(CSS::ValueID::RepeatX)), value_or_default(maybe_background_repeat_y, IdentifierStyleValue::create(CSS::ValueID::RepeatY))),
+        };
+    }
+    case CSS::PropertyID::Background: {
+        auto maybe_background_color = property(CSS::PropertyID::BackgroundColor);
+        auto maybe_background_image = property(CSS::PropertyID::BackgroundImage);
+        auto maybe_background_repeat_x = property(CSS::PropertyID::BackgroundRepeatX);
+        auto maybe_background_repeat_y = property(CSS::PropertyID::BackgroundRepeatY);
+
+        return StyleProperty {
+            .property_id = property_id,
+            .value = BackgroundStyleValue::create(value_or_default(maybe_background_color, InitialStyleValue::the()), value_or_default(maybe_background_image, IdentifierStyleValue::create(CSS::ValueID::None)), value_or_default(maybe_background_repeat_x, IdentifierStyleValue::create(CSS::ValueID::RepeatX)), value_or_default(maybe_background_repeat_y, IdentifierStyleValue::create(CSS::ValueID::RepeatX))),
+        };
+    }
     case CSS::PropertyID::ListStyleType:
         return StyleProperty {
             .property_id = property_id,
             .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().list_style_type())),
         };
+    case CSS::PropertyID::Invalid:
+        return StyleProperty {
+            .property_id = property_id,
+            .value = IdentifierStyleValue::create(CSS::ValueID::Invalid),
+        };
+    case CSS::PropertyID::Custom:
+        dbgln("Computed style for custom properties was requested (?)");
+        return {};
     default:
         dbgln("FIXME: Computed style for the '{}' property was requested", string_from_property_id(property_id));
         return {};

@@ -689,7 +689,7 @@ public:
 
     virtual String to_string() const override
     {
-        return String::formatted("Background color: {}, image: {}, repeat: {}/{}", m_color->to_string(), m_image->to_string(), m_repeat_x->to_string(), m_repeat_y->to_string());
+        return String::formatted("{} {} {} {}", m_color->to_string(), m_image->to_string(), m_repeat_x->to_string(), m_repeat_y->to_string());
     }
 
 private:
