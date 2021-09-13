@@ -187,6 +187,7 @@ public:
     void string_replace_all(String const&);
 
     bool is_same_node(Node const*) const;
+    bool is_equal_node(Node const*) const;
 
 protected:
     Node(Document&, NodeType);

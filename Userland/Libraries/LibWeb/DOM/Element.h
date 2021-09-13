@@ -52,6 +52,7 @@ public:
     String get_attribute(const FlyString& name) const { return attribute(name); }
     ExceptionOr<void> set_attribute(const FlyString& name, const String& value);
     void remove_attribute(const FlyString& name);
+    size_t attribute_list_size() const { return m_attributes.size(); }
 
     template<typename Callback>
     void for_each_attribute(Callback callback) const
