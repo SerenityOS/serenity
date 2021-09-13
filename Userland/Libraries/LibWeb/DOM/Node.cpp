@@ -768,4 +768,10 @@ void Node::string_replace_all(String const& string)
     replace_all(node);
 }
 
+// https://dom.spec.whatwg.org/#dom-node-issamenode
+bool Node::is_same_node(Node const* other_node) const
+{
+    return this == other_node;
+}
+
 }
