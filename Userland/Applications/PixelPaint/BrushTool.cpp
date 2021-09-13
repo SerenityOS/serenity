@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Ben Jilks <benjyjilks@gmail.com>
- * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
