@@ -233,6 +233,7 @@ public:
         BackgroundRepeat,
         Border,
         BorderRadius,
+        CombinedBorderRadius,
         BoxShadow,
         Flex,
         FlexFlow,
@@ -812,6 +813,40 @@ private:
     bool m_is_elliptical;
     Length m_horizontal_radius;
     Length m_vertical_radius;
+};
+
+class CombinedBorderRadiusStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<CombinedBorderRadiusStyleValue> create(NonnullRefPtr<BorderRadiusStyleValue> top_left, NonnullRefPtr<BorderRadiusStyleValue> top_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_left)
+    {
+        return adopt_ref(*new CombinedBorderRadiusStyleValue(top_left, top_right, bottom_right, bottom_left));
+    }
+    virtual ~CombinedBorderRadiusStyleValue() override { }
+
+    NonnullRefPtr<BorderRadiusStyleValue> top_left() const { return m_top_left; }
+    NonnullRefPtr<BorderRadiusStyleValue> top_right() const { return m_top_right; }
+    NonnullRefPtr<BorderRadiusStyleValue> bottom_right() const { return m_bottom_right; }
+    NonnullRefPtr<BorderRadiusStyleValue> bottom_left() const { return m_bottom_left; }
+
+    virtual String to_string() const override
+    {
+        return String::formatted("{} {} {} {} / {} {} {} {}", m_top_left->horizontal_radius().to_string(), m_top_right->horizontal_radius().to_string(), m_bottom_right->horizontal_radius().to_string(), m_bottom_left->horizontal_radius().to_string(), m_top_left->vertical_radius().to_string(), m_top_right->vertical_radius().to_string(), m_bottom_right->vertical_radius().to_string(), m_bottom_left->vertical_radius().to_string());
+    }
+
+private:
+    CombinedBorderRadiusStyleValue(NonnullRefPtr<BorderRadiusStyleValue> top_left, NonnullRefPtr<BorderRadiusStyleValue> top_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_left)
+        : StyleValue(Type::CombinedBorderRadius)
+        , m_top_left(top_left)
+        , m_top_right(top_right)
+        , m_bottom_right(bottom_right)
+        , m_bottom_left(bottom_left)
+    {
+    }
+
+    NonnullRefPtr<BorderRadiusStyleValue> m_top_left;
+    NonnullRefPtr<BorderRadiusStyleValue> m_top_right;
+    NonnullRefPtr<BorderRadiusStyleValue> m_bottom_right;
+    NonnullRefPtr<BorderRadiusStyleValue> m_bottom_left;
 };
 
 class FlexStyleValue final : public StyleValue {
