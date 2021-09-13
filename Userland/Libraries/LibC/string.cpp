@@ -155,7 +155,7 @@ void* memset(void* dest_ptr, int c, size_t n)
 
 void* memmove(void* dest, const void* src, size_t n)
 {
-    if (dest < src)
+    if (((FlatPtr)dest - (FlatPtr)src) >= n)
         return memcpy(dest, src, n);
 
     u8* pd = (u8*)dest;
