@@ -239,15 +239,15 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
 
     VERIFY(!callee.is_empty());
 
-    if (!callee.is_function()) {
-        throw_type_error_for_callee(interpreter, global_object, callee, "function"sv);
-        return {};
-    }
-
     MarkedValueList arg_list(vm.heap());
     argument_list_evaluation(interpreter, global_object, m_arguments, arg_list);
     if (interpreter.exception())
         return {};
+
+    if (!callee.is_function()) {
+        throw_type_error_for_callee(interpreter, global_object, callee, "function"sv);
+        return {};
+    }
 
     auto& function = callee.as_function();
 
