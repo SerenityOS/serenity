@@ -20,8 +20,6 @@ public:
     virtual ~WeakMapPrototype() override;
 
 private:
-    static WeakMap* typed_this(VM&, GlobalObject&);
-
     JS_DECLARE_NATIVE_FUNCTION(delete_);
     JS_DECLARE_NATIVE_FUNCTION(get);
     JS_DECLARE_NATIVE_FUNCTION(has);
