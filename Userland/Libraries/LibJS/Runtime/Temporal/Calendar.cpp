@@ -946,16 +946,14 @@ Optional<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_object, Obj
     if (month_code.is_undefined()) {
         // a. Let result be ? RegulateISODate(year, month, day, overflow).
         result = regulate_iso_date(global_object, year.as_double(), month, day.as_double(), *overflow);
-        if (vm.exception())
-            return {};
     }
     // 13. Else,
     else {
         // a. Let result be ? RegulateISODate(referenceISOYear, month, day, overflow).
         result = regulate_iso_date(global_object, reference_iso_year, month, day.as_double(), *overflow);
-        if (vm.exception())
-            return {};
     }
+    if (vm.exception())
+        return {};
 
     // 14. Return the Record { [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[ReferenceISOYear]]: referenceISOYear }.
     return ISOMonthDay { .month = result->month, .day = result->day, .reference_iso_year = reference_iso_year };
