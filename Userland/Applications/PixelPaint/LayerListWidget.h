@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
