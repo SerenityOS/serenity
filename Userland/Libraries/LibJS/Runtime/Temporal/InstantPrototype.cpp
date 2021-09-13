@@ -19,7 +19,7 @@ namespace JS::Temporal {
 
 // 8.3 Properties of the Temporal.Instant Prototype Object, https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-instant-prototype-object
 InstantPrototype::InstantPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -52,25 +52,12 @@ void InstantPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toZonedDateTimeISO, to_zoned_date_time_iso, 1, attr);
 }
 
-static Instant* typed_this(GlobalObject& global_object)
-{
-    auto& vm = global_object.vm();
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
-    if (!is<Instant>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.Instant");
-        return {};
-    }
-    return static_cast<Instant*>(this_object);
-}
-
 // 8.3.3 get Temporal.Instant.prototype.epochSeconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochseconds
 JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_seconds_getter)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = typed_this(global_object);
+    auto* instant = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -89,7 +76,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_milliseconds_getter)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = typed_this(global_object);
+    auto* instant = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -108,7 +95,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_microseconds_getter)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = typed_this(global_object);
+    auto* instant = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -127,7 +114,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_nanoseconds_getter)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = typed_this(global_object);
+    auto* instant = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -145,7 +132,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::add)
 
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = typed_this(global_object);
+    auto* instant = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -170,7 +157,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::subtract)
 
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = typed_this(global_object);
+    auto* instant = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -193,7 +180,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = typed_this(global_object);
+    auto* instant = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -253,7 +240,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = typed_this(global_object);
+    auto* instant = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -313,7 +300,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = typed_this(global_object);
+    auto* instant = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -400,7 +387,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::equals)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = typed_this(global_object);
+    auto* instant = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -422,7 +409,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = typed_this(global_object);
+    auto* instant = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -476,7 +463,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_locale_string)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = typed_this(global_object);
+    auto* instant = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -493,7 +480,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_json)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = typed_this(global_object);
+    auto* instant = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -520,7 +507,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
 
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = typed_this(global_object);
+    auto* instant = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
@@ -576,7 +563,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time_iso)
 
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = typed_this(global_object);
+    auto* instant = typed_this_object(global_object);
     if (vm.exception())
         return {};
 
