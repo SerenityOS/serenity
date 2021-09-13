@@ -11,7 +11,7 @@ interface URL {
     // TODO: attribute USVString port;
     // TODO: attribute USVString pathname;
     // TODO: attribute USVString search;
-    // TODO: [SameObject] readonly attribute URLSearchParams searchParams;
+    [SameObject] readonly attribute URLSearchParams searchParams;
     // TODO: attribute USVString hash;
 
     USVString toJSON();

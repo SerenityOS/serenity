@@ -1481,6 +1481,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/RangeWrapper.h>
 #include <LibWeb/Bindings/StyleSheetListWrapper.h>
 #include <LibWeb/Bindings/TextWrapper.h>
+#include <LibWeb/Bindings/URLSearchParamsWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/EventListener.h>
