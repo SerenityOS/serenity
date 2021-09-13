@@ -7,17 +7,5 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <AK/URL.h>
-#include <AK/Vector.h>
-
 namespace Web::URL {
-
-struct QueryParam {
-    String name;
-    String value;
-};
-String url_encode(const Vector<QueryParam>&, AK::URL::PercentEncodeSet);
-Vector<QueryParam> url_decode(StringView const&);
-
 }
