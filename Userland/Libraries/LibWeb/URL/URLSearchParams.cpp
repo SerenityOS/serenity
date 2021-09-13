@@ -88,7 +88,7 @@ void URLSearchParams::set(const String& name, const String& value)
     if (!existing.is_end()) {
         existing->value = value;
         m_list.remove_all_matching([&name, &existing](auto& entry) {
-            return &entry != &*existing && name == name;
+            return &entry != &*existing && entry.name == name;
         });
     }
     // 2. Otherwise, append a new name-value pair whose name is name and value is value, to this’s list.
