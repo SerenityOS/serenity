@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/PrototypeObject.h>
+#include <LibJS/Runtime/Temporal/Instant.h>
 
 namespace JS::Temporal {
 
-class InstantPrototype final : public Object {
-    JS_OBJECT(InstantPrototype, Object);
+class InstantPrototype final : public PrototypeObject<InstantPrototype, Instant> {
+    JS_PROTOTYPE_OBJECT(InstantPrototype, Instant, Temporal.Instant);
 
 public:
     explicit InstantPrototype(GlobalObject&);
