@@ -171,7 +171,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send()
     dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);
 
     // TODO: Add support for preflight requests to support CORS requests
-    Origin request_url_origin = Origin(request_url.protocol(), request_url.host(), request_url.port());
+    Origin request_url_origin = Origin(request_url.protocol(), request_url.host(), request_url.port_or_default());
 
     bool should_enforce_same_origin_policy = true;
     if (auto* page = m_window->page())

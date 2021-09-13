@@ -71,13 +71,13 @@ void URL::set_host(String host)
     m_valid = compute_validity();
 }
 
-void URL::set_port(u16 port)
+void URL::set_port(Optional<u16> port)
 {
     if (port == default_port_for_scheme(m_scheme)) {
-        m_port = 0;
+        m_port = {};
         return;
     }
-    m_port = port;
+    m_port = move(port);
     m_valid = compute_validity();
 }
 
@@ -234,8 +234,8 @@ String URL::serialize(ExcludeFragment exclude_fragment) const
         }
 
         builder.append(m_host);
-        if (m_port != 0)
-            builder.appendff(":{}", m_port);
+        if (m_port.has_value())
+            builder.appendff(":{}", *m_port);
     }
 
     if (cannot_be_a_base_url()) {
@@ -278,8 +278,8 @@ String URL::serialize_for_display() const
     if (!m_host.is_null()) {
         builder.append("//");
         builder.append(m_host);
-        if (m_port != 0)
-            builder.appendff(":{}", m_port);
+        if (m_port.has_value())
+            builder.appendff(":{}", *m_port);
     }
 
     if (cannot_be_a_base_url()) {
@@ -329,8 +329,8 @@ String URL::serialize_origin() const
     builder.append(m_scheme);
     builder.append("://"sv);
     builder.append(m_host);
-    if (m_port != 0)
-        builder.append(":{}", m_port);
+    if (m_port.has_value())
+        builder.append(":{}", *m_port);
     return builder.build();
 }
 

@@ -151,10 +151,10 @@ void WebSocket::send_client_handshake()
     // 4. Host
     auto url = m_connection.url();
     builder.appendff("Host: {}", url.host());
-    if (!m_connection.is_secure() && url.port() != 80)
-        builder.appendff(":{}", url.port());
-    else if (m_connection.is_secure() && url.port() != 443)
-        builder.appendff(":{}", url.port());
+    if (!m_connection.is_secure() && url.port_or_default() != 80)
+        builder.appendff(":{}", url.port_or_default());
+    else if (m_connection.is_secure() && url.port_or_default() != 443)
+        builder.appendff(":{}", url.port_or_default());
     builder.append("\r\n");
 
     // 5. and 6. Connection Upgrade

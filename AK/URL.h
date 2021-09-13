@@ -56,7 +56,8 @@ public:
     Vector<String> const& paths() const { return m_paths; }
     String const& query() const { return m_query; }
     String const& fragment() const { return m_fragment; }
-    u16 port() const { return m_port ? m_port : default_port_for_scheme(m_scheme); }
+    Optional<u16> port() const { return m_port; }
+    u16 port_or_default() const { return m_port.value_or(default_port_for_scheme(m_scheme)); }
     bool cannot_be_a_base_url() const { return m_cannot_be_a_base_url; }
     bool cannot_have_a_username_or_password_or_port() const { return m_host.is_null() || m_host.is_empty() || m_cannot_be_a_base_url || m_scheme == "file"sv; }
 
@@ -68,7 +69,7 @@ public:
     void set_username(String);
     void set_password(String);
     void set_host(String);
-    void set_port(u16);
+    void set_port(Optional<u16>);
     void set_paths(Vector<String>);
     void set_query(String);
     void set_fragment(String);
@@ -129,8 +130,8 @@ private:
     String m_username;
     String m_password;
     String m_host;
-    // NOTE: If the port is the default port for the scheme, m_port should be 0.
-    u16 m_port { 0 };
+    // NOTE: If the port is the default port for the scheme, m_port should be empty.
+    Optional<u16> m_port;
     String m_path;
     Vector<String> m_paths;
     String m_query;

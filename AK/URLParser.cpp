@@ -472,7 +472,7 @@ URL URLParser::parse(StringView const& raw_input, URL const* base_url, Optional<
                         return {};
                     }
                     if (port.value() == URL::default_port_for_scheme(url->scheme()))
-                        url->m_port = 0;
+                        url->m_port = {};
                     else
                         url->m_port = port.value();
                     buffer.clear();

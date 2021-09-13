@@ -46,7 +46,7 @@ void HttpsJob::start()
         if (on_certificate_requested)
             on_certificate_requested(*this);
     };
-    bool success = ((TLS::TLSv12&)*m_socket).connect(m_request.url().host(), m_request.url().port());
+    bool success = ((TLS::TLSv12&)*m_socket).connect(m_request.url().host(), m_request.url().port_or_default());
     if (!success) {
         deferred_invoke([this] {
             return did_fail(Core::NetworkJob::Error::ConnectionFailed);

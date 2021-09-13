@@ -134,7 +134,7 @@ Origin Document::origin() const
 {
     if (!m_url.is_valid())
         return {};
-    return { m_url.protocol(), m_url.host(), m_url.port() };
+    return { m_url.protocol(), m_url.host(), m_url.port_or_default() };
 }
 
 void Document::set_origin(const Origin& origin)
