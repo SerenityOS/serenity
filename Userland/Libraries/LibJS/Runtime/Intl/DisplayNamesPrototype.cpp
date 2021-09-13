@@ -12,25 +12,9 @@
 
 namespace JS::Intl {
 
-static DisplayNames* typed_this(GlobalObject& global_object)
-{
-    auto& vm = global_object.vm();
-
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return nullptr;
-
-    if (!is<DisplayNames>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Intl.DisplayNames");
-        return nullptr;
-    }
-
-    return static_cast<DisplayNames*>(this_object);
-}
-
 // 12.4 Properties of the Intl.DisplayNames Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-displaynames-prototype-object
 DisplayNamesPrototype::DisplayNamesPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -55,7 +39,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
 
     // 1. Let displayNames be this value.
     // 2. Perform ? RequireInternalSlot(displayNames, [[InitializedDisplayNames]]).
-    auto* display_names = typed_this(global_object);
+    auto* display_names = typed_this_object(global_object);
     if (!display_names)
         return {};
 
@@ -107,7 +91,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::resolved_options)
 {
     // 1. Let displayNames be this value.
     // 2. Perform ? RequireInternalSlot(displayNames, [[InitializedDisplayNames]]).
-    auto* display_names = typed_this(global_object);
+    auto* display_names = typed_this_object(global_object);
     if (!display_names)
         return {};
 
