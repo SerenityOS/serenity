@@ -495,7 +495,7 @@ Optional<StyleProperty> ComputedCSSStyleDeclaration::property(PropertyID propert
         };
     }
     case CSS::PropertyID::Opacity: {
-        auto maybe_opacity = layout_node.computed_values().flex_grow_factor();
+        auto maybe_opacity = layout_node.computed_values().opacity();
         if (!maybe_opacity.has_value())
             return {};
 
