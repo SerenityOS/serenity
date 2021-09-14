@@ -449,6 +449,20 @@ static bool is_simple_parameter_list(Vector<FunctionNode::Parameter> const& para
 
 RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expect_parens)
 {
+    if (!expect_parens) {
+        // NOTE: This is a fast path where we try to fail early in case this can't possibly
+        //       be a match. The idea is to avoid the expensive parser state save/load mechanism.
+        //       The logic is duplicated below in the "real" !expect_parens branch.
+        if (!match_identifier() && !match(TokenType::Yield) && !match(TokenType::Await))
+            return nullptr;
+        auto forked_lexer = m_state.lexer;
+        auto token = forked_lexer.next();
+        if (token.trivia_contains_line_terminator())
+            return nullptr;
+        if (token.type() != TokenType::Arrow)
+            return nullptr;
+    }
+
     save_state();
     auto rule_start = push_start();
 
