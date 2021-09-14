@@ -2229,6 +2229,7 @@ size_t ECMA262Parser::ensure_total_number_of_capturing_parenthesis()
             }
             break;
         case '(':
+            lexer.consume();
             if (lexer.consume_specific('?')) {
                 // non-capturing group '(?:', lookaround '(?<='/'(?<!', or named capture '(?<'
                 if (!lexer.consume_specific('<'))
@@ -2242,8 +2243,10 @@ size_t ECMA262Parser::ensure_total_number_of_capturing_parenthesis()
                 ++count;
             }
             break;
+        default:
+            lexer.consume();
+            break;
         }
-        lexer.consume();
     }
 
     m_total_number_of_capturing_parenthesis = count;
