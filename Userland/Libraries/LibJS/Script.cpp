@@ -30,7 +30,8 @@ NonnullRefPtr<Script> Script::parse(StringView source_text, Realm& realm, String
 }
 
 Script::Script(Realm& realm, NonnullRefPtr<Program> parse_node)
-    : m_realm(make_handle(&realm))
+    : m_vm(realm.vm())
+    , m_realm(make_handle(&realm))
     , m_parse_node(move(parse_node))
 {
 }
