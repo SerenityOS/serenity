@@ -17,6 +17,7 @@
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/PropertyName.h>
+#include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/SourceRange.h>
 #include <LibRegex/Regex.h>
@@ -1069,7 +1070,7 @@ private:
         Value callee;
     };
 
-    ThisAndCallee compute_this_and_callee(Interpreter&, GlobalObject&) const;
+    ThisAndCallee compute_this_and_callee(Interpreter&, GlobalObject&, Reference const&) const;
 };
 
 class NewExpression final : public CallExpression {
@@ -1384,6 +1385,50 @@ private:
     bool m_computed { false };
 };
 
+class OptionalChain final : public Expression {
+public:
+    enum class Mode {
+        Optional,
+        NotOptional,
+    };
+
+    struct Call {
+        Vector<CallExpression::Argument> arguments;
+        Mode mode;
+    };
+    struct ComputedReference {
+        NonnullRefPtr<Expression> expression;
+        Mode mode;
+    };
+    struct MemberReference {
+        NonnullRefPtr<Identifier> identifier;
+        Mode mode;
+    };
+
+    using Reference = Variant<Call, ComputedReference, MemberReference>;
+
+    OptionalChain(SourceRange source_range, NonnullRefPtr<Expression> base, Vector<Reference> references)
+        : Expression(source_range)
+        , m_base(move(base))
+        , m_references(move(references))
+    {
+    }
+
+    virtual Value execute(Interpreter& interpreter, GlobalObject& global_object) const override;
+    virtual JS::Reference to_reference(Interpreter& interpreter, GlobalObject& global_object) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    struct ReferenceAndValue {
+        JS::Reference reference;
+        Value value;
+    };
+    Optional<ReferenceAndValue> to_reference_and_value(Interpreter&, GlobalObject&) const;
+
+    NonnullRefPtr<Expression> m_base;
+    Vector<Reference> m_references;
+};
+
 class MetaProperty final : public Expression {
 public:
     enum class Type {
@@ -1574,6 +1619,23 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
+};
+
+class SyntheticReferenceExpression final : public Expression {
+public:
+    explicit SyntheticReferenceExpression(SourceRange source_range, Reference reference, Value value)
+        : Expression(source_range)
+        , m_reference(move(reference))
+        , m_value(value)
+    {
+    }
+
+    virtual Value execute(Interpreter&, GlobalObject&) const override { return m_value; }
+    virtual Reference to_reference(Interpreter&, GlobalObject&) const override { return m_reference; }
+
+private:
+    Reference m_reference;
+    Value m_value;
 };
 
 template<typename C>

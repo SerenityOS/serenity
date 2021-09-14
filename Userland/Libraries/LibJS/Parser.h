@@ -76,6 +76,7 @@ public:
     NonnullRefPtr<WithStatement> parse_with_statement();
     NonnullRefPtr<DebuggerStatement> parse_debugger_statement();
     NonnullRefPtr<ConditionalExpression> parse_conditional_expression(NonnullRefPtr<Expression> test);
+    NonnullRefPtr<OptionalChain> parse_optional_chain(NonnullRefPtr<Expression> base);
     NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right, const Vector<TokenType>& forbidden = {});
     PrimaryExpressionParseResult parse_primary_expression();
     NonnullRefPtr<Expression> parse_unary_prefixed_expression();
@@ -99,6 +100,8 @@ public:
     RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens);
     RefPtr<Statement> try_parse_labelled_statement(AllowLabelledFunction allow_function);
     RefPtr<MetaProperty> try_parse_new_target_expression();
+
+    Vector<CallExpression::Argument> parse_arguments();
 
     struct Error {
         String message;
