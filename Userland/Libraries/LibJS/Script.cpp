@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/ElapsedTimer.h>
 #include <LibJS/AST.h>
 #include <LibJS/Lexer.h>
 #include <LibJS/Parser.h>
@@ -15,11 +14,6 @@ namespace JS {
 // 16.1.5 ParseScript ( sourceText, realm, hostDefined ), https://tc39.es/ecma262/#sec-parse-script
 Result<NonnullRefPtr<Script>, Vector<Parser::Error>> Script::parse(StringView source_text, Realm& realm, StringView filename)
 {
-    auto timer = Core::ElapsedTimer::start_new();
-    ScopeGuard timer_guard([&] {
-        dbgln("JS::Script: Parsed {} in {}ms", filename, timer.elapsed());
-    });
-
     // 1. Let body be ParseText(sourceText, Script).
     auto parser = Parser(Lexer(source_text, filename));
     auto body = parser.parse_program();
