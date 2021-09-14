@@ -251,7 +251,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
 
     auto& function = callee.as_function();
 
-    if (is<Identifier>(*m_callee) && static_cast<Identifier const&>(*m_callee).string() == vm.names.eval.as_string() && &function == global_object.eval_function()) {
+    if (&function == global_object.eval_function() && is<Identifier>(*m_callee) && static_cast<Identifier const&>(*m_callee).string() == vm.names.eval.as_string()) {
         auto script_value = arg_list.size() == 0 ? js_undefined() : arg_list[0];
         return perform_eval(script_value, global_object, vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct);
     }
