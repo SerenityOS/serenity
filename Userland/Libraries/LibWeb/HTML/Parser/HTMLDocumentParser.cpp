@@ -95,6 +95,29 @@ static Vector<FlyString> s_quirks_public_ids = {
     "-//WebTechs//DTD Mozilla HTML//"
 };
 
+// https://html.spec.whatwg.org/multipage/parsing.html#mathml-text-integration-point
+static bool is_mathml_text_integration_point(DOM::Element const&)
+{
+    // FIXME: Implement.
+    return false;
+}
+
+// https://html.spec.whatwg.org/multipage/parsing.html#html-integration-point
+static bool is_html_integration_point(DOM::Element const& element)
+{
+    // A node is an HTML integration point if it is one of the following elements:
+    // FIXME: A MathML annotation-xml element whose start tag token had an attribute with the name "encoding" whose value was an ASCII case-insensitive match for the string "text/html"
+    // FIXME: A MathML annotation-xml element whose start tag token had an attribute with the name "encoding" whose value was an ASCII case-insensitive match for the string "application/xhtml+xml"
+
+    // An SVG foreignObject element
+    // An SVG desc element
+    // An SVG title element
+    if (element.tag_name().is_one_of(SVG::TagNames::foreignObject, SVG::TagNames::desc, SVG::TagNames::title))
+        return true;
+
+    return false;
+}
+
 RefPtr<DOM::Document> parse_html_document(const StringView& data, const AK::URL& url, const String& encoding)
 {
     auto document = DOM::Document::create(url);
@@ -2809,17 +2832,24 @@ void HTMLDocumentParser::process_using_the_rules_for_foreign_content(HTMLToken& 
     }
 
     if ((token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::b, HTML::TagNames::big, HTML::TagNames::blockquote, HTML::TagNames::body, HTML::TagNames::br, HTML::TagNames::center, HTML::TagNames::code, HTML::TagNames::dd, HTML::TagNames::div, HTML::TagNames::dl, HTML::TagNames::dt, HTML::TagNames::em, HTML::TagNames::embed, HTML::TagNames::h1, HTML::TagNames::h2, HTML::TagNames::h3, HTML::TagNames::h4, HTML::TagNames::h5, HTML::TagNames::h6, HTML::TagNames::head, HTML::TagNames::hr, HTML::TagNames::i, HTML::TagNames::img, HTML::TagNames::li, HTML::TagNames::listing, HTML::TagNames::menu, HTML::TagNames::meta, HTML::TagNames::nobr, HTML::TagNames::ol, HTML::TagNames::p, HTML::TagNames::pre, HTML::TagNames::ruby, HTML::TagNames::s, HTML::TagNames::small, HTML::TagNames::span, HTML::TagNames::strong, HTML::TagNames::strike, HTML::TagNames::sub, HTML::TagNames::sup, HTML::TagNames::table, HTML::TagNames::tt, HTML::TagNames::u, HTML::TagNames::ul, HTML::TagNames::var))
-        || (token.is_start_tag() && token.tag_name() == HTML::TagNames::font && (token.has_attribute(HTML::AttributeNames::color) || token.has_attribute(HTML::AttributeNames::face) || token.has_attribute(HTML::AttributeNames::size)))) {
+        || (token.is_start_tag() && token.tag_name() == HTML::TagNames::font && (token.has_attribute(HTML::AttributeNames::color) || token.has_attribute(HTML::AttributeNames::face) || token.has_attribute(HTML::AttributeNames::size)))
+        || (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::br, HTML::TagNames::p))) {
         log_parse_error();
-        if (m_parsing_fragment) {
-            goto AnyOtherStartTag;
+
+        // While the current node is not a MathML text integration point, an HTML integration point, or an element in the HTML namespace, pop elements from the stack of open elements.
+        while (!is_mathml_text_integration_point(current_node())
+            && !is_html_integration_point(current_node())
+            && current_node().namespace_() != Namespace::HTML) {
+            m_stack_of_open_elements.pop();
         }
 
-        TODO();
+        // Reprocess the token according to the rules given in the section corresponding to the current insertion mode in HTML content.
+        process_using_the_rules_for(m_insertion_mode, token);
+        return;
     }
 
+    // Any other start tag
     if (token.is_start_tag()) {
-    AnyOtherStartTag:
         if (adjusted_current_node().namespace_() == Namespace::MathML) {
             adjust_mathml_attributes(token);
         } else if (adjusted_current_node().namespace_() == Namespace::SVG) {
