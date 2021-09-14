@@ -62,7 +62,6 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
         auto& label = right_container.add<Label>(text);
         label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         label.set_fixed_height(14);
-        label.set_content_margins({ 0, 8, 0 });
         if (bold)
             label.set_font(Gfx::FontDatabase::default_font().bold_variant());
     };
