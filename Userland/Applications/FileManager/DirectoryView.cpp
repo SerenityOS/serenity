@@ -135,7 +135,7 @@ DirectoryView::DirectoryView(Mode mode)
     , m_sorting_model(GUI::SortingProxyModel::create(m_model))
 {
     set_active_widget(nullptr);
-    set_content_margins(2);
+    set_grabbable_margins(2);
 
     setup_actions();
 
