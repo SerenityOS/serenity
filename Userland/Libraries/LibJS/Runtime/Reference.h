@@ -98,13 +98,13 @@ public:
     }
 
     void put_value(GlobalObject&, Value);
-    Value get_value(GlobalObject&, bool throw_if_undefined = true);
+    Value get_value(GlobalObject&, bool throw_if_undefined = true) const;
     bool delete_(GlobalObject&);
 
     String to_string() const;
 
 private:
-    void throw_reference_error(GlobalObject&);
+    void throw_reference_error(GlobalObject&) const;
 
     BaseType m_base_type { BaseType::Unresolvable };
     union {
