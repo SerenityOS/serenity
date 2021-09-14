@@ -504,7 +504,9 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
                     });
 
                     for_each_unfrozen_item([&](FlexItem* flex_item) {
-                        float ratio = flex_item->scaled_flex_shrink_factor / sum_of_scaled_flex_shrink_factor_of_unfrozen_items;
+                        float ratio = 1.0f;
+                        if (sum_of_scaled_flex_shrink_factor_of_unfrozen_items != 0.0f)
+                            ratio = flex_item->scaled_flex_shrink_factor / sum_of_scaled_flex_shrink_factor_of_unfrozen_items;
                         flex_item->target_main_size = flex_item->flex_base_size - (AK::abs(remaining_free_space) * ratio);
                     });
                 }
