@@ -94,7 +94,7 @@ TESTJS_GLOBAL_FUNCTION(mark_as_garbage, markAsGarbage)
     return JS::js_undefined();
 }
 
-TESTJS_RUN_FILE_FUNCTION(const String& test_file, JS::Interpreter&)
+TESTJS_RUN_FILE_FUNCTION(String const& test_file, JS::Interpreter& interpreter)
 {
     if (!test262_parser_tests)
         return Test::JS::RunFileHookResult::RunAsNormal;
@@ -122,8 +122,12 @@ TESTJS_RUN_FILE_FUNCTION(const String& test_file, JS::Interpreter&)
         return Test::JS::RunFileHookResult::SkipFile;
 
     auto program_type = path.basename().ends_with(".module.js") ? JS::Program::Type::Module : JS::Program::Type::Script;
+    bool parse_succeeded = false;
+    if (program_type == JS::Program::Type::Module)
+        parse_succeeded = !Test::JS::parse_module(test_file, interpreter.realm()).is_error();
+    else
+        parse_succeeded = !Test::JS::parse_script(test_file, interpreter.realm()).is_error();
 
-    auto parse_result = Test::JS::parse_file(test_file, program_type);
     bool test_passed = true;
     String message;
     String expectation_string;
@@ -132,14 +136,14 @@ TESTJS_RUN_FILE_FUNCTION(const String& test_file, JS::Interpreter&)
     case Early:
     case Fail:
         expectation_string = "File should not parse";
-        test_passed = parse_result.is_error();
+        test_passed = !parse_succeeded;
         if (!test_passed)
             message = "Expected the file to fail parsing, but it did not";
         break;
     case Pass:
     case ExplicitPass:
         expectation_string = "File should parse";
-        test_passed = !parse_result.is_error();
+        test_passed = parse_succeeded;
         if (!test_passed)
             message = "Expected the file to parse, but it did not";
         break;

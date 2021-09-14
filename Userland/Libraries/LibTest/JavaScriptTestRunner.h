@@ -29,6 +29,8 @@
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/WeakMap.h>
 #include <LibJS/Runtime/WeakSet.h>
+#include <LibJS/Script.h>
+#include <LibJS/SourceTextModule.h>
 #include <LibTest/Results.h>
 #include <LibTest/TestRunner.h>
 #include <fcntl.h>
@@ -169,7 +171,7 @@ protected:
     void print_file_result(const JSFileResult& file_result) const;
 
     String m_common_path;
-    RefPtr<JS::Program> m_test_program;
+    RefPtr<JS::Script> m_test_script;
 };
 
 class TestRunnerGlobalObject final : public JS::GlobalObject {
@@ -195,28 +197,42 @@ inline void TestRunnerGlobalObject::initialize_global_object()
     }
 }
 
-inline AK::Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& file_path, JS::Program::Type program_type = JS::Program::Type::Script)
+inline ByteBuffer load_entire_file(StringView path)
 {
-    auto file = Core::File::construct(file_path);
-    auto result = file->open(Core::OpenMode::ReadOnly);
-    if (!result) {
-        warnln("Failed to open the following file: \"{}\"", file_path);
+    auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
+    if (file_or_error.is_error()) {
+        warnln("Failed to open the following file: \"{}\"", path);
         cleanup_and_exit();
     }
 
-    auto contents = file->read_all();
-    String test_file_string(reinterpret_cast<const char*>(contents.data()), contents.size());
-    file->close();
+    auto file = file_or_error.release_value();
+    return file->read_all();
+}
 
-    auto parser = JS::Parser(JS::Lexer(test_file_string), program_type);
-    auto program = parser.parse_program();
+inline AK::Result<NonnullRefPtr<JS::Script>, ParserError> parse_script(StringView path, JS::Realm& realm)
+{
+    auto contents = load_entire_file(path);
+    auto script_or_errors = JS::Script::parse(contents, realm, path);
 
-    if (parser.has_errors()) {
-        auto error = parser.errors()[0];
-        return AK::Result<NonnullRefPtr<JS::Program>, ParserError>(ParserError { error, error.source_location_hint(test_file_string) });
+    if (script_or_errors.is_error()) {
+        auto errors = script_or_errors.release_error();
+        return ParserError { errors[0], errors[0].source_location_hint(contents) };
     }
 
-    return AK::Result<NonnullRefPtr<JS::Program>, ParserError>(program);
+    return script_or_errors.release_value();
+}
+
+inline AK::Result<NonnullRefPtr<JS::SourceTextModule>, ParserError> parse_module(StringView path, JS::Realm& realm)
+{
+    auto contents = load_entire_file(path);
+    auto script_or_errors = JS::SourceTextModule::parse(contents, realm, path);
+
+    if (script_or_errors.is_error()) {
+        auto errors = script_or_errors.release_error();
+        return ParserError { errors[0], errors[0].source_location_hint(contents) };
+    }
+
+    return script_or_errors.release_value();
 }
 
 inline Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
@@ -304,19 +320,19 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
         }
     }
 
-    if (!m_test_program) {
-        auto result = parse_file(m_common_path);
+    if (!m_test_script) {
+        auto result = parse_script(m_common_path, interpreter->realm());
         if (result.is_error()) {
             warnln("Unable to parse test-common.js");
             warnln("{}", result.error().error.to_string());
             warnln("{}", result.error().hint);
             cleanup_and_exit();
         }
-        m_test_program = result.value();
+        m_test_script = result.release_value();
     }
 
     if (g_run_bytecode) {
-        auto unit = JS::Bytecode::Generator::generate(*m_test_program);
+        auto unit = JS::Bytecode::Generator::generate(m_test_script->parse_node());
         if (g_dump_bytecode) {
             for (auto& block : unit.basic_blocks)
                 block.dump(unit);
@@ -329,16 +345,16 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
         JS::Bytecode::Interpreter bytecode_interpreter(interpreter->global_object(), interpreter->realm());
         bytecode_interpreter.run(unit);
     } else {
-        interpreter->run(interpreter->global_object(), *m_test_program);
+        interpreter->run(interpreter->global_object(), m_test_script->parse_node());
     }
 
     VERIFY(!g_vm->exception());
 
-    auto file_program = parse_file(test_path);
-    if (file_program.is_error())
-        return { test_path, file_program.error() };
+    auto file_script = parse_script(test_path, interpreter->realm());
+    if (file_script.is_error())
+        return { test_path, file_script.error() };
     if (g_run_bytecode) {
-        auto unit = JS::Bytecode::Generator::generate(*file_program.value());
+        auto unit = JS::Bytecode::Generator::generate(file_script.value()->parse_node());
         if (g_dump_bytecode) {
             for (auto& block : unit.basic_blocks)
                 block.dump(unit);
@@ -351,7 +367,7 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
         JS::Bytecode::Interpreter bytecode_interpreter(interpreter->global_object(), interpreter->realm());
         bytecode_interpreter.run(unit);
     } else {
-        interpreter->run(interpreter->global_object(), *file_program.value());
+        interpreter->run(interpreter->global_object(), file_script.value()->parse_node());
     }
 
     if (g_vm->exception())
