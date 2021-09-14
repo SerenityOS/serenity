@@ -190,6 +190,7 @@ set(SOURCES
     Runtime/WeakSetConstructor.cpp
     Runtime/WeakSetPrototype.cpp
     Script.cpp
+    SourceTextModule.cpp
     SyntaxHighlighter.cpp
     Token.cpp
 )
