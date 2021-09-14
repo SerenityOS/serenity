@@ -21,6 +21,7 @@ set(SOURCES
     Interpreter.cpp
     Lexer.cpp
     MarkupGenerator.cpp
+    Module.cpp
     Parser.cpp
     Runtime/AbstractOperations.cpp
     Runtime/AggregateError.cpp
