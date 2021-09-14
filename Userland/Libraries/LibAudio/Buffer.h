@@ -90,6 +90,20 @@ struct Frame {
         return new_frame;
     }
 
+    ALWAYS_INLINE Frame& log_pan(double const pan)
+    {
+        left *= log_factor(min(pan * -1 + 1.0, 1.0));
+        right *= log_factor(min(pan + 1.0, 1.0));
+        return *this;
+    }
+
+    ALWAYS_INLINE Frame log_pan(double const pan) const
+    {
+        Frame new_frame { left, right };
+        new_frame.log_pan(pan);
+        return new_frame;
+    }
+
     constexpr Frame& operator*=(double const mult)
     {
         left *= mult;
