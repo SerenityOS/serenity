@@ -149,7 +149,6 @@ int main(int argc, char** argv)
     bottom_widget.set_layout<GUI::HorizontalBoxLayout>();
     bottom_widget.layout()->add_spacer();
     bottom_widget.set_fixed_height(30);
-    bottom_widget.set_content_margins({ 4, 0 });
 
     auto& ok_button = bottom_widget.add<GUI::Button>();
     ok_button.set_text("OK");
