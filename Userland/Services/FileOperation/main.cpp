@@ -321,27 +321,36 @@ int execute_work_items(Vector<WorkItem> const& items)
         }
 
         case WorkItem::Type::MoveFile: {
-            if (rename(item.source.characters(), item.destination.characters()) == 0) {
-                item_done += item.size;
-                executed_work_bytes += item.size;
-                print_progress();
-                continue;
-            }
-
-            auto original_errno = errno;
-            if (original_errno != EXDEV) {
-                report_warning(String::formatted("Failed to move {}: {}", item.source, strerror(original_errno)));
-                return 1;
-            }
-
-            // EXDEV means we have to copy the file data and then remove the original
-            if (!copy_file(item.source, item.destination))
-                return 1;
-
-            if (unlink(item.source.characters()) < 0) {
+            String destination = item.destination;
+            while (true) {
+                if (rename(item.source.characters(), destination.characters()) == 0) {
+                    item_done += item.size;
+                    executed_work_bytes += item.size;
+                    print_progress();
+                    break;
+                }
                 auto original_errno = errno;
-                report_error(String::formatted("unlink: {}", strerror(original_errno)));
-                return 1;
+
+                if (original_errno == EEXIST) {
+                    destination = deduplicate_destination_file_name(destination);
+                    continue;
+                }
+
+                if (original_errno != EXDEV) {
+                    report_warning(String::formatted("Failed to move {}: {}", item.source, strerror(original_errno)));
+                    return 1;
+                }
+
+                // EXDEV means we have to copy the file data and then remove the original
+                if (!copy_file(item.source, item.destination))
+                    return 1;
+
+                if (unlink(item.source.characters()) < 0) {
+                    auto original_errno = errno;
+                    report_error(String::formatted("unlink: {}", strerror(original_errno)));
+                    return 1;
+                }
+                break;
             }
 
             break;
