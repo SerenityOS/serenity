@@ -35,7 +35,7 @@ protected:
 
 private:
     void override_cursor(bool do_override);
-    Gfx::IntRect rect_between_widgets(GUI::Widget const& first_widget, GUI::Widget const& second_widget, bool honor_content_margins) const;
+    Gfx::IntRect rect_between_widgets(GUI::Widget const& first_widget, GUI::Widget const& second_widget, bool honor_grabbable_margins) const;
 
     Gfx::Orientation m_orientation;
     bool m_resizing { false };

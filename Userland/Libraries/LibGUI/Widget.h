@@ -263,10 +263,10 @@ public:
     Gfx::Palette palette() const;
     void set_palette(const Gfx::Palette&);
 
-    const Margins& content_margins() const { return m_content_margins; }
-    void set_content_margins(const Margins&);
+    const Margins& grabbable_margins() const { return m_grabbable_margins; }
+    void set_grabbable_margins(const Margins&);
 
-    Gfx::IntRect content_rect() const;
+    Gfx::IntRect relative_non_grabbable_rect() const;
 
     void set_accepts_emoji_input(bool b) { m_accepts_emoji_input = b; }
     bool accepts_emoji_input() const { return m_accepts_emoji_input; }
@@ -357,7 +357,7 @@ private:
 
     Gfx::IntSize m_min_size { -1, -1 };
     Gfx::IntSize m_max_size { -1, -1 };
-    Margins m_content_margins;
+    Margins m_grabbable_margins;
 
     bool m_fill_with_background_color { false };
     bool m_visible { true };

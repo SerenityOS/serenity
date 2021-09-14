@@ -657,7 +657,7 @@ Widget* Widget::child_at(const Gfx::IntPoint& point) const
         auto& child = verify_cast<Widget>(children()[i]);
         if (!child.is_visible())
             continue;
-        if (child.content_rect().contains(point))
+        if (child.relative_non_grabbable_rect().contains(point))
             return const_cast<Widget*>(&child);
     }
     return nullptr;
@@ -999,20 +999,20 @@ void Widget::did_end_inspection()
     update();
 }
 
-void Widget::set_content_margins(const Margins& margins)
+void Widget::set_grabbable_margins(const Margins& margins)
 {
-    if (m_content_margins == margins)
+    if (m_grabbable_margins == margins)
         return;
-    m_content_margins = margins;
+    m_grabbable_margins = margins;
     invalidate_layout();
 }
 
-Gfx::IntRect Widget::content_rect() const
+Gfx::IntRect Widget::relative_non_grabbable_rect() const
 {
     auto rect = relative_rect();
-    rect.translate_by(m_content_margins.left(), m_content_margins.top());
-    rect.set_width(rect.width() - (m_content_margins.left() + m_content_margins.right()));
-    rect.set_height(rect.height() - (m_content_margins.top() + m_content_margins.bottom()));
+    rect.translate_by(m_grabbable_margins.left(), m_grabbable_margins.top());
+    rect.set_width(rect.width() - (m_grabbable_margins.left() + m_grabbable_margins.right()));
+    rect.set_height(rect.height() - (m_grabbable_margins.top() + m_grabbable_margins.bottom()));
     return rect;
 }
 
