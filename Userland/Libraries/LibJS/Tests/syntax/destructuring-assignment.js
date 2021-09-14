@@ -196,6 +196,11 @@ describe("evaluating", () => {
             expect(a).toBe(o[0]);
             expect(length).toBe(o[1].length);
         }
+        {
+            expect(() => {
+                let [a, b, [...{ length }]] = o;
+            }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
+        }
     });
 
     test("patterns with default", () => {
