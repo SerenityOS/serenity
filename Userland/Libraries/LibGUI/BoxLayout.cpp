@@ -6,6 +6,7 @@
 
 #include <AK/JsonObject.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Margins.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Orientation.h>
 #include <stdio.h>
@@ -125,7 +126,8 @@ void BoxLayout::run(Widget& widget)
     if (items.is_empty())
         return;
 
-    int available_size = widget.size().primary_size_for_orientation(orientation()) - spacing() * (items.size() - 1);
+    Gfx::IntRect content_rect = widget.content_rect();
+    int available_size = content_rect.size().primary_size_for_orientation(orientation()) - spacing() * (items.size() - 1);
     int unfinished_items = items.size();
 
     if (orientation() == Gfx::Orientation::Horizontal)
@@ -180,10 +182,10 @@ void BoxLayout::run(Widget& widget)
     }
 
     // Pass 3: Place the widgets.
-    int current_x = margins().left();
-    int current_y = margins().top();
+    int current_x = margins().left() + content_rect.x();
+    int current_y = margins().top() + content_rect.y();
 
-    auto widget_rect_with_margins_subtracted = widget.rect();
+    auto widget_rect_with_margins_subtracted = content_rect;
     widget_rect_with_margins_subtracted.take_from_left(margins().left());
     widget_rect_with_margins_subtracted.take_from_top(margins().top());
     widget_rect_with_margins_subtracted.take_from_right(margins().right());
@@ -195,7 +197,7 @@ void BoxLayout::run(Widget& widget)
         rect.set_primary_size_for_orientation(orientation(), item.size);
 
         if (item.widget) {
-            int secondary = widget.size().secondary_size_for_orientation(orientation());
+            int secondary = widget.content_size().secondary_size_for_orientation(orientation());
             if (orientation() == Gfx::Orientation::Horizontal)
                 secondary -= margins().top() + margins().bottom();
             else
