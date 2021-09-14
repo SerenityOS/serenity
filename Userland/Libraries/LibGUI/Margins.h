@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <LibGfx/Rect.h>
+
 namespace GUI {
 
 class Margins {
@@ -41,6 +43,16 @@ public:
     }
     ~Margins() = default;
 
+    [[nodiscard]] Gfx::IntRect applied_to(Gfx::IntRect const& input) const
+    {
+        Gfx::IntRect output = input;
+        output.take_from_left(left());
+        output.take_from_top(top());
+        output.take_from_right(right());
+        output.take_from_bottom(bottom());
+        return output;
+    }
+
     bool is_null() const { return !m_left && !m_top && !m_right && !m_bottom; }
 
     int top() const { return m_top; }
@@ -59,6 +71,11 @@ public:
             && m_top == other.m_top
             && m_right == other.m_right
             && m_bottom == other.m_bottom;
+    }
+
+    Margins operator+(Margins const& other) const
+    {
+        return Margins { top() + other.top(), right() + other.right(), bottom() + other.bottom(), left() + other.left() };
     }
 
 private:
