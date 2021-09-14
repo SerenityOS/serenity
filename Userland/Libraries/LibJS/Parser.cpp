@@ -1521,6 +1521,15 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
         return parse_assignment_expression(AssignmentOp::NullishAssignment, move(lhs), min_precedence, associativity);
     case TokenType::QuestionMark:
         return parse_conditional_expression(move(lhs));
+    case TokenType::QuestionMarkPeriod:
+        // FIXME: This should allow `(new Foo)?.bar', but as our parser strips parenthesis,
+        //        we can't really tell if `lhs' was parenthesized at this point.
+        if (is<NewExpression>(lhs.ptr())) {
+            syntax_error("'new' cannot be used with optional chaining", position());
+            consume();
+            return lhs;
+        }
+        return parse_optional_chain(move(lhs));
     default:
         expected("secondary expression");
         consume();
@@ -1620,16 +1629,11 @@ NonnullRefPtr<Identifier> Parser::parse_identifier()
         token.value());
 }
 
-NonnullRefPtr<Expression> Parser::parse_call_expression(NonnullRefPtr<Expression> lhs)
+Vector<CallExpression::Argument> Parser::parse_arguments()
 {
-    auto rule_start = push_start();
-    if (!m_state.allow_super_constructor_call && is<SuperExpression>(*lhs))
-        syntax_error("'super' keyword unexpected here");
-
-    consume(TokenType::ParenOpen);
-
     Vector<CallExpression::Argument> arguments;
 
+    consume(TokenType::ParenOpen);
     while (match_expression() || match(TokenType::TripleDot)) {
         if (match(TokenType::TripleDot)) {
             consume();
@@ -1643,6 +1647,16 @@ NonnullRefPtr<Expression> Parser::parse_call_expression(NonnullRefPtr<Expression
     }
 
     consume(TokenType::ParenClose);
+    return arguments;
+}
+
+NonnullRefPtr<Expression> Parser::parse_call_expression(NonnullRefPtr<Expression> lhs)
+{
+    auto rule_start = push_start();
+    if (!m_state.allow_super_constructor_call && is<SuperExpression>(*lhs))
+        syntax_error("'super' keyword unexpected here");
+
+    auto arguments = parse_arguments();
 
     if (is<SuperExpression>(*lhs))
         return create_ast_node<SuperCall>({ m_state.current_token.filename(), rule_start.position(), position() }, move(arguments));
@@ -1655,7 +1669,7 @@ NonnullRefPtr<NewExpression> Parser::parse_new_expression()
     auto rule_start = push_start();
     consume(TokenType::New);
 
-    auto callee = parse_expression(g_operator_precedence.get(TokenType::New), Associativity::Right, { TokenType::ParenOpen });
+    auto callee = parse_expression(g_operator_precedence.get(TokenType::New), Associativity::Right, { TokenType::ParenOpen, TokenType::QuestionMarkPeriod });
 
     Vector<CallExpression::Argument> arguments;
 
@@ -2372,6 +2386,80 @@ NonnullRefPtr<ConditionalExpression> Parser::parse_conditional_expression(Nonnul
     return create_ast_node<ConditionalExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(test), move(consequent), move(alternate));
 }
 
+NonnullRefPtr<OptionalChain> Parser::parse_optional_chain(NonnullRefPtr<Expression> base)
+{
+    auto rule_start = push_start();
+    Vector<OptionalChain::Reference> chain;
+    do {
+        if (match(TokenType::QuestionMarkPeriod)) {
+            consume(TokenType::QuestionMarkPeriod);
+            switch (m_state.current_token.type()) {
+            case TokenType::ParenOpen:
+                chain.append(OptionalChain::Call { parse_arguments(), OptionalChain::Mode::Optional });
+                break;
+            case TokenType::BracketOpen:
+                consume();
+                chain.append(OptionalChain::ComputedReference { parse_expression(0), OptionalChain::Mode::Optional });
+                consume(TokenType::BracketClose);
+                break;
+            case TokenType::TemplateLiteralStart:
+                // 13.3.1.1 - Static Semantics: Early Errors
+                // OptionalChain :
+                //        ?. TemplateLiteral
+                //        OptionalChain TemplateLiteral
+                // This is a hard error.
+                syntax_error("Invalid tagged template literal after ?.", position());
+                break;
+            default:
+                if (match_identifier_name()) {
+                    auto start = position();
+                    auto identifier = consume();
+                    chain.append(OptionalChain::MemberReference {
+                        create_ast_node<Identifier>({ m_state.current_token.filename(), start, position() }, identifier.value()),
+                        OptionalChain::Mode::Optional,
+                    });
+                } else {
+                    syntax_error("Invalid optional chain reference after ?.", position());
+                }
+                break;
+            }
+        } else if (match(TokenType::ParenOpen)) {
+            chain.append(OptionalChain::Call { parse_arguments(), OptionalChain::Mode::NotOptional });
+        } else if (match(TokenType::Period)) {
+            consume();
+            if (match_identifier_name()) {
+                auto start = position();
+                auto identifier = consume();
+                chain.append(OptionalChain::MemberReference {
+                    create_ast_node<Identifier>({ m_state.current_token.filename(), start, position() }, identifier.value()),
+                    OptionalChain::Mode::NotOptional,
+                });
+            } else {
+                expected("an identifier");
+                break;
+            }
+        } else if (match(TokenType::TemplateLiteralStart)) {
+            // 13.3.1.1 - Static Semantics: Early Errors
+            // OptionalChain :
+            //        ?. TemplateLiteral
+            //        OptionalChain TemplateLiteral
+            syntax_error("Invalid tagged template literal after optional chain", position());
+            break;
+        } else if (match(TokenType::BracketOpen)) {
+            consume();
+            chain.append(OptionalChain::ComputedReference { parse_expression(2), OptionalChain::Mode::NotOptional });
+            consume(TokenType::BracketClose);
+        } else {
+            break;
+        }
+    } while (!done());
+
+    return create_ast_node<OptionalChain>(
+        { m_state.current_token.filename(), rule_start.position(), position() },
+        move(base),
+        move(chain));
+}
+
 NonnullRefPtr<TryStatement> Parser::parse_try_statement()
 {
     auto rule_start = push_start();
@@ -2788,7 +2876,8 @@ bool Parser::match_secondary_expression(const Vector<TokenType>& forbidden) cons
         || type == TokenType::DoublePipe
         || type == TokenType::DoublePipeEquals
         || type == TokenType::DoubleQuestionMark
-        || type == TokenType::DoubleQuestionMarkEquals;
+        || type == TokenType::DoubleQuestionMarkEquals
+        || type == TokenType::QuestionMarkPeriod;
 }
 
 bool Parser::match_statement() const

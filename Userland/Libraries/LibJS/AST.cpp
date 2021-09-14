@@ -125,44 +125,26 @@ Value ExpressionStatement::execute(Interpreter& interpreter, GlobalObject& globa
     return m_expression->execute(interpreter, global_object);
 }
 
-CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interpreter& interpreter, GlobalObject& global_object) const
+CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interpreter& interpreter, GlobalObject& global_object, Reference const& callee_reference) const
 {
     auto& vm = interpreter.vm();
 
-    if (is<MemberExpression>(*m_callee)) {
-        auto& member_expression = static_cast<MemberExpression const&>(*m_callee);
-        Value callee;
-        Value this_value;
-
-        if (is<SuperExpression>(member_expression.object())) {
-            auto super_base = interpreter.current_function_environment()->get_super_base();
-            if (super_base.is_nullish()) {
-                vm.throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess, super_base.to_string_without_side_effects());
-                return {};
-            }
-            auto property_name = member_expression.computed_property_name(interpreter, global_object);
-            if (!property_name.is_valid())
-                return {};
-            auto reference = Reference { super_base, move(property_name), super_base, vm.in_strict_mode() };
-            callee = reference.get_value(global_object);
-            if (vm.exception())
-                return {};
-            this_value = &vm.this_value(global_object).as_object();
-        } else {
-            auto reference = member_expression.to_reference(interpreter, global_object);
-            if (vm.exception())
-                return {};
-            callee = reference.get_value(global_object);
-            if (vm.exception())
-                return {};
-            this_value = reference.get_this_value();
-        }
+    if (callee_reference.is_property_reference()) {
+        auto this_value = callee_reference.get_this_value();
+        auto callee = callee_reference.get_value(global_object);
+        if (vm.exception())
+            return {};
 
         return { this_value, callee };
     }
 
     // [[Call]] will handle that in non-strict mode the this value becomes the global object
-    return { js_undefined(), m_callee->execute(interpreter, global_object) };
+    return {
+        js_undefined(),
+        callee_reference.is_unresolvable()
+            ? m_callee->execute(interpreter, global_object)
+            : callee_reference.get_value(global_object)
+    };
 }
 
 // 13.3.8.1 Runtime Semantics: ArgumentListEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-argumentlistevaluation
@@ -233,7 +215,11 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& vm = interpreter.vm();
-    auto [this_value, callee] = compute_this_and_callee(interpreter, global_object);
+    auto callee_reference = m_callee->to_reference(interpreter, global_object);
+    if (vm.exception())
+        return {};
+
+    auto [this_value, callee] = compute_this_and_callee(interpreter, global_object, callee_reference);
     if (vm.exception())
         return {};
 
@@ -251,7 +237,11 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
 
     auto& function = callee.as_function();
 
-    if (&function == global_object.eval_function() && is<Identifier>(*m_callee) && static_cast<Identifier const&>(*m_callee).string() == vm.names.eval.as_string()) {
+    if (&function == global_object.eval_function()
+        && callee_reference.is_environment_reference()
+        && callee_reference.name().is_string()
+        && callee_reference.name().as_string() == vm.names.eval.as_string()) {
+
         auto script_value = arg_list.size() == 0 ? js_undefined() : arg_list[0];
         return perform_eval(script_value, global_object, vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct);
     }
@@ -2009,6 +1999,92 @@ Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     if (interpreter.exception())
         return {};
     return reference.get_value(global_object);
+}
+
+void OptionalChain::dump(int indent) const
+{
+    print_indent(indent);
+    outln("{}", class_name());
+    m_base->dump(indent + 1);
+    for (auto& reference : m_references) {
+        reference.visit(
+            [&](Call const& call) {
+                print_indent(indent + 1);
+                outln("Call({})", call.mode == Mode::Optional ? "Optional" : "Not Optional");
+                for (auto& argument : call.arguments)
+                    argument.value->dump(indent + 2);
+            },
+            [&](ComputedReference const& ref) {
+                print_indent(indent + 1);
+                outln("ComputedReference({})", ref.mode == Mode::Optional ? "Optional" : "Not Optional");
+                ref.expression->dump(indent + 2);
+            },
+            [&](MemberReference const& ref) {
+                print_indent(indent + 1);
+                outln("MemberReference({})", ref.mode == Mode::Optional ? "Optional" : "Not Optional");
+                ref.identifier->dump(indent + 2);
+            });
+    }
+}
+
+Optional<OptionalChain::ReferenceAndValue> OptionalChain::to_reference_and_value(JS::Interpreter& interpreter, JS::GlobalObject& global_object) const
+{
+    // Note: This is wrapped in an optional to allow base_reference = ...
+    Optional<JS::Reference> base_reference = m_base->to_reference(interpreter, global_object);
+    auto base = base_reference->is_unresolvable() ? m_base->execute(interpreter, global_object) : base_reference->get_value(global_object);
+    if (interpreter.exception())
+        return {};
+
+    for (auto& reference : m_references) {
+        auto is_optional = reference.visit([](auto& ref) { return ref.mode; }) == Mode::Optional;
+        if (is_optional && base.is_nullish())
+            return ReferenceAndValue { {}, js_undefined() };
+
+        auto expression = reference.visit(
+            [&](Call const& call) -> NonnullRefPtr<Expression> {
+                return create_ast_node<CallExpression>(source_range(),
+                    create_ast_node<SyntheticReferenceExpression>(source_range(), *base_reference, base),
+                    call.arguments);
+            },
+            [&](ComputedReference const& ref) -> NonnullRefPtr<Expression> {
+                return create_ast_node<MemberExpression>(source_range(),
+                    create_ast_node<SyntheticReferenceExpression>(source_range(), *base_reference, base),
+                    ref.expression,
+                    true);
+            },
+            [&](MemberReference const& ref) -> NonnullRefPtr<Expression> {
+                return create_ast_node<MemberExpression>(source_range(),
+                    create_ast_node<SyntheticReferenceExpression>(source_range(), *base_reference, base),
+                    ref.identifier,
+                    false);
+            });
+        if (is<CallExpression>(*expression)) {
+            base_reference = JS::Reference {};
+            base = expression->execute(interpreter, global_object);
+        } else {
+            base_reference = expression->to_reference(interpreter, global_object);
+            base = base_reference->get_value(global_object);
+        }
+        if (interpreter.exception())
+            return {};
+    }
+
+    return ReferenceAndValue { base_reference.release_value(), base };
+}
+
+Value OptionalChain::execute(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    InterpreterNodeScope node_scope { interpreter, *this };
+    if (auto result = to_reference_and_value(interpreter, global_object); result.has_value())
+        return result.release_value().value;
+    return {};
+}
+
+JS::Reference OptionalChain::to_reference(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    if (auto result = to_reference_and_value(interpreter, global_object); result.has_value())
+        return result.release_value().reference;
+    return {};
 }
 
 void MetaProperty::dump(int indent) const
