@@ -26,6 +26,9 @@ public:
 private:
     Script(Realm&, NonnullRefPtr<Program>);
 
+    // Handles are not safe unless we keep the VM alive.
+    NonnullRefPtr<VM> m_vm;
+
     Handle<Realm> m_realm;               // [[Realm]]
     NonnullRefPtr<Program> m_parse_node; // [[ECMAScriptCode]]
 };
