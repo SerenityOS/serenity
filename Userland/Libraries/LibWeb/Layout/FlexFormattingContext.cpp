@@ -400,7 +400,7 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         flex_lines.append(line);
     }
 
-    // 6. Resolve the flexible lengths
+    // 6. Resolve the flexible lengths https://www.w3.org/TR/css-flexbox-1/#resolve-flexible-lengths
     enum FlexFactor {
         FlexGrowFactor,
         FlexShrinkFactor
@@ -514,9 +514,8 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
                     flex_item->target_main_size = flex_item->flex_base_size;
                 });
             }
-
             // d Fix min/max violations.
-            float adjustments = 0;
+            float adjustments = 0.0f;
             for_each_unfrozen_item([&](FlexItem* item) {
                 auto min_main = has_main_min_size(item->box)
                     ? specified_main_min_size(item->box)
@@ -537,23 +536,23 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
                     item->is_max_violation = true;
                 }
                 float delta = item->target_main_size - original_target_size;
-
                 adjustments += delta;
             });
             // e Freeze over-flexed items
-            if (adjustments == 0) {
+            float total_violation = adjustments;
+            if (total_violation == 0) {
                 for_each_unfrozen_item([&](FlexItem* item) {
                     --number_of_unfrozen_items_on_line;
                     item->frozen = true;
                 });
-            } else if (adjustments > 0) {
+            } else if (total_violation > 0) {
                 for_each_unfrozen_item([&](FlexItem* item) {
                     if (item->is_min_violation) {
                         --number_of_unfrozen_items_on_line;
                         item->frozen = true;
                     }
                 });
-            } else if (adjustments < 0) {
+            } else if (total_violation < 0) {
                 for_each_unfrozen_item([&](FlexItem* item) {
                     if (item->is_max_violation) {
                         --number_of_unfrozen_items_on_line;
