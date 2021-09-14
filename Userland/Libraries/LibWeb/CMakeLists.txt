@@ -221,6 +221,7 @@ set(SOURCES
     Page/Page.cpp
     Painting/BorderPainting.cpp
     Painting/StackingContext.cpp
+    SVG/AttributeNames.cpp
     SVG/SVGElement.cpp
     SVG/SVGGeometryElement.cpp
     SVG/SVGGraphicsElement.cpp
