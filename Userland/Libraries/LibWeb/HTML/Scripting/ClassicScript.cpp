@@ -38,12 +38,17 @@ NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView s
     // 10. Let result be ParseScript(source, settings's Realm, script).
     auto result = JS::Script::parse(source, realm, script->filename());
 
-    // FIXME: 11. If result is a list of errors, then:
-    //            1. Set script's parse error and its error to rethrow to result[0].
-    //            2. Return script.
+    // 11. If result is a list of errors, then:
+
+    if (result.is_error()) {
+        // FIXME:  1. Set script's parse error and its error to rethrow to result[0].
+
+        // 2. Return script.
+        return script;
+    }
 
     // 12. Set script's record to result.
-    script->m_script_record = move(result);
+    script->m_script_record = result.release_value();
 
     // 13. Return script.
     return script;

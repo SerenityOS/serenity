@@ -10,6 +10,7 @@
 #include <AK/RefCounted.h>
 #include <LibJS/AST.h>
 #include <LibJS/Heap/Handle.h>
+#include <LibJS/Parser.h>
 #include <LibJS/Runtime/Realm.h>
 
 namespace JS {
@@ -18,7 +19,7 @@ namespace JS {
 class Script : public RefCounted<Script> {
 public:
     ~Script();
-    static NonnullRefPtr<Script> parse(StringView source_text, Realm&, StringView filename = {});
+    static Result<NonnullRefPtr<Script>, Vector<Parser::Error>> parse(StringView source_text, Realm&, StringView filename = {});
 
     Realm& realm() { return *m_realm.cell(); }
     Program const& parse_node() const { return *m_parse_node; }

@@ -13,7 +13,7 @@
 namespace JS {
 
 // 16.1.5 ParseScript ( sourceText, realm, hostDefined ), https://tc39.es/ecma262/#sec-parse-script
-NonnullRefPtr<Script> Script::parse(StringView source_text, Realm& realm, StringView filename)
+Result<NonnullRefPtr<Script>, Vector<Parser::Error>> Script::parse(StringView source_text, Realm& realm, StringView filename)
 {
     auto timer = Core::ElapsedTimer::start_new();
     ScopeGuard timer_guard([&] {
@@ -21,9 +21,12 @@ NonnullRefPtr<Script> Script::parse(StringView source_text, Realm& realm, String
     });
 
     // 1. Let body be ParseText(sourceText, Script).
-    auto body = Parser(Lexer(source_text, filename)).parse_program();
+    auto parser = Parser(Lexer(source_text, filename));
+    auto body = parser.parse_program();
 
-    // FIXME: 2. If body is a List of errors, return body.
+    // 2. If body is a List of errors, return body.
+    if (parser.has_errors())
+        return parser.errors();
 
     // 3. Return Script Record { [[Realm]]: realm, [[ECMAScriptCode]]: body, [[HostDefined]]: hostDefined }.
     return adopt_ref(*new Script(realm, move(body)));
