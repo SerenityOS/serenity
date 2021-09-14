@@ -73,7 +73,7 @@ void Reference::put_value(GlobalObject& global_object, Value value)
     }
 }
 
-void Reference::throw_reference_error(GlobalObject& global_object)
+void Reference::throw_reference_error(GlobalObject& global_object) const
 {
     auto& vm = global_object.vm();
     if (!m_name.is_valid())
@@ -83,7 +83,7 @@ void Reference::throw_reference_error(GlobalObject& global_object)
 }
 
 // 6.2.4.5 GetValue ( V ), https://tc39.es/ecma262/#sec-getvalue
-Value Reference::get_value(GlobalObject& global_object, bool throw_if_undefined)
+Value Reference::get_value(GlobalObject& global_object, bool throw_if_undefined) const
 {
     if (is_unresolvable()) {
         throw_reference_error(global_object);
