@@ -97,6 +97,12 @@ public:
         return !m_this_value.is_empty();
     }
 
+    // Note: Non-standard helper.
+    bool is_environment_reference() const
+    {
+        return m_base_type == BaseType::Environment;
+    }
+
     void put_value(GlobalObject&, Value);
     Value get_value(GlobalObject&, bool throw_if_undefined = true) const;
     bool delete_(GlobalObject&);
