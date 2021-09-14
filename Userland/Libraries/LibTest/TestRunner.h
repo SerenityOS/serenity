@@ -73,7 +73,7 @@ inline void cleanup()
         warn("\033]9;-1;\033\\");
 }
 
-inline void cleanup_and_exit()
+[[noreturn]] inline void cleanup_and_exit()
 {
     cleanup();
     exit(1);
