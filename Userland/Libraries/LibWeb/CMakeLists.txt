@@ -228,6 +228,7 @@ set(SOURCES
     SVG/SVGPathElement.cpp
     SVG/SVGSVGElement.cpp
     SVG/TagNames.cpp
+    SVG/ViewBox.cpp
     StylePropertiesModel.cpp
     UIEvents/EventNames.cpp
     UIEvents/MouseEvent.cpp
