@@ -18,6 +18,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Exception.h>
+#include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/Promise.h>
 #include <LibJS/Runtime/Value.h>
@@ -40,25 +41,6 @@ struct ScopeFrame {
     ScopeType type;
     NonnullRefPtr<ScopeNode> scope_node;
     bool pushed_environment { false };
-};
-
-// 9.4 Execution Contexts, https://tc39.es/ecma262/#sec-execution-contexts
-struct ExecutionContext {
-    explicit ExecutionContext(Heap& heap)
-        : arguments(heap)
-    {
-    }
-
-    const ASTNode* current_node { nullptr };
-    FlyString function_name;
-    FunctionObject* function { nullptr };
-    Value this_value;
-    MarkedValueList arguments;
-    Object* arguments_object { nullptr };
-    Environment* lexical_environment { nullptr };
-    Environment* variable_environment { nullptr };
-    Realm* realm { nullptr };
-    bool is_strict_mode { false };
 };
 
 class VM : public RefCounted<VM> {
