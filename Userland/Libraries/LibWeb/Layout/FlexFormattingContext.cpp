@@ -90,6 +90,14 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
             ? box.width()
             : box.height();
     };
+    auto specified_main_size_of_child_box = [&is_row, &specified_main_size](Box& box, Box& child_box) {
+        auto main_size_of_parent = specified_main_size(box);
+        if (is_row) {
+            return child_box.computed_values().width().resolved_or_zero(child_box, main_size_of_parent).to_px(child_box);
+        } else {
+            return child_box.computed_values().height().resolved_or_zero(child_box, main_size_of_parent).to_px(child_box);
+        }
+    };
     auto specified_cross_size = [&is_row](Box& box) {
         return is_row
             ? box.height()
@@ -313,7 +321,7 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
             // FIXME: This is probably too naive.
             // FIXME: Care about FlexBasis::Auto
             if (has_definite_main_size(child_box)) {
-                flex_item.flex_base_size = specified_main_size(child_box);
+                flex_item.flex_base_size = specified_main_size_of_child_box(box, child_box);
             } else {
                 layout_for_maximum_main_size(child_box);
                 flex_item.flex_base_size = calculated_main_size(child_box);
