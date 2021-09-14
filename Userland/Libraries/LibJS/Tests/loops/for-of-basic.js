@@ -102,3 +102,9 @@ describe("errors", () => {
 test("allow binding patterns", () => {
     expect(`for (let [a, b] of foo) {}`).toEval();
 });
+
+test("allow member expression as variable", () => {
+    const f = {};
+    for (f.a of "abc");
+    expect(f.a).toBe("c");
+});

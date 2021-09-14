@@ -518,7 +518,7 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
     return last_value;
 }
 
-static Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>> variable_from_for_declaration(Interpreter& interpreter, GlobalObject& global_object, ASTNode const& node, RefPtr<BlockStatement> wrapper)
+static Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>, Reference> variable_from_for_declaration(Interpreter& interpreter, GlobalObject& global_object, ASTNode const& node, RefPtr<BlockStatement> wrapper)
 {
     if (is<VariableDeclaration>(node)) {
         auto& variable_declaration = static_cast<VariableDeclaration const&>(node);
@@ -528,11 +528,15 @@ static Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>> variabl
             interpreter.enter_scope(*wrapper, ScopeType::Block, global_object);
         }
         variable_declaration.execute(interpreter, global_object);
-        return variable_declaration.declarations().first().target();
+        return variable_declaration.declarations().first().target().downcast<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>, Reference>();
     }
 
     if (is<Identifier>(node)) {
         return NonnullRefPtr(static_cast<Identifier const&>(node));
+    }
+
+    if (is<MemberExpression>(node)) {
+        return static_cast<MemberExpression const&>(node).to_reference(interpreter, global_object);
     }
 
     VERIFY_NOT_REACHED();
@@ -543,8 +547,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     InterpreterNodeScope node_scope { interpreter, *this };
 
     bool has_declaration = is<VariableDeclaration>(*m_lhs);
-    if (!has_declaration && !is<Identifier>(*m_lhs)) {
-        // FIXME: Implement "for (foo.bar in baz)", "for (foo[0] in bar)"
+    if (!has_declaration && !is<Identifier>(*m_lhs) && !is<MemberExpression>(*m_lhs)) {
         VERIFY_NOT_REACHED();
     }
     RefPtr<BlockStatement> wrapper;
@@ -558,12 +561,15 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     if (interpreter.exception())
         return {};
     if (rhs_result.is_nullish())
-        return {};
+        return last_value;
     auto* object = rhs_result.to_object(global_object);
     while (object) {
         auto property_names = object->enumerable_own_property_names(Object::PropertyKind::Key);
         for (auto& value : property_names) {
-            interpreter.vm().assign(target, value, global_object, has_declaration);
+            if (auto reference_ptr = target.get_pointer<Reference>())
+                reference_ptr->put_value(global_object, value);
+            else
+                interpreter.vm().assign(target.downcast<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>>(), value, global_object, has_declaration);
             if (interpreter.exception())
                 return {};
             last_value = interpreter.execute_statement(global_object, *m_body).value_or(last_value);
@@ -592,8 +598,7 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     InterpreterNodeScope node_scope { interpreter, *this };
 
     bool has_declaration = is<VariableDeclaration>(*m_lhs);
-    if (!has_declaration && !is<Identifier>(*m_lhs)) {
-        // FIXME: Implement "for (foo.bar of baz)", "for (foo[0] of bar)"
+    if (!has_declaration && !is<Identifier>(*m_lhs) && !is<MemberExpression>(*m_lhs)) {
         VERIFY_NOT_REACHED();
     }
     RefPtr<BlockStatement> wrapper;
@@ -608,7 +613,10 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
         return {};
 
     get_iterator_values(global_object, rhs_result, [&](Value value) {
-        interpreter.vm().assign(target, value, global_object, has_declaration);
+        if (auto reference_ptr = target.get_pointer<Reference>())
+            reference_ptr->put_value(global_object, value);
+        else
+            interpreter.vm().assign(target.downcast<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>>(), value, global_object, has_declaration);
         last_value = interpreter.execute_statement(global_object, *m_body).value_or(last_value);
         if (interpreter.exception())
             return IterationDecision::Break;

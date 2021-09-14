@@ -53,3 +53,9 @@ test("use already-declared variable", () => {
 test("allow binding patterns", () => {
     expect(`for (let [a, b] in foo) {}`).toEval();
 });
+
+test("allow member expression as variable", () => {
+    const f = {};
+    for (f.a in "abc");
+    expect(f.a).toBe("2");
+});
