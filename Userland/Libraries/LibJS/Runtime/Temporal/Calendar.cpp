@@ -110,9 +110,7 @@ Vector<String> calendar_fields(GlobalObject& global_object, Object& calendar, Ve
     }
 
     // 4. Return ? IterableToListOfType(fieldsArray, « String »).
-    auto list = iterable_to_list_of_type(global_object, fields_array, { OptionType::String });
-    if (vm.exception())
-        return {};
+    auto list = TRY_OR_DISCARD(iterable_to_list_of_type(global_object, fields_array, { OptionType::String }));
 
     Vector<String> result;
     for (auto& value : list)
