@@ -44,6 +44,7 @@ jobs:
         cmake -S Meta/CMake/Superbuild -B Build/superbuild -GNinja \
           -DSERENITY_ARCH=${{ parameters.arch }} \
           -DSERENITY_TOOLCHAIN=Clang \
+          -DENABLE_ALL_KERNEL_MODULES=ON \
           -DENABLE_UNDEFINED_SANITIZER=ON \
           -DENABLE_PCI_IDS_DOWNLOAD=OFF \
           -DENABLE_USB_IDS_DOWNLOAD=OFF \
