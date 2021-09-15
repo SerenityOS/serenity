@@ -32,9 +32,12 @@ KResultOr<FlatPtr> Process::sys$waitid(Userspace<const Syscall::SC_waitid_params
         break;
     case P_PID: {
         auto waitee_process = Process::from_pid(params.id);
-        if (!waitee_process || waitee_process->ppid() != Process::current().pid()) {
+        if (!waitee_process)
             return ECHILD;
-        }
+        bool waitee_is_child = waitee_process->ppid() == Process::current().pid();
+        bool waitee_is_our_tracee = waitee_process->has_tracee_thread(Process::current().pid());
+        if (!waitee_is_child && !waitee_is_our_tracee)
+            return ECHILD;
         waitee = waitee_process.release_nonnull();
         break;
     }
