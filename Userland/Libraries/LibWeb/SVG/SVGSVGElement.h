@@ -31,7 +31,6 @@ public:
 private:
     virtual void parse_attribute(FlyString const& name, String const& value) override;
 
-    RefPtr<Gfx::Bitmap> m_bitmap;
     Optional<ViewBox> m_view_box;
 };
 
