@@ -29,6 +29,8 @@ foreach(source IN LISTS TEST_SOURCES)
     install(TARGETS "${test_name}" RUNTIME DESTINATION usr/Tests/Kernel/Legacy)
 endforeach()
 
+serenity_test("crash.cpp" Kernel MAIN_ALREADY_DEFINED)
+
 set(LIBTEST_BASED_SOURCES
     TestEFault.cpp
     TestKernelAlarm.cpp
