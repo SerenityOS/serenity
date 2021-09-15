@@ -4,6 +4,9 @@ set(CLDR_VERSION 39.0.0)
 set(UCD_PATH "${CMAKE_BINARY_DIR}/UCD" CACHE PATH "Download location for UCD files")
 set(CLDR_PATH "${CMAKE_BINARY_DIR}/CLDR" CACHE PATH "Download location for CLDR files")
 
+set(UCD_VERSION_FILE "${UCD_PATH}/version.txt")
+set(CLDR_VERSION_FILE "${CLDR_PATH}/version.txt")
+
 set(UNICODE_DATA_URL "https://www.unicode.org/Public/${UCD_VERSION}/ucd/UnicodeData.txt")
 set(UNICODE_DATA_PATH "${UCD_PATH}/UnicodeData.txt")
 
@@ -55,6 +58,23 @@ set(CLDR_MISC_PATH "${CLDR_PATH}/${CLDR_MISC_SOURCE}")
 set(CLDR_NUMBERS_SOURCE cldr-numbers-modern)
 set(CLDR_NUMBERS_PATH "${CLDR_PATH}/${CLDR_NUMBERS_SOURCE}")
 
+function(remove_unicode_data_if_version_changed version version_file cache_path)
+    set(version_differs YES)
+
+    if (EXISTS "${version_file}")
+        file(STRINGS "${version_file}" active_version)
+        if (version STREQUAL active_version)
+            set(version_differs NO)
+        endif()
+    endif()
+
+    if (version_differs)
+        message(STATUS "Removing outdated ${cache_path} for version ${version}")
+        file(REMOVE_RECURSE "${cache_path}")
+        file(WRITE "${version_file}" "${version}")
+    endif()
+endfunction()
+
 function(download_ucd_file url path)
     if (NOT EXISTS "${path}")
         get_filename_component(file "${path}" NAME)
@@ -74,6 +94,9 @@ function(extract_cldr_file source path)
 endfunction()
 
 if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
+    remove_unicode_data_if_version_changed("${UCD_VERSION}" "${UCD_VERSION_FILE}" "${UCD_PATH}")
+    remove_unicode_data_if_version_changed("${CLDR_VERSION}" "${CLDR_VERSION_FILE}" "${CLDR_PATH}")
+
     download_ucd_file("${UNICODE_DATA_URL}" "${UNICODE_DATA_PATH}")
     download_ucd_file("${SPECIAL_CASING_URL}" "${SPECIAL_CASING_PATH}")
     download_ucd_file("${DERIVED_GENERAL_CATEGORY_URL}" "${DERIVED_GENERAL_CATEGORY_PATH}")
