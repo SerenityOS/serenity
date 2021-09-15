@@ -34,10 +34,11 @@ public:
 
     Gfx::FloatRect padded_rect() const
     {
+        auto absolute_rect = this->absolute_rect();
         Gfx::FloatRect rect;
-        rect.set_x(absolute_x() - box_model().padding.left);
+        rect.set_x(absolute_rect.x() - box_model().padding.left);
         rect.set_width(width() + box_model().padding.left + box_model().padding.right);
-        rect.set_y(absolute_y() - box_model().padding.top);
+        rect.set_y(absolute_rect.y() - box_model().padding.top);
         rect.set_height(height() + box_model().padding.top + box_model().padding.bottom);
         return rect;
     }
