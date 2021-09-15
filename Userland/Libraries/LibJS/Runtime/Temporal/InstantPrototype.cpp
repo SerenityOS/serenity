@@ -426,9 +426,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
     // 5. If timeZone is not undefined, then
     if (!time_zone.is_undefined()) {
         // a. Set timeZone to ? ToTemporalTimeZone(timeZone).
-        time_zone = to_temporal_time_zone(global_object, time_zone);
-        if (vm.exception())
-            return {};
+        time_zone = TRY_OR_DISCARD(to_temporal_time_zone(global_object, time_zone));
     }
 
     // 6. Let precision be ? ToSecondsStringPrecision(options).
@@ -548,9 +546,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
     }
 
     // 9. Let timeZone be ? ToTemporalTimeZone(temporalTimeZoneLike).
-    auto* time_zone = to_temporal_time_zone(global_object, temporal_time_zone_like);
-    if (vm.exception())
-        return {};
+    auto* time_zone = TRY_OR_DISCARD(to_temporal_time_zone(global_object, temporal_time_zone_like));
 
     // 10. Return ? CreateTemporalZonedDateTime(instant.[[Nanoseconds]], timeZone, calendar).
     return TRY_OR_DISCARD(create_temporal_zoned_date_time(global_object, instant->nanoseconds(), *time_zone, *calendar));
@@ -582,9 +578,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time_iso)
     }
 
     // 4. Let timeZone be ? ToTemporalTimeZone(item).
-    auto* time_zone = to_temporal_time_zone(global_object, item);
-    if (vm.exception())
-        return {};
+    auto* time_zone = TRY_OR_DISCARD(to_temporal_time_zone(global_object, item));
 
     // 5. Let calendar be ! GetISO8601Calendar().
     auto* calendar = get_iso8601_calendar(global_object);

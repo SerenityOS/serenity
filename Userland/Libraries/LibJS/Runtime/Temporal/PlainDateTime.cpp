@@ -167,7 +167,7 @@ PlainDateTime* to_temporal_date_time(GlobalObject& global_object, Value item, Ob
             auto* instant = create_temporal_instant(global_object, zoned_date_time.nanoseconds());
 
             // ii. Return ? BuiltinTimeZoneGetPlainDateTimeFor(item.[[TimeZone]], instant, item.[[Calendar]]).
-            return builtin_time_zone_get_plain_date_time_for(global_object, &zoned_date_time.time_zone(), *instant, zoned_date_time.calendar());
+            return TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &zoned_date_time.time_zone(), *instant, zoned_date_time.calendar()));
         }
 
         // c. If item has an [[InitializedTemporalDate]] internal slot, then

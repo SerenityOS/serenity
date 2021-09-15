@@ -159,7 +159,7 @@ TimeZone* system_time_zone(GlobalObject& global_object)
     auto identifier = default_time_zone();
 
     // 2. Return ! CreateTemporalTimeZone(identifier).
-    return create_temporal_time_zone(global_object, identifier);
+    return TRY_OR_DISCARD(create_temporal_time_zone(global_object, identifier));
 }
 
 // 2.3.2 SystemUTCEpochNanoseconds ( ), https://tc39.es/proposal-temporal/#sec-temporal-systemutcepochnanoseconds
@@ -209,9 +209,7 @@ PlainDateTime* system_date_time(GlobalObject& global_object, Value temporal_time
     // 2. Else,
     else {
         // a. Let timeZone be ? ToTemporalTimeZone(temporalTimeZoneLike).
-        time_zone = to_temporal_time_zone(global_object, temporal_time_zone_like);
-        if (vm.exception())
-            return {};
+        time_zone = TRY_OR_DISCARD(to_temporal_time_zone(global_object, temporal_time_zone_like));
     }
 
     // 3. Let calendar be ? ToTemporalCalendar(calendarLike).
@@ -223,7 +221,7 @@ PlainDateTime* system_date_time(GlobalObject& global_object, Value temporal_time
     auto* instant = system_instant(global_object);
 
     // 5. Return ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    return builtin_time_zone_get_plain_date_time_for(global_object, time_zone, *instant, *calendar);
+    return TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, time_zone, *instant, *calendar));
 }
 
 // 2.3.5 SystemZonedDateTime ( temporalTimeZoneLike, calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-systemzoneddatetime
@@ -240,9 +238,7 @@ ZonedDateTime* system_zoned_date_time(GlobalObject& global_object, Value tempora
     // 2. Else,
     else {
         // a. Let timeZone be ? ToTemporalTimeZone(temporalTimeZoneLike).
-        time_zone = to_temporal_time_zone(global_object, temporal_time_zone_like);
-        if (vm.exception())
-            return {};
+        time_zone = TRY_OR_DISCARD(to_temporal_time_zone(global_object, temporal_time_zone_like));
     }
 
     // 3. Let calendar be ? ToTemporalCalendar(calendarLike).
