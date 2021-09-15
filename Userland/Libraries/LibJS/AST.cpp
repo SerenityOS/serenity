@@ -786,9 +786,7 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
     // From here on equivalent to
     // 13.3.4 EvaluatePropertyAccessWithIdentifierKey ( baseValue, identifierName, strict ), https://tc39.es/ecma262/#sec-evaluate-property-access-with-identifier-key
 
-    object_value = require_object_coercible(global_object, object_value);
-    if (interpreter.exception())
-        return {};
+    object_value = TRY_OR_DISCARD(require_object_coercible(global_object, object_value));
 
     auto property_name = computed_property_name(interpreter, global_object);
     if (!property_name.is_valid())

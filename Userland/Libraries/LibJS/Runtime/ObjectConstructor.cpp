@@ -149,9 +149,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
     auto proto = vm.argument(1);
 
     // 1. Set O to ? RequireObjectCoercible(O).
-    auto object = require_object_coercible(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto object = TRY_OR_DISCARD(require_object_coercible(global_object, vm.argument(0)));
 
     // 2. If Type(proto) is neither Object nor Null, throw a TypeError exception.
     if (!proto.is_object() && !proto.is_null()) {
@@ -242,9 +240,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::freeze)
 // 20.1.2.7 Object.fromEntries ( iterable ), https://tc39.es/ecma262/#sec-object.fromentries
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
 {
-    auto iterable = require_object_coercible(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto iterable = TRY_OR_DISCARD(require_object_coercible(global_object, vm.argument(0)));
 
     auto* object = Object::create(global_object, global_object.object_prototype());
 

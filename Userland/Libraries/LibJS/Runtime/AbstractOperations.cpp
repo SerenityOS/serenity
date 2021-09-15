@@ -17,6 +17,7 @@
 #include <LibJS/Runtime/ArgumentsObject.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BoundFunction.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
@@ -32,13 +33,11 @@
 namespace JS {
 
 // 7.2.1 RequireObjectCoercible ( argument ), https://tc39.es/ecma262/#sec-requireobjectcoercible
-Value require_object_coercible(GlobalObject& global_object, Value value)
+ThrowCompletionOr<Value> require_object_coercible(GlobalObject& global_object, Value value)
 {
     auto& vm = global_object.vm();
-    if (value.is_nullish()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotObjectCoercible, value.to_string_without_side_effects());
-        return {};
-    }
+    if (value.is_nullish())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotObjectCoercible, value.to_string_without_side_effects());
     return value;
 }
 
@@ -364,9 +363,7 @@ Reference make_super_property_reference(GlobalObject& global_object, Value actua
     // 3. Let baseValue be ? env.GetSuperBase().
     auto base_value = env.get_super_base();
     // 4. Let bv be ? RequireObjectCoercible(baseValue).
-    auto bv = require_object_coercible(global_object, base_value);
-    if (vm.exception())
-        return {};
+    auto bv = TRY_OR_DISCARD(require_object_coercible(global_object, base_value));
     // 5. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
     // 6. NOTE: This returns a Super Reference Record.
     return Reference { bv, property_key, actual_this, strict };

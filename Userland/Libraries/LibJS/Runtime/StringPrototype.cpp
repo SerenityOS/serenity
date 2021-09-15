@@ -30,17 +30,13 @@ namespace JS {
 
 static Optional<String> ak_string_from(VM& vm, GlobalObject& global_object)
 {
-    auto this_value = require_object_coercible(global_object, vm.this_value(global_object));
-    if (vm.exception())
-        return {};
+    auto this_value = TRY_OR_DISCARD(require_object_coercible(global_object, vm.this_value(global_object)));
     return this_value.to_string(global_object);
 }
 
 static Utf16String utf16_string_from(VM& vm, GlobalObject& global_object)
 {
-    auto this_value = require_object_coercible(global_object, vm.this_value(global_object));
-    if (vm.exception())
-        return {};
+    auto this_value = TRY_OR_DISCARD(require_object_coercible(global_object, vm.this_value(global_object)));
     return this_value.to_utf16_string(global_object);
 }
 
@@ -717,9 +713,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
 // 22.1.3.21 String.prototype.split ( separator, limit ), https://tc39.es/ecma262/#sec-string.prototype.split
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
 {
-    auto object = require_object_coercible(global_object, vm.this_value(global_object));
-    if (vm.exception())
-        return {};
+    auto object = TRY_OR_DISCARD(require_object_coercible(global_object, vm.this_value(global_object)));
 
     auto separator_argument = vm.argument(0);
     auto limit_argument = vm.argument(1);
@@ -862,9 +856,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::at)
 // 22.1.3.33 String.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-string.prototype-@@iterator
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
 {
-    auto this_object = require_object_coercible(global_object, vm.this_value(global_object));
-    if (vm.exception())
-        return {};
+    auto this_object = TRY_OR_DISCARD(require_object_coercible(global_object, vm.this_value(global_object)));
     auto string = this_object.to_string(global_object);
     if (vm.exception())
         return {};
@@ -874,9 +866,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
 // 22.1.3.11 String.prototype.match ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.match
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
 {
-    auto this_object = require_object_coercible(global_object, vm.this_value(global_object));
-    if (vm.exception())
-        return {};
+    auto this_object = TRY_OR_DISCARD(require_object_coercible(global_object, vm.this_value(global_object)));
     auto regexp = vm.argument(0);
     if (!regexp.is_nullish()) {
         if (auto* matcher = regexp.get_method(global_object, *vm.well_known_symbol_match()))
@@ -898,9 +888,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
 // 22.1.3.12 String.prototype.matchAll ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.matchall
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
 {
-    auto this_object = require_object_coercible(global_object, vm.this_value(global_object));
-    if (vm.exception())
-        return {};
+    auto this_object = TRY_OR_DISCARD(require_object_coercible(global_object, vm.this_value(global_object)));
     auto regexp = vm.argument(0);
     if (!regexp.is_nullish()) {
         auto is_regexp = regexp.is_regexp(global_object);
@@ -910,9 +898,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
             auto flags = regexp.as_object().get("flags");
             if (vm.exception())
                 return {};
-            auto flags_object = require_object_coercible(global_object, flags);
-            if (vm.exception())
-                return {};
+            auto flags_object = TRY_OR_DISCARD(require_object_coercible(global_object, flags));
             auto flags_string = flags_object.to_string(global_object);
             if (vm.exception())
                 return {};
@@ -940,9 +926,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
 // 22.1.3.17 String.prototype.replace ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replace
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
 {
-    auto this_object = require_object_coercible(global_object, vm.this_value(global_object));
-    if (vm.exception())
-        return {};
+    auto this_object = TRY_OR_DISCARD(require_object_coercible(global_object, vm.this_value(global_object)));
     auto search_value = vm.argument(0);
     auto replace_value = vm.argument(1);
 
@@ -1001,9 +985,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
 // 22.1.3.18 String.prototype.replaceAll ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replaceall
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
 {
-    auto this_object = require_object_coercible(global_object, vm.this_value(global_object));
-    if (vm.exception())
-        return {};
+    auto this_object = TRY_OR_DISCARD(require_object_coercible(global_object, vm.this_value(global_object)));
     auto search_value = vm.argument(0);
     auto replace_value = vm.argument(1);
 
@@ -1016,9 +998,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
             auto flags = search_value.as_object().get(vm.names.flags);
             if (vm.exception())
                 return {};
-            auto flags_object = require_object_coercible(global_object, flags);
-            if (vm.exception())
-                return {};
+            auto flags_object = TRY_OR_DISCARD(require_object_coercible(global_object, flags));
             auto flags_string = flags_object.to_string(global_object);
             if (vm.exception())
                 return {};
@@ -1103,9 +1083,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
 // 22.1.3.19 String.prototype.search ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.search
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::search)
 {
-    auto this_object = require_object_coercible(global_object, vm.this_value(global_object));
-    if (vm.exception())
-        return {};
+    auto this_object = TRY_OR_DISCARD(require_object_coercible(global_object, vm.this_value(global_object)));
     auto regexp = vm.argument(0);
     if (!regexp.is_nullish()) {
         if (auto* searcher = regexp.get_method(global_object, *vm.well_known_symbol_search()))
@@ -1128,9 +1106,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::search)
 static Value create_html(GlobalObject& global_object, Value string, const String& tag, const String& attribute, Value value)
 {
     auto& vm = global_object.vm();
-    require_object_coercible(global_object, string);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(require_object_coercible(global_object, string));
     auto str = string.to_string(global_object);
     if (vm.exception())
         return {};
