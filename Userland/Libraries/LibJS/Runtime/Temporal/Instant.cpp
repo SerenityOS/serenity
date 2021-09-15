@@ -135,9 +135,7 @@ BigInt* parse_temporal_instant(GlobalObject& global_object, String const& iso_st
     }
 
     // 7. Let offsetNanoseconds be ? ParseTimeZoneOffsetString(offsetString).
-    auto offset_nanoseconds = parse_time_zone_offset_string(global_object, *offset_string);
-    if (vm.exception())
-        return {};
+    auto offset_nanoseconds = TRY_OR_DISCARD(parse_time_zone_offset_string(global_object, *offset_string));
 
     // 8. Return utc − offsetNanoseconds.
     return js_bigint(vm, utc->big_integer().minus(Crypto::SignedBigInteger::create_from(offset_nanoseconds)));
@@ -256,20 +254,16 @@ Optional<String> temporal_instant_to_string(GlobalObject& global_object, Instant
 
     // 4. If outputTimeZone is undefined, then
     if (output_time_zone.is_undefined()) {
-        // a. Set outputTimeZone to ? CreateTemporalTimeZone("UTC").
-        output_time_zone = create_temporal_time_zone(global_object, "UTC"sv);
         // TODO: Can this really throw...?
-        if (vm.exception())
-            return {};
+        // a. Set outputTimeZone to ? CreateTemporalTimeZone("UTC").
+        output_time_zone = TRY_OR_DISCARD(create_temporal_time_zone(global_object, "UTC"sv));
     }
 
     // 5. Let isoCalendar be ! GetISO8601Calendar().
     auto* iso_calendar = get_iso8601_calendar(global_object);
 
     // 6. Let dateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(outputTimeZone, instant, isoCalendar).
-    auto* date_time = builtin_time_zone_get_plain_date_time_for(global_object, output_time_zone, instant, *iso_calendar);
-    if (vm.exception())
-        return {};
+    auto* date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, output_time_zone, instant, *iso_calendar));
 
     // 7. Let dateTimeString be ? TemporalDateTimeToString(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], undefined, precision, "never").
     auto date_time_string = temporal_date_time_to_string(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), js_undefined(), precision, "never"sv);
@@ -286,9 +280,7 @@ Optional<String> temporal_instant_to_string(GlobalObject& global_object, Instant
     // 9. Else,
     else {
         // a. Let timeZoneString be ? BuiltinTimeZoneGetOffsetStringFor(timeZone, instant).
-        time_zone_string = builtin_time_zone_get_offset_string_for(global_object, time_zone, instant);
-        if (vm.exception())
-            return {};
+        time_zone_string = TRY_OR_DISCARD(builtin_time_zone_get_offset_string_for(global_object, time_zone, instant));
     }
 
     // 10. Return the string-concatenation of dateTimeString and timeZoneString.

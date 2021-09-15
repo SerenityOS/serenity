@@ -58,9 +58,7 @@ Value TimeZoneConstructor::construct(FunctionObject& new_target)
     // 3. If identifier satisfies the syntax of a TimeZoneNumericUTCOffset (see 13.33), then
     if (is_valid_time_zone_numeric_utc_offset_syntax(identifier)) {
         // a. Let offsetNanoseconds be ? ParseTimeZoneOffsetString(identifier).
-        auto offset_nanoseconds = parse_time_zone_offset_string(global_object, identifier);
-        if (vm.exception())
-            return {};
+        auto offset_nanoseconds = TRY_OR_DISCARD(parse_time_zone_offset_string(global_object, identifier));
 
         // b. Let canonical be ! FormatTimeZoneOffsetString(offsetNanoseconds).
         canonical = format_time_zone_offset_string(offset_nanoseconds);
@@ -79,7 +77,7 @@ Value TimeZoneConstructor::construct(FunctionObject& new_target)
     }
 
     // 5. Return ? CreateTemporalTimeZone(canonical, NewTarget).
-    return create_temporal_time_zone(global_object, canonical, &new_target);
+    return TRY_OR_DISCARD(create_temporal_time_zone(global_object, canonical, &new_target));
 }
 
 // 11.3.2 Temporal.TimeZone.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.from
@@ -88,7 +86,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZoneConstructor::from)
     auto item = vm.argument(0);
 
     // 1. Return ? ToTemporalTimeZone(item).
-    return to_temporal_time_zone(global_object, item);
+    return TRY_OR_DISCARD(to_temporal_time_zone(global_object, item));
 }
 
 }
