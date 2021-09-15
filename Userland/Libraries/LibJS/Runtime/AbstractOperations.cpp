@@ -31,9 +31,6 @@
 
 namespace JS {
 
-// Used in various abstract operations to make it obvious when a non-optional return value must be discarded.
-static constexpr double INVALID { 0 };
-
 // 7.2.1 RequireObjectCoercible ( argument ), https://tc39.es/ecma262/#sec-requireobjectcoercible
 Value require_object_coercible(GlobalObject& global_object, Value value)
 {
@@ -51,7 +48,7 @@ size_t length_of_array_like(GlobalObject& global_object, Object const& object)
     auto& vm = global_object.vm();
     auto result = object.get(vm.names.length);
     if (vm.exception())
-        return INVALID;
+        return {};
     return result.to_length(global_object);
 }
 

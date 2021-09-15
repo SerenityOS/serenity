@@ -34,9 +34,6 @@
 
 namespace JS {
 
-// Used in various abstract operations to make it obvious when a non-optional return value must be discarded.
-static constexpr double INVALID { 0 };
-
 static inline bool same_type_for_equality(const Value& lhs, const Value& rhs)
 {
     if (lhs.type() == rhs.type())
@@ -569,7 +566,7 @@ i64 Value::to_bigint_int64(GlobalObject& global_object) const
 {
     auto* bigint = to_bigint(global_object);
     if (global_object.vm().exception())
-        return INVALID;
+        return {};
     return static_cast<i64>(bigint->big_integer().to_u64());
 }
 
@@ -578,7 +575,7 @@ u64 Value::to_bigint_uint64(GlobalObject& global_object) const
 {
     auto* bigint = to_bigint(global_object);
     if (global_object.vm().exception())
-        return INVALID;
+        return {};
     return bigint->big_integer().to_u64();
 }
 
@@ -598,7 +595,7 @@ double Value::to_double(GlobalObject& global_object) const
 {
     auto number = to_number(global_object);
     if (global_object.vm().exception())
-        return INVALID;
+        return {};
     return number.as_double();
 }
 
@@ -618,7 +615,7 @@ i32 Value::to_i32_slow_case(GlobalObject& global_object) const
     VERIFY(type() != Type::Int32);
     auto number = to_number(global_object);
     if (global_object.vm().exception())
-        return INVALID;
+        return {};
     double value = number.as_double();
     if (!isfinite(value) || value == 0)
         return 0;
@@ -638,7 +635,7 @@ u32 Value::to_u32(GlobalObject& global_object) const
 {
     auto number = to_number(global_object);
     if (global_object.vm().exception())
-        return INVALID;
+        return {};
     double value = number.as_double();
     if (!isfinite(value) || value == 0)
         return 0;
@@ -656,7 +653,7 @@ i16 Value::to_i16(GlobalObject& global_object) const
 {
     auto number = to_number(global_object);
     if (global_object.vm().exception())
-        return INVALID;
+        return {};
     double value = number.as_double();
     if (!isfinite(value) || value == 0)
         return 0;
@@ -676,7 +673,7 @@ u16 Value::to_u16(GlobalObject& global_object) const
 {
     auto number = to_number(global_object);
     if (global_object.vm().exception())
-        return INVALID;
+        return {};
     double value = number.as_double();
     if (!isfinite(value) || value == 0)
         return 0;
@@ -694,7 +691,7 @@ i8 Value::to_i8(GlobalObject& global_object) const
 {
     auto number = to_number(global_object);
     if (global_object.vm().exception())
-        return INVALID;
+        return {};
     double value = number.as_double();
     if (!isfinite(value) || value == 0)
         return 0;
@@ -714,7 +711,7 @@ u8 Value::to_u8(GlobalObject& global_object) const
 {
     auto number = to_number(global_object);
     if (global_object.vm().exception())
-        return INVALID;
+        return {};
     double value = number.as_double();
     if (!isfinite(value) || value == 0)
         return 0;
@@ -732,7 +729,7 @@ u8 Value::to_u8_clamp(GlobalObject& global_object) const
 {
     auto number = to_number(global_object);
     if (global_object.vm().exception())
-        return INVALID;
+        return {};
     if (number.is_nan())
         return 0;
     double value = number.as_double();
@@ -757,7 +754,7 @@ size_t Value::to_length(GlobalObject& global_object) const
 
     auto len = to_integer_or_infinity(global_object);
     if (vm.exception())
-        return INVALID;
+        return {};
     if (len <= 0)
         return 0;
     // FIXME: The spec says that this function's output range is 0 - 2^53-1. But we don't want to overflow the size_t.
@@ -774,16 +771,16 @@ size_t Value::to_index(GlobalObject& global_object) const
         return 0;
     auto integer_index = to_integer_or_infinity(global_object);
     if (vm.exception())
-        return INVALID;
+        return {};
     if (integer_index < 0) {
         vm.throw_exception<RangeError>(global_object, ErrorType::InvalidIndex);
-        return INVALID;
+        return {};
     }
     auto index = Value(integer_index).to_length(global_object);
     VERIFY(!vm.exception());
     if (integer_index != index) {
         vm.throw_exception<RangeError>(global_object, ErrorType::InvalidIndex);
-        return INVALID;
+        return {};
     }
     return index;
 }
@@ -795,7 +792,7 @@ double Value::to_integer_or_infinity(GlobalObject& global_object) const
 
     auto number = to_number(global_object);
     if (vm.exception())
-        return INVALID;
+        return {};
     if (number.is_nan() || number.as_double() == 0)
         return 0;
     if (number.is_infinity())
