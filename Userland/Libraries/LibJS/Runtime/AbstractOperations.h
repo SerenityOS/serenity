@@ -19,7 +19,7 @@ ObjectEnvironment* new_object_environment(Object&, bool is_with_environment, Env
 Environment& get_this_environment(VM&);
 Object* get_super_constructor(VM&);
 Reference make_super_property_reference(GlobalObject&, Value actual_this, StringOrSymbol const& property_key, bool strict);
-Value require_object_coercible(GlobalObject&, Value);
+ThrowCompletionOr<Value> require_object_coercible(GlobalObject&, Value);
 size_t length_of_array_like(GlobalObject&, Object const&);
 MarkedValueList create_list_from_array_like(GlobalObject&, Value, Function<void(Value)> = {});
 FunctionObject* species_constructor(GlobalObject&, Object const&, FunctionObject& default_constructor);
