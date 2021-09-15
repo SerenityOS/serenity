@@ -154,9 +154,7 @@ ThrowCompletionOr<PartialUnregulatedTemporalTime> to_partial_time(GlobalObject& 
             any = true;
 
             // ii. Set value to ? ToIntegerThrowOnInfinity(value).
-            auto value_number = to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
+            auto value_number = TRY(to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite));
 
             // iii. Set result's internal slot whose name is the Internal Slot value of the current row to value.
             result.*internal_slot = value_number;
@@ -384,9 +382,7 @@ ThrowCompletionOr<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject&
         }
 
         // d. Set value to ? ToIntegerThrowOnInfinity(value).
-        auto value_number = to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto value_number = TRY(to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite));
 
         // e. Set result's internal slot whose name is the Internal Slot value of the current row to value.
         result.*internal_slot = value_number;

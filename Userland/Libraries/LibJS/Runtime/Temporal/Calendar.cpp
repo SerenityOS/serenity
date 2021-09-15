@@ -138,7 +138,7 @@ double calendar_year(GlobalObject& global_object, Object& calendar, Object& date
     }
 
     // 4. Return ? ToIntegerThrowOnInfinity(result).
-    return to_integer_throw_on_infinity(global_object, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.Infinity.as_string());
+    return TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.Infinity.as_string()));
 }
 
 // 12.1.10 CalendarMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonth
@@ -321,11 +321,8 @@ Value calendar_era_year(GlobalObject& global_object, Object& calendar, Object& d
         return {};
 
     // 3. If result is not undefined, set result to ? ToIntegerThrowOnInfinity(result).
-    if (!result.is_undefined()) {
-        result = Value(to_integer_throw_on_infinity(global_object, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.eraYear.as_string(), "Infinity"sv));
-        if (vm.exception())
-            return {};
-    }
+    if (!result.is_undefined())
+        result = Value(TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.eraYear.as_string(), "Infinity"sv)));
 
     // 4. Return result.
     return result;

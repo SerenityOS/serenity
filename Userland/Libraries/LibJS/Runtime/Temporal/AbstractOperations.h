@@ -11,6 +11,7 @@
 #include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS::Temporal {
@@ -116,20 +117,19 @@ Object* prepare_temporal_fields(GlobalObject&, Object const& fields, Vector<Stri
 
 // 13.46 ToIntegerThrowOnInfinity ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-tointegerthrowoninfinity
 template<typename... Args>
-double to_integer_throw_on_infinity(GlobalObject& global_object, Value argument, ErrorType error_type, Args... args)
+ThrowCompletionOr<double> to_integer_throw_on_infinity(GlobalObject& global_object, Value argument, ErrorType error_type, Args... args)
 {
     auto& vm = global_object.vm();
 
     // 1. Let integer be ? ToIntegerOrInfinity(argument).
     auto integer = argument.to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 2. If integer is −∞ or +∞ , then
     if (Value(integer).is_infinity()) {
         // a. Throw a RangeError exception.
-        vm.throw_exception<RangeError>(global_object, error_type, args...);
-        return {};
+        return vm.template throw_completion<RangeError>(global_object, error_type, args...);
     }
 
     // 3. Return integer.
