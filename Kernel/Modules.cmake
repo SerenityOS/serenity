@@ -6,6 +6,7 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_
 
 # Default values for default setup
 set(COMPILE_IDE ON)
+set(COMPILE_AHCI ON)
 
 file(READ "${CMAKE_CURRENT_BINARY_DIR}/config.ini" contents )
 string(REGEX REPLACE ";" "\\\\;" contents "${contents}")
@@ -25,6 +26,15 @@ endforeach()
 
 message(VERBOSE "Compiling ATA IDE support was set to " "${COMPILE_IDE}" )
 
+if (COMPILE_IDE OR COMPILE_AHCI)
+    add_library(ATA_STORAGE_DEVICE OBJECT
+    Storage/ATADevice.cpp
+    Storage/ATADiskDevice.cpp
+    Storage/ATAPIDiscDevice.cpp
+    )
+    target_link_libraries(Kernel PUBLIC ATA_STORAGE_DEVICE)
+endif()  
+
 if (COMPILE_IDE)
     add_library(ATA_IDE OBJECT
         Storage/IDEController.cpp
@@ -33,4 +43,16 @@ if (COMPILE_IDE)
     )
     target_compile_definitions(Kernel PRIVATE COMPILE_IDE)
     target_link_libraries(Kernel PUBLIC ATA_IDE)
+endif()
+
+message(VERBOSE "Compiling SATA AHCI support was set to " "${COMPILE_AHCI}" )
+
+if (COMPILE_AHCI)
+    add_library(SATA_AHCI OBJECT
+        Storage/AHCIController.cpp
+        Storage/AHCIPort.cpp
+        Storage/AHCIPortHandler.cpp
+    )
+    target_compile_definitions(Kernel PRIVATE COMPILE_AHCI)
+    target_link_libraries(Kernel PUBLIC SATA_AHCI)
 endif()

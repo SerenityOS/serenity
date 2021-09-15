@@ -90,12 +90,6 @@ set(KERNEL_SOURCES
     Storage/Partition/MBRPartitionTable.cpp
     Storage/Partition/PartitionTable.cpp
     Storage/StorageDevice.cpp
-    Storage/AHCIController.cpp
-    Storage/AHCIPort.cpp
-    Storage/AHCIPortHandler.cpp
-    Storage/ATADevice.cpp
-    Storage/ATADiskDevice.cpp
-    Storage/ATAPIDiscDevice.cpp
     Storage/RamdiskController.cpp
     Storage/RamdiskDevice.cpp
     Storage/StorageManagement.cpp

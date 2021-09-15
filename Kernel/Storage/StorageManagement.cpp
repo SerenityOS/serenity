@@ -13,7 +13,9 @@
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/Panic.h>
-#include <Kernel/Storage/AHCIController.h>
+#ifdef COMPILE_AHCI
+#    include <Kernel/Storage/AHCIController.h>
+#endif
 #ifdef COMPILE_IDE
 #    include <Kernel/Storage/IDEController.h>
 #endif
@@ -59,6 +61,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers()
             });
         }
 #endif
+#ifdef COMPILE_AHCI
         PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
             if (device_identifier.class_code().value() == to_underlying(PCI::ClassID::MassStorage)
                 && device_identifier.subclass_code().value() == to_underlying(PCI::MassStorage::SubclassID::SATAController)
@@ -66,6 +69,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers()
                 m_controllers.append(AHCIController::initialize(device_identifier));
             }
         });
+#endif
     }
     m_controllers.append(RamdiskController::initialize());
 }
