@@ -15,6 +15,8 @@ public:
     FlexFormattingContext(Box& containing_block, FormattingContext* parent);
     ~FlexFormattingContext();
 
+    virtual bool inhibits_floating() const override { return true; }
+
     virtual void run(Box&, LayoutMode) override;
 };
 

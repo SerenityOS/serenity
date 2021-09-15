@@ -21,6 +21,7 @@ public:
     const FormattingContext* parent() const { return m_parent; }
 
     virtual bool is_block_formatting_context() const { return false; }
+    virtual bool inhibits_floating() const { return false; }
 
     static bool creates_block_formatting_context(const Box&);
 
