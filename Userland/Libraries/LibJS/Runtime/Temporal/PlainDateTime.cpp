@@ -112,12 +112,10 @@ Optional<ISODateTime> interpret_temporal_date_time_fields(GlobalObject& global_o
         return {};
 
     // 3. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = to_temporal_overflow(global_object, options);
-    if (vm.exception())
-        return {};
+    auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, options));
 
     // 4. Let timeResult be ? RegulateTime(timeResult.[[Hour]], timeResult.[[Minute]], timeResult.[[Second]], timeResult.[[Millisecond]], timeResult.[[Microsecond]], timeResult.[[Nanosecond]], overflow).
-    auto time_result = TRY_OR_DISCARD(regulate_time(global_object, unregulated_time_result.hour, unregulated_time_result.minute, unregulated_time_result.second, unregulated_time_result.millisecond, unregulated_time_result.microsecond, unregulated_time_result.nanosecond, *overflow));
+    auto time_result = TRY_OR_DISCARD(regulate_time(global_object, unregulated_time_result.hour, unregulated_time_result.minute, unregulated_time_result.second, unregulated_time_result.millisecond, unregulated_time_result.microsecond, unregulated_time_result.nanosecond, overflow));
 
     // 5. Return the Record { [[Year]]: temporalDate.[[ISOYear]], [[Month]]: temporalDate.[[ISOMonth]], [[Day]]: temporalDate.[[ISODay]], [[Hour]]: timeResult.[[Hour]], [[Minute]]: timeResult.[[Minute]], [[Second]]: timeResult.[[Second]], [[Millisecond]]: timeResult.[[Millisecond]], [[Microsecond]]: timeResult.[[Microsecond]], [[Nanosecond]]: timeResult.[[Nanosecond]] }.
     return ISODateTime {
@@ -198,9 +196,7 @@ PlainDateTime* to_temporal_date_time(GlobalObject& global_object, Value item, Ob
     // 3. Else,
     else {
         // a. Perform ? ToTemporalOverflow(options).
-        (void)to_temporal_overflow(global_object, *options);
-        if (vm.exception())
-            return {};
+        (void)TRY_OR_DISCARD(to_temporal_overflow(global_object, *options));
 
         // b. Let string be ? ToString(item).
         auto string = item.to_string(global_object);

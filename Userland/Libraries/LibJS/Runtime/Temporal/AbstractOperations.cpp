@@ -202,12 +202,12 @@ ThrowCompletionOr<Variant<String, NumberType>> get_string_or_number_option(Globa
 }
 
 // 13.6 ToTemporalOverflow ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloverflow
-Optional<String> to_temporal_overflow(GlobalObject& global_object, Object const& normalized_options)
+ThrowCompletionOr<String> to_temporal_overflow(GlobalObject& global_object, Object const& normalized_options)
 {
     auto& vm = global_object.vm();
 
     // 1. Return ? GetOption(normalizedOptions, "overflow", « String », « "constrain", "reject" », "constrain").
-    auto option = TRY_OR_DISCARD(get_option(global_object, normalized_options, vm.names.overflow, { OptionType::String }, { "constrain"sv, "reject"sv }, js_string(vm, "constrain")));
+    auto option = TRY(get_option(global_object, normalized_options, vm.names.overflow, { OptionType::String }, { "constrain"sv, "reject"sv }, js_string(vm, "constrain")));
 
     VERIFY(option.is_string());
     return option.as_string().string();

@@ -194,9 +194,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_add)
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(2)));
 
     // 7. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = to_temporal_overflow(global_object, *options);
-    if (vm.exception())
-        return {};
+    auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, *options));
 
     // FIXME: Narrowing conversion from 'double' to 'i64'
     auto* nanoseconds = js_bigint(vm, Crypto::SignedBigInteger::create_from(duration->nanoseconds()));
@@ -205,7 +203,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_add)
     auto balance_result = balance_duration(global_object, duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), *nanoseconds, "day"sv);
 
     // 9. Let result be ? AddISODate(date.[[ISOYear]], date.[[ISOMonth]], date.[[ISODay]], duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], overflow).
-    auto result = add_iso_date(global_object, date->iso_year(), date->iso_month(), date->iso_day(), duration->years(), duration->months(), duration->weeks(), balance_result->days, *overflow);
+    auto result = add_iso_date(global_object, date->iso_year(), date->iso_month(), date->iso_day(), duration->years(), duration->months(), duration->weeks(), balance_result->days, overflow);
     if (vm.exception())
         return {};
 

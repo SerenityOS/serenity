@@ -195,9 +195,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 11. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = to_temporal_overflow(global_object, *options);
-    if (vm.exception())
-        return {};
+    auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, *options));
 
     // 12. If partialTime.[[Hour]] is not undefined, then
     //      a. Let hour be partialTime.[[Hour]].
@@ -236,7 +234,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     auto nanosecond = partial_time.nanosecond.value_or(temporal_time->iso_nanosecond());
 
     // 24. Let result be ? RegulateTime(hour, minute, second, millisecond, microsecond, nanosecond, overflow).
-    auto result = TRY_OR_DISCARD(regulate_time(global_object, hour, minute, second, millisecond, microsecond, nanosecond, *overflow));
+    auto result = TRY_OR_DISCARD(regulate_time(global_object, hour, minute, second, millisecond, microsecond, nanosecond, overflow));
 
     // 25. Return ? CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
     return TRY_OR_DISCARD(create_temporal_time(global_object, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));

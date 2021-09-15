@@ -791,9 +791,7 @@ Optional<ISODate> iso_date_from_fields(GlobalObject& global_object, Object const
     // 1. Assert: Type(fields) is Object.
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = to_temporal_overflow(global_object, options);
-    if (vm.exception())
-        return {};
+    auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
     auto* prepared_fields = prepare_temporal_fields(global_object, fields, { "day", "month", "monthCode", "year" }, {});
@@ -828,7 +826,7 @@ Optional<ISODate> iso_date_from_fields(GlobalObject& global_object, Object const
     }
 
     // 9. Return ? RegulateISODate(year, month, day, overflow).
-    return regulate_iso_date(global_object, year.as_double(), month, day.as_double(), *overflow);
+    return regulate_iso_date(global_object, year.as_double(), month, day.as_double(), overflow);
 }
 
 // 12.1.39 ISOYearMonthFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthfromfields
@@ -839,9 +837,7 @@ Optional<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_object, O
     // 1. Assert: Type(fields) is Object.
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = to_temporal_overflow(global_object, options);
-    if (vm.exception())
-        return {};
+    auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "month", "monthCode", "year" », «»).
     auto* prepared_fields = prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, {});
@@ -865,7 +861,7 @@ Optional<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_object, O
         return {};
 
     // 7. Let result be ? RegulateISOYearMonth(year, month, overflow).
-    auto result = TRY_OR_DISCARD(regulate_iso_year_month(global_object, year.as_double(), month, *overflow));
+    auto result = TRY_OR_DISCARD(regulate_iso_year_month(global_object, year.as_double(), month, overflow));
 
     // 8. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[ReferenceISODay]]: 1 }.
     return ISOYearMonth { .year = result.year, .month = result.month, .reference_iso_day = 1 };
@@ -879,9 +875,7 @@ Optional<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_object, Obj
     // 1. Assert: Type(fields) is Object.
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = to_temporal_overflow(global_object, options);
-    if (vm.exception())
-        return {};
+    auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
     auto* prepared_fields = prepare_temporal_fields(global_object, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, {});
@@ -934,12 +928,12 @@ Optional<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_object, Obj
     // 12. If monthCode is undefined, then
     if (month_code.is_undefined()) {
         // a. Let result be ? RegulateISODate(year, month, day, overflow).
-        result = regulate_iso_date(global_object, year.as_double(), month, day.as_double(), *overflow);
+        result = regulate_iso_date(global_object, year.as_double(), month, day.as_double(), overflow);
     }
     // 13. Else,
     else {
         // a. Let result be ? RegulateISODate(referenceISOYear, month, day, overflow).
-        result = regulate_iso_date(global_object, reference_iso_year, month, day.as_double(), *overflow);
+        result = regulate_iso_date(global_object, reference_iso_year, month, day.as_double(), overflow);
     }
     if (vm.exception())
         return {};
