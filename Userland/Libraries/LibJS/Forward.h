@@ -141,6 +141,7 @@ class BoundFunction;
 class Cell;
 class CellAllocator;
 class ClassExpression;
+class Completion;
 class Console;
 class DeclarativeEnvironment;
 class DeferGC;
@@ -224,6 +225,9 @@ JS_ENUMERATE_TEMPORAL_OBJECTS
 #undef __JS_ENUMERATE
 struct TemporalDuration;
 };
+
+template<typename T>
+class ThrowCompletionOr;
 
 template<class T>
 class Handle;
