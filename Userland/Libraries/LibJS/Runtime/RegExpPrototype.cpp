@@ -515,9 +515,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     if (vm.exception())
         return {};
 
-    auto* constructor = species_constructor(global_object, *regexp_object, *global_object.regexp_constructor());
-    if (vm.exception())
-        return {};
+    auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, *regexp_object, *global_object.regexp_constructor()));
 
     auto flags_value = regexp_object->get(vm.names.flags);
     if (vm.exception())
@@ -784,9 +782,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         return {};
     auto string_view = string.view();
 
-    auto* constructor = species_constructor(global_object, *regexp_object, *global_object.regexp_constructor());
-    if (vm.exception())
-        return {};
+    auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, *regexp_object, *global_object.regexp_constructor()));
 
     auto flags_object = regexp_object->get(vm.names.flags);
     if (vm.exception())

@@ -22,7 +22,7 @@ Reference make_super_property_reference(GlobalObject&, Value actual_this, String
 ThrowCompletionOr<Value> require_object_coercible(GlobalObject&, Value);
 size_t length_of_array_like(GlobalObject&, Object const&);
 ThrowCompletionOr<MarkedValueList> create_list_from_array_like(GlobalObject&, Value, Function<ThrowCompletionOr<void>(Value)> = {});
-FunctionObject* species_constructor(GlobalObject&, Object const&, FunctionObject& default_constructor);
+ThrowCompletionOr<FunctionObject*> species_constructor(GlobalObject&, Object const&, FunctionObject& default_constructor);
 Realm* get_function_realm(GlobalObject&, FunctionObject const&);
 bool is_compatible_property_descriptor(bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);
 bool validate_and_apply_property_descriptor(Object*, PropertyName const&, bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);

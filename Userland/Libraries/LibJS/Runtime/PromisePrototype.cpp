@@ -43,9 +43,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::then)
         return {};
     auto on_fulfilled = vm.argument(0);
     auto on_rejected = vm.argument(1);
-    auto* constructor = species_constructor(global_object, *promise, *global_object.promise_constructor());
-    if (vm.exception())
-        return {};
+    auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, *promise, *global_object.promise_constructor()));
     auto result_capability = new_promise_capability(global_object, constructor);
     if (vm.exception())
         return {};
@@ -66,9 +64,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
     auto* promise = vm.this_value(global_object).to_object(global_object);
     if (!promise)
         return {};
-    auto* constructor = species_constructor(global_object, *promise, *global_object.promise_constructor());
-    if (vm.exception())
-        return {};
+    auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, *promise, *global_object.promise_constructor()));
     Value then_finally;
     Value catch_finally;
     auto on_finally = vm.argument(0);

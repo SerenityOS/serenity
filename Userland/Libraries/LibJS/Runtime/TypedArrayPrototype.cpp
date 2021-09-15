@@ -175,9 +175,7 @@ static TypedArrayBase* typed_array_species_create(GlobalObject& global_object, T
 
     VERIFY(typed_array_default_constructor);
 
-    auto* constructor = species_constructor(global_object, exemplar, *typed_array_default_constructor);
-    if (vm.exception())
-        return nullptr;
+    auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, exemplar, *typed_array_default_constructor));
 
     auto* result = typed_array_create(global_object, *constructor, move(arguments));
     if (vm.exception())
