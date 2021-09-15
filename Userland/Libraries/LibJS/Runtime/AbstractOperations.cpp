@@ -331,16 +331,27 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyName const& 
 }
 
 // 10.1.14 GetPrototypeFromConstructor ( constructor, intrinsicDefaultProto ), https://tc39.es/ecma262/#sec-getprototypefromconstructor
-Object* get_prototype_from_constructor(GlobalObject& global_object, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)())
+ThrowCompletionOr<Object*> get_prototype_from_constructor(GlobalObject& global_object, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)())
 {
     auto& vm = global_object.vm();
+
+    // 1. Assert: intrinsicDefaultProto is this specification's name of an intrinsic object. The corresponding object must be an intrinsic that is intended to be used as the [[Prototype]] value of an object.
+
+    // 2. Let proto be ? Get(constructor, "prototype").
     auto prototype = constructor.get(vm.names.prototype);
-    if (vm.exception())
-        return nullptr;
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+
+    // 3. If Type(proto) is not Object, then
     if (!prototype.is_object()) {
-        auto* realm = TRY_OR_DISCARD(get_function_realm(global_object, constructor));
+        // a. Let realm be ? GetFunctionRealm(constructor).
+        auto* realm = TRY(get_function_realm(global_object, constructor));
+
+        // b. Set proto to realm's intrinsic object named intrinsicDefaultProto.
         prototype = (realm->global_object().*intrinsic_default_prototype)();
     }
+
+    // 4. Return proto.
     return &prototype.as_object();
 }
 

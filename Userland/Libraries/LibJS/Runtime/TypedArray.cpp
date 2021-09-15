@@ -270,10 +270,8 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
 #define JS_DEFINE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type)                                             \
     ClassName* ClassName::create(GlobalObject& global_object, u32 length, FunctionObject& new_target)                                  \
     {                                                                                                                                  \
-        auto& vm = global_object.vm();                                                                                                 \
-        auto* prototype = get_prototype_from_constructor(global_object, new_target, &GlobalObject::snake_name##_prototype);            \
-        if (vm.exception())                                                                                                            \
-            return {};                                                                                                                 \
+        auto* prototype = TRY_OR_DISCARD(get_prototype_from_constructor(                                                               \
+            global_object, new_target, &GlobalObject::snake_name##_prototype));                                                        \
         return global_object.heap().allocate<ClassName>(global_object, length, *prototype);                                            \
     }                                                                                                                                  \
                                                                                                                                        \

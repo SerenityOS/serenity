@@ -26,7 +26,7 @@ ThrowCompletionOr<FunctionObject*> species_constructor(GlobalObject&, Object con
 ThrowCompletionOr<Realm*> get_function_realm(GlobalObject&, FunctionObject const&);
 bool is_compatible_property_descriptor(bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);
 bool validate_and_apply_property_descriptor(Object*, PropertyName const&, bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);
-Object* get_prototype_from_constructor(GlobalObject&, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)());
+ThrowCompletionOr<Object*> get_prototype_from_constructor(GlobalObject&, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)());
 Object* create_unmapped_arguments_object(GlobalObject&, Span<Value> arguments);
 Object* create_mapped_arguments_object(GlobalObject&, FunctionObject&, Vector<FunctionNode::Parameter> const&, Span<Value> arguments, Environment&);
 Value canonical_numeric_index_string(GlobalObject&, PropertyName const&);
@@ -46,10 +46,7 @@ Value perform_eval(Value, GlobalObject&, CallerMode, EvalMode);
 template<typename T, typename... Args>
 T* ordinary_create_from_constructor(GlobalObject& global_object, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)(), Args&&... args)
 {
-    auto& vm = global_object.vm();
-    auto* prototype = get_prototype_from_constructor(global_object, constructor, intrinsic_default_prototype);
-    if (vm.exception())
-        return nullptr;
+    auto* prototype = TRY_OR_DISCARD(get_prototype_from_constructor(global_object, constructor, intrinsic_default_prototype));
     return global_object.heap().allocate<T>(global_object, forward<Args>(args)..., *prototype);
 }
 

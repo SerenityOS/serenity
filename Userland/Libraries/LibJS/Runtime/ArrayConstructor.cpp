@@ -55,9 +55,7 @@ Value ArrayConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
-    auto* proto = get_prototype_from_constructor(global_object(), new_target, &GlobalObject::array_prototype);
-    if (vm.exception())
-        return {};
+    auto* proto = TRY_OR_DISCARD(get_prototype_from_constructor(global_object(), new_target, &GlobalObject::array_prototype));
 
     if (vm.argument_count() == 0)
         return Array::create(global_object(), 0, proto);
