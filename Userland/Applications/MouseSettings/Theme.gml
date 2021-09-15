@@ -9,7 +9,7 @@
         title: "Available Cursor Themes"
 
         layout: @GUI::VerticalBoxLayout {
-            margins: [16, 8, 8]
+            margins: [6]
             spacing: 4
         }
 

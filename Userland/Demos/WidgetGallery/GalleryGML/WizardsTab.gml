@@ -6,7 +6,7 @@
 
     @GUI::GroupBox {
         layout: @GUI::VerticalBoxLayout {
-            margins: [8]
+            margins: [6]
         }
 
         @GUI::Button {

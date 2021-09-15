@@ -7,7 +7,7 @@
     @GUI::GroupBox {
         fixed_height: 129
         layout: @GUI::VerticalBoxLayout {
-            margins: [8]
+            margins: [6]
         }
 
         @GUI::GroupBox {
@@ -92,7 +92,7 @@
 
     @GUI::GroupBox {
         layout: @GUI::HorizontalBoxLayout {
-            margins: [8]
+            margins: [6]
         }
 
         @GUI::VerticalProgressbar {
@@ -140,7 +140,7 @@
 
     @GUI::GroupBox {
         layout: @GUI::VerticalBoxLayout {
-            margins: [8]
+            margins: [6]
         }
 
         @GUI::Widget {
