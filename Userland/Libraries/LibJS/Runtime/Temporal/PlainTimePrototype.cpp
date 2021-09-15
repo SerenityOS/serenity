@@ -192,9 +192,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     auto partial_time = TRY_OR_DISCARD(to_partial_time(global_object, temporal_time_like));
 
     // 10. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 11. Let overflow be ? ToTemporalOverflow(options).
     auto overflow = to_temporal_overflow(global_object, *options);
@@ -349,9 +347,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_string)
         return {};
 
     // 3. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(0)));
 
     // 4. Let precision be ? ToSecondsStringPrecision(options).
     auto precision = to_seconds_string_precision(global_object, *options);

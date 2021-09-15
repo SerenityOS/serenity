@@ -82,7 +82,7 @@ ThrowCompletionOr<MarkedValueList> iterable_to_list_of_type(GlobalObject& global
 }
 
 // 13.2 GetOptionsObject ( options ), https://tc39.es/proposal-temporal/#sec-getoptionsobject
-Object* get_options_object(GlobalObject& global_object, Value options)
+ThrowCompletionOr<Object*> get_options_object(GlobalObject& global_object, Value options)
 {
     auto& vm = global_object.vm();
 
@@ -99,8 +99,7 @@ Object* get_options_object(GlobalObject& global_object, Value options)
     }
 
     // 3. Throw a TypeError exception.
-    vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, "Options");
-    return {};
+    return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, "Options");
 }
 
 // 13.3 GetOption ( options, property, types, values, fallback ), https://tc39.es/proposal-temporal/#sec-getoption

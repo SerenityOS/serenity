@@ -456,9 +456,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_string)
         return {};
 
     // 3. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(0)));
 
     // 4. Let showCalendar be ? ToShowCalendarOption(options).
     auto show_calendar = to_show_calendar_option(global_object, *options);
