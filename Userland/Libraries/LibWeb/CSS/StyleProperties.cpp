@@ -424,6 +424,27 @@ Optional<CSS::JustifyContent> StyleProperties::justify_content() const
     }
 }
 
+Optional<CSS::AlignItems> StyleProperties::align_items() const
+{
+    auto value = property(CSS::PropertyID::AlignItems);
+    if (!value.has_value())
+        return {};
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::FlexStart:
+        return CSS::AlignItems::FlexStart;
+    case CSS::ValueID::FlexEnd:
+        return CSS::AlignItems::FlexEnd;
+    case CSS::ValueID::Center:
+        return CSS::AlignItems::Center;
+    case CSS::ValueID::Baseline:
+        return CSS::AlignItems::Baseline;
+    case CSS::ValueID::Stretch:
+        return CSS::AlignItems::Stretch;
+    default:
+        return {};
+    }
+}
+
 Optional<CSS::Position> StyleProperties::position() const
 {
     auto value = property(CSS::PropertyID::Position);
