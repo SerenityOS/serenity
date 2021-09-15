@@ -47,7 +47,7 @@ Value WeakSetConstructor::construct(FunctionObject& new_target)
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto* weak_set = ordinary_create_from_constructor<WeakSet>(global_object, new_target, &GlobalObject::weak_set_prototype);
+    auto* weak_set = TRY_OR_DISCARD(ordinary_create_from_constructor<WeakSet>(global_object, new_target, &GlobalObject::weak_set_prototype));
     if (vm.exception())
         return {};
 

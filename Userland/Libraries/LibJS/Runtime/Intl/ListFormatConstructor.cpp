@@ -53,9 +53,7 @@ Value ListFormatConstructor::construct(FunctionObject& new_target)
     auto options_value = vm.argument(1);
 
     // 2. Let listFormat be ? OrdinaryCreateFromConstructor(NewTarget, "%ListFormat.prototype%", « [[InitializedListFormat]], [[Locale]], [[Type]], [[Style]], [[Templates]] »).
-    auto* list_format = ordinary_create_from_constructor<ListFormat>(global_object, new_target, &GlobalObject::intl_list_format_prototype);
-    if (vm.exception())
-        return {};
+    auto* list_format = TRY_OR_DISCARD(ordinary_create_from_constructor<ListFormat>(global_object, new_target, &GlobalObject::intl_list_format_prototype));
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = canonicalize_locale_list(global_object, locale_value);

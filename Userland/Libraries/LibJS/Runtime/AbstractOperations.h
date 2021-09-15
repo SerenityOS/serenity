@@ -44,9 +44,9 @@ Value perform_eval(Value, GlobalObject&, CallerMode, EvalMode);
 
 // 10.1.13 OrdinaryCreateFromConstructor ( constructor, intrinsicDefaultProto [ , internalSlotsList ] ), https://tc39.es/ecma262/#sec-ordinarycreatefromconstructor
 template<typename T, typename... Args>
-T* ordinary_create_from_constructor(GlobalObject& global_object, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)(), Args&&... args)
+ThrowCompletionOr<T*> ordinary_create_from_constructor(GlobalObject& global_object, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)(), Args&&... args)
 {
-    auto* prototype = TRY_OR_DISCARD(get_prototype_from_constructor(global_object, constructor, intrinsic_default_prototype));
+    auto* prototype = TRY(get_prototype_from_constructor(global_object, constructor, intrinsic_default_prototype));
     return global_object.heap().allocate<T>(global_object, forward<Args>(args)..., *prototype);
 }
 

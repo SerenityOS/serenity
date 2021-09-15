@@ -39,9 +39,7 @@ Value ErrorConstructor::construct(FunctionObject& new_target)
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto* error = ordinary_create_from_constructor<Error>(global_object, new_target, &GlobalObject::error_prototype);
-    if (vm.exception())
-        return {};
+    auto* error = TRY_OR_DISCARD(ordinary_create_from_constructor<Error>(global_object, new_target, &GlobalObject::error_prototype));
 
     if (!vm.argument(0).is_undefined()) {
         auto message = vm.argument(0).to_string(global_object);
@@ -89,10 +87,8 @@ Value ErrorConstructor::construct(FunctionObject& new_target)
         auto& vm = this->vm();                                                                             \
         auto& global_object = this->global_object();                                                       \
                                                                                                            \
-        auto* error = ordinary_create_from_constructor<ClassName>(                                         \
-            global_object, new_target, &GlobalObject::snake_name##_prototype);                             \
-        if (vm.exception())                                                                                \
-            return {};                                                                                     \
+        auto* error = TRY_OR_DISCARD(ordinary_create_from_constructor<ClassName>(                          \
+            global_object, new_target, &GlobalObject::snake_name##_prototype));                            \
                                                                                                            \
         if (!vm.argument(0).is_undefined()) {                                                              \
             auto message = vm.argument(0).to_string(global_object);                                        \

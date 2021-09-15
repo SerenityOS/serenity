@@ -88,17 +88,13 @@ String parse_temporal_time_zone(GlobalObject& global_object, String const& strin
 // 11.6.2 CreateTemporalTimeZone ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaltimezone
 TimeZone* create_temporal_time_zone(GlobalObject& global_object, String const& identifier, FunctionObject const* new_target)
 {
-    auto& vm = global_object.vm();
-
     // 1. If newTarget is not present, set it to %Temporal.TimeZone%.
     if (!new_target)
         new_target = global_object.temporal_time_zone_constructor();
 
     // 2. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.TimeZone.prototype%", « [[InitializedTemporalTimeZone]], [[Identifier]], [[OffsetNanoseconds]] »).
     // 3. Set object.[[Identifier]] to identifier.
-    auto* object = ordinary_create_from_constructor<TimeZone>(global_object, *new_target, &GlobalObject::temporal_time_zone_prototype, identifier);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(ordinary_create_from_constructor<TimeZone>(global_object, *new_target, &GlobalObject::temporal_time_zone_prototype, identifier));
 
     // 4. If identifier satisfies the syntax of a TimeZoneNumericUTCOffset (see 13.33), then
     if (is_valid_time_zone_numeric_utc_offset_syntax(identifier)) {

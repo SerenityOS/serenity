@@ -262,9 +262,7 @@ Duration* create_temporal_duration(GlobalObject& global_object, double years, do
     // 11. Set object.[[Milliseconds]] to milliseconds.
     // 12. Set object.[[Microseconds]] to microseconds.
     // 13. Set object.[[Nanoseconds]] to nanoseconds.
-    auto* object = ordinary_create_from_constructor<Duration>(global_object, *new_target, &GlobalObject::temporal_duration_prototype, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(ordinary_create_from_constructor<Duration>(global_object, *new_target, &GlobalObject::temporal_duration_prototype, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
 
     // 14. Return object.
     return object;

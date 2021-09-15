@@ -49,9 +49,7 @@ Value SetConstructor::construct(FunctionObject& new_target)
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto* set = ordinary_create_from_constructor<Set>(global_object, new_target, &GlobalObject::set_prototype);
-    if (vm.exception())
-        return {};
+    auto* set = TRY_OR_DISCARD(ordinary_create_from_constructor<Set>(global_object, new_target, &GlobalObject::set_prototype));
 
     if (vm.argument(0).is_nullish())
         return set;

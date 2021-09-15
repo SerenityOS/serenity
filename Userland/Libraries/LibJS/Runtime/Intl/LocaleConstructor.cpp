@@ -275,9 +275,7 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
     //     a. Append [[Numeric]] as the last element of internalSlotsList.
 
     // 6. Let locale be ? OrdinaryCreateFromConstructor(NewTarget, "%Locale.prototype%", internalSlotsList).
-    auto* locale = ordinary_create_from_constructor<Locale>(global_object, new_target, &GlobalObject::intl_locale_prototype);
-    if (vm.exception())
-        return {};
+    auto* locale = TRY_OR_DISCARD(ordinary_create_from_constructor<Locale>(global_object, new_target, &GlobalObject::intl_locale_prototype));
 
     String tag;
 

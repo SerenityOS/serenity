@@ -263,9 +263,7 @@ Value PromiseConstructor::construct(FunctionObject& new_target)
         return {};
     }
 
-    auto* promise = ordinary_create_from_constructor<Promise>(global_object, new_target, &GlobalObject::promise_prototype);
-    if (vm.exception())
-        return {};
+    auto* promise = TRY_OR_DISCARD(ordinary_create_from_constructor<Promise>(global_object, new_target, &GlobalObject::promise_prototype));
 
     auto [resolve_function, reject_function] = promise->create_resolving_functions();
 

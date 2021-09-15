@@ -81,9 +81,7 @@ Value DataViewConstructor::construct(FunctionObject& new_target)
         }
     }
 
-    auto* data_view = ordinary_create_from_constructor<DataView>(global_object, new_target, &GlobalObject::data_view_prototype, &array_buffer, view_byte_length, offset);
-    if (vm.exception())
-        return {};
+    auto* data_view = TRY_OR_DISCARD(ordinary_create_from_constructor<DataView>(global_object, new_target, &GlobalObject::data_view_prototype, &array_buffer, view_byte_length, offset));
 
     if (array_buffer.is_detached()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);

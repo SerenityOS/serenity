@@ -49,9 +49,7 @@ Value MapConstructor::construct(FunctionObject& new_target)
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto* map = ordinary_create_from_constructor<Map>(global_object, new_target, &GlobalObject::map_prototype);
-    if (vm.exception())
-        return {};
+    auto* map = TRY_OR_DISCARD(ordinary_create_from_constructor<Map>(global_object, new_target, &GlobalObject::map_prototype));
 
     if (vm.argument(0).is_nullish())
         return map;

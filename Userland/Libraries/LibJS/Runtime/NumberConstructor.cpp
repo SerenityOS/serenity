@@ -103,7 +103,7 @@ Value NumberConstructor::construct(FunctionObject& new_target)
     auto number = get_value_from_constructor_argument(global_object);
     if (vm.exception())
         return {};
-    return ordinary_create_from_constructor<NumberObject>(global_object, new_target, &GlobalObject::number_prototype, number.as_double());
+    return TRY_OR_DISCARD(ordinary_create_from_constructor<NumberObject>(global_object, new_target, &GlobalObject::number_prototype, number.as_double()));
 }
 
 // 21.1.2.2 Number.isFinite ( number ), https://tc39.es/ecma262/#sec-number.isfinite

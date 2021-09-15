@@ -47,7 +47,7 @@ Value BooleanConstructor::construct(FunctionObject& new_target)
     auto& global_object = this->global_object();
 
     auto b = vm.argument(0).to_boolean();
-    return ordinary_create_from_constructor<BooleanObject>(global_object, new_target, &GlobalObject::boolean_prototype, b);
+    return TRY_OR_DISCARD(ordinary_create_from_constructor<BooleanObject>(global_object, new_target, &GlobalObject::boolean_prototype, b));
 }
 
 }

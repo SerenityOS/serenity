@@ -51,7 +51,7 @@ Value WeakRefConstructor::construct(FunctionObject& new_target)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, target.to_string_without_side_effects());
         return {};
     }
-    return ordinary_create_from_constructor<WeakRef>(global_object, new_target, &GlobalObject::weak_ref_prototype, &target.as_object());
+    return TRY_OR_DISCARD(ordinary_create_from_constructor<WeakRef>(global_object, new_target, &GlobalObject::weak_ref_prototype, &target.as_object()));
 }
 
 }

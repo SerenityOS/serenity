@@ -475,11 +475,8 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
     auto& global_object = function.global_object();
 
     Value this_argument;
-    if (function.constructor_kind() == FunctionObject::ConstructorKind::Base) {
-        this_argument = ordinary_create_from_constructor<Object>(global_object, new_target, &GlobalObject::object_prototype);
-        if (exception())
-            return {};
-    }
+    if (function.constructor_kind() == FunctionObject::ConstructorKind::Base)
+        this_argument = TRY_OR_DISCARD(ordinary_create_from_constructor<Object>(global_object, new_target, &GlobalObject::object_prototype));
 
     // FIXME: prepare_for_ordinary_call() is not supposed to receive a BoundFunction, ProxyObject, etc. - ever.
     //        This needs to be moved to NativeFunction/OrdinaryFunctionObject's construct() (10.2.2 [[Construct]])

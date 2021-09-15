@@ -54,9 +54,7 @@ Value DisplayNamesConstructor::construct(FunctionObject& new_target)
     auto options_value = vm.argument(1);
 
     // 2. Let displayNames be ? OrdinaryCreateFromConstructor(NewTarget, "%DisplayNames.prototype%", « [[InitializedDisplayNames]], [[Locale]], [[Style]], [[Type]], [[Fallback]], [[Fields]] »).
-    auto* display_names = ordinary_create_from_constructor<DisplayNames>(global_object, new_target, &GlobalObject::intl_display_names_prototype);
-    if (vm.exception())
-        return {};
+    auto* display_names = TRY_OR_DISCARD(ordinary_create_from_constructor<DisplayNames>(global_object, new_target, &GlobalObject::intl_display_names_prototype));
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = canonicalize_locale_list(global_object, locale_value);
