@@ -898,6 +898,10 @@ TEST_CASE(optimizer_atomic_groups)
         // Alternative fuse
         Tuple { "(abcfoo|abcbar|abcbaz).*x"sv, "abcbarx"sv, true },
         Tuple { "(a|a)"sv, "a"sv, true },
+        // ForkReplace shouldn't be applied where it would change the semantics
+        Tuple { "(1+)\\1"sv, "11"sv, true },
+        Tuple { "(1+)1"sv, "11"sv, true },
+        Tuple { "(1+)0"sv, "10"sv, true },
     };
 
     for (auto& test : tests) {
