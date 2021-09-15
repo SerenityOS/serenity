@@ -238,6 +238,10 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
                 return IterationDecision::Continue;
         }
 
+        // Skip any "out-of-flow" children
+        if (child_box.is_out_of_flow(*this))
+            return IterationDecision::Continue;
+
         child_box.set_flex_item(true);
         flex_items.append({ child_box });
         return IterationDecision::Continue;
