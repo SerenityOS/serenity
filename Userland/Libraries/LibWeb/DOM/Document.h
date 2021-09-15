@@ -144,6 +144,7 @@ public:
 
     void force_layout();
     void invalidate_layout();
+    void ensure_layout();
 
     void update_style();
     void update_layout();
