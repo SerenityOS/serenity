@@ -90,12 +90,10 @@ Value PlainMonthDayConstructor::construct(FunctionObject& new_target)
 // 10.2.2 Temporal.PlainMonthDay.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.from
 JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayConstructor::from)
 {
-    // 1. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
-
     auto item = vm.argument(0);
+
+    // 1. Set options to ? GetOptionsObject(options).
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 2. If Type(item) is Object and item has an [[InitializedTemporalMonthDay]] internal slot, then
     if (item.is_object() && is<PlainMonthDay>(item.as_object())) {

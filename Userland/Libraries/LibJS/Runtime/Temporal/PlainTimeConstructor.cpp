@@ -85,9 +85,7 @@ Value PlainTimeConstructor::construct(FunctionObject& new_target)
 JS_DEFINE_NATIVE_FUNCTION(PlainTimeConstructor::from)
 {
     // 1. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
     auto overflow = to_temporal_overflow(global_object, *options);
