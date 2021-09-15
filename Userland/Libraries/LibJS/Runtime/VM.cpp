@@ -417,6 +417,8 @@ Reference VM::get_identifier_reference(Environment* environment, FlyString name,
         auto possible_match = environment->get_from_environment(name);
         if (possible_match.has_value())
             return Reference { *environment, move(name), strict };
+        if (environment->has_binding(name))
+            return Reference { *environment, move(name), strict };
     }
 
     auto& global_environment = interpreter().realm().global_environment();

@@ -98,7 +98,17 @@ void ObjectEnvironment::set_mutable_binding(GlobalObject& global_object, FlyStri
         global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
         return;
     }
-    m_binding_object.set(name, value, strict ? Object::ShouldThrowExceptions::Yes : Object::ShouldThrowExceptions::No);
+
+    auto result = m_binding_object.set(name, value, strict ? Object::ShouldThrowExceptions::Yes : Object::ShouldThrowExceptions::No);
+
+    // Note: Nothing like this in the spec, this is here to produce nicer errors instead of the generic one thrown by Object::set().
+    if (!result && strict) {
+        auto property = m_binding_object.internal_get_own_property(name);
+        if (property.has_value() && !property->writable.value_or(true)) {
+            vm.clear_exception();
+            vm.throw_exception<TypeError>(global_object, ErrorType::DescWriteNonWritable, name);
+        }
+    }
 }
 
 // 9.1.1.2.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-object-environment-records-getbindingvalue-n-s
