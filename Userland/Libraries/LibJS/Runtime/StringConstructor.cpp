@@ -67,9 +67,7 @@ Value StringConstructor::construct(FunctionObject& new_target)
         primitive_string = vm.argument(0).to_primitive_string(global_object());
     if (!primitive_string)
         return {};
-    auto* prototype = get_prototype_from_constructor(global_object(), new_target, &GlobalObject::string_prototype);
-    if (vm.exception())
-        return {};
+    auto* prototype = TRY_OR_DISCARD(get_prototype_from_constructor(global_object(), new_target, &GlobalObject::string_prototype));
     return StringObject::create(global_object(), *primitive_string, *prototype);
 }
 
