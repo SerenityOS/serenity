@@ -248,12 +248,10 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_string)
         return {};
 
     // 4. Let showCalendar be ? ToShowCalendarOption(options).
-    auto show_calendar = to_show_calendar_option(global_object, *options);
-    if (vm.exception())
-        return {};
+    auto show_calendar = TRY_OR_DISCARD(to_show_calendar_option(global_object, *options));
 
     // 5. Return ? TemporalYearMonthToString(yearMonth, showCalendar).
-    return js_string(vm, TRY_OR_DISCARD(temporal_year_month_to_string(global_object, *year_month, *show_calendar)));
+    return js_string(vm, TRY_OR_DISCARD(temporal_year_month_to_string(global_object, *year_month, show_calendar)));
 }
 
 // 9.3.18 Temporal.PlainYearMonth.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tolocalestring
