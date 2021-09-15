@@ -381,7 +381,7 @@ static NonnullRefPtr<StyleValue> value_or_default(Optional<StyleProperty> proper
 
 Optional<StyleProperty> ComputedCSSStyleDeclaration::property(PropertyID property_id) const
 {
-    const_cast<DOM::Document&>(m_element->document()).force_layout();
+    const_cast<DOM::Document&>(m_element->document()).ensure_layout();
 
     if (!m_element->layout_node()) {
         auto style = m_element->document().style_resolver().resolve_style(const_cast<DOM::Element&>(*m_element));

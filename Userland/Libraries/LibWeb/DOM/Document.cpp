@@ -400,6 +400,12 @@ void Document::force_layout()
     update_layout();
 }
 
+void Document::ensure_layout()
+{
+    if (!m_layout_root)
+        update_layout();
+}
+
 void Document::update_layout()
 {
     if (!browsing_context())
