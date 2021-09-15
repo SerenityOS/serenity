@@ -103,7 +103,7 @@ ThrowCompletionOr<Object*> get_options_object(GlobalObject& global_object, Value
 }
 
 // 13.3 GetOption ( options, property, types, values, fallback ), https://tc39.es/proposal-temporal/#sec-getoption
-Value get_option(GlobalObject& global_object, Object const& options, PropertyName const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback)
+ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyName const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback)
 {
     VERIFY(property.is_string());
 
@@ -114,8 +114,8 @@ Value get_option(GlobalObject& global_object, Object const& options, PropertyNam
 
     // 3. Let value be ? Get(options, property).
     auto value = options.get(property);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 4. If value is undefined, return fallback.
     if (value.is_undefined())
@@ -142,30 +142,27 @@ Value get_option(GlobalObject& global_object, Object const& options, PropertyNam
     else if (type == OptionType::Number) {
         // a. Set value to ? ToNumber(value).
         value = value.to_number(global_object);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
+
         // b. If value is NaN, throw a RangeError exception.
-        if (value.is_nan()) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, vm.names.NaN.as_string(), property.as_string());
-            return {};
-        }
+        if (value.is_nan())
+            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, vm.names.NaN.as_string(), property.as_string());
     }
     // 9. Else,
     else {
         // a. Set value to ? ToString(value).
         value = value.to_primitive_string(global_object);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
     }
 
     // 10. If values is not empty, then
     if (!values.is_empty()) {
         VERIFY(value.is_string());
         // a. If values does not contain value, throw a RangeError exception.
-        if (!values.contains_slow(value.as_string().string())) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.as_string().string(), property.as_string());
-            return {};
-        }
+        if (!values.contains_slow(value.as_string().string()))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.as_string().string(), property.as_string());
     }
 
     // 11. Return value.
@@ -181,9 +178,7 @@ Optional<Variant<String, NumberType>> get_string_or_number_option(GlobalObject& 
     // 1. Assert: Type(options) is Object.
 
     // 2. Let value be ? GetOption(options, property, « Number, String », empty, fallback).
-    auto value = get_option(global_object, options, property, { OptionType::Number, OptionType::String }, {}, fallback);
-    if (vm.exception())
-        return {};
+    auto value = TRY_OR_DISCARD(get_option(global_object, options, property, { OptionType::Number, OptionType::String }, {}, fallback));
 
     // 3. If Type(value) is Number, then
     if (value.is_number()) {
@@ -216,9 +211,7 @@ Optional<String> to_temporal_overflow(GlobalObject& global_object, Object const&
     auto& vm = global_object.vm();
 
     // 1. Return ? GetOption(normalizedOptions, "overflow", « String », « "constrain", "reject" », "constrain").
-    auto option = get_option(global_object, normalized_options, vm.names.overflow, { OptionType::String }, { "constrain"sv, "reject"sv }, js_string(vm, "constrain"));
-    if (vm.exception())
-        return {};
+    auto option = TRY_OR_DISCARD(get_option(global_object, normalized_options, vm.names.overflow, { OptionType::String }, { "constrain"sv, "reject"sv }, js_string(vm, "constrain")));
 
     VERIFY(option.is_string());
     return option.as_string().string();
@@ -230,9 +223,7 @@ Optional<String> to_temporal_rounding_mode(GlobalObject& global_object, Object c
     auto& vm = global_object.vm();
 
     // 1. Return ? GetOption(normalizedOptions, "roundingMode", « String », « "ceil", "floor", "trunc", "halfExpand" », fallback).
-    auto option = get_option(global_object, normalized_options, vm.names.roundingMode, { OptionType::String }, { "ceil"sv, "floor"sv, "trunc"sv, "halfExpand"sv }, js_string(vm, fallback));
-    if (vm.exception())
-        return {};
+    auto option = TRY_OR_DISCARD(get_option(global_object, normalized_options, vm.names.roundingMode, { OptionType::String }, { "ceil"sv, "floor"sv, "trunc"sv, "halfExpand"sv }, js_string(vm, fallback)));
 
     VERIFY(option.is_string());
     return option.as_string().string();
@@ -244,9 +235,7 @@ Optional<String> to_show_calendar_option(GlobalObject& global_object, Object con
     auto& vm = global_object.vm();
 
     // 1. Return ? GetOption(normalizedOptions, "calendarName", « String », « "auto", "always", "never" », "auto").
-    auto option = get_option(global_object, normalized_options, vm.names.calendarName, { OptionType::String }, { "auto"sv, "always"sv, "never"sv }, js_string(vm, "auto"sv));
-    if (vm.exception())
-        return {};
+    auto option = TRY_OR_DISCARD(get_option(global_object, normalized_options, vm.names.calendarName, { OptionType::String }, { "auto"sv, "always"sv, "never"sv }, js_string(vm, "auto"sv)));
 
     VERIFY(option.is_string());
     return option.as_string().string();
@@ -280,9 +269,7 @@ u64 to_temporal_rounding_increment(GlobalObject& global_object, Object const& no
     }
 
     // 5. Let increment be ? GetOption(normalizedOptions, "roundingIncrement", « Number », empty, 1).
-    auto increment_value = get_option(global_object, normalized_options, vm.names.roundingIncrement, { OptionType::Number }, {}, Value(1));
-    if (vm.exception())
-        return {};
+    auto increment_value = TRY_OR_DISCARD(get_option(global_object, normalized_options, vm.names.roundingIncrement, { OptionType::Number }, {}, Value(1)));
     VERIFY(increment_value.is_number());
     auto increment = increment_value.as_double();
 
@@ -414,9 +401,7 @@ Optional<String> to_largest_temporal_unit(GlobalObject& global_object, Object co
     // 4. Assert: autoValue is not present or disallowedUnits does not contain autoValue.
 
     // 5. Let largestUnit be ? GetOption(normalizedOptions, "largestUnit", « String », « "auto", "year", "years", "month", "months", "week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second", "seconds", "millisecond", "milliseconds", "microsecond", "microseconds", "nanosecond", "nanoseconds" », fallback).
-    auto largest_unit_value = get_option(global_object, normalized_options, vm.names.largestUnit, { OptionType::String }, { "auto"sv, "year"sv, "years"sv, "month"sv, "months"sv, "week"sv, "weeks"sv, "day"sv, "days"sv, "hour"sv, "hours"sv, "minute"sv, "minutes"sv, "second"sv, "seconds"sv, "millisecond"sv, "milliseconds"sv, "microsecond"sv, "microseconds"sv, "nanosecond"sv, "nanoseconds"sv }, js_string(vm, fallback));
-    if (vm.exception())
-        return {};
+    auto largest_unit_value = TRY_OR_DISCARD(get_option(global_object, normalized_options, vm.names.largestUnit, { OptionType::String }, { "auto"sv, "year"sv, "years"sv, "month"sv, "months"sv, "week"sv, "weeks"sv, "day"sv, "days"sv, "hour"sv, "hours"sv, "minute"sv, "minutes"sv, "second"sv, "seconds"sv, "millisecond"sv, "milliseconds"sv, "microsecond"sv, "microseconds"sv, "nanosecond"sv, "nanoseconds"sv }, js_string(vm, fallback)));
     auto largest_unit = largest_unit_value.as_string().string();
 
     // 6. If largestUnit is "auto" and autoValue is present, then
@@ -450,9 +435,7 @@ Optional<String> to_smallest_temporal_unit(GlobalObject& global_object, Object c
     // 1. Assert: disallowedUnits does not contain fallback.
 
     // 2. Let smallestUnit be ? GetOption(normalizedOptions, "smallestUnit", « String », « "year", "years", "month", "months", "week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second", "seconds", "millisecond", "milliseconds", "microsecond", "microseconds", "nanosecond", "nanoseconds" », fallback).
-    auto smallest_unit_value = get_option(global_object, normalized_options, vm.names.smallestUnit, { OptionType::String }, { "year"sv, "years"sv, "month"sv, "months"sv, "week"sv, "weeks"sv, "day"sv, "days"sv, "hour"sv, "hours"sv, "minute"sv, "minutes"sv, "second"sv, "seconds"sv, "millisecond"sv, "milliseconds"sv, "microsecond"sv, "microseconds"sv, "nanosecond"sv, "nanoseconds"sv }, fallback.has_value() ? js_string(vm, *fallback) : js_undefined());
-    if (vm.exception())
-        return {};
+    auto smallest_unit_value = TRY_OR_DISCARD(get_option(global_object, normalized_options, vm.names.smallestUnit, { OptionType::String }, { "year"sv, "years"sv, "month"sv, "months"sv, "week"sv, "weeks"sv, "day"sv, "days"sv, "hour"sv, "hours"sv, "minute"sv, "minutes"sv, "second"sv, "seconds"sv, "millisecond"sv, "milliseconds"sv, "microsecond"sv, "microseconds"sv, "nanosecond"sv, "nanoseconds"sv }, fallback.has_value() ? js_string(vm, *fallback) : js_undefined()));
 
     // OPTIMIZATION: We skip the following string-only checks for the fallback to tidy up the code a bit
     if (smallest_unit_value.is_undefined())
