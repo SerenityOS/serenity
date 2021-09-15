@@ -69,6 +69,7 @@ public:
     FlexBasisData flex_basis() const { return m_noninherited.flex_basis; }
     Optional<float> flex_grow_factor() const { return m_noninherited.flex_grow_factor; }
     Optional<float> flex_shrink_factor() const { return m_noninherited.flex_shrink_factor; }
+    CSS::AlignItems align_items() const { return m_noninherited.align_items; }
     Optional<float> opacity() const { return m_noninherited.opacity; }
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
     Optional<BoxShadowData> box_shadow() const { return m_noninherited.box_shadow; }
@@ -152,6 +153,7 @@ protected:
         CSS::FlexBasisData flex_basis {};
         Optional<float> flex_grow_factor;
         Optional<float> flex_shrink_factor;
+        CSS::AlignItems align_items;
         CSS::JustifyContent justify_content { InitialValues::justify_content() };
         CSS::Overflow overflow_x { InitialValues::overflow() };
         CSS::Overflow overflow_y { InitialValues::overflow() };
@@ -204,6 +206,7 @@ public:
     void set_flex_basis(FlexBasisData value) { m_noninherited.flex_basis = value; }
     void set_flex_grow_factor(Optional<float> value) { m_noninherited.flex_grow_factor = value; }
     void set_flex_shrink_factor(Optional<float> value) { m_noninherited.flex_shrink_factor = value; }
+    void set_align_items(CSS::AlignItems value) { m_noninherited.align_items = value; }
     void set_opacity(Optional<float> value) { m_noninherited.opacity = value; }
     void set_justify_content(CSS::JustifyContent value) { m_noninherited.justify_content = value; }
     void set_box_shadow(Optional<BoxShadowData> value) { m_noninherited.box_shadow = move(value); }
