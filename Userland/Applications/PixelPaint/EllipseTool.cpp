@@ -14,6 +14,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/RadioButton.h>
+#include <LibGUI/TextBox.h>
 #include <LibGUI/ValueSlider.h>
 #include <LibGfx/Rect.h>
 
@@ -91,6 +92,8 @@ void EllipseTool::on_mousemove(Layer*, MouseEvent& event)
 
     if (event.layer_event().shift())
         m_ellipse_end_position = m_ellipse_start_position.end_point_for_aspect_ratio(event.layer_event().position(), 1.0);
+    else if (m_aspect_ratio.has_value())
+        m_ellipse_end_position = m_ellipse_start_position.end_point_for_aspect_ratio(event.layer_event().position(), m_aspect_ratio.value());
     else
         m_ellipse_end_position = event.layer_event().position();
 
@@ -162,6 +165,36 @@ GUI::Widget* EllipseTool::get_properties_widget()
         };
 
         outline_mode_radio.set_checked(true);
+
+        auto& aspect_container = m_properties_widget->add<GUI::Widget>();
+        aspect_container.set_fixed_height(20);
+        aspect_container.set_layout<GUI::HorizontalBoxLayout>();
+
+        auto& aspect_label = aspect_container.add<GUI::Label>("Aspect Ratio:");
+        aspect_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        aspect_label.set_fixed_size(80, 20);
+
+        m_aspect_w_textbox = aspect_container.add<GUI::TextBox>();
+        m_aspect_w_textbox->set_fixed_height(20);
+        m_aspect_w_textbox->set_fixed_width(25);
+        m_aspect_w_textbox->on_change = [&] {
+            auto x = m_aspect_w_textbox->text().to_int().value_or(0);
+            auto y = m_aspect_h_textbox->text().to_int().value_or(0);
+            if (x > 0 && y > 0) {
+                m_aspect_ratio = (float)x / (float)y;
+            } else {
+                m_aspect_ratio = {};
+            }
+        };
+
+        auto& multiply_label = aspect_container.add<GUI::Label>("x");
+        multiply_label.set_text_alignment(Gfx::TextAlignment::Center);
+        multiply_label.set_fixed_size(10, 20);
+
+        m_aspect_h_textbox = aspect_container.add<GUI::TextBox>();
+        m_aspect_h_textbox->set_fixed_height(20);
+        m_aspect_h_textbox->set_fixed_width(25);
+        m_aspect_h_textbox->on_change = [&] { m_aspect_w_textbox->on_change(); };
     }
 
     return m_properties_widget.ptr();
