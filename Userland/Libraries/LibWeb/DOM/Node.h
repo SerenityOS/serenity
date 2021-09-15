@@ -77,6 +77,8 @@ public:
 
     virtual bool is_editable() const;
 
+    virtual bool is_html_template_element() const { return false; }
+
     ExceptionOr<NonnullRefPtr<Node>> pre_insert(NonnullRefPtr<Node>, RefPtr<Node>);
     ExceptionOr<NonnullRefPtr<Node>> pre_remove(NonnullRefPtr<Node>);
 
