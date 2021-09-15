@@ -53,19 +53,13 @@ Value PlainDateConstructor::construct(FunctionObject& new_target)
     auto& global_object = this->global_object();
 
     // 2. Let y be ? ToIntegerThrowOnInfinity(isoYear).
-    auto y = to_integer_throw_on_infinity(global_object, vm.argument(0), ErrorType::TemporalInvalidPlainDate);
-    if (vm.exception())
-        return {};
+    auto y = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(0), ErrorType::TemporalInvalidPlainDate));
 
     // 3. Let m be ? ToIntegerThrowOnInfinity(isoMonth).
-    auto m = to_integer_throw_on_infinity(global_object, vm.argument(1), ErrorType::TemporalInvalidPlainDate);
-    if (vm.exception())
-        return {};
+    auto m = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(1), ErrorType::TemporalInvalidPlainDate));
 
     // 4. Let d be ? ToIntegerThrowOnInfinity(isoDay).
-    auto d = to_integer_throw_on_infinity(global_object, vm.argument(2), ErrorType::TemporalInvalidPlainDate);
-    if (vm.exception())
-        return {};
+    auto d = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(2), ErrorType::TemporalInvalidPlainDate));
 
     // 5. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
     auto* calendar = to_temporal_calendar_with_iso_default(global_object, vm.argument(3));

@@ -62,14 +62,10 @@ Value PlainMonthDayConstructor::construct(FunctionObject& new_target)
     }
 
     // 3. Let m be ? ToIntegerThrowOnInfinity(isoMonth).
-    auto m = to_integer_throw_on_infinity(global_object, iso_month, ErrorType::TemporalInvalidPlainMonthDay);
-    if (vm.exception())
-        return {};
+    auto m = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, iso_month, ErrorType::TemporalInvalidPlainMonthDay));
 
     // 4. Let d be ? ToIntegerThrowOnInfinity(isoDay).
-    auto d = to_integer_throw_on_infinity(global_object, iso_day, ErrorType::TemporalInvalidPlainMonthDay);
-    if (vm.exception())
-        return {};
+    auto d = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, iso_day, ErrorType::TemporalInvalidPlainMonthDay));
 
     // 5. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
     auto* calendar = to_temporal_calendar_with_iso_default(global_object, calendar_like);
@@ -77,9 +73,7 @@ Value PlainMonthDayConstructor::construct(FunctionObject& new_target)
         return {};
 
     // 6. Let ref be ? ToIntegerThrowOnInfinity(referenceISOYear).
-    auto ref = to_integer_throw_on_infinity(global_object, reference_iso_year, ErrorType::TemporalInvalidPlainMonthDay);
-    if (vm.exception())
-        return {};
+    auto ref = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, reference_iso_year, ErrorType::TemporalInvalidPlainMonthDay));
 
     // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
     // This does not change the exposed behavior as the call to CreateTemporalMonthDay will immediately check that these values are valid

@@ -51,34 +51,22 @@ Value PlainTimeConstructor::construct(FunctionObject& new_target)
     auto& global_object = this->global_object();
 
     // 2. Let hour be ? ToIntegerThrowOnInfinity(hour).
-    auto hour = to_integer_throw_on_infinity(global_object, vm.argument(0), ErrorType::TemporalInvalidPlainTime);
-    if (vm.exception())
-        return {};
+    auto hour = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(0), ErrorType::TemporalInvalidPlainTime));
 
     // 3. Let minute be ? ToIntegerThrowOnInfinity(hour).
-    auto minute = to_integer_throw_on_infinity(global_object, vm.argument(1), ErrorType::TemporalInvalidPlainTime);
-    if (vm.exception())
-        return {};
+    auto minute = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(1), ErrorType::TemporalInvalidPlainTime));
 
     // 4. Let second be ? ToIntegerThrowOnInfinity(hour).
-    auto second = to_integer_throw_on_infinity(global_object, vm.argument(2), ErrorType::TemporalInvalidPlainTime);
-    if (vm.exception())
-        return {};
+    auto second = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(2), ErrorType::TemporalInvalidPlainTime));
 
     // 5. Let millisecond be ? ToIntegerThrowOnInfinity(hour).
-    auto millisecond = to_integer_throw_on_infinity(global_object, vm.argument(3), ErrorType::TemporalInvalidPlainTime);
-    if (vm.exception())
-        return {};
+    auto millisecond = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(3), ErrorType::TemporalInvalidPlainTime));
 
     // 6. Let microsecond be ? ToIntegerThrowOnInfinity(hour).
-    auto microsecond = to_integer_throw_on_infinity(global_object, vm.argument(4), ErrorType::TemporalInvalidPlainTime);
-    if (vm.exception())
-        return {};
+    auto microsecond = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(4), ErrorType::TemporalInvalidPlainTime));
 
     // 7. Let nanosecond be ? ToIntegerThrowOnInfinity(hour).
-    auto nanosecond = to_integer_throw_on_infinity(global_object, vm.argument(5), ErrorType::TemporalInvalidPlainTime);
-    if (vm.exception())
-        return {};
+    auto nanosecond = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(5), ErrorType::TemporalInvalidPlainTime));
 
     // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
     // This does not change the exposed behavior as the call to CreateTemporalTime will immediately check that these values are valid
