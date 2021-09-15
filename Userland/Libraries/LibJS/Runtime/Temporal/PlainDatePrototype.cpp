@@ -459,12 +459,10 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_string)
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(0)));
 
     // 4. Let showCalendar be ? ToShowCalendarOption(options).
-    auto show_calendar = to_show_calendar_option(global_object, *options);
-    if (vm.exception())
-        return {};
+    auto show_calendar = TRY_OR_DISCARD(to_show_calendar_option(global_object, *options));
 
     // 5. Return ? TemporalDateToString(temporalDate, showCalendar).
-    auto string = temporal_date_to_string(global_object, *temporal_date, *show_calendar);
+    auto string = temporal_date_to_string(global_object, *temporal_date, show_calendar);
     if (vm.exception())
         return {};
 
