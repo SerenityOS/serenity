@@ -92,7 +92,7 @@ Value PlainYearMonthConstructor::construct(FunctionObject& new_target)
     }
 
     // 7. Return ? CreateTemporalYearMonth(y, m, calendar, ref, NewTarget).
-    return create_temporal_year_month(global_object, y, m, *calendar, ref, &new_target);
+    return TRY_OR_DISCARD(create_temporal_year_month(global_object, y, m, *calendar, ref, &new_target));
 }
 
 // 9.2.2 Temporal.PlainYearMonth.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.from
@@ -115,25 +115,21 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthConstructor::from)
         auto& plain_year_month_object = static_cast<PlainYearMonth&>(item.as_object());
 
         // b. Return ? CreateTemporalYearMonth(item.[[ISOYear]], item.[[ISOMonth]], item.[[Calendar]], item.[[ISODay]]).
-        return create_temporal_year_month(global_object, plain_year_month_object.iso_year(), plain_year_month_object.iso_month(), plain_year_month_object.calendar(), plain_year_month_object.iso_day());
+        return TRY_OR_DISCARD(create_temporal_year_month(global_object, plain_year_month_object.iso_year(), plain_year_month_object.iso_month(), plain_year_month_object.calendar(), plain_year_month_object.iso_day()));
     }
 
     // 3. Return ? ToTemporalYearMonth(item, options).
-    return to_temporal_year_month(global_object, item, options);
+    return TRY_OR_DISCARD(to_temporal_year_month(global_object, item, options));
 }
 
 // 9.2.3 Temporal.PlainYearMonth.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.compare
 JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthConstructor::compare)
 {
     // 1. Set one to ? ToTemporalYearMonth(one).
-    auto* one = to_temporal_year_month(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* one = TRY_OR_DISCARD(to_temporal_year_month(global_object, vm.argument(0)));
 
     // 2. Set two to ? ToTemporalYearMonth(one).
-    auto* two = to_temporal_year_month(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* two = TRY_OR_DISCARD(to_temporal_year_month(global_object, vm.argument(1)));
 
     // 3. Return 𝔽(! CompareISODate(one.[[ISOYear]], one.[[ISOMonth]], one.[[ISODay]], two.[[ISOYear]], two.[[ISOMonth]], two.[[ISODay]])).
     return Value(compare_iso_date(one->iso_year(), one->iso_month(), one->iso_day(), two->iso_year(), two->iso_month(), two->iso_day()));
