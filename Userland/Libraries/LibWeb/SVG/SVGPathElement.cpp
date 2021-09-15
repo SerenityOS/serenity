@@ -584,7 +584,19 @@ Gfx::Path& SVGPathElement::get_path()
             break;
         }
 
-        case PathInstructionType::Curve:
+        case PathInstructionType::Curve: {
+            Gfx::FloatPoint c1 = { data[0], data[1] };
+            Gfx::FloatPoint c2 = { data[2], data[3] };
+            Gfx::FloatPoint p2 = { data[4], data[5] };
+            if (!absolute) {
+                p2 += path.segments().last().point();
+                c1 += path.segments().last().point();
+                c2 += path.segments().last().point();
+            }
+            path.cubic_bezier_curve_to(c1, c2, p2);
+            break;
+        }
+
         case PathInstructionType::SmoothCurve:
             // Instead of crashing the browser every time we come across an SVG
             // with these path instructions, let's just skip them
