@@ -90,7 +90,7 @@ Value PlainTimeConstructor::construct(FunctionObject& new_target)
     }
 
     // 8. Return ? CreateTemporalTime(hour, minute, second, millisecond, microsecond, nanosecond, NewTarget).
-    return create_temporal_time(global_object, hour, minute, second, millisecond, microsecond, nanosecond, &new_target);
+    return TRY_OR_DISCARD(create_temporal_time(global_object, hour, minute, second, millisecond, microsecond, nanosecond, &new_target));
 }
 
 // 4.2.2 Temporal.PlainTime.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.from
@@ -112,25 +112,21 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimeConstructor::from)
     if (item.is_object() && is<PlainTime>(item.as_object())) {
         auto& plain_time = static_cast<PlainTime&>(item.as_object());
         // a. Return ? CreateTemporalTime(item.[[ISOHour]], item.[[ISOMinute]], item.[[ISOSecond]], item.[[ISOMillisecond]], item.[[ISOMicrosecond]], item.[[ISONanosecond]]).
-        return create_temporal_time(global_object, plain_time.iso_hour(), plain_time.iso_minute(), plain_time.iso_second(), plain_time.iso_millisecond(), plain_time.iso_microsecond(), plain_time.iso_nanosecond());
+        return TRY_OR_DISCARD(create_temporal_time(global_object, plain_time.iso_hour(), plain_time.iso_minute(), plain_time.iso_second(), plain_time.iso_millisecond(), plain_time.iso_microsecond(), plain_time.iso_nanosecond()));
     }
 
     // 4. Return ? ToTemporalTime(item, overflow).
-    return to_temporal_time(global_object, item, *overflow);
+    return TRY_OR_DISCARD(to_temporal_time(global_object, item, *overflow));
 }
 
 // 4.2.3 Temporal.PlainTime.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.compare
 JS_DEFINE_NATIVE_FUNCTION(PlainTimeConstructor::compare)
 {
     // 1. Set one to ? ToTemporalTime(one).
-    auto* one = to_temporal_time(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* one = TRY_OR_DISCARD(to_temporal_time(global_object, vm.argument(0)));
 
     // 2. Set two to ? ToTemporalTime(two).
-    auto* two = to_temporal_time(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* two = TRY_OR_DISCARD(to_temporal_time(global_object, vm.argument(1)));
 
     // 3. Return 𝔽(! CompareTemporalTime(one.[[ISOHour]], one.[[ISOMinute]], one.[[ISOSecond]], one.[[ISOMillisecond]], one.[[ISOMicrosecond]], one.[[ISONanosecond]], two.[[ISOHour]], two.[[ISOMinute]], two.[[ISOSecond]], two.[[ISOMillisecond]], two.[[ISOMicrosecond]], two.[[ISONanosecond]])).
     return Value(compare_temporal_time(one->iso_hour(), one->iso_minute(), one->iso_second(), one->iso_millisecond(), one->iso_microsecond(), one->iso_nanosecond(), two->iso_hour(), two->iso_minute(), two->iso_second(), two->iso_millisecond(), two->iso_microsecond(), two->iso_nanosecond()));
