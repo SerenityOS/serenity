@@ -587,6 +587,12 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         for (auto& flex_line : flex_lines) {
             // FIXME: Implement 8.1
 
+            // FIXME: This isn't spec but makes sense here
+            if (has_definite_cross_size(box) && box.computed_values().align_items() == CSS::AlignItems::Stretch) {
+                flex_line.cross_size = specified_cross_size(box) / flex_lines.size();
+                continue;
+            }
+
             // 8.2
             float largest_hypothetical_cross_size = 0;
             for (auto& flex_item : flex_line.items) {
@@ -687,7 +693,32 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
     // FIXME: This
 
     // 14. Align all flex items along the cross-axis
-    // FIXME: Support align-self
+    // FIXME: Get the alignment via "align-self" of the item (which accesses "align-items" of the parent if unset)
+    // FIXME: Take margins into account
+    float line_cross_offset = 0;
+    for (auto& flex_line : flex_lines) {
+        for (auto* flex_item : flex_line.items) {
+            switch (box.computed_values().align_items()) {
+            case CSS::AlignItems::Baseline:
+                //FIXME: Implement this
+                // Fallthrough
+            case CSS::AlignItems::FlexStart:
+            case CSS::AlignItems::Stretch:
+                flex_item->cross_offset = line_cross_offset;
+                break;
+            case CSS::AlignItems::FlexEnd:
+                flex_item->cross_offset = line_cross_offset + flex_line.cross_size - flex_item->cross_size;
+                break;
+            case CSS::AlignItems::Center:
+                flex_item->cross_offset = line_cross_offset + (flex_line.cross_size / 2.0f) - (flex_item->cross_size / 2.0f);
+                break;
+            default:
+                break;
+            }
+        }
+
+        line_cross_offset += flex_line.cross_size;
+    }
 
     // 15. Determine the flex container’s used cross size:
     if (has_definite_cross_size(box)) {
@@ -705,13 +736,6 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
     // 16. Align all flex lines
     // FIXME: Support align-content
     // FIXME: Support reverse
-    float cross_offset = 0;
-    for (auto& flex_line : flex_lines) {
-        for (auto* flex_item : flex_line.items) {
-            flex_item->cross_offset = cross_offset;
-        }
-        cross_offset += flex_line.cross_size;
-    }
     for (auto& flex_line : flex_lines) {
         for (auto* flex_item : flex_line.items) {
             set_main_size(flex_item->box, flex_item->main_size);
