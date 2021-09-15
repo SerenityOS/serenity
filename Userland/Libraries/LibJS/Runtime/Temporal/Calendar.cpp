@@ -870,12 +870,10 @@ Optional<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_object, O
         return {};
 
     // 7. Let result be ? RegulateISOYearMonth(year, month, overflow).
-    auto result = regulate_iso_year_month(global_object, year.as_double(), month, *overflow);
-    if (vm.exception())
-        return {};
+    auto result = TRY_OR_DISCARD(regulate_iso_year_month(global_object, year.as_double(), month, *overflow));
 
     // 8. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[ReferenceISODay]]: 1 }.
-    return ISOYearMonth { .year = result->year, .month = result->month, .reference_iso_day = 1 };
+    return ISOYearMonth { .year = result.year, .month = result.month, .reference_iso_day = 1 };
 }
 
 // 12.1.40 ISOMonthDayFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthdayfromfields
