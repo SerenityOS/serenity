@@ -115,7 +115,7 @@ TimeZone* create_temporal_time_zone(GlobalObject& global_object, String const& i
 }
 
 // 11.6.3 GetISOPartsFromEpoch ( epochNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-getisopartsfromepoch
-Optional<ISODateTime> get_iso_parts_from_epoch(BigInt const& epoch_nanoseconds)
+ISODateTime get_iso_parts_from_epoch(BigInt const& epoch_nanoseconds)
 {
     // 1. Let remainderNs be remainder(epochNanoseconds, 10^6).
     auto remainder_ns_bigint = epoch_nanoseconds.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000'000 }).remainder;
@@ -153,7 +153,7 @@ Optional<ISODateTime> get_iso_parts_from_epoch(BigInt const& epoch_nanoseconds)
     auto nanosecond = static_cast<u16>(remainder_ns % 1000);
 
     // 12. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day, [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
-    return ISODateTime { .year = year, .month = month, .day = day, .hour = hour, .minute = minute, .second = second, .millisecond = millisecond, .microsecond = microsecond, .nanosecond = nanosecond };
+    return { .year = year, .month = month, .day = day, .hour = hour, .minute = minute, .second = second, .millisecond = millisecond, .microsecond = microsecond, .nanosecond = nanosecond };
 }
 
 // 11.6.5 GetIANATimeZoneOffsetNanoseconds ( epochNanoseconds, timeZoneIdentifier ), https://tc39.es/proposal-temporal/#sec-temporal-getianatimezoneoffsetnanoseconds
@@ -439,10 +439,10 @@ PlainDateTime* builtin_time_zone_get_plain_date_time_for(GlobalObject& global_ob
     auto result = get_iso_parts_from_epoch(instant.nanoseconds());
 
     // 3. Set result to ! BalanceISODateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]] + offsetNanoseconds).
-    result = balance_iso_date_time(result->year, result->month, result->day, result->hour, result->minute, result->second, result->millisecond, result->microsecond, result->nanosecond + offset_nanoseconds);
+    result = balance_iso_date_time(result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond + offset_nanoseconds);
 
     // 4. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], calendar).
-    return create_temporal_date_time(global_object, result->year, result->month, result->day, result->hour, result->minute, result->second, result->millisecond, result->microsecond, result->nanosecond, calendar);
+    return create_temporal_date_time(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, calendar);
 }
 
 }
