@@ -219,8 +219,6 @@ private:
     float m_font_size { 0 };
     RefPtr<CSS::ImageStyleValue> m_background_image;
 
-    CSS::Position m_position;
-
     bool m_has_definite_height { false };
     bool m_has_definite_width { false };
 };
