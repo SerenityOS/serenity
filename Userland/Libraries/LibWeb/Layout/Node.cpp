@@ -83,20 +83,6 @@ bool Node::establishes_stacking_context() const
     return false;
 }
 
-void Node::paint(PaintContext& context, PaintPhase phase)
-{
-    if (!is_visible())
-        return;
-
-    before_children_paint(context, phase);
-
-    for_each_child_in_paint_order([&](auto& child) {
-        child.paint(context, phase);
-    });
-
-    after_children_paint(context, phase);
-}
-
 HitTestResult Node::hit_test(const Gfx::IntPoint& position, HitTestType type) const
 {
     HitTestResult result;

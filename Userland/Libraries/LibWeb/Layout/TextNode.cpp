@@ -414,4 +414,8 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::try_commit_chunk(Utf8View::It
     return {};
 }
 
+void TextNode::paint(PaintContext&, PaintPhase)
+{
+}
+
 }
