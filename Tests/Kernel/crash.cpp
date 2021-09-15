@@ -55,7 +55,7 @@ int main(int argc, char** argv)
     args_parser.set_general_help(
         "Exercise error-handling paths of the execution environment "
         "(i.e., Kernel or UE) by crashing in many different ways.");
-    args_parser.add_option(do_all_crash_types, "Test that all of the following crash types crash as expected (default behavior)", nullptr, 'A');
+    args_parser.add_option(do_all_crash_types, "Test that all (except -U) of the following crash types crash as expected (default behavior)", nullptr, 'A');
     args_parser.add_option(do_segmentation_violation, "Perform a segmentation violation by dereferencing an invalid pointer", nullptr, 's');
     args_parser.add_option(do_division_by_zero, "Perform a division by zero", nullptr, 'd');
     args_parser.add_option(do_illegal_instruction, "Execute an illegal CPU instruction", nullptr, 'i');
@@ -70,7 +70,7 @@ int main(int argc, char** argv)
     args_parser.add_option(do_syscall_from_writeable_memory, "Make a syscall from writeable memory", nullptr, 'S');
     args_parser.add_option(do_legitimate_syscall, "Make a syscall from legitimate memory (but outside msyscall)", nullptr, 'y');
     args_parser.add_option(do_execute_non_executable_memory, "Attempt to execute non-executable memory (not mapped with PROT_EXEC)", nullptr, 'X');
-    args_parser.add_option(do_trigger_user_mode_instruction_prevention, "Attempt to trigger an x86 User Mode Instruction Prevention fault", nullptr, 'U');
+    args_parser.add_option(do_trigger_user_mode_instruction_prevention, "Attempt to trigger an x86 User Mode Instruction Prevention fault. WARNING: This test runs only when invoked manually, see #10042.", nullptr, 'U');
     args_parser.add_option(do_use_io_instruction, "Use an x86 I/O instruction in userspace", nullptr, 'I');
     args_parser.add_option(do_read_cpu_counter, "Read the x86 TSC (Time Stamp Counter) directly", nullptr, 'c');
     args_parser.add_option(do_pledge_violation, "Violate pledge()'d promises", nullptr, 'p');
@@ -253,7 +253,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (do_trigger_user_mode_instruction_prevention || do_all_crash_types) {
+    if (do_trigger_user_mode_instruction_prevention) {
         any_failures |= !Crash("Trigger x86 User Mode Instruction Prevention", []() {
             asm volatile("str %eax");
             return Crash::Failure::DidNotCrash;
