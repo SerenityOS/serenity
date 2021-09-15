@@ -70,7 +70,7 @@ Value ZonedDateTimeConstructor::construct(FunctionObject& new_target)
         return {};
 
     // 6. Return ? CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar, NewTarget).
-    return create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, *time_zone, *calendar, &new_target);
+    return TRY_OR_DISCARD(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, *time_zone, *calendar, &new_target));
 }
 
 }
