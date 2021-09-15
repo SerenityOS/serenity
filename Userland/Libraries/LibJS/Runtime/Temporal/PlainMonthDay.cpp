@@ -34,7 +34,7 @@ void PlainMonthDay::visit_edges(Visitor& visitor)
 }
 
 // 10.5.1 ToTemporalMonthDay ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalmonthday
-PlainMonthDay* to_temporal_month_day(GlobalObject& global_object, Value item, Object const* options)
+ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(GlobalObject& global_object, Value item, Object const* options)
 {
     auto& vm = global_object.vm();
 
@@ -82,8 +82,8 @@ PlainMonthDay* to_temporal_month_day(GlobalObject& global_object, Value item, Ob
         } else {
             // i. Let calendar be ? Get(item, "calendar").
             auto calendar_value = item_object.get(vm.names.calendar);
-            if (vm.exception())
-                return {};
+            if (auto* exception = vm.exception())
+                return throw_completion(exception->value());
 
             // ii. If calendar is undefined, then
             //      1. Let calendarAbsent be true.
@@ -93,34 +93,34 @@ PlainMonthDay* to_temporal_month_day(GlobalObject& global_object, Value item, Ob
 
             // iv. Set calendar to ? ToTemporalCalendarWithISODefault(calendar).
             calendar = to_temporal_calendar_with_iso_default(global_object, calendar_value);
-            if (vm.exception())
-                return {};
+            if (auto* exception = vm.exception())
+                return throw_completion(exception->value());
         }
 
         // d. Let fieldNames be ? CalendarFields(calendar, « "day", "month", "monthCode", "year" »).
         auto field_names = calendar_fields(global_object, *calendar, { "day"sv, "month"sv, "monthCode"sv, "year"sv });
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // e. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
         auto* fields = prepare_temporal_fields(global_object, item_object, field_names, {});
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // f. Let month be ? Get(fields, "month").
         auto month = fields->get(vm.names.month);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // g. Let monthCode be ? Get(fields, "monthCode").
         auto month_code = fields->get(vm.names.monthCode);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // h. Let year be ? Get(fields, "year").
         auto year = fields->get(vm.names.year);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // i. If calendarAbsent is true, and month is not undefined, and monthCode is undefined and year is undefined, then
         if (calendar_absent && !month.is_undefined() && month_code.is_undefined() && year.is_undefined()) {
@@ -139,7 +139,7 @@ PlainMonthDay* to_temporal_month_day(GlobalObject& global_object, Value item, Ob
 }
 
 // 10.5.2 CreateTemporalMonthDay ( isoMonth, isoDay, calendar, referenceISOYear [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalmonthday
-PlainMonthDay* create_temporal_month_day(GlobalObject& global_object, u8 iso_month, u8 iso_day, Object& calendar, i32 reference_iso_year, FunctionObject const* new_target)
+ThrowCompletionOr<PlainMonthDay*> create_temporal_month_day(GlobalObject& global_object, u8 iso_month, u8 iso_day, Object& calendar, i32 reference_iso_year, FunctionObject const* new_target)
 {
     auto& vm = global_object.vm();
 
@@ -147,10 +147,8 @@ PlainMonthDay* create_temporal_month_day(GlobalObject& global_object, u8 iso_mon
     // 2. Assert: Type(calendar) is Object.
 
     // 3. If ! IsValidISODate(referenceISOYear, isoMonth, isoDay) is false, throw a RangeError exception.
-    if (!is_valid_iso_date(reference_iso_year, iso_month, iso_day)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainMonthDay);
-        return {};
-    }
+    if (!is_valid_iso_date(reference_iso_year, iso_month, iso_day))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainMonthDay);
 
     // 4. If newTarget is not present, set it to %Temporal.PlainMonthDay%.
     if (!new_target)
@@ -161,14 +159,14 @@ PlainMonthDay* create_temporal_month_day(GlobalObject& global_object, u8 iso_mon
     // 7. Set object.[[ISODay]] to isoDay.
     // 8. Set object.[[Calendar]] to calendar.
     // 9. Set object.[[ISOYear]] to referenceISOYear.
-    auto* object = TRY_OR_DISCARD(ordinary_create_from_constructor<PlainMonthDay>(global_object, *new_target, &GlobalObject::temporal_plain_month_day_prototype, iso_month, iso_day, reference_iso_year, calendar));
+    auto* object = TRY(ordinary_create_from_constructor<PlainMonthDay>(global_object, *new_target, &GlobalObject::temporal_plain_month_day_prototype, iso_month, iso_day, reference_iso_year, calendar));
 
     // 10. Return object.
     return object;
 }
 
 // 10.5.3 TemporalMonthDayToString ( monthDay, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporalmonthdaytostring
-Optional<String> temporal_month_day_to_string(GlobalObject& global_object, PlainMonthDay& month_day, StringView show_calendar)
+ThrowCompletionOr<String> temporal_month_day_to_string(GlobalObject& global_object, PlainMonthDay& month_day, StringView show_calendar)
 {
     auto& vm = global_object.vm();
 
@@ -182,8 +180,8 @@ Optional<String> temporal_month_day_to_string(GlobalObject& global_object, Plain
 
     // 6. Let calendarID be ? ToString(monthDay.[[Calendar]]).
     auto calendar_id = Value(&month_day.calendar()).to_string(global_object);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 7. If calendarID is not "iso8601", then
     if (calendar_id != "iso8601"sv) {
