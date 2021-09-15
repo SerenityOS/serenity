@@ -189,9 +189,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     }
 
     // 9. Let partialTime be ? ToPartialTime(temporalTimeLike).
-    auto partial_time = to_partial_time(global_object, temporal_time_like);
-    if (vm.exception())
-        return {};
+    auto partial_time = TRY_OR_DISCARD(to_partial_time(global_object, temporal_time_like));
 
     // 10. Set options to ? GetOptionsObject(options).
     auto* options = get_options_object(global_object, vm.argument(1));
@@ -207,45 +205,43 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     //      a. Let hour be partialTime.[[Hour]].
     // 13. Else,
     //      a. Let hour be temporalTime.[[ISOHour]].
-    auto hour = partial_time->hour.value_or(temporal_time->iso_hour());
+    auto hour = partial_time.hour.value_or(temporal_time->iso_hour());
 
     // 14. If partialTime.[[Minute]] is not undefined, then
     //      a. Let minute be partialTime.[[Minute]].
     // 15. Else,
     //      a. Let minute be temporalTime.[[ISOMinute]].
-    auto minute = partial_time->minute.value_or(temporal_time->iso_minute());
+    auto minute = partial_time.minute.value_or(temporal_time->iso_minute());
 
     // 16. If partialTime.[[Second]] is not undefined, then
     //      a. Let second be partialTime.[[Second]].
     // 17. Else,
     //      a. Let second be temporalTime.[[ISOSecond]].
-    auto second = partial_time->second.value_or(temporal_time->iso_second());
+    auto second = partial_time.second.value_or(temporal_time->iso_second());
 
     // 18. If partialTime.[[Millisecond]] is not undefined, then
     //      a. Let millisecond be partialTime.[[Millisecond]].
     // 19. Else,
     //      a. Let millisecond be temporalTime.[[ISOMillisecond]].
-    auto millisecond = partial_time->millisecond.value_or(temporal_time->iso_millisecond());
+    auto millisecond = partial_time.millisecond.value_or(temporal_time->iso_millisecond());
 
     // 20. If partialTime.[[Microsecond]] is not undefined, then
     //      a. Let microsecond be partialTime.[[Microsecond]].
     // 21. Else,
     //      a. Let microsecond be temporalTime.[[ISOMicrosecond]].
-    auto microsecond = partial_time->microsecond.value_or(temporal_time->iso_microsecond());
+    auto microsecond = partial_time.microsecond.value_or(temporal_time->iso_microsecond());
 
     // 22. If partialTime.[[Nanosecond]] is not undefined, then
     //      a. Let nanosecond be partialTime.[[Nanosecond]].
     // 23. Else,
     //      a. Let nanosecond be temporalTime.[[ISONanosecond]].
-    auto nanosecond = partial_time->nanosecond.value_or(temporal_time->iso_nanosecond());
+    auto nanosecond = partial_time.nanosecond.value_or(temporal_time->iso_nanosecond());
 
     // 24. Let result be ? RegulateTime(hour, minute, second, millisecond, microsecond, nanosecond, overflow).
-    auto result = regulate_time(global_object, hour, minute, second, millisecond, microsecond, nanosecond, *overflow);
-    if (vm.exception())
-        return {};
+    auto result = TRY_OR_DISCARD(regulate_time(global_object, hour, minute, second, millisecond, microsecond, nanosecond, *overflow));
 
     // 25. Return ? CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
-    return create_temporal_time(global_object, result->hour, result->minute, result->second, result->millisecond, result->microsecond, result->nanosecond);
+    return TRY_OR_DISCARD(create_temporal_time(global_object, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
 }
 
 // 4.3.16 Temporal.PlainTime.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.equals
@@ -258,9 +254,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::equals)
         return {};
 
     // 3. Set other to ? ToTemporalTime(other).
-    auto* other = to_temporal_time(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* other = TRY_OR_DISCARD(to_temporal_time(global_object, vm.argument(0)));
 
     // 4. If temporalTime.[[ISOHour]] ≠ other.[[ISOHour]], return false.
     if (temporal_time->iso_hour() != other->iso_hour())
