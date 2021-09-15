@@ -71,9 +71,7 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
     }
 
     // 4. Perform ? ToTemporalOverflow(options).
-    (void)to_temporal_overflow(global_object, *options);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    (void)TRY(to_temporal_overflow(global_object, *options));
 
     // 5. Let string be ? ToString(item).
     auto string = item.to_string(global_object);

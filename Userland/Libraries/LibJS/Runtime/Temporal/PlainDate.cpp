@@ -131,9 +131,7 @@ PlainDate* to_temporal_date(GlobalObject& global_object, Value item, Object* opt
     }
 
     // 4. Perform ? ToTemporalOverflow(options).
-    (void)to_temporal_overflow(global_object, *options);
-    if (vm.exception())
-        return {};
+    (void)TRY_OR_DISCARD(to_temporal_overflow(global_object, *options));
 
     // 5. Let string be ? ToString(item).
     auto string = item.to_string(global_object);

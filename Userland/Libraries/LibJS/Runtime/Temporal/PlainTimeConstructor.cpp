@@ -88,9 +88,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimeConstructor::from)
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = to_temporal_overflow(global_object, *options);
-    if (vm.exception())
-        return {};
+    auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, *options));
 
     auto item = vm.argument(0);
 
@@ -102,7 +100,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimeConstructor::from)
     }
 
     // 4. Return ? ToTemporalTime(item, overflow).
-    return TRY_OR_DISCARD(to_temporal_time(global_object, item, *overflow));
+    return TRY_OR_DISCARD(to_temporal_time(global_object, item, overflow));
 }
 
 // 4.2.3 Temporal.PlainTime.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.compare

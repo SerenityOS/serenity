@@ -98,9 +98,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayConstructor::from)
     // 2. If Type(item) is Object and item has an [[InitializedTemporalMonthDay]] internal slot, then
     if (item.is_object() && is<PlainMonthDay>(item.as_object())) {
         // a. Perform ? ToTemporalOverflow(options).
-        (void)to_temporal_overflow(global_object, *options);
-        if (vm.exception())
-            return {};
+        (void)TRY_OR_DISCARD(to_temporal_overflow(global_object, *options));
 
         auto& plain_month_day_object = static_cast<PlainMonthDay&>(item.as_object());
 
