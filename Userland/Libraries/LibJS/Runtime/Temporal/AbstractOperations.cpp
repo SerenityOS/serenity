@@ -214,12 +214,12 @@ ThrowCompletionOr<String> to_temporal_overflow(GlobalObject& global_object, Obje
 }
 
 // 13.8 ToTemporalRoundingMode ( normalizedOptions, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingmode
-Optional<String> to_temporal_rounding_mode(GlobalObject& global_object, Object const& normalized_options, String const& fallback)
+ThrowCompletionOr<String> to_temporal_rounding_mode(GlobalObject& global_object, Object const& normalized_options, String const& fallback)
 {
     auto& vm = global_object.vm();
 
     // 1. Return ? GetOption(normalizedOptions, "roundingMode", « String », « "ceil", "floor", "trunc", "halfExpand" », fallback).
-    auto option = TRY_OR_DISCARD(get_option(global_object, normalized_options, vm.names.roundingMode, { OptionType::String }, { "ceil"sv, "floor"sv, "trunc"sv, "halfExpand"sv }, js_string(vm, fallback)));
+    auto option = TRY(get_option(global_object, normalized_options, vm.names.roundingMode, { OptionType::String }, { "ceil"sv, "floor"sv, "trunc"sv, "halfExpand"sv }, js_string(vm, fallback)));
 
     VERIFY(option.is_string());
     return option.as_string().string();

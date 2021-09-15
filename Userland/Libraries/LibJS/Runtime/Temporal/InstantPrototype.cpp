@@ -211,9 +211,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
         return {};
 
     // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = to_temporal_rounding_mode(global_object, *options, "trunc"sv);
-    if (vm.exception())
-        return {};
+    auto rounding_mode = TRY_OR_DISCARD(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
     // 10. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
     auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
@@ -224,7 +222,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
         return {};
 
     // 12. Let roundedNs be ! DifferenceInstant(instant.[[Nanoseconds]], other.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
-    auto rounded_ns = difference_instant(global_object, instant->nanoseconds(), other->nanoseconds(), rounding_increment, *smallest_unit, *rounding_mode);
+    auto rounded_ns = difference_instant(global_object, instant->nanoseconds(), other->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
 
     // 13. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
     auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, *largest_unit);
@@ -269,9 +267,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
         return {};
 
     // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = to_temporal_rounding_mode(global_object, *options, "trunc"sv);
-    if (vm.exception())
-        return {};
+    auto rounding_mode = TRY_OR_DISCARD(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
     // 10. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
     auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
@@ -282,7 +278,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
         return {};
 
     // 12. Let roundedNs be ! DifferenceInstant(other.[[Nanoseconds]], instant.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
-    auto rounded_ns = difference_instant(global_object, other->nanoseconds(), instant->nanoseconds(), rounding_increment, *smallest_unit, *rounding_mode);
+    auto rounded_ns = difference_instant(global_object, other->nanoseconds(), instant->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
 
     // 13. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
     auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, *largest_unit);
@@ -324,9 +320,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
     auto& smallest_unit = *smallest_unit_value;
 
     // 7. Let roundingMode be ? ToTemporalRoundingMode(options, "halfExpand").
-    auto rounding_mode = to_temporal_rounding_mode(global_object, *options, "halfExpand");
-    if (vm.exception())
-        return {};
+    auto rounding_mode = TRY_OR_DISCARD(to_temporal_rounding_mode(global_object, *options, "halfExpand"));
 
     double maximum;
     // 8. If smallestUnit is "hour", then
@@ -368,7 +362,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
         return {};
 
     // 15. Let roundedNs be ? RoundTemporalInstant(instant.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
-    auto* rounded_ns = round_temporal_instant(global_object, instant->nanoseconds(), rounding_increment, smallest_unit, *rounding_mode);
+    auto* rounded_ns = round_temporal_instant(global_object, instant->nanoseconds(), rounding_increment, smallest_unit, rounding_mode);
     if (vm.exception())
         return {};
 
@@ -427,12 +421,10 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
         return {};
 
     // 7. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = to_temporal_rounding_mode(global_object, *options, "trunc"sv);
-    if (vm.exception())
-        return {};
+    auto rounding_mode = TRY_OR_DISCARD(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
     // 8. Let roundedNs be ? RoundTemporalInstant(instant.[[Nanoseconds]], precision.[[Increment]], precision.[[Unit]], roundingMode).
-    auto* rounded_ns = round_temporal_instant(global_object, instant->nanoseconds(), precision->increment, precision->unit, *rounding_mode);
+    auto* rounded_ns = round_temporal_instant(global_object, instant->nanoseconds(), precision->increment, precision->unit, rounding_mode);
     if (vm.exception())
         return {};
 
