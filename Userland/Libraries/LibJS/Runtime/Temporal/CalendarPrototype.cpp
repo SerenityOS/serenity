@@ -170,7 +170,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_day_from_fields)
         return {};
 
     // 7. Return ? CreateTemporalMonthDay(result.[[Month]], result.[[Day]], calendar, result.[[ReferenceISOYear]]).
-    return create_temporal_month_day(global_object, result->month, result->day, *calendar, result->reference_iso_year);
+    return TRY_OR_DISCARD(create_temporal_month_day(global_object, result->month, result->day, *calendar, result->reference_iso_year));
 }
 
 // 12.4.7 Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dateadd
