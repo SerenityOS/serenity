@@ -181,13 +181,13 @@ Value DateConstructor::construct(FunctionObject& new_target)
 
     if (vm.argument_count() == 0) {
         auto [datetime, milliseconds] = JS::now();
-        return ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false);
+        return TRY_OR_DISCARD(ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false));
     }
 
-    auto create_invalid_date = [&global_object, &new_target]() {
+    auto create_invalid_date = [&global_object, &new_target]() -> Date* {
         auto datetime = Core::DateTime::create(1970, 1, 1, 0, 0, 0);
         auto milliseconds = static_cast<i16>(0);
-        return ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, true);
+        return TRY_OR_DISCARD(ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, true));
     };
 
     if (vm.argument_count() == 1) {
@@ -210,7 +210,7 @@ Value DateConstructor::construct(FunctionObject& new_target)
             return create_invalid_date();
         auto datetime = Core::DateTime::from_timestamp(static_cast<time_t>(value_as_double / 1000));
         auto milliseconds = static_cast<i16>(fmod(value_as_double, 1000));
-        return ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false);
+        return TRY_OR_DISCARD(ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false));
     }
 
     // A date/time in components, in local time.
@@ -288,7 +288,7 @@ Value DateConstructor::construct(FunctionObject& new_target)
     auto time = datetime.timestamp() * 1000.0 + milliseconds;
     if (time > Date::time_clip)
         return create_invalid_date();
-    return ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false);
+    return TRY_OR_DISCARD(ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false));
 }
 
 // 21.4.3.1 Date.now ( ), https://tc39.es/ecma262/#sec-date.now

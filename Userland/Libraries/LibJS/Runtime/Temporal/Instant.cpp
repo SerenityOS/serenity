@@ -51,8 +51,6 @@ bool is_valid_epoch_nanoseconds(BigInt const& epoch_nanoseconds)
 // 8.5.2 CreateTemporalInstant ( epochNanoseconds [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalinstant
 Instant* create_temporal_instant(GlobalObject& global_object, BigInt const& epoch_nanoseconds, FunctionObject const* new_target)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: Type(epochNanoseconds) is BigInt.
 
     // 2. Assert: ! IsValidEpochNanoseconds(epochNanoseconds) is true.
@@ -64,9 +62,7 @@ Instant* create_temporal_instant(GlobalObject& global_object, BigInt const& epoc
 
     // 4. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.Instant.prototype%", « [[InitializedTemporalInstant]], [[Nanoseconds]] »).
     // 5. Set object.[[Nanoseconds]] to epochNanoseconds.
-    auto* object = ordinary_create_from_constructor<Instant>(global_object, *new_target, &GlobalObject::temporal_instant_prototype, epoch_nanoseconds);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(ordinary_create_from_constructor<Instant>(global_object, *new_target, &GlobalObject::temporal_instant_prototype, epoch_nanoseconds));
 
     // 6. Return object.
     return object;
