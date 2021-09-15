@@ -226,12 +226,12 @@ ThrowCompletionOr<String> to_temporal_rounding_mode(GlobalObject& global_object,
 }
 
 // 13.11 ToShowCalendarOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-toshowcalendaroption
-Optional<String> to_show_calendar_option(GlobalObject& global_object, Object const& normalized_options)
+ThrowCompletionOr<String> to_show_calendar_option(GlobalObject& global_object, Object const& normalized_options)
 {
     auto& vm = global_object.vm();
 
     // 1. Return ? GetOption(normalizedOptions, "calendarName", « String », « "auto", "always", "never" », "auto").
-    auto option = TRY_OR_DISCARD(get_option(global_object, normalized_options, vm.names.calendarName, { OptionType::String }, { "auto"sv, "always"sv, "never"sv }, js_string(vm, "auto"sv)));
+    auto option = TRY(get_option(global_object, normalized_options, vm.names.calendarName, { OptionType::String }, { "auto"sv, "always"sv, "never"sv }, js_string(vm, "auto"sv)));
 
     VERIFY(option.is_string());
     return option.as_string().string();
