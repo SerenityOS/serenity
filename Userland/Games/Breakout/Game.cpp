@@ -153,10 +153,12 @@ void Game::keyup_event(GUI::KeyEvent& event)
         return;
     switch (event.key()) {
     case Key_A:
+        [[fallthrough]];
     case Key_Left:
         m_paddle.moving_left = false;
         break;
     case Key_D:
+        [[fallthrough]];
     case Key_Right:
         m_paddle.moving_right = false;
         break;
@@ -174,10 +176,12 @@ void Game::keydown_event(GUI::KeyEvent& event)
         GUI::Application::the()->quit();
         break;
     case Key_A:
+        [[fallthrough]];
     case Key_Left:
         m_paddle.moving_left = true;
         break;
     case Key_D:
+        [[fallthrough]];
     case Key_Right:
         m_paddle.moving_right = true;
         break;
