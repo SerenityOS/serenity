@@ -132,7 +132,7 @@ ThrowCompletionOr<FunctionObject*> species_constructor(GlobalObject& global_obje
 }
 
 // 7.3.24 GetFunctionRealm ( obj ), https://tc39.es/ecma262/#sec-getfunctionrealm
-Realm* get_function_realm(GlobalObject& global_object, FunctionObject const& function)
+ThrowCompletionOr<Realm*> get_function_realm(GlobalObject& global_object, FunctionObject const& function)
 {
     auto& vm = global_object.vm();
 
@@ -160,10 +160,8 @@ Realm* get_function_realm(GlobalObject& global_object, FunctionObject const& fun
         auto& proxy = static_cast<ProxyObject const&>(function);
 
         // a. If obj.[[ProxyHandler]] is null, throw a TypeError exception.
-        if (proxy.is_revoked()) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::ProxyRevoked);
-            return nullptr;
-        }
+        if (proxy.is_revoked())
+            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
 
         // b. Let proxyTarget be obj.[[ProxyTarget]].
         auto& proxy_target = proxy.target();
@@ -340,9 +338,7 @@ Object* get_prototype_from_constructor(GlobalObject& global_object, FunctionObje
     if (vm.exception())
         return nullptr;
     if (!prototype.is_object()) {
-        auto* realm = get_function_realm(global_object, constructor);
-        if (vm.exception())
-            return nullptr;
+        auto* realm = TRY_OR_DISCARD(get_function_realm(global_object, constructor));
         prototype = (realm->global_object().*intrinsic_default_prototype)();
     }
     return &prototype.as_object();
