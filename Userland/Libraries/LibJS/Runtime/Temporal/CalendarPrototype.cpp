@@ -136,7 +136,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year_month_from_fields)
         return {};
 
     // 7. Return ? CreateTemporalYearMonth(result.[[Year]], result.[[Month]], calendar, result.[[ReferenceISODay]]).
-    return create_temporal_year_month(global_object, result->year, result->month, *calendar, result->reference_iso_day);
+    return TRY_OR_DISCARD(create_temporal_year_month(global_object, result->year, result->month, *calendar, result->reference_iso_day));
 }
 
 // 12.4.6 Temporal.Calendar.prototype.monthDayFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.monthdayfromfields

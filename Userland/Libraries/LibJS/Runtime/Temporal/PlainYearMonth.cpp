@@ -31,7 +31,7 @@ void PlainYearMonth::visit_edges(Visitor& visitor)
 }
 
 // 9.5.1 ToTemporalYearMonth ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalyearmonth
-PlainYearMonth* to_temporal_year_month(GlobalObject& global_object, Value item, Object* options)
+ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_object, Value item, Object* options)
 {
     auto& vm = global_object.vm();
 
@@ -53,18 +53,18 @@ PlainYearMonth* to_temporal_year_month(GlobalObject& global_object, Value item, 
 
         // b. Let calendar be ? GetTemporalCalendarWithISODefault(item).
         auto* calendar = get_temporal_calendar_with_iso_default(global_object, item_object);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // c. Let fieldNames be ? CalendarFields(calendar, « "month", "monthCode", "year" »).
         auto field_names = calendar_fields(global_object, *calendar, { "month"sv, "monthCode"sv, "year"sv });
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // d. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
         auto* fields = prepare_temporal_fields(global_object, item_object, field_names, {});
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // e. Return ? YearMonthFromFields(calendar, fields, options).
         return year_month_from_fields(global_object, *calendar, *fields, options);
@@ -72,28 +72,26 @@ PlainYearMonth* to_temporal_year_month(GlobalObject& global_object, Value item, 
 
     // 4. Perform ? ToTemporalOverflow(options).
     (void)to_temporal_overflow(global_object, *options);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 5. Let string be ? ToString(item).
     auto string = item.to_string(global_object);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 6. Let result be ? ParseTemporalYearMonthString(string).
     auto result = parse_temporal_year_month_string(global_object, string);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 7. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
     auto* calendar = to_temporal_calendar_with_iso_default(global_object, result->calendar.has_value() ? js_string(vm, *result->calendar) : js_undefined());
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 8. Set result to ? CreateTemporalYearMonth(result.[[Year]], result.[[Month]], calendar, result.[[Day]]).
-    auto* creation_result = create_temporal_year_month(global_object, result->year, result->month, *calendar, result->day);
-    if (vm.exception())
-        return {};
+    auto* creation_result = TRY(create_temporal_year_month(global_object, result->year, result->month, *calendar, result->day));
 
     // 9. Let canonicalYearMonthOptions be ! OrdinaryObjectCreate(null).
     auto* canonical_year_month_options = Object::create(global_object, nullptr);
@@ -103,7 +101,7 @@ PlainYearMonth* to_temporal_year_month(GlobalObject& global_object, Value item, 
 }
 
 // 9.5.2 RegulateISOYearMonth ( year, month, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulateisoyearmonth
-Optional<ISOYearMonth> regulate_iso_year_month(GlobalObject& global_object, double year, double month, StringView overflow)
+ThrowCompletionOr<ISOYearMonth> regulate_iso_year_month(GlobalObject& global_object, double year, double month, StringView overflow)
 {
     auto& vm = global_object.vm();
 
@@ -119,10 +117,8 @@ Optional<ISOYearMonth> regulate_iso_year_month(GlobalObject& global_object, doub
         // This does not change the exposed behavior as the subsequent call to CreateTemporalYearMonth will check that its value is a valid ISO
         // values (for years: -273975 - 273975) which is a subset of this check.
         // If RegulateISOYearMonth is ever used outside ISOYearMonthFromFields, this may need to be changed.
-        if (!AK::is_within_range<i32>(year)) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
-            return {};
-        }
+        if (!AK::is_within_range<i32>(year))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
 
         // a. Return ! ConstrainISOYearMonth(year, month).
         return constrain_iso_year_month(year, month);
@@ -133,16 +129,12 @@ Optional<ISOYearMonth> regulate_iso_year_month(GlobalObject& global_object, doub
         // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
         // This does not change the exposed behavior as the call to IsValidISOMonth and subsequent call to CreateTemporalDateTime will check
         // that these values are valid ISO values (for years: -273975 - 273975, for months: 1 - 12) all of which are subsets of this check.
-        if (!AK::is_within_range<i32>(year) || !AK::is_within_range<u8>(month)) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
-            return {};
-        }
+        if (!AK::is_within_range<i32>(year) || !AK::is_within_range<u8>(month))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
 
         // a. If ! IsValidISOMonth(month) is false, throw a RangeError exception.
-        if (!is_valid_iso_month(month)) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
-            return {};
-        }
+        if (!is_valid_iso_month(month))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
 
         // b. Return the Record { [[Year]]: year, [[Month]]: month }.
         return ISOYearMonth { .year = static_cast<i32>(year), .month = static_cast<u8>(month), .reference_iso_day = 0 };
@@ -223,7 +215,7 @@ ISOYearMonth constrain_iso_year_month(double year, double month)
 }
 
 // 9.5.7 CreateTemporalYearMonth ( isoYear, isoMonth, calendar, referenceISODay [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalyearmonth
-PlainYearMonth* create_temporal_year_month(GlobalObject& global_object, i32 iso_year, u8 iso_month, Object& calendar, u8 reference_iso_day, FunctionObject const* new_target)
+ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(GlobalObject& global_object, i32 iso_year, u8 iso_month, Object& calendar, u8 reference_iso_day, FunctionObject const* new_target)
 {
     auto& vm = global_object.vm();
 
@@ -231,16 +223,12 @@ PlainYearMonth* create_temporal_year_month(GlobalObject& global_object, i32 iso_
     // 2. Assert: Type(calendar) is Object.
 
     // 3. If ! IsValidISODate(isoYear, isoMonth, referenceISODay) is false, throw a RangeError exception.
-    if (!is_valid_iso_date(iso_year, iso_month, reference_iso_day)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
-        return {};
-    }
+    if (!is_valid_iso_date(iso_year, iso_month, reference_iso_day))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
 
     // 4. If ! ISOYearMonthWithinLimits(isoYear, isoMonth) is false, throw a RangeError exception.
-    if (!iso_year_month_within_limits(iso_year, iso_month)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
-        return {};
-    }
+    if (!iso_year_month_within_limits(iso_year, iso_month))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
 
     // 5. If newTarget is not present, set it to %Temporal.PlainYearMonth%.
     if (!new_target)
@@ -251,14 +239,14 @@ PlainYearMonth* create_temporal_year_month(GlobalObject& global_object, i32 iso_
     // 8. Set object.[[ISOMonth]] to isoMonth.
     // 9. Set object.[[Calendar]] to calendar.
     // 10. Set object.[[ISODay]] to referenceISODay.
-    auto* object = TRY_OR_DISCARD(ordinary_create_from_constructor<PlainYearMonth>(global_object, *new_target, &GlobalObject::temporal_plain_year_month_prototype, iso_year, iso_month, reference_iso_day, calendar));
+    auto* object = TRY(ordinary_create_from_constructor<PlainYearMonth>(global_object, *new_target, &GlobalObject::temporal_plain_year_month_prototype, iso_year, iso_month, reference_iso_day, calendar));
 
     // 11. Return object.
     return object;
 }
 
 // 9.5.8 TemporalYearMonthToString ( yearMonth, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporalyearmonthtostring
-Optional<String> temporal_year_month_to_string(GlobalObject& global_object, PlainYearMonth& year_month, StringView show_calendar)
+ThrowCompletionOr<String> temporal_year_month_to_string(GlobalObject& global_object, PlainYearMonth& year_month, StringView show_calendar)
 {
     auto& vm = global_object.vm();
 
@@ -272,8 +260,8 @@ Optional<String> temporal_year_month_to_string(GlobalObject& global_object, Plai
 
     // 6. Let calendarID be ? ToString(yearMonth.[[Calendar]]).
     auto calendar_id = Value(&year_month.calendar()).to_string(global_object);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 7. If calendarID is not "iso8601", then
     if (calendar_id != "iso8601") {

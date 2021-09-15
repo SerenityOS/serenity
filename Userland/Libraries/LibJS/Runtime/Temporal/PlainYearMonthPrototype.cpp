@@ -215,9 +215,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::equals)
         return {};
 
     // 3. Set other to ? ToTemporalYearMonth(other).
-    auto* other = to_temporal_year_month(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* other = TRY_OR_DISCARD(to_temporal_year_month(global_object, vm.argument(0)));
 
     // 4. If yearMonth.[[ISOYear]] ≠ other.[[ISOYear]], return false.
     if (year_month->iso_year() != other->iso_year())
@@ -255,11 +253,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_string)
         return {};
 
     // 5. Return ? TemporalYearMonthToString(yearMonth, showCalendar).
-    auto string = temporal_year_month_to_string(global_object, *year_month, *show_calendar);
-    if (vm.exception())
-        return {};
-
-    return js_string(vm, *string);
+    return js_string(vm, TRY_OR_DISCARD(temporal_year_month_to_string(global_object, *year_month, *show_calendar)));
 }
 
 // 9.3.18 Temporal.PlainYearMonth.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tolocalestring
@@ -273,11 +267,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_locale_string)
         return {};
 
     // 3. Return ? TemporalYearMonthToString(yearMonth, "auto").
-    auto string = temporal_year_month_to_string(global_object, *year_month, "auto"sv);
-    if (vm.exception())
-        return {};
-
-    return js_string(vm, *string);
+    return js_string(vm, TRY_OR_DISCARD(temporal_year_month_to_string(global_object, *year_month, "auto"sv)));
 }
 
 // 9.3.19 Temporal.PlainYearMonth.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tojson
@@ -290,11 +280,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_json)
         return {};
 
     // 3. Return ? TemporalYearMonthToString(yearMonth, "auto").
-    auto string = temporal_year_month_to_string(global_object, *year_month, "auto"sv);
-    if (vm.exception())
-        return {};
-
-    return js_string(vm, *string);
+    return js_string(vm, TRY_OR_DISCARD(temporal_year_month_to_string(global_object, *year_month, "auto"sv)));
 }
 
 // 9.3.20 Temporal.PlainYearMonth.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.valueof
