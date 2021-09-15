@@ -19,6 +19,8 @@ public:
     int frame_thickness() const { return m_thickness; }
     void set_frame_thickness(int thickness);
 
+    virtual Margins content_margins() const override { return { frame_thickness() }; }
+
     Gfx::FrameShadow frame_shadow() const { return m_shadow; }
     void set_frame_shadow(Gfx::FrameShadow shadow) { m_shadow = shadow; }
 
