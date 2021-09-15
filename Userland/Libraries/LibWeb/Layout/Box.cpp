@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,6 +13,7 @@
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/Box.h>
+#include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Painting/BorderPainting.h>
 
@@ -315,6 +317,29 @@ Box::BorderRadiusData Box::normalized_border_radius_data()
     bottom_left_radius = (int)(bottom_left_radius * f);
 
     return { (int)top_left_radius, (int)top_right_radius, (int)bottom_right_radius, (int)bottom_left_radius };
+}
+
+// https://www.w3.org/TR/css-display-3/#out-of-flow
+bool Box::is_out_of_flow(FormattingContext const& formatting_context) const
+{
+    // A box is out of flow if either:
+
+    // 1. It is floated (which requires that floating is not inhibited).
+    if (!formatting_context.inhibits_floating() && computed_values().float_() != CSS::Float::None)
+        return true;
+
+    // 2. It is "absolutely positioned".
+    switch (computed_values().position()) {
+    case CSS::Position::Absolute:
+    case CSS::Position::Fixed:
+        return true;
+    case CSS::Position::Static:
+    case CSS::Position::Relative:
+    case CSS::Position::Sticky:
+        break;
+    }
+
+    return false;
 }
 
 HitTestResult Box::hit_test(const Gfx::IntPoint& position, HitTestType type) const
