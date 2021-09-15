@@ -720,7 +720,7 @@ KResultOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executa
 
     if (!interpreter_path.is_empty()) {
         dbgln_if(EXEC_DEBUG, "exec({}): Using program interpreter {}", path, interpreter_path);
-        auto interpreter_description = TRY(VirtualFileSystem::the().open(interpreter_path, O_EXEC, 0, current_directory()));
+        auto interpreter_description = TRY(VirtualFileSystem::the().open_executable_without_veil(interpreter_path, current_directory()));
         auto interp_metadata = interpreter_description->metadata();
 
         VERIFY(interpreter_description->inode());

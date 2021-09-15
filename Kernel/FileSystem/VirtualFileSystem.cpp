@@ -204,6 +204,14 @@ KResultOr<InodeMetadata> VirtualFileSystem::lookup_metadata(StringView path, Cus
     return custody->inode().metadata();
 }
 
+KResultOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open_executable_without_veil(StringView path, Custody& base)
+{
+    const int options = O_EXEC;
+
+    auto custody = TRY(resolve_path_without_veil(path, base, nullptr, options));
+    return open(*custody, options);
+}
+
 KResultOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> owner)
 {
     if ((options & O_CREAT) && (options & O_DIRECTORY))
@@ -223,6 +231,11 @@ KResultOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(StringView
         return EEXIST;
 
     auto& custody = *custody_or_error.value();
+    return open(custody, options);
+}
+
+KResultOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(Custody& custody, int options)
+{
     auto& inode = custody.inode();
     auto metadata = inode.metadata();
 
@@ -764,8 +777,6 @@ KResult VirtualFileSystem::validate_path_against_process_veil(Custody const& cus
 KResult VirtualFileSystem::validate_path_against_process_veil(StringView path, int options)
 {
     if (Process::current().veil_state() == VeilState::None)
-        return KSuccess;
-    if (options == O_EXEC && path == "/usr/lib/Loader.so")
         return KSuccess;
 
     VERIFY(path.starts_with('/'));

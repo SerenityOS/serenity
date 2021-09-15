@@ -48,6 +48,7 @@ public:
     KResult remount(Custody& mount_point, int new_flags);
     KResult unmount(Inode& guest_inode);
 
+    KResultOr<NonnullRefPtr<OpenFileDescription>> open(Custody& custody, int options);
     KResultOr<NonnullRefPtr<OpenFileDescription>> open(StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
     KResultOr<NonnullRefPtr<OpenFileDescription>> create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
     KResult mkdir(StringView path, mode_t mode, Custody& base);
@@ -65,6 +66,7 @@ public:
     KResult rename(StringView oldpath, StringView newpath, Custody& base);
     KResult mknod(StringView path, mode_t, dev_t, Custody& base);
     KResultOr<NonnullRefPtr<Custody>> open_directory(StringView path, Custody& base);
+    KResultOr<NonnullRefPtr<OpenFileDescription>> open_executable_without_veil(StringView path, Custody& base);
 
     void for_each_mount(Function<void(const Mount&)>) const;
 
