@@ -329,7 +329,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (computed_values.opacity() == 0)
         m_visible = false;
 
-    if (auto width = specified_style.property(CSS::PropertyID::Width); width.has_value())
+    if (auto width = specified_style.property(CSS::PropertyID::Width); width.has_value() && !width.value()->is_auto())
         m_has_definite_width = true;
     computed_values.set_width(specified_style.length_or_fallback(CSS::PropertyID::Width, {}));
     computed_values.set_min_width(specified_style.length_or_fallback(CSS::PropertyID::MinWidth, {}));
