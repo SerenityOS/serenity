@@ -348,18 +348,16 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_string)
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(0)));
 
     // 4. Let precision be ? ToSecondsStringPrecision(options).
-    auto precision = to_seconds_string_precision(global_object, *options);
-    if (vm.exception())
-        return {};
+    auto precision = TRY_OR_DISCARD(to_seconds_string_precision(global_object, *options));
 
     // 5. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY_OR_DISCARD(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
     // 6. Let roundResult be ! RoundTime(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], precision.[[Increment]], precision.[[Unit]], roundingMode).
-    auto round_result = round_time(global_object, temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), precision->increment, precision->unit, rounding_mode);
+    auto round_result = round_time(global_object, temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), precision.increment, precision.unit, rounding_mode);
 
     // 7. Return ! TemporalTimeToString(roundResult.[[Hour]], roundResult.[[Minute]], roundResult.[[Second]], roundResult.[[Millisecond]], roundResult.[[Microsecond]], roundResult.[[Nanosecond]], precision.[[Precision]]).
-    auto string = temporal_time_to_string(round_result.hour, round_result.minute, round_result.second, round_result.millisecond, round_result.microsecond, round_result.nanosecond, precision->precision);
+    auto string = temporal_time_to_string(round_result.hour, round_result.minute, round_result.second, round_result.millisecond, round_result.microsecond, round_result.nanosecond, precision.precision);
     return js_string(vm, move(string));
 }
 
