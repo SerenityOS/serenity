@@ -71,12 +71,19 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+include(GNUInstallDirs) # make sure to include before we mess w/RPATH
+
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 # See slide 100 of the following ppt :^)
 # https://crascit.com/wp-content/uploads/2019/09/Deep-CMake-For-Library-Authors-Craig-Scott-CppCon-2019.pdf
-if (NOT APPLE)
-    set(CMAKE_INSTALL_RPATH $ORIGIN:$ORIGIN/../lib)
+if (APPLE)
+    # FIXME: This doesn't work for the full BUILD_LAGOM=ON build, see #10055
+    set(CMAKE_MACOSX_RPATH TRUE)
+    set(CMAKE_INSTALL_NAME_DIR "@rpath")
+    set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+else()
+    set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 endif()
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
@@ -129,7 +136,6 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # install rules, think about moving to its own helper cmake file
 include(CMakePackageConfigHelpers)
-include(GNUInstallDirs)
 
 # find_package(<package>) call for consumers to find this project
 set(package Lagom)
