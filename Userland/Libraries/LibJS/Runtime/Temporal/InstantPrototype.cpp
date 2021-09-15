@@ -553,7 +553,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
         return {};
 
     // 10. Return ? CreateTemporalZonedDateTime(instant.[[Nanoseconds]], timeZone, calendar).
-    return create_temporal_zoned_date_time(global_object, instant->nanoseconds(), *time_zone, *calendar);
+    return TRY_OR_DISCARD(create_temporal_zoned_date_time(global_object, instant->nanoseconds(), *time_zone, *calendar));
 }
 
 // 8.3.18 Temporal.Instant.prototype.toZonedDateTimeISO ( item ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tozoneddatetimeiso
@@ -590,7 +590,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time_iso)
     auto* calendar = get_iso8601_calendar(global_object);
 
     // 6. Return ? CreateTemporalZonedDateTime(instant.[[Nanoseconds]], timeZone, calendar).
-    return create_temporal_zoned_date_time(global_object, instant->nanoseconds(), *time_zone, *calendar);
+    return TRY_OR_DISCARD(create_temporal_zoned_date_time(global_object, instant->nanoseconds(), *time_zone, *calendar));
 }
 
 }

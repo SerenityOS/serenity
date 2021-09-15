@@ -254,7 +254,7 @@ ZonedDateTime* system_zoned_date_time(GlobalObject& global_object, Value tempora
     auto* ns = system_utc_epoch_nanoseconds(global_object);
 
     // 5. Return ? CreateTemporalZonedDateTime(ns, timeZone, calendar).
-    return create_temporal_zoned_date_time(global_object, *ns, *time_zone, *calendar);
+    return TRY_OR_DISCARD(create_temporal_zoned_date_time(global_object, *ns, *time_zone, *calendar));
 }
 
 }
