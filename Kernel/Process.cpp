@@ -661,8 +661,14 @@ void Process::disowned_by_waiter(Process& process)
 
 void Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags flags, u8 signal)
 {
-    if (auto parent = Process::from_pid(ppid()))
-        parent->m_wait_blocker_set.unblock(*this, flags, signal);
+    RefPtr<Process> waiter_process;
+    if (auto* my_tracer = tracer())
+        waiter_process = Process::from_pid(my_tracer->tracer_pid());
+    else
+        waiter_process = Process::from_pid(ppid());
+
+    if (waiter_process)
+        waiter_process->m_wait_blocker_set.unblock(*this, flags, signal);
 }
 
 void Process::die()
