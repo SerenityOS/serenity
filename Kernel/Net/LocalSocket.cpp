@@ -466,7 +466,7 @@ NonnullRefPtrVector<OpenFileDescription>& LocalSocket::sendfd_queue_for(const Op
     VERIFY_NOT_REACHED();
 }
 
-KResult LocalSocket::sendfd(const OpenFileDescription& socket_description, OpenFileDescription& passing_description)
+KResult LocalSocket::sendfd(OpenFileDescription const& socket_description, NonnullRefPtr<OpenFileDescription> passing_description)
 {
     MutexLocker locker(mutex());
     auto role = this->role(socket_description);

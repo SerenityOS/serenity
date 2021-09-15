@@ -23,9 +23,9 @@ KResultOr<FlatPtr> Process::sys$sendfd(int sockfd, int fd)
     if (!socket.is_connected())
         return ENOTCONN;
 
-    auto passing_descriptor = TRY(fds().open_file_description(fd));
+    auto passing_description = TRY(fds().open_file_description(fd));
     auto& local_socket = static_cast<LocalSocket&>(socket);
-    return local_socket.sendfd(*socket_description, *passing_descriptor);
+    return local_socket.sendfd(*socket_description, move(passing_description));
 }
 
 KResultOr<FlatPtr> Process::sys$recvfd(int sockfd, int options)
