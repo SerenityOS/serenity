@@ -96,9 +96,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::equals)
         return {};
 
     // 3. Set other to ? ToTemporalMonthDay(other).
-    auto* other = to_temporal_month_day(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* other = TRY_OR_DISCARD(to_temporal_month_day(global_object, vm.argument(0)));
 
     // 4. If monthDay.[[ISOMonth]] ≠ other.[[ISOMonth]], return false.
     if (month_day->iso_month() != other->iso_month())
@@ -136,11 +134,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_string)
         return {};
 
     // 5. Return ? TemporalMonthDayToString(monthDay, showCalendar).
-    auto string = temporal_month_day_to_string(global_object, *month_day, *show_calendar);
-    if (vm.exception())
-        return {};
-
-    return js_string(vm, *string);
+    return js_string(vm, TRY_OR_DISCARD(temporal_month_day_to_string(global_object, *month_day, *show_calendar)));
 }
 
 // 10.3.9 Temporal.PlainMonthDay.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.tolocalestring
@@ -154,11 +148,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_locale_string)
         return {};
 
     // 3. Return ? TemporalMonthDayToString(monthDay, "auto").
-    auto string = temporal_month_day_to_string(global_object, *month_day, "auto"sv);
-    if (vm.exception())
-        return {};
-
-    return js_string(vm, *string);
+    return js_string(vm, TRY_OR_DISCARD(temporal_month_day_to_string(global_object, *month_day, "auto"sv)));
 }
 
 // 10.3.10 Temporal.PlainMonthDay.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.tojson
@@ -171,11 +161,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_json)
         return {};
 
     // 3. Return ? TemporalMonthDayToString(monthDay, "auto").
-    auto string = temporal_month_day_to_string(global_object, *month_day, "auto"sv);
-    if (vm.exception())
-        return {};
-
-    return js_string(vm, *string);
+    return js_string(vm, TRY_OR_DISCARD(temporal_month_day_to_string(global_object, *month_day, "auto"sv)));
 }
 
 // 10.3.11 Temporal.PlainMonthDay.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.valueof

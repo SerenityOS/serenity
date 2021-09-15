@@ -90,7 +90,7 @@ Value PlainMonthDayConstructor::construct(FunctionObject& new_target)
     }
 
     // 7. Return ? CreateTemporalMonthDay(m, d, calendar, ref, NewTarget).
-    return create_temporal_month_day(global_object, m, d, *calendar, ref, &new_target);
+    return TRY_OR_DISCARD(create_temporal_month_day(global_object, m, d, *calendar, ref, &new_target));
 }
 
 // 10.2.2 Temporal.PlainMonthDay.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.from
@@ -113,11 +113,11 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayConstructor::from)
         auto& plain_month_day_object = static_cast<PlainMonthDay&>(item.as_object());
 
         // b. Return ? CreateTemporalMonthDay(item.[[ISOMonth]], item.[[ISODay]], item.[[Calendar]], item.[[ISOYear]]).
-        return create_temporal_month_day(global_object, plain_month_day_object.iso_month(), plain_month_day_object.iso_day(), plain_month_day_object.calendar(), plain_month_day_object.iso_year());
+        return TRY_OR_DISCARD(create_temporal_month_day(global_object, plain_month_day_object.iso_month(), plain_month_day_object.iso_day(), plain_month_day_object.calendar(), plain_month_day_object.iso_year()));
     }
 
     // 3. Return ? ToTemporalMonthDay(item, options).
-    return to_temporal_month_day(global_object, item, options);
+    return TRY_OR_DISCARD(to_temporal_month_day(global_object, item, options));
 }
 
 }
