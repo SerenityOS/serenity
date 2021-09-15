@@ -201,12 +201,10 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
     auto default_largest_unit = larger_of_two_temporal_units("second"sv, *smallest_unit);
 
     // 7. Let largestUnit be ? ToLargestTemporalUnit(options, « "year", "month", "week", "day" », "auto", defaultLargestUnit).
-    auto largest_unit = to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit));
-    if (vm.exception())
-        return {};
+    auto largest_unit = TRY_OR_DISCARD(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit)));
 
     // 8. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit);
+    validate_temporal_unit_range(global_object, largest_unit, *smallest_unit);
     if (vm.exception())
         return {};
 
@@ -223,7 +221,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
     auto rounded_ns = difference_instant(global_object, instant->nanoseconds(), other->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
 
     // 13. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
-    auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, *largest_unit);
+    auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, largest_unit);
 
     // 14. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
     return create_temporal_duration(global_object, 0, 0, 0, 0, result->hours, result->minutes, result->seconds, result->milliseconds, result->microseconds, result->nanoseconds);
@@ -255,12 +253,10 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
     auto default_largest_unit = larger_of_two_temporal_units("second"sv, *smallest_unit);
 
     // 7. Let largestUnit be ? ToLargestTemporalUnit(options, « "year", "month", "week", "day" », "auto", defaultLargestUnit).
-    auto largest_unit = to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit));
-    if (vm.exception())
-        return {};
+    auto largest_unit = TRY_OR_DISCARD(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit)));
 
     // 8. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit);
+    validate_temporal_unit_range(global_object, largest_unit, *smallest_unit);
     if (vm.exception())
         return {};
 
@@ -277,7 +273,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
     auto rounded_ns = difference_instant(global_object, other->nanoseconds(), instant->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
 
     // 13. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
-    auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, *largest_unit);
+    auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, largest_unit);
 
     // 14. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
     return create_temporal_duration(global_object, 0, 0, 0, 0, result->hours, result->minutes, result->seconds, result->milliseconds, result->microseconds, result->nanoseconds);
