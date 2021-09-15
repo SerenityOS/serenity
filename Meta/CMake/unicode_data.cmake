@@ -1,4 +1,4 @@
-set(UCD_VERSION 13.0.0)
+set(UCD_VERSION 14.0.0)
 set(CLDR_VERSION 39.0.0)
 
 set(UCD_PATH "${CMAKE_BINARY_DIR}/UCD" CACHE PATH "Download location for UCD files")
