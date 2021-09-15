@@ -291,9 +291,7 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObje
     auto& vm = global_object.vm();
 
     // Let smallestUnit be ? ToSmallestTemporalUnit(normalizedOptions, « "year", "month", "week", "day", "hour" », undefined).
-    auto smallest_unit = to_smallest_temporal_unit(global_object, normalized_options, { "year"sv, "month"sv, "week"sv, "day"sv, "hour"sv }, {});
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, normalized_options, { "year"sv, "month"sv, "week"sv, "day"sv, "hour"sv }, {}));
 
     // 2. If smallestUnit is "minute", then
     if (smallest_unit == "minute"sv) {
@@ -417,18 +415,18 @@ ThrowCompletionOr<String> to_largest_temporal_unit(GlobalObject& global_object, 
 }
 
 // 13.18 ToSmallestTemporalUnit ( normalizedOptions, disallowedUnits, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-tosmallesttemporalunit
-Optional<String> to_smallest_temporal_unit(GlobalObject& global_object, Object const& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback)
+ThrowCompletionOr<Optional<String>> to_smallest_temporal_unit(GlobalObject& global_object, Object const& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback)
 {
     auto& vm = global_object.vm();
 
     // 1. Assert: disallowedUnits does not contain fallback.
 
     // 2. Let smallestUnit be ? GetOption(normalizedOptions, "smallestUnit", « String », « "year", "years", "month", "months", "week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second", "seconds", "millisecond", "milliseconds", "microsecond", "microseconds", "nanosecond", "nanoseconds" », fallback).
-    auto smallest_unit_value = TRY_OR_DISCARD(get_option(global_object, normalized_options, vm.names.smallestUnit, { OptionType::String }, { "year"sv, "years"sv, "month"sv, "months"sv, "week"sv, "weeks"sv, "day"sv, "days"sv, "hour"sv, "hours"sv, "minute"sv, "minutes"sv, "second"sv, "seconds"sv, "millisecond"sv, "milliseconds"sv, "microsecond"sv, "microseconds"sv, "nanosecond"sv, "nanoseconds"sv }, fallback.has_value() ? js_string(vm, *fallback) : js_undefined()));
+    auto smallest_unit_value = TRY(get_option(global_object, normalized_options, vm.names.smallestUnit, { OptionType::String }, { "year"sv, "years"sv, "month"sv, "months"sv, "week"sv, "weeks"sv, "day"sv, "days"sv, "hour"sv, "hours"sv, "minute"sv, "minutes"sv, "second"sv, "seconds"sv, "millisecond"sv, "milliseconds"sv, "microsecond"sv, "microseconds"sv, "nanosecond"sv, "nanoseconds"sv }, fallback.has_value() ? js_string(vm, *fallback) : js_undefined()));
 
     // OPTIMIZATION: We skip the following string-only checks for the fallback to tidy up the code a bit
     if (smallest_unit_value.is_undefined())
-        return {};
+        return Optional<String> {};
     VERIFY(smallest_unit_value.is_string());
     auto smallest_unit = smallest_unit_value.as_string().string();
 
@@ -441,12 +439,11 @@ Optional<String> to_smallest_temporal_unit(GlobalObject& global_object, Object c
     // 4. If disallowedUnits contains smallestUnit, then
     if (disallowed_units.contains_slow(smallest_unit)) {
         // a. Throw a RangeError exception.
-        vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, smallest_unit, vm.names.smallestUnit.as_string());
-        return {};
+        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, smallest_unit, vm.names.smallestUnit.as_string());
     }
 
     // 5. Return smallestUnit.
-    return smallest_unit;
+    return { smallest_unit };
 }
 
 // 13.22 ValidateTemporalUnitRange ( largestUnit, smallestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-validatetemporalunitrange

@@ -193,9 +193,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », "nanosecond").
-    auto smallest_unit = to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv);
-    if (vm.exception())
-        return {};
+    auto smallest_unit = TRY_OR_DISCARD(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv));
 
     // 6. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("second", smallestUnit).
     auto default_largest_unit = larger_of_two_temporal_units("second"sv, *smallest_unit);
@@ -245,9 +243,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », "nanosecond").
-    auto smallest_unit = to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv);
-    if (vm.exception())
-        return {};
+    auto smallest_unit = TRY_OR_DISCARD(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv));
 
     // 6. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("second", smallestUnit).
     auto default_largest_unit = larger_of_two_temporal_units("second"sv, *smallest_unit);
@@ -299,9 +295,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(0)));
 
     // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », undefined).
-    auto smallest_unit_value = to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, {});
-    if (vm.exception())
-        return {};
+    auto smallest_unit_value = TRY_OR_DISCARD(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, {}));
 
     // 6. If smallestUnit is undefined, throw a RangeError exception.
     if (!smallest_unit_value.has_value()) {
