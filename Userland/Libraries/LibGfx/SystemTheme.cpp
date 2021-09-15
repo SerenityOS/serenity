@@ -77,12 +77,11 @@ Core::AnonymousBuffer load_system_theme(Core::ConfigFile const& file)
     ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
 #undef __ENUMERATE_COLOR_ROLE
 
-#define DO_METRIC(x) \
-    data->metric[(int)MetricRole::x] = get_metric(#x, (int)MetricRole::x)
-
-    DO_METRIC(TitleHeight);
-    DO_METRIC(TitleButtonWidth);
-    DO_METRIC(TitleButtonHeight);
+#undef __ENUMERATE_METRIC_ROLE
+#define __ENUMERATE_METRIC_ROLE(role) \
+    data->metric[(int)MetricRole::role] = get_metric(#role, (int)MetricRole::role);
+    ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
+#undef __ENUMERATE_METRIC_ROLE
 
 #define DO_PATH(x, allow_empty)                                                                                  \
     do {                                                                                                         \
