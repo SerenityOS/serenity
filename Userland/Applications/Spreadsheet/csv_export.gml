@@ -18,8 +18,7 @@
                     title: "Delimiter"
 
                     layout: @GUI::VerticalBoxLayout {
-                        // FIXME: This is working around the fact that group boxes don't allocate space for their title and border!
-                        margins: [20, 10, 10]
+                        margins: [10, 8, 8]
                     }
 
                     @GUI::RadioButton {
@@ -69,8 +68,7 @@
                     title: "Quote"
 
                     layout: @GUI::VerticalBoxLayout {
-                        // FIXME: This is working around the fact that group boxes don't allocate space for their title and border!
-                        margins: [20, 10, 10]
+                        margins: [10, 8, 8]
                     }
 
                     @GUI::RadioButton {
@@ -151,8 +149,7 @@
             fixed_width: 150
 
             layout: @GUI::VerticalBoxLayout {
-                // FIXME: This is working around the fact that group boxes don't allocate space for their title and border!
-                margins: [20, 10, 10]
+                margins: [10, 8, 8]
             }
 
             @GUI::TextEditor {
