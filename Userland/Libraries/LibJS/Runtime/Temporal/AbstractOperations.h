@@ -88,7 +88,7 @@ ThrowCompletionOr<MarkedValueList> iterable_to_list_of_type(GlobalObject&, Value
 ThrowCompletionOr<Object*> get_options_object(GlobalObject&, Value options);
 ThrowCompletionOr<Value> get_option(GlobalObject&, Object const& options, PropertyName const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback);
 template<typename NumberType>
-Optional<Variant<String, NumberType>> get_string_or_number_option(GlobalObject&, Object const& options, PropertyName const& property, Vector<StringView> const& string_values, NumberType minimum, NumberType maximum, Value fallback);
+ThrowCompletionOr<Variant<String, NumberType>> get_string_or_number_option(GlobalObject&, Object const& options, PropertyName const& property, Vector<StringView> const& string_values, NumberType minimum, NumberType maximum, Value fallback);
 Optional<String> to_temporal_overflow(GlobalObject&, Object const& normalized_options);
 Optional<String> to_temporal_rounding_mode(GlobalObject&, Object const& normalized_options, String const& fallback);
 Optional<String> to_show_calendar_option(GlobalObject&, Object const& normalized_options);
