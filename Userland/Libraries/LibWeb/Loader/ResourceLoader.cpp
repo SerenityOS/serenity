@@ -90,22 +90,29 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, LoadRequest&
     return resource;
 }
 
+static String sanitized_url_for_logging(AK::URL const& url)
+{
+    if (url.protocol() == "data"sv)
+        return String::formatted("[data URL, mime-type={}, size={}]", url.data_mime_type(), url.data_payload().length());
+    return url.to_string();
+}
+
 void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
 {
     auto& url = request.url();
     request.start_timer();
-    dbgln("ResourceLoader: Starting load of: \"{}\"", url);
+    dbgln("ResourceLoader: Starting load of: \"{}\"", sanitized_url_for_logging(url));
 
     const auto log_success = [](const auto& request) {
         auto& url = request.url();
         auto load_time_ms = request.load_time().to_milliseconds();
-        dbgln("ResourceLoader: Finished load of: \"{}\", Duration: {}ms", url, load_time_ms);
+        dbgln("ResourceLoader: Finished load of: \"{}\", Duration: {}ms", sanitized_url_for_logging(url), load_time_ms);
     };
 
     const auto log_failure = [](const auto& request, const auto error_message) {
         auto& url = request.url();
         auto load_time_ms = request.load_time().to_milliseconds();
-        dbgln("ResourceLoader: Failed load of: \"{}\", \033[32;1mError: {}\033[0m, Duration: {}ms", url, error_message, load_time_ms);
+        dbgln("ResourceLoader: Failed load of: \"{}\", \033[32;1mError: {}\033[0m, Duration: {}ms", sanitized_url_for_logging(url), error_message, load_time_ms);
     };
 
     if (is_port_blocked(url.port_or_default())) {
