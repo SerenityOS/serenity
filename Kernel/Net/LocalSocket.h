@@ -26,7 +26,7 @@ public:
     static KResultOr<SocketPair> try_create_connected_pair(int type);
     virtual ~LocalSocket() override;
 
-    KResult sendfd(const OpenFileDescription& socket_description, OpenFileDescription& passing_description);
+    KResult sendfd(OpenFileDescription const& socket_description, NonnullRefPtr<OpenFileDescription> passing_description);
     KResultOr<NonnullRefPtr<OpenFileDescription>> recvfd(const OpenFileDescription& socket_description);
 
     static void for_each(Function<void(const LocalSocket&)>);
