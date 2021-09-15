@@ -208,7 +208,13 @@ void UTF8Decoder::process(const StringView& input, Function<void(u32)> on_code_p
 
 String UTF8Decoder::to_utf8(const StringView& input)
 {
-    return input;
+    // Discard the BOM
+    auto bomless_input = input;
+    if (auto bytes = input.bytes(); bytes.size() >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) {
+        bomless_input = input.substring_view(3);
+    }
+
+    return bomless_input;
 }
 
 void UTF16BEDecoder::process(const StringView& input, Function<void(u32)> on_code_point)
@@ -222,8 +228,14 @@ void UTF16BEDecoder::process(const StringView& input, Function<void(u32)> on_cod
 
 String UTF16BEDecoder::to_utf8(const StringView& input)
 {
-    StringBuilder builder(input.length() / 2);
-    process(input, [&builder](u32 c) { builder.append_code_point(c); });
+    // Discard the BOM
+    auto bomless_input = input;
+    if (auto bytes = input.bytes(); bytes.size() >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF) {
+        bomless_input = input.substring_view(2);
+    }
+
+    StringBuilder builder(bomless_input.length() / 2);
+    process(bomless_input, [&builder](u32 c) { builder.append_code_point(c); });
     return builder.to_string();
 }
 
