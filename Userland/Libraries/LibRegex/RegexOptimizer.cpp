@@ -104,6 +104,7 @@ typename Regex<Parser>::BasicBlockList Regex<Parser>::split_basic_blocks()
 static bool block_satisfies_atomic_rewrite_precondition(ByteCode const& bytecode, Block const& repeated_block, Block const& following_block)
 {
     Vector<Vector<CompareTypeAndValuePair>> repeated_values;
+    HashTable<size_t> active_capture_groups;
     MatchState state;
     for (state.instruction_position = repeated_block.start; state.instruction_position < repeated_block.end;) {
         auto& opcode = bytecode.get_opcode(state);
@@ -126,6 +127,12 @@ static bool block_satisfies_atomic_rewrite_precondition(ByteCode const& bytecode
         case OpCodeId::Restore:
         case OpCodeId::GoBack:
             return false;
+        case OpCodeId::SaveRightCaptureGroup:
+            active_capture_groups.set(static_cast<OpCode_SaveRightCaptureGroup const&>(opcode).id());
+            break;
+        case OpCodeId::SaveLeftCaptureGroup:
+            active_capture_groups.set(static_cast<OpCode_SaveLeftCaptureGroup const&>(opcode).id());
+            break;
         default:
             break;
         }
@@ -133,19 +140,29 @@ static bool block_satisfies_atomic_rewrite_precondition(ByteCode const& bytecode
         state.instruction_position += opcode.size();
     }
     dbgln_if(REGEX_DEBUG, "Found {} entries in reference", repeated_values.size());
+    dbgln_if(REGEX_DEBUG, "Found {} active capture groups", active_capture_groups.size());
 
     // Find the first compare in the following block, it must NOT match any of the values in `repeated_values'.
     for (state.instruction_position = following_block.start; state.instruction_position < following_block.end;) {
         auto& opcode = bytecode.get_opcode(state);
         switch (opcode.opcode_id()) {
+        // Note: These have to exist since we're effectively repeating the following block as well
+        case OpCodeId::SaveRightCaptureGroup:
+            active_capture_groups.set(static_cast<OpCode_SaveRightCaptureGroup const&>(opcode).id());
+            break;
+        case OpCodeId::SaveLeftCaptureGroup:
+            active_capture_groups.set(static_cast<OpCode_SaveLeftCaptureGroup const&>(opcode).id());
+            break;
         case OpCodeId::Compare: {
             // We found a compare, let's see what it has.
             auto compares = static_cast<OpCode_Compare const&>(opcode).flat_compares();
             if (compares.is_empty())
                 break;
 
-            // If either side can match _anything_, fail.
-            if (any_of(compares, [](auto& compare) { return compare.type == CharacterCompareType::AnyChar; }))
+            if (any_of(compares, [&](auto& compare) {
+                    return compare.type == CharacterCompareType::AnyChar
+                        || (compare.type == CharacterCompareType::Reference && active_capture_groups.contains(compare.value));
+                }))
                 return false;
 
             for (auto& repeated_value : repeated_values) {
