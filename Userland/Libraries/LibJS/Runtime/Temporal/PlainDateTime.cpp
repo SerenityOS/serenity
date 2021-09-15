@@ -104,9 +104,7 @@ Optional<ISODateTime> interpret_temporal_date_time_fields(GlobalObject& global_o
     auto& vm = global_object.vm();
 
     // 1. Let timeResult be ? ToTemporalTimeRecord(fields).
-    auto unregulated_time_result = to_temporal_time_record(global_object, fields);
-    if (vm.exception())
-        return {};
+    auto unregulated_time_result = TRY_OR_DISCARD(to_temporal_time_record(global_object, fields));
 
     // 2. Let temporalDate be ? DateFromFields(calendar, fields, options).
     auto* temporal_date = date_from_fields(global_object, calendar, fields, options);
@@ -119,21 +117,19 @@ Optional<ISODateTime> interpret_temporal_date_time_fields(GlobalObject& global_o
         return {};
 
     // 4. Let timeResult be ? RegulateTime(timeResult.[[Hour]], timeResult.[[Minute]], timeResult.[[Second]], timeResult.[[Millisecond]], timeResult.[[Microsecond]], timeResult.[[Nanosecond]], overflow).
-    auto time_result = regulate_time(global_object, unregulated_time_result->hour, unregulated_time_result->minute, unregulated_time_result->second, unregulated_time_result->millisecond, unregulated_time_result->microsecond, unregulated_time_result->nanosecond, *overflow);
-    if (vm.exception())
-        return {};
+    auto time_result = TRY_OR_DISCARD(regulate_time(global_object, unregulated_time_result.hour, unregulated_time_result.minute, unregulated_time_result.second, unregulated_time_result.millisecond, unregulated_time_result.microsecond, unregulated_time_result.nanosecond, *overflow));
 
     // 5. Return the Record { [[Year]]: temporalDate.[[ISOYear]], [[Month]]: temporalDate.[[ISOMonth]], [[Day]]: temporalDate.[[ISODay]], [[Hour]]: timeResult.[[Hour]], [[Minute]]: timeResult.[[Minute]], [[Second]]: timeResult.[[Second]], [[Millisecond]]: timeResult.[[Millisecond]], [[Microsecond]]: timeResult.[[Microsecond]], [[Nanosecond]]: timeResult.[[Nanosecond]] }.
     return ISODateTime {
         .year = temporal_date->iso_year(),
         .month = temporal_date->iso_month(),
         .day = temporal_date->iso_day(),
-        .hour = time_result->hour,
-        .minute = time_result->minute,
-        .second = time_result->second,
-        .millisecond = time_result->millisecond,
-        .microsecond = time_result->microsecond,
-        .nanosecond = time_result->nanosecond,
+        .hour = time_result.hour,
+        .minute = time_result.minute,
+        .second = time_result.second,
+        .millisecond = time_result.millisecond,
+        .microsecond = time_result.microsecond,
+        .nanosecond = time_result.nanosecond,
     };
 }
 

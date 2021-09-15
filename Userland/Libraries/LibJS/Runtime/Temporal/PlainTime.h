@@ -90,14 +90,14 @@ auto temporal_time_like_properties = [](VM& vm) {
     };
 };
 
-PlainTime* to_temporal_time(GlobalObject&, Value item, Optional<StringView> overflow = {});
-Optional<PartialUnregulatedTemporalTime> to_partial_time(GlobalObject&, Object& temporal_time_like);
-Optional<TemporalTime> regulate_time(GlobalObject&, double hour, double minute, double second, double millisecond, double microsecond, double nanosecond, StringView overflow);
+ThrowCompletionOr<PlainTime*> to_temporal_time(GlobalObject&, Value item, Optional<StringView> overflow = {});
+ThrowCompletionOr<PartialUnregulatedTemporalTime> to_partial_time(GlobalObject&, Object& temporal_time_like);
+ThrowCompletionOr<TemporalTime> regulate_time(GlobalObject&, double hour, double minute, double second, double millisecond, double microsecond, double nanosecond, StringView overflow);
 bool is_valid_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond);
 DaysAndTime balance_time(i64 hour, i64 minute, i64 second, i64 millisecond, i64 microsecond, i64 nanosecond);
 TemporalTime constrain_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond);
-PlainTime* create_temporal_time(GlobalObject&, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, FunctionObject const* new_target = nullptr);
-Optional<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject&, Object const& temporal_time_like);
+ThrowCompletionOr<PlainTime*> create_temporal_time(GlobalObject&, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, FunctionObject const* new_target = nullptr);
+ThrowCompletionOr<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject&, Object const& temporal_time_like);
 String temporal_time_to_string(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision);
 i8 compare_temporal_time(u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2);
 DaysAndTime round_time(GlobalObject&, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, u64 increment, StringView unit, StringView rounding_mode, Optional<double> day_length_ns = {});

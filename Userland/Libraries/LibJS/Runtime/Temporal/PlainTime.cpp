@@ -39,7 +39,7 @@ void PlainTime::visit_edges(Visitor& visitor)
 }
 
 // 4.5.2 ToTemporalTime ( item [ , overflow ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaltime
-PlainTime* to_temporal_time(GlobalObject& global_object, Value item, Optional<StringView> overflow)
+ThrowCompletionOr<PlainTime*> to_temporal_time(GlobalObject& global_object, Value item, Optional<StringView> overflow)
 {
     auto& vm = global_object.vm();
 
@@ -68,54 +68,49 @@ PlainTime* to_temporal_time(GlobalObject& global_object, Value item, Optional<St
             // i. Let instant be ! CreateTemporalInstant(item.[[Nanoseconds]]).
             auto* instant = create_temporal_instant(global_object, zoned_date_time.nanoseconds());
             // ii. Set plainDateTime to ? BuiltinTimeZoneGetPlainDateTimeFor(item.[[TimeZone]], instant, item.[[Calendar]]).
-            auto* plain_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &zoned_date_time.time_zone(), *instant, zoned_date_time.calendar()));
+            auto* plain_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &zoned_date_time.time_zone(), *instant, zoned_date_time.calendar()));
             // iii. Return ! CreateTemporalTime(plainDateTime.[[ISOHour]], plainDateTime.[[ISOMinute]], plainDateTime.[[ISOSecond]], plainDateTime.[[ISOMillisecond]], plainDateTime.[[ISOMicrosecond]], plainDateTime.[[ISONanosecond]]).
-            return create_temporal_time(global_object, plain_date_time->iso_hour(), plain_date_time->iso_minute(), plain_date_time->iso_second(), plain_date_time->iso_millisecond(), plain_date_time->iso_microsecond(), plain_date_time->iso_nanosecond());
+            return TRY(create_temporal_time(global_object, plain_date_time->iso_hour(), plain_date_time->iso_minute(), plain_date_time->iso_second(), plain_date_time->iso_millisecond(), plain_date_time->iso_microsecond(), plain_date_time->iso_nanosecond()));
         }
 
         // c. If item has an [[InitializedTemporalDateTime]] internal slot, then
         if (is<PlainDateTime>(item_object)) {
             auto& plain_date_time = static_cast<PlainDateTime&>(item_object);
             // i. Return ! CreateTemporalTime(item.[[ISOHour]], item.[[ISOMinute]], item.[[ISOSecond]], item.[[ISOMillisecond]], item.[[ISOMicrosecond]], item.[[ISONanosecond]]).
-            return create_temporal_time(global_object, plain_date_time.iso_hour(), plain_date_time.iso_minute(), plain_date_time.iso_second(), plain_date_time.iso_millisecond(), plain_date_time.iso_microsecond(), plain_date_time.iso_nanosecond());
+            return TRY(create_temporal_time(global_object, plain_date_time.iso_hour(), plain_date_time.iso_minute(), plain_date_time.iso_second(), plain_date_time.iso_millisecond(), plain_date_time.iso_microsecond(), plain_date_time.iso_nanosecond()));
         }
 
         // d. Let calendar be ? GetTemporalCalendarWithISODefault(item).
         auto* calendar = get_temporal_calendar_with_iso_default(global_object, item_object);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // e. If ? ToString(calendar) is not "iso8601", then
         auto calendar_identifier = Value(calendar).to_string(global_object);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
         if (calendar_identifier != "iso8601"sv) {
             // i. Throw a RangeError exception.
-            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, calendar_identifier);
-            return {};
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, calendar_identifier);
         }
 
         // f. Let result be ? ToTemporalTimeRecord(item).
-        auto unregulated_result = to_temporal_time_record(global_object, item_object);
-        if (vm.exception())
-            return {};
+        auto unregulated_result = TRY(to_temporal_time_record(global_object, item_object));
 
         // g. Set result to ? RegulateTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], overflow).
-        result = regulate_time(global_object, unregulated_result->hour, unregulated_result->minute, unregulated_result->second, unregulated_result->millisecond, unregulated_result->microsecond, unregulated_result->nanosecond, *overflow);
-        if (vm.exception())
-            return {};
+        result = TRY(regulate_time(global_object, unregulated_result.hour, unregulated_result.minute, unregulated_result.second, unregulated_result.millisecond, unregulated_result.microsecond, unregulated_result.nanosecond, *overflow));
     }
     // 4. Else,
     else {
         // a. Let string be ? ToString(item).
         auto string = item.to_string(global_object);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // b. Let result be ? ParseTemporalTimeString(string).
         result = parse_temporal_time_string(global_object, string);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // c. Assert: ! IsValidTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]) is true.
         VERIFY(is_valid_time(result->hour, result->minute, result->second, result->millisecond, result->microsecond, result->nanosecond));
@@ -123,17 +118,16 @@ PlainTime* to_temporal_time(GlobalObject& global_object, Value item, Optional<St
         // d. If result.[[Calendar]] is not one of undefined or "iso8601", then
         if (result->calendar.has_value() && *result->calendar != "iso8601"sv) {
             // i. Throw a RangeError exception.
-            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, *result->calendar);
-            return {};
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, *result->calendar);
         }
     }
 
     // 5. Return ? CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
-    return create_temporal_time(global_object, result->hour, result->minute, result->second, result->millisecond, result->microsecond, result->nanosecond);
+    return TRY(create_temporal_time(global_object, result->hour, result->minute, result->second, result->millisecond, result->microsecond, result->nanosecond));
 }
 
 // 4.5.3 ToPartialTime ( temporalTimeLike ), https://tc39.es/proposal-temporal/#sec-temporal-topartialtime
-Optional<PartialUnregulatedTemporalTime> to_partial_time(GlobalObject& global_object, Object& temporal_time_like)
+ThrowCompletionOr<PartialUnregulatedTemporalTime> to_partial_time(GlobalObject& global_object, Object& temporal_time_like)
 {
     auto& vm = global_object.vm();
 
@@ -151,8 +145,8 @@ Optional<PartialUnregulatedTemporalTime> to_partial_time(GlobalObject& global_ob
 
         // b. Let value be ? Get(temporalTimeLike, property).
         auto value = temporal_time_like.get(property);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // c. If value is not undefined, then
         if (!value.is_undefined()) {
@@ -161,8 +155,8 @@ Optional<PartialUnregulatedTemporalTime> to_partial_time(GlobalObject& global_ob
 
             // ii. Set value to ? ToIntegerThrowOnInfinity(value).
             auto value_number = to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite);
-            if (vm.exception())
-                return {};
+            if (auto* exception = vm.exception())
+                return throw_completion(exception->value());
 
             // iii. Set result's internal slot whose name is the Internal Slot value of the current row to value.
             result.*internal_slot = value_number;
@@ -172,8 +166,7 @@ Optional<PartialUnregulatedTemporalTime> to_partial_time(GlobalObject& global_ob
     // 5. If any is false, then
     if (!any) {
         // a. Throw a TypeError exception.
-        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalInvalidPlainTimeLikeObject);
-        return {};
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalInvalidPlainTimeLikeObject);
     }
 
     // 6. Return result.
@@ -181,7 +174,7 @@ Optional<PartialUnregulatedTemporalTime> to_partial_time(GlobalObject& global_ob
 }
 
 // 4.5.4 RegulateTime ( hour, minute, second, millisecond, microsecond, nanosecond, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulatetime
-Optional<TemporalTime> regulate_time(GlobalObject& global_object, double hour, double minute, double second, double millisecond, double microsecond, double nanosecond, StringView overflow)
+ThrowCompletionOr<TemporalTime> regulate_time(GlobalObject& global_object, double hour, double minute, double second, double millisecond, double microsecond, double nanosecond, StringView overflow)
 {
     auto& vm = global_object.vm();
 
@@ -201,10 +194,8 @@ Optional<TemporalTime> regulate_time(GlobalObject& global_object, double hour, d
     // 4. If overflow is "reject", then
     if (overflow == "reject"sv) {
         // a. If ! IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
-        if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond)) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
-            return {};
-        }
+        if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
 
         // b. Return the Record { [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
         return TemporalTime { .hour = static_cast<u8>(hour), .minute = static_cast<u8>(minute), .second = static_cast<u8>(second), .millisecond = static_cast<u16>(millisecond), .microsecond = static_cast<u16>(microsecond), .nanosecond = static_cast<u16>(nanosecond) };
@@ -339,17 +330,15 @@ TemporalTime constrain_time(double hour, double minute, double second, double mi
 }
 
 // 4.5.8 CreateTemporalTime ( hour, minute, second, millisecond, microsecond, nanosecond [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaltime
-PlainTime* create_temporal_time(GlobalObject& global_object, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, FunctionObject const* new_target)
+ThrowCompletionOr<PlainTime*> create_temporal_time(GlobalObject& global_object, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, FunctionObject const* new_target)
 {
     auto& vm = global_object.vm();
 
     // 1. Assert: hour, minute, second, millisecond, microsecond and nanosecond are integers.
 
     // 2. If ! IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
-    if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
-        return {};
-    }
+    if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
 
     // 3. If newTarget is not present, set it to %Temporal.PlainTime%.
     if (!new_target)
@@ -363,14 +352,14 @@ PlainTime* create_temporal_time(GlobalObject& global_object, u8 hour, u8 minute,
     // 9. Set object.[[ISOMicrosecond]] to microsecond.
     // 10. Set object.[[ISONanosecond]] to nanosecond.
     // 11. Set object.[[Calendar]] to ! GetISO8601Calendar().
-    auto* object = TRY_OR_DISCARD(ordinary_create_from_constructor<PlainTime>(global_object, *new_target, &GlobalObject::temporal_plain_time_prototype, hour, minute, second, millisecond, microsecond, nanosecond, *get_iso8601_calendar(global_object)));
+    auto* object = TRY(ordinary_create_from_constructor<PlainTime>(global_object, *new_target, &GlobalObject::temporal_plain_time_prototype, hour, minute, second, millisecond, microsecond, nanosecond, *get_iso8601_calendar(global_object)));
 
     // 12. Return object.
     return object;
 }
 
 // 4.5.9 ToTemporalTimeRecord ( temporalTimeLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimerecord
-Optional<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject& global_object, Object const& temporal_time_like)
+ThrowCompletionOr<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject& global_object, Object const& temporal_time_like)
 {
     auto& vm = global_object.vm();
 
@@ -385,20 +374,19 @@ Optional<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject& global_o
 
         // b. Let value be ? Get(temporalTimeLike, property).
         auto value = temporal_time_like.get(property);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // c. If value is undefined, then
         if (value.is_undefined()) {
             // i. Throw a TypeError exception.
-            vm.throw_exception<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, property);
-            return {};
+            return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, property);
         }
 
         // d. Set value to ? ToIntegerThrowOnInfinity(value).
         auto value_number = to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // e. Set result's internal slot whose name is the Internal Slot value of the current row to value.
         result.*internal_slot = value_number;
