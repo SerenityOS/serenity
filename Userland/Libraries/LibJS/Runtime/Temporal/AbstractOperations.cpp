@@ -380,7 +380,7 @@ static HashMap<StringView, StringView> plural_to_singular_units = {
 };
 
 // 13.17 ToLargestTemporalUnit ( normalizedOptions, disallowedUnits, fallback [ , autoValue ] ), https://tc39.es/proposal-temporal/#sec-temporal-tolargesttemporalunit
-Optional<String> to_largest_temporal_unit(GlobalObject& global_object, Object const& normalized_options, Vector<StringView> const& disallowed_units, String const& fallback, Optional<String> auto_value)
+ThrowCompletionOr<String> to_largest_temporal_unit(GlobalObject& global_object, Object const& normalized_options, Vector<StringView> const& disallowed_units, String const& fallback, Optional<String> auto_value)
 {
     auto& vm = global_object.vm();
 
@@ -391,13 +391,13 @@ Optional<String> to_largest_temporal_unit(GlobalObject& global_object, Object co
     // 4. Assert: autoValue is not present or disallowedUnits does not contain autoValue.
 
     // 5. Let largestUnit be ? GetOption(normalizedOptions, "largestUnit", « String », « "auto", "year", "years", "month", "months", "week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second", "seconds", "millisecond", "milliseconds", "microsecond", "microseconds", "nanosecond", "nanoseconds" », fallback).
-    auto largest_unit_value = TRY_OR_DISCARD(get_option(global_object, normalized_options, vm.names.largestUnit, { OptionType::String }, { "auto"sv, "year"sv, "years"sv, "month"sv, "months"sv, "week"sv, "weeks"sv, "day"sv, "days"sv, "hour"sv, "hours"sv, "minute"sv, "minutes"sv, "second"sv, "seconds"sv, "millisecond"sv, "milliseconds"sv, "microsecond"sv, "microseconds"sv, "nanosecond"sv, "nanoseconds"sv }, js_string(vm, fallback)));
+    auto largest_unit_value = TRY(get_option(global_object, normalized_options, vm.names.largestUnit, { OptionType::String }, { "auto"sv, "year"sv, "years"sv, "month"sv, "months"sv, "week"sv, "weeks"sv, "day"sv, "days"sv, "hour"sv, "hours"sv, "minute"sv, "minutes"sv, "second"sv, "seconds"sv, "millisecond"sv, "milliseconds"sv, "microsecond"sv, "microseconds"sv, "nanosecond"sv, "nanoseconds"sv }, js_string(vm, fallback)));
     auto largest_unit = largest_unit_value.as_string().string();
 
     // 6. If largestUnit is "auto" and autoValue is present, then
     if (largest_unit == "auto"sv && auto_value.has_value()) {
         // a. Return autoValue.
-        return auto_value;
+        return *auto_value;
     }
 
     // 7. If largestUnit is in the Plural column of Table 12, then
@@ -409,8 +409,7 @@ Optional<String> to_largest_temporal_unit(GlobalObject& global_object, Object co
     // 8. If disallowedUnits contains largestUnit, then
     if (disallowed_units.contains_slow(largest_unit)) {
         // a. Throw a RangeError exception.
-        vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, largest_unit, vm.names.largestUnit.as_string());
-        return {};
+        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, largest_unit, vm.names.largestUnit.as_string());
     }
 
     // 9. Return largestUnit.
