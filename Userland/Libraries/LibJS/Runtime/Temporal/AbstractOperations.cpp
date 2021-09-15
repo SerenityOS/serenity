@@ -9,6 +9,7 @@
 #include <AK/DateTimeLexer.h>
 #include <AK/TypeCasts.h>
 #include <AK/Variant.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
@@ -34,15 +35,15 @@ static Optional<OptionType> to_option_type(Value value)
 }
 
 // 13.1 IterableToListOfType ( items, elementTypes ), https://tc39.es/proposal-temporal/#sec-iterabletolistoftype
-MarkedValueList iterable_to_list_of_type(GlobalObject& global_object, Value items, Vector<OptionType> const& element_types)
+ThrowCompletionOr<MarkedValueList> iterable_to_list_of_type(GlobalObject& global_object, Value items, Vector<OptionType> const& element_types)
 {
     auto& vm = global_object.vm();
     auto& heap = global_object.heap();
 
     // 1. Let iteratorRecord be ? GetIterator(items, sync).
     auto iterator_record = get_iterator(global_object, items, IteratorHint::Sync);
-    if (vm.exception())
-        return MarkedValueList { heap };
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 2. Let values be a new empty List.
     MarkedValueList values(heap);
@@ -53,23 +54,23 @@ MarkedValueList iterable_to_list_of_type(GlobalObject& global_object, Value item
     while (next) {
         // a. Set next to ? IteratorStep(iteratorRecord).
         auto* iterator_result = iterator_step(global_object, *iterator_record);
-        if (vm.exception())
-            return MarkedValueList { heap };
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
         next = iterator_result;
 
         // b. If next is not false, then
         if (next) {
             // i. Let nextValue be ? IteratorValue(next).
             auto next_value = iterator_value(global_object, *iterator_result);
-            if (vm.exception())
-                return MarkedValueList { heap };
+            if (auto* exception = vm.exception())
+                return throw_completion(exception->value());
             // ii. If Type(nextValue) is not an element of elementTypes, then
             if (auto type = to_option_type(next_value); !type.has_value() || !element_types.contains_slow(*type)) {
                 // 1. Let completion be ThrowCompletion(a newly created TypeError object).
-                vm.throw_exception<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
+                auto completion = vm.throw_completion<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
                 // 2. Return ? IteratorClose(iteratorRecord, completion).
                 iterator_close(*iterator_record);
-                return MarkedValueList { heap };
+                return completion;
             }
             // iii. Append nextValue to the end of the List values.
             values.append(next_value);
@@ -77,7 +78,7 @@ MarkedValueList iterable_to_list_of_type(GlobalObject& global_object, Value item
     }
 
     // 5. Return values.
-    return values;
+    return { move(values) };
 }
 
 // 13.2 GetOptionsObject ( options ), https://tc39.es/proposal-temporal/#sec-getoptionsobject
