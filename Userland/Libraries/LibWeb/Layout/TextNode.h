@@ -63,6 +63,7 @@ private:
     void split_into_lines_by_rules(InlineFormattingContext&, LayoutMode, bool do_collapse, bool do_wrap_lines, bool do_respect_linebreaks);
     void paint_cursor_if_needed(PaintContext&, const LineBoxFragment&) const;
     void paint_text_decoration(Gfx::Painter&, LineBoxFragment const&) const;
+    virtual void paint(PaintContext&, PaintPhase) override;
 
     String m_text_for_rendering;
 };

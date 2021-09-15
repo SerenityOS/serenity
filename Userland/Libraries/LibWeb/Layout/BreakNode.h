@@ -19,6 +19,8 @@ public:
     const HTML::HTMLBRElement& dom_node() const { return verify_cast<HTML::HTMLBRElement>(*Node::dom_node()); }
 
 private:
+    virtual void paint(PaintContext&, PaintPhase) override;
+
     virtual void split_into_lines(InlineFormattingContext&, LayoutMode) override;
 };
 

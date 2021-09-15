@@ -92,7 +92,7 @@ public:
     virtual bool handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers, int wheel_delta);
 
     virtual void before_children_paint(PaintContext&, PaintPhase) {};
-    virtual void paint(PaintContext&, PaintPhase);
+    virtual void paint(PaintContext&, PaintPhase) = 0;
     virtual void paint_fragment(PaintContext&, const LineBoxFragment&, PaintPhase) const { }
     virtual void after_children_paint(PaintContext&, PaintPhase) {};
 

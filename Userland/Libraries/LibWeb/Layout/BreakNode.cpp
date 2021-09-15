@@ -26,4 +26,8 @@ void BreakNode::split_into_lines(InlineFormattingContext& context, LayoutMode)
     line_box.add_fragment(*this, 0, 0, 0, context.containing_block().line_height());
 }
 
+void BreakNode::paint(PaintContext&, PaintPhase)
+{
+}
+
 }
