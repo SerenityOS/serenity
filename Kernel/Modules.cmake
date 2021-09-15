@@ -7,6 +7,7 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_
 # Default values for default setup
 set(COMPILE_IDE ON)
 set(COMPILE_AHCI ON)
+set(COMPILE_RAMDISK ON)
 
 file(READ "${CMAKE_CURRENT_BINARY_DIR}/config.ini" contents )
 string(REGEX REPLACE ";" "\\\\;" contents "${contents}")
@@ -55,4 +56,15 @@ if (COMPILE_AHCI)
     )
     target_compile_definitions(Kernel PRIVATE COMPILE_AHCI)
     target_link_libraries(Kernel PUBLIC SATA_AHCI)
+endif()
+
+message(VERBOSE "Compiling Ramdisk support was set to " "${COMPILE_RAMDISK}" )
+
+if (COMPILE_RAMDISK)
+    add_library(RAMDISK_IO OBJECT
+        Storage/RamdiskController.cpp
+        Storage/RamdiskDevice.cpp
+    )
+    target_compile_definitions(Kernel PRIVATE COMPILE_RAMDISK)
+    target_link_libraries(Kernel PUBLIC RAMDISK_IO)
 endif()

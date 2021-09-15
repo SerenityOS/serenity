@@ -90,8 +90,6 @@ set(KERNEL_SOURCES
     Storage/Partition/MBRPartitionTable.cpp
     Storage/Partition/PartitionTable.cpp
     Storage/StorageDevice.cpp
-    Storage/RamdiskController.cpp
-    Storage/RamdiskDevice.cpp
     Storage/StorageManagement.cpp
     DoubleBuffer.cpp
     FileSystem/AnonymousFile.cpp

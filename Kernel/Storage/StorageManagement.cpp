@@ -71,7 +71,9 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers()
         });
 #endif
     }
+#ifdef COMPILE_RAMDISK
     m_controllers.append(RamdiskController::initialize());
+#endif
 }
 
 UNMAP_AFTER_INIT void StorageManagement::enumerate_storage_devices()
