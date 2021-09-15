@@ -50,6 +50,7 @@ void Reference::put_value(GlobalObject& global_object, Value value)
     }
 
     VERIFY(m_base_type == BaseType::Environment);
+    // FIXME: This entire following section is 100% not spec-compliant.
     auto existing_variable = m_base_environment->get_from_environment(m_name.as_string());
     Variable variable {
         .value = value,
@@ -66,10 +67,11 @@ void Reference::put_value(GlobalObject& global_object, Value value)
     if (vm.exception())
         return;
 
-    if (!succeeded && m_strict) {
-        // FIXME: This is a hack and will disappear when we support proper variable bindings.
-        vm.throw_exception<TypeError>(global_object, ErrorType::DescWriteNonWritable, m_name);
-        return;
+    if (!succeeded) {
+        if (m_base_environment->has_binding(m_name.as_string())) {
+            m_base_environment->set_mutable_binding(global_object, m_name.as_string(), value, is_strict());
+            return;
+        }
     }
 }
 
@@ -98,8 +100,11 @@ Value Reference::get_value(GlobalObject& global_object, bool throw_if_undefined)
     }
 
     VERIFY(m_base_type == BaseType::Environment);
+    // FIXME: This entire section is 100% not spec-compliant.
     auto value = m_base_environment->get_from_environment(m_name.as_string());
     if (!value.has_value()) {
+        if (m_base_environment->has_binding(m_name.as_string()))
+            return m_base_environment->get_binding_value(global_object, m_name.as_string(), is_strict());
         if (!throw_if_undefined) {
             // FIXME: This is an ad-hoc hack for the `typeof` operator until we support proper variable bindings.
             return js_undefined();
@@ -168,6 +173,9 @@ bool Reference::delete_(GlobalObject& global_object)
     VERIFY(m_base_type == BaseType::Environment);
 
     //    c. Return ? base.DeleteBinding(ref.[[ReferencedName]]).
+    if (m_base_environment->has_binding(m_name.as_string()))
+        return m_base_environment->delete_binding(global_object, m_name.as_string());
+
     // FIXME: This is ad-hoc, we should be calling DeleteBinding.
     return m_base_environment->delete_from_environment(m_name.as_string());
 }
