@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 namespace AK {
 
 template<typename K, typename V, size_t Capacity>

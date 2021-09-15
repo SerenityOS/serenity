@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/NonnullRefPtr.h>
+
 namespace AK::Detail {
 
 template<typename T, typename Container>

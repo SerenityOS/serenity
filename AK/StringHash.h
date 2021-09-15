@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 namespace AK {
 
 constexpr u32 string_hash(char const* characters, size_t length)

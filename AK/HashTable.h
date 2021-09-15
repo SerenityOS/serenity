@@ -9,6 +9,7 @@
 #include <AK/Forward.h>
 #include <AK/HashFunctions.h>
 #include <AK/StdLibExtras.h>
+#include <AK/Traits.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
 
