@@ -52,31 +52,47 @@ size_t length_of_array_like(GlobalObject& global_object, Object const& object)
 }
 
 // 7.3.19 CreateListFromArrayLike ( obj [ , elementTypes ] ), https://tc39.es/ecma262/#sec-createlistfromarraylike
-MarkedValueList create_list_from_array_like(GlobalObject& global_object, Value value, Function<void(Value)> check_value)
+ThrowCompletionOr<MarkedValueList> create_list_from_array_like(GlobalObject& global_object, Value value, Function<ThrowCompletionOr<void>(Value)> check_value)
 {
     auto& vm = global_object.vm();
     auto& heap = global_object.heap();
-    if (!value.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, value.to_string_without_side_effects());
-        return MarkedValueList { heap };
-    }
+
+    // 1. If elementTypes is not present, set elementTypes to « Undefined, Null, Boolean, String, Symbol, Number, BigInt, Object ».
+
+    // 2. If Type(obj) is not Object, throw a TypeError exception.
+    if (!value.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, value.to_string_without_side_effects());
+
     auto& array_like = value.as_object();
+
+    // 3. Let len be ? LengthOfArrayLike(obj).
     auto length = length_of_array_like(global_object, array_like);
-    if (vm.exception())
-        return MarkedValueList { heap };
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+
+    // 4. Let list be a new empty List.
     auto list = MarkedValueList { heap };
+
+    // 5. Let index be 0.
+    // 6. Repeat, while index < len,
     for (size_t i = 0; i < length; ++i) {
+        // a. Let indexName be ! ToString(𝔽(index)).
         auto index_name = String::number(i);
+
+        // b. Let next be ? Get(obj, indexName).
         auto next = array_like.get(index_name);
-        if (vm.exception())
-            return MarkedValueList { heap };
-        if (check_value) {
-            check_value(next);
-            if (vm.exception())
-                return MarkedValueList { heap };
-        }
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
+
+        // c. If Type(next) is not an element of elementTypes, throw a TypeError exception.
+        if (check_value)
+            TRY(check_value(next));
+
+        // d. Append next as the last element of list.
         list.append(next);
     }
+
+    // 7. Return list.
     return list;
 }
 

@@ -57,9 +57,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
     auto arg_array = vm.argument(1);
     if (arg_array.is_nullish())
         return vm.call(function, this_arg);
-    auto arguments = create_list_from_array_like(global_object, arg_array);
-    if (vm.exception())
-        return {};
+    auto arguments = TRY_OR_DISCARD(create_list_from_array_like(global_object, arg_array));
     return vm.call(function, this_arg, move(arguments));
 }
 
