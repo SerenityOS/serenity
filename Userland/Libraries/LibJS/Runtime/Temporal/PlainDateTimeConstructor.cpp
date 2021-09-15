@@ -103,9 +103,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimeConstructor::from)
     auto item = vm.argument(0);
 
     // 1. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 2. If Type(item) is Object and item has an [[InitializedTemporalDateTime]] internal slot, then
     if (item.is_object() && is<PlainDateTime>(item.as_object())) {

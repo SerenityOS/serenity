@@ -243,7 +243,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_string)
         return {};
 
     // 3. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(0));
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(0)));
     if (vm.exception())
         return {};
 

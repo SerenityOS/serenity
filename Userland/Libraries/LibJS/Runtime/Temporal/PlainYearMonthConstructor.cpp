@@ -93,9 +93,7 @@ Value PlainYearMonthConstructor::construct(FunctionObject& new_target)
 JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthConstructor::from)
 {
     // 1. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     auto item = vm.argument(0);
 

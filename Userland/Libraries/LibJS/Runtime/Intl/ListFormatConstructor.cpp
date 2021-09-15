@@ -61,9 +61,7 @@ Value ListFormatConstructor::construct(FunctionObject& new_target)
         return {};
 
     // 4. Set options to ? GetOptionsObject(options).
-    auto* options = Temporal::get_options_object(global_object, options_value);
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(Temporal::get_options_object(global_object, options_value));
 
     // 5. Let opt be a new Record.
     LocaleOptions opt {};

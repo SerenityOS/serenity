@@ -92,9 +92,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_from_fields)
     }
 
     // 5. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 6. Let result be ? ISODateFromFields(fields, options).
     auto result = iso_date_from_fields(global_object, fields.as_object(), *options);
@@ -126,9 +124,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year_month_from_fields)
     }
 
     // 5. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 6. Let result be ? ISOYearMonthFromFields(fields, options).
     auto result = iso_year_month_from_fields(global_object, fields.as_object(), *options);
@@ -160,9 +156,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_day_from_fields)
     }
 
     // 5. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 6. Let result be ? ISOMonthDayFromFields(fields, options).
     auto result = iso_month_day_from_fields(global_object, fields.as_object(), *options);
@@ -197,9 +191,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_add)
         return {};
 
     // 6. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(2));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(2)));
 
     // 7. Let overflow be ? ToTemporalOverflow(options).
     auto overflow = to_temporal_overflow(global_object, *options);
