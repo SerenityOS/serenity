@@ -164,7 +164,7 @@ void TLSv12::read_from_socket()
     if (!check_connection_state(true))
         return;
 
-    consume(Core::Socket::read(4096));
+    consume(Core::Socket::read(4 * MiB));
 
     // If anything new shows up, tell the client about the event.
     notify_client_for_app_data();
