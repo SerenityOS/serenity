@@ -42,10 +42,11 @@ bool StorageManagement::boot_argument_contains_partition_uuid()
     return m_boot_argument.starts_with(partition_uuid_prefix);
 }
 
-UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers(bool force_pio)
+UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers()
 {
     VERIFY(m_controllers.is_empty());
     if (!kernel_command_line().disable_physical_storage()) {
+        bool force_pio = kernel_command_line().is_force_pio();
         if (kernel_command_line().is_ide_enabled()) {
             PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
                 if (device_identifier.class_code().value() == to_underlying(PCI::ClassID::MassStorage)
@@ -192,11 +193,11 @@ NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
     return file_system;
 }
 
-UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device, bool force_pio)
+UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device)
 {
     VERIFY(s_device_minor_number == 0);
     m_boot_argument = root_device;
-    enumerate_controllers(force_pio);
+    enumerate_controllers();
     enumerate_storage_devices();
     enumerate_disk_partitions();
     if (!boot_argument_contains_partition_uuid()) {

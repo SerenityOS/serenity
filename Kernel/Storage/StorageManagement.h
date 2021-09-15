@@ -24,7 +24,7 @@ class StorageManagement {
 public:
     StorageManagement();
     static bool initialized();
-    void initialize(StringView boot_argument, bool force_pio);
+    void initialize(StringView boot_argument);
     static StorageManagement& the();
 
     NonnullRefPtr<FileSystem> root_filesystem() const;
@@ -37,7 +37,7 @@ public:
 private:
     bool boot_argument_contains_partition_uuid();
 
-    void enumerate_controllers(bool force_pio);
+    void enumerate_controllers();
     void enumerate_storage_devices();
     void enumerate_disk_partitions() const;
 
