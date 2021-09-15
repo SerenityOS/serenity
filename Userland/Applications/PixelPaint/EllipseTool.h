@@ -8,7 +8,7 @@
 #pragma once
 
 #include "Tool.h"
-#include <LibGUI/ActionGroup.h>
+#include <LibGUI/Forward.h>
 #include <LibGfx/Point.h>
 
 namespace PixelPaint {
@@ -40,12 +40,16 @@ private:
     void draw_using(GUI::Painter&, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position, int thickness);
 
     RefPtr<GUI::Widget> m_properties_widget;
+    RefPtr<GUI::TextBox> m_aspect_w_textbox;
+    RefPtr<GUI::TextBox> m_aspect_h_textbox;
+
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
     Gfx::IntPoint m_ellipse_start_position;
     Gfx::IntPoint m_ellipse_end_position;
     int m_thickness { 1 };
     FillMode m_fill_mode { FillMode::Outline };
     DrawMode m_draw_mode { DrawMode::FromCorner };
+    Optional<float> m_aspect_ratio;
 };
 
 }
