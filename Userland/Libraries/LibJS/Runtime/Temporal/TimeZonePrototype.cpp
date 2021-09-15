@@ -85,10 +85,8 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_string_for)
         return {};
 
     // 4. Return ? BuiltinTimeZoneGetOffsetStringFor(timeZone, instant).
-    auto offset_string = builtin_time_zone_get_offset_string_for(global_object, time_zone, *instant);
-    if (vm.exception())
-        return {};
-    return js_string(vm, move(*offset_string));
+    auto offset_string = TRY_OR_DISCARD(builtin_time_zone_get_offset_string_for(global_object, time_zone, *instant));
+    return js_string(vm, move(offset_string));
 }
 
 // 11.4.6 Temporal.TimeZone.prototype.getPlainDateTimeFor ( instant [ , calendarLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getplaindatetimefor
@@ -108,7 +106,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_plain_date_time_for)
         return {};
 
     // 4. Return ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    return builtin_time_zone_get_plain_date_time_for(global_object, time_zone, *instant, *calendar);
+    return TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, time_zone, *instant, *calendar));
 }
 
 // 11.4.11 Temporal.TimeZone.prototype.toString ( ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.tostring

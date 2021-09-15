@@ -118,9 +118,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::year_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarYear(calendar, temporalDateTime).
     return Value(calendar_year(global_object, calendar, *temporal_date_time));
@@ -145,9 +143,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::month_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarMonth(calendar, temporalDateTime).
     return Value(calendar_month(global_object, calendar, *temporal_date_time));
@@ -172,9 +168,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::month_code_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarMonthCode(calendar, temporalDateTime).
     return js_string(vm, calendar_month_code(global_object, calendar, *temporal_date_time));
@@ -199,9 +193,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarDay(calendar, temporalDateTime).
     return Value(calendar_day(global_object, calendar, *temporal_date_time));
@@ -226,9 +218,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::hour_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return 𝔽(temporalDateTime.[[ISOHour]]).
     return Value(temporal_date_time->iso_hour());
@@ -253,9 +243,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::minute_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return 𝔽(temporalDateTime.[[ISOMinute]]).
     return Value(temporal_date_time->iso_minute());
@@ -280,9 +268,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::second_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return 𝔽(temporalDateTime.[[ISOSecond]]).
     return Value(temporal_date_time->iso_second());
@@ -307,9 +293,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::millisecond_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return 𝔽(temporalDateTime.[[ISOMillisecond]]).
     return Value(temporal_date_time->iso_millisecond());
@@ -334,9 +318,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::microsecond_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return 𝔽(temporalDateTime.[[ISOMicrosecond]]).
     return Value(temporal_date_time->iso_microsecond());
@@ -361,9 +343,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::nanosecond_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return 𝔽(temporalDateTime.[[ISONanosecond]]).
     return Value(temporal_date_time->iso_nanosecond());
@@ -458,9 +438,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_of_week_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarDayOfWeek(calendar, temporalDateTime).
     return calendar_day_of_week(global_object, calendar, *temporal_date_time);
@@ -485,9 +463,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_of_year_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarDayOfYear(calendar, temporalDateTime).
     return calendar_day_of_year(global_object, calendar, *temporal_date_time);
@@ -512,9 +488,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::week_of_year_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarWeekOfYear(calendar, temporalDateTime).
     return calendar_week_of_year(global_object, calendar, *temporal_date_time);
@@ -539,9 +513,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_week_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarDaysInWeek(calendar, temporalDateTime).
     return calendar_days_in_week(global_object, calendar, *temporal_date_time);
@@ -566,9 +538,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_month_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarDaysInMonth(calendar, temporalDateTime).
     return calendar_days_in_month(global_object, calendar, *temporal_date_time);
@@ -593,9 +563,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_year_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarDaysInYear(calendar, temporalDateTime).
     return calendar_days_in_year(global_object, calendar, *temporal_date_time);
@@ -620,9 +588,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::months_in_year_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarMonthsInYear(calendar, temporalDateTime).
     return calendar_months_in_year(global_object, calendar, *temporal_date_time);
@@ -647,9 +613,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::in_leap_year_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarInLeapYear(calendar, temporalDateTime).
     return calendar_in_leap_year(global_object, calendar, *temporal_date_time);
@@ -671,7 +635,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_nanoseconds_getter)
     auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds());
 
     // 5. Return 𝔽(? GetOffsetNanosecondsFor(timeZone, instant)).
-    return Value(get_offset_nanoseconds_for(global_object, &time_zone, *instant));
+    return Value(TRY_OR_DISCARD(get_offset_nanoseconds_for(global_object, &time_zone, *instant)));
 }
 
 // 6.3.29 get Temporal.ZonedDateTime.prototype.offset, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.offset
@@ -687,10 +651,8 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_getter)
     auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds());
 
     // 4. Return ? BuiltinTimeZoneGetOffsetStringFor(zonedDateTime.[[TimeZone]], instant).
-    auto offset_string = builtin_time_zone_get_offset_string_for(global_object, &zoned_date_time->time_zone(), *instant);
-    if (vm.exception())
-        return {};
-    return js_string(vm, move(*offset_string));
+    auto offset_string = TRY_OR_DISCARD(builtin_time_zone_get_offset_string_for(global_object, &zoned_date_time->time_zone(), *instant));
+    return js_string(vm, move(offset_string));
 }
 
 // 15.6.10.2 get Temporal.ZonedDateTime.prototype.era, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.era
@@ -712,9 +674,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::era_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let plainDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* plain_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* plain_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarEra(calendar, plainDateTime).
     return calendar_era(global_object, calendar, *plain_date_time);
@@ -739,9 +699,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::era_year_getter)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let plainDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* plain_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* plain_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarEraYear(calendar, plainDateTime).
     return calendar_era_year(global_object, calendar, *plain_date_time);
@@ -787,9 +745,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_date)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CreateTemporalDate(temporalDateTime.[[ISOYear]], temporalDateTime.[[ISOMonth]], temporalDateTime.[[ISODay]], calendar).
     return create_temporal_date(global_object, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), calendar);
@@ -814,9 +770,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_time)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, zonedDateTime.[[Calendar]]).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CreateTemporalTime(temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]]).
     return create_temporal_time(global_object, temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond());
@@ -838,7 +792,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_date_time)
     auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds());
 
     // 5. Return ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, zonedDateTime.[[Calendar]]).
-    return builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, zoned_date_time->calendar());
+    return TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, zoned_date_time->calendar()));
 }
 
 // 6.3.50 Temporal.ZonedDateTime.prototype.toPlainYearMonth ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplainyearmonth
@@ -860,9 +814,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_year_month)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Let fieldNames be ? CalendarFields(calendar, « "monthCode", "year" »).
     auto field_names = calendar_fields(global_object, calendar, { "monthCode"sv, "year"sv });
@@ -897,9 +849,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_month_day)
     auto& calendar = zoned_date_time->calendar();
 
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Let fieldNames be ? CalendarFields(calendar, « "day", "monthCode" »).
     auto field_names = calendar_fields(global_object, calendar, { "day"sv, "monthCode"sv });
@@ -937,15 +887,10 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::get_iso_fields)
     auto& calendar = zoned_date_time->calendar();
 
     // 7. Let dateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
-    if (vm.exception())
-        return {};
+    auto* date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 8. Let offset be ? BuiltinTimeZoneGetOffsetStringFor(timeZone, instant).
-    auto maybe_offset = builtin_time_zone_get_offset_string_for(global_object, &time_zone, *instant);
-    if (vm.exception())
-        return {};
-    auto offset = move(*maybe_offset);
+    auto offset = TRY_OR_DISCARD(builtin_time_zone_get_offset_string_for(global_object, &time_zone, *instant));
 
     // 9. Perform ! CreateDataPropertyOrThrow(fields, "calendar", calendar).
     fields->create_data_property_or_throw(vm.names.calendar, Value(&calendar));

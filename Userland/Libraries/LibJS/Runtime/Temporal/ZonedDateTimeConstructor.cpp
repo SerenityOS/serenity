@@ -60,9 +60,7 @@ Value ZonedDateTimeConstructor::construct(FunctionObject& new_target)
     }
 
     // 4. Let timeZone be ? ToTemporalTimeZone(timeZoneLike).
-    auto* time_zone = to_temporal_time_zone(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* time_zone = TRY_OR_DISCARD(to_temporal_time_zone(global_object, vm.argument(1)));
 
     // 5. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
     auto* calendar = to_temporal_calendar_with_iso_default(global_object, vm.argument(2));
