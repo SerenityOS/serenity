@@ -113,13 +113,14 @@ void AbstractButton::mousedown_event(MouseEvent& event)
             click();
             m_auto_repeat_timer->start(m_auto_repeat_interval);
         }
+        event.accept();
     }
     Widget::mousedown_event(event);
 }
 
 void AbstractButton::mouseup_event(MouseEvent& event)
 {
-    if (event.button() == MouseButton::Left) {
+    if (event.button() == MouseButton::Left && m_being_pressed) {
         bool was_auto_repeating = m_auto_repeat_timer->is_active();
         m_auto_repeat_timer->stop();
         bool was_being_pressed = m_being_pressed;
@@ -137,21 +138,35 @@ void AbstractButton::enter_event(Core::Event&)
     update();
 }
 
-void AbstractButton::leave_event(Core::Event&)
+void AbstractButton::leave_event(Core::Event& event)
 {
     m_hovered = false;
+    if (m_being_keyboard_pressed)
+        m_being_keyboard_pressed = m_being_pressed = false;
     update();
+    event.accept();
+    Widget::leave_event(event);
+}
+
+void AbstractButton::focusout_event(GUI::FocusEvent& event)
+{
+    if (m_being_keyboard_pressed) {
+        m_being_pressed = m_being_keyboard_pressed = false;
+        event.accept();
+        update();
+    }
+    Widget::focusout_event(event);
 }
 
 void AbstractButton::keydown_event(KeyEvent& event)
 {
     if (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Space) {
-        m_being_pressed = true;
+        m_being_pressed = m_being_keyboard_pressed = true;
         update();
         event.accept();
         return;
     } else if (m_being_pressed && event.key() == KeyCode::Key_Escape) {
-        m_being_pressed = false;
+        m_being_pressed = m_being_keyboard_pressed = false;
         update();
         event.accept();
         return;
@@ -162,8 +177,8 @@ void AbstractButton::keydown_event(KeyEvent& event)
 void AbstractButton::keyup_event(KeyEvent& event)
 {
     bool was_being_pressed = m_being_pressed;
-    m_being_pressed = false;
     if (was_being_pressed && (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Space)) {
+        m_being_pressed = m_being_keyboard_pressed = false;
         click(event.modifiers());
         update();
         event.accept();
