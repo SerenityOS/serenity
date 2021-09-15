@@ -10,17 +10,24 @@ After opening the `serenity` repository in CLion as a new project, the "`Open Pr
 
 > _CMake will complain with any other build type, make sure to use `Default` so that `CMAKE_BUILD_TYPE` is empty in the `Build/i686/CMakeCache.txt` file._
 
-`CMake Options`: `-G Ninja -DBUILD_LAGOM=ON -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10`
+`CMake Options`:
+```
+-GNinja
+-DCMAKE_TOOLCHAIN_FILE=$CMakeProjectDir$/Build/i686/CMakeToolchain.txt
+-DCMAKE_INSTALL_PREFIX=$CMakeProjectDir$/Build/lagom-install
+-DSERENITY_ARCH=i686
+```
 
-> The `gcc-10` and `g++-10` are not special-meaning strings, they're paths to your GCC compiler executables, and should be findable through `PATH`. It is entirely possible you might have to instead use something like `-DCMAKE_C_COMPILER=/opt/homebrew/bin/gcc-11 -DCMAKE_CXX_COMPILER=/opt/homebrew/bin/g++-11` instead of the above.
+> CLion will complain that the toolchain file doesn't exist yet, if you haven't `cmake` for the SuperBuild step before. The SuperBuild configure step creates the Toolchain file.
+> To re-create the file after blasting your build directory, run `cmake -GNinja -S Meta/CMake/Superbuild -B Build/superbuild-i686` from the top level in a terminal, or simply run `./Meta/serenity.sh run`
 
 `Build Directory`: `Build/i686`
 
 > _If you have not built the Toolchain at this point, please do so: `./Toolchain/BuildIt.sh`_
 
-If you already have the project open, you can go to `File -> Settings -> Build, Execution, Deployment -> CMake` to find these options.
+> _If you have not built host tools from Lagom at this point, please do so: `./Meta/serenity.sh build` or `ninja -C Build/superbuild-i686` after running `cmake -GNinja -S Meta/CMake/Superbuild -B Build/superbuild-i686`_
 
-Remember to recreate the CMake cache after changing any of the options.
+If you already have the project open, you can go to `File -> Settings -> Build, Execution, Deployment -> CMake` to find these options.
 
 ## Excluding Build Artifacts
 
