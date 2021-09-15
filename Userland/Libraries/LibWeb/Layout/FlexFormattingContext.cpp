@@ -610,10 +610,10 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
     // FIXME: This
 
     // 11. Determine the used cross size of each flex item.
-    // FIXME: align-stretch
+    // FIXME: Get the alignment via "align-self" of the item (which accesses "align-items" of the parent if unset)
     for (auto& flex_line : flex_lines) {
         for (auto& flex_item : flex_line.items) {
-            if (is_cross_auto(flex_item->box)) {
+            if (is_cross_auto(flex_item->box) && box.computed_values().align_items() == CSS::AlignItems::Stretch) {
                 // FIXME: Take margins into account
                 flex_item->cross_size = flex_line.cross_size;
             } else {
