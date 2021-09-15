@@ -9,6 +9,12 @@ set(COMPILE_IDE ON)
 set(COMPILE_AHCI ON)
 set(COMPILE_RAMDISK ON)
 
+set(COMPILE_E1000 ON)
+set(COMPILE_E1000E ON)
+set(COMPILE_RTL8139 ON)
+set(COMPILE_RTL8168 ON)
+set(COMPILE_NE2000 ON)
+
 file(READ "${CMAKE_CURRENT_BINARY_DIR}/config.ini" contents )
 string(REGEX REPLACE ";" "\\\\;" contents "${contents}")
 string(REGEX REPLACE "\n" ";" contents "${contents}")
@@ -67,4 +73,50 @@ if (COMPILE_RAMDISK)
     )
     target_compile_definitions(Kernel PRIVATE COMPILE_RAMDISK)
     target_link_libraries(Kernel PUBLIC RAMDISK_IO)
+endif()
+
+message(VERBOSE "Compiling e1000e support was set to " "${COMPILE_E1000E}" )
+if (COMPILE_E1000E)
+    add_library(E1000E_NET OBJECT
+        Net/E1000ENetworkAdapter.cpp
+
+    )
+    target_compile_definitions(Kernel PRIVATE COMPILE_E1000E)
+    target_link_libraries(Kernel PUBLIC E1000E_NET)
+endif()
+
+message(VERBOSE "Compiling e1000 support was set to " "${COMPILE_E1000}" )
+if (COMPILE_E1000)
+    add_library(E1000_NET OBJECT
+        Net/E1000NetworkAdapter.cpp
+    )
+    target_compile_definitions(Kernel PRIVATE COMPILE_E1000)
+    target_link_libraries(Kernel PUBLIC E1000_NET)
+endif()
+
+message(VERBOSE "Compiling ne2000 support was set to " "${COMPILE_NE2000}" )
+if (COMPILE_NE2000)
+    add_library(NE2000_NET OBJECT
+        Net/NE2000NetworkAdapter.cpp
+    )
+    target_compile_definitions(Kernel PRIVATE COMPILE_NE2000)
+    target_link_libraries(Kernel PUBLIC NE2000_NET)
+endif()
+
+message(VERBOSE "Compiling rtl8139 support was set to " "${COMPILE_RTL8139}" )
+if (COMPILE_RTL8139)
+    add_library(RTL8139_NET OBJECT
+        Net/RTL8139NetworkAdapter.cpp
+    )
+    target_compile_definitions(Kernel PRIVATE COMPILE_RTL8139)
+    target_link_libraries(Kernel PUBLIC RTL8139_NET)
+endif()
+
+message(VERBOSE "Compiling rtl8168 support was set to " "${COMPILE_RTL8168}" )
+if (COMPILE_RTL8168)
+    add_library(RTL8168_NET OBJECT
+        Net/RTL8168NetworkAdapter.cpp
+    )
+    target_compile_definitions(Kernel PRIVATE COMPILE_RTL8168)
+    target_link_libraries(Kernel PUBLIC RTL8168_NET)
 endif()

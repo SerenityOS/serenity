@@ -11,13 +11,23 @@
 #include <Kernel/KString.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Multiboot.h>
-#include <Kernel/Net/E1000ENetworkAdapter.h>
-#include <Kernel/Net/E1000NetworkAdapter.h>
+#ifdef COMPILE_E1000E
+#    include <Kernel/Net/E1000ENetworkAdapter.h>
+#endif
+#ifdef COMPILE_E1000
+#    include <Kernel/Net/E1000NetworkAdapter.h>
+#endif
 #include <Kernel/Net/LoopbackAdapter.h>
-#include <Kernel/Net/NE2000NetworkAdapter.h>
+#ifdef COMPILE_NE2000
+#    include <Kernel/Net/NE2000NetworkAdapter.h>
+#endif
 #include <Kernel/Net/NetworkingManagement.h>
-#include <Kernel/Net/RTL8139NetworkAdapter.h>
-#include <Kernel/Net/RTL8168NetworkAdapter.h>
+#ifdef COMPILE_RTL8139
+#    include <Kernel/Net/RTL8139NetworkAdapter.h>
+#endif
+#ifdef COMPILE_RTL8168
+#    include <Kernel/Net/RTL8168NetworkAdapter.h>
+#endif
 #include <Kernel/Sections.h>
 
 namespace Kernel {
@@ -85,16 +95,27 @@ UNMAP_AFTER_INIT RefPtr<NetworkAdapter> NetworkingManagement::determine_network_
     if (interface_name_or_error.is_error())
         return {};
     auto interface_name = interface_name_or_error.release_value();
+#ifdef COMPILE_E1000
     if (auto candidate = E1000NetworkAdapter::try_to_initialize(device_identifier, move(interface_name)); !candidate.is_null())
         return candidate;
+#endif
+#ifdef COMPILE_E1000E
     if (auto candidate = E1000ENetworkAdapter::try_to_initialize(device_identifier, move(interface_name)); !candidate.is_null())
         return candidate;
+#endif
+#ifdef COMPILE_RTL8139
     if (auto candidate = RTL8139NetworkAdapter::try_to_initialize(device_identifier, move(interface_name)); !candidate.is_null())
         return candidate;
+#endif
+#ifdef COMPILE_RTL8168
     if (auto candidate = RTL8168NetworkAdapter::try_to_initialize(device_identifier, move(interface_name)); !candidate.is_null())
         return candidate;
+#endif
+#ifdef COMPILE_NE2000
     if (auto candidate = NE2000NetworkAdapter::try_to_initialize(device_identifier, move(interface_name)); !candidate.is_null())
         return candidate;
+#endif
+    dbgln("Networking: No driver found for {}", interface_name->view());
     return {};
 }
 

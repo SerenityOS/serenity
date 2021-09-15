@@ -154,17 +154,12 @@ set(KERNEL_SOURCES
     MiniStdLib.cpp
     Locking/LockRank.cpp
     Locking/Mutex.cpp
-    Net/E1000ENetworkAdapter.cpp
-    Net/E1000NetworkAdapter.cpp
     Net/IPv4Socket.cpp
     Net/LocalSocket.cpp
     Net/LoopbackAdapter.cpp
-    Net/NE2000NetworkAdapter.cpp
     Net/NetworkAdapter.cpp
     Net/NetworkTask.cpp
     Net/NetworkingManagement.cpp
-    Net/RTL8139NetworkAdapter.cpp
-    Net/RTL8168NetworkAdapter.cpp
     Net/Routing.cpp
     Net/Socket.cpp
     Net/TCPSocket.cpp
