@@ -33,8 +33,6 @@ void ZonedDateTime::visit_edges(Cell::Visitor& visitor)
 // 6.5.3 CreateTemporalZonedDateTime ( epochNanoseconds, timeZone, calendar [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalzoneddatetime
 ZonedDateTime* create_temporal_zoned_date_time(GlobalObject& global_object, BigInt const& epoch_nanoseconds, Object& time_zone, Object& calendar, FunctionObject const* new_target)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: Type(epochNanoseconds) is BigInt.
     // 3. Assert: Type(timeZone) is Object.
     // 4. Assert: Type(calendar) is Object.
@@ -50,9 +48,7 @@ ZonedDateTime* create_temporal_zoned_date_time(GlobalObject& global_object, BigI
     // 7. Set object.[[Nanoseconds]] to epochNanoseconds.
     // 8. Set object.[[TimeZone]] to timeZone.
     // 9. Set object.[[Calendar]] to calendar.
-    auto* object = ordinary_create_from_constructor<ZonedDateTime>(global_object, *new_target, &GlobalObject::temporal_time_zone_prototype, epoch_nanoseconds, time_zone, calendar);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(ordinary_create_from_constructor<ZonedDateTime>(global_object, *new_target, &GlobalObject::temporal_time_zone_prototype, epoch_nanoseconds, time_zone, calendar));
 
     // 10. Return object.
     return object;

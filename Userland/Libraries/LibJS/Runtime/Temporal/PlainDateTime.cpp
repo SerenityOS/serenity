@@ -294,9 +294,7 @@ PlainDateTime* create_temporal_date_time(GlobalObject& global_object, i32 iso_ye
     // 15. Set object.[[ISOMicrosecond]] to microsecond.
     // 16. Set object.[[ISONanosecond]] to nanosecond.
     // 17. Set object.[[Calendar]] to calendar.
-    auto* object = ordinary_create_from_constructor<PlainDateTime>(global_object, *new_target, &GlobalObject::temporal_plain_date_prototype, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond, calendar);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(ordinary_create_from_constructor<PlainDateTime>(global_object, *new_target, &GlobalObject::temporal_plain_date_prototype, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond, calendar));
 
     // 18. Return object.
     return object;

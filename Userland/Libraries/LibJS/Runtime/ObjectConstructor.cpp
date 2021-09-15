@@ -74,7 +74,7 @@ Value ObjectConstructor::construct(FunctionObject& new_target)
     auto& global_object = this->global_object();
 
     if (&new_target != this)
-        return ordinary_create_from_constructor<Object>(global_object, new_target, &GlobalObject::object_prototype);
+        return TRY_OR_DISCARD(ordinary_create_from_constructor<Object>(global_object, new_target, &GlobalObject::object_prototype));
     auto value = vm.argument(0);
     if (value.is_nullish())
         return Object::create(global_object, global_object.object_prototype());

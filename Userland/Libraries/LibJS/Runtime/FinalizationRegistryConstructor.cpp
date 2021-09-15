@@ -51,7 +51,7 @@ Value FinalizationRegistryConstructor::construct(FunctionObject& new_target)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, cleanup_callback.to_string_without_side_effects());
         return {};
     }
-    return ordinary_create_from_constructor<FinalizationRegistry>(global_object, new_target, &GlobalObject::finalization_registry_prototype, cleanup_callback.as_function());
+    return TRY_OR_DISCARD(ordinary_create_from_constructor<FinalizationRegistry>(global_object, new_target, &GlobalObject::finalization_registry_prototype, cleanup_callback.as_function()));
 }
 
 }

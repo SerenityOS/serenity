@@ -47,9 +47,7 @@ Value WeakMapConstructor::construct(FunctionObject& new_target)
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto* weak_map = ordinary_create_from_constructor<WeakMap>(global_object, new_target, &GlobalObject::weak_map_prototype);
-    if (vm.exception())
-        return {};
+    auto* weak_map = TRY_OR_DISCARD(ordinary_create_from_constructor<WeakMap>(global_object, new_target, &GlobalObject::weak_map_prototype));
 
     if (vm.argument(0).is_nullish())
         return weak_map;

@@ -65,9 +65,7 @@ PlainDate* create_temporal_date(GlobalObject& global_object, i32 iso_year, u8 is
     // 10. Set object.[[ISOMonth]] to isoMonth.
     // 11. Set object.[[ISODay]] to isoDay.
     // 12. Set object.[[Calendar]] to calendar.
-    auto* object = ordinary_create_from_constructor<PlainDate>(global_object, *new_target, &GlobalObject::temporal_plain_date_prototype, iso_year, iso_month, iso_day, calendar);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(ordinary_create_from_constructor<PlainDate>(global_object, *new_target, &GlobalObject::temporal_plain_date_prototype, iso_year, iso_month, iso_day, calendar));
 
     return object;
 }

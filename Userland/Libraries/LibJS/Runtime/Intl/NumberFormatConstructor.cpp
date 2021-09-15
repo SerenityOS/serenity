@@ -51,9 +51,7 @@ Value NumberFormatConstructor::construct(FunctionObject& new_target)
     auto options = vm.argument(1);
 
     // 2. Let numberFormat be ? OrdinaryCreateFromConstructor(newTarget, "%NumberFormat.prototype%", « [[InitializedNumberFormat]], [[Locale]], [[DataLocale]], [[NumberingSystem]], [[Style]], [[Unit]], [[UnitDisplay]], [[Currency]], [[CurrencyDisplay]], [[CurrencySign]], [[MinimumIntegerDigits]], [[MinimumFractionDigits]], [[MaximumFractionDigits]], [[MinimumSignificantDigits]], [[MaximumSignificantDigits]], [[RoundingType]], [[Notation]], [[CompactDisplay]], [[UseGrouping]], [[SignDisplay]], [[BoundFormat]] »).
-    auto* number_format = ordinary_create_from_constructor<NumberFormat>(global_object, new_target, &GlobalObject::intl_number_format_prototype);
-    if (vm.exception())
-        return {};
+    auto* number_format = TRY_OR_DISCARD(ordinary_create_from_constructor<NumberFormat>(global_object, new_target, &GlobalObject::intl_number_format_prototype));
 
     // 3. Perform ? InitializeNumberFormat(numberFormat, locales, options).
     initialize_number_format(global_object, *number_format, locales, options);
