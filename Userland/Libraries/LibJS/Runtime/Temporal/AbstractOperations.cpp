@@ -171,38 +171,34 @@ ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& o
 
 // 13.4 GetStringOrNumberOption ( options, property, stringValues, minimum, maximum, fallback ), https://tc39.es/proposal-temporal/#sec-getstringornumberoption
 template<typename NumberType>
-Optional<Variant<String, NumberType>> get_string_or_number_option(GlobalObject& global_object, Object const& options, PropertyName const& property, Vector<StringView> const& string_values, NumberType minimum, NumberType maximum, Value fallback)
+ThrowCompletionOr<Variant<String, NumberType>> get_string_or_number_option(GlobalObject& global_object, Object const& options, PropertyName const& property, Vector<StringView> const& string_values, NumberType minimum, NumberType maximum, Value fallback)
 {
     auto& vm = global_object.vm();
 
     // 1. Assert: Type(options) is Object.
 
     // 2. Let value be ? GetOption(options, property, « Number, String », empty, fallback).
-    auto value = TRY_OR_DISCARD(get_option(global_object, options, property, { OptionType::Number, OptionType::String }, {}, fallback));
+    auto value = TRY(get_option(global_object, options, property, { OptionType::Number, OptionType::String }, {}, fallback));
 
     // 3. If Type(value) is Number, then
     if (value.is_number()) {
         // a. If value < minimum or value > maximum, throw a RangeError exception.
-        if (value.as_double() < minimum || value.as_double() > maximum) {
-            vm.template throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.as_double(), property.as_string());
-            return {};
-        }
+        if (value.as_double() < minimum || value.as_double() > maximum)
+            return vm.template throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.as_double(), property.as_string());
 
         // b. Return floor(ℝ(value)).
-        return floor(value.as_double());
+        return { static_cast<NumberType>(floor(value.as_double())) };
     }
 
     // 4. Assert: Type(value) is String.
     VERIFY(value.is_string());
 
     // 5. If stringValues does not contain value, throw a RangeError exception.
-    if (!string_values.contains_slow(value.as_string().string())) {
-        vm.template throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.as_string().string(), property.as_string());
-        return {};
-    }
+    if (!string_values.contains_slow(value.as_string().string()))
+        return vm.template throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.as_string().string(), property.as_string());
 
     // 6. Return value.
-    return value.as_string().string();
+    return { value.as_string().string() };
 }
 
 // 13.6 ToTemporalOverflow ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloverflow
@@ -337,18 +333,16 @@ Optional<SecondsStringPrecision> to_seconds_string_precision(GlobalObject& globa
     VERIFY(!smallest_unit.has_value());
 
     // 8. Let digits be ? GetStringOrNumberOption(normalizedOptions, "fractionalSecondDigits", « "auto" », 0, 9, "auto").
-    auto digits_variant = get_string_or_number_option<u8>(global_object, normalized_options, vm.names.fractionalSecondDigits, { "auto"sv }, 0, 9, js_string(vm, "auto"sv));
-    if (vm.exception())
-        return {};
+    auto digits_variant = TRY_OR_DISCARD(get_string_or_number_option<u8>(global_object, normalized_options, vm.names.fractionalSecondDigits, { "auto"sv }, 0, 9, js_string(vm, "auto"sv)));
 
     // 9. If digits is "auto", then
-    if (digits_variant->has<String>()) {
-        VERIFY(digits_variant->get<String>() == "auto"sv);
+    if (digits_variant.has<String>()) {
+        VERIFY(digits_variant.get<String>() == "auto"sv);
         // a. Return the Record { [[Precision]]: "auto", [[Unit]]: "nanosecond", [[Increment]]: 1 }.
         return SecondsStringPrecision { .precision = "auto"sv, .unit = "nanosecond"sv, .increment = 1 };
     }
 
-    auto digits = digits_variant->get<u8>();
+    auto digits = digits_variant.get<u8>();
 
     // 10. If digits is 0, then
     if (digits == 0) {
