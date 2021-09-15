@@ -41,12 +41,16 @@ private:
     void draw_using(GUI::Painter&, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position, int thickness);
 
     RefPtr<GUI::Widget> m_properties_widget;
+    RefPtr<GUI::TextBox> m_aspect_w_textbox;
+    RefPtr<GUI::TextBox> m_aspect_h_textbox;
+
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
     Gfx::IntPoint m_rectangle_start_position;
     Gfx::IntPoint m_rectangle_end_position;
     FillMode m_fill_mode { FillMode::Outline };
     DrawMode m_draw_mode { DrawMode::FromCorner };
     int m_thickness { 1 };
+    Optional<float> m_aspect_ratio;
 };
 
 }
