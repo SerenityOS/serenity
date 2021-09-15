@@ -305,11 +305,12 @@ Box::BorderRadiusData Box::normalized_border_radius_data()
     auto top_right_radius = computed_values().border_top_right_radius().resolved_or_zero(*this, width()).to_px(*this);
 
     // Scale overlapping curves according to https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
+    auto bordered_rect = this->bordered_rect();
     auto f = 1.0f;
-    f = min(f, bordered_rect().width() / (float)(top_left_radius + top_right_radius));
-    f = min(f, bordered_rect().height() / (float)(top_right_radius + bottom_right_radius));
-    f = min(f, bordered_rect().width() / (float)(bottom_left_radius + bottom_right_radius));
-    f = min(f, bordered_rect().height() / (float)(top_left_radius + bottom_left_radius));
+    f = min(f, bordered_rect.width() / (float)(top_left_radius + top_right_radius));
+    f = min(f, bordered_rect.height() / (float)(top_right_radius + bottom_right_radius));
+    f = min(f, bordered_rect.width() / (float)(bottom_left_radius + bottom_right_radius));
+    f = min(f, bordered_rect.height() / (float)(top_left_radius + bottom_left_radius));
 
     top_left_radius = (int)(top_left_radius * f);
     top_right_radius = (int)(top_right_radius * f);
