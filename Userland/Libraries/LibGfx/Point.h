@@ -249,6 +249,24 @@ private:
 using IntPoint = Point<int>;
 using FloatPoint = Point<float>;
 
+template<typename T>
+inline Point<T> linear_interpolate(Point<T> const& p1, Point<T> const& p2, float t)
+{
+    return Point<T> { p1.x() + t * (p2.x() - p1.x()), p1.y() + t * (p2.y() - p1.y()) };
+}
+
+template<typename T>
+inline Point<T> quadratic_interpolate(Point<T> const& p1, Point<T> const& p2, Point<T> const& c1, float t)
+{
+    return linear_interpolate(linear_interpolate(p1, c1, t), linear_interpolate(c1, p2, t), t);
+}
+
+template<typename T>
+inline Point<T> cubic_interpolate(Point<T> const& p1, Point<T> const& p2, Point<T> const& c1, Point<T> const& c2, float t)
+{
+    return linear_interpolate(quadratic_interpolate(p1, c1, c2, t), quadratic_interpolate(c1, c2, p2, t), t);
+}
+
 }
 
 namespace AK {
