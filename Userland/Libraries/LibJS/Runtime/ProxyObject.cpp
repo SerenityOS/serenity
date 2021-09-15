@@ -817,16 +817,19 @@ MarkedValueList ProxyObject::internal_own_property_keys() const
 
     // 8. Let trapResult be ? CreateListFromArrayLike(trapResultArray, « String, Symbol »).
     HashTable<StringOrSymbol> unique_keys;
-    auto trap_result = create_list_from_array_like(global_object, trap_result_array, [&](auto value) {
+    auto throw_completion_or_trap_result = create_list_from_array_like(global_object, trap_result_array, [&](auto value) -> ThrowCompletionOr<void> {
         auto& vm = global_object.vm();
-        if (!value.is_string() && !value.is_symbol()) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::ProxyOwnPropertyKeysNotStringOrSymbol);
-            return;
-        }
+        if (!value.is_string() && !value.is_symbol())
+            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyOwnPropertyKeysNotStringOrSymbol);
         auto property_key = value.to_property_key(global_object);
         VERIFY(!vm.exception());
         unique_keys.set(property_key, AK::HashSetExistingEntryBehavior::Keep);
+        return {};
     });
+    // TODO: This becomes a lot nicer once this function returns a ThrowCompletionOr as well.
+    if (throw_completion_or_trap_result.is_throw_completion())
+        return MarkedValueList { heap() };
+    auto trap_result = throw_completion_or_trap_result.release_value();
 
     // 9. If trapResult contains any duplicate entries, throw a TypeError exception.
     if (unique_keys.size() != trap_result.size()) {

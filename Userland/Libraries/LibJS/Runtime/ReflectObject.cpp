@@ -61,9 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::apply)
     }
 
     // 2. Let args be ? CreateListFromArrayLike(argumentsList).
-    auto args = create_list_from_array_like(global_object, arguments_list);
-    if (vm.exception())
-        return {};
+    auto args = TRY_OR_DISCARD(create_list_from_array_like(global_object, arguments_list));
 
     // 3. Perform PrepareForTailCall().
     // 4. Return ? Call(target, thisArgument, args).
@@ -94,9 +92,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::construct)
     }
 
     // 4. Let args be ? CreateListFromArrayLike(argumentsList).
-    auto args = create_list_from_array_like(global_object, arguments_list);
-    if (vm.exception())
-        return {};
+    auto args = TRY_OR_DISCARD(create_list_from_array_like(global_object, arguments_list));
 
     // 5. Return ? Construct(target, args, newTarget).
     return vm.construct(target.as_function(), new_target.as_function(), move(args));
