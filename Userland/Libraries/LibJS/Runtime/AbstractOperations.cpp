@@ -97,25 +97,38 @@ ThrowCompletionOr<MarkedValueList> create_list_from_array_like(GlobalObject& glo
 }
 
 // 7.3.22 SpeciesConstructor ( O, defaultConstructor ), https://tc39.es/ecma262/#sec-speciesconstructor
-FunctionObject* species_constructor(GlobalObject& global_object, Object const& object, FunctionObject& default_constructor)
+ThrowCompletionOr<FunctionObject*> species_constructor(GlobalObject& global_object, Object const& object, FunctionObject& default_constructor)
 {
     auto& vm = global_object.vm();
+
+    // 1. Let C be ? Get(O, "constructor").
     auto constructor = object.get(vm.names.constructor);
-    if (vm.exception())
-        return nullptr;
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+
+    // 2. If C is undefined, return defaultConstructor.
     if (constructor.is_undefined())
         return &default_constructor;
-    if (!constructor.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
-        return nullptr;
-    }
+
+    // 3. If Type(C) is not Object, throw a TypeError exception.
+    if (!constructor.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
+
+    // 4. Let S be ? Get(C, @@species).
     auto species = constructor.as_object().get(*vm.well_known_symbol_species());
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+
+    // 5. If S is either undefined or null, return defaultConstructor.
     if (species.is_nullish())
         return &default_constructor;
+
+    // 6. If IsConstructor(S) is true, return S.
     if (species.is_constructor())
         return &species.as_function();
-    vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, species.to_string_without_side_effects());
-    return nullptr;
+
+    // 7. Throw a TypeError exception.
+    return vm.throw_completion<TypeError>(global_object, ErrorType::NotAConstructor, species.to_string_without_side_effects());
 }
 
 // 7.3.24 GetFunctionRealm ( obj ), https://tc39.es/ecma262/#sec-getfunctionrealm

@@ -71,9 +71,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 
     auto new_length = max(final - first, 0.0);
 
-    auto constructor = species_constructor(global_object, *array_buffer_object, *global_object.array_buffer_constructor());
-    if (vm.exception())
-        return {};
+    auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, *array_buffer_object, *global_object.array_buffer_constructor()));
 
     MarkedValueList arguments(vm.heap());
     arguments.append(Value(new_length));
