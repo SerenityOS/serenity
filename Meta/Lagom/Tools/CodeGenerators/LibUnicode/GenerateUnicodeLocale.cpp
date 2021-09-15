@@ -74,18 +74,6 @@ struct UnicodeLocaleData {
     size_t max_variant_size { 0 };
 };
 
-static void write_to_file_if_different(Core::File& file, StringView contents)
-{
-    auto const current_contents = file.read_all();
-
-    if (StringView { current_contents.bytes() } == contents)
-        return;
-
-    VERIFY(file.seek(0));
-    VERIFY(file.truncate(0));
-    VERIFY(file.write(contents));
-}
-
 static Optional<CanonicalLanguageID> parse_language(StringView language)
 {
     CanonicalLanguageID language_id {};
@@ -607,7 +595,7 @@ Optional<String> resolve_most_likely_territory(Unicode::LanguageID const& langua
 }
 )~~~");
 
-    write_to_file_if_different(file, generator.as_string_view());
+    file.write(generator.as_string_view());
 }
 
 static void generate_unicode_locale_implementation(Core::File& file, UnicodeLocaleData& locale_data)
@@ -1144,7 +1132,7 @@ Optional<String> resolve_most_likely_territory(Unicode::LanguageID const& langua
 }
 )~~~");
 
-    write_to_file_if_different(file, generator.as_string_view());
+    file.write(generator.as_string_view());
 }
 
 int main(int argc, char** argv)

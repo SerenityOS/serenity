@@ -125,18 +125,6 @@ static constexpr auto s_desired_fields = Array {
     "simple_lowercase_mapping"sv,
 };
 
-static void write_to_file_if_different(Core::File& file, StringView contents)
-{
-    auto const current_contents = file.read_all();
-
-    if (StringView { current_contents.bytes() } == contents)
-        return;
-
-    VERIFY(file.seek(0));
-    VERIFY(file.truncate(0));
-    VERIFY(file.write(contents));
-}
-
 static Vector<u32> parse_code_point_list(StringView const& list)
 {
     Vector<u32> code_points;
@@ -578,7 +566,7 @@ Optional<Script> script_from_string(StringView const& script);
 }
 )~~~");
 
-    write_to_file_if_different(file, generator.as_string_view());
+    file.write(generator.as_string_view());
 }
 
 static void generate_unicode_data_implementation(Core::File& file, UnicodeData const& unicode_data)
@@ -861,7 +849,7 @@ Optional<@enum_title@> @enum_snake@_from_string(StringView const& @enum_snake@)
 }
 )~~~");
 
-    write_to_file_if_different(file, generator.as_string_view());
+    file.write(generator.as_string_view());
 }
 
 static Vector<u32> flatten_code_point_ranges(Vector<CodePointRange> const& code_points)
