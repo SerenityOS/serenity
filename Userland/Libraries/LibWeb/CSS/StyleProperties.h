@@ -55,6 +55,7 @@ public:
     Optional<CSS::FlexBasisData> flex_basis() const;
     Optional<float> flex_grow_factor() const;
     Optional<float> flex_shrink_factor() const;
+    Optional<CSS::AlignItems> align_items() const;
     Optional<float> opacity() const;
     Optional<CSS::JustifyContent> justify_content() const;
     Optional<CSS::Overflow> overflow_x() const;

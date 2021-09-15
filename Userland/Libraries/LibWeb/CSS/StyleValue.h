@@ -211,6 +211,14 @@ enum class JustifyContent {
     SpaceAround,
 };
 
+enum class AlignItems {
+    FlexStart,
+    FlexEnd,
+    Center,
+    Baseline,
+    Stretch,
+};
+
 class StyleValue : public RefCounted<StyleValue> {
 public:
     virtual ~StyleValue();
