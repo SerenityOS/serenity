@@ -8,8 +8,6 @@
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATAPIDiscDevice.h>
-#include <Kernel/Storage/IDEChannel.h>
-#include <Kernel/Storage/IDEController.h>
 #include <Kernel/Storage/StorageManagement.h>
 
 namespace Kernel {

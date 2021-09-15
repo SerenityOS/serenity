@@ -96,9 +96,6 @@ set(KERNEL_SOURCES
     Storage/ATADevice.cpp
     Storage/ATADiskDevice.cpp
     Storage/ATAPIDiscDevice.cpp
-    Storage/BMIDEChannel.cpp
-    Storage/IDEController.cpp
-    Storage/IDEChannel.cpp
     Storage/RamdiskController.cpp
     Storage/RamdiskDevice.cpp
     Storage/StorageManagement.cpp
@@ -490,6 +487,8 @@ add_custom_command(
     COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=Kernel.debug Kernel
     BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/kernel.map
 )
+
+include("${CMAKE_CURRENT_LIST_DIR}/Modules.cmake")
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel" DESTINATION boot)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel.debug" DESTINATION boot)

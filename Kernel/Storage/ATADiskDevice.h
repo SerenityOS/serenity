@@ -6,16 +6,12 @@
 
 #pragma once
 
-#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Storage/ATADevice.h>
 
 namespace Kernel {
 
-class IDEController;
-class IDEChannel;
 class ATADiskDevice final : public ATADevice {
-    friend class IDEController;
     friend class DeviceManagement;
 
 public:

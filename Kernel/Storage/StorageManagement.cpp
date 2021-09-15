@@ -14,7 +14,9 @@
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Storage/AHCIController.h>
-#include <Kernel/Storage/IDEController.h>
+#ifdef COMPILE_IDE
+#    include <Kernel/Storage/IDEController.h>
+#endif
 #include <Kernel/Storage/Partition/EBRPartitionTable.h>
 #include <Kernel/Storage/Partition/GUIDPartitionTable.h>
 #include <Kernel/Storage/Partition/MBRPartitionTable.h>
@@ -46,6 +48,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers()
 {
     VERIFY(m_controllers.is_empty());
     if (!kernel_command_line().disable_physical_storage()) {
+#ifdef COMPILE_IDE
         bool force_pio = kernel_command_line().is_force_pio();
         if (kernel_command_line().is_ide_enabled()) {
             PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
@@ -55,6 +58,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers()
                 }
             });
         }
+#endif
         PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
             if (device_identifier.class_code().value() == to_underlying(PCI::ClassID::MassStorage)
                 && device_identifier.subclass_code().value() == to_underlying(PCI::MassStorage::SubclassID::SATAController)
