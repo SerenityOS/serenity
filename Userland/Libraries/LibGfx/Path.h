@@ -134,6 +134,8 @@ public:
         invalidate_split_lines();
     }
 
+    void cubic_bezier_curve_to(FloatPoint const& c1, FloatPoint const& c2, FloatPoint const& p2);
+
     void elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, double x_axis_rotation, bool large_arc, bool sweep);
     void arc_to(const FloatPoint& point, float radius, bool large_arc, bool sweep)
     {

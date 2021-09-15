@@ -311,4 +311,15 @@ void Path::segmentize_path()
     m_bounding_box = Gfx::FloatRect { min_x, min_y, max_x - min_x, max_y - min_y };
 }
 
+void Path::cubic_bezier_curve_to(FloatPoint const& c1, FloatPoint const& c2, FloatPoint const& p2)
+{
+    // FIXME: I'm sure there's a faster and more elegant way to do this.
+    // FIXME: We should divide it into enough segments to stay within some tolerance.
+    auto p1 = segments().last().point();
+    for (float t = 0; t <= 1.0f; t += 0.02f) {
+        auto p = cubic_interpolate(p1, p2, c1, c2, t);
+        line_to(p);
+    }
+}
+
 }
