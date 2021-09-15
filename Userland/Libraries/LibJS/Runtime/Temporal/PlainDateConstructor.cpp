@@ -89,9 +89,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateConstructor::from)
     if (item.is_object() && is<PlainDate>(item.as_object())) {
         auto& plain_date_item = static_cast<PlainDate&>(item.as_object());
         // a. Perform ? ToTemporalOverflow(options).
-        (void)to_temporal_overflow(global_object, *options);
-        if (vm.exception())
-            return {};
+        (void)TRY_OR_DISCARD(to_temporal_overflow(global_object, *options));
+
         // b. Return ? CreateTemporalDate(item.[[ISOYear]], item.[[ISOMonth]], item.[[ISODay]], item.[[Calendar]]).
         return create_temporal_date(global_object, plain_date_item.iso_year(), plain_date_item.iso_month(), plain_date_item.iso_day(), plain_date_item.calendar());
     }
