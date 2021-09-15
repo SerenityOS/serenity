@@ -93,7 +93,7 @@ ThrowCompletionOr<String> to_temporal_overflow(GlobalObject&, Object const& norm
 ThrowCompletionOr<String> to_temporal_rounding_mode(GlobalObject&, Object const& normalized_options, String const& fallback);
 ThrowCompletionOr<String> to_show_calendar_option(GlobalObject&, Object const& normalized_options);
 ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject&, Object const& normalized_options, Optional<double> dividend, bool inclusive);
-Optional<SecondsStringPrecision> to_seconds_string_precision(GlobalObject&, Object const& normalized_options);
+ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObject&, Object const& normalized_options);
 Optional<String> to_largest_temporal_unit(GlobalObject&, Object const& normalized_options, Vector<StringView> const& disallowed_units, String const& fallback, Optional<String> auto_value);
 Optional<String> to_smallest_temporal_unit(GlobalObject&, Object const& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback);
 void validate_temporal_unit_range(GlobalObject&, StringView largest_unit, StringView smallest_unit);

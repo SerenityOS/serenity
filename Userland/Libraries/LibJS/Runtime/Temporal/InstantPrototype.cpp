@@ -410,15 +410,13 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
     }
 
     // 6. Let precision be ? ToSecondsStringPrecision(options).
-    auto precision = to_seconds_string_precision(global_object, *options);
-    if (vm.exception())
-        return {};
+    auto precision = TRY_OR_DISCARD(to_seconds_string_precision(global_object, *options));
 
     // 7. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY_OR_DISCARD(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
     // 8. Let roundedNs be ? RoundTemporalInstant(instant.[[Nanoseconds]], precision.[[Increment]], precision.[[Unit]], roundingMode).
-    auto* rounded_ns = round_temporal_instant(global_object, instant->nanoseconds(), precision->increment, precision->unit, rounding_mode);
+    auto* rounded_ns = round_temporal_instant(global_object, instant->nanoseconds(), precision.increment, precision.unit, rounding_mode);
     if (vm.exception())
         return {};
 
@@ -426,7 +424,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
     auto* rounded_instant = create_temporal_instant(global_object, *rounded_ns);
 
     // 10. Return ? TemporalInstantToString(roundedInstant, timeZone, precision.[[Precision]]).
-    auto string = temporal_instant_to_string(global_object, *rounded_instant, time_zone, precision->precision);
+    auto string = temporal_instant_to_string(global_object, *rounded_instant, time_zone, precision.precision);
     if (vm.exception())
         return {};
 

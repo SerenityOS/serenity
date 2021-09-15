@@ -286,14 +286,14 @@ ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject& global_objec
 }
 
 // 13.16 ToSecondsStringPrecision ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-tosecondsstringprecision
-Optional<SecondsStringPrecision> to_seconds_string_precision(GlobalObject& global_object, Object const& normalized_options)
+ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObject& global_object, Object const& normalized_options)
 {
     auto& vm = global_object.vm();
 
     // Let smallestUnit be ? ToSmallestTemporalUnit(normalizedOptions, « "year", "month", "week", "day", "hour" », undefined).
     auto smallest_unit = to_smallest_temporal_unit(global_object, normalized_options, { "year"sv, "month"sv, "week"sv, "day"sv, "hour"sv }, {});
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 2. If smallestUnit is "minute", then
     if (smallest_unit == "minute"sv) {
@@ -329,7 +329,7 @@ Optional<SecondsStringPrecision> to_seconds_string_precision(GlobalObject& globa
     VERIFY(!smallest_unit.has_value());
 
     // 8. Let digits be ? GetStringOrNumberOption(normalizedOptions, "fractionalSecondDigits", « "auto" », 0, 9, "auto").
-    auto digits_variant = TRY_OR_DISCARD(get_string_or_number_option<u8>(global_object, normalized_options, vm.names.fractionalSecondDigits, { "auto"sv }, 0, 9, js_string(vm, "auto"sv)));
+    auto digits_variant = TRY(get_string_or_number_option<u8>(global_object, normalized_options, vm.names.fractionalSecondDigits, { "auto"sv }, 0, 9, js_string(vm, "auto"sv)));
 
     // 9. If digits is "auto", then
     if (digits_variant.has<String>()) {
