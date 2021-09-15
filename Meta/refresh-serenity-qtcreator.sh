@@ -11,4 +11,4 @@ fi
 
 cd "$SERENITY_SOURCE_DIR"
 
-find . \( -name Base -o -name Patches -o -name Ports -o -name Root -o -name Toolchain -o -name Build \) -prune -o \( -name '*.ipc' -or -name '*.cpp' -or -name '*.idl' -or -name '*.c' -or -name '*.h' -or -name '*.S' -or -name '*.css' -or -name '*.json' -or -name '*.gml' -or -name 'CMakeLists.txt' \) -print > serenity.files
+find . \( -name Base -o -name Patches -o -name Ports -o -name Root -o -name Toolchain -o -name Build \) -prune -o \( -name '*.ipc' -or -name '*.cpp' -or -name '*.idl' -or -name '*.c' -or -name '*.h' -or -name '*.S' -or -name '*.css' -or -name '*.cmake' -or -name '*.json' -or -name '*.gml' -or -name 'CMakeLists.txt' \) -print > serenity.files
