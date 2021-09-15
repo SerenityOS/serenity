@@ -9,10 +9,10 @@
 // NOTE: This macro works with any result type that has the expected APIs.
 //       It's designed with AK::Result and Kernel::KResult in mind.
 
-#define TRY(expression)                    \
-    ({                                     \
-        auto result = (expression);        \
-        if (result.is_error())             \
-            return result.release_error(); \
-        result.release_value();            \
+#define TRY(expression)                               \
+    ({                                                \
+        auto _temporary_result = (expression);        \
+        if (_temporary_result.is_error())             \
+            return _temporary_result.release_error(); \
+        _temporary_result.release_value();            \
     })
