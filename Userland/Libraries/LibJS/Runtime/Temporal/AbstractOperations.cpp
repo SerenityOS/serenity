@@ -238,7 +238,7 @@ ThrowCompletionOr<String> to_show_calendar_option(GlobalObject& global_object, O
 }
 
 // 13.14 ToTemporalRoundingIncrement ( normalizedOptions, dividend, inclusive ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingincrement
-u64 to_temporal_rounding_increment(GlobalObject& global_object, Object const& normalized_options, Optional<double> dividend, bool inclusive)
+ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject& global_object, Object const& normalized_options, Optional<double> dividend, bool inclusive)
 {
     auto& vm = global_object.vm();
 
@@ -265,25 +265,21 @@ u64 to_temporal_rounding_increment(GlobalObject& global_object, Object const& no
     }
 
     // 5. Let increment be ? GetOption(normalizedOptions, "roundingIncrement", « Number », empty, 1).
-    auto increment_value = TRY_OR_DISCARD(get_option(global_object, normalized_options, vm.names.roundingIncrement, { OptionType::Number }, {}, Value(1)));
+    auto increment_value = TRY(get_option(global_object, normalized_options, vm.names.roundingIncrement, { OptionType::Number }, {}, Value(1)));
     VERIFY(increment_value.is_number());
     auto increment = increment_value.as_double();
 
     // 6. If increment < 1 or increment > maximum, throw a RangeError exception.
-    if (increment < 1 || increment > maximum) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, increment, "roundingIncrement");
-        return {};
-    }
+    if (increment < 1 || increment > maximum)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, increment, "roundingIncrement");
 
     // 7. Set increment to floor(ℝ(increment)).
     auto floored_increment = static_cast<u64>(increment);
 
     // 8. If dividend is not undefined and dividend modulo increment is not zero, then
-    if (dividend.has_value() && static_cast<u64>(*dividend) % floored_increment != 0) {
+    if (dividend.has_value() && static_cast<u64>(*dividend) % floored_increment != 0)
         // a. Throw a RangeError exception.
-        vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, increment, "roundingIncrement");
-        return {};
-    }
+        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, increment, "roundingIncrement");
 
     // 9. Return increment.
     return floored_increment;
