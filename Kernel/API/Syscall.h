@@ -300,10 +300,10 @@ struct SC_getsockopt_params {
 };
 
 struct SC_setsockopt_params {
+    const void* value;
     int sockfd;
     int level;
     int option;
-    const void* value;
     socklen_t value_size;
 };
 
