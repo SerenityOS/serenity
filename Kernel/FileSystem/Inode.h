@@ -126,11 +126,11 @@ private:
     IntrusiveListNode<Inode> m_inode_list_node;
 
     struct Flock {
-        short type;
         off_t start;
         off_t len;
         OpenFileDescription const* owner;
         pid_t pid;
+        short type;
     };
 
     Vector<Flock> m_flocks;

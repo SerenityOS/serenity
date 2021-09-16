@@ -336,7 +336,7 @@ KResult Inode::apply_flock(Process const& process, OpenFileDescription const& de
         return EINVAL;
     }
 
-    m_flocks.append(Flock { new_lock.l_type, new_lock.l_start, new_lock.l_len, &description, process.pid().value() });
+    m_flocks.append(Flock { new_lock.l_start, new_lock.l_len, &description, process.pid().value(), new_lock.l_type });
     return KSuccess;
 }
 
