@@ -81,7 +81,7 @@ Value DurationConstructor::construct(FunctionObject& new_target)
     auto ns = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(9), ErrorType::TemporalInvalidDuration));
 
     // 12. Return ? CreateTemporalDuration(y, mo, w, d, h, m, s, ms, mis, ns, NewTarget).
-    return create_temporal_duration(global_object, y, mo, w, d, h, m, s, ms, mis, ns, &new_target);
+    return TRY_OR_DISCARD(create_temporal_duration(global_object, y, mo, w, d, h, m, s, ms, mis, ns, &new_target));
 }
 
 // 7.2.2 Temporal.Duration.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.duration.from
@@ -94,11 +94,11 @@ JS_DEFINE_NATIVE_FUNCTION(DurationConstructor::from)
         auto& duration = static_cast<Duration&>(item.as_object());
 
         // a. Return ? CreateTemporalDuration(item.[[Years]], item.[[Months]], item.[[Weeks]], item.[[Days]], item.[[Hours]], item.[[Minutes]], item.[[Seconds]], item.[[Milliseconds]], item.[[Microseconds]], item.[[Nanoseconds]]).
-        return create_temporal_duration(global_object, duration.years(), duration.months(), duration.weeks(), duration.days(), duration.hours(), duration.minutes(), duration.seconds(), duration.milliseconds(), duration.microseconds(), duration.nanoseconds());
+        return TRY_OR_DISCARD(create_temporal_duration(global_object, duration.years(), duration.months(), duration.weeks(), duration.days(), duration.hours(), duration.minutes(), duration.seconds(), duration.milliseconds(), duration.microseconds(), duration.nanoseconds()));
     }
 
     // 2. Return ? ToTemporalDuration(item).
-    return to_temporal_duration(global_object, item);
+    return TRY_OR_DISCARD(to_temporal_duration(global_object, item));
 }
 
 }

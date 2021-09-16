@@ -137,12 +137,10 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::add)
         return {};
 
     // 3. Let duration be ? ToLimitedTemporalDuration(temporalDurationLike, « "years", "months", "weeks", "days" »).
-    auto duration = to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv });
-    if (vm.exception())
-        return {};
+    auto duration = TRY_OR_DISCARD(to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv }));
 
     // 4. Let ns be ? AddInstant(instant.[[Nanoseconds]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]]).
-    auto* ns = add_instant(global_object, instant->nanoseconds(), duration->hours, duration->minutes, duration->seconds, duration->milliseconds, duration->microseconds, duration->nanoseconds);
+    auto* ns = add_instant(global_object, instant->nanoseconds(), duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, duration.nanoseconds);
     if (vm.exception())
         return {};
 
@@ -162,12 +160,10 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::subtract)
         return {};
 
     // 3. Let duration be ? ToLimitedTemporalDuration(temporalDurationLike, « "years", "months", "weeks", "days" »).
-    auto duration = to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv });
-    if (vm.exception())
-        return {};
+    auto duration = TRY_OR_DISCARD(to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv }));
 
     // 4. Let ns be ? AddInstant(instant.[[Nanoseconds]], −duration.[[Hours]], −duration.[[Minutes]], −duration.[[Seconds]], −duration.[[Milliseconds]], −duration.[[Microseconds]], −duration.[[Nanoseconds]]).
-    auto* ns = add_instant(global_object, instant->nanoseconds(), -duration->hours, -duration->minutes, -duration->seconds, -duration->milliseconds, -duration->microseconds, -duration->nanoseconds);
+    auto* ns = add_instant(global_object, instant->nanoseconds(), -duration.hours, -duration.minutes, -duration.seconds, -duration.milliseconds, -duration.microseconds, -duration.nanoseconds);
     if (vm.exception())
         return {};
 
@@ -217,10 +213,10 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
     auto rounded_ns = difference_instant(global_object, instant->nanoseconds(), other->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
 
     // 13. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
-    auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, largest_unit);
+    auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, largest_unit).release_value();
 
     // 14. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
-    return create_temporal_duration(global_object, 0, 0, 0, 0, result->hours, result->minutes, result->seconds, result->milliseconds, result->microseconds, result->nanoseconds);
+    return TRY_OR_DISCARD(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
 }
 
 // 8.3.10 Temporal.Instant.prototype.since ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.since
@@ -265,10 +261,10 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
     auto rounded_ns = difference_instant(global_object, other->nanoseconds(), instant->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
 
     // 13. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
-    auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, largest_unit);
+    auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, largest_unit).release_value();
 
     // 14. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
-    return create_temporal_duration(global_object, 0, 0, 0, 0, result->hours, result->minutes, result->seconds, result->milliseconds, result->microseconds, result->nanoseconds);
+    return TRY_OR_DISCARD(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
 }
 
 // 8.3.11 Temporal.Instant.prototype.round ( options ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.round
