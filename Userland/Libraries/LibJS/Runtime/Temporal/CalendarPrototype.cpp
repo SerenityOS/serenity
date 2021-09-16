@@ -95,12 +95,10 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_from_fields)
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 6. Let result be ? ISODateFromFields(fields, options).
-    auto result = iso_date_from_fields(global_object, fields.as_object(), *options);
-    if (vm.exception())
-        return {};
+    auto result = TRY_OR_DISCARD(iso_date_from_fields(global_object, fields.as_object(), *options));
 
     // 7. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
-    return create_temporal_date(global_object, result->year, result->month, result->day, *calendar);
+    return create_temporal_date(global_object, result.year, result.month, result.day, *calendar);
 }
 
 // 12.4.5 Temporal.Calendar.prototype.yearMonthFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.yearmonthfromfields
@@ -127,12 +125,10 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year_month_from_fields)
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 6. Let result be ? ISOYearMonthFromFields(fields, options).
-    auto result = iso_year_month_from_fields(global_object, fields.as_object(), *options);
-    if (vm.exception())
-        return {};
+    auto result = TRY_OR_DISCARD(iso_year_month_from_fields(global_object, fields.as_object(), *options));
 
     // 7. Return ? CreateTemporalYearMonth(result.[[Year]], result.[[Month]], calendar, result.[[ReferenceISODay]]).
-    return TRY_OR_DISCARD(create_temporal_year_month(global_object, result->year, result->month, *calendar, result->reference_iso_day));
+    return TRY_OR_DISCARD(create_temporal_year_month(global_object, result.year, result.month, *calendar, result.reference_iso_day));
 }
 
 // 12.4.6 Temporal.Calendar.prototype.monthDayFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.monthdayfromfields
@@ -159,12 +155,10 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_day_from_fields)
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 6. Let result be ? ISOMonthDayFromFields(fields, options).
-    auto result = iso_month_day_from_fields(global_object, fields.as_object(), *options);
-    if (vm.exception())
-        return {};
+    auto result = TRY_OR_DISCARD(iso_month_day_from_fields(global_object, fields.as_object(), *options));
 
     // 7. Return ? CreateTemporalMonthDay(result.[[Month]], result.[[Day]], calendar, result.[[ReferenceISOYear]]).
-    return TRY_OR_DISCARD(create_temporal_month_day(global_object, result->month, result->day, *calendar, result->reference_iso_year));
+    return TRY_OR_DISCARD(create_temporal_month_day(global_object, result.month, result.day, *calendar, result.reference_iso_year));
 }
 
 // 12.4.7 Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dateadd
@@ -617,7 +611,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::merge_fields)
         return {};
 
     // 6. Return ? DefaultMergeFields(fields, additionalFields).
-    return default_merge_fields(global_object, *fields, *additional_fields);
+    return TRY_OR_DISCARD(default_merge_fields(global_object, *fields, *additional_fields));
 }
 
 // 12.4.23 Temporal.Calendar.prototype.toString ( ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.tostring

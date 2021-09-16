@@ -74,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::year_getter)
     auto& calendar = year_month->calendar();
 
     // 4. Return 𝔽(? CalendarYear(calendar, yearMonth)).
-    return Value(calendar_year(global_object, calendar, *year_month));
+    return Value(TRY_OR_DISCARD(calendar_year(global_object, calendar, *year_month)));
 }
 
 // 9.3.5 get Temporal.PlainYearMonth.prototype.month, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.month
@@ -90,7 +90,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::month_getter)
     auto& calendar = year_month->calendar();
 
     // 4. Return 𝔽(? CalendarMonth(calendar, yearMonth)).
-    return Value(calendar_month(global_object, calendar, *year_month));
+    return Value(TRY_OR_DISCARD(calendar_month(global_object, calendar, *year_month)));
 }
 
 // 9.3.6 get Temporal.PlainYearMonth.prototype.monthCode, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.monthCode
@@ -106,7 +106,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::month_code_getter)
     auto& calendar = year_month->calendar();
 
     // 4. Return ? CalendarMonthCode(calendar, yearMonth).
-    return js_string(vm, calendar_month_code(global_object, calendar, *year_month));
+    return js_string(vm, TRY_OR_DISCARD(calendar_month_code(global_object, calendar, *year_month)));
 }
 
 // 9.3.7 get Temporal.PlainYearMonth.prototype.daysInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.daysinyear
@@ -122,7 +122,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::days_in_year_getter)
     auto& calendar = year_month->calendar();
 
     // 4. Return ? CalendarDaysInYear(calendar, yearMonth).
-    return Value(calendar_days_in_year(global_object, calendar, *year_month));
+    return Value(TRY_OR_DISCARD(calendar_days_in_year(global_object, calendar, *year_month)));
 }
 
 // 9.3.8 get Temporal.PlainYearMonth.prototype.daysInMonth, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.daysinmonth
@@ -138,7 +138,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::days_in_month_getter)
     auto& calendar = year_month->calendar();
 
     // 4. Return ? CalendarDaysInMonth(calendar, yearMonth).
-    return Value(calendar_days_in_month(global_object, calendar, *year_month));
+    return Value(TRY_OR_DISCARD(calendar_days_in_month(global_object, calendar, *year_month)));
 }
 
 // 9.3.9 get Temporal.PlainYearMonth.prototype.monthsInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.monthsinyear
@@ -154,7 +154,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::months_in_year_getter)
     auto& calendar = year_month->calendar();
 
     // 4. Return ? CalendarMonthsInYear(calendar, yearMonth).
-    return Value(calendar_months_in_year(global_object, calendar, *year_month));
+    return Value(TRY_OR_DISCARD(calendar_months_in_year(global_object, calendar, *year_month)));
 }
 
 // 9.3.10 get Temporal.PlainYearMonth.prototype.inLeapYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.inleapyear
@@ -170,7 +170,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::in_leap_year_getter)
     auto& calendar = year_month->calendar();
 
     // 4. Return ? CalendarInLeapYear(calendar, yearMonth).
-    return Value(calendar_in_leap_year(global_object, calendar, *year_month));
+    return Value(TRY_OR_DISCARD(calendar_in_leap_year(global_object, calendar, *year_month)));
 }
 
 // 15.6.9.2 get Temporal.PlainYearMonth.prototype.era, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.era
@@ -186,7 +186,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::era_getter)
     auto& calendar = plain_year_month->calendar();
 
     // 4. Return ? CalendarEra(calendar, plainYearMonth).
-    return calendar_era(global_object, calendar, *plain_year_month);
+    return TRY_OR_DISCARD(calendar_era(global_object, calendar, *plain_year_month));
 }
 
 // 15.6.9.3 get Temporal.PlainYearMonth.prototype.eraYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.erayear
@@ -202,7 +202,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::era_year_getter)
     auto& calendar = plain_year_month->calendar();
 
     // 4. Return ? CalendarEraYear(calendar, plainYearMonth).
-    return calendar_era_year(global_object, calendar, *plain_year_month);
+    return TRY_OR_DISCARD(calendar_era_year(global_object, calendar, *plain_year_month));
 }
 
 // 9.3.16 Temporal.PlainYearMonth.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.equals
@@ -230,7 +230,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::equals)
         return Value(false);
 
     // 7. Return ? CalendarEquals(yearMonth.[[Calendar]], other.[[Calendar]]).
-    return Value(calendar_equals(global_object, year_month->calendar(), other->calendar()));
+    return Value(TRY_OR_DISCARD(calendar_equals(global_object, year_month->calendar(), other->calendar())));
 }
 
 // 9.3.17 Temporal.PlainYearMonth.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tostring

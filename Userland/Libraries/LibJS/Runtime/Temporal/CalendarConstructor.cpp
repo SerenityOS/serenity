@@ -61,7 +61,7 @@ Value CalendarConstructor::construct(FunctionObject& new_target)
     }
 
     // 4. Return ? CreateTemporalCalendar(id, NewTarget).
-    return create_temporal_calendar(global_object, identifier, &new_target);
+    return TRY_OR_DISCARD(create_temporal_calendar(global_object, identifier, &new_target));
 }
 
 // 12.3.2 Temporal.Calendar.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.from
@@ -70,7 +70,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarConstructor::from)
     auto item = vm.argument(0);
 
     // 1. Return ? ToTemporalCalendar(item).
-    return to_temporal_calendar(global_object, item);
+    return TRY_OR_DISCARD(to_temporal_calendar(global_object, item));
 }
 
 }
