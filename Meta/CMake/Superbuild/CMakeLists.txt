@@ -130,7 +130,7 @@ ExternalProject_Add(
     BUILD_ALWAYS YES
     # Host tools must be built and installed before the OS can be built
     DEPENDS lagom-install
-    STEP_TARGETS install
+    STEP_TARGETS configure install
     ${console_access}
 )
 

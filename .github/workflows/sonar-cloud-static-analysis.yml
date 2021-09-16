@@ -42,7 +42,7 @@ jobs:
           echo "sonar.organization=serenityos" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.cfamily.cache.enabled=true" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.cfamily.cache.path=.sonar" >> ${{ github.workspace }}/sonar-project.properties
-          echo "sonar.cfamily.compile-commands=${{ github.workspace }}/Build/compile_commands.json" >> ${{ github.workspace }}/sonar-project.properties
+          echo "sonar.cfamily.compile-commands=${{ github.workspace }}/Build/${{ env.SONAR_ANALYSIS_ARCH }}/compile_commands.json" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.cfamily.threads=2" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.host.url=${{ env.SONAR_SERVER_URL }}" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.sources=AK,Build,Userland,Kernel,Meta" >> ${{ github.workspace }}/sonar-project.properties
@@ -98,19 +98,29 @@ jobs:
 
       - name: Create build directory
         run: |
-          mkdir -p ${{ github.workspace }}/Build
-          mkdir -p ${{ github.workspace }}/Build/UCD
-          mkdir -p ${{ github.workspace }}/Build/CLDR
+          mkdir -p ${{ github.workspace }}/Build/${{ env.SONAR_ANALYSIS_ARCH }}/UCD
+          mkdir -p ${{ github.workspace }}/Build/${{ env.SONAR_ANALYSIS_ARCH }}/CLDR
 
       - name: Create build environment
-        working-directory: ${{ github.workspace }}/Build
-        run: cmake .. -GNinja -DSERENITY_ARCH=i686 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
-
+        working-directory: ${{ github.workspace }}
+        run: |
+          cmake -S Meta/CMake/Superbuild -B Build/superbuild -GNinja \
+            -DSERENITY_ARCH=${{ env.SONAR_ANALYSIS_ARCH }} \
+            -DSERENITY_TOOLCHAIN=GNU \
+            -DCMAKE_C_COMPILER=gcc-10 \
+            -DCMAKE_CXX_COMPILER=g++-10 \
+            -DENABLE_PCI_IDS_DOWNLOAD=OFF \
+            -DENABLE_USB_IDS_DOWNLOAD=OFF
 
       - name: Build generated sources so they are available for analysis.
-        working-directory: ${{ github.workspace }}/Build
+        working-directory: ${{ github.workspace }}
+        # Note: The superbuild will create the Build/arch directory when doing the
+        #       configure step for the serenity ExternalProject, as that's the configured
+        #       binary directory for that project.
         run: |
-          ninja all_generated
+          ninja -C Build/superbuild serenity-configure
+          cmake -B Build/{{ env.SONAR_ANALYSIS_ARCH }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          ninja -C Build/{{ env.SONAR_ANALYSIS_ARCH }} all_generated
 
       - name: Run sonar-scanner, upload results
         env:
