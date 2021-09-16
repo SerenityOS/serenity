@@ -547,18 +547,6 @@ diff --git a/libcxx/include/iosfwd b/libcxx/include/iosfwd
 index 0a0de99ff..790dc4023 100644
 --- a/libcxx/include/iosfwd
 +++ b/libcxx/include/iosfwd
-@@ -92,7 +92,11 @@ typedef fpos<char_traits<wchar_t>::state_type> wstreampos;
- */
- 
- #include <__config>
-+#if 0
- #include <wchar.h>  // for mbstate_t
-+#endif
-+
-+#define mbstate_t void
- 
- #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
- #pragma GCC system_header
 @@ -109,7 +113,9 @@ template<> struct char_traits<char8_t>;
  #endif
  template<> struct char_traits<char16_t>;
