@@ -78,7 +78,7 @@
     ]
   },
   "border-bottom-color": {
-    "initial": "currentColor",
+    "initial": "currentcolor",
     "inherited": false,
     "quirks": [
       "hashless-hex-color"
@@ -119,7 +119,7 @@
     "initial": "separate"
   },
   "border-left-color": {
-    "initial": "currentColor",
+    "initial": "currentcolor",
     "inherited": false,
     "quirks": [
       "hashless-hex-color"
@@ -145,7 +145,7 @@
     ]
   },
   "border-right-color": {
-    "initial": "currentColor",
+    "initial": "currentcolor",
     "inherited": false,
     "quirks": [
       "hashless-hex-color"
@@ -178,7 +178,7 @@
     ]
   },
   "border-top-color": {
-    "initial": "currentColor",
+    "initial": "currentcolor",
     "inherited": false,
     "quirks": [
       "hashless-hex-color"
