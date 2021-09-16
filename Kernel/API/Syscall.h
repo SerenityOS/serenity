@@ -285,9 +285,9 @@ struct SC_clock_nanosleep_params {
 };
 
 struct SC_accept4_params {
-    int sockfd;
     sockaddr* addr;
     socklen_t* addrlen;
+    int sockfd;
     int flags;
 };
 
