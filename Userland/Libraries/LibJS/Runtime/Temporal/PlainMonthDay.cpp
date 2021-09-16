@@ -103,9 +103,7 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(GlobalObject& global_obj
             return throw_completion(exception->value());
 
         // e. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
-        auto* fields = prepare_temporal_fields(global_object, item_object, field_names, {});
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, {}));
 
         // f. Let month be ? Get(fields, "month").
         auto month = fields->get(vm.names.month);

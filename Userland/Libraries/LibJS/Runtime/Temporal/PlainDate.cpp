@@ -122,9 +122,7 @@ PlainDate* to_temporal_date(GlobalObject& global_object, Value item, Object* opt
             return {};
 
         // f. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
-        auto* fields = prepare_temporal_fields(global_object, item_object, field_names, {});
-        if (vm.exception())
-            return {};
+        auto* fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, item_object, field_names, {}));
 
         // g. Return ? DateFromFields(calendar, fields, options).
         return date_from_fields(global_object, *calendar, *fields, *options);

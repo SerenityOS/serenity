@@ -1038,7 +1038,7 @@ ThrowCompletionOr<double> to_positive_integer(GlobalObject& global_object, Value
 }
 
 // 13.48 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
-Object* prepare_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields)
+ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields)
 {
     auto& vm = global_object.vm();
 
@@ -1052,16 +1052,15 @@ Object* prepare_temporal_fields(GlobalObject& global_object, Object const& field
     for (auto& property : field_names) {
         // a. Let value be ? Get(fields, property).
         auto value = fields.get(property);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // b. If value is undefined, then
         if (value.is_undefined()) {
             // i. If requiredFields contains property, then
             if (required_fields.contains_slow(property)) {
                 // 1. Throw a TypeError exception.
-                vm.throw_exception<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, property);
-                return {};
+                return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, property);
             }
             // ii. If property is in the Property column of Table 13, then
             // NOTE: The other properties in the table are automatically handled as their default value is undefined
@@ -1076,13 +1075,13 @@ Object* prepare_temporal_fields(GlobalObject& global_object, Object const& field
             // 1. Let Conversion represent the abstract operation named by the Conversion value of the same row.
             // 2. Set value to ? Conversion(value).
             if (property.is_one_of("year", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond", "eraYear")) {
-                value = Value(TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite)));
+                value = Value(TRY(to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite)));
             } else if (property.is_one_of("month", "day")) {
-                value = Value(TRY_OR_DISCARD(to_positive_integer(global_object, value)));
+                value = Value(TRY(to_positive_integer(global_object, value)));
             } else if (property.is_one_of("monthCode", "offset", "era")) {
                 value = value.to_primitive_string(global_object);
-                if (vm.exception())
-                    return {};
+                if (auto* exception = vm.exception())
+                    return throw_completion(exception->value());
             }
         }
 
