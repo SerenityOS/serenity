@@ -2687,19 +2687,13 @@ NonnullRefPtr<Statement> Parser::parse_for_statement()
 
     consume(TokenType::ParenOpen);
 
-    bool in_scope = false;
-    ScopeGuard guard([&]() {
-        if (in_scope)
-            m_state.let_scopes.take_last();
-    });
+    Optional<ScopePusher> scope_pusher;
 
     RefPtr<ASTNode> init;
     if (!match(TokenType::Semicolon)) {
         if (match_variable_declaration()) {
-            if (!match(TokenType::Var)) {
-                m_state.let_scopes.append(NonnullRefPtrVector<VariableDeclaration>());
-                in_scope = true;
-            }
+            if (!match(TokenType::Var))
+                scope_pusher.emplace(*this, ScopePusher::Let, Scope::Block);
             init = parse_variable_declaration(true);
             if (match_for_in_of())
                 return parse_for_in_of_statement(*init);
