@@ -8,6 +8,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibLine/Editor.h>
 #include <LibSQL/AST/Lexer.h>
@@ -33,9 +34,8 @@ public:
 
             bool indenters_starting_line = true;
             for (SQL::AST::Token token = lexer.next(); token.type() != SQL::AST::TokenType::Eof; token = lexer.next()) {
-                auto length = token.value().length();
                 auto start = token.start_position().column - 1;
-                auto end = start + length;
+                auto end = token.end_position().column - 1;
 
                 if (indenters_starting_line) {
                     if (token.type() != SQL::AST::TokenType::ParenClose)
@@ -93,7 +93,7 @@ public:
         m_sql_client->on_next_result = [](int, Vector<String> const& row) {
             StringBuilder builder;
             builder.join(", ", row);
-            outln(builder.build());
+            outln("{}", builder.build());
         };
 
         m_sql_client->on_results_exhausted = [this](int, int total_rows) {
@@ -141,6 +141,18 @@ public:
         }
     }
 
+    void source_file(String file_name)
+    {
+        m_input_file_chain.append(move(file_name));
+        m_quit_when_files_read = false;
+    }
+
+    void read_file(String file_name)
+    {
+        m_input_file_chain.append(move(file_name));
+        m_quit_when_files_read = true;
+    }
+
     auto run()
     {
         return m_loop.exec();
@@ -156,6 +168,38 @@ private:
     AK::RefPtr<SQL::SQLClient> m_sql_client { nullptr };
     int m_connection_id { 0 };
     Core::EventLoop m_loop;
+    RefPtr<Core::File> m_input_file { nullptr };
+    bool m_quit_when_files_read { false };
+    Vector<String> m_input_file_chain {};
+
+    Optional<String> get_line()
+    {
+        if (!m_input_file && !m_input_file_chain.is_empty()) {
+            auto file_name = m_input_file_chain.take_first();
+            auto file_or_error = Core::File::open(file_name, Core::OpenMode::ReadOnly);
+            if (file_or_error.is_error()) {
+                warnln("Input file {} could not be opened: {}", file_name, file_or_error.error().string());
+                return {};
+            }
+            m_input_file = file_or_error.value();
+        }
+        if (m_input_file) {
+            auto line = m_input_file->read_line();
+            if (m_input_file->eof()) {
+                m_input_file->close();
+                m_input_file = nullptr;
+                if (m_quit_when_files_read && m_input_file_chain.is_empty())
+                    return {};
+            }
+            return line;
+            // If the last file is exhausted but m_quit_when_files_read is false
+            // we fall through to the standard reading from the editor behaviour
+        }
+        auto line_result = m_editor->get_line(prompt_for_level(m_repl_line_level));
+        if (line_result.is_error())
+            return {};
+        return line_result.value();
+    }
 
     String read_next_piece()
     {
@@ -165,14 +209,14 @@ private:
             if (!piece.is_empty())
                 piece.append('\n');
 
-            auto line_result = m_editor->get_line(prompt_for_level(m_repl_line_level));
+            auto line_maybe = get_line();
 
-            if (line_result.is_error()) {
+            if (!line_maybe.has_value()) {
                 m_keep_running = false;
                 return {};
             }
 
-            auto& line = line_result.value();
+            auto& line = line_maybe.value();
             auto lexer = SQL::AST::Lexer(line);
 
             m_editor->add_to_history(line);
@@ -214,8 +258,13 @@ private:
     void read_sql()
     {
         String piece = read_next_piece();
-        if (piece.is_empty())
+
+        // m_keep_running can be set to false when the file we are reading
+        // from is exhausted...
+        if (!m_keep_running) {
+            m_sql_client->async_disconnect(m_connection_id);
             return;
+        }
 
         if (piece.starts_with('.')) {
             handle_command(piece);
@@ -224,6 +273,7 @@ private:
             m_sql_client->async_statement_execute(statement_id);
         }
 
+        // ...But m_keep_running can also be set to false by a command handler.
         if (!m_keep_running) {
             m_sql_client->async_disconnect(m_connection_id);
             return;
@@ -251,7 +301,21 @@ private:
             if (parts.size() == 2)
                 connect(parts[1]);
             else
-                outln("\033[33;1mUsage: .connect <database name>\033[0m {}", command);
+                outln("\033[33;1mUsage: .connect <database name>\033[0m");
+        } else if (command.starts_with(".read ")) {
+            if (!m_input_file) {
+                auto parts = command.split_view(' ');
+                if (parts.size() == 2) {
+                    source_file(parts[1]);
+                } else {
+                    outln("\033[33;1mUsage: .read <sql file>\033[0m");
+                }
+            } else {
+                outln("\033[33;1mCannot recursively read sql files\033[0m");
+            }
+            m_loop.deferred_invoke([this]() {
+                read_sql();
+            });
         } else {
             outln("\033[33;1mUnrecognized command:\033[0m {}", command);
         }
@@ -261,12 +325,26 @@ private:
 int main(int argc, char** argv)
 {
     String database_name(getlogin());
+    String file_to_source;
+    String file_to_read;
+    bool suppress_sqlrc = false;
+    auto sqlrc_path = String::formatted("{}/.sqlrc", Core::StandardPaths::home_directory());
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This is a client for the SerenitySQL database server.");
     args_parser.add_option(database_name, "Database to connect to", "database", 'd', "database");
+    args_parser.add_option(file_to_read, "File to read", "read", 'r', "file");
+    args_parser.add_option(file_to_source, "File to source", "source", 's', "file");
+    args_parser.add_option(suppress_sqlrc, "Don't read ~/.sqlrc", "no-sqlrc", 'n');
     args_parser.parse(argc, argv);
 
     SQLRepl repl(database_name);
+
+    if (!suppress_sqlrc && Core::File::exists(sqlrc_path))
+        repl.source_file(sqlrc_path);
+    if (!file_to_source.is_empty())
+        repl.source_file(file_to_source);
+    if (!file_to_read.is_empty())
+        repl.read_file(file_to_read);
     return repl.run();
 }
