@@ -321,8 +321,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (auto list_style_type = specified_style.list_style_type(); list_style_type.has_value())
         computed_values.set_list_style_type(list_style_type.value());
 
-    computed_values.set_color(specified_style.color_or_fallback(CSS::PropertyID::Color, document(), Color::Black));
-    computed_values.set_background_color(specified_style.color_or_fallback(CSS::PropertyID::BackgroundColor, document(), Color::Transparent));
+    computed_values.set_color(specified_style.color_or_fallback(CSS::PropertyID::Color, *this, Color::Black));
+    computed_values.set_background_color(specified_style.color_or_fallback(CSS::PropertyID::BackgroundColor, *this, Color::Transparent));
 
     computed_values.set_z_index(specified_style.z_index());
     computed_values.set_opacity(specified_style.opacity());
@@ -348,7 +348,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     computed_values.set_box_shadow(specified_style.box_shadow());
 
     auto do_border_style = [&](CSS::BorderData& border, CSS::PropertyID width_property, CSS::PropertyID color_property, CSS::PropertyID style_property) {
-        border.color = specified_style.color_or_fallback(color_property, document(), Color::Transparent);
+        border.color = specified_style.color_or_fallback(color_property, *this, Color::Transparent);
         border.line_style = specified_style.line_style(style_property).value_or(CSS::LineStyle::None);
         if (border.line_style == CSS::LineStyle::None)
             border.width = 0;
@@ -362,9 +362,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     do_border_style(computed_values.border_bottom(), CSS::PropertyID::BorderBottomWidth, CSS::PropertyID::BorderBottomColor, CSS::PropertyID::BorderBottomStyle);
 
     if (auto fill = specified_style.property(CSS::PropertyID::Fill); fill.has_value())
-        computed_values.set_fill(fill.value()->to_color(document()));
+        computed_values.set_fill(fill.value()->to_color(*this));
     if (auto stroke = specified_style.property(CSS::PropertyID::Stroke); stroke.has_value())
-        computed_values.set_stroke(stroke.value()->to_color(document()));
+        computed_values.set_stroke(stroke.value()->to_color(*this));
     if (auto stroke_width = specified_style.property(CSS::PropertyID::StrokeWidth); stroke_width.has_value()) {
         // FIXME: Converting to pixels isn't really correct - values should be in "user units"
         //        https://svgwg.org/svg2-draft/coords.html#TermUserUnits

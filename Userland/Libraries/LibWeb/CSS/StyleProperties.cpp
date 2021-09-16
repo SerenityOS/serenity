@@ -105,12 +105,12 @@ LengthBox StyleProperties::length_box(CSS::PropertyID left_id, CSS::PropertyID t
     return box;
 }
 
-Color StyleProperties::color_or_fallback(CSS::PropertyID id, const DOM::Document& document, Color fallback) const
+Color StyleProperties::color_or_fallback(CSS::PropertyID id, Layout::NodeWithStyle const& node, Color fallback) const
 {
     auto value = property(id);
     if (!value.has_value())
         return fallback;
-    return value.value()->to_color(document);
+    return value.value()->to_color(node);
 }
 
 void StyleProperties::load_font(Layout::Node const& node) const

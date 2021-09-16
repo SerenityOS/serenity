@@ -286,7 +286,7 @@ public:
 
     virtual String to_string() const = 0;
     virtual Length to_length() const { return {}; }
-    virtual Color to_color(const DOM::Document&) const { return {}; }
+    virtual Color to_color(Layout::NodeWithStyle const&) const { return {}; }
 
     CSS::ValueID to_identifier() const;
 
@@ -607,7 +607,7 @@ public:
 
     Color color() const { return m_color; }
     String to_string() const override { return m_color.to_string(); }
-    Color to_color(const DOM::Document&) const override { return m_color; }
+    Color to_color(Layout::NodeWithStyle const&) const override { return m_color; }
 
     virtual bool equals(const StyleValue& other) const override
     {
@@ -637,7 +637,7 @@ public:
     CSS::ValueID id() const { return m_id; }
 
     virtual String to_string() const override;
-    virtual Color to_color(const DOM::Document&) const override;
+    virtual Color to_color(Layout::NodeWithStyle const& node) const override;
 
     virtual bool equals(const StyleValue& other) const override
     {
