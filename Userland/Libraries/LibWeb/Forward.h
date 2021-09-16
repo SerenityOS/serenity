@@ -153,6 +153,10 @@ namespace Web::NavigationTiming {
 class PerformanceTiming;
 }
 
+namespace Web::RequestIdleCallback {
+class IdleDeadline;
+}
+
 namespace Web::SVG {
 class SVGElement;
 class SVGGeometryElement;
@@ -302,6 +306,7 @@ class HTMLTrackElementWrapper;
 class HTMLUListElementWrapper;
 class HTMLUnknownElementWrapper;
 class HTMLVideoElementWrapper;
+class IdleDeadlineWrapper;
 class ImageDataWrapper;
 class LocationObject;
 class MediaQueryListWrapper;

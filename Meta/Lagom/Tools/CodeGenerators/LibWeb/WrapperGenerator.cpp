@@ -439,7 +439,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (namespace_.is_one_of("CSS", "DOM", "HTML", "UIEvents", "HighResolutionTime", "NavigationTiming", "SVG", "XHR", "URL")) {
+    if (namespace_.is_one_of("CSS", "DOM", "HTML", "UIEvents", "HighResolutionTime", "NavigationTiming", "RequestIdleCallback", "SVG", "XHR", "URL")) {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::");
@@ -966,6 +966,8 @@ static void generate_header(IDL::Interface const& interface)
 #    include <LibWeb/HighResolutionTime/@name@.h>
 #elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
 #    include <LibWeb/NavigationTiming/@name@.h>
+#elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
+#    include <LibWeb/RequestIdleCallback/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
 #elif __has_include(<LibWeb/XHR/@name@.h>)
@@ -1099,6 +1101,7 @@ void generate_implementation(IDL::Interface const& interface)
 using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::HTML;
+using namespace Web::RequestIdleCallback;
 
 namespace Web::Bindings {
 
@@ -1235,6 +1238,8 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #    include <LibWeb/HighResolutionTime/@name@.h>
 #elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
 #    include <LibWeb/NavigationTiming/@name@.h>
+#elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
+#    include <LibWeb/RequestIdleCallback/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
 #elif __has_include(<LibWeb/XHR/@name@.h>)
@@ -1247,6 +1252,7 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::HTML;
+using namespace Web::RequestIdleCallback;
 
 namespace Web::Bindings {
 
@@ -1507,6 +1513,8 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #    include <LibWeb/HighResolutionTime/@name@.h>
 #elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
 #    include <LibWeb/NavigationTiming/@name@.h>
+#elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
+#    include <LibWeb/RequestIdleCallback/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
 #elif __has_include(<LibWeb/XHR/@name@.h>)
@@ -1520,6 +1528,7 @@ using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::HTML;
 using namespace Web::NavigationTiming;
+using namespace Web::RequestIdleCallback;
 using namespace Web::XHR;
 using namespace Web::URL;
 
