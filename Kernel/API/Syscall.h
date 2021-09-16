@@ -474,8 +474,8 @@ struct SC_set_coredump_metadata_params {
 };
 
 struct SC_inode_watcher_add_watch_params {
-    int fd;
     StringArgument user_path;
+    int fd;
     u32 event_mask;
 };
 
