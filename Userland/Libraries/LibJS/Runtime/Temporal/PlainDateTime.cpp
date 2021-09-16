@@ -101,15 +101,11 @@ bool iso_date_time_within_limits(GlobalObject& global_object, i32 year, u8 month
 // 5.5.3 InterpretTemporalDateTimeFields ( calendar, fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-interprettemporaldatetimefields
 Optional<ISODateTime> interpret_temporal_date_time_fields(GlobalObject& global_object, Object& calendar, Object& fields, Object& options)
 {
-    auto& vm = global_object.vm();
-
     // 1. Let timeResult be ? ToTemporalTimeRecord(fields).
     auto unregulated_time_result = TRY_OR_DISCARD(to_temporal_time_record(global_object, fields));
 
     // 2. Let temporalDate be ? DateFromFields(calendar, fields, options).
-    auto* temporal_date = date_from_fields(global_object, calendar, fields, options);
-    if (vm.exception())
-        return {};
+    auto* temporal_date = TRY_OR_DISCARD(date_from_fields(global_object, calendar, fields, options));
 
     // 3. Let overflow be ? ToTemporalOverflow(options).
     auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, options));
@@ -173,14 +169,10 @@ PlainDateTime* to_temporal_date_time(GlobalObject& global_object, Value item, Ob
         }
 
         // d. Let calendar be ? GetTemporalCalendarWithISODefault(item).
-        calendar = get_temporal_calendar_with_iso_default(global_object, item_object);
-        if (vm.exception())
-            return {};
+        calendar = TRY_OR_DISCARD(get_temporal_calendar_with_iso_default(global_object, item_object));
 
         // e. Let fieldNames be ? CalendarFields(calendar, « "day", "hour", "microsecond", "millisecond", "minute", "month", "monthCode", "nanosecond", "second", "year" »).
-        auto field_names = calendar_fields(global_object, *calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv });
-        if (vm.exception())
-            return {};
+        auto field_names = TRY_OR_DISCARD(calendar_fields(global_object, *calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv }));
 
         // f. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
         auto* fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, item_object, field_names, {}));
@@ -211,9 +203,7 @@ PlainDateTime* to_temporal_date_time(GlobalObject& global_object, Value item, Ob
         VERIFY(is_valid_time(result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
 
         // f. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
-        calendar = to_temporal_calendar_with_iso_default(global_object, result.calendar.has_value() ? js_string(vm, *result.calendar) : js_undefined());
-        if (vm.exception())
-            return {};
+        calendar = TRY_OR_DISCARD(to_temporal_calendar_with_iso_default(global_object, result.calendar.has_value() ? js_string(vm, *result.calendar) : js_undefined()));
     }
 
     // 4. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], calendar).

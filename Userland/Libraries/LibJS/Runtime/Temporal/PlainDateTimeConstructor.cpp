@@ -80,9 +80,7 @@ Value PlainDateTimeConstructor::construct(FunctionObject& new_target)
     auto nanosecond = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(8), ErrorType::TemporalInvalidPlainDateTime));
 
     // 11. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
-    auto* calendar = to_temporal_calendar_with_iso_default(global_object, vm.argument(9));
-    if (vm.exception())
-        return {};
+    auto* calendar = TRY_OR_DISCARD(to_temporal_calendar_with_iso_default(global_object, vm.argument(9)));
 
     // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
     // This does not change the exposed behavior as the call to CreateTemporalDateTime will immediately check that these values are valid

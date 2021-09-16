@@ -121,7 +121,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::year_getter)
     auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarYear(calendar, temporalDateTime).
-    return Value(calendar_year(global_object, calendar, *temporal_date_time));
+    return Value(TRY_OR_DISCARD(calendar_year(global_object, calendar, *temporal_date_time)));
 }
 
 // 6.3.6 get Temporal.ZonedDateTime.prototype.month, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.month
@@ -146,7 +146,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::month_getter)
     auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarMonth(calendar, temporalDateTime).
-    return Value(calendar_month(global_object, calendar, *temporal_date_time));
+    return Value(TRY_OR_DISCARD(calendar_month(global_object, calendar, *temporal_date_time)));
 }
 
 // 6.3.7 get Temporal.ZonedDateTime.prototype.monthCode, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.monthcode
@@ -171,7 +171,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::month_code_getter)
     auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarMonthCode(calendar, temporalDateTime).
-    return js_string(vm, calendar_month_code(global_object, calendar, *temporal_date_time));
+    return js_string(vm, TRY_OR_DISCARD(calendar_month_code(global_object, calendar, *temporal_date_time)));
 }
 
 // 6.3.8 get Temporal.ZonedDateTime.prototype.day, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.day
@@ -196,7 +196,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_getter)
     auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarDay(calendar, temporalDateTime).
-    return Value(calendar_day(global_object, calendar, *temporal_date_time));
+    return Value(TRY_OR_DISCARD(calendar_day(global_object, calendar, *temporal_date_time)));
 }
 
 // 6.3.9 get Temporal.ZonedDateTime.prototype.hour, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.hour
@@ -441,7 +441,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_of_week_getter)
     auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarDayOfWeek(calendar, temporalDateTime).
-    return calendar_day_of_week(global_object, calendar, *temporal_date_time);
+    return TRY_OR_DISCARD(calendar_day_of_week(global_object, calendar, *temporal_date_time));
 }
 
 // 6.3.20 get Temporal.ZonedDateTime.prototype.dayOfYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.dayofyear
@@ -466,7 +466,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_of_year_getter)
     auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarDayOfYear(calendar, temporalDateTime).
-    return calendar_day_of_year(global_object, calendar, *temporal_date_time);
+    return TRY_OR_DISCARD(calendar_day_of_year(global_object, calendar, *temporal_date_time));
 }
 
 // 6.3.21 get Temporal.ZonedDateTime.prototype.weekOfYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.weekofyear
@@ -491,7 +491,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::week_of_year_getter)
     auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarWeekOfYear(calendar, temporalDateTime).
-    return calendar_week_of_year(global_object, calendar, *temporal_date_time);
+    return TRY_OR_DISCARD(calendar_week_of_year(global_object, calendar, *temporal_date_time));
 }
 
 // 6.3.23 get Temporal.ZonedDateTime.prototype.daysInWeek, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.daysinweek
@@ -516,7 +516,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_week_getter)
     auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarDaysInWeek(calendar, temporalDateTime).
-    return calendar_days_in_week(global_object, calendar, *temporal_date_time);
+    return TRY_OR_DISCARD(calendar_days_in_week(global_object, calendar, *temporal_date_time));
 }
 
 // 6.3.24 get Temporal.ZonedDateTime.prototype.daysInMonth, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.daysinmonth
@@ -541,7 +541,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_month_getter)
     auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarDaysInMonth(calendar, temporalDateTime).
-    return calendar_days_in_month(global_object, calendar, *temporal_date_time);
+    return TRY_OR_DISCARD(calendar_days_in_month(global_object, calendar, *temporal_date_time));
 }
 
 // 6.3.25 get Temporal.ZonedDateTime.prototype.daysInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.daysinyear
@@ -566,7 +566,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_year_getter)
     auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarDaysInYear(calendar, temporalDateTime).
-    return calendar_days_in_year(global_object, calendar, *temporal_date_time);
+    return TRY_OR_DISCARD(calendar_days_in_year(global_object, calendar, *temporal_date_time));
 }
 
 // 6.3.26 get Temporal.ZonedDateTime.prototype.monthsInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.monthsinyear
@@ -591,7 +591,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::months_in_year_getter)
     auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarMonthsInYear(calendar, temporalDateTime).
-    return calendar_months_in_year(global_object, calendar, *temporal_date_time);
+    return TRY_OR_DISCARD(calendar_months_in_year(global_object, calendar, *temporal_date_time));
 }
 
 // 6.3.27 get Temporal.ZonedDateTime.prototype.inLeapYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.inleapyear
@@ -616,7 +616,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::in_leap_year_getter)
     auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarInLeapYear(calendar, temporalDateTime).
-    return calendar_in_leap_year(global_object, calendar, *temporal_date_time);
+    return TRY_OR_DISCARD(calendar_in_leap_year(global_object, calendar, *temporal_date_time));
 }
 
 // 6.3.28 get Temporal.ZonedDateTime.prototype.offsetNanoseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.offsetnanoseconds
@@ -677,7 +677,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::era_getter)
     auto* plain_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarEra(calendar, plainDateTime).
-    return calendar_era(global_object, calendar, *plain_date_time);
+    return TRY_OR_DISCARD(calendar_era(global_object, calendar, *plain_date_time));
 }
 
 // 15.6.10.3 get Temporal.ZonedDateTime.prototype.eraYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.erayear
@@ -702,7 +702,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::era_year_getter)
     auto* plain_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarEraYear(calendar, plainDateTime).
-    return calendar_era_year(global_object, calendar, *plain_date_time);
+    return TRY_OR_DISCARD(calendar_era_year(global_object, calendar, *plain_date_time));
 }
 
 // 6.3.44 Temporal.ZonedDateTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.valueof
@@ -817,15 +817,13 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_year_month)
     auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Let fieldNames be ? CalendarFields(calendar, « "monthCode", "year" »).
-    auto field_names = calendar_fields(global_object, calendar, { "monthCode"sv, "year"sv });
-    if (vm.exception())
-        return {};
+    auto field_names = TRY_OR_DISCARD(calendar_fields(global_object, calendar, { "monthCode"sv, "year"sv }));
 
     // 8. Let fields be ? PrepareTemporalFields(temporalDateTime, fieldNames, «»).
     auto* fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, *temporal_date_time, field_names, {}));
 
     // 9. Return ? YearMonthFromFields(calendar, fields).
-    return year_month_from_fields(global_object, calendar, *fields);
+    return TRY_OR_DISCARD(year_month_from_fields(global_object, calendar, *fields));
 }
 
 // 6.3.51 Temporal.ZonedDateTime.prototype.toPlainMonthDay ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplainmonthday
@@ -850,7 +848,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_month_day)
     auto* temporal_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
     // 7. Let fieldNames be ? CalendarFields(calendar, « "day", "monthCode" »).
-    auto field_names = calendar_fields(global_object, calendar, { "day"sv, "monthCode"sv });
+    auto field_names = TRY_OR_DISCARD(calendar_fields(global_object, calendar, { "day"sv, "monthCode"sv }));
     if (vm.exception())
         return {};
 
@@ -858,7 +856,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_month_day)
     auto* fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, *temporal_date_time, field_names, {}));
 
     // 9. Return ? MonthDayFromFields(calendar, fields).
-    return month_day_from_fields(global_object, calendar, *fields);
+    return TRY_OR_DISCARD(month_day_from_fields(global_object, calendar, *fields));
 }
 
 // 6.3.52 Temporal.ZonedDateTime.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.getisofields

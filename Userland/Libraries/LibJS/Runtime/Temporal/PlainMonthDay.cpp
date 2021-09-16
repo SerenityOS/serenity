@@ -92,15 +92,11 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(GlobalObject& global_obj
             calendar_absent = calendar_value.is_undefined();
 
             // iv. Set calendar to ? ToTemporalCalendarWithISODefault(calendar).
-            calendar = to_temporal_calendar_with_iso_default(global_object, calendar_value);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
+            calendar = TRY(to_temporal_calendar_with_iso_default(global_object, calendar_value));
         }
 
         // d. Let fieldNames be ? CalendarFields(calendar, « "day", "month", "monthCode", "year" »).
-        auto field_names = calendar_fields(global_object, *calendar, { "day"sv, "month"sv, "monthCode"sv, "year"sv });
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto field_names = TRY(calendar_fields(global_object, *calendar, { "day"sv, "month"sv, "monthCode"sv, "year"sv }));
 
         // e. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
         auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, {}));

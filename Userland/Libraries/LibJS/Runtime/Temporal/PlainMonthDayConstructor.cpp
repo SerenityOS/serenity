@@ -68,9 +68,7 @@ Value PlainMonthDayConstructor::construct(FunctionObject& new_target)
     auto d = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, iso_day, ErrorType::TemporalInvalidPlainMonthDay));
 
     // 5. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
-    auto* calendar = to_temporal_calendar_with_iso_default(global_object, calendar_like);
-    if (vm.exception())
-        return {};
+    auto* calendar = TRY_OR_DISCARD(to_temporal_calendar_with_iso_default(global_object, calendar_like));
 
     // 6. Let ref be ? ToIntegerThrowOnInfinity(referenceISOYear).
     auto ref = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, reference_iso_year, ErrorType::TemporalInvalidPlainMonthDay));

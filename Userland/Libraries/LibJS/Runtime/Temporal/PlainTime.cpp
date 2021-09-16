@@ -81,9 +81,7 @@ ThrowCompletionOr<PlainTime*> to_temporal_time(GlobalObject& global_object, Valu
         }
 
         // d. Let calendar be ? GetTemporalCalendarWithISODefault(item).
-        auto* calendar = get_temporal_calendar_with_iso_default(global_object, item_object);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto* calendar = TRY(get_temporal_calendar_with_iso_default(global_object, item_object));
 
         // e. If ? ToString(calendar) is not "iso8601", then
         auto calendar_identifier = Value(calendar).to_string(global_object);

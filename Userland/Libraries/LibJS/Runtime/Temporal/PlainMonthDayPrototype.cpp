@@ -67,7 +67,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::month_code_getter)
     auto& calendar = month_day->calendar();
 
     // 4. Return ? CalendarMonthCode(calendar, monthDay).
-    return js_string(vm, calendar_month_code(global_object, calendar, *month_day));
+    return js_string(vm, TRY_OR_DISCARD(calendar_month_code(global_object, calendar, *month_day)));
 }
 
 // 10.3.5 get Temporal.PlainMonthDay.prototype.day, https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.day
@@ -83,7 +83,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::day_getter)
     auto& calendar = month_day->calendar();
 
     // 4. Return 𝔽(? CalendarDay(calendar, monthDay)).
-    return Value(calendar_day(global_object, calendar, *month_day));
+    return Value(TRY_OR_DISCARD(calendar_day(global_object, calendar, *month_day)));
 }
 
 // 10.3.7 Temporal.PlainMonthDay.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.equals
@@ -111,7 +111,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::equals)
         return Value(false);
 
     // 7. Return ? CalendarEquals(monthDay.[[Calendar]], other.[[Calendar]]).
-    return Value(calendar_equals(global_object, month_day->calendar(), other->calendar()));
+    return Value(TRY_OR_DISCARD(calendar_equals(global_object, month_day->calendar(), other->calendar())));
 }
 
 // 10.3.8 Temporal.PlainMonthDay.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.tostring

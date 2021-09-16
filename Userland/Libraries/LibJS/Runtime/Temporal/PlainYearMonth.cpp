@@ -52,14 +52,10 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
         }
 
         // b. Let calendar be ? GetTemporalCalendarWithISODefault(item).
-        auto* calendar = get_temporal_calendar_with_iso_default(global_object, item_object);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto* calendar = TRY(get_temporal_calendar_with_iso_default(global_object, item_object));
 
         // c. Let fieldNames be ? CalendarFields(calendar, « "month", "monthCode", "year" »).
-        auto field_names = calendar_fields(global_object, *calendar, { "month"sv, "monthCode"sv, "year"sv });
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto field_names = TRY(calendar_fields(global_object, *calendar, { "month"sv, "monthCode"sv, "year"sv }));
 
         // d. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
         auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, {}));
@@ -80,9 +76,7 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
     auto result = TRY(parse_temporal_year_month_string(global_object, string));
 
     // 7. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
-    auto* calendar = to_temporal_calendar_with_iso_default(global_object, result.calendar.has_value() ? js_string(vm, *result.calendar) : js_undefined());
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto* calendar = TRY(to_temporal_calendar_with_iso_default(global_object, result.calendar.has_value() ? js_string(vm, *result.calendar) : js_undefined()));
 
     // 8. Set result to ? CreateTemporalYearMonth(result.[[Year]], result.[[Month]], calendar, result.[[Day]]).
     auto* creation_result = TRY(create_temporal_year_month(global_object, result.year, result.month, *calendar, result.day));

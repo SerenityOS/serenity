@@ -198,7 +198,6 @@ Instant* system_instant(GlobalObject& global_object)
 // 2.3.4 SystemDateTime ( temporalTimeZoneLike, calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-systemdatetime
 PlainDateTime* system_date_time(GlobalObject& global_object, Value temporal_time_zone_like, Value calendar_like)
 {
-    auto& vm = global_object.vm();
     Object* time_zone;
 
     // 1. If temporalTimeZoneLike is undefined, then
@@ -213,9 +212,7 @@ PlainDateTime* system_date_time(GlobalObject& global_object, Value temporal_time
     }
 
     // 3. Let calendar be ? ToTemporalCalendar(calendarLike).
-    auto* calendar = to_temporal_calendar(global_object, calendar_like);
-    if (vm.exception())
-        return {};
+    auto* calendar = TRY_OR_DISCARD(to_temporal_calendar(global_object, calendar_like));
 
     // 4. Let instant be ! SystemInstant().
     auto* instant = system_instant(global_object);
@@ -227,7 +224,6 @@ PlainDateTime* system_date_time(GlobalObject& global_object, Value temporal_time
 // 2.3.5 SystemZonedDateTime ( temporalTimeZoneLike, calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-systemzoneddatetime
 ZonedDateTime* system_zoned_date_time(GlobalObject& global_object, Value temporal_time_zone_like, Value calendar_like)
 {
-    auto& vm = global_object.vm();
     Object* time_zone;
 
     // 1. If temporalTimeZoneLike is undefined, then
@@ -242,9 +238,7 @@ ZonedDateTime* system_zoned_date_time(GlobalObject& global_object, Value tempora
     }
 
     // 3. Let calendar be ? ToTemporalCalendar(calendarLike).
-    auto* calendar = to_temporal_calendar(global_object, calendar_like);
-    if (vm.exception())
-        return {};
+    auto* calendar = TRY_OR_DISCARD(to_temporal_calendar(global_object, calendar_like));
 
     // 4. Let ns be ! SystemUTCEpochNanoseconds().
     auto* ns = system_utc_epoch_nanoseconds(global_object);

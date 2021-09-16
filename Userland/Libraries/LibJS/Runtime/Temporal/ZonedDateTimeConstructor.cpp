@@ -63,9 +63,7 @@ Value ZonedDateTimeConstructor::construct(FunctionObject& new_target)
     auto* time_zone = TRY_OR_DISCARD(to_temporal_time_zone(global_object, vm.argument(1)));
 
     // 5. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
-    auto* calendar = to_temporal_calendar_with_iso_default(global_object, vm.argument(2));
-    if (vm.exception())
-        return {};
+    auto* calendar = TRY_OR_DISCARD(to_temporal_calendar_with_iso_default(global_object, vm.argument(2)));
 
     // 6. Return ? CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar, NewTarget).
     return TRY_OR_DISCARD(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, *time_zone, *calendar, &new_target));

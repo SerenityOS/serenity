@@ -62,9 +62,7 @@ Value PlainDateConstructor::construct(FunctionObject& new_target)
     auto d = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(2), ErrorType::TemporalInvalidPlainDate));
 
     // 5. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
-    auto* calendar = to_temporal_calendar_with_iso_default(global_object, vm.argument(3));
-    if (vm.exception())
-        return {};
+    auto* calendar = TRY_OR_DISCARD(to_temporal_calendar_with_iso_default(global_object, vm.argument(3)));
 
     // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
     // This does not change the exposed behavior as the call to CreateTemporalDate will immediately check that these values are valid
