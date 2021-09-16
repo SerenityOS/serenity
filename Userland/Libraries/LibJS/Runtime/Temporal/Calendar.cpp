@@ -157,7 +157,7 @@ double calendar_month(GlobalObject& global_object, Object& calendar, Object& dat
     }
 
     // 4. Return ? ToPositiveInteger(result).
-    return to_positive_integer(global_object, result);
+    return TRY_OR_DISCARD(to_positive_integer(global_object, result));
 }
 
 // 12.1.11 CalendarMonthCode ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthcode
@@ -199,7 +199,7 @@ double calendar_day(GlobalObject& global_object, Object& calendar, Object& date_
     }
 
     // 4. Return ? ToPositiveInteger(result).
-    return to_positive_integer(global_object, result);
+    return TRY_OR_DISCARD(to_positive_integer(global_object, result));
 }
 
 // 12.1.13 CalendarDayOfWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardayofweek
