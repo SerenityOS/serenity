@@ -545,6 +545,14 @@
       "unitless-length"
     ]
   },
+  "stroke": {
+    "inherited": true,
+    "initial": "transparent"
+  },
+  "stroke-width": {
+    "inherited": true,
+    "initial": "1px"
+  },
   "text-align": {
     "inherited": true,
     "initial": "left"

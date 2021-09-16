@@ -104,6 +104,10 @@ public:
 
     CSS::ListStyleType list_style_type() const { return m_inherited.list_style_type; }
 
+    Optional<Color> fill() const { return m_inherited.fill; }
+    Optional<Color> stroke() const { return m_inherited.stroke; }
+    Optional<Length> stroke_width() const { return m_inherited.stroke_width; }
+
     ComputedValues clone_inherited_values() const
     {
         ComputedValues clone;
@@ -119,6 +123,10 @@ protected:
         CSS::TextTransform text_transform { InitialValues::text_transform() };
         CSS::WhiteSpace white_space { InitialValues::white_space() };
         CSS::ListStyleType list_style_type { InitialValues::list_style_type() };
+
+        Optional<Color> fill;
+        Optional<Color> stroke;
+        Optional<Length> stroke_width;
     } m_inherited;
 
     struct {
@@ -210,6 +218,10 @@ public:
     void set_opacity(Optional<float> value) { m_noninherited.opacity = value; }
     void set_justify_content(CSS::JustifyContent value) { m_noninherited.justify_content = value; }
     void set_box_shadow(Optional<BoxShadowData> value) { m_noninherited.box_shadow = move(value); }
+
+    void set_fill(Color value) { m_inherited.fill = value; }
+    void set_stroke(Color value) { m_inherited.stroke = value; }
+    void set_stroke_width(Length value) { m_inherited.stroke_width = value; }
 };
 
 }
