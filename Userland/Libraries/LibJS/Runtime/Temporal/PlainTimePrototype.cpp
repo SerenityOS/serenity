@@ -160,9 +160,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     auto& temporal_time_like = temporal_time_like_argument.as_object();
 
     // 4. Perform ? RejectTemporalCalendarType(temporalTimeLike).
-    reject_temporal_calendar_type(global_object, temporal_time_like);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(reject_temporal_calendar_type(global_object, temporal_time_like));
 
     // 5. Let calendarProperty be ? Get(temporalTimeLike, "calendar").
     auto calendar_property = temporal_time_like.get(vm.names.calendar);

@@ -563,7 +563,7 @@ Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit)
 }
 
 // 13.26 RejectTemporalCalendarType ( object ), https://tc39.es/proposal-temporal/#sec-temporal-rejecttemporalcalendartype
-void reject_temporal_calendar_type(GlobalObject& global_object, Object& object)
+ThrowCompletionOr<void> reject_temporal_calendar_type(GlobalObject& global_object, Object& object)
 {
     auto& vm = global_object.vm();
 
@@ -572,8 +572,10 @@ void reject_temporal_calendar_type(GlobalObject& global_object, Object& object)
     // 2. If object has an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], [[InitializedTemporalMonthDay]], [[InitializedTemporalTime]], [[InitializedTemporalYearMonth]], or [[InitializedTemporalZonedDateTime]] internal slot, then
     if (is<PlainDate>(object) || is<PlainDateTime>(object) || is<PlainMonthDay>(object) || is<PlainTime>(object) || is<PlainYearMonth>(object) || is<ZonedDateTime>(object)) {
         // a. Throw a TypeError exception.
-        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalPlainTimeWithArgumentMustNotHave, "calendar or timeZone");
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalPlainTimeWithArgumentMustNotHave, "calendar or timeZone");
     }
+
+    return {};
 }
 
 // 13.27 FormatSecondsStringPart ( second, millisecond, microsecond, nanosecond, precision ), https://tc39.es/proposal-temporal/#sec-temporal-formatsecondsstringpart
