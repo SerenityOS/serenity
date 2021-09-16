@@ -8,6 +8,8 @@
 
 #include <AK/Format.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
+#include <LibPDF/Forward.h>
 
 namespace PDF {
 
