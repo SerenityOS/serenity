@@ -45,6 +45,7 @@ private:
     virtual void image_did_modify_layer_properties(size_t) override;
     virtual void image_did_modify_layer_bitmap(size_t) override;
     virtual void image_did_modify_layer_stack() override;
+    virtual void on_automatic_scrolling_timer_fired() override;
 
     void rebuild_gadgets();
     void relayout_gadgets();
@@ -71,6 +72,8 @@ private:
 
     Optional<size_t> m_moving_gadget_index;
     Gfx::IntPoint m_moving_event_origin;
+
+    Gfx::IntPoint m_automatic_scroll_delta;
 
     size_t m_selected_gadget_index { 0 };
 };
