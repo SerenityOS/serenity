@@ -317,10 +317,11 @@ size_t wcrtomb(char*, wchar_t, mbstate_t*)
     TODO();
 }
 
-int wcscoll(const wchar_t*, const wchar_t*)
+int wcscoll(const wchar_t* ws1, const wchar_t* ws2)
 {
-    dbgln("FIXME: Implement wcscoll()");
-    TODO();
+    // TODO: Actually implement a sensible sort order for this,
+    // because right now we are doing what LC_COLLATE=C would do.
+    return wcscmp(ws1, ws2);
 }
 
 int wctob(wint_t)
