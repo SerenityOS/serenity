@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/Format.h>
 #include <AK/Random.h>
 #include <LibCrypto/PK/Code/Code.h>
 
