@@ -234,7 +234,6 @@ Optional<JsonValue> JsonParser::parse_number()
     }
 
     StringView number_string(number_buffer.data(), number_buffer.size());
-    StringView fraction_string(fraction_buffer.data(), fraction_buffer.size());
 
 #ifndef KERNEL
     if (is_double) {
@@ -250,6 +249,7 @@ Optional<JsonValue> JsonParser::parse_number()
             whole = number.value();
         }
 
+        StringView fraction_string(fraction_buffer.data(), fraction_buffer.size());
         auto fraction_string_uint = fraction_string.to_uint();
         if (!fraction_string_uint.has_value())
             return {};
