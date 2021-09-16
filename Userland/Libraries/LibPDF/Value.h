@@ -20,8 +20,8 @@ public:
     // This may need to be rethought later, as the max generation index is
     // 2^16 and the max for the object index is probably 2^32 (I don't know
     // exactly)
-    static constexpr auto max_ref_index = (1 << 19) - 1;            // 2 ^ 18 - 1
-    static constexpr auto max_ref_generation_index = (1 << 15) - 1; // 2 ^ 14 - 1
+    static constexpr auto max_ref_index = (1 << 19) - 1;            // 2 ^ 19 - 1
+    static constexpr auto max_ref_generation_index = (1 << 15) - 1; // 2 ^ 15 - 1
 
     Value()
         : m_type(Type::Empty)
