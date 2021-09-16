@@ -892,7 +892,7 @@ ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject& glo
 }
 
 // 13.40 ParseTemporalDurationString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring
-Optional<TemporalDuration> parse_temporal_duration_string(GlobalObject& global_object, String const& iso_string)
+ThrowCompletionOr<TemporalDuration> parse_temporal_duration_string(GlobalObject& global_object, String const& iso_string)
 {
     (void)global_object;
     (void)iso_string;

@@ -57,9 +57,7 @@ Duration* to_temporal_duration(GlobalObject& global_object, Value item)
             return {};
 
         // b. Let result be ? ParseTemporalDurationString(string).
-        result = parse_temporal_duration_string(global_object, string);
-        if (vm.exception())
-            return {};
+        result = TRY_OR_DISCARD(parse_temporal_duration_string(global_object, string));
     }
 
     // 3. Return ? CreateTemporalDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
@@ -469,9 +467,7 @@ Optional<TemporalDuration> to_limited_temporal_duration(GlobalObject& global_obj
             return {};
 
         // b. Let duration be ? ParseTemporalDurationString(str).
-        duration = parse_temporal_duration_string(global_object, str);
-        if (vm.exception())
-            return {};
+        duration = TRY_OR_DISCARD(parse_temporal_duration_string(global_object, str));
     }
     // 2. Else,
     else {
