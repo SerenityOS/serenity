@@ -7,6 +7,8 @@
 #pragma once
 
 #include <AK/Format.h>
+#include <AK/RefCounted.h>
+#include <AK/String.h>
 
 namespace PDF {
 
