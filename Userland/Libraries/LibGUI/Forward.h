@@ -67,6 +67,7 @@ class Statusbar;
 class TabWidget;
 class TableView;
 class TextBox;
+class TextPosition;
 class UrlBox;
 class TextDocument;
 class TextDocumentLine;
