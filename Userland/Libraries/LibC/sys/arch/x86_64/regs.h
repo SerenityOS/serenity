@@ -8,25 +8,25 @@
 
 #include <AK/Types.h>
 
-#define RREGISTER(num)                    \
-    union {                               \
-        u64 r##num;                       \
-        struct {                          \
-            u32 _;                        \
-            union {                       \
-                u32 r##num##d;            \
-                struct {                  \
-                    u16 __;               \
-                    union {               \
-                        u16 r##num##w;    \
-                        struct {          \
-                            u8 ___;       \
-                            u8 r##num##b; \
-                        };                \
-                    };                    \
-                };                        \
-            };                            \
-        };                                \
+#define RREGISTER(num)                         \
+    union {                                    \
+        u64 r##num;                            \
+        struct {                               \
+            u32 _unused##num;                  \
+            union {                            \
+                u32 r##num##d;                 \
+                struct {                       \
+                    u16 __unused##num;         \
+                    union {                    \
+                        u16 r##num##w;         \
+                        struct {               \
+                            u8 ___unused##num; \
+                            u8 r##num##b;      \
+                        };                     \
+                    };                         \
+                };                             \
+            };                                 \
+        };                                     \
     }
 
 #define GPREGISTER(letter)                \
@@ -34,12 +34,12 @@
         u64 r##letter##x;                 \
         struct                            \
         {                                 \
-            u32 _;                        \
+            u32 _unused##letter;          \
             union {                       \
                 u32 e##letter##x;         \
                 struct                    \
                 {                         \
-                    u16 __;               \
+                    u16 __unused##letter; \
                     union {               \
                         u16 letter##x;    \
                         struct {          \
@@ -52,27 +52,27 @@
         };                                \
     }
 
-#define SPREGISTER(name)                \
-    union {                             \
-        u64 r##name;                    \
-        struct                          \
-        {                               \
-            u32 _;                      \
-            union {                     \
-                u32 e##name;            \
-                struct                  \
-                {                       \
-                    u16 __;             \
-                    union {             \
-                        u16 name;       \
-                        struct {        \
-                            u8 ___;     \
-                            u8 name##l; \
-                        };              \
-                    };                  \
-                };                      \
-            };                          \
-        };                              \
+#define SPREGISTER(name)                        \
+    union {                                     \
+        u64 r##name;                            \
+        struct                                  \
+        {                                       \
+            u32 _unused##name;                  \
+            union {                             \
+                u32 e##name;                    \
+                struct                          \
+                {                               \
+                    u16 __unused##name;         \
+                    union {                     \
+                        u16 name;               \
+                        struct {                \
+                            u8 ___unused##name; \
+                            u8 name##l;         \
+                        };                      \
+                    };                          \
+                };                              \
+            };                                  \
+        };                                      \
     }
 
 struct [[gnu::packed]] PtraceRegisters {
