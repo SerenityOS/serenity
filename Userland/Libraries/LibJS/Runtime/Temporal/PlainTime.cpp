@@ -108,9 +108,7 @@ ThrowCompletionOr<PlainTime*> to_temporal_time(GlobalObject& global_object, Valu
             return throw_completion(exception->value());
 
         // b. Let result be ? ParseTemporalTimeString(string).
-        result = parse_temporal_time_string(global_object, string);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        result = TRY(parse_temporal_time_string(global_object, string));
 
         // c. Assert: ! IsValidTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]) is true.
         VERIFY(is_valid_time(result->hour, result->minute, result->second, result->millisecond, result->microsecond, result->nanosecond));
