@@ -305,7 +305,7 @@ NonnullRefPtrVector<OutlineItem> Document::build_outline_item_chain(Value const&
         auto next_child = build_outline_item(next_child_dict);
         children.append(next_child);
 
-        current_child_dict = next_child_dict;
+        current_child_dict = move(next_child_dict);
     }
 
     VERIFY(last_ref.as_ref_index() == current_child_index);
