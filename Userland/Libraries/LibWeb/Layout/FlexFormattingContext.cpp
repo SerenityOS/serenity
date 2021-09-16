@@ -79,6 +79,12 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
             return NumericLimits<float>::max();
         }
     };
+    auto containing_block_main_size = [&is_row](Box& box) {
+        if (is_row)
+            return box.parent()->containing_block()->width();
+        else
+            return box.parent()->containing_block()->height();
+    };
     auto has_definite_main_size = [&is_row](Box& box) {
         return is_row ? box.has_definite_width() : box.has_definite_height();
     };
@@ -350,7 +356,8 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         float largest_max_content_flex_fraction = 0;
         for (auto& flex_item : flex_items) {
             // FIXME: This needs some serious work.
-            float max_content_contribution = calculated_main_size(flex_item.box);
+            // This is obviously wrong. But for now it achieves good results. We simply assume the largest an element could possibly become is the size of its parent.
+            float max_content_contribution = containing_block_main_size(flex_item.box);
             float max_content_flex_fraction = max_content_contribution - flex_item.flex_base_size;
             if (max_content_flex_fraction > 0) {
                 max_content_flex_fraction /= max(flex_item.box.computed_values().flex_grow_factor().value_or(1), 1.0f);
