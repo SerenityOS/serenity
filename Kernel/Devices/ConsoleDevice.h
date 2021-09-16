@@ -14,12 +14,11 @@ namespace Kernel {
 
 class ConsoleDevice final : public CharacterDevice {
     AK_MAKE_ETERNAL
-public:
-    static ConsoleDevice& the();
-    static void initialize();
-    static bool is_initialized();
+    friend class DeviceManagement;
 
-    ConsoleDevice();
+public:
+    static NonnullRefPtr<ConsoleDevice> must_create();
+
     virtual ~ConsoleDevice() override;
 
     // ^CharacterDevice
@@ -34,6 +33,7 @@ public:
     const CircularQueue<char, 16384>& logbuffer() const { return m_logbuffer; }
 
 private:
+    ConsoleDevice();
     CircularQueue<char, 16384> m_logbuffer;
 };
 

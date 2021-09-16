@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
 #include <Kernel/Devices/ConsoleDevice.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/IO.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Sections.h>
@@ -14,23 +14,13 @@
 // Output bytes to kernel debug port 0xE9 (Bochs console). It's very handy.
 #define CONSOLE_OUT_TO_BOCHS_DEBUG_PORT
 
-static Singleton<ConsoleDevice> s_the;
 static Kernel::Spinlock g_console_lock;
 
-UNMAP_AFTER_INIT void ConsoleDevice::initialize()
+UNMAP_AFTER_INIT NonnullRefPtr<ConsoleDevice> ConsoleDevice::must_create()
 {
-    s_the.ensure_instance();
-    s_the->after_inserting();
-}
-
-ConsoleDevice& ConsoleDevice::the()
-{
-    return *s_the;
-}
-
-bool ConsoleDevice::is_initialized()
-{
-    return s_the.is_initialized();
+    auto device_or_error = DeviceManagement::try_create_device<ConsoleDevice>();
+    VERIFY(!device_or_error.is_error());
+    return device_or_error.release_value();
 }
 
 UNMAP_AFTER_INIT ConsoleDevice::ConsoleDevice()
