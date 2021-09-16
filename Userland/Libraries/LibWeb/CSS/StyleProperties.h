@@ -39,7 +39,7 @@ public:
 
     Length length_or_fallback(CSS::PropertyID, const Length& fallback) const;
     LengthBox length_box(CSS::PropertyID left_id, CSS::PropertyID top_id, CSS::PropertyID right_id, CSS::PropertyID bottom_id, const CSS::Length& default_value) const;
-    Color color_or_fallback(CSS::PropertyID, const DOM::Document&, Color fallback) const;
+    Color color_or_fallback(CSS::PropertyID, Layout::NodeWithStyle const&, Color fallback) const;
     Optional<CSS::TextAlign> text_align() const;
     CSS::Display display() const;
     Optional<CSS::Float> float_() const;

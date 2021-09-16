@@ -31,8 +31,9 @@ String IdentifierStyleValue::to_string() const
     return CSS::string_from_value_id(m_id);
 }
 
-Color IdentifierStyleValue::to_color(const DOM::Document& document) const
+Color IdentifierStyleValue::to_color(Layout::NodeWithStyle const& node) const
 {
+    auto& document = node.document();
     if (id() == CSS::ValueID::LibwebLink)
         return document.link_color();
 

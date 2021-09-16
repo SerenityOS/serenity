@@ -175,7 +175,7 @@ enum class StyleDifference {
     NeedsRelayout,
 };
 
-static StyleDifference compute_style_difference(const CSS::StyleProperties& old_style, const CSS::StyleProperties& new_style, const Document& document)
+static StyleDifference compute_style_difference(CSS::StyleProperties const& old_style, CSS::StyleProperties const& new_style, Layout::NodeWithStyle const& node)
 {
     if (old_style == new_style)
         return StyleDifference::None;
@@ -186,9 +186,9 @@ static StyleDifference compute_style_difference(const CSS::StyleProperties& old_
     if (new_style.display() != old_style.display())
         needs_relayout = true;
 
-    if (new_style.color_or_fallback(CSS::PropertyID::Color, document, Color::Black) != old_style.color_or_fallback(CSS::PropertyID::Color, document, Color::Black))
+    if (new_style.color_or_fallback(CSS::PropertyID::Color, node, Color::Black) != old_style.color_or_fallback(CSS::PropertyID::Color, node, Color::Black))
         needs_repaint = true;
-    else if (new_style.color_or_fallback(CSS::PropertyID::BackgroundColor, document, Color::Black) != old_style.color_or_fallback(CSS::PropertyID::BackgroundColor, document, Color::Black))
+    else if (new_style.color_or_fallback(CSS::PropertyID::BackgroundColor, node, Color::Black) != old_style.color_or_fallback(CSS::PropertyID::BackgroundColor, node, Color::Black))
         needs_repaint = true;
 
     if (needs_relayout)
@@ -215,8 +215,8 @@ void Element::recompute_style()
     }
 
     auto diff = StyleDifference::NeedsRelayout;
-    if (old_specified_css_values)
-        diff = compute_style_difference(*old_specified_css_values, *new_specified_css_values, document());
+    if (old_specified_css_values && layout_node())
+        diff = compute_style_difference(*old_specified_css_values, *new_specified_css_values, *layout_node());
     if (diff == StyleDifference::None)
         return;
     layout_node()->apply_style(*new_specified_css_values);
