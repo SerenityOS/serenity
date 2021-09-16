@@ -57,7 +57,7 @@ static int do_stat(int dirfd, const char* path, struct stat* statbuf, bool follo
         errno = EFAULT;
         return -1;
     }
-    Syscall::SC_stat_params params { dirfd, { path, strlen(path) }, statbuf, follow_symlinks };
+    Syscall::SC_stat_params params { { path, strlen(path) }, statbuf, dirfd, follow_symlinks };
     int rc = syscall(SC_stat, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
