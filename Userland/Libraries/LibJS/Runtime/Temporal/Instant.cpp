@@ -8,6 +8,7 @@
 #include <AK/Variant.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
@@ -49,7 +50,7 @@ bool is_valid_epoch_nanoseconds(BigInt const& epoch_nanoseconds)
 }
 
 // 8.5.2 CreateTemporalInstant ( epochNanoseconds [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalinstant
-Instant* create_temporal_instant(GlobalObject& global_object, BigInt const& epoch_nanoseconds, FunctionObject const* new_target)
+ThrowCompletionOr<Instant*> create_temporal_instant(GlobalObject& global_object, BigInt const& epoch_nanoseconds, FunctionObject const* new_target)
 {
     // 1. Assert: Type(epochNanoseconds) is BigInt.
 
@@ -62,14 +63,14 @@ Instant* create_temporal_instant(GlobalObject& global_object, BigInt const& epoc
 
     // 4. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.Instant.prototype%", « [[InitializedTemporalInstant]], [[Nanoseconds]] »).
     // 5. Set object.[[Nanoseconds]] to epochNanoseconds.
-    auto* object = TRY_OR_DISCARD(ordinary_create_from_constructor<Instant>(global_object, *new_target, &GlobalObject::temporal_instant_prototype, epoch_nanoseconds));
+    auto* object = TRY(ordinary_create_from_constructor<Instant>(global_object, *new_target, &GlobalObject::temporal_instant_prototype, epoch_nanoseconds));
 
     // 6. Return object.
     return object;
 }
 
 // 8.5.3 ToTemporalInstant ( item ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalinstant
-Instant* to_temporal_instant(GlobalObject& global_object, Value item)
+ThrowCompletionOr<Instant*> to_temporal_instant(GlobalObject& global_object, Value item)
 {
     auto& vm = global_object.vm();
 
@@ -92,27 +93,25 @@ Instant* to_temporal_instant(GlobalObject& global_object, Value item)
 
     // 2. Let string be ? ToString(item).
     auto string = item.to_string(global_object);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 3. Let epochNanoseconds be ? ParseTemporalInstant(string).
-    auto* epoch_nanoseconds = parse_temporal_instant(global_object, string);
-    if (vm.exception())
-        return {};
+    auto* epoch_nanoseconds = TRY(parse_temporal_instant(global_object, string));
 
     // 4. Return ! CreateTemporalInstant(ℤ(epochNanoseconds)).
     return create_temporal_instant(global_object, *epoch_nanoseconds);
 }
 
 // 8.5.4 ParseTemporalInstant ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstant
-BigInt* parse_temporal_instant(GlobalObject& global_object, String const& iso_string)
+ThrowCompletionOr<BigInt*> parse_temporal_instant(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
 
     // 1. Assert: Type(isoString) is String.
 
     // 2. Let result be ? ParseTemporalInstantString(isoString).
-    auto result = TRY_OR_DISCARD(parse_temporal_instant_string(global_object, iso_string));
+    auto result = TRY(parse_temporal_instant_string(global_object, iso_string));
 
     // 3. Let offsetString be result.[[TimeZoneOffsetString]].
     auto& offset_string = result.time_zone_offset;
@@ -122,18 +121,17 @@ BigInt* parse_temporal_instant(GlobalObject& global_object, String const& iso_st
 
     // 5. Let utc be ? GetEpochFromISOParts(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
     auto* utc = get_epoch_from_iso_parts(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 6. If utc < −8.64 × 10^21 or utc > 8.64 × 10^21, then
     if (utc->big_integer() < INSTANT_NANOSECONDS_MIN || utc->big_integer() > INSTANT_NANOSECONDS_MAX) {
         // a. Throw a RangeError exception.
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
-        return {};
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
     }
 
     // 7. Let offsetNanoseconds be ? ParseTimeZoneOffsetString(offsetString).
-    auto offset_nanoseconds = TRY_OR_DISCARD(parse_time_zone_offset_string(global_object, *offset_string));
+    auto offset_nanoseconds = TRY(parse_time_zone_offset_string(global_object, *offset_string));
 
     // 8. Return utc − offsetNanoseconds.
     return js_bigint(vm, utc->big_integer().minus(Crypto::SignedBigInteger::create_from(offset_nanoseconds)));
@@ -155,7 +153,7 @@ i32 compare_epoch_nanoseconds(BigInt const& epoch_nanoseconds_one, BigInt const&
 }
 
 // 8.5.6 AddInstant ( epochNanoseconds, hours, minutes, seconds, milliseconds, microseconds, nanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-addinstant
-BigInt* add_instant(GlobalObject& global_object, BigInt const& epoch_nanoseconds, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds)
+ThrowCompletionOr<BigInt*> add_instant(GlobalObject& global_object, BigInt const& epoch_nanoseconds, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds)
 {
     auto& vm = global_object.vm();
 
@@ -174,10 +172,8 @@ BigInt* add_instant(GlobalObject& global_object, BigInt const& epoch_nanoseconds
             .plus(Crypto::SignedBigInteger::create_from((i64)hours).multiplied_by(Crypto::SignedBigInteger { 3600 }).multiplied_by(Crypto::SignedBigInteger { 1'000'000'000 })));
 
     // If ! IsValidEpochNanoseconds(result) is false, throw a RangeError exception.
-    if (!is_valid_epoch_nanoseconds(*result)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
-        return {};
-    }
+    if (!is_valid_epoch_nanoseconds(*result))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 4. Return result.
     return result;
@@ -240,7 +236,7 @@ BigInt* round_temporal_instant(GlobalObject& global_object, BigInt const& nanose
 }
 
 // 8.5.9 TemporalInstantToString ( instant, timeZone, precision ), https://tc39.es/proposal-temporal/#sec-temporal-temporalinstanttostring
-Optional<String> temporal_instant_to_string(GlobalObject& global_object, Instant& instant, Value time_zone, Variant<StringView, u8> const& precision)
+ThrowCompletionOr<String> temporal_instant_to_string(GlobalObject& global_object, Instant& instant, Value time_zone, Variant<StringView, u8> const& precision)
 {
     auto& vm = global_object.vm();
 
@@ -254,19 +250,19 @@ Optional<String> temporal_instant_to_string(GlobalObject& global_object, Instant
     if (output_time_zone.is_undefined()) {
         // TODO: Can this really throw...?
         // a. Set outputTimeZone to ? CreateTemporalTimeZone("UTC").
-        output_time_zone = TRY_OR_DISCARD(create_temporal_time_zone(global_object, "UTC"sv));
+        output_time_zone = TRY(create_temporal_time_zone(global_object, "UTC"sv));
     }
 
     // 5. Let isoCalendar be ! GetISO8601Calendar().
     auto* iso_calendar = get_iso8601_calendar(global_object);
 
     // 6. Let dateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(outputTimeZone, instant, isoCalendar).
-    auto* date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, output_time_zone, instant, *iso_calendar));
+    auto* date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, output_time_zone, instant, *iso_calendar));
 
     // 7. Let dateTimeString be ? TemporalDateTimeToString(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], undefined, precision, "never").
     auto date_time_string = temporal_date_time_to_string(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), js_undefined(), precision, "never"sv);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     Optional<String> time_zone_string;
 
@@ -278,7 +274,7 @@ Optional<String> temporal_instant_to_string(GlobalObject& global_object, Instant
     // 9. Else,
     else {
         // a. Let timeZoneString be ? BuiltinTimeZoneGetOffsetStringFor(timeZone, instant).
-        time_zone_string = TRY_OR_DISCARD(builtin_time_zone_get_offset_string_for(global_object, time_zone, instant));
+        time_zone_string = TRY(builtin_time_zone_get_offset_string_for(global_object, time_zone, instant));
     }
 
     // 10. Return the string-concatenation of dateTimeString and timeZoneString.

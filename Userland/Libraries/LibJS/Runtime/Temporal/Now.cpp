@@ -192,7 +192,7 @@ Instant* system_instant(GlobalObject& global_object)
     auto* ns = system_utc_epoch_nanoseconds(global_object);
 
     // 2. Return ! CreateTemporalInstant(ns).
-    return create_temporal_instant(global_object, *ns);
+    return create_temporal_instant(global_object, *ns).release_value();
 }
 
 // 2.3.4 SystemDateTime ( temporalTimeZoneLike, calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-systemdatetime

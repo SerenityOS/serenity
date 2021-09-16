@@ -58,9 +58,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_nanoseconds_for)
         return {};
 
     // 3. Set instant to ? ToTemporalInstant(instant).
-    auto* instant = to_temporal_instant(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* instant = TRY_OR_DISCARD(to_temporal_instant(global_object, vm.argument(0)));
 
     // 4. If timeZone.[[OffsetNanoseconds]] is not undefined, return timeZone.[[OffsetNanoseconds]].
     if (time_zone->offset_nanoseconds().has_value())
@@ -80,9 +78,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_string_for)
         return {};
 
     // 3. Set instant to ? ToTemporalInstant(instant).
-    auto* instant = to_temporal_instant(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* instant = TRY_OR_DISCARD(to_temporal_instant(global_object, vm.argument(0)));
 
     // 4. Return ? BuiltinTimeZoneGetOffsetStringFor(timeZone, instant).
     auto offset_string = TRY_OR_DISCARD(builtin_time_zone_get_offset_string_for(global_object, time_zone, *instant));
@@ -96,9 +92,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_plain_date_time_for)
     auto time_zone = vm.this_value(global_object);
 
     // 2. Set instant to ? ToTemporalInstant(instant).
-    auto* instant = to_temporal_instant(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* instant = TRY_OR_DISCARD(to_temporal_instant(global_object, vm.argument(0)));
 
     // 3. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
     auto* calendar = TRY_OR_DISCARD(to_temporal_calendar_with_iso_default(global_object, vm.argument(1)));

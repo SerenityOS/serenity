@@ -140,12 +140,12 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::add)
     auto duration = TRY_OR_DISCARD(to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv }));
 
     // 4. Let ns be ? AddInstant(instant.[[Nanoseconds]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]]).
-    auto* ns = add_instant(global_object, instant->nanoseconds(), duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, duration.nanoseconds);
+    auto* ns = TRY_OR_DISCARD(add_instant(global_object, instant->nanoseconds(), duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, duration.nanoseconds));
     if (vm.exception())
         return {};
 
     // 5. Return ! CreateTemporalInstant(ns).
-    return create_temporal_instant(global_object, *ns);
+    return create_temporal_instant(global_object, *ns).release_value();
 }
 
 // 8.3.8 Temporal.Instant.prototype.subtract ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.subtract
@@ -163,12 +163,10 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::subtract)
     auto duration = TRY_OR_DISCARD(to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv }));
 
     // 4. Let ns be ? AddInstant(instant.[[Nanoseconds]], −duration.[[Hours]], −duration.[[Minutes]], −duration.[[Seconds]], −duration.[[Milliseconds]], −duration.[[Microseconds]], −duration.[[Nanoseconds]]).
-    auto* ns = add_instant(global_object, instant->nanoseconds(), -duration.hours, -duration.minutes, -duration.seconds, -duration.milliseconds, -duration.microseconds, -duration.nanoseconds);
-    if (vm.exception())
-        return {};
+    auto* ns = TRY_OR_DISCARD(add_instant(global_object, instant->nanoseconds(), -duration.hours, -duration.minutes, -duration.seconds, -duration.milliseconds, -duration.microseconds, -duration.nanoseconds));
 
     // 5. Return ! CreateTemporalInstant(ns).
-    return create_temporal_instant(global_object, *ns);
+    return create_temporal_instant(global_object, *ns).release_value();
 }
 
 // 8.3.9 Temporal.Instant.prototype.until ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.until
@@ -181,9 +179,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
         return {};
 
     // 3. Set other to ? ToTemporalInstant(other).
-    auto* other = to_temporal_instant(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* other = TRY_OR_DISCARD(to_temporal_instant(global_object, vm.argument(0)));
 
     // 4. Set options to ? GetOptionsObject(options).
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
@@ -229,9 +225,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
         return {};
 
     // 3. Set other to ? ToTemporalInstant(other).
-    auto* other = to_temporal_instant(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* other = TRY_OR_DISCARD(to_temporal_instant(global_object, vm.argument(0)));
 
     // 4. Set options to ? GetOptionsObject(options).
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
@@ -343,7 +337,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
         return {};
 
     // 16. Return ! CreateTemporalInstant(roundedNs).
-    return create_temporal_instant(global_object, *rounded_ns);
+    return create_temporal_instant(global_object, *rounded_ns).release_value();
 }
 
 // 8.3.12 Temporal.Instant.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.equals
@@ -356,9 +350,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::equals)
         return {};
 
     // 3. Set other to ? ToTemporalInstant(other).
-    auto other = to_temporal_instant(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto other = TRY_OR_DISCARD(to_temporal_instant(global_object, vm.argument(0)));
 
     // 4. If instant.[[Nanoseconds]] ≠ other.[[Nanoseconds]], return false.
     if (instant->nanoseconds().big_integer() != other->nanoseconds().big_integer())
@@ -403,14 +395,10 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
         return {};
 
     // 9. Let roundedInstant be ! CreateTemporalInstant(roundedNs).
-    auto* rounded_instant = create_temporal_instant(global_object, *rounded_ns);
+    auto* rounded_instant = create_temporal_instant(global_object, *rounded_ns).release_value();
 
     // 10. Return ? TemporalInstantToString(roundedInstant, timeZone, precision.[[Precision]]).
-    auto string = temporal_instant_to_string(global_object, *rounded_instant, time_zone, precision.precision);
-    if (vm.exception())
-        return {};
-
-    return js_string(vm, *string);
+    return js_string(vm, TRY_OR_DISCARD(temporal_instant_to_string(global_object, *rounded_instant, time_zone, precision.precision)));
 }
 
 // 8.3.14 Temporal.Instant.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tolocalestring
@@ -424,11 +412,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_locale_string)
         return {};
 
     // 3. Return ? TemporalInstantToString(instant, undefined, "auto").
-    auto string = temporal_instant_to_string(global_object, *instant, js_undefined(), "auto"sv);
-    if (vm.exception())
-        return {};
-
-    return js_string(vm, *string);
+    return js_string(vm, TRY_OR_DISCARD(temporal_instant_to_string(global_object, *instant, js_undefined(), "auto"sv)));
 }
 
 // 8.3.15 Temporal.Instant.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tojson
@@ -441,11 +425,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_json)
         return {};
 
     // 3. Return ? TemporalInstantToString(instant, undefined, "auto").
-    auto string = temporal_instant_to_string(global_object, *instant, js_undefined(), "auto"sv);
-    if (vm.exception())
-        return {};
-
-    return js_string(vm, *string);
+    return js_string(vm, TRY_OR_DISCARD(temporal_instant_to_string(global_object, *instant, js_undefined(), "auto"sv)));
 }
 
 // 8.3.16 Temporal.Instant.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.valueof
