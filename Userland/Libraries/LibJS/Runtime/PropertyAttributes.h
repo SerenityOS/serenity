@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Format.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 
 namespace JS {

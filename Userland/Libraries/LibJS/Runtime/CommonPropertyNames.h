@@ -8,6 +8,7 @@
 
 #include <AK/FlyString.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/PropertyName.h>
 
 namespace JS {
 
