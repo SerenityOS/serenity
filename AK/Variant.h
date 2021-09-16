@@ -116,7 +116,7 @@ struct VariantConstructors {
         internal_cast().set(t, VariantNoClearTag {});
     }
 
-    ALWAYS_INLINE VariantConstructors() { }
+    ALWAYS_INLINE VariantConstructors() = default;
 
 private:
     [[nodiscard]] ALWAYS_INLINE Base& internal_cast()

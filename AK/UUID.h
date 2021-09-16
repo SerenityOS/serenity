@@ -15,7 +15,7 @@ namespace AK {
 
 class UUID {
 public:
-    UUID();
+    UUID() = default;
     UUID(Array<u8, 16> uuid_buffer);
     UUID(const StringView&);
     ~UUID() = default;

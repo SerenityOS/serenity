@@ -46,7 +46,7 @@ public:
 
 protected:
     BaseRedBlackTree() = default; // These are protected to ensure no one instantiates the leaky base red black tree directly
-    virtual ~BaseRedBlackTree() {};
+    virtual ~BaseRedBlackTree() = default;
 
     void rotate_left(Node* subtree_root)
     {
