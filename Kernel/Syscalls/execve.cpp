@@ -454,8 +454,6 @@ KResult Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_descrip
     auto new_process_name = TRY(KString::try_create(parts.last()));
     auto new_main_thread_name = TRY(new_process_name->try_clone());
 
-    auto main_program_metadata = main_program_description->metadata();
-
     auto load_result = TRY(load(main_program_description, interpreter_description, main_program_header));
 
     // NOTE: We don't need the interpreter executable description after this point.
@@ -488,6 +486,7 @@ KResult Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_descrip
     bool executable_is_setid = false;
 
     if (!(main_program_description->custody()->mount_flags() & MS_NOSUID)) {
+        auto main_program_metadata = main_program_description->metadata();
         if (main_program_metadata.is_setuid()) {
             executable_is_setid = true;
             ProtectedDataMutationScope scope { *this };
