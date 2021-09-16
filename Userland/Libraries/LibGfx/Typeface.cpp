@@ -35,7 +35,7 @@ void Typeface::add_bitmap_font(RefPtr<BitmapFont> font)
 
 void Typeface::set_ttf_font(RefPtr<TTF::Font> font)
 {
-    m_ttf_font = font;
+    m_ttf_font = move(font);
 }
 
 RefPtr<Font> Typeface::get_font(unsigned size) const
