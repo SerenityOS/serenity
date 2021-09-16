@@ -39,7 +39,7 @@ int accept(int sockfd, sockaddr* addr, socklen_t* addrlen)
 
 int accept4(int sockfd, sockaddr* addr, socklen_t* addrlen, int flags)
 {
-    Syscall::SC_accept4_params params { sockfd, addr, addrlen, flags };
+    Syscall::SC_accept4_params params { addr, addrlen, sockfd, flags };
     int rc = syscall(SC_accept4, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
