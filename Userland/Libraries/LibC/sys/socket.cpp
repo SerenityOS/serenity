@@ -112,7 +112,7 @@ int getsockopt(int sockfd, int level, int option, void* value, socklen_t* value_
 
 int setsockopt(int sockfd, int level, int option, const void* value, socklen_t value_size)
 {
-    Syscall::SC_setsockopt_params params { sockfd, level, option, value, value_size };
+    Syscall::SC_setsockopt_params params { value, sockfd, level, option, value_size };
     int rc = syscall(SC_setsockopt, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
