@@ -67,7 +67,7 @@ Value InstantConstructor::construct(FunctionObject& new_target)
     }
 
     // 4. Return ? CreateTemporalInstant(epochNanoseconds, NewTarget).
-    return create_temporal_instant(global_object, *epoch_nanoseconds, &new_target);
+    return TRY_OR_DISCARD(create_temporal_instant(global_object, *epoch_nanoseconds, &new_target));
 }
 
 // 8.2.2 Temporal.Instant.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.instant.from
@@ -78,11 +78,11 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from)
     // 1. If Type(item) is Object and item has an [[InitializedTemporalInstant]] internal slot, then
     if (item.is_object() && is<Instant>(item.as_object())) {
         // a. Return ! CreateTemporalInstant(item.[[Nanoseconds]]).
-        return create_temporal_instant(global_object, *js_bigint(vm, static_cast<Instant&>(item.as_object()).nanoseconds().big_integer()));
+        return create_temporal_instant(global_object, *js_bigint(vm, static_cast<Instant&>(item.as_object()).nanoseconds().big_integer())).release_value();
     }
 
     // 2. Return ? ToTemporalInstant(item).
-    return to_temporal_instant(global_object, item);
+    return TRY_OR_DISCARD(to_temporal_instant(global_object, item));
 }
 
 // 8.2.3 Temporal.Instant.fromEpochSeconds ( epochSeconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochseconds
@@ -108,7 +108,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_seconds)
     }
 
     // 5. Return ! CreateTemporalInstant(epochNanoseconds).
-    return create_temporal_instant(global_object, *epoch_nanoseconds);
+    return create_temporal_instant(global_object, *epoch_nanoseconds).release_value();
 }
 
 // 8.2.4 Temporal.Instant.fromEpochMilliseconds ( epochMilliseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochmilliseconds
@@ -134,7 +134,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_milliseconds)
     }
 
     // 5. Return ! CreateTemporalInstant(epochNanoseconds).
-    return create_temporal_instant(global_object, *epoch_nanoseconds);
+    return create_temporal_instant(global_object, *epoch_nanoseconds).release_value();
 }
 
 // 8.2.5 Temporal.Instant.fromEpochMicroseconds ( epochMicroseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochmicroseconds
@@ -155,7 +155,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_microseconds)
     }
 
     // 4. Return ! CreateTemporalInstant(epochNanoseconds).
-    return create_temporal_instant(global_object, *epoch_nanoseconds);
+    return create_temporal_instant(global_object, *epoch_nanoseconds).release_value();
 }
 
 // 8.2.6 Temporal.Instant.fromEpochNanoseconds ( epochNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochnanoseconds
@@ -173,21 +173,17 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_nanoseconds)
     }
 
     // 3. Return ! CreateTemporalInstant(epochNanoseconds).
-    return create_temporal_instant(global_object, *epoch_nanoseconds);
+    return create_temporal_instant(global_object, *epoch_nanoseconds).release_value();
 }
 
 // 8.2.7 Temporal.Instant.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.instant.compare
 JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::compare)
 {
     // 1. Set one to ? ToTemporalInstant(one).
-    auto* one = to_temporal_instant(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* one = TRY_OR_DISCARD(to_temporal_instant(global_object, vm.argument(0)));
 
     // 2. Set two to ? ToTemporalInstant(two).
-    auto* two = to_temporal_instant(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* two = TRY_OR_DISCARD(to_temporal_instant(global_object, vm.argument(1)));
 
     // 3. Return 𝔽(! CompareEpochNanoseconds(one.[[Nanoseconds]], two.[[Nanoseconds]])).
     return Value(compare_epoch_nanoseconds(one->nanoseconds(), two->nanoseconds()));
