@@ -18,6 +18,7 @@
 #include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/NullDevice.h>
+#include <Kernel/Devices/SB16.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -33,6 +34,9 @@ public:
 
     bool is_console_device_attached() const { return !m_console_device.is_null(); }
     void attach_console_device(ConsoleDevice const&);
+
+    // FIXME: Once we have a singleton for managing many sound cards, remove this from here
+    void attach_sb16_device(SB16 const&);
 
     void after_inserting_device(Badge<Device>, Device&);
     void before_device_removal(Badge<Device>, Device&);
@@ -57,6 +61,8 @@ public:
 private:
     RefPtr<NullDevice> m_null_device;
     RefPtr<ConsoleDevice> m_console_device;
+    // FIXME: Once we have a singleton for managing many sound cards, remove this from here
+    RefPtr<SB16> m_sb16_device;
     MutexProtected<HashMap<u32, Device*>> m_devices;
 };
 
