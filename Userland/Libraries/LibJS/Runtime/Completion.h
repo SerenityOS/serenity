@@ -97,7 +97,10 @@ private:
 template<typename ValueType>
 class [[nodiscard]] ThrowCompletionOr {
 public:
-    ThrowCompletionOr() requires(IsSame<ValueType, Empty>) = default;
+    ThrowCompletionOr() requires(IsSame<ValueType, Empty>)
+        : m_value(Empty {})
+    {
+    }
 
     // Not `explicit` on purpose so that `return vm.throw_completion<Error>(...);` is possible.
     ThrowCompletionOr(Completion throw_completion)
