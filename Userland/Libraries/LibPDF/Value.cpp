@@ -9,12 +9,6 @@
 
 namespace PDF {
 
-Value::~Value()
-{
-    if (is_object())
-        m_as_object->unref();
-}
-
 Value& Value::operator=(Value const& other)
 {
     m_type = other.m_type;
@@ -36,8 +30,6 @@ Value& Value::operator=(Value const& other)
         break;
     case Type::Object:
         m_as_object = other.m_as_object;
-        if (m_as_object)
-            m_as_object->ref();
         break;
     }
     return *this;
