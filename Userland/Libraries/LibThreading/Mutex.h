@@ -27,7 +27,7 @@ public:
         pthread_mutex_init(&m_mutex, &attr);
 #endif
     }
-    ~Mutex() { }
+    ~Mutex() = default;
 
     void lock();
     void unlock();
