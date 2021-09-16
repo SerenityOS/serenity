@@ -183,9 +183,7 @@ PlainDateTime* to_temporal_date_time(GlobalObject& global_object, Value item, Ob
             return {};
 
         // f. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
-        auto* fields = prepare_temporal_fields(global_object, item_object, field_names, {});
-        if (vm.exception())
-            return {};
+        auto* fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, item_object, field_names, {}));
 
         // g. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
         auto maybe_result = interpret_temporal_date_time_fields(global_object, *calendar, *fields, *options);

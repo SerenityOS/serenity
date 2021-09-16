@@ -62,9 +62,7 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
             return throw_completion(exception->value());
 
         // d. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
-        auto* fields = prepare_temporal_fields(global_object, item_object, field_names, {});
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, {}));
 
         // e. Return ? YearMonthFromFields(calendar, fields, options).
         return year_month_from_fields(global_object, *calendar, *fields, options);

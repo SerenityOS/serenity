@@ -507,9 +507,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_year_month)
         return {};
 
     // 5. Let fields be ? PrepareTemporalFields(dateTime, fieldNames, «»).
-    auto* fields = prepare_temporal_fields(global_object, *date_time, field_names, {});
-    if (vm.exception())
-        return {};
+    auto* fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, *date_time, field_names, {}));
 
     // 6. Return ? YearMonthFromFields(calendar, fields).
     return year_month_from_fields(global_object, calendar, *fields);
@@ -533,9 +531,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_month_day)
         return {};
 
     // 5. Let fields be ? PrepareTemporalFields(dateTime, fieldNames, «»).
-    auto* fields = prepare_temporal_fields(global_object, *date_time, field_names, {});
-    if (vm.exception())
-        return {};
+    auto* fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, *date_time, field_names, {}));
 
     // 6. Return ? MonthDayFromFields(calendar, fields).
     return month_day_from_fields(global_object, calendar, *fields);

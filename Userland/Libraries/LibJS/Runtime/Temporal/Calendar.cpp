@@ -791,9 +791,7 @@ Optional<ISODate> iso_date_from_fields(GlobalObject& global_object, Object const
     auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
-    auto* prepared_fields = prepare_temporal_fields(global_object, fields, { "day", "month", "monthCode", "year" }, {});
-    if (vm.exception())
-        return {};
+    auto* prepared_fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, fields, { "day", "month", "monthCode", "year" }, {}));
 
     // 4. Let year be ? Get(fields, "year").
     auto year = prepared_fields->get(vm.names.year);
@@ -837,9 +835,7 @@ Optional<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_object, O
     auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "month", "monthCode", "year" », «»).
-    auto* prepared_fields = prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, {});
-    if (vm.exception())
-        return {};
+    auto* prepared_fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, {}));
 
     // 4. Let year be ? Get(fields, "year").
     auto year = prepared_fields->get(vm.names.year);
@@ -875,9 +871,7 @@ Optional<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_object, Obj
     auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
-    auto* prepared_fields = prepare_temporal_fields(global_object, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, {});
-    if (vm.exception())
-        return {};
+    auto* prepared_fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, {}));
 
     // 4. Let month be ? Get(fields, "month").
     auto month_value = prepared_fields->get(vm.names.month);

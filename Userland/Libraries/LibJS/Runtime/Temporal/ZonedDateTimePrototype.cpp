@@ -822,9 +822,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_year_month)
         return {};
 
     // 8. Let fields be ? PrepareTemporalFields(temporalDateTime, fieldNames, «»).
-    auto* fields = prepare_temporal_fields(global_object, *temporal_date_time, field_names, {});
-    if (vm.exception())
-        return {};
+    auto* fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, *temporal_date_time, field_names, {}));
 
     // 9. Return ? YearMonthFromFields(calendar, fields).
     return year_month_from_fields(global_object, calendar, *fields);
@@ -857,9 +855,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_month_day)
         return {};
 
     // 8. Let fields be ? PrepareTemporalFields(temporalDateTime, fieldNames, «»).
-    auto* fields = prepare_temporal_fields(global_object, *temporal_date_time, field_names, {});
-    if (vm.exception())
-        return {};
+    auto* fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, *temporal_date_time, field_names, {}));
 
     // 9. Return ? MonthDayFromFields(calendar, fields).
     return month_day_from_fields(global_object, calendar, *fields);
