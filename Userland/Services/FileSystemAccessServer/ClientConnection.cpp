@@ -75,11 +75,11 @@ void ClientConnection::request_file_handler(i32 window_server_client_id, i32 par
         auto pid = this->socket().peer_pid();
         auto exe_link = LexicalPath("/proc").append(String::number(pid)).append("exe").string();
         auto exe_path = Core::File::real_path_for(exe_link);
-        auto exe_name = LexicalPath::basename(exe_path);
 
         auto main_window = create_dummy_child_window(window_server_client_id, parent_window_id);
 
         if (prompt == ShouldPrompt::Yes) {
+            auto exe_name = LexicalPath::basename(exe_path);
             auto result = GUI::MessageBox::show(main_window, String::formatted("Allow {} ({}) to {} \"{}\"?", exe_name, pid, access_string, path), "File Permissions Requested", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNo);
             approved = result == GUI::MessageBox::ExecYes;
         } else {
