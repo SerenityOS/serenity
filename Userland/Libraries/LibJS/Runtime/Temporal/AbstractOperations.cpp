@@ -796,7 +796,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
 }
 
 // 13.35 ParseTemporalInstantString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstantstring
-Optional<TemporalInstant> parse_temporal_instant_string(GlobalObject& global_object, String const& iso_string)
+ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
 
@@ -811,8 +811,8 @@ Optional<TemporalInstant> parse_temporal_instant_string(GlobalObject& global_obj
 
     // 4. Let timeZoneResult be ? ParseTemporalTimeZoneString(isoString).
     auto time_zone_result = parse_temporal_time_zone_string(global_object, iso_string);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 5. Let offsetString be timeZoneResult.[[OffsetString]].
     auto offset_string = time_zone_result->offset;
