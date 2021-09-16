@@ -199,6 +199,11 @@ run_tests() {
 }
 
 build_target() {
+    if [ "$TARGET" = "lagom" ]; then
+        # Ensure that all lagom binaries get built, in case user first
+        # invoked superbuild for serenity target that doesn't set -DBUILD_LAGOM=ON
+        cmake -S "$SERENITY_SOURCE_DIR/Meta/Lagom" -B "$BUILD_DIR" -DBUILD_LAGOM=ON
+    fi
     # With zero args, we are doing a standard "build"
     # With multiple args, we are doing an install/image/run
     if [ $# -eq 0 ]; then
