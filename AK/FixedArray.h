@@ -15,7 +15,7 @@ namespace AK {
 template<typename T>
 class FixedArray {
 public:
-    FixedArray() { }
+    FixedArray() = default;
     explicit FixedArray(size_t size)
         : m_size(size)
     {

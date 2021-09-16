@@ -16,9 +16,7 @@ class NonnullPtrVector : public Vector<PtrType, inline_capacity> {
     using Base = Vector<PtrType, inline_capacity>;
 
 public:
-    NonnullPtrVector()
-    {
-    }
+    NonnullPtrVector() = default;
 
     NonnullPtrVector(Vector<PtrType>&& other)
         : Base(static_cast<Base&&>(other))
