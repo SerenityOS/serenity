@@ -22,6 +22,8 @@ public:
     // test-js to communicate between the JS tests and the C++ test runner.
     static String stringify_impl(GlobalObject&, Value value, Value replacer, Value space);
 
+    static Value parse_json_value(GlobalObject&, const JsonValue&);
+
 private:
     struct StringifyState {
         FunctionObject* replacer_function { nullptr };
@@ -40,7 +42,6 @@ private:
     // Parse helpers
     static Object* parse_json_object(GlobalObject&, const JsonObject&);
     static Array* parse_json_array(GlobalObject&, const JsonArray&);
-    static Value parse_json_value(GlobalObject&, const JsonValue&);
     static Value internalize_json_property(GlobalObject&, Object* holder, PropertyName const& name, FunctionObject& reviver);
 
     JS_DECLARE_NATIVE_FUNCTION(stringify);
