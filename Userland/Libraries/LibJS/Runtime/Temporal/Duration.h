@@ -9,6 +9,7 @@
 #include <AK/Optional.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/VM.h>
 
 namespace JS::Temporal {
 
