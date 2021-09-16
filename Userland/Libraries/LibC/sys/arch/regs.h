@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Platform.h>
+
 #if ARCH(I386)
 #    include "i386/regs.h"
 #elif ARCH(X86_64)
