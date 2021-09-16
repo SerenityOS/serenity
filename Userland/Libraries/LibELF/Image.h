@@ -47,7 +47,7 @@ public:
         {
         }
 
-        ~Symbol() { }
+        ~Symbol() = default;
 
         StringView name() const { return m_image.table_string(m_sym.st_name); }
         unsigned section_index() const { return m_sym.st_shndx; }
@@ -88,7 +88,7 @@ public:
             , m_program_header_index(program_header_index)
         {
         }
-        ~ProgramHeader() { }
+        ~ProgramHeader() = default;
 
         unsigned index() const { return m_program_header_index; }
         u32 type() const { return m_program_header.p_type; }
@@ -118,7 +118,7 @@ public:
             , m_section_index(sectionIndex)
         {
         }
-        ~Section() { }
+        ~Section() = default;
 
         StringView name() const { return m_image.section_header_table_string(m_section_header.sh_name); }
         u32 type() const { return m_section_header.sh_type; }
@@ -162,7 +162,7 @@ public:
         {
         }
 
-        ~Relocation() { }
+        ~Relocation() = default;
 
         size_t offset() const { return m_rel.r_offset; }
 #if ARCH(I386)
