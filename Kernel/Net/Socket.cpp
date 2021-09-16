@@ -101,7 +101,7 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
         auto device = NetworkingManagement::the().lookup_by_name(ifname->view());
         if (!device)
             return ENODEV;
-        m_bound_interface = device;
+        m_bound_interface = move(device);
         return KSuccess;
     }
     case SO_KEEPALIVE:
