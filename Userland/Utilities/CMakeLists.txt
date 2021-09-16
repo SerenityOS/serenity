@@ -1,7 +1,7 @@
 file(GLOB CMD_SOURCES  CONFIGURE_DEPENDS "*.cpp")
 list(APPEND SPECIAL_TARGETS test install)
 list(APPEND REQUIRED_TARGETS
-    arp base64 basename cat chmod chown clear comm cp cut date dd df dirname dmesg du echo env expr false fgrep
+    arp base64 basename cat chmod chown clear comm cp cut date dd df diff dirname dmesg du echo env expr false fgrep
     file find grep groups head host hostname id ifconfig kill killall ln ls mkdir mount mv nproc
     pgrep pidof ping pmap ps readlink realpath reboot rm rmdir seq shutdown sleep sort stat stty su tail test
     touch tr true umount uname uniq uptime w wc which whoami xargs yes less
@@ -59,6 +59,7 @@ target_link_libraries(chres LibGUI)
 target_link_libraries(cksum LibCrypto)
 target_link_libraries(config LibConfig)
 target_link_libraries(copy LibGUI)
+target_link_libraries(diff LibDiff)
 target_link_libraries(disasm LibX86)
 target_link_libraries(expr LibRegex)
 target_link_libraries(file LibGfx LibIPC LibCompress)
