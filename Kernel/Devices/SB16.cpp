@@ -5,10 +5,10 @@
  */
 
 #include <AK/Memory.h>
-#include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/IO.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -60,8 +60,6 @@ void SB16::set_sample_rate(uint16_t hz)
     dsp_write((u8)hz);
 }
 
-static Singleton<SB16> s_the;
-
 UNMAP_AFTER_INIT SB16::SB16()
     : IRQHandler(SB16_DEFAULT_IRQ)
     // FIXME: We can't change version numbers later, i.e. after the sound card is initialized.
@@ -74,7 +72,7 @@ UNMAP_AFTER_INIT SB16::~SB16()
 {
 }
 
-UNMAP_AFTER_INIT void SB16::detect()
+UNMAP_AFTER_INIT RefPtr<SB16> SB16::try_detect_and_create()
 {
     IO::out8(0x226, 1);
     IO::delay(32);
@@ -82,19 +80,11 @@ UNMAP_AFTER_INIT void SB16::detect()
 
     auto data = dsp_read();
     if (data != 0xaa)
-        return;
-    SB16::create();
-}
-
-UNMAP_AFTER_INIT void SB16::create()
-{
-    s_the.ensure_instance();
-    s_the->after_inserting();
-}
-
-SB16& SB16::the()
-{
-    return *s_the;
+        return {};
+    auto device_or_error = DeviceManagement::try_create_device<SB16>();
+    if (device_or_error.is_error())
+        return {};
+    return device_or_error.release_value();
 }
 
 UNMAP_AFTER_INIT void SB16::initialize()
