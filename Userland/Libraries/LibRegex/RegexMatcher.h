@@ -100,21 +100,21 @@ public:
     void print_bytecode(FILE* f = stdout) const;
     String error_string(Optional<String> message = {}) const;
 
-    RegexResult match(RegexStringView const view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
+    RegexResult match(RegexStringView const& view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
     {
         if (!matcher || parser_result.error != Error::NoError)
             return {};
         return matcher->match(view, regex_options);
     }
 
-    RegexResult match(Vector<RegexStringView> const views, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
+    RegexResult match(Vector<RegexStringView> const& views, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
     {
         if (!matcher || parser_result.error != Error::NoError)
             return {};
         return matcher->match(views, regex_options);
     }
 
-    String replace(RegexStringView const view, StringView const& replacement_pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
+    String replace(RegexStringView const& view, StringView const& replacement_pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
     {
         if (!matcher || parser_result.error != Error::NoError)
             return {};
@@ -155,7 +155,7 @@ public:
 
     // FIXME: replace(Vector<RegexStringView> const , ...)
 
-    RegexResult search(RegexStringView const view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
+    RegexResult search(RegexStringView const& view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
     {
         if (!matcher || parser_result.error != Error::NoError)
             return {};
@@ -171,7 +171,7 @@ public:
         return matcher->match(view, options);
     }
 
-    RegexResult search(Vector<RegexStringView> const views, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
+    RegexResult search(Vector<RegexStringView> const& views, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
     {
         if (!matcher || parser_result.error != Error::NoError)
             return {};
@@ -187,31 +187,31 @@ public:
         return matcher->match(views, options);
     }
 
-    bool match(RegexStringView const view, RegexResult& m, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
+    bool match(RegexStringView const& view, RegexResult& m, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
     {
         m = match(view, regex_options);
         return m.success;
     }
 
-    bool match(Vector<RegexStringView> const views, RegexResult& m, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
+    bool match(Vector<RegexStringView> const& views, RegexResult& m, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
     {
         m = match(views, regex_options);
         return m.success;
     }
 
-    bool search(RegexStringView const view, RegexResult& m, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
+    bool search(RegexStringView const& view, RegexResult& m, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
     {
         m = search(view, regex_options);
         return m.success;
     }
 
-    bool search(Vector<RegexStringView> const views, RegexResult& m, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
+    bool search(Vector<RegexStringView> const& views, RegexResult& m, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
     {
         m = search(views, regex_options);
         return m.success;
     }
 
-    bool has_match(RegexStringView const view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
+    bool has_match(RegexStringView const& view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
     {
         if (!matcher || parser_result.error != Error::NoError)
             return false;
@@ -219,7 +219,7 @@ public:
         return result.success;
     }
 
-    bool has_match(Vector<RegexStringView> const views, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
+    bool has_match(Vector<RegexStringView> const& views, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
     {
         if (!matcher || parser_result.error != Error::NoError)
             return false;
@@ -236,61 +236,61 @@ private:
 
 // free standing functions for match, search and has_match
 template<class Parser>
-RegexResult match(RegexStringView const view, Regex<Parser>& pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
+RegexResult match(RegexStringView const& view, Regex<Parser>& pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
 {
     return pattern.match(view, regex_options);
 }
 
 template<class Parser>
-RegexResult match(Vector<RegexStringView> const view, Regex<Parser>& pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
+RegexResult match(Vector<RegexStringView> const& view, Regex<Parser>& pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
 {
     return pattern.match(view, regex_options);
 }
 
 template<class Parser>
-bool match(RegexStringView const view, Regex<Parser>& pattern, RegexResult&, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
+bool match(RegexStringView const& view, Regex<Parser>& pattern, RegexResult&, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
 {
     return pattern.match(view, regex_options);
 }
 
 template<class Parser>
-bool match(Vector<RegexStringView> const view, Regex<Parser>& pattern, RegexResult&, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
+bool match(Vector<RegexStringView> const& view, Regex<Parser>& pattern, RegexResult&, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
 {
     return pattern.match(view, regex_options);
 }
 
 template<class Parser>
-RegexResult search(RegexStringView const view, Regex<Parser>& pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
+RegexResult search(RegexStringView const& view, Regex<Parser>& pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
 {
     return pattern.search(view, regex_options);
 }
 
 template<class Parser>
-RegexResult search(Vector<RegexStringView> const views, Regex<Parser>& pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
+RegexResult search(Vector<RegexStringView> const& views, Regex<Parser>& pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
 {
     return pattern.search(views, regex_options);
 }
 
 template<class Parser>
-bool search(RegexStringView const view, Regex<Parser>& pattern, RegexResult&, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
+bool search(RegexStringView const& view, Regex<Parser>& pattern, RegexResult&, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
 {
     return pattern.search(view, regex_options);
 }
 
 template<class Parser>
-bool search(Vector<RegexStringView> const views, Regex<Parser>& pattern, RegexResult&, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
+bool search(Vector<RegexStringView> const& views, Regex<Parser>& pattern, RegexResult&, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
 {
     return pattern.search(views, regex_options);
 }
 
 template<class Parser>
-bool has_match(RegexStringView const view, Regex<Parser>& pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
+bool has_match(RegexStringView const& view, Regex<Parser>& pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
 {
     return pattern.has_match(view, regex_options);
 }
 
 template<class Parser>
-bool has_match(Vector<RegexStringView> const views, Regex<Parser>& pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
+bool has_match(Vector<RegexStringView> const& views, Regex<Parser>& pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
 {
     return pattern.has_match(views, regex_options);
 }
