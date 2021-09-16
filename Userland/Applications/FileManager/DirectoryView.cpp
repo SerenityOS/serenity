@@ -114,6 +114,17 @@ void DirectoryView::handle_activation(GUI::ModelIndex const& index)
         return;
     }
 
+    if (path.ends_with(".zip", AK::CaseSensitivity::CaseInsensitive)) {
+        auto result = GUI::MessageBox::show(window(),
+            String::formatted("Extract {} here?", LexicalPath::basename(path)),
+            "Confirm extraction",
+            GUI::MessageBox::Type::Question,
+            GUI::MessageBox::InputType::YesNo);
+        if (result == GUI::MessageBox::ExecYes)
+            do_unzip_archive({ path }, window());
+        return;
+    }
+
     auto url = URL::create_with_file_protocol(path);
     auto launcher_handlers = get_launch_handlers(url);
     auto default_launcher = get_default_launch_handler(launcher_handlers);

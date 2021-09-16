@@ -10,6 +10,7 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/File.h>
 #include <LibGUI/MessageBox.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 namespace FileManager {
@@ -124,6 +125,32 @@ void run_file_operation(FileOperation operation, Vector<String> const& sources, 
     if (parent_window)
         window->center_within(*parent_window);
     window->show();
+}
+
+void do_unzip_archive(Vector<String> const& selected_file_paths, GUI::Window* window)
+{
+    String archive_file_path = selected_file_paths.first();
+    String output_directory_path = archive_file_path.substring(0, archive_file_path.length() - 4);
+
+    pid_t unzip_pid = fork();
+    if (unzip_pid < 0) {
+        perror("fork");
+        VERIFY_NOT_REACHED();
+    }
+
+    if (!unzip_pid) {
+        int rc = execlp("/bin/unzip", "/bin/unzip", "-d", output_directory_path.characters(), archive_file_path.characters(), nullptr);
+        if (rc < 0) {
+            perror("execlp");
+            _exit(1);
+        }
+    } else {
+        // FIXME: this could probably be tied in with the new file operation progress tracking
+        int status;
+        int rc = waitpid(unzip_pid, &status, 0);
+        if (rc < 0 || !WIFEXITED(status) || WEXITSTATUS(status) != 0)
+            GUI::MessageBox::show(window, "Could not extract archive", "Extract Archive Error", GUI::MessageBox::Type::Error);
+    }
 }
 
 }

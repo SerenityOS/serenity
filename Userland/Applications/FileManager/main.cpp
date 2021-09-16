@@ -44,7 +44,6 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/wait.h>
 #include <unistd.h>
 
 using namespace FileManager;
@@ -54,7 +53,6 @@ static int run_in_windowed_mode(String initial_location, String entry_focused_on
 static void do_copy(Vector<String> const& selected_file_paths, FileOperation file_operation);
 static void do_paste(String const& target_directory, GUI::Window* window);
 static void do_create_link(Vector<String> const& selected_file_paths, GUI::Window* window);
-static void do_unzip_archive(Vector<String> const& selected_file_paths, GUI::Window* window);
 static void show_properties(String const& container_dir_path, String const& path, Vector<String> const& selected, GUI::Window* window);
 static bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView const& directory_view, String const& full_path, RefPtr<GUI::Action>& default_action, NonnullRefPtrVector<LauncherHandler>& current_file_launch_handlers);
 
@@ -188,32 +186,6 @@ void do_create_link(Vector<String> const& selected_file_paths, GUI::Window* wind
     if (auto result = Core::File::link_file(destination, path); result.is_error()) {
         GUI::MessageBox::show(window, String::formatted("Could not create desktop shortcut:\n{}", result.error()), "File Manager",
             GUI::MessageBox::Type::Error);
-    }
-}
-
-void do_unzip_archive(Vector<String> const& selected_file_paths, GUI::Window* window)
-{
-    String archive_file_path = selected_file_paths.first();
-    String output_directory_path = archive_file_path.substring(0, archive_file_path.length() - 4);
-
-    pid_t unzip_pid = fork();
-    if (unzip_pid < 0) {
-        perror("fork");
-        VERIFY_NOT_REACHED();
-    }
-
-    if (!unzip_pid) {
-        int rc = execlp("/bin/unzip", "/bin/unzip", "-d", output_directory_path.characters(), archive_file_path.characters(), nullptr);
-        if (rc < 0) {
-            perror("execlp");
-            _exit(1);
-        }
-    } else {
-        // FIXME: this could probably be tied in with the new file operation progress tracking
-        int status;
-        int rc = waitpid(unzip_pid, &status, 0);
-        if (rc < 0 || !WIFEXITED(status) || WEXITSTATUS(status) != 0)
-            GUI::MessageBox::show(window, "Could not extract archive", "Extract Archive Error", GUI::MessageBox::Type::Error);
     }
 }
 

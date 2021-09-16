@@ -22,4 +22,7 @@ enum class FileOperation {
 void delete_paths(Vector<String> const&, bool should_confirm, GUI::Window*);
 
 void run_file_operation(FileOperation, Vector<String> const& sources, String const& destination, GUI::Window*);
+
+void do_unzip_archive(Vector<String> const& selected_file_paths, GUI::Window* window);
+
 }
