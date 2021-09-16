@@ -116,6 +116,11 @@ public:
     bool operator>(Value const&) const;
     bool operator>=(Value const&) const;
 
+    [[nodiscard]] TupleElementDescriptor descriptor() const
+    {
+        return { "", type(), Order::Ascending };
+    }
+
     static Value const& null();
     static Value create_tuple(NonnullRefPtr<TupleDescriptor> const&);
     static Value create_array(SQLType element_type, Optional<size_t> const& max_size = {});

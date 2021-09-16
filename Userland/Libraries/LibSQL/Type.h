@@ -55,10 +55,30 @@ inline static size_t size_of(SQLType t)
     }
 }
 
+#define ENUMERATE_ORDERS(S) \
+    S(Ascending)            \
+    S(Descending)
+
 enum class Order {
-    Ascending,
-    Descending,
+#undef __ENUMERATE_ORDER
+#define __ENUMERATE_ORDER(order) order,
+    ENUMERATE_ORDERS(__ENUMERATE_ORDER)
+#undef __ENUMERATE_ORDER
 };
+
+inline static String Order_name(Order order)
+{
+    switch (order) {
+#undef __ENUMERATE_ORDER
+#define __ENUMERATE_ORDER(order) \
+    case Order::order:           \
+        return #order;
+        ENUMERATE_ORDERS(__ENUMERATE_ORDER)
+#undef __ENUMERATE_ORDER
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
 
 enum class Nulls {
     First,

@@ -62,7 +62,7 @@ public:
 
     [[nodiscard]] size_t size() const { return m_data.size(); }
     [[nodiscard]] virtual size_t length() const;
-    void clear() { m_descriptor->clear(); }
+    void clear() { m_data.clear(); }
     [[nodiscard]] NonnullRefPtr<TupleDescriptor> descriptor() const { return m_descriptor; }
     [[nodiscard]] int compare(Tuple const&) const;
     [[nodiscard]] int match(Tuple const&) const;

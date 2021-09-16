@@ -87,4 +87,17 @@ Value UnaryOperatorExpression::evaluate(ExecutionContext& context) const
     VERIFY_NOT_REACHED();
 }
 
+Value ColumnNameExpression::evaluate(ExecutionContext& context) const
+{
+    auto& descriptor = *context.current_row->descriptor();
+    VERIFY(context.current_row->size() == descriptor.size());
+    for (auto ix = 0u; ix < context.current_row->size(); ix++) {
+        auto& column_descriptor = descriptor[ix];
+        if (column_descriptor.name == column_name())
+            return { (*context.current_row)[ix] };
+    }
+    // TODO: Error handling.
+    VERIFY_NOT_REACHED();
+}
+
 }
