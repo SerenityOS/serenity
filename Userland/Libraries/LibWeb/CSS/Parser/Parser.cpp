@@ -31,10 +31,6 @@ static void log_parse_error(const SourceLocation& location = SourceLocation::cur
 
 namespace Web::CSS {
 
-ParsingContext::ParsingContext()
-{
-}
-
 ParsingContext::ParsingContext(DOM::Document& document)
     : m_document(&document)
 {

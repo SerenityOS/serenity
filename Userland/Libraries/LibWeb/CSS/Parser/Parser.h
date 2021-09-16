@@ -32,7 +32,7 @@ enum class PropertyID;
 
 class ParsingContext {
 public:
-    ParsingContext();
+    ParsingContext() = default;
     explicit ParsingContext(DOM::Document&);
     explicit ParsingContext(DOM::ParentNode&);
 
