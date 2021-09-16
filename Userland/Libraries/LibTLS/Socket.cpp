@@ -142,31 +142,42 @@ bool TLSv12::common_connect(const struct sockaddr* saddr, socklen_t length)
     return true;
 }
 
+void TLSv12::notify_client_for_app_data()
+{
+    if (m_context.application_buffer.size() > 0) {
+        if (!m_has_scheduled_app_data_flush) {
+            deferred_invoke([this] { notify_client_for_app_data(); });
+            m_has_scheduled_app_data_flush = true;
+        }
+        if (on_tls_ready_to_read)
+            on_tls_ready_to_read(*this);
+    } else {
+        if (m_context.connection_finished && !m_context.has_invoked_finish_or_error_callback) {
+            m_context.has_invoked_finish_or_error_callback = true;
+            if (on_tls_finished)
+                on_tls_finished();
+        }
+    }
+    m_has_scheduled_app_data_flush = false;
+}
+
 void TLSv12::read_from_socket()
 {
-    auto did_schedule_read = false;
-    auto notify_client_for_app_data = [&] {
-        if (m_context.application_buffer.size() > 0) {
-            if (!did_schedule_read) {
-                deferred_invoke([&] { read_from_socket(); });
-                did_schedule_read = true;
-            }
-            if (on_tls_ready_to_read)
-                on_tls_ready_to_read(*this);
-        }
-    };
-
     // If there's anything before we consume stuff, let the client know
     // since we won't be consuming things if the connection is terminated.
     notify_client_for_app_data();
+
+    ScopeGuard notify_guard {
+        [this] {
+            // If anything new shows up, tell the client about the event.
+            notify_client_for_app_data();
+        }
+    };
 
     if (!check_connection_state(true))
         return;
 
     consume(Core::Socket::read(4 * MiB));
-
-    // If anything new shows up, tell the client about the event.
-    notify_client_for_app_data();
 }
 
 void TLSv12::write_into_socket()
@@ -188,20 +199,27 @@ void TLSv12::write_into_socket()
 
 bool TLSv12::check_connection_state(bool read)
 {
+    if (m_context.connection_finished)
+        return false;
+
     if (!Core::Socket::is_open() || !Core::Socket::is_connected() || Core::Socket::eof()) {
         // an abrupt closure (the server is a jerk)
         dbgln_if(TLS_DEBUG, "Socket not open, assuming abrupt closure");
         m_context.connection_finished = true;
+        Core::Socket::close();
+        return false;
     }
     if (m_context.critical_error) {
         dbgln_if(TLS_DEBUG, "CRITICAL ERROR {} :(", m_context.critical_error);
 
+        m_context.has_invoked_finish_or_error_callback = true;
         if (on_tls_error)
             on_tls_error((AlertDescription)m_context.critical_error);
         return false;
     }
     if (((read && m_context.application_buffer.size() == 0) || !read) && m_context.connection_finished) {
         if (m_context.application_buffer.size() == 0 && m_context.connection_status != ConnectionStatus::Disconnected) {
+            m_context.has_invoked_finish_or_error_callback = true;
             if (on_tls_finished)
                 on_tls_finished();
         }
@@ -210,7 +228,7 @@ bool TLSv12::check_connection_state(bool read)
                 m_context.tls_buffer.size(),
                 m_context.application_buffer.size());
         } else {
-            m_context.connection_finished = false;
+            m_context.connection_finished = true;
             dbgln_if(TLS_DEBUG, "FINISHED");
         }
         if (!m_context.application_buffer.size()) {

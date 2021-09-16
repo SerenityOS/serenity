@@ -290,6 +290,7 @@ struct Context {
     ClientVerificationStaus client_verified { Verified };
 
     bool connection_finished { false };
+    bool has_invoked_finish_or_error_callback { false };
 
     // message flags
     u8 handshake_messages[11] { 0 };
@@ -412,6 +413,7 @@ private:
     void read_from_socket();
 
     bool check_connection_state(bool read);
+    void notify_client_for_app_data();
 
     ssize_t handle_server_hello(ReadonlyBytes, WritePacketStage&);
     ssize_t handle_handshake_finished(ReadonlyBytes, WritePacketStage&);
@@ -515,6 +517,7 @@ private:
     CipherVariant m_cipher_remote { Empty {} };
 
     bool m_has_scheduled_write_flush { false };
+    bool m_has_scheduled_app_data_flush { false };
     i32 m_max_wait_time_for_handshake_in_seconds { 10 };
 
     RefPtr<Core::Timer> m_handshake_timeout_timer;
