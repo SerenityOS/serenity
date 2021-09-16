@@ -264,7 +264,7 @@ public:
     const NonnullRefPtr<DOMImplementation> implementation() const { return m_implementation; }
 
     RefPtr<HTML::HTMLScriptElement> current_script() const { return m_current_script; }
-    void set_current_script(Badge<HTML::HTMLScriptElement>, RefPtr<HTML::HTMLScriptElement> script) { m_current_script = script; }
+    void set_current_script(Badge<HTML::HTMLScriptElement>, RefPtr<HTML::HTMLScriptElement> script) { m_current_script = move(script); }
 
     u32 ignore_destructive_writes_counter() const { return m_ignore_destructive_writes_counter; }
     void increment_ignore_destructive_writes_counter() { m_ignore_destructive_writes_counter++; }

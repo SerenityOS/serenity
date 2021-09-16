@@ -263,7 +263,7 @@ void StyleProperties::load_font(Layout::Node const& node) const
         found_font = font_fallback(monospace, bold);
     }
 
-    m_font = found_font;
+    m_font = move(found_font);
     FontCache::the().set(font_selector, *m_font);
 }
 
