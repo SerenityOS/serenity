@@ -47,7 +47,7 @@ public:
     const Element* next_element_in_pre_order() const { return const_cast<NonDocumentTypeChildNode*>(this)->next_element_in_pre_order(); }
 
 protected:
-    NonDocumentTypeChildNode() { }
+    NonDocumentTypeChildNode() = default;
 };
 
 }
