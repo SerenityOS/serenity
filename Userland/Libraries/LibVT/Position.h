@@ -10,7 +10,7 @@ namespace VT {
 
 class Position {
 public:
-    Position() { }
+    Position() = default;
     Position(int row, int column)
         : m_row(row)
         , m_column(column)
