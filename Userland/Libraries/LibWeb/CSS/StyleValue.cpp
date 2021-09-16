@@ -33,6 +33,12 @@ String IdentifierStyleValue::to_string() const
 
 Color IdentifierStyleValue::to_color(Layout::NodeWithStyle const& node) const
 {
+    if (id() == CSS::ValueID::Currentcolor) {
+        if (!node.has_style())
+            return Color::Black;
+        return node.computed_values().color();
+    }
+
     auto& document = node.document();
     if (id() == CSS::ValueID::LibwebLink)
         return document.link_color();
