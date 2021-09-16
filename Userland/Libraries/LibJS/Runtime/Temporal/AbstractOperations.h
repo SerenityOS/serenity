@@ -99,7 +99,7 @@ ThrowCompletionOr<Optional<String>> to_smallest_temporal_unit(GlobalObject&, Obj
 ThrowCompletionOr<void> validate_temporal_unit_range(GlobalObject&, StringView largest_unit, StringView smallest_unit);
 String larger_of_two_temporal_units(StringView, StringView);
 Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit);
-void reject_temporal_calendar_type(GlobalObject&, Object&);
+ThrowCompletionOr<void> reject_temporal_calendar_type(GlobalObject&, Object&);
 String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision);
 double constrain_to_range(double x, double minimum, double maximum);
 BigInt* round_number_to_increment(GlobalObject&, BigInt const&, u64 increment, StringView rounding_mode);
