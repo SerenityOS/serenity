@@ -43,6 +43,13 @@ void TCPSocket::set_state(State new_state)
         [[maybe_unused]] auto rc = set_so_error(KSuccess);
     }
 
+    if (new_state == State::TimeWait) {
+        // Once we hit TimeWait, we are only holding the socket in case there
+        // are packets on the way which we wouldn't want a new socket to get hit
+        // with, so there's no point in keeping the receive buffer around.
+        drop_receive_buffer();
+    }
+
     if (new_state == State::Closed) {
         closing_sockets().with_exclusive([&](auto& table) {
             table.remove(tuple());
