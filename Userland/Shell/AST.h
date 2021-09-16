@@ -1506,7 +1506,7 @@ namespace AK {
 
 template<>
 struct Formatter<Shell::AST::Command> : StandardFormatter {
-    Formatter() { }
+    Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(formatter)
     {
