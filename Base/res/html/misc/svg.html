@@ -1,10 +1,21 @@
 <!DOCTYPE html>
 <html>
-<head><title>SVG test</title></head>
+<head>
+    <title>SVG test</title>
+    <style>
+        .css {
+            fill: magenta;
+            stroke: yellow;
+            stroke-width: 3;
+        }
+    </style>
+</head>
 <body>
 <svg width="800" height="400">
     <path d="M 10 10 h 100 l -50 80 z" fill="green" stroke="black" stroke-width="3"></path>
     <path d="M 60 10 h 100 l -50 80 z" fill="red" stroke="blue" stroke-width="3"></path>
+    <path d="M 110 10 h 100 l -50 80 z" class="css"></path>
+
     <path d="M 135 275 v -100 a 100,100 0 0,0 -100,100 z" fill="yellow" stroke="blue" stroke-width="3"></path>
     <path d="M 150 290 v -100 a 100,100 0 1,1 -100,100 z" fill="red" stroke="blue" stroke-width="3"></path>
 
