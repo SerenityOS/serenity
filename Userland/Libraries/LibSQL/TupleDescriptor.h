@@ -36,6 +36,11 @@ struct TupleElementDescriptor {
     {
         return (sizeof(u32) + name.length()) + 2 * sizeof(u8);
     }
+
+    String to_string() const
+    {
+        return String::formatted("  name: {} type: {} order: {}", name, SQLType_name(type), Order_name(order));
+    }
 };
 
 class TupleDescriptor
@@ -82,6 +87,15 @@ public:
             len += element.length();
         }
         return len;
+    }
+
+    String to_string() const
+    {
+        Vector<String> elements;
+        for (auto& element : *this) {
+            elements.append(element.to_string());
+        }
+        return String::formatted("[\n{}\n]", String::join("\n", elements));
     }
 
     using Vector<TupleElementDescriptor>::operator==;

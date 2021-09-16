@@ -298,7 +298,7 @@ private:
 struct ExecutionContext {
     NonnullRefPtr<Database> database;
     RefPtr<SQLResult> result { nullptr };
-    Tuple current_row {};
+    Tuple* current_row { nullptr };
 };
 
 class Expression : public ASTNode {
@@ -429,6 +429,7 @@ public:
     const String& schema_name() const { return m_schema_name; }
     const String& table_name() const { return m_table_name; }
     const String& column_name() const { return m_column_name; }
+    virtual Value evaluate(ExecutionContext&) const override;
 
 private:
     String m_schema_name;

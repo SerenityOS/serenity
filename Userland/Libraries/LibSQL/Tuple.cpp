@@ -119,7 +119,10 @@ Value& Tuple::operator[](String const& name)
 
 void Tuple::append(const Value& value)
 {
-    VERIFY(m_descriptor->size() == 0);
+    VERIFY(descriptor()->size() >= size());
+    if (descriptor()->size() == size()) {
+        descriptor()->append(value.descriptor());
+    }
     m_data.append(value);
 }
 
