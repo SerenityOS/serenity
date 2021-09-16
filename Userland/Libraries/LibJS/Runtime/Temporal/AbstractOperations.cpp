@@ -900,7 +900,7 @@ ThrowCompletionOr<TemporalDuration> parse_temporal_duration_string(GlobalObject&
 }
 
 // 13.43 ParseTemporalTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimestring
-Optional<TemporalTime> parse_temporal_time_string(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
+ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
 {
     // 1. Assert: Type(isoString) is String.
 
@@ -909,7 +909,7 @@ Optional<TemporalTime> parse_temporal_time_string(GlobalObject& global_object, [
     // TODO
 
     // 3. Let result be ? ParseISODateTime(isoString).
-    auto result = TRY_OR_DISCARD(parse_iso_date_time(global_object, iso_string));
+    auto result = TRY(parse_iso_date_time(global_object, iso_string));
 
     // 4. Return the Record { [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]] }.
     return TemporalTime { .hour = result.hour, .minute = result.minute, .second = result.second, .millisecond = result.millisecond, .microsecond = result.microsecond, .nanosecond = result.nanosecond, .calendar = move(result.calendar) };
