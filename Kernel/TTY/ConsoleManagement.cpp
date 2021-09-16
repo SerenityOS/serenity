@@ -7,6 +7,7 @@
 #include <AK/Singleton.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Sections.h>
@@ -48,7 +49,8 @@ UNMAP_AFTER_INIT void ConsoleManagement::initialize()
     for (size_t index = 0; index < s_max_virtual_consoles; index++) {
         // FIXME: Better determine the debug TTY we chose...
         if (index == 1) {
-            m_consoles.append(VirtualConsole::create_with_preset_log(index, ConsoleDevice::the().logbuffer()));
+            VERIFY(DeviceManagement::the().is_console_device_attached());
+            m_consoles.append(VirtualConsole::create_with_preset_log(index, DeviceManagement::the().console_device().logbuffer()));
             continue;
         }
         m_consoles.append(VirtualConsole::create(index));

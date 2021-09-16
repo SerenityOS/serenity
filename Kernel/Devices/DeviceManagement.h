@@ -15,6 +15,7 @@
 #include <Kernel/API/KResult.h>
 #include <Kernel/API/TimePage.h>
 #include <Kernel/Arch/x86/RegisterState.h>
+#include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/UnixTypes.h>
@@ -30,13 +31,20 @@ public:
     static DeviceManagement& the();
     void attach_null_device(NullDevice const&);
 
+    bool is_console_device_attached() const { return !m_console_device.is_null(); }
+    void attach_console_device(ConsoleDevice const&);
+
     void after_inserting_device(Badge<Device>, Device&);
     void before_device_removal(Badge<Device>, Device&);
 
     void for_each(Function<void(Device&)>);
     Device* get_device(unsigned major, unsigned minor);
+
     NullDevice const& null_device() const;
     NullDevice& null_device();
+
+    ConsoleDevice const& console_device() const;
+    ConsoleDevice& console_device();
 
     template<typename DeviceType, typename... Args>
     static inline KResultOr<NonnullRefPtr<DeviceType>> try_create_device(Args&&... args)
@@ -48,6 +56,7 @@ public:
 
 private:
     RefPtr<NullDevice> m_null_device;
+    RefPtr<ConsoleDevice> m_console_device;
     MutexProtected<HashMap<u32, Device*>> m_devices;
 };
 

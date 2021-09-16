@@ -186,8 +186,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     DeviceManagement::initialize();
     SysFSComponentRegistry::initialize();
     DeviceManagement::the().attach_null_device(*NullDevice::must_initialize());
-
-    ConsoleDevice::initialize();
+    DeviceManagement::the().attach_console_device(*ConsoleDevice::must_create());
     s_bsp_processor.initialize(0);
 
     CommandLine::initialize();
