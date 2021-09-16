@@ -1020,18 +1020,17 @@ ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObje
 }
 
 // 13.46 ToPositiveInteger ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-topositiveinteger
-double to_positive_integer(GlobalObject& global_object, Value argument)
+ThrowCompletionOr<double> to_positive_integer(GlobalObject& global_object, Value argument)
 {
     auto& vm = global_object.vm();
 
     // 1. Let integer be ? ToIntegerThrowOnInfinity(argument).
-    auto integer = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, argument, ErrorType::TemporalPropertyMustBePositiveInteger));
+    auto integer = TRY(to_integer_throw_on_infinity(global_object, argument, ErrorType::TemporalPropertyMustBePositiveInteger));
 
     // 2. If integer ≤ 0, then
     if (integer <= 0) {
         // a. Throw a RangeError exception.
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalPropertyMustBePositiveInteger);
-        return {};
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalPropertyMustBePositiveInteger);
     }
 
     // 3. Return integer.
@@ -1079,9 +1078,7 @@ Object* prepare_temporal_fields(GlobalObject& global_object, Object const& field
             if (property.is_one_of("year", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond", "eraYear")) {
                 value = Value(TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite)));
             } else if (property.is_one_of("month", "day")) {
-                value = Value(to_positive_integer(global_object, value));
-                if (vm.exception())
-                    return {};
+                value = Value(TRY_OR_DISCARD(to_positive_integer(global_object, value)));
             } else if (property.is_one_of("monthCode", "offset", "era")) {
                 value = value.to_primitive_string(global_object);
                 if (vm.exception())
