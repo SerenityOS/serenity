@@ -52,9 +52,7 @@ class DistinctNumeric {
     using Self = DistinctNumeric<T, X, Incr, Cmp, Bool, Flags, Shift, Arith>;
 
 public:
-    constexpr DistinctNumeric()
-    {
-    }
+    constexpr DistinctNumeric() = default;
 
     constexpr DistinctNumeric(T value)
         : m_value { value }

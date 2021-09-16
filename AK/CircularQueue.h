@@ -17,9 +17,7 @@ class CircularQueue {
     friend CircularDuplexStream<Capacity>;
 
 public:
-    CircularQueue()
-    {
-    }
+    CircularQueue() = default;
 
     ~CircularQueue()
     {

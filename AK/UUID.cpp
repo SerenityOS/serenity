@@ -10,9 +10,6 @@
 #include <AK/UUID.h>
 
 namespace AK {
-UUID::UUID()
-{
-}
 
 UUID::UUID(Array<u8, 16> uuid_buffer)
 {
