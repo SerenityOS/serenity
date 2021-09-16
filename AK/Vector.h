@@ -746,6 +746,12 @@ public:
         return {};
     }
 
+    void reverse()
+    {
+        for (size_t i = 0; i < size() / 2; ++i)
+            AK::swap(at(i), at(size() - i - 1));
+    }
+
 private:
     void reset_capacity()
     {
