@@ -559,8 +559,9 @@ private:
     ProcFSDmesg();
     virtual KResult try_generate(KBufferBuilder& builder) override
     {
+        VERIFY(DeviceManagement::the().is_console_device_attached());
         InterruptDisabler disabler;
-        for (char ch : ConsoleDevice::the().logbuffer()) {
+        for (char ch : DeviceManagement::the().console_device().logbuffer()) {
             TRY(builder.append(ch));
         }
         return KSuccess;

@@ -8,6 +8,7 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/Devices/ConsoleDevice.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/IO.h>
@@ -87,8 +88,8 @@ static void console_out(char ch)
 
     // It would be bad to reach the assert in ConsoleDevice()::the() and do a stack overflow
 
-    if (ConsoleDevice::is_initialized()) {
-        ConsoleDevice::the().put_char(ch);
+    if (DeviceManagement::the().is_console_device_attached()) {
+        DeviceManagement::the().console_device().put_char(ch);
     } else {
         IO::out8(IO::BOCHS_DEBUG_PORT, ch);
     }

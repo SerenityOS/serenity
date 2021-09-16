@@ -22,6 +22,12 @@ UNMAP_AFTER_INIT void DeviceManagement::initialize()
     s_the.ensure_instance();
 }
 
+
+UNMAP_AFTER_INIT void DeviceManagement::attach_console_device(ConsoleDevice const& device)
+{
+    m_console_device = device;
+}
+
 UNMAP_AFTER_INIT void DeviceManagement::attach_null_device(NullDevice const& device)
 {
     m_null_device = device;
@@ -83,6 +89,15 @@ NullDevice& DeviceManagement::null_device()
 NullDevice const& DeviceManagement::null_device() const
 {
     return *m_null_device;
+}
+
+ConsoleDevice const& DeviceManagement::console_device() const
+{
+    return *m_console_device;
+}
+ConsoleDevice& DeviceManagement::console_device()
+{
+    return *m_console_device;
 }
 
 }
