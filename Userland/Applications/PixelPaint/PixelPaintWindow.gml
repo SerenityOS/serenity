@@ -61,10 +61,12 @@
 
             @PixelPaint::LayerPropertiesWidget {
                 name: "layer_properties_widget"
+                max_height: 94
             }
 
             @PixelPaint::ToolPropertiesWidget {
                 name: "tool_properties_widget"
+                max_height: 144
             }
         }
     }
