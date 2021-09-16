@@ -71,8 +71,8 @@ private:
 
     KResult try_set_path(StringView);
 
-    // An open socket file on the filesystem.
-    RefPtr<OpenFileDescription> m_file;
+    // The inode this socket is bound to.
+    WeakPtr<Inode> m_inode;
 
     UserID m_prebind_uid { 0 };
     GroupID m_prebind_gid { 0 };

@@ -131,12 +131,13 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
     }
 
     auto file = move(result.value());
+    auto inode = file->inode();
 
-    VERIFY(file->inode());
-    if (!file->inode()->bind_socket(*this))
+    VERIFY(inode);
+    if (!inode->bind_socket(*this))
         return set_so_error(EADDRINUSE);
 
-    m_file = move(file);
+    m_inode = inode;
 
     m_path = move(path);
     m_bound = true;
@@ -168,10 +169,12 @@ KResult LocalSocket::connect(OpenFileDescription& description, Userspace<const s
     auto path = maybe_path.release_nonnull();
     dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) connect({})", this, *path);
 
-    m_file = SOCKET_TRY(VirtualFileSystem::the().open(path->view(), O_RDWR, 0, Process::current().current_directory()));
+    auto file = SOCKET_TRY(VirtualFileSystem::the().open(path->view(), O_RDWR, 0, Process::current().current_directory()));
+    auto inode = file->inode();
+    m_inode = inode;
 
-    VERIFY(m_file->inode());
-    if (!m_file->inode()->socket())
+    VERIFY(inode);
+    if (!inode->socket())
         return set_so_error(ECONNREFUSED);
 
     m_path = move(path);
@@ -179,7 +182,7 @@ KResult LocalSocket::connect(OpenFileDescription& description, Userspace<const s
     VERIFY(m_connect_side_fd == &description);
     set_connect_side_role(Role::Connecting);
 
-    auto peer = m_file->inode()->socket();
+    auto peer = file->inode()->socket();
     auto result = peer->queue_connection_from(*this);
     if (result.is_error()) {
         set_connect_side_role(Role::None);
@@ -244,6 +247,12 @@ void LocalSocket::detach(OpenFileDescription& description)
     } else {
         VERIFY(m_accept_side_fd_open);
         m_accept_side_fd_open = false;
+
+        if (m_bound) {
+            auto inode = m_inode.strong_ref();
+            if (inode)
+                inode->unbind_socket();
+        }
     }
 
     evaluate_block_conditions();
@@ -425,8 +434,9 @@ KResult LocalSocket::ioctl(OpenFileDescription& description, unsigned request, U
 
 KResult LocalSocket::chmod(OpenFileDescription&, mode_t mode)
 {
-    if (m_file)
-        return m_file->chmod(mode);
+    auto inode = m_inode.strong_ref();
+    if (inode)
+        return inode->chmod(mode);
 
     m_prebind_mode = mode & 0777;
     return KSuccess;
@@ -434,8 +444,9 @@ KResult LocalSocket::chmod(OpenFileDescription&, mode_t mode)
 
 KResult LocalSocket::chown(OpenFileDescription&, UserID uid, GroupID gid)
 {
-    if (m_file)
-        return m_file->chown(uid, gid);
+    auto inode = m_inode.strong_ref();
+    if (inode)
+        return inode->chown(uid, gid);
 
     auto& current_process = Process::current();
     if (!current_process.is_superuser() && (current_process.euid() != uid || !current_process.in_group(gid)))
