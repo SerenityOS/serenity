@@ -248,6 +248,9 @@ KResultOr<size_t> IPv4Socket::sendto(OpenFileDescription&, const UserOrKernelBuf
 KResultOr<size_t> IPv4Socket::receive_byte_buffered(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>)
 {
     MutexLocker locker(mutex());
+
+    VERIFY(m_receive_buffer);
+
     if (m_receive_buffer->is_empty()) {
         if (protocol_is_disconnected())
             return 0;
@@ -408,6 +411,8 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
     auto packet_size = packet.size();
 
     if (buffer_mode() == BufferMode::Bytes) {
+        VERIFY(m_receive_buffer);
+
         size_t space_in_receive_buffer = m_receive_buffer->space_for_writing();
         if (packet_size > space_in_receive_buffer) {
             dbgln("IPv4Socket({}): did_receive refusing packet since buffer is full.", this);
@@ -762,6 +767,11 @@ void IPv4Socket::set_can_read(bool value)
     m_can_read = value;
     if (value)
         evaluate_block_conditions();
+}
+
+void IPv4Socket::drop_receive_buffer()
+{
+    m_receive_buffer = nullptr;
 }
 
 }

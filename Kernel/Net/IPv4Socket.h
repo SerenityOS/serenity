@@ -91,6 +91,7 @@ protected:
     void set_peer_address(IPv4Address address) { m_peer_address = address; }
 
     static KResultOr<NonnullOwnPtr<DoubleBuffer>> try_create_receive_buffer();
+    void drop_receive_buffer();
 
 private:
     virtual bool is_ipv4() const override { return true; }
@@ -115,7 +116,7 @@ private:
 
     SinglyLinkedListWithCount<ReceivedPacket> m_receive_queue;
 
-    NonnullOwnPtr<DoubleBuffer> m_receive_buffer;
+    OwnPtr<DoubleBuffer> m_receive_buffer;
 
     u16 m_local_port { 0 };
     u16 m_peer_port { 0 };
