@@ -30,6 +30,7 @@ public:
     static CSS::FlexDirection flex_direction() { return CSS::FlexDirection::Row; }
     static CSS::FlexWrap flex_wrap() { return CSS::FlexWrap::Nowrap; }
     static CSS::JustifyContent justify_content() { return CSS::JustifyContent::FlexStart; }
+    static CSS::AlignItems align_items() { return CSS::AlignItems::FlexStart; }
     static CSS::Overflow overflow() { return CSS::Overflow::Visible; }
 };
 
@@ -161,7 +162,7 @@ protected:
         CSS::FlexBasisData flex_basis {};
         Optional<float> flex_grow_factor;
         Optional<float> flex_shrink_factor;
-        CSS::AlignItems align_items;
+        CSS::AlignItems align_items { InitialValues::align_items() };
         CSS::JustifyContent justify_content { InitialValues::justify_content() };
         CSS::Overflow overflow_x { InitialValues::overflow() };
         CSS::Overflow overflow_y { InitialValues::overflow() };
