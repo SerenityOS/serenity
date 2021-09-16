@@ -251,10 +251,11 @@ Vector<Region*> AddressSpace::find_regions_intersecting(VirtualRange const& rang
     if (!found_region)
         return regions;
     for (auto iter = m_regions.begin_from((*found_region)->vaddr().get()); !iter.is_end(); ++iter) {
-        if ((*iter)->range().base() < range.end() && (*iter)->range().end() > range.base()) {
+        const auto& iter_range = (*iter)->range();
+        if (iter_range.base() < range.end() && iter_range.end() > range.base()) {
             regions.append(*iter);
 
-            total_size_collected += (*iter)->size() - (*iter)->range().intersect(range).size();
+            total_size_collected += (*iter)->size() - iter_range.intersect(range).size();
             if (total_size_collected == range.size())
                 break;
         }
