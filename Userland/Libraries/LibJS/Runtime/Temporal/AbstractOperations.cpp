@@ -798,8 +798,6 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
 // 13.35 ParseTemporalInstantString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstantstring
 ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& global_object, String const& iso_string)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: Type(isoString) is String.
 
     // 2. If isoString does not satisfy the syntax of a TemporalInstantString (see 13.33), then
@@ -810,15 +808,13 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& g
     auto result = parse_iso_date_time(global_object, iso_string).release_value();
 
     // 4. Let timeZoneResult be ? ParseTemporalTimeZoneString(isoString).
-    auto time_zone_result = parse_temporal_time_zone_string(global_object, iso_string);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto time_zone_result = TRY(parse_temporal_time_zone_string(global_object, iso_string));
 
     // 5. Let offsetString be timeZoneResult.[[OffsetString]].
-    auto offset_string = time_zone_result->offset;
+    auto offset_string = time_zone_result.offset;
 
     // 6. If timeZoneResult.[[Z]] is true, then
-    if (time_zone_result->z) {
+    if (time_zone_result.z) {
         // a. Set offsetString to "+00:00".
         offset_string = "+00:00"sv;
     }
@@ -916,7 +912,7 @@ ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject& global_
 }
 
 // 13.44 ParseTemporalTimeZoneString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring
-Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
+ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
 {
     auto& vm = global_object.vm();
 
@@ -996,10 +992,9 @@ Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_
     // 7. If name is not undefined, then
     if (name_part.has_value()) {
         // a. If ! IsValidTimeZoneName(name) is false, throw a RangeError exception.
-        if (!is_valid_time_zone_name(*name_part)) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName);
-            return {};
-        }
+        if (!is_valid_time_zone_name(*name_part))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName);
+
         // b. Set name to ! CanonicalizeTimeZoneName(name).
         name = canonicalize_time_zone_name(*name_part);
     }
