@@ -17,7 +17,7 @@ namespace JS {
 class CellAllocator {
 public:
     explicit CellAllocator(size_t cell_size);
-    ~CellAllocator();
+    ~CellAllocator() = default;
 
     size_t cell_size() const { return m_cell_size; }
 
