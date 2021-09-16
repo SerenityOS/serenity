@@ -13,6 +13,8 @@
 namespace Threading {
 
 class Mutex {
+    AK_MAKE_NONCOPYABLE(Mutex);
+    AK_MAKE_NONMOVABLE(Mutex);
     friend class ConditionVariable;
 
 public:
@@ -39,6 +41,9 @@ private:
 };
 
 class MutexLocker {
+    AK_MAKE_NONCOPYABLE(MutexLocker);
+    AK_MAKE_NONMOVABLE(MutexLocker);
+
 public:
     ALWAYS_INLINE explicit MutexLocker(Mutex& mutex)
         : m_mutex(mutex)
