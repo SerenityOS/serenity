@@ -25,9 +25,7 @@ public:
     {
     }
 
-    PKSystem()
-    {
-    }
+    PKSystem() = default;
 
     virtual void encrypt(ReadonlyBytes in, Bytes& out) = 0;
     virtual void decrypt(ReadonlyBytes in, Bytes& out) = 0;

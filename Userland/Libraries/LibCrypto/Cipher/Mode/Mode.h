@@ -17,7 +17,7 @@ namespace Cipher {
 template<typename T>
 class Mode {
 public:
-    virtual ~Mode() { }
+    virtual ~Mode() = default;
 
     virtual void encrypt(ReadonlyBytes in, Bytes& out, ReadonlyBytes ivec = {}, Bytes* ivec_out = nullptr) = 0;
     virtual void decrypt(ReadonlyBytes in, Bytes& out, ReadonlyBytes ivec = {}) = 0;

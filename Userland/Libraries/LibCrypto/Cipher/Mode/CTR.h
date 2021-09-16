@@ -88,7 +88,7 @@ class CTR : public Mode<T> {
 public:
     constexpr static size_t IVSizeInBits = 128;
 
-    virtual ~CTR() { }
+    virtual ~CTR() = default;
 
     // Must intercept `Intent`, because AES must always be set to
     // Encryption, even when decrypting AES-CTR.

@@ -60,9 +60,7 @@ public:
     {
     }
 
-    RSAPrivateKey()
-    {
-    }
+    RSAPrivateKey() = default;
 
     const Integer& modulus() const { return m_modulus; }
     const Integer& private_exponent() const { return m_private_exponent; }
