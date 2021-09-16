@@ -57,7 +57,7 @@ public:
         MidMagenta,
     };
 
-    constexpr Color() { }
+    constexpr Color() = default;
     constexpr Color(NamedColor);
     constexpr Color(u8 r, u8 g, u8 b)
         : m_value(0xff000000 | (r << 16) | (g << 8) | b)
