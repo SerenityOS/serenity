@@ -831,7 +831,7 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& g
 }
 
 // 13.37 ParseTemporalCalendarString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring
-Optional<String> parse_temporal_calendar_string(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
+ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
 {
     auto& vm = global_object.vm();
 
@@ -846,18 +846,17 @@ Optional<String> parse_temporal_calendar_string(GlobalObject& global_object, [[m
     // 4. If id is undefined, then
     if (!id_part.has_value()) {
         // a. Return "iso8601".
-        return "iso8601";
+        return { "iso8601"sv };
     }
 
     // 5. If ! IsBuiltinCalendar(id) is false, then
     if (!is_builtin_calendar(*id_part)) {
         // a. Throw a RangeError exception.
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, *id_part);
-        return {};
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, *id_part);
     }
 
     // 6. Return id.
-    return id_part.value();
+    return { id_part.value() };
 }
 
 // 13.38 ParseTemporalDateString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatestring
