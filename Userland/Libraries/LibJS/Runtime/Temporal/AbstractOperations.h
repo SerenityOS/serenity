@@ -111,7 +111,7 @@ ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject&, St
 ThrowCompletionOr<TemporalDuration> parse_temporal_duration_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject&, String const& iso_string);
-Optional<TemporalYearMonth> parse_temporal_year_month_string(GlobalObject&, String const& iso_string);
+ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObject&, String const& iso_string);
 double to_positive_integer(GlobalObject&, Value argument);
 Object* prepare_temporal_fields(GlobalObject&, Object const& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields);
 

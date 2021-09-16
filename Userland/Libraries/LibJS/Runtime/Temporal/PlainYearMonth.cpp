@@ -79,17 +79,15 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
         return throw_completion(exception->value());
 
     // 6. Let result be ? ParseTemporalYearMonthString(string).
-    auto result = parse_temporal_year_month_string(global_object, string);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto result = TRY(parse_temporal_year_month_string(global_object, string));
 
     // 7. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
-    auto* calendar = to_temporal_calendar_with_iso_default(global_object, result->calendar.has_value() ? js_string(vm, *result->calendar) : js_undefined());
+    auto* calendar = to_temporal_calendar_with_iso_default(global_object, result.calendar.has_value() ? js_string(vm, *result.calendar) : js_undefined());
     if (auto* exception = vm.exception())
         return throw_completion(exception->value());
 
     // 8. Set result to ? CreateTemporalYearMonth(result.[[Year]], result.[[Month]], calendar, result.[[Day]]).
-    auto* creation_result = TRY(create_temporal_year_month(global_object, result->year, result->month, *calendar, result->day));
+    auto* creation_result = TRY(create_temporal_year_month(global_object, result.year, result.month, *calendar, result.day));
 
     // 9. Let canonicalYearMonthOptions be ! OrdinaryObjectCreate(null).
     auto* canonical_year_month_options = Object::create(global_object, nullptr);
