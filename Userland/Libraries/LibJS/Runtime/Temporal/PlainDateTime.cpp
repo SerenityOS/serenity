@@ -204,10 +204,7 @@ PlainDateTime* to_temporal_date_time(GlobalObject& global_object, Value item, Ob
             return {};
 
         // c. Let result be ? ParseTemporalDateTimeString(string).
-        auto maybe_result = parse_temporal_date_time_string(global_object, string);
-        if (vm.exception())
-            return {};
-        result = move(*maybe_result);
+        result = TRY_OR_DISCARD(parse_temporal_date_time_string(global_object, string));
 
         // d. Assert: ! IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
         VERIFY(is_valid_iso_date(result.year, result.month, result.day));

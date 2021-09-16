@@ -876,7 +876,7 @@ ThrowCompletionOr<TemporalDate> parse_temporal_date_string(GlobalObject& global_
 }
 
 // 13.39 ParseTemporalDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatetimestring
-Optional<ISODateTime> parse_temporal_date_time_string(GlobalObject& global_object, String const& iso_string)
+ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject& global_object, String const& iso_string)
 {
     // 1. Assert: Type(isoString) is String.
 
@@ -885,7 +885,7 @@ Optional<ISODateTime> parse_temporal_date_time_string(GlobalObject& global_objec
     // TODO
 
     // 3. Let result be ? ParseISODateTime(isoString).
-    auto result = TRY_OR_DISCARD(parse_iso_date_time(global_object, iso_string));
+    auto result = TRY(parse_iso_date_time(global_object, iso_string));
 
     // 4. Return result.
     return result;
