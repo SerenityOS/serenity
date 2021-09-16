@@ -33,6 +33,7 @@
 #include <LibJS/Runtime/Intl/ListFormat.h>
 #include <LibJS/Runtime/Intl/Locale.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
+#include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/Map.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NumberObject.h>
@@ -79,6 +80,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(repl_help);
     JS_DECLARE_NATIVE_FUNCTION(load_file);
     JS_DECLARE_NATIVE_FUNCTION(save_to_file);
+    JS_DECLARE_NATIVE_FUNCTION(load_json);
 };
 
 class ScriptObject final : public JS::GlobalObject {
@@ -91,6 +93,7 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(load_file);
+    JS_DECLARE_NATIVE_FUNCTION(load_json);
 };
 
 static bool s_dump_ast = false;
@@ -909,6 +912,25 @@ static JS::Value load_file_impl(JS::VM& vm, JS::GlobalObject& global_object)
     return JS::js_undefined();
 }
 
+static JS::Value load_json_impl(JS::VM& vm, JS::GlobalObject& global_object)
+{
+    auto filename = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto file = Core::File::construct(filename);
+    if (!file->open(Core::OpenMode::ReadOnly)) {
+        vm.throw_exception<JS::Error>(global_object, String::formatted("Failed to open '{}': {}", filename, file->error_string()));
+        return {};
+    }
+    auto file_contents = file->read_all();
+    auto json = JsonValue::from_string(file_contents);
+    if (!json.has_value()) {
+        vm.throw_exception<JS::SyntaxError>(global_object, JS::ErrorType::JsonMalformed);
+        return {};
+    }
+    return JS::JSONObject::parse_json_value(global_object, json.value());
+}
+
 void ReplObject::initialize_global_object()
 {
     Base::initialize_global_object();
@@ -918,6 +940,7 @@ void ReplObject::initialize_global_object()
     define_native_function("help", repl_help, 0, attr);
     define_native_function("load", load_file, 1, attr);
     define_native_function("save", save_to_file, 1, attr);
+    define_native_function("loadJSON", load_json, 1, attr);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
@@ -957,17 +980,28 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_file)
     return load_file_impl(vm, global_object);
 }
 
+JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_json)
+{
+    return load_json_impl(vm, global_object);
+}
+
 void ScriptObject::initialize_global_object()
 {
     Base::initialize_global_object();
     define_direct_property("global", this, JS::Attribute::Enumerable);
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
     define_native_function("load", load_file, 1, attr);
+    define_native_function("loadJSON", load_json, 1, attr);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_file)
 {
     return load_file_impl(vm, global_object);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_json)
+{
+    return load_json_impl(vm, global_object);
 }
 
 static void repl(JS::Interpreter& interpreter)
