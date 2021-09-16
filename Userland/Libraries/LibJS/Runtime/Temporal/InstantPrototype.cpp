@@ -202,9 +202,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
     auto largest_unit = TRY_OR_DISCARD(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit)));
 
     // 8. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    validate_temporal_unit_range(global_object, largest_unit, *smallest_unit);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(validate_temporal_unit_range(global_object, largest_unit, *smallest_unit));
 
     // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY_OR_DISCARD(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
@@ -252,9 +250,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
     auto largest_unit = TRY_OR_DISCARD(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit)));
 
     // 8. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    validate_temporal_unit_range(global_object, largest_unit, *smallest_unit);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(validate_temporal_unit_range(global_object, largest_unit, *smallest_unit));
 
     // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY_OR_DISCARD(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
