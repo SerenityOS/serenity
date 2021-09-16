@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/IntrusiveList.h>
+#include <LibJS/Forward.h>
 
 namespace JS {
 

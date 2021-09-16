@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <AK/Types.h>
 
 namespace JS {
