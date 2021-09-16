@@ -101,9 +101,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_plain_date_time_for)
         return {};
 
     // 3. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
-    auto* calendar = to_temporal_calendar_with_iso_default(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* calendar = TRY_OR_DISCARD(to_temporal_calendar_with_iso_default(global_object, vm.argument(1)));
 
     // 4. Return ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
     return TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, time_zone, *instant, *calendar));

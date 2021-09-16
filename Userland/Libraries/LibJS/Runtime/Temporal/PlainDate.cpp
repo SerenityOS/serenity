@@ -112,20 +112,16 @@ PlainDate* to_temporal_date(GlobalObject& global_object, Value item, Object* opt
         }
 
         // d. Let calendar be ? GetTemporalCalendarWithISODefault(item).
-        auto* calendar = get_temporal_calendar_with_iso_default(global_object, item_object);
-        if (vm.exception())
-            return {};
+        auto* calendar = TRY_OR_DISCARD(get_temporal_calendar_with_iso_default(global_object, item_object));
 
         // e. Let fieldNames be ? CalendarFields(calendar, « "day", "month", "monthCode", "year" »).
-        auto field_names = calendar_fields(global_object, *calendar, { "day"sv, "month"sv, "monthCode"sv, "year"sv });
-        if (vm.exception())
-            return {};
+        auto field_names = TRY_OR_DISCARD(calendar_fields(global_object, *calendar, { "day"sv, "month"sv, "monthCode"sv, "year"sv }));
 
         // f. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
         auto* fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, item_object, field_names, {}));
 
         // g. Return ? DateFromFields(calendar, fields, options).
-        return date_from_fields(global_object, *calendar, *fields, *options);
+        return TRY_OR_DISCARD(date_from_fields(global_object, *calendar, *fields, *options));
     }
 
     // 4. Perform ? ToTemporalOverflow(options).
@@ -143,9 +139,7 @@ PlainDate* to_temporal_date(GlobalObject& global_object, Value item, Object* opt
     VERIFY(is_valid_iso_date(result.year, result.month, result.day));
 
     // 8. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
-    auto calendar = to_temporal_calendar_with_iso_default(global_object, result.calendar.has_value() ? js_string(vm, *result.calendar) : js_undefined());
-    if (vm.exception())
-        return {};
+    auto* calendar = TRY_OR_DISCARD(to_temporal_calendar_with_iso_default(global_object, result.calendar.has_value() ? js_string(vm, *result.calendar) : js_undefined()));
 
     // 9. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
     return create_temporal_date(global_object, result.year, result.month, result.day, *calendar);

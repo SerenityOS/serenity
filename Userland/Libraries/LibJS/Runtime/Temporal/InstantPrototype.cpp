@@ -491,9 +491,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
     }
 
     // 6. Let calendar be ? ToTemporalCalendar(calendarLike).
-    auto* calendar = to_temporal_calendar(global_object, calendar_like);
-    if (vm.exception())
-        return {};
+    auto* calendar = TRY_OR_DISCARD(to_temporal_calendar(global_object, calendar_like));
 
     // 7. Let temporalTimeZoneLike be ? Get(item, "timeZone").
     auto temporal_time_zone_like = item.as_object().get(vm.names.timeZone);
