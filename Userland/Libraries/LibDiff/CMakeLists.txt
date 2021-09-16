@@ -1,7 +1,8 @@
 
 set(SOURCES
-    Hunks.cpp
     Format.cpp
+    Generator.cpp
+    Hunks.cpp
 )
 
 serenity_lib(LibDiff diff)
