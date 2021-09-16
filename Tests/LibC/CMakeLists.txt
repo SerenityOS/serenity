@@ -15,6 +15,7 @@ set(TEST_SOURCES
     TestStackSmash.cpp
     TestStrlcpy.cpp
     TestStrtodAccuracy.cpp
+    TestWchar.cpp
     TestWctype.cpp
 )
 
