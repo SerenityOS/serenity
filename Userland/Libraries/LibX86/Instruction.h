@@ -279,7 +279,7 @@ enum MMXRegisterIndex {
 
 class LogicalAddress {
 public:
-    LogicalAddress() { }
+    LogicalAddress() = default;
     LogicalAddress(u16 selector, FlatPtr offset)
         : m_selector(selector)
         , m_offset(offset)
@@ -411,7 +411,7 @@ public:
     LogicalAddress resolve(const CPU&, const Instruction&);
 
 private:
-    MemoryOrRegisterReference() { }
+    MemoryOrRegisterReference() = default;
 
     String to_string(const Instruction&) const;
     String to_string_a16() const;
