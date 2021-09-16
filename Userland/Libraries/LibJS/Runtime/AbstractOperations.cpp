@@ -93,7 +93,7 @@ ThrowCompletionOr<MarkedValueList> create_list_from_array_like(GlobalObject& glo
     }
 
     // 7. Return list.
-    return list;
+    return ThrowCompletionOr(move(list));
 }
 
 // 7.3.22 SpeciesConstructor ( O, defaultConstructor ), https://tc39.es/ecma262/#sec-speciesconstructor
