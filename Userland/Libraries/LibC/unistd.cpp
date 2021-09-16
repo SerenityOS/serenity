@@ -723,9 +723,9 @@ int mount(int source_fd, const char* target, const char* fs_type, int flags)
     }
 
     Syscall::SC_mount_params params {
-        source_fd,
         { target, strlen(target) },
         { fs_type, strlen(fs_type) },
+        source_fd,
         flags
     };
     int rc = syscall(SC_mount, &params);
