@@ -220,9 +220,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::with)
         return {};
 
     // 3. Let temporalDurationLike be ? ToPartialDuration(temporalDurationLike).
-    auto temporal_duration_like = to_partial_duration(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto temporal_duration_like = TRY_OR_DISCARD(to_partial_duration(global_object, vm.argument(0)));
 
     // 4. If temporalDurationLike.[[Years]] is not undefined, then
     //     a. Let years be temporalDurationLike.[[Years]].
@@ -285,7 +283,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::with)
     auto nanoseconds = temporal_duration_like.nanoseconds.value_or(duration->nanoseconds());
 
     // 24. Return ? CreateTemporalDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
-    return create_temporal_duration(global_object, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
+    return TRY_OR_DISCARD(create_temporal_duration(global_object, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
 }
 
 // 7.3.16 Temporal.Duration.prototype.negated ( ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.negated
@@ -311,7 +309,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::abs)
         return {};
 
     // 3. Return ! CreateTemporalDuration(abs(duration.[[Years]]), abs(duration.[[Months]]), abs(duration.[[Weeks]]), abs(duration.[[Days]]), abs(duration.[[Hours]]), abs(duration.[[Minutes]]), abs(duration.[[Seconds]]), abs(duration.[[Milliseconds]]), abs(duration.[[Microseconds]]), abs(duration.[[Nanoseconds]])).
-    return create_temporal_duration(global_object, fabs(duration->years()), fabs(duration->months()), fabs(duration->weeks()), fabs(duration->days()), fabs(duration->hours()), fabs(duration->minutes()), fabs(duration->seconds()), fabs(duration->milliseconds()), fabs(duration->microseconds()), fabs(duration->nanoseconds()));
+    return TRY_OR_DISCARD(create_temporal_duration(global_object, fabs(duration->years()), fabs(duration->months()), fabs(duration->weeks()), fabs(duration->days()), fabs(duration->hours()), fabs(duration->minutes()), fabs(duration->seconds()), fabs(duration->milliseconds()), fabs(duration->microseconds()), fabs(duration->nanoseconds())));
 }
 
 // 7.3.25 Temporal.Duration.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.valueof

@@ -180,9 +180,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_add)
         return {};
 
     // 5. Set duration to ? ToTemporalDuration(duration).
-    auto* duration = to_temporal_duration(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* duration = TRY_OR_DISCARD(to_temporal_duration(global_object, vm.argument(1)));
 
     // 6. Set options to ? GetOptionsObject(options).
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(2)));
@@ -194,10 +192,10 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_add)
     auto* nanoseconds = js_bigint(vm, Crypto::SignedBigInteger::create_from(duration->nanoseconds()));
 
     // 8. Let balanceResult be ! BalanceDuration(duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], "day").
-    auto balance_result = balance_duration(global_object, duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), *nanoseconds, "day"sv);
+    auto balance_result = balance_duration(global_object, duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), *nanoseconds, "day"sv).release_value();
 
     // 9. Let result be ? AddISODate(date.[[ISOYear]], date.[[ISOMonth]], date.[[ISODay]], duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], overflow).
-    auto result = add_iso_date(global_object, date->iso_year(), date->iso_month(), date->iso_day(), duration->years(), duration->months(), duration->weeks(), balance_result->days, overflow);
+    auto result = add_iso_date(global_object, date->iso_year(), date->iso_month(), date->iso_day(), duration->years(), duration->months(), duration->weeks(), balance_result.days, overflow);
     if (vm.exception())
         return {};
 
