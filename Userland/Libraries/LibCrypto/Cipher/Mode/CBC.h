@@ -19,7 +19,7 @@ class CBC : public Mode<T> {
 public:
     constexpr static size_t IVSizeInBits = 128;
 
-    virtual ~CBC() { }
+    virtual ~CBC() = default;
     template<typename... Args>
     explicit constexpr CBC<T>(Args... args)
         : Mode<T>(args...)

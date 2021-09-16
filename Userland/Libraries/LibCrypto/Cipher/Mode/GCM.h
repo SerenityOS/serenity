@@ -24,7 +24,7 @@ class GCM : public CTR<T, IncrementFunction> {
 public:
     constexpr static size_t IVSizeInBits = 128;
 
-    virtual ~GCM() { }
+    virtual ~GCM() = default;
 
     template<typename... Args>
     explicit constexpr GCM<T>(Args... args)
