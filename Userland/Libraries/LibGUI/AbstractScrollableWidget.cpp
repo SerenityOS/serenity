@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/Timer.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Scrollbar.h>
 
@@ -28,6 +29,12 @@ AbstractScrollableWidget::AbstractScrollableWidget()
 
     m_corner_widget = add<Widget>();
     m_corner_widget->set_fill_with_background_color(true);
+
+    m_automatic_scrolling_timer = add<Core::Timer>();
+    m_automatic_scrolling_timer->set_interval(50);
+    m_automatic_scrolling_timer->on_timeout = [this] {
+        on_automatic_scrolling_timer_fired();
+    };
 }
 
 AbstractScrollableWidget::~AbstractScrollableWidget()
@@ -212,6 +219,38 @@ void AbstractScrollableWidget::scroll_to_top()
 void AbstractScrollableWidget::scroll_to_bottom()
 {
     scroll_into_view({ 0, content_height(), 0, 0 }, Orientation::Vertical);
+}
+
+void AbstractScrollableWidget::set_automatic_scrolling_timer(bool active)
+{
+    if (active == m_active_scrolling_enabled)
+        return;
+
+    m_active_scrolling_enabled = active;
+
+    if (active) {
+        on_automatic_scrolling_timer_fired();
+        m_automatic_scrolling_timer->start();
+    } else {
+        m_automatic_scrolling_timer->stop();
+    }
+}
+
+Gfx::IntPoint AbstractScrollableWidget::automatic_scroll_delta_from_position(const Gfx::IntPoint& pos) const
+{
+    Gfx::IntPoint delta { 0, 0 };
+
+    if (pos.y() < m_autoscroll_threshold)
+        delta.set_y(clamp(-(m_autoscroll_threshold - pos.y()), -m_autoscroll_threshold, 0));
+    else if (pos.y() > height() - m_autoscroll_threshold)
+        delta.set_y(clamp(m_autoscroll_threshold - (height() - pos.y()), 0, m_autoscroll_threshold));
+
+    if (pos.x() < m_autoscroll_threshold)
+        delta.set_x(clamp(-(m_autoscroll_threshold - pos.x()), -m_autoscroll_threshold, 0));
+    else if (pos.x() > width() - m_autoscroll_threshold)
+        delta.set_x(clamp(m_autoscroll_threshold - (width() - pos.x()), 0, m_autoscroll_threshold));
+
+    return delta;
 }
 
 Gfx::IntRect AbstractScrollableWidget::widget_inner_rect() const

@@ -51,6 +51,9 @@ public:
     void scroll_to_top();
     void scroll_to_bottom();
 
+    void set_automatic_scrolling_timer(bool active);
+    Gfx::IntPoint automatic_scroll_delta_from_position(const Gfx::IntPoint&) const;
+
     int width_occupied_by_vertical_scrollbar() const;
     int height_occupied_by_horizontal_scrollbar() const;
 
@@ -71,6 +74,7 @@ protected:
     virtual void did_scroll() { }
     void set_content_size(const Gfx::IntSize&);
     void set_size_occupied_by_fixed_elements(const Gfx::IntSize&);
+    virtual void on_automatic_scrolling_timer_fired() {};
 
 private:
     class AbstractScrollableWidgetScrollbar final : public Scrollbar {
@@ -103,6 +107,10 @@ private:
     Gfx::IntSize m_size_occupied_by_fixed_elements;
     bool m_scrollbars_enabled { true };
     bool m_should_hide_unnecessary_scrollbars { false };
+
+    RefPtr<Core::Timer> m_automatic_scrolling_timer;
+    bool m_active_scrolling_enabled { false };
+    int m_autoscroll_threshold { 20 };
 };
 
 }
