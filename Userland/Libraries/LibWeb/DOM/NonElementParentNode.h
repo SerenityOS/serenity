@@ -34,7 +34,7 @@ public:
     }
 
 protected:
-    NonElementParentNode() { }
+    NonElementParentNode() = default;
 };
 
 }

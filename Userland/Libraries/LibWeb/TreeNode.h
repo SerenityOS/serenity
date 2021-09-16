@@ -419,7 +419,7 @@ public:
     }
 
 protected:
-    TreeNode() { }
+    TreeNode() = default;
 
     bool m_deletion_has_begun { false };
     bool m_in_removed_last_ref { false };

@@ -35,7 +35,7 @@ public:
         Vmin,
     };
 
-    Length() { }
+    Length() = default;
     Length(int value, Type type)
         : m_type(type)
         , m_value(value)
