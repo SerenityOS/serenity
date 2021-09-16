@@ -41,7 +41,7 @@ public:
 template<class T>
 class Handle {
 public:
-    Handle() { }
+    Handle() = default;
 
     static Handle create(T* cell)
     {

@@ -17,10 +17,6 @@ CellAllocator::CellAllocator(size_t cell_size)
 {
 }
 
-CellAllocator::~CellAllocator()
-{
-}
-
 Cell* CellAllocator::allocate_cell(Heap& heap)
 {
     if (m_usable_blocks.is_empty()) {
