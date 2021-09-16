@@ -14,7 +14,7 @@ After opening the `serenity` repository in CLion as a new project, the "`Open Pr
 ```
 -GNinja
 -DCMAKE_TOOLCHAIN_FILE=$CMakeProjectDir$/Build/i686/CMakeToolchain.txt
--DCMAKE_INSTALL_PREFIX=$CMakeProjectDir$/Build/lagom-install
+-DCMAKE_PREFIX_PATH=$CMakeProjectDir$/Build/lagom-install
 -DSERENITY_ARCH=i686
 ```
 
