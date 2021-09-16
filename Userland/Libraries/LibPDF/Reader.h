@@ -9,6 +9,8 @@
 #include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/ScopeGuard.h>
+#include <AK/Span.h>
+#include <AK/String.h>
 
 namespace PDF {
 
