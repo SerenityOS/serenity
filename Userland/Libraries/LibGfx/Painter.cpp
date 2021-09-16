@@ -486,6 +486,9 @@ void Painter::draw_ellipse_intersecting(const IntRect& rect, Color color, int th
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
+    if (thickness <= 0)
+        return;
+
     constexpr int number_samples = 100; // FIXME: dynamically work out the number of samples based upon the rect size
     double increment = M_PI / number_samples;
 
@@ -589,6 +592,9 @@ void Painter::draw_rect(const IntRect& a_rect, Color color, bool rough)
 void Painter::draw_rect_with_thickness(const IntRect& rect, Color color, int thickness)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
+
+    if (thickness <= 0)
+        return;
 
     IntPoint p1 = rect.location();
     IntPoint p2 = { rect.location().x() + rect.width(), rect.location().y() };
@@ -1634,6 +1640,9 @@ void Painter::draw_physical_pixel(const IntPoint& physical_position, Color color
     // (including scaling thickness).
     VERIFY(draw_op() == DrawOp::Copy);
 
+    if (thickness <= 0)
+        return;
+
     if (thickness == 1) { // Implies scale() == 1.
         auto& pixel = m_target->scanline(physical_position.y())[physical_position.x()];
         return set_physical_pixel_with_draw_op(pixel, Color::from_rgba(pixel).blend(color));
@@ -1646,6 +1655,9 @@ void Painter::draw_physical_pixel(const IntPoint& physical_position, Color color
 
 void Painter::draw_line(IntPoint const& a_p1, IntPoint const& a_p2, Color color, int thickness, LineStyle style, Color alternate_color)
 {
+    if (thickness <= 0)
+        return;
+
     if (color.alpha() == 0)
         return;
 
@@ -1837,6 +1849,9 @@ void Painter::draw_quadratic_bezier_curve(const IntPoint& control_point, const I
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
+    if (thickness <= 0)
+        return;
+
     for_each_line_segment_on_bezier_curve(FloatPoint(control_point), FloatPoint(p1), FloatPoint(p2), [&](const FloatPoint& fp1, const FloatPoint& fp2) {
         draw_line(IntPoint(fp1.x(), fp1.y()), IntPoint(fp2.x(), fp2.y()), color, thickness, style);
     });
@@ -1902,6 +1917,9 @@ void Painter::draw_elliptical_arc(const IntPoint& p1, const IntPoint& p2, const 
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
+    if (thickness <= 0)
+        return;
+
     for_each_line_segment_on_elliptical_arc(FloatPoint(p1), FloatPoint(p2), FloatPoint(center), radii, x_axis_rotation, theta_1, theta_delta, [&](const FloatPoint& fp1, const FloatPoint& fp2) {
         draw_line(IntPoint(fp1.x(), fp1.y()), IntPoint(fp2.x(), fp2.y()), color, thickness, style);
     });
@@ -1932,6 +1950,9 @@ PainterStateSaver::~PainterStateSaver()
 void Painter::stroke_path(const Path& path, Color color, int thickness)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
+
+    if (thickness <= 0)
+        return;
 
     FloatPoint cursor;
 
