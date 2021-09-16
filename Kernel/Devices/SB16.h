@@ -18,13 +18,12 @@ class SB16;
 
 class SB16 final : public IRQHandler
     , public CharacterDevice {
+    friend class DeviceManagement;
+
 public:
-    SB16();
     virtual ~SB16() override;
 
-    static void detect();
-    static void create();
-    static SB16& the();
+    static RefPtr<SB16> try_detect_and_create();
 
     // ^CharacterDevice
     virtual bool can_read(const OpenFileDescription&, size_t) const override;
@@ -37,6 +36,8 @@ public:
     virtual KResult ioctl(OpenFileDescription&, unsigned, Userspace<void*>) override;
 
 private:
+    SB16();
+
     // ^IRQHandler
     virtual bool handle_irq(const RegisterState&) override;
 
