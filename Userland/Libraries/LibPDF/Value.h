@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Format.h>
+#include <AK/RefPtr.h>
 
 namespace PDF {
 
@@ -66,7 +67,6 @@ public:
         : m_type(obj ? Type::Object : Type::Empty)
     {
         if (obj) {
-            obj->ref();
             m_as_object = obj;
         }
     }
@@ -75,7 +75,6 @@ public:
     Value(NonnullRefPtr<T> obj)
         : m_type(Type::Object)
     {
-        obj->ref();
         m_as_object = obj;
     }
 
@@ -84,7 +83,7 @@ public:
         *this = other;
     }
 
-    ~Value();
+    ~Value() = default;
 
     Value& operator=(Value const& other);
 
@@ -179,9 +178,9 @@ private:
         int m_as_int;
         u32 m_as_ref;
         float m_as_float;
-        Object* m_as_object;
     };
 
+    RefPtr<Object> m_as_object;
     Type m_type;
 };
 
