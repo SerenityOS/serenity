@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/Forward.h>
 #include <AK/RefPtr.h>
 #include <LibGUI/Forward.h>

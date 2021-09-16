@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/String.h>
 #include <LibGUI/Forward.h>
 #include <sys/types.h>
 

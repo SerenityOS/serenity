@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/Orientation.h>
 
 namespace Gfx {
 

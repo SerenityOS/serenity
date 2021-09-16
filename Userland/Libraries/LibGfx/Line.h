@@ -8,6 +8,7 @@
 
 #include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
+#include <AK/String.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>

@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <AK/StringView.h>
+
 namespace Gfx {
 
 struct FontStyleMapping {

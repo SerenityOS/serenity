@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Array.h>
 #include <AK/Utf32View.h>
 #include <AK/Vector.h>
 
