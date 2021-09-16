@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
@@ -31,11 +32,11 @@ Duration::Duration(double years, double months, double weeks, double days, doubl
 }
 
 // 7.5.1 ToTemporalDuration ( item ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalduration
-Duration* to_temporal_duration(GlobalObject& global_object, Value item)
+ThrowCompletionOr<Duration*> to_temporal_duration(GlobalObject& global_object, Value item)
 {
     auto& vm = global_object.vm();
 
-    Optional<TemporalDuration> result;
+    TemporalDuration result;
 
     // 1. If Type(item) is Object, then
     if (item.is_object()) {
@@ -45,27 +46,25 @@ Duration* to_temporal_duration(GlobalObject& global_object, Value item)
             return &static_cast<Duration&>(item.as_object());
         }
         // b. Let result be ? ToTemporalDurationRecord(item).
-        result = to_temporal_duration_record(global_object, item.as_object());
-        if (vm.exception())
-            return {};
+        result = TRY(to_temporal_duration_record(global_object, item.as_object()));
     }
     // 2. Else,
     else {
         // a. Let string be ? ToString(item).
         auto string = item.to_string(global_object);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // b. Let result be ? ParseTemporalDurationString(string).
-        result = TRY_OR_DISCARD(parse_temporal_duration_string(global_object, string));
+        result = TRY(parse_temporal_duration_string(global_object, string));
     }
 
     // 3. Return ? CreateTemporalDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
-    return create_temporal_duration(global_object, result->years, result->months, result->weeks, result->days, result->hours, result->minutes, result->seconds, result->milliseconds, result->microseconds, result->nanoseconds);
+    return create_temporal_duration(global_object, result.years, result.months, result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds);
 }
 
 // 7.5.2 ToTemporalDurationRecord ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldurationrecord
-TemporalDuration to_temporal_duration_record(GlobalObject& global_object, Object const& temporal_duration_like)
+ThrowCompletionOr<TemporalDuration> to_temporal_duration_record(GlobalObject& global_object, Object const& temporal_duration_like)
 {
     auto& vm = global_object.vm();
 
@@ -91,8 +90,8 @@ TemporalDuration to_temporal_duration_record(GlobalObject& global_object, Object
 
         // b. Let val be ? Get(temporalDurationLike, prop).
         auto value = temporal_duration_like.get(property);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // c. If val is undefined, then
         if (value.is_undefined()) {
@@ -106,14 +105,13 @@ TemporalDuration to_temporal_duration_record(GlobalObject& global_object, Object
 
             // ii. Let val be ? ToNumber(val).
             value = value.to_number(global_object);
-            if (vm.exception())
-                return {};
+            if (auto* exception = vm.exception())
+                return throw_completion(exception->value());
 
             // iii. If ! IsIntegralNumber(val) is false, then
             if (!value.is_integral_number()) {
                 // 1. Throw a RangeError exception.
-                vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects());
-                return {};
+                return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects());
             }
 
             // iv. Set result's internal slot whose name is the Internal Slot value of the current row to val.
@@ -124,8 +122,7 @@ TemporalDuration to_temporal_duration_record(GlobalObject& global_object, Object
     // 6. If any is false, then
     if (!any) {
         // a. Throw a TypeError exception.
-        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalInvalidDurationLikeObject);
-        return {};
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalInvalidDurationLikeObject);
     }
 
     // 7. Return result.
@@ -176,14 +173,14 @@ bool is_valid_duration(double years, double months, double weeks, double days, d
 }
 
 // 7.5.6 ToPartialDuration ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-topartialduration
-PartialDuration to_partial_duration(GlobalObject& global_object, Value temporal_duration_like)
+ThrowCompletionOr<PartialDuration> to_partial_duration(GlobalObject& global_object, Value temporal_duration_like)
 {
     auto& vm = global_object.vm();
 
     // 1. If Type(temporalDurationLike) is not Object, then
     if (!temporal_duration_like.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, temporal_duration_like.to_string_without_side_effects());
-        return {};
+        // a. Throw a TypeError exception.
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, temporal_duration_like.to_string_without_side_effects());
     }
 
     // 2. Let result be the Record { [[Years]]: undefined, [[Months]]: undefined, [[Weeks]]: undefined, [[Days]]: undefined, [[Hours]]: undefined, [[Minutes]]: undefined, [[Seconds]]: undefined, [[Milliseconds]]: undefined, [[Microseconds]]: undefined, [[Nanoseconds]]: undefined }.
@@ -198,8 +195,8 @@ PartialDuration to_partial_duration(GlobalObject& global_object, Value temporal_
 
         // b. Let value be ? Get(temporalDurationLike, property).
         auto value = temporal_duration_like.as_object().get(property);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // c. If value is not undefined, then
         if (!value.is_undefined()) {
@@ -208,14 +205,13 @@ PartialDuration to_partial_duration(GlobalObject& global_object, Value temporal_
 
             // ii. Set value to ? ToNumber(value).
             value = value.to_number(global_object);
-            if (vm.exception())
-                return {};
+            if (auto* exception = vm.exception())
+                return throw_completion(exception->value());
 
             // iii. If ! IsIntegralNumber(value) is false, then
             if (!value.is_integral_number()) {
                 // 1. Throw a RangeError exception.
-                vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects());
-                return {};
+                return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects());
             }
 
             // iv. Set result's internal slot whose name is the Internal Slot value of the current row to value.
@@ -226,8 +222,7 @@ PartialDuration to_partial_duration(GlobalObject& global_object, Value temporal_
     // 5. If any is false, then
     if (!any) {
         // a. Throw a TypeError exception.
-        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalInvalidDurationLikeObject);
-        return {};
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalInvalidDurationLikeObject);
     }
 
     // 6. Return result.
@@ -235,15 +230,13 @@ PartialDuration to_partial_duration(GlobalObject& global_object, Value temporal_
 }
 
 // 7.5.7 CreateTemporalDuration ( years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalduration
-Duration* create_temporal_duration(GlobalObject& global_object, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, FunctionObject const* new_target)
+ThrowCompletionOr<Duration*> create_temporal_duration(GlobalObject& global_object, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, FunctionObject const* new_target)
 {
     auto& vm = global_object.vm();
 
     // 1. If ! IsValidDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds) is false, throw a RangeError exception.
-    if (!is_valid_duration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
-        return {};
-    }
+    if (!is_valid_duration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
 
     // 2. If newTarget is not present, set it to %Temporal.Duration%.
     if (!new_target)
@@ -260,7 +253,7 @@ Duration* create_temporal_duration(GlobalObject& global_object, double years, do
     // 11. Set object.[[Milliseconds]] to milliseconds.
     // 12. Set object.[[Microseconds]] to microseconds.
     // 13. Set object.[[Nanoseconds]] to nanoseconds.
-    auto* object = TRY_OR_DISCARD(ordinary_create_from_constructor<Duration>(global_object, *new_target, &GlobalObject::temporal_duration_prototype, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
+    auto* object = TRY(ordinary_create_from_constructor<Duration>(global_object, *new_target, &GlobalObject::temporal_duration_prototype, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
 
     // 14. Return object.
     return object;
@@ -273,7 +266,7 @@ Duration* create_negated_temporal_duration(GlobalObject& global_object, Duration
     // 2. Assert: duration has an [[InitializedTemporalDuration]] internal slot.
 
     // 3. Return ! CreateTemporalDuration(−duration.[[Years]], −duration.[[Months]], −duration.[[Weeks]], −duration.[[Days]], −duration.[[Hours]], −duration.[[Minutes]], −duration.[[Seconds]], −duration.[[Milliseconds]], −duration.[[Microseconds]], −duration.[[Nanoseconds]]).
-    return create_temporal_duration(global_object, -duration.years(), -duration.months(), -duration.weeks(), -duration.days(), -duration.hours(), -duration.minutes(), -duration.seconds(), -duration.milliseconds(), -duration.microseconds(), -duration.nanoseconds());
+    return create_temporal_duration(global_object, -duration.years(), -duration.months(), -duration.weeks(), -duration.days(), -duration.hours(), -duration.minutes(), -duration.seconds(), -duration.milliseconds(), -duration.microseconds(), -duration.nanoseconds()).release_value();
 }
 
 // 7.5.10 TotalDurationNanoseconds ( days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, offsetShift ), https://tc39.es/proposal-temporal/#sec-temporal-totaldurationnanoseconds
@@ -310,7 +303,7 @@ BigInt* total_duration_nanoseconds(GlobalObject& global_object, double days, dou
 }
 
 // 7.5.11 BalanceDuration ( days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit [ , relativeTo ] ), https://tc39.es/proposal-temporal/#sec-temporal-balanceduration
-Optional<BalancedDuration> balance_duration(GlobalObject& global_object, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, BigInt const& nanoseconds, String const& largest_unit, Object* relative_to)
+ThrowCompletionOr<BalancedDuration> balance_duration(GlobalObject& global_object, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, BigInt const& nanoseconds, String const& largest_unit, Object* relative_to)
 {
     auto& vm = global_object.vm();
     // 1. If relativeTo is not present, set relativeTo to undefined.
@@ -320,8 +313,8 @@ Optional<BalancedDuration> balance_duration(GlobalObject& global_object, double 
     if (relative_to && is<ZonedDateTime>(*relative_to)) {
         // a. Let endNs be ? AddZonedDateTime(relativeTo.[[Nanoseconds]], relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
         TODO();
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
         // b. Set nanoseconds to endNs − relativeTo.[[Nanoseconds]].
     }
     // 3. Else,
@@ -334,8 +327,8 @@ Optional<BalancedDuration> balance_duration(GlobalObject& global_object, double 
     if (largest_unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv)) {
         // a. Let result be ? NanosecondsToDays(nanoseconds, relativeTo).
         TODO();
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // b. Set days to result.[[Days]].
 
@@ -453,48 +446,43 @@ Optional<BalancedDuration> balance_duration(GlobalObject& global_object, double 
 }
 
 // 7.5.20 ToLimitedTemporalDuration ( temporalDurationLike, disallowedFields ),https://tc39.es/proposal-temporal/#sec-temporal-tolimitedtemporalduration
-Optional<TemporalDuration> to_limited_temporal_duration(GlobalObject& global_object, Value temporal_duration_like, Vector<StringView> const& disallowed_fields)
+ThrowCompletionOr<TemporalDuration> to_limited_temporal_duration(GlobalObject& global_object, Value temporal_duration_like, Vector<StringView> const& disallowed_fields)
 {
     auto& vm = global_object.vm();
 
-    Optional<TemporalDuration> duration;
+    TemporalDuration duration;
 
     // 1. If Type(temporalDurationLike) is not Object, then
     if (!temporal_duration_like.is_object()) {
         // a. Let str be ? ToString(temporalDurationLike).
         auto str = temporal_duration_like.to_string(global_object);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // b. Let duration be ? ParseTemporalDurationString(str).
-        duration = TRY_OR_DISCARD(parse_temporal_duration_string(global_object, str));
+        duration = TRY(parse_temporal_duration_string(global_object, str));
     }
     // 2. Else,
     else {
         // a. Let duration be ? ToTemporalDurationRecord(temporalDurationLike).
-        duration = to_temporal_duration_record(global_object, temporal_duration_like.as_object());
-        if (vm.exception())
-            return {};
+        duration = TRY(to_temporal_duration_record(global_object, temporal_duration_like.as_object()));
     }
 
     // 3. If ! IsValidDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]]) is false, throw a RangeError exception.
-    if (!is_valid_duration(duration->years, duration->months, duration->weeks, duration->days, duration->hours, duration->minutes, duration->seconds, duration->milliseconds, duration->microseconds, duration->nanoseconds)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
-        return {};
-    }
+    if (!is_valid_duration(duration.years, duration.months, duration.weeks, duration.days, duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, duration.nanoseconds))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
 
     // 4. For each row of Table 7, except the header row, in table order, do
     for (auto& [internal_slot, property] : temporal_duration_like_properties<TemporalDuration, double>(vm)) {
         // a. Let prop be the Property value of the current row.
 
         // b. Let value be duration's internal slot whose name is the Internal Slot value of the current row.
-        auto value = (*duration).*internal_slot;
+        auto value = duration.*internal_slot;
 
         // If value is not 0 and disallowedFields contains prop, then
         if (value != 0 && disallowed_fields.contains_slow(property.as_string())) {
             // i. Throw a RangeError exception.
-            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonZero, property.as_string(), value);
-            return {};
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonZero, property.as_string(), value);
         }
     }
 
