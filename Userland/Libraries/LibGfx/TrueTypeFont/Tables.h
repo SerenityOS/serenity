@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Span.h>
+#include <AK/String.h>
 
 namespace TTF {
 
