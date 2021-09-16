@@ -95,7 +95,7 @@ PlainDate* to_temporal_date(GlobalObject& global_object, Value item, Object* opt
             auto& zoned_date_time = static_cast<ZonedDateTime&>(item_object);
 
             // i. Let instant be ! CreateTemporalInstant(item.[[Nanoseconds]]).
-            auto* instant = create_temporal_instant(global_object, zoned_date_time.nanoseconds());
+            auto* instant = create_temporal_instant(global_object, zoned_date_time.nanoseconds()).release_value();
 
             // ii. Let plainDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(item.[[TimeZone]], instant, item.[[Calendar]]).
             auto* plain_date_time = TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &zoned_date_time.time_zone(), *instant, zoned_date_time.calendar()));

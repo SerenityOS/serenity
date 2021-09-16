@@ -66,7 +66,7 @@ ThrowCompletionOr<PlainTime*> to_temporal_time(GlobalObject& global_object, Valu
         if (is<ZonedDateTime>(item_object)) {
             auto& zoned_date_time = static_cast<ZonedDateTime&>(item_object);
             // i. Let instant be ! CreateTemporalInstant(item.[[Nanoseconds]]).
-            auto* instant = create_temporal_instant(global_object, zoned_date_time.nanoseconds());
+            auto* instant = create_temporal_instant(global_object, zoned_date_time.nanoseconds()).release_value();
             // ii. Set plainDateTime to ? BuiltinTimeZoneGetPlainDateTimeFor(item.[[TimeZone]], instant, item.[[Calendar]]).
             auto* plain_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &zoned_date_time.time_zone(), *instant, zoned_date_time.calendar()));
             // iii. Return ! CreateTemporalTime(plainDateTime.[[ISOHour]], plainDateTime.[[ISOMinute]], plainDateTime.[[ISOSecond]], plainDateTime.[[ISOMillisecond]], plainDateTime.[[ISOMicrosecond]], plainDateTime.[[ISONanosecond]]).
