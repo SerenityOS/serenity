@@ -17,7 +17,7 @@ class ModelIndex {
     friend class Model;
 
 public:
-    ModelIndex() { }
+    ModelIndex() = default;
 
     bool is_valid() const { return m_model && m_row != -1 && m_column != -1; }
     int row() const { return m_row; }
