@@ -19,7 +19,7 @@ class File {
 public:
     // Must have a default constructor, because LibIPC
     // default-constructs arguments prior to decoding them.
-    File() { }
+    File() = default;
 
     // Intentionally not `explicit`.
     File(int fd)
