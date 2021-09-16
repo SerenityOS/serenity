@@ -104,7 +104,7 @@ String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u
 double constrain_to_range(double x, double minimum, double maximum);
 BigInt* round_number_to_increment(GlobalObject&, BigInt const&, u64 increment, StringView rounding_mode);
 ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject&, String const& iso_string);
-Optional<TemporalInstant> parse_temporal_instant_string(GlobalObject&, String const& iso_string);
+ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject&, String const& iso_string);
 Optional<String> parse_temporal_calendar_string(GlobalObject&, String const& iso_string);
 Optional<TemporalDate> parse_temporal_date_string(GlobalObject&, String const& iso_string);
 Optional<ISODateTime> parse_temporal_date_time_string(GlobalObject&, String const& iso_string);
