@@ -22,6 +22,7 @@ public:
         UserInteraction,
         Networking,
         HistoryTraversal,
+        IdleTask,
     };
 
     static NonnullOwnPtr<Task> create(Source source, DOM::Document* document, Function<void()> steps)
