@@ -38,7 +38,7 @@ public:
         {
         }
 
-        ~DynamicEntry() { }
+        ~DynamicEntry() = default;
 
         ElfW(Sword) tag() const { return m_dyn.d_tag; }
         ElfW(Addr) ptr() const { return m_dyn.d_un.d_ptr; }
@@ -161,7 +161,7 @@ public:
         {
         }
 
-        ~Relocation() { }
+        ~Relocation() = default;
 
         unsigned offset_in_section() const { return m_offset_in_section; }
         unsigned offset() const { return m_rel.r_offset; }
