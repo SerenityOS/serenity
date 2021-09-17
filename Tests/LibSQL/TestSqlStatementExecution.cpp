@@ -28,13 +28,13 @@ RefPtr<SQL::SQLResult> execute(NonnullRefPtr<SQL::Database> database, String con
     }
     SQL::AST::ExecutionContext context { database };
     auto result = statement->execute(context);
-    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
     return result;
 }
 
 void create_schema(NonnullRefPtr<SQL::Database> database)
 {
     auto result = execute(database, "CREATE SCHEMA TestSchema;");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
     EXPECT(result->inserted() == 1);
 }
 
@@ -42,6 +42,7 @@ void create_table(NonnullRefPtr<SQL::Database> database)
 {
     create_schema(database);
     auto result = execute(database, "CREATE TABLE TestSchema.TestTable ( TextColumn text, IntColumn integer );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
     EXPECT(result->inserted() == 1);
 }
 
@@ -69,6 +70,7 @@ TEST_CASE(insert_into_table)
     auto database = SQL::Database::construct(db_name);
     create_table(database);
     auto result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test', 42 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
     EXPECT(result->inserted() == 1);
 
     auto table = database->get_table("TESTSCHEMA", "TESTTABLE");
@@ -88,12 +90,16 @@ TEST_CASE(select_from_table)
     auto database = SQL::Database::construct(db_name);
     create_table(database);
     auto result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_1', 42 ), ( 'Test_2', 43 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
     EXPECT(result->inserted() == 2);
     result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_3', 44 ), ( 'Test_4', 45 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
     EXPECT(result->inserted() == 2);
     result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_5', 46 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
     EXPECT(result->inserted() == 1);
     result = execute(database, "SELECT * FROM TestSchema.TestTable;");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
     EXPECT(result->has_results());
     EXPECT_EQ(result->results().size(), 5u);
 }
