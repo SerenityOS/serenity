@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/SVGPathBox.h>
 #include <LibWeb/SVG/SVGPathElement.h>
@@ -47,10 +48,10 @@ void SVGPathBox::paint(PaintContext& context, PaintPhase phase)
     closed_path.close();
 
     // Fills are computed as though all paths are closed (https://svgwg.org/svg2-draft/painting.html#FillProperties)
-    auto& painter = context.painter();
+    Gfx::AntiAliasingPainter painter { context.painter() };
     auto& svg_context = context.svg_context();
 
-    auto offset = (absolute_position() - effective_offset()).to_type<int>();
+    auto offset = absolute_position() - effective_offset();
 
     painter.translate(offset);
 
