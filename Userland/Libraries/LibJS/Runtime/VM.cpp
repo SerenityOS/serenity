@@ -168,29 +168,6 @@ void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_o
     global_object.set(name, value, Object::ShouldThrowExceptions::Yes);
 }
 
-bool VM::delete_variable(FlyString const& name)
-{
-    Environment* specific_scope = nullptr;
-    Optional<Variable> possible_match;
-    if (!m_execution_context_stack.is_empty()) {
-        for (auto* environment = lexical_environment(); environment; environment = environment->outer_environment()) {
-            possible_match = environment->get_from_environment(name);
-            if (possible_match.has_value()) {
-                specific_scope = environment;
-                break;
-            }
-        }
-    }
-
-    if (!possible_match.has_value())
-        return false;
-    if (possible_match.value().declaration_kind == DeclarationKind::Const)
-        return false;
-
-    VERIFY(specific_scope);
-    return specific_scope->delete_from_environment(name);
-}
-
 void VM::assign(const FlyString& target, Value value, GlobalObject& global_object, bool first_assignment, Environment* specific_scope)
 {
     set_variable(target, move(value), global_object, first_assignment, specific_scope);
