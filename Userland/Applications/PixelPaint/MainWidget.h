@@ -35,6 +35,7 @@ public:
 
     void open_image_fd(int fd, String const& path);
     void create_default_image();
+    bool request_close();
 
 private:
     MainWidget();
