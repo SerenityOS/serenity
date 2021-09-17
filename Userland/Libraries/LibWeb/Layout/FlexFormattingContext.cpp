@@ -222,6 +222,9 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
     // This is particularly important since we take references to the items stored in flex_items
     // later, whose addresses won't be stable if we added or removed any items.
     Vector<FlexItem> flex_items;
+    if (!box.has_definite_width())
+        box.set_width(box.width_of_logical_containing_block());
+
     box.for_each_child_of_type<Box>([&](Box& child_box) {
         layout_inside(child_box, LayoutMode::Default);
         // Skip anonymous text runs that are only whitespace.
