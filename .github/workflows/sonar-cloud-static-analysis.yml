@@ -119,8 +119,8 @@ jobs:
         #       binary directory for that project.
         run: |
           ninja -C Build/superbuild serenity-configure
-          cmake -B Build/{{ env.SONAR_ANALYSIS_ARCH }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-          ninja -C Build/{{ env.SONAR_ANALYSIS_ARCH }} all_generated
+          cmake -B Build/${{ env.SONAR_ANALYSIS_ARCH }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          ninja -C Build/${{ env.SONAR_ANALYSIS_ARCH }} all_generated
 
       - name: Run sonar-scanner, upload results
         env:
