@@ -10,8 +10,8 @@
 #include "ImageEditor.h"
 #include "Image.h"
 #include "Layer.h"
-#include "MoveTool.h"
-#include "Tool.h"
+#include "Tools/MoveTool.h"
+#include "Tools/Tool.h"
 #include <LibConfig/Client.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/Painter.h>

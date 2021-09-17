@@ -14,9 +14,9 @@
 #include "LayerPropertiesWidget.h"
 #include "PaletteWidget.h"
 #include "ProjectLoader.h"
-#include "Tool.h"
 #include "ToolPropertiesWidget.h"
 #include "ToolboxWidget.h"
+#include "Tools/Tool.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Statusbar.h>

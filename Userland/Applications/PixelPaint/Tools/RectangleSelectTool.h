@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Selection.h"
+#include "../Selection.h"
 #include "Tool.h"
 
 #include <AK/Vector.h>

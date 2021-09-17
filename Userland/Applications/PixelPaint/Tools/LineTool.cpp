@@ -6,8 +6,8 @@
  */
 
 #include "LineTool.h"
-#include "ImageEditor.h"
-#include "Layer.h"
+#include "../ImageEditor.h"
+#include "../Layer.h"
 #include <AK/Math.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>

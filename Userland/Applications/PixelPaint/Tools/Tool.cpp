@@ -6,7 +6,7 @@
  */
 
 #include "Tool.h"
-#include "ImageEditor.h"
+#include "../ImageEditor.h"
 #include <LibGUI/Action.h>
 
 namespace PixelPaint {

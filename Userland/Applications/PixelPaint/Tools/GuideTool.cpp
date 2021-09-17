@@ -5,8 +5,7 @@
  */
 
 #include "GuideTool.h"
-#include "EditGuideDialog.h"
-#include "ImageEditor.h"
+#include "../EditGuideDialog.h"
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>

@@ -5,7 +5,7 @@
  */
 
 #include "ToolPropertiesWidget.h"
-#include "Tool.h"
+#include "Tools/Tool.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/GroupBox.h>
 
