@@ -20,14 +20,12 @@ public:
     AbbreviationsMap(DwarfInfo const& dwarf_info, u32 offset);
 
     struct AbbreviationEntry {
-
         EntryTag tag;
         bool has_children;
 
         Vector<AttributeSpecification> attribute_specifications;
     };
-
-    Optional<AbbreviationEntry> get(u32 code) const;
+    AbbreviationEntry const* get(u32 code) const;
 
 private:
     void populate_map();
