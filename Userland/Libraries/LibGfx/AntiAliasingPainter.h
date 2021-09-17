@@ -18,6 +18,7 @@ public:
     }
 
     void draw_line(FloatPoint const&, FloatPoint const&, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid, Color alternate_color = Color::Transparent);
+    void draw_aliased_line(FloatPoint const&, FloatPoint const&, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid, Color alternate_color = Color::Transparent);
     void fill_path(Path&, Color, Painter::WindingRule rule = Painter::WindingRule::Nonzero);
     void stroke_path(Path const&, Color, float thickness);
     void draw_quadratic_bezier_curve(FloatPoint const& control_point, FloatPoint const&, FloatPoint const&, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid);
@@ -27,6 +28,13 @@ public:
     void translate(FloatPoint const& delta) { m_transform.translate(delta); }
 
 private:
+    enum class AntiAliasPolicy {
+        OnlyEnds,
+        Full,
+    };
+    template<AntiAliasPolicy policy>
+    void draw_anti_aliased_line(FloatPoint const&, FloatPoint const&, Color, float thickness, Painter::LineStyle style, Color alternate_color);
+
     Painter& m_underlying_painter;
     AffineTransform m_transform;
 };
