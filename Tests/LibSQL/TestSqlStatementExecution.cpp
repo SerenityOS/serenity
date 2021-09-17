@@ -84,6 +84,26 @@ TEST_CASE(insert_into_table)
     EXPECT_EQ(count, 1);
 }
 
+TEST_CASE(insert_into_table_wrong_data_types)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    create_table(database);
+    auto result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES (43, 'Test_2');");
+    EXPECT(result->inserted() == 0);
+    EXPECT(result->error().code == SQL::SQLErrorCode::InvalidValueType);
+}
+
+TEST_CASE(insert_into_table_multiple_tuples_wrong_data_types)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    create_table(database);
+    auto result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ('Test_1', 42), (43, 'Test_2');");
+    EXPECT(result->inserted() == 0);
+    EXPECT(result->error().code == SQL::SQLErrorCode::InvalidValueType);
+}
+
 TEST_CASE(select_from_table)
 {
     ScopeGuard guard([]() { unlink(db_name); });
