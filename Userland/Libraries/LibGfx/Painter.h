@@ -97,7 +97,7 @@ public:
         Nonzero,
         EvenOdd,
     };
-    void fill_path(Path&, Color, WindingRule rule = WindingRule::Nonzero);
+    void fill_path(Path const&, Color, WindingRule rule = WindingRule::Nonzero);
 
     const Font& font() const { return *state().font; }
     void set_font(const Font& font) { state().font = &font; }

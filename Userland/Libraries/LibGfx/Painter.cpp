@@ -2005,11 +2005,11 @@ void Painter::stroke_path(const Path& path, Color color, int thickness)
         from.set_x(previous_to.value().x());
 }
 
-void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
+void Painter::fill_path(Path const& path, Color color, WindingRule winding_rule)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
-    const auto& segments = path.split_lines();
+    auto const& segments = path.split_lines();
 
     if (segments.size() == 0)
         return;
