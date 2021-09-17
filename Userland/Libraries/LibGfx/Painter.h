@@ -54,6 +54,7 @@ public:
     void set_pixel(int x, int y, Color color) { set_pixel({ x, y }, color); }
     void draw_line(IntPoint const&, IntPoint const&, Color, int thickness = 1, LineStyle style = LineStyle::Solid, Color alternate_color = Color::Transparent);
     void draw_quadratic_bezier_curve(IntPoint const& control_point, IntPoint const&, IntPoint const&, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
+    void draw_cubic_bezier_curve(IntPoint const& control_point_0, IntPoint const& control_point_1, IntPoint const&, IntPoint const&, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
     void draw_elliptical_arc(IntPoint const& p1, IntPoint const& p2, IntPoint const& center, FloatPoint const& radii, float x_axis_rotation, float theta_1, float theta_delta, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
     void blit(IntPoint const&, Gfx::Bitmap const&, IntRect const& src_rect, float opacity = 1.0f, bool apply_alpha = true);
     void blit_dimmed(IntPoint const&, Gfx::Bitmap const&, IntRect const& src_rect);
@@ -87,6 +88,9 @@ public:
 
     static void for_each_line_segment_on_bezier_curve(FloatPoint const& control_point, FloatPoint const& p1, FloatPoint const& p2, Function<void(FloatPoint const&, FloatPoint const&)>&);
     static void for_each_line_segment_on_bezier_curve(FloatPoint const& control_point, FloatPoint const& p1, FloatPoint const& p2, Function<void(FloatPoint const&, FloatPoint const&)>&&);
+
+    static void for_each_line_segment_on_cubic_bezier_curve(FloatPoint const& control_point_0, FloatPoint const& control_point_1, FloatPoint const& p1, FloatPoint const& p2, Function<void(FloatPoint const&, FloatPoint const&)>&);
+    static void for_each_line_segment_on_cubic_bezier_curve(FloatPoint const& control_point_0, FloatPoint const& control_point_1, FloatPoint const& p1, FloatPoint const& p2, Function<void(FloatPoint const&, FloatPoint const&)>&&);
 
     static void for_each_line_segment_on_elliptical_arc(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& center, FloatPoint const radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint const&, FloatPoint const&)>&);
     static void for_each_line_segment_on_elliptical_arc(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& center, FloatPoint const radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint const&, FloatPoint const&)>&&);

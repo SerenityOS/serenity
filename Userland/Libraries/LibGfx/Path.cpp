@@ -160,6 +160,7 @@ void Path::close_all_subpaths()
         }
         case Segment::Type::LineTo:
         case Segment::Type::QuadraticBezierCurveTo:
+        case Segment::Type::CubicBezierCurveTo:
         case Segment::Type::EllipticalArcTo:
             if (is_first_point_in_subpath) {
                 start_of_subpath = cursor;
@@ -189,6 +190,9 @@ String Path::to_string() const
         case Segment::Type::QuadraticBezierCurveTo:
             builder.append("QuadraticBezierCurveTo");
             break;
+        case Segment::Type::CubicBezierCurveTo:
+            builder.append("CubicBezierCurveTo");
+            break;
         case Segment::Type::EllipticalArcTo:
             builder.append("EllipticalArcTo");
             break;
@@ -202,6 +206,12 @@ String Path::to_string() const
         case Segment::Type::QuadraticBezierCurveTo:
             builder.append(", ");
             builder.append(static_cast<const QuadraticBezierCurveSegment&>(segment).through().to_string());
+            break;
+        case Segment::Type::CubicBezierCurveTo:
+            builder.append(", ");
+            builder.append(static_cast<const CubicBezierCurveSegment&>(segment).through_0().to_string());
+            builder.append(", ");
+            builder.append(static_cast<const CubicBezierCurveSegment&>(segment).through_1().to_string());
             break;
         case Segment::Type::EllipticalArcTo: {
             auto& arc = static_cast<const EllipticalArcSegment&>(segment);
@@ -286,6 +296,16 @@ void Path::segmentize_path()
             cursor = segment.point();
             break;
         }
+        case Segment::Type::CubicBezierCurveTo: {
+            auto& curve = static_cast<CubicBezierCurveSegment const&>(segment);
+            auto& control_0 = curve.through_0();
+            auto& control_1 = curve.through_1();
+            Painter::for_each_line_segment_on_cubic_bezier_curve(control_0, control_1, cursor, segment.point(), [&](const FloatPoint& p0, const FloatPoint& p1) {
+                add_line(p0, p1);
+            });
+            cursor = segment.point();
+            break;
+        }
         case Segment::Type::EllipticalArcTo: {
             auto& arc = static_cast<EllipticalArcSegment&>(segment);
             Painter::for_each_line_segment_on_elliptical_arc(cursor, arc.point(), arc.center(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), [&](const FloatPoint& p0, const FloatPoint& p1) {
@@ -308,17 +328,6 @@ void Path::segmentize_path()
 
     m_split_lines = move(segments);
     m_bounding_box = Gfx::FloatRect { min_x, min_y, max_x - min_x, max_y - min_y };
-}
-
-void Path::cubic_bezier_curve_to(FloatPoint const& c1, FloatPoint const& c2, FloatPoint const& p2)
-{
-    // FIXME: I'm sure there's a faster and more elegant way to do this.
-    // FIXME: We should divide it into enough segments to stay within some tolerance.
-    auto p1 = segments().last().point();
-    for (float t = 0; t <= 1.0f; t += 0.02f) {
-        auto p = cubic_interpolate(p1, p2, c1, c2, t);
-        line_to(p);
-    }
 }
 
 }
