@@ -13,14 +13,6 @@ SVGSVGBox::SVGSVGBox(DOM::Document& document, SVG::SVGSVGElement& element, Nonnu
 {
 }
 
-void SVGSVGBox::prepare_for_replaced_layout()
-{
-    set_has_intrinsic_width(true);
-    set_has_intrinsic_height(true);
-    set_intrinsic_width(dom_node().width());
-    set_intrinsic_height(dom_node().height());
-}
-
 void SVGSVGBox::before_children_paint(PaintContext& context, PaintPhase phase)
 {
     if (phase != PaintPhase::Foreground)

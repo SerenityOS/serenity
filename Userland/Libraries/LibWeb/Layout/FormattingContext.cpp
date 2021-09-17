@@ -11,6 +11,8 @@
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/ReplacedBox.h>
+#include <LibWeb/Layout/SVGFormattingContext.h>
+#include <LibWeb/Layout/SVGSVGBox.h>
 #include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableFormattingContext.h>
@@ -67,6 +69,12 @@ bool FormattingContext::creates_block_formatting_context(const Box& box)
 
 void FormattingContext::layout_inside(Box& box, LayoutMode layout_mode)
 {
+    if (is<SVGSVGBox>(box)) {
+        SVGFormattingContext context(box, this);
+        context.run(box, layout_mode);
+        return;
+    }
+
     if (creates_block_formatting_context(box)) {
         BlockFormattingContext context(box, this);
         context.run(box, layout_mode);

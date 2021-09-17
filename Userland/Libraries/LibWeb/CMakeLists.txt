@@ -193,6 +193,7 @@ set(SOURCES
     Layout/RadioButton.cpp
     Layout/ReplacedBox.cpp
     Layout/SVGBox.cpp
+    Layout/SVGFormattingContext.cpp
     Layout/SVGGraphicsBox.cpp
     Layout/SVGPathBox.cpp
     Layout/SVGSVGBox.cpp
