@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "EllipseTool.h"
-#include "ImageEditor.h"
-#include "Layer.h"
+#include "RectangleTool.h"
+#include "../ImageEditor.h"
+#include "../Layer.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
@@ -20,37 +20,40 @@
 
 namespace PixelPaint {
 
-EllipseTool::EllipseTool()
+RectangleTool::RectangleTool()
 {
 }
 
-EllipseTool::~EllipseTool()
+RectangleTool::~RectangleTool()
 {
 }
 
-void EllipseTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position, int thickness)
+void RectangleTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position, int thickness)
 {
-    Gfx::IntRect ellipse_intersecting_rect;
+    Gfx::IntRect rect;
     if (m_draw_mode == DrawMode::FromCenter) {
         auto delta = end_position - start_position;
-        ellipse_intersecting_rect = Gfx::IntRect::from_two_points(start_position - delta, end_position);
+        rect = Gfx::IntRect::from_two_points(start_position - delta, end_position);
     } else {
-        ellipse_intersecting_rect = Gfx::IntRect::from_two_points(start_position, end_position);
+        rect = Gfx::IntRect::from_two_points(start_position, end_position);
     }
 
     switch (m_fill_mode) {
-    case FillMode::Outline:
-        painter.draw_ellipse_intersecting(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button), thickness);
-        break;
     case FillMode::Fill:
-        painter.fill_ellipse(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button));
+        painter.fill_rect(rect, m_editor->color_for(m_drawing_button));
+        break;
+    case FillMode::Outline:
+        painter.draw_rect_with_thickness(rect, m_editor->color_for(m_drawing_button), thickness);
+        break;
+    case FillMode::Gradient:
+        painter.fill_rect_with_gradient(rect, m_editor->primary_color(), m_editor->secondary_color());
         break;
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
-void EllipseTool::on_mousedown(Layer* layer, MouseEvent& event)
+void RectangleTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
     if (!layer)
         return;
@@ -63,19 +66,19 @@ void EllipseTool::on_mousedown(Layer* layer, MouseEvent& event)
         return;
 
     m_drawing_button = layer_event.button();
-    m_ellipse_start_position = layer_event.position();
-    m_ellipse_end_position = layer_event.position();
+    m_rectangle_start_position = layer_event.position();
+    m_rectangle_end_position = layer_event.position();
     m_editor->update();
 }
 
-void EllipseTool::on_mouseup(Layer* layer, MouseEvent& event)
+void RectangleTool::on_mouseup(Layer* layer, MouseEvent& event)
 {
     if (!layer)
         return;
 
     if (event.layer_event().button() == m_drawing_button) {
         GUI::Painter painter(layer->bitmap());
-        draw_using(painter, m_ellipse_start_position, m_ellipse_end_position, m_thickness);
+        draw_using(painter, m_rectangle_start_position, m_rectangle_end_position, m_thickness);
         m_drawing_button = GUI::MouseButton::None;
         layer->did_modify_bitmap();
         m_editor->update();
@@ -83,36 +86,39 @@ void EllipseTool::on_mouseup(Layer* layer, MouseEvent& event)
     }
 }
 
-void EllipseTool::on_mousemove(Layer*, MouseEvent& event)
+void RectangleTool::on_mousemove(Layer* layer, MouseEvent& event)
 {
+    if (!layer)
+        return;
+
     if (m_drawing_button == GUI::MouseButton::None)
         return;
 
     m_draw_mode = event.layer_event().alt() ? DrawMode::FromCenter : DrawMode::FromCorner;
 
     if (event.layer_event().shift())
-        m_ellipse_end_position = m_ellipse_start_position.end_point_for_aspect_ratio(event.layer_event().position(), 1.0);
+        m_rectangle_end_position = m_rectangle_start_position.end_point_for_aspect_ratio(event.layer_event().position(), 1.0);
     else if (m_aspect_ratio.has_value())
-        m_ellipse_end_position = m_ellipse_start_position.end_point_for_aspect_ratio(event.layer_event().position(), m_aspect_ratio.value());
+        m_rectangle_end_position = m_rectangle_start_position.end_point_for_aspect_ratio(event.layer_event().position(), m_aspect_ratio.value());
     else
-        m_ellipse_end_position = event.layer_event().position();
+        m_rectangle_end_position = event.layer_event().position();
 
     m_editor->update();
 }
 
-void EllipseTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
+void RectangleTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
 {
     if (!layer || m_drawing_button == GUI::MouseButton::None)
         return;
 
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
-    auto preview_start = m_editor->layer_position_to_editor_position(*layer, m_ellipse_start_position).to_type<int>();
-    auto preview_end = m_editor->layer_position_to_editor_position(*layer, m_ellipse_end_position).to_type<int>();
-    draw_using(painter, preview_start, preview_end, AK::max(m_thickness * m_editor->scale(), 1));
+    auto start_position = editor_stroke_position(m_rectangle_start_position, m_thickness);
+    auto end_position = editor_stroke_position(m_rectangle_end_position, m_thickness);
+    draw_using(painter, start_position, end_position, AK::max(m_thickness * m_editor->scale(), 1));
 }
 
-void EllipseTool::on_keydown(GUI::KeyEvent& event)
+void RectangleTool::on_keydown(GUI::KeyEvent& event)
 {
     Tool::on_keydown(event);
     if (event.key() == Key_Escape && m_drawing_button != GUI::MouseButton::None) {
@@ -122,7 +128,7 @@ void EllipseTool::on_keydown(GUI::KeyEvent& event)
     }
 }
 
-GUI::Widget* EllipseTool::get_properties_widget()
+GUI::Widget* RectangleTool::get_properties_widget()
 {
     if (!m_properties_widget) {
         m_properties_widget = GUI::Widget::construct();
@@ -146,7 +152,7 @@ GUI::Widget* EllipseTool::get_properties_widget()
         set_primary_slider(&thickness_slider);
 
         auto& mode_container = m_properties_widget->add<GUI::Widget>();
-        mode_container.set_fixed_height(46);
+        mode_container.set_fixed_height(70);
         mode_container.set_layout<GUI::HorizontalBoxLayout>();
         auto& mode_label = mode_container.add<GUI::Label>("Mode:");
         mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -156,12 +162,16 @@ GUI::Widget* EllipseTool::get_properties_widget()
         mode_radio_container.set_layout<GUI::VerticalBoxLayout>();
         auto& outline_mode_radio = mode_radio_container.add<GUI::RadioButton>("Outline");
         auto& fill_mode_radio = mode_radio_container.add<GUI::RadioButton>("Fill");
+        auto& gradient_mode_radio = mode_radio_container.add<GUI::RadioButton>("Gradient");
 
         outline_mode_radio.on_checked = [&](bool) {
             m_fill_mode = FillMode::Outline;
         };
         fill_mode_radio.on_checked = [&](bool) {
             m_fill_mode = FillMode::Fill;
+        };
+        gradient_mode_radio.on_checked = [&](bool) {
+            m_fill_mode = FillMode::Gradient;
         };
 
         outline_mode_radio.set_checked(true);

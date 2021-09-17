@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Guide.h"
+#include "../Guide.h"
 #include "Tool.h"
 #include <AK/RefPtr.h>
 

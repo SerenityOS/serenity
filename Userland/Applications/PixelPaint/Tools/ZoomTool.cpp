@@ -5,7 +5,7 @@
  */
 
 #include "ZoomTool.h"
-#include "ImageEditor.h"
+#include "../ImageEditor.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/ValueSlider.h>
