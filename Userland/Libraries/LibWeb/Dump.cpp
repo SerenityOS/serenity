@@ -22,6 +22,7 @@
 #include <LibWeb/HTML/HTMLTemplateElement.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Layout/SVGBox.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <stdio.h>
 
@@ -106,6 +107,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
 
     char const* nonbox_color_on = "";
     char const* box_color_on = "";
+    char const* svg_box_color_on = "";
     char const* positioned_color_on = "";
     char const* floating_color_on = "";
     char const* inline_block_color_on = "";
@@ -117,6 +119,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
     if (interactive) {
         nonbox_color_on = "\033[33m";
         box_color_on = "\033[34m";
+        svg_box_color_on = "\033[31m";
         positioned_color_on = "\033[31;1m";
         floating_color_on = "\033[32;1m";
         inline_block_color_on = "\033[36;1m";
@@ -140,11 +143,13 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         builder.append("\n");
     } else {
         auto& box = verify_cast<Layout::Box>(layout_node);
+        StringView color_on = is<Layout::SVGBox>(box) ? svg_box_color_on : box_color_on;
+
         builder.appendff("{}{}{} <{}{}{}{}> ",
-            box_color_on,
+            color_on,
             box.class_name().substring_view(13),
             color_off,
-            box_color_on,
+            color_on,
             tag_name,
             color_off,
             identifier.characters());
