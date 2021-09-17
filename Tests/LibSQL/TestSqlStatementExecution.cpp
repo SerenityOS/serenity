@@ -114,6 +114,19 @@ TEST_CASE(insert_wrong_number_of_values)
     EXPECT(result->inserted() == 0);
 }
 
+TEST_CASE(insert_without_column_names)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    create_table(database);
+    auto result = execute(database, "INSERT INTO TestSchema.TestTable VALUES ('Test_1', 42), ('Test_2', 43);");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->inserted() == 2);
+
+    auto table = database->get_table("TESTSCHEMA", "TESTTABLE");
+    EXPECT_EQ(database->select_all(*table).size(), 2u);
+}
+
 TEST_CASE(select_from_table)
 {
     ScopeGuard guard([]() { unlink(db_name); });
