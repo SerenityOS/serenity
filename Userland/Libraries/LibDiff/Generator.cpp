@@ -63,23 +63,50 @@ Vector<Hunk> from_text(StringView const& old_text, StringView const& new_text)
     }
 
     Vector<Hunk> hunks;
+    Hunk cur_hunk;
+    bool in_hunk = false;
+
+    auto update_hunk = [&](size_t i, size_t j, Direction direction) {
+        if (!in_hunk) {
+            in_hunk = true;
+            cur_hunk = { i, j, {}, {} };
+        }
+        if (direction == Direction::Down) {
+            cur_hunk.added_lines.append(new_lines[j]);
+        } else if (direction == Direction::Right) {
+            cur_hunk.removed_lines.append(old_lines[i]);
+        }
+    };
+
+    auto flush_hunk = [&]() {
+        if (in_hunk) {
+            if (cur_hunk.added_lines.size() > 0)
+                cur_hunk.target_start_line++;
+            if (cur_hunk.removed_lines.size() > 0)
+                cur_hunk.original_start_line++;
+            hunks.append(cur_hunk);
+            in_hunk = false;
+        }
+    };
+
     size_t i = 0;
     size_t j = 0;
 
-    // FIXME: This creates a hunk per line, very inefficient.
     while (i < old_lines.size() && j < new_lines.size()) {
         auto& cell = dp(i, j);
         if (cell.direction == Direction::Down) {
-            hunks.append({ i, j, {}, { new_lines[j] } });
+            update_hunk(i, j, cell.direction);
             ++j;
         } else if (cell.direction == Direction::Right) {
-            hunks.append({ i, j, { old_lines[i] }, {} });
+            update_hunk(i, j, cell.direction);
             ++i;
         } else {
             ++i;
             ++j;
+            flush_hunk();
         }
     }
+    flush_hunk();
 
     return hunks;
 }
