@@ -62,14 +62,10 @@ Value PlainMonthDayConstructor::construct(FunctionObject& new_target)
     }
 
     // 3. Let m be ? ToIntegerThrowOnInfinity(isoMonth).
-    auto m = to_integer_throw_on_infinity(global_object, iso_month, ErrorType::TemporalInvalidPlainMonthDay);
-    if (vm.exception())
-        return {};
+    auto m = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, iso_month, ErrorType::TemporalInvalidPlainMonthDay));
 
     // 4. Let d be ? ToIntegerThrowOnInfinity(isoDay).
-    auto d = to_integer_throw_on_infinity(global_object, iso_day, ErrorType::TemporalInvalidPlainMonthDay);
-    if (vm.exception())
-        return {};
+    auto d = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, iso_day, ErrorType::TemporalInvalidPlainMonthDay));
 
     // 5. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
     auto* calendar = to_temporal_calendar_with_iso_default(global_object, calendar_like);
@@ -77,9 +73,7 @@ Value PlainMonthDayConstructor::construct(FunctionObject& new_target)
         return {};
 
     // 6. Let ref be ? ToIntegerThrowOnInfinity(referenceISOYear).
-    auto ref = to_integer_throw_on_infinity(global_object, reference_iso_year, ErrorType::TemporalInvalidPlainMonthDay);
-    if (vm.exception())
-        return {};
+    auto ref = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, reference_iso_year, ErrorType::TemporalInvalidPlainMonthDay));
 
     // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
     // This does not change the exposed behavior as the call to CreateTemporalMonthDay will immediately check that these values are valid
@@ -96,19 +90,15 @@ Value PlainMonthDayConstructor::construct(FunctionObject& new_target)
 // 10.2.2 Temporal.PlainMonthDay.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.from
 JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayConstructor::from)
 {
-    // 1. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
-
     auto item = vm.argument(0);
+
+    // 1. Set options to ? GetOptionsObject(options).
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 2. If Type(item) is Object and item has an [[InitializedTemporalMonthDay]] internal slot, then
     if (item.is_object() && is<PlainMonthDay>(item.as_object())) {
         // a. Perform ? ToTemporalOverflow(options).
-        (void)to_temporal_overflow(global_object, *options);
-        if (vm.exception())
-            return {};
+        (void)TRY_OR_DISCARD(to_temporal_overflow(global_object, *options));
 
         auto& plain_month_day_object = static_cast<PlainMonthDay&>(item.as_object());
 

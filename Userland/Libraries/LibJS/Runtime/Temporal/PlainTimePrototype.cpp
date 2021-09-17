@@ -160,9 +160,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     auto& temporal_time_like = temporal_time_like_argument.as_object();
 
     // 4. Perform ? RejectTemporalCalendarType(temporalTimeLike).
-    reject_temporal_calendar_type(global_object, temporal_time_like);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(reject_temporal_calendar_type(global_object, temporal_time_like));
 
     // 5. Let calendarProperty be ? Get(temporalTimeLike, "calendar").
     auto calendar_property = temporal_time_like.get(vm.names.calendar);
@@ -192,14 +190,10 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     auto partial_time = TRY_OR_DISCARD(to_partial_time(global_object, temporal_time_like));
 
     // 10. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 11. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = to_temporal_overflow(global_object, *options);
-    if (vm.exception())
-        return {};
+    auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, *options));
 
     // 12. If partialTime.[[Hour]] is not undefined, then
     //      a. Let hour be partialTime.[[Hour]].
@@ -238,7 +232,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     auto nanosecond = partial_time.nanosecond.value_or(temporal_time->iso_nanosecond());
 
     // 24. Let result be ? RegulateTime(hour, minute, second, millisecond, microsecond, nanosecond, overflow).
-    auto result = TRY_OR_DISCARD(regulate_time(global_object, hour, minute, second, millisecond, microsecond, nanosecond, *overflow));
+    auto result = TRY_OR_DISCARD(regulate_time(global_object, hour, minute, second, millisecond, microsecond, nanosecond, overflow));
 
     // 25. Return ? CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
     return TRY_OR_DISCARD(create_temporal_time(global_object, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
@@ -349,25 +343,19 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_string)
         return {};
 
     // 3. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(0)));
 
     // 4. Let precision be ? ToSecondsStringPrecision(options).
-    auto precision = to_seconds_string_precision(global_object, *options);
-    if (vm.exception())
-        return {};
+    auto precision = TRY_OR_DISCARD(to_seconds_string_precision(global_object, *options));
 
     // 5. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = to_temporal_rounding_mode(global_object, *options, "trunc"sv);
-    if (vm.exception())
-        return {};
+    auto rounding_mode = TRY_OR_DISCARD(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
     // 6. Let roundResult be ! RoundTime(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], precision.[[Increment]], precision.[[Unit]], roundingMode).
-    auto round_result = round_time(global_object, temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), precision->increment, precision->unit, *rounding_mode);
+    auto round_result = round_time(global_object, temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), precision.increment, precision.unit, rounding_mode);
 
     // 7. Return ! TemporalTimeToString(roundResult.[[Hour]], roundResult.[[Minute]], roundResult.[[Second]], roundResult.[[Millisecond]], roundResult.[[Microsecond]], roundResult.[[Nanosecond]], precision.[[Precision]]).
-    auto string = temporal_time_to_string(round_result.hour, round_result.minute, round_result.second, round_result.millisecond, round_result.microsecond, round_result.nanosecond, precision->precision);
+    auto string = temporal_time_to_string(round_result.hour, round_result.minute, round_result.second, round_result.millisecond, round_result.microsecond, round_result.nanosecond, precision.precision);
     return js_string(vm, move(string));
 }
 

@@ -27,14 +27,6 @@
 
 namespace Kernel {
 
-template<typename DeviceType, typename... Args>
-inline KResultOr<NonnullRefPtr<DeviceType>> try_create_device(Args&&... args)
-{
-    auto device = TRY(adopt_nonnull_ref_or_enomem(new DeviceType(forward<Args>(args)...)));
-    device->after_inserting();
-    return device;
-}
-
 class Device : public File {
 protected:
     enum class State {
@@ -57,10 +49,6 @@ public:
     virtual bool is_device() const override { return true; }
     virtual void before_removing() override;
     virtual void after_inserting();
-
-    static void for_each(Function<void(Device&)>);
-    static Device* get_device(unsigned major, unsigned minor);
-
     void process_next_queued_request(Badge<AsyncDeviceRequest>, const AsyncDeviceRequest&);
 
     template<typename AsyncRequestType, typename... Args>
@@ -79,8 +67,6 @@ protected:
     Device(unsigned major, unsigned minor);
     void set_uid(UserID uid) { m_uid = uid; }
     void set_gid(GroupID gid) { m_gid = gid; }
-
-    static MutexProtected<HashMap<u32, Device*>>& all_devices();
 
 private:
     unsigned m_major { 0 };

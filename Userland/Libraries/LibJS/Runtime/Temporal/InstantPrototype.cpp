@@ -190,46 +190,34 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
         return {};
 
     // 4. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », "nanosecond").
-    auto smallest_unit = to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv);
-    if (vm.exception())
-        return {};
+    auto smallest_unit = TRY_OR_DISCARD(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv));
 
     // 6. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("second", smallestUnit).
     auto default_largest_unit = larger_of_two_temporal_units("second"sv, *smallest_unit);
 
     // 7. Let largestUnit be ? ToLargestTemporalUnit(options, « "year", "month", "week", "day" », "auto", defaultLargestUnit).
-    auto largest_unit = to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit));
-    if (vm.exception())
-        return {};
+    auto largest_unit = TRY_OR_DISCARD(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit)));
 
     // 8. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(validate_temporal_unit_range(global_object, largest_unit, *smallest_unit));
 
     // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = to_temporal_rounding_mode(global_object, *options, "trunc"sv);
-    if (vm.exception())
-        return {};
+    auto rounding_mode = TRY_OR_DISCARD(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
     // 10. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
     auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
 
     // 11. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
-    auto rounding_increment = to_temporal_rounding_increment(global_object, *options, *maximum, false);
-    if (vm.exception())
-        return {};
+    auto rounding_increment = TRY_OR_DISCARD(to_temporal_rounding_increment(global_object, *options, *maximum, false));
 
     // 12. Let roundedNs be ! DifferenceInstant(instant.[[Nanoseconds]], other.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
-    auto rounded_ns = difference_instant(global_object, instant->nanoseconds(), other->nanoseconds(), rounding_increment, *smallest_unit, *rounding_mode);
+    auto rounded_ns = difference_instant(global_object, instant->nanoseconds(), other->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
 
     // 13. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
-    auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, *largest_unit);
+    auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, largest_unit);
 
     // 14. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
     return create_temporal_duration(global_object, 0, 0, 0, 0, result->hours, result->minutes, result->seconds, result->milliseconds, result->microseconds, result->nanoseconds);
@@ -250,46 +238,34 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
         return {};
 
     // 4. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
 
     // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », "nanosecond").
-    auto smallest_unit = to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv);
-    if (vm.exception())
-        return {};
+    auto smallest_unit = TRY_OR_DISCARD(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv));
 
     // 6. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("second", smallestUnit).
     auto default_largest_unit = larger_of_two_temporal_units("second"sv, *smallest_unit);
 
     // 7. Let largestUnit be ? ToLargestTemporalUnit(options, « "year", "month", "week", "day" », "auto", defaultLargestUnit).
-    auto largest_unit = to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit));
-    if (vm.exception())
-        return {};
+    auto largest_unit = TRY_OR_DISCARD(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit)));
 
     // 8. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(validate_temporal_unit_range(global_object, largest_unit, *smallest_unit));
 
     // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = to_temporal_rounding_mode(global_object, *options, "trunc"sv);
-    if (vm.exception())
-        return {};
+    auto rounding_mode = TRY_OR_DISCARD(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
     // 10. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
     auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
 
     // 11. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
-    auto rounding_increment = to_temporal_rounding_increment(global_object, *options, *maximum, false);
-    if (vm.exception())
-        return {};
+    auto rounding_increment = TRY_OR_DISCARD(to_temporal_rounding_increment(global_object, *options, *maximum, false));
 
     // 12. Let roundedNs be ! DifferenceInstant(other.[[Nanoseconds]], instant.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
-    auto rounded_ns = difference_instant(global_object, other->nanoseconds(), instant->nanoseconds(), rounding_increment, *smallest_unit, *rounding_mode);
+    auto rounded_ns = difference_instant(global_object, other->nanoseconds(), instant->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
 
     // 13. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
-    auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, *largest_unit);
+    auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, largest_unit);
 
     // 14. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
     return create_temporal_duration(global_object, 0, 0, 0, 0, result->hours, result->minutes, result->seconds, result->milliseconds, result->microseconds, result->nanoseconds);
@@ -312,14 +288,10 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
     }
 
     // 4. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(0)));
 
     // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », undefined).
-    auto smallest_unit_value = to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, {});
-    if (vm.exception())
-        return {};
+    auto smallest_unit_value = TRY_OR_DISCARD(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, {}));
 
     // 6. If smallestUnit is undefined, throw a RangeError exception.
     if (!smallest_unit_value.has_value()) {
@@ -330,9 +302,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
     auto& smallest_unit = *smallest_unit_value;
 
     // 7. Let roundingMode be ? ToTemporalRoundingMode(options, "halfExpand").
-    auto rounding_mode = to_temporal_rounding_mode(global_object, *options, "halfExpand");
-    if (vm.exception())
-        return {};
+    auto rounding_mode = TRY_OR_DISCARD(to_temporal_rounding_mode(global_object, *options, "halfExpand"));
 
     double maximum;
     // 8. If smallestUnit is "hour", then
@@ -369,12 +339,10 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
     }
 
     // 14. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, true).
-    auto rounding_increment = to_temporal_rounding_increment(global_object, *options, maximum, true);
-    if (vm.exception())
-        return {};
+    auto rounding_increment = TRY_OR_DISCARD(to_temporal_rounding_increment(global_object, *options, maximum, true));
 
     // 15. Let roundedNs be ? RoundTemporalInstant(instant.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
-    auto* rounded_ns = round_temporal_instant(global_object, instant->nanoseconds(), rounding_increment, smallest_unit, *rounding_mode);
+    auto* rounded_ns = round_temporal_instant(global_object, instant->nanoseconds(), rounding_increment, smallest_unit, rounding_mode);
     if (vm.exception())
         return {};
 
@@ -414,9 +382,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
         return {};
 
     // 3. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(0)));
 
     // 4. Let timeZone be ? Get(options, "timeZone").
     auto time_zone = options->get(vm.names.timeZone);
@@ -430,17 +396,13 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
     }
 
     // 6. Let precision be ? ToSecondsStringPrecision(options).
-    auto precision = to_seconds_string_precision(global_object, *options);
-    if (vm.exception())
-        return {};
+    auto precision = TRY_OR_DISCARD(to_seconds_string_precision(global_object, *options));
 
     // 7. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = to_temporal_rounding_mode(global_object, *options, "trunc"sv);
-    if (vm.exception())
-        return {};
+    auto rounding_mode = TRY_OR_DISCARD(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
     // 8. Let roundedNs be ? RoundTemporalInstant(instant.[[Nanoseconds]], precision.[[Increment]], precision.[[Unit]], roundingMode).
-    auto* rounded_ns = round_temporal_instant(global_object, instant->nanoseconds(), precision->increment, precision->unit, *rounding_mode);
+    auto* rounded_ns = round_temporal_instant(global_object, instant->nanoseconds(), precision.increment, precision.unit, rounding_mode);
     if (vm.exception())
         return {};
 
@@ -448,7 +410,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
     auto* rounded_instant = create_temporal_instant(global_object, *rounded_ns);
 
     // 10. Return ? TemporalInstantToString(roundedInstant, timeZone, precision.[[Precision]]).
-    auto string = temporal_instant_to_string(global_object, *rounded_instant, time_zone, precision->precision);
+    auto string = temporal_instant_to_string(global_object, *rounded_instant, time_zone, precision.precision);
     if (vm.exception())
         return {};
 

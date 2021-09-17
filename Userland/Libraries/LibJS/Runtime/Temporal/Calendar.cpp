@@ -110,9 +110,7 @@ Vector<String> calendar_fields(GlobalObject& global_object, Object& calendar, Ve
     }
 
     // 4. Return ? IterableToListOfType(fieldsArray, « String »).
-    auto list = iterable_to_list_of_type(global_object, fields_array, { OptionType::String });
-    if (vm.exception())
-        return {};
+    auto list = TRY_OR_DISCARD(iterable_to_list_of_type(global_object, fields_array, { OptionType::String }));
 
     Vector<String> result;
     for (auto& value : list)
@@ -138,7 +136,7 @@ double calendar_year(GlobalObject& global_object, Object& calendar, Object& date
     }
 
     // 4. Return ? ToIntegerThrowOnInfinity(result).
-    return to_integer_throw_on_infinity(global_object, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.Infinity.as_string());
+    return TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.Infinity.as_string()));
 }
 
 // 12.1.10 CalendarMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonth
@@ -159,7 +157,7 @@ double calendar_month(GlobalObject& global_object, Object& calendar, Object& dat
     }
 
     // 4. Return ? ToPositiveInteger(result).
-    return to_positive_integer(global_object, result);
+    return TRY_OR_DISCARD(to_positive_integer(global_object, result));
 }
 
 // 12.1.11 CalendarMonthCode ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthcode
@@ -201,7 +199,7 @@ double calendar_day(GlobalObject& global_object, Object& calendar, Object& date_
     }
 
     // 4. Return ? ToPositiveInteger(result).
-    return to_positive_integer(global_object, result);
+    return TRY_OR_DISCARD(to_positive_integer(global_object, result));
 }
 
 // 12.1.13 CalendarDayOfWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardayofweek
@@ -321,11 +319,8 @@ Value calendar_era_year(GlobalObject& global_object, Object& calendar, Object& d
         return {};
 
     // 3. If result is not undefined, set result to ? ToIntegerThrowOnInfinity(result).
-    if (!result.is_undefined()) {
-        result = Value(to_integer_throw_on_infinity(global_object, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.eraYear.as_string(), "Infinity"sv));
-        if (vm.exception())
-            return {};
-    }
+    if (!result.is_undefined())
+        result = Value(TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.eraYear.as_string(), "Infinity"sv)));
 
     // 4. Return result.
     return result;
@@ -383,10 +378,7 @@ Object* to_temporal_calendar(GlobalObject& global_object, Value temporal_calenda
     // 3. If ! IsBuiltinCalendar(identifier) is false, then
     if (!is_builtin_calendar(identifier)) {
         // a. Let identifier be ? ParseTemporalCalendarString(identifier).
-        auto parsed_identifier = parse_temporal_calendar_string(global_object, identifier);
-        if (vm.exception())
-            return {};
-        identifier = move(*parsed_identifier);
+        identifier = TRY_OR_DISCARD(parse_temporal_calendar_string(global_object, identifier));
     }
 
     // 4. Return ! CreateTemporalCalendar(identifier).
@@ -796,14 +788,10 @@ Optional<ISODate> iso_date_from_fields(GlobalObject& global_object, Object const
     // 1. Assert: Type(fields) is Object.
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = to_temporal_overflow(global_object, options);
-    if (vm.exception())
-        return {};
+    auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
-    auto* prepared_fields = prepare_temporal_fields(global_object, fields, { "day", "month", "monthCode", "year" }, {});
-    if (vm.exception())
-        return {};
+    auto* prepared_fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, fields, { "day", "month", "monthCode", "year" }, {}));
 
     // 4. Let year be ? Get(fields, "year").
     auto year = prepared_fields->get(vm.names.year);
@@ -833,7 +821,7 @@ Optional<ISODate> iso_date_from_fields(GlobalObject& global_object, Object const
     }
 
     // 9. Return ? RegulateISODate(year, month, day, overflow).
-    return regulate_iso_date(global_object, year.as_double(), month, day.as_double(), *overflow);
+    return regulate_iso_date(global_object, year.as_double(), month, day.as_double(), overflow);
 }
 
 // 12.1.39 ISOYearMonthFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthfromfields
@@ -844,14 +832,10 @@ Optional<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_object, O
     // 1. Assert: Type(fields) is Object.
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = to_temporal_overflow(global_object, options);
-    if (vm.exception())
-        return {};
+    auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "month", "monthCode", "year" », «»).
-    auto* prepared_fields = prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, {});
-    if (vm.exception())
-        return {};
+    auto* prepared_fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, {}));
 
     // 4. Let year be ? Get(fields, "year").
     auto year = prepared_fields->get(vm.names.year);
@@ -870,7 +854,7 @@ Optional<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_object, O
         return {};
 
     // 7. Let result be ? RegulateISOYearMonth(year, month, overflow).
-    auto result = TRY_OR_DISCARD(regulate_iso_year_month(global_object, year.as_double(), month, *overflow));
+    auto result = TRY_OR_DISCARD(regulate_iso_year_month(global_object, year.as_double(), month, overflow));
 
     // 8. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[ReferenceISODay]]: 1 }.
     return ISOYearMonth { .year = result.year, .month = result.month, .reference_iso_day = 1 };
@@ -884,14 +868,10 @@ Optional<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_object, Obj
     // 1. Assert: Type(fields) is Object.
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = to_temporal_overflow(global_object, options);
-    if (vm.exception())
-        return {};
+    auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
-    auto* prepared_fields = prepare_temporal_fields(global_object, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, {});
-    if (vm.exception())
-        return {};
+    auto* prepared_fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, {}));
 
     // 4. Let month be ? Get(fields, "month").
     auto month_value = prepared_fields->get(vm.names.month);
@@ -939,12 +919,12 @@ Optional<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_object, Obj
     // 12. If monthCode is undefined, then
     if (month_code.is_undefined()) {
         // a. Let result be ? RegulateISODate(year, month, day, overflow).
-        result = regulate_iso_date(global_object, year.as_double(), month, day.as_double(), *overflow);
+        result = regulate_iso_date(global_object, year.as_double(), month, day.as_double(), overflow);
     }
     // 13. Else,
     else {
         // a. Let result be ? RegulateISODate(referenceISOYear, month, day, overflow).
-        result = regulate_iso_date(global_object, reference_iso_year, month, day.as_double(), *overflow);
+        result = regulate_iso_date(global_object, reference_iso_year, month, day.as_double(), overflow);
     }
     if (vm.exception())
         return {};

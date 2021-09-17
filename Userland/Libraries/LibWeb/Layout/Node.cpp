@@ -360,6 +360,19 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     do_border_style(computed_values.border_top(), CSS::PropertyID::BorderTopWidth, CSS::PropertyID::BorderTopColor, CSS::PropertyID::BorderTopStyle);
     do_border_style(computed_values.border_right(), CSS::PropertyID::BorderRightWidth, CSS::PropertyID::BorderRightColor, CSS::PropertyID::BorderRightStyle);
     do_border_style(computed_values.border_bottom(), CSS::PropertyID::BorderBottomWidth, CSS::PropertyID::BorderBottomColor, CSS::PropertyID::BorderBottomStyle);
+
+    if (auto fill = specified_style.property(CSS::PropertyID::Fill); fill.has_value())
+        computed_values.set_fill(fill.value()->to_color(document()));
+    if (auto stroke = specified_style.property(CSS::PropertyID::Stroke); stroke.has_value())
+        computed_values.set_stroke(stroke.value()->to_color(document()));
+    if (auto stroke_width = specified_style.property(CSS::PropertyID::StrokeWidth); stroke_width.has_value()) {
+        // FIXME: Converting to pixels isn't really correct - values should be in "user units"
+        //        https://svgwg.org/svg2-draft/coords.html#TermUserUnits
+        if (stroke_width.value()->is_numeric())
+            computed_values.set_stroke_width(CSS::Length::make_px(static_cast<CSS::NumericStyleValue const&>(*stroke_width.value()).value()));
+        else
+            computed_values.set_stroke_width(stroke_width.value()->to_length());
+    }
 }
 
 void Node::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned)

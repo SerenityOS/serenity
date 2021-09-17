@@ -112,18 +112,16 @@ BigInt* parse_temporal_instant(GlobalObject& global_object, String const& iso_st
     // 1. Assert: Type(isoString) is String.
 
     // 2. Let result be ? ParseTemporalInstantString(isoString).
-    auto result = parse_temporal_instant_string(global_object, iso_string);
-    if (vm.exception())
-        return {};
+    auto result = TRY_OR_DISCARD(parse_temporal_instant_string(global_object, iso_string));
 
     // 3. Let offsetString be result.[[TimeZoneOffsetString]].
-    auto& offset_string = result->time_zone_offset;
+    auto& offset_string = result.time_zone_offset;
 
     // 4. Assert: offsetString is not undefined.
     VERIFY(offset_string.has_value());
 
     // 5. Let utc be ? GetEpochFromISOParts(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
-    auto* utc = get_epoch_from_iso_parts(global_object, result->year, result->month, result->day, result->hour, result->minute, result->second, result->millisecond, result->microsecond, result->nanosecond);
+    auto* utc = get_epoch_from_iso_parts(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond);
     if (vm.exception())
         return {};
 

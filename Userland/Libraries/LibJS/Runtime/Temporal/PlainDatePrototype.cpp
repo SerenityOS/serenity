@@ -317,9 +317,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_plain_year_month)
         return {};
 
     // 5. Let fields be ? PrepareTemporalFields(temporalDate, fieldNames, «»).
-    auto* fields = prepare_temporal_fields(global_object, *temporal_date, field_names, {});
-    if (vm.exception())
-        return {};
+    auto* fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, *temporal_date, field_names, {}));
 
     // 6. Return ? YearMonthFromFields(calendar, fields).
     return year_month_from_fields(global_object, calendar, *fields);
@@ -343,9 +341,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_plain_month_day)
         return {};
 
     // 5. Let fields be ? PrepareTemporalFields(temporalDate, fieldNames, «»).
-    auto* fields = prepare_temporal_fields(global_object, *temporal_date, field_names, {});
-    if (vm.exception())
-        return {};
+    auto* fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, *temporal_date, field_names, {}));
 
     // 6. Return ? MonthDayFromFields(calendar, fields).
     return month_day_from_fields(global_object, calendar, *fields);
@@ -456,17 +452,13 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_string)
         return {};
 
     // 3. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(0)));
 
     // 4. Let showCalendar be ? ToShowCalendarOption(options).
-    auto show_calendar = to_show_calendar_option(global_object, *options);
-    if (vm.exception())
-        return {};
+    auto show_calendar = TRY_OR_DISCARD(to_show_calendar_option(global_object, *options));
 
     // 5. Return ? TemporalDateToString(temporalDate, showCalendar).
-    auto string = temporal_date_to_string(global_object, *temporal_date, *show_calendar);
+    auto string = temporal_date_to_string(global_object, *temporal_date, show_calendar);
     if (vm.exception())
         return {};
 

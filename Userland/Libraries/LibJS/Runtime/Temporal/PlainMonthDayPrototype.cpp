@@ -124,17 +124,13 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_string)
         return {};
 
     // 3. Set options to ? GetOptionsObject(options).
-    auto* options = get_options_object(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(0)));
 
     // 4. Let showCalendar be ? ToShowCalendarOption(options).
-    auto show_calendar = to_show_calendar_option(global_object, *options);
-    if (vm.exception())
-        return {};
+    auto show_calendar = TRY_OR_DISCARD(to_show_calendar_option(global_object, *options));
 
     // 5. Return ? TemporalMonthDayToString(monthDay, showCalendar).
-    return js_string(vm, TRY_OR_DISCARD(temporal_month_day_to_string(global_object, *month_day, *show_calendar)));
+    return js_string(vm, TRY_OR_DISCARD(temporal_month_day_to_string(global_object, *month_day, show_calendar)));
 }
 
 // 10.3.9 Temporal.PlainMonthDay.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.tolocalestring

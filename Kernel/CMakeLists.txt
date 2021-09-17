@@ -42,12 +42,13 @@ set(KERNEL_SOURCES
     Bus/VirtIO/RNG.cpp
     CMOS.cpp
     CommandLine.cpp
-    ConsoleDevice.cpp
     Coredump.cpp
     Devices/AsyncDeviceRequest.cpp
     Devices/BlockDevice.cpp
     Devices/CharacterDevice.cpp
+    Devices/ConsoleDevice.cpp
     Devices/Device.cpp
+    Devices/DeviceManagement.cpp
     Devices/FullDevice.cpp
     Devices/KCOVDevice.cpp
     Devices/KCOVInstance.cpp

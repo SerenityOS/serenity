@@ -5,6 +5,7 @@
  */
 
 #include <AK/Memory.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/FullDevice.h>
 #include <Kernel/Sections.h>
 #include <LibC/errno_numbers.h>
@@ -13,7 +14,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<FullDevice> FullDevice::must_create()
 {
-    auto full_device_or_error = try_create_device<FullDevice>();
+    auto full_device_or_error = DeviceManagement::try_create_device<FullDevice>();
     // FIXME: Find a way to propagate errors
     VERIFY(!full_device_or_error.is_error());
     return full_device_or_error.release_value();

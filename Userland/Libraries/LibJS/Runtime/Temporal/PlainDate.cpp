@@ -122,18 +122,14 @@ PlainDate* to_temporal_date(GlobalObject& global_object, Value item, Object* opt
             return {};
 
         // f. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
-        auto* fields = prepare_temporal_fields(global_object, item_object, field_names, {});
-        if (vm.exception())
-            return {};
+        auto* fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, item_object, field_names, {}));
 
         // g. Return ? DateFromFields(calendar, fields, options).
         return date_from_fields(global_object, *calendar, *fields, *options);
     }
 
     // 4. Perform ? ToTemporalOverflow(options).
-    (void)to_temporal_overflow(global_object, *options);
-    if (vm.exception())
-        return {};
+    (void)TRY_OR_DISCARD(to_temporal_overflow(global_object, *options));
 
     // 5. Let string be ? ToString(item).
     auto string = item.to_string(global_object);
@@ -141,20 +137,18 @@ PlainDate* to_temporal_date(GlobalObject& global_object, Value item, Object* opt
         return {};
 
     // 6. Let result be ? ParseTemporalDateString(string).
-    auto result = parse_temporal_date_string(global_object, string);
-    if (vm.exception())
-        return {};
+    auto result = TRY_OR_DISCARD(parse_temporal_date_string(global_object, string));
 
     // 7. Assert: ! IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
-    VERIFY(is_valid_iso_date(result->year, result->month, result->day));
+    VERIFY(is_valid_iso_date(result.year, result.month, result.day));
 
     // 8. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
-    auto calendar = to_temporal_calendar_with_iso_default(global_object, result->calendar.has_value() ? js_string(vm, *result->calendar) : js_undefined());
+    auto calendar = to_temporal_calendar_with_iso_default(global_object, result.calendar.has_value() ? js_string(vm, *result.calendar) : js_undefined());
     if (vm.exception())
         return {};
 
     // 9. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
-    return create_temporal_date(global_object, result->year, result->month, result->day, *calendar);
+    return create_temporal_date(global_object, result.year, result.month, result.day, *calendar);
 }
 
 // 3.5.4 RegulateISODate ( year, month, day, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulateisodate
