@@ -164,11 +164,14 @@ RefPtr<StyleValue> property_initial_value(PropertyID property_id)
         ParsingContext parsing_context;
 )~~~");
 
-    properties.for_each_member([&](auto& name, auto& value) {
-        VERIFY(value.is_object());
+    // NOTE: Parsing a shorthand property requires that its longhands are already available here.
+    //       So, we do this in two passes: First longhands, then shorthands.
+    //       Probably we should build a dependency graph and then handle them in order, but this
+    //       works for now! :^)
 
-        if (value.as_object().has("initial")) {
-            auto& initial_value = value.as_object().get("initial");
+    auto output_initial_value_code = [&](auto& name, auto& object) {
+        if (object.has("initial")) {
+            auto& initial_value = object.get("initial");
             VERIFY(initial_value.is_string());
             auto initial_value_string = initial_value.as_string();
 
@@ -180,11 +183,31 @@ RefPtr<StyleValue> property_initial_value(PropertyID property_id)
             initial_values.set(PropertyID::@name:titlecase@, parsed_value.release_nonnull());
 )~~~");
         }
+    };
+
+    properties.for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+        if (value.as_object().has("longhands"))
+            return;
+        output_initial_value_code(name, value.as_object());
+    });
+
+    properties.for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+        if (!value.as_object().has("longhands"))
+            return;
+        output_initial_value_code(name, value.as_object());
     });
 
     generator.append(R"~~~(
     }
-    return initial_values.get(property_id).value_or(nullptr);
+
+    auto maybe_value = initial_values.get(property_id);
+    if (!maybe_value.has_value()) {
+        dbgln("No initial value found for '{}' property!", string_from_property_id(property_id));
+        return nullptr;
+    }
+    return maybe_value.value();
 }
 
 bool property_has_quirk(PropertyID property_id, Quirk quirk)
