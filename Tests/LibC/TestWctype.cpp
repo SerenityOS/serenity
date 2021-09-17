@@ -66,3 +66,20 @@ TEST_CASE(iswctype)
         EXPECT(iswctype(test_chars[i], -1) == 0);
     }
 }
+
+TEST_CASE(towctrans)
+{
+    const wint_t test_chars[] = { L'A', L'a', L'F', L'f', L'Z', L'z', L'0', L'\n', L'.', L'\x00' };
+
+    // Test that valid mappings are wired to the correct implementation.
+    for (unsigned int i = 0; i < sizeof(test_chars) / sizeof(test_chars[0]); i++) {
+        EXPECT(towctrans(test_chars[i], wctrans("tolower")) == towlower(test_chars[i]));
+        EXPECT(towctrans(test_chars[i], wctrans("toupper")) == towupper(test_chars[i]));
+    }
+
+    // Test that invalid mappings always return the character unchanged.
+    for (unsigned int i = 0; i < sizeof(test_chars) / sizeof(test_chars[0]); i++) {
+        EXPECT(towctrans(test_chars[i], 0) == test_chars[i]);
+        EXPECT(towctrans(test_chars[i], -1) == test_chars[i]);
+    }
+}
