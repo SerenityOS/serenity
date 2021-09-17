@@ -22,6 +22,7 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Toolbar.h>
+#include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 
 namespace PixelPaint {
@@ -61,16 +62,16 @@ MainWidget::MainWidget()
     };
 
     m_tab_widget->on_tab_close_click = [&](auto& widget) {
-        auto& image_editor = verify_cast<PixelPaint::ImageEditor>(widget);
-
-        if (m_tab_widget->children().size() == 1) {
-            m_layer_list_widget->set_image(nullptr);
-            m_layer_properties_widget->set_layer(nullptr);
+        if (request_close()) {
+            auto& image_editor = verify_cast<PixelPaint::ImageEditor>(widget);
+            m_tab_widget->deferred_invoke([&] {
+                m_tab_widget->remove_tab(image_editor);
+                if (m_tab_widget->children().size() == 1) {
+                    m_layer_list_widget->set_image(nullptr);
+                    m_layer_properties_widget->set_layer(nullptr);
+                }
+            });
         }
-
-        m_tab_widget->deferred_invoke([&] {
-            m_tab_widget->remove_tab(image_editor);
-        });
     };
 
     m_tab_widget->on_change = [&](auto& widget) {
@@ -173,8 +174,9 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                     return;
                 m_tab_widget->on_tab_close_click(*active_widget);
             }));
-    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        GUI::Application::the()->quit();
+    file_menu.add_action(GUI::CommonActions::make_quit_action([this](auto&) {
+        if (request_close())
+            GUI::Application::the()->quit();
     }));
 
     auto& edit_menu = window.add_menu("&Edit");
@@ -746,6 +748,24 @@ void MainWidget::create_default_image()
 
     auto& editor = create_new_editor(*image);
     editor.set_active_layer(bg_layer);
+}
+
+bool MainWidget::request_close()
+{
+    if (m_tab_widget->children().is_empty())
+        return true;
+
+    auto result = GUI::MessageBox::show(window(), "Save before closing?", "Save changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+
+    if (result == GUI::MessageBox::ExecYes) {
+        m_save_image_as_action->activate();
+        return true;
+    }
+
+    if (result == GUI::MessageBox::ExecNo)
+        return true;
+
+    return false;
 }
 
 ImageEditor* MainWidget::current_image_editor()

@@ -68,7 +68,14 @@ int main(int argc, char** argv)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto& main_widget = window->set_main_widget<PixelPaint::MainWidget>();
+
     main_widget.initialize_menubar(*window);
+
+    window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
+        if (main_widget.request_close())
+            return GUI::Window::CloseRequestDecision::Close;
+        return GUI::Window::CloseRequestDecision::StayOpen;
+    };
 
     auto& statusbar = *main_widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
