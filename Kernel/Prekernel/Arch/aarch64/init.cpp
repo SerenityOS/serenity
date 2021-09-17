@@ -18,3 +18,16 @@ extern "C" [[noreturn]] void init()
 // FIXME: Share this with the Intel Prekernel.
 extern size_t __stack_chk_guard;
 size_t __stack_chk_guard;
+extern "C" [[noreturn]] void __stack_chk_fail();
+
+[[noreturn]] static void halt()
+{
+    for (;;) {
+        asm volatile("wfi");
+    }
+}
+
+void __stack_chk_fail()
+{
+    halt();
+}
