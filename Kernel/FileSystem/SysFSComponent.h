@@ -30,6 +30,8 @@ public:
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
     virtual RefPtr<SysFSComponent> lookup(StringView) { VERIFY_NOT_REACHED(); };
     virtual mode_t permissions() const;
+    virtual KResult truncate(u64) { return EPERM; }
+    virtual KResult set_mtime(time_t) { return ENOTIMPL; }
     virtual KResultOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) { return EROFS; }
     virtual KResult refresh_data(OpenFileDescription&) const { return KSuccess; }
 

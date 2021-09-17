@@ -182,9 +182,14 @@ KResult SysFSInode::chown(UserID, GroupID)
     return EPERM;
 }
 
-KResult SysFSInode::truncate(u64)
+KResult SysFSInode::set_mtime(time_t time)
 {
-    return EPERM;
+    return m_associated_component->set_mtime(time);
+}
+
+KResult SysFSInode::truncate(u64 size)
+{
+    return m_associated_component->truncate(size);
 }
 
 KResultOr<NonnullRefPtr<SysFSDirectoryInode>> SysFSDirectoryInode::try_create(SysFS const& sysfs, SysFSComponent const& component)
