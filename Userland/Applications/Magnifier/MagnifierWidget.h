@@ -14,6 +14,7 @@ class MagnifierWidget final : public GUI::Frame {
 public:
     virtual ~MagnifierWidget();
     void set_scale_factor(int scale_factor);
+    void pause_capture(bool pause) { m_pause_capture = pause; }
 
 private:
     MagnifierWidget();
@@ -24,4 +25,5 @@ private:
 
     int m_scale_factor { 2 };
     RefPtr<Gfx::Bitmap> m_grabbed_bitmap;
+    bool m_pause_capture { false };
 };
