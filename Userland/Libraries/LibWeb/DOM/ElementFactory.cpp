@@ -76,6 +76,7 @@
 #include <LibWeb/HTML/HTMLUListElement.h>
 #include <LibWeb/HTML/HTMLUnknownElement.h>
 #include <LibWeb/HTML/HTMLVideoElement.h>
+#include <LibWeb/SVG/SVGGElement.h>
 #include <LibWeb/SVG/SVGPathElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 #include <LibWeb/SVG/TagNames.h>
@@ -235,6 +236,8 @@ NonnullRefPtr<Element> create_element(Document& document, const FlyString& tag_n
         return adopt_ref(*new SVG::SVGSVGElement(document, move(qualified_name)));
     if (lowercase_tag_name == SVG::TagNames::path)
         return adopt_ref(*new SVG::SVGPathElement(document, move(qualified_name)));
+    if (lowercase_tag_name == SVG::TagNames::g)
+        return adopt_ref(*new SVG::SVGGElement(document, move(qualified_name)));
 
     // FIXME: If name is a valid custom element name, then return HTMLElement.
 

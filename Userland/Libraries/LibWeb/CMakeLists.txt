@@ -225,6 +225,7 @@ set(SOURCES
     RequestIdleCallback/IdleDeadline.cpp
     SVG/AttributeNames.cpp
     SVG/SVGElement.cpp
+    SVG/SVGGElement.cpp
     SVG/SVGGeometryElement.cpp
     SVG/SVGGraphicsElement.cpp
     SVG/SVGPathElement.cpp

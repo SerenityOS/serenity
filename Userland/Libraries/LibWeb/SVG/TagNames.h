@@ -11,6 +11,7 @@
 namespace Web::SVG::TagNames {
 
 #define ENUMERATE_SVG_GRAPHICS_TAGS \
+    __ENUMERATE_SVG_TAG(g)          \
     __ENUMERATE_SVG_TAG(path)       \
     __ENUMERATE_SVG_TAG(svg)
 
