@@ -66,9 +66,13 @@ void AbbreviationsMap::populate_map()
     }
 }
 
-Optional<AbbreviationsMap::AbbreviationEntry> AbbreviationsMap::get(u32 code) const
+AbbreviationsMap::AbbreviationEntry const* AbbreviationsMap::get(u32 code) const
 {
-    return m_entries.get(code);
+    auto it = m_entries.find(code);
+    if (it == m_entries.end()) {
+        return nullptr;
+    }
+    return &it->value;
 }
 
 }
