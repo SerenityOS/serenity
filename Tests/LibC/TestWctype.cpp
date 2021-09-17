@@ -39,3 +39,30 @@ TEST_CASE(wctrans)
     EXPECT(wctrans("") == 0);
     EXPECT(wctrans("abc") == 0);
 }
+
+TEST_CASE(iswctype)
+{
+    const wint_t test_chars[] = { L'A', L'a', L'F', L'f', L'Z', L'z', L'0', L'\n', L'.', L'\x00' };
+
+    // Test that valid properties are wired to the correct implementation.
+    for (unsigned int i = 0; i < sizeof(test_chars) / sizeof(test_chars[0]); i++) {
+        EXPECT(iswctype(test_chars[i], wctype("alnum")) == iswalnum(test_chars[i]));
+        EXPECT(iswctype(test_chars[i], wctype("alpha")) == iswalpha(test_chars[i]));
+        EXPECT(iswctype(test_chars[i], wctype("blank")) == iswblank(test_chars[i]));
+        EXPECT(iswctype(test_chars[i], wctype("cntrl")) == iswcntrl(test_chars[i]));
+        EXPECT(iswctype(test_chars[i], wctype("digit")) == iswdigit(test_chars[i]));
+        EXPECT(iswctype(test_chars[i], wctype("graph")) == iswgraph(test_chars[i]));
+        EXPECT(iswctype(test_chars[i], wctype("lower")) == iswlower(test_chars[i]));
+        EXPECT(iswctype(test_chars[i], wctype("print")) == iswprint(test_chars[i]));
+        EXPECT(iswctype(test_chars[i], wctype("punct")) == iswpunct(test_chars[i]));
+        EXPECT(iswctype(test_chars[i], wctype("space")) == iswspace(test_chars[i]));
+        EXPECT(iswctype(test_chars[i], wctype("upper")) == iswupper(test_chars[i]));
+        EXPECT(iswctype(test_chars[i], wctype("xdigit")) == iswxdigit(test_chars[i]));
+    }
+
+    // Test that invalid properties always return zero.
+    for (unsigned int i = 0; i < sizeof(test_chars) / sizeof(test_chars[0]); i++) {
+        EXPECT(iswctype(test_chars[i], 0) == 0);
+        EXPECT(iswctype(test_chars[i], -1) == 0);
+    }
+}
