@@ -56,23 +56,38 @@ int main(int argc, char** argv)
     auto size_action_group = make<GUI::ActionGroup>();
 
     auto two_x_action = GUI::Action::create_checkable(
-        "&2x", [&](auto&) {
+        "&2x", { Key_2 }, [&](auto&) {
             magnifier.set_scale_factor(2);
         });
 
     auto four_x_action = GUI::Action::create_checkable(
-        "&4x", [&](auto&) {
+        "&4x", { Key_4 }, [&](auto&) {
             magnifier.set_scale_factor(4);
+        });
+
+    auto eight_x_action = GUI::Action::create_checkable(
+        "&8x", { Key_8 }, [&](auto&) {
+            magnifier.set_scale_factor(8);
+        });
+
+    auto pause_action = GUI::Action::create_checkable(
+        "&Pause Capture", { Key_Space }, [&](auto& action) {
+            magnifier.pause_capture(action.is_checked());
         });
 
     size_action_group->add_action(two_x_action);
     size_action_group->add_action(four_x_action);
+    size_action_group->add_action(eight_x_action);
     size_action_group->set_exclusive(true);
 
     auto& view_menu = window->add_menu("&View");
     view_menu.add_action(two_x_action);
     view_menu.add_action(four_x_action);
+    view_menu.add_action(eight_x_action);
     two_x_action->set_checked(true);
+
+    view_menu.add_separator();
+    view_menu.add_action(pause_action);
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Magnifier", app_icon, window));
