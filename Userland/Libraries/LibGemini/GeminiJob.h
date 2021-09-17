@@ -27,9 +27,12 @@ public:
     {
     }
 
-    virtual void start() override;
+    virtual void start(NonnullRefPtr<Core::Socket>) override;
     virtual void shutdown() override;
     void set_certificate(String certificate, String key);
+
+    Core::Socket const* socket() const { return m_socket; }
+    URL url() const { return m_request.url(); }
 
     Function<void(GeminiJob&)> on_certificate_requested;
 

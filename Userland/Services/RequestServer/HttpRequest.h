@@ -20,6 +20,7 @@ public:
     static NonnullOwnPtr<HttpRequest> create_with_job(Badge<HttpProtocol>&&, ClientConnection&, NonnullRefPtr<HTTP::HttpJob>, NonnullOwnPtr<OutputFileStream>&&);
 
     HTTP::HttpJob& job() { return m_job; }
+    HTTP::HttpJob const& job() const { return m_job; }
 
 private:
     explicit HttpRequest(ClientConnection&, NonnullRefPtr<HTTP::HttpJob>, NonnullOwnPtr<OutputFileStream>&&);

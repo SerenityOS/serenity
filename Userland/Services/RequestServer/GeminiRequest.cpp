@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "ConnectionCache.h"
+#include <LibCore/EventLoop.h>
 #include <LibGemini/GeminiJob.h>
 #include <LibGemini/GeminiResponse.h>
 #include <RequestServer/GeminiRequest.h>
@@ -15,6 +17,9 @@ GeminiRequest::GeminiRequest(ClientConnection& client, NonnullRefPtr<Gemini::Gem
     , m_job(job)
 {
     m_job->on_finish = [this](bool success) {
+        Core::deferred_invoke([url = m_job->url(), socket = m_job->socket()] {
+            ConnectionCache::request_did_finish(url, socket);
+        });
         if (auto* response = m_job->response()) {
             set_downloaded_size(this->output_stream().size());
             if (!response->meta().is_empty()) {

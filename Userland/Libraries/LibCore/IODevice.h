@@ -82,6 +82,7 @@ public:
     bool can_read_line() const;
 
     bool can_read() const;
+    bool can_read_only_from_buffer() const { return !m_buffered_data.is_empty() && !can_read_from_fd(); }
 
     bool seek(i64, SeekMode = SeekMode::SetPosition, off_t* = nullptr);
 
