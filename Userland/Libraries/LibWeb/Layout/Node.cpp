@@ -321,8 +321,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (auto list_style_type = specified_style.list_style_type(); list_style_type.has_value())
         computed_values.set_list_style_type(list_style_type.value());
 
-    computed_values.set_color(specified_style.color_or_fallback(CSS::PropertyID::Color, *this, Color::Black));
-    computed_values.set_background_color(specified_style.color_or_fallback(CSS::PropertyID::BackgroundColor, *this, Color::Transparent));
+    computed_values.set_color(specified_style.color_or_fallback(CSS::PropertyID::Color, *this, CSS::InitialValues::color()));
+    computed_values.set_background_color(specified_style.color_or_fallback(CSS::PropertyID::BackgroundColor, *this, CSS::InitialValues::background_color()));
 
     computed_values.set_z_index(specified_style.z_index());
     computed_values.set_opacity(specified_style.opacity());
@@ -348,7 +348,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     computed_values.set_box_shadow(specified_style.box_shadow());
 
     auto do_border_style = [&](CSS::BorderData& border, CSS::PropertyID width_property, CSS::PropertyID color_property, CSS::PropertyID style_property) {
-        border.color = specified_style.color_or_fallback(color_property, *this, Color::Transparent);
+        // FIXME: The default border color value is `currentcolor`, but since we can't resolve that easily,
+        //        we just manually grab the value from `color`. This makes it dependent on `color` being
+        //        specified first, so it's far from ideal.
+        border.color = specified_style.color_or_fallback(color_property, *this, computed_values.color());
         border.line_style = specified_style.line_style(style_property).value_or(CSS::LineStyle::None);
         if (border.line_style == CSS::LineStyle::None)
             border.width = 0;
