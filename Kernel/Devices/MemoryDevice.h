@@ -15,16 +15,17 @@ namespace Kernel {
 
 class MemoryDevice final : public CharacterDevice {
     AK_MAKE_ETERNAL
+    friend class DeviceManagement;
+
 public:
     static NonnullRefPtr<MemoryDevice> must_create();
     ~MemoryDevice();
 
     virtual KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
 
-    // FIXME: We expose this constructor to make try_create_device helper to work
+private:
     MemoryDevice();
 
-private:
     virtual StringView class_name() const override { return "MemoryDevice"; }
     virtual bool can_read(const OpenFileDescription&, size_t) const override { return true; }
     virtual bool can_write(const OpenFileDescription&, size_t) const override { return false; }

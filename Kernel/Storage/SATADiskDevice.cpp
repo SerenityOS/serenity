@@ -5,6 +5,7 @@
  */
 
 #include <AK/StringView.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Storage/AHCIController.h>
 #include <Kernel/Storage/IDEChannel.h>
@@ -14,7 +15,7 @@ namespace Kernel {
 
 NonnullRefPtr<SATADiskDevice> SATADiskDevice::create(const AHCIController& controller, const AHCIPort& port, size_t sector_size, u64 max_addressable_block)
 {
-    auto device_or_error = try_create_device<SATADiskDevice>(controller, port, sector_size, max_addressable_block);
+    auto device_or_error = DeviceManagement::try_create_device<SATADiskDevice>(controller, port, sector_size, max_addressable_block);
     // FIXME: Find a way to propagate errors
     VERIFY(!device_or_error.is_error());
     return device_or_error.release_value();

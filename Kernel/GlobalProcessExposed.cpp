@@ -11,7 +11,8 @@
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/CommandLine.h>
-#include <Kernel/ConsoleDevice.h>
+#include <Kernel/Devices/ConsoleDevice.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
@@ -558,8 +559,9 @@ private:
     ProcFSDmesg();
     virtual KResult try_generate(KBufferBuilder& builder) override
     {
+        VERIFY(DeviceManagement::the().is_console_device_attached());
         InterruptDisabler disabler;
-        for (char ch : ConsoleDevice::the().logbuffer()) {
+        for (char ch : DeviceManagement::the().console_device().logbuffer()) {
             TRY(builder.append(ch));
         }
         return KSuccess;
@@ -640,7 +642,7 @@ private:
     virtual KResult try_generate(KBufferBuilder& builder) override
     {
         JsonArraySerializer array { builder };
-        Device::for_each([&array](auto& device) {
+        DeviceManagement::the().for_each([&array](auto& device) {
             auto obj = array.add_object();
             obj.add("major", device.major());
             obj.add("minor", device.minor());

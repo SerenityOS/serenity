@@ -9,6 +9,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/kmalloc.h>
@@ -103,7 +104,7 @@ void VirtualConsole::set_graphical(bool graphical)
 
 UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create(size_t index)
 {
-    auto virtual_console_or_error = try_create_device<VirtualConsole>(index);
+    auto virtual_console_or_error = DeviceManagement::try_create_device<VirtualConsole>(index);
     // FIXME: Find a way to propagate errors
     VERIFY(!virtual_console_or_error.is_error());
     return virtual_console_or_error.release_value();
@@ -111,7 +112,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create(size_t ind
 
 UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create_with_preset_log(size_t index, const CircularQueue<char, 16384>& log)
 {
-    auto virtual_console_or_error = try_create_device<VirtualConsole>(index, log);
+    auto virtual_console_or_error = DeviceManagement::try_create_device<VirtualConsole>(index, log);
     // FIXME: Find a way to propagate errors
     VERIFY(!virtual_console_or_error.is_error());
     return virtual_console_or_error.release_value();

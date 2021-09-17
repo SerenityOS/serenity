@@ -5,22 +5,18 @@
  */
 
 #include <AK/Singleton.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
 
-static Singleton<NullDevice> s_the;
-
-UNMAP_AFTER_INIT void NullDevice::initialize()
+UNMAP_AFTER_INIT NonnullRefPtr<NullDevice> NullDevice::must_initialize()
 {
-    s_the.ensure_instance();
-    s_the->after_inserting();
-}
-
-NullDevice& NullDevice::the()
-{
-    return *s_the;
+    auto null_device_or_error = DeviceManagement::try_create_device<NullDevice>();
+    // FIXME: Find a way to propagate errors
+    VERIFY(!null_device_or_error.is_error());
+    return null_device_or_error.release_value();
 }
 
 UNMAP_AFTER_INIT NullDevice::NullDevice()

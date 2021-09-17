@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
@@ -12,7 +13,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<RandomDevice> RandomDevice::must_create()
 {
-    auto random_device_or_error = try_create_device<RandomDevice>();
+    auto random_device_or_error = DeviceManagement::try_create_device<RandomDevice>();
     // FIXME: Find a way to propagate errors
     VERIFY(!random_device_or_error.is_error());
     return random_device_or_error.release_value();

@@ -68,21 +68,17 @@ String default_time_zone()
 // 11.6.1 ParseTemporalTimeZone ( string ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezone
 ThrowCompletionOr<String> parse_temporal_time_zone(GlobalObject& global_object, String const& string)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: Type(string) is String.
 
     // 2. Let result be ? ParseTemporalTimeZoneString(string).
-    auto result = parse_temporal_time_zone_string(global_object, string);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto result = TRY(parse_temporal_time_zone_string(global_object, string));
 
     // 3. If result.[[Z]] is not undefined, return "UTC".
-    if (result->z)
+    if (result.z)
         return String { "UTC" };
 
     // 4. Return result.[[Name]].
-    return *result->name;
+    return *result.name;
 }
 
 // 11.6.2 CreateTemporalTimeZone ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaltimezone

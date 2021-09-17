@@ -30,6 +30,7 @@ public:
     static CSS::FlexDirection flex_direction() { return CSS::FlexDirection::Row; }
     static CSS::FlexWrap flex_wrap() { return CSS::FlexWrap::Nowrap; }
     static CSS::JustifyContent justify_content() { return CSS::JustifyContent::FlexStart; }
+    static CSS::AlignItems align_items() { return CSS::AlignItems::FlexStart; }
     static CSS::Overflow overflow() { return CSS::Overflow::Visible; }
 };
 
@@ -104,6 +105,10 @@ public:
 
     CSS::ListStyleType list_style_type() const { return m_inherited.list_style_type; }
 
+    Optional<Color> fill() const { return m_inherited.fill; }
+    Optional<Color> stroke() const { return m_inherited.stroke; }
+    Optional<Length> stroke_width() const { return m_inherited.stroke_width; }
+
     ComputedValues clone_inherited_values() const
     {
         ComputedValues clone;
@@ -119,6 +124,10 @@ protected:
         CSS::TextTransform text_transform { InitialValues::text_transform() };
         CSS::WhiteSpace white_space { InitialValues::white_space() };
         CSS::ListStyleType list_style_type { InitialValues::list_style_type() };
+
+        Optional<Color> fill;
+        Optional<Color> stroke;
+        Optional<Length> stroke_width;
     } m_inherited;
 
     struct {
@@ -153,7 +162,7 @@ protected:
         CSS::FlexBasisData flex_basis {};
         Optional<float> flex_grow_factor;
         Optional<float> flex_shrink_factor;
-        CSS::AlignItems align_items;
+        CSS::AlignItems align_items { InitialValues::align_items() };
         CSS::JustifyContent justify_content { InitialValues::justify_content() };
         CSS::Overflow overflow_x { InitialValues::overflow() };
         CSS::Overflow overflow_y { InitialValues::overflow() };
@@ -210,6 +219,10 @@ public:
     void set_opacity(Optional<float> value) { m_noninherited.opacity = value; }
     void set_justify_content(CSS::JustifyContent value) { m_noninherited.justify_content = value; }
     void set_box_shadow(Optional<BoxShadowData> value) { m_noninherited.box_shadow = move(value); }
+
+    void set_fill(Color value) { m_inherited.fill = value; }
+    void set_stroke(Color value) { m_inherited.stroke = value; }
+    void set_stroke_width(Length value) { m_inherited.stroke_width = value; }
 };
 
 }

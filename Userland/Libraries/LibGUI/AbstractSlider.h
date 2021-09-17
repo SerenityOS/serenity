@@ -26,6 +26,9 @@ public:
     int page_step() const { return m_page_step; }
     bool jump_to_cursor() const { return m_jump_to_cursor; }
 
+    bool is_min() const { return m_value == m_min; }
+    bool is_max() const { return m_value == m_max; }
+
     void set_range(int min, int max);
     virtual void set_value(int);
 

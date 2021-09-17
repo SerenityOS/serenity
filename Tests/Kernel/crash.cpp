@@ -42,6 +42,7 @@ int main(int argc, char** argv)
     bool do_invalid_stack_pointer_on_syscall = false;
     bool do_invalid_stack_pointer_on_page_fault = false;
     bool do_syscall_from_writeable_memory = false;
+    bool do_legitimate_syscall = false;
     bool do_execute_non_executable_memory = false;
     bool do_trigger_user_mode_instruction_prevention = false;
     bool do_use_io_instruction = false;
@@ -54,7 +55,7 @@ int main(int argc, char** argv)
     args_parser.set_general_help(
         "Exercise error-handling paths of the execution environment "
         "(i.e., Kernel or UE) by crashing in many different ways.");
-    args_parser.add_option(do_all_crash_types, "Test that all of the following crash types crash as expected", nullptr, 'A');
+    args_parser.add_option(do_all_crash_types, "Test that all (except -U) of the following crash types crash as expected (default behavior)", nullptr, 'A');
     args_parser.add_option(do_segmentation_violation, "Perform a segmentation violation by dereferencing an invalid pointer", nullptr, 's');
     args_parser.add_option(do_division_by_zero, "Perform a division by zero", nullptr, 'd');
     args_parser.add_option(do_illegal_instruction, "Execute an illegal CPU instruction", nullptr, 'i');
@@ -67,15 +68,18 @@ int main(int argc, char** argv)
     args_parser.add_option(do_invalid_stack_pointer_on_syscall, "Make a syscall while using an invalid stack pointer", nullptr, 'T');
     args_parser.add_option(do_invalid_stack_pointer_on_page_fault, "Trigger a page fault while using an invalid stack pointer", nullptr, 't');
     args_parser.add_option(do_syscall_from_writeable_memory, "Make a syscall from writeable memory", nullptr, 'S');
+    args_parser.add_option(do_legitimate_syscall, "Make a syscall from legitimate memory (but outside msyscall)", nullptr, 'y');
     args_parser.add_option(do_execute_non_executable_memory, "Attempt to execute non-executable memory (not mapped with PROT_EXEC)", nullptr, 'X');
-    args_parser.add_option(do_trigger_user_mode_instruction_prevention, "Attempt to trigger an x86 User Mode Instruction Prevention fault", nullptr, 'U');
+    args_parser.add_option(do_trigger_user_mode_instruction_prevention, "Attempt to trigger an x86 User Mode Instruction Prevention fault. WARNING: This test runs only when invoked manually, see #10042.", nullptr, 'U');
     args_parser.add_option(do_use_io_instruction, "Use an x86 I/O instruction in userspace", nullptr, 'I');
     args_parser.add_option(do_read_cpu_counter, "Read the x86 TSC (Time Stamp Counter) directly", nullptr, 'c');
     args_parser.add_option(do_pledge_violation, "Violate pledge()'d promises", nullptr, 'p');
     args_parser.add_option(do_failing_assertion, "Perform a failing assertion", nullptr, 'n');
     args_parser.add_option(do_deref_null_refptr, "Dereference a null RefPtr", nullptr, 'R');
 
-    if (argc != 2) {
+    if (argc == 1) {
+        do_all_crash_types = true;
+    } else if (argc != 2) {
         args_parser.print_usage(stderr, argv[0]);
         exit(1);
     }
@@ -84,9 +88,10 @@ int main(int argc, char** argv)
 
     Crash::RunType run_type = do_all_crash_types ? Crash::RunType::UsingChildProcess
                                                  : Crash::RunType::UsingCurrentProcess;
+    bool any_failures = false;
 
     if (do_segmentation_violation || do_all_crash_types) {
-        Crash("Segmentation violation", []() {
+        any_failures |= !Crash("Segmentation violation", []() {
             volatile int* crashme = nullptr;
             *crashme = 0xbeef;
             return Crash::Failure::DidNotCrash;
@@ -94,7 +99,7 @@ int main(int argc, char** argv)
     }
 
     if (do_division_by_zero || do_all_crash_types) {
-        Crash("Division by zero", []() {
+        any_failures |= !Crash("Division by zero", []() {
             volatile int lala = 10;
             volatile int zero = 0;
             [[maybe_unused]] volatile int test = lala / zero;
@@ -103,21 +108,21 @@ int main(int argc, char** argv)
     }
 
     if (do_illegal_instruction || do_all_crash_types) {
-        Crash("Illegal instruction", []() {
+        any_failures |= !Crash("Illegal instruction", []() {
             asm volatile("ud2");
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
 
     if (do_abort || do_all_crash_types) {
-        Crash("Abort", []() {
+        any_failures |= !Crash("Abort", []() {
             abort();
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
 
     if (do_read_from_uninitialized_malloc_memory || do_all_crash_types) {
-        Crash("Read from uninitialized malloc memory", []() {
+        any_failures |= !Crash("Read from uninitialized malloc memory", []() {
             auto* uninitialized_memory = (volatile u32**)malloc(1024);
             if (!uninitialized_memory)
                 return Crash::Failure::UnexpectedError;
@@ -128,7 +133,7 @@ int main(int argc, char** argv)
     }
 
     if (do_read_from_freed_memory || do_all_crash_types) {
-        Crash("Read from freed memory", []() {
+        any_failures |= !Crash("Read from freed memory", []() {
             auto* uninitialized_memory = (volatile u32**)malloc(1024);
             if (!uninitialized_memory)
                 return Crash::Failure::UnexpectedError;
@@ -140,7 +145,7 @@ int main(int argc, char** argv)
     }
 
     if (do_write_to_uninitialized_malloc_memory || do_all_crash_types) {
-        Crash("Write to uninitialized malloc memory", []() {
+        any_failures |= !Crash("Write to uninitialized malloc memory", []() {
             auto* uninitialized_memory = (volatile u32**)malloc(1024);
             if (!uninitialized_memory)
                 return Crash::Failure::UnexpectedError;
@@ -151,7 +156,7 @@ int main(int argc, char** argv)
     }
 
     if (do_write_to_freed_memory || do_all_crash_types) {
-        Crash("Write to freed memory", []() {
+        any_failures |= !Crash("Write to freed memory", []() {
             auto* uninitialized_memory = (volatile u32**)malloc(1024);
             if (!uninitialized_memory)
                 return Crash::Failure::UnexpectedError;
@@ -163,7 +168,7 @@ int main(int argc, char** argv)
     }
 
     if (do_write_to_read_only_memory || do_all_crash_types) {
-        Crash("Write to read only memory", []() {
+        any_failures |= !Crash("Write to read only memory", []() {
             auto* ptr = (u8*)mmap(nullptr, 4096, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, 0, 0);
             if (ptr == MAP_FAILED)
                 return Crash::Failure::UnexpectedError;
@@ -179,7 +184,7 @@ int main(int argc, char** argv)
     }
 
     if (do_invalid_stack_pointer_on_syscall || do_all_crash_types) {
-        Crash("Invalid stack pointer on syscall", []() {
+        any_failures |= !Crash("Invalid stack pointer on syscall", []() {
             u8* makeshift_stack = (u8*)mmap(nullptr, 0, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_STACK, 0, 0);
             if (!makeshift_stack)
                 return Crash::Failure::UnexpectedError;
@@ -201,7 +206,7 @@ int main(int argc, char** argv)
     }
 
     if (do_invalid_stack_pointer_on_page_fault || do_all_crash_types) {
-        Crash("Invalid stack pointer on page fault", []() {
+        any_failures |= !Crash("Invalid stack pointer on page fault", []() {
             u8* bad_stack = (u8*)mmap(nullptr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
             if (!bad_stack)
                 return Crash::Failure::UnexpectedError;
@@ -220,15 +225,23 @@ int main(int argc, char** argv)
     }
 
     if (do_syscall_from_writeable_memory || do_all_crash_types) {
-        Crash("Syscall from writable memory", []() {
+        any_failures |= !Crash("Syscall from writable memory", []() {
             u8 buffer[] = { 0xb8, Syscall::SC_getuid, 0, 0, 0, 0xcd, 0x82 };
             ((void (*)())buffer)();
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
 
+    if (do_legitimate_syscall || do_all_crash_types) {
+        any_failures |= !Crash("Regular syscall from outside msyscall", []() {
+            // Since 'crash' is dynamically linked, and DynamicLoader only allows LibSystem to make syscalls, this should kill us:
+            Syscall::invoke(Syscall::SC_getuid);
+            return Crash::Failure::DidNotCrash;
+        }).run(run_type);
+    }
+
     if (do_execute_non_executable_memory || do_all_crash_types) {
-        Crash("Execute non executable memory", []() {
+        any_failures |= !Crash("Execute non executable memory", []() {
             auto* ptr = (u8*)mmap(nullptr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
             if (ptr == MAP_FAILED)
                 return Crash::Failure::UnexpectedError;
@@ -240,15 +253,15 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (do_trigger_user_mode_instruction_prevention || do_all_crash_types) {
-        Crash("Trigger x86 User Mode Instruction Prevention", []() {
+    if (do_trigger_user_mode_instruction_prevention) {
+        any_failures |= !Crash("Trigger x86 User Mode Instruction Prevention", []() {
             asm volatile("str %eax");
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
 
     if (do_use_io_instruction || do_all_crash_types) {
-        Crash("Attempt to use an I/O instruction", [] {
+        any_failures |= !Crash("Attempt to use an I/O instruction", [] {
             u8 keyboard_status = IO::in8(0x64);
             outln("Keyboard status: {:#02x}", keyboard_status);
             return Crash::Failure::DidNotCrash;
@@ -256,14 +269,14 @@ int main(int argc, char** argv)
     }
 
     if (do_read_cpu_counter || do_all_crash_types) {
-        Crash("Read the CPU timestamp counter", [] {
+        any_failures |= !Crash("Read the CPU timestamp counter", [] {
             asm volatile("rdtsc");
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
 
     if (do_pledge_violation || do_all_crash_types) {
-        Crash("Violate pledge()'d promises", [] {
+        any_failures |= !Crash("Violate pledge()'d promises", [] {
             if (pledge("", nullptr) < 0) {
                 perror("pledge");
                 return Crash::Failure::DidNotCrash;
@@ -274,19 +287,19 @@ int main(int argc, char** argv)
     }
 
     if (do_failing_assertion || do_all_crash_types) {
-        Crash("Perform a failing assertion", [] {
+        any_failures |= !Crash("Perform a failing assertion", [] {
             VERIFY(1 == 2);
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
 
     if (do_deref_null_refptr || do_all_crash_types) {
-        Crash("Dereference a null RefPtr", [] {
+        any_failures |= !Crash("Dereference a null RefPtr", [] {
             RefPtr<Core::Object> p;
             *p;
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
 
-    return 0;
+    return any_failures;
 }

@@ -12,6 +12,7 @@
 namespace Kernel {
 class KCOVDevice final : public BlockDevice {
     AK_MAKE_ETERNAL
+    friend class DeviceManagement;
 
 public:
     static HashMap<ProcessID, KCOVInstance*>* proc_instance;
@@ -25,10 +26,9 @@ public:
     KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
     KResultOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
 
-    // FIXME: We expose this constructor to make try_create_device helper to work
+protected:
     KCOVDevice();
 
-protected:
     virtual StringView class_name() const override { return "KCOVDevice"; }
 
     virtual bool can_read(const OpenFileDescription&, size_t) const override final { return true; }

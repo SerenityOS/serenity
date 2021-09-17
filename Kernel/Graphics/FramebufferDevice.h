@@ -19,6 +19,8 @@ namespace Kernel {
 
 class FramebufferDevice : public BlockDevice {
     AK_MAKE_ETERNAL
+    friend class DeviceManagement;
+
 public:
     static NonnullRefPtr<FramebufferDevice> create(const GraphicsDevice&, size_t, PhysicalAddress, size_t, size_t, size_t);
 
@@ -32,10 +34,9 @@ public:
     virtual ~FramebufferDevice() {};
     KResult initialize();
 
-    // FIXME: We expose this constructor to make try_create_device helper to work
+private:
     FramebufferDevice(const GraphicsDevice&, size_t, PhysicalAddress, size_t, size_t, size_t);
 
-private:
     // ^File
     virtual StringView class_name() const override { return "FramebufferDevice"; }
 
