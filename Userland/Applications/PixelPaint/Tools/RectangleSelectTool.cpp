@@ -5,8 +5,8 @@
  */
 
 #include "RectangleSelectTool.h"
-#include "ImageEditor.h"
-#include "Layer.h"
+#include "../ImageEditor.h"
+#include "../Layer.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>

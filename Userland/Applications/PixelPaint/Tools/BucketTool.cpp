@@ -5,8 +5,8 @@
  */
 
 #include "BucketTool.h"
-#include "ImageEditor.h"
-#include "Layer.h"
+#include "../ImageEditor.h"
+#include "../Layer.h"
 #include <AK/HashTable.h>
 #include <AK/Queue.h>
 #include <LibGUI/BoxLayout.h>

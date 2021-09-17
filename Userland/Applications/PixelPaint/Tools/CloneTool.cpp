@@ -5,8 +5,8 @@
  */
 
 #include "CloneTool.h"
-#include "ImageEditor.h"
-#include "Layer.h"
+#include "../ImageEditor.h"
+#include "../Layer.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
