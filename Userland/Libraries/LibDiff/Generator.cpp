@@ -20,8 +20,8 @@ Vector<Hunk> from_text(StringView const& old_text, StringView const& new_text)
      */
 
     enum class Direction {
-        Up,       // Added a new line
-        Left,     // Removed a line
+        Down,     // Added a new line
+        Right,    // Removed a line
         Diagonal, // Line remained the same
     };
 
@@ -41,47 +41,46 @@ Vector<Hunk> from_text(StringView const& old_text, StringView const& new_text)
 
     // Initialize the first row and column
     for (size_t i = 0; i <= old_lines.size(); ++i)
-        dp(i, 0) = { 0, Direction::Left };
+        dp(i, new_lines.size()) = { 0, Direction::Right };
 
     for (size_t j = 0; j <= new_lines.size(); ++j)
-        dp(0, j) = { 0, Direction::Up };
+        dp(old_lines.size(), 0) = { 0, Direction::Down };
 
     // Fill in the rest of the DP table
-    for (size_t i = 1; i <= old_lines.size(); ++i) {
-        for (size_t j = 1; j <= new_lines.size(); ++j) {
-            if (old_lines[i - 1] == new_lines[j - 1]) {
-                dp(i, j) = { dp(i - 1, j - 1).length + 1, Direction::Diagonal };
+    for (int i = old_lines.size() - 1; i >= 0; --i) {
+        for (int j = new_lines.size() - 1; j >= 0; --j) {
+            if (old_lines[i] == new_lines[j]) {
+                dp(i, j) = { dp(i + 1, j + 1).length + 1, Direction::Diagonal };
             } else {
-                auto up = dp(i, j - 1).length;
-                auto left = dp(i - 1, j).length;
-                if (up > left)
-                    dp(i, j) = { up, Direction::Up };
+                auto down = dp(i, j + 1).length;
+                auto right = dp(i + 1, j).length;
+                if (down > right)
+                    dp(i, j) = { down, Direction::Down };
                 else
-                    dp(i, j) = { left, Direction::Left };
+                    dp(i, j) = { right, Direction::Right };
             }
         }
     }
 
     Vector<Hunk> hunks;
-    size_t i = old_lines.size();
-    size_t j = new_lines.size();
+    size_t i = 0;
+    size_t j = 0;
 
     // FIXME: This creates a hunk per line, very inefficient.
-    while (i > 0 && j > 0) {
+    while (i < old_lines.size() && j < new_lines.size()) {
         auto& cell = dp(i, j);
-        if (cell.direction == Direction::Up) {
-            --j;
+        if (cell.direction == Direction::Down) {
             hunks.append({ i, j, {}, { new_lines[j] } });
-        } else if (cell.direction == Direction::Left) {
-            --i;
+            ++j;
+        } else if (cell.direction == Direction::Right) {
             hunks.append({ i, j, { old_lines[i] }, {} });
-        } else if (cell.direction == Direction::Diagonal) {
-            --i;
-            --j;
+            ++i;
+        } else {
+            ++i;
+            ++j;
         }
     }
 
-    hunks.reverse();
     return hunks;
 }
 
