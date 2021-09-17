@@ -1,5 +1,6 @@
 set(SOURCES
     AffineTransform.cpp
+    AntiAliasingPainter.cpp
     Bitmap.cpp
     BitmapFont.cpp
     BMPLoader.cpp
