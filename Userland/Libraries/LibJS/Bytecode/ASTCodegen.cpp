@@ -778,6 +778,9 @@ static void generate_array_binding_pattern_bytecode(Bytecode::Generator& generat
                 auto target_reg = generator.allocate_register();
                 generator.emit<Bytecode::Op::Store>(target_reg);
                 generate_binding_pattern_bytecode(generator, pattern, target_reg);
+            },
+            [&](NonnullRefPtr<MemberExpression> const&) {
+                TODO();
             });
     };
 
