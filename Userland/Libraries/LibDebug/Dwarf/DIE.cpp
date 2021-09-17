@@ -14,8 +14,14 @@ namespace Debug::Dwarf {
 
 DIE::DIE(CompilationUnit const& unit, u32 offset, Optional<u32> parent_offset)
     : m_compilation_unit(unit)
-    , m_offset(offset)
 {
+    rehydrate_from(offset, parent_offset);
+}
+
+void DIE::rehydrate_from(u32 offset, Optional<u32> parent_offset)
+{
+    m_offset = offset;
+
     InputMemoryStream stream(m_compilation_unit.dwarf_info().debug_info_data());
     stream.discard_or_error(m_offset);
     stream.read_LEB128_unsigned(m_abbreviation_code);
@@ -62,30 +68,28 @@ void DIE::for_each_child(Function<void(DIE const& child)> callback) const
     if (!m_has_children)
         return;
 
-    NonnullOwnPtr<DIE> current_child = make<DIE>(m_compilation_unit, m_offset + m_size, m_offset);
+    auto current_child = DIE(m_compilation_unit, m_offset + m_size, m_offset);
     while (true) {
-        callback(*current_child);
-        if (current_child->is_null())
+        callback(current_child);
+        if (current_child.is_null())
             break;
-        if (!current_child->has_children()) {
-            current_child = make<DIE>(m_compilation_unit, current_child->offset() + current_child->size(), m_offset);
+        if (!current_child.has_children()) {
+            current_child.rehydrate_from(current_child.offset() + current_child.size(), m_offset);
             continue;
         }
 
-        auto sibling = current_child->get_attribute(Attribute::Sibling);
+        auto sibling = current_child.get_attribute(Attribute::Sibling);
         u32 sibling_offset = 0;
         if (sibling.has_value()) {
             sibling_offset = sibling.value().data.as_unsigned;
-        }
-
-        if (!sibling.has_value()) {
+        } else {
             // NOTE: According to the spec, the compiler doesn't have to supply the sibling information.
             // When it doesn't, we have to recursively iterate the current child's children to find where they end
-            current_child->for_each_child([&](DIE const& sub_child) {
+            current_child.for_each_child([&](DIE const& sub_child) {
                 sibling_offset = sub_child.offset() + sub_child.size();
             });
         }
-        current_child = make<DIE>(m_compilation_unit, sibling_offset, m_offset);
+        current_child.rehydrate_from(sibling_offset, m_offset);
     }
 }
 
