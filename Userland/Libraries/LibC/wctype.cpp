@@ -5,7 +5,24 @@
  */
 
 #include <AK/Format.h>
+#include <string.h>
 #include <wctype.h>
+
+enum {
+    WCTYPE_INVALID = 0,
+    WCTYPE_ALNUM,
+    WCTYPE_ALPHA,
+    WCTYPE_BLANK,
+    WCTYPE_CNTRL,
+    WCTYPE_DIGIT,
+    WCTYPE_GRAPH,
+    WCTYPE_LOWER,
+    WCTYPE_PRINT,
+    WCTYPE_PUNCT,
+    WCTYPE_SPACE,
+    WCTYPE_UPPER,
+    WCTYPE_XDIGIT,
+};
 
 extern "C" {
 
@@ -75,10 +92,45 @@ int iswctype(wint_t, wctype_t)
     TODO();
 }
 
-wctype_t wctype(const char*)
+wctype_t wctype(const char* property)
 {
-    dbgln("FIXME: Implement wctype()");
-    TODO();
+    if (strcmp(property, "alnum") == 0)
+        return WCTYPE_ALNUM;
+
+    if (strcmp(property, "alpha") == 0)
+        return WCTYPE_ALPHA;
+
+    if (strcmp(property, "blank") == 0)
+        return WCTYPE_BLANK;
+
+    if (strcmp(property, "cntrl") == 0)
+        return WCTYPE_CNTRL;
+
+    if (strcmp(property, "digit") == 0)
+        return WCTYPE_DIGIT;
+
+    if (strcmp(property, "graph") == 0)
+        return WCTYPE_GRAPH;
+
+    if (strcmp(property, "lower") == 0)
+        return WCTYPE_LOWER;
+
+    if (strcmp(property, "print") == 0)
+        return WCTYPE_PRINT;
+
+    if (strcmp(property, "punct") == 0)
+        return WCTYPE_PUNCT;
+
+    if (strcmp(property, "space") == 0)
+        return WCTYPE_SPACE;
+
+    if (strcmp(property, "upper") == 0)
+        return WCTYPE_UPPER;
+
+    if (strcmp(property, "xdigit") == 0)
+        return WCTYPE_XDIGIT;
+
+    return WCTYPE_INVALID;
 }
 
 wint_t towlower(wint_t wc)

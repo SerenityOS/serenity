@@ -15,6 +15,7 @@ set(TEST_SOURCES
     TestStackSmash.cpp
     TestStrlcpy.cpp
     TestStrtodAccuracy.cpp
+    TestWctype.cpp
 )
 
 set_source_files_properties(TestStrtodAccuracy.cpp PROPERTIES COMPILE_FLAGS "-fno-builtin-strtod")
