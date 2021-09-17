@@ -282,6 +282,11 @@ void Box::paint_box_shadow(PaintContext& context)
     };
 
     auto new_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, bitmap_rect.size());
+    if (!new_bitmap) {
+        dbgln("Unable to allocate temporary bitmap for box-shadow rendering");
+        return;
+    }
+
     Gfx::Painter painter(*new_bitmap);
     painter.fill_rect({ { 2 * blur_radius, 2 * blur_radius }, enclosed_int_rect.size() }, box_shadow_data->color);
 
