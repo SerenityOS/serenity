@@ -12,7 +12,7 @@
 
 __BEGIN_DECLS
 
-typedef const int* wctrans_t;
+typedef long wctrans_t;
 
 int iswalnum(wint_t wc);
 int iswalpha(wint_t wc);
