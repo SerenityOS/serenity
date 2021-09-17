@@ -104,6 +104,16 @@ TEST_CASE(insert_into_table_multiple_tuples_wrong_data_types)
     EXPECT(result->error().code == SQL::SQLErrorCode::InvalidValueType);
 }
 
+TEST_CASE(insert_wrong_number_of_values)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    create_table(database);
+    auto result = execute(database, "INSERT INTO TestSchema.TestTable VALUES ( 42 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::InvalidNumberOfValues);
+    EXPECT(result->inserted() == 0);
+}
+
 TEST_CASE(select_from_table)
 {
     ScopeGuard guard([]() { unlink(db_name); });
