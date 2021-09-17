@@ -85,7 +85,7 @@ void Job::flush_received_buffers()
 {
     if (!m_can_stream_response || m_buffered_size == 0)
         return;
-    dbgln_if(JOB_DEBUG, "Job: Flushing received buffers: have {} bytes in {} buffers", m_buffered_size, m_received_buffers.size());
+    dbgln_if(JOB_DEBUG, "Job: Flushing received buffers: have {} bytes in {} buffers for {}", m_buffered_size, m_received_buffers.size(), m_request.url());
     for (size_t i = 0; i < m_received_buffers.size(); ++i) {
         auto& payload = m_received_buffers[i];
         auto written = do_write(payload);
@@ -100,7 +100,7 @@ void Job::flush_received_buffers()
         payload = payload.slice(written, payload.size() - written);
         break;
     }
-    dbgln_if(JOB_DEBUG, "Job: Flushing received buffers done: have {} bytes in {} buffers", m_buffered_size, m_received_buffers.size());
+    dbgln_if(JOB_DEBUG, "Job: Flushing received buffers done: have {} bytes in {} buffers for {}", m_buffered_size, m_received_buffers.size(), m_request.url());
 }
 
 void Job::on_socket_connected()
@@ -121,6 +121,7 @@ void Job::on_socket_connected()
             deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
     });
     register_on_ready_to_read([&] {
+        dbgln_if(JOB_DEBUG, "Ready to read for {}, state = {}, cancelled = {}", m_request.url(), to_underlying(m_state), is_cancelled());
         if (is_cancelled())
             return;
 
@@ -132,9 +133,12 @@ void Job::on_socket_connected()
         }
 
         if (m_state == State::InStatus) {
-            if (!can_read_line())
+            if (!can_read_line()) {
+                dbgln_if(JOB_DEBUG, "Job {} cannot read line", m_request.url());
                 return;
+            }
             auto line = read_line(PAGE_SIZE);
+            dbgln_if(JOB_DEBUG, "Job {} read line of length {}", m_request.url(), line.length());
             if (line.is_null()) {
                 dbgln("Job: Expected HTTP status");
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
@@ -287,7 +291,9 @@ void Job::on_socket_connected()
                 }
             }
 
+            dbgln_if(JOB_DEBUG, "Waiting for payload for {}", m_request.url());
             auto payload = receive(read_size);
+            dbgln_if(JOB_DEBUG, "Received {} bytes of payload from {}", payload.size(), m_request.url());
             if (payload.is_empty()) {
                 if (eof()) {
                     finish_up();

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "ConnectionCache.h"
 #include <LibGemini/GeminiJob.h>
 #include <LibGemini/GeminiRequest.h>
 #include <RequestServer/GeminiProtocol.h>
@@ -34,7 +35,9 @@ OwnPtr<Request> GeminiProtocol::start_request(ClientConnection& client, const St
     auto job = Gemini::GeminiJob::construct(request, *output_stream);
     auto protocol_request = GeminiRequest::create_with_job({}, client, (Gemini::GeminiJob&)*job, move(output_stream));
     protocol_request->set_request_fd(pipe_result.value().read_fd);
-    job->start();
+
+    ConnectionCache::get_or_create_connection(ConnectionCache::g_tls_connection_cache, url, *job);
+
     return protocol_request;
 }
 

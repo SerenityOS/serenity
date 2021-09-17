@@ -15,6 +15,7 @@
 #include <AK/Types.h>
 #include <LibHTTP/HttpRequest.h>
 #include <RequestServer/ClientConnection.h>
+#include <RequestServer/ConnectionCache.h>
 #include <RequestServer/Request.h>
 
 namespace RequestServer::Detail {
@@ -29,6 +30,9 @@ void init(TSelf* self, TJob job)
     };
 
     job->on_finish = [self](bool success) {
+        Core::deferred_invoke([url = self->job().url(), socket = self->job().socket()] {
+            ConnectionCache::request_did_finish(url, socket);
+        });
         if (auto* response = self->job().response()) {
             self->set_status_code(response->code());
             self->set_response_headers(response->headers());
@@ -80,7 +84,12 @@ OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ClientConnection& clie
     auto job = TJob::construct(request, *output_stream);
     auto protocol_request = TRequest::create_with_job(forward<TBadgedProtocol>(protocol), client, (TJob&)*job, move(output_stream));
     protocol_request->set_request_fd(pipe_result.value().read_fd);
-    job->start();
+
+    if constexpr (IsSame<typename TBadgedProtocol::Type, HttpsProtocol>)
+        ConnectionCache::get_or_create_connection(ConnectionCache::g_tls_connection_cache, url, *job);
+    else
+        ConnectionCache::get_or_create_connection(ConnectionCache::g_tcp_connection_cache, url, *job);
+
     return protocol_request;
 }
 

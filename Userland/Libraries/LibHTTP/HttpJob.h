@@ -27,8 +27,11 @@ public:
     {
     }
 
-    virtual void start() override;
+    virtual void start(NonnullRefPtr<Core::Socket>) override;
     virtual void shutdown() override;
+
+    Core::Socket const* socket() const { return m_socket; }
+    URL url() const { return m_request.url(); }
 
 protected:
     virtual bool should_fail_on_empty_payload() const override { return false; }

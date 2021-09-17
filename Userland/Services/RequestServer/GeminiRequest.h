@@ -18,6 +18,8 @@ public:
     virtual ~GeminiRequest() override;
     static NonnullOwnPtr<GeminiRequest> create_with_job(Badge<GeminiProtocol>, ClientConnection&, NonnullRefPtr<Gemini::GeminiJob>, NonnullOwnPtr<OutputFileStream>&&);
 
+    Gemini::GeminiJob const& job() const { return *m_job; }
+
 private:
     explicit GeminiRequest(ClientConnection&, NonnullRefPtr<Gemini::GeminiJob>, NonnullOwnPtr<OutputFileStream>&&);
 

@@ -19,7 +19,7 @@ NetworkJob::~NetworkJob()
 {
 }
 
-void NetworkJob::start()
+void NetworkJob::start(NonnullRefPtr<Core::Socket>)
 {
 }
 
