@@ -19,17 +19,17 @@ class RamdiskDevice final : public StorageDevice {
     AK_MAKE_ETERNAL
 public:
     static NonnullRefPtr<RamdiskDevice> create(const RamdiskController&, NonnullOwnPtr<Memory::Region>&& region, int major, int minor);
-    RamdiskDevice(const RamdiskController&, NonnullOwnPtr<Memory::Region>&&, int major, int minor);
     virtual ~RamdiskDevice() override;
-
-    // ^BlockDevice
-    virtual void start_request(AsyncBlockDeviceRequest&) override;
 
     // ^DiskDevice
     virtual StringView class_name() const override;
     virtual String storage_name() const override;
 
-    bool is_slave() const;
+private:
+    RamdiskDevice(const RamdiskController&, NonnullOwnPtr<Memory::Region>&&, int major, int minor);
+
+    // ^BlockDevice
+    virtual void start_request(AsyncBlockDeviceRequest&) override;
 
     Mutex m_lock { "RamdiskDevice" };
 
