@@ -16,18 +16,6 @@ SVGPathBox::SVGPathBox(DOM::Document& document, SVG::SVGPathElement& element, No
 {
 }
 
-void SVGPathBox::prepare_for_replaced_layout()
-{
-    auto& bounding_box = dom_node().get_path().bounding_box();
-    set_has_intrinsic_width(true);
-    set_has_intrinsic_height(true);
-    set_intrinsic_width(bounding_box.width());
-    set_intrinsic_height(bounding_box.height());
-
-    // FIXME: This does not belong here! Someone at a higher level should place this box.
-    set_offset(bounding_box.top_left());
-}
-
 void SVGPathBox::paint(PaintContext& context, PaintPhase phase)
 {
     if (!is_visible())
