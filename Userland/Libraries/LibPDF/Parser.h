@@ -29,7 +29,7 @@ public:
     Parser(Badge<Document>, ReadonlyBytes const&);
 
     [[nodiscard]] ALWAYS_INLINE RefPtr<DictObject> const& trailer() const { return m_trailer; }
-    void set_document(RefPtr<Document> const& document) { m_document = document; }
+    void set_document(RefPtr<Document> const&);
 
     // Parses the header and initializes the xref table and trailer
     bool initialize();
