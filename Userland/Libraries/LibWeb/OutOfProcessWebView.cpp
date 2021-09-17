@@ -128,18 +128,14 @@ void OutOfProcessWebView::handle_resize()
         m_backup_bitmap = m_client_state.front_bitmap.bitmap;
     }
 
-    if (m_client_state.front_bitmap.bitmap) {
-        m_client_state.front_bitmap.bitmap = nullptr;
+    if (m_client_state.front_bitmap.bitmap)
         client().async_remove_backing_store(m_client_state.front_bitmap.id);
-    }
 
-    if (m_client_state.back_bitmap.bitmap) {
-        m_client_state.back_bitmap.bitmap = nullptr;
+    if (m_client_state.back_bitmap.bitmap)
         client().async_remove_backing_store(m_client_state.back_bitmap.id);
-    }
 
-    m_client_state.front_bitmap.id = -1;
-    m_client_state.back_bitmap.id = -1;
+    m_client_state.front_bitmap = {};
+    m_client_state.back_bitmap = {};
     m_client_state.has_usable_bitmap = false;
 
     if (available_size().is_empty())
@@ -201,6 +197,7 @@ void OutOfProcessWebView::notify_server_did_paint(Badge<WebContentClient>, i32 b
 {
     if (m_client_state.back_bitmap.id == bitmap_id) {
         m_client_state.has_usable_bitmap = true;
+        m_client_state.back_bitmap.pending_paints--;
         swap(m_client_state.back_bitmap, m_client_state.front_bitmap);
         // We don't need the backup bitmap anymore, so drop it.
         m_backup_bitmap = nullptr;
@@ -396,6 +393,10 @@ void OutOfProcessWebView::request_repaint()
     // it won't have a back bitmap yet, so we can just skip repaint requests.
     if (!m_client_state.back_bitmap.bitmap)
         return;
+    // Don't request a repaint until pending paint requests have finished.
+    if (m_client_state.back_bitmap.pending_paints)
+        return;
+    m_client_state.back_bitmap.pending_paints++;
     client().async_paint(m_client_state.back_bitmap.bitmap->rect().translated(horizontal_scrollbar().value(), vertical_scrollbar().value()), m_client_state.back_bitmap.id);
 }
 

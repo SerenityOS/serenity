@@ -112,6 +112,7 @@ private:
 
     struct SharedBitmap {
         i32 id { -1 };
+        i32 pending_paints { 0 };
         RefPtr<Gfx::Bitmap> bitmap;
     };
 
