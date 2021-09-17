@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibCore/ElapsedTimer.h>
 #include <LibGfx/Bitmap.h>
 
 namespace Gfx {
@@ -29,18 +28,20 @@ public:
 
         int div = 2 * radius + 1;
 
-        size_t sum_red, sum_green, sum_blue, sum_alpha;
-
         u8 intermediate_red[width * height];
         u8 intermediate_green[width * height];
         u8 intermediate_blue[width * height];
         u8 intermediate_alpha[width * height];
 
         // First pass: vertical
-        for (int y = 0; y < height; y++) {
-            sum_red = sum_green = sum_blue = sum_alpha = 0;
+        for (int y = 0; y < height; ++y) {
+            size_t sum_red = 0;
+            size_t sum_green = 0;
+            size_t sum_blue = 0;
+            size_t sum_alpha = 0;
+
             // Setup sliding window
-            for (int i = -radius; i <= radius; i++) {
+            for (int i = -radius; i <= radius; ++i) {
                 auto color_at_px = m_bitmap.get_pixel<StorageFormat::BGRA8888>(clamp(i, 0, width - 1), y);
                 sum_red += red_value(color_at_px);
                 sum_green += green_value(color_at_px);
@@ -48,7 +49,7 @@ public:
                 sum_alpha += color_at_px.alpha();
             }
             // Slide horizontally
-            for (int x = 0; x < width; x++) {
+            for (int x = 0; x < width; ++x) {
                 intermediate_red[y * width + x] = (sum_red / div);
                 intermediate_green[y * width + x] = (sum_green / div);
                 intermediate_blue[y * width + x] = (sum_blue / div);
@@ -72,10 +73,14 @@ public:
         }
 
         // Second pass: horizontal
-        for (int x = 0; x < width; x++) {
-            sum_red = sum_green = sum_blue = sum_alpha = 0;
+        for (int x = 0; x < width; ++x) {
+            size_t sum_red = 0;
+            size_t sum_green = 0;
+            size_t sum_blue = 0;
+            size_t sum_alpha = 0;
+
             // Setup sliding window
-            for (int i = -radius; i <= radius; i++) {
+            for (int i = -radius; i <= radius; ++i) {
                 int offset = clamp(i, 0, height - 1) * width + x;
                 sum_red += intermediate_red[offset];
                 sum_green += intermediate_green[offset];
@@ -83,7 +88,7 @@ public:
                 sum_alpha += intermediate_alpha[offset];
             }
 
-            for (int y = 0; y < height; y++) {
+            for (int y = 0; y < height; ++y) {
                 auto color = Color(
                     sum_red / div,
                     sum_green / div,
@@ -113,16 +118,16 @@ public:
         if (!radius)
             return;
 
-        size_t no_of_passes = 3;
-        double wIdeal = sqrt((12 * radius * radius / (double)no_of_passes) + 1);
-        int wl = floor(wIdeal);
+        constexpr size_t no_of_passes = 3;
+        double w_ideal = sqrt((12 * radius * radius / (double)no_of_passes) + 1);
+        int wl = floor(w_ideal);
         if (wl % 2 == 0)
             wl--;
         int wu = wl - 2;
-        double mIdeal = (12 * radius * radius - no_of_passes * wl * wl - 4 * no_of_passes * wl - 3 * no_of_passes) / (double)(-4 * wl - 4);
-        int m = round(mIdeal);
+        double m_ideal = (12 * radius * radius - no_of_passes * wl * wl - 4 * no_of_passes * wl - 3 * no_of_passes) / (double)(-4 * wl - 4);
+        int m = round(m_ideal);
 
-        for (size_t i = 0; i < no_of_passes; i++) {
+        for (size_t i = 0; i < no_of_passes; ++i) {
             int weighted_radius = (int)i < m ? wl : wu;
             if (weighted_radius < 2)
                 continue;
@@ -131,15 +136,15 @@ public:
     }
 
 private:
-    ALWAYS_INLINE static u8 red_value(Color const& color)
+    ALWAYS_INLINE static u8 red_value(Color color)
     {
         return (color.alpha() == 0) ? 0xFF : color.red();
     }
-    ALWAYS_INLINE static u8 green_value(Color const& color)
+    ALWAYS_INLINE static u8 green_value(Color color)
     {
         return (color.alpha() == 0) ? 0xFF : color.green();
     }
-    ALWAYS_INLINE static u8 blue_value(Color const& color)
+    ALWAYS_INLINE static u8 blue_value(Color color)
     {
         return (color.alpha() == 0) ? 0xFF : color.blue();
     }
