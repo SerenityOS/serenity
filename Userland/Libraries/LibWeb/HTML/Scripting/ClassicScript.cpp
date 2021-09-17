@@ -59,6 +59,12 @@ NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView s
 // https://html.spec.whatwg.org/multipage/webappapis.html#run-a-classic-script
 JS::Value ClassicScript::run(RethrowErrors rethrow_errors)
 {
+    if (!m_script_record) {
+        // FIXME: Throw a SyntaxError per the spec.
+        dbgln("ClassicScript: Unable to run script {}", filename());
+        return {};
+    }
+
     dbgln("ClassicScript: Running script {}", filename());
     (void)rethrow_errors;
 
