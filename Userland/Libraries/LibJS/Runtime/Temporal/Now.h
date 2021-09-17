@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS::Temporal {
@@ -33,7 +34,7 @@ private:
 TimeZone* system_time_zone(GlobalObject&);
 BigInt* system_utc_epoch_nanoseconds(GlobalObject&);
 Instant* system_instant(GlobalObject&);
-PlainDateTime* system_date_time(GlobalObject&, Value temporal_time_zone_like, Value calendar_like);
-ZonedDateTime* system_zoned_date_time(GlobalObject&, Value temporal_time_zone_like, Value calendar_like);
+ThrowCompletionOr<PlainDateTime*> system_date_time(GlobalObject&, Value temporal_time_zone_like, Value calendar_like);
+ThrowCompletionOr<ZonedDateTime*> system_zoned_date_time(GlobalObject&, Value temporal_time_zone_like, Value calendar_like);
 
 }

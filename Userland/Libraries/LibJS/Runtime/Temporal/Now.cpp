@@ -5,6 +5,7 @@
  */
 
 #include <LibCrypto/BigInt/SignedBigInteger.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
@@ -66,7 +67,7 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_date_time)
     auto temporal_time_zone_like = vm.argument(1);
 
     // 1. Return ? SystemDateTime(temporalTimeZoneLike, calendar).
-    return system_date_time(global_object, temporal_time_zone_like, calendar);
+    return TRY_OR_DISCARD(system_date_time(global_object, temporal_time_zone_like, calendar));
 }
 
 // 2.2.4 Temporal.Now.plainDateTimeISO ( [ temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindatetimeiso
@@ -78,7 +79,7 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_date_time_iso)
     auto* calendar = get_iso8601_calendar(global_object);
 
     // 2. Return ? SystemDateTime(temporalTimeZoneLike, calendar).
-    return system_date_time(global_object, temporal_time_zone_like, calendar);
+    return TRY_OR_DISCARD(system_date_time(global_object, temporal_time_zone_like, calendar));
 }
 
 // 2.2.5 Temporal.Now.zonedDateTime ( calendar [ , temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.zoneddatetime
@@ -88,7 +89,7 @@ JS_DEFINE_NATIVE_FUNCTION(Now::zoned_date_time)
     auto temporal_time_zone_like = vm.argument(1);
 
     // 1. Return ? SystemZonedDateTime(temporalTimeZoneLike, calendar).
-    return system_zoned_date_time(global_object, temporal_time_zone_like, calendar);
+    return TRY_OR_DISCARD(system_zoned_date_time(global_object, temporal_time_zone_like, calendar));
 }
 
 // 2.2.6 Temporal.Now.zonedDateTimeISO ( [ temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.zoneddatetimeiso
@@ -100,7 +101,7 @@ JS_DEFINE_NATIVE_FUNCTION(Now::zoned_date_time_iso)
     auto* calendar = get_iso8601_calendar(global_object);
 
     // 2. Return ? SystemZonedDateTime(temporalTimeZoneLike, calendar).
-    return system_zoned_date_time(global_object, temporal_time_zone_like, calendar);
+    return TRY_OR_DISCARD(system_zoned_date_time(global_object, temporal_time_zone_like, calendar));
 }
 
 // 2.2.7 Temporal.Now.plainDate ( calendar [ , temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindate
@@ -110,9 +111,7 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_date)
     auto temporal_time_zone_like = vm.argument(1);
 
     // 1. Let dateTime be ? SystemDateTime(temporalTimeZoneLike, calendar).
-    auto* date_time = system_date_time(global_object, temporal_time_zone_like, calendar);
-    if (vm.exception())
-        return {};
+    auto* date_time = TRY_OR_DISCARD(system_date_time(global_object, temporal_time_zone_like, calendar));
 
     // 2. Return ! CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
     return TRY_OR_DISCARD(create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar()));
@@ -127,9 +126,7 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_date_iso)
     auto* calendar = get_iso8601_calendar(global_object);
 
     // 2. Let dateTime be ? SystemDateTime(temporalTimeZoneLike, calendar).
-    auto* date_time = system_date_time(global_object, temporal_time_zone_like, calendar);
-    if (vm.exception())
-        return {};
+    auto* date_time = TRY_OR_DISCARD(system_date_time(global_object, temporal_time_zone_like, calendar));
 
     // 3. Return ! CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
     return TRY_OR_DISCARD(create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar()));
@@ -144,9 +141,7 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_time_iso)
     auto* calendar = get_iso8601_calendar(global_object);
 
     // 2. Let dateTime be ? SystemDateTime(temporalTimeZoneLike, calendar).
-    auto* date_time = system_date_time(global_object, temporal_time_zone_like, calendar);
-    if (vm.exception())
-        return {};
+    auto* date_time = TRY_OR_DISCARD(system_date_time(global_object, temporal_time_zone_like, calendar));
 
     // 3. Return ! CreateTemporalTime(dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
     return TRY_OR_DISCARD(create_temporal_time(global_object, date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond()));
@@ -196,7 +191,7 @@ Instant* system_instant(GlobalObject& global_object)
 }
 
 // 2.3.4 SystemDateTime ( temporalTimeZoneLike, calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-systemdatetime
-PlainDateTime* system_date_time(GlobalObject& global_object, Value temporal_time_zone_like, Value calendar_like)
+ThrowCompletionOr<PlainDateTime*> system_date_time(GlobalObject& global_object, Value temporal_time_zone_like, Value calendar_like)
 {
     Object* time_zone;
 
@@ -208,21 +203,21 @@ PlainDateTime* system_date_time(GlobalObject& global_object, Value temporal_time
     // 2. Else,
     else {
         // a. Let timeZone be ? ToTemporalTimeZone(temporalTimeZoneLike).
-        time_zone = TRY_OR_DISCARD(to_temporal_time_zone(global_object, temporal_time_zone_like));
+        time_zone = TRY(to_temporal_time_zone(global_object, temporal_time_zone_like));
     }
 
     // 3. Let calendar be ? ToTemporalCalendar(calendarLike).
-    auto* calendar = TRY_OR_DISCARD(to_temporal_calendar(global_object, calendar_like));
+    auto* calendar = TRY(to_temporal_calendar(global_object, calendar_like));
 
     // 4. Let instant be ! SystemInstant().
     auto* instant = system_instant(global_object);
 
     // 5. Return ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    return TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, time_zone, *instant, *calendar));
+    return builtin_time_zone_get_plain_date_time_for(global_object, time_zone, *instant, *calendar);
 }
 
 // 2.3.5 SystemZonedDateTime ( temporalTimeZoneLike, calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-systemzoneddatetime
-ZonedDateTime* system_zoned_date_time(GlobalObject& global_object, Value temporal_time_zone_like, Value calendar_like)
+ThrowCompletionOr<ZonedDateTime*> system_zoned_date_time(GlobalObject& global_object, Value temporal_time_zone_like, Value calendar_like)
 {
     Object* time_zone;
 
@@ -234,17 +229,17 @@ ZonedDateTime* system_zoned_date_time(GlobalObject& global_object, Value tempora
     // 2. Else,
     else {
         // a. Let timeZone be ? ToTemporalTimeZone(temporalTimeZoneLike).
-        time_zone = TRY_OR_DISCARD(to_temporal_time_zone(global_object, temporal_time_zone_like));
+        time_zone = TRY(to_temporal_time_zone(global_object, temporal_time_zone_like));
     }
 
     // 3. Let calendar be ? ToTemporalCalendar(calendarLike).
-    auto* calendar = TRY_OR_DISCARD(to_temporal_calendar(global_object, calendar_like));
+    auto* calendar = TRY(to_temporal_calendar(global_object, calendar_like));
 
     // 4. Let ns be ! SystemUTCEpochNanoseconds().
     auto* ns = system_utc_epoch_nanoseconds(global_object);
 
     // 5. Return ? CreateTemporalZonedDateTime(ns, timeZone, calendar).
-    return TRY_OR_DISCARD(create_temporal_zoned_date_time(global_object, *ns, *time_zone, *calendar));
+    return create_temporal_zoned_date_time(global_object, *ns, *time_zone, *calendar);
 }
 
 }

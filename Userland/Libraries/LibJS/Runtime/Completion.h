@@ -10,6 +10,7 @@
 #include <AK/FlyString.h>
 #include <AK/Optional.h>
 #include <AK/Try.h>
+#include <AK/Variant.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
