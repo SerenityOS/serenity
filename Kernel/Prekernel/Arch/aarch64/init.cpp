@@ -5,15 +5,14 @@
  */
 
 #include <AK/Types.h>
-#include <Kernel/Prekernel/Arch/aarch64/MainIdRegister.h>
+#include <Kernel/Prekernel/Arch/aarch64/MMIO.h>
 
 extern "C" [[noreturn]] void halt();
 
 extern "C" [[noreturn]] void init();
 extern "C" [[noreturn]] void init()
 {
-    Prekernel::MainIdRegister id;
-    [[maybe_unused]] unsigned part_num = id.part_num();
+    [[maybe_unused]] auto& MMIO = Prekernel::MMIO::the();
     halt();
 }
 
