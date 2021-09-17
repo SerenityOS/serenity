@@ -384,7 +384,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::with_calendar)
     auto* calendar = TRY_OR_DISCARD(to_temporal_calendar(global_object, vm.argument(0)));
 
     // 4. Return ? CreateTemporalDate(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]], calendar).
-    return create_temporal_date(global_object, temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day(), *calendar);
+    return TRY_OR_DISCARD(create_temporal_date(global_object, temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day(), *calendar));
 }
 
 // 3.3.25 Temporal.PlainDate.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.equals
@@ -397,9 +397,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::equals)
         return {};
 
     // 3. Set other to ? ToTemporalDate(other).
-    auto* other = to_temporal_date(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* other = TRY_OR_DISCARD(to_temporal_date(global_object, vm.argument(0)));
 
     // 4. If temporalDate.[[ISOYear]] ≠ other.[[ISOYear]], return false.
     if (temporal_date->iso_year() != other->iso_year())
@@ -452,11 +450,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_string)
     auto show_calendar = TRY_OR_DISCARD(to_show_calendar_option(global_object, *options));
 
     // 5. Return ? TemporalDateToString(temporalDate, showCalendar).
-    auto string = temporal_date_to_string(global_object, *temporal_date, show_calendar);
-    if (vm.exception())
-        return {};
-
-    return js_string(vm, *string);
+    return js_string(vm, TRY_OR_DISCARD(temporal_date_to_string(global_object, *temporal_date, show_calendar)));
 }
 
 // 3.3.29 Temporal.PlainDate.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tolocalestring
@@ -470,11 +464,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_locale_string)
         return {};
 
     // 3. Return ? TemporalDateToString(temporalDate, "auto").
-    auto string = temporal_date_to_string(global_object, *temporal_date, "auto"sv);
-    if (vm.exception())
-        return {};
-
-    return js_string(vm, *string);
+    return js_string(vm, TRY_OR_DISCARD(temporal_date_to_string(global_object, *temporal_date, "auto"sv)));
 }
 
 // 3.3.30 Temporal.PlainDate.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tojson
@@ -487,11 +477,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_json)
         return {};
 
     // 3. Return ? TemporalDateToString(temporalDate, "auto").
-    auto string = temporal_date_to_string(global_object, *temporal_date, "auto"sv);
-    if (vm.exception())
-        return {};
-
-    return js_string(vm, *string);
+    return js_string(vm, TRY_OR_DISCARD(temporal_date_to_string(global_object, *temporal_date, "auto"sv)));
 }
 
 // 3.3.31 Temporal.PlainDate.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.valueof
