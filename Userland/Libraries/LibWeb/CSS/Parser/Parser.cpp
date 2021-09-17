@@ -1891,13 +1891,13 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
     }
 
     if (!background_color)
-        background_color = ColorStyleValue::create(Color::Transparent);
+        background_color = property_initial_value(PropertyID::BackgroundColor);
     if (!background_image)
-        background_image = IdentifierStyleValue::create(ValueID::None);
+        background_image = property_initial_value(PropertyID::BackgroundImage);
     if (!repeat_x)
-        repeat_x = IdentifierStyleValue::create(ValueID::Repeat);
+        repeat_x = property_initial_value(PropertyID::BackgroundRepeatX);
     if (!repeat_y)
-        repeat_y = IdentifierStyleValue::create(ValueID::Repeat);
+        repeat_y = property_initial_value(PropertyID::BackgroundRepeatY);
 
     return BackgroundStyleValue::create(background_color.release_nonnull(), background_image.release_nonnull(), repeat_x.release_nonnull(), repeat_y.release_nonnull());
 }
@@ -2031,12 +2031,11 @@ RefPtr<StyleValue> Parser::parse_border_value(ParsingContext const& context, Vec
     }
 
     if (!border_width)
-        border_width = IdentifierStyleValue::create(ValueID::Medium);
+        border_width = property_initial_value(PropertyID::BorderWidth);
     if (!border_style)
-        border_style = IdentifierStyleValue::create(ValueID::None);
-    // FIXME: Default should be `currentcolor` special value. https://www.w3.org/TR/css-color-4/#currentcolor-color
+        border_style = property_initial_value(PropertyID::BorderStyle);
     if (!border_color)
-        border_color = ColorStyleValue::create(Gfx::Color::Black);
+        border_color = property_initial_value(PropertyID::BorderColor);
 
     return BorderStyleValue::create(border_width.release_nonnull(), border_style.release_nonnull(), border_color.release_nonnull());
 }
@@ -2268,11 +2267,11 @@ RefPtr<StyleValue> Parser::parse_flex_value(ParsingContext const& context, Vecto
     }
 
     if (!flex_grow)
-        flex_grow = NumericStyleValue::create(0);
+        flex_grow = property_initial_value(PropertyID::FlexGrow);
     if (!flex_shrink)
-        flex_shrink = NumericStyleValue::create(1);
+        flex_shrink = property_initial_value(PropertyID::FlexShrink);
     if (!flex_basis)
-        flex_basis = IdentifierStyleValue::create(ValueID::Auto);
+        flex_basis = property_initial_value(PropertyID::FlexBasis);
 
     return FlexStyleValue::create(flex_grow.release_nonnull(), flex_shrink.release_nonnull(), flex_basis.release_nonnull());
 }
@@ -2327,9 +2326,9 @@ RefPtr<StyleValue> Parser::parse_flex_flow_value(ParsingContext const& context, 
     }
 
     if (!flex_direction)
-        flex_direction = IdentifierStyleValue::create(ValueID::Row);
+        flex_direction = property_initial_value(PropertyID::FlexDirection);
     if (!flex_wrap)
-        flex_wrap = IdentifierStyleValue::create(ValueID::Nowrap);
+        flex_wrap = property_initial_value(PropertyID::FlexWrap);
 
     return FlexFlowStyleValue::create(flex_direction.release_nonnull(), flex_wrap.release_nonnull());
 }
@@ -2466,11 +2465,11 @@ RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vecto
         return nullptr;
 
     if (!font_style)
-        font_style = IdentifierStyleValue::create(ValueID::Normal);
+        font_style = property_initial_value(PropertyID::FontStyle);
     if (!font_weight)
-        font_weight = IdentifierStyleValue::create(ValueID::Normal);
+        font_weight = property_initial_value(PropertyID::FontWeight);
     if (!line_height)
-        line_height = IdentifierStyleValue::create(ValueID::Normal);
+        line_height = property_initial_value(PropertyID::LineHeight);
 
     return FontStyleValue::create(font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull());
 }
@@ -2666,11 +2665,11 @@ RefPtr<StyleValue> Parser::parse_list_style_value(ParsingContext const& context,
     }
 
     if (!list_position)
-        list_position = IdentifierStyleValue::create(ValueID::Outside);
+        list_position = property_initial_value(PropertyID::ListStylePosition);
     if (!list_image)
-        list_image = IdentifierStyleValue::create(ValueID::None);
+        list_image = property_initial_value(PropertyID::ListStyleImage);
     if (!list_type)
-        list_type = IdentifierStyleValue::create(ValueID::Disc);
+        list_type = property_initial_value(PropertyID::ListStyleType);
 
     return ListStyleStyleValue::create(list_position.release_nonnull(), list_image.release_nonnull(), list_type.release_nonnull());
 }
@@ -2780,12 +2779,11 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(ParsingContext const& con
     }
 
     if (!decoration_line)
-        decoration_line = IdentifierStyleValue::create(ValueID::None);
+        decoration_line = property_initial_value(PropertyID::TextDecorationLine);
     if (!decoration_style)
-        decoration_style = IdentifierStyleValue::create(ValueID::Solid);
-    // FIXME: Should default to 'currentcolor' special value: https://www.w3.org/TR/css-color-3/#currentcolor
+        decoration_style = property_initial_value(PropertyID::TextDecorationStyle);
     if (!decoration_color)
-        decoration_color = InitialStyleValue::the();
+        decoration_color = property_initial_value(PropertyID::TextDecorationColor);
 
     return TextDecorationStyleValue::create(decoration_line.release_nonnull(), decoration_style.release_nonnull(), decoration_color.release_nonnull());
 }
