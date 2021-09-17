@@ -54,6 +54,7 @@ constexpr char const* command_tag(SQLCommand command)
     S(TableExists, "Table '{}' already exist")                    \
     S(InvalidType, "Invalid type '{}'")                           \
     S(InvalidDatabaseName, "Invalid database name '{}'")          \
+    S(InvalidValueType, "Invalid type for attribute '{}'")        \
     S(InvalidNumberOfValues, "Number of values does not match number of columns")
 
 enum class SQLErrorCode {
