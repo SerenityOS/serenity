@@ -3,7 +3,7 @@ set(SOURCES
     CommonNames.cpp
     Document.cpp
     Filter.cpp
-    Object.cpp
+    ObjectDerivatives.cpp
     Parser.cpp
     Renderer.cpp
     Value.cpp
