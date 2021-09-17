@@ -24,6 +24,12 @@ enum {
     WCTYPE_XDIGIT,
 };
 
+enum {
+    WCTRANS_INVALID = 0,
+    WCTRANS_TOLOWER,
+    WCTRANS_TOUPPER,
+};
+
 extern "C" {
 
 int iswalnum(wint_t wc)
@@ -149,9 +155,14 @@ wint_t towctrans(wint_t, wctrans_t)
     TODO();
 }
 
-wctrans_t wctrans(const char*)
+wctrans_t wctrans(const char* charclass)
 {
-    dbgln("FIXME: Implement wctrans()");
-    TODO();
+    if (strcmp(charclass, "tolower") == 0)
+        return WCTRANS_TOLOWER;
+
+    if (strcmp(charclass, "toupper") == 0)
+        return WCTRANS_TOUPPER;
+
+    return WCTRANS_INVALID;
 }
 }

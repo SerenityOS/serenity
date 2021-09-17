@@ -28,3 +28,14 @@ TEST_CASE(wctype)
     EXPECT(wctype("") == 0);
     EXPECT(wctype("abc") == 0);
 }
+
+TEST_CASE(wctrans)
+{
+    // Test that existing character mappings return non-zero wctrans values.
+    EXPECT(wctrans("tolower") != 0);
+    EXPECT(wctrans("toupper") != 0);
+
+    // Test that invalid character mappings return the "invalid" wctrans value (0).
+    EXPECT(wctrans("") == 0);
+    EXPECT(wctrans("abc") == 0);
+}
