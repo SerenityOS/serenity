@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
+ * Copyright (c) 2021, Mahmoud Mandour <ma.mandourr@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -52,7 +53,8 @@ constexpr char const* command_tag(SQLCommand command)
     S(ColumnDoesNotExist, "Column '{}' does not exist")           \
     S(TableExists, "Table '{}' already exist")                    \
     S(InvalidType, "Invalid type '{}'")                           \
-    S(InvalidDatabaseName, "Invalid database name '{}'")
+    S(InvalidDatabaseName, "Invalid database name '{}'")          \
+    S(InvalidNumberOfValues, "Number of values does not match number of columns")
 
 enum class SQLErrorCode {
 #undef __ENUMERATE_SQL_ERROR
