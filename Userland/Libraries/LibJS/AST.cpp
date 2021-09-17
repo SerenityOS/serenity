@@ -1331,6 +1331,8 @@ void BindingPattern::dump(int indent) const
             entry.alias.get<NonnullRefPtr<Identifier>>()->dump(indent + 3);
         } else if (entry.alias.has<NonnullRefPtr<BindingPattern>>()) {
             entry.alias.get<NonnullRefPtr<BindingPattern>>()->dump(indent + 3);
+        } else if (entry.alias.has<NonnullRefPtr<MemberExpression>>()) {
+            entry.alias.get<NonnullRefPtr<MemberExpression>>()->dump(indent + 3);
         } else {
             print_indent(indent + 3);
             outln("<empty>");

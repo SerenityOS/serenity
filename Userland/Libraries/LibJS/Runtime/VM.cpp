@@ -197,6 +197,20 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
 
             auto& entry = binding.entries[i];
 
+            Optional<Reference> assignment_target;
+            entry.alias.visit(
+                [&](Empty) {},
+                [&](NonnullRefPtr<Identifier> const&) {
+                    // FIXME: We need to get the reference but bindings are broken so this doesn't work yet.
+                },
+                [&](NonnullRefPtr<BindingPattern> const&) {},
+                [&](NonnullRefPtr<MemberExpression> const& member_expression) {
+                    assignment_target = member_expression->to_reference(interpreter(), global_object);
+                });
+
+            if (exception())
+                return;
+
             if (entry.is_rest) {
                 VERIFY(i == binding.entries.size() - 1);
 
@@ -254,7 +268,14 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
                 },
                 [&](NonnullRefPtr<BindingPattern> const& pattern) {
                     assign(pattern, value, global_object, first_assignment, specific_scope);
+                },
+                [&](NonnullRefPtr<MemberExpression> const&) {
+                    VERIFY(assignment_target.has_value());
+                    assignment_target->put_value(global_object, value);
                 });
+
+            if (exception())
+                return;
 
             if (entry.is_rest)
                 break;
@@ -269,10 +290,21 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
             VERIFY(!property.is_elision());
 
             PropertyName assignment_name;
+            Optional<Reference> assignment_target;
+
             JS::Value value_to_assign;
             if (property.is_rest) {
-                VERIFY(property.name.has<NonnullRefPtr<Identifier>>());
-                assignment_name = property.name.get<NonnullRefPtr<Identifier>>()->string();
+                if (auto identifier_ptr = property.name.get_pointer<NonnullRefPtr<Identifier>>())
+                    assignment_name = (*identifier_ptr)->string();
+                property.alias.visit(
+                    [&](Empty) {},
+                    [&](NonnullRefPtr<Identifier> const&) {
+                        // FIXME: We need to get the reference but bindings are broken so this doesn't work yet.
+                    },
+                    [&](NonnullRefPtr<BindingPattern> const&) {},
+                    [&](NonnullRefPtr<MemberExpression> const& member_expression) {
+                        assignment_target = member_expression->to_reference(interpreter(), global_object);
+                    });
 
                 auto* rest_object = Object::create(global_object, global_object.object_prototype());
                 for (auto& object_property : object->shape().property_table()) {
@@ -297,6 +329,15 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
                         if (exception())
                             return;
                         assignment_name = result.to_property_key(global_object);
+                    });
+                property.alias.visit(
+                    [&](Empty) {},
+                    [&](NonnullRefPtr<Identifier> const&) {
+                        // FIXME: We need to get the reference but bindings are broken so this doesn't work yet.
+                    },
+                    [&](NonnullRefPtr<BindingPattern> const&) {},
+                    [&](NonnullRefPtr<MemberExpression> const& member_expression) {
+                        assignment_target = member_expression->to_reference(interpreter(), global_object);
                     });
 
                 if (exception())
@@ -327,7 +368,14 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
                 [&](NonnullRefPtr<BindingPattern> const& pattern) {
                     VERIFY(!property.is_rest);
                     assign(pattern, value_to_assign, global_object, first_assignment, specific_scope);
+                },
+                [&](NonnullRefPtr<MemberExpression> const&) {
+                    VERIFY(assignment_target.has_value());
+                    assignment_target->put_value(global_object, value_to_assign);
                 });
+
+            if (exception())
+                return;
 
             if (property.is_rest)
                 break;
