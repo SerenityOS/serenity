@@ -6,49 +6,10 @@
 
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
-#include <Kernel/Bus/VirtIO/Console.h>
 #include <Kernel/Bus/VirtIO/Device.h>
-#include <Kernel/Bus/VirtIO/RNG.h>
-#include <Kernel/CommandLine.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel::VirtIO {
-
-UNMAP_AFTER_INIT void detect()
-{
-    if (kernel_command_line().disable_virtio())
-        return;
-    PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
-        if (address.is_null() || id.is_null())
-            return;
-        // TODO: We should also be checking that the device_id is in between 0x1000 - 0x107F inclusive
-        if (id.vendor_id != PCI::VendorID::VirtIO)
-            return;
-        switch (id.device_id) {
-        case PCI::DeviceID::VirtIOConsole: {
-            auto console = Console::try_create(address);
-            if (console) {
-                [[maybe_unused]] auto* unused = console.leak_ref();
-            }
-            break;
-        }
-        case PCI::DeviceID::VirtIOEntropy: {
-            auto rng = RNG::try_create(address);
-            if (rng) {
-                [[maybe_unused]] auto* unused = rng.leak_ref();
-            }
-            break;
-        }
-        case PCI::DeviceID::VirtIOGPU: {
-            // This should have been initialized by the graphics subsystem
-            break;
-        }
-        default:
-            dbgln_if(VIRTIO_DEBUG, "VirtIO: Unknown VirtIO device with ID: {}", id.device_id);
-            break;
-        }
-    });
-}
 
 StringView determine_device_class(const PCI::Address& address)
 {
@@ -88,7 +49,7 @@ StringView determine_device_class(const PCI::Address& address)
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT bool Device::initialize()
+UNMAP_AFTER_INIT InitializationResult Device::initialize()
 {
     auto address = pci_address();
     enable_bus_mastering(pci_address());
@@ -103,7 +64,7 @@ UNMAP_AFTER_INIT bool Device::initialize()
             auto raw_config_type = capability.read8(0x3);
             if (raw_config_type < static_cast<u8>(ConfigurationType::Common) || raw_config_type > static_cast<u8>(ConfigurationType::PCI)) {
                 dbgln("{}: Unknown capability configuration type: {}", VirtIO::determine_device_class(address), raw_config_type);
-                return false;
+                return InitializationState::Failed;
             }
             cfg->cfg_type = static_cast<ConfigurationType>(raw_config_type);
             auto cap_length = capability.read8(0x2);
@@ -138,7 +99,7 @@ UNMAP_AFTER_INIT bool Device::initialize()
     set_status_bit(DEVICE_STATUS_ACKNOWLEDGE);
 
     set_status_bit(DEVICE_STATUS_DRIVER);
-    return true;
+    return InitializationState::OK;
 }
 
 UNMAP_AFTER_INIT VirtIO::Device::Device(PCI::Address address)

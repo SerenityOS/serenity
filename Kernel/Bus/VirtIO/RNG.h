@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/RefCounted.h>
+#include <AK/Result.h>
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Random.h>
@@ -18,12 +19,14 @@ namespace Kernel::VirtIO {
 class RNG final
     : public RefCounted<RNG>
     , public VirtIO::Device {
+    friend class Initializer;
+
 public:
-    static RefPtr<RNG> try_create(PCI::Address address);
+    static Result<NonnullRefPtr<RNG>, InitializationResult> try_create(PCI::Address address);
     virtual StringView purpose() const override { return class_name(); }
     virtual ~RNG() override = default;
 
-    virtual bool initialize() override;
+    virtual InitializationResult initialize() override;
 
 private:
     virtual StringView class_name() const override { return "VirtIOConsole"; }

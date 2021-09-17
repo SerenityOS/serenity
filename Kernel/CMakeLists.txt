@@ -38,6 +38,7 @@ set(KERNEL_SOURCES
     Bus/VirtIO/Console.cpp
     Bus/VirtIO/ConsolePort.cpp
     Bus/VirtIO/Device.cpp
+    Bus/VirtIO/Initializer.cpp
     Bus/VirtIO/Queue.cpp
     Bus/VirtIO/RNG.cpp
     CMOS.cpp

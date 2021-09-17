@@ -9,6 +9,7 @@
 #include <AK/BinaryBufferWriter.h>
 #include <AK/DistinctNumeric.h>
 #include <Kernel/Bus/VirtIO/Device.h>
+#include <Kernel/Bus/VirtIO/Initializer.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/Protocol.h>
@@ -39,9 +40,10 @@ class GPU final
     : public VirtIO::Device
     , public RefCounted<GPU> {
     friend class FrameBufferDevice;
+    friend class VirtIO::Initializer;
 
 public:
-    static RefPtr<GPU> try_create(Badge<GraphicsAdapter>, PCI::Address address);
+    static Result<NonnullRefPtr<GPU>, VirtIO::InitializationResult> try_create(Badge<GraphicsAdapter>, PCI::Address address);
     virtual ~GPU() override;
 
     void create_framebuffer_devices();
@@ -58,7 +60,7 @@ public:
         return IterationDecision::Continue;
     }
 
-    virtual bool initialize() override;
+    virtual VirtIO::InitializationResult initialize() override;
 
     RefPtr<Console> default_console()
     {

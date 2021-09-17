@@ -4,28 +4,23 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Bus/VirtIO/Initializer.h>
 #include <Kernel/Bus/VirtIO/RNG.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel::VirtIO {
 
-UNMAP_AFTER_INIT RefPtr<RNG> RNG::try_create(PCI::Address address)
+UNMAP_AFTER_INIT Result<NonnullRefPtr<RNG>, InitializationResult> RNG::try_create(PCI::Address address)
 {
     auto entropy_buffer = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIO::RNG", Memory::Region::Access::ReadWrite);
     if (entropy_buffer.is_error())
-        return {};
-    auto rng = adopt_ref_if_nonnull(new RNG(address, entropy_buffer.release_value()));
-    if (!rng)
-        return {};
-    if (!rng->initialize())
-        return {};
-    return rng;
+        return InitializationResult(InitializationState::OutOfMemory);
+    return Initializer::try_create_virtio_device<VirtIO::RNG>(address, entropy_buffer.release_value());
 }
 
-UNMAP_AFTER_INIT bool RNG::initialize()
+UNMAP_AFTER_INIT InitializationResult RNG::initialize()
 {
-    if (auto result = Device::initialize(); !result)
-        return false;
+    TRY(Device::initialize());
     bool success = negotiate_features([&](auto) {
         return 0;
     });
@@ -37,7 +32,7 @@ UNMAP_AFTER_INIT bool RNG::initialize()
         memset(m_entropy_buffer->vaddr().as_ptr(), 0, m_entropy_buffer->size());
         request_entropy_from_host();
     }
-    return true;
+    return InitializationState::OK;
 }
 
 UNMAP_AFTER_INIT RNG::RNG(PCI::Address address, NonnullOwnPtr<Memory::Region> entropy_buffer_region)

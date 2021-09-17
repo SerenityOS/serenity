@@ -6,6 +6,7 @@
  */
 
 #include <Kernel/Bus/VirtIO/Console.h>
+#include <Kernel/Bus/VirtIO/Initializer.h>
 #include <Kernel/Sections.h>
 #include <Kernel/WorkQueue.h>
 
@@ -13,24 +14,18 @@ namespace Kernel::VirtIO {
 
 unsigned Console::next_device_id = 0;
 
-UNMAP_AFTER_INIT RefPtr<Console> Console::try_create(PCI::Address address)
+UNMAP_AFTER_INIT Result<NonnullRefPtr<Console>, InitializationResult> Console::try_create(PCI::Address address)
 {
     auto control_receive_buffer = Memory::RingBuffer::try_create("VirtIOConsole control receive queue", CONTROL_BUFFER_SIZE);
     auto control_transmit_buffer = Memory::RingBuffer::try_create("VirtIOConsole control transmit queue", CONTROL_BUFFER_SIZE);
     if (control_receive_buffer.is_error() || control_transmit_buffer.is_error())
-        return {};
-    auto console = adopt_ref_if_nonnull(new Console(address, control_receive_buffer.release_value(), control_transmit_buffer.release_value()));
-    if (!console)
-        return {};
-    if (!console->initialize())
-        return {};
-    return console;
+        return InitializationResult(InitializationState::OutOfMemory);
+    return Initializer::try_create_virtio_device<Console>(address, control_receive_buffer.release_value(), control_transmit_buffer.release_value());
 }
 
-UNMAP_AFTER_INIT bool Console::initialize()
+UNMAP_AFTER_INIT InitializationResult Console::initialize()
 {
-    if (auto result = Device::initialize(); !result)
-        return false;
+    TRY(Device::initialize());
     if (auto cfg = get_config(ConfigurationType::Device)) {
         bool success = negotiate_features([&](u64 supported_features) {
             u64 negotiated = 0;
@@ -69,7 +64,7 @@ UNMAP_AFTER_INIT bool Console::initialize()
             }
         }
     }
-    return true;
+    return InitializationState::OK;
 }
 
 UNMAP_AFTER_INIT Console::Console(PCI::Address address, NonnullOwnPtr<Memory::RingBuffer> control_transmit_buffer, NonnullOwnPtr<Memory::RingBuffer> control_receive_buffer)

@@ -7,9 +7,11 @@
 #pragma once
 
 #include <AK/NonnullOwnPtrVector.h>
+#include <AK/Result.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
+#include <Kernel/Bus/VirtIO/Result.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Memory/MemoryManager.h>
@@ -81,16 +83,15 @@ struct Configuration {
     u32 length;
 };
 
-void detect();
 StringView determine_device_class(const PCI::Address& address);
 
-class Device
-    : public PCI::Device
+class Device : public PCI::Device
     , public IRQHandler {
+public:
 public:
     virtual ~Device() override = default;
 
-    virtual bool initialize();
+    virtual InitializationResult initialize();
 
 protected:
     virtual StringView class_name() const { return "VirtIO::Device"; }
@@ -243,5 +244,6 @@ private:
     bool m_did_setup_queues { false };
     u32 m_notify_multiplier { 0 };
 };
+
 };
 }

@@ -10,7 +10,7 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/Bus/USB/USBManagement.h>
-#include <Kernel/Bus/VirtIO/Device.h>
+#include <Kernel/Bus/VirtIO/Initializer.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/DeviceManagement.h>
@@ -304,7 +304,7 @@ void init_stage2(void*)
     USB::USBManagement::initialize();
     FirmwareSysFSDirectory::initialize();
 
-    VirtIO::detect();
+    VirtIO::Initializer::detect();
 
     NetworkingManagement::the().initialize();
     Syscall::initialize();

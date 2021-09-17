@@ -7,7 +7,7 @@
 #pragma once
 
 // NOTE: This macro works with any result type that has the expected APIs.
-//       It's designed with AK::Result and Kernel::KResult in mind.
+//       It's designed with AK::Result, VirtIO::InitializationResult and Kernel::KResult in mind.
 
 #define TRY(expression)                               \
     ({                                                \

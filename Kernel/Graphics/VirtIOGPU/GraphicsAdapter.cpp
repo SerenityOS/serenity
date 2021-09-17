@@ -27,8 +27,12 @@ RefPtr<GraphicsAdapter> GraphicsAdapter::try_initialize(PCI::Address base_addres
 bool GraphicsAdapter::initialize()
 {
     VERIFY(m_gpu_device.is_null());
-    m_gpu_device = GPU::try_create({}, pci_address());
-    return !m_gpu_device.is_null();
+    // FIXME: Propagate errors properly
+    auto gpu_device_or_error = GPU::try_create({}, pci_address());
+    if (gpu_device_or_error.is_error())
+        return false;
+    m_gpu_device = gpu_device_or_error.release_value();
+    return true;
 }
 
 GraphicsAdapter::GraphicsAdapter(PCI::Address base_address)

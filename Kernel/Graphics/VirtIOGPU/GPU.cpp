@@ -5,6 +5,7 @@
  */
 
 #include <AK/BinaryBufferWriter.h>
+#include <Kernel/Bus/VirtIO/Initializer.h>
 #include <Kernel/Graphics/VirtIOGPU/Console.h>
 #include <Kernel/Graphics/VirtIOGPU/FrameBufferDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/GPU.h>
@@ -15,10 +16,9 @@
 
 namespace Kernel::Graphics::VirtIOGPU {
 
-bool GPU::initialize()
+VirtIO::InitializationResult GPU::initialize()
 {
-    if (auto result = Device::initialize(); !result)
-        return false;
+    TRY(Device::initialize());
     if (auto cfg = get_config(VirtIO::ConfigurationType::Device)) {
         m_device_configuration = cfg;
         bool success = negotiate_features([&](u64 supported_features) {
@@ -46,20 +46,15 @@ bool GPU::initialize()
     } else {
         VERIFY_NOT_REACHED();
     }
-    return true;
+    return VirtIO::InitializationState::OK;
 }
 
-UNMAP_AFTER_INIT RefPtr<GPU> GPU::try_create(Badge<VirtIOGPU::GraphicsAdapter>, PCI::Address address)
+Result<NonnullRefPtr<GPU>, VirtIO::InitializationResult> GPU::try_create(Badge<VirtIOGPU::GraphicsAdapter>, PCI::Address address)
 {
     auto scratch_region = MM.allocate_contiguous_kernel_region(32 * PAGE_SIZE, "VirtGPU Scratch Space", Memory::Region::Access::ReadWrite);
     if (scratch_region.is_error())
-        return {};
-    auto gpu_device = adopt_ref_if_nonnull(new GPU(address, scratch_region.release_value()));
-    if (!gpu_device)
-        return {};
-    if (!gpu_device->initialize())
-        return {};
-    return gpu_device;
+        return VirtIO::InitializationResult(VirtIO::InitializationState::OutOfMemory);
+    return VirtIO::Initializer::try_create_virtio_device<GPU>(address, scratch_region.release_value());
 }
 
 GPU::GPU(PCI::Address address, NonnullOwnPtr<Memory::Region> scratch_region)

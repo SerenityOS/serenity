@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Result.h>
 #include <Kernel/Bus/VirtIO/ConsolePort.h>
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Memory/RingBuffer.h>
@@ -16,9 +17,10 @@ class Console
     : public VirtIO::Device
     , public RefCounted<Console> {
     friend VirtIO::ConsolePort;
+    friend class Initializer;
 
 public:
-    static RefPtr<Console> try_create(PCI::Address address);
+    static Result<NonnullRefPtr<Console>, InitializationResult> try_create(PCI::Address address);
     virtual ~Console() override = default;
 
     virtual StringView purpose() const override { return class_name(); }
@@ -28,7 +30,7 @@ public:
         return m_device_id;
     }
 
-    virtual bool initialize() override;
+    virtual InitializationResult initialize() override;
 
 private:
     virtual StringView class_name() const override { return "VirtIOConsole"; }
