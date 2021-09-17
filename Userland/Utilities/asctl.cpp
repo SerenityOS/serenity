@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
+ * Copyright (c) 2021, David Isaksson <davidisaksson93@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,6 +13,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <math.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
 
@@ -63,9 +65,9 @@ int main(int argc, char** argv)
         for (auto to_print : values_to_print) {
             switch (to_print) {
             case AudioVariable::Volume: {
-                i16 volume = audio_client->get_main_mix_volume();
+                auto volume = static_cast<int>(round(audio_client->get_main_mix_volume() * 100));
                 if (human_mode)
-                    outln("Volume: {:3d}%", volume);
+                    outln("Volume: {}%", volume);
                 else
                     out("{} ", volume);
                 break;
@@ -105,6 +107,10 @@ int main(int argc, char** argv)
                     warnln("Error: {} is not an integer volume", arguments[i - 1]);
                     return 1;
                 }
+                if (volume.value() < 0 || volume.value() > 100) {
+                    warnln("Error: {} is not between 0 and 100", arguments[i - 1]);
+                    return 1;
+                }
                 values_to_set.set(AudioVariable::Volume, volume.value());
             } else if (variable.is_one_of("m"sv, "mute"sv)) {
                 String& mute_text = arguments[++i];
@@ -135,7 +141,7 @@ int main(int argc, char** argv)
             switch (to_set.key) {
             case AudioVariable::Volume: {
                 int& volume = to_set.value.get<int>();
-                audio_client->set_main_mix_volume(volume);
+                audio_client->set_main_mix_volume(static_cast<double>(volume) / 100);
                 break;
             }
             case AudioVariable::Mute: {
