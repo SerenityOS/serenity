@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
+ * Copyright (c) 2021, Mahmoud Mandour <ma.mandourr@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -37,9 +38,20 @@ RefPtr<SQLResult> Insert::execute(ExecutionContext& context) const
         auto row_value = row_expr.evaluate(context);
         VERIFY(row_value.type() == SQLType::Tuple);
         auto values = row_value.to_vector().value();
-        for (auto ix = 0u; ix < values.size(); ix++) {
-            auto& column_name = m_column_names[ix];
-            row[column_name] = values[ix];
+
+        // FIXME: Check that the values[ix] match the data type of the column.
+        if (m_column_names.size() > 0) {
+            for (auto ix = 0u; ix < values.size(); ix++) {
+                auto& column_name = m_column_names[ix];
+                row[column_name] = values[ix];
+            }
+        } else {
+            if (values.size() != row.size()) {
+                return SQLResult::construct(SQLCommand::Insert, SQLErrorCode::InvalidNumberOfValues, "");
+            }
+            for (auto ix = 0u; ix < values.size(); ix++) {
+                row[ix] = values[ix];
+            }
         }
         context.database->insert(row);
     }
