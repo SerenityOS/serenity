@@ -35,7 +35,7 @@ public:
     NetworkResponse* response() { return m_response.ptr(); }
     const NetworkResponse* response() const { return m_response.ptr(); }
 
-    virtual void start() = 0;
+    virtual void start(NonnullRefPtr<Core::Socket>) = 0;
     virtual void shutdown() = 0;
 
     void cancel()

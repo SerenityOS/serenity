@@ -12,26 +12,35 @@
 #include <unistd.h>
 
 namespace HTTP {
-void HttpJob::start()
+void HttpJob::start(NonnullRefPtr<Core::Socket> socket)
 {
     VERIFY(!m_socket);
-    m_socket = Core::TCPSocket::construct(this);
-    m_socket->on_connected = [this] {
-        dbgln_if(CHTTPJOB_DEBUG, "HttpJob: on_connected callback");
-        on_socket_connected();
-    };
+    m_socket = move(socket);
     m_socket->on_error = [this] {
         dbgln_if(CHTTPJOB_DEBUG, "HttpJob: on_error callback");
         deferred_invoke([this] {
             did_fail(Core::NetworkJob::Error::ConnectionFailed);
         });
     };
-    bool success = m_socket->connect(m_request.url().host(), m_request.url().port_or_default());
-    if (!success) {
+    if (m_socket->is_connected()) {
+        dbgln("Reusing previous connection for {}", url());
         deferred_invoke([this] {
-            return did_fail(Core::NetworkJob::Error::ConnectionFailed);
+            dbgln_if(CHTTPJOB_DEBUG, "HttpJob: on_connected callback");
+            on_socket_connected();
         });
-    }
+    } else {
+        dbgln("Creating new connection for {}", url());
+        m_socket->on_connected = [this] {
+            dbgln_if(CHTTPJOB_DEBUG, "HttpJob: on_connected callback");
+            on_socket_connected();
+        };
+        bool success = m_socket->connect(m_request.url().host(), m_request.url().port_or_default());
+        if (!success) {
+            deferred_invoke([this] {
+                return did_fail(Core::NetworkJob::Error::ConnectionFailed);
+            });
+        }
+    };
 }
 
 void HttpJob::shutdown()
@@ -40,13 +49,24 @@ void HttpJob::shutdown()
         return;
     m_socket->on_ready_to_read = nullptr;
     m_socket->on_connected = nullptr;
-    remove_child(*m_socket);
     m_socket = nullptr;
 }
 
 void HttpJob::register_on_ready_to_read(Function<void()> callback)
 {
-    m_socket->on_ready_to_read = move(callback);
+    m_socket->on_ready_to_read = [callback = move(callback), this] {
+        callback();
+        // As IODevice so graciously buffers everything, there's a possible
+        // scenario where it buffers the entire response, and we get stuck waiting
+        // for select() in the notifier (which will never return).
+        // So handle this case by exhausting the buffer here.
+        if (m_socket->can_read_only_from_buffer() && m_state != State::Finished && !has_error()) {
+            deferred_invoke([this] {
+                if (m_socket && m_socket->on_ready_to_read)
+                    m_socket->on_ready_to_read();
+            });
+        }
+    };
 }
 
 void HttpJob::register_on_ready_to_write(Function<void()> callback)

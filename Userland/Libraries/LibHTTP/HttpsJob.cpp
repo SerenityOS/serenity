@@ -14,15 +14,12 @@
 
 namespace HTTP {
 
-void HttpsJob::start()
+void HttpsJob::start(NonnullRefPtr<Core::Socket> socket)
 {
     VERIFY(!m_socket);
-    m_socket = TLS::TLSv12::construct(this);
-    m_socket->set_root_certificates(m_override_ca_certificates ? *m_override_ca_certificates : DefaultRootCACertificates::the().certificates());
-    m_socket->on_tls_connected = [this] {
-        dbgln_if(HTTPSJOB_DEBUG, "HttpsJob: on_connected callback");
-        on_socket_connected();
-    };
+    VERIFY(is<TLS::TLSv12>(*socket));
+
+    m_socket = static_ptr_cast<TLS::TLSv12>(socket);
     m_socket->on_tls_error = [&](TLS::AlertDescription error) {
         if (error == TLS::AlertDescription::HandshakeFailure) {
             deferred_invoke([this] {
@@ -46,11 +43,22 @@ void HttpsJob::start()
         if (on_certificate_requested)
             on_certificate_requested(*this);
     };
-    bool success = ((TLS::TLSv12&)*m_socket).connect(m_request.url().host(), m_request.url().port_or_default());
-    if (!success) {
-        deferred_invoke([this] {
-            return did_fail(Core::NetworkJob::Error::ConnectionFailed);
-        });
+    if (m_socket->is_established()) {
+        dbgln("Reusing previous connection for {}", url());
+        deferred_invoke([this] { on_socket_connected(); });
+    } else {
+        dbgln("Creating a new connection for {}", url());
+        m_socket->set_root_certificates(m_override_ca_certificates ? *m_override_ca_certificates : DefaultRootCACertificates::the().certificates());
+        m_socket->on_tls_connected = [this] {
+            dbgln_if(HTTPSJOB_DEBUG, "HttpsJob: on_connected callback");
+            on_socket_connected();
+        };
+        bool success = ((TLS::TLSv12&)*m_socket).connect(m_request.url().host(), m_request.url().port_or_default());
+        if (!success) {
+            deferred_invoke([this] {
+                return did_fail(Core::NetworkJob::Error::ConnectionFailed);
+            });
+        }
     }
 }
 
@@ -60,7 +68,6 @@ void HttpsJob::shutdown()
         return;
     m_socket->on_tls_ready_to_read = nullptr;
     m_socket->on_tls_connected = nullptr;
-    remove_child(*m_socket);
     m_socket = nullptr;
 }
 
