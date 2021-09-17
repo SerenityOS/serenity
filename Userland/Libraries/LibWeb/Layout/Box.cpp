@@ -131,8 +131,8 @@ void Box::paint_border(PaintContext& context)
             circle_position.set_y(to.y());
             center.set_x(radius);
         } else {
-            // How did you get here?
-            VERIFY_NOT_REACHED();
+            // You are lying about your intentions of drawing a quarter circle, your coordinates are (partly) the same!
+            return;
         }
 
         Gfx::IntRect circle_rect = {
