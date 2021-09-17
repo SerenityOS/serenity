@@ -11,7 +11,7 @@
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/CSS/Parser/Tokenizer.h>
 
-//U+FFFD REPLACEMENT CHARACTER (�)
+// U+FFFD REPLACEMENT CHARACTER (�)
 #define REPLACEMENT_CHARACTER 0xFFFD
 static const u32 TOKENIZER_EOF = 0xFFFFFFFF;
 
@@ -42,7 +42,10 @@ static inline bool is_low_line(u32 code_point)
 
 static inline bool is_name_start_code_point(u32 code_point)
 {
-    return is_ascii_alpha(code_point) || !is_ascii(code_point) || is_low_line(code_point);
+    // FIXME: We use !is_ascii() for "non-ASCII code point" in the spec, but it's not quite right -
+    //        it treats EOF as a valid! The spec also lacks a definition of code point. For now, the
+    //        !is_eof() check is a hack, but it should work.
+    return !is_eof(code_point) && (is_ascii_alpha(code_point) || !is_ascii(code_point) || is_low_line(code_point));
 }
 
 static inline bool is_hyphen_minus(u32 code_point)
@@ -585,6 +588,7 @@ Token Tokenizer::consume_a_numeric_token()
         token.m_number_type = number.type;
 
         auto unit = consume_a_name();
+        VERIFY(!unit.is_empty() && !unit.is_whitespace());
         token.m_unit.append(unit);
 
         return token;
