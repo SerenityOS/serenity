@@ -6,7 +6,7 @@
 
 #include <AK/Hex.h>
 #include <LibPDF/Document.h>
-#include <LibPDF/Object.h>
+#include <LibPDF/ObjectDerivatives.h>
 
 namespace PDF {
 

@@ -10,10 +10,9 @@
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <LibPDF/Forward.h>
+#include <LibPDF/Object.h>
 
 namespace PDF {
-
-class Object;
 
 class Value {
 public:
