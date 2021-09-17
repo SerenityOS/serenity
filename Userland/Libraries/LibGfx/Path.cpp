@@ -118,8 +118,6 @@ void Path::close()
     if (m_segments.size() <= 1)
         return;
 
-    invalidate_split_lines();
-
     auto& last_point = m_segments.last().point();
 
     for (ssize_t i = m_segments.size() - 1; i >= 0; --i) {
@@ -128,6 +126,7 @@ void Path::close()
             if (last_point == segment.point())
                 return;
             append_segment<LineSegment>(segment.point());
+            invalidate_split_lines();
             return;
         }
     }
