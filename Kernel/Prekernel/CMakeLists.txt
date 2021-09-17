@@ -44,9 +44,9 @@ target_link_options(${PREKERNEL_TARGET} PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE
 set_target_properties(${PREKERNEL_TARGET} PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_link_libraries(${PREKERNEL_TARGET} PRIVATE kernel_heap gcc)
+    target_link_libraries(${PREKERNEL_TARGET} PRIVATE gcc)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
-    target_link_libraries(${PREKERNEL_TARGET} PRIVATE kernel_heap "clang_rt.builtins-${SERENITY_CLANG_ARCH}" c++abi)
+    target_link_libraries(${PREKERNEL_TARGET} PRIVATE "clang_rt.builtins-${SERENITY_CLANG_ARCH}" c++abi)
 endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
