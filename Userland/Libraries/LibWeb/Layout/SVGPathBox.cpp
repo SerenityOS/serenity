@@ -39,8 +39,7 @@ void SVGPathBox::paint(PaintContext& context, PaintPhase phase)
     Gfx::AntiAliasingPainter painter { context.painter() };
     auto& svg_context = context.svg_context();
 
-    auto offset = absolute_position() - effective_offset();
-
+    auto offset = absolute_position();
     painter.translate(offset);
 
     painter.fill_path(
