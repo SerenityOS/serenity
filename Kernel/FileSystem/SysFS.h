@@ -146,6 +146,7 @@ protected:
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(UserID, GroupID) override;
     virtual KResult truncate(u64) override;
+    virtual KResult set_mtime(time_t);
 
     virtual KResult attach(OpenFileDescription& description) override final;
     virtual void did_seek(OpenFileDescription&, off_t) override final;

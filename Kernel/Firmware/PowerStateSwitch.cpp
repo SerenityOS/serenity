@@ -30,6 +30,15 @@ UNMAP_AFTER_INIT PowerStateSwitchNode::PowerStateSwitchNode(FirmwareSysFSDirecto
 {
 }
 
+KResult PowerStateSwitchNode::truncate(u64 size)
+{
+    // Note: This node doesn't store any useful data anyway, so we can safely
+    // truncate this to zero (essentially ignoring the request without failing).
+    if (size != 0)
+        return EPERM;
+    return KSuccess;
+}
+
 KResultOr<size_t> PowerStateSwitchNode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& data, OpenFileDescription*)
 {
     if (Checked<off_t>::addition_would_overflow(offset, count))
