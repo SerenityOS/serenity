@@ -37,11 +37,34 @@ int main(int argc, char** argv)
 
     auto hunks = Diff::from_text(file1->read_all(), file2->read_all());
     for (const auto& hunk : hunks) {
-        outln("Hunk: {}, {}", hunk.original_start_line, hunk.target_start_line);
-        for (const auto& line : hunk.removed_lines) {
+        auto original_start = hunk.original_start_line;
+        auto target_start = hunk.target_start_line;
+        auto num_added = hunk.added_lines.size();
+        auto num_removed = hunk.removed_lines.size();
+
+        StringBuilder sb;
+        // Source line(s)
+        sb.appendff("{}", original_start);
+        if (num_removed > 1)
+            sb.appendff(",{}", original_start + num_removed - 1);
+
+        // Action
+        if (num_added > 0 && num_removed > 0)
+            sb.append("c");
+        else if (num_added > 0)
+            sb.append("a");
+        else
+            sb.append("d");
+
+        // Target line(s)
+        sb.appendff("{}", target_start);
+        if (num_added > 1)
+            sb.appendff(",{}", target_start + num_added - 1);
+
+        outln("Hunk: {}", sb.build());
+        for (const auto& line : hunk.removed_lines)
             outln("\033[31;1m< {}\033[0m", line);
-        }
-        if (hunk.added_lines.size() > 0 && hunk.removed_lines.size() > 0)
+        if (num_added > 0 && num_removed > 0)
             outln("---");
         for (const auto& line : hunk.added_lines)
             outln("\033[32;1m> {}\033[0m", line);
