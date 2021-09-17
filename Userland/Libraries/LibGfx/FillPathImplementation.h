@@ -46,6 +46,12 @@ void fill_path(Painter& painter, Path const& path, Color color, Gfx::Painter::Wi
 {
     using GridCoordinateType = Conditional<fill_path_mode == FillPathMode::PlaceOnIntGrid, int, float>;
     using PointType = Point<GridCoordinateType>;
+    auto draw_line = [&](auto... args) {
+        if constexpr (requires { painter.draw_aliased_line(args...); })
+            painter.draw_aliased_line(args...);
+        else
+            painter.draw_line(args...);
+    };
 
     auto const& segments = path.split_lines();
 
@@ -130,7 +136,7 @@ void fill_path(Painter& painter, Path const& path, Color color, Gfx::Painter::Wi
                         // inside the shape
 
                         dbgln_if(FILL_PATH_DEBUG, "y={}: {} at {}: {} -- {}", scanline, winding_number, i, from, to);
-                        painter.draw_line(from, to, color, 1);
+                        draw_line(from, to, color, 1);
                     }
 
                     auto is_passing_through_maxima = scanline == previous.maximum_y
@@ -153,7 +159,7 @@ void fill_path(Painter& painter, Path const& path, Color color, Gfx::Painter::Wi
                 active_list.last().x -= active_list.last().inverse_slope;
             } else {
                 auto point = PointType(active_list[0].x, scanline);
-                painter.draw_line(point, point, color);
+                draw_line(point, point, color);
 
                 // update the x coord
                 active_list.first().x -= active_list.first().inverse_slope;
@@ -183,7 +189,7 @@ void fill_path(Painter& painter, Path const& path, Color color, Gfx::Painter::Wi
     if constexpr (FILL_PATH_DEBUG) {
         size_t i { 0 };
         for (auto& segment : segments) {
-            painter.draw_line(PointType(segment.from), PointType(segment.to), Color::from_hsv(i++ * 360.0 / segments.size(), 1.0, 1.0), 1);
+            draw_line(PointType(segment.from), PointType(segment.to), Color::from_hsv(i++ * 360.0 / segments.size(), 1.0, 1.0), 1);
         }
     }
 }

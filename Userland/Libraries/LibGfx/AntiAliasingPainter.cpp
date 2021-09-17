@@ -16,7 +16,8 @@ static float fractional_part(float x)
 
 // Base algorithm from https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm,
 // because there seems to be no other known method for drawing AA'd lines (?)
-void Gfx::AntiAliasingPainter::draw_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Gfx::Painter::LineStyle style, Color)
+template<Gfx::AntiAliasingPainter::AntiAliasPolicy policy>
+void Gfx::AntiAliasingPainter::draw_anti_aliased_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Gfx::Painter::LineStyle style, Color)
 {
     // FIXME: Implement this :P
     VERIFY(style == Painter::LineStyle::Solid);
@@ -76,15 +77,33 @@ void Gfx::AntiAliasingPainter::draw_line(FloatPoint const& actual_from, FloatPoi
     auto x = first_end_point.x();
     while (x < last_end_point.x()) {
         if (is_steep) {
-            draw_point({ floorf(next_intersection), x }, color_with_alpha(1 - fractional_part(next_intersection)));
+            if constexpr (policy == AntiAliasPolicy::OnlyEnds) {
+                draw_point({ floorf(next_intersection), x }, color);
+            } else {
+                draw_point({ floorf(next_intersection), x }, color_with_alpha(1 - fractional_part(next_intersection)));
+            }
             draw_point({ floorf(next_intersection) + 1, x }, color_with_alpha(fractional_part(next_intersection)));
         } else {
-            draw_point({ x, floorf(next_intersection) }, color_with_alpha(1 - fractional_part(next_intersection)));
+            if constexpr (policy == AntiAliasPolicy::OnlyEnds) {
+                draw_point({ x, floorf(next_intersection) }, color);
+            } else {
+                draw_point({ x, floorf(next_intersection) }, color_with_alpha(1 - fractional_part(next_intersection)));
+            }
             draw_point({ x, floorf(next_intersection) + 1 }, color_with_alpha(fractional_part(next_intersection)));
         }
         next_intersection += delta_y;
         x += delta_x;
     }
+}
+
+void Gfx::AntiAliasingPainter::draw_aliased_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Gfx::Painter::LineStyle style, Color alternate_color)
+{
+    draw_anti_aliased_line<AntiAliasPolicy::OnlyEnds>(actual_from, actual_to, color, thickness, style, alternate_color);
+}
+
+void Gfx::AntiAliasingPainter::draw_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Gfx::Painter::LineStyle style, Color alternate_color)
+{
+    draw_anti_aliased_line<AntiAliasPolicy::Full>(actual_from, actual_to, color, thickness, style, alternate_color);
 }
 
 void Gfx::AntiAliasingPainter::fill_path(Path& path, Color color, Painter::WindingRule rule)
