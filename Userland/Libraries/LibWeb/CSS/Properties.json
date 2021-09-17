@@ -104,6 +104,7 @@
     ]
   },
   "border-color": {
+    "initial": "currentcolor",
     "longhands": [
       "border-top-color",
       "border-right-color",
@@ -164,12 +165,13 @@
   },
   "border-spacing": {
     "inherited": true,
-    "initial": "0",
+    "initial": "0px 0px",
     "quirks": [
       "unitless-length"
     ]
   },
   "border-style": {
+    "initial": "none",
     "longhands": [
       "border-top-style",
       "border-right-style",
@@ -204,6 +206,7 @@
     ]
   },
   "border-width": {
+    "initial": "medium",
     "longhands": [
       "border-top-width",
       "border-right-width",
@@ -246,7 +249,7 @@
   },
   "color": {
     "inherited": true,
-    "initial": "",
+    "initial": "-libweb-palette-base-text",
     "quirks": [
       "hashless-hex-color"
     ]
@@ -569,7 +572,7 @@
   },
   "text-decoration-color": {
     "inherited": false,
-    "initial": "none"
+    "initial": "currentcolor"
   },
   "text-decoration-line": {
     "__comment": "FIXME: This property is not supposed to be inherited, but we currently rely on inheritance to propagate decorations into line boxes.",
@@ -578,7 +581,7 @@
   },
   "text-decoration-style": {
     "inherited": false,
-    "initial": "none"
+    "initial": "solid"
   },
   "text-decoration-thickness": {
     "inherited": false,
