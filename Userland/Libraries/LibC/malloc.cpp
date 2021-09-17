@@ -26,8 +26,13 @@ public:
         : m_mutex(mutex)
     {
         lock();
+        __heap_is_stable = false;
     }
-    ALWAYS_INLINE ~PthreadMutexLocker() { unlock(); }
+    ALWAYS_INLINE ~PthreadMutexLocker()
+    {
+        __heap_is_stable = true;
+        unlock();
+    }
     ALWAYS_INLINE void lock() { pthread_mutex_lock(&m_mutex); }
     ALWAYS_INLINE void unlock() { pthread_mutex_unlock(&m_mutex); }
 
@@ -38,6 +43,7 @@ private:
 #define RECYCLE_BIG_ALLOCATIONS
 
 static pthread_mutex_t s_malloc_mutex = PTHREAD_MUTEX_INITIALIZER;
+bool __heap_is_stable = true;
 
 constexpr size_t number_of_hot_chunked_blocks_to_keep_around = 16;
 constexpr size_t number_of_cold_chunked_blocks_to_keep_around = 16;
