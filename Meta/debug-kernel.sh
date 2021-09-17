@@ -2,6 +2,10 @@
 
 SCRIPT_DIR="$(dirname "${0}")"
 
+if [ -z "$SERENITY_ARCH" ]; then
+    SERENITY_ARCH="i686"
+fi
+
 # Set this environment variable to override the default debugger.
 #
 if [ -z "$SERENITY_KERNEL_DEBUGGER" ]; then
