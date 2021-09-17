@@ -7,6 +7,7 @@
 #include "ProcessModel.h"
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/NumberFormat.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibGUI/FileIconProvider.h>
@@ -122,11 +123,6 @@ String ProcessModel::column_name(int column) const
     default:
         VERIFY_NOT_REACHED();
     }
-}
-
-static String pretty_byte_size(size_t size)
-{
-    return String::formatted("{}K", size / 1024);
 }
 
 GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole role) const
@@ -265,17 +261,17 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
         case Column::Priority:
             return thread.current_state.priority;
         case Column::Virtual:
-            return pretty_byte_size(thread.current_state.amount_virtual);
+            return human_readable_size(thread.current_state.amount_virtual);
         case Column::Physical:
-            return pretty_byte_size(thread.current_state.amount_resident);
+            return human_readable_size(thread.current_state.amount_resident);
         case Column::DirtyPrivate:
-            return pretty_byte_size(thread.current_state.amount_dirty_private);
+            return human_readable_size(thread.current_state.amount_dirty_private);
         case Column::CleanInode:
-            return pretty_byte_size(thread.current_state.amount_clean_inode);
+            return human_readable_size(thread.current_state.amount_clean_inode);
         case Column::PurgeableVolatile:
-            return pretty_byte_size(thread.current_state.amount_purgeable_volatile);
+            return human_readable_size(thread.current_state.amount_purgeable_volatile);
         case Column::PurgeableNonvolatile:
-            return pretty_byte_size(thread.current_state.amount_purgeable_nonvolatile);
+            return human_readable_size(thread.current_state.amount_purgeable_nonvolatile);
         case Column::CPU:
             return String::formatted("{:.2}", thread.current_state.cpu_percent);
         case Column::Processor:
