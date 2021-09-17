@@ -238,8 +238,6 @@ BigInt* round_temporal_instant(GlobalObject& global_object, BigInt const& nanose
 // 8.5.9 TemporalInstantToString ( instant, timeZone, precision ), https://tc39.es/proposal-temporal/#sec-temporal-temporalinstanttostring
 ThrowCompletionOr<String> temporal_instant_to_string(GlobalObject& global_object, Instant& instant, Value time_zone, Variant<StringView, u8> const& precision)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: Type(instant) is Object.
     // 2. Assert: instant has an [[InitializedTemporalInstant]] internal slot.
 
@@ -260,11 +258,9 @@ ThrowCompletionOr<String> temporal_instant_to_string(GlobalObject& global_object
     auto* date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, output_time_zone, instant, *iso_calendar));
 
     // 7. Let dateTimeString be ? TemporalDateTimeToString(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], undefined, precision, "never").
-    auto date_time_string = temporal_date_time_to_string(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), js_undefined(), precision, "never"sv);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto date_time_string = TRY(temporal_date_time_to_string(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), js_undefined(), precision, "never"sv));
 
-    Optional<String> time_zone_string;
+    String time_zone_string;
 
     // 8. If timeZone is undefined, then
     if (time_zone.is_undefined()) {
@@ -278,7 +274,7 @@ ThrowCompletionOr<String> temporal_instant_to_string(GlobalObject& global_object
     }
 
     // 10. Return the string-concatenation of dateTimeString and timeZoneString.
-    return String::formatted("{}{}", *date_time_string, *time_zone_string);
+    return String::formatted("{}{}", date_time_string, time_zone_string);
 }
 
 }

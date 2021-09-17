@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
@@ -99,19 +100,19 @@ bool iso_date_time_within_limits(GlobalObject& global_object, i32 year, u8 month
 }
 
 // 5.5.3 InterpretTemporalDateTimeFields ( calendar, fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-interprettemporaldatetimefields
-Optional<ISODateTime> interpret_temporal_date_time_fields(GlobalObject& global_object, Object& calendar, Object& fields, Object& options)
+ThrowCompletionOr<ISODateTime> interpret_temporal_date_time_fields(GlobalObject& global_object, Object& calendar, Object& fields, Object& options)
 {
     // 1. Let timeResult be ? ToTemporalTimeRecord(fields).
-    auto unregulated_time_result = TRY_OR_DISCARD(to_temporal_time_record(global_object, fields));
+    auto unregulated_time_result = TRY(to_temporal_time_record(global_object, fields));
 
     // 2. Let temporalDate be ? DateFromFields(calendar, fields, options).
-    auto* temporal_date = TRY_OR_DISCARD(date_from_fields(global_object, calendar, fields, options));
+    auto* temporal_date = TRY(date_from_fields(global_object, calendar, fields, options));
 
     // 3. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, options));
+    auto overflow = TRY(to_temporal_overflow(global_object, options));
 
     // 4. Let timeResult be ? RegulateTime(timeResult.[[Hour]], timeResult.[[Minute]], timeResult.[[Second]], timeResult.[[Millisecond]], timeResult.[[Microsecond]], timeResult.[[Nanosecond]], overflow).
-    auto time_result = TRY_OR_DISCARD(regulate_time(global_object, unregulated_time_result.hour, unregulated_time_result.minute, unregulated_time_result.second, unregulated_time_result.millisecond, unregulated_time_result.microsecond, unregulated_time_result.nanosecond, overflow));
+    auto time_result = TRY(regulate_time(global_object, unregulated_time_result.hour, unregulated_time_result.minute, unregulated_time_result.second, unregulated_time_result.millisecond, unregulated_time_result.microsecond, unregulated_time_result.nanosecond, overflow));
 
     // 5. Return the Record { [[Year]]: temporalDate.[[ISOYear]], [[Month]]: temporalDate.[[ISOMonth]], [[Day]]: temporalDate.[[ISODay]], [[Hour]]: timeResult.[[Hour]], [[Minute]]: timeResult.[[Minute]], [[Second]]: timeResult.[[Second]], [[Millisecond]]: timeResult.[[Millisecond]], [[Microsecond]]: timeResult.[[Microsecond]], [[Nanosecond]]: timeResult.[[Nanosecond]] }.
     return ISODateTime {
@@ -128,7 +129,7 @@ Optional<ISODateTime> interpret_temporal_date_time_fields(GlobalObject& global_o
 }
 
 // 5.5.4 ToTemporalDateTime ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldatetime
-PlainDateTime* to_temporal_date_time(GlobalObject& global_object, Value item, Object* options)
+ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(GlobalObject& global_object, Value item, Object* options)
 {
     auto& vm = global_object.vm();
 
@@ -157,7 +158,7 @@ PlainDateTime* to_temporal_date_time(GlobalObject& global_object, Value item, Ob
             auto* instant = create_temporal_instant(global_object, zoned_date_time.nanoseconds()).release_value();
 
             // ii. Return ? BuiltinTimeZoneGetPlainDateTimeFor(item.[[TimeZone]], instant, item.[[Calendar]]).
-            return TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &zoned_date_time.time_zone(), *instant, zoned_date_time.calendar()));
+            return builtin_time_zone_get_plain_date_time_for(global_object, &zoned_date_time.time_zone(), *instant, zoned_date_time.calendar());
         }
 
         // c. If item has an [[InitializedTemporalDate]] internal slot, then
@@ -169,32 +170,29 @@ PlainDateTime* to_temporal_date_time(GlobalObject& global_object, Value item, Ob
         }
 
         // d. Let calendar be ? GetTemporalCalendarWithISODefault(item).
-        calendar = TRY_OR_DISCARD(get_temporal_calendar_with_iso_default(global_object, item_object));
+        calendar = TRY(get_temporal_calendar_with_iso_default(global_object, item_object));
 
         // e. Let fieldNames be ? CalendarFields(calendar, « "day", "hour", "microsecond", "millisecond", "minute", "month", "monthCode", "nanosecond", "second", "year" »).
-        auto field_names = TRY_OR_DISCARD(calendar_fields(global_object, *calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv }));
+        auto field_names = TRY(calendar_fields(global_object, *calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv }));
 
         // f. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
-        auto* fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, item_object, field_names, {}));
+        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, {}));
 
         // g. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
-        auto maybe_result = interpret_temporal_date_time_fields(global_object, *calendar, *fields, *options);
-        if (vm.exception())
-            return {};
-        result = move(*maybe_result);
+        result = TRY(interpret_temporal_date_time_fields(global_object, *calendar, *fields, *options));
     }
     // 3. Else,
     else {
         // a. Perform ? ToTemporalOverflow(options).
-        (void)TRY_OR_DISCARD(to_temporal_overflow(global_object, *options));
+        (void)TRY(to_temporal_overflow(global_object, *options));
 
         // b. Let string be ? ToString(item).
         auto string = item.to_string(global_object);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // c. Let result be ? ParseTemporalDateTimeString(string).
-        result = TRY_OR_DISCARD(parse_temporal_date_time_string(global_object, string));
+        result = TRY(parse_temporal_date_time_string(global_object, string));
 
         // d. Assert: ! IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
         VERIFY(is_valid_iso_date(result.year, result.month, result.day));
@@ -203,7 +201,7 @@ PlainDateTime* to_temporal_date_time(GlobalObject& global_object, Value item, Ob
         VERIFY(is_valid_time(result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
 
         // f. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
-        calendar = TRY_OR_DISCARD(to_temporal_calendar_with_iso_default(global_object, result.calendar.has_value() ? js_string(vm, *result.calendar) : js_undefined()));
+        calendar = TRY(to_temporal_calendar_with_iso_default(global_object, result.calendar.has_value() ? js_string(vm, *result.calendar) : js_undefined()));
     }
 
     // 4. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], calendar).
@@ -230,7 +228,7 @@ ISODateTime balance_iso_date_time(i32 year, u8 month, u8 day, u8 hour, u8 minute
 }
 
 // 5.5.6 CreateTemporalDateTime ( isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond, calendar [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaldatetime
-PlainDateTime* create_temporal_date_time(GlobalObject& global_object, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Object& calendar, FunctionObject const* new_target)
+ThrowCompletionOr<PlainDateTime*> create_temporal_date_time(GlobalObject& global_object, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Object& calendar, FunctionObject const* new_target)
 {
     auto& vm = global_object.vm();
 
@@ -238,22 +236,17 @@ PlainDateTime* create_temporal_date_time(GlobalObject& global_object, i32 iso_ye
     // 2. Assert: Type(calendar) is Object.
 
     // 3. If ! IsValidISODate(isoYear, isoMonth, isoDay) is false, throw a RangeError exception.
-    if (!is_valid_iso_date(iso_year, iso_month, iso_day)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
-        return {};
-    }
+    if (!is_valid_iso_date(iso_year, iso_month, iso_day))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
 
     // 4. If ! IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
-    if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
-        return {};
-    }
+    if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
 
     // 5. If ! ISODateTimeWithinLimits(isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond) is false, then
     if (!iso_date_time_within_limits(global_object, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond)) {
         // a. Throw a RangeError exception.
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
-        return {};
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
     }
 
     // 6. If newTarget is not present, set it to %Temporal.PlainDateTime%.
@@ -271,14 +264,14 @@ PlainDateTime* create_temporal_date_time(GlobalObject& global_object, i32 iso_ye
     // 15. Set object.[[ISOMicrosecond]] to microsecond.
     // 16. Set object.[[ISONanosecond]] to nanosecond.
     // 17. Set object.[[Calendar]] to calendar.
-    auto* object = TRY_OR_DISCARD(ordinary_create_from_constructor<PlainDateTime>(global_object, *new_target, &GlobalObject::temporal_plain_date_prototype, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond, calendar));
+    auto* object = TRY(ordinary_create_from_constructor<PlainDateTime>(global_object, *new_target, &GlobalObject::temporal_plain_date_prototype, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond, calendar));
 
     // 18. Return object.
     return object;
 }
 
 // 5.5.7 TemporalDateTimeToString ( isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond, calendar, precision, showCalendar ), , https://tc39.es/proposal-temporal/#sec-temporal-temporaldatetimetostring
-Optional<String> temporal_date_time_to_string(GlobalObject& global_object, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Value calendar, Variant<StringView, u8> const& precision, StringView show_calendar)
+ThrowCompletionOr<String> temporal_date_time_to_string(GlobalObject& global_object, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Value calendar, Variant<StringView, u8> const& precision, StringView show_calendar)
 {
     auto& vm = global_object.vm();
 
@@ -295,8 +288,8 @@ Optional<String> temporal_date_time_to_string(GlobalObject& global_object, i32 i
 
     // 8. Let calendarID be ? ToString(calendar).
     auto calendar_id = calendar.to_string(global_object);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 9. Let calendarString be ! FormatCalendarAnnotation(calendarID, showCalendar).
     auto calendar_string = format_calendar_annotation(calendar_id, show_calendar);
