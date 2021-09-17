@@ -12,6 +12,7 @@ set(SOURCES
     DDSLoader.cpp
     DisjointRectSet.cpp
     Emoji.cpp
+    Filters/FastBoxBlurFilter.cpp
     FontDatabase.cpp
     GIFLoader.cpp
     ICOLoader.cpp
