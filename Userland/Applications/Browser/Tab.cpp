@@ -132,7 +132,6 @@ Tab::Tab(BrowserWindow& window)
 
         auto url = url_from_user_input(m_location_box->text());
         load(url);
-        view();
     };
 
     m_location_box->add_custom_context_menu_action(GUI::Action::create("Paste && Go", [this](auto&) {
