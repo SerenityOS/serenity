@@ -27,6 +27,7 @@ namespace JS {
 class VariableDeclaration;
 class FunctionDeclaration;
 class Identifier;
+class MemberExpression;
 
 enum class FunctionKind {
     Generator,
@@ -319,7 +320,7 @@ struct BindingPattern : RefCounted<BindingPattern> {
     struct BindingEntry {
         // If this entry represents a BindingElement, then name will be Empty
         Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<Expression>, Empty> name {};
-        Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>, Empty> alias {};
+        Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>, NonnullRefPtr<MemberExpression>, Empty> alias {};
         RefPtr<Expression> initializer {};
         bool is_rest { false };
 

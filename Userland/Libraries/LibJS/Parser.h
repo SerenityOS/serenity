@@ -42,7 +42,18 @@ public:
     template<typename FunctionNodeType>
     NonnullRefPtr<FunctionNodeType> parse_function_node(u8 parse_options = FunctionNodeParseOptions::CheckForFunctionAndName);
     Vector<FunctionNode::Parameter> parse_formal_parameters(int& function_length, u8 parse_options = 0);
-    RefPtr<BindingPattern> parse_binding_pattern(bool strict_checks = false);
+
+    enum class AllowDuplicates {
+        Yes,
+        No
+    };
+
+    enum class AllowMemberExpressions {
+        Yes,
+        No
+    };
+
+    RefPtr<BindingPattern> parse_binding_pattern(AllowDuplicates is_var_declaration = AllowDuplicates::No, AllowMemberExpressions allow_member_expressions = AllowMemberExpressions::No);
 
     struct PrimaryExpressionParseResult {
         NonnullRefPtr<Expression> result;
@@ -178,6 +189,8 @@ private:
     void load_state();
     void discard_saved_state();
     Position position() const;
+
+    RefPtr<BindingPattern> synthesize_binding_pattern(Expression const& expression);
 
     Token next_token();
 
