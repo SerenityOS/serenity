@@ -187,10 +187,18 @@ wint_t towupper(wint_t wc)
     return __inline_toupper(wc);
 }
 
-wint_t towctrans(wint_t, wctrans_t)
+wint_t towctrans(wint_t wc, wctrans_t desc)
 {
-    dbgln("FIXME: Implement towctrans()");
-    TODO();
+    switch (desc) {
+    case WCTRANS_TOLOWER:
+        return towlower(wc);
+
+    case WCTRANS_TOUPPER:
+        return towupper(wc);
+
+    default:
+        return wc;
+    }
 }
 
 wctrans_t wctrans(const char* charclass)
