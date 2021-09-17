@@ -32,13 +32,13 @@ void DIE::rehydrate_from(u32 offset, Optional<u32> parent_offset)
         m_tag = EntryTag::None;
     } else {
         auto abbreviation_info = m_compilation_unit.abbreviations_map().get(m_abbreviation_code);
-        VERIFY(abbreviation_info.has_value());
+        VERIFY(abbreviation_info);
 
-        m_tag = abbreviation_info.value().tag;
-        m_has_children = abbreviation_info.value().has_children;
+        m_tag = abbreviation_info->tag;
+        m_has_children = abbreviation_info->has_children;
 
         // We iterate the attributes data only to calculate this DIE's size
-        for (auto& attribute_spec : abbreviation_info.value().attribute_specifications) {
+        for (auto& attribute_spec : abbreviation_info->attribute_specifications) {
             m_compilation_unit.dwarf_info().get_attribute_value(attribute_spec.form, attribute_spec.value, stream, &m_compilation_unit);
         }
     }
@@ -52,9 +52,9 @@ Optional<AttributeValue> DIE::get_attribute(Attribute const& attribute) const
     stream.discard_or_error(m_data_offset);
 
     auto abbreviation_info = m_compilation_unit.abbreviations_map().get(m_abbreviation_code);
-    VERIFY(abbreviation_info.has_value());
+    VERIFY(abbreviation_info);
 
-    for (const auto& attribute_spec : abbreviation_info.value().attribute_specifications) {
+    for (const auto& attribute_spec : abbreviation_info->attribute_specifications) {
         auto value = m_compilation_unit.dwarf_info().get_attribute_value(attribute_spec.form, attribute_spec.value, stream, &m_compilation_unit);
         if (attribute_spec.attribute == attribute) {
             return value;
