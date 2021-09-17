@@ -28,10 +28,15 @@ public:
 
         int div = 2 * radius + 1;
 
-        u8 intermediate_red[width * height];
-        u8 intermediate_green[width * height];
-        u8 intermediate_blue[width * height];
-        u8 intermediate_alpha[width * height];
+        Vector<u8, 1024> intermediate_red;
+        Vector<u8, 1024> intermediate_green;
+        Vector<u8, 1024> intermediate_blue;
+        Vector<u8, 1024> intermediate_alpha;
+
+        intermediate_red.resize(width * height);
+        intermediate_green.resize(width * height);
+        intermediate_blue.resize(width * height);
+        intermediate_alpha.resize(width * height);
 
         // First pass: vertical
         for (int y = 0; y < height; ++y) {
