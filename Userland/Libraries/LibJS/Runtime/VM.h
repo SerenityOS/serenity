@@ -206,7 +206,6 @@ public:
 
     Value get_variable(const FlyString& name, GlobalObject&);
     void set_variable(const FlyString& name, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
-    bool delete_variable(FlyString const& name);
     void assign(const Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>>& target, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
     void assign(const FlyString& target, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
     void assign(const NonnullRefPtr<BindingPattern>& target, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
