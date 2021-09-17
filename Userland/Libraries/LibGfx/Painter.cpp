@@ -1858,6 +1858,76 @@ void Painter::draw_quadratic_bezier_curve(IntPoint const& control_point, IntPoin
     });
 }
 
+void Painter::for_each_line_segment_on_cubic_bezier_curve(FloatPoint const& control_point_0, FloatPoint const& control_point_1, FloatPoint const& p1, FloatPoint const& p2, Function<void(FloatPoint const&, FloatPoint const&)>&& callback)
+{
+    for_each_line_segment_on_cubic_bezier_curve(control_point_0, control_point_1, p1, p2, callback);
+}
+
+static bool can_approximate_cubic_bezier_curve(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& control_0, FloatPoint const& control_1)
+{
+    constexpr float tolerance = 15; // Arbitrary, seems like 10-30 produces nice results.
+
+    auto ax = 3 * control_0.x() - 2 * p1.x() - p2.x();
+    auto ay = 3 * control_0.y() - 2 * p1.y() - p2.y();
+    auto bx = 3 * control_1.x() - p1.x() - 2 * p2.x();
+    auto by = 3 * control_1.y() - p1.y() - 2 * p2.y();
+
+    ax *= ax;
+    ay *= ay;
+    bx *= bx;
+    by *= by;
+
+    return max(ax, bx) + max(ay, by) <= tolerance;
+}
+
+// static
+void Painter::for_each_line_segment_on_cubic_bezier_curve(FloatPoint const& control_point_0, FloatPoint const& control_point_1, FloatPoint const& p1, FloatPoint const& p2, Function<void(FloatPoint const&, FloatPoint const&)>& callback)
+{
+    struct ControlPair {
+        FloatPoint control_point_0;
+        FloatPoint control_point_1;
+    };
+    struct SegmentDescriptor {
+        ControlPair control_points;
+        FloatPoint p1;
+        FloatPoint p2;
+    };
+
+    static constexpr auto split_cubic_bezier_curve = [](ControlPair const& original_controls, FloatPoint const& p1, FloatPoint const& p2, auto& segments) {
+        Array level_1_midpoints {
+            (p1 + original_controls.control_point_0) / 2,
+            (original_controls.control_point_0 + original_controls.control_point_1) / 2,
+            (original_controls.control_point_1 + p2) / 2,
+        };
+        Array level_2_midpoints {
+            (level_1_midpoints[0] + level_1_midpoints[1]) / 2,
+            (level_1_midpoints[1] + level_1_midpoints[2]) / 2,
+        };
+        auto level_3_midpoint = (level_2_midpoints[0] + level_2_midpoints[1]) / 2;
+
+        segments.enqueue({ { level_1_midpoints[0], level_2_midpoints[0] }, p1, level_3_midpoint });
+        segments.enqueue({ { level_2_midpoints[1], level_1_midpoints[2] }, level_3_midpoint, p2 });
+    };
+
+    Queue<SegmentDescriptor> segments;
+    segments.enqueue({ { control_point_0, control_point_1 }, p1, p2 });
+    while (!segments.is_empty()) {
+        auto segment = segments.dequeue();
+
+        if (can_approximate_cubic_bezier_curve(segment.p1, segment.p2, segment.control_points.control_point_0, segment.control_points.control_point_1))
+            callback(segment.p1, segment.p2);
+        else
+            split_cubic_bezier_curve(segment.control_points, segment.p1, segment.p2, segments);
+    }
+}
+
+void Painter::draw_cubic_bezier_curve(IntPoint const& control_point_0, IntPoint const& control_point_1, IntPoint const& p1, IntPoint const& p2, Color color, int thickness, Painter::LineStyle style)
+{
+    for_each_line_segment_on_cubic_bezier_curve(FloatPoint(control_point_0), FloatPoint(control_point_1), FloatPoint(p1), FloatPoint(p2), [&](FloatPoint const& fp1, FloatPoint const& fp2) {
+        draw_line(IntPoint(fp1.x(), fp1.y()), IntPoint(fp2.x(), fp2.y()), color, thickness, style);
+    });
+}
+
 // static
 void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& center, FloatPoint const radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint const&, FloatPoint const&)>& callback)
 {
@@ -1972,6 +2042,14 @@ void Painter::stroke_path(Path const& path, Color color, int thickness)
         case Segment::Type::QuadraticBezierCurveTo: {
             auto& through = static_cast<QuadraticBezierCurveSegment const&>(segment).through();
             draw_quadratic_bezier_curve(through.to_type<int>(), cursor.to_type<int>(), segment.point().to_type<int>(), color, thickness);
+            cursor = segment.point();
+            break;
+        }
+        case Segment::Type::CubicBezierCurveTo: {
+            auto& curve = static_cast<CubicBezierCurveSegment const&>(segment);
+            auto& through_0 = curve.through_0();
+            auto& through_1 = curve.through_1();
+            draw_cubic_bezier_curve(through_0.to_type<int>(), through_1.to_type<int>(), cursor.to_type<int>(), segment.point().to_type<int>(), color, thickness);
             cursor = segment.point();
             break;
         }

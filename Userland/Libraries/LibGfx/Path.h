@@ -24,6 +24,7 @@ public:
         MoveTo,
         LineTo,
         QuadraticBezierCurveTo,
+        CubicBezierCurveTo,
         EllipticalArcTo,
     };
 
@@ -83,6 +84,27 @@ private:
     FloatPoint m_through;
 };
 
+class CubicBezierCurveSegment final : public Segment {
+public:
+    CubicBezierCurveSegment(const FloatPoint& point, const FloatPoint& through_0, const FloatPoint& through_1)
+        : Segment(point)
+        , m_through_0(through_0)
+        , m_through_1(through_1)
+    {
+    }
+
+    virtual ~CubicBezierCurveSegment() override = default;
+
+    const FloatPoint& through_0() const { return m_through_0; }
+    const FloatPoint& through_1() const { return m_through_1; }
+
+private:
+    virtual Type type() const override { return Segment::Type::CubicBezierCurveTo; }
+
+    FloatPoint m_through_0;
+    FloatPoint m_through_1;
+};
+
 class EllipticalArcSegment final : public Segment {
 public:
     EllipticalArcSegment(const FloatPoint& point, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta)
@@ -134,7 +156,11 @@ public:
         invalidate_split_lines();
     }
 
-    void cubic_bezier_curve_to(FloatPoint const& c1, FloatPoint const& c2, FloatPoint const& p2);
+    void cubic_bezier_curve_to(FloatPoint const& c1, FloatPoint const& c2, FloatPoint const& p2)
+    {
+        append_segment<CubicBezierCurveSegment>(p2, c1, c2);
+        invalidate_split_lines();
+    }
 
     void elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, double x_axis_rotation, bool large_arc, bool sweep);
     void arc_to(const FloatPoint& point, float radius, bool large_arc, bool sweep)
