@@ -13,6 +13,7 @@ if ("${SERENITY_ARCH}" STREQUAL "aarch64")
 
         ${SOURCES}
         Arch/aarch64/MainIdRegister.cpp
+        Arch/aarch64/MMIO.cpp
         Arch/aarch64/init.cpp
     )
 else()
