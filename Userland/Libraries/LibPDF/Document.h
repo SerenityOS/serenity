@@ -10,7 +10,7 @@
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
 #include <LibGfx/Color.h>
-#include <LibPDF/Object.h>
+#include <LibPDF/ObjectDerivatives.h>
 #include <LibPDF/Parser.h>
 
 namespace PDF {

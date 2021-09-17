@@ -6,6 +6,7 @@
 
 #include <LibPDF/ColorSpace.h>
 #include <LibPDF/CommonNames.h>
+#include <LibPDF/ObjectDerivatives.h>
 
 namespace PDF {
 
