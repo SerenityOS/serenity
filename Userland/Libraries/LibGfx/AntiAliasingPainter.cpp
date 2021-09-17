@@ -132,6 +132,14 @@ void Gfx::AntiAliasingPainter::stroke_path(Path const& path, Color color, float 
             cursor = segment.point();
             break;
         }
+        case Segment::Type::CubicBezierCurveTo: {
+            auto& curve = static_cast<CubicBezierCurveSegment const&>(segment);
+            auto& through_0 = curve.through_0();
+            auto& through_1 = curve.through_1();
+            draw_cubic_bezier_curve(through_0, through_1, cursor, segment.point(), color, thickness);
+            cursor = segment.point();
+            break;
+        }
         case Segment::Type::EllipticalArcTo:
             auto& arc = static_cast<EllipticalArcSegment const&>(segment);
             draw_elliptical_arc(cursor, segment.point(), arc.center(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), color, thickness);
@@ -151,6 +159,13 @@ void Gfx::AntiAliasingPainter::draw_elliptical_arc(FloatPoint const& p1, FloatPo
 void Gfx::AntiAliasingPainter::draw_quadratic_bezier_curve(FloatPoint const& control_point, FloatPoint const& p1, FloatPoint const& p2, Color color, float thickness, Painter::LineStyle style)
 {
     Gfx::Painter::for_each_line_segment_on_bezier_curve(control_point, p1, p2, [&](FloatPoint const& fp1, FloatPoint const& fp2) {
+        draw_line(fp1, fp2, color, thickness, style);
+    });
+}
+
+void Gfx::AntiAliasingPainter::draw_cubic_bezier_curve(const FloatPoint& control_point_0, const FloatPoint& control_point_1, const FloatPoint& p1, const FloatPoint& p2, Color color, float thickness, Painter::LineStyle style)
+{
+    Gfx::Painter::for_each_line_segment_on_cubic_bezier_curve(control_point_0, control_point_1, p1, p2, [&](FloatPoint const& fp1, FloatPoint const& fp2) {
         draw_line(fp1, fp2, color, thickness, style);
     });
 }
