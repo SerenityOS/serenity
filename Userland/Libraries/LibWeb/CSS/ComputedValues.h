@@ -59,7 +59,7 @@ public:
     CSS::Clear clear() const { return m_noninherited.clear; }
     CSS::Cursor cursor() const { return m_inherited.cursor; }
     CSS::Display display() const { return m_noninherited.display; }
-    Optional<int> z_index() const { return m_noninherited.z_index; }
+    Optional<int> const& z_index() const { return m_noninherited.z_index; }
     CSS::TextAlign text_align() const { return m_inherited.text_align; }
     CSS::TextDecorationLine text_decoration_line() const { return m_noninherited.text_decoration_line; }
     CSS::TextTransform text_transform() const { return m_inherited.text_transform; }
@@ -67,13 +67,13 @@ public:
     CSS::WhiteSpace white_space() const { return m_inherited.white_space; }
     CSS::FlexDirection flex_direction() const { return m_noninherited.flex_direction; }
     CSS::FlexWrap flex_wrap() const { return m_noninherited.flex_wrap; }
-    FlexBasisData flex_basis() const { return m_noninherited.flex_basis; }
-    Optional<float> flex_grow_factor() const { return m_noninherited.flex_grow_factor; }
-    Optional<float> flex_shrink_factor() const { return m_noninherited.flex_shrink_factor; }
+    FlexBasisData const& flex_basis() const { return m_noninherited.flex_basis; }
+    Optional<float> const& flex_grow_factor() const { return m_noninherited.flex_grow_factor; }
+    Optional<float> const& flex_shrink_factor() const { return m_noninherited.flex_shrink_factor; }
     CSS::AlignItems align_items() const { return m_noninherited.align_items; }
-    Optional<float> opacity() const { return m_noninherited.opacity; }
+    Optional<float> const& opacity() const { return m_noninherited.opacity; }
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
-    Optional<BoxShadowData> box_shadow() const { return m_noninherited.box_shadow; }
+    Optional<BoxShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
     const CSS::Length& width() const { return m_noninherited.width; }
     const CSS::Length& min_width() const { return m_noninherited.min_width; }
     const CSS::Length& max_width() const { return m_noninherited.max_width; }
@@ -107,7 +107,7 @@ public:
 
     Optional<Color> fill() const { return m_inherited.fill; }
     Optional<Color> stroke() const { return m_inherited.stroke; }
-    Optional<Length> stroke_width() const { return m_inherited.stroke_width; }
+    Optional<Length> const& stroke_width() const { return m_inherited.stroke_width; }
 
     ComputedValues clone_inherited_values() const
     {
