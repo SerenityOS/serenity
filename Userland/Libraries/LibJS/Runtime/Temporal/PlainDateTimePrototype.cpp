@@ -412,9 +412,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with_plain_date)
         return {};
 
     // 3. Let plainDate be ? ToTemporalDate(plainDateLike).
-    auto* plain_date = to_temporal_date(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* plain_date = TRY_OR_DISCARD(to_temporal_date(global_object, vm.argument(0)));
 
     // 4. Let calendar be ? ConsolidateCalendars(dateTime.[[Calendar]], plainDate.[[Calendar]]).
     auto* calendar = TRY_OR_DISCARD(consolidate_calendars(global_object, date_time->calendar(), plain_date->calendar()));
@@ -484,7 +482,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_date)
         return {};
 
     // 3. Return ? CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
-    return create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar());
+    return TRY_OR_DISCARD(create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar()));
 }
 
 // 5.3.38 Temporal.PlainDateTime.prototype.toPlainYearMonth ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplainyearmonth

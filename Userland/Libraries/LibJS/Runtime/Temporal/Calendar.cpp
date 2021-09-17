@@ -827,10 +827,7 @@ ThrowCompletionOr<ISODate> iso_date_from_fields(GlobalObject& global_object, Obj
         return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, vm.names.day.as_string());
 
     // 9. Return ? RegulateISODate(year, month, day, overflow).
-    auto iso_date = regulate_iso_date(global_object, year.as_double(), month, day.as_double(), overflow);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return *iso_date;
+    return regulate_iso_date(global_object, year.as_double(), month, day.as_double(), overflow);
 }
 
 // 12.1.39 ISOYearMonthFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthfromfields
@@ -919,15 +916,13 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     // 12. If monthCode is undefined, then
     if (month_code.is_undefined()) {
         // a. Let result be ? RegulateISODate(year, month, day, overflow).
-        result = regulate_iso_date(global_object, year.as_double(), month, day.as_double(), overflow);
+        result = TRY(regulate_iso_date(global_object, year.as_double(), month, day.as_double(), overflow));
     }
     // 13. Else,
     else {
         // a. Let result be ? RegulateISODate(referenceISOYear, month, day, overflow).
-        result = regulate_iso_date(global_object, reference_iso_year, month, day.as_double(), overflow);
+        result = TRY(regulate_iso_date(global_object, reference_iso_year, month, day.as_double(), overflow));
     }
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
 
     // 14. Return the Record { [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[ReferenceISOYear]]: referenceISOYear }.
     return ISOMonthDay { .month = result->month, .day = result->day, .reference_iso_year = reference_iso_year };

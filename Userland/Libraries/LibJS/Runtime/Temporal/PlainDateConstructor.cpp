@@ -73,7 +73,7 @@ Value PlainDateConstructor::construct(FunctionObject& new_target)
     }
 
     // 6. Return ? CreateTemporalDate(y, m, d, calendar, NewTarget).
-    return create_temporal_date(global_object, y, m, d, *calendar, &new_target);
+    return TRY_OR_DISCARD(create_temporal_date(global_object, y, m, d, *calendar, &new_target));
 }
 
 // 3.2.2 Temporal.PlainDate.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.from
@@ -90,24 +90,22 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateConstructor::from)
         (void)TRY_OR_DISCARD(to_temporal_overflow(global_object, *options));
 
         // b. Return ? CreateTemporalDate(item.[[ISOYear]], item.[[ISOMonth]], item.[[ISODay]], item.[[Calendar]]).
-        return create_temporal_date(global_object, plain_date_item.iso_year(), plain_date_item.iso_month(), plain_date_item.iso_day(), plain_date_item.calendar());
+        return TRY_OR_DISCARD(create_temporal_date(global_object, plain_date_item.iso_year(), plain_date_item.iso_month(), plain_date_item.iso_day(), plain_date_item.calendar()));
     }
 
     // 3. Return ? ToTemporalDate(item, options).
-    return to_temporal_date(global_object, item, options);
+    return TRY_OR_DISCARD(to_temporal_date(global_object, item, options));
 }
 
 // 3.2.3 Temporal.PlainDate.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-plaindate-constructor
 JS_DEFINE_NATIVE_FUNCTION(PlainDateConstructor::compare)
 {
     // 1. Set one to ? ToTemporalDate(one).
-    auto* one = to_temporal_date(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* one = TRY_OR_DISCARD(to_temporal_date(global_object, vm.argument(0)));
+
     // 2. Set two to ? ToTemporalDate(two).
-    auto* two = to_temporal_date(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* two = TRY_OR_DISCARD(to_temporal_date(global_object, vm.argument(1)));
+
     // 3. Return 𝔽(! CompareISODate(one.[[ISOYear]], one.[[ISOMonth]], one.[[ISODay]], two.[[ISOYear]], two.[[ISOMonth]], two.[[ISODay]])).
     return Value(compare_iso_date(one->iso_year(), one->iso_month(), one->iso_day(), two->iso_year(), two->iso_month(), two->iso_day()));
 }
