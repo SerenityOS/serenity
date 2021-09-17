@@ -103,7 +103,7 @@ void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    if (auto* bitmap = m_client_state.has_usable_bitmap ? m_client_state.front_bitmap.ptr() : m_backup_bitmap.ptr()) {
+    if (auto* bitmap = m_client_state.has_usable_bitmap ? m_client_state.front_bitmap.bitmap.ptr() : m_backup_bitmap.ptr()) {
         painter.add_clip_rect(frame_inner_rect());
         painter.translate(frame_thickness(), frame_thickness());
         painter.blit({ 0, 0 }, *bitmap, bitmap->rect());
@@ -125,36 +125,36 @@ void OutOfProcessWebView::handle_resize()
 
     if (m_client_state.has_usable_bitmap) {
         // NOTE: We keep the outgoing front bitmap as a backup so we have something to paint until we get a new one.
-        m_backup_bitmap = m_client_state.front_bitmap;
+        m_backup_bitmap = m_client_state.front_bitmap.bitmap;
     }
 
-    if (m_client_state.front_bitmap) {
-        m_client_state.front_bitmap = nullptr;
-        client().async_remove_backing_store(m_client_state.front_bitmap_id);
+    if (m_client_state.front_bitmap.bitmap) {
+        m_client_state.front_bitmap.bitmap = nullptr;
+        client().async_remove_backing_store(m_client_state.front_bitmap.id);
     }
 
-    if (m_client_state.back_bitmap) {
-        m_client_state.back_bitmap = nullptr;
-        client().async_remove_backing_store(m_client_state.back_bitmap_id);
+    if (m_client_state.back_bitmap.bitmap) {
+        m_client_state.back_bitmap.bitmap = nullptr;
+        client().async_remove_backing_store(m_client_state.back_bitmap.id);
     }
 
-    m_client_state.front_bitmap_id = -1;
-    m_client_state.back_bitmap_id = -1;
+    m_client_state.front_bitmap.id = -1;
+    m_client_state.back_bitmap.id = -1;
     m_client_state.has_usable_bitmap = false;
 
     if (available_size().is_empty())
         return;
 
     if (auto new_bitmap = Gfx::Bitmap::try_create_shareable(Gfx::BitmapFormat::BGRx8888, available_size())) {
-        m_client_state.front_bitmap = move(new_bitmap);
-        m_client_state.front_bitmap_id = m_client_state.next_bitmap_id++;
-        client().async_add_backing_store(m_client_state.front_bitmap_id, m_client_state.front_bitmap->to_shareable_bitmap());
+        m_client_state.front_bitmap.bitmap = move(new_bitmap);
+        m_client_state.front_bitmap.id = m_client_state.next_bitmap_id++;
+        client().async_add_backing_store(m_client_state.front_bitmap.id, m_client_state.front_bitmap.bitmap->to_shareable_bitmap());
     }
 
     if (auto new_bitmap = Gfx::Bitmap::try_create_shareable(Gfx::BitmapFormat::BGRx8888, available_size())) {
-        m_client_state.back_bitmap = move(new_bitmap);
-        m_client_state.back_bitmap_id = m_client_state.next_bitmap_id++;
-        client().async_add_backing_store(m_client_state.back_bitmap_id, m_client_state.back_bitmap->to_shareable_bitmap());
+        m_client_state.back_bitmap.bitmap = move(new_bitmap);
+        m_client_state.back_bitmap.id = m_client_state.next_bitmap_id++;
+        client().async_add_backing_store(m_client_state.back_bitmap.id, m_client_state.back_bitmap.bitmap->to_shareable_bitmap());
     }
 
     request_repaint();
@@ -199,10 +199,9 @@ void OutOfProcessWebView::screen_rects_change_event(GUI::ScreenRectsChangeEvent&
 
 void OutOfProcessWebView::notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id)
 {
-    if (m_client_state.back_bitmap_id == bitmap_id) {
+    if (m_client_state.back_bitmap.id == bitmap_id) {
         m_client_state.has_usable_bitmap = true;
         swap(m_client_state.back_bitmap, m_client_state.front_bitmap);
-        swap(m_client_state.back_bitmap_id, m_client_state.front_bitmap_id);
         // We don't need the backup bitmap anymore, so drop it.
         m_backup_bitmap = nullptr;
         update();
@@ -395,9 +394,9 @@ void OutOfProcessWebView::request_repaint()
 {
     // If this widget was instantiated but not yet added to a window,
     // it won't have a back bitmap yet, so we can just skip repaint requests.
-    if (!m_client_state.back_bitmap)
+    if (!m_client_state.back_bitmap.bitmap)
         return;
-    client().async_paint(m_client_state.back_bitmap->rect().translated(horizontal_scrollbar().value(), vertical_scrollbar().value()), m_client_state.back_bitmap_id);
+    client().async_paint(m_client_state.back_bitmap.bitmap->rect().translated(horizontal_scrollbar().value(), vertical_scrollbar().value()), m_client_state.back_bitmap.id);
 }
 
 WebContentClient& OutOfProcessWebView::client()

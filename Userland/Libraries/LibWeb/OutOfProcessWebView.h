@@ -110,12 +110,15 @@ private:
 
     AK::URL m_url;
 
+    struct SharedBitmap {
+        i32 id { -1 };
+        RefPtr<Gfx::Bitmap> bitmap;
+    };
+
     struct ClientState {
         RefPtr<WebContentClient> client;
-        RefPtr<Gfx::Bitmap> front_bitmap;
-        RefPtr<Gfx::Bitmap> back_bitmap;
-        i32 front_bitmap_id { -1 };
-        i32 back_bitmap_id { -1 };
+        SharedBitmap front_bitmap;
+        SharedBitmap back_bitmap;
         i32 next_bitmap_id { 0 };
         bool has_usable_bitmap { false };
     } m_client_state;
