@@ -392,14 +392,14 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with_plain_time)
     // 3. If plainTimeLike is undefined, then
     if (vm.argument(0).is_undefined()) {
         // a. Return ? CreateTemporalDateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], 0, 0, 0, 0, 0, 0, dateTime.[[Calendar]]).
-        return create_temporal_date_time(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), 0, 0, 0, 0, 0, 0, date_time->calendar());
+        return TRY_OR_DISCARD(create_temporal_date_time(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), 0, 0, 0, 0, 0, 0, date_time->calendar()));
     }
 
     // 4. Let plainTime be ? ToTemporalTime(plainTimeLike).
     auto* plain_time = TRY_OR_DISCARD(to_temporal_time(global_object, vm.argument(0)));
 
     // 5. Return ? CreateTemporalDateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], plainTime.[[ISOHour]], plainTime.[[ISOMinute]], plainTime.[[ISOSecond]], plainTime.[[ISOMillisecond]], plainTime.[[ISOMicrosecond]], plainTime.[[ISONanosecond]], dateTime.[[Calendar]]).
-    return create_temporal_date_time(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), plain_time->iso_hour(), plain_time->iso_minute(), plain_time->iso_second(), plain_time->iso_millisecond(), plain_time->iso_microsecond(), plain_time->iso_nanosecond(), date_time->calendar());
+    return TRY_OR_DISCARD(create_temporal_date_time(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), plain_time->iso_hour(), plain_time->iso_minute(), plain_time->iso_second(), plain_time->iso_millisecond(), plain_time->iso_microsecond(), plain_time->iso_nanosecond(), date_time->calendar()));
 }
 
 // 5.3.24 Temporal.PlainDateTime.prototype.withPlainDate ( plainDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.withplaindate
@@ -418,7 +418,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with_plain_date)
     auto* calendar = TRY_OR_DISCARD(consolidate_calendars(global_object, date_time->calendar(), plain_date->calendar()));
 
     // 5. Return ? CreateTemporalDateTime(plainDate.[[ISOYear]], plainDate.[[ISOMonth]], plainDate.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], calendar).
-    return create_temporal_date_time(global_object, plain_date->iso_year(), plain_date->iso_month(), plain_date->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), *calendar);
+    return TRY_OR_DISCARD(create_temporal_date_time(global_object, plain_date->iso_year(), plain_date->iso_month(), plain_date->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), *calendar));
 }
 
 // 5.3.25 Temporal.PlainDateTime.prototype.withCalendar ( calendar ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.withcalendar
@@ -436,7 +436,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with_calendar)
         return {};
 
     // 4. Return ? CreateTemporalDateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], calendar).
-    return create_temporal_date_time(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), *calendar);
+    return TRY_OR_DISCARD(create_temporal_date_time(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), *calendar));
 }
 
 // 5.3.31 Temporal.PlainDateTime.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.equals
@@ -449,9 +449,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::equals)
         return {};
 
     // 3. Set other to ? ToTemporalDateTime(other).
-    auto* other = to_temporal_date_time(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto* other = TRY_OR_DISCARD(to_temporal_date_time(global_object, vm.argument(0)));
 
     // 4. Let result be ! CompareISODateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], other.[[ISOYear]], other.[[ISOMonth]], other.[[ISODay]], other.[[ISOHour]], other.[[ISOMinute]], other.[[ISOSecond]], other.[[ISOMillisecond]], other.[[ISOMicrosecond]], other.[[ISONanosecond]]).
     auto result = compare_iso_date_time(date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), other->iso_year(), other->iso_month(), other->iso_day(), other->iso_hour(), other->iso_minute(), other->iso_second(), other->iso_millisecond(), other->iso_microsecond(), other->iso_nanosecond());
