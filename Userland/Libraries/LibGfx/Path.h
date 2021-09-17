@@ -169,10 +169,10 @@ public:
     };
 
     const NonnullRefPtrVector<Segment>& segments() const { return m_segments; }
-    const auto& split_lines()
+    auto& split_lines() const
     {
         if (!m_split_lines.has_value()) {
-            segmentize_path();
+            const_cast<Path*>(this)->segmentize_path();
             VERIFY(m_split_lines.has_value());
         }
         return m_split_lines.value();
@@ -184,10 +184,10 @@ public:
         m_split_lines.clear();
     }
 
-    const Gfx::FloatRect& bounding_box()
+    Gfx::FloatRect const& bounding_box() const
     {
         if (!m_bounding_box.has_value()) {
-            segmentize_path();
+            const_cast<Path*>(this)->segmentize_path();
             VERIFY(m_bounding_box.has_value());
         }
         return m_bounding_box.value();
