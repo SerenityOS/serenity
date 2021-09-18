@@ -62,6 +62,6 @@ private:
     Fallback m_fallback { Fallback::Invalid }; // [[Fallback]]
 };
 
-Value canonical_code_for_display_names(GlobalObject& global_object, DisplayNames::Type type, StringView code);
+ThrowCompletionOr<Value> canonical_code_for_display_names(GlobalObject& global_object, DisplayNames::Type type, StringView code);
 
 }
