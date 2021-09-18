@@ -50,9 +50,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
     code = js_string(vm, move(code_string));
 
     // 4. Let code be ? CanonicalCodeForDisplayNames(displayNames.[[Type]], code).
-    code = canonical_code_for_display_names(global_object, display_names->type(), code.as_string().string());
-    if (vm.exception())
-        return {};
+    code = TRY_OR_DISCARD(canonical_code_for_display_names(global_object, display_names->type(), code.as_string().string()));
 
     // 5. Let fields be displayNames.[[Fields]].
     // 6. If fields has a field [[<code>]], return fields.[[<code>]].
