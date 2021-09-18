@@ -80,13 +80,22 @@ public:
         : ASTNode(source_range)
     {
     }
+};
 
-    HashTable<FlyString> const& labels() const { return m_labels; }
-    void add_label(FlyString label) { m_labels.set(move(label)); }
-    bool has_label(FlyString const& label) const { return m_labels.contains(label); }
+class LabelableStatement : public Statement {
+public:
+    using Statement::Statement;
+
+    Vector<FlyString> const& labels() const { return m_labels; }
+    virtual void add_label(FlyString string) { m_labels.append(move(string)); }
 
 protected:
-    HashTable<FlyString> m_labels;
+    Vector<FlyString> m_labels;
+};
+
+class IterationStatement : public LabelableStatement {
+public:
+    using LabelableStatement::LabelableStatement;
 };
 
 class EmptyStatement final : public Statement {
@@ -128,7 +137,7 @@ private:
     NonnullRefPtr<Expression> m_expression;
 };
 
-class ScopeNode : public Statement {
+class ScopeNode : public LabelableStatement {
 public:
     template<typename T, typename... Args>
     T& append(SourceRange range, Args&&... args)
@@ -156,7 +165,7 @@ public:
 
 protected:
     explicit ScopeNode(SourceRange source_range)
-        : Statement(source_range)
+        : LabelableStatement(source_range)
     {
     }
 
@@ -514,10 +523,10 @@ private:
     RefPtr<Statement> m_alternate;
 };
 
-class WhileStatement final : public Statement {
+class WhileStatement final : public IterationStatement {
 public:
     WhileStatement(SourceRange source_range, NonnullRefPtr<Expression> test, NonnullRefPtr<Statement> body)
-        : Statement(source_range)
+        : IterationStatement(source_range)
         , m_test(move(test))
         , m_body(move(body))
     {
@@ -535,10 +544,10 @@ private:
     NonnullRefPtr<Statement> m_body;
 };
 
-class DoWhileStatement final : public Statement {
+class DoWhileStatement final : public IterationStatement {
 public:
     DoWhileStatement(SourceRange source_range, NonnullRefPtr<Expression> test, NonnullRefPtr<Statement> body)
-        : Statement(source_range)
+        : IterationStatement(source_range)
         , m_test(move(test))
         , m_body(move(body))
     {
@@ -576,10 +585,10 @@ private:
     NonnullRefPtr<Statement> m_body;
 };
 
-class ForStatement final : public Statement {
+class ForStatement final : public IterationStatement {
 public:
     ForStatement(SourceRange source_range, RefPtr<ASTNode> init, RefPtr<Expression> test, RefPtr<Expression> update, NonnullRefPtr<Statement> body)
-        : Statement(source_range)
+        : IterationStatement(source_range)
         , m_init(move(init))
         , m_test(move(test))
         , m_update(move(update))
@@ -603,10 +612,10 @@ private:
     NonnullRefPtr<Statement> m_body;
 };
 
-class ForInStatement final : public Statement {
+class ForInStatement final : public IterationStatement {
 public:
     ForInStatement(SourceRange source_range, NonnullRefPtr<ASTNode> lhs, NonnullRefPtr<Expression> rhs, NonnullRefPtr<Statement> body)
-        : Statement(source_range)
+        : IterationStatement(source_range)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
         , m_body(move(body))
@@ -626,10 +635,10 @@ private:
     NonnullRefPtr<Statement> m_body;
 };
 
-class ForOfStatement final : public Statement {
+class ForOfStatement final : public IterationStatement {
 public:
     ForOfStatement(SourceRange source_range, NonnullRefPtr<ASTNode> lhs, NonnullRefPtr<Expression> rhs, NonnullRefPtr<Statement> body)
-        : Statement(source_range)
+        : IterationStatement(source_range)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
         , m_body(move(body))
@@ -1498,10 +1507,10 @@ private:
     NonnullRefPtr<BlockStatement> m_body;
 };
 
-class TryStatement final : public Statement {
+class TryStatement final : public LabelableStatement {
 public:
     TryStatement(SourceRange source_range, NonnullRefPtr<BlockStatement> block, RefPtr<CatchClause> handler, RefPtr<BlockStatement> finalizer)
-        : Statement(source_range)
+        : LabelableStatement(source_range)
         , m_block(move(block))
         , m_handler(move(handler))
         , m_finalizer(move(finalizer))
@@ -1515,6 +1524,7 @@ public:
     virtual void dump(int indent) const override;
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
+    void add_label(FlyString string) override;
 
 private:
     NonnullRefPtr<BlockStatement> m_block;
@@ -1560,10 +1570,10 @@ private:
     NonnullRefPtrVector<Statement> m_consequent;
 };
 
-class SwitchStatement final : public Statement {
+class SwitchStatement final : public LabelableStatement {
 public:
     SwitchStatement(SourceRange source_range, NonnullRefPtr<Expression> discriminant, NonnullRefPtrVector<SwitchCase> cases)
-        : Statement(source_range)
+        : LabelableStatement(source_range)
         , m_discriminant(move(discriminant))
         , m_cases(move(cases))
     {
