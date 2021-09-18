@@ -61,10 +61,12 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         return length.resolved(CSS::Length::make_px(0), box, box.containing_block()->width()).to_px(box);
     };
     auto layout_for_maximum_main_size = [&](Box& box) {
-        if (is_row)
+        if (is_row) {
             layout_inside(box, LayoutMode::OnlyRequiredLineBreaks);
-        else
-            layout_inside(box, LayoutMode::AllPossibleLineBreaks);
+            return box.width();
+        } else {
+            return BlockFormattingContext::compute_theoretical_height(box);
+        }
     };
     auto containing_block_effective_main_size = [&is_row, &main_size_is_infinite](Box& box) {
         if (is_row) {
@@ -330,11 +332,9 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
             if (has_definite_main_size(child_box)) {
                 flex_item.flex_base_size = specified_main_size_of_child_box(box, child_box);
             } else {
-                layout_for_maximum_main_size(child_box);
-                flex_item.flex_base_size = calculated_main_size(child_box);
+                flex_item.flex_base_size = layout_for_maximum_main_size(child_box);
             }
         }
-
         auto clamp_min = has_main_min_size(child_box)
             ? specified_main_min_size(child_box)
             : 0;
