@@ -282,14 +282,16 @@ void set_number_format_digit_options(GlobalObject& global_object, NumberFormat& 
         intl_object.set_rounding_type(NumberFormat::RoundingType::SignificantDigits);
 
         // b. Let mnsd be ? DefaultNumberOption(mnsd, 1, 21, 1).
-        auto min_digits = default_number_option(global_object, min_significant_digits, 1, 21, 1);
-        if (vm.exception())
+        auto min_digits_or_error = default_number_option(global_object, min_significant_digits, 1, 21, 1);
+        if (min_digits_or_error.is_error())
             return;
+        auto min_digits = min_digits_or_error.release_value();
 
         // c. Let mxsd be ? DefaultNumberOption(mxsd, mnsd, 21, 21).
-        auto max_digits = default_number_option(global_object, max_significant_digits, *min_digits, 21, 21);
-        if (vm.exception())
+        auto max_digits_or_error = default_number_option(global_object, max_significant_digits, *min_digits, 21, 21);
+        if (max_digits_or_error.is_error())
             return;
+        auto max_digits = max_digits_or_error.release_value();
 
         // d. Set intlObj.[[MinimumSignificantDigits]] to mnsd.
         intl_object.set_min_significant_digits(*min_digits);
@@ -303,14 +305,16 @@ void set_number_format_digit_options(GlobalObject& global_object, NumberFormat& 
         intl_object.set_rounding_type(NumberFormat::RoundingType::FractionDigits);
 
         // b. Let mnfd be ? DefaultNumberOption(mnfd, 0, 20, undefined).
-        auto min_digits = default_number_option(global_object, min_fraction_digits, 0, 20, {});
-        if (vm.exception())
+        auto min_digits_or_error = default_number_option(global_object, min_fraction_digits, 0, 20, {});
+        if (min_digits_or_error.is_error())
             return;
+        auto min_digits = min_digits_or_error.release_value();
 
         // c. Let mxfd be ? DefaultNumberOption(mxfd, 0, 20, undefined).
-        auto max_digits = default_number_option(global_object, max_fraction_digits, 0, 20, {});
-        if (vm.exception())
+        auto max_digits_or_error = default_number_option(global_object, max_fraction_digits, 0, 20, {});
+        if (max_digits_or_error.is_error())
             return;
+        auto max_digits = max_digits_or_error.release_value();
 
         // d. If mnfd is undefined, set mnfd to min(mnfdDefault, mxfd).
         if (!min_digits.has_value()) {

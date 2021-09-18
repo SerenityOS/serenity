@@ -661,7 +661,7 @@ ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& o
 }
 
 // 9.2.14 DefaultNumberOption ( value, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-defaultnumberoption
-Optional<int> default_number_option(GlobalObject& global_object, Value value, int minimum, int maximum, Optional<int> fallback)
+ThrowCompletionOr<Optional<int>> default_number_option(GlobalObject& global_object, Value value, int minimum, int maximum, Optional<int> fallback)
 {
     auto& vm = global_object.vm();
 
@@ -671,17 +671,15 @@ Optional<int> default_number_option(GlobalObject& global_object, Value value, in
 
     // 2. Let value be ? ToNumber(value).
     value = value.to_number(global_object);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 3. If value is NaN or less than minimum or greater than maximum, throw a RangeError exception.
-    if (value.is_nan() || (value.as_double() < minimum) || (value.as_double() > maximum)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::IntlNumberIsNaNOrOutOfRange, value, minimum, maximum);
-        return {};
-    }
+    if (value.is_nan() || (value.as_double() < minimum) || (value.as_double() > maximum))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberIsNaNOrOutOfRange, value, minimum, maximum);
 
     // 4. Return floor(value).
-    return floor(value.as_double());
+    return { floor(value.as_double()) };
 }
 
 // 9.2.15 GetNumberOption ( options, property, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-getnumberoption
@@ -696,7 +694,7 @@ Optional<int> get_number_option(GlobalObject& global_object, Object const& optio
         return {};
 
     // 3. Return ? DefaultNumberOption(value, minimum, maximum, fallback).
-    return default_number_option(global_object, value, minimum, maximum, fallback);
+    return TRY_OR_DISCARD(default_number_option(global_object, value, minimum, maximum, move(fallback)));
 }
 
 // 9.2.16 PartitionPattern ( pattern ), https://tc39.es/ecma402/#sec-partitionpattern
