@@ -91,11 +91,11 @@ extern "C" [[noreturn]] void init()
         halt();
     __builtin_memcpy(kernel_program_headers, kernel_image + kernel_elf_header.e_phoff, sizeof(ElfW(Phdr)) * kernel_elf_header.e_phnum);
 
-    FlatPtr kernel_physical_base = 0x200000;
+    FlatPtr kernel_physical_base = 0x400000;
 #if ARCH(I386)
-    FlatPtr kernel_load_base = 0xc0200000;
+    FlatPtr kernel_load_base = 0xc0400000;
 #else
-    FlatPtr kernel_load_base = 0x2000200000;
+    FlatPtr kernel_load_base = 0x2000400000;
 #endif
 
     FlatPtr kernel_load_end = 0;
