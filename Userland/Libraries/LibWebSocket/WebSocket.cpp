@@ -5,13 +5,11 @@
  */
 
 #include <AK/Base64.h>
-#include <AK/Debug.h>
 #include <AK/Random.h>
 #include <LibCrypto/Hash/HashManager.h>
 #include <LibWebSocket/Impl/TCPWebSocketConnectionImpl.h>
 #include <LibWebSocket/Impl/TLSv12WebSocketConnectionImpl.h>
 #include <LibWebSocket/WebSocket.h>
-#include <stdio.h>
 #include <unistd.h>
 
 namespace WebSocket {
@@ -21,11 +19,11 @@ namespace WebSocket {
 
 NonnullRefPtr<WebSocket> WebSocket::create(ConnectionInfo connection)
 {
-    return adopt_ref(*new WebSocket(connection));
+    return adopt_ref(*new WebSocket(move(connection)));
 }
 
 WebSocket::WebSocket(ConnectionInfo connection)
-    : m_connection(connection)
+    : m_connection(move(connection))
 {
 }
 
@@ -81,7 +79,7 @@ ReadyState WebSocket::ready_state()
     }
 }
 
-void WebSocket::send(Message message)
+void WebSocket::send(Message const& message)
 {
     // Calling send on a socket that is not opened is not allowed
     VERIFY(m_state == WebSocket::InternalState::Open);
@@ -92,7 +90,7 @@ void WebSocket::send(Message message)
         send_frame(WebSocket::OpCode::Binary, message.data(), true);
 }
 
-void WebSocket::close(u16 code, String message)
+void WebSocket::close(u16 code, String const& message)
 {
     // Calling close on a socket that is not opened is not allowed
     VERIFY(m_state == WebSocket::InternalState::Open);
@@ -320,10 +318,10 @@ void WebSocket::read_server_handshake()
         if (header_name.equals_ignoring_case("Sec-WebSocket-Extensions")) {
             // 5. |Sec-WebSocket-Extensions| should not contain an extension that doesn't appear in m_connection->extensions()
             auto server_extensions = parts[1].split(',');
-            for (auto extension : server_extensions) {
+            for (auto const& extension : server_extensions) {
                 auto trimmed_extension = extension.trim_whitespace();
                 bool found_extension = false;
-                for (auto supported_extension : m_connection.extensions()) {
+                for (auto const& supported_extension : m_connection.extensions()) {
                     if (trimmed_extension.equals_ignoring_case(supported_extension)) {
                         found_extension = true;
                     }
@@ -340,10 +338,10 @@ void WebSocket::read_server_handshake()
         if (header_name.equals_ignoring_case("Sec-WebSocket-Protocol")) {
             // 6. |Sec-WebSocket-Protocol| should not contain an extension that doesn't appear in m_connection->protocols()
             auto server_protocols = parts[1].split(',');
-            for (auto protocol : server_protocols) {
+            for (auto const& protocol : server_protocols) {
                 auto trimmed_protocol = protocol.trim_whitespace();
                 bool found_protocol = false;
-                for (auto supported_protocol : m_connection.protocols()) {
+                for (auto const& supported_protocol : m_connection.protocols()) {
                     if (trimmed_protocol.equals_ignoring_case(supported_protocol)) {
                         found_protocol = true;
                     }
@@ -470,7 +468,6 @@ void WebSocket::read_frame()
     if (op_code == WebSocket::OpCode::Continuation) {
         // FIXME: Support fragmented frames
         TODO();
-        return;
     }
     if (op_code == WebSocket::OpCode::Text) {
         notify_message(Message(payload, true));
@@ -587,7 +584,7 @@ void WebSocket::notify_close(u16 code, String reason, bool was_clean)
 {
     if (!on_close)
         return;
-    on_close(code, reason, was_clean);
+    on_close(code, move(reason), was_clean);
 }
 
 void WebSocket::notify_error(WebSocket::Error error)
@@ -601,7 +598,7 @@ void WebSocket::notify_message(Message message)
 {
     if (!on_message)
         return;
-    on_message(message);
+    on_message(move(message));
 }
 
 }
