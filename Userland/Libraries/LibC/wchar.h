@@ -24,6 +24,8 @@ typedef struct {
     unsigned int stored_bytes;
 } mbstate_t;
 
+struct tm;
+
 size_t wcslen(const wchar_t*);
 wchar_t* wcscpy(wchar_t*, const wchar_t*);
 wchar_t* wcsncpy(wchar_t*, const wchar_t*, size_t);
