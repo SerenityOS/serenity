@@ -70,9 +70,14 @@ struct Frame {
     // This is a good dynamic range because it can represent all loudness values from
     // 30 dB(A) (barely hearable with background noise)
     // to 90 dB(A) (almost too loud to hear and about the reasonable limit of actual sound equipment).
+    ALWAYS_INLINE double log_factor(double const change)
+    {
+        return VOLUME_A * exp(VOLUME_B * change);
+    }
+
     ALWAYS_INLINE Frame& log_multiply(double const change)
     {
-        double factor = VOLUME_A * exp(VOLUME_B * change);
+        double factor = log_factor(change);
         left *= factor;
         right *= factor;
         return *this;
