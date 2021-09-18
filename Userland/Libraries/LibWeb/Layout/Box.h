@@ -126,11 +126,10 @@ public:
     virtual float width_of_logical_containing_block() const;
 
     struct BorderRadiusData {
-        // FIXME: Use floats here
-        int top_left { 0 };
-        int top_right { 0 };
-        int bottom_right { 0 };
-        int bottom_left { 0 };
+        float top_left { 0 };
+        float top_right { 0 };
+        float bottom_right { 0 };
+        float bottom_left { 0 };
     };
 
     BorderRadiusData normalized_border_radius_data();
