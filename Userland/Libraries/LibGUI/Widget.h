@@ -39,6 +39,7 @@ enum class HorizontalDirection {
     Left,
     Right
 };
+
 enum class VerticalDirection {
     Up,
     Down
@@ -52,6 +53,11 @@ enum class FocusPolicy {
 };
 
 AK_ENUM_BITWISE_OPERATORS(FocusPolicy)
+
+enum class CallOnChange {
+    No,
+    Yes
+};
 
 class Widget : public Core::Object {
     C_OBJECT(Widget)
