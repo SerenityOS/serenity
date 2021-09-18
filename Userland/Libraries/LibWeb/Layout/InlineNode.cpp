@@ -40,18 +40,17 @@ void InlineNode::split_into_lines(InlineFormattingContext& context, LayoutMode l
     }
 }
 
-void InlineNode::paint_fragment(PaintContext& context, const LineBoxFragment& fragment, PaintPhase phase) const
+void InlineNode::paint(PaintContext& context, PaintPhase phase)
 {
     auto& painter = context.painter();
 
     if (phase == PaintPhase::Background) {
-        painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), computed_values().background_color());
+        containing_block()->for_each_fragment([&](auto& fragment) {
+            if (is_inclusive_ancestor_of(fragment.layout_node()))
+                painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), computed_values().background_color());
+            return IterationDecision::Continue;
+        });
     }
-}
-
-void InlineNode::paint(PaintContext& context, PaintPhase phase)
-{
-    auto& painter = context.painter();
 
     if (phase == PaintPhase::Foreground && document().inspected_node() == dom_node()) {
         // FIXME: This paints a double-thick border between adjacent fragments, where ideally there
