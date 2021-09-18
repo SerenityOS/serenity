@@ -15,6 +15,7 @@
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Origin.h>
@@ -258,6 +259,16 @@ bool XMLHttpRequest::dispatch_event(NonnullRefPtr<DOM::Event> event)
 JS::Object* XMLHttpRequest::create_wrapper(JS::GlobalObject& global_object)
 {
     return wrap(global_object, *this);
+}
+
+HTML::EventHandler XMLHttpRequest::onreadystatechange()
+{
+    return event_handler_attribute(Web::XHR::EventNames::readystatechange);
+}
+
+void XMLHttpRequest::set_onreadystatechange(HTML::EventHandler value)
+{
+    set_event_handler_attribute(Web::XHR::EventNames::readystatechange, move(value));
 }
 
 }
