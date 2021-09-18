@@ -125,6 +125,18 @@ UNMAP_AFTER_INIT void Device::initialize()
     }
 
     if (m_use_mmio) {
+        for (auto& cfg : m_configs) {
+            auto& mapping = m_mmio[cfg.bar];
+            mapping.size = PCI::get_BAR_space_size(pci_address(), cfg.bar);
+            if (!mapping.base && mapping.size) {
+                auto region_or_error = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR(pci_address(), cfg.bar))), Memory::page_round_up(mapping.size), "VirtIO MMIO", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
+                if (region_or_error.is_error()) {
+                    dbgln_if(VIRTIO_DEBUG, "{}: Failed to map bar {} - (size={}) {}", VirtIO::determine_device_class(pci_address()), cfg.bar, mapping.size, region_or_error.error());
+                } else {
+                    mapping.base = region_or_error.release_value();
+                }
+            }
+        }
         m_common_cfg = get_config(ConfigurationType::Common, 0);
         m_notify_cfg = get_config(ConfigurationType::Notify, 0);
         m_isr_cfg = get_config(ConfigurationType::ISR, 0);
@@ -147,17 +159,7 @@ UNMAP_AFTER_INIT VirtIO::Device::Device(PCI::Address address)
 auto Device::mapping_for_bar(u8 bar) -> MappedMMIO&
 {
     VERIFY(m_use_mmio);
-    auto& mapping = m_mmio[bar];
-    if (!mapping.base && mapping.size) {
-        auto region_or_error = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR(pci_address(), bar))), Memory::page_round_up(mapping.size), "VirtIO MMIO", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
-        if (region_or_error.is_error()) {
-            dbgln("{}: Failed to map bar {} - (size={}) {}", VirtIO::determine_device_class(pci_address()), bar, mapping.size, region_or_error.error());
-        } else {
-            mapping.size = PCI::get_BAR_space_size(pci_address(), bar);
-            mapping.base = region_or_error.release_value();
-        }
-    }
-    return mapping;
+    return m_mmio[bar];
 }
 
 void Device::notify_queue(u16 queue_index)
