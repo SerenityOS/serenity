@@ -360,9 +360,7 @@ NumberFormat* initialize_number_format(GlobalObject& global_object, NumberFormat
     auto requested_locales = TRY_OR_DISCARD(canonicalize_locale_list(global_object, locales_value));
 
     // 2. Set options to ? CoerceOptionsToObject(options).
-    auto* options = coerce_options_to_object(global_object, options_value);
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(coerce_options_to_object(global_object, options_value));
 
     // 3. Let opt be a new Record.
     LocaleOptions opt {};

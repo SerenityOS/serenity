@@ -573,9 +573,7 @@ ThrowCompletionOr<Array*> supported_locales(GlobalObject& global_object, Vector<
     auto& vm = global_object.vm();
 
     // 1. Set options to ? CoerceOptionsToObject(options).
-    auto* options_object = coerce_options_to_object(global_object, options);
-    if (vm.exception())
-        return {};
+    auto* options_object = TRY(coerce_options_to_object(global_object, options));
 
     // 2. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
     auto matcher = TRY(get_option(global_object, *options_object, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
@@ -598,8 +596,10 @@ ThrowCompletionOr<Array*> supported_locales(GlobalObject& global_object, Vector<
 }
 
 // 9.2.12 CoerceOptionsToObject ( options ), https://tc39.es/ecma402/#sec-coerceoptionstoobject
-Object* coerce_options_to_object(GlobalObject& global_object, Value options)
+ThrowCompletionOr<Object*> coerce_options_to_object(GlobalObject& global_object, Value options)
 {
+    auto& vm = global_object.vm();
+
     // 1. If options is undefined, then
     if (options.is_undefined()) {
         // a. Return ! OrdinaryObjectCreate(null).
@@ -607,7 +607,10 @@ Object* coerce_options_to_object(GlobalObject& global_object, Value options)
     }
 
     // 2. Return ? ToObject(options).
-    return options.to_object(global_object);
+    auto result = options.to_object(global_object);
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+    return result;
 }
 
 // 9.2.13 GetOption ( options, property, type, values, fallback ), https://tc39.es/ecma402/#sec-getoption
