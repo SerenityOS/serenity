@@ -175,6 +175,14 @@ void Job::on_socket_connected()
                         on_headers_received(m_headers, m_code > 0 ? m_code : Optional<u32> {});
                     m_state = State::InBody;
                 }
+
+                // We've reached the end of the headers, there's a possibility that the server
+                // responds with nothing (content-length = 0 with normal encoding); if that's the case,
+                // quit early as we won't be reading anything anyway.
+                if (auto result = m_headers.get("Content-Length"sv).value_or(""sv).to_uint(); result.has_value()) {
+                    if (result.value() == 0 && !m_headers.get("Transfer-Encoding"sv).value_or(""sv).view().trim_whitespace().equals_ignoring_case("chunked"sv))
+                        return finish_up();
+                }
                 return;
             }
             auto parts = line.split_view(':');
