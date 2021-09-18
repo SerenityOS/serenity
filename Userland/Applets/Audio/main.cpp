@@ -23,12 +23,12 @@
 class AudioWidget final : public GUI::Widget {
     C_OBJECT(AudioWidget)
 public:
-    AudioWidget(int initial_volume, bool initial_mute_state)
+    AudioWidget()
         : m_audio_client(Audio::ClientConnection::construct())
         , m_show_percent(Config::read_bool("AudioApplet", "Applet", "ShowPercent", false))
-        , m_audio_muted(initial_mute_state)
-        , m_audio_volume(initial_volume)
     {
+        m_audio_volume = static_cast<int>(m_audio_client->get_main_mix_volume() * 100);
+        m_audio_muted = m_audio_client->get_muted();
 
         m_audio_client->on_muted_state_change = [this](bool muted) {
             if (m_audio_muted == muted)
@@ -213,16 +213,28 @@ int main(int argc, char** argv)
     }
 
     auto app = GUI::Application::construct(argc, argv);
-    Config::pledge_domains({ "Audio", "AudioApplet" });
+    if (unveil("/tmp/portal/config", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+    if (unveil("/tmp/portal/audio", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+    unveil(nullptr, nullptr);
+
+    Config::pledge_domains("AudioApplet");
 
     auto window = GUI::Window::construct();
     window->set_has_alpha_channel(true);
     window->set_title("Audio");
     window->set_window_type(GUI::WindowType::Applet);
 
-    auto initial_volume = Config::read_i32("Audio", "Master", "Volume", 100);
-    auto initial_mute = Config::read_bool("Audio", "Master", "Mute", false);
-    window->set_main_widget<AudioWidget>(initial_volume, initial_mute);
+    window->set_main_widget<AudioWidget>();
     window->show();
 
     // This positioning code depends on the window actually existing.
@@ -231,13 +243,6 @@ int main(int argc, char** argv)
     } else {
         window->resize(44, 16);
     }
-
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
 
     if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
         perror("pledge");
