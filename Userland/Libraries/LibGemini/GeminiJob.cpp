@@ -93,9 +93,10 @@ void GeminiJob::register_on_ready_to_read(Function<void()> callback)
 
 void GeminiJob::register_on_ready_to_write(Function<void()> callback)
 {
-    m_socket->on_tls_ready_to_write = [callback = move(callback)](auto&) {
+    m_socket->set_on_tls_ready_to_write([callback = move(callback)](auto& tls) {
+        Core::deferred_invoke([&tls] { tls.set_on_tls_ready_to_write(nullptr); });
         callback();
-    };
+    });
 }
 
 bool GeminiJob::can_read_line() const
