@@ -614,7 +614,7 @@ Token Lexer::next()
             code_point = is_identifier_middle(identifier_length);
         } while (code_point.has_value());
 
-        identifier = builder.build();
+        identifier = builder.string_view();
         m_parsed_identifiers->identifiers.set(*identifier);
 
         auto it = s_keywords.find(identifier->hash(), [&](auto& entry) { return entry.key == identifier; });
