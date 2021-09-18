@@ -565,12 +565,14 @@ void WebSocket::fatal_error(WebSocket::Error error)
 
 void WebSocket::discard_connection()
 {
-    VERIFY(m_impl);
-    m_impl->discard_connection();
-    m_impl->on_connection_error = nullptr;
-    m_impl->on_connected = nullptr;
-    m_impl->on_ready_to_read = nullptr;
-    m_impl = nullptr;
+    deferred_invoke([this] {
+        VERIFY(m_impl);
+        m_impl->discard_connection();
+        m_impl->on_connection_error = nullptr;
+        m_impl->on_connected = nullptr;
+        m_impl->on_ready_to_read = nullptr;
+        m_impl = nullptr;
+    });
 }
 
 void WebSocket::notify_open()
