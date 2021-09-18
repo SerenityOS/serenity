@@ -17,17 +17,23 @@ Lagom can be used to fuzz parts of SerenityOS's code base. Fuzzers can be run lo
 Lagom can be used to fuzz parts of SerenityOS's code base. This requires buildling with `clang`, so it's convenient to use a different build directory for that. Fuzzers work best with Address Sanitizer enabled. Run CMake like this:
 
     # From the root of the SerenityOS checkout:
-    mkdir BuildLagom && cd BuildLagom
-    cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_UNDEFINED_SANITIZER=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang ..
-    ninja Meta/Lagom/all
+    cmake -GNinja -S Meta/Lagom -B Build/lagom-fuzzers \
+      -DBUILD_LAGOM=ON \
+      -DENABLE_FUZZER_SANITIZER=ON \
+      -DENABLE_ADDRESS_SANITIZER=ON \
+      -DENABLE_UNDEFINED_SANITIZER=ON \
+      -DCMAKE_CXX_COMPILER=clang++ \
+      -DCMAKE_C_COMPILER=clang
+    cd Build/lagom-fuzzers
+    ninja
     # Or as a handy rebuild-rerun line:
-    ninja FuzzJs && Meta/Lagom/Fuzzers/FuzzJs
+    ninja FuzzJs && ./Fuzzers/FuzzJs
 
 Any fuzzing results (particularly slow inputs, crashes, etc.) will be dropped in the current directory.
 
 clang emits different warnings than gcc, so you may have to remove `-Werror` in CMakeLists.txt and Meta/Lagom/CMakeLists.txt.
 
-Fuzzers work better if you give them a fuzz corpus, e.g. `Meta/Lagom/Fuzzers/FuzzBMP ../Base/res/html/misc/bmpsuite_files/rgba32-61754.bmp` Pay attention that LLVM also likes creating new files, don't blindly commit them (yet)!
+Fuzzers work better if you give them a fuzz corpus, e.g. `./Fuzzers/FuzzBMP ../Base/res/html/misc/bmpsuite_files/rgba32-61754.bmp` Pay attention that LLVM also likes creating new files, don't blindly commit them (yet)!
 
 To run several fuzz jobs in parallel, pass `-jobs=24 -workers=24`.
 
@@ -99,7 +105,7 @@ To reproduce a crash, run it like this: `MyFuzzer crash-27480a219572aa5a11b28596
 To reproduce a crash in gdb, you want to disable various signal handlers, so that gdb sees the actual location of the crash:
 
 ```
-$ gdb ./Meta/Lagom/Fuzzers/FuzzBMP
+$ gdb ./Fuzzers/FuzzBMP
 <... SNIP some output ...>
 (gdb) run -handle_abrt=0 -handle_segv=0 crash-27480a219572aa5a11b285968a3632a4cf25388e
 <... SNIP some output ...>
