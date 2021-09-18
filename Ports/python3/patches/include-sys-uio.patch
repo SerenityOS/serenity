@@ -1,5 +1,5 @@
---- Python-3.10.0rc1/Modules/socketmodule.c	2021-09-09 01:14:41.120232921 +0800
-+++ Python-3.10.0rc1/Modules/socketmodule.c	2021-08-03 03:53:59.000000000 +0800
+--- Python-3.10.0rc2/Modules/socketmodule.c	2021-09-09 01:14:41.120232921 +0800
++++ Python-3.10.0rc2/Modules/socketmodule.c	2021-08-03 03:53:59.000000000 +0800
 @@ -171,7 +171,7 @@
  # undef HAVE_GETHOSTBYNAME_R_6_ARG
  #endif
