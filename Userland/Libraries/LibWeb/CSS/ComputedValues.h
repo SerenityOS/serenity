@@ -41,6 +41,11 @@ public:
     float width { 0 };
 };
 
+struct Transformation {
+    CSS::TransformFunction function;
+    Vector<Variant<CSS::Length, float>> values;
+};
+
 struct FlexBasisData {
     CSS::FlexBasis type { CSS::FlexBasis::Auto };
     CSS::Length length {};
@@ -109,6 +114,8 @@ public:
     Optional<Color> stroke() const { return m_inherited.stroke; }
     Optional<Length> const& stroke_width() const { return m_inherited.stroke_width; }
 
+    Vector<CSS::Transformation> transformations() const { return m_noninherited.transformations; }
+
     ComputedValues clone_inherited_values() const
     {
         ComputedValues clone;
@@ -168,6 +175,7 @@ protected:
         CSS::Overflow overflow_y { InitialValues::overflow() };
         Optional<float> opacity;
         Optional<BoxShadowData> box_shadow {};
+        Vector<CSS::Transformation> transformations {};
     } m_noninherited;
 };
 
@@ -219,6 +227,7 @@ public:
     void set_opacity(Optional<float> value) { m_noninherited.opacity = value; }
     void set_justify_content(CSS::JustifyContent value) { m_noninherited.justify_content = value; }
     void set_box_shadow(Optional<BoxShadowData> value) { m_noninherited.box_shadow = move(value); }
+    void set_transformations(Vector<CSS::Transformation> value) { m_noninherited.transformations = move(value); }
 
     void set_fill(Color value) { m_inherited.fill = value; }
     void set_stroke(Color value) { m_inherited.stroke = value; }

@@ -219,6 +219,10 @@ enum class AlignItems {
     Stretch,
 };
 
+enum class TransformFunction {
+    TranslateY,
+};
+
 class StyleValue : public RefCounted<StyleValue> {
 public:
     virtual ~StyleValue();
@@ -249,6 +253,7 @@ public:
         ListStyle,
         Overflow,
         TextDecoration,
+        Transformation,
     };
 
     Type type() const { return m_type; }
@@ -276,6 +281,7 @@ public:
     bool is_list_style() const { return type() == Type::ListStyle; }
     bool is_overflow() const { return type() == Type::Overflow; }
     bool is_text_decoration() const { return type() == Type::TextDecoration; }
+    bool is_transformation() const { return type() == Type::Transformation; }
 
     bool is_builtin() const { return is_inherit() || is_initial() || is_unset(); }
 
@@ -1058,6 +1064,34 @@ private:
     NonnullRefPtr<StyleValue> m_line;
     NonnullRefPtr<StyleValue> m_style;
     NonnullRefPtr<StyleValue> m_color;
+};
+
+class TransformationStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<TransformationStyleValue> create(CSS::TransformFunction transform_function, NonnullRefPtrVector<StyleValue>&& values)
+    {
+        return adopt_ref(*new TransformationStyleValue(transform_function, move(values)));
+    }
+    virtual ~TransformationStyleValue() override { }
+
+    CSS::TransformFunction transform_function() const { return m_transform_function; }
+    NonnullRefPtrVector<StyleValue> values() const { return m_values; }
+
+    virtual String to_string() const override
+    {
+        return String::formatted("TransformationStyleValue");
+    }
+
+private:
+    TransformationStyleValue(CSS::TransformFunction transform_function, NonnullRefPtrVector<StyleValue>&& values)
+        : StyleValue(Type::Transformation)
+        , m_transform_function(transform_function)
+        , m_values(move(values))
+    {
+    }
+
+    CSS::TransformFunction m_transform_function;
+    NonnullRefPtrVector<StyleValue> m_values;
 };
 
 class StyleValueList final : public StyleValue {
