@@ -237,8 +237,9 @@ inline AK::Result<NonnullRefPtr<JS::SourceTextModule>, ParserError> parse_module
 
 inline Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
 {
-    auto result = g_vm->get_variable("__TestResults__", interpreter.global_object());
-    auto json_string = JS::JSONObject::stringify_impl(interpreter.global_object(), result, JS::js_undefined(), JS::js_undefined());
+    auto results = interpreter.global_object().get("__TestResults__");
+    VERIFY(!results.is_empty());
+    auto json_string = JS::JSONObject::stringify_impl(interpreter.global_object(), results, JS::js_undefined(), JS::js_undefined());
 
     auto json = JsonValue::from_string(json_string);
     if (!json.has_value())
@@ -382,7 +383,10 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
     JSFileResult file_result { test_path.substring(m_test_root.length() + 1, test_path.length() - m_test_root.length() - 1) };
 
     // Collect logged messages
-    auto& arr = interpreter->vm().get_variable("__UserOutput__", interpreter->global_object()).as_array();
+    auto user_output = interpreter->global_object().get("__UserOutput__");
+    VERIFY(!user_output.is_empty());
+
+    auto& arr = user_output.as_array();
     for (auto& entry : arr.indexed_properties()) {
         auto message = arr.get(entry.index());
         file_result.logged_messages.append(message.to_string_without_side_effects());
