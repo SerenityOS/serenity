@@ -57,6 +57,8 @@ public:
     int width_occupied_by_vertical_scrollbar() const;
     int height_occupied_by_horizontal_scrollbar() const;
 
+    virtual Margins content_margins() const override;
+
     void set_should_hide_unnecessary_scrollbars(bool b) { m_should_hide_unnecessary_scrollbars = b; }
     bool should_hide_unnecessary_scrollbars() const { return m_should_hide_unnecessary_scrollbars; }
 
