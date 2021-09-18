@@ -187,6 +187,14 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
         return statement.execute(*this, global_object);
 
     auto& block = static_cast<const ScopeNode&>(statement);
+    Vector<FlyString> const& labels = [&] {
+        if (is<BlockStatement>(block)) {
+            return static_cast<BlockStatement const&>(block).labels();
+        } else {
+            return Vector<FlyString>();
+        }
+    }();
+
     enter_scope(block, scope_type, global_object);
 
     Value last_value;
@@ -195,7 +203,7 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
         if (!value.is_empty())
             last_value = value;
         if (vm().should_unwind()) {
-            if (!block.labels().is_empty() && vm().should_unwind_until(ScopeType::Breakable, block.labels()))
+            if (!labels.is_empty() && vm().should_unwind_until(ScopeType::Breakable, labels))
                 vm().stop_unwind();
             break;
         }
