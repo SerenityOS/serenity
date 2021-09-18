@@ -35,10 +35,10 @@ public:
     void start();
 
     // This can only be used if the `ready_state` is `ReadyState::Open`
-    void send(Message);
+    void send(Message const&);
 
     // This can only be used if the `ready_state` is `ReadyState::Open`
-    void close(u16 code = 1005, String reason = {});
+    void close(u16 code = 1005, String const& reason = {});
 
     Function<void()> on_open;
     Function<void(u16 code, String reason, bool was_clean)> on_close;
