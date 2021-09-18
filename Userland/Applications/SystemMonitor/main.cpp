@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Undefine <cqundefine@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,6 +15,7 @@
 #include "ProcessUnveiledPathsWidget.h"
 #include "ThreadStackWidget.h"
 #include <AK/NumberFormat.h>
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
@@ -156,7 +158,14 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/tmp/portal/config", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     unveil(nullptr, nullptr);
+
+    Config::pledge_domains("SystemMonitor");
 
     const char* args_tab = "processes";
     Core::ArgsParser parser;
@@ -225,8 +234,14 @@ int main(int argc, char** argv)
     process_table_view.set_key_column_and_sort_order(ProcessModel::Column::CPU, GUI::SortOrder::Descending);
     process_model->update();
 
+    i32 frequency = Config::read_i32("SystemMonitor", "Monitor", "Frequency", 3);
+    if (frequency != 1 && frequency != 3 && frequency != 5) {
+        frequency = 3;
+        Config::write_i32("SystemMonitor", "Monitor", "Frequency", frequency);
+    }
+
     auto& refresh_timer = window->add<Core::Timer>(
-        3000, [&] {
+        frequency * 1000, [&] {
             process_model->update();
             if (auto* memory_stats_widget = MemoryStatsWidget::the())
                 memory_stats_widget->refresh();
@@ -328,18 +343,19 @@ int main(int argc, char** argv)
     GUI::ActionGroup frequency_action_group;
     frequency_action_group.set_exclusive(true);
 
-    auto make_frequency_action = [&](int seconds, bool checked = false) {
+    auto make_frequency_action = [&](int seconds) {
         auto action = GUI::Action::create_checkable(String::formatted("&{} Sec", seconds), [&refresh_timer, seconds](auto&) {
+            Config::write_i32("SystemMonitor", "Monitor", "Frequency", seconds);
             refresh_timer.restart(seconds * 1000);
         });
         action->set_status_tip(String::formatted("Refresh every {} seconds", seconds));
-        action->set_checked(checked);
+        action->set_checked(frequency == seconds);
         frequency_action_group.add_action(*action);
         frequency_menu.add_action(*action);
     };
 
     make_frequency_action(1);
-    make_frequency_action(3, true);
+    make_frequency_action(3);
     make_frequency_action(5);
 
     auto& help_menu = window->add_menu("&Help");
