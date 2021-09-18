@@ -269,6 +269,7 @@ private:
     bool m_resizable { true };
     Optional<Gfx::IntSize> m_resize_aspect_ratio {};
     bool m_minimizable { true };
+    bool m_maximized_when_windowless { false };
     bool m_fullscreen { false };
     bool m_frameless { false };
     bool m_forced_shadow { false };

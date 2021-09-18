@@ -167,6 +167,7 @@ void Window::show()
         return IterationDecision::Continue;
     });
 
+    set_maximized(m_maximized_when_windowless);
     reified_windows->set(m_window_id, this);
     Application::the()->did_create_window({});
     update();
@@ -998,14 +999,17 @@ void Window::set_forced_shadow(bool shadow)
 bool Window::is_maximized() const
 {
     if (!is_visible())
-        return false;
+        return m_maximized_when_windowless;
 
     return WindowServerConnection::the().is_maximized(m_window_id);
 }
 
 void Window::set_maximized(bool maximized)
 {
-    VERIFY(m_window_id != 0);
+    m_maximized_when_windowless = maximized;
+    if (!is_visible())
+        return;
+
     WindowServerConnection::the().async_set_maximized(m_window_id, maximized);
 }
 
