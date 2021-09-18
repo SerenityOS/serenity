@@ -68,6 +68,7 @@ void HttpsJob::shutdown()
         return;
     m_socket->on_tls_ready_to_read = nullptr;
     m_socket->on_tls_connected = nullptr;
+    m_socket->set_on_tls_ready_to_write(nullptr);
     m_socket = nullptr;
 }
 
@@ -97,9 +98,10 @@ void HttpsJob::register_on_ready_to_read(Function<void()> callback)
 
 void HttpsJob::register_on_ready_to_write(Function<void()> callback)
 {
-    m_socket->on_tls_ready_to_write = [callback = move(callback)](auto&) {
+    m_socket->set_on_tls_ready_to_write([callback = move(callback)](auto& tls) {
+        Core::deferred_invoke([&tls] { tls.set_on_tls_ready_to_write(nullptr); });
         callback();
-    };
+    });
 }
 
 bool HttpsJob::can_read_line() const

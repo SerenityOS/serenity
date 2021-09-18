@@ -152,12 +152,12 @@ static void tls(const char* message, size_t len)
             if (buffer.has_value())
                 out("{}", StringView { buffer->data(), buffer->size() });
         };
-        tls->on_tls_ready_to_write = [&](auto&) {
+        tls->set_on_tls_ready_to_write([&](auto&) {
             if (write.size()) {
                 tls->write(write);
                 write.clear();
             }
-        };
+        });
         tls->on_tls_error = [&](auto) {
             g_loop.quit(1);
         };
@@ -2013,10 +2013,11 @@ static void tls_test_client_hello()
     tls->set_root_certificates(s_root_ca_certificates);
     bool sent_request = false;
     ByteBuffer contents;
-    tls->on_tls_ready_to_write = [&](TLS::TLSv12& tls) {
+    tls->set_on_tls_ready_to_write([&](TLS::TLSv12& tls) {
         if (sent_request)
             return;
         sent_request = true;
+        Core::deferred_invoke([&tls] { tls.set_on_tls_ready_to_write(nullptr); });
         if (!tls.write("GET / HTTP/1.1\r\nHost: "_b)) {
             FAIL(write(0) failed);
             loop.quit(0);
@@ -2030,7 +2031,7 @@ static void tls_test_client_hello()
             FAIL(write(2) failed);
             loop.quit(0);
         }
-    };
+    });
     tls->on_tls_ready_to_read = [&](TLS::TLSv12& tls) {
         auto data = tls.read();
         if (!data.has_value()) {

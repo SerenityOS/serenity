@@ -373,8 +373,16 @@ public:
     bool can_read() const { return m_context.application_buffer.size() > 0; }
     String read_line(size_t max_size);
 
+    void set_on_tls_ready_to_write(Function<void(TLSv12&)> function)
+    {
+        on_tls_ready_to_write = move(function);
+        if (on_tls_ready_to_write) {
+            if (is_established())
+                on_tls_ready_to_write(*this);
+        }
+    }
+
     Function<void(TLSv12&)> on_tls_ready_to_read;
-    Function<void(TLSv12&)> on_tls_ready_to_write;
     Function<void(AlertDescription)> on_tls_error;
     Function<void()> on_tls_connected;
     Function<void()> on_tls_finished;
@@ -521,6 +529,7 @@ private:
     i32 m_max_wait_time_for_handshake_in_seconds { 10 };
 
     RefPtr<Core::Timer> m_handshake_timeout_timer;
+    Function<void(TLSv12&)> on_tls_ready_to_write;
 };
 
 }
