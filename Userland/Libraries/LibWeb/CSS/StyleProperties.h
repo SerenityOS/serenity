@@ -64,6 +64,8 @@ public:
     Optional<CSS::Repeat> background_repeat_y() const;
     Optional<CSS::BoxShadowData> box_shadow() const;
 
+    Vector<CSS::Transformation> transformations() const;
+
     const Gfx::Font& font(Layout::Node const& node) const
     {
         if (!m_font)

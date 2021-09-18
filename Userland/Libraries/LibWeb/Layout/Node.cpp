@@ -347,6 +347,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 
     computed_values.set_box_shadow(specified_style.box_shadow());
 
+    computed_values.set_transformations(specified_style.transformations());
+
     auto do_border_style = [&](CSS::BorderData& border, CSS::PropertyID width_property, CSS::PropertyID color_property, CSS::PropertyID style_property) {
         // FIXME: The default border color value is `currentcolor`, but since we can't resolve that easily,
         //        we just manually grab the value from `color`. This makes it dependent on `color` being

@@ -2788,6 +2788,45 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(ParsingContext const& con
     return TextDecorationStyleValue::create(decoration_line.release_nonnull(), decoration_style.release_nonnull(), decoration_color.release_nonnull());
 }
 
+static Optional<CSS::TransformFunction> parse_transform_function_name(StringView name)
+{
+    if (name == "translateY")
+        return CSS::TransformFunction::TranslateY;
+    return {};
+}
+
+RefPtr<StyleValue> Parser::parse_transform_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+{
+    NonnullRefPtrVector<StyleValue> transformations;
+
+    for (auto& part : component_values) {
+        if (!part.is_function())
+            return nullptr;
+        auto maybe_function = parse_transform_function_name(part.function().name());
+        if (!maybe_function.has_value())
+            return nullptr;
+
+        NonnullRefPtrVector<StyleValue> values;
+        for (auto& value : part.function().values()) {
+            if (value.is(Token::Type::Dimension)) {
+                auto maybe_length = parse_length(context, value);
+                if (!maybe_length.has_value())
+                    return nullptr;
+                values.append(LengthStyleValue::create(maybe_length.release_value()));
+            } else if (value.is(Token::Type::Number)) {
+                auto number = parse_numeric_value(context, value);
+                values.append(number.release_nonnull());
+            } else {
+                dbgln("FIXME: Unsupported value type for transformation!");
+                return nullptr;
+            }
+        }
+
+        transformations.append(TransformationStyleValue::create(maybe_function.value(), move(values)));
+    }
+    return StyleValueList::create(move(transformations));
+}
+
 RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
 {
     auto component_values = parse_as_list_of_component_values();
@@ -2891,6 +2930,10 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
         break;
     case PropertyID::TextDecoration:
         if (auto parsed_value = parse_text_decoration_value(m_context, component_values))
+            return parsed_value.release_nonnull();
+        break;
+    case PropertyID::Transform:
+        if (auto parsed_value = parse_transform_value(m_context, component_values))
             return parsed_value.release_nonnull();
         break;
     default:
