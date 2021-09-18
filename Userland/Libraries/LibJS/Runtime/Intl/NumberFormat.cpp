@@ -249,9 +249,10 @@ void set_number_format_digit_options(GlobalObject& global_object, NumberFormat& 
     // 4. Assert: Type(mxfdDefault) is Number.
 
     // 5. Let mnid be ? GetNumberOption(options, "minimumIntegerDigits,", 1, 21, 1).
-    auto min_integer_digits = get_number_option(global_object, options, vm.names.minimumIntegerDigits, 1, 21, 1);
-    if (vm.exception())
+    auto min_integer_digits_or_error = get_number_option(global_object, options, vm.names.minimumIntegerDigits, 1, 21, 1);
+    if (min_integer_digits_or_error.is_error())
         return;
+    auto min_integer_digits = min_integer_digits_or_error.release_value();
 
     // 6. Let mnfd be ? Get(options, "minimumFractionDigits").
     auto min_fraction_digits = options.get(vm.names.minimumFractionDigits);

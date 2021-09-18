@@ -683,18 +683,18 @@ ThrowCompletionOr<Optional<int>> default_number_option(GlobalObject& global_obje
 }
 
 // 9.2.15 GetNumberOption ( options, property, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-getnumberoption
-Optional<int> get_number_option(GlobalObject& global_object, Object const& options, PropertyName const& property, int minimum, int maximum, Optional<int> fallback)
+ThrowCompletionOr<Optional<int>> get_number_option(GlobalObject& global_object, Object const& options, PropertyName const& property, int minimum, int maximum, Optional<int> fallback)
 {
     auto& vm = global_object.vm();
 
     // 1. Assert: Type(options) is Object.
     // 2. Let value be ? Get(options, property).
     auto value = options.get(property);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 3. Return ? DefaultNumberOption(value, minimum, maximum, fallback).
-    return TRY_OR_DISCARD(default_number_option(global_object, value, minimum, maximum, move(fallback)));
+    return default_number_option(global_object, value, minimum, maximum, move(fallback));
 }
 
 // 9.2.16 PartitionPattern ( pattern ), https://tc39.es/ecma402/#sec-partitionpattern
