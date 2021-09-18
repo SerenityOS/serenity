@@ -605,6 +605,10 @@
       "unitless-length"
     ]
   },
+  "transform": {
+    "inherited": false,
+    "initial": "none"
+  },
   "user-select": {
     "inherited": false,
     "initial": "auto"

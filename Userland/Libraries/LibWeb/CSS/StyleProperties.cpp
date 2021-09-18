@@ -424,6 +424,44 @@ Optional<CSS::JustifyContent> StyleProperties::justify_content() const
     }
 }
 
+Vector<CSS::Transformation> StyleProperties::transformations() const
+{
+    auto value = property(CSS::PropertyID::Transform);
+    if (!value.has_value())
+        return {};
+
+    if (value.value()->is_identifier() && value.value()->to_identifier() == CSS::ValueID::None)
+        return {};
+
+    if (!value.value()->is_value_list())
+        return {};
+
+    auto& list = static_cast<const StyleValueList&>(*value.value());
+
+    Vector<CSS::Transformation> transformations;
+
+    for (auto& it : list.values()) {
+        if (!it.is_transformation())
+            return {};
+        auto& transformation_style_value = static_cast<TransformationStyleValue const&>(it);
+        CSS::Transformation transformation;
+        transformation.function = transformation_style_value.transform_function();
+        Vector<Variant<CSS::Length, float>> values;
+        for (auto& transformation_value : transformation_style_value.values()) {
+            if (transformation_value.is_length()) {
+                values.append({ transformation_value.to_length() });
+            } else if (transformation_value.is_numeric()) {
+                values.append({ static_cast<NumericStyleValue const&>(transformation_value).value() });
+            } else {
+                dbgln("FIXME: Unsupported value in transform!");
+            }
+        }
+        transformation.values = move(values);
+        transformations.append(move(transformation));
+    }
+    return transformations;
+}
+
 Optional<CSS::AlignItems> StyleProperties::align_items() const
 {
     auto value = property(CSS::PropertyID::AlignItems);
