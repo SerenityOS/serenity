@@ -13,6 +13,7 @@
 
 namespace Protocol {
 class RequestClient;
+class Request;
 }
 
 namespace Web {
@@ -53,6 +54,7 @@ private:
 
     int m_pending_loads { 0 };
 
+    HashTable<NonnullRefPtr<Protocol::Request>> m_active_requests;
     RefPtr<Protocol::RequestClient> m_protocol_client;
     String m_user_agent;
 };
