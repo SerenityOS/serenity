@@ -192,6 +192,51 @@ UNMAP_AFTER_INIT RefPtr<RTL8168NetworkAdapter> RTL8168NetworkAdapter::try_to_ini
     return adopt_ref_if_nonnull(new (nothrow) RTL8168NetworkAdapter(address, irq));
 }
 
+bool RTL8168NetworkAdapter::determine_supported_version() const
+{
+    switch (m_version) {
+    case ChipVersion::Version1:
+    case ChipVersion::Version2:
+    case ChipVersion::Version3:
+        return true;
+    case ChipVersion::Version4:
+    case ChipVersion::Version5:
+    case ChipVersion::Version6:
+    case ChipVersion::Version7:
+    case ChipVersion::Version8:
+    case ChipVersion::Version9:
+    case ChipVersion::Version10:
+    case ChipVersion::Version11:
+    case ChipVersion::Version12:
+    case ChipVersion::Version13:
+    case ChipVersion::Version14:
+        return false;
+    case ChipVersion::Version15:
+        return true;
+    case ChipVersion::Version16:
+        return false;
+    case ChipVersion::Version17:
+        return true;
+    case ChipVersion::Version18:
+    case ChipVersion::Version19:
+    case ChipVersion::Version20:
+    case ChipVersion::Version21:
+    case ChipVersion::Version22:
+    case ChipVersion::Version23:
+    case ChipVersion::Version24:
+    case ChipVersion::Version25:
+    case ChipVersion::Version26:
+    case ChipVersion::Version27:
+    case ChipVersion::Version28:
+    case ChipVersion::Version29:
+        return false;
+    case ChipVersion::Version30:
+        return true;
+    default:
+        return false;
+    }
+}
+
 UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(PCI::Address address, u8 irq)
     : PCI::Device(address)
     , IRQHandler(irq)
@@ -206,7 +251,8 @@ UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(PCI::Address addre
 
     identify_chip_version();
     dmesgln("RTL8168: Version detected - {} ({}{})", possible_device_name(), (u8)m_version, m_version_uncertain ? "?" : "");
-    if (m_version == ChipVersion::Unknown || (m_version >= ChipVersion::Version4 && m_version <= ChipVersion::Version16) || m_version >= ChipVersion::Version18) {
+
+    if (!determine_supported_version()) {
         dmesgln("RTL8168: Aborting initialization! Support for your chip version ({}) is not implemented yet, please open a GH issue and include this message.", (u8)m_version);
         return; // Each ChipVersion requires a specific implementation of configure_phy and hardware_quirks
     }
@@ -389,8 +435,10 @@ void RTL8168NetworkAdapter::configure_phy()
         TODO();
     case ChipVersion::Version14:
         TODO();
-    case ChipVersion::Version15:
-        TODO();
+    case ChipVersion::Version15: {
+        configure_phy_e_2();
+        return;
+    }
     case ChipVersion::Version16:
         TODO();
     case ChipVersion::Version17: {
@@ -822,7 +870,7 @@ void RTL8168NetworkAdapter::hardware_quirks()
     case ChipVersion::Version14:
         TODO();
     case ChipVersion::Version15:
-        TODO();
+        return;
     case ChipVersion::Version16:
         TODO();
     case ChipVersion::Version17:
