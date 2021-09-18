@@ -373,12 +373,9 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
 static Optional<String> resolve_best_locale(GlobalObject& global_object, Value locales)
 {
     // For details on these steps, see https://tc39.es/ecma402/#sup-string.prototype.tolocalelowercase
-    auto& vm = global_object.vm();
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = Intl::canonicalize_locale_list(global_object, locales);
-    if (vm.exception())
-        return {};
+    auto requested_locales = TRY_OR_DISCARD(Intl::canonicalize_locale_list(global_object, locales));
 
     Optional<Unicode::LocaleID> requested_locale;
 
