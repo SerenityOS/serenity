@@ -93,8 +93,9 @@ void AbstractScrollableWidget::resize_event(ResizeEvent& event)
 
 Gfx::IntSize AbstractScrollableWidget::available_size() const
 {
-    unsigned available_width = max(frame_inner_rect().width() - m_size_occupied_by_fixed_elements.width() - width_occupied_by_vertical_scrollbar(), 0);
-    unsigned available_height = max(frame_inner_rect().height() - m_size_occupied_by_fixed_elements.height() - height_occupied_by_horizontal_scrollbar(), 0);
+    auto inner_size = Widget::content_size();
+    unsigned available_width = max(inner_size.width() - m_size_occupied_by_fixed_elements.width(), 0);
+    unsigned available_height = max(inner_size.height() - m_size_occupied_by_fixed_elements.height(), 0);
     return { available_width, available_height };
 }
 
@@ -159,13 +160,19 @@ int AbstractScrollableWidget::width_occupied_by_vertical_scrollbar() const
     return m_vertical_scrollbar->is_visible() ? m_vertical_scrollbar->width() : 0;
 }
 
+Margins AbstractScrollableWidget::content_margins() const
+{
+    return Frame::content_margins() + Margins { 0, width_occupied_by_vertical_scrollbar(), height_occupied_by_horizontal_scrollbar(), 0 };
+}
+
 Gfx::IntRect AbstractScrollableWidget::visible_content_rect() const
 {
+    auto inner_size = Widget::content_size();
     Gfx::IntRect rect {
         m_horizontal_scrollbar->value(),
         m_vertical_scrollbar->value(),
-        min(m_content_size.width(), frame_inner_rect().width() - width_occupied_by_vertical_scrollbar() - m_size_occupied_by_fixed_elements.width()),
-        min(m_content_size.height(), frame_inner_rect().height() - height_occupied_by_horizontal_scrollbar() - m_size_occupied_by_fixed_elements.height())
+        min(m_content_size.width(), inner_size.width() - m_size_occupied_by_fixed_elements.width()),
+        min(m_content_size.height(), inner_size.height() - m_size_occupied_by_fixed_elements.height())
     };
     if (rect.is_empty())
         return {};
