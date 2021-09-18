@@ -493,7 +493,7 @@ void WebSocket::send_frame(WebSocket::OpCode op_code, ReadonlyBytes payload, boo
         TODO();
     } else if (payload.size() > NumericLimits<u16>::max()) {
         // Send (the 'mask' flag + 127) + the 8-byte payload length
-        if constexpr (sizeof(size_t) >= 64) {
+        if constexpr (sizeof(size_t) >= 8) {
             u8 payload_length[9] = {
                 (u8)((has_mask ? 0x80 : 0x00) | 127),
                 (u8)((payload.size() >> 56) & 0xff),
