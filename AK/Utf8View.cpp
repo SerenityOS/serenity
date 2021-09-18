@@ -11,26 +11,6 @@
 
 namespace AK {
 
-const unsigned char* Utf8View::begin_ptr() const
-{
-    return (const unsigned char*)m_string.characters_without_null_termination();
-}
-
-const unsigned char* Utf8View::end_ptr() const
-{
-    return begin_ptr() + m_string.length();
-}
-
-Utf8CodePointIterator Utf8View::begin() const
-{
-    return { begin_ptr(), m_string.length() };
-}
-
-Utf8CodePointIterator Utf8View::end() const
-{
-    return { end_ptr(), 0 };
-}
-
 Utf8CodePointIterator Utf8View::iterator_at_byte_offset(size_t byte_offset) const
 {
     size_t current_offset = 0;
@@ -63,12 +43,6 @@ size_t Utf8View::byte_offset_of(size_t code_point_offset) const
     }
 
     return byte_offset;
-}
-
-Utf8View Utf8View::substring_view(size_t byte_offset, size_t byte_length) const
-{
-    StringView string = m_string.substring_view(byte_offset, byte_length);
-    return Utf8View { string };
 }
 
 Utf8View Utf8View::unicode_substring_view(size_t code_point_offset, size_t code_point_length) const
@@ -212,22 +186,6 @@ Utf8View Utf8View::trim(const Utf8View& characters, TrimMode mode) const
     }
 
     return substring_view(substring_start, substring_length);
-}
-
-Utf8CodePointIterator::Utf8CodePointIterator(const unsigned char* ptr, size_t length)
-    : m_ptr(ptr)
-    , m_length(length)
-{
-}
-
-bool Utf8CodePointIterator::operator==(const Utf8CodePointIterator& other) const
-{
-    return m_ptr == other.m_ptr && m_length == other.m_length;
-}
-
-bool Utf8CodePointIterator::operator!=(const Utf8CodePointIterator& other) const
-{
-    return !(*this == other);
 }
 
 Utf8CodePointIterator& Utf8CodePointIterator::operator++()
