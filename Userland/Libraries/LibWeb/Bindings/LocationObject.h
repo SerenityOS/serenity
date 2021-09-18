@@ -39,6 +39,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(hash_getter);
     JS_DECLARE_NATIVE_FUNCTION(search_getter);
     JS_DECLARE_NATIVE_FUNCTION(protocol_getter);
+    JS_DECLARE_NATIVE_FUNCTION(port_getter);
 };
 
 }

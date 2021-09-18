@@ -29,6 +29,7 @@ void LocationObject::initialize(JS::GlobalObject& global_object)
     define_native_accessor("hash", hash_getter, {}, attr);
     define_native_accessor("search", search_getter, {}, attr);
     define_native_accessor("protocol", protocol_getter, {}, attr);
+    define_native_accessor("port", port_getter, {}, attr);
 
     define_native_function("reload", reload, 0, JS::Attribute::Enumerable);
 }
@@ -108,6 +109,12 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::protocol_getter)
     builder.append(window.impl().associated_document().url().protocol());
     builder.append(':');
     return JS::js_string(vm, builder.to_string());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(LocationObject::port_getter)
+{
+    auto& window = static_cast<WindowObject&>(global_object);
+    return JS::Value(window.impl().associated_document().url().port_or_default());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::reload)
