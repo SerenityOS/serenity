@@ -13,6 +13,7 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/Orientation.h>
 #include <LibIPC/Forward.h>
+#include <math.h>
 
 namespace Gfx {
 
@@ -237,6 +238,12 @@ public:
     [[nodiscard]] Point<U> to_type() const
     {
         return Point<U>(*this);
+    }
+
+    template<typename U>
+    [[nodiscard]] Point<U> to_rounded() const
+    {
+        return Point<U>(roundf(x()), roundf(y()));
     }
 
     [[nodiscard]] String to_string() const;
