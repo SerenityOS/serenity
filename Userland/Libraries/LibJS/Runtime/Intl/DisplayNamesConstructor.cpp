@@ -74,9 +74,7 @@ Value DisplayNamesConstructor::construct(FunctionObject& new_target)
     // 7. Let localeData be %DisplayNames%.[[LocaleData]].
 
     // 8. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
-    auto matcher = get_option(global_object, *options, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv);
-    if (vm.exception())
-        return {};
+    auto matcher = TRY_OR_DISCARD(get_option(global_object, *options, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     // 9. Set opt.[[localeMatcher]] to matcher.
     opt.locale_matcher = matcher;
@@ -85,17 +83,13 @@ Value DisplayNamesConstructor::construct(FunctionObject& new_target)
     auto result = resolve_locale(requested_locales, opt, {});
 
     // 11. Let style be ? GetOption(options, "style", "string", « "narrow", "short", "long" », "long").
-    auto style = get_option(global_object, *options, vm.names.style, Value::Type::String, { "narrow"sv, "short"sv, "long"sv }, "long"sv);
-    if (vm.exception())
-        return {};
+    auto style = TRY_OR_DISCARD(get_option(global_object, *options, vm.names.style, Value::Type::String, { "narrow"sv, "short"sv, "long"sv }, "long"sv));
 
     // 12. Set displayNames.[[Style]] to style.
     display_names->set_style(style.as_string().string());
 
     // 13. Let type be ? GetOption(options, "type", "string", « "language", "region", "script", "currency" », undefined).
-    auto type = get_option(global_object, *options, vm.names.type, Value::Type::String, { "language"sv, "region"sv, "script"sv, "currency"sv }, Empty {});
-    if (vm.exception())
-        return {};
+    auto type = TRY_OR_DISCARD(get_option(global_object, *options, vm.names.type, Value::Type::String, { "language"sv, "region"sv, "script"sv, "currency"sv }, Empty {}));
 
     // 14. If type is undefined, throw a TypeError exception.
     if (type.is_undefined()) {
@@ -107,9 +101,7 @@ Value DisplayNamesConstructor::construct(FunctionObject& new_target)
     display_names->set_type(type.as_string().string());
 
     // 16. Let fallback be ? GetOption(options, "fallback", "string", « "code", "none" », "code").
-    auto fallback = get_option(global_object, *options, vm.names.fallback, Value::Type::String, { "code"sv, "none"sv }, "code"sv);
-    if (vm.exception())
-        return {};
+    auto fallback = TRY_OR_DISCARD(get_option(global_object, *options, vm.names.fallback, Value::Type::String, { "code"sv, "none"sv }, "code"sv));
 
     // 17. Set displayNames.[[Fallback]] to fallback.
     display_names->set_fallback(fallback.as_string().string());

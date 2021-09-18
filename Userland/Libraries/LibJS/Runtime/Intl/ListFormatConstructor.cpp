@@ -65,9 +65,7 @@ Value ListFormatConstructor::construct(FunctionObject& new_target)
     LocaleOptions opt {};
 
     // 6. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
-    auto matcher = get_option(global_object, *options, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv);
-    if (vm.exception())
-        return {};
+    auto matcher = TRY_OR_DISCARD(get_option(global_object, *options, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     // 7. Set opt.[[localeMatcher]] to matcher.
     opt.locale_matcher = matcher;
@@ -81,17 +79,13 @@ Value ListFormatConstructor::construct(FunctionObject& new_target)
     list_format->set_locale(move(result.locale));
 
     // 11. Let type be ? GetOption(options, "type", "string", « "conjunction", "disjunction", "unit" », "conjunction").
-    auto type = get_option(global_object, *options, vm.names.type, Value::Type::String, { "conjunction"sv, "disjunction"sv, "unit"sv }, "conjunction"sv);
-    if (vm.exception())
-        return {};
+    auto type = TRY_OR_DISCARD(get_option(global_object, *options, vm.names.type, Value::Type::String, { "conjunction"sv, "disjunction"sv, "unit"sv }, "conjunction"sv));
 
     // 12. Set listFormat.[[Type]] to type.
     list_format->set_type(type.as_string().string());
 
     // 13. Let style be ? GetOption(options, "style", "string", « "long", "short", "narrow" », "long").
-    auto style = get_option(global_object, *options, vm.names.style, Value::Type::String, { "long"sv, "short"sv, "narrow"sv }, "long"sv);
-    if (vm.exception())
-        return {};
+    auto style = TRY_OR_DISCARD(get_option(global_object, *options, vm.names.style, Value::Type::String, { "long"sv, "short"sv, "narrow"sv }, "long"sv));
 
     // 14. Set listFormat.[[Style]] to style.
     list_format->set_style(style.as_string().string());
