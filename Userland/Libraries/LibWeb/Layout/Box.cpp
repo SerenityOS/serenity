@@ -28,8 +28,6 @@ void Box::paint(PaintContext& context, PaintPhase phase)
     if (is_fixed_position())
         context.painter().translate(context.scroll_offset());
 
-    auto padded_rect = this->padded_rect();
-
     if (phase == PaintPhase::Background) {
         paint_background(context);
         paint_box_shadow(context);
@@ -50,7 +48,7 @@ void Box::paint(PaintContext& context, PaintPhase phase)
         margin_rect.set_height(height() + margin_box.top + margin_box.bottom);
 
         context.painter().draw_rect(enclosing_int_rect(margin_rect), Color::Yellow);
-        context.painter().draw_rect(enclosing_int_rect(padded_rect), Color::Cyan);
+        context.painter().draw_rect(enclosing_int_rect(padded_rect()), Color::Cyan);
         context.painter().draw_rect(enclosing_int_rect(content_rect), Color::Magenta);
     }
 
