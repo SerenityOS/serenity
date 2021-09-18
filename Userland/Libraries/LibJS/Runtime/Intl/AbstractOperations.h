@@ -48,7 +48,7 @@ ThrowCompletionOr<Array*> supported_locales(GlobalObject&, Vector<String> const&
 ThrowCompletionOr<Object*> coerce_options_to_object(GlobalObject& global_object, Value options);
 ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyName const& property, Value::Type type, Vector<StringView> const& values, Fallback fallback);
 ThrowCompletionOr<Optional<int>> default_number_option(GlobalObject& global_object, Value value, int minimum, int maximum, Optional<int> fallback);
-Optional<int> get_number_option(GlobalObject& global_object, Object const& options, PropertyName const& property, int minimum, int maximum, Optional<int> fallback);
+ThrowCompletionOr<Optional<int>> get_number_option(GlobalObject& global_object, Object const& options, PropertyName const& property, int minimum, int maximum, Optional<int> fallback);
 Vector<PatternPartition> partition_pattern(StringView pattern);
 
 }
