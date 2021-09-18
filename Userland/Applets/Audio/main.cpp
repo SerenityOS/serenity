@@ -76,13 +76,8 @@ public:
         m_percent_box->set_checked(m_show_percent);
         m_percent_box->on_checked = [&](bool show_percent) {
             m_show_percent = show_percent;
-            if (!m_show_percent) {
-                window()->resize(16, 16);
-                m_percent_box->set_tooltip("Show percent");
-            } else {
-                window()->resize(44, 16);
-                m_percent_box->set_tooltip("Hide percent");
-            }
+            set_audio_widget_size(m_show_percent);
+            m_percent_box->set_tooltip(m_show_percent ? "Hide percent" : "Show percent");
             GUI::Application::the()->hide_tooltip();
 
             Config::write_bool("AudioApplet", "Applet", "ShowPercent", m_show_percent);
@@ -113,6 +108,14 @@ public:
     }
 
     virtual ~AudioWidget() override { }
+
+    void set_audio_widget_size(bool show_percent)
+    {
+        if (show_percent)
+            window()->resize(44, 16);
+        else
+            window()->resize(16, 16);
+    }
 
 private:
     virtual void mousedown_event(GUI::MouseEvent& event) override
@@ -238,11 +241,7 @@ int main(int argc, char** argv)
     window->show();
 
     // This positioning code depends on the window actually existing.
-    if (!Config::read_bool("AudioApplet", "Applet", "ShowPercent", false)) {
-        window->resize(16, 16);
-    } else {
-        window->resize(44, 16);
-    }
+    static_cast<AudioWidget*>(window->main_widget())->set_audio_widget_size(Config::read_bool("AudioApplet", "Applet", "ShowPercent", false));
 
     if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
         perror("pledge");
