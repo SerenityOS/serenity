@@ -141,9 +141,9 @@ int ValueSlider::value_at(const Gfx::IntPoint& position) const
     return (int)(relative_offset * (float)max());
 }
 
-void ValueSlider::set_value(int value)
+void ValueSlider::set_value(int value, CallOnChange call_on_change)
 {
-    AbstractSlider::set_value(value);
+    AbstractSlider::set_value(value, call_on_change);
     m_textbox->set_text(formatted_value());
 }
 
