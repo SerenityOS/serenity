@@ -54,9 +54,7 @@ Value NumberFormatConstructor::construct(FunctionObject& new_target)
     auto* number_format = TRY_OR_DISCARD(ordinary_create_from_constructor<NumberFormat>(global_object, new_target, &GlobalObject::intl_number_format_prototype));
 
     // 3. Perform ? InitializeNumberFormat(numberFormat, locales, options).
-    initialize_number_format(global_object, *number_format, locales, options);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(initialize_number_format(global_object, *number_format, locales, options));
 
     // 4. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Let this be the this value.
