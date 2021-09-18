@@ -60,6 +60,6 @@ Vector<PatternPartition> deconstruct_pattern(StringView pattern, Placeables plac
 Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, Vector<String> const& list);
 String format_list(ListFormat const& list_format, Vector<String> const& list);
 Array* format_list_to_parts(GlobalObject& global_object, ListFormat const& list_format, Vector<String> const& list);
-Vector<String> string_list_from_iterable(GlobalObject& global_object, Value iterable);
+ThrowCompletionOr<Vector<String>> string_list_from_iterable(GlobalObject& global_object, Value iterable);
 
 }
