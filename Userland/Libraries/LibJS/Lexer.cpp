@@ -330,7 +330,7 @@ bool Lexer::is_eof() const
     return m_eof;
 }
 
-bool Lexer::is_line_terminator() const
+ALWAYS_INLINE bool Lexer::is_line_terminator() const
 {
     if (m_current_char == '\n' || m_current_char == '\r')
         return true;
@@ -341,7 +341,7 @@ bool Lexer::is_line_terminator() const
     return code_point == LINE_SEPARATOR || code_point == PARAGRAPH_SEPARATOR;
 }
 
-bool Lexer::is_unicode_character() const
+ALWAYS_INLINE bool Lexer::is_unicode_character() const
 {
     return (m_current_char & 128) != 0;
 }
