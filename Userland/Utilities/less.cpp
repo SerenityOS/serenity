@@ -234,7 +234,7 @@ public:
         if (size == -1)
             return false;
 
-        m_lines.extend(wrap_line(Utf8View(line), m_width));
+        m_lines.extend(wrap_line(Utf8View { StringView { line } }, m_width));
         free(line);
         return true;
     }

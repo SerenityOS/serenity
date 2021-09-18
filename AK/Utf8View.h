@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 
@@ -53,9 +54,17 @@ public:
     using Iterator = Utf8CodePointIterator;
 
     Utf8View() = default;
-    explicit Utf8View(const String&);
-    explicit Utf8View(const StringView&);
-    explicit Utf8View(const char*);
+
+    explicit Utf8View(String& string)
+        : m_string(string.view())
+    {
+    }
+
+    explicit Utf8View(StringView string)
+        : m_string(string)
+    {
+    }
+
     ~Utf8View() = default;
 
     explicit Utf8View(String&&) = delete;
