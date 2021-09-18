@@ -20,6 +20,21 @@ public:
 
     virtual ~XMLHttpRequestEventTarget() override {};
 
+    HTML::EventHandler onloadstart();
+    void set_onloadstart(HTML::EventHandler);
+    HTML::EventHandler onprogress();
+    void set_onprogress(HTML::EventHandler);
+    HTML::EventHandler onabort();
+    void set_onabort(HTML::EventHandler);
+    HTML::EventHandler onerror();
+    void set_onerror(HTML::EventHandler);
+    HTML::EventHandler onload();
+    void set_onload(HTML::EventHandler);
+    HTML::EventHandler ontimeout();
+    void set_ontimeout(HTML::EventHandler);
+    HTML::EventHandler onloadend();
+    void set_onloadend(HTML::EventHandler);
+
 protected:
     explicit XMLHttpRequestEventTarget(Bindings::ScriptExecutionContext& script_execution_context)
         : DOM::EventTarget(script_execution_context)
