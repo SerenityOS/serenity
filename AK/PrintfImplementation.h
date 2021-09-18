@@ -487,7 +487,7 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fm
                 PRINTF_IMPL_DELEGATE_TO_IMPL(X);
                 PRINTF_IMPL_DELEGATE_TO_IMPL(c);
                 PRINTF_IMPL_DELEGATE_TO_IMPL(d);
-#ifndef KERNEL
+#if !defined(KERNEL) && !defined(PREKERNEL)
                 PRINTF_IMPL_DELEGATE_TO_IMPL(f);
                 PRINTF_IMPL_DELEGATE_TO_IMPL(g);
 #endif

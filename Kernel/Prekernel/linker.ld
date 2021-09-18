@@ -41,6 +41,7 @@ SECTIONS
         *(.bss)
         *(.stack)
         *(.page_tables)
+        *(.heap)
     } :bss
 
     end_of_prekernel_image = .;

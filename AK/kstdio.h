@@ -7,7 +7,9 @@
 #pragma once
 
 #ifdef __serenity__
-#    ifdef KERNEL
+#    ifdef PREKERNEL
+#        include <Kernel/Prekernel/kstdio.h>
+#    elif defined(KERNEL)
 #        include <Kernel/kstdio.h>
 #    else
 #        include <AK/Types.h>

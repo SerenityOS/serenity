@@ -15,7 +15,7 @@
 #    include <serenity.h>
 #endif
 
-#ifdef KERNEL
+#if defined(KERNEL)
 #    include <Kernel/Process.h>
 #    include <Kernel/Thread.h>
 #else
@@ -345,7 +345,7 @@ void FormatBuilder::put_i64(
     put_u64(static_cast<u64>(value), base, prefix, upper_case, zero_pad, align, min_width, fill, sign_mode, is_negative);
 }
 
-#ifndef KERNEL
+#if !defined(KERNEL) && !defined(PREKERNEL)
 void FormatBuilder::put_f64(
     double value,
     u8 base,
@@ -700,7 +700,7 @@ void Formatter<bool>::format(FormatBuilder& builder, bool value)
         return formatter.format(builder, value ? "true" : "false");
     }
 }
-#ifndef KERNEL
+#if !defined(KERNEL) && !defined(PREKERNEL)
 void Formatter<long double>::format(FormatBuilder& builder, long double value)
 {
     u8 base;
@@ -753,7 +753,7 @@ void Formatter<float>::format(FormatBuilder& builder, float value)
 }
 #endif
 
-#ifndef KERNEL
+#if !defined(KERNEL) && !defined(PREKERNEL)
 void vout(FILE* file, StringView fmtstr, TypeErasedFormatParams& params, bool newline)
 {
     StringBuilder builder;
@@ -786,7 +786,7 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams& params)
     StringBuilder builder;
 
 #ifdef __serenity__
-#    ifdef KERNEL
+#    if defined(KERNEL) && !defined(PREKERNEL)
     if (Kernel::Processor::is_initialized()) {
         if (Kernel::Thread::current()) {
             auto& thread = *Kernel::Thread::current();
@@ -797,6 +797,8 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams& params)
     } else {
         builder.appendff("\033[34;1m[Kernel]\033[0m: ");
     }
+#    elif defined(PREKERNEL)
+    builder.appendff("\033[34;1m[Prekernel]\033[0m: ");
 #    else
     static TriState got_process_name = TriState::Unknown;
     static char process_name_buffer[256];

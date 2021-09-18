@@ -9,6 +9,8 @@
 #include <AK/Types.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/PhysicalAddress.h>
+#include <Kernel/Prekernel/Memory/Management.h>
+#include <Kernel/Prekernel/Memory/kmalloc.h>
 #include <Kernel/Prekernel/Prekernel.h>
 #include <Kernel/VirtualAddress.h>
 #include <LibC/elf.h>
@@ -51,11 +53,6 @@ void __stack_chk_fail()
     halt();
 }
 
-void __assertion_failed(char const*, char const*, unsigned int, char const*)
-{
-    halt();
-}
-
 namespace Kernel {
 
 // boot.S expects these functions to exactly have the following signatures.
@@ -69,6 +66,18 @@ extern "C" [[noreturn]] void init();
 
 extern "C" [[noreturn]] void init()
 {
+    kmalloc_eternal_init();
+    // Note: For now, just assert if the pointer to multiboot provided info is
+    // null, because we can't do anything useful yet without it.
+    VERIFY(multiboot_info_ptr != nullptr);
+
+    if (multiboot_info_ptr->mmap_addr == 0) {
+        VERIFY_NOT_REACHED();
+    }
+    Prekernel::MemoryManagement::the().initialize(PhysicalAddress(multiboot_info_ptr->mmap_addr), multiboot_info_ptr->mmap_length / sizeof(multiboot_mmap_entry));
+    
+    kmalloc_init();
+
     if (multiboot_info_ptr->mods_count < 1)
         halt();
 

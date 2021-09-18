@@ -143,7 +143,7 @@ public:
     [[nodiscard]] constexpr static Time zero() { return Time(0, 0); };
     [[nodiscard]] constexpr static Time max() { return Time(0x7fff'ffff'ffff'ffffLL, 999'999'999); };
 
-#ifndef KERNEL
+#if !defined(KERNEL) && !defined(PREKERNEL)
     [[nodiscard]] static Time now_realtime();
     [[nodiscard]] static Time now_realtime_coarse();
     [[nodiscard]] static Time now_monotonic();

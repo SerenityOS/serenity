@@ -288,7 +288,7 @@ Time Time::from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanoseconds)
     return Time { seconds + extra_seconds, nanoseconds };
 }
 
-#ifndef KERNEL
+#if !defined(KERNEL) && !defined(PREKERNEL)
 namespace {
 static Time now_time_from_clock(clockid_t clock_id)
 {

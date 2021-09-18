@@ -8,6 +8,8 @@
 
 #if defined(KERNEL)
 #    include <Kernel/Assertions.h>
+#elif defined(PREKERNEL)
+#    include <Kernel/Prekernel/Assertions.h>
 #else
 #    include <assert.h>
 #    define VERIFY assert

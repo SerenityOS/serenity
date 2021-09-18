@@ -9,7 +9,9 @@
 
 #include <AK/Checked.h>
 
-#if defined(KERNEL)
+#if defined(PREKERNEL)
+#    include <Kernel/Prekernel/Memory/kmalloc.h>
+#elif defined(KERNEL)
 #    include <Kernel/Heap/kmalloc.h>
 #else
 #    include <new>

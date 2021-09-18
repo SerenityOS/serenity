@@ -1,7 +1,23 @@
 set(SOURCES
+    ../../AK/FlyString.cpp
+    ../../AK/GenericLexer.cpp
+    ../../AK/Hex.cpp
+    ../../AK/String.cpp
+    ../../AK/StringBuilder.cpp
+    ../../AK/StringImpl.cpp
+    ../../AK/StringUtils.cpp
+    ../../AK/StringView.cpp
+    ../../AK/Time.cpp
+    ../../AK/Format.cpp
+    ../../AK/UUID.cpp
+    ../../AK/Utf8View.cpp
+    ../../AK/Utf16View.cpp
     UBSanitizer.cpp
     ../MiniStdLib.cpp
 )
+
+remove_definitions(-DKERNEL)
+
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     set(SOURCES
         # This has to be first, so that the entry point is at the start of the image.
@@ -21,7 +37,14 @@ else()
         Arch/x86/boot.S
         Arch/x86/multiboot.S
         # FIXME: Eventually, some of these should build on aarch64 too.
+        Images/Multiboot.cpp
+        Memory/kmalloc.cpp
+        Memory/Management.cpp
+        Memory/PhysicalRegion.cpp
         init.cpp
+        kprintf.cpp
+        Assertions.cpp
+        StdLibExtras.cpp
         ../../Userland/Libraries/LibELF/Relocation.cpp
     )
 endif()
@@ -39,6 +62,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
 
 add_executable(${PREKERNEL_TARGET} ${SOURCES})
 target_compile_options(${PREKERNEL_TARGET} PRIVATE -no-pie -fno-pic -fno-threadsafe-statics)
+
+add_compile_definitions(PREKERNEL)
 
 target_link_options(${PREKERNEL_TARGET} PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld -nostdlib LINKER:--no-pie)
 set_target_properties(${PREKERNEL_TARGET} PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld)

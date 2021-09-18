@@ -14,7 +14,7 @@
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 
-#ifndef KERNEL
+#if !defined(KERNEL) && !defined(PREKERNEL)
 #    include <stdio.h>
 #endif
 
@@ -174,7 +174,7 @@ public:
         char fill = ' ',
         SignMode sign_mode = SignMode::OnlyIfNeeded);
 
-#ifndef KERNEL
+#if !defined(KERNEL) && !defined(PREKERNEL)
     void put_f80(
         long double value,
         u8 base = 10,
@@ -427,7 +427,7 @@ struct Formatter<bool> : StandardFormatter {
     void format(FormatBuilder&, bool value);
 };
 
-#ifndef KERNEL
+#if !defined(KERNEL) && !defined(PREKERNEL)
 template<>
 struct Formatter<float> : StandardFormatter {
     void format(FormatBuilder&, float value);
@@ -468,7 +468,7 @@ struct Formatter<std::nullptr_t> : Formatter<FlatPtr> {
 
 void vformat(StringBuilder&, StringView fmtstr, TypeErasedFormatParams&);
 
-#ifndef KERNEL
+#if !defined(KERNEL) && !defined(PREKERNEL)
 void vout(FILE*, StringView fmtstr, TypeErasedFormatParams&, bool newline = false);
 
 template<typename... Parameters>
@@ -603,10 +603,10 @@ struct Formatter<FormatString> : Formatter<String> {
 
 } // namespace AK
 
-#ifdef KERNEL
+#if defined(KERNEL)
 using AK::critical_dmesgln;
 using AK::dmesgln;
-#else
+#elif !defined(PREKERNEL)
 using AK::out;
 using AK::outln;
 
