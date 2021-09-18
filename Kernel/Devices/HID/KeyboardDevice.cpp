@@ -306,11 +306,6 @@ KResultOr<size_t> KeyboardDevice::read(OpenFileDescription&, u64, UserOrKernelBu
     return nread;
 }
 
-KResultOr<size_t> KeyboardDevice::write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t)
-{
-    return 0;
-}
-
 KResult KeyboardDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
     switch (request) {
