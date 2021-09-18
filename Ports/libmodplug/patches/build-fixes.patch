@@ -1,0 +1,12 @@
+diff -Naur libmodplug-0.8.8.5/src/libmodplug/stdafx.h libmodplug-0.8.8.5.serenity/src/libmodplug/stdafx.h
+index 3eacf1da6..871fb6d82 100644
+--- libmodplug-0.8.8.5/src/libmodplug/stdafx.h
++++ libmodplug-0.8.8.5.serenity/src/libmodplug/stdafx.h
+@@ -57,6 +57,7 @@ inline void ProcessPlugins(int n) {}
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <string.h>
++#include <strings.h>
+ #ifdef HAVE_MALLOC_H
+ #include <malloc.h>
+ #endif
