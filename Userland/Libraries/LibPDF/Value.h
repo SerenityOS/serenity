@@ -11,19 +11,12 @@
 #include <AK/String.h>
 #include <LibPDF/Forward.h>
 #include <LibPDF/Object.h>
+#include <LibPDF/Reference.h>
 
 namespace PDF {
 
 class Value {
 public:
-    // We store refs as u32, with 18 bits for the index and 14 bits for the
-    // generation index. The generation index is stored in the higher bits.
-    // This may need to be rethought later, as the max generation index is
-    // 2^16 and the max for the object index is probably 2^32 (I don't know
-    // exactly)
-    static constexpr auto max_ref_index = (1 << 19) - 1;            // 2 ^ 19 - 1
-    static constexpr auto max_ref_generation_index = (1 << 15) - 1; // 2 ^ 15 - 1
-
     Value()
         : m_type(Type::Empty)
     {
@@ -55,12 +48,10 @@ public:
         m_as_float = f;
     }
 
-    Value(u32 index, u32 generation_index)
+    Value(Reference ref)
         : m_type(Type::Ref)
     {
-        VERIFY(index < max_ref_index);
-        VERIFY(generation_index < max_ref_generation_index);
-        m_as_ref = (generation_index << 14) | index;
+        m_as_ref = ref;
     }
 
     template<IsObject T>
@@ -148,13 +139,13 @@ public:
     [[nodiscard]] ALWAYS_INLINE u32 as_ref_index() const
     {
         VERIFY(is_ref());
-        return m_as_ref & 0x3ffff;
+        return m_as_ref.as_ref_index();
     }
 
     [[nodiscard]] ALWAYS_INLINE u32 as_ref_generation_index() const
     {
         VERIFY(is_ref());
-        return m_as_ref >> 18;
+        return m_as_ref.as_ref_generation_index();
     }
 
     [[nodiscard]] ALWAYS_INLINE NonnullRefPtr<Object> as_object() const { return *m_as_object; }
@@ -177,7 +168,7 @@ private:
     union {
         bool m_as_bool;
         int m_as_int;
-        u32 m_as_ref;
+        Reference m_as_ref;
         float m_as_float;
     };
 
