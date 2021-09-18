@@ -18,4 +18,6 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
 
     ByteString? getResponseHeader(ByteString name);
 
+    attribute EventHandler onreadystatechange;
+
 };

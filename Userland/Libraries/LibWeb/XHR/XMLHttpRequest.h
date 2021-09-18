@@ -58,6 +58,9 @@ public:
 
     String get_response_header(const String& name) { return m_response_headers.get(name).value_or({}); }
 
+    HTML::EventHandler onreadystatechange();
+    void set_onreadystatechange(HTML::EventHandler);
+
 private:
     virtual void ref_event_target() override { ref(); }
     virtual void unref_event_target() override { unref(); }
