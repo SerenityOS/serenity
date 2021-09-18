@@ -809,13 +809,18 @@ void MainWidget::update_statusbar()
 {
     StringBuilder builder;
     builder.appendff("Line: {}, Column: {}", m_editor->cursor().line() + 1, m_editor->cursor().column());
-
+    m_statusbar->set_text(0, builder.to_string());
+    builder.clear();
     if (m_editor->has_selection()) {
         String selected_text = m_editor->selected_text();
         auto word_count = m_editor->number_of_selected_words();
-        builder.appendff("        Selected: {} {} ({} {})", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
+        builder.appendff("{} {} ({} {}) selected", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
+    } else {
+        String text = m_editor->text();
+        auto word_count = m_editor->number_of_words();
+        builder.appendff("{} {} ({} {})", text.length(), text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
-    m_statusbar->set_text(builder.to_string());
+    m_statusbar->set_text(1, builder.to_string());
 }
 
 }
