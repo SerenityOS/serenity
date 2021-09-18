@@ -33,9 +33,10 @@ void TLSv12WebSocketConnectionImpl::connect(ConnectionInfo const& connection)
     m_socket->on_tls_ready_to_read = [this](auto&) {
         on_ready_to_read();
     };
-    m_socket->on_tls_ready_to_write = [this](auto&) {
+    m_socket->set_on_tls_ready_to_write([this](auto& tls) {
+        tls.set_on_tls_ready_to_write(nullptr);
         on_connected();
-    };
+    });
     m_socket->on_tls_finished = [this] {
         on_connection_error();
     };
