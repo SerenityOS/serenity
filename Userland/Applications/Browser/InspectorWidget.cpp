@@ -75,15 +75,6 @@ InspectorWidget::InspectorWidget()
         set_inspected_node(index);
     };
 
-    auto& layout_tree_container = top_tab_widget.add_tab<GUI::Widget>("Layout");
-    layout_tree_container.set_layout<GUI::VerticalBoxLayout>();
-    layout_tree_container.layout()->set_margins({ 4, 4, 4, 4 });
-    m_layout_tree_view = layout_tree_container.add<GUI::TreeView>();
-    m_layout_tree_view->on_selection_change = [this] {
-        const auto& index = m_layout_tree_view->selection().first();
-        set_inspected_node(index);
-    };
-
     auto& bottom_tab_widget = splitter.add<GUI::TabWidget>();
 
     auto& style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Styles");
@@ -110,9 +101,6 @@ void InspectorWidget::select_default_node()
     // FIXME: Select the <body> element, or else the root node.
     m_dom_tree_view->collapse_tree();
     m_dom_tree_view->set_cursor({}, GUI::AbstractView::SelectionUpdate::ClearIfNotSelected);
-
-    m_layout_tree_view->collapse_tree();
-    m_layout_tree_view->set_cursor({}, GUI::AbstractView::SelectionUpdate::ClearIfNotSelected);
 }
 
 void InspectorWidget::set_dom_json(String json)
@@ -122,9 +110,6 @@ void InspectorWidget::set_dom_json(String json)
 
     m_dom_json = json;
     m_dom_tree_view->set_model(Web::DOMTreeModel::create(m_dom_json->view()));
-
-    // FIXME: Support the LayoutTreeModel
-    // m_layout_tree_view->set_model(Web::LayoutTreeModel::create(*document));
 
     if (m_pending_inspect_node_id.has_value()) {
         i32 node_id = m_pending_inspect_node_id.value();

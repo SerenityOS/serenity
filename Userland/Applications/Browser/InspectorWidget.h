@@ -35,7 +35,6 @@ private:
     RefPtr<Web::OutOfProcessWebView> m_web_view;
 
     RefPtr<GUI::TreeView> m_dom_tree_view;
-    RefPtr<GUI::TreeView> m_layout_tree_view;
     RefPtr<GUI::TableView> m_style_table_view;
     RefPtr<GUI::TableView> m_computed_style_table_view;
 
