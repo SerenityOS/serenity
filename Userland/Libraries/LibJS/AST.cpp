@@ -2326,6 +2326,11 @@ void ThrowStatement::dump(int indent) const
     argument().dump(indent + 1);
 }
 
+void TryStatement::add_label(FlyString string)
+{
+    m_block->add_label(move(string));
+}
+
 Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
