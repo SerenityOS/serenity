@@ -48,9 +48,4 @@ KResultOr<size_t> MouseDevice::read(OpenFileDescription&, u64, UserOrKernelBuffe
     return nread;
 }
 
-KResultOr<size_t> MouseDevice::write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t)
-{
-    return 0;
-}
-
 }
