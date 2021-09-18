@@ -112,9 +112,8 @@ int main()
 
         bool indenters_starting_line = true;
         for (SQL::AST::Token token = lexer.next(); token.type() != SQL::AST::TokenType::Eof; token = lexer.next()) {
-            auto length = token.value().length();
             auto start = token.start_position().column - 1;
-            auto end = start + length;
+            auto end = token.end_position().column - 1;
 
             if (indenters_starting_line) {
                 if (token.type() != SQL::AST::TokenType::ParenClose)
