@@ -24,7 +24,6 @@
 
 using namespace HackStudio;
 
-static RefPtr<GUI::Window> s_window;
 static RefPtr<HackStudioWidget> s_hack_studio_widget;
 
 static bool make_is_available();
@@ -40,9 +39,9 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    s_window = GUI::Window::construct();
-    s_window->resize(840, 600);
-    s_window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-hack-studio.png"));
+    auto window = GUI::Window::construct();
+    window->resize(840, 600);
+    window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-hack-studio.png"));
 
     update_path_environment_variable();
 
@@ -61,20 +60,20 @@ int main(int argc, char** argv)
     if (argument_absolute_path.is_null())
         project_path = Core::File::real_path_for(".");
 
-    s_hack_studio_widget = s_window->set_main_widget<HackStudioWidget>(project_path);
+    s_hack_studio_widget = window->set_main_widget<HackStudioWidget>(project_path);
 
-    s_window->set_title(String::formatted("{} - Hack Studio", s_hack_studio_widget->project().name()));
+    window->set_title(String::formatted("{} - Hack Studio", s_hack_studio_widget->project().name()));
 
-    s_hack_studio_widget->initialize_menubar(*s_window);
+    s_hack_studio_widget->initialize_menubar(*window);
 
-    s_window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
+    window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
         s_hack_studio_widget->locator().close();
         if (s_hack_studio_widget->warn_unsaved_changes("There are unsaved changes, do you want to save before exiting?") == HackStudioWidget::ContinueDecision::Yes)
             return GUI::Window::CloseRequestDecision::Close;
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
 
-    s_window->show();
+    window->show();
 
     s_hack_studio_widget->update_actions();
 
