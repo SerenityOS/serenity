@@ -7,10 +7,14 @@
 #include <LibGUI/Layout.h>
 #include <LibGUI/ScrollableContainerWidget.h>
 
+REGISTER_WIDGET(GUI, ScrollableContainerWidget)
+
 namespace GUI {
 
 ScrollableContainerWidget::ScrollableContainerWidget()
 {
+    REGISTER_BOOL_PROPERTY("scrollbars_enabled", is_scrollbars_enabled, set_scrollbars_enabled);
+    REGISTER_BOOL_PROPERTY("should_hide_unnecessary_scrollbars", should_hide_unnecessary_scrollbars, set_should_hide_unnecessary_scrollbars);
 }
 
 ScrollableContainerWidget::~ScrollableContainerWidget()
@@ -79,6 +83,54 @@ void ScrollableContainerWidget::set_widget(GUI::Widget* widget)
     }
     update_widget_size();
     update_widget_position();
+}
+
+bool ScrollableContainerWidget::load_from_json(const JsonObject& json, RefPtr<Core::Object> (*unregistered_child_handler)(const String&))
+{
+    json.for_each_member([&](auto& key, auto& value) {
+        set_property(key, value);
+    });
+
+    auto layout_value = json.get("layout");
+    if (!layout_value.is_null()) {
+        dbgln("Layout specified in ScrollableContainerWidget, this is not supported.");
+        return false;
+    }
+
+    auto content_widget_value = json.get("content_widget");
+    if (!content_widget_value.is_null() && !content_widget_value.is_object()) {
+        dbgln("content widget is not an object");
+        return false;
+    }
+
+    if (!json.get("children").is_null()) {
+        dbgln("children specified for ScrollableContainerWidget, but only 1 widget as content_widget is supported");
+        return false;
+    }
+
+    if (content_widget_value.is_object()) {
+        auto& content_widget = content_widget_value.as_object();
+        auto class_name = content_widget.get("class");
+        if (!class_name.is_string()) {
+            dbgln("Invalid content widget class name");
+            return false;
+        }
+
+        RefPtr<Core::Object> child;
+        if (auto* registration = Core::ObjectClassRegistration::find(class_name.as_string())) {
+            child = registration->construct();
+        } else {
+            child = unregistered_child_handler(class_name.as_string());
+        }
+        if (!child)
+            return false;
+        auto widget_ptr = verify_cast<GUI::Widget>(child.ptr());
+        set_widget(widget_ptr);
+        child->load_from_json(content_widget, unregistered_child_handler);
+        return true;
+    }
+
+    return true;
 }
 
 }
