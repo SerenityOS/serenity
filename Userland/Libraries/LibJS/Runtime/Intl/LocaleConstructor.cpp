@@ -30,9 +30,7 @@ static Optional<String> get_string_option(GlobalObject& global_object, Object co
 {
     auto& vm = global_object.vm();
 
-    auto option = get_option(global_object, options, property, Value::Type::String, values, Empty {});
-    if (vm.exception())
-        return {};
+    auto option = TRY_OR_DISCARD(get_option(global_object, options, property, Value::Type::String, values, Empty {}));
     if (option.is_undefined())
         return {};
 
@@ -342,9 +340,7 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
         return {};
 
     // 23. Let kn be ? GetOption(options, "numeric", "boolean", undefined, undefined).
-    auto kn = get_option(global_object, *options, vm.names.numeric, Value::Type::Boolean, {}, Empty {});
-    if (vm.exception())
-        return {};
+    auto kn = TRY_OR_DISCARD(get_option(global_object, *options, vm.names.numeric, Value::Type::Boolean, {}, Empty {}));
 
     // 24. If kn is not undefined, set kn to ! ToString(kn).
     // 25. Set opt.[[kn]] to kn.

@@ -578,9 +578,7 @@ Array* supported_locales(GlobalObject& global_object, Vector<String> const& requ
         return {};
 
     // 2. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
-    auto matcher = get_option(global_object, *options_object, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv);
-    if (vm.exception())
-        return {};
+    auto matcher = TRY_OR_DISCARD(get_option(global_object, *options_object, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     Vector<String> supported_locales;
 
@@ -613,15 +611,15 @@ Object* coerce_options_to_object(GlobalObject& global_object, Value options)
 }
 
 // 9.2.13 GetOption ( options, property, type, values, fallback ), https://tc39.es/ecma402/#sec-getoption
-Value get_option(GlobalObject& global_object, Object const& options, PropertyName const& property, Value::Type type, Vector<StringView> const& values, Fallback fallback)
+ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyName const& property, Value::Type type, Vector<StringView> const& values, Fallback fallback)
 {
     auto& vm = global_object.vm();
 
     // 1. Assert: Type(options) is Object.
     // 2. Let value be ? Get(options, property).
     auto value = options.get(property);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 3. If value is undefined, return fallback.
     if (value.is_undefined()) {
@@ -643,18 +641,16 @@ Value get_option(GlobalObject& global_object, Object const& options, PropertyNam
     else {
         // a. Let value be ? ToString(value).
         value = value.to_primitive_string(global_object);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
     }
 
     // 7. If values is not undefined and values does not contain an element equal to value, throw a RangeError exception.
     if (!values.is_empty()) {
         // Note: Every location in the spec that invokes GetOption with type=boolean also has values=undefined.
         VERIFY(value.is_string());
-        if (!values.contains_slow(value.as_string().string())) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.to_string_without_side_effects(), property.as_string());
-            return {};
-        }
+        if (!values.contains_slow(value.as_string().string()))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.to_string_without_side_effects(), property.as_string());
     }
 
     // 8. Return value.
