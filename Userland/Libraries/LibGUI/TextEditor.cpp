@@ -1335,6 +1335,29 @@ size_t TextEditor::number_of_selected_words() const
     return word_count;
 }
 
+size_t TextEditor::number_of_words() const
+{
+    if (document().is_empty())
+        return 0;
+
+    size_t word_count = 0;
+    bool in_word = false;
+    auto text = this->text();
+    for (char c : text) {
+        if (in_word && is_ascii_space(c)) {
+            in_word = false;
+            word_count++;
+            continue;
+        }
+        if (!in_word && !is_ascii_space(c))
+            in_word = true;
+    }
+    if (in_word)
+        word_count++;
+
+    return word_count;
+}
+
 void TextEditor::delete_selection()
 {
     auto selection = normalized_selection();
