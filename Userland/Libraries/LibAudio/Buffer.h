@@ -28,11 +28,7 @@ double const VOLUME_B = log(DYNAMIC_RANGE);
 // A single sample in an audio buffer.
 // Values are floating point, and should range from -1.0 to +1.0
 struct Frame {
-    constexpr Frame()
-        : left(0)
-        , right(0)
-    {
-    }
+    constexpr Frame() = default;
 
     // For mono
     constexpr Frame(double left)
@@ -70,9 +66,26 @@ struct Frame {
     // This is a good dynamic range because it can represent all loudness values from
     // 30 dB(A) (barely hearable with background noise)
     // to 90 dB(A) (almost too loud to hear and about the reasonable limit of actual sound equipment).
+    //
+    // Format ranges:
+    // - Linear:        0.0 to 1.0
+    // - Logarithmic:   0.0 to 1.0
+
+    ALWAYS_INLINE double linear_to_log(double const change)
+    {
+        // TODO: Add linear slope around 0
+        return VOLUME_A * exp(VOLUME_B * change);
+    }
+
+    ALWAYS_INLINE double log_to_linear(double const val)
+    {
+        // TODO: Add linear slope around 0
+        return log(val / VOLUME_A) / VOLUME_B;
+    }
+
     ALWAYS_INLINE Frame& log_multiply(double const change)
     {
-        double factor = VOLUME_A * exp(VOLUME_B * change);
+        double factor = linear_to_log(change);
         left *= factor;
         right *= factor;
         return *this;
@@ -82,6 +95,20 @@ struct Frame {
     {
         Frame new_frame { left, right };
         new_frame.log_multiply(volume_change);
+        return new_frame;
+    }
+
+    ALWAYS_INLINE Frame& log_pan(double const pan)
+    {
+        left *= linear_to_log(min(pan * -1 + 1.0, 1.0));
+        right *= linear_to_log(min(pan + 1.0, 1.0));
+        return *this;
+    }
+
+    ALWAYS_INLINE Frame log_pan(double const pan) const
+    {
+        Frame new_frame { left, right };
+        new_frame.log_pan(pan);
         return new_frame;
     }
 
@@ -103,14 +130,20 @@ struct Frame {
         right += other.right;
         return *this;
     }
+    constexpr Frame& operator+=(double other)
+    {
+        left += other;
+        right += other;
+        return *this;
+    }
 
     constexpr Frame operator+(Frame const& other)
     {
         return { left + other.left, right + other.right };
     }
 
-    double left;
-    double right;
+    double left { 0 };
+    double right { 0 };
 };
 
 // Supported PCM sample formats.
