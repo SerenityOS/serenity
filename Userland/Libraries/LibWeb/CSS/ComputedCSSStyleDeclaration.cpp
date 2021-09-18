@@ -379,224 +379,104 @@ static NonnullRefPtr<StyleValue> value_or_default(Optional<StyleProperty> proper
     return default_style;
 }
 
-Optional<StyleProperty> ComputedCSSStyleDeclaration::property(PropertyID property_id) const
+RefPtr<StyleValue> ComputedCSSStyleDeclaration::style_value_for_property(Layout::NodeWithStyle const& layout_node, PropertyID property_id) const
 {
-    const_cast<DOM::Document&>(m_element->document()).ensure_layout();
-
-    if (!m_element->layout_node()) {
-        auto style = m_element->document().style_resolver().resolve_style(const_cast<DOM::Element&>(*m_element));
-        if (auto maybe_property = style->property(property_id); maybe_property.has_value()) {
-            return StyleProperty {
-                .property_id = property_id,
-                .value = maybe_property.release_value(),
-            };
-        }
-        return {};
-    }
-
-    auto& layout_node = *m_element->layout_node();
-
     switch (property_id) {
     case CSS::PropertyID::Float:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().float_())),
-        };
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().float_()));
     case CSS::PropertyID::Clear:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().clear())),
-        };
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().clear()));
     case CSS::PropertyID::Cursor:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().cursor())),
-        };
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().cursor()));
     case CSS::PropertyID::Display:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().display())),
-        };
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().display()));
     case CSS::PropertyID::ZIndex: {
         auto maybe_z_index = layout_node.computed_values().z_index();
         if (!maybe_z_index.has_value())
             return {};
-
-        return StyleProperty {
-            .property_id = property_id,
-            .value = NumericStyleValue::create(maybe_z_index.release_value()),
-        };
+        return NumericStyleValue::create(maybe_z_index.release_value());
     }
     case CSS::PropertyID::TextAlign:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().text_align())),
-        };
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().text_align()));
     case CSS::PropertyID::TextDecorationLine:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().text_decoration_line())),
-        };
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().text_decoration_line()));
     case CSS::PropertyID::TextTransform:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().text_transform())),
-        };
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().text_transform()));
     case CSS::PropertyID::Position:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().position())),
-        };
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().position()));
     case CSS::PropertyID::WhiteSpace:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().white_space())),
-        };
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().white_space()));
     case CSS::PropertyID::FlexDirection:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().flex_direction())),
-        };
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().flex_direction()));
     case CSS::PropertyID::FlexWrap:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().flex_wrap())),
-        };
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().flex_wrap()));
     case CSS::PropertyID::FlexBasis: {
         switch (layout_node.computed_values().flex_basis().type) {
         case FlexBasis::Content:
-            return StyleProperty {
-                .property_id = property_id,
-                .value = IdentifierStyleValue::create(CSS::ValueID::Content),
-            };
+            return IdentifierStyleValue::create(CSS::ValueID::Content);
         case FlexBasis::Length:
-            return StyleProperty {
-                .property_id = property_id,
-                .value = LengthStyleValue::create(layout_node.computed_values().flex_basis().length),
-            };
+            return LengthStyleValue::create(layout_node.computed_values().flex_basis().length);
         case FlexBasis::Auto:
-            return StyleProperty {
-                .property_id = property_id,
-                .value = IdentifierStyleValue::create(CSS::ValueID::Auto),
-            };
+            return IdentifierStyleValue::create(CSS::ValueID::Auto);
+        default:
+            VERIFY_NOT_REACHED();
         }
-        VERIFY_NOT_REACHED();
-    }
+        break;
     case CSS::PropertyID::FlexGrow: {
         auto maybe_grow_factor = layout_node.computed_values().flex_grow_factor();
         if (!maybe_grow_factor.has_value())
             return {};
-
-        return StyleProperty {
-            .property_id = property_id,
-            .value = NumericStyleValue::create(maybe_grow_factor.release_value()),
-        };
+        return NumericStyleValue::create(maybe_grow_factor.release_value());
     }
     case CSS::PropertyID::FlexShrink: {
         auto maybe_shrink_factor = layout_node.computed_values().flex_shrink_factor();
         if (!maybe_shrink_factor.has_value())
             return {};
-
-        return StyleProperty {
-            .property_id = property_id,
-            .value = NumericStyleValue::create(maybe_shrink_factor.release_value()),
-        };
+        return NumericStyleValue::create(maybe_shrink_factor.release_value());
     }
     case CSS::PropertyID::Opacity: {
         auto maybe_opacity = layout_node.computed_values().opacity();
         if (!maybe_opacity.has_value())
             return {};
-
-        return StyleProperty {
-            .property_id = property_id,
-            .value = NumericStyleValue::create(maybe_opacity.release_value()),
-        };
+        return NumericStyleValue::create(maybe_opacity.release_value());
     }
     case CSS::PropertyID::JustifyContent:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().justify_content())),
-        };
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().justify_content()));
     case CSS::PropertyID::BoxShadow: {
         auto maybe_box_shadow = layout_node.computed_values().box_shadow();
         if (!maybe_box_shadow.has_value())
             return {};
         auto box_shadow_data = maybe_box_shadow.release_value();
-        return StyleProperty {
-            .property_id = property_id,
-            .value = BoxShadowStyleValue::create(box_shadow_data.offset_x, box_shadow_data.offset_y, box_shadow_data.blur_radius, box_shadow_data.color),
-        };
+        return BoxShadowStyleValue::create(box_shadow_data.offset_x, box_shadow_data.offset_y, box_shadow_data.blur_radius, box_shadow_data.color);
     }
     case CSS::PropertyID::Width:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().width()),
-        };
+        return LengthStyleValue::create(layout_node.computed_values().width());
     case CSS::PropertyID::MinWidth:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().min_width()),
-        };
+        return LengthStyleValue::create(layout_node.computed_values().min_width());
     case CSS::PropertyID::MaxWidth:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().max_width()),
-        };
+        return LengthStyleValue::create(layout_node.computed_values().max_width());
     case CSS::PropertyID::Height:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().height()),
-        };
+        return LengthStyleValue::create(layout_node.computed_values().height());
     case CSS::PropertyID::MinHeight:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().min_height()),
-        };
+        return LengthStyleValue::create(layout_node.computed_values().min_height());
     case CSS::PropertyID::MaxHeight:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().max_height()),
-        };
+        return LengthStyleValue::create(layout_node.computed_values().max_height());
     case CSS::PropertyID::MarginTop:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().margin().top),
-        };
+        return LengthStyleValue::create(layout_node.computed_values().margin().top);
     case CSS::PropertyID::MarginRight:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().margin().right),
-        };
+        return LengthStyleValue::create(layout_node.computed_values().margin().right);
     case CSS::PropertyID::MarginBottom:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().margin().bottom),
-        };
+        return LengthStyleValue::create(layout_node.computed_values().margin().bottom);
     case CSS::PropertyID::MarginLeft:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().margin().left),
-        };
+        return LengthStyleValue::create(layout_node.computed_values().margin().left);
     case CSS::PropertyID::PaddingTop:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().padding().top),
-        };
+        return LengthStyleValue::create(layout_node.computed_values().padding().top);
     case CSS::PropertyID::PaddingRight:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().padding().right),
-        };
+        return LengthStyleValue::create(layout_node.computed_values().padding().right);
     case CSS::PropertyID::PaddingBottom:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().padding().bottom),
-        };
+        return LengthStyleValue::create(layout_node.computed_values().padding().bottom);
     case CSS::PropertyID::PaddingLeft:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = LengthStyleValue::create(layout_node.computed_values().padding().left),
-        };
+        return LengthStyleValue::create(layout_node.computed_values().padding().left);
     case CSS::PropertyID::BorderRadius: {
         auto maybe_top_left_radius = property(CSS::PropertyID::BorderTopLeftRadius);
         auto maybe_top_right_radius = property(CSS::PropertyID::BorderTopRightRadius);
@@ -620,69 +500,33 @@ Optional<StyleProperty> ComputedCSSStyleDeclaration::property(PropertyID propert
             bottom_right_radius = *static_cast<BorderRadiusStyleValue*>(maybe_bottom_right_radius.value().value.ptr());
         }
 
-        return StyleProperty {
-            .property_id = property_id,
-            .value = CombinedBorderRadiusStyleValue::create(top_left_radius.release_nonnull(), top_right_radius.release_nonnull(), bottom_right_radius.release_nonnull(), bottom_left_radius.release_nonnull()),
-        };
+        return CombinedBorderRadiusStyleValue::create(top_left_radius.release_nonnull(), top_right_radius.release_nonnull(), bottom_right_radius.release_nonnull(), bottom_left_radius.release_nonnull());
     }
     // FIXME: The two radius components are not yet stored, as we currently don't actually render them.
     case CSS::PropertyID::BorderBottomLeftRadius:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = BorderRadiusStyleValue::create(layout_node.computed_values().border_bottom_left_radius(), layout_node.computed_values().border_bottom_left_radius()),
-        };
+        return BorderRadiusStyleValue::create(layout_node.computed_values().border_bottom_left_radius(), layout_node.computed_values().border_bottom_left_radius());
     case CSS::PropertyID::BorderBottomRightRadius:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = BorderRadiusStyleValue::create(layout_node.computed_values().border_bottom_right_radius(), layout_node.computed_values().border_bottom_right_radius()),
-        };
+        return BorderRadiusStyleValue::create(layout_node.computed_values().border_bottom_right_radius(), layout_node.computed_values().border_bottom_right_radius());
     case CSS::PropertyID::BorderTopLeftRadius:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = BorderRadiusStyleValue::create(layout_node.computed_values().border_top_left_radius(), layout_node.computed_values().border_top_left_radius()),
-        };
+        return BorderRadiusStyleValue::create(layout_node.computed_values().border_top_left_radius(), layout_node.computed_values().border_top_left_radius());
     case CSS::PropertyID::BorderTopRightRadius:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = BorderRadiusStyleValue::create(layout_node.computed_values().border_top_right_radius(), layout_node.computed_values().border_top_right_radius()),
-        };
+        return BorderRadiusStyleValue::create(layout_node.computed_values().border_top_right_radius(), layout_node.computed_values().border_top_right_radius());
     case CSS::PropertyID::OverflowX:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().overflow_x())),
-        };
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().overflow_x()));
     case CSS::PropertyID::OverflowY:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().overflow_y())),
-        };
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().overflow_y()));
     case CSS::PropertyID::Color:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = ColorStyleValue::create(layout_node.computed_values().color()),
-        };
+        return ColorStyleValue::create(layout_node.computed_values().color());
     case PropertyID::BackgroundColor:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = ColorStyleValue::create(layout_node.computed_values().background_color()),
-        };
+        return ColorStyleValue::create(layout_node.computed_values().background_color());
     case CSS::PropertyID::BackgroundRepeatX:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().background_repeat_x())),
-        };
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().background_repeat_x()));
     case CSS::PropertyID::BackgroundRepeatY:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().background_repeat_y())),
-        };
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().background_repeat_y()));
     case CSS::PropertyID::BackgroundRepeat: {
         auto maybe_background_repeat_x = property(CSS::PropertyID::BackgroundRepeatX);
         auto maybe_background_repeat_y = property(CSS::PropertyID::BackgroundRepeatY);
-        return StyleProperty {
-            .property_id = property_id,
-            .value = BackgroundRepeatStyleValue::create(value_or_default(maybe_background_repeat_x, IdentifierStyleValue::create(CSS::ValueID::RepeatX)), value_or_default(maybe_background_repeat_y, IdentifierStyleValue::create(CSS::ValueID::RepeatY))),
-        };
+        return BackgroundRepeatStyleValue::create(value_or_default(maybe_background_repeat_x, IdentifierStyleValue::create(CSS::ValueID::RepeatX)), value_or_default(maybe_background_repeat_y, IdentifierStyleValue::create(CSS::ValueID::RepeatY)));
     }
     case CSS::PropertyID::Background: {
         auto maybe_background_color = property(CSS::PropertyID::BackgroundColor);
@@ -690,21 +534,12 @@ Optional<StyleProperty> ComputedCSSStyleDeclaration::property(PropertyID propert
         auto maybe_background_repeat_x = property(CSS::PropertyID::BackgroundRepeatX);
         auto maybe_background_repeat_y = property(CSS::PropertyID::BackgroundRepeatY);
 
-        return StyleProperty {
-            .property_id = property_id,
-            .value = BackgroundStyleValue::create(value_or_default(maybe_background_color, InitialStyleValue::the()), value_or_default(maybe_background_image, IdentifierStyleValue::create(CSS::ValueID::None)), value_or_default(maybe_background_repeat_x, IdentifierStyleValue::create(CSS::ValueID::RepeatX)), value_or_default(maybe_background_repeat_y, IdentifierStyleValue::create(CSS::ValueID::RepeatX))),
-        };
+        return BackgroundStyleValue::create(value_or_default(maybe_background_color, InitialStyleValue::the()), value_or_default(maybe_background_image, IdentifierStyleValue::create(CSS::ValueID::None)), value_or_default(maybe_background_repeat_x, IdentifierStyleValue::create(CSS::ValueID::RepeatX)), value_or_default(maybe_background_repeat_y, IdentifierStyleValue::create(CSS::ValueID::RepeatX)));
     }
     case CSS::PropertyID::ListStyleType:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().list_style_type())),
-        };
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().list_style_type()));
     case CSS::PropertyID::Invalid:
-        return StyleProperty {
-            .property_id = property_id,
-            .value = IdentifierStyleValue::create(CSS::ValueID::Invalid),
-        };
+        return IdentifierStyleValue::create(CSS::ValueID::Invalid);
     case CSS::PropertyID::Custom:
         dbgln("Computed style for custom properties was requested (?)");
         return {};
@@ -712,11 +547,36 @@ Optional<StyleProperty> ComputedCSSStyleDeclaration::property(PropertyID propert
         dbgln("FIXME: Computed style for the '{}' property was requested", string_from_property_id(property_id));
         return {};
     }
+    }
+}
+
+Optional<StyleProperty> ComputedCSSStyleDeclaration::property(PropertyID property_id) const
+{
+    const_cast<DOM::Document&>(m_element->document()).ensure_layout();
+
+    if (!m_element->layout_node()) {
+        auto style = m_element->document().style_resolver().resolve_style(const_cast<DOM::Element&>(*m_element));
+        if (auto maybe_property = style->property(property_id); maybe_property.has_value()) {
+            return StyleProperty {
+                .property_id = property_id,
+                .value = maybe_property.release_value(),
+            };
+        }
+        return {};
+    }
+
+    auto& layout_node = *m_element->layout_node();
+    auto value = style_value_for_property(layout_node, property_id);
+    if (!value)
+        return {};
+    return StyleProperty {
+        .property_id = property_id,
+        .value = value.release_nonnull(),
+    };
 }
 
 bool ComputedCSSStyleDeclaration::set_property(PropertyID, StringView)
 {
     return false;
 }
-
 }
