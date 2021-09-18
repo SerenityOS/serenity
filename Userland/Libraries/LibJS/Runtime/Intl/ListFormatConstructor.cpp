@@ -110,7 +110,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatConstructor::supported_locales_of)
         return {};
 
     // 3. Return ? SupportedLocales(availableLocales, requestedLocales, options).
-    return supported_locales(global_object, requested_locales, options);
+    return TRY_OR_DISCARD(supported_locales(global_object, requested_locales, options));
 }
 
 }

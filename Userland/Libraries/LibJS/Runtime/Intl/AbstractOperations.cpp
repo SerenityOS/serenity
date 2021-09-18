@@ -568,7 +568,7 @@ Vector<String> best_fit_supported_locales(Vector<String> const& requested_locale
 }
 
 // 9.2.10 SupportedLocales ( availableLocales, requestedLocales, options ), https://tc39.es/ecma402/#sec-supportedlocales
-Array* supported_locales(GlobalObject& global_object, Vector<String> const& requested_locales, Value options)
+ThrowCompletionOr<Array*> supported_locales(GlobalObject& global_object, Vector<String> const& requested_locales, Value options)
 {
     auto& vm = global_object.vm();
 
@@ -578,7 +578,7 @@ Array* supported_locales(GlobalObject& global_object, Vector<String> const& requ
         return {};
 
     // 2. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
-    auto matcher = TRY_OR_DISCARD(get_option(global_object, *options_object, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
+    auto matcher = TRY(get_option(global_object, *options_object, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     Vector<String> supported_locales;
 
