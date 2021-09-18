@@ -8,7 +8,7 @@
 
 #ifdef __serenity__
 #    ifdef PREKERNEL
-#        include <Kernel/Prekernel/kstdio.h>
+#        include <PreKernel/kstdio.h>
 #    elif defined(KERNEL)
 #        include <Kernel/kstdio.h>
 #    else

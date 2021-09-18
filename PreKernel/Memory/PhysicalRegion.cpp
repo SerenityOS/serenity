@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Prekernel/Memory/PhysicalRegion.h>
-#include <Kernel/Prekernel/Memory/kmalloc.h>
+#include <PreKernel/Memory/PhysicalRegion.h>
+#include <PreKernel/Memory/kmalloc.h>
 
 namespace Prekernel {
 

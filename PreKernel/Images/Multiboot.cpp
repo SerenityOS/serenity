@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Prekernel/Images/Multiboot.h>
+#include <PreKernel/Images/Multiboot.h>
 
 namespace Multiboot {
 

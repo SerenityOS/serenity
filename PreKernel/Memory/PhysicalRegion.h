@@ -9,8 +9,8 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/PhysicalAddress.h>
-#include <Kernel/Prekernel/Images/Multiboot.h>
-#include <Kernel/Prekernel/Memory/PhysicalRange.h>
+#include <PreKernel/Images/Multiboot.h>
+#include <PreKernel/Memory/PhysicalRange.h>
 
 namespace Prekernel {
 

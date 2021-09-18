@@ -258,6 +258,7 @@ serenity_component(
 
 add_subdirectory(AK)
 add_subdirectory(Kernel)
+add_subdirectory(PreKernel)
 if(NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     add_subdirectory(Userland)
     add_subdirectory(Tests)

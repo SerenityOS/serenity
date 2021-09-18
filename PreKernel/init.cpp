@@ -9,12 +9,12 @@
 #include <AK/Types.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/PhysicalAddress.h>
-#include <Kernel/Prekernel/Memory/Management.h>
-#include <Kernel/Prekernel/Memory/kmalloc.h>
-#include <Kernel/Prekernel/Prekernel.h>
 #include <Kernel/VirtualAddress.h>
 #include <LibC/elf.h>
 #include <LibELF/Relocation.h>
+#include <PreKernel/Memory/Management.h>
+#include <PreKernel/Memory/kmalloc.h>
+#include <PreKernel/Prekernel.h>
 
 // Defined in the linker script
 extern size_t __stack_chk_guard;
@@ -75,7 +75,7 @@ extern "C" [[noreturn]] void init()
         VERIFY_NOT_REACHED();
     }
     Prekernel::MemoryManagement::the().initialize(PhysicalAddress(multiboot_info_ptr->mmap_addr), multiboot_info_ptr->mmap_length / sizeof(multiboot_mmap_entry));
-    
+
     kmalloc_init();
 
     if (multiboot_info_ptr->mods_count < 1)

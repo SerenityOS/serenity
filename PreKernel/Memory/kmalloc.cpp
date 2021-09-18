@@ -6,11 +6,11 @@
 
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
-#include <Kernel/Prekernel/Assertions.h>
-#include <Kernel/Prekernel/Memory/Management.h>
-#include <Kernel/Prekernel/Memory/PhysicalRange.h>
-#include <Kernel/Prekernel/Memory/kmalloc.h>
-#include <Kernel/Prekernel/StdLibExtras.h>
+#include <PreKernel/Assertions.h>
+#include <PreKernel/Memory/Management.h>
+#include <PreKernel/Memory/PhysicalRange.h>
+#include <PreKernel/Memory/kmalloc.h>
+#include <PreKernel/StdLibExtras.h>
 
 static u8* s_next_eternal_ptr;
 static u64 s_eternal_allocated_count = 0;

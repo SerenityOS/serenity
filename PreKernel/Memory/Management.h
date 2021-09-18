@@ -9,8 +9,8 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Types.h>
 #include <Kernel/PhysicalAddress.h>
-#include <Kernel/Prekernel/Memory/PhysicalRange.h>
-#include <Kernel/Prekernel/Memory/PhysicalRegion.h>
+#include <PreKernel/Memory/PhysicalRange.h>
+#include <PreKernel/Memory/PhysicalRegion.h>
 
 namespace Prekernel {
 

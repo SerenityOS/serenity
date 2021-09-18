@@ -45,7 +45,7 @@ fi
 
 
 exec $SERENITY_KERNEL_DEBUGGER \
-    -ex "file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-i686}/Kernel/Prekernel/$prekernel_image" \
+    -ex "file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-i686}/PreKernel/$prekernel_image" \
     -ex "set confirm off" \
     -ex "directory $SCRIPT_DIR/../Build/${SERENITY_ARCH:-i686}/" \
     -ex "add-symbol-file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-i686}/Kernel/Kernel -o $kernel_base" \

@@ -5,8 +5,8 @@
  */
 
 #include <AK/Format.h>
-#include <Kernel/Prekernel/Assertions.h>
-#include <Kernel/Prekernel/Memory/kmalloc.h>
+#include <PreKernel/Assertions.h>
+#include <PreKernel/Memory/kmalloc.h>
 
 void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func)
 {

@@ -7,7 +7,7 @@
 #include <AK/PrintfImplementation.h>
 #include <AK/Types.h>
 #include <Kernel/IO.h>
-#include <Kernel/Prekernel/kstdio.h>
+#include <PreKernel/kstdio.h>
 
 static bool serial_debug;
 // A recursive spinlock allows us to keep writing in the case where a

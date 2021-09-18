@@ -5,7 +5,7 @@
  */
 
 #include <AK/Types.h>
-#include <Kernel/Prekernel/Arch/aarch64/MainIdRegister.h>
+#include <PreKernel/Arch/aarch64/MainIdRegister.h>
 
 extern "C" [[noreturn]] void init();
 extern "C" [[noreturn]] void init()

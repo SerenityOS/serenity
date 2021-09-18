@@ -6,9 +6,9 @@
 
 #include <AK/Singleton.h>
 #include <AK/kstdio.h>
-#include <Kernel/Prekernel/Assertions.h>
-#include <Kernel/Prekernel/Images/Multiboot.h>
-#include <Kernel/Prekernel/Memory/Management.h>
+#include <PreKernel/Assertions.h>
+#include <PreKernel/Images/Multiboot.h>
+#include <PreKernel/Memory/Management.h>
 
 namespace Prekernel {
 

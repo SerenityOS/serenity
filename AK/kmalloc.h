@@ -10,7 +10,7 @@
 #include <AK/Checked.h>
 
 #if defined(PREKERNEL)
-#    include <Kernel/Prekernel/Memory/kmalloc.h>
+#    include <PreKernel/Memory/kmalloc.h>
 #elif defined(KERNEL)
 #    include <Kernel/Heap/kmalloc.h>
 #else

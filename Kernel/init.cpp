@@ -44,7 +44,6 @@
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Panic.h>
-#include <Kernel/Prekernel/Prekernel.h>
 #include <Kernel/Process.h>
 #include <Kernel/ProcessExposed.h>
 #include <Kernel/RTC.h>
@@ -60,6 +59,7 @@
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/WorkQueue.h>
 #include <Kernel/kstdio.h>
+#include <PreKernel/Prekernel.h>
 
 // Defined in the linker script
 typedef void (*ctor_func_t)();

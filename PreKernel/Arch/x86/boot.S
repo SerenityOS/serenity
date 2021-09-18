@@ -1,5 +1,5 @@
 #include <AK/Platform.h>
-#include <Kernel/Prekernel/Prekernel.h>
+#include <PreKernel/Prekernel.h>
 
 .code32
 

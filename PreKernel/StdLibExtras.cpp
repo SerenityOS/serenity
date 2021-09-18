@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Prekernel/StdLibExtras.h>
+#include <PreKernel/StdLibExtras.h>
 
 size_t strnlen(const char* str, size_t maxlen)
 {

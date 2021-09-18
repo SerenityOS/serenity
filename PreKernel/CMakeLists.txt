@@ -1,19 +1,19 @@
 set(SOURCES
-    ../../AK/FlyString.cpp
-    ../../AK/GenericLexer.cpp
-    ../../AK/Hex.cpp
-    ../../AK/String.cpp
-    ../../AK/StringBuilder.cpp
-    ../../AK/StringImpl.cpp
-    ../../AK/StringUtils.cpp
-    ../../AK/StringView.cpp
-    ../../AK/Time.cpp
-    ../../AK/Format.cpp
-    ../../AK/UUID.cpp
-    ../../AK/Utf8View.cpp
-    ../../AK/Utf16View.cpp
+    ../AK/FlyString.cpp
+    ../AK/GenericLexer.cpp
+    ../AK/Hex.cpp
+    ../AK/String.cpp
+    ../AK/StringBuilder.cpp
+    ../AK/StringImpl.cpp
+    ../AK/StringUtils.cpp
+    ../AK/StringView.cpp
+    ../AK/Time.cpp
+    ../AK/Format.cpp
+    ../AK/UUID.cpp
+    ../AK/Utf8View.cpp
+    ../AK/Utf16View.cpp
     UBSanitizer.cpp
-    ../MiniStdLib.cpp
+    ../Kernel/MiniStdLib.cpp
 )
 
 remove_definitions(-DKERNEL)
@@ -45,7 +45,7 @@ else()
         kprintf.cpp
         Assertions.cpp
         StdLibExtras.cpp
-        ../../Userland/Libraries/LibELF/Relocation.cpp
+        ../Userland/Libraries/LibELF/Relocation.cpp
     )
 endif()
 
