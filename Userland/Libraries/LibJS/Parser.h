@@ -199,6 +199,8 @@ private:
     bool try_parse_arrow_function_expression_failed_at_position(const Position&) const;
     void set_try_parse_arrow_function_expression_failed_at_position(const Position&, bool);
 
+    bool match_invalid_escaped_keyword() const;
+
     struct RulePosition {
         AK_MAKE_NONCOPYABLE(RulePosition);
         AK_MAKE_NONMOVABLE(RulePosition);

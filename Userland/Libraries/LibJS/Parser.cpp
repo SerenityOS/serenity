@@ -406,9 +406,7 @@ NonnullRefPtr<Statement> Parser::parse_statement(AllowLabelledFunction allow_lab
         m_state.current_token = m_state.lexer.force_slash_as_regex();
         [[fallthrough]];
     default:
-        if (type == TokenType::EscapedKeyword
-            && (m_state.strict_mode
-                || (m_state.current_token.value() != "yield"sv && m_state.current_token.value() != "let"sv)))
+        if (match_invalid_escaped_keyword())
             syntax_error("Keyword must not contain escaped characters");
 
         if (match_identifier_name()) {
@@ -430,6 +428,20 @@ NonnullRefPtr<Statement> Parser::parse_statement(AllowLabelledFunction allow_lab
         consume();
         return create_ast_node<ErrorStatement>({ m_state.current_token.filename(), rule_start.position(), position() });
     }
+}
+
+bool Parser::match_invalid_escaped_keyword() const
+{
+    if (m_state.current_token.type() != TokenType::EscapedKeyword)
+        return false;
+    auto token_value = m_state.current_token.value();
+    if (token_value == "await"sv) {
+        return m_program_type == Program::Type::Module;
+    }
+    if (m_state.strict_mode) {
+        return true;
+    }
+    return token_value != "yield"sv && token_value != "let"sv;
 }
 
 static constexpr AK::Array<StringView, 9> strict_reserved_words = { "implements", "interface", "let", "package", "private", "protected", "public", "static", "yield" };
@@ -582,7 +594,10 @@ RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction all
     };
 
     if (m_state.current_token.value() == "yield"sv && (m_state.strict_mode || m_state.in_generator_function_context)) {
-        syntax_error("'yield' label not allowed in this context");
+        return {};
+    }
+
+    if (m_state.current_token.value() == "await"sv && m_program_type == Program::Type::Module) {
         return {};
     }
 
@@ -2854,6 +2869,7 @@ bool Parser::match_expression() const
         || type == TokenType::TemplateLiteralStart
         || type == TokenType::NullLiteral
         || match_identifier()
+        || type == TokenType::Await
         || type == TokenType::New
         || type == TokenType::Class
         || type == TokenType::CurlyOpen
@@ -3026,12 +3042,14 @@ bool Parser::match_identifier() const
             return !m_state.strict_mode;
         if (m_state.current_token.value() == "yield"sv)
             return !m_state.strict_mode && !m_state.in_generator_function_context;
+        if (m_state.current_token.value() == "await"sv)
+            return m_program_type != Program::Type::Module;
         return true;
     }
 
     return m_state.current_token.type() == TokenType::Identifier
         || (m_state.current_token.type() == TokenType::Let && !m_state.strict_mode)
-        || (m_state.current_token.type() == TokenType::Await && !m_state.strict_mode)
+        || (m_state.current_token.type() == TokenType::Await && m_program_type != Program::Type::Module)
         || (m_state.current_token.type() == TokenType::Yield && !m_state.in_generator_function_context && !m_state.strict_mode); // See note in Parser::parse_identifier().
 }
 
@@ -3119,10 +3137,10 @@ Token Parser::consume_identifier_reference()
 
     if (match(TokenType::EscapedKeyword)) {
         auto name = m_state.current_token.value();
-        if (name == "await"sv)
-            syntax_error("Identifier reference may not be 'await'");
-        else if (m_state.strict_mode && (name == "let"sv || name == "yield"sv))
+        if (m_state.strict_mode && (name == "let"sv || name == "yield"sv))
             syntax_error(String::formatted("'{}' is not allowed as an identifier in strict mode", name));
+        if (m_program_type == Program::Type::Module && name == "await"sv)
+            syntax_error("'await' is not allowed as an identifier in module");
 
         return consume();
     }
@@ -3141,7 +3159,8 @@ Token Parser::consume_identifier_reference()
     }
 
     if (match(TokenType::Await)) {
-        syntax_error("Identifier reference may not be 'await'");
+        if (m_program_type == Program::Type::Module)
+            syntax_error("'await' is not allowed as an identifier in module");
         return consume();
     }
 
@@ -3343,7 +3362,7 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
         expected("import clauses");
     }
 
-    auto from_statement = consume(TokenType::Identifier).value();
+    auto from_statement = consume(TokenType::Identifier).original_value();
     if (from_statement != "from"sv)
         syntax_error(String::formatted("Expected 'from' got {}", from_statement));
 
