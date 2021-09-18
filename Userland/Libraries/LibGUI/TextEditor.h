@@ -126,6 +126,7 @@ public:
     bool write_to_file_and_close(int fd);
     bool has_selection() const { return m_selection.is_valid(); }
     String selected_text() const;
+    size_t number_of_words() const;
     size_t number_of_selected_words() const;
     void set_selection(TextRange const&);
     void clear_selection();
