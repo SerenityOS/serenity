@@ -357,9 +357,7 @@ NumberFormat* initialize_number_format(GlobalObject& global_object, NumberFormat
     auto& vm = global_object.vm();
 
     // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = canonicalize_locale_list(global_object, locales_value);
-    if (vm.exception())
-        return {};
+    auto requested_locales = TRY_OR_DISCARD(canonicalize_locale_list(global_object, locales_value));
 
     // 2. Set options to ? CoerceOptionsToObject(options).
     auto* options = coerce_options_to_object(global_object, options_value);

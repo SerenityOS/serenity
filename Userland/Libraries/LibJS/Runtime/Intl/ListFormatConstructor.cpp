@@ -56,9 +56,7 @@ Value ListFormatConstructor::construct(FunctionObject& new_target)
     auto* list_format = TRY_OR_DISCARD(ordinary_create_from_constructor<ListFormat>(global_object, new_target, &GlobalObject::intl_list_format_prototype));
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = canonicalize_locale_list(global_object, locale_value);
-    if (vm.exception())
-        return {};
+    auto requested_locales = TRY_OR_DISCARD(canonicalize_locale_list(global_object, locale_value));
 
     // 4. Set options to ? GetOptionsObject(options).
     auto* options = TRY_OR_DISCARD(Temporal::get_options_object(global_object, options_value));
@@ -113,7 +111,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatConstructor::supported_locales_of)
     // 1. Let availableLocales be %ListFormat%.[[AvailableLocales]].
 
     // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = canonicalize_locale_list(global_object, locales);
+    auto requested_locales = TRY_OR_DISCARD(canonicalize_locale_list(global_object, locales));
     if (vm.exception())
         return {};
 

@@ -186,14 +186,14 @@ bool is_well_formed_unit_identifier(StringView unit_identifier)
 }
 
 // 9.2.1 CanonicalizeLocaleList ( locales ), https://tc39.es/ecma402/#sec-canonicalizelocalelist
-Vector<String> canonicalize_locale_list(GlobalObject& global_object, Value locales)
+ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_object, Value locales)
 {
     auto& vm = global_object.vm();
 
     // 1. If locales is undefined, then
     if (locales.is_undefined()) {
         // a. Return a new empty List.
-        return {};
+        return Vector<String> {};
     }
 
     // 2. Let seen be a new empty List.
@@ -209,17 +209,17 @@ Vector<String> canonicalize_locale_list(GlobalObject& global_object, Value local
     else {
         // a. Let O be ? ToObject(locales).
         object = locales.to_object(global_object);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
     }
 
     // 5. Let len be ? ToLength(? Get(O, "length")).
     auto length_value = object->get(vm.names.length);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
     auto length = length_value.to_length(global_object);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 6. Let k be 0.
     // 7. Repeat, while k < len,
@@ -229,21 +229,19 @@ Vector<String> canonicalize_locale_list(GlobalObject& global_object, Value local
 
         // b. Let kPresent be ? HasProperty(O, Pk).
         auto key_present = object->has_property(property_key);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // c. If kPresent is true, then
         if (key_present) {
             // i. Let kValue be ? Get(O, Pk).
             auto key_value = object->get(property_key);
-            if (vm.exception())
-                return {};
+            if (auto* exception = vm.exception())
+                return throw_completion(exception->value());
 
             // ii. If Type(kValue) is not String or Object, throw a TypeError exception.
-            if (!key_value.is_string() && !key_value.is_object()) {
-                vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOrString, key_value.to_string_without_side_effects());
-                return {};
-            }
+            if (!key_value.is_string() && !key_value.is_object())
+                return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOrString, key_value.to_string_without_side_effects());
 
             String tag;
 
@@ -256,16 +254,14 @@ Vector<String> canonicalize_locale_list(GlobalObject& global_object, Value local
             else {
                 // 1. Let tag be ? ToString(kValue).
                 tag = key_value.to_string(global_object);
-                if (vm.exception())
-                    return {};
+                if (auto* exception = vm.exception())
+                    return throw_completion(exception->value());
             }
 
             // v. If IsStructurallyValidLanguageTag(tag) is false, throw a RangeError exception.
             auto locale_id = is_structurally_valid_language_tag(tag);
-            if (!locale_id.has_value()) {
-                vm.throw_exception<RangeError>(global_object, ErrorType::IntlInvalidLanguageTag, tag);
-                return {};
-            }
+            if (!locale_id.has_value())
+                return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidLanguageTag, tag);
 
             // vi. Let canonicalizedTag be CanonicalizeUnicodeLocaleId(tag).
             auto canonicalized_tag = JS::Intl::canonicalize_unicode_locale_id(*locale_id);

@@ -75,7 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatConstructor::supported_locales_of)
     // 1. Let availableLocales be %NumberFormat%.[[AvailableLocales]].
 
     // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = canonicalize_locale_list(global_object, locales);
+    auto requested_locales = TRY_OR_DISCARD(canonicalize_locale_list(global_object, locales));
     if (vm.exception())
         return {};
 
