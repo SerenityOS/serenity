@@ -566,6 +566,14 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
 
 RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction allow_function)
 {
+    {
+        // NOTE: This is a fast path where we try to fail early to avoid the expensive save_state+load_state.
+        auto forked_lexer = m_state.lexer;
+        auto token = forked_lexer.next();
+        if (token.type() != TokenType::Colon)
+            return {};
+    }
+
     save_state();
     auto rule_start = push_start();
     ArmedScopeGuard state_rollback_guard = [&] {
