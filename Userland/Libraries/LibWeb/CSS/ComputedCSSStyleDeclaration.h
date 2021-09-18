@@ -27,6 +27,8 @@ public:
 private:
     explicit ComputedCSSStyleDeclaration(DOM::Element&);
 
+    RefPtr<StyleValue> style_value_for_property(Layout::NodeWithStyle const&, PropertyID) const;
+
     NonnullRefPtr<DOM::Element> m_element;
 };
 
