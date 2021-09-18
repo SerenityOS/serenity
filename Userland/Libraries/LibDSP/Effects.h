@@ -40,6 +40,10 @@ public:
 
 private:
     virtual Signal process_impl(Signal const&) override;
+
+    ProcessorRangeParameter m_master_volume;
+    ProcessorRangeParameter m_pan;
+    ProcessorBooleanParameter m_mute;
 };
 
 }

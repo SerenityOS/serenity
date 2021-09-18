@@ -54,12 +54,27 @@ Signal Delay::process_impl(Signal const& input_signal)
 
 Mastering::Mastering(NonnullRefPtr<Transport> transport)
     : EffectProcessor(move(transport))
+    , m_master_volume("Master"sv, 0, 1, 1)
+    , m_pan("Pan"sv, -1, 1, 0)
+    , m_mute("Mute"sv, false)
 {
+    m_parameters.append(m_master_volume);
+    m_parameters.append(m_pan);
+    m_parameters.append(m_mute);
 }
 
-Signal Mastering::process_impl([[maybe_unused]] Signal const& input_signal)
+Signal Mastering::process_impl(Signal const& input_signal)
 {
-    TODO();
+    Sample const& in = input_signal.get<Sample>();
+    Sample out;
+
+    if (m_mute.value()) {
+        return Signal(out);
+    }
+
+    out += in.log_pan(static_cast<double>(m_pan));
+    out += in.log_multiplied(static_cast<double>(m_master_volume));
+    return Signal(out);
 }
 
 }
