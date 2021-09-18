@@ -298,9 +298,7 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
     }
 
     // 10. Set options to ? CoerceOptionsToObject(options).
-    auto* options = coerce_options_to_object(global_object, options_value);
-    if (vm.exception())
-        return {};
+    auto* options = TRY_OR_DISCARD(coerce_options_to_object(global_object, options_value));
 
     // 11. Set tag to ? ApplyOptionsToTag(tag, options).
     if (auto applied_tag = apply_options_to_tag(global_object, tag, *options); applied_tag.has_value())
