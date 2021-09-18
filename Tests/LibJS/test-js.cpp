@@ -77,19 +77,19 @@ TESTJS_GLOBAL_FUNCTION(mark_as_garbage, markAsGarbage)
         return {};
     }
 
-    auto variable = outer_environment.value()->lexical_environment->get_from_environment(variable_name.string());
-    if (!variable.has_value()) {
-        vm.throw_exception<JS::ReferenceError>(global_object, JS::ErrorType::UnknownIdentifier, variable_name.string());
-        return {};
-    }
+    auto reference = vm.resolve_binding(variable_name.string(), outer_environment.value()->lexical_environment);
 
-    if (!variable->value.is_object()) {
+    auto value = reference.get_value(global_object);
+    if (vm.exception())
+        return {};
+
+    if (!value.is_object()) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, String::formatted("Variable with name {}", variable_name.string()));
         return {};
     }
 
-    vm.heap().uproot_cell(&variable->value.as_object());
-    outer_environment.value()->lexical_environment->delete_from_environment(variable_name.string());
+    vm.heap().uproot_cell(&value.as_object());
+    reference.delete_(global_object);
 
     return JS::js_undefined();
 }
