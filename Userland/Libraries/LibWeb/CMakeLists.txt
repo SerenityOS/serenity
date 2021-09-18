@@ -204,7 +204,6 @@ set(SOURCES
     Layout/TableRowGroupBox.cpp
     Layout/TextNode.cpp
     Layout/TreeBuilder.cpp
-    LayoutTreeModel.cpp
     Loader/CSSLoader.cpp
     Loader/ContentFilter.cpp
     Loader/FrameLoader.cpp
