@@ -17,6 +17,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     : Dialog(parent_window)
 {
     set_title("Create new image");
+    set_icon(parent_window->icon());
     resize(200, 200);
 
     auto& main_widget = set_main_widget<GUI::Widget>();
