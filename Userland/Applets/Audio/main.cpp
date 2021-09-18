@@ -95,7 +95,8 @@ public:
         m_slider->set_value(m_slider->max() - m_audio_volume);
         m_slider->set_knob_size_mode(GUI::Slider::KnobSizeMode::Proportional);
         m_slider->on_change = [&](int value) {
-            double volume = clamp(static_cast<double>(m_slider->max() - value) / m_slider->max(), 0.0, 1.0);
+            m_audio_volume = m_slider->max() - value;
+            double volume = clamp(static_cast<double>(m_audio_volume) / m_slider->max(), 0.0, 1.0);
             m_audio_client->set_main_mix_volume(volume);
             update();
         };
