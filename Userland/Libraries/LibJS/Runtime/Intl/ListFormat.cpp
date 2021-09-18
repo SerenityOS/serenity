@@ -265,20 +265,20 @@ Array* format_list_to_parts(GlobalObject& global_object, ListFormat const& list_
 }
 
 // 13.1.5 StringListFromIterable ( iterable ), https://tc39.es/ecma402/#sec-createstringlistfromiterable
-Vector<String> string_list_from_iterable(GlobalObject& global_object, Value iterable)
+ThrowCompletionOr<Vector<String>> string_list_from_iterable(GlobalObject& global_object, Value iterable)
 {
     auto& vm = global_object.vm();
 
     // 1. If iterable is undefined, then
     if (iterable.is_undefined()) {
         // a. Return a new empty List.
-        return {};
+        return Vector<String> {};
     }
 
     // 2. Let iteratorRecord be ? GetIterator(iterable).
     auto* iterator_record = get_iterator(global_object, iterable);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 3. Let list be a new empty List.
     Vector<String> list;
@@ -290,24 +290,24 @@ Vector<String> string_list_from_iterable(GlobalObject& global_object, Value iter
     do {
         // a. Set next to ? IteratorStep(iteratorRecord).
         next = iterator_step(global_object, *iterator_record);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // b. If next is not false, then
         if (next != nullptr) {
             // i. Let nextValue be ? IteratorValue(next).
             auto next_value = iterator_value(global_object, *next);
-            if (vm.exception())
-                return {};
+            if (auto* exception = vm.exception())
+                return throw_completion(exception->value());
 
             // ii. If Type(nextValue) is not String, then
             if (!next_value.is_string()) {
                 // 1. Let error be ThrowCompletion(a newly created TypeError object).
-                vm.throw_exception<TypeError>(global_object, ErrorType::NotAString, next_value);
+                auto completion = vm.throw_completion<TypeError>(global_object, ErrorType::NotAString, next_value);
 
                 // 2. Return ? IteratorClose(iteratorRecord, error).
                 iterator_close(*iterator_record);
-                return {};
+                return completion;
             }
 
             // iii. Append nextValue to the end of the List list.
