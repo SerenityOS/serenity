@@ -61,6 +61,42 @@ void BlockFormattingContext::run(Box& box, LayoutMode layout_mode)
             return IterationDecision::Continue;
         });
     }
+
+    apply_transformations_to_children(box);
+}
+
+void BlockFormattingContext::apply_transformations_to_children(Box& box)
+{
+    box.for_each_child_of_type<Box>([&](auto& child_box) {
+        float transform_y_offset = 0.0f;
+        if (!child_box.computed_values().transformations().is_empty()) {
+            // FIXME: All transformations can be interpreted as successive 3D-matrix operations on the box, we don't do that yet.
+            //        https://drafts.csswg.org/css-transforms/#serialization-of-the-computed-value
+            for (auto transformation : child_box.computed_values().transformations()) {
+                switch (transformation.function) {
+                case CSS::TransformFunction::TranslateY:
+                    if (transformation.values.size() != 1)
+                        continue;
+                    transformation.values.first().visit(
+                        [&](CSS::Length& value) {
+                            transform_y_offset += value.resolved_or_zero(child_box, child_box.width()).to_px(child_box);
+                        },
+                        [&](float value) {
+                            transform_y_offset += value;
+                        },
+                        [&](auto&) {
+                            dbgln("FIXME: Implement unsupported transformation function value type!");
+                        });
+                    break;
+                default:
+                    dbgln("FIXME: Implement missing transform function!");
+                }
+            }
+        }
+
+        auto untransformed_offset = child_box.effective_offset();
+        child_box.set_offset(untransformed_offset.x(), untransformed_offset.y() + transform_y_offset);
+    });
 }
 
 void BlockFormattingContext::compute_width(Box& box)

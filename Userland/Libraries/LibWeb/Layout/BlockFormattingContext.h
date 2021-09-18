@@ -48,6 +48,8 @@ private:
 
     void layout_floating_child(Box&, Box& containing_block);
 
+    void apply_transformations_to_children(Box&);
+
     Vector<Box*> m_left_floating_boxes;
     Vector<Box*> m_right_floating_boxes;
 };
