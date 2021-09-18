@@ -53,6 +53,9 @@ public:
     Function<void()> legacy_pre_activation_behavior;
     Function<void()> legacy_cancelled_activation_behavior;
 
+    HTML::EventHandler event_handler_attribute(FlyString const& name);
+    void set_event_handler_attribute(FlyString const& name, HTML::EventHandler);
+
 protected:
     explicit EventTarget(Bindings::ScriptExecutionContext&);
 
