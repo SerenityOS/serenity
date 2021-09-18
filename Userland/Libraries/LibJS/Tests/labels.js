@@ -110,6 +110,28 @@ test("can use certain 'keywords' as labels", () => {
     expect(`const: { break const; }`).not.toEval();
 });
 
+test("can use certain 'keywords' even in strict mode", () => {
+    "use strict";
+
+    let i = 0;
+    await: {
+        i++;
+        break await;
+        expect().fail();
+    }
+
+    async: {
+        i++;
+        break async;
+        expect().fail();
+    }
+    expect(i).toBe(2);
+
+    expect(`'use strict'; let: { break let; }`).not.toEval();
+
+    expect(`'use strict'; l\u0065t: { break l\u0065t; }`).not.toEval();
+});
+
 test("invalid label usage", () => {
     expect(() =>
         eval(`
