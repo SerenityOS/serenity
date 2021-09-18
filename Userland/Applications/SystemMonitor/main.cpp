@@ -700,7 +700,7 @@ NonnullRefPtr<GUI::Widget> build_performance_tab()
     ProcessModel::the().on_cpu_info_change = [cpu_graphs](const NonnullOwnPtrVector<ProcessModel::CpuInfo>& cpus) {
         float sum_cpu = 0;
         for (size_t i = 0; i < cpus.size(); ++i) {
-            cpu_graphs[i].add_value({ (int)cpus[i].total_cpu_percent, (int)cpus[i].total_cpu_percent_kernel });
+            cpu_graphs[i].add_value({ static_cast<size_t>(cpus[i].total_cpu_percent), static_cast<size_t>(cpus[i].total_cpu_percent_kernel) });
             sum_cpu += cpus[i].total_cpu_percent;
         }
         float cpu_usage = sum_cpu / (float)cpus.size();
