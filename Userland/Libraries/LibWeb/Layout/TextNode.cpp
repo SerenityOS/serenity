@@ -74,10 +74,6 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
 {
     auto& painter = context.painter();
 
-    if (phase == PaintPhase::Background) {
-        painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), computed_values().background_color());
-    }
-
     if (phase == PaintPhase::Foreground) {
         painter.set_font(font());
 
