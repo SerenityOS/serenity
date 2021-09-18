@@ -191,7 +191,8 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
                 error_callback(start_request_failure_msg, {});
             return;
         }
-        protocol_request->on_buffered_request_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request, protocol_request](bool success, auto, auto& response_headers, auto status_code, ReadonlyBytes payload) {
+        m_active_requests.set(*protocol_request);
+        protocol_request->on_buffered_request_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request, &protocol_request = *protocol_request](bool success, auto, auto& response_headers, auto status_code, ReadonlyBytes payload) {
             --m_pending_loads;
             if (on_load_counter_change)
                 on_load_counter_change();
@@ -202,12 +203,11 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
                     error_callback(http_load_failure_msg, {});
                 return;
             }
-            deferred_invoke([protocol_request] {
-                // Clear circular reference of `protocol_request` captured by copy
-                const_cast<Protocol::Request&>(*protocol_request).on_buffered_request_finish = nullptr;
-            });
             success_callback(payload, response_headers, status_code);
             log_success(request);
+            deferred_invoke([this, &protocol_request] {
+                m_active_requests.remove(protocol_request);
+            });
         };
         protocol_request->set_should_buffer_all_input(true);
         protocol_request->on_certificate_requested = []() -> Protocol::Request::CertificateAndKey {
