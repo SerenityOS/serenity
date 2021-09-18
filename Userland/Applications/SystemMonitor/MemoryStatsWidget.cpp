@@ -117,5 +117,5 @@ void MemoryStatsWidget::refresh()
     m_kmalloc_difference_label->set_text(String::formatted("{:+}", kmalloc_call_count - kfree_call_count));
 
     m_graph.set_max(page_count_to_bytes(total_userphysical_and_swappable_pages) + kmalloc_bytes_total);
-    m_graph.add_value({ (int)page_count_to_bytes(user_physical_committed), (int)page_count_to_bytes(user_physical_allocated), (int)kmalloc_bytes_total });
+    m_graph.add_value({ page_count_to_bytes(user_physical_committed), page_count_to_bytes(user_physical_allocated), kmalloc_bytes_total });
 }

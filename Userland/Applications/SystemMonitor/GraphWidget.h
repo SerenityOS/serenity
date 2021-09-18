@@ -15,15 +15,15 @@ class GraphWidget final : public GUI::Frame {
 public:
     virtual ~GraphWidget() override;
 
-    void set_max(int max) { m_max = max; }
-    int max() const { return m_max; }
+    void set_max(size_t max) { m_max = max; }
+    size_t max() const { return m_max; }
 
-    void add_value(Vector<int, 1>&&);
+    void add_value(Vector<size_t, 1>&&);
 
     struct ValueFormat {
         Gfx::ColorRole graph_color_role { Gfx::ColorRole::Base };
         Color text_shadow_color { Color::Transparent };
-        Function<String(int)> text_formatter;
+        Function<String(size_t)> text_formatter;
     };
     void set_value_format(size_t index, ValueFormat&& format)
     {
@@ -38,9 +38,9 @@ private:
 
     virtual void paint_event(GUI::PaintEvent&) override;
 
-    int m_max { 100 };
+    size_t m_max { 100 };
     Vector<ValueFormat, 1> m_value_format;
-    CircularQueue<Vector<int, 1>, 4000> m_values;
+    CircularQueue<Vector<size_t, 1>, 4000> m_values;
     bool m_stack_values { false };
 
     Vector<Gfx::IntPoint, 1> m_calculated_points;
