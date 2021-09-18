@@ -81,7 +81,7 @@ Vector<u32> CharacterMapFile::read_map(const JsonObject& json, const String& nam
         } else if (key_value.length() == 1) {
             buffer[i] = key_value.characters()[0];
         } else {
-            Utf8View m_utf8_view(key_value.characters());
+            Utf8View m_utf8_view(key_value);
             buffer[i] = *m_utf8_view.begin();
         }
     }

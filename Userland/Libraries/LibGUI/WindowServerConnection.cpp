@@ -187,7 +187,7 @@ void WindowServerConnection::key_down(i32 window_id, u32 code_point, u32 key, u3
         key_event->m_key = Key_Invalid;
         key_event->m_modifiers = 0;
 
-        Utf8View m_utf8_view(emoji_input_dialog->selected_emoji_text().characters());
+        Utf8View m_utf8_view(emoji_input_dialog->selected_emoji_text());
         u32 emoji_code_point = *m_utf8_view.begin();
 
         key_event->m_code_point = emoji_code_point;

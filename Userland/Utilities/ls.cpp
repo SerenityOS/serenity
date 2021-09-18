@@ -196,13 +196,13 @@ int main(int argc, char** argv)
     return status;
 }
 
-static int print_escaped(const char* name)
+static int print_escaped(StringView name)
 {
     int printed = 0;
 
     Utf8View utf8_name(name);
     if (utf8_name.validate()) {
-        printf("%s", name);
+        out("{}", name);
         return utf8_name.length();
     }
 

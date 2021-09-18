@@ -11,21 +11,6 @@
 
 namespace AK {
 
-Utf8View::Utf8View(const String& string)
-    : m_string(string)
-{
-}
-
-Utf8View::Utf8View(const StringView& string)
-    : m_string(string)
-{
-}
-
-Utf8View::Utf8View(const char* string)
-    : m_string(string)
-{
-}
-
 const unsigned char* Utf8View::begin_ptr() const
 {
     return (const unsigned char*)m_string.characters_without_null_termination();
