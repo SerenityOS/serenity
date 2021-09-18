@@ -250,6 +250,7 @@ set(SOURCES
     WebContentClient.cpp
     XHR/EventNames.cpp
     XHR/XMLHttpRequest.cpp
+    XHR/XMLHttpRequestEventTarget.cpp
 )
 
 set(GENERATED_SOURCES
