@@ -38,7 +38,9 @@ extern multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
 extern size_t multiboot_copy_boot_modules_count;
 
 // Treat the super pages as logically separate from .bss
-__attribute__((section(".super_pages"))) static u8 super_pages[1 * MiB];
+// FIXME: Find a solution so we don't need to expand this range each time
+// we are in a situation too many drivers try to allocate super pages.
+__attribute__((section(".super_pages"))) static u8 super_pages[4 * MiB];
 
 namespace Kernel::Memory {
 
