@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -121,6 +122,14 @@ public:
         set_height(height() + h);
     }
 
+    void inflate(T top, T right, T bottom, T left)
+    {
+        set_x(x() - left);
+        set_width(width() + left + right);
+        set_y(y() - top);
+        set_height(height() + top + bottom);
+    }
+
     void inflate(Size<T> const& size)
     {
         set_x(x() - size.width() / 2);
@@ -135,6 +144,14 @@ public:
         set_width(width() - w);
         set_y(y() + h / 2);
         set_height(height() - h);
+    }
+
+    void shrink(T top, T right, T bottom, T left)
+    {
+        set_x(x() + left);
+        set_width(width() - (left + right));
+        set_y(y() + top);
+        set_height(height() - (top + bottom));
     }
 
     void shrink(Size<T> const& size)
@@ -187,6 +204,13 @@ public:
         return rect;
     }
 
+    [[nodiscard]] Rect<T> shrunken(T top, T right, T bottom, T left) const
+    {
+        Rect<T> rect = *this;
+        rect.shrink(top, right, bottom, left);
+        return rect;
+    }
+
     [[nodiscard]] Rect<T> shrunken(Size<T> const& size) const
     {
         Rect<T> rect = *this;
@@ -198,6 +222,13 @@ public:
     {
         Rect<T> rect = *this;
         rect.inflate(w, h);
+        return rect;
+    }
+
+    [[nodiscard]] Rect<T> inflated(T top, T right, T bottom, T left) const
+    {
+        Rect<T> rect = *this;
+        rect.inflate(top, right, bottom, left);
         return rect;
     }
 
