@@ -280,8 +280,8 @@ size_t mbrtowc(wchar_t* pwc, const char* s, size_t n, mbstate_t* state)
         *pwc = codepoint;
     }
 
-    // We don't have a shift state that we need to keep, so just clear the entire state
-    *state = {};
+    // We want to read the next multibyte character, but keep all other properties.
+    state->stored_bytes = 0;
 
     if (codepoint == 0) {
         return 0;
