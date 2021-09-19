@@ -54,34 +54,36 @@ StringView determine_device_class(const PCI::Address& address)
         auto subsystem_device_id = PCI::get_subsystem_id(address);
         switch (subsystem_device_id) {
         case 1:
-            return "VirtIONetAdapter";
+            return "VirtIONetAdapter"sv;
         case 2:
-            return "VirtIOBlockDevice";
+            return "VirtIOBlockDevice"sv;
         case 3:
-            return "VirtIOConsole";
+            return "VirtIOConsole"sv;
         case 4:
-            return "VirtIORNG";
+            return "VirtIORNG"sv;
+        default:
+            dbgln("VirtIO: Unknown subsystem_device_id {}", subsystem_device_id);
+            VERIFY_NOT_REACHED();
         }
-        dbgln("VirtIO: Unknown subsystem_device_id {}", subsystem_device_id);
-        VERIFY_NOT_REACHED();
     }
 
     auto id = PCI::get_id(address);
     VERIFY(id.vendor_id == PCI::VendorID::VirtIO);
     switch (id.device_id) {
     case PCI::DeviceID::VirtIONetAdapter:
-        return "VirtIONetAdapter";
+        return "VirtIONetAdapter"sv;
     case PCI::DeviceID::VirtIOBlockDevice:
-        return "VirtIOBlockDevice";
+        return "VirtIOBlockDevice"sv;
     case PCI::DeviceID::VirtIOConsole:
-        return "VirtIOConsole";
+        return "VirtIOConsole"sv;
     case PCI::DeviceID::VirtIOEntropy:
-        return "VirtIORNG";
+        return "VirtIORNG"sv;
     case PCI::DeviceID::VirtIOGPU:
-        return "VirtIOGPU";
+        return "VirtIOGPU"sv;
+    default:
+        dbgln("VirtIO: Unknown device_id {}", id.vendor_id);
+        VERIFY_NOT_REACHED();
     }
-    dbgln("VirtIO: Unknown device_id {}", id.vendor_id);
-    VERIFY_NOT_REACHED();
 }
 
 UNMAP_AFTER_INIT void Device::initialize()
