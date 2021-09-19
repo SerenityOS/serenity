@@ -6,13 +6,8 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibMarkdown/CodeBlock.h>
 #include <LibMarkdown/Document.h>
-#include <LibMarkdown/Heading.h>
-#include <LibMarkdown/HorizontalRule.h>
-#include <LibMarkdown/List.h>
-#include <LibMarkdown/Paragraph.h>
-#include <LibMarkdown/Table.h>
+#include <LibMarkdown/LineIterator.h>
 
 namespace Markdown {
 
@@ -49,7 +44,7 @@ String Document::render_for_terminal(size_t view_width) const
 OwnPtr<Document> Document::parse(const StringView& str)
 {
     const Vector<StringView> lines_vec = str.lines();
-    auto lines = lines_vec.begin();
+    LineIterator lines(lines_vec.begin());
     return make<Document>(ContainerBlock::parse(lines));
 }
 

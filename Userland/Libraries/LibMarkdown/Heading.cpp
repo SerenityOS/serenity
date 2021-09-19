@@ -35,7 +35,7 @@ String Heading::render_for_terminal(size_t) const
     return builder.build();
 }
 
-OwnPtr<Heading> Heading::parse(Vector<StringView>::ConstIterator& lines)
+OwnPtr<Heading> Heading::parse(LineIterator& lines)
 {
     if (lines.is_end())
         return {};

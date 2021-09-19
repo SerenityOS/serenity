@@ -4,6 +4,7 @@ set(SOURCES
     Document.cpp
     Heading.cpp
     HorizontalRule.cpp
+    LineIterator.cpp
     List.cpp
     Paragraph.cpp
     Table.cpp

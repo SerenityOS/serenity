@@ -9,6 +9,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <LibMarkdown/Block.h>
+#include <LibMarkdown/LineIterator.h>
 #include <LibMarkdown/Text.h>
 
 namespace Markdown {
@@ -33,7 +34,7 @@ public:
 
     virtual String render_to_html() const override;
     virtual String render_for_terminal(size_t view_width = 0) const override;
-    static OwnPtr<Table> parse(Vector<StringView>::ConstIterator& lines);
+    static OwnPtr<Table> parse(LineIterator& lines);
 
 private:
     Vector<Column> m_columns;
