@@ -57,6 +57,7 @@ public:
     DOM::ExceptionOr<void> set_request_header(const String& header, const String& value);
 
     String get_response_header(const String& name) { return m_response_headers.get(name).value_or({}); }
+    String get_all_response_headers() const;
 
     HTML::EventHandler onreadystatechange();
     void set_onreadystatechange(HTML::EventHandler);

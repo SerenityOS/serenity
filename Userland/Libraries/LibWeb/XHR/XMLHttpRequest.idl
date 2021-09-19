@@ -17,6 +17,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
     undefined send();
 
     ByteString? getResponseHeader(ByteString name);
+    ByteString getAllResponseHeaders();
 
     attribute EventHandler onreadystatechange;
 
