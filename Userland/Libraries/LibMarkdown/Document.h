@@ -6,14 +6,19 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtrVector.h>
+#include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <LibMarkdown/Block.h>
+#include <LibMarkdown/ContainerBlock.h>
 
 namespace Markdown {
 
 class Document final {
 public:
+    Document(OwnPtr<ContainerBlock> container)
+        : m_container(move(container))
+    {
+    }
     String render_to_html() const;
     String render_to_inline_html() const;
     String render_for_terminal(size_t view_width = 0) const;
@@ -21,7 +26,7 @@ public:
     static OwnPtr<Document> parse(const StringView&);
 
 private:
-    NonnullOwnPtrVector<Block> m_blocks;
+    OwnPtr<ContainerBlock> m_container;
 };
 
 }
