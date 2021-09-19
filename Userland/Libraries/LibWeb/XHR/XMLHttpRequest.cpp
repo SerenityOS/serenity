@@ -180,11 +180,8 @@ DOM::ExceptionOr<void> XMLHttpRequest::send()
 
     if (should_enforce_same_origin_policy && !m_window->associated_document().origin().is_same(request_url_origin)) {
         dbgln("XHR failed to load: Same-Origin Policy violation: {} may not load {}", m_window->associated_document().url(), request_url);
-        auto weak_this = make_weak_ptr();
-        if (!weak_this)
-            return {};
-        const_cast<XMLHttpRequest&>(*weak_this).set_ready_state(ReadyState::Done);
-        const_cast<XMLHttpRequest&>(*weak_this).dispatch_event(DOM::Event::create(HTML::EventNames::error));
+        set_ready_state(ReadyState::Done);
+        dispatch_event(DOM::Event::create(HTML::EventNames::error));
         return {};
     }
 
