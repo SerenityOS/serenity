@@ -71,7 +71,7 @@ fi
 
 [ -z "$SERENITY_KERNEL_CMDLINE" ] && SERENITY_KERNEL_CMDLINE="hello"
 
-[ -z "$SERENITY_RAM_SIZE" ] && SERENITY_RAM_SIZE=512M
+[ -z "$SERENITY_RAM_SIZE" ] && SERENITY_RAM_SIZE=1G
 
 [ -z "$SERENITY_DISK_IMAGE" ] && {
     if [ "$SERENITY_RUN" = q35grub ] || [ "$SERENITY_RUN" = qgrub ]; then
