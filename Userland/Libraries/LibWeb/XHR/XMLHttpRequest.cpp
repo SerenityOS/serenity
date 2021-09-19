@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/QuickSort.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
@@ -269,6 +270,24 @@ HTML::EventHandler XMLHttpRequest::onreadystatechange()
 void XMLHttpRequest::set_onreadystatechange(HTML::EventHandler value)
 {
     set_event_handler_attribute(Web::XHR::EventNames::readystatechange, move(value));
+}
+
+// https://xhr.spec.whatwg.org/#the-getallresponseheaders()-method
+String XMLHttpRequest::get_all_response_headers() const
+{
+    // FIXME: Implement the spec-compliant sort order.
+
+    StringBuilder builder;
+    auto keys = m_response_headers.keys();
+    quick_sort(keys);
+
+    for (auto& key : keys) {
+        builder.append(key);
+        builder.append(": ");
+        builder.append(m_response_headers.get(key).value());
+        builder.append("\r\n");
+    }
+    return builder.to_string();
 }
 
 }
