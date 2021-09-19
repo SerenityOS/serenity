@@ -20,11 +20,6 @@ class Value : public Variant<Empty, std::nullptr_t, bool, int, float, Reference,
 public:
     using Variant::Variant;
 
-    Value()
-        : Variant(Empty())
-    {
-    }
-
     template<IsObject T>
     Value(RefPtr<T> const& refptr)
         : Variant(nullptr)
