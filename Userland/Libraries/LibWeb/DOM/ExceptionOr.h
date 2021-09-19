@@ -112,7 +112,7 @@ public:
 private:
     Optional<ValueType> m_result;
     // https://heycam.github.io/webidl/#idl-exceptions
-    Variant<Empty, SimpleException, NonnullRefPtr<DOMException>> m_exception { Empty {} };
+    Variant<Empty, SimpleException, NonnullRefPtr<DOMException>> m_exception {};
 };
 
 template<>
