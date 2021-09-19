@@ -25,10 +25,9 @@ KResultOr<FlatPtr> Process::sys$waitid(Userspace<const Syscall::SC_waitid_params
     REQUIRE_PROMISE(proc);
     auto params = TRY(copy_typed_from_user(user_params));
 
-    Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee = Empty {};
+    Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee;
     switch (params.idtype) {
     case P_ALL:
-        waitee = Empty {};
         break;
     case P_PID: {
         auto waitee_process = Process::from_pid(params.id);
