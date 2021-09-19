@@ -132,12 +132,12 @@ RENDERER_HANDLER(set_line_width)
 
 RENDERER_HANDLER(set_line_cap)
 {
-    state().line_cap_style = static_cast<LineCapStyle>(args[0].as_int());
+    state().line_cap_style = static_cast<LineCapStyle>(args[0].get<int>());
 }
 
 RENDERER_HANDLER(set_line_join)
 {
-    state().line_join_style = static_cast<LineJoinStyle>(args[0].as_int());
+    state().line_join_style = static_cast<LineJoinStyle>(args[0].get<int>());
 }
 
 RENDERER_HANDLER(set_miter_limit)
@@ -150,8 +150,8 @@ RENDERER_HANDLER(set_dash_pattern)
     auto dash_array = m_document->resolve_to<ArrayObject>(args[0]);
     Vector<int> pattern;
     for (auto& element : *dash_array)
-        pattern.append(element.as_int());
-    state().line_dash_pattern = LineDashPattern { pattern, args[1].as_int() };
+        pattern.append(element.get<int>());
+    state().line_dash_pattern = LineDashPattern { pattern, args[1].get<int>() };
 }
 
 RENDERER_TODO(set_color_rendering_intent);
@@ -335,7 +335,7 @@ RENDERER_HANDLER(text_set_font)
 
 RENDERER_HANDLER(text_set_rendering_mode)
 {
-    text_state().rendering_mode = static_cast<TextRenderingMode>(args[0].as_int());
+    text_state().rendering_mode = static_cast<TextRenderingMode>(args[0].get<int>());
 }
 
 RENDERER_HANDLER(text_set_rise)
@@ -398,11 +398,12 @@ RENDERER_HANDLER(text_show_string_array)
     float next_shift = 0.0f;
 
     for (auto& element : elements) {
-        if (element.is_number()) {
-            next_shift = element.to_float();
+        if (element.has<int>()) {
+            next_shift = element.get<int>();
+        } else if (element.has<float>()) {
+            next_shift = element.get<float>();
         } else {
-            VERIFY(element.is_object());
-            auto obj = element.as_object();
+            auto& obj = element.get<NonnullRefPtr<Object>>();
             VERIFY(obj->is_string());
             auto str = object_cast<StringObject>(obj)->string();
             show_text(str, next_shift);
@@ -568,7 +569,7 @@ void Renderer::show_text(String const& string, float shift)
 
 RefPtr<ColorSpace> Renderer::get_color_space(Value const& value)
 {
-    auto name = object_cast<NameObject>(value.as_object())->name();
+    auto name = object_cast<NameObject>(value.get<NonnullRefPtr<Object>>())->name();
 
     // Simple color spaces with no parameters, which can be specified directly
     if (name == CommonNames::DeviceGray)

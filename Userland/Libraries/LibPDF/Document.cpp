@@ -58,7 +58,7 @@ Document::Document(NonnullRefPtr<Parser> const& parser)
 Value Document::get_or_load_value(u32 index)
 {
     auto value = get_value(index);
-    if (value)
+    if (!value.has<Empty>()) // FIXME: Use Optional instead?
         return value;
 
     auto object = m_parser->parse_object_with_index(index);
@@ -122,7 +122,7 @@ Page Document::get_page(u32 index)
 
     int rotate = 0;
     if (raw_page_object->contains(CommonNames::Rotate)) {
-        rotate = raw_page_object->get_value(CommonNames::Rotate).as_int();
+        rotate = raw_page_object->get_value(CommonNames::Rotate).get<int>();
         VERIFY(rotate % 90 == 0);
     }
 
@@ -133,22 +133,22 @@ Page Document::get_page(u32 index)
 
 Value Document::resolve(Value const& value)
 {
-    if (value.is_ref()) {
+    if (value.has<Reference>()) {
         // FIXME: Surely indirect PDF objects can't contain another indirect PDF object,
         // right? Unsure from the spec, but if they can, these return values would have
         // to be wrapped with another resolve() call.
         return get_or_load_value(value.as_ref_index());
     }
 
-    if (!value.is_object())
+    if (!value.has<NonnullRefPtr<Object>>())
         return value;
 
-    auto obj = value.as_object();
+    auto& obj = value.get<NonnullRefPtr<Object>>();
 
     if (obj->is_indirect_value())
         return static_ptr_cast<IndirectValue>(obj)->value();
 
-    return obj;
+    return value;
 }
 
 bool Document::build_page_tree()
@@ -165,7 +165,7 @@ bool Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> const& 
         return false;
 
     auto kids_array = page_tree->get_array(this, CommonNames::Kids);
-    auto page_count = page_tree->get(CommonNames::Count).value().as_int();
+    auto page_count = page_tree->get(CommonNames::Count).value().get<int>();
 
     if (static_cast<size_t>(page_count) != kids_array->elements().size()) {
         // This page tree contains child page trees, so we recursively add
@@ -213,7 +213,7 @@ void Document::build_outline()
     m_outline->children = move(children);
 
     if (outline_dict->contains(CommonNames::Count))
-        m_outline->count = outline_dict->get_value(CommonNames::Count).as_int();
+        m_outline->count = outline_dict->get_value(CommonNames::Count).get<int>();
 }
 
 NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict)
@@ -232,7 +232,7 @@ NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject
     outline_item->title = outline_item_dict->get_string(this, CommonNames::Title)->string();
 
     if (outline_item_dict->contains(CommonNames::Count))
-        outline_item->count = outline_item_dict->get_value(CommonNames::Count).as_int();
+        outline_item->count = outline_item_dict->get_value(CommonNames::Count).get<int>();
 
     if (outline_item_dict->contains(CommonNames::Dest)) {
         auto dest_arr = outline_item_dict->get_array(this, CommonNames::Dest);
@@ -269,14 +269,14 @@ NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject
 
     if (outline_item_dict->contains(CommonNames::C)) {
         auto color_array = outline_item_dict->get_array(this, CommonNames::C);
-        auto r = static_cast<int>(255.0f * color_array->at(0).as_float());
-        auto g = static_cast<int>(255.0f * color_array->at(1).as_float());
-        auto b = static_cast<int>(255.0f * color_array->at(2).as_float());
+        auto r = static_cast<int>(255.0f * color_array->at(0).get<float>());
+        auto g = static_cast<int>(255.0f * color_array->at(1).get<float>());
+        auto b = static_cast<int>(255.0f * color_array->at(2).get<float>());
         outline_item->color = Color(r, g, b);
     }
 
     if (outline_item_dict->contains(CommonNames::F)) {
-        auto bitfield = outline_item_dict->get_value(CommonNames::F).as_int();
+        auto bitfield = outline_item_dict->get_value(CommonNames::F).get<int>();
         outline_item->italic = bitfield & 0x1;
         outline_item->bold = bitfield & 0x2;
     }
@@ -286,12 +286,13 @@ NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject
 
 NonnullRefPtrVector<OutlineItem> Document::build_outline_item_chain(Value const& first_ref, Value const& last_ref)
 {
-    VERIFY(first_ref.is_ref());
-    VERIFY(last_ref.is_ref());
+    VERIFY(first_ref.has<Reference>());
+    VERIFY(last_ref.has<Reference>());
 
     NonnullRefPtrVector<OutlineItem> children;
 
-    auto first_dict = object_cast<DictObject>(get_or_load_value(first_ref.as_ref_index()).as_object());
+    auto first_dict = object_cast<DictObject>(
+        get_or_load_value(first_ref.as_ref_index()).get<NonnullRefPtr<Object>>());
     auto first = build_outline_item(first_dict);
     children.append(first);
 
@@ -301,7 +302,7 @@ NonnullRefPtrVector<OutlineItem> Document::build_outline_item_chain(Value const&
     while (current_child_dict->contains(CommonNames::Next)) {
         auto next_child_dict_ref = current_child_dict->get_value(CommonNames::Next);
         current_child_index = next_child_dict_ref.as_ref_index();
-        auto next_child_dict = object_cast<DictObject>(get_or_load_value(current_child_index).as_object());
+        auto next_child_dict = object_cast<DictObject>(get_or_load_value(current_child_index).get<NonnullRefPtr<Object>>());
         auto next_child = build_outline_item(next_child_dict);
         children.append(next_child);
 

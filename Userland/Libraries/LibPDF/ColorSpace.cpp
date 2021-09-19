@@ -60,10 +60,10 @@ RefPtr<CalRGBColorSpace> CalRGBColorSpace::create(RefPtr<Document> document, Vec
         return {};
 
     auto param = parameters[0];
-    if (!param.is_object() || !param.as_object()->is_dict())
+    if (!param.has<NonnullRefPtr<Object>>() || !param.get<NonnullRefPtr<Object>>()->is_dict())
         return {};
 
-    auto dict = object_cast<DictObject>(param.as_object());
+    auto dict = object_cast<DictObject>(param.get<NonnullRefPtr<Object>>());
     if (!dict->contains(CommonNames::WhitePoint))
         return {};
 

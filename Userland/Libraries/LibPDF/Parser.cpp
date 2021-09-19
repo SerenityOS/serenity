@@ -125,10 +125,10 @@ Parser::LinearizationResult Parser::initialize_linearization_dict()
 {
     // parse_header() is called immediately before this, so we are at the right location
     auto dict_value = m_document->resolve(parse_indirect_value());
-    if (!dict_value || !dict_value.is_object())
+    if (!dict_value.has<NonnullRefPtr<Object>>())
         return LinearizationResult::Error;
 
-    auto dict_object = dict_value.as_object();
+    auto dict_object = dict_value.get<NonnullRefPtr<Object>>();
     if (!dict_object->is_dict())
         return LinearizationResult::NotLinearized;
 
@@ -149,16 +149,16 @@ Parser::LinearizationResult Parser::initialize_linearization_dict()
     auto first_page = dict->get(CommonNames::P).value_or({});
 
     // Validation
-    if (!length_of_file.is_int_type<u32>()
-        || !hint_table.is_object()
-        || !first_page_object_number.is_int_type<u32>()
-        || !number_of_pages.is_int_type<u16>()
-        || !offset_of_main_xref_table.is_int_type<u32>()
-        || (first_page && !first_page.is_int_type<u32>())) {
+    if (!length_of_file.has_u32()
+        || !hint_table.has<NonnullRefPtr<Object>>()
+        || !first_page_object_number.has_u32()
+        || !number_of_pages.has_u16()
+        || !offset_of_main_xref_table.has_u32()
+        || (!first_page.has<Empty>() && !first_page.has_u32())) {
         return LinearizationResult::Error;
     }
 
-    auto hint_table_object = hint_table.as_object();
+    auto hint_table_object = hint_table.get<NonnullRefPtr<Object>>();
     if (!hint_table_object->is_array())
         return LinearizationResult::Error;
 
@@ -177,24 +177,24 @@ Parser::LinearizationResult Parser::initialize_linearization_dict()
         overflow_hint_stream_length = hint_table_array->at(3);
     }
 
-    if (!primary_hint_stream_offset.is_int_type<u32>()
-        || !primary_hint_stream_length.is_int_type<u32>()
-        || (overflow_hint_stream_offset && !overflow_hint_stream_offset.is_int_type<u32>())
-        || (overflow_hint_stream_length && !overflow_hint_stream_length.is_int_type<u32>())) {
+    if (!primary_hint_stream_offset.has_u32()
+        || !primary_hint_stream_length.has_u32()
+        || (!overflow_hint_stream_offset.has<Empty>() && !overflow_hint_stream_offset.has_u32())
+        || (!overflow_hint_stream_length.has<Empty>() && !overflow_hint_stream_length.has_u32())) {
         return LinearizationResult::Error;
     }
 
     m_linearization_dictionary = LinearizationDictionary {
-        length_of_file.as_int_type<u32>(),
-        primary_hint_stream_offset.as_int_type<u32>(),
-        primary_hint_stream_length.as_int_type<u32>(),
-        overflow_hint_stream_offset ? overflow_hint_stream_offset.as_int_type<u32>() : NumericLimits<u32>::max(),
-        overflow_hint_stream_length ? overflow_hint_stream_length.as_int_type<u32>() : NumericLimits<u32>::max(),
-        first_page_object_number.as_int_type<u32>(),
-        offset_of_first_page_end.as_int_type<u32>(),
-        number_of_pages.as_int_type<u16>(),
-        offset_of_main_xref_table.as_int_type<u32>(),
-        first_page ? first_page.as_int_type<u32>() : NumericLimits<u32>::max(),
+        length_of_file.get_u32(),
+        primary_hint_stream_offset.get_u32(),
+        primary_hint_stream_length.get_u32(),
+        overflow_hint_stream_offset.has<Empty>() ? NumericLimits<u32>::max() : overflow_hint_stream_offset.get_u32(),
+        overflow_hint_stream_length.has<Empty>() ? NumericLimits<u32>::max() : overflow_hint_stream_length.get_u32(),
+        first_page_object_number.get_u32(),
+        offset_of_first_page_end.get_u32(),
+        number_of_pages.get_u16(),
+        offset_of_main_xref_table.get_u32(),
+        first_page.has<Empty>() ? NumericLimits<u32>::max() : first_page.get_u32(),
     };
 
     return LinearizationResult::Linearized;
@@ -241,10 +241,10 @@ bool Parser::initialize_hint_tables()
             return {};
 
         auto stream_value = stream_indirect_value->value();
-        if (!stream_value.is_object())
+        if (!stream_value.has<NonnullRefPtr<Object>>())
             return {};
 
-        auto stream_object = stream_value.as_object();
+        auto stream_object = stream_value.get<NonnullRefPtr<Object>>();
         if (!stream_object->is_stream())
             return {};
 
@@ -310,9 +310,9 @@ bool Parser::initialize_non_linearized_xref_table()
 
     m_reader.set_reading_forwards();
     auto xref_offset_value = parse_number();
-    if (!xref_offset_value.is_int())
+    if (!xref_offset_value.has<int>())
         return false;
-    auto xref_offset = xref_offset_value.as_int();
+    auto xref_offset = xref_offset_value.get<int>();
 
     m_reader.move_to(xref_offset);
     m_xref_table = parse_xref_table();
@@ -339,9 +339,9 @@ RefPtr<XRefTable> Parser::parse_xref_table()
         Vector<XRefEntry> entries;
 
         auto starting_index_value = parse_number();
-        auto starting_index = starting_index_value.as_int();
+        auto starting_index = starting_index_value.get<int>();
         auto object_count_value = parse_number();
-        auto object_count = object_count_value.as_int();
+        auto object_count = object_count_value.get<int>();
 
         for (int i = 0; i < object_count; i++) {
             auto offset_string = String(m_reader.bytes().slice(m_reader.offset(), 10));
@@ -603,7 +603,7 @@ Value Parser::parse_value()
     if (m_reader.matches("null")) {
         m_reader.move_by(4);
         consume_whitespace();
-        return Value(Value::NullTag {});
+        return Value(nullptr);
     }
 
     if (m_reader.matches("true")) {
@@ -646,12 +646,12 @@ Value Parser::parse_value()
 Value Parser::parse_possible_indirect_value_or_ref()
 {
     auto first_number = parse_number();
-    if (!first_number.is_int() || !matches_number())
+    if (!first_number.has<int>() || !matches_number())
         return first_number;
 
     m_reader.save();
     auto second_number = parse_number();
-    if (!second_number.is_int()) {
+    if (!second_number.has<int>()) {
         m_reader.load();
         return first_number;
     }
@@ -660,12 +660,12 @@ Value Parser::parse_possible_indirect_value_or_ref()
         m_reader.discard();
         consume();
         consume_whitespace();
-        return Value(Reference(first_number.as_int(), second_number.as_int()));
+        return Value(Reference(first_number.get<int>(), second_number.get<int>()));
     }
 
     if (m_reader.matches("obj")) {
         m_reader.discard();
-        return parse_indirect_value(first_number.as_int(), second_number.as_int());
+        return parse_indirect_value(first_number.get<int>(), second_number.get<int>());
     }
 
     m_reader.load();
@@ -692,12 +692,12 @@ RefPtr<IndirectValue> Parser::parse_indirect_value(int index, int generation)
 RefPtr<IndirectValue> Parser::parse_indirect_value()
 {
     auto first_number = parse_number();
-    if (!first_number.is_int())
+    if (!first_number.has<int>())
         return {};
     auto second_number = parse_number();
-    if (!second_number.is_int())
+    if (!second_number.has<int>())
         return {};
-    return parse_indirect_value(first_number.as_int(), second_number.as_int());
+    return parse_indirect_value(first_number.get<int>(), second_number.get<int>());
 }
 
 Value Parser::parse_number()
@@ -928,7 +928,7 @@ RefPtr<ArrayObject> Parser::parse_array()
 
     while (!m_reader.matches(']')) {
         auto value = parse_value();
-        if (!value)
+        if (value.has<Empty>())
             return {};
         values.append(value);
     }
@@ -954,7 +954,7 @@ RefPtr<DictObject> Parser::parse_dict()
         if (!name)
             return {};
         auto value = parse_value();
-        if (!value)
+        if (value.has<Empty>())
             return {};
         map.set(name->name(), value);
     }
@@ -1004,14 +1004,14 @@ RefPtr<DictObject> Parser::conditionally_parse_page_tree_node(u32 object_index, 
             return {};
         }
         auto value = parse_value();
-        if (!value) {
+        if (value.has<Empty>()) {
             ok = false;
             return {};
         }
         if (name_string == CommonNames::Type) {
-            if (!value.is_object())
+            if (!value.has<NonnullRefPtr<Object>>())
                 return {};
-            auto type_object = value.as_object();
+            auto type_object = value.get<NonnullRefPtr<Object>>();
             if (!type_object->is_name())
                 return {};
             auto type_name = object_cast<NameObject>(type_object);
@@ -1039,7 +1039,7 @@ RefPtr<StreamObject> Parser::parse_stream(NonnullRefPtr<DictObject> dict)
     ReadonlyBytes bytes;
 
     auto maybe_length = dict->get(CommonNames::Length);
-    if (maybe_length.has_value() && (!maybe_length->is_ref() || m_xref_table)) {
+    if (maybe_length.has_value() && (!maybe_length->has<Reference>() || m_xref_table)) {
         // The PDF writer has kindly provided us with the direct length of the stream
         m_reader.save();
         auto length = m_document->resolve_to<int>(maybe_length.value());
