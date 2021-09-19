@@ -25,6 +25,13 @@ enum class BorderEdge {
     Bottom,
     Left,
 };
-void paint_border(PaintContext&, BorderEdge, const Gfx::FloatRect&, const CSS::ComputedValues&);
+struct BordersData {
+    CSS::BorderData top;
+    CSS::BorderData right;
+    CSS::BorderData bottom;
+    CSS::BorderData left;
+};
+void paint_border(PaintContext& context, BorderEdge edge, Gfx::FloatRect const& rect, BorderRadiusData const& border_radius_data, BordersData const& borders_data);
+void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rect, BorderRadiusData const& border_radius_data, BordersData const&);
 
 }
