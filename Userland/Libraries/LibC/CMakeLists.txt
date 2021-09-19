@@ -85,7 +85,7 @@ elseif ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(CRTN_SOURCE "arch/x86_64/crtn.S")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -DSERENITY_LIBC_BUILD")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option")
 
 add_library(crt0 STATIC crt0.cpp)
 add_custom_command(
