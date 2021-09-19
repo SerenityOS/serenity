@@ -1142,7 +1142,7 @@ void Window::update_cursor()
     else
         new_cursor = m_cursor;
 
-    if (m_effective_cursor == new_cursor)
+    if (!m_custom_cursor && m_effective_cursor == new_cursor)
         return;
     m_effective_cursor = new_cursor;
 
