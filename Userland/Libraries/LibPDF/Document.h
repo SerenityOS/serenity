@@ -102,13 +102,13 @@ public:
         auto resolved = resolve(value);
 
         if constexpr (IsSame<T, bool>)
-            return resolved.as_bool();
+            return resolved.get<bool>();
         if constexpr (IsSame<T, int>)
-            return resolved.as_int();
+            return resolved.get<int>();
         if constexpr (IsSame<T, float>)
-            return resolved.as_float();
+            return resolved.get<float>();
         if constexpr (IsObject<T>)
-            return object_cast<T>(resolved.as_object());
+            return object_cast<T>(resolved.get<NonnullRefPtr<Object>>());
 
         VERIFY_NOT_REACHED();
     }
