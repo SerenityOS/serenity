@@ -52,7 +52,7 @@ public:
     void scroll_to_bottom();
 
     void set_automatic_scrolling_timer(bool active);
-    Gfx::IntPoint automatic_scroll_delta_from_position(const Gfx::IntPoint&) const;
+    virtual Gfx::IntPoint automatic_scroll_delta_from_position(const Gfx::IntPoint&) const;
 
     int width_occupied_by_vertical_scrollbar() const;
     int height_occupied_by_horizontal_scrollbar() const;
@@ -75,6 +75,7 @@ protected:
     void set_content_size(const Gfx::IntSize&);
     void set_size_occupied_by_fixed_elements(const Gfx::IntSize&);
     virtual void on_automatic_scrolling_timer_fired() {};
+    int autoscroll_threshold() const { return m_autoscroll_threshold; }
 
 private:
     class AbstractScrollableWidgetScrollbar final : public Scrollbar {
