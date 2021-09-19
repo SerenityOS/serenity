@@ -1,0 +1,14 @@
+--- SDL_sound-main/CMakeLists.txt	2021-08-21 03:28:50.000000000 +0300
++++ SDL_sound-main.serenity/CMakeLists.txt	2021-09-18 15:59:24.321216126 +0300
+@@ -29,7 +29,10 @@
+     add_definitions(-xldscope=hidden)
+ endif()
+ 
+-find_package(SDL2 REQUIRED)
++INCLUDE(FindPkgConfig)
++
++PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
++
+ include_directories(${SDL2_INCLUDE_DIRS} ${SDL2_INCLUDE_DIR})
+ if(WIN32)
+     # -lmingw32: gcc adds it automatically.
