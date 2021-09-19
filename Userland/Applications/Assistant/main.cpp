@@ -276,9 +276,11 @@ int main(int argc, char** argv)
     text_box.on_escape_pressed = []() {
         GUI::Application::the()->quit();
     };
-    window->on_active_window_change = [](bool is_active_window) {
-        if (!is_active_window)
+    window->on_active_window_change = [&](bool is_active_window) {
+        if (!is_active_window) {
+            lockfile.release();
             GUI::Application::the()->quit();
+        }
     };
 
     auto update_ui_timer = Core::Timer::create_single_shot(10, [&] {
