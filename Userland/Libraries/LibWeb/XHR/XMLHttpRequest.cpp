@@ -212,7 +212,8 @@ DOM::ExceptionOr<void> XMLHttpRequest::send()
         ResourceLoader::the().load(
             request,
             [weak_this = make_weak_ptr()](auto data, auto& response_headers, auto status_code) {
-                if (!weak_this)
+                auto strong_this = weak_this.strong_ref();
+                if (!strong_this)
                     return;
                 auto& xhr = const_cast<XMLHttpRequest&>(*weak_this);
                 // FIXME: Handle OOM failure.
@@ -235,12 +236,14 @@ DOM::ExceptionOr<void> XMLHttpRequest::send()
                 xhr.fire_progress_event(EventNames::loadend, transmitted, length);
             },
             [weak_this = make_weak_ptr()](auto& error, auto status_code) {
-                if (!weak_this)
-                    return;
                 dbgln("XHR failed to load: {}", error);
-                const_cast<XMLHttpRequest&>(*weak_this).set_ready_state(ReadyState::Done);
-                const_cast<XMLHttpRequest&>(*weak_this).set_status(status_code.value_or(0));
-                const_cast<XMLHttpRequest&>(*weak_this).dispatch_event(DOM::Event::create(HTML::EventNames::error));
+                auto strong_this = weak_this.strong_ref();
+                if (!strong_this)
+                    return;
+                auto& xhr = const_cast<XMLHttpRequest&>(*strong_this);
+                xhr.set_ready_state(ReadyState::Done);
+                xhr.set_status(status_code.value_or(0));
+                xhr.dispatch_event(DOM::Event::create(HTML::EventNames::error));
             });
     } else {
         TODO();
