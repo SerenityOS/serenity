@@ -82,7 +82,6 @@ struct Configuration {
 };
 
 void detect();
-StringView determine_device_class(const PCI::Address& address);
 
 class Device
     : public PCI::Device
@@ -235,6 +234,9 @@ private:
 
     IOAddress m_io_base;
     MappedMMIO m_mmio[6];
+
+    StringView const m_class_name;
+
     u16 m_queue_count { 0 };
     bool m_use_mmio { false };
     u8 m_status { 0 };

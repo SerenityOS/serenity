@@ -46,7 +46,7 @@ UNMAP_AFTER_INIT void detect()
     });
 }
 
-StringView determine_device_class(const PCI::Address& address)
+static StringView const determine_device_class(const PCI::Address& address)
 {
     if (PCI::get_revision_id(address) == 0) {
         // Note: If the device is a legacy (or transitional) device, therefore,
@@ -100,23 +100,23 @@ UNMAP_AFTER_INIT void Device::initialize()
             auto cfg = make<Configuration>();
             auto raw_config_type = capability.read8(0x3);
             if (raw_config_type < static_cast<u8>(ConfigurationType::Common) || raw_config_type > static_cast<u8>(ConfigurationType::PCI)) {
-                dbgln("{}: Unknown capability configuration type: {}", VirtIO::determine_device_class(address), raw_config_type);
+                dbgln("{}: Unknown capability configuration type: {}", m_class_name, raw_config_type);
                 return;
             }
             cfg->cfg_type = static_cast<ConfigurationType>(raw_config_type);
             auto cap_length = capability.read8(0x2);
             if (cap_length < 0x10) {
-                dbgln("{}: Unexpected capability size: {}", VirtIO::determine_device_class(address), cap_length);
+                dbgln("{}: Unexpected capability size: {}", m_class_name, cap_length);
                 break;
             }
             cfg->bar = capability.read8(0x4);
             if (cfg->bar > 0x5) {
-                dbgln("{}: Unexpected capability bar value: {}", VirtIO::determine_device_class(address), cfg->bar);
+                dbgln("{}: Unexpected capability bar value: {}", m_class_name, cfg->bar);
                 break;
             }
             cfg->offset = capability.read32(0x8);
             cfg->length = capability.read32(0xc);
-            dbgln_if(VIRTIO_DEBUG, "{}: Found configuration {}, bar: {}, offset: {}, length: {}", VirtIO::determine_device_class(address), (u32)cfg->cfg_type, cfg->bar, cfg->offset, cfg->length);
+            dbgln_if(VIRTIO_DEBUG, "{}: Found configuration {}, bar: {}, offset: {}, length: {}", m_class_name, (u32)cfg->cfg_type, cfg->bar, cfg->offset, cfg->length);
             if (cfg->cfg_type == ConfigurationType::Common)
                 m_use_mmio = true;
             else if (cfg->cfg_type == ConfigurationType::Notify)
@@ -133,7 +133,7 @@ UNMAP_AFTER_INIT void Device::initialize()
             if (!mapping.base && mapping.size) {
                 auto region_or_error = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR(pci_address(), cfg.bar))), Memory::page_round_up(mapping.size), "VirtIO MMIO", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
                 if (region_or_error.is_error()) {
-                    dbgln_if(VIRTIO_DEBUG, "{}: Failed to map bar {} - (size={}) {}", VirtIO::determine_device_class(pci_address()), cfg.bar, mapping.size, region_or_error.error());
+                    dbgln_if(VIRTIO_DEBUG, "{}: Failed to map bar {} - (size={}) {}", m_class_name, cfg.bar, mapping.size, region_or_error.error());
                 } else {
                     mapping.base = region_or_error.release_value();
                 }
@@ -154,8 +154,9 @@ UNMAP_AFTER_INIT VirtIO::Device::Device(PCI::Address address)
     : PCI::Device(address)
     , IRQHandler(PCI::get_interrupt_line(address))
     , m_io_base(IOAddress(PCI::get_BAR0(pci_address()) & ~1))
+    , m_class_name(VirtIO::determine_device_class(address))
 {
-    dbgln("{}: Found @ {}", VirtIO::determine_device_class(address), pci_address());
+    dbgln("{}: Found @ {}", m_class_name, pci_address());
 }
 
 auto Device::mapping_for_bar(u8 bar) -> MappedMMIO&
@@ -166,7 +167,7 @@ auto Device::mapping_for_bar(u8 bar) -> MappedMMIO&
 
 void Device::notify_queue(u16 queue_index)
 {
-    dbgln_if(VIRTIO_DEBUG, "{}: notifying about queue change at idx: {}", VirtIO::determine_device_class(pci_address()), queue_index);
+    dbgln_if(VIRTIO_DEBUG, "{}: notifying about queue change at idx: {}", m_class_name, queue_index);
     if (!m_notify_cfg)
         out<u16>(REG_QUEUE_NOTIFY, queue_index);
     else
@@ -254,7 +255,7 @@ bool Device::accept_device_features(u64 device_features, u64 accepted_features)
     }
 
     if (is_feature_set(device_features, VIRTIO_F_RING_PACKED)) {
-        dbgln_if(VIRTIO_DEBUG, "{}: packed queues not yet supported", VirtIO::determine_device_class(pci_address()));
+        dbgln_if(VIRTIO_DEBUG, "{}: packed queues not yet supported", m_class_name);
         accepted_features &= ~(VIRTIO_F_RING_PACKED);
     }
 
@@ -267,8 +268,8 @@ bool Device::accept_device_features(u64 device_features, u64 accepted_features)
         accepted_features |= VIRTIO_F_IN_ORDER;
     }
 
-    dbgln_if(VIRTIO_DEBUG, "{}: Device features: {}", VirtIO::determine_device_class(pci_address()), device_features);
-    dbgln_if(VIRTIO_DEBUG, "{}: Accepted features: {}", VirtIO::determine_device_class(pci_address()), accepted_features);
+    dbgln_if(VIRTIO_DEBUG, "{}: Device features: {}", m_class_name, device_features);
+    dbgln_if(VIRTIO_DEBUG, "{}: Accepted features: {}", m_class_name, accepted_features);
 
     if (!m_common_cfg) {
         out<u32>(REG_GUEST_FEATURES, accepted_features);
@@ -282,18 +283,18 @@ bool Device::accept_device_features(u64 device_features, u64 accepted_features)
     m_status = read_status_bits();
     if (!(m_status & DEVICE_STATUS_FEATURES_OK)) {
         set_status_bit(DEVICE_STATUS_FAILED);
-        dbgln("{}: Features not accepted by host!", VirtIO::determine_device_class(pci_address()));
+        dbgln("{}: Features not accepted by host!", m_class_name);
         return false;
     }
 
     m_accepted_features = accepted_features;
-    dbgln_if(VIRTIO_DEBUG, "{}: Features accepted by host", VirtIO::determine_device_class(pci_address()));
+    dbgln_if(VIRTIO_DEBUG, "{}: Features accepted by host", m_class_name);
     return true;
 }
 
 void Device::reset_device()
 {
-    dbgln_if(VIRTIO_DEBUG, "{}: Reset device", VirtIO::determine_device_class(pci_address()));
+    dbgln_if(VIRTIO_DEBUG, "{}: Reset device", m_class_name);
     if (!m_common_cfg) {
         mask_status_bits(0);
         while (read_status_bits() != 0) {
@@ -315,7 +316,7 @@ bool Device::setup_queue(u16 queue_index)
     config_write16(*m_common_cfg, COMMON_CFG_QUEUE_SELECT, queue_index);
     u16 queue_size = config_read16(*m_common_cfg, COMMON_CFG_QUEUE_SIZE);
     if (queue_size == 0) {
-        dbgln_if(VIRTIO_DEBUG, "{}: Queue[{}] is unavailable!", VirtIO::determine_device_class(pci_address()), queue_index);
+        dbgln_if(VIRTIO_DEBUG, "{}: Queue[{}] is unavailable!", m_class_name, queue_index);
         return true;
     }
 
@@ -329,7 +330,7 @@ bool Device::setup_queue(u16 queue_index)
     config_write64(*m_common_cfg, COMMON_CFG_QUEUE_DRIVER, queue->driver_area().get());
     config_write64(*m_common_cfg, COMMON_CFG_QUEUE_DEVICE, queue->device_area().get());
 
-    dbgln_if(VIRTIO_DEBUG, "{}: Queue[{}] configured with size: {}", VirtIO::determine_device_class(pci_address()), queue_index, queue_size);
+    dbgln_if(VIRTIO_DEBUG, "{}: Queue[{}] configured with size: {}", m_class_name, queue_index, queue_size);
 
     m_queues.append(move(queue));
     return true;
@@ -343,7 +344,7 @@ bool Device::activate_queue(u16 queue_index)
     config_write16(*m_common_cfg, COMMON_CFG_QUEUE_SELECT, queue_index);
     config_write16(*m_common_cfg, COMMON_CFG_QUEUE_ENABLE, true);
 
-    dbgln_if(VIRTIO_DEBUG, "{}: Queue[{}] activated", VirtIO::determine_device_class(pci_address()), queue_index);
+    dbgln_if(VIRTIO_DEBUG, "{}: Queue[{}] activated", m_class_name, queue_index);
     return true;
 }
 
@@ -357,17 +358,17 @@ bool Device::setup_queues(u16 requested_queue_count)
         if (requested_queue_count == 0) {
             m_queue_count = maximum_queue_count;
         } else if (requested_queue_count > maximum_queue_count) {
-            dbgln("{}: {} queues requested but only {} available!", VirtIO::determine_device_class(pci_address()), m_queue_count, maximum_queue_count);
+            dbgln("{}: {} queues requested but only {} available!", m_class_name, m_queue_count, maximum_queue_count);
             return false;
         } else {
             m_queue_count = requested_queue_count;
         }
     } else {
         m_queue_count = requested_queue_count;
-        dbgln("{}: device's available queue count could not be determined!", VirtIO::determine_device_class(pci_address()));
+        dbgln("{}: device's available queue count could not be determined!", m_class_name);
     }
 
-    dbgln_if(VIRTIO_DEBUG, "{}: Setting up {} queues", VirtIO::determine_device_class(pci_address()), m_queue_count);
+    dbgln_if(VIRTIO_DEBUG, "{}: Setting up {} queues", m_class_name, m_queue_count);
     for (u16 i = 0; i < m_queue_count; i++) {
         if (!setup_queue(i))
             return false;
@@ -386,7 +387,7 @@ void Device::finish_init()
     VERIFY(!(m_status & DEVICE_STATUS_DRIVER_OK)); // ensure we didn't already finish the initialization
 
     set_status_bit(DEVICE_STATUS_DRIVER_OK);
-    dbgln_if(VIRTIO_DEBUG, "{}: Finished initialization", VirtIO::determine_device_class(pci_address()));
+    dbgln_if(VIRTIO_DEBUG, "{}: Finished initialization", m_class_name);
 }
 
 u8 Device::isr_status()
