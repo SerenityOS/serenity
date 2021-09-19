@@ -16,5 +16,6 @@ build() {
 }
 
 install() {
-    run meson install -C _build --destdir $SERENITY_BUILD_DIR/Root
+    export DESTDIR=$SERENITY_BUILD_DIR/Root
+    run meson install -C _build
 }
