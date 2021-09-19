@@ -138,7 +138,6 @@ String serialize_astring(StringView string)
 String SearchKey::serialize() const
 {
     return data.visit(
-        [&](Empty const&) { VERIFY_NOT_REACHED(); return String("The compiler complains if you remove this."); },
         [&](All const&) { return String("ALL"); },
         [&](Answered const&) { return String("ANSWERED"); },
         [&](Bcc const& x) { return String::formatted("BCC {}", serialize_astring(x.bcc)); },

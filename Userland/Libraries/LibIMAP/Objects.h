@@ -460,7 +460,7 @@ public:
     struct Unseen { };
     // clang-format on
 
-    Variant<Empty, All, Answered, Bcc, Cc, Deleted, Draft, From, Header, Keyword,
+    Variant<All, Answered, Bcc, Cc, Deleted, Draft, From, Header, Keyword,
         Larger, New, Not, Old, On, Or, Recent, SearchKeys, Seen, SentBefore, SentOn,
         SentSince, SequenceSet, Since, Smaller, Subject, Text, To, UID, Unanswered,
         Undeleted, Undraft, Unkeyword, Unseen>
