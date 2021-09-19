@@ -15,8 +15,8 @@ KResultOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
     REQUIRE_PROMISE(stdio);
     if (fds().open_count() + 2 > fds().max_open())
         return EMFILE;
-    // Reject flags other than O_CLOEXEC.
-    if ((flags & O_CLOEXEC) != flags)
+    // Reject flags other than O_CLOEXEC, O_NONBLOCK
+    if ((flags & (O_CLOEXEC | O_NONBLOCK)) != flags)
         return EINVAL;
 
     u32 fd_flags = (flags & O_CLOEXEC) ? FD_CLOEXEC : 0;
@@ -30,6 +30,10 @@ KResultOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
 
     reader_description->set_readable(true);
     writer_description->set_writable(true);
+    if (flags & O_NONBLOCK) {
+        reader_description->set_blocking(false);
+        writer_description->set_blocking(false);
+    }
 
     m_fds[reader_fd_allocation.fd].set(move(reader_description), fd_flags);
     m_fds[writer_fd_allocation.fd].set(move(writer_description), fd_flags);
