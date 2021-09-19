@@ -300,11 +300,9 @@ void HTMLScriptElement::prepare_script()
                         dbgln("HTMLScriptElement: Failed to load {}", url);
                         return;
                     }
-                    // FIXME: This is a hack to ensure that there's a global object.
-                    document().interpreter();
 
                     // FIXME: This is all ad-hoc and needs work.
-                    auto script = ClassicScript::create(url.to_string(), data, document().interpreter().realm(), AK::URL());
+                    auto script = ClassicScript::create(url.to_string(), data, document().realm(), AK::URL());
 
                     // When the chosen algorithm asynchronously completes, set the script's script to the result. At that time, the script is ready.
                     m_script = script;
@@ -327,11 +325,8 @@ void HTMLScriptElement::prepare_script()
             // -> "classic"
             // 1. Let script be the result of creating a classic script using source text, settings object, base URL, and options.
 
-            // FIXME: This is a hack to ensure that there's a global object.
-            document().interpreter();
-
             // FIXME: Pass settings, base URL and options.
-            auto script = ClassicScript::create(m_document->url().to_string(), source_text, document().interpreter().realm(), AK::URL());
+            auto script = ClassicScript::create(m_document->url().to_string(), source_text, document().realm(), AK::URL());
 
             // 2. Set the script's script to script.
             m_script = script;
