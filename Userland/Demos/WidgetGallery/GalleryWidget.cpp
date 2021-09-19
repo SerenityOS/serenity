@@ -304,58 +304,8 @@ GalleryWidget::GalleryWidget()
     m_cursors_tableview->set_column_width(0, 25);
 
     m_cursors_tableview->on_activation = [&](const GUI::ModelIndex& index) {
-        switch (index.row()) {
-        case 0:
-            window()->set_cursor(Gfx::StandardCursor::Arrow);
-            break;
-        case 1:
-            window()->set_cursor(Gfx::StandardCursor::Crosshair);
-            break;
-        case 2:
-            window()->set_cursor(Gfx::StandardCursor::Disallowed);
-            break;
-        case 3:
-            window()->set_cursor(Gfx::StandardCursor::Drag);
-            break;
-        case 4:
-            window()->set_cursor(Gfx::StandardCursor::Hand);
-            break;
-        case 5:
-            window()->set_cursor(Gfx::StandardCursor::Help);
-            break;
-        case 6:
-            window()->set_cursor(Gfx::StandardCursor::Hidden);
-            break;
-        case 7:
-            window()->set_cursor(Gfx::StandardCursor::IBeam);
-            break;
-        case 8:
-            window()->set_cursor(Gfx::StandardCursor::Move);
-            break;
-        case 9:
-            window()->set_cursor(Gfx::StandardCursor::ResizeColumn);
-            break;
-        case 10:
-            window()->set_cursor(Gfx::StandardCursor::ResizeDiagonalBLTR);
-            break;
-        case 11:
-            window()->set_cursor(Gfx::StandardCursor::ResizeDiagonalTLBR);
-            break;
-        case 12:
-            window()->set_cursor(Gfx::StandardCursor::ResizeHorizontal);
-            break;
-        case 13:
-            window()->set_cursor(Gfx::StandardCursor::ResizeRow);
-            break;
-        case 14:
-            window()->set_cursor(Gfx::StandardCursor::ResizeVertical);
-            break;
-        case 15:
-            window()->set_cursor(Gfx::StandardCursor::Wait);
-            break;
-        default:
-            window()->set_cursor(Gfx::StandardCursor::Arrow);
-        }
+        auto icon_index = index.model()->index(index.row(), MouseCursorModel::Column::Bitmap);
+        window()->set_cursor(icon_index.data().as_bitmap());
     };
 
     auto& icons_tab = tab_widget.add_tab<GUI::Widget>("Icons");
