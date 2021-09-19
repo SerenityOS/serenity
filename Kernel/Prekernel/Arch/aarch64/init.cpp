@@ -5,14 +5,14 @@
  */
 
 #include <AK/Types.h>
-#include <Kernel/Prekernel/Arch/aarch64/MMIO.h>
+#include <Kernel/Prekernel/Arch/aarch64/Mailbox.h>
 
 extern "C" [[noreturn]] void halt();
 
 extern "C" [[noreturn]] void init();
 extern "C" [[noreturn]] void init()
 {
-    [[maybe_unused]] auto& MMIO = Prekernel::MMIO::the();
+    [[maybe_unused]] u32 firmware_version = Prekernel::Mailbox::query_firmware_version();
     halt();
 }
 
