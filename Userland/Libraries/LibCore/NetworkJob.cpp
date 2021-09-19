@@ -29,6 +29,9 @@ void NetworkJob::shutdown()
 
 void NetworkJob::did_finish(NonnullRefPtr<NetworkResponse>&& response)
 {
+    if (is_cancelled())
+        return;
+
     // NOTE: We protect ourselves here, since the on_finish callback may otherwise
     //       trigger destruction of this job somehow.
     NonnullRefPtr<NetworkJob> protector(*this);
@@ -42,6 +45,9 @@ void NetworkJob::did_finish(NonnullRefPtr<NetworkResponse>&& response)
 
 void NetworkJob::did_fail(Error error)
 {
+    if (is_cancelled())
+        return;
+
     // NOTE: We protect ourselves here, since the on_finish callback may otherwise
     //       trigger destruction of this job somehow.
     NonnullRefPtr<NetworkJob> protector(*this);
@@ -55,6 +61,9 @@ void NetworkJob::did_fail(Error error)
 
 void NetworkJob::did_progress(Optional<u32> total_size, u32 downloaded)
 {
+    if (is_cancelled())
+        return;
+
     // NOTE: We protect ourselves here, since the callback may otherwise
     //       trigger destruction of this job somehow.
     NonnullRefPtr<NetworkJob> protector(*this);

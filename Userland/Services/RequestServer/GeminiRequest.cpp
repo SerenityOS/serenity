@@ -58,7 +58,7 @@ GeminiRequest::~GeminiRequest()
 {
     m_job->on_finish = nullptr;
     m_job->on_progress = nullptr;
-    m_job->shutdown();
+    m_job->cancel();
 }
 
 NonnullOwnPtr<GeminiRequest> GeminiRequest::create_with_job(Badge<GeminiProtocol>, ClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job, NonnullOwnPtr<OutputFileStream>&& output_stream)
