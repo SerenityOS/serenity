@@ -24,7 +24,7 @@ String HorizontalRule::render_for_terminal(size_t view_width) const
     return builder.to_string();
 }
 
-OwnPtr<HorizontalRule> HorizontalRule::parse(Vector<StringView>::ConstIterator& lines)
+OwnPtr<HorizontalRule> HorizontalRule::parse(LineIterator& lines)
 {
     if (lines.is_end())
         return {};

@@ -56,7 +56,7 @@ String CodeBlock::render_for_terminal(size_t) const
 
 static Regex<ECMA262> style_spec_re("\\s*([\\*_]*)\\s*([^\\*_\\s]*).*");
 
-OwnPtr<CodeBlock> CodeBlock::parse(Vector<StringView>::ConstIterator& lines)
+OwnPtr<CodeBlock> CodeBlock::parse(LineIterator& lines)
 {
     if (lines.is_end())
         return {};
