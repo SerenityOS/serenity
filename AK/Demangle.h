@@ -8,25 +8,18 @@
 
 #include <AK/String.h>
 #include <AK/StringView.h>
-
-#ifndef BUILDING_SERENITY_TOOLCHAIN
-#    include <cxxabi.h>
-#endif
+#include <cxxabi.h>
 
 namespace AK {
 
 inline String demangle(const StringView& name)
 {
-#ifdef BUILDING_SERENITY_TOOLCHAIN
-    return name;
-#else
     int status = 0;
     auto* demangled_name = abi::__cxa_demangle(name.to_string().characters(), nullptr, nullptr, &status);
     auto string = String(status == 0 ? demangled_name : name);
     if (status == 0)
         kfree(demangled_name);
     return string;
-#endif
 }
 
 }
