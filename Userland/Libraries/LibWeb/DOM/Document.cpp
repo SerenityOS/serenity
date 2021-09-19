@@ -985,6 +985,13 @@ bool Document::is_fully_active() const
     return browsing_context() && browsing_context()->active_document() == this && (browsing_context()->is_top_level() || browsing_context()->container_document()->is_fully_active());
 }
 
+// https://html.spec.whatwg.org/multipage/browsers.html#active-document
+bool Document::is_active() const
+{
+    // A browsing context's active document is its active window's associated Document.
+    return browsing_context() && browsing_context()->active_document() == this;
+}
+
 // https://html.spec.whatwg.org/multipage/history.html#dom-document-location
 Bindings::LocationObject* Document::location()
 {
