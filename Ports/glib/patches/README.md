@@ -60,16 +60,6 @@ Somehow we get a conflict with glib's mount function. This patch renames glib's 
 - [X] Resolves issue(s) with our side of things
 - [X] Hack
 
-## `0008-add-missing-macro-IN6_IS_ADDR_V4MAPPED.patch`
-
-Serenity lacks the macro 'IN6_IS_ADDR_V4MAPPED' so this patch adds such a macro.
-
-### Status
-- [ ] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [X] Hack
-
 ## `0009-include-section-with-missing-functionality.patch`
 
 This includes a bigger section with functionality that Serenity is missing.
