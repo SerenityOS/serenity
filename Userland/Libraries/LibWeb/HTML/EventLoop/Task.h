@@ -23,6 +23,7 @@ public:
         Networking,
         HistoryTraversal,
         IdleTask,
+        PostedMessage,
     };
 
     static NonnullOwnPtr<Task> create(Source source, DOM::Document* document, Function<void()> steps)
