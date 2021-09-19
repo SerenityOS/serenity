@@ -60,8 +60,7 @@ void MouseCursorModel::invalidate()
 
         Cursor cursor;
         cursor.path = move(path);
-        auto filename_split = cursor.path.split('/');
-        cursor.name = filename_split[3];
+        cursor.name = LexicalPath::basename(cursor.path);
 
         // FIXME: Animated cursor bitmaps
         auto cursor_bitmap = Gfx::Bitmap::try_load_from_file(cursor.path);
