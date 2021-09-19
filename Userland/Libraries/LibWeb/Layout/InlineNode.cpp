@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +11,8 @@
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/InlineNode.h>
+#include <LibWeb/Painting/BackgroundPainting.h>
+#include <LibWeb/Painting/BorderPainting.h>
 
 namespace Web::Layout {
 
@@ -45,9 +48,23 @@ void InlineNode::paint(PaintContext& context, PaintPhase phase)
     auto& painter = context.painter();
 
     if (phase == PaintPhase::Background) {
-        containing_block()->for_each_fragment([&](auto& fragment) {
-            if (is_inclusive_ancestor_of(fragment.layout_node()))
-                painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), computed_values().background_color());
+        auto background_data = Painting::BackgroundData {
+            .color = computed_values().background_color(),
+            .image = background_image() ? background_image()->bitmap() : nullptr,
+            .repeat_x = computed_values().background_repeat_x(),
+            .repeat_y = computed_values().background_repeat_y()
+        };
+
+        auto top_left_border_radius = computed_values().border_top_left_radius();
+        auto top_right_border_radius = computed_values().border_top_right_radius();
+        auto bottom_right_border_radius = computed_values().border_bottom_right_radius();
+        auto bottom_left_border_radius = computed_values().border_bottom_left_radius();
+
+        for_each_fragment([&](auto& fragment) {
+            // FIXME: This recalculates our (InlineNode's) absolute_rect() for every single fragment!
+            auto rect = fragment.absolute_rect();
+            auto border_radius_data = Painting::normalized_border_radius_data(*this, rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
+            Painting::paint_background(context, enclosing_int_rect(rect), background_data, border_radius_data);
             return IterationDecision::Continue;
         });
     }
@@ -56,12 +73,26 @@ void InlineNode::paint(PaintContext& context, PaintPhase phase)
         // FIXME: This paints a double-thick border between adjacent fragments, where ideally there
         //        would be none. Once we implement non-rectangular outlines for the `outline` CSS
         //        property, we can use that here instead.
-        containing_block()->for_each_fragment([&](auto& fragment) {
-            if (is_inclusive_ancestor_of(fragment.layout_node()))
-                painter.draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Magenta);
+        for_each_fragment([&](auto& fragment) {
+            painter.draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Magenta);
             return IterationDecision::Continue;
         });
     }
+}
+
+template<typename Callback>
+void InlineNode::for_each_fragment(Callback callback)
+{
+    // FIXME: This will be slow if the containing block has a lot of fragments!
+    containing_block()->for_each_fragment([&](auto& fragment) {
+        if (!is_inclusive_ancestor_of(fragment.layout_node()))
+            return IterationDecision::Continue;
+        // FIXME: This skips the 0-width fragments at the start and end of the InlineNode.
+        //        A better solution would be to not generate them in the first place.
+        if (fragment.width() == 0 || fragment.height() == 0)
+            return IterationDecision::Continue;
+        return callback(fragment);
+    });
 }
 
 }
