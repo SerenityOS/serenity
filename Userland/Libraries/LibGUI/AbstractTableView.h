@@ -100,6 +100,8 @@ protected:
 
     void move_cursor_relative(int vertical_steps, int horizontal_steps, SelectionUpdate);
 
+    virtual Gfx::IntPoint automatic_scroll_delta_from_position(const Gfx::IntPoint& pos) const override;
+
 private:
     void layout_headers();
     bool is_navigation(GUI::KeyEvent&);

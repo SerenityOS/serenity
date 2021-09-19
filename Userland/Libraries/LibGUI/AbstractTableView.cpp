@@ -460,4 +460,14 @@ bool AbstractTableView::is_navigation(GUI::KeyEvent& event)
         return false;
     }
 }
+
+Gfx::IntPoint AbstractTableView::automatic_scroll_delta_from_position(const Gfx::IntPoint& pos) const
+{
+    if (pos.y() > column_header().height() + autoscroll_threshold())
+        return AbstractScrollableWidget::automatic_scroll_delta_from_position(pos);
+
+    Gfx::IntPoint position_excluding_header = { pos.x(), pos.y() - column_header().height() };
+    return AbstractScrollableWidget::automatic_scroll_delta_from_position(position_excluding_header);
+}
+
 }

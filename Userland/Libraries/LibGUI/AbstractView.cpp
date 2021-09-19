@@ -335,6 +335,8 @@ void AbstractView::mouseup_event(MouseEvent& event)
     if (!model())
         return;
 
+    set_automatic_scrolling_timer(false);
+
     if (m_might_drag) {
         // We were unsure about unselecting items other than the current one
         // in mousedown_event(), because we could be seeing a start of a drag.
@@ -759,13 +761,19 @@ void AbstractView::drag_move_event(DragEvent& event)
 {
     if (!model())
         return;
+
     auto index = index_at_event_position(event.position());
     ModelIndex new_drop_candidate_index;
-    if (index.is_valid()) {
-        bool acceptable = model()->accepts_drag(index, event.mime_types());
-        if (acceptable)
-            new_drop_candidate_index = index;
+    bool acceptable = model()->accepts_drag(index, event.mime_types());
+
+    if (acceptable && index.is_valid())
+        new_drop_candidate_index = index;
+
+    if (acceptable) {
+        m_automatic_scroll_delta = automatic_scroll_delta_from_position(event.position());
+        set_automatic_scrolling_timer(!m_automatic_scroll_delta.is_null());
     }
+
     if (m_drop_candidate_index != new_drop_candidate_index) {
         m_drop_candidate_index = new_drop_candidate_index;
         update();
@@ -780,6 +788,17 @@ void AbstractView::drag_leave_event(Event&)
         m_drop_candidate_index = {};
         update();
     }
+
+    set_automatic_scrolling_timer(false);
+}
+
+void AbstractView::on_automatic_scrolling_timer_fired()
+{
+    if (m_automatic_scroll_delta.is_null())
+        return;
+
+    vertical_scrollbar().set_value(vertical_scrollbar().value() + m_automatic_scroll_delta.y());
+    horizontal_scrollbar().set_value(horizontal_scrollbar().value() + m_automatic_scroll_delta.x());
 }
 
 }

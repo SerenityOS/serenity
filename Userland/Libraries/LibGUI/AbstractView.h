@@ -142,6 +142,8 @@ protected:
     virtual void hide_event(HideEvent&) override;
     virtual void focusin_event(FocusEvent&) override;
 
+    virtual void on_automatic_scrolling_timer_fired() override;
+
     virtual void clear_selection();
     virtual void set_selection(ModelIndex const&);
     virtual void set_selection_start_index(ModelIndex const&);
@@ -202,6 +204,8 @@ private:
     bool m_is_dragging { false };
     bool m_draw_item_text_with_shadow { false };
     bool m_suppress_update_on_selection_change { false };
+
+    Gfx::IntPoint m_automatic_scroll_delta {};
 };
 
 }

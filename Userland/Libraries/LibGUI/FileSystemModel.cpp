@@ -711,10 +711,12 @@ String FileSystemModel::column_name(int column) const
 
 bool FileSystemModel::accepts_drag(ModelIndex const& index, Vector<String> const& mime_types) const
 {
-    if (!index.is_valid())
-        return false;
     if (!mime_types.contains_slow("text/uri-list"))
         return false;
+
+    if (!index.is_valid())
+        return true;
+
     auto& node = this->node(index);
     return node.is_directory();
 }
