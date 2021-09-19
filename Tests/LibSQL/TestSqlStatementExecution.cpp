@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
+ * Copyright (c) 2021, Mahmoud Mandour <ma.mandourr@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -675,6 +676,27 @@ TEST_CASE(select_with_offset_out_of_bounds)
     EXPECT(result->has_results());
     auto rows = result->results();
     EXPECT_EQ(rows.size(), 0u);
+}
+
+TEST_CASE(describe_table)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
+    create_table(database);
+    auto result = execute(database, "DESCRIBE TABLE TestSchema.TestTable;");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    EXPECT_EQ(result->results().size(), 2u);
+
+    auto rows = result->results();
+    auto& row1 = rows[0];
+    EXPECT_EQ(row1.row[0].to_string(), "TEXTCOLUMN");
+    EXPECT_EQ(row1.row[1].to_string(), "text");
+
+    auto& row2 = rows[1];
+    EXPECT_EQ(row2.row[0].to_string(), "INTCOLUMN");
+    EXPECT_EQ(row2.row[1].to_string(), "int");
 }
 
 }

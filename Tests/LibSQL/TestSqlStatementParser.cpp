@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
  * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
+ * Copyright (c) 2021, Mahmoud Mandour <ma.mandourr@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -749,4 +750,29 @@ TEST_CASE(nested_subquery_limit)
     auto subquery = String::formatted("{:(^{}}table_name{:)^{}}", "", SQL::AST::Limits::maximum_subquery_depth - 1, "", SQL::AST::Limits::maximum_subquery_depth - 1);
     EXPECT(!parse(String::formatted("SELECT * FROM {};", subquery)).is_error());
     EXPECT(parse(String::formatted("SELECT * FROM ({});", subquery)).is_error());
+}
+
+TEST_CASE(describe_table)
+{
+    EXPECT(parse("DESCRIBE").is_error());
+    EXPECT(parse("DESCRIBE;").is_error());
+    EXPECT(parse("DESCRIBE TABLE;").is_error());
+    EXPECT(parse("DESCRIBE table_name;").is_error());
+
+    auto validate = [](StringView sql, StringView expected_schema, StringView expected_table) {
+        auto result = parse(sql);
+        if (result.is_error())
+            outln("{}: {}", sql, result.error());
+        EXPECT(!result.is_error());
+
+        auto statement = result.release_value();
+        EXPECT(is<SQL::AST::DescribeTable>(*statement));
+
+        const auto& describe_table_statement = static_cast<const SQL::AST::DescribeTable&>(*statement);
+        EXPECT_EQ(describe_table_statement.qualified_table_name()->schema_name(), expected_schema);
+        EXPECT_EQ(describe_table_statement.qualified_table_name()->table_name(), expected_table);
+    };
+
+    validate("DESCRIBE TABLE TableName;", {}, "TABLENAME");
+    validate("DESCRIBE TABLE SchemaName.TableName;", "SCHEMANAME", "TABLENAME");
 }
