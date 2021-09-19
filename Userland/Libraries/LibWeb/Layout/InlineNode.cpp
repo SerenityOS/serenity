@@ -13,6 +13,7 @@
 #include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
 #include <LibWeb/Painting/BorderPainting.h>
+#include <LibWeb/Painting/ShadowPainting.h>
 
 namespace Web::Layout {
 
@@ -65,6 +66,17 @@ void InlineNode::paint(PaintContext& context, PaintPhase phase)
             auto rect = fragment.absolute_rect();
             auto border_radius_data = Painting::normalized_border_radius_data(*this, rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
             Painting::paint_background(context, enclosing_int_rect(rect), background_data, border_radius_data);
+
+            if (auto computed_box_shadow = computed_values().box_shadow(); computed_box_shadow.has_value()) {
+                auto box_shadow_data = Painting::BoxShadowData {
+                    .offset_x = (int)computed_box_shadow->offset_x.resolved_or_zero(*this, rect.width()).to_px(*this),
+                    .offset_y = (int)computed_box_shadow->offset_y.resolved_or_zero(*this, rect.height()).to_px(*this),
+                    .blur_radius = (int)computed_box_shadow->blur_radius.resolved_or_zero(*this, rect.width()).to_px(*this),
+                    .color = computed_box_shadow->color
+                };
+                Painting::paint_box_shadow(context, enclosing_int_rect(rect), box_shadow_data);
+            }
+
             return IterationDecision::Continue;
         });
     }
