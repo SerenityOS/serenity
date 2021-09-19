@@ -317,8 +317,8 @@ struct BindingPattern : RefCounted<BindingPattern> {
     // This covers both BindingProperty and BindingElement, hence the more generic name
     struct BindingEntry {
         // If this entry represents a BindingElement, then name will be Empty
-        Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<Expression>, Empty> name { Empty {} };
-        Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>, Empty> alias { Empty {} };
+        Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<Expression>, Empty> name {};
+        Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>, Empty> alias {};
         RefPtr<Expression> initializer {};
         bool is_rest { false };
 

@@ -1567,7 +1567,7 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
     }
 
     if (unicode) {
-        PropertyEscape property { Empty {} };
+        PropertyEscape property {};
         bool negated = false;
 
         if (parse_unicode_property_escape(property, negated)) {
@@ -1847,7 +1847,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                 if (try_skip("-"))
                     return { CharClassRangeElement { .code_point = '-', .is_character_class = false } };
 
-                PropertyEscape property { Empty {} };
+                PropertyEscape property {};
                 bool negated = false;
                 if (parse_unicode_property_escape(property, negated)) {
                     return property.visit(

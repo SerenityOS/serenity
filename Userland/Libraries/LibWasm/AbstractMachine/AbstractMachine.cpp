@@ -381,7 +381,7 @@ Optional<InstantiationError> AbstractMachine::allocate_all_initial_phase(Module 
     });
     module.for_each_section_of_type<ExportSection>([&](ExportSection const& section) {
         for (auto& entry : section.entries()) {
-            Variant<FunctionAddress, TableAddress, MemoryAddress, GlobalAddress, Empty> address { Empty {} };
+            Variant<FunctionAddress, TableAddress, MemoryAddress, GlobalAddress, Empty> address {};
             entry.description().visit(
                 [&](FunctionIndex const& index) {
                     if (module_instance.functions().size() > index.value())

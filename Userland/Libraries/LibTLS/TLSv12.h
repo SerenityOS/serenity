@@ -521,8 +521,8 @@ private:
         Empty,
         Crypto::Cipher::AESCipher::CBCMode,
         Crypto::Cipher::AESCipher::GCMMode>;
-    CipherVariant m_cipher_local { Empty {} };
-    CipherVariant m_cipher_remote { Empty {} };
+    CipherVariant m_cipher_local {};
+    CipherVariant m_cipher_remote {};
 
     bool m_has_scheduled_write_flush { false };
     bool m_has_scheduled_app_data_flush { false };
