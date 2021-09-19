@@ -18,6 +18,7 @@ __BEGIN_DECLS
 typedef __WINT_TYPE__ wint_t;
 typedef unsigned long int wctype_t;
 
+// A zero-initialized mbstate_t struct must be a valid initial state.
 typedef struct {
     unsigned char bytes[4];
 } mbstate_t;
