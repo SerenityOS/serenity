@@ -10,6 +10,29 @@
 
 namespace Web::Painting {
 
+BorderRadiusData normalized_border_radius_data(Layout::Node const& node, Gfx::FloatRect const& rect, CSS::Length top_left_radius, CSS::Length top_right_radius, CSS::Length bottom_right_radius, CSS::Length bottom_left_radius)
+{
+    // FIXME: some values should be relative to the height() if specified, but which? For now, all relative values are relative to the width.
+    auto bottom_left_radius_px = bottom_left_radius.resolved_or_zero(node, rect.width()).to_px(node);
+    auto bottom_right_radius_px = bottom_right_radius.resolved_or_zero(node, rect.width()).to_px(node);
+    auto top_left_radius_px = top_left_radius.resolved_or_zero(node, rect.width()).to_px(node);
+    auto top_right_radius_px = top_right_radius.resolved_or_zero(node, rect.width()).to_px(node);
+
+    // Scale overlapping curves according to https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
+    auto f = 1.0f;
+    f = min(f, rect.width() / (float)(top_left_radius_px + top_right_radius_px));
+    f = min(f, rect.height() / (float)(top_right_radius_px + bottom_right_radius_px));
+    f = min(f, rect.width() / (float)(bottom_left_radius_px + bottom_right_radius_px));
+    f = min(f, rect.height() / (float)(top_left_radius_px + bottom_left_radius_px));
+
+    top_left_radius_px = (int)(top_left_radius_px * f);
+    top_right_radius_px = (int)(top_right_radius_px * f);
+    bottom_right_radius_px = (int)(bottom_right_radius_px * f);
+    bottom_left_radius_px = (int)(bottom_left_radius_px * f);
+
+    return BorderRadiusData { top_left_radius_px, top_right_radius_px, bottom_right_radius_px, bottom_left_radius_px };
+}
+
 void paint_border(PaintContext& context, BorderEdge edge, const Gfx::FloatRect& rect, const CSS::ComputedValues& style)
 {
     const auto& border_data = [&] {

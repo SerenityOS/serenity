@@ -10,6 +10,7 @@
 #include <LibGfx/Rect.h>
 #include <LibWeb/Layout/LineBox.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Painting/BorderPainting.h>
 #include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::Layout {
@@ -125,14 +126,7 @@ public:
 
     virtual float width_of_logical_containing_block() const;
 
-    struct BorderRadiusData {
-        float top_left { 0 };
-        float top_right { 0 };
-        float bottom_right { 0 };
-        float bottom_left { 0 };
-    };
-
-    BorderRadiusData normalized_border_radius_data();
+    Painting::BorderRadiusData normalized_border_radius_data();
 
 protected:
     Box(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
