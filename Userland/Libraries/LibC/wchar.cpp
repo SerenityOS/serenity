@@ -9,19 +9,12 @@
 #include <errno.h>
 #include <wchar.h>
 
-static unsigned int mbstate_stored_bytes(mbstate_t* state)
-{
-    for (unsigned int i = 0; i < sizeof(state->bytes); i++) {
-        if (!state->bytes[i]) {
-            return i;
-        }
-    }
-
-    return sizeof(state->bytes);
-}
-
 static unsigned int mbstate_expected_bytes(mbstate_t* state)
 {
+    if (state->stored_bytes == 0) {
+        return 0;
+    }
+
     unsigned char first = state->bytes[0];
 
     // Single-byte sequences have their first bit unset
@@ -218,7 +211,7 @@ size_t mbrtowc(wchar_t* pwc, const char* s, size_t n, mbstate_t* state)
 
     // If s is nullptr, check if the state contains a complete multibyte character
     if (s == nullptr) {
-        if (mbstate_expected_bytes(state) == mbstate_stored_bytes(state)) {
+        if (mbstate_expected_bytes(state) == mbstate->stored_bytes) {
             *state = {};
             return 0;
         } else {
@@ -234,11 +227,10 @@ size_t mbrtowc(wchar_t* pwc, const char* s, size_t n, mbstate_t* state)
     }
 
     size_t consumed_bytes = 0;
-    size_t stored_bytes = mbstate_stored_bytes(state);
 
     // Fill the first byte if we haven't done that yet
-    if (state->bytes[0] == 0) {
-        state->bytes[0] = s[0];
+    if (state->stored_bytes == 0) {
+        state->bytes[state->stored_bytes++] = s[0];
         consumed_bytes++;
     }
 
@@ -251,9 +243,7 @@ size_t mbrtowc(wchar_t* pwc, const char* s, size_t n, mbstate_t* state)
         return -1;
     }
 
-    size_t needed_bytes = expected_bytes - stored_bytes;
-
-    while (consumed_bytes < needed_bytes) {
+    while (state->stored_bytes < expected_bytes) {
         if (consumed_bytes == n) {
             // No complete multibyte character
             return -2;
@@ -269,7 +259,7 @@ size_t mbrtowc(wchar_t* pwc, const char* s, size_t n, mbstate_t* state)
             return -1;
         }
 
-        state->bytes[mbstate_stored_bytes(state)] = c;
+        state->bytes[state->stored_bytes++] = c;
         consumed_bytes++;
     }
 
@@ -331,10 +321,8 @@ int mbsinit(const mbstate_t* state)
         return 1;
     }
 
-    for (unsigned char byte : state->bytes) {
-        if (byte) {
-            return 0;
-        }
+    if (state->stored_bytes != 0) {
+        return 0;
     }
 
     return 1;
