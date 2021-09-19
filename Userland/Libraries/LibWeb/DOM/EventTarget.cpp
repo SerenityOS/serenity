@@ -9,10 +9,14 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/OrdinaryFunctionObject.h>
 #include <LibWeb/Bindings/ScriptExecutionContext.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/EventTarget.h>
+#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/EventHandler.h>
+#include <LibWeb/HTML/HTMLBodyElement.h>
+#include <LibWeb/HTML/HTMLFrameSetElement.h>
 
 namespace Web::DOM {
 
@@ -73,9 +77,37 @@ ExceptionOr<bool> EventTarget::dispatch_event_binding(NonnullRefPtr<Event> event
     return dispatch_event(event);
 }
 
+// https://html.spec.whatwg.org/multipage/webappapis.html#determining-the-target-of-an-event-handler
+static EventTarget* determine_target_of_event_handler(EventTarget& event_target, FlyString const& name)
+{
+    // To determine the target of an event handler, given an EventTarget object eventTarget on which the event handler is exposed,
+    // and an event handler name name, the following steps are taken:
+
+    // 1. If eventTarget is not a body element or a frameset element, then return eventTarget.
+    if (!is<HTML::HTMLBodyElement>(event_target) && !is<HTML::HTMLFrameSetElement>(event_target))
+        return &event_target;
+
+    auto& event_target_element = static_cast<HTML::HTMLElement&>(event_target);
+
+    // FIXME: 2. If name is not the name of an attribute member of the WindowEventHandlers interface mixin and the Window-reflecting
+    //           body element event handler set does not contain name, then return eventTarget.
+    (void)name;
+
+    // 3. If eventTarget's node document is not an active document, then return null.
+    if (!event_target_element.document().is_active())
+        return nullptr;
+
+    // Return eventTarget's node document's relevant global object.
+    return &event_target_element.document().window();
+}
+
 HTML::EventHandler EventTarget::event_handler_attribute(FlyString const& name)
 {
-    for (auto& listener : listeners()) {
+    auto target = determine_target_of_event_handler(*this, name);
+    if (!target)
+        return {};
+
+    for (auto& listener : target->listeners()) {
         if (listener.event_name == name && listener.listener->is_attribute()) {
             return HTML::EventHandler { JS::make_handle(&listener.listener->function()) };
         }
@@ -85,6 +117,10 @@ HTML::EventHandler EventTarget::event_handler_attribute(FlyString const& name)
 
 void EventTarget::set_event_handler_attribute(FlyString const& name, HTML::EventHandler value)
 {
+    auto target = determine_target_of_event_handler(*this, name);
+    if (!target)
+        return;
+
     RefPtr<DOM::EventListener> listener;
     if (!value.callback.is_null()) {
         listener = adopt_ref(*new DOM::EventListener(move(value.callback)));
@@ -97,18 +133,18 @@ void EventTarget::set_event_handler_attribute(FlyString const& name, HTML::Event
             dbgln("Failed to parse script in event handler attribute '{}'", name);
             return;
         }
-        auto* function = JS::OrdinaryFunctionObject::create(script_execution_context()->interpreter().global_object(), name, program->body(), program->parameters(), program->function_length(), nullptr, JS::FunctionKind::Regular, false, false);
+        auto* function = JS::OrdinaryFunctionObject::create(target->script_execution_context()->interpreter().global_object(), name, program->body(), program->parameters(), program->function_length(), nullptr, JS::FunctionKind::Regular, false, false);
         VERIFY(function);
         listener = adopt_ref(*new DOM::EventListener(JS::make_handle(static_cast<JS::FunctionObject*>(function))));
     }
     if (listener) {
-        for (auto& registered_listener : listeners()) {
+        for (auto& registered_listener : target->listeners()) {
             if (registered_listener.event_name == name && registered_listener.listener->is_attribute()) {
-                remove_event_listener(name, registered_listener.listener);
+                target->remove_event_listener(name, registered_listener.listener);
                 break;
             }
         }
-        add_event_listener(name, listener.release_nonnull());
+        target->add_event_listener(name, listener.release_nonnull());
     }
 }
 }
