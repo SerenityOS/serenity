@@ -210,7 +210,11 @@ public:
     template<typename... NewTs>
     friend struct Variant;
 
-    Variant() = delete;
+    Variant() requires(!can_contain<Empty>()) = delete;
+    Variant() requires(can_contain<Empty>())
+        : Variant(Empty())
+    {
+    }
 
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
     Variant(const Variant&) requires(!(IsCopyConstructible<Ts> && ...)) = delete;
