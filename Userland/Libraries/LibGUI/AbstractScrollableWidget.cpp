@@ -242,13 +242,13 @@ Gfx::IntPoint AbstractScrollableWidget::automatic_scroll_delta_from_position(con
 
     if (pos.y() < m_autoscroll_threshold)
         delta.set_y(clamp(-(m_autoscroll_threshold - pos.y()), -m_autoscroll_threshold, 0));
-    else if (pos.y() > height() - m_autoscroll_threshold)
-        delta.set_y(clamp(m_autoscroll_threshold - (height() - pos.y()), 0, m_autoscroll_threshold));
+    else if (pos.y() > widget_inner_rect().height() - m_autoscroll_threshold)
+        delta.set_y(clamp(m_autoscroll_threshold - (widget_inner_rect().height() - pos.y()), 0, m_autoscroll_threshold));
 
     if (pos.x() < m_autoscroll_threshold)
         delta.set_x(clamp(-(m_autoscroll_threshold - pos.x()), -m_autoscroll_threshold, 0));
-    else if (pos.x() > width() - m_autoscroll_threshold)
-        delta.set_x(clamp(m_autoscroll_threshold - (width() - pos.x()), 0, m_autoscroll_threshold));
+    else if (pos.x() > widget_inner_rect().width() - m_autoscroll_threshold)
+        delta.set_x(clamp(m_autoscroll_threshold - (widget_inner_rect().width() - pos.x()), 0, m_autoscroll_threshold));
 
     return delta;
 }
