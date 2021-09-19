@@ -12,6 +12,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/WindowServerConnection.h>
+#include <LibGfx/CursorParams.h>
 
 class MouseCursorModel final : public GUI::Model {
 public:
@@ -69,8 +70,15 @@ public:
                 continue;
             Cursor cursor;
             cursor.path = move(path);
-            cursor.bitmap = Gfx::Bitmap::try_load_from_file(cursor.path);
             cursor.name = LexicalPath::basename(cursor.path);
+
+            // FIXME: Animated cursor bitmaps
+            auto cursor_bitmap = Gfx::Bitmap::try_load_from_file(cursor.path);
+            auto cursor_bitmap_rect = cursor_bitmap->rect();
+
+            cursor.params = Gfx::CursorParams::parse_from_filename(cursor.name, cursor_bitmap_rect.center()).constrained(*cursor_bitmap);
+            cursor.bitmap = cursor_bitmap->cropped(Gfx::IntRect(Gfx::FloatRect(cursor_bitmap_rect).scaled(1.0 / cursor.params.frames(), 1.0)));
+
             m_cursors.append(move(cursor));
         }
 
@@ -84,6 +92,7 @@ private:
         RefPtr<Gfx::Bitmap> bitmap;
         String path;
         String name;
+        Gfx::CursorParams params;
     };
 
     Vector<Cursor> m_cursors;
