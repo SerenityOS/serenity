@@ -299,28 +299,13 @@ void Box::paint_box_shadow(PaintContext& context)
         context.painter().blit(rect.location() + blur_rect_position, *new_bitmap, rect);
 }
 
-Box::BorderRadiusData Box::normalized_border_radius_data()
+Painting::BorderRadiusData Box::normalized_border_radius_data()
 {
-    // FIXME: some values should be relative to the height() if specified, but which? For now, all relative values are relative to the width.
-    auto bottom_left_radius = computed_values().border_bottom_left_radius().resolved_or_zero(*this, width()).to_px(*this);
-    auto bottom_right_radius = computed_values().border_bottom_right_radius().resolved_or_zero(*this, width()).to_px(*this);
-    auto top_left_radius = computed_values().border_top_left_radius().resolved_or_zero(*this, width()).to_px(*this);
-    auto top_right_radius = computed_values().border_top_right_radius().resolved_or_zero(*this, width()).to_px(*this);
-
-    // Scale overlapping curves according to https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
-    auto bordered_rect = this->bordered_rect();
-    auto f = 1.0f;
-    f = min(f, bordered_rect.width() / (float)(top_left_radius + top_right_radius));
-    f = min(f, bordered_rect.height() / (float)(top_right_radius + bottom_right_radius));
-    f = min(f, bordered_rect.width() / (float)(bottom_left_radius + bottom_right_radius));
-    f = min(f, bordered_rect.height() / (float)(top_left_radius + bottom_left_radius));
-
-    top_left_radius = (int)(top_left_radius * f);
-    top_right_radius = (int)(top_right_radius * f);
-    bottom_right_radius = (int)(bottom_right_radius * f);
-    bottom_left_radius = (int)(bottom_left_radius * f);
-
-    return { top_left_radius, top_right_radius, bottom_right_radius, bottom_left_radius };
+    return Painting::normalized_border_radius_data(*this, bordered_rect(),
+        computed_values().border_top_left_radius(),
+        computed_values().border_top_right_radius(),
+        computed_values().border_bottom_right_radius(),
+        computed_values().border_bottom_left_radius());
 }
 
 // https://www.w3.org/TR/css-display-3/#out-of-flow
