@@ -12,6 +12,15 @@
 
 namespace Web::XHR {
 
+#define ENUMERATE_XML_HTTP_REQUEST_EVENT_TARGET_EVENT_HANDLERS(E) \
+    E(onloadstart, XHR::EventNames::loadstart)                    \
+    E(onprogress, XHR::EventNames::progress)                      \
+    E(onabort, XHR::EventNames::abort)                            \
+    E(onerror, XHR::EventNames::error)                            \
+    E(onload, XHR::EventNames::load)                              \
+    E(ontimeout, XHR::EventNames::timeout)                        \
+    E(onloadend, XHR::EventNames::loadend)
+
 class XMLHttpRequestEventTarget
     : public DOM::EventTarget
     , public Bindings::Wrappable {
@@ -20,20 +29,12 @@ public:
 
     virtual ~XMLHttpRequestEventTarget() override {};
 
-    HTML::EventHandler onloadstart();
-    void set_onloadstart(HTML::EventHandler);
-    HTML::EventHandler onprogress();
-    void set_onprogress(HTML::EventHandler);
-    HTML::EventHandler onabort();
-    void set_onabort(HTML::EventHandler);
-    HTML::EventHandler onerror();
-    void set_onerror(HTML::EventHandler);
-    HTML::EventHandler onload();
-    void set_onload(HTML::EventHandler);
-    HTML::EventHandler ontimeout();
-    void set_ontimeout(HTML::EventHandler);
-    HTML::EventHandler onloadend();
-    void set_onloadend(HTML::EventHandler);
+#undef __ENUMERATE
+#define __ENUMERATE(attribute_name, event_name)    \
+    void set_##attribute_name(HTML::EventHandler); \
+    HTML::EventHandler attribute_name();
+    ENUMERATE_XML_HTTP_REQUEST_EVENT_TARGET_EVENT_HANDLERS(__ENUMERATE)
+#undef __ENUMERATE
 
 protected:
     explicit XMLHttpRequestEventTarget(Bindings::ScriptExecutionContext& script_execution_context)

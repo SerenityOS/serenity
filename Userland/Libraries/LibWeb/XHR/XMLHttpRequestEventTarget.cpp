@@ -10,74 +10,17 @@
 
 namespace Web::XHR {
 
-HTML::EventHandler XMLHttpRequestEventTarget::onabort()
-{
-    return event_handler_attribute(Web::XHR::EventNames::abort);
-}
-
-void XMLHttpRequestEventTarget::set_onabort(HTML::EventHandler value)
-{
-    set_event_handler_attribute(Web::XHR::EventNames::abort, move(value));
-}
-
-HTML::EventHandler XMLHttpRequestEventTarget::onloadstart()
-{
-    return event_handler_attribute(Web::XHR::EventNames::loadstart);
-}
-
-void XMLHttpRequestEventTarget::set_onloadstart(HTML::EventHandler value)
-{
-    set_event_handler_attribute(Web::XHR::EventNames::loadstart, move(value));
-}
-
-HTML::EventHandler XMLHttpRequestEventTarget::onloadend()
-{
-    return event_handler_attribute(Web::XHR::EventNames::loadend);
-}
-
-void XMLHttpRequestEventTarget::set_onloadend(HTML::EventHandler value)
-{
-    set_event_handler_attribute(Web::XHR::EventNames::loadend, move(value));
-}
-
-HTML::EventHandler XMLHttpRequestEventTarget::onprogress()
-{
-    return event_handler_attribute(Web::XHR::EventNames::progress);
-}
-
-void XMLHttpRequestEventTarget::set_onprogress(HTML::EventHandler value)
-{
-    set_event_handler_attribute(Web::XHR::EventNames::progress, move(value));
-}
-
-HTML::EventHandler XMLHttpRequestEventTarget::onerror()
-{
-    return event_handler_attribute(Web::XHR::EventNames::error);
-}
-
-void XMLHttpRequestEventTarget::set_onerror(HTML::EventHandler value)
-{
-    set_event_handler_attribute(Web::XHR::EventNames::error, move(value));
-}
-
-HTML::EventHandler XMLHttpRequestEventTarget::onload()
-{
-    return event_handler_attribute(Web::XHR::EventNames::load);
-}
-
-void XMLHttpRequestEventTarget::set_onload(HTML::EventHandler value)
-{
-    set_event_handler_attribute(Web::XHR::EventNames::load, move(value));
-}
-
-HTML::EventHandler XMLHttpRequestEventTarget::ontimeout()
-{
-    return event_handler_attribute(Web::XHR::EventNames::timeout);
-}
-
-void XMLHttpRequestEventTarget::set_ontimeout(HTML::EventHandler value)
-{
-    set_event_handler_attribute(Web::XHR::EventNames::timeout, move(value));
-}
+#undef __ENUMERATE
+#define __ENUMERATE(attribute_name, event_name)                                    \
+    void XMLHttpRequestEventTarget::set_##attribute_name(HTML::EventHandler value) \
+    {                                                                              \
+        set_event_handler_attribute(event_name, move(value));                      \
+    }                                                                              \
+    HTML::EventHandler XMLHttpRequestEventTarget::attribute_name()                 \
+    {                                                                              \
+        return event_handler_attribute(event_name);                                \
+    }
+ENUMERATE_XML_HTTP_REQUEST_EVENT_TARGET_EVENT_HANDLERS(__ENUMERATE)
+#undef __ENUMERATE
 
 }
