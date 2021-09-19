@@ -22,7 +22,7 @@ HttpRequest::~HttpRequest()
 {
     m_job->on_finish = nullptr;
     m_job->on_progress = nullptr;
-    m_job->shutdown();
+    m_job->cancel();
 }
 
 NonnullOwnPtr<HttpRequest> HttpRequest::create_with_job(Badge<HttpProtocol>&&, ClientConnection& client, NonnullRefPtr<HTTP::HttpJob> job, NonnullOwnPtr<OutputFileStream>&& output_stream)
