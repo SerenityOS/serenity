@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=glib
-version=2.69.0
+version=2.70.0
 depends="libiconv libffi zlib gettext"
 useconfigure=true
 configopts="--cross-file ../cross_file-$SERENITY_ARCH.txt"
-files="https://gitlab.gnome.org/GNOME/glib/-/archive/2.69.0/glib-${version}.tar.gz glib-${version}.tar.gz 35af83aedf34b96f1e99ed9c995c50960509f504750fb4def2440a9406b00a95"
+files="https://gitlab.gnome.org/GNOME/glib/-/archive/${version}/glib-${version}.tar.gz glib-${version}.tar.gz aadf815ed908d4cc14ac3976f325b986b4ab2b65ad85bc214ddf2e200648bd1c"
 auth_type=sha256
 
 configure() {
