@@ -398,7 +398,7 @@ int Shell::builtin_exit(int argc, const char** argv)
     int exit_code = 0;
     Core::ArgsParser parser;
     parser.add_positional_argument(exit_code, "Exit code", "code", Core::ArgsParser::Required::No);
-    if (!parser.parse(argc, const_cast<char**>(argv)))
+    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     if (m_is_interactive) {
