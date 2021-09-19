@@ -5,8 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/DisjointRectSet.h>
-#include <LibGfx/Filters/FastBoxBlurFilter.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
@@ -16,6 +14,7 @@
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Painting/BorderPainting.h>
+#include <LibWeb/Painting/ShadowPainting.h>
 
 namespace Web::Layout {
 
@@ -261,42 +260,13 @@ void Box::paint_box_shadow(PaintContext& context)
     if (!box_shadow_data.has_value())
         return;
 
-    auto enclosed_int_rect = enclosing_int_rect(bordered_rect());
-
-    auto offset_x_px = (int)box_shadow_data->offset_x.resolved_or_zero(*this, width()).to_px(*this);
-    auto offset_y_px = (int)box_shadow_data->offset_y.resolved_or_zero(*this, width()).to_px(*this);
-    auto blur_radius = (int)box_shadow_data->blur_radius.resolved_or_zero(*this, width()).to_px(*this);
-
-    Gfx::IntRect bitmap_rect = {
-        0,
-        0,
-        enclosed_int_rect.width() + 4 * blur_radius,
-        enclosed_int_rect.height() + 4 * blur_radius
+    auto resolved_box_shadow_data = Painting::BoxShadowData {
+        .offset_x = (int)box_shadow_data->offset_x.resolved_or_zero(*this, width()).to_px(*this),
+        .offset_y = (int)box_shadow_data->offset_y.resolved_or_zero(*this, width()).to_px(*this),
+        .blur_radius = (int)box_shadow_data->blur_radius.resolved_or_zero(*this, width()).to_px(*this),
+        .color = box_shadow_data->color
     };
-
-    Gfx::IntPoint blur_rect_position = {
-        enclosed_int_rect.x() - 2 * blur_radius + offset_x_px,
-        enclosed_int_rect.y() - 2 * blur_radius + offset_y_px
-    };
-
-    auto new_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, bitmap_rect.size());
-    if (!new_bitmap) {
-        dbgln("Unable to allocate temporary bitmap for box-shadow rendering");
-        return;
-    }
-
-    Gfx::Painter painter(*new_bitmap);
-    painter.fill_rect({ { 2 * blur_radius, 2 * blur_radius }, enclosed_int_rect.size() }, box_shadow_data->color);
-
-    Gfx::FastBoxBlurFilter filter(*new_bitmap);
-    filter.apply_three_passes(blur_radius);
-
-    Gfx::DisjointRectSet rect_set;
-    rect_set.add(bitmap_rect);
-    auto shattered = rect_set.shatter({ enclosed_int_rect.location() - blur_rect_position, enclosed_int_rect.size() });
-
-    for (auto& rect : shattered.rects())
-        context.painter().blit(rect.location() + blur_rect_position, *new_bitmap, rect);
+    Painting::paint_box_shadow(context, enclosing_int_rect(bordered_rect()), resolved_box_shadow_data);
 }
 
 Painting::BorderRadiusData Box::normalized_border_radius_data()
