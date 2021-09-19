@@ -81,6 +81,31 @@ void InlineNode::paint(PaintContext& context, PaintPhase phase)
         });
     }
 
+    if (phase == PaintPhase::Border) {
+        auto top_left_border_radius = computed_values().border_top_left_radius();
+        auto top_right_border_radius = computed_values().border_top_right_radius();
+        auto bottom_right_border_radius = computed_values().border_bottom_right_radius();
+        auto bottom_left_border_radius = computed_values().border_bottom_left_radius();
+
+        auto borders_data = Painting::BordersData {
+            .top = computed_values().border_top(),
+            .right = computed_values().border_right(),
+            .bottom = computed_values().border_bottom(),
+            .left = computed_values().border_left(),
+        };
+
+        for_each_fragment([&](auto& fragment) {
+            // FIXME: This recalculates our (InlineNode's) absolute_rect() for every single fragment!
+            auto bordered_rect = fragment.absolute_rect();
+            bordered_rect.inflate(borders_data.top.width, borders_data.right.width, borders_data.bottom.width, borders_data.left.width);
+            auto border_radius_data = Painting::normalized_border_radius_data(*this, bordered_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
+
+            Painting::paint_all_borders(context, bordered_rect, border_radius_data, borders_data);
+
+            return IterationDecision::Continue;
+        });
+    }
+
     if (phase == PaintPhase::Foreground && document().inspected_node() == dom_node()) {
         // FIXME: This paints a double-thick border between adjacent fragments, where ideally there
         //        would be none. Once we implement non-rectangular outlines for the `outline` CSS
