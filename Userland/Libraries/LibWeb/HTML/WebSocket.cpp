@@ -226,49 +226,9 @@ JS::Object* WebSocket::create_wrapper(JS::GlobalObject& global_object)
     }                                                              \
     HTML::EventHandler WebSocket::attribute_name()                 \
     {                                                              \
-        return get_event_handler_attribute(event_name);            \
+        return event_handler_attribute(event_name);                \
     }
 ENUMERATE_WEBSOCKET_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
-
-// FIXME: This is copied from GlobalEventHandlers.cpp. Find a way to deduplicate it.
-void WebSocket::set_event_handler_attribute(const FlyString& name, HTML::EventHandler value)
-{
-    RefPtr<DOM::EventListener> listener;
-    if (!value.callback.is_null()) {
-        listener = adopt_ref(*new DOM::EventListener(move(value.callback)));
-    } else {
-        StringBuilder builder;
-        builder.appendff("function {}(event) {{\n{}\n}}", name, value.string);
-        auto parser = JS::Parser(JS::Lexer(builder.string_view()));
-        auto program = parser.parse_function_node<JS::FunctionExpression>();
-        if (parser.has_errors()) {
-            dbgln("Failed to parse script in event handler attribute '{}'", name);
-            return;
-        }
-        auto* function = JS::OrdinaryFunctionObject::create(script_execution_context()->interpreter().global_object(), name, program->body(), program->parameters(), program->function_length(), nullptr, JS::FunctionKind::Regular, false, false);
-        VERIFY(function);
-        listener = adopt_ref(*new DOM::EventListener(JS::make_handle(static_cast<JS::FunctionObject*>(function))));
-    }
-    if (listener) {
-        for (auto& registered_listener : listeners()) {
-            if (registered_listener.event_name == name && registered_listener.listener->is_attribute()) {
-                remove_event_listener(name, registered_listener.listener);
-                break;
-            }
-        }
-        add_event_listener(name, listener.release_nonnull());
-    }
-}
-
-HTML::EventHandler WebSocket::get_event_handler_attribute(const FlyString& name)
-{
-    for (auto& listener : listeners()) {
-        if (listener.event_name == name && listener.listener->is_attribute())
-            return HTML::EventHandler { JS::make_handle(&listener.listener->function()) };
-    }
-
-    return {};
-}
 
 }

@@ -78,9 +78,6 @@ public:
     ENUMERATE_WEBSOCKET_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
 
-    void set_event_handler_attribute(const FlyString& name, HTML::EventHandler);
-    HTML::EventHandler get_event_handler_attribute(const FlyString& name);
-
     ReadyState ready_state() const;
     String extensions() const;
     String protocol() const;
