@@ -630,6 +630,11 @@ Color Document::visited_link_color() const
     return page()->palette().visited_link();
 }
 
+JS::Realm& Document::realm()
+{
+    return interpreter().realm();
+}
+
 JS::Interpreter& Document::interpreter()
 {
     if (!m_interpreter) {
