@@ -213,8 +213,6 @@ void Socket::ensure_read_notifier()
     VERIFY(m_connected);
     m_read_notifier = Notifier::construct(fd(), Notifier::Event::Read, this);
     m_read_notifier->on_ready_to_read = [this] {
-        if (!can_read())
-            return;
         if (on_ready_to_read)
             on_ready_to_read();
     };
