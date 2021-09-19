@@ -19,7 +19,7 @@ KResultOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
     if ((flags & (O_CLOEXEC | O_NONBLOCK)) != flags)
         return EINVAL;
 
-    u32 fd_flags = (flags & O_CLOEXEC) ? FD_CLOEXEC : 0;
+    u32 fd_flags = flags & (O_CLOEXEC | O_NONBLOCK);
     auto fifo = TRY(FIFO::try_create(uid()));
 
     auto reader_fd_allocation = TRY(m_fds.allocate());
