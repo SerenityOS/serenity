@@ -9,11 +9,6 @@
 #include <errno.h>
 #include <wchar.h>
 
-static void mbstate_reset(mbstate_t* state)
-{
-    *state = { 0 };
-}
-
 static unsigned int mbstate_stored_bytes(mbstate_t* state)
 {
     for (unsigned int i = 0; i < sizeof(state->bytes); i++) {
@@ -215,7 +210,7 @@ wint_t btowc(int c)
 
 size_t mbrtowc(wchar_t* pwc, const char* s, size_t n, mbstate_t* state)
 {
-    static mbstate_t _anonymous_state = { 0 };
+    static mbstate_t _anonymous_state = {};
 
     if (state == nullptr) {
         state = &_anonymous_state;
@@ -224,10 +219,10 @@ size_t mbrtowc(wchar_t* pwc, const char* s, size_t n, mbstate_t* state)
     // If s is nullptr, check if the state contains a complete multibyte character
     if (s == nullptr) {
         if (mbstate_expected_bytes(state) == mbstate_stored_bytes(state)) {
-            mbstate_reset(state);
+            *state = {};
             return 0;
         } else {
-            mbstate_reset(state);
+            *state = {};
             errno = EILSEQ;
             return -1;
         }
@@ -251,7 +246,7 @@ size_t mbrtowc(wchar_t* pwc, const char* s, size_t n, mbstate_t* state)
 
     // Check if the first byte is invalid
     if (expected_bytes == 0) {
-        mbstate_reset(state);
+        *state = {};
         errno = EILSEQ;
         return -1;
     }
@@ -269,7 +264,7 @@ size_t mbrtowc(wchar_t* pwc, const char* s, size_t n, mbstate_t* state)
         // Continuation bytes have to start with 0b10xxxxxx
         if ((c & 0b11000000) != 0b10000000) {
             // Invalid multibyte character
-            mbstate_reset(state);
+            *state = {};
             errno = EILSEQ;
             return -1;
         }
@@ -296,7 +291,7 @@ size_t mbrtowc(wchar_t* pwc, const char* s, size_t n, mbstate_t* state)
     }
 
     // We don't have a shift state that we need to keep, so just clear the entire state
-    mbstate_reset(state);
+    *state = {};
 
     if (codepoint == 0) {
         return 0;
