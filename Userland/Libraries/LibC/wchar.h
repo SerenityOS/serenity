@@ -21,6 +21,7 @@ typedef unsigned long int wctype_t;
 // A zero-initialized mbstate_t struct must be a valid initial state.
 typedef struct {
     unsigned char bytes[4];
+    unsigned int stored_bytes;
 } mbstate_t;
 
 size_t wcslen(const wchar_t*);
