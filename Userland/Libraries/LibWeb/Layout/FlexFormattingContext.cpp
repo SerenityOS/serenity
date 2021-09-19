@@ -269,6 +269,7 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
     } else {
         if (has_main_max_size(box)) {
             main_max_size = specified_main_max_size(box);
+            main_available_size = main_max_size;
             main_is_constrained = true;
         }
         if (has_main_min_size(box)) {
