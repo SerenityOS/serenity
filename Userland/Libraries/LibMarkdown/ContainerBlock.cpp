@@ -39,7 +39,7 @@ String ContainerBlock::render_for_terminal(size_t view_width) const
 }
 
 template<typename BlockType>
-static bool try_parse_block(Vector<StringView>::ConstIterator& lines, NonnullOwnPtrVector<Block>& blocks)
+static bool try_parse_block(LineIterator& lines, NonnullOwnPtrVector<Block>& blocks)
 {
     OwnPtr<BlockType> block = BlockType::parse(lines);
     if (!block)
@@ -48,7 +48,7 @@ static bool try_parse_block(Vector<StringView>::ConstIterator& lines, NonnullOwn
     return true;
 }
 
-OwnPtr<ContainerBlock> ContainerBlock::parse(Vector<StringView>::ConstIterator& lines)
+OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
 {
     NonnullOwnPtrVector<Block> blocks;
 

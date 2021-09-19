@@ -46,7 +46,7 @@ String List::render_for_terminal(size_t) const
     return builder.build();
 }
 
-OwnPtr<List> List::parse(Vector<StringView>::ConstIterator& lines)
+OwnPtr<List> List::parse(LineIterator& lines)
 {
     Vector<Text> items;
     bool is_ordered = false;

@@ -96,7 +96,7 @@ String Table::render_to_html() const
     return builder.to_string();
 }
 
-OwnPtr<Table> Table::parse(Vector<StringView>::ConstIterator& lines)
+OwnPtr<Table> Table::parse(LineIterator& lines)
 {
     auto peek_it = lines;
     auto first_line = *peek_it;
@@ -178,7 +178,7 @@ OwnPtr<Table> Table::parse(Vector<StringView>::ConstIterator& lines)
     size_t row_count = 0;
     ++lines;
     while (!lines.is_end()) {
-        auto& line = *lines;
+        auto line = *lines;
         if (!line.starts_with('|'))
             break;
 
