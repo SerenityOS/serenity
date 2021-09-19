@@ -1,5 +1,6 @@
 set(SOURCES
     CodeBlock.cpp
+    ContainerBlock.cpp
     Document.cpp
     Heading.cpp
     HorizontalRule.cpp
