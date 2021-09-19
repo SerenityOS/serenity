@@ -221,6 +221,7 @@ set(SOURCES
     Page/EditEventHandler.cpp
     Page/EventHandler.cpp
     Page/Page.cpp
+    Painting/BackgroundPainting.cpp
     Painting/BorderPainting.cpp
     Painting/ShadowPainting.cpp
     Painting/StackingContext.cpp

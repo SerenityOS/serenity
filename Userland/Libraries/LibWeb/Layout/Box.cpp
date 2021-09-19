@@ -13,6 +13,7 @@
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Page/BrowsingContext.h>
+#include <LibWeb/Painting/BackgroundPainting.h>
 #include <LibWeb/Painting/BorderPainting.h>
 #include <LibWeb/Painting/ShadowPainting.h>
 
@@ -175,7 +176,6 @@ void Box::paint_border(PaintContext& context)
 
 void Box::paint_background(PaintContext& context)
 {
-    auto padded_rect = this->padded_rect();
     // If the body's background properties were propagated to the root element, do no re-paint the body's background.
     if (is_body() && document().html_element()->should_use_body_background_properties())
         return;
@@ -199,7 +199,7 @@ void Box::paint_background(PaintContext& context)
             background_repeat_y = document().background_repeat_y();
         }
     } else {
-        background_rect = enclosing_int_rect(padded_rect);
+        background_rect = enclosing_int_rect(padded_rect());
     }
 
     // HACK: If the Box has a border, use the bordered_rect to paint the background.
@@ -207,51 +207,13 @@ void Box::paint_background(PaintContext& context)
     if (computed_values().border_top().width || computed_values().border_right().width || computed_values().border_bottom().width || computed_values().border_left().width)
         background_rect = enclosing_int_rect(bordered_rect());
 
-    // FIXME: some values should be relative to the height() if specified, but which? For now, all relative values are relative to the width.
-    auto border_radius_data = normalized_border_radius_data();
-    auto top_left_radius = border_radius_data.top_left;
-    auto top_right_radius = border_radius_data.top_right;
-    auto bottom_right_radius = border_radius_data.bottom_right;
-    auto bottom_left_radius = border_radius_data.bottom_left;
-
-    context.painter().fill_rect_with_rounded_corners(background_rect, move(background_color), top_left_radius, top_right_radius, bottom_right_radius, bottom_left_radius);
-
-    if (background_image)
-        paint_background_image(context, *background_image, background_repeat_x, background_repeat_y, move(background_rect));
-}
-
-void Box::paint_background_image(
-    PaintContext& context,
-    const Gfx::Bitmap& background_image,
-    CSS::Repeat background_repeat_x,
-    CSS::Repeat background_repeat_y,
-    Gfx::IntRect background_rect)
-{
-    switch (background_repeat_x) {
-    case CSS::Repeat::Round:
-    case CSS::Repeat::Space:
-        // FIXME: Support 'round' and 'space'. Fall through to 'repeat' since that most closely resembles these.
-    case CSS::Repeat::Repeat:
-        // The background rect is already sized to align with 'repeat'.
-        break;
-    case CSS::Repeat::NoRepeat:
-        background_rect.set_width(background_image.width());
-        break;
-    }
-
-    switch (background_repeat_y) {
-    case CSS::Repeat::Round:
-    case CSS::Repeat::Space:
-        // FIXME: Support 'round' and 'space'. Fall through to 'repeat' since that most closely resembles these.
-    case CSS::Repeat::Repeat:
-        // The background rect is already sized to align with 'repeat'.
-        break;
-    case CSS::Repeat::NoRepeat:
-        background_rect.set_height(background_image.height());
-        break;
-    }
-
-    context.painter().blit_tiled(background_rect, background_image, background_image.rect());
+    auto background_data = Painting::BackgroundData {
+        .color = background_color,
+        .image = background_image,
+        .repeat_x = background_repeat_x,
+        .repeat_y = background_repeat_y
+    };
+    Painting::paint_background(context, background_rect, background_data, normalized_border_radius_data());
 }
 
 void Box::paint_box_shadow(PaintContext& context)
