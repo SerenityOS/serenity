@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 namespace Prekernel {
 
 // Knows about memory-mapped IO addresses on the Broadcom family of SOCs used in Raspberry Pis.
@@ -15,6 +17,9 @@ namespace Prekernel {
 class MMIO {
 public:
     static MMIO& the();
+
+    u32 read(FlatPtr offset) { return *(u32 volatile*)(m_base_address + offset); }
+    void write(FlatPtr offset, u32 value) { *(u32 volatile*)(m_base_address + offset) = value; }
 
 private:
     MMIO();
