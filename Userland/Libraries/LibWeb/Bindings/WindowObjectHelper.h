@@ -189,6 +189,8 @@
 #include <LibWeb/Bindings/ImageDataPrototype.h>
 #include <LibWeb/Bindings/MediaQueryListConstructor.h>
 #include <LibWeb/Bindings/MediaQueryListPrototype.h>
+#include <LibWeb/Bindings/MessageChannelConstructor.h>
+#include <LibWeb/Bindings/MessageChannelPrototype.h>
 #include <LibWeb/Bindings/MessageEventConstructor.h>
 #include <LibWeb/Bindings/MessageEventPrototype.h>
 #include <LibWeb/Bindings/MouseEventConstructor.h>
@@ -341,6 +343,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(HTMLVideoElement)          \
     ADD_WINDOW_OBJECT_INTERFACE(ImageData)                 \
     ADD_WINDOW_OBJECT_INTERFACE(MediaQueryList)            \
+    ADD_WINDOW_OBJECT_INTERFACE(MessageChannel)            \
     ADD_WINDOW_OBJECT_INTERFACE(MessageEvent)              \
     ADD_WINDOW_OBJECT_INTERFACE(MouseEvent)                \
     ADD_WINDOW_OBJECT_INTERFACE(Node)                      \

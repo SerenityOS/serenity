@@ -153,6 +153,8 @@ set(SOURCES
     HTML/HTMLUnknownElement.cpp
     HTML/HTMLVideoElement.cpp
     HTML/ImageData.cpp
+    HTML/MessageChannel.cpp
+    HTML/MessagePort.cpp
     HTML/Parser/Entities.cpp
     HTML/Parser/HTMLDocumentParser.cpp
     HTML/Parser/HTMLEncodingDetection.cpp
@@ -412,7 +414,9 @@ libweb_js_wrapper(HTML/HTMLUListElement)
 libweb_js_wrapper(HTML/HTMLUnknownElement)
 libweb_js_wrapper(HTML/HTMLVideoElement)
 libweb_js_wrapper(HTML/ImageData)
+libweb_js_wrapper(HTML/MessageChannel)
 libweb_js_wrapper(HTML/MessageEvent)
+libweb_js_wrapper(HTML/MessagePort)
 libweb_js_wrapper(HTML/SubmitEvent)
 libweb_js_wrapper(HTML/WebSocket)
 libweb_js_wrapper(HighResolutionTime/Performance)

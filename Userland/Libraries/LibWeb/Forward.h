@@ -141,7 +141,9 @@ class HTMLUListElement;
 class HTMLUnknownElement;
 class HTMLVideoElement;
 class ImageData;
+class MessageChannel;
 class MessageEvent;
+class MessagePort;
 class WebSocket;
 }
 
@@ -310,7 +312,9 @@ class IdleDeadlineWrapper;
 class ImageDataWrapper;
 class LocationObject;
 class MediaQueryListWrapper;
+class MessageChannelWrapper;
 class MessageEventWrapper;
+class MessagePortWrapper;
 class MouseEventWrapper;
 class NodeWrapper;
 class PerformanceTimingWrapper;
