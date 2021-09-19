@@ -74,7 +74,7 @@ struct MultiHashDigestVariant {
     }
 
     using DigestVariant = Variant<Empty, MD5::DigestType, SHA1::DigestType, SHA256::DigestType, SHA384::DigestType, SHA512::DigestType>;
-    DigestVariant m_digest { Empty {} };
+    DigestVariant m_digest {};
 };
 
 class Manager final : public HashFunction<0, MultiHashDigestVariant> {
@@ -198,7 +198,7 @@ public:
 
 private:
     using AlgorithmVariant = Variant<Empty, MD5, SHA1, SHA256, SHA384, SHA512>;
-    AlgorithmVariant m_algorithm { Empty {} };
+    AlgorithmVariant m_algorithm {};
     HashKind m_kind { HashKind::None };
     ByteBuffer m_pre_init_buffer;
 };

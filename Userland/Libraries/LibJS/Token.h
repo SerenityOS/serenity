@@ -239,7 +239,7 @@ private:
     String m_message;
     StringView m_trivia;
     StringView m_original_value;
-    Variant<Empty, StringView, FlyString> m_value { Empty {} };
+    Variant<Empty, StringView, FlyString> m_value {};
     StringView m_filename;
     size_t m_line_number { 0 };
     size_t m_line_column { 0 };
