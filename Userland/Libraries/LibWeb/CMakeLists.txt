@@ -222,6 +222,7 @@ set(SOURCES
     Page/EventHandler.cpp
     Page/Page.cpp
     Painting/BorderPainting.cpp
+    Painting/ShadowPainting.cpp
     Painting/StackingContext.cpp
     RequestIdleCallback/IdleDeadline.cpp
     SVG/AttributeNames.cpp
