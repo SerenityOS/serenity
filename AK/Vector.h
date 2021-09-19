@@ -19,10 +19,6 @@
 #include <AK/kmalloc.h>
 #include <initializer_list>
 
-#ifndef __serenity__
-#    include <new>
-#endif
-
 namespace AK {
 
 namespace Detail {
