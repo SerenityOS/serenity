@@ -352,7 +352,7 @@ private:
     // Type::Comment (comment data), Type::StartTag and Type::EndTag (tag name)
     String m_string_data;
 
-    Variant<Empty, u32, OwnPtr<DoctypeData>, OwnPtr<Vector<Attribute>>> m_data { Empty {} };
+    Variant<Empty, u32, OwnPtr<DoctypeData>, OwnPtr<Vector<Attribute>>> m_data {};
 
     Position m_start_position;
     Position m_end_position;
