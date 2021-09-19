@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/VM.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 
 namespace Web::Bindings {
