@@ -198,3 +198,31 @@ TEST_CASE(wcscoll)
     EXPECT(wcscoll(L"a", L"z") < 0);
     EXPECT(wcscoll(L"z", L"a") > 0);
 }
+
+TEST_CASE(mbsinit)
+{
+    // Ensure that nullptr is considered an initial state.
+    EXPECT(mbsinit(nullptr) != 0);
+
+    // Ensure that a zero-initialized state is recognized as initial state.
+    mbstate_t state = {};
+    EXPECT(mbsinit(&state) != 0);
+
+    // Read a partial multibyte sequence (0b11011111 / 0xdf).
+    size_t ret = mbrtowc(nullptr, "\xdf", 1, &state);
+
+    if (ret != -2ul)
+        FAIL(String::formatted("mbrtowc accepted partial multibyte sequence with return code {} (expected -2)", static_cast<ssize_t>(ret)));
+
+    // Ensure that we are not in an initial state.
+    EXPECT(mbsinit(&state) == 0);
+
+    // Read the remaining multibyte sequence (0b10111111 / 0xbf).
+    ret = mbrtowc(nullptr, "\xbf", 1, &state);
+
+    if (ret != 1ul)
+        FAIL(String::formatted("mbrtowc did not consume the expected number of bytes (1), returned {} instead", static_cast<ssize_t>(ret)));
+
+    // Ensure that we are in an initial state again.
+    EXPECT(mbsinit(&state) != 0);
+}
