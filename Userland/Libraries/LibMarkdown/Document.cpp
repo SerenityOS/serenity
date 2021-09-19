@@ -38,85 +38,19 @@ String Document::render_to_html() const
 
 String Document::render_to_inline_html() const
 {
-    StringBuilder builder;
-
-    for (auto& block : m_blocks) {
-        auto s = block.render_to_html();
-        builder.append(s);
-    }
-
-    return builder.build();
+    return m_container->render_to_html();
 }
 
 String Document::render_for_terminal(size_t view_width) const
 {
-    StringBuilder builder;
-
-    for (auto& block : m_blocks) {
-        auto s = block.render_for_terminal(view_width);
-        builder.append(s);
-    }
-
-    return builder.build();
-}
-
-template<typename BlockType>
-static bool helper(Vector<StringView>::ConstIterator& lines, NonnullOwnPtrVector<Block>& blocks)
-{
-    OwnPtr<BlockType> block = BlockType::parse(lines);
-    if (!block)
-        return false;
-    blocks.append(block.release_nonnull());
-    return true;
+    return m_container->render_for_terminal(view_width);
 }
 
 OwnPtr<Document> Document::parse(const StringView& str)
 {
     const Vector<StringView> lines_vec = str.lines();
     auto lines = lines_vec.begin();
-    auto document = make<Document>();
-    auto& blocks = document->m_blocks;
-    StringBuilder paragraph_text;
-
-    auto flush_paragraph = [&] {
-        if (paragraph_text.is_empty())
-            return;
-        auto paragraph = make<Paragraph>(Text::parse(paragraph_text.build()));
-        document->m_blocks.append(move(paragraph));
-        paragraph_text.clear();
-    };
-
-    while (true) {
-        if (lines.is_end())
-            break;
-
-        if ((*lines).is_empty()) {
-            ++lines;
-
-            flush_paragraph();
-            continue;
-        }
-
-        bool any = helper<Table>(lines, blocks) || helper<List>(lines, blocks) || helper<CodeBlock>(lines, blocks)
-            || helper<Heading>(lines, blocks) || helper<HorizontalRule>(lines, blocks);
-
-        if (any) {
-            if (!paragraph_text.is_empty()) {
-                auto last_block = document->m_blocks.take_last();
-                flush_paragraph();
-                document->m_blocks.append(move(last_block));
-            }
-            continue;
-        }
-
-        if (!paragraph_text.is_empty())
-            paragraph_text.append("\n");
-        paragraph_text.append(*lines++);
-    }
-
-    flush_paragraph();
-
-    return document;
+    return make<Document>(ContainerBlock::parse(lines));
 }
 
 }
