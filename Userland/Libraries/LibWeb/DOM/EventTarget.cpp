@@ -133,7 +133,7 @@ void EventTarget::set_event_handler_attribute(FlyString const& name, HTML::Event
             dbgln("Failed to parse script in event handler attribute '{}'", name);
             return;
         }
-        auto* function = JS::OrdinaryFunctionObject::create(target->script_execution_context()->interpreter().global_object(), name, program->body(), program->parameters(), program->function_length(), nullptr, JS::FunctionKind::Regular, false, false);
+        auto* function = JS::OrdinaryFunctionObject::create(target->script_execution_context()->realm().global_object(), name, program->body(), program->parameters(), program->function_length(), nullptr, JS::FunctionKind::Regular, false, false);
         VERIFY(function);
         listener = adopt_ref(*new DOM::EventListener(JS::make_handle(static_cast<JS::FunctionObject*>(function))));
     }

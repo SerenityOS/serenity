@@ -173,7 +173,8 @@ public:
     const String& source() const { return m_source; }
     void set_source(const String& source) { m_source = source; }
 
-    virtual JS::Interpreter& interpreter() override;
+    JS::Realm& realm();
+    JS::Interpreter& interpreter();
 
     JS::Value run_javascript(const StringView& source, const StringView& filename = "(unknown)");
 
