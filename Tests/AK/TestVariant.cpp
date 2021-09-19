@@ -219,3 +219,10 @@ TEST_CASE(copy_assign)
         EXPECT_EQ(the_value.get<String>(), "Hello, world!");
     }
 }
+
+TEST_CASE(default_empty)
+{
+    Variant<Empty, int> my_variant;
+    EXPECT(my_variant.has<Empty>());
+    EXPECT(!my_variant.has<int>());
+}
