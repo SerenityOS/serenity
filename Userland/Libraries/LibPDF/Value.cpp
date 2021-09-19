@@ -9,52 +9,31 @@
 
 namespace PDF {
 
-Value& Value::operator=(Value const& other)
-{
-    m_type = other.m_type;
-    switch (m_type) {
-    case Type::Empty:
-    case Type::Null:
-        break;
-    case Type::Bool:
-        m_as_bool = other.m_as_bool;
-        break;
-    case Type::Int:
-        m_as_int = other.m_as_int;
-        break;
-    case Type::Float:
-        m_as_float = other.m_as_float;
-        break;
-    case Type::Ref:
-        m_as_ref = other.m_as_ref;
-        break;
-    case Type::Object:
-        m_as_object = other.m_as_object;
-        break;
-    }
-    return *this;
-}
-
 String Value::to_string(int indent) const
 {
-    switch (m_type) {
-    case Type::Empty:
-        return "<empty>";
-    case Type::Null:
-        return "null";
-    case Type::Bool:
-        return as_bool() ? "true" : "false";
-    case Type::Int:
-        return String::number(as_int());
-    case Type::Float:
-        return String::number(as_float());
-    case Type::Ref:
-        return String::formatted("{} {} R", as_ref_index(), as_ref_generation_index());
-    case Type::Object:
-        return as_object()->to_string(indent);
-    }
-
-    VERIFY_NOT_REACHED();
+    return visit(
+        [&](Empty const&) -> String {
+            // Return type deduction means that we can't use implicit conversions.
+            return "<empty>";
+        },
+        [&](std::nullptr_t const&) -> String {
+            return "null";
+        },
+        [&](bool const& b) -> String {
+            return b ? "true" : "false";
+        },
+        [&](int const& i) {
+            return String::number(i);
+        },
+        [&](float const& f) {
+            return String::number(f);
+        },
+        [&](Reference const& ref) {
+            return String::formatted("{} {} R", ref.as_ref_index(), ref.as_ref_generation_index());
+        },
+        [&](NonnullRefPtr<Object> const& object) {
+            return object->to_string(indent);
+        });
 }
 
 }
