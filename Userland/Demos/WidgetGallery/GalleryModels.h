@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/LexicalPath.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
@@ -69,8 +70,7 @@ public:
             Cursor cursor;
             cursor.path = move(path);
             cursor.bitmap = Gfx::Bitmap::try_load_from_file(cursor.path);
-            auto filename_split = cursor.path.split('/');
-            cursor.name = filename_split[3];
+            cursor.name = LexicalPath::basename(cursor.path);
             m_cursors.append(move(cursor));
         }
 
@@ -150,8 +150,7 @@ public:
                 continue;
             IconSet icon_set;
             icon_set.big_icon = Gfx::Bitmap::try_load_from_file(path);
-            auto filename_split = path.split('/');
-            icon_set.name = filename_split[3];
+            icon_set.name = LexicalPath::basename(path);
             m_icon_sets.append(move(icon_set));
         }
 
@@ -165,8 +164,7 @@ public:
                 continue;
             IconSet icon_set;
             icon_set.little_icon = Gfx::Bitmap::try_load_from_file(path);
-            auto filename_split = path.split('/');
-            icon_set.name = filename_split[3];
+            icon_set.name = LexicalPath::basename(path);
             for (size_t i = 0; i < big_icons_found; i++) {
                 if (icon_set.name == m_icon_sets[i].name) {
                     m_icon_sets[i].little_icon = icon_set.little_icon;
