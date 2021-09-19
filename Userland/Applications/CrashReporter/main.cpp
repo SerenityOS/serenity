@@ -234,9 +234,10 @@ int main(int argc, char** argv)
     auto& backtrace_tab_widget = backtrace_tab.add<GUI::TabWidget>();
     backtrace_tab_widget.set_tab_position(GUI::TabWidget::TabPosition::Bottom);
     for (auto& backtrace : thread_backtraces) {
-        auto& backtrace_text_editor = backtrace_tab_widget.add_tab<GUI::TextEditor>(backtrace.title);
-        backtrace_text_editor.set_layout<GUI::VerticalBoxLayout>();
-        backtrace_text_editor.layout()->set_margins(4);
+        auto& container = backtrace_tab_widget.add_tab<GUI::Widget>(backtrace.title);
+        container.set_layout<GUI::VerticalBoxLayout>();
+        container.layout()->set_margins(4);
+        auto& backtrace_text_editor = container.add<GUI::TextEditor>();
         backtrace_text_editor.set_text(backtrace.text);
         backtrace_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
         backtrace_text_editor.set_should_hide_unnecessary_scrollbars(true);
@@ -253,9 +254,10 @@ int main(int argc, char** argv)
     auto& cpu_registers_tab_widget = cpu_registers_tab.add<GUI::TabWidget>();
     cpu_registers_tab_widget.set_tab_position(GUI::TabWidget::TabPosition::Bottom);
     for (auto& cpu_registers : thread_cpu_registers) {
-        auto& cpu_registers_text_editor = cpu_registers_tab_widget.add_tab<GUI::TextEditor>(cpu_registers.title);
-        cpu_registers_text_editor.set_layout<GUI::VerticalBoxLayout>();
-        cpu_registers_text_editor.layout()->set_margins(4);
+        auto& container = cpu_registers_tab_widget.add_tab<GUI::Widget>(cpu_registers.title);
+        container.set_layout<GUI::VerticalBoxLayout>();
+        container.layout()->set_margins(4);
+        auto& cpu_registers_text_editor = container.add<GUI::TextEditor>();
         cpu_registers_text_editor.set_text(cpu_registers.text);
         cpu_registers_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
         cpu_registers_text_editor.set_should_hide_unnecessary_scrollbars(true);
