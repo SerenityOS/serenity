@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/EventLoop.h>
 #include <LibCore/Timer.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
@@ -46,6 +47,19 @@ EventLoop& main_thread_event_loop()
 // https://html.spec.whatwg.org/multipage/webappapis.html#spin-the-event-loop
 void EventLoop::spin_until([[maybe_unused]] Function<bool()> goal_condition)
 {
+    // FIXME: This is an ad-hoc hack until we implement the proper mechanism.
+    if (goal_condition())
+        return;
+    Core::EventLoop loop;
+    auto timer = Core::Timer::create_repeating(16, [&] {
+        if (goal_condition())
+            loop.quit(0);
+    });
+    timer->start();
+    loop.exec();
+
+    // Real spec steps:
+
     // FIXME: 1. Let task be the event loop's currently running task.
 
     // FIXME: 2. Let task source be task's source.
