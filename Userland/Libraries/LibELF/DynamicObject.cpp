@@ -422,6 +422,16 @@ const char* DynamicObject::name_for_dtag(ElfW(Sword) d_tag)
         return "RELCOUNT"; /* relocs, which must come first */
     case DT_FLAGS_1:
         return "FLAGS_1";
+    case DT_VERDEF:
+        return "VERDEF";
+    case DT_VERDEFNUM:
+        return "VERDEFNUM";
+    case DT_VERSYM:
+        return "VERSYM";
+    case DT_VERNEEDED:
+        return "VERNEEDED";
+    case DT_VERNEEDEDNUM:
+        return "VERNEEDEDNUM";
     default:
         return "??";
     }
