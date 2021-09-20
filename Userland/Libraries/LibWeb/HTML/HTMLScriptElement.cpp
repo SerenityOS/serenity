@@ -291,9 +291,8 @@ void HTMLScriptElement::prepare_script()
             //    Fetch a classic script given url, settings object, options, classic script CORS setting, and encoding.
             auto request = LoadRequest::create_for_url_on_page(url, document().page());
 
-            // FIXME: This load should be made asynchronous and the parser should spin an event loop etc.
             m_script_filename = url.to_string();
-            ResourceLoader::the().load_sync(
+            ResourceLoader::the().load(
                 request,
                 [this, url](auto data, auto&, auto) {
                     if (data.is_null()) {
@@ -310,6 +309,8 @@ void HTMLScriptElement::prepare_script()
                 },
                 [this](auto&, auto) {
                     m_failed_to_load = true;
+                    dbgln("HONK! Failed to load script, but ready nonetheless.");
+                    script_became_ready();
                 });
         } else if (m_script_type == ScriptType::Module) {
             // FIXME: -> "module"
@@ -374,21 +375,34 @@ void HTMLScriptElement::prepare_script()
         // Add the element to the end of the list of scripts that will execute in order as soon as possible associated with the element's preparation-time document.
         m_preparation_time_document->add_script_to_execute_as_soon_as_possible({}, *this);
 
-        // FIXME: When the script is ready, run the following steps:
+        // When the script is ready, run the following steps:
+        when_the_script_is_ready([this] {
+            // 1. If the element is not now the first element in the list of scripts
+            //    that will execute in order as soon as possible to which it was added above,
+            //    then mark the element as ready but return without executing the script yet.
+            if (this != &m_preparation_time_document->scripts_to_execute_as_soon_as_possible().first()) {
+                m_script_ready = true;
+                return;
+            }
 
-        // FIXME: 1. If the element is not now the first element in the list of scripts
-        //           that will execute in order as soon as possible to which it was added above,
-        //           then mark the element as ready but return without executing the script yet.
+            for (;;) {
+                // 2. Execution: Execute the script block corresponding to the first script element
+                //    in this list of scripts that will execute in order as soon as possible.
+                m_preparation_time_document->scripts_to_execute_as_soon_as_possible().first().execute_script();
 
-        // FIXME: 2. Execution: Execute the script block corresponding to the first script element
-        //           in this list of scripts that will execute in order as soon as possible.
-        //
-        // FIXME: 3. Remove the first element from this list of scripts that will execute in order
-        //           as soon as possible.
-        //
-        // FIXME: 4. If this list of scripts that will execute in order as soon as possible is still
-        //           not empty and the first entry has already been marked as ready, then jump back
-        //           to the step labeled execution.
+                // 3. Remove the first element from this list of scripts that will execute in order
+                //    as soon as possible.
+                m_preparation_time_document->scripts_to_execute_as_soon_as_possible().take_first();
+
+                // 4. If this list of scripts that will execute in order as soon as possible is still
+                //    not empty and the first entry has already been marked as ready, then jump back
+                //    to the step labeled execution.
+                if (!m_preparation_time_document->scripts_to_execute_as_soon_as_possible().is_empty() && m_preparation_time_document->scripts_to_execute_as_soon_as_possible().first().m_script_ready)
+                    continue;
+
+                break;
+            }
+        });
     }
 
     // -> If the script's type is "classic", and the element has a src attribute
@@ -399,6 +413,8 @@ void HTMLScriptElement::prepare_script()
         m_preparation_time_document->add_script_to_execute_as_soon_as_possible({}, *this);
         // FIXME: When the script is ready, execute the script block and then remove the element
         //        from the set of scripts that will execute as soon as possible.
+
+        TODO();
     }
 
     // FIXME: -> If the element does not have a src attribute, and the element is "parser-inserted",
