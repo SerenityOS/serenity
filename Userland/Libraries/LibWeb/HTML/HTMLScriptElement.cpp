@@ -411,10 +411,15 @@ void HTMLScriptElement::prepare_script()
         // The element must be added to the set of scripts that will execute as soon as possible of the element's preparation-time document.
         // FIXME: This should add to a set, not a list.
         m_preparation_time_document->add_script_to_execute_as_soon_as_possible({}, *this);
-        // FIXME: When the script is ready, execute the script block and then remove the element
-        //        from the set of scripts that will execute as soon as possible.
 
-        TODO();
+        // When the script is ready, execute the script block and then remove the element
+        // from the set of scripts that will execute as soon as possible.
+        when_the_script_is_ready([this] {
+            execute_script();
+            m_preparation_time_document->scripts_to_execute_as_soon_as_possible().remove_first_matching([&](auto& entry) {
+                return entry == this;
+            });
+        });
     }
 
     // FIXME: -> If the element does not have a src attribute, and the element is "parser-inserted",
