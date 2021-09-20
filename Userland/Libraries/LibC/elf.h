@@ -552,9 +552,14 @@ typedef struct {
 
 /* some other useful tags */
 #define DT_GNU_HASH 0x6ffffef5  /* address of GNU hash table */
+#define DT_VERSYM 0x6ffffff0    /* address of table provided by .gnu.version */
 #define DT_RELACOUNT 0x6ffffff9 /* if present, number of RELATIVE */
 #define DT_RELCOUNT 0x6ffffffa  /* relocs, which must come first */
 #define DT_FLAGS_1 0x6ffffffb
+#define DT_VERDEF 0x6ffffffc       /* address of version definition table */
+#define DT_VERDEFNUM 0x6ffffffd    /* number of version definitions */
+#define DT_VERNEEDED 0x6ffffffe    /* address of the dependency table */
+#define DT_VERNEEDEDNUM 0x6fffffff /* number of entries in VERNEEDED */
 
 /* Dynamic Flags - DT_FLAGS .dynamic entry */
 #define DF_ORIGIN 0x00000001
