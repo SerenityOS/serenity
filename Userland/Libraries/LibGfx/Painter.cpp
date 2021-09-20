@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1076,24 +1077,28 @@ ALWAYS_INLINE static void do_draw_integer_scaled_bitmap(Gfx::Bitmap& target, Int
     }
 }
 
-template<bool has_alpha_channel, typename GetPixel>
+template<bool has_alpha_channel, bool do_bilinear_blend, typename GetPixel>
 ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect const& dst_rect, IntRect const& clipped_rect, Gfx::Bitmap const& source, FloatRect const& src_rect, GetPixel get_pixel, float opacity)
 {
-    IntRect int_src_rect = enclosing_int_rect(src_rect);
-    if (dst_rect == clipped_rect && int_src_rect == src_rect && !(dst_rect.width() % int_src_rect.width()) && !(dst_rect.height() % int_src_rect.height())) {
-        int hfactor = dst_rect.width() / int_src_rect.width();
-        int vfactor = dst_rect.height() / int_src_rect.height();
-        if (hfactor == 2 && vfactor == 2)
-            return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, int_src_rect, source, 2, 2, get_pixel, opacity);
-        if (hfactor == 3 && vfactor == 3)
-            return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, int_src_rect, source, 3, 3, get_pixel, opacity);
-        if (hfactor == 4 && vfactor == 4)
-            return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, int_src_rect, source, 4, 4, get_pixel, opacity);
-        return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, int_src_rect, source, hfactor, vfactor, get_pixel, opacity);
+    if constexpr (!do_bilinear_blend) {
+        IntRect int_src_rect = enclosing_int_rect(src_rect);
+        if (dst_rect == clipped_rect && int_src_rect == src_rect && !(dst_rect.width() % int_src_rect.width()) && !(dst_rect.height() % int_src_rect.height())) {
+            int hfactor = dst_rect.width() / int_src_rect.width();
+            int vfactor = dst_rect.height() / int_src_rect.height();
+            if (hfactor == 2 && vfactor == 2)
+                return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, int_src_rect, source, 2, 2, get_pixel, opacity);
+            if (hfactor == 3 && vfactor == 3)
+                return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, int_src_rect, source, 3, 3, get_pixel, opacity);
+            if (hfactor == 4 && vfactor == 4)
+                return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, int_src_rect, source, 4, 4, get_pixel, opacity);
+            return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, int_src_rect, source, hfactor, vfactor, get_pixel, opacity);
+        }
     }
 
     bool has_opacity = opacity != 1.0f;
     i64 shift = (i64)1 << 32;
+    i64 fractional_mask = (shift - (u64)1);
+    i64 half_pixel = (i64)1 << 31;
     i64 hscale = (src_rect.width() * shift) / dst_rect.width();
     i64 vscale = (src_rect.height() * shift) / dst_rect.height();
     i64 src_left = src_rect.left() * shift;
@@ -1102,25 +1107,56 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
     for (int y = clipped_rect.top(); y <= clipped_rect.bottom(); ++y) {
         auto* scanline = (Color*)target.scanline(y);
         for (int x = clipped_rect.left(); x <= clipped_rect.right(); ++x) {
-            auto scaled_x = ((x - dst_rect.x()) * hscale + src_left) >> 32;
-            auto scaled_y = ((y - dst_rect.y()) * vscale + src_top) >> 32;
-            auto src_pixel = get_pixel(source, scaled_x, scaled_y);
+            auto desired_x = ((x - dst_rect.x()) * hscale + src_left);
+            auto desired_y = ((y - dst_rect.y()) * vscale + src_top);
+
+            Color src_pixel;
+            if constexpr (do_bilinear_blend) {
+                auto scaled_x0 = clamp((desired_x - half_pixel) >> 32, 0, src_rect.width() - 1);
+                auto scaled_x1 = clamp((desired_x + half_pixel) >> 32, 0, src_rect.width() - 1);
+                auto scaled_y0 = clamp((desired_y - half_pixel) >> 32, 0, src_rect.height() - 1);
+                auto scaled_y1 = clamp((desired_y + half_pixel) >> 32, 0, src_rect.height() - 1);
+
+                float x_ratio = (((desired_x + half_pixel) & fractional_mask) / (float)shift);
+                float y_ratio = (((desired_y + half_pixel) & fractional_mask) / (float)shift);
+
+                src_pixel = get_pixel(source, scaled_x0, scaled_y0).interpolate(get_pixel(source, scaled_x1, scaled_y0), x_ratio).interpolate(get_pixel(source, scaled_x0, scaled_y1).interpolate(get_pixel(source, scaled_x1, scaled_y1), x_ratio), y_ratio);
+            } else {
+                auto scaled_x = desired_x >> 32;
+                auto scaled_y = desired_y >> 32;
+                src_pixel = get_pixel(source, scaled_x, scaled_y);
+            }
+
             if (has_opacity)
                 src_pixel.set_alpha(src_pixel.alpha() * opacity);
             if constexpr (has_alpha_channel) {
                 scanline[x] = scanline[x].blend(src_pixel);
-            } else
+            } else {
                 scanline[x] = src_pixel;
+            }
         }
     }
 }
 
-void Painter::draw_scaled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& source, IntRect const& a_src_rect, float opacity)
+template<bool has_alpha_channel, typename GetPixel>
+ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect const& dst_rect, IntRect const& clipped_rect, Gfx::Bitmap const& source, FloatRect const& src_rect, GetPixel get_pixel, float opacity, Painter::ScalingMode scaling_mode)
 {
-    draw_scaled_bitmap(a_dst_rect, source, FloatRect { a_src_rect }, opacity);
+    switch (scaling_mode) {
+    case Painter::ScalingMode::NearestNeighbor:
+        do_draw_scaled_bitmap<has_alpha_channel, false>(target, dst_rect, clipped_rect, source, src_rect, get_pixel, opacity);
+        break;
+    case Painter::ScalingMode::BilinearBlend:
+        do_draw_scaled_bitmap<has_alpha_channel, true>(target, dst_rect, clipped_rect, source, src_rect, get_pixel, opacity);
+        break;
+    }
 }
 
-void Painter::draw_scaled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& source, FloatRect const& a_src_rect, float opacity)
+void Painter::draw_scaled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& source, IntRect const& a_src_rect, float opacity, ScalingMode scaling_mode)
+{
+    draw_scaled_bitmap(a_dst_rect, source, FloatRect { a_src_rect }, opacity, scaling_mode);
+}
+
+void Painter::draw_scaled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& source, FloatRect const& a_src_rect, float opacity, ScalingMode scaling_mode)
 {
     IntRect int_src_rect = enclosing_int_rect(a_src_rect);
     if (scale() == source.scale() && a_src_rect == int_src_rect && a_dst_rect.size() == int_src_rect.size())
@@ -1135,37 +1171,37 @@ void Painter::draw_scaled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& s
     if (source.has_alpha_channel() || opacity != 1.0f) {
         switch (source.format()) {
         case BitmapFormat::BGRx8888:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::BGRx8888>, opacity);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::BGRx8888>, opacity, scaling_mode);
             break;
         case BitmapFormat::BGRA8888:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::BGRA8888>, opacity);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::BGRA8888>, opacity, scaling_mode);
             break;
         case BitmapFormat::Indexed8:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed8>, opacity);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed8>, opacity, scaling_mode);
             break;
         case BitmapFormat::Indexed4:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed4>, opacity);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed4>, opacity, scaling_mode);
             break;
         case BitmapFormat::Indexed2:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed2>, opacity);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed2>, opacity, scaling_mode);
             break;
         case BitmapFormat::Indexed1:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed1>, opacity);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed1>, opacity, scaling_mode);
             break;
         default:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Invalid>, opacity);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Invalid>, opacity, scaling_mode);
             break;
         }
     } else {
         switch (source.format()) {
         case BitmapFormat::BGRx8888:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::BGRx8888>, opacity);
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::BGRx8888>, opacity, scaling_mode);
             break;
         case BitmapFormat::Indexed8:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed8>, opacity);
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed8>, opacity, scaling_mode);
             break;
         default:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Invalid>, opacity);
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Invalid>, opacity, scaling_mode);
             break;
         }
     }
