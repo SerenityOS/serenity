@@ -19,6 +19,7 @@ extern void _init();
 extern bool __environ_is_malloced;
 extern bool __stdio_is_initialized;
 extern bool __heap_is_stable;
+extern void* __auxiliary_vector;
 
 int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle);
 void __cxa_finalize(void* dso_handle);

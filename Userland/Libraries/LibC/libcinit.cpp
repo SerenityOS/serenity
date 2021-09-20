@@ -19,10 +19,23 @@ __thread int errno;
 char** environ;
 bool __environ_is_malloced;
 bool __stdio_is_initialized;
+void* __auxiliary_vector;
+
+static void __auxiliary_vector_init();
 
 void __libc_init()
 {
+    __auxiliary_vector_init();
     __malloc_init();
     __stdio_init();
+}
+
+static void __auxiliary_vector_init()
+{
+    char** env;
+    for (env = environ; *env; ++env) {
+    }
+
+    __auxiliary_vector = (void*)++env;
 }
 }
