@@ -534,8 +534,8 @@ Optional<StyleProperty> StyleResolver::resolve_custom_property(DOM::Element& ele
 NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(DOM::Element& element) const
 {
     auto style = StyleProperties::create();
-
-    if (auto* parent_style = element.parent_element() ? element.parent_element()->specified_css_values() : nullptr) {
+    auto* parent_style = element.parent_element() ? element.parent_element()->specified_css_values() : nullptr;
+    if (parent_style) {
         parent_style->for_each_property([&](auto property_id, auto& value) {
             if (is_inherited_property(property_id))
                 set_property_expanding_shorthands(style, property_id, value, m_document);
@@ -556,6 +556,17 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(DOM::Element& elemen
                 auto resolved = resolve_custom_property(element, custom_prop_name);
                 if (resolved.has_value()) {
                     property_value = resolved.value().value;
+                }
+            }
+            // FIXME: This also captures shorthands of which we ideally want to resolve the long names separately.
+            if (property_value->is_inherit()) {
+                // HACK: Trying to resolve the font property here lead to copious amounts of debug-spam
+                if (property.property_id == CSS::PropertyID::Font)
+                    continue;
+                if (parent_style) {
+                    auto maybe_parent_property_value = parent_style->property(property.property_id);
+                    if (maybe_parent_property_value.has_value())
+                        property_value = maybe_parent_property_value.release_value();
                 }
             }
             set_property_expanding_shorthands(style, property.property_id, property_value, m_document);
