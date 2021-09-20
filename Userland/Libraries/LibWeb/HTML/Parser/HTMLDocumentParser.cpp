@@ -184,8 +184,11 @@ void HTMLDocumentParser::run(const AK::URL& url)
         m_stack_of_open_elements.pop();
 
     auto scripts_to_execute_when_parsing_has_finished = m_document->take_scripts_to_execute_when_parsing_has_finished({});
+
     for (auto& script : scripts_to_execute_when_parsing_has_finished) {
-        // FIXME: Spin the event loop until the script is ready to be parser executed and there's no style sheets blocking scripts.
+        main_thread_event_loop().spin_until([&] {
+            return script.is_ready_to_be_parser_executed() && !document().has_a_style_sheet_that_is_blocking_scripts();
+        });
         script.execute_script();
     }
 
@@ -193,12 +196,10 @@ void HTMLDocumentParser::run(const AK::URL& url)
     content_loaded_event->set_bubbles(true);
     m_document->dispatch_event(content_loaded_event);
 
-    // FIXME: The document parser shouldn't execute these, it should just spin the event loop until the list becomes empty.
-    // FIXME: Once the set has been added, also spin the event loop until the set becomes empty.
-    auto scripts_to_execute_as_soon_as_possible = m_document->take_scripts_to_execute_as_soon_as_possible({});
-    for (auto& script : scripts_to_execute_as_soon_as_possible) {
-        script.execute_script();
-    }
+    // 7. Spin the event loop until the set of scripts that will execute as soon as possible and the list of scripts that will execute in order as soon as possible are empty.
+    main_thread_event_loop().spin_until([&] {
+        return m_document->scripts_to_execute_as_soon_as_possible().is_empty();
+    });
 
     // FIXME: Spin the event loop until there is nothing that delays the load event in the Document.
 
