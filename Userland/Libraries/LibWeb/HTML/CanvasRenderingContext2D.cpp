@@ -100,7 +100,7 @@ void CanvasRenderingContext2D::draw_image(const HTMLImageElement& image_element,
     Gfx::FloatRect dst_rect = { x, y, (float)image_element.bitmap()->width(), (float)image_element.bitmap()->height() };
     auto rect = m_transform.map(dst_rect);
 
-    painter->draw_scaled_bitmap(enclosing_int_rect(rect), *image_element.bitmap(), src_rect);
+    painter->draw_scaled_bitmap(enclosing_int_rect(rect), *image_element.bitmap(), src_rect, 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
 }
 
 void CanvasRenderingContext2D::scale(float sx, float sy)

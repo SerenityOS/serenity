@@ -39,7 +39,7 @@ void CanvasBox::paint(PaintContext& context, PaintPhase phase)
             return;
 
         if (dom_node().bitmap())
-            context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *dom_node().bitmap(), dom_node().bitmap()->rect());
+            context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *dom_node().bitmap(), dom_node().bitmap()->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
     }
 }
 
