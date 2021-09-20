@@ -255,6 +255,21 @@ public:
     {
         *this = HashTable();
     }
+    void clear_with_capacity()
+    {
+        if constexpr (!Detail::IsTriviallyDestructible<T>) {
+            for (auto* bucket : *this)
+                bucket->~T();
+        }
+        __builtin_memset(m_buckets, 0, size_in_bytes(capacity()));
+        m_size = 0;
+        m_deleted_count = 0;
+
+        if constexpr (IsOrdered)
+            m_collection_data = { nullptr, nullptr };
+        else
+            m_buckets[m_capacity].end = true;
+    }
 
     template<typename U = T>
     ErrorOr<HashSetResult> try_set(U&& value, HashSetExistingEntryBehavior existing_entry_behavior = HashSetExistingEntryBehavior::Replace)
