@@ -32,6 +32,11 @@ public:
         Dashed,
     };
 
+    enum class ScalingMode {
+        NearestNeighbor,
+        BilinearBlend,
+    };
+
     void clear_rect(IntRect const&, Color);
     void fill_rect(IntRect const&, Color);
     void fill_rect_with_dither_pattern(IntRect const&, Color, Color);
@@ -46,8 +51,8 @@ public:
     void draw_focus_rect(IntRect const&, Color);
     void draw_bitmap(IntPoint const&, CharacterBitmap const&, Color = Color());
     void draw_bitmap(IntPoint const&, GlyphBitmap const&, Color = Color());
-    void draw_scaled_bitmap(IntRect const& dst_rect, Gfx::Bitmap const&, IntRect const& src_rect, float opacity = 1.0f);
-    void draw_scaled_bitmap(IntRect const& dst_rect, Gfx::Bitmap const&, FloatRect const& src_rect, float opacity = 1.0f);
+    void draw_scaled_bitmap(IntRect const& dst_rect, Gfx::Bitmap const&, IntRect const& src_rect, float opacity = 1.0f, ScalingMode = ScalingMode::NearestNeighbor);
+    void draw_scaled_bitmap(IntRect const& dst_rect, Gfx::Bitmap const&, FloatRect const& src_rect, float opacity = 1.0f, ScalingMode = ScalingMode::NearestNeighbor);
     void draw_triangle(IntPoint const&, IntPoint const&, IntPoint const&, Color);
     void draw_ellipse_intersecting(IntRect const&, Color, int thickness = 1);
     void set_pixel(IntPoint const&, Color);
