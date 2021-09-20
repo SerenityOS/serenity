@@ -1005,9 +1005,11 @@ Messages::WindowServer::GetScreenBitmapAroundCursorResponse ClientConnection::ge
         return IterationDecision::Continue;
     });
 
+    auto screen_scale_factor = ScreenInput::the().cursor_location_screen().scale_factor();
     if (intersecting_with_screens == 1) {
         auto& screen = Screen::closest_to_rect(rect);
-        auto bitmap = Compositor::the().front_bitmap_for_screenshot({}, screen).cropped(rect.translated(-screen.rect().location()));
+        auto crop_rect = rect.translated(-screen.rect().location()) * screen_scale_factor;
+        auto bitmap = Compositor::the().front_bitmap_for_screenshot({}, screen).cropped(crop_rect);
         return bitmap->to_shareable_bitmap();
     }
 
@@ -1022,6 +1024,7 @@ Messages::WindowServer::GetScreenBitmapAroundCursorResponse ClientConnection::ge
             if (src_rect.is_empty())
                 return IterationDecision ::Continue;
             auto& screen_bitmap = Compositor::the().front_bitmap_for_screenshot({}, screen);
+            // TODO: Add scaling support for multiple screens
             auto from_rect = src_rect.translated(-screen_rect.location());
             auto target_location = rect.intersected(screen_rect).location().translated(-rect.location());
             // TODO: painter does *not* support down-sampling!!!
