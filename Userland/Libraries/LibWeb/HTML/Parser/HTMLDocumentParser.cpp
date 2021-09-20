@@ -179,6 +179,10 @@ void HTMLDocumentParser::run(const AK::URL& url)
 
     m_document->set_ready_state("interactive");
 
+    // 3. Pop all the nodes off the stack of open elements.
+    while (!m_stack_of_open_elements.is_empty())
+        m_stack_of_open_elements.pop();
+
     auto scripts_to_execute_when_parsing_has_finished = m_document->take_scripts_to_execute_when_parsing_has_finished({});
     for (auto& script : scripts_to_execute_when_parsing_has_finished) {
         // FIXME: Spin the event loop until the script is ready to be parser executed and there's no style sheets blocking scripts.
