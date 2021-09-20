@@ -46,6 +46,7 @@ public:
     [[nodiscard]] size_t size() const { return m_table.size(); }
     [[nodiscard]] size_t capacity() const { return m_table.capacity(); }
     void clear() { m_table.clear(); }
+    void clear_with_capacity() { m_table.clear_with_capacity(); }
 
     HashSetResult set(const K& key, const V& value) { return m_table.set({ key, value }); }
     HashSetResult set(const K& key, V&& value) { return m_table.set({ key, move(value) }); }
