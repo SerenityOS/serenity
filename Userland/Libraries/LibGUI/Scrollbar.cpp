@@ -123,12 +123,12 @@ bool Scrollbar::has_scrubber() const
     return max() != min();
 }
 
-int Scrollbar::unclamped_scrubber_size() const
+float Scrollbar::unclamped_scrubber_size() const
 {
-    int pixel_range = length(orientation()) - button_size() * 2;
-    int value_range = max() - min();
+    float pixel_range = length(orientation()) - button_size() * 2;
+    float value_range = max() - min();
 
-    int scrubber_size = 0;
+    float scrubber_size { 0 };
     if (value_range > 0) {
         // Scrubber size should be proportional to the visible portion
         // (page) in relation to the content (value range + page)
