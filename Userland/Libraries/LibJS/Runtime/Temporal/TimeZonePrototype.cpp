@@ -60,7 +60,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_nanoseconds_for)
     // 3. Set instant to ? ToTemporalInstant(instant).
     auto* instant = TRY_OR_DISCARD(to_temporal_instant(global_object, vm.argument(0)));
 
-    // 4. If timeZone.[[OffsetNanoseconds]] is not undefined, return timeZone.[[OffsetNanoseconds]].
+    // 4. If timeZone.[[OffsetNanoseconds]] is not undefined, return 𝔽(timeZone.[[OffsetNanoseconds]]).
     if (time_zone->offset_nanoseconds().has_value())
         return Value(*time_zone->offset_nanoseconds());
 
