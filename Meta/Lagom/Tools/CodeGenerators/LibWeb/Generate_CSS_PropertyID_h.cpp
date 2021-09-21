@@ -56,26 +56,46 @@ enum class PropertyID {
     Custom,
 )~~~");
 
-    Optional<String> first_property_id;
-    Optional<String> last_property_id;
+    Vector<String> shorthand_property_ids;
+    Vector<String> longhand_property_ids;
 
     json.value().as_object().for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
+        if (value.as_object().has("longhands"))
+            shorthand_property_ids.append(name);
+        else
+            longhand_property_ids.append(name);
+    });
 
-        if (!first_property_id.has_value())
-            first_property_id = name;
-        last_property_id = name;
+    auto first_property_id = shorthand_property_ids.first();
+    auto last_property_id = longhand_property_ids.last();
 
+    for (auto& name : shorthand_property_ids) {
         auto member_generator = generator.fork();
         member_generator.set("name:titlecase", title_casify(name));
 
         member_generator.append(R"~~~(
     @name:titlecase@,
 )~~~");
-    });
+    }
 
-    generator.set("first_property_id", title_casify(first_property_id.value()));
-    generator.set("last_property_id", title_casify(last_property_id.value()));
+    for (auto& name : longhand_property_ids) {
+        auto member_generator = generator.fork();
+        member_generator.set("name:titlecase", title_casify(name));
+
+        member_generator.append(R"~~~(
+    @name:titlecase@,
+)~~~");
+    }
+
+    generator.set("first_property_id", title_casify(first_property_id));
+    generator.set("last_property_id", title_casify(last_property_id));
+
+    generator.set("first_shorthand_property_id", title_casify(shorthand_property_ids.first()));
+    generator.set("last_shorthand_property_id", title_casify(shorthand_property_ids.last()));
+
+    generator.set("first_longhand_property_id", title_casify(longhand_property_ids.first()));
+    generator.set("last_longhand_property_id", title_casify(longhand_property_ids.last()));
 
     generator.append(R"~~~(
 };
@@ -88,6 +108,10 @@ RefPtr<StyleValue> property_initial_value(PropertyID);
 
 constexpr PropertyID first_property_id = PropertyID::@first_property_id@;
 constexpr PropertyID last_property_id = PropertyID::@last_property_id@;
+constexpr PropertyID first_shorthand_property_id = PropertyID::@first_shorthand_property_id@;
+constexpr PropertyID last_shorthand_property_id = PropertyID::@last_shorthand_property_id@;
+constexpr PropertyID first_longhand_property_id = PropertyID::@first_longhand_property_id@;
+constexpr PropertyID last_longhand_property_id = PropertyID::@last_longhand_property_id@;
 
 enum class Quirk {
     // https://quirks.spec.whatwg.org/#the-hashless-hex-color-quirk
