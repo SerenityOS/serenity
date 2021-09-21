@@ -234,12 +234,18 @@ public:
 
     // 5.2.3.2 Throw an Exception, https://tc39.es/ecma262/#sec-throw-an-exception
     template<typename T, typename... Args>
-    Completion throw_completion(GlobalObject& global_object, ErrorType type, Args&&... args)
+    Completion throw_completion(GlobalObject& global_object, Args&&... args)
     {
-        auto* error = T::create(global_object, String::formatted(type.message(), forward<Args>(args)...));
+        auto* error = T::create(global_object, forward<Args>(args)...);
         // NOTE: This is temporary until we remove VM::exception().
         throw_exception(global_object, error);
         return JS::throw_completion(error);
+    }
+
+    template<typename T, typename... Args>
+    Completion throw_completion(GlobalObject& global_object, ErrorType type, Args&&... args)
+    {
+        return throw_completion<T>(global_object, String::formatted(type.message(), forward<Args>(args)...));
     }
 
     Value construct(FunctionObject&, FunctionObject& new_target, Optional<MarkedValueList> arguments);
