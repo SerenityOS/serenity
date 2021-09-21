@@ -966,9 +966,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
         if (vm.exception())
             return {};
     } else {
-        replacement = get_substitution(global_object, search_string.view(), string.view(), *position, {}, js_undefined(), replace_value);
-        if (vm.exception())
-            return {};
+        replacement = TRY_OR_DISCARD(get_substitution(global_object, search_string.view(), string.view(), *position, {}, js_undefined(), replace_value));
     }
 
     StringBuilder builder;
@@ -1060,9 +1058,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
             if (vm.exception())
                 return {};
         } else {
-            replacement = get_substitution(global_object, search_string.view(), string.view(), position, {}, js_undefined(), replace_value);
-            if (vm.exception())
-                return {};
+            replacement = TRY_OR_DISCARD(get_substitution(global_object, search_string.view(), string.view(), position, {}, js_undefined(), replace_value));
         }
 
         result.append(preserved);
