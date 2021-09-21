@@ -76,7 +76,7 @@ void FramebufferDevice::create_buffer(Buffer& buffer, size_t framebuffer_offset,
     buffer.resource_id = adapter().create_2d_resource(info.rect);
 
     // 2. Attach backing storage using  VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING
-    adapter().ensure_backing_storage(*m_framebuffer, buffer.framebuffer_offset, framebuffer_size, buffer.resource_id);
+    adapter().ensure_backing_storage(buffer.resource_id, *m_framebuffer, buffer.framebuffer_offset, framebuffer_size);
     // 3. Use VIRTIO_GPU_CMD_SET_SCANOUT to link the framebuffer to a display scanout.
     if (&buffer == m_current_buffer)
         adapter().set_scanout_resource(m_scanout.value(), buffer.resource_id, info.rect);
@@ -111,17 +111,17 @@ Protocol::DisplayInfoResponse::Display& FramebufferDevice::display_info()
 
 void FramebufferDevice::transfer_framebuffer_data_to_host(Protocol::Rect const& rect, Buffer& buffer)
 {
-    adapter().transfer_framebuffer_data_to_host(m_scanout, rect, buffer.resource_id);
+    adapter().transfer_framebuffer_data_to_host(m_scanout, buffer.resource_id, rect);
 }
 
 void FramebufferDevice::flush_dirty_window(Protocol::Rect const& dirty_rect, Buffer& buffer)
 {
-    adapter().flush_dirty_rectangle(m_scanout, dirty_rect, buffer.resource_id);
+    adapter().flush_dirty_rectangle(m_scanout, buffer.resource_id, dirty_rect);
 }
 
 void FramebufferDevice::flush_displayed_image(Protocol::Rect const& dirty_rect, Buffer& buffer)
 {
-    adapter().flush_displayed_image(dirty_rect, buffer.resource_id);
+    adapter().flush_displayed_image(buffer.resource_id, dirty_rect);
 }
 
 KResult FramebufferDevice::try_to_set_resolution(size_t width, size_t height)
@@ -151,7 +151,7 @@ void FramebufferDevice::set_buffer(int buffer_index)
         return;
     m_current_buffer = &buffer;
     adapter().set_scanout_resource(m_scanout.value(), buffer.resource_id, display_info().rect);
-    adapter().flush_displayed_image(buffer.dirty_rect, buffer.resource_id); // QEMU SDL backend requires this (as per spec)
+    adapter().flush_displayed_image(buffer.resource_id, buffer.dirty_rect); // QEMU SDL backend requires this (as per spec)
     buffer.dirty_rect = {};
 }
 

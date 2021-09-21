@@ -186,7 +186,7 @@ ResourceID GraphicsAdapter::create_2d_resource(Protocol::Rect rect)
     return resource_id;
 }
 
-void GraphicsAdapter::ensure_backing_storage(Memory::Region const& region, size_t buffer_offset, size_t buffer_length, ResourceID resource_id)
+void GraphicsAdapter::ensure_backing_storage(ResourceID resource_id, Memory::Region const& region, size_t buffer_offset, size_t buffer_length)
 {
     VERIFY(m_operation_lock.is_locked());
 
@@ -250,7 +250,7 @@ void GraphicsAdapter::set_scanout_resource(ScanoutID scanout, ResourceID resourc
     dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Set backing scanout");
 }
 
-void GraphicsAdapter::transfer_framebuffer_data_to_host(ScanoutID scanout, Protocol::Rect const& dirty_rect, ResourceID resource_id)
+void GraphicsAdapter::transfer_framebuffer_data_to_host(ScanoutID scanout, ResourceID resource_id, Protocol::Rect const& dirty_rect)
 {
     VERIFY(m_operation_lock.is_locked());
     auto writer = create_scratchspace_writer();
@@ -267,7 +267,7 @@ void GraphicsAdapter::transfer_framebuffer_data_to_host(ScanoutID scanout, Proto
     VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
 }
 
-void GraphicsAdapter::flush_displayed_image(Protocol::Rect const& dirty_rect, ResourceID resource_id)
+void GraphicsAdapter::flush_displayed_image(ResourceID resource_id, Protocol::Rect const& dirty_rect)
 {
     VERIFY(m_operation_lock.is_locked());
     auto writer = create_scratchspace_writer();
@@ -308,11 +308,11 @@ void GraphicsAdapter::populate_virtio_gpu_request_header(Protocol::ControlHeader
     header.padding = 0;
 }
 
-void GraphicsAdapter::flush_dirty_rectangle(ScanoutID scanout_id, Protocol::Rect const& dirty_rect, ResourceID resource_id)
+void GraphicsAdapter::flush_dirty_rectangle(ScanoutID scanout_id, ResourceID resource_id, Protocol::Rect const& dirty_rect)
 {
     MutexLocker locker(m_operation_lock);
-    transfer_framebuffer_data_to_host(scanout_id, dirty_rect, resource_id);
-    flush_displayed_image(dirty_rect, resource_id);
+    transfer_framebuffer_data_to_host(scanout_id, resource_id, dirty_rect);
+    flush_displayed_image(resource_id, dirty_rect);
 }
 
 ResourceID GraphicsAdapter::allocate_resource_id()
