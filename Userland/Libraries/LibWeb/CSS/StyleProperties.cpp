@@ -36,48 +36,20 @@ NonnullRefPtr<StyleProperties> StyleProperties::clone() const
 
 void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue> value)
 {
-    m_property_values.set((unsigned)id, move(value));
+    m_property_values.set(id, move(value));
 }
 
 void StyleProperties::set_property(CSS::PropertyID id, const StringView& value)
 {
-    m_property_values.set((unsigned)id, StringStyleValue::create(value));
+    m_property_values.set(id, StringStyleValue::create(value));
 }
 
-Optional<NonnullRefPtr<StyleValue>> StyleProperties::property(CSS::PropertyID id) const
+Optional<NonnullRefPtr<StyleValue>> StyleProperties::property(CSS::PropertyID property_id) const
 {
-    auto fetch_initial = [](CSS::PropertyID id) -> Optional<NonnullRefPtr<StyleValue>> {
-        auto initial_value = property_initial_value(id);
-        if (initial_value)
-            return initial_value.release_nonnull();
+    auto it = m_property_values.find(property_id);
+    if (it == m_property_values.end())
         return {};
-    };
-    auto fetch_inherited = [](CSS::PropertyID) -> Optional<NonnullRefPtr<StyleValue>> {
-        // FIXME: Implement inheritance
-        return {};
-    };
-
-    auto it = m_property_values.find((unsigned)id);
-    if (it == m_property_values.end()) {
-        if (is_inherited_property(id))
-            return fetch_inherited(id);
-        return fetch_initial(id);
-    }
-
-    auto& value = it->value;
-    if (value->is_initial())
-        return fetch_initial(id);
-    if (value->is_inherit())
-        return fetch_inherited(id);
-    if (value->is_unset()) {
-        if (is_inherited_property(id)) {
-            return fetch_inherited(id);
-        } else {
-            return fetch_initial(id);
-        }
-    }
-
-    return value;
+    return it->value;
 }
 
 Length StyleProperties::length_or_fallback(CSS::PropertyID id, const Length& fallback) const

@@ -82,7 +82,9 @@ public:
     Optional<int> z_index() const;
 
 private:
-    HashMap<unsigned, NonnullRefPtr<StyleValue>> m_property_values;
+    friend class StyleResolver;
+
+    HashMap<CSS::PropertyID, NonnullRefPtr<StyleValue>> m_property_values;
     Optional<CSS::Overflow> overflow(CSS::PropertyID) const;
 
     void load_font(Layout::Node const&) const;

@@ -52,22 +52,26 @@ static StyleSheet& quirks_mode_stylesheet()
 }
 
 template<typename Callback>
-void StyleResolver::for_each_stylesheet(Callback callback) const
+void StyleResolver::for_each_stylesheet(CascadeOrigin cascade_origin, Callback callback) const
 {
-    callback(default_stylesheet());
-    if (document().in_quirks_mode())
-        callback(quirks_mode_stylesheet());
-    for (auto& sheet : document().style_sheets().sheets()) {
-        callback(sheet);
+    if (cascade_origin == CascadeOrigin::Any || cascade_origin == CascadeOrigin::UserAgent) {
+        callback(default_stylesheet());
+        if (document().in_quirks_mode())
+            callback(quirks_mode_stylesheet());
+    }
+    if (cascade_origin == CascadeOrigin::Any || cascade_origin == CascadeOrigin::Author) {
+        for (auto& sheet : document().style_sheets().sheets()) {
+            callback(sheet);
+        }
     }
 }
 
-Vector<MatchingRule> StyleResolver::collect_matching_rules(DOM::Element const& element) const
+Vector<MatchingRule> StyleResolver::collect_matching_rules(DOM::Element const& element, CascadeOrigin declaration_type) const
 {
     Vector<MatchingRule> matching_rules;
 
     size_t style_sheet_index = 0;
-    for_each_stylesheet([&](auto& sheet) {
+    for_each_stylesheet(declaration_type, [&](auto& sheet) {
         size_t rule_index = 0;
         static_cast<CSSStyleSheet const&>(sheet).for_each_effective_style_rule([&](auto& rule) {
             size_t selector_index = 0;
@@ -531,54 +535,129 @@ Optional<StyleProperty> StyleResolver::resolve_custom_property(DOM::Element& ele
     return resolved_with_specificity.style;
 }
 
-NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(DOM::Element& element) const
+struct MatchingDeclarations {
+    Vector<MatchingRule> user_agent_rules;
+    Vector<MatchingRule> author_rules;
+};
+
+void StyleResolver::cascade_declarations(StyleProperties& style, DOM::Element& element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, bool important) const
 {
-    auto style = StyleProperties::create();
-    auto* parent_style = element.parent_element() ? element.parent_element()->specified_css_values() : nullptr;
-    if (parent_style) {
-        parent_style->for_each_property([&](auto property_id, auto& value) {
-            if (is_inherited_property(property_id))
-                set_property_expanding_shorthands(style, property_id, value, m_document);
-        });
-    }
-
-    element.apply_presentational_hints(*style);
-
-    auto matching_rules = collect_matching_rules(element);
-    sort_matching_rules(matching_rules);
-
     for (auto& match : matching_rules) {
         for (auto& property : verify_cast<PropertyOwningCSSStyleDeclaration>(match.rule->declaration()).properties()) {
+            if (important != property.important)
+                continue;
             auto property_value = property.value;
             if (property.value->is_custom_property()) {
-                auto prop = reinterpret_cast<CSS::CustomStyleValue const*>(property.value.ptr());
-                auto custom_prop_name = prop->custom_property_name();
-                auto resolved = resolve_custom_property(element, custom_prop_name);
+                auto custom_property_name = static_cast<CSS::CustomStyleValue const&>(*property.value).custom_property_name();
+                auto resolved = resolve_custom_property(element, custom_property_name);
                 if (resolved.has_value()) {
                     property_value = resolved.value().value;
-                }
-            }
-            // FIXME: This also captures shorthands of which we ideally want to resolve the long names separately.
-            if (property_value->is_inherit()) {
-                // HACK: Trying to resolve the font property here lead to copious amounts of debug-spam
-                if (property.property_id == CSS::PropertyID::Font)
-                    continue;
-                if (parent_style) {
-                    auto maybe_parent_property_value = parent_style->property(property.property_id);
-                    if (maybe_parent_property_value.has_value())
-                        property_value = maybe_parent_property_value.release_value();
                 }
             }
             set_property_expanding_shorthands(style, property.property_id, property_value, m_document);
         }
     }
 
-    if (auto* inline_style = verify_cast<ElementInlineCSSStyleDeclaration>(element.inline_style())) {
-        for (auto& property : inline_style->properties()) {
-            set_property_expanding_shorthands(style, property.property_id, property.value, m_document);
+    if (cascade_origin == CascadeOrigin::Author) {
+        if (auto* inline_style = verify_cast<ElementInlineCSSStyleDeclaration>(element.inline_style())) {
+            for (auto& property : inline_style->properties()) {
+                if (important != property.important)
+                    continue;
+                set_property_expanding_shorthands(style, property.property_id, property.value, m_document);
+            }
         }
     }
+}
 
+// https://drafts.csswg.org/css-cascade/#cascading
+void StyleResolver::compute_cascaded_values(StyleProperties& style, DOM::Element& element) const
+{
+    // First, we collect all the CSS rules whose selectors match `element`:
+    MatchingRuleSet matching_rule_set;
+    matching_rule_set.user_agent_rules = collect_matching_rules(element, CascadeOrigin::UserAgent);
+    sort_matching_rules(matching_rule_set.user_agent_rules);
+    matching_rule_set.author_rules = collect_matching_rules(element, CascadeOrigin::Author);
+    sort_matching_rules(matching_rule_set.author_rules);
+
+    // Then we apply the declarations from the matched rules in cascade order:
+
+    // Normal user agent declarations
+    cascade_declarations(style, element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, false);
+
+    // FIXME: Normal user declarations
+
+    // Normal author declarations
+    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, false);
+
+    // Author presentational hints (NOTE: The spec doesn't say exactly how to prioritize these.)
+    element.apply_presentational_hints(style);
+
+    // FIXME: Animation declarations [css-animations-1]
+
+    // Important author declarations
+    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, true);
+
+    // FIXME: Important user declarations
+
+    // Important user agent declarations
+    cascade_declarations(style, element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, true);
+
+    // FIXME: Transition declarations [css-transitions-1]
+}
+
+// https://drafts.csswg.org/css-cascade/#defaulting
+void StyleResolver::compute_defaulted_values(StyleProperties& style, DOM::Element const& element) const
+{
+    // FIXME: If we don't know the correct initial value for a property, we fall back to InitialStyleValue.
+
+    auto get_initial_value = [&](PropertyID property_id) -> NonnullRefPtr<StyleValue> {
+        auto value = property_initial_value(property_id);
+        if (!value)
+            return InitialStyleValue::the();
+        return value.release_nonnull();
+    };
+
+    auto get_inherit_value = [&](PropertyID property_id) -> NonnullRefPtr<StyleValue> {
+        if (!element.parent_element() || !element.parent_element()->specified_css_values())
+            return get_initial_value(property_id);
+        auto& map = element.parent_element()->specified_css_values()->m_property_values;
+        auto it = map.find(property_id);
+        VERIFY(it != map.end());
+        return const_cast<StyleValue&>(*it->value);
+    };
+
+    // Walk the list of all known CSS properties and:
+    // - Add them to `style` if they are missing.
+    // - Resolve `inherit` and `initial` as needed.
+    for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
+        auto property_id = (CSS::PropertyID)i;
+        auto it = style.m_property_values.find(property_id);
+        if (it == style.m_property_values.end()) {
+
+            if (is_inherited_property(property_id))
+                style.m_property_values.set(property_id, get_inherit_value(property_id));
+            else
+                style.m_property_values.set(property_id, get_initial_value(property_id));
+            continue;
+        }
+
+        if (it->value->is_initial()) {
+            it->value = get_initial_value(property_id);
+            continue;
+        }
+
+        if (it->value->is_inherit()) {
+            it->value = get_inherit_value(property_id);
+            continue;
+        }
+    }
+}
+
+NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(DOM::Element& element) const
+{
+    auto style = StyleProperties::create();
+    compute_cascaded_values(style, element);
+    compute_defaulted_values(style, element);
     return style;
 }
 
