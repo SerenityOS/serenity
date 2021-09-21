@@ -110,9 +110,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
     }
 
     auto array_like = source.to_object(global_object);
-    auto length = length_of_array_like(global_object, *array_like);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *array_like));
 
     MarkedValueList arguments(vm.heap());
     arguments.empend(length);

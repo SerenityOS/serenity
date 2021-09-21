@@ -172,9 +172,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 
     auto* array_like = items.to_object(global_object);
 
-    auto length = length_of_array_like(global_object, *array_like);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *array_like));
 
     Value array;
     if (constructor.is_constructor()) {

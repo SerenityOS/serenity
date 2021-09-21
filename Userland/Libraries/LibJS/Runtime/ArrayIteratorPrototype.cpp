@@ -63,9 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
 
         length = typed_array.array_length();
     } else {
-        length = length_of_array_like(global_object, array);
-        if (vm.exception())
-            return {};
+        length = TRY_OR_DISCARD(length_of_array_like(global_object, array));
     }
 
     if (index >= length) {
