@@ -36,6 +36,7 @@ public:
 
 protected:
     FramebufferDevice(const GraphicsDevice&, size_t);
+    NonnullRefPtr<GraphicsDevice> m_graphics_adapter;
 
 private:
     FramebufferDevice(const GraphicsDevice&, size_t, PhysicalAddress, size_t, size_t, size_t);
@@ -68,7 +69,6 @@ private:
 
     size_t m_y_offset { 0 };
     size_t m_output_port_index;
-    NonnullRefPtr<GraphicsDevice> m_graphics_adapter;
 };
 
 }

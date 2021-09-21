@@ -10,10 +10,11 @@
 #include <Kernel/Bus/VirtIO/Queue.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
 #include <Kernel/Graphics/GraphicsDevice.h>
-#include <Kernel/Graphics/VirtIOGPU/GPU.h>
+#include <Kernel/Graphics/VirtIOGPU/Protocol.h>
 
 namespace Kernel::Graphics::VirtIOGPU {
 
+class GraphicsAdapter;
 class FramebufferDevice final : public Kernel::FramebufferDevice {
     friend class Console;
     struct Buffer {
@@ -24,7 +25,7 @@ class FramebufferDevice final : public Kernel::FramebufferDevice {
     };
 
 public:
-    FramebufferDevice(GraphicsDevice const&, VirtIOGPU::GPU& virtio_gpu, ScanoutID);
+    FramebufferDevice(GraphicsAdapter const&, ScanoutID);
     virtual ~FramebufferDevice() override;
 
     virtual void deactivate_writes();
@@ -75,7 +76,9 @@ private:
     }
     Buffer& current_buffer() const { return *m_current_buffer; }
 
-    GPU& m_gpu;
+    GraphicsAdapter const& adapter() const;
+    GraphicsAdapter& adapter();
+
     const ScanoutID m_scanout;
     Buffer* m_current_buffer { nullptr };
     Atomic<int, AK::memory_order_relaxed> m_last_set_buffer_index { 0 };
