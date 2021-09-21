@@ -101,19 +101,19 @@ UNMAP_AFTER_INIT KResult FramebufferDevice::initialize()
 
 UNMAP_AFTER_INIT FramebufferDevice::FramebufferDevice(const GraphicsDevice& adapter, size_t output_port_index)
     : BlockDevice(29, GraphicsManagement::the().allocate_minor_device_number())
-    , m_output_port_index(output_port_index)
     , m_graphics_adapter(adapter)
+    , m_output_port_index(output_port_index)
 {
 }
 
 UNMAP_AFTER_INIT FramebufferDevice::FramebufferDevice(const GraphicsDevice& adapter, size_t output_port_index, PhysicalAddress addr, size_t width, size_t height, size_t pitch)
     : BlockDevice(29, GraphicsManagement::the().allocate_minor_device_number())
+    , m_graphics_adapter(adapter)
     , m_framebuffer_address(addr)
     , m_framebuffer_pitch(pitch)
     , m_framebuffer_width(width)
     , m_framebuffer_height(height)
     , m_output_port_index(output_port_index)
-    , m_graphics_adapter(adapter)
 {
     VERIFY(!m_framebuffer_address.is_null());
     VERIFY(m_framebuffer_pitch);

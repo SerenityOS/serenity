@@ -10,6 +10,11 @@
 
 #define VIRTIO_GPU_MAX_SCANOUTS 16
 
+namespace Kernel::Graphics::VirtIOGPU {
+TYPEDEF_DISTINCT_ORDERED_ID(u32, ResourceID);
+TYPEDEF_DISTINCT_ORDERED_ID(u32, ScanoutID);
+};
+
 namespace Kernel::Graphics::VirtIOGPU::Protocol {
 
 // Specification equivalent: enum virtio_gpu_ctrl_type

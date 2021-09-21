@@ -6,13 +6,23 @@
 
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/VirtIOGPU/FramebufferDevice.h>
+#include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
 #include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel::Graphics::VirtIOGPU {
 
-FramebufferDevice::FramebufferDevice(GraphicsDevice const& adapter, GPU& virtio_gpu, ScanoutID scanout)
+GraphicsAdapter const& FramebufferDevice::adapter() const
+{
+    return static_cast<GraphicsAdapter const&>(*m_graphics_adapter);
+}
+
+GraphicsAdapter& FramebufferDevice::adapter()
+{
+    return static_cast<GraphicsAdapter&>(*m_graphics_adapter);
+}
+
+FramebufferDevice::FramebufferDevice(GraphicsAdapter const& adapter, ScanoutID scanout)
     : Kernel::FramebufferDevice(adapter, scanout.value())
-    , m_gpu(virtio_gpu)
     , m_scanout(scanout)
 {
     if (display_info().enabled) {
@@ -45,7 +55,7 @@ KResult FramebufferDevice::create_framebuffer()
     }
     m_framebuffer_sink_vmobject = TRY(Memory::AnonymousVMObject::try_create_with_physical_pages(pages.span()));
 
-    MutexLocker locker(m_gpu.operation_lock());
+    MutexLocker locker(adapter().operation_lock());
     m_current_buffer = &buffer_from_index(m_last_set_buffer_index.load());
     create_buffer(m_main_buffer, 0, m_buffer_size);
     create_buffer(m_back_buffer, m_buffer_size, m_buffer_size);
@@ -62,14 +72,14 @@ void FramebufferDevice::create_buffer(Buffer& buffer, size_t framebuffer_offset,
 
     // 1. Create BUFFER using VIRTIO_GPU_CMD_RESOURCE_CREATE_2D
     if (buffer.resource_id.value() != 0)
-        m_gpu.delete_resource(buffer.resource_id);
-    buffer.resource_id = m_gpu.create_2d_resource(info.rect);
+        adapter().delete_resource(buffer.resource_id);
+    buffer.resource_id = adapter().create_2d_resource(info.rect);
 
     // 2. Attach backing storage using  VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING
-    m_gpu.ensure_backing_storage(*m_framebuffer, buffer.framebuffer_offset, framebuffer_size, buffer.resource_id);
+    adapter().ensure_backing_storage(*m_framebuffer, buffer.framebuffer_offset, framebuffer_size, buffer.resource_id);
     // 3. Use VIRTIO_GPU_CMD_SET_SCANOUT to link the framebuffer to a display scanout.
     if (&buffer == m_current_buffer)
-        m_gpu.set_scanout_resource(m_scanout.value(), buffer.resource_id, info.rect);
+        adapter().set_scanout_resource(m_scanout.value(), buffer.resource_id, info.rect);
     // 4. Render our test pattern
     draw_ntsc_test_pattern(buffer);
     // 5. Use VIRTIO_GPU_CMD_TRANSFER_TO_HOST_2D to update the host resource from guest memory.
@@ -91,27 +101,27 @@ void FramebufferDevice::create_buffer(Buffer& buffer, size_t framebuffer_offset,
 
 Protocol::DisplayInfoResponse::Display const& FramebufferDevice::display_info() const
 {
-    return m_gpu.display_info(m_scanout);
+    return adapter().display_info(m_scanout);
 }
 
 Protocol::DisplayInfoResponse::Display& FramebufferDevice::display_info()
 {
-    return m_gpu.display_info(m_scanout);
+    return adapter().display_info(m_scanout);
 }
 
 void FramebufferDevice::transfer_framebuffer_data_to_host(Protocol::Rect const& rect, Buffer& buffer)
 {
-    m_gpu.transfer_framebuffer_data_to_host(m_scanout, rect, buffer.resource_id);
+    adapter().transfer_framebuffer_data_to_host(m_scanout, rect, buffer.resource_id);
 }
 
 void FramebufferDevice::flush_dirty_window(Protocol::Rect const& dirty_rect, Buffer& buffer)
 {
-    m_gpu.flush_dirty_rectangle(m_scanout, dirty_rect, buffer.resource_id);
+    adapter().flush_dirty_rectangle(m_scanout, dirty_rect, buffer.resource_id);
 }
 
 void FramebufferDevice::flush_displayed_image(Protocol::Rect const& dirty_rect, Buffer& buffer)
 {
-    m_gpu.flush_displayed_image(dirty_rect, buffer.resource_id);
+    adapter().flush_displayed_image(dirty_rect, buffer.resource_id);
 }
 
 KResult FramebufferDevice::try_to_set_resolution(size_t width, size_t height)
@@ -121,7 +131,7 @@ KResult FramebufferDevice::try_to_set_resolution(size_t width, size_t height)
 
     auto& info = display_info();
 
-    MutexLocker locker(m_gpu.operation_lock());
+    MutexLocker locker(adapter().operation_lock());
 
     info.rect = {
         .x = 0,
@@ -136,12 +146,12 @@ KResult FramebufferDevice::try_to_set_resolution(size_t width, size_t height)
 void FramebufferDevice::set_buffer(int buffer_index)
 {
     auto& buffer = buffer_index == 0 ? m_main_buffer : m_back_buffer;
-    MutexLocker locker(m_gpu.operation_lock());
+    MutexLocker locker(adapter().operation_lock());
     if (&buffer == m_current_buffer)
         return;
     m_current_buffer = &buffer;
-    m_gpu.set_scanout_resource(m_scanout.value(), buffer.resource_id, display_info().rect);
-    m_gpu.flush_displayed_image(buffer.dirty_rect, buffer.resource_id); // QEMU SDL backend requires this (as per spec)
+    adapter().set_scanout_resource(m_scanout.value(), buffer.resource_id, display_info().rect);
+    adapter().flush_displayed_image(buffer.dirty_rect, buffer.resource_id); // QEMU SDL backend requires this (as per spec)
     buffer.dirty_rect = {};
 }
 
@@ -188,7 +198,7 @@ KResult FramebufferDevice::ioctl(OpenFileDescription&, unsigned request, Userspa
             return EFAULT;
         if (m_are_writes_active && flush_rects.count > 0) {
             auto& buffer = buffer_from_index(flush_rects.buffer_index);
-            MutexLocker locker(m_gpu.operation_lock());
+            MutexLocker locker(adapter().operation_lock());
             for (unsigned i = 0; i < flush_rects.count; i++) {
                 FBRect user_dirty_rect;
                 TRY(copy_from_user(&user_dirty_rect, &flush_rects.rects[i]));
