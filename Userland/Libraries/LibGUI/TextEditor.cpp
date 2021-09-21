@@ -101,11 +101,11 @@ void TextEditor::create_actions()
     m_select_all_action = CommonActions::make_select_all_action([this](auto&) { select_all(); }, this);
 }
 
-void TextEditor::set_text(StringView const& text)
+void TextEditor::set_text(StringView const& text, AllowCallback allow_callback)
 {
     m_selection.clear();
 
-    document().set_text(text);
+    document().set_text(text, allow_callback);
 
     update_content_size();
     recompute_all_visual_lines();
@@ -1480,7 +1480,7 @@ void TextEditor::leave_event(Core::Event&)
         m_automatic_selection_scroll_timer->start();
 }
 
-void TextEditor::did_change()
+void TextEditor::did_change(AllowCallback allow_callback)
 {
     update_content_size();
     recompute_all_visual_lines();
@@ -1492,9 +1492,9 @@ void TextEditor::did_change()
     m_needs_rehighlight = true;
     if (!m_has_pending_change_notification) {
         m_has_pending_change_notification = true;
-        deferred_invoke([this] {
+        deferred_invoke([this, allow_callback] {
             m_has_pending_change_notification = false;
-            if (on_change)
+            if (on_change && allow_callback == AllowCallback::Yes)
                 on_change();
         });
     }
@@ -1784,9 +1784,9 @@ void TextEditor::document_did_insert_line(size_t line_index)
     update();
 }
 
-void TextEditor::document_did_change()
+void TextEditor::document_did_change(AllowCallback allow_callback)
 {
-    did_change();
+    did_change(allow_callback);
     update();
 }
 
@@ -1814,12 +1814,12 @@ void TextEditor::document_did_update_undo_stack()
         on_modified_change(document().is_modified());
 }
 
-void TextEditor::document_did_set_text()
+void TextEditor::document_did_set_text(AllowCallback allow_callback)
 {
     m_line_visual_data.clear();
     for (size_t i = 0; i < m_document->line_count(); ++i)
         m_line_visual_data.append(make<LineVisualData>());
-    document_did_change();
+    document_did_change(allow_callback);
 }
 
 void TextEditor::document_did_set_cursor(TextPosition const& position)

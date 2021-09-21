@@ -30,7 +30,7 @@ public:
     bool is_max() const { return m_value == m_max; }
 
     void set_range(int min, int max);
-    virtual void set_value(int, CallOnChange call_on_change = CallOnChange::Yes);
+    virtual void set_value(int, AllowCallback = AllowCallback::Yes);
 
     void set_min(int min) { set_range(min, max()); }
     void set_max(int max) { set_range(min(), max); }
