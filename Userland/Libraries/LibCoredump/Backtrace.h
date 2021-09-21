@@ -40,8 +40,8 @@ public:
     Backtrace(const Reader&, const ELF::Core::ThreadInfo&);
     ~Backtrace();
 
-    const ELF::Core::ThreadInfo thread_info() const { return m_thread_info; }
-    const Vector<Entry> entries() const { return m_entries; }
+    ELF::Core::ThreadInfo const& thread_info() const { return m_thread_info; }
+    Vector<Entry> const& entries() const { return m_entries; }
 
 private:
     void add_entry(const Reader&, FlatPtr ip);
