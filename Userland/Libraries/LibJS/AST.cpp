@@ -776,7 +776,7 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
         bool strict = interpreter.vm().in_strict_mode();
 
         // 7. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
-        return make_super_property_reference(global_object, actual_this, property_key, strict);
+        return TRY_OR_DISCARD(make_super_property_reference(global_object, actual_this, property_key, strict));
     }
 
     auto object_value = m_object->execute(interpreter, global_object);

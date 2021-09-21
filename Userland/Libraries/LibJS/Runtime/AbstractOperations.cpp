@@ -389,7 +389,7 @@ Object* get_super_constructor(VM& vm)
 }
 
 // 13.3.7.3 MakeSuperPropertyReference ( actualThis, propertyKey, strict ), https://tc39.es/ecma262/#sec-makesuperpropertyreference
-Reference make_super_property_reference(GlobalObject& global_object, Value actual_this, StringOrSymbol const& property_key, bool strict)
+ThrowCompletionOr<Reference> make_super_property_reference(GlobalObject& global_object, Value actual_this, StringOrSymbol const& property_key, bool strict)
 {
     auto& vm = global_object.vm();
     // 1. Let env be GetThisEnvironment().
@@ -399,7 +399,7 @@ Reference make_super_property_reference(GlobalObject& global_object, Value actua
     // 3. Let baseValue be ? env.GetSuperBase().
     auto base_value = env.get_super_base();
     // 4. Let bv be ? RequireObjectCoercible(baseValue).
-    auto bv = TRY_OR_DISCARD(require_object_coercible(global_object, base_value));
+    auto bv = TRY(require_object_coercible(global_object, base_value));
     // 5. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
     // 6. NOTE: This returns a Super Reference Record.
     return Reference { bv, property_key, actual_this, strict };
