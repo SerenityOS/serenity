@@ -115,7 +115,6 @@ private:
 
     // ^GraphicsDevice
     virtual void initialize_framebuffer_devices() override;
-    virtual Type type() const override { return Type::VGACompatible; }
 
     bool pipe_a_enabled() const;
     bool pipe_b_enabled() const;

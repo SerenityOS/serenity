@@ -36,13 +36,14 @@ public:
     virtual bool modesetting_capable() const override { return true; }
     virtual bool double_framebuffering_capable() const override { return true; }
 
+    virtual bool vga_compatible() const override;
+
 private:
     // ^GraphicsDevice
     virtual bool try_to_set_resolution(size_t output_port_index, size_t width, size_t height) override;
     virtual bool set_y_offset(size_t output_port_index, size_t y) override;
 
     virtual void initialize_framebuffer_devices() override;
-    virtual Type type() const override;
 
     virtual void enable_consoles() override;
     virtual void disable_consoles() override;
