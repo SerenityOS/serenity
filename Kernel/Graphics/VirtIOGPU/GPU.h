@@ -29,7 +29,7 @@
 namespace Kernel::Graphics::VirtIOGPU {
 
 class Console;
-class FrameBufferDevice;
+class FramebufferDevice;
 
 TYPEDEF_DISTINCT_ORDERED_ID(u32, ResourceID);
 TYPEDEF_DISTINCT_ORDERED_ID(u32, ScanoutID);
@@ -37,7 +37,7 @@ TYPEDEF_DISTINCT_ORDERED_ID(u32, ScanoutID);
 class GPU final
     : public VirtIO::Device
     , public RefCounted<GPU> {
-    friend class FrameBufferDevice;
+    friend class FramebufferDevice;
 
 public:
     GPU(PCI::DeviceIdentifier const&);
@@ -82,7 +82,7 @@ private:
     virtual StringView class_name() const override { return "VirtIOGPU"sv; }
 
     struct Scanout {
-        RefPtr<FrameBufferDevice> framebuffer;
+        RefPtr<FramebufferDevice> framebuffer;
         RefPtr<Console> console;
         Protocol::DisplayInfoResponse::Display display_info {};
     };

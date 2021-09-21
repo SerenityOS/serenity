@@ -32,7 +32,7 @@ private:
 
 class Console final : public GenericFramebufferConsole {
 public:
-    static NonnullRefPtr<Console> initialize(RefPtr<FrameBufferDevice> const&);
+    static NonnullRefPtr<Console> initialize(RefPtr<FramebufferDevice> const&);
 
     virtual void set_resolution(size_t width, size_t height, size_t pitch) override;
     virtual void flush(size_t x, size_t y, size_t width, size_t height) override;
@@ -42,8 +42,8 @@ private:
     void enqueue_refresh_timer();
     virtual u8* framebuffer_data() override;
 
-    Console(RefPtr<FrameBufferDevice> const&);
-    RefPtr<FrameBufferDevice> m_framebuffer_device;
+    Console(RefPtr<FramebufferDevice> const&);
+    RefPtr<FramebufferDevice> m_framebuffer_device;
     DirtyRect m_dirty_rect;
 };
 
