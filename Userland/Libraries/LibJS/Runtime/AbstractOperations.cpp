@@ -598,13 +598,13 @@ Value canonical_numeric_index_string(GlobalObject& global_object, PropertyName c
 }
 
 // 22.1.3.17.1 GetSubstitution ( matched, str, position, captures, namedCaptures, replacement ), https://tc39.es/ecma262/#sec-getsubstitution
-String get_substitution(GlobalObject& global_object, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement)
+ThrowCompletionOr<String> get_substitution(GlobalObject& global_object, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement)
 {
     auto& vm = global_object.vm();
 
     auto replace_string = replacement.to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
     auto replace_view = replace_string.view();
 
     StringBuilder result;
@@ -647,8 +647,8 @@ String get_substitution(GlobalObject& global_object, Utf16View const& matched, U
 
                 if (!value.is_undefined()) {
                     auto value_string = value.to_string(global_object);
-                    if (vm.exception())
-                        return {};
+                    if (auto* exception = vm.exception())
+                        return throw_completion(exception->value());
 
                     result.append(value_string);
                 }
@@ -675,13 +675,13 @@ String get_substitution(GlobalObject& global_object, Utf16View const& matched, U
                 auto group_name = group_name_view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes);
 
                 auto capture = named_captures.as_object().get(group_name);
-                if (vm.exception())
-                    return {};
+                if (auto* exception = vm.exception())
+                    return throw_completion(exception->value());
 
                 if (!capture.is_undefined()) {
                     auto capture_string = capture.to_string(global_object);
-                    if (vm.exception())
-                        return {};
+                    if (auto* exception = vm.exception())
+                        return throw_completion(exception->value());
 
                     result.append(capture_string);
                 }

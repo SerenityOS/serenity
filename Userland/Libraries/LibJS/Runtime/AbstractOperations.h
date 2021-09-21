@@ -30,7 +30,7 @@ ThrowCompletionOr<Object*> get_prototype_from_constructor(GlobalObject&, Functio
 Object* create_unmapped_arguments_object(GlobalObject&, Span<Value> arguments);
 Object* create_mapped_arguments_object(GlobalObject&, FunctionObject&, Vector<FunctionNode::Parameter> const&, Span<Value> arguments, Environment&);
 Value canonical_numeric_index_string(GlobalObject&, PropertyName const&);
-String get_substitution(GlobalObject&, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement);
+ThrowCompletionOr<String> get_substitution(GlobalObject&, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement);
 
 enum class CallerMode {
     Strict,
