@@ -715,6 +715,11 @@ using FloatRect = Rect<float>;
     return Gfx::IntRect::from_two_points({ x1, y1 }, { x2, y2 });
 }
 
+[[nodiscard]] ALWAYS_INLINE IntRect rounded_int_rect(FloatRect const& float_rect)
+{
+    return IntRect { floorf(float_rect.x()), floorf(float_rect.y()), roundf(float_rect.width()), roundf(float_rect.height()) };
+}
+
 }
 
 namespace AK {
