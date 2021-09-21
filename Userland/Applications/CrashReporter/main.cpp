@@ -68,6 +68,7 @@ static TitleAndText build_backtrace(Coredump::Reader const& coredump, ELF::Core:
 
     auto timer = Core::ElapsedTimer::start_new();
     Coredump::Backtrace backtrace(coredump, thread_info, [&](size_t frame_index, size_t frame_count) {
+        progress_window->set_progress(100.0f * (float)(frame_index + 1) / (float)frame_count);
         progressbar.set_value(frame_index + 1);
         progressbar.set_max(frame_count);
         Core::EventLoop::current().pump(Core::EventLoop::WaitMode::PollForEvents);
