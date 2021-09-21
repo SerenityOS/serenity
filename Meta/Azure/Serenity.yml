@@ -6,7 +6,7 @@ jobs:
     timeoutInMinutes: 0 # Setting to 0 means the maximum allowed timeout is used.
 
     variables:
-    - name: CCACHE_DIR
+    - name: SERENITY_CCACHE_DIR
       value: $(Build.SourcesDirectory)/.ccache
 
     pool:
@@ -22,6 +22,7 @@ jobs:
         arch: '${{ parameters.arch }}'
         toolchain: 'clang'
         build_directory: 'Build/${{ parameters.arch }}clang'
+        serenity_ccache_path: '$(SERENITY_CCACHE_DIR)'
 
     - script: ./Toolchain/BuildClang.sh
       displayName: Build Toolchain
@@ -44,11 +45,15 @@ jobs:
           -DCMAKE_CXX_COMPILER=g++-10
       displayName: 'Create Build Environment'
       workingDirectory: $(Build.SourcesDirectory)
+      env:
+        CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
 
     - script: |
         cmake --build ./Build/superbuild
       displayName: 'Build'
       workingDirectory: $(Build.SourcesDirectory)
+      env:
+        CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
 
     - script: |
         ninja install && ninja image
@@ -86,5 +91,5 @@ jobs:
       condition: failed()
 
     - script: |
-        ccache -s
+        CCACHE_DIR='$(SERENITY_CCACHE_DIR)' ccache -s
       displayName: 'Cache Stats'

@@ -7,7 +7,7 @@ jobs:
   - job: 'Lagom_${{ parameters.os }}_${{ parameters.fuzzer }}'
 
     variables:
-    - name: CCACHE_DIR
+    - name: SERENITY_CCACHE_DIR
       value: $(Build.SourcesDirectory)/.ccache
 
     - name: job_pool
@@ -36,6 +36,7 @@ jobs:
         arch: 'Lagom'
         toolchain: '$(toolchain)'
         build_directory: 'Meta/Lagom/Build'
+        serenity_ccache_path: '$(SERENITY_CCACHE_DIR)'
         ${{ if eq(parameters.fuzzer, 'Fuzz') }}:
           with_unicode_caches: false
         ${{ if eq(parameters.fuzzer, 'NoFuzz') }}:
@@ -59,6 +60,8 @@ jobs:
             ..
         displayName: 'Create Build Environment'
         workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
+        env:
+          CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
     - ${{ if eq(parameters.fuzzer, 'NoFuzz') }}:
       - script: |
           cmake -GNinja \
@@ -77,11 +80,14 @@ jobs:
         workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
         env:
           PATH: '$(PATH):$(Build.SourcesDirectory)/wabt-1.0.23/bin'
+          CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
 
     - script: |
         cmake --build .
       displayName: 'Build'
       workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
+      env:
+        CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
 
     - ${{ if eq(parameters.fuzzer, 'NoFuzz') }}:
       - script: |
@@ -96,5 +102,5 @@ jobs:
           UBSAN_OPTIONS: 'print_stacktrace=1:print_summary=1:halt_on_error=1'
 
     - script: |
-        ccache -s
+        CCACHE_DIR='$(SERENITY_CCACHE_DIR)' ccache -s
       displayName: 'Cache Stats'
