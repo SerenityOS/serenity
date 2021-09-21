@@ -8,6 +8,7 @@
 #include <AK/MappedFile.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <LibCompress/Gzip.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibCore/File.h>
 #include <LibCore/FileWatcher.h>
 #include <LibCoredump/Backtrace.h>
@@ -33,14 +34,8 @@ static void wait_until_coredump_is_ready(const String& coredump_path)
     }
 }
 
-static bool compress_coredump(const String& coredump_path)
+static bool compress_coredump(String const& coredump_path, NonnullRefPtr<MappedFile> coredump_file)
 {
-    auto file_or_error = MappedFile::map(coredump_path);
-    if (file_or_error.is_error()) {
-        dbgln("Could not open coredump '{}': {}", coredump_path, file_or_error.error());
-        return false;
-    }
-    auto coredump_file = file_or_error.value();
     auto compressed_coredump = Compress::GzipCompressor::compress_all(coredump_file->bytes());
     if (!compressed_coredump.has_value()) {
         dbgln("Could not compress coredump '{}'", coredump_path);
@@ -58,28 +53,6 @@ static bool compress_coredump(const String& coredump_path)
         return false;
     }
     return true;
-}
-
-static void print_backtrace(const String& coredump_path)
-{
-    auto coredump = Coredump::Reader::create(coredump_path);
-    if (!coredump) {
-        dbgln("Could not open coredump '{}'", coredump_path);
-        return;
-    }
-
-    size_t thread_index = 0;
-    coredump->for_each_thread_info([&](auto& thread_info) {
-        Coredump::Backtrace backtrace(*coredump, thread_info);
-        if (thread_index > 0)
-            dbgln();
-        dbgln("--- Backtrace for thread #{} (TID {}) ---", thread_index, thread_info.tid);
-        for (auto& entry : backtrace.entries()) {
-            dbgln("{}", entry.to_string(true));
-        }
-        ++thread_index;
-        return IterationDecision::Continue;
-    });
 }
 
 static void launch_crash_reporter(const String& coredump_path, bool unlink_after_use)
@@ -126,8 +99,23 @@ int main()
             continue; // stops compress_coredump from accidentally triggering us
         dbgln("New coredump file: {}", coredump_path);
         wait_until_coredump_is_ready(coredump_path);
-        auto compressed = compress_coredump(coredump_path);
-        print_backtrace(coredump_path);
-        launch_crash_reporter(coredump_path, compressed);
+
+        auto file_or_error = MappedFile::map(coredump_path);
+        if (file_or_error.is_error()) {
+            dbgln("Unable to map coredump {}: {}", coredump_path, file_or_error.error().string());
+            continue;
+        }
+
+        launch_crash_reporter(coredump_path, true);
+
+        // FIXME: This is a hack to give CrashReporter time to parse the coredump
+        //        before we start compressing it.
+        //        I'm sure there's a much smarter approach to this whole thing,
+        //        and we should find it. :^)
+        sleep(3);
+
+        auto compress_timer = Core::ElapsedTimer::start_new();
+        if (compress_coredump(coredump_path, file_or_error.release_value()))
+            dbgln("Compressing coredump took {} ms", compress_timer.elapsed());
     }
 }
