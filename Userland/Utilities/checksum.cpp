@@ -48,21 +48,18 @@ int main(int argc, char** argv)
     Crypto::Hash::Manager hash;
     hash.initialize(hash_kind);
 
-    bool success;
     auto has_error = false;
-    auto file = Core::File::construct();
 
     for (auto const& path : paths) {
-        if (path == "-") {
-            success = file->open(STDIN_FILENO, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::No);
-        } else {
-            file->set_filename(path);
-            success = file->open(Core::OpenMode::ReadOnly);
-        }
-        if (!success) {
-            warnln("{}: {}: {}", argv[0], path, file->error_string());
-            has_error = true;
-            continue;
+        NonnullRefPtr<Core::File> file = Core::File::standard_input();
+        if (path != "-"sv) {
+            auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
+            if (file_or_error.is_error()) {
+                warnln("{}: {}: {}", argv[0], path, file->error_string());
+                has_error = true;
+                continue;
+            }
+            file = file_or_error.release_value();
         }
 
         while (!file->eof() && !file->has_error())
