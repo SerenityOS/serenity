@@ -423,6 +423,10 @@ struct Formatter<char> : StandardFormatter {
     void format(FormatBuilder&, char value);
 };
 template<>
+struct Formatter<wchar_t> : StandardFormatter {
+    void format(FormatBuilder& builder, wchar_t value);
+};
+template<>
 struct Formatter<bool> : StandardFormatter {
     void format(FormatBuilder&, bool value);
 };
