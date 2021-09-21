@@ -47,13 +47,22 @@ fi
 BUILD=$($REALPATH "$BUILD")
 
 dev=
+ci=
+
 while [ "$1" != "" ]; do
     case $1 in
         --dev )           dev=1
                           ;;
+        --ci )            ci=1
+                          ;;
     esac
     shift
 done
+
+if [ "$dev" = "1" ] && [ "$ci" = "1" ]; then
+    echo "Please only set one of --dev or --ci."
+    exit 1
+fi
 
 echo PREFIX is "$PREFIX"
 echo SYSROOT is "$SYSROOT"
@@ -272,7 +281,11 @@ pushd "$DIR/Build/clang/$ARCH"
             -DLLVM_INCLUDE_TESTS=OFF \
             -DLLVM_LINK_LLVM_DYLIB=ON \
             -DLLVM_INSTALL_UTILS=OFF \
-            ${dev:+"-DLLVM_CCACHE_BUILD=ON"} || exit 1
+            ${dev:+"-DLLVM_CCACHE_BUILD=ON"} \
+            ${ci:+"-DLLVM_CCACHE_BUILD=ON"} \
+            ${ci:+"-DLLVM_CCACHE_DIR=$LLVM_CCACHE_DIR"} \
+            ${ci:+"-DLLVM_CCACHE_MAXSIZE=$LLVM_CCACHE_MAXSIZE"} \
+            || exit 1
 
         buildstep_ninja "llvm+clang/build" ninja -j "$MAKEJOBS" || exit 1
         buildstep "llvm+clang/install" ninja install || exit 1
