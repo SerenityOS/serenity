@@ -700,9 +700,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
                     return {};
             }
 
-            replacement = get_substitution(global_object, matched.view(), string_view, position, captures, named_captures_object, replace_value);
-            if (vm.exception())
-                return {};
+            replacement = TRY_OR_DISCARD(get_substitution(global_object, matched.view(), string_view, position, captures, named_captures_object, replace_value));
         }
 
         if (position >= next_source_position) {
