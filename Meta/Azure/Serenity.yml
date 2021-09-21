@@ -8,6 +8,10 @@ jobs:
     variables:
     - name: SERENITY_CCACHE_DIR
       value: $(Build.SourcesDirectory)/.ccache
+    - name: LLVM_CCACHE_DIR
+      value: $(Build.SourcesDirectory)/Toolchain/.ccache
+    - name: LLVM_CCACHE_MAXSIZE
+      value: 20GB
 
     pool:
       vmImage: ubuntu-20.04
@@ -23,8 +27,10 @@ jobs:
         toolchain: 'clang'
         build_directory: 'Build/${{ parameters.arch }}clang'
         serenity_ccache_path: '$(SERENITY_CCACHE_DIR)'
+        toolchain_ccache_path: '$(LLVM_CCACHE_DIR)'
+        toolchain_ccache_size: '$(LLVM_CCACHE_MAXSIZE)'
 
-    - script: ./Toolchain/BuildClang.sh
+    - script: ./Toolchain/BuildClang.sh --ci
       displayName: Build Toolchain
       env:
         TRY_USE_LOCAL_TOOLCHAIN: 'y'
@@ -91,5 +97,9 @@ jobs:
       condition: failed()
 
     - script: |
+        echo "##[section]Toolchain Cache"
+        CCACHE_DIR='$(LLVM_CCACHE_DIR)' ccache -s
+
+        echo "##[section]Serenity Cache"
         CCACHE_DIR='$(SERENITY_CCACHE_DIR)' ccache -s
       displayName: 'Cache Stats'
