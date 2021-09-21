@@ -158,10 +158,10 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
             builder.appendff("@{:p} ", &layout_node);
 
         builder.appendff("at ({},{}) size {}x{}",
-            (int)box.absolute_x(),
-            (int)box.absolute_y(),
-            (int)box.width(),
-            (int)box.height());
+            box.absolute_x(),
+            box.absolute_y(),
+            box.width(),
+            box.height());
 
         if (box.is_positioned())
             builder.appendff(" {}positioned{}", positioned_color_on, color_off);
@@ -224,7 +224,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                 builder.appendff("start: {}, length: {}, rect: {}\n",
                     fragment.start(),
                     fragment.length(),
-                    enclosing_int_rect(fragment.absolute_rect()).to_string());
+                    fragment.absolute_rect().to_string());
                 if (is<Layout::TextNode>(fragment.layout_node())) {
                     for (size_t i = 0; i < indent; ++i)
                         builder.append("  ");
