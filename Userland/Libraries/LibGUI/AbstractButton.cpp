@@ -44,7 +44,7 @@ void AbstractButton::set_text(String text)
     update();
 }
 
-void AbstractButton::set_checked(bool checked)
+void AbstractButton::set_checked(bool checked, AllowCallback allow_callback)
 {
     if (m_checked == checked)
         return;
@@ -71,7 +71,7 @@ void AbstractButton::set_checked(bool checked)
     }
 
     update();
-    if (on_checked)
+    if (on_checked && allow_callback == AllowCallback::Yes)
         on_checked(checked);
 }
 

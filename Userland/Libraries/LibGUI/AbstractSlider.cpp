@@ -53,7 +53,7 @@ void AbstractSlider::set_range(int min, int max)
     update();
 }
 
-void AbstractSlider::set_value(int value, CallOnChange call_on_change)
+void AbstractSlider::set_value(int value, AllowCallback allow_callback)
 {
     value = clamp(value, m_min, m_max);
     if (m_value == value)
@@ -61,7 +61,7 @@ void AbstractSlider::set_value(int value, CallOnChange call_on_change)
     m_value = value;
     update();
 
-    if (on_change && call_on_change == CallOnChange::Yes)
+    if (on_change && allow_callback == AllowCallback::Yes)
         on_change(m_value);
 }
 

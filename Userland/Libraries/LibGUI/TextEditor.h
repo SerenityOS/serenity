@@ -108,7 +108,7 @@ public:
     Function<void()> on_focusin;
     Function<void()> on_focusout;
 
-    void set_text(StringView const&);
+    void set_text(StringView const&, AllowCallback = AllowCallback::Yes);
     void scroll_cursor_into_view();
     void scroll_position_into_view(TextPosition const&);
     size_t line_count() const { return document().line_count(); }
@@ -195,7 +195,7 @@ public:
 
     TextRange* selection() { return &m_selection; };
     void did_update_selection();
-    void did_change();
+    void did_change(AllowCallback = AllowCallback::Yes);
     void update_cursor();
 
     void add_code_point(u32 code_point);
@@ -248,8 +248,8 @@ private:
     virtual void document_did_insert_line(size_t) override;
     virtual void document_did_remove_line(size_t) override;
     virtual void document_did_remove_all_lines() override;
-    virtual void document_did_change() override;
-    virtual void document_did_set_text() override;
+    virtual void document_did_change(AllowCallback = AllowCallback::Yes) override;
+    virtual void document_did_set_text(AllowCallback = AllowCallback::Yes) override;
     virtual void document_did_set_cursor(TextPosition const&) override;
     virtual void document_did_update_undo_stack() override;
 

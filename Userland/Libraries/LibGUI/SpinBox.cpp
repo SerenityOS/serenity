@@ -53,7 +53,7 @@ SpinBox::~SpinBox()
 {
 }
 
-void SpinBox::set_value(int value)
+void SpinBox::set_value(int value, AllowCallback allow_callback)
 {
     value = clamp(value, m_min, m_max);
     if (m_value == value)
@@ -61,11 +61,11 @@ void SpinBox::set_value(int value)
     m_value = value;
     m_editor->set_text(String::number(value));
     update();
-    if (on_change)
+    if (on_change && allow_callback == AllowCallback::Yes)
         on_change(value);
 }
 
-void SpinBox::set_range(int min, int max, bool change)
+void SpinBox::set_range(int min, int max, AllowCallback allow_callback)
 {
     VERIFY(min <= max);
     if (m_min == min && m_max == max)
@@ -78,7 +78,7 @@ void SpinBox::set_range(int min, int max, bool change)
     m_value = clamp(m_value, m_min, m_max);
     if (m_value != old_value) {
         m_editor->set_text(String::number(m_value));
-        if (change && on_change)
+        if (on_change && allow_callback == AllowCallback::Yes)
             on_change(m_value);
     }
 

@@ -54,7 +54,7 @@ enum class FocusPolicy {
 
 AK_ENUM_BITWISE_OPERATORS(FocusPolicy)
 
-enum class CallOnChange {
+enum class AllowCallback {
     No,
     Yes
 };

@@ -101,8 +101,8 @@ public:
     virtual void document_did_insert_line(size_t) override {};
     virtual void document_did_remove_line(size_t) override {};
     virtual void document_did_remove_all_lines() override {};
-    virtual void document_did_change() override {};
-    virtual void document_did_set_text() override {};
+    virtual void document_did_change(GUI::AllowCallback) override {};
+    virtual void document_did_set_text(GUI::AllowCallback) override {};
     virtual void document_did_set_cursor(const GUI::TextPosition&) override {};
     virtual void document_did_update_undo_stack() override { }
 
