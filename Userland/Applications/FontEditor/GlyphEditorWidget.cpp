@@ -6,6 +6,7 @@
 
 #include "GlyphEditorWidget.h"
 #include <AK/StringBuilder.h>
+#include <AK/UnicodeUtils.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/BitmapFont.h>
@@ -65,15 +66,12 @@ void GlyphEditorWidget::copy_glyph()
     }
 
     StringBuilder glyph_builder;
-    if (m_glyph < 128) {
-        if (m_glyph == 10)
-            glyph_builder.append("LF");
-        else
-            glyph_builder.append(m_glyph);
-    } else {
-        glyph_builder.append(128 | 64 | (m_glyph / 64));
-        glyph_builder.append(128 | (m_glyph % 64));
-    }
+    if (AK::UnicodeUtils::is_unicode_control_code_point(m_glyph))
+        glyph_builder.append(AK::UnicodeUtils::get_unicode_control_code_point_alias(m_glyph).value());
+    else if (Gfx::get_char_bidi_class(m_glyph) == Gfx::BidirectionalClass::STRONG_RTL)
+        glyph_builder.append_code_point(0xFFFD);
+    else
+        glyph_builder.append_code_point(m_glyph);
 
     HashMap<String, String> metadata;
     metadata.set("char", glyph_builder.to_string());
