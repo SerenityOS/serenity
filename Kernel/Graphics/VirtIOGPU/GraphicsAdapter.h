@@ -49,7 +49,7 @@ public:
     virtual void initialize() override;
 
 private:
-    void flush_dirty_rectangle(ScanoutID, Protocol::Rect const& dirty_rect, ResourceID);
+    void flush_dirty_rectangle(ScanoutID, ResourceID, Protocol::Rect const& dirty_rect);
 
     template<typename F>
     IterationDecision for_each_framebuffer(F f)
@@ -120,11 +120,11 @@ private:
     void query_display_information();
     ResourceID create_2d_resource(Protocol::Rect rect);
     void delete_resource(ResourceID resource_id);
-    void ensure_backing_storage(Memory::Region const& region, size_t buffer_offset, size_t buffer_length, ResourceID resource_id);
+    void ensure_backing_storage(ResourceID resource_id, Memory::Region const& region, size_t buffer_offset, size_t buffer_length);
     void detach_backing_storage(ResourceID resource_id);
     void set_scanout_resource(ScanoutID scanout, ResourceID resource_id, Protocol::Rect rect);
-    void transfer_framebuffer_data_to_host(ScanoutID scanout, Protocol::Rect const& rect, ResourceID resource_id);
-    void flush_displayed_image(Protocol::Rect const& dirty_rect, ResourceID resource_id);
+    void transfer_framebuffer_data_to_host(ScanoutID scanout, ResourceID resource_id, Protocol::Rect const& rect);
+    void flush_displayed_image(ResourceID resource_id, Protocol::Rect const& dirty_rect);
 
     bool m_created_framebuffer_devices { false };
     Optional<ScanoutID> m_default_scanout;
