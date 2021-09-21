@@ -505,7 +505,10 @@ void dump_style_rule(StringBuilder& builder, CSS::CSSStyleRule const& rule)
     }
     builder.append("  Declarations:\n");
     for (auto& property : verify_cast<CSS::PropertyOwningCSSStyleDeclaration>(rule.declaration()).properties()) {
-        builder.appendff("    {}: '{}'\n", CSS::string_from_property_id(property.property_id), property.value->to_string());
+        builder.appendff("    {}: '{}'", CSS::string_from_property_id(property.property_id), property.value->to_string());
+        if (property.important)
+            builder.append(" \033[31;1m!important\033[0m");
+        builder.append('\n');
     }
 }
 
