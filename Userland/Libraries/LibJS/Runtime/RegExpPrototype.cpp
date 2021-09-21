@@ -629,7 +629,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 
     for (auto& result_value : results) {
         auto& result = result_value.as_object();
-        size_t result_length = length_of_array_like(global_object, result);
+        size_t result_length = TRY_OR_DISCARD(length_of_array_like(global_object, result));
         size_t n_captures = result_length == 0 ? 0 : result_length - 1;
 
         auto matched_value = result.get(0);
@@ -864,7 +864,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         auto* result_object = result.to_object(global_object);
         if (!result_object)
             return {};
-        auto number_of_captures = length_of_array_like(global_object, *result_object);
+        auto number_of_captures = TRY_OR_DISCARD(length_of_array_like(global_object, *result_object));
         if (vm.exception())
             return {};
         if (number_of_captures > 0)

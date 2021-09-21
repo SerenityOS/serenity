@@ -810,9 +810,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
         if (vm.exception())
             return {};
 
-        auto source_length = length_of_array_like(global_object, *src);
-        if (vm.exception())
-            return {};
+        auto source_length = TRY_OR_DISCARD(length_of_array_like(global_object, *src));
 
         if (isinf(target_offset)) {
             vm.throw_exception<JS::RangeError>(global_object, "Invalid target offset");

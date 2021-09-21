@@ -165,9 +165,10 @@ template<typename T>
 static void initialize_typed_array_from_array_like(GlobalObject& global_object, TypedArray<T>& typed_array, const Object& array_like)
 {
     auto& vm = global_object.vm();
-    auto length = length_of_array_like(global_object, array_like);
-    if (vm.exception())
+    auto length_or_error = length_of_array_like(global_object, array_like);
+    if (length_or_error.is_error())
         return;
+    auto length = length_or_error.release_value();
 
     // Enforce 2GB "Excessive Length" limit
     if (length > NumericLimits<i32>::max() / sizeof(T)) {

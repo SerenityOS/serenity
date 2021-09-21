@@ -171,9 +171,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::filter)
         return {};
 
     // 2. Let len be ? LengthOfArrayLike(O).
-    auto length = length_of_array_like(global_object, *object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *object));
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_function.is_function()) {
@@ -243,9 +241,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::for_each)
         return {};
 
     // 2. Let len be ? LengthOfArrayLike(O).
-    auto length = length_of_array_like(global_object, *object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *object));
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_function.is_function()) {
@@ -296,9 +292,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
         return {};
 
     // 2. Let len be ? LengthOfArrayLike(O).
-    auto length = length_of_array_like(global_object, *object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *object));
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_function.is_function()) {
@@ -353,9 +347,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::push)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    auto length = length_of_array_like(global_object, *this_object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
     auto argument_count = vm.argument_count();
     auto new_length = length + argument_count;
     if (new_length > MAX_ARRAY_LIKE_INDEX) {
@@ -380,9 +372,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    auto length = length_of_array_like(global_object, *this_object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
     auto arg_count = vm.argument_count();
     size_t new_length = length + arg_count;
     if (arg_count > 0) {
@@ -431,9 +421,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    auto length = length_of_array_like(global_object, *this_object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
     if (length == 0) {
         this_object->set(vm.names.length, Value(0), Object::ShouldThrowExceptions::Yes);
         return js_undefined();
@@ -457,9 +445,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    auto length = length_of_array_like(global_object, *this_object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
     if (length == 0) {
         this_object->set(vm.names.length, Value(0), Object::ShouldThrowExceptions::Yes);
         if (vm.exception())
@@ -528,9 +514,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
         s_array_join_seen_objects.remove(this_object);
     };
 
-    auto length = length_of_array_like(global_object, *this_object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
 
     String separator = ","; // NOTE: This is implementation-specific.
     StringBuilder builder;
@@ -570,9 +554,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
         s_array_join_seen_objects.remove(this_object);
     };
 
-    auto length = length_of_array_like(global_object, *this_object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
     String separator = ",";
     if (!vm.argument(0).is_undefined()) {
         separator = vm.argument(0).to_string(global_object);
@@ -637,9 +619,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
             VERIFY(arg.is_object());
             Object& obj = arg.as_object();
             size_t k = 0;
-            auto length = length_of_array_like(global_object, obj);
-            if (vm.exception())
+            auto length_or_error = length_of_array_like(global_object, obj);
+            if (length_or_error.is_error())
                 return;
+            auto length = length_or_error.release_value();
 
             if (n + length > MAX_ARRAY_LIKE_INDEX) {
                 vm.throw_exception<TypeError>(global_object, ErrorType::ArrayMaxSize);
@@ -696,9 +679,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
     if (!this_object)
         return {};
 
-    auto initial_length = length_of_array_like(global_object, *this_object);
-    if (vm.exception())
-        return {};
+    auto initial_length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
 
     auto relative_start = vm.argument(0).to_integer_or_infinity(global_object);
     if (vm.exception())
@@ -779,9 +760,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::index_of)
         return {};
 
     // 2. Let len be ? LengthOfArrayLike(O).
-    auto length = length_of_array_like(global_object, *object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *object));
 
     // 3. If len is 0, return -1𝔽.
     if (length == 0)
@@ -861,9 +840,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
         return {};
 
     // 2. Let len be ? LengthOfArrayLike(O).
-    auto length = length_of_array_like(global_object, *object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *object));
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_function.is_function()) {
@@ -961,9 +938,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
         return {};
 
     // 2. Let len be ? LengthOfArrayLike(O).
-    auto length = length_of_array_like(global_object, *object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *object));
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_function.is_function()) {
@@ -1057,9 +1032,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    auto length = length_of_array_like(global_object, *this_object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
 
     auto middle = length / 2;
     for (size_t lower = 0; lower < middle; ++lower) {
@@ -1233,9 +1206,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
     if (vm.exception())
         return {};
 
-    auto length = length_of_array_like(global_object, *object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *object));
 
     MarkedValueList items(vm.heap());
     for (size_t k = 0; k < length; ++k) {
@@ -1291,9 +1262,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::last_index_of)
         return {};
 
     // 2. Let len be ? LengthOfArrayLike(O).
-    auto length = length_of_array_like(global_object, *object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *object));
 
     // 3. If len is 0, return -1𝔽.
     if (length == 0)
@@ -1364,9 +1333,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::includes)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    auto length = length_of_array_like(global_object, *this_object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
     if (length == 0)
         return Value(false);
     u64 from_index = 0;
@@ -1408,9 +1375,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find)
         return {};
 
     // 2. Let len be ? LengthOfArrayLike(O).
-    auto length = length_of_array_like(global_object, *object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *object));
 
     // 3. If IsCallable(predicate) is false, throw a TypeError exception.
     if (!predicate.is_function()) {
@@ -1457,9 +1422,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_index)
         return {};
 
     // 2. Let len be ? LengthOfArrayLike(O).
-    auto length = length_of_array_like(global_object, *object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *object));
 
     // 3. If IsCallable(predicate) is false, throw a TypeError exception.
     if (!predicate.is_function()) {
@@ -1506,9 +1469,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last)
         return {};
 
     // 2. Let len be ? LengthOfArrayLike(O).
-    auto length = length_of_array_like(global_object, *object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *object));
 
     // 3. If IsCallable(predicate) is false, throw a TypeError exception.
     if (!predicate.is_function()) {
@@ -1555,9 +1516,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last_index)
         return {};
 
     // 2. Let len be ? LengthOfArrayLike(O).
-    auto length = length_of_array_like(global_object, *object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *object));
 
     // 3. If IsCallable(predicate) is false, throw a TypeError exception.
     if (!predicate.is_function()) {
@@ -1604,9 +1563,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::some)
         return {};
 
     // 2. Let len be ? LengthOfArrayLike(O).
-    auto length = length_of_array_like(global_object, *object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *object));
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_function.is_function()) {
@@ -1661,9 +1618,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::every)
         return {};
 
     // 2. Let len be ? LengthOfArrayLike(O).
-    auto length = length_of_array_like(global_object, *object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *object));
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_function.is_function()) {
@@ -1713,9 +1668,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
     if (!this_object)
         return {};
 
-    auto initial_length = length_of_array_like(global_object, *this_object);
-    if (vm.exception())
-        return {};
+    auto initial_length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
 
     auto relative_start = vm.argument(0).to_integer_or_infinity(global_object);
     if (vm.exception())
@@ -1846,9 +1799,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::fill)
     if (!this_object)
         return {};
 
-    auto length = length_of_array_like(global_object, *this_object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
 
     double relative_start = 0;
     double relative_end = length;
@@ -1950,9 +1901,7 @@ static size_t flatten_into_array(GlobalObject& global_object, Object& new_array,
                 return {};
             }
 
-            auto length = length_of_array_like(global_object, value.as_object());
-            if (vm.exception())
-                return {};
+            auto length = TRY_OR_DISCARD(length_of_array_like(global_object, value.as_object()));
             target_index = flatten_into_array(global_object, new_array, value.as_object(), length, target_index, depth - 1);
             if (vm.exception())
                 return {};
@@ -1980,9 +1929,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat)
     if (!this_object)
         return {};
 
-    auto length = length_of_array_like(global_object, *this_object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
 
     double depth = 1;
     if (!vm.argument(0).is_undefined()) {
@@ -2014,9 +1961,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat_map)
         return {};
 
     // 2. Let sourceLen be ? LengthOfArrayLike(O).
-    auto source_length = length_of_array_like(global_object, *object);
-    if (vm.exception())
-        return {};
+    auto source_length = TRY_OR_DISCARD(length_of_array_like(global_object, *object));
 
     // 3. If ! IsCallable(mapperFunction) is false, throw a TypeError exception.
     if (!mapper_function.is_function()) {
@@ -2044,9 +1989,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::copy_within)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    auto length = length_of_array_like(global_object, *this_object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
 
     auto relative_target = vm.argument(0).to_integer_or_infinity(global_object);
     if (vm.exception())
@@ -2128,9 +2071,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::at)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    auto length = length_of_array_like(global_object, *this_object);
-    if (vm.exception())
-        return {};
+    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
     auto relative_index = vm.argument(0).to_integer_or_infinity(global_object);
     if (vm.exception())
         return {};

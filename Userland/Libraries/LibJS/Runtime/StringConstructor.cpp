@@ -86,7 +86,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     if (vm.exception())
         return {};
 
-    auto literal_segments = length_of_array_like(global_object, *raw);
+    auto literal_segments = TRY_OR_DISCARD(length_of_array_like(global_object, *raw));
     if (vm.exception())
         return {};
 
