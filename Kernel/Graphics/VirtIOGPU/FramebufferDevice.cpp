@@ -5,12 +5,12 @@
  */
 
 #include <Kernel/Graphics/GraphicsManagement.h>
-#include <Kernel/Graphics/VirtIOGPU/FrameBufferDevice.h>
+#include <Kernel/Graphics/VirtIOGPU/FramebufferDevice.h>
 #include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel::Graphics::VirtIOGPU {
 
-FrameBufferDevice::FrameBufferDevice(GPU& virtio_gpu, ScanoutID scanout)
+FramebufferDevice::FramebufferDevice(GPU& virtio_gpu, ScanoutID scanout)
     : BlockDevice(29, GraphicsManagement::the().allocate_minor_device_number())
     , m_gpu(virtio_gpu)
     , m_scanout(scanout)
@@ -22,11 +22,11 @@ FrameBufferDevice::FrameBufferDevice(GPU& virtio_gpu, ScanoutID scanout)
     }
 }
 
-FrameBufferDevice::~FrameBufferDevice()
+FramebufferDevice::~FramebufferDevice()
 {
 }
 
-KResult FrameBufferDevice::create_framebuffer()
+KResult FramebufferDevice::create_framebuffer()
 {
     // First delete any existing framebuffers to free the memory first
     m_framebuffer = nullptr;
@@ -53,7 +53,7 @@ KResult FrameBufferDevice::create_framebuffer()
     return KSuccess;
 }
 
-void FrameBufferDevice::create_buffer(Buffer& buffer, size_t framebuffer_offset, size_t framebuffer_size)
+void FramebufferDevice::create_buffer(Buffer& buffer, size_t framebuffer_offset, size_t framebuffer_size)
 {
     buffer.framebuffer_offset = framebuffer_offset;
     buffer.framebuffer_data = m_framebuffer->vaddr().as_ptr() + framebuffer_offset;
@@ -89,32 +89,32 @@ void FrameBufferDevice::create_buffer(Buffer& buffer, size_t framebuffer_offset,
     info.enabled = 1;
 }
 
-Protocol::DisplayInfoResponse::Display const& FrameBufferDevice::display_info() const
+Protocol::DisplayInfoResponse::Display const& FramebufferDevice::display_info() const
 {
     return m_gpu.display_info(m_scanout);
 }
 
-Protocol::DisplayInfoResponse::Display& FrameBufferDevice::display_info()
+Protocol::DisplayInfoResponse::Display& FramebufferDevice::display_info()
 {
     return m_gpu.display_info(m_scanout);
 }
 
-void FrameBufferDevice::transfer_framebuffer_data_to_host(Protocol::Rect const& rect, Buffer& buffer)
+void FramebufferDevice::transfer_framebuffer_data_to_host(Protocol::Rect const& rect, Buffer& buffer)
 {
     m_gpu.transfer_framebuffer_data_to_host(m_scanout, rect, buffer.resource_id);
 }
 
-void FrameBufferDevice::flush_dirty_window(Protocol::Rect const& dirty_rect, Buffer& buffer)
+void FramebufferDevice::flush_dirty_window(Protocol::Rect const& dirty_rect, Buffer& buffer)
 {
     m_gpu.flush_dirty_rectangle(m_scanout, dirty_rect, buffer.resource_id);
 }
 
-void FrameBufferDevice::flush_displayed_image(Protocol::Rect const& dirty_rect, Buffer& buffer)
+void FramebufferDevice::flush_displayed_image(Protocol::Rect const& dirty_rect, Buffer& buffer)
 {
     m_gpu.flush_displayed_image(dirty_rect, buffer.resource_id);
 }
 
-KResult FrameBufferDevice::try_to_set_resolution(size_t width, size_t height)
+KResult FramebufferDevice::try_to_set_resolution(size_t width, size_t height)
 {
     if (width > MAX_VIRTIOGPU_RESOLUTION_WIDTH || height > MAX_VIRTIOGPU_RESOLUTION_HEIGHT)
         return EINVAL;
@@ -133,7 +133,7 @@ KResult FrameBufferDevice::try_to_set_resolution(size_t width, size_t height)
     return create_framebuffer();
 }
 
-void FrameBufferDevice::set_buffer(int buffer_index)
+void FramebufferDevice::set_buffer(int buffer_index)
 {
     auto& buffer = buffer_index == 0 ? m_main_buffer : m_back_buffer;
     MutexLocker locker(m_gpu.operation_lock());
@@ -145,7 +145,7 @@ void FrameBufferDevice::set_buffer(int buffer_index)
     buffer.dirty_rect = {};
 }
 
-KResult FrameBufferDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
+KResult FramebufferDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(video);
     switch (request) {
@@ -233,7 +233,7 @@ KResult FrameBufferDevice::ioctl(OpenFileDescription&, unsigned request, Userspa
     };
 }
 
-KResultOr<Memory::Region*> FrameBufferDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+KResultOr<Memory::Region*> FramebufferDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     REQUIRE_PROMISE(video);
     if (!shared)
@@ -267,7 +267,7 @@ KResultOr<Memory::Region*> FrameBufferDevice::mmap(Process& process, OpenFileDes
     return m_userspace_mmap_region.unsafe_ptr();
 }
 
-void FrameBufferDevice::deactivate_writes()
+void FramebufferDevice::deactivate_writes()
 {
     m_are_writes_active = false;
     if (m_userspace_mmap_region) {
@@ -282,7 +282,7 @@ void FrameBufferDevice::deactivate_writes()
     clear_to_black(buffer_from_index(0));
 }
 
-void FrameBufferDevice::activate_writes()
+void FramebufferDevice::activate_writes()
 {
     m_are_writes_active = true;
     auto last_set_buffer_index = m_last_set_buffer_index.load();
@@ -294,7 +294,7 @@ void FrameBufferDevice::activate_writes()
     set_buffer(last_set_buffer_index);
 }
 
-void FrameBufferDevice::clear_to_black(Buffer& buffer)
+void FramebufferDevice::clear_to_black(Buffer& buffer)
 {
     auto& info = display_info();
     size_t width = info.rect.width;
@@ -308,7 +308,7 @@ void FrameBufferDevice::clear_to_black(Buffer& buffer)
     }
 }
 
-void FrameBufferDevice::draw_ntsc_test_pattern(Buffer& buffer)
+void FramebufferDevice::draw_ntsc_test_pattern(Buffer& buffer)
 {
     static constexpr u8 colors[12][4] = {
         { 0xff, 0xff, 0xff, 0xff }, // White
@@ -365,7 +365,7 @@ void FrameBufferDevice::draw_ntsc_test_pattern(Buffer& buffer)
     dbgln_if(VIRTIO_DEBUG, "Finish drawing the pattern");
 }
 
-u8* FrameBufferDevice::framebuffer_data()
+u8* FramebufferDevice::framebuffer_data()
 {
     return m_current_buffer->framebuffer_data;
 }

@@ -13,7 +13,7 @@
 
 namespace Kernel::Graphics::VirtIOGPU {
 
-class FrameBufferDevice final : public BlockDevice {
+class FramebufferDevice final : public BlockDevice {
     friend class Console;
     struct Buffer {
         size_t framebuffer_offset { 0 };
@@ -23,8 +23,8 @@ class FrameBufferDevice final : public BlockDevice {
     };
 
 public:
-    FrameBufferDevice(VirtIOGPU::GPU& virtio_gpu, ScanoutID);
-    virtual ~FrameBufferDevice() override;
+    FramebufferDevice(VirtIOGPU::GPU& virtio_gpu, ScanoutID);
+    virtual ~FramebufferDevice() override;
 
     virtual void deactivate_writes();
     virtual void activate_writes();
