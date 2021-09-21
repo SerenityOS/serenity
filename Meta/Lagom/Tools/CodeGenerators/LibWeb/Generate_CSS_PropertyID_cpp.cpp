@@ -202,12 +202,10 @@ RefPtr<StyleValue> property_initial_value(PropertyID property_id)
     generator.append(R"~~~(
     }
 
-    auto maybe_value = initial_values.get(property_id);
-    if (!maybe_value.has_value()) {
-        dbgln("No initial value found for '{}' property!", string_from_property_id(property_id));
+    auto it = initial_values.find(property_id);
+    if (it == initial_values.end())
         return nullptr;
-    }
-    return maybe_value.value();
+    return it->value;
 }
 
 bool property_has_quirk(PropertyID property_id, Quirk quirk)
