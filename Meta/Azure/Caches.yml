@@ -5,6 +5,8 @@ parameters:
   build_directory: ''
   ccache_version: 1 # Increment this number if CI has trouble with ccache.
   serenity_ccache_path: $(CCACHE_DIR)
+  toolchain_ccache_path: $(CCACHE_DIR)
+  toolchain_ccache_size: $(CCACHE_MAXSIZE)
   with_unicode_caches: true
 
 steps:
@@ -18,13 +20,26 @@ steps:
         inputs:
           key: '"toolchain" | "${{ parameters.arch }}" | Toolchain/BuildClang.sh | Toolchain/Patches/*[!gcc].patch | Userland/Libraries/LibC/**/*.h | Userland/Libraries/LibPthread/**/*.h'
           path: $(Build.SourcesDirectory)/Toolchain/Cache
-        displayName: 'Toolchain Cache'
+        displayName: 'Toolchain Prebuilt Cache'
     - ${{ if eq(parameters.toolchain, 'gcc') }}:
       - task: Cache@2
         inputs:
           key: '"toolchain" | "${{ parameters.arch }}" | Toolchain/BuildIt.sh | Toolchain/Patches/*[!llvm].patch | Userland/Libraries/LibC/**/*.h | Userland/Libraries/LibPthread/**/*.h'
           path: $(Build.SourcesDirectory)/Toolchain/Cache
-        displayName: 'Toolchain Cache'
+        displayName: 'Toolchain Prebuilt Cache'
+
+    - task: Cache@2
+      inputs:
+        key: '"toolchain ccache" | "${{ parameters.arch }}" | "${{ parameters.toolchain }}" | "${{ parameters.ccache_version }}" | "$(timestamp)"'
+        restoreKeys: |
+          "toolchain ccache" | "${{ parameters.arch }}" | "${{ parameters.toolchain }}" | "${{ parameters.ccache_version }}"
+        path: ${{ parameters.toolchain_ccache_path }}
+      displayName: 'Toolchain Compiler Cache'
+
+    - script: |
+        CCACHE_DIR=${{ parameters.toolchain_ccache_path }} ccache -M ${{ parameters.toolchain_ccache_size }}
+        CCACHE_DIR=${{ parameters.toolchain_ccache_path }} ccache -s
+      displayName: 'Configure Toolchain ccache'
 
   - task: Cache@2
     inputs:
