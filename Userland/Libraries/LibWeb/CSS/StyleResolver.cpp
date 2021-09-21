@@ -629,7 +629,7 @@ void StyleResolver::compute_defaulted_values(StyleProperties& style, DOM::Elemen
     // Walk the list of all known CSS properties and:
     // - Add them to `style` if they are missing.
     // - Resolve `inherit` and `initial` as needed.
-    for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
+    for (auto i = to_underlying(CSS::first_longhand_property_id); i <= to_underlying(CSS::last_longhand_property_id); ++i) {
         auto property_id = (CSS::PropertyID)i;
         auto it = style.m_property_values.find(property_id);
         if (it == style.m_property_values.end()) {
