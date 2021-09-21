@@ -72,14 +72,6 @@ void GlyphMapWidget::update_glyph(int glyph)
     update(get_outer_rect(glyph));
 }
 
-void GlyphMapWidget::reprobe_font()
-{
-    VERIFY(m_font);
-    m_glyph_count = m_font->glyph_count();
-    m_selected_glyph = 0;
-    update();
-}
-
 void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);

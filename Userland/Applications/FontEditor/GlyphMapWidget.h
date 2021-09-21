@@ -27,7 +27,6 @@ public:
     const Gfx::BitmapFont& font() const { return *m_font; }
 
     void update_glyph(int);
-    void reprobe_font();
 
     Function<void(int)> on_glyph_selected;
 
