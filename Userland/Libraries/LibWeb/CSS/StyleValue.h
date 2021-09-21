@@ -348,6 +348,13 @@ public:
     float value() const { return m_value; }
     String to_string() const override { return String::formatted("{}", m_value); }
 
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        return m_value == static_cast<NumericStyleValue const&>(other).m_value;
+    }
+
 private:
     explicit NumericStyleValue(float value)
         : StyleValue(Type::Numeric)
