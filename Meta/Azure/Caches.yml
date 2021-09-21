@@ -4,6 +4,7 @@ parameters:
   toolchain: 'gcc'
   build_directory: ''
   ccache_version: 1 # Increment this number if CI has trouble with ccache.
+  serenity_ccache_path: $(CCACHE_DIR)
   with_unicode_caches: true
 
 steps:
@@ -30,8 +31,8 @@ steps:
       key: '"ccache" | "${{ parameters.os }}" | "${{ parameters.arch }}" | "${{ parameters.toolchain }}" | "${{ parameters.ccache_version }}" | "$(timestamp)"'
       restoreKeys: |
         "ccache" | "${{ parameters.os }}" | "${{ parameters.arch }}" | "${{ parameters.toolchain }}" | "${{ parameters.ccache_version }}"
-      path: $(CCACHE_DIR)
-    displayName: 'Compiler Cache'
+      path: ${{ parameters.serenity_ccache_path }}
+    displayName: 'Serenity Compiler Cache'
 
   - ${{ if eq(parameters.with_unicode_caches, true) }}:
     - task: Cache@2
@@ -47,6 +48,6 @@ steps:
       displayName: 'UnicodeLocale Cache'
 
   - script: |
-      ccache -M 5G
-      ccache -s
-    displayName: 'Configure ccache'
+      CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -M 5G
+      CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -s
+    displayName: 'Configure Serenity ccache'
