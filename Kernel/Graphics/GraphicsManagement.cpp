@@ -133,7 +133,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
 
     // Note: If IO space is enabled, this VGA adapter is operating in VGA mode.
     // Note: If no other VGA adapter is attached as m_vga_adapter, we should attach it then.
-    if (!m_vga_adapter && PCI::is_io_space_enabled(device_identifier.address()) && adapter->type() == GraphicsDevice::Type::VGACompatible) {
+    if (!m_vga_adapter && PCI::is_io_space_enabled(device_identifier.address()) && adapter->vga_compatible()) {
         dbgln("Graphics adapter @ {} is operating in VGA mode", device_identifier.address());
         m_vga_adapter = static_ptr_cast<VGACompatibleAdapter>(adapter);
     }
