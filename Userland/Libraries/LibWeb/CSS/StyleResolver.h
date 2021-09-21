@@ -32,7 +32,17 @@ public:
 
     NonnullRefPtr<StyleProperties> resolve_style(DOM::Element&) const;
 
-    Vector<MatchingRule> collect_matching_rules(DOM::Element const&) const;
+    // https://www.w3.org/TR/css-cascade/#origin
+    enum class CascadeOrigin {
+        Any, // FIXME: This is not part of the spec. Get rid of it.
+        Author,
+        User,
+        UserAgent,
+        Animation,
+        Transition,
+    };
+
+    Vector<MatchingRule> collect_matching_rules(DOM::Element const&, CascadeOrigin = CascadeOrigin::Any) const;
     void sort_matching_rules(Vector<MatchingRule>&) const;
     struct CustomPropertyResolutionTuple {
         Optional<StyleProperty> style {};
@@ -42,8 +52,18 @@ public:
     Optional<StyleProperty> resolve_custom_property(DOM::Element&, String const&) const;
 
 private:
+    void compute_cascaded_values(StyleProperties&, DOM::Element&) const;
+    void compute_defaulted_values(StyleProperties&, DOM::Element const&) const;
+
     template<typename Callback>
-    void for_each_stylesheet(Callback) const;
+    void for_each_stylesheet(CascadeOrigin, Callback) const;
+
+    struct MatchingRuleSet {
+        Vector<MatchingRule> user_agent_rules;
+        Vector<MatchingRule> author_rules;
+    };
+
+    void cascade_declarations(StyleProperties&, DOM::Element&, Vector<MatchingRule> const&, CascadeOrigin, bool important) const;
 
     DOM::Document& m_document;
 };
