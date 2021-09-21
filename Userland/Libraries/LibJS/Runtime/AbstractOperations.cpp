@@ -407,7 +407,7 @@ ThrowCompletionOr<Reference> make_super_property_reference(GlobalObject& global_
 }
 
 // 19.2.1.1 PerformEval ( x, callerRealm, strictCaller, direct ), https://tc39.es/ecma262/#sec-performeval
-Value perform_eval(Value x, GlobalObject& caller_realm, CallerMode strict_caller, EvalMode direct)
+ThrowCompletionOr<Value> perform_eval(Value x, GlobalObject& caller_realm, CallerMode strict_caller, EvalMode direct)
 {
     VERIFY(direct == EvalMode::Direct || strict_caller == CallerMode::NonStrict);
     if (!x.is_string())
@@ -420,17 +420,23 @@ Value perform_eval(Value x, GlobalObject& caller_realm, CallerMode strict_caller
 
     if (parser.has_errors()) {
         auto& error = parser.errors()[0];
-        vm.throw_exception<SyntaxError>(caller_realm, error.to_string());
-        return {};
+        return vm.throw_completion<SyntaxError>(caller_realm, error.to_string());
     }
 
     auto& interpreter = vm.interpreter();
-    if (direct == EvalMode::Direct)
-        return interpreter.execute_statement(caller_realm, program).value_or(js_undefined());
+    if (direct == EvalMode::Direct) {
+        auto result = interpreter.execute_statement(caller_realm, program).value_or(js_undefined());
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
+        return result;
+    }
 
     TemporaryChange scope_change(vm.running_execution_context().lexical_environment, static_cast<Environment*>(&interpreter.realm().global_environment()));
     TemporaryChange scope_change_strict(vm.running_execution_context().is_strict_mode, strict_caller == CallerMode::Strict);
-    return interpreter.execute_statement(caller_realm, program).value_or(js_undefined());
+    auto result = interpreter.execute_statement(caller_realm, program).value_or(js_undefined());
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+    return result;
 }
 
 // 10.4.4.6 CreateUnmappedArgumentsObject ( argumentsList ), https://tc39.es/ecma262/#sec-createunmappedargumentsobject

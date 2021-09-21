@@ -40,7 +40,7 @@ enum class EvalMode {
     Direct,
     Indirect
 };
-Value perform_eval(Value, GlobalObject&, CallerMode, EvalMode);
+ThrowCompletionOr<Value> perform_eval(Value, GlobalObject&, CallerMode, EvalMode);
 
 // 10.1.13 OrdinaryCreateFromConstructor ( constructor, intrinsicDefaultProto [ , internalSlotsList ] ), https://tc39.es/ecma262/#sec-ordinarycreatefromconstructor
 template<typename T, typename... Args>
