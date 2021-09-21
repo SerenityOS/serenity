@@ -390,9 +390,11 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         if (m_undo_glyph)
             m_undo_glyph->set_code_point(glyph);
         m_glyph_editor_widget->set_glyph(glyph);
-        auto glyph_width = m_edited_font->raw_glyph_width(m_glyph_map_widget->selected_glyph());
-        m_glyph_editor_width_spinbox->set_value(glyph_width);
-        m_glyph_editor_present_checkbox->set_checked(glyph_width > 0);
+        auto glyph_width = m_edited_font->raw_glyph_width(glyph);
+        if (m_edited_font->is_fixed_width())
+            m_glyph_editor_present_checkbox->set_checked(glyph_width > 0, GUI::AllowCallback::No);
+        else
+            m_glyph_editor_width_spinbox->set_value(glyph_width, GUI::AllowCallback::No);
         update_statusbar();
     };
 
@@ -410,17 +412,15 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         m_edited_font->set_fixed_width(checked);
         auto glyph_width = m_edited_font->raw_glyph_width(m_glyph_map_widget->selected_glyph());
         m_glyph_editor_width_spinbox->set_visible(!checked);
-        m_glyph_editor_width_spinbox->set_value(glyph_width);
+        m_glyph_editor_width_spinbox->set_value(glyph_width, GUI::AllowCallback::No);
         m_glyph_editor_present_checkbox->set_visible(checked);
-        m_glyph_editor_present_checkbox->set_checked(glyph_width > 0);
+        m_glyph_editor_present_checkbox->set_checked(glyph_width > 0, GUI::AllowCallback::No);
         m_glyph_editor_widget->update();
         update_demo();
         did_modify_font();
     };
 
     m_glyph_editor_width_spinbox->on_change = [this, update_demo, update_statusbar](int value) {
-        if (m_edited_font->raw_glyph_width(m_glyph_map_widget->selected_glyph()) == value)
-            return;
         m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), value);
         m_glyph_editor_widget->update();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
@@ -430,10 +430,6 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     };
 
     m_glyph_editor_present_checkbox->on_checked = [this, update_demo, update_statusbar](bool checked) {
-        if (!m_edited_font->is_fixed_width()
-            || m_edited_font->raw_glyph_width(m_glyph_map_widget->selected_glyph()) == checked
-            || (m_edited_font->raw_glyph_width(m_glyph_map_widget->selected_glyph()) && checked))
-            return;
         m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), checked ? m_edited_font->glyph_fixed_width() : 0);
         m_glyph_editor_widget->update();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
@@ -503,20 +499,25 @@ void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& 
 
     m_glyph_editor_container->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
     m_left_column_container->set_fixed_width(m_glyph_editor_widget->preferred_width());
+
     m_glyph_editor_width_spinbox->set_visible(!m_edited_font->is_fixed_width());
-    m_glyph_editor_width_spinbox->set_max(m_edited_font->max_glyph_width());
+    m_glyph_editor_width_spinbox->set_max(m_edited_font->max_glyph_width(), GUI::AllowCallback::No);
+    m_glyph_editor_width_spinbox->set_value(m_edited_font->raw_glyph_width(m_glyph_map_widget->selected_glyph()), GUI::AllowCallback::No);
+
     m_glyph_editor_present_checkbox->set_visible(m_edited_font->is_fixed_width());
+    m_glyph_editor_present_checkbox->set_checked(m_edited_font->raw_glyph_width(m_glyph_map_widget->selected_glyph()) > 0, GUI::AllowCallback::No);
+    m_fixed_width_checkbox->set_checked(m_edited_font->is_fixed_width(), GUI::AllowCallback::No);
 
-    m_name_textbox->set_text(m_edited_font->name());
-    m_family_textbox->set_text(m_edited_font->family());
+    m_name_textbox->set_text(m_edited_font->name(), GUI::AllowCallback::No);
+    m_family_textbox->set_text(m_edited_font->family(), GUI::AllowCallback::No);
 
-    m_presentation_spinbox->set_value(m_edited_font->presentation_size());
-    m_spacing_spinbox->set_value(m_edited_font->glyph_spacing());
+    m_presentation_spinbox->set_value(m_edited_font->presentation_size(), GUI::AllowCallback::No);
+    m_spacing_spinbox->set_value(m_edited_font->glyph_spacing(), GUI::AllowCallback::No);
 
-    m_mean_line_spinbox->set_range(0, max(m_edited_font->glyph_height() - 2, 0), false);
-    m_baseline_spinbox->set_range(0, max(m_edited_font->glyph_height() - 2, 0), false);
-    m_mean_line_spinbox->set_value(m_edited_font->mean_line());
-    m_baseline_spinbox->set_value(m_edited_font->baseline());
+    m_mean_line_spinbox->set_range(0, max(m_edited_font->glyph_height() - 2, 0), GUI::AllowCallback::No);
+    m_baseline_spinbox->set_range(0, max(m_edited_font->glyph_height() - 2, 0), GUI::AllowCallback::No);
+    m_mean_line_spinbox->set_value(m_edited_font->mean_line(), GUI::AllowCallback::No);
+    m_baseline_spinbox->set_value(m_edited_font->baseline(), GUI::AllowCallback::No);
 
     m_font_weight_list.clear();
     for (auto& it : GUI::font_weight_names)
@@ -532,13 +533,9 @@ void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& 
         i++;
     }
 
-    m_fixed_width_checkbox->set_checked(m_edited_font->is_fixed_width());
-
-    m_glyph_map_widget->set_selected_glyph('A');
     deferred_invoke([this] {
         m_glyph_map_widget->set_focus(true);
         m_glyph_map_widget->scroll_to_glyph(m_glyph_map_widget->selected_glyph());
-        window()->set_modified(false);
         update_title();
     });
 

@@ -25,8 +25,8 @@ void GlyphMapWidget::initialize(Gfx::BitmapFont& mutable_font)
     if (m_font == mutable_font)
         return;
     m_font = mutable_font;
-    m_selected_glyph = 0;
     vertical_scrollbar().set_step(font().glyph_height() + m_vertical_spacing);
+    set_selected_glyph('A');
 }
 
 void GlyphMapWidget::resize_event(GUI::ResizeEvent& event)
