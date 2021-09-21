@@ -39,9 +39,10 @@ void GlyphEditorWidget::delete_glyph()
     if (on_undo_event)
         on_undo_event();
     auto bitmap = font().raw_glyph(m_glyph).glyph_bitmap();
-    for (int x = 0; x < bitmap.width(); x++)
-        for (int y = 0; y < bitmap.height(); y++)
+    for (int x = 0; x < font().max_glyph_width(); x++)
+        for (int y = 0; y < font().glyph_height(); y++)
             bitmap.set_bit_at(x, y, false);
+    font().set_glyph_width(m_glyph, 0);
     if (on_glyph_altered)
         on_glyph_altered(m_glyph);
     update();
@@ -155,8 +156,8 @@ void GlyphEditorWidget::paint_event(GUI::PaintEvent& event)
 bool GlyphEditorWidget::is_glyph_empty()
 {
     auto bitmap = font().raw_glyph(m_glyph).glyph_bitmap();
-    for (int x = 0; x < bitmap.width(); x++)
-        for (int y = 0; y < bitmap.height(); y++)
+    for (int x = 0; x < font().max_glyph_width(); x++)
+        for (int y = 0; y < font().glyph_height(); y++)
             if (bitmap.bit_at(x, y))
                 return false;
     return true;
