@@ -48,7 +48,7 @@ private:
     Gfx::IntRect decrement_button_rect() const;
     Gfx::IntRect increment_button_rect() const;
     Gfx::IntRect scrubber_rect() const;
-    int unclamped_scrubber_size() const;
+    float unclamped_scrubber_size() const;
     int visible_scrubber_size() const;
     int scrubbable_range_in_pixels() const;
     void on_automatic_scrolling_timer_fired();
