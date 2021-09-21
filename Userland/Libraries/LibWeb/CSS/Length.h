@@ -162,7 +162,7 @@ private:
     Type m_type { Type::Undefined };
     float m_value { 0 };
 
-    CalculatedStyleValue* m_calculated_style { nullptr };
+    RefPtr<CalculatedStyleValue> m_calculated_style;
 };
 
 }
