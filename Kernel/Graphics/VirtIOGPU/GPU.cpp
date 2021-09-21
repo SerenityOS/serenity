@@ -46,8 +46,9 @@ void GPU::initialize()
     }
 }
 
-GPU::GPU(PCI::DeviceIdentifier const& device_identifier)
+GPU::GPU(GraphicsDevice const& adapter, PCI::DeviceIdentifier const& device_identifier)
     : VirtIO::Device(device_identifier)
+    , m_adapter(adapter)
 {
     auto region_or_error = MM.allocate_contiguous_kernel_region(32 * PAGE_SIZE, "VirtGPU Scratch Space", Memory::Region::Access::ReadWrite);
     if (region_or_error.is_error())
@@ -63,7 +64,7 @@ void GPU::create_framebuffer_devices()
 {
     for (size_t i = 0; i < min(m_num_scanouts, VIRTIO_GPU_MAX_SCANOUTS); i++) {
         auto& scanout = m_scanouts[i];
-        scanout.framebuffer = adopt_ref(*new VirtIOGPU::FramebufferDevice(*this, i));
+        scanout.framebuffer = adopt_ref(*new VirtIOGPU::FramebufferDevice(*m_adapter, *this, i));
         scanout.framebuffer->after_inserting();
         scanout.console = Kernel::Graphics::VirtIOGPU::Console::initialize(scanout.framebuffer);
     }

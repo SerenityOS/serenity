@@ -11,6 +11,7 @@
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
 #include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Graphics/GraphicsDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/Protocol.h>
 
 #define VIRTIO_GPU_F_VIRGL (1 << 0)
@@ -40,7 +41,7 @@ class GPU final
     friend class FramebufferDevice;
 
 public:
-    GPU(PCI::DeviceIdentifier const&);
+    GPU(GraphicsDevice const&, PCI::DeviceIdentifier const&);
     virtual ~GPU() override;
 
     void create_framebuffer_devices();
@@ -118,6 +119,8 @@ private:
 
     VirtIO::Configuration const* m_device_configuration { nullptr };
     ResourceID m_resource_id_counter { 0 };
+
+    NonnullRefPtr<GraphicsDevice> m_adapter;
 
     // Synchronous commands
     WaitQueue m_outstanding_request;

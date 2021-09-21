@@ -8,12 +8,13 @@
 
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
-#include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Graphics/FramebufferDevice.h>
+#include <Kernel/Graphics/GraphicsDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/GPU.h>
 
 namespace Kernel::Graphics::VirtIOGPU {
 
-class FramebufferDevice final : public BlockDevice {
+class FramebufferDevice final : public Kernel::FramebufferDevice {
     friend class Console;
     struct Buffer {
         size_t framebuffer_offset { 0 };
@@ -23,7 +24,7 @@ class FramebufferDevice final : public BlockDevice {
     };
 
 public:
-    FramebufferDevice(VirtIOGPU::GPU& virtio_gpu, ScanoutID);
+    FramebufferDevice(GraphicsDevice const&, VirtIOGPU::GPU& virtio_gpu, ScanoutID);
     virtual ~FramebufferDevice() override;
 
     virtual void deactivate_writes();
@@ -62,11 +63,6 @@ private:
 
     virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
     virtual KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
-    virtual bool can_read(const OpenFileDescription&, size_t) const override { return true; }
-    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return EINVAL; }
-    virtual bool can_write(const OpenFileDescription&, size_t) const override { return true; }
-    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return EINVAL; };
-    virtual void start_request(AsyncBlockDeviceRequest& request) override { request.complete(AsyncDeviceRequest::Failure); }
 
     static bool is_valid_buffer_index(int buffer_index)
     {

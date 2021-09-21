@@ -34,6 +34,9 @@ public:
     virtual ~FramebufferDevice() {};
     KResult initialize();
 
+protected:
+    FramebufferDevice(const GraphicsDevice&, size_t);
+
 private:
     FramebufferDevice(const GraphicsDevice&, size_t, PhysicalAddress, size_t, size_t, size_t);
 
