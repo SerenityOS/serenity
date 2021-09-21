@@ -243,7 +243,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         && callee_reference.name().as_string() == vm.names.eval.as_string()) {
 
         auto script_value = arg_list.size() == 0 ? js_undefined() : arg_list[0];
-        return perform_eval(script_value, global_object, vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct);
+        return TRY_OR_DISCARD(perform_eval(script_value, global_object, vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct));
     }
 
     return vm.call(function, this_value, move(arg_list));
