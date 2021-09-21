@@ -132,11 +132,9 @@ UNMAP_AFTER_INIT void BochsGraphicsAdapter::initialize_framebuffer_devices()
     VERIFY(!m_framebuffer_device->initialize().is_error());
 }
 
-GraphicsDevice::Type BochsGraphicsAdapter::type() const
+bool BochsGraphicsAdapter::vga_compatible() const
 {
-    if (m_is_vga_capable)
-        return Type::VGACompatible;
-    return Type::Bochs;
+    return m_is_vga_capable;
 }
 
 void BochsGraphicsAdapter::unblank()

@@ -22,12 +22,13 @@ public:
 
     virtual bool framebuffer_devices_initialized() const override { return m_created_framebuffer_devices; }
 
+    // FIXME: There's a VirtIO VGA GPU variant, so we should consider that
+    virtual bool vga_compatible() const override { return false; }
+
 private:
     explicit GraphicsAdapter(PCI::DeviceIdentifier const&);
 
     virtual void initialize_framebuffer_devices() override;
-    virtual Type type() const override { return Type::Raw; }
-
     virtual void enable_consoles() override;
     virtual void disable_consoles() override;
 
