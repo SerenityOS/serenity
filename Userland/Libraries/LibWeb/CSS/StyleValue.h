@@ -822,6 +822,16 @@ public:
         return String::formatted("{} / {}", m_horizontal_radius.to_string(), m_vertical_radius.to_string());
     }
 
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        auto& other_value = static_cast<BorderRadiusStyleValue const&>(other);
+        return m_is_elliptical == other_value.m_is_elliptical
+            && m_horizontal_radius == other_value.m_horizontal_radius
+            && m_vertical_radius == other_value.m_vertical_radius;
+    }
+
 private:
     BorderRadiusStyleValue(Length const& horizontal_radius, Length const& vertical_radius)
         : StyleValue(Type::BorderRadius)
