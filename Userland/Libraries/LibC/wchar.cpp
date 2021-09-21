@@ -209,16 +209,11 @@ size_t mbrtowc(wchar_t* pwc, const char* s, size_t n, mbstate_t* state)
         state = &_anonymous_state;
     }
 
-    // If s is nullptr, check if the state contains a complete multibyte character
+    // s being a null pointer is a shorthand for reading a single null byte.
     if (s == nullptr) {
-        if (mbstate_expected_bytes(state) == mbstate->stored_bytes) {
-            *state = {};
-            return 0;
-        } else {
-            *state = {};
-            errno = EILSEQ;
-            return -1;
-        }
+        pwc = nullptr;
+        s = "";
+        n = 1;
     }
 
     // Stop early if we can't read anything
@@ -284,6 +279,7 @@ size_t mbrtowc(wchar_t* pwc, const char* s, size_t n, mbstate_t* state)
     state->stored_bytes = 0;
 
     if (codepoint == 0) {
+        *state = {};
         return 0;
     }
 
