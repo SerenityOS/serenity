@@ -10,8 +10,8 @@
 
 namespace Kernel::Graphics::VirtIOGPU {
 
-FramebufferDevice::FramebufferDevice(GPU& virtio_gpu, ScanoutID scanout)
-    : BlockDevice(29, GraphicsManagement::the().allocate_minor_device_number())
+FramebufferDevice::FramebufferDevice(GraphicsDevice const& adapter, GPU& virtio_gpu, ScanoutID scanout)
+    : Kernel::FramebufferDevice(adapter, scanout.value())
     , m_gpu(virtio_gpu)
     , m_scanout(scanout)
 {
