@@ -6,7 +6,7 @@
 
 #include <AK/BinaryBufferWriter.h>
 #include <Kernel/Graphics/VirtIOGPU/Console.h>
-#include <Kernel/Graphics/VirtIOGPU/FrameBufferDevice.h>
+#include <Kernel/Graphics/VirtIOGPU/FramebufferDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/GPU.h>
 
 #define DEVICE_EVENTS_READ 0x0
@@ -63,7 +63,7 @@ void GPU::create_framebuffer_devices()
 {
     for (size_t i = 0; i < min(m_num_scanouts, VIRTIO_GPU_MAX_SCANOUTS); i++) {
         auto& scanout = m_scanouts[i];
-        scanout.framebuffer = adopt_ref(*new VirtIOGPU::FrameBufferDevice(*this, i));
+        scanout.framebuffer = adopt_ref(*new VirtIOGPU::FramebufferDevice(*this, i));
         scanout.framebuffer->after_inserting();
         scanout.console = Kernel::Graphics::VirtIOGPU::Console::initialize(scanout.framebuffer);
     }

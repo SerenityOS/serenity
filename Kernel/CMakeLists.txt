@@ -76,7 +76,7 @@ set(KERNEL_SOURCES
     Graphics/FramebufferDevice.cpp
     Graphics/GraphicsManagement.cpp
     Graphics/Intel/NativeGraphicsAdapter.cpp
-    Graphics/VirtIOGPU/FrameBufferDevice.cpp
+    Graphics/VirtIOGPU/FramebufferDevice.cpp
     Graphics/VirtIOGPU/Console.cpp
     Graphics/VirtIOGPU/GPU.cpp
     Graphics/VirtIOGPU/GraphicsAdapter.cpp

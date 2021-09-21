@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Graphics/VirtIOGPU/Console.h>
-#include <Kernel/Graphics/VirtIOGPU/FrameBufferDevice.h>
+#include <Kernel/Graphics/VirtIOGPU/FramebufferDevice.h>
 #include <Kernel/WorkQueue.h>
 
 namespace Kernel::Graphics::VirtIOGPU {
@@ -30,12 +30,12 @@ void DirtyRect::union_rect(size_t x, size_t y, size_t width, size_t height)
     }
 }
 
-NonnullRefPtr<Console> Console::initialize(RefPtr<FrameBufferDevice> const& framebuffer_device)
+NonnullRefPtr<Console> Console::initialize(RefPtr<FramebufferDevice> const& framebuffer_device)
 {
     return adopt_ref(*new Console(framebuffer_device));
 }
 
-Console::Console(RefPtr<FrameBufferDevice> const& framebuffer_device)
+Console::Console(RefPtr<FramebufferDevice> const& framebuffer_device)
     : GenericFramebufferConsole(framebuffer_device->width(), framebuffer_device->height(), framebuffer_device->pitch())
     , m_framebuffer_device(framebuffer_device)
 {
