@@ -38,8 +38,11 @@ struct TitleAndText {
 
 static TitleAndText build_backtrace(Coredump::Reader const& coredump, ELF::Core::ThreadInfo const& thread_info, size_t thread_index)
 {
+    auto timer = Core::ElapsedTimer::start_new();
     Coredump::Backtrace backtrace(coredump, thread_info);
     auto metadata = coredump.metadata();
+
+    dbgln("Generating backtrace took {} ms", timer.elapsed());
 
     StringBuilder builder;
 
@@ -71,6 +74,11 @@ static TitleAndText build_backtrace(Coredump::Reader const& coredump, ELF::Core:
         else
             builder.append('\n');
         builder.append(entry.to_string());
+    }
+
+    dbgln("--- Backtrace for thread #{} (TID {}) ---", thread_index, thread_info.tid);
+    for (auto& entry : backtrace.entries()) {
+        dbgln("{}", entry.to_string(true));
     }
 
     return {
