@@ -6,6 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
+#include <errno.h>
 #include <string.h>
 #include <wchar.h>
 
@@ -225,4 +226,62 @@ TEST_CASE(mbsinit)
 
     // Ensure that we are in an initial state again.
     EXPECT(mbsinit(&state) != 0);
+}
+
+TEST_CASE(mbrtowc)
+{
+    size_t ret = 0;
+    mbstate_t state = {};
+    wchar_t wc = 0;
+
+    // Ensure that we can parse normal ASCII characters.
+    ret = mbrtowc(&wc, "Hello", 5, &state);
+    EXPECT_EQ(ret, 1ul);
+    EXPECT_EQ(wc, 'H');
+
+    // Try two three-byte codepoints (™™), only one of which should be consumed.
+    ret = mbrtowc(&wc, "\xe2\x84\xa2\xe2\x84\xa2", 6, &state);
+    EXPECT_EQ(ret, 3ul);
+    EXPECT_EQ(wc, 0x2122);
+
+    // Try a null character, which should return 0 and reset the state to the initial state.
+    ret = mbrtowc(&wc, "\x00\x00", 2, &state);
+    EXPECT_EQ(ret, 0ul);
+    EXPECT_EQ(wc, 0);
+    EXPECT_NE(mbsinit(&state), 0);
+
+    // Try an incomplete multibyte character.
+    ret = mbrtowc(&wc, "\xe2\x84", 2, &state);
+    EXPECT_EQ(ret, -2ul);
+    EXPECT_EQ(mbsinit(&state), 0);
+
+    mbstate_t incomplete_state = state;
+
+    // Finish the previous multibyte character.
+    ret = mbrtowc(&wc, "\xa2", 1, &state);
+    EXPECT_EQ(ret, 1ul);
+    EXPECT_EQ(wc, 0x2122);
+
+    // Try an invalid multibyte sequence.
+    // Reset the state afterwards because the effects are undefined.
+    ret = mbrtowc(&wc, "\xff", 1, &state);
+    EXPECT_EQ(ret, -1ul);
+    EXPECT_EQ(errno, EILSEQ);
+    state = {};
+
+    // Try a successful conversion, but without target address.
+    ret = mbrtowc(nullptr, "\xe2\x84\xa2\xe2\x84\xa2", 6, &state);
+    EXPECT_EQ(ret, 3ul);
+
+    // Test the "null byte shorthand". Ensure that wc is ignored.
+    state = {};
+    wchar_t old_wc = wc;
+    ret = mbrtowc(&wc, nullptr, 0, &state);
+    EXPECT_EQ(ret, 0ul);
+    EXPECT_EQ(wc, old_wc);
+
+    // Test recognition of incomplete multibyte sequences.
+    ret = mbrtowc(nullptr, nullptr, 0, &incomplete_state);
+    EXPECT_EQ(ret, -1ul);
+    EXPECT_EQ(errno, EILSEQ);
 }
