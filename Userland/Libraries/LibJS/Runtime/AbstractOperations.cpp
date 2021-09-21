@@ -42,13 +42,16 @@ ThrowCompletionOr<Value> require_object_coercible(GlobalObject& global_object, V
 }
 
 // 7.3.18 LengthOfArrayLike ( obj ), https://tc39.es/ecma262/#sec-lengthofarraylike
-size_t length_of_array_like(GlobalObject& global_object, Object const& object)
+ThrowCompletionOr<size_t> length_of_array_like(GlobalObject& global_object, Object const& object)
 {
     auto& vm = global_object.vm();
     auto result = object.get(vm.names.length);
-    if (vm.exception())
-        return {};
-    return result.to_length(global_object);
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+    auto length = result.to_length(global_object);
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+    return length;
 }
 
 // 7.3.19 CreateListFromArrayLike ( obj [ , elementTypes ] ), https://tc39.es/ecma262/#sec-createlistfromarraylike
@@ -66,9 +69,7 @@ ThrowCompletionOr<MarkedValueList> create_list_from_array_like(GlobalObject& glo
     auto& array_like = value.as_object();
 
     // 3. Let len be ? LengthOfArrayLike(obj).
-    auto length = length_of_array_like(global_object, array_like);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto length = TRY(length_of_array_like(global_object, array_like));
 
     // 4. Let list be a new empty List.
     auto list = MarkedValueList { heap };

@@ -20,7 +20,7 @@ Environment& get_this_environment(VM&);
 Object* get_super_constructor(VM&);
 ThrowCompletionOr<Reference> make_super_property_reference(GlobalObject&, Value actual_this, StringOrSymbol const& property_key, bool strict);
 ThrowCompletionOr<Value> require_object_coercible(GlobalObject&, Value);
-size_t length_of_array_like(GlobalObject&, Object const&);
+ThrowCompletionOr<size_t> length_of_array_like(GlobalObject&, Object const&);
 ThrowCompletionOr<MarkedValueList> create_list_from_array_like(GlobalObject&, Value, Function<ThrowCompletionOr<void>(Value)> = {});
 ThrowCompletionOr<FunctionObject*> species_constructor(GlobalObject&, Object const&, FunctionObject& default_constructor);
 ThrowCompletionOr<Realm*> get_function_realm(GlobalObject&, FunctionObject const&);
