@@ -51,7 +51,9 @@ public:
     HashMap<String, String> metadata() const;
 
 private:
-    Reader(ByteBuffer);
+    explicit Reader(ReadonlyBytes);
+    explicit Reader(ByteBuffer);
+    explicit Reader(NonnullRefPtr<MappedFile>);
 
     static Optional<ByteBuffer> decompress_coredump(const ReadonlyBytes&);
 
@@ -75,7 +77,14 @@ private:
     // as getters with the appropriate (non-JsonValue) types.
     const JsonObject process_info() const;
 
+    // For uncompressed coredumps, we keep the MappedFile
+    RefPtr<MappedFile> m_mapped_file;
+
+    // For compressed coredumps, we decompress them into a ByteBuffer
     ByteBuffer m_coredump_buffer;
+
+    ReadonlyBytes m_coredump_bytes;
+
     ELF::Image m_coredump_image;
     ssize_t m_notes_segment_index { -1 };
 };

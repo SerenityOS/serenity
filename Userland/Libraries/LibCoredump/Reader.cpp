@@ -18,15 +18,33 @@ OwnPtr<Reader> Reader::create(const String& path)
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
         return {};
+
+    if (!Compress::GzipDecompressor::is_likely_compressed(file_or_error.value()->bytes())) {
+        // It's an uncompressed coredump.
+        return AK::adopt_own_if_nonnull(new (nothrow) Reader(file_or_error.release_value()));
+    }
+
     auto decompressed_data = decompress_coredump(file_or_error.value()->bytes());
     if (!decompressed_data.has_value())
         return {};
     return adopt_own_if_nonnull(new (nothrow) Reader(decompressed_data.release_value()));
 }
 
-Reader::Reader(ByteBuffer coredump_data)
-    : m_coredump_buffer(move(coredump_data))
-    , m_coredump_image(m_coredump_buffer.bytes())
+Reader::Reader(ByteBuffer buffer)
+    : Reader(buffer.bytes())
+{
+    m_coredump_buffer = move(buffer);
+}
+
+Reader::Reader(NonnullRefPtr<MappedFile> file)
+    : Reader(file->bytes())
+{
+    m_mapped_file = move(file);
+}
+
+Reader::Reader(ReadonlyBytes coredump_bytes)
+    : m_coredump_bytes(coredump_bytes)
+    , m_coredump_image(m_coredump_bytes)
 {
     size_t index = 0;
     m_coredump_image.for_each_program_header([this, &index](auto pheader) {
@@ -42,8 +60,6 @@ Reader::Reader(ByteBuffer coredump_data)
 
 Optional<ByteBuffer> Reader::decompress_coredump(const ReadonlyBytes& raw_coredump)
 {
-    if (!Compress::GzipDecompressor::is_likely_compressed(raw_coredump))
-        return ByteBuffer::copy(raw_coredump); // handle old format coredumps (uncompressed)
     auto decompressed_coredump = Compress::GzipDecompressor::decompress_all(raw_coredump);
     if (!decompressed_coredump.has_value())
         return ByteBuffer::copy(raw_coredump); // if we didn't manage to decompress it, try and parse it as decompressed coredump
