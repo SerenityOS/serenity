@@ -26,7 +26,7 @@ public:
     void set_exclusive(bool b) { m_exclusive = b; }
 
     bool is_checked() const { return m_checked; }
-    void set_checked(bool);
+    void set_checked(bool, AllowCallback = AllowCallback::Yes);
 
     bool is_checkable() const { return m_checkable; }
     void set_checkable(bool);

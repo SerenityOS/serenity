@@ -39,7 +39,7 @@ TextDocument::~TextDocument()
 {
 }
 
-bool TextDocument::set_text(const StringView& text)
+bool TextDocument::set_text(const StringView& text, AllowCallback allow_callback)
 {
     m_client_notifications_enabled = false;
     m_undo_stack.clear();
@@ -90,7 +90,7 @@ bool TextDocument::set_text(const StringView& text)
     m_client_notifications_enabled = true;
 
     for (auto* client : m_clients)
-        client->document_did_set_text();
+        client->document_did_set_text(allow_callback);
 
     clear_text_guard.disarm();
 

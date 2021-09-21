@@ -17,6 +17,7 @@
 #include <LibGUI/Forward.h>
 #include <LibGUI/TextRange.h>
 #include <LibGUI/UndoStack.h>
+#include <LibGUI/Widget.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/TextAttributes.h>
 #include <LibRegex/Regex.h>
@@ -44,8 +45,8 @@ public:
         virtual void document_did_insert_line(size_t) = 0;
         virtual void document_did_remove_line(size_t) = 0;
         virtual void document_did_remove_all_lines() = 0;
-        virtual void document_did_change() = 0;
-        virtual void document_did_set_text() = 0;
+        virtual void document_did_change(AllowCallback = AllowCallback::Yes) = 0;
+        virtual void document_did_set_text(AllowCallback = AllowCallback::Yes) = 0;
         virtual void document_did_set_cursor(const TextPosition&) = 0;
         virtual void document_did_update_undo_stack() = 0;
 
@@ -62,7 +63,7 @@ public:
 
     void set_spans(Vector<TextDocumentSpan> spans) { m_spans = move(spans); }
 
-    bool set_text(const StringView&);
+    bool set_text(const StringView&, AllowCallback = AllowCallback::Yes);
 
     const NonnullOwnPtrVector<TextDocumentLine>& lines() const { return m_lines; }
     NonnullOwnPtrVector<TextDocumentLine>& lines() { return m_lines; }

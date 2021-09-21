@@ -16,13 +16,13 @@ public:
     virtual ~SpinBox() override;
 
     int value() const { return m_value; }
-    void set_value(int);
+    void set_value(int, AllowCallback = AllowCallback::Yes);
 
     int min() const { return m_min; }
     int max() const { return m_max; }
-    void set_min(int min) { set_range(min, max()); }
-    void set_max(int max) { set_range(min(), max); }
-    void set_range(int min, int max, bool change = true);
+    void set_min(int min, AllowCallback allow_callback = AllowCallback::Yes) { set_range(min, max(), allow_callback); }
+    void set_max(int max, AllowCallback allow_callback = AllowCallback::Yes) { set_range(min(), max, allow_callback); }
+    void set_range(int min, int max, AllowCallback = AllowCallback::Yes);
 
     Function<void(int value)> on_change;
 
