@@ -37,7 +37,7 @@ public:
         String to_string(bool color = false) const;
     };
 
-    Backtrace(const Reader&, const ELF::Core::ThreadInfo&);
+    Backtrace(const Reader&, const ELF::Core::ThreadInfo&, Function<void(size_t, size_t)> on_progress = {});
     ~Backtrace();
 
     ELF::Core::ThreadInfo const& thread_info() const { return m_thread_info; }

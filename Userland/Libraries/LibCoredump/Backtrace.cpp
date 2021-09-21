@@ -42,20 +42,37 @@ ELFObjectInfo const* Backtrace::object_info_for_region(ELF::Core::MemoryRegionIn
     return info_ptr;
 }
 
-Backtrace::Backtrace(const Reader& coredump, const ELF::Core::ThreadInfo& thread_info)
+Backtrace::Backtrace(const Reader& coredump, const ELF::Core::ThreadInfo& thread_info, Function<void(size_t, size_t)> on_progress)
     : m_thread_info(move(thread_info))
 {
-    FlatPtr* bp;
-    FlatPtr* ip;
 #if ARCH(I386)
-    bp = (FlatPtr*)m_thread_info.regs.ebp;
-    ip = (FlatPtr*)m_thread_info.regs.eip;
+    auto* start_bp = (FlatPtr*)m_thread_info.regs.ebp;
+    auto* start_ip = (FlatPtr*)m_thread_info.regs.eip;
 #else
-    bp = (FlatPtr*)m_thread_info.regs.rbp;
-    ip = (FlatPtr*)m_thread_info.regs.rip;
+    auto* start_bp = (FlatPtr*)m_thread_info.regs.rbp;
+    auto* start_ip = (FlatPtr*)m_thread_info.regs.rip;
 #endif
 
-    bool first_frame = true;
+    // In order to provide progress updates, we first have to walk the
+    // call stack to determine how many frames it has.
+    size_t frame_count = 0;
+    {
+        auto* bp = start_bp;
+        auto* ip = start_ip;
+        while (bp && ip) {
+            ++frame_count;
+            auto next_ip = coredump.peek_memory((FlatPtr)(bp + 1));
+            auto next_bp = coredump.peek_memory((FlatPtr)(bp));
+            if (!next_ip.has_value() || !next_bp.has_value())
+                break;
+            ip = (FlatPtr*)next_ip.value();
+            bp = (FlatPtr*)next_bp.value();
+        }
+    }
+
+    auto* bp = start_bp;
+    auto* ip = start_ip;
+    size_t frame_index = 0;
     while (bp && ip) {
         // We use eip - 1 because the return address from a function frame
         // is the instruction that comes after the 'call' instruction.
@@ -63,8 +80,10 @@ Backtrace::Backtrace(const Reader& coredump, const ELF::Core::ThreadInfo& thread
         // instruction rather than the return address we don't subtract
         // 1 there.
         VERIFY((FlatPtr)ip > 0);
-        add_entry(coredump, (FlatPtr)ip - (first_frame ? 0 : 1));
-        first_frame = false;
+        add_entry(coredump, (FlatPtr)ip - ((frame_index == 0) ? 0 : 1));
+        if (on_progress)
+            on_progress(frame_index, frame_count);
+        ++frame_index;
         auto next_ip = coredump.peek_memory((FlatPtr)(bp + 1));
         auto next_bp = coredump.peek_memory((FlatPtr)(bp));
         if (!next_ip.has_value() || !next_bp.has_value())

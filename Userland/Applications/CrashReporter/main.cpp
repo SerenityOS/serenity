@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,6 +25,7 @@
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/LinkLabel.h>
+#include <LibGUI/Progressbar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
@@ -36,10 +38,42 @@ struct TitleAndText {
     String text;
 };
 
+static NonnullRefPtr<GUI::Window> create_progress_window()
+{
+    auto window = GUI::Window::construct();
+    window->set_title("CrashReporter");
+    window->set_resizable(false);
+    window->resize(240, 64);
+    window->center_on_screen();
+    auto& main_widget = window->set_main_widget<GUI::Widget>();
+    main_widget.set_fill_with_background_color(true);
+    main_widget.set_layout<GUI::VerticalBoxLayout>();
+    auto& label = main_widget.add<GUI::Label>("Generating crash report...");
+    label.set_fixed_height(30);
+    auto& progressbar = main_widget.add<GUI::Progressbar>();
+    progressbar.set_name("progressbar");
+    progressbar.set_fixed_width(150);
+    progressbar.set_fixed_height(22);
+    return window;
+}
+
 static TitleAndText build_backtrace(Coredump::Reader const& coredump, ELF::Core::ThreadInfo const& thread_info, size_t thread_index)
 {
+    // Show a very simple progress window ASAP to make crashing feel more responsive.
+    // FIXME: This is not the most beautifully factored thing.
+    auto progress_window = create_progress_window();
+    progress_window->show();
+
+    auto& progressbar = *progress_window->main_widget()->find_descendant_of_type_named<GUI::Progressbar>("progressbar");
+
     auto timer = Core::ElapsedTimer::start_new();
-    Coredump::Backtrace backtrace(coredump, thread_info);
+    Coredump::Backtrace backtrace(coredump, thread_info, [&](size_t frame_index, size_t frame_count) {
+        progressbar.set_value(frame_index + 1);
+        progressbar.set_max(frame_count);
+        Core::EventLoop::current().pump(Core::EventLoop::WaitMode::PollForEvents);
+    });
+    progress_window->close();
+
     auto metadata = coredump.metadata();
 
     dbgln("Generating backtrace took {} ms", timer.elapsed());
@@ -118,6 +152,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    auto app = GUI::Application::construct(argc, argv);
+
     const char* coredump_path = nullptr;
     bool unlink_after_use = false;
 
@@ -162,8 +198,6 @@ int main(int argc, char** argv)
         if (Core::File::remove(coredump_path, Core::File::RecursionMode::Disallowed, false).is_error())
             dbgln("Failed deleting coredump file");
     }
-
-    auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio recvfd sendfd rpath unix", nullptr) < 0) {
         perror("pledge");
