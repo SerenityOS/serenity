@@ -365,9 +365,13 @@ void BlockFormattingContext::compute_height(Box& box)
 {
     auto& computed_values = box.computed_values();
     auto& containing_block = *box.containing_block();
+
     // First, resolve the top/bottom parts of the surrounding box model.
-    box.box_model().margin.top = computed_values.margin().top.resolved_or_zero(box, containing_block.width()).to_px(box);
-    box.box_model().margin.bottom = computed_values.margin().bottom.resolved_or_zero(box, containing_block.width()).to_px(box);
+
+    // FIXME: While negative values are generally allowed for margins, for now just ignore those for height calculation
+    box.box_model().margin.top = max(computed_values.margin().top.resolved_or_zero(box, containing_block.width()).to_px(box), 0);
+    box.box_model().margin.bottom = max(computed_values.margin().bottom.resolved_or_zero(box, containing_block.width()).to_px(box), 0);
+
     box.box_model().border.top = computed_values.border_top().width;
     box.box_model().border.bottom = computed_values.border_bottom().width;
     box.box_model().padding.top = computed_values.padding().top.resolved_or_zero(box, containing_block.width()).to_px(box);
