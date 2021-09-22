@@ -48,5 +48,6 @@ wchar_t* wmemcpy(wchar_t*, const wchar_t*, size_t);
 wchar_t* wmemset(wchar_t*, wchar_t, size_t);
 wchar_t* wmemmove(wchar_t*, const wchar_t*, size_t);
 unsigned long wcstoul(const wchar_t*, wchar_t**, int);
+unsigned long long wcstoull(const wchar_t*, wchar_t**, int);
 
 __END_DECLS

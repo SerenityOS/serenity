@@ -423,4 +423,10 @@ unsigned long wcstoul(const wchar_t*, wchar_t**, int)
     dbgln("TODO: Implement wcstoul()");
     TODO();
 }
+
+unsigned long long wcstoull(const wchar_t*, wchar_t**, int)
+{
+    dbgln("TODO: Implement wcstoull()");
+    TODO();
+}
 }
