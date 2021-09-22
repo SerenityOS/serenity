@@ -19,6 +19,7 @@
 #include <LibWeb/Bindings/EventTargetPrototype.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/EventWrapperFactory.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/HistoryWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/MediaQueryListWrapper.h>
@@ -31,6 +32,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/Page.h>
@@ -103,6 +105,12 @@ void WindowObject::initialize_global_object()
 
     // WebAssembly "namespace"
     define_direct_property("WebAssembly", heap().allocate<WebAssemblyObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
+
+    // HTML::GlobalEventHandlers
+#define __ENUMERATE(attribute, event_name) \
+    define_native_accessor(#attribute, attribute##_getter, attribute##_setter, attr);
+    ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE);
+#undef __ENUMERATE
 
     ADD_WINDOW_OBJECT_INTERFACES;
 }
@@ -673,5 +681,38 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::history_getter)
         return {};
     return wrap(global_object, impl->associated_document().history());
 }
+
+#define __ENUMERATE(attribute, event_name)                              \
+    JS_DEFINE_NATIVE_FUNCTION(WindowObject::attribute##_getter)         \
+    {                                                                   \
+        auto* impl = impl_from(vm, global_object);                      \
+        if (!impl)                                                      \
+            return {};                                                  \
+        auto retval = impl->attribute();                                \
+        if (retval.callback.is_null())                                  \
+            return JS::js_null();                                       \
+        return retval.callback.cell();                                  \
+    }                                                                   \
+    JS_DEFINE_NATIVE_FUNCTION(WindowObject::attribute##_setter)         \
+    {                                                                   \
+        auto* impl = impl_from(vm, global_object);                      \
+        if (!impl)                                                      \
+            return {};                                                  \
+        auto value = vm.argument(0);                                    \
+        HTML::EventHandler cpp_value;                                   \
+        if (value.is_function()) {                                      \
+            cpp_value.callback = JS::make_handle(&value.as_function()); \
+        } else if (value.is_string()) {                                 \
+            cpp_value.string = value.as_string().string();              \
+        } else {                                                        \
+            return {};                                                  \
+        }                                                               \
+        (void)throw_dom_exception_if_needed(vm, global_object, [&] {    \
+            return impl->set_##attribute(cpp_value);                    \
+        });                                                             \
+        return {};                                                      \
+    }
+ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
+#undef __ENUMERATE
 
 }
