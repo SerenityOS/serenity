@@ -41,5 +41,6 @@ size_t wcrtomb(char*, wchar_t, mbstate_t*);
 int wcscoll(const wchar_t*, const wchar_t*);
 int wctob(wint_t);
 int mbsinit(const mbstate_t*);
+wchar_t* wcspbrk(const wchar_t*, const wchar_t*);
 
 __END_DECLS
