@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, David Tuin <david.tuin@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,7 +17,6 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FinalizationRegistry.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
-#include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/NativeFunction.h>
@@ -137,294 +137,310 @@ Symbol* VM::get_global_symbol(const String& description)
     return new_global_symbol;
 }
 
-void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_object, bool first_assignment, Environment* specific_scope)
+ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(GlobalObject& global_object, ASTNode const& expression, FlyString const& name)
 {
-    Optional<Variable> possible_match;
-    if (!specific_scope && m_execution_context_stack.size()) {
-        for (auto* environment = lexical_environment(); environment; environment = environment->outer_environment()) {
-            possible_match = environment->get_from_environment(name);
-            if (possible_match.has_value()) {
-                specific_scope = environment;
-                break;
-            }
+    // 8.3.3 Static Semantics: IsAnonymousFunctionDefinition ( expr ), https://tc39.es/ecma262/#sec-isanonymousfunctiondefinition
+    // And 8.3.5 Runtime Semantics: NamedEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-namedevaluation
+    if (is<FunctionExpression>(expression)) {
+        auto& function = static_cast<FunctionExpression const&>(expression);
+        if (!function.has_name()) {
+            return function.instantiate_ordinary_function_expression(interpreter(), global_object, name);
+        }
+    } else if (is<ClassExpression>(expression)) {
+        auto& class_expression = static_cast<ClassExpression const&>(expression);
+        if (!class_expression.has_name()) {
+            return TRY(class_expression.class_definition_evaluation(interpreter(), global_object, {}, name));
         }
     }
 
-    if (specific_scope && possible_match.has_value()) {
-        if (!first_assignment && possible_match.value().declaration_kind == DeclarationKind::Const) {
-            throw_exception<TypeError>(global_object, ErrorType::InvalidAssignToConst);
-            return;
-        }
-
-        specific_scope->put_into_environment(name, { value, possible_match.value().declaration_kind });
-        return;
-    }
-
-    if (specific_scope) {
-        specific_scope->put_into_environment(name, { value, DeclarationKind::Var });
-        return;
-    }
-
-    global_object.set(name, value, Object::ShouldThrowExceptions::Yes);
+    auto value = expression.execute(interpreter(), global_object);
+    if (auto* thrown_exception = exception())
+        return JS::throw_completion(thrown_exception->value());
+    return value;
 }
 
-void VM::assign(const FlyString& target, Value value, GlobalObject& global_object, bool first_assignment, Environment* specific_scope)
+// 13.15.5.2 Runtime Semantics: DestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-destructuringassignmentevaluation
+ThrowCompletionOr<void> VM::destructuring_assignment_evaluation(NonnullRefPtr<BindingPattern> const& target, Value value, GlobalObject& global_object)
 {
-    set_variable(target, move(value), global_object, first_assignment, specific_scope);
+    // Note: DestructuringAssignmentEvaluation is just like BindingInitialization without an environment
+    //       And it allows member expressions. We thus trust the parser to disallow member expressions
+    //       in any non assignment binding and just call BindingInitialization with a nullptr environment
+    return binding_initialization(target, value, nullptr, global_object);
 }
 
-void VM::assign(const Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>>& target, Value value, GlobalObject& global_object, bool first_assignment, Environment* specific_scope)
+// 8.5.2 Runtime Semantics: BindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-bindinginitialization
+ThrowCompletionOr<void> VM::binding_initialization(FlyString const& target, Value value, Environment* environment, GlobalObject& global_object)
 {
-    if (auto id_ptr = target.get_pointer<NonnullRefPtr<Identifier>>())
-        return assign((*id_ptr)->string(), move(value), global_object, first_assignment, specific_scope);
-
-    assign(target.get<NonnullRefPtr<BindingPattern>>(), move(value), global_object, first_assignment, specific_scope);
-}
-
-void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, GlobalObject& global_object, bool first_assignment, Environment* specific_scope)
-{
-    auto& binding = *target;
-
-    switch (binding.kind) {
-    case BindingPattern::Kind::Array: {
-        auto iterator = get_iterator(global_object, value);
-        if (!iterator)
-            return;
-
-        for (size_t i = 0; i < binding.entries.size(); i++) {
-            if (exception())
-                return;
-
-            auto& entry = binding.entries[i];
-
-            Optional<Reference> assignment_target;
-            entry.alias.visit(
-                [&](Empty) {},
-                [&](NonnullRefPtr<Identifier> const&) {
-                    // FIXME: We need to get the reference but bindings are broken so this doesn't work yet.
-                },
-                [&](NonnullRefPtr<BindingPattern> const&) {},
-                [&](NonnullRefPtr<MemberExpression> const& member_expression) {
-                    assignment_target = member_expression->to_reference(interpreter(), global_object);
-                });
-
-            if (exception())
-                return;
-
-            if (entry.is_rest) {
-                VERIFY(i == binding.entries.size() - 1);
-
-                auto* array = Array::create(global_object, 0);
-                for (;;) {
-                    auto next_object = iterator_next(*iterator);
-                    if (!next_object)
-                        return;
-
-                    auto done_property = next_object->get(names.done);
-                    if (exception())
-                        return;
-
-                    if (done_property.to_boolean())
-                        break;
-
-                    auto next_value = next_object->get(names.value);
-                    if (exception())
-                        return;
-
-                    array->indexed_properties().append(next_value);
-                }
-                value = array;
-            } else if (iterator) {
-                auto next_object = iterator_next(*iterator);
-                if (!next_object)
-                    return;
-
-                auto done_property = next_object->get(names.done);
-                if (exception())
-                    return;
-
-                if (done_property.to_boolean()) {
-                    iterator = nullptr;
-                    value = js_undefined();
-                } else {
-                    value = next_object->get(names.value);
-                    if (exception())
-                        return;
-                }
-            } else {
-                value = js_undefined();
-            }
-
-            if (value.is_undefined() && entry.initializer) {
-                value = entry.initializer->execute(interpreter(), global_object);
-                if (exception())
-                    return;
-            }
-
-            entry.alias.visit(
-                [&](Empty) {},
-                [&](NonnullRefPtr<Identifier> const& identifier) {
-                    set_variable(identifier->string(), value, global_object, first_assignment, specific_scope);
-                },
-                [&](NonnullRefPtr<BindingPattern> const& pattern) {
-                    assign(pattern, value, global_object, first_assignment, specific_scope);
-                },
-                [&](NonnullRefPtr<MemberExpression> const&) {
-                    VERIFY(assignment_target.has_value());
-                    assignment_target->put_value(global_object, value);
-                });
-
-            if (exception())
-                return;
-
-            if (entry.is_rest)
-                break;
-        }
-
-        break;
-    }
-    case BindingPattern::Kind::Object: {
-        auto object = value.to_object(global_object);
-        HashTable<PropertyName, PropertyNameTraits> seen_names;
-        for (auto& property : binding.entries) {
-            VERIFY(!property.is_elision());
-
-            PropertyName assignment_name;
-            Optional<Reference> assignment_target;
-
-            JS::Value value_to_assign;
-            if (property.is_rest) {
-                if (auto identifier_ptr = property.name.get_pointer<NonnullRefPtr<Identifier>>())
-                    assignment_name = (*identifier_ptr)->string();
-                property.alias.visit(
-                    [&](Empty) {},
-                    [&](NonnullRefPtr<Identifier> const&) {
-                        // FIXME: We need to get the reference but bindings are broken so this doesn't work yet.
-                    },
-                    [&](NonnullRefPtr<BindingPattern> const&) {},
-                    [&](NonnullRefPtr<MemberExpression> const& member_expression) {
-                        assignment_target = member_expression->to_reference(interpreter(), global_object);
-                    });
-
-                auto* rest_object = Object::create(global_object, global_object.object_prototype());
-                for (auto& object_property : object->shape().property_table()) {
-                    if (!object_property.value.attributes.is_enumerable())
-                        continue;
-                    if (seen_names.contains(object_property.key.to_display_string()))
-                        continue;
-                    rest_object->set(object_property.key, object->get(object_property.key), Object::ShouldThrowExceptions::Yes);
-                    if (exception())
-                        return;
-                }
-
-                value_to_assign = rest_object;
-            } else {
-                property.name.visit(
-                    [&](Empty) { VERIFY_NOT_REACHED(); },
-                    [&](NonnullRefPtr<Identifier> const& identifier) {
-                        assignment_name = identifier->string();
-                    },
-                    [&](NonnullRefPtr<Expression> const& expression) {
-                        auto result = expression->execute(interpreter(), global_object);
-                        if (exception())
-                            return;
-                        assignment_name = result.to_property_key(global_object);
-                    });
-                property.alias.visit(
-                    [&](Empty) {},
-                    [&](NonnullRefPtr<Identifier> const&) {
-                        // FIXME: We need to get the reference but bindings are broken so this doesn't work yet.
-                    },
-                    [&](NonnullRefPtr<BindingPattern> const&) {},
-                    [&](NonnullRefPtr<MemberExpression> const& member_expression) {
-                        assignment_target = member_expression->to_reference(interpreter(), global_object);
-                    });
-
-                if (exception())
-                    break;
-
-                value_to_assign = object->get(assignment_name);
-            }
-
-            seen_names.set(assignment_name);
-
-            if (value_to_assign.is_empty())
-                value_to_assign = js_undefined();
-
-            if (value_to_assign.is_undefined() && property.initializer)
-                value_to_assign = property.initializer->execute(interpreter(), global_object);
-
-            if (exception())
-                break;
-
-            property.alias.visit(
-                [&](Empty) {
-                    set_variable(assignment_name.to_string(), value_to_assign, global_object, first_assignment, specific_scope);
-                },
-                [&](NonnullRefPtr<Identifier> const& identifier) {
-                    VERIFY(!property.is_rest);
-                    set_variable(identifier->string(), value_to_assign, global_object, first_assignment, specific_scope);
-                },
-                [&](NonnullRefPtr<BindingPattern> const& pattern) {
-                    VERIFY(!property.is_rest);
-                    assign(pattern, value_to_assign, global_object, first_assignment, specific_scope);
-                },
-                [&](NonnullRefPtr<MemberExpression> const&) {
-                    VERIFY(assignment_target.has_value());
-                    assignment_target->put_value(global_object, value_to_assign);
-                });
-
-            if (exception())
-                return;
-
-            if (property.is_rest)
-                break;
-        }
-        break;
-    }
-    }
-}
-
-Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
-{
-    if (!m_execution_context_stack.is_empty()) {
-        auto& context = running_execution_context();
-        if (name == names.arguments.as_string() && context.function) {
-            // HACK: Special handling for the name "arguments":
-            //       If the name "arguments" is defined in the current scope, for example via
-            //       a function parameter, or by a local var declaration, we use that.
-            //       Otherwise, we return a lazily constructed Array with all the argument values.
-            // FIXME: Do something much more spec-compliant.
-            auto possible_match = lexical_environment()->get_from_environment(name);
-            if (possible_match.has_value())
-                return possible_match.value().value;
-            if (!context.arguments_object) {
-                if (context.function->is_strict_mode() || (is<ECMAScriptFunctionObject>(context.function) && !static_cast<ECMAScriptFunctionObject*>(context.function)->has_simple_parameter_list())) {
-                    context.arguments_object = create_unmapped_arguments_object(global_object, context.arguments.span());
-                } else {
-                    context.arguments_object = create_mapped_arguments_object(global_object, *context.function, verify_cast<ECMAScriptFunctionObject>(context.function)->formal_parameters(), context.arguments.span(), *lexical_environment());
-                }
-            }
-            return context.arguments_object;
-        }
-
-        for (auto* environment = lexical_environment(); environment; environment = environment->outer_environment()) {
-            auto possible_match = environment->get_from_environment(name);
-            if (exception())
-                return {};
-            if (possible_match.has_value())
-                return possible_match.value().value;
-            if (environment->has_binding(name))
-                return environment->get_binding_value(global_object, name, false);
-        }
-    }
-
-    if (!global_object.storage_has(name)) {
-        if (m_underscore_is_last_value && name == "_")
-            return m_last_value;
+    if (environment) {
+        environment->initialize_binding(global_object, target, value);
         return {};
     }
-    return global_object.get(name);
+    auto reference = resolve_binding(target);
+    reference.put_value(global_object, value);
+    if (auto* thrown_exception = exception())
+        return JS::throw_completion(thrown_exception->value());
+    return {};
+}
+
+// 8.5.2 Runtime Semantics: BindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-bindinginitialization
+ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern> const& target, Value value, Environment* environment, GlobalObject& global_object)
+{
+    if (target->kind == BindingPattern::Kind::Object) {
+        TRY(require_object_coercible(global_object, value));
+        TRY(property_binding_initialization(*target, value, environment, global_object));
+        return {};
+    } else {
+        auto* iterator = get_iterator(global_object, value);
+        if (!iterator) {
+            VERIFY(exception());
+            return JS::throw_completion(exception()->value());
+        }
+
+        auto iterator_done = false;
+
+        auto result = iterator_binding_initialization(*target, iterator, iterator_done, environment, global_object);
+
+        if (!iterator_done) {
+            // FIXME: Iterator close should take result and potentially return that. This logic should achieve the same until that is possible.
+            iterator_close(*iterator);
+            if (auto* thrown_exception = exception())
+                return JS::throw_completion(thrown_exception->value());
+        }
+        return result;
+    }
+}
+
+// 13.15.5.3 Runtime Semantics: PropertyDestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-propertydestructuringassignmentevaluation
+// 14.3.3.1 Runtime Semantics: PropertyBindingInitialization, https://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization
+ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment, GlobalObject& global_object)
+{
+    auto* object = value.to_object(global_object);
+    if (!object) {
+        VERIFY(exception());
+        return JS::throw_completion(exception()->value());
+    }
+
+    HashTable<PropertyName, PropertyNameTraits> seen_names;
+    for (auto& property : binding.entries) {
+
+        VERIFY(!property.is_elision());
+
+        if (property.is_rest) {
+            Reference assignment_target;
+            if (auto identifier_ptr = property.name.get_pointer<NonnullRefPtr<Identifier>>()) {
+                assignment_target = resolve_binding((*identifier_ptr)->string(), environment);
+            } else if (auto member_ptr = property.alias.get_pointer<NonnullRefPtr<MemberExpression>>()) {
+                assignment_target = (*member_ptr)->to_reference(interpreter(), global_object);
+            } else {
+                VERIFY_NOT_REACHED();
+            }
+
+            if (auto* thrown_exception = exception())
+                return JS::throw_completion(thrown_exception->value());
+
+            auto* rest_object = Object::create(global_object, global_object.object_prototype());
+            VERIFY(rest_object);
+
+            TRY(rest_object->copy_data_properties(object, seen_names, global_object));
+            if (!environment)
+                assignment_target.put_value(global_object, rest_object);
+            else
+                assignment_target.initialize_referenced_binding(global_object, rest_object);
+
+            break;
+        }
+
+        PropertyName name;
+
+        property.name.visit(
+            [&](Empty) { VERIFY_NOT_REACHED(); },
+            [&](NonnullRefPtr<Identifier> const& identifier) {
+                name = identifier->string();
+            },
+            [&](NonnullRefPtr<Expression> const& expression) {
+                auto result = expression->execute(interpreter(), global_object);
+                if (exception())
+                    return;
+                name = result.to_property_key(global_object);
+            });
+
+        if (auto* thrown_exception = exception())
+            return JS::throw_completion(thrown_exception->value());
+
+        seen_names.set(name);
+
+        if (property.name.has<NonnullRefPtr<Identifier>>() && property.alias.has<Empty>()) {
+            // FIXME: this branch and not taking this have a lot in common we might want to unify it more (like it was before).
+            auto& identifier = *property.name.get<NonnullRefPtr<Identifier>>();
+            auto reference = resolve_binding(identifier.string(), environment);
+            if (auto* thrown_exception = exception())
+                return JS::throw_completion(thrown_exception->value());
+
+            auto value_to_assign = object->get(name);
+            if (auto* thrown_exception = exception())
+                return JS::throw_completion(thrown_exception->value());
+
+            if (property.initializer && value_to_assign.is_undefined()) {
+                value_to_assign = TRY(named_evaluation_if_anonymous_function(global_object, *property.initializer, identifier.string()));
+            }
+
+            if (!environment)
+                reference.put_value(global_object, value_to_assign);
+            else
+                reference.initialize_referenced_binding(global_object, value_to_assign);
+            continue;
+        }
+
+        Optional<Reference> reference_to_assign_to;
+
+        property.alias.visit(
+            [&](Empty) {},
+            [&](NonnullRefPtr<Identifier> const& identifier) {
+                reference_to_assign_to = resolve_binding(identifier->string(), environment);
+            },
+            [&](NonnullRefPtr<BindingPattern> const&) {},
+            [&](NonnullRefPtr<MemberExpression> const& member_expression) {
+                reference_to_assign_to = member_expression->to_reference(interpreter(), global_object);
+            });
+
+        if (auto* thrown_exception = exception())
+            return JS::throw_completion(thrown_exception->value());
+
+        auto value_to_assign = object->get(name);
+        if (auto* thrown_exception = exception())
+            return JS::throw_completion(thrown_exception->value());
+
+        if (property.initializer && value_to_assign.is_undefined()) {
+            if (auto* identifier_ptr = property.alias.get_pointer<NonnullRefPtr<Identifier>>())
+                value_to_assign = TRY(named_evaluation_if_anonymous_function(global_object, *property.initializer, (*identifier_ptr)->string()));
+            else
+                value_to_assign = property.initializer->execute(interpreter(), global_object);
+
+            if (auto* thrown_exception = exception())
+                return JS::throw_completion(thrown_exception->value());
+        }
+
+        if (auto* binding_ptr = property.alias.get_pointer<NonnullRefPtr<BindingPattern>>()) {
+            TRY(binding_initialization(*binding_ptr, value_to_assign, environment, global_object));
+        } else {
+            VERIFY(reference_to_assign_to.has_value());
+            if (!environment)
+                reference_to_assign_to->put_value(global_object, value_to_assign);
+            else
+                reference_to_assign_to->initialize_referenced_binding(global_object, value_to_assign);
+
+            if (auto* thrown_exception = exception())
+                return JS::throw_completion(thrown_exception->value());
+        }
+    }
+
+    return {};
+}
+
+// 13.15.5.5 Runtime Semantics: IteratorDestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-iteratordestructuringassignmentevaluation
+// 8.5.3 Runtime Semantics: IteratorBindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-iteratorbindinginitialization
+ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const& binding, Object* iterator, bool& iterator_done, Environment* environment, GlobalObject& global_object)
+{
+    // FIXME: this method is nearly identical to destructuring assignment!
+    for (size_t i = 0; i < binding.entries.size(); i++) {
+        auto& entry = binding.entries[i];
+        Value value;
+
+        Optional<Reference> assignment_target;
+        entry.alias.visit(
+            [&](Empty) {},
+            [&](NonnullRefPtr<Identifier> const& identifier) {
+                assignment_target = resolve_binding(identifier->string(), environment);
+            },
+            [&](NonnullRefPtr<BindingPattern> const&) {},
+            [&](NonnullRefPtr<MemberExpression> const& member_expression) {
+                assignment_target = member_expression->to_reference(interpreter(), global_object);
+            });
+
+        if (auto* thrown_exception = exception())
+            return JS::throw_completion(thrown_exception->value());
+
+        if (entry.is_rest) {
+            VERIFY(i == binding.entries.size() - 1);
+
+            auto* array = Array::create(global_object, 0);
+            while (!iterator_done) {
+                auto next_object = iterator_next(*iterator);
+                if (!next_object) {
+                    iterator_done = true;
+                    VERIFY(exception());
+                    return JS::throw_completion(exception()->value());
+                }
+
+                auto done_property = next_object->get(names.done);
+                if (auto* thrown_exception = exception())
+                    return JS::throw_completion(thrown_exception->value());
+
+                if (done_property.to_boolean()) {
+                    iterator_done = true;
+                    break;
+                }
+
+                auto next_value = next_object->get(names.value);
+                if (auto* thrown_exception = exception())
+                    return JS::throw_completion(thrown_exception->value());
+
+                array->indexed_properties().append(next_value);
+            }
+            value = array;
+
+        } else if (!iterator_done) {
+            auto next_object = iterator_next(*iterator);
+            if (!next_object) {
+                iterator_done = true;
+                VERIFY(exception());
+                return JS::throw_completion(exception()->value());
+            }
+
+            auto done_property = next_object->get(names.done);
+            if (auto* thrown_exception = exception())
+                return JS::throw_completion(thrown_exception->value());
+
+            if (done_property.to_boolean()) {
+                iterator_done = true;
+                value = js_undefined();
+            } else {
+                value = next_object->get(names.value);
+                if (auto* thrown_exception = exception()) {
+                    iterator_done = true;
+                    return JS::throw_completion(thrown_exception->value());
+                }
+            }
+        } else {
+            value = js_undefined();
+        }
+
+        if (value.is_undefined() && entry.initializer) {
+            VERIFY(!entry.is_rest);
+            if (auto* identifier_ptr = entry.alias.get_pointer<NonnullRefPtr<Identifier>>())
+                value = TRY(named_evaluation_if_anonymous_function(global_object, *entry.initializer, (*identifier_ptr)->string()));
+            else
+                value = entry.initializer->execute(interpreter(), global_object);
+
+            if (auto* thrown_exception = exception())
+                return JS::throw_completion(thrown_exception->value());
+        }
+
+        if (auto* binding_ptr = entry.alias.get_pointer<NonnullRefPtr<BindingPattern>>()) {
+            TRY(binding_initialization(*binding_ptr, value, environment, global_object));
+        } else if (!entry.alias.has<Empty>()) {
+            VERIFY(assignment_target.has_value());
+            if (!environment)
+                assignment_target->put_value(global_object, value);
+            else
+                assignment_target->initialize_referenced_binding(global_object, value);
+
+            if (auto* thrown_exception = exception())
+                return JS::throw_completion(thrown_exception->value());
+        }
+    }
+
+    return {};
 }
 
 // 9.1.2.1 GetIdentifierReference ( env, name, strict ), https://tc39.es/ecma262/#sec-getidentifierreference
@@ -435,23 +451,14 @@ Reference VM::get_identifier_reference(Environment* environment, FlyString name,
         // a. Return the Reference Record { [[Base]]: unresolvable, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
         return Reference { Reference::BaseType::Unresolvable, move(name), strict };
     }
+    auto exists = environment->has_binding(name);
+    if (exception())
+        return {};
 
-    // FIXME: The remainder of this function is non-conforming.
-
-    for (; environment && environment->outer_environment(); environment = environment->outer_environment()) {
-        auto possible_match = environment->get_from_environment(name);
-        if (possible_match.has_value())
-            return Reference { *environment, move(name), strict };
-        if (environment->has_binding(name))
-            return Reference { *environment, move(name), strict };
-    }
-
-    auto& global_environment = interpreter().realm().global_environment();
-    if (global_environment.has_binding(name) || !in_strict_mode()) {
-        return Reference { global_environment, move(name), strict };
-    }
-
-    return Reference { Reference::BaseType::Unresolvable, move(name), strict };
+    if (exists)
+        return Reference { *environment, move(name), strict };
+    else
+        return get_identifier_reference(environment->outer_environment(), move(name), strict);
 }
 
 // 9.4.2 ResolveBinding ( name [ , env ] ), https://tc39.es/ecma262/#sec-resolvebinding
@@ -546,7 +553,9 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
             return {};
     }
 
+    auto* constructor_environment = callee_context.lexical_environment;
     auto result = function.construct(new_target);
+    VERIFY(constructor_environment);
 
     pop_execution_context();
     pop_guard.disarm();
@@ -557,8 +566,8 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
     if ((!is<ECMAScriptFunctionObject>(function) || static_cast<ECMAScriptFunctionObject&>(function).constructor_kind() == ECMAScriptFunctionObject::ConstructorKind::Base)
         && is<ECMAScriptFunctionObject>(new_target) && static_cast<ECMAScriptFunctionObject&>(new_target).constructor_kind() == ECMAScriptFunctionObject::ConstructorKind::Derived
         && result.is_object()) {
-        if (auto* environment = callee_context.lexical_environment)
-            verify_cast<FunctionEnvironment>(environment)->replace_this_binding(result);
+        verify_cast<FunctionEnvironment>(constructor_environment)->replace_this_binding(result);
+
         auto prototype = new_target.get(names.prototype);
         if (exception())
             return {};
@@ -573,9 +582,16 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
     if (result.is_object())
         return result;
 
-    if (auto* environment = callee_context.lexical_environment)
-        return environment->get_this_binding(global_object);
-    return this_argument;
+    if (is<ECMAScriptFunctionObject>(function) && static_cast<ECMAScriptFunctionObject&>(function).constructor_kind() == ECMAScriptFunctionObject::ConstructorKind::Base)
+        return this_argument;
+
+    if (!result.is_empty() && !result.is_undefined()) {
+        throw_exception<TypeError>(global_object, ErrorType::DerivedConstructorReturningInvalidValue);
+        return {};
+    }
+
+    VERIFY(constructor_environment);
+    return constructor_environment->get_this_binding(global_object);
 }
 
 void VM::throw_exception(Exception& exception)
@@ -609,7 +625,7 @@ Value VM::get_new_target()
 }
 
 // 10.2.1.1 PrepareForOrdinaryCall ( F, newTarget ), https://tc39.es/ecma262/#sec-prepareforordinarycall
-void VM::prepare_for_ordinary_call(FunctionObject& function, ExecutionContext& callee_context, [[maybe_unused]] Object* new_target)
+void VM::prepare_for_ordinary_call(FunctionObject& function, ExecutionContext& callee_context, Object* new_target)
 {
     // NOTE: This is a LibJS specific hack for NativeFunction to inherit the strictness of its caller.
     // FIXME: I feel like we should be able to get rid of this.
@@ -643,8 +659,7 @@ void VM::prepare_for_ordinary_call(FunctionObject& function, ExecutionContext& c
     // FIXME: Our execution context struct currently does not track this item.
 
     // 7. Let localEnv be NewFunctionEnvironment(F, newTarget).
-    // FIXME: This should call NewFunctionEnvironment instead of the ad-hoc FunctionObject::create_environment()
-    auto* local_environment = function.create_environment(function);
+    auto* local_environment = function.new_function_environment(new_target);
 
     // 8. Set the LexicalEnvironment of calleeContext to localEnv.
     callee_context.lexical_environment = local_environment;
@@ -724,8 +739,7 @@ ThrowCompletionOr<Value> VM::call_internal(FunctionObject& function, Value this_
     callee_context.this_value = this_value;
     append_bound_and_passed_arguments(callee_context.arguments, {}, move(arguments));
 
-    if (callee_context.lexical_environment)
-        ordinary_call_bind_this(function, callee_context, this_value);
+    ordinary_call_bind_this(function, callee_context, this_value);
 
     if (auto* exception = this->exception())
         return JS::throw_completion(exception->value());
@@ -806,19 +820,6 @@ void VM::dump_backtrace() const
             dbgln("-> {} @ {}:{},{}", frame->function_name, source_range.filename, source_range.start.line, source_range.start.column);
         } else {
             dbgln("-> {}", frame->function_name);
-        }
-    }
-}
-
-void VM::dump_environment_chain() const
-{
-    for (auto* environment = lexical_environment(); environment; environment = environment->outer_environment()) {
-        dbgln("+> {} ({:p})", environment->class_name(), environment);
-        if (is<DeclarativeEnvironment>(*environment)) {
-            auto& declarative_environment = static_cast<DeclarativeEnvironment const&>(*environment);
-            for (auto& variable : declarative_environment.variables()) {
-                dbgln("    {}", variable.key);
-            }
         }
     }
 }

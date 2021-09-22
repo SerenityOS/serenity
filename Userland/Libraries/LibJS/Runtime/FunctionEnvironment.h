@@ -21,7 +21,7 @@ public:
         Uninitialized,
     };
 
-    FunctionEnvironment(Environment* parent_scope, HashMap<FlyString, Variable> variables);
+    explicit FunctionEnvironment(Environment* parent_scope);
     virtual ~FunctionEnvironment() override;
 
     // [[ThisValue]]

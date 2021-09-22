@@ -26,46 +26,7 @@ void ASTNode::generate_bytecode(Bytecode::Generator&) const
 
 void ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
 {
-    for (auto& function : functions()) {
-        generator.emit<Bytecode::Op::NewFunction>(function);
-        generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(function.name()));
-    }
-
-    HashMap<u32, Variable> scope_variables_with_declaration_kind;
-
-    bool is_program_node = is<Program>(*this);
-    for (auto& declaration : variables()) {
-        for (auto& declarator : declaration.declarations()) {
-            if (is_program_node && declaration.declaration_kind() == DeclarationKind::Var) {
-                declarator.target().visit(
-                    [&](const NonnullRefPtr<Identifier>& id) {
-                        generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
-                        generator.emit<Bytecode::Op::PutById>(Bytecode::Register::global_object(), generator.intern_string(id->string()));
-                    },
-                    [&](const NonnullRefPtr<BindingPattern>& binding) {
-                        binding->for_each_bound_name([&](const auto& name) {
-                            generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
-                            generator.emit<Bytecode::Op::PutById>(Bytecode::Register::global_object(), generator.intern_string(name));
-                        });
-                    });
-            } else {
-                declarator.target().visit(
-                    [&](const NonnullRefPtr<Identifier>& id) {
-                        scope_variables_with_declaration_kind.set((size_t)generator.intern_string(id->string()).value(), { js_undefined(), declaration.declaration_kind() });
-                    },
-                    [&](const NonnullRefPtr<BindingPattern>& binding) {
-                        binding->for_each_bound_name([&](const auto& name) {
-                            scope_variables_with_declaration_kind.set((size_t)generator.intern_string(name).value(), { js_undefined(), declaration.declaration_kind() });
-                        });
-                    });
-            }
-        }
-    }
-
-    if (!scope_variables_with_declaration_kind.is_empty()) {
-        generator.emit<Bytecode::Op::PushDeclarativeEnvironment>(move(scope_variables_with_declaration_kind));
-    }
-
+    // FIXME: Register lexical and variable scope declarations
     for (auto& child : children()) {
         child.generate_bytecode(generator);
         if (generator.is_current_block_terminated())
@@ -1294,7 +1255,7 @@ void SwitchStatement::generate_bytecode(Bytecode::Generator& generator) const
         generator.switch_to_basic_block(*current_block);
 
         generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
-        for (auto& statement : switch_case.consequent()) {
+        for (auto& statement : switch_case.children()) {
             statement.generate_bytecode(generator);
         }
         if (!generator.is_current_block_terminated()) {

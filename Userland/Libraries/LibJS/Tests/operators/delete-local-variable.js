@@ -1,8 +1,16 @@
 test("basic functionality", () => {
     let a = 5;
-    expect(delete a).toBeTrue();
+    var b = 6;
+    c = 7;
+    expect(delete a).toBeFalse();
+    expect(a).toBe(5);
+
+    expect(delete b).toBeFalse();
+    expect(b).toBe(6);
+
+    expect(delete c).toBeTrue();
 
     expect(() => {
-        a;
-    }).toThrowWithMessage(ReferenceError, "'a' is not defined");
+        c;
+    }).toThrowWithMessage(ReferenceError, "'c' is not defined");
 });

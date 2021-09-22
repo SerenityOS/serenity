@@ -31,15 +31,6 @@ void Reference::put_value(GlobalObject& global_object, Value value)
     }
 
     if (is_property_reference()) {
-        // FIXME: This is an ad-hoc hack until we support proper variable bindings.
-        if (!m_base_value.is_object() && vm.in_strict_mode()) {
-            if (m_base_value.is_nullish())
-                vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishSetProperty, m_name, m_base_value.to_string_without_side_effects());
-            else
-                vm.throw_exception<TypeError>(global_object, ErrorType::ReferencePrimitiveSetProperty, m_name, m_base_value.typeof(), m_base_value.to_string_without_side_effects());
-            return;
-        }
-
         auto* base_obj = m_base_value.to_object(global_object);
         if (!base_obj)
             return;
@@ -56,29 +47,8 @@ void Reference::put_value(GlobalObject& global_object, Value value)
     }
 
     VERIFY(m_base_type == BaseType::Environment);
-    // FIXME: This entire following section is 100% not spec-compliant.
-    auto existing_variable = m_base_environment->get_from_environment(m_name.as_string());
-    Variable variable {
-        .value = value,
-        .declaration_kind = existing_variable.has_value() ? existing_variable->declaration_kind : DeclarationKind::Var
-    };
-
-    // FIXME: This is a hack until we support proper variable bindings.
-    if (variable.declaration_kind == DeclarationKind::Const) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::InvalidAssignToConst);
-        return;
-    }
-
-    bool succeeded = m_base_environment->put_into_environment(m_name.as_string(), variable);
-    if (vm.exception())
-        return;
-
-    if (!succeeded) {
-        if (m_base_environment->has_binding(m_name.as_string())) {
-            m_base_environment->set_mutable_binding(global_object, m_name.as_string(), value, is_strict());
-            return;
-        }
-    }
+    VERIFY(m_base_environment);
+    m_base_environment->set_mutable_binding(global_object, m_name.as_string(), value, m_strict);
 }
 
 void Reference::throw_reference_error(GlobalObject& global_object) const
@@ -91,7 +61,7 @@ void Reference::throw_reference_error(GlobalObject& global_object) const
 }
 
 // 6.2.4.5 GetValue ( V ), https://tc39.es/ecma262/#sec-getvalue
-Value Reference::get_value(GlobalObject& global_object, bool throw_if_undefined) const
+Value Reference::get_value(GlobalObject& global_object) const
 {
     if (!is_valid_reference() || is_unresolvable()) {
         throw_reference_error(global_object);
@@ -106,19 +76,8 @@ Value Reference::get_value(GlobalObject& global_object, bool throw_if_undefined)
     }
 
     VERIFY(m_base_type == BaseType::Environment);
-    // FIXME: This entire section is 100% not spec-compliant.
-    auto value = m_base_environment->get_from_environment(m_name.as_string());
-    if (!value.has_value()) {
-        if (m_base_environment->has_binding(m_name.as_string()))
-            return m_base_environment->get_binding_value(global_object, m_name.as_string(), is_strict());
-        if (!throw_if_undefined) {
-            // FIXME: This is an ad-hoc hack for the `typeof` operator until we support proper variable bindings.
-            return js_undefined();
-        }
-        throw_reference_error(global_object);
-        return {};
-    }
-    return value->value;
+    VERIFY(m_base_environment);
+    return m_base_environment->get_binding_value(global_object, m_name.as_string(), m_strict);
 }
 
 // 13.5.1.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
@@ -177,11 +136,7 @@ bool Reference::delete_(GlobalObject& global_object)
     VERIFY(m_base_type == BaseType::Environment);
 
     //    c. Return ? base.DeleteBinding(ref.[[ReferencedName]]).
-    if (m_base_environment->has_binding(m_name.as_string()))
-        return m_base_environment->delete_binding(global_object, m_name.as_string());
-
-    // FIXME: This is ad-hoc, we should be calling DeleteBinding.
-    return m_base_environment->delete_from_environment(m_name.as_string());
+    return m_base_environment->delete_binding(global_object, m_name.as_string());
 }
 
 String Reference::to_string() const

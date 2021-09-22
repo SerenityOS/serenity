@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, David Tuin <david.tuin@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -38,12 +39,6 @@ enum class ScopeType {
     Continuable,
 };
 
-struct ScopeFrame {
-    ScopeType type;
-    NonnullRefPtr<ScopeNode> scope_node;
-    bool pushed_environment { false };
-};
-
 class VM : public RefCounted<VM> {
 public:
     struct CustomData {
@@ -67,7 +62,6 @@ public:
     void clear_exception() { m_exception = nullptr; }
 
     void dump_backtrace() const;
-    void dump_environment_chain() const;
 
     class InterpreterExecutionScope {
     public:
@@ -206,12 +200,6 @@ public:
     ScopeType unwind_until() const { return m_unwind_until; }
     FlyString unwind_until_label() const { return m_unwind_until_label; }
 
-    Value get_variable(const FlyString& name, GlobalObject&);
-    void set_variable(const FlyString& name, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
-    void assign(const Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>>& target, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
-    void assign(const FlyString& target, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
-    void assign(const NonnullRefPtr<BindingPattern>& target, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
-
     Reference resolve_binding(FlyString const&, Environment* = nullptr);
     Reference get_identifier_reference(Environment*, FlyString, bool strict);
 
@@ -285,6 +273,12 @@ public:
 
     CustomData* custom_data() { return m_custom_data; }
 
+    ThrowCompletionOr<void> destructuring_assignment_evaluation(NonnullRefPtr<BindingPattern> const& target, Value value, GlobalObject& global_object);
+    ThrowCompletionOr<void> binding_initialization(FlyString const& target, Value value, Environment* environment, GlobalObject& global_object);
+    ThrowCompletionOr<void> binding_initialization(NonnullRefPtr<BindingPattern> const& target, Value value, Environment* environment, GlobalObject& global_object);
+
+    ThrowCompletionOr<Value> named_evaluation_if_anonymous_function(GlobalObject& global_object, ASTNode const& expression, FlyString const& name);
+
 private:
     explicit VM(OwnPtr<CustomData>);
 
@@ -292,6 +286,11 @@ private:
 
     [[nodiscard]] ThrowCompletionOr<Value> call_internal(FunctionObject&, Value this_value, Optional<MarkedValueList> arguments);
     void prepare_for_ordinary_call(FunctionObject&, ExecutionContext& callee_context, Object* new_target);
+
+    ThrowCompletionOr<Object*> copy_data_properties(Object& rest_object, Object const& source, HashTable<PropertyName, PropertyNameTraits> const& seen_names, GlobalObject& global_object);
+
+    ThrowCompletionOr<void> property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment, GlobalObject& global_object);
+    ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, Object* iterator, bool& iterator_done, Environment* environment, GlobalObject& global_object);
 
     Exception* m_exception { nullptr };
 

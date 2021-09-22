@@ -23,6 +23,7 @@
     M(ConstructorWithoutNew, "{} constructor must be called with 'new'")                                                                \
     M(Convert, "Cannot convert {} to {}")                                                                                               \
     M(DataViewOutOfRangeByteOffset, "Data view byte offset {} is out of range for buffer with length {}")                               \
+    M(DerivedConstructorReturningInvalidValue, "Derived constructor return invalid value")                                              \
     M(DescWriteNonWritable, "Cannot write to non-writable property '{}'")                                                               \
     M(DetachedArrayBuffer, "ArrayBuffer is detached")                                                                                   \
     M(DivisionByZero, "Division by zero")                                                                                               \
@@ -223,6 +224,7 @@
     M(BadArgCountAtLeastOne, "{}() needs at least one argument")                                                                        \
     M(BadArgCountMany, "{}() needs {} arguments")                                                                                       \
     M(FixmeAddAnErrorString, "FIXME: Add a string for this error.")                                                                     \
+    M(FixmeAddAnErrorStringWithMessage, "FIXME: Add a real string for this error '{}'")                                                 \
     M(NotEnoughMemoryToAllocate, "Not enough memory to allocate {} bytes")
 
 namespace JS {

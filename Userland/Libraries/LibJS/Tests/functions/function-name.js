@@ -39,8 +39,9 @@ test("functions in objects", () => {
     expect(o.a.name).toBe("a");
     expect(o.b.name).toBe("a");
 
+    // Member expressions do not get named.
     o.c = function () {};
-    expect(o.c.name).toBe("c");
+    expect(o.c.name).toBe("");
 });
 
 test("names of native functions", () => {
@@ -49,16 +50,25 @@ test("names of native functions", () => {
     expect(console.debug.name).toBe("debug");
 });
 
-test("no invalid autonaming of anonymous functions", () => {
-    // prettier-ignore
-    let f1 = (function () {});
-    expect(f1.name).toBe("");
-    let f2 = f1;
-    expect(f2.name).toBe("");
-    let f3;
-    f3 = false || f2;
-    expect(f3.name).toBe("");
-    let f4 = false;
-    f4 ||= function () {};
-    expect(f4.name).toBe("");
+describe("some anonymous functions get renamed", () => {
+    test("direct assignment does name new function expression", () => {
+        // prettier-ignore
+        let f1 = (function () {});
+        expect(f1.name).toBe("f1");
+
+        let f2 = false;
+        f2 ||= function () {};
+        expect(f2.name).toBe("f2");
+    });
+
+    test("assignment from variable does not name", () => {
+        const f1 = function () {};
+        let f3 = f1;
+        expect(f3.name).toBe("f1");
+    });
+
+    test("assignment via expression does not name", () => {
+        let f4 = false || function () {};
+        expect(f4.name).toBe("");
+    });
 });

@@ -27,10 +27,6 @@ public:
 
     virtual void initialize(GlobalObject&) override;
 
-    virtual Optional<Variable> get_from_environment(FlyString const&) const = 0;
-    virtual bool put_into_environment(FlyString const&, Variable) = 0;
-    virtual bool delete_from_environment(FlyString const&) = 0;
-
     virtual bool has_this_binding() const { return false; }
     virtual Value get_this_binding(GlobalObject&) const { return {}; }
 

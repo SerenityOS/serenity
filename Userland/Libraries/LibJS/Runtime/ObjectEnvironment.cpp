@@ -24,24 +24,6 @@ void ObjectEnvironment::visit_edges(Cell::Visitor& visitor)
     visitor.visit(&m_binding_object);
 }
 
-Optional<Variable> ObjectEnvironment::get_from_environment(FlyString const& name) const
-{
-    if (!m_binding_object.storage_has(name))
-        return {};
-    auto value = m_binding_object.get(name);
-    return Variable { value, DeclarationKind::Var };
-}
-
-bool ObjectEnvironment::put_into_environment(FlyString const& name, Variable variable)
-{
-    return m_binding_object.set(name, variable.value, Object::ShouldThrowExceptions::No);
-}
-
-bool ObjectEnvironment::delete_from_environment(FlyString const& name)
-{
-    return TRY_OR_DISCARD(m_binding_object.internal_delete(name));
-}
-
 // 9.1.1.2.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n
 bool ObjectEnvironment::has_binding(FlyString const& name) const
 {

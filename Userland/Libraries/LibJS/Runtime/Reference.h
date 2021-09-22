@@ -103,8 +103,15 @@ public:
         return m_base_type == BaseType::Environment;
     }
 
+    void initialize_referenced_binding(GlobalObject& global_object, Value value) const
+    {
+        VERIFY(!is_unresolvable());
+        VERIFY(m_base_type == BaseType::Environment);
+        m_base_environment->initialize_binding(global_object, m_name.as_string(), value);
+    }
+
     void put_value(GlobalObject&, Value);
-    Value get_value(GlobalObject&, bool throw_if_undefined = true) const;
+    Value get_value(GlobalObject&) const;
     bool delete_(GlobalObject&);
 
     String to_string() const;

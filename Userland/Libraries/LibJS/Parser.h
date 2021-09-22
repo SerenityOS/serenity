@@ -33,6 +33,8 @@ struct FunctionNodeParseOptions {
     };
 };
 
+class ScopePusher;
+
 class Parser {
 public:
     explicit Parser(Lexer lexer, Program::Type program_type = Program::Type::Script);
@@ -69,7 +71,7 @@ public:
 
     NonnullRefPtr<Statement> parse_statement(AllowLabelledFunction allow_labelled_function = AllowLabelledFunction::No);
     NonnullRefPtr<BlockStatement> parse_block_statement();
-    NonnullRefPtr<BlockStatement> parse_block_statement(bool& is_strict, bool function_with_non_simple_parameter_list = false);
+    NonnullRefPtr<FunctionBody> parse_function_body(Vector<FunctionDeclaration::Parameter> const& parameters, FunctionKind function_kind);
     NonnullRefPtr<ReturnStatement> parse_return_statement();
     NonnullRefPtr<VariableDeclaration> parse_variable_declaration(bool for_loop_variable_declaration = false);
     NonnullRefPtr<Statement> parse_for_statement();
@@ -201,6 +203,9 @@ private:
 
     bool match_invalid_escaped_keyword() const;
 
+    bool parse_directive(ScopeNode& body);
+    void parse_statement_list(ScopeNode& output_node, AllowLabelledFunction allow_labelled_functions = AllowLabelledFunction::No);
+
     struct RulePosition {
         AK_MAKE_NONCOPYABLE(RulePosition);
         AK_MAKE_NONMOVABLE(RulePosition);
@@ -229,37 +234,11 @@ private:
 
     [[nodiscard]] RulePosition push_start() { return { *this, position() }; }
 
-    struct Scope : public RefCounted<Scope> {
-        enum Type {
-            Function,
-            Block,
-        };
-        struct HoistableDeclaration {
-            NonnullRefPtr<FunctionDeclaration> declaration;
-            NonnullRefPtr<Scope> scope; // where it is actually declared
-        };
-
-        Type type;
-        RefPtr<Scope> parent;
-
-        NonnullRefPtrVector<FunctionDeclaration> function_declarations;
-        Vector<HoistableDeclaration> hoisted_function_declarations;
-
-        HashTable<FlyString> lexical_declarations;
-
-        explicit Scope(Type, RefPtr<Scope>);
-        RefPtr<Scope> get_current_function_scope();
-    };
-
     struct ParserState {
         Lexer lexer;
         Token current_token;
         Vector<Error> errors;
-        Vector<NonnullRefPtrVector<VariableDeclaration>> var_scopes;
-        Vector<NonnullRefPtrVector<VariableDeclaration>> let_scopes;
-        RefPtr<Scope> current_scope;
-
-        Vector<Vector<FunctionNode::Parameter>&> function_parameters;
+        ScopePusher* current_scope_pusher;
 
         HashMap<StringView, Optional<Position>> labels_in_scope;
         bool strict_mode { false };
