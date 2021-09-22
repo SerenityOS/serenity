@@ -30,88 +30,12 @@
 
 namespace Web::CSS {
 
-enum class Position {
-    Static,
-    Relative,
-    Absolute,
-    Fixed,
-    Sticky,
-};
-
-enum class TextAlign {
-    Left,
+enum class AlignItems {
+    FlexStart,
+    FlexEnd,
     Center,
-    Right,
-    Justify,
-    LibwebCenter,
-};
-
-enum class TextDecorationLine {
-    None,
-    Underline,
-    Overline,
-    LineThrough,
-    Blink,
-};
-
-enum class TextTransform {
-    None,
-    Capitalize,
-    Uppercase,
-    Lowercase,
-    FullWidth,
-    FullSizeKana,
-};
-
-enum class Display {
-    None,
-    Block,
-    Inline,
-    InlineBlock,
-    ListItem,
-    Table,
-    TableRow,
-    TableCell,
-    TableHeaderGroup,
-    TableRowGroup,
-    TableFooterGroup,
-    TableColumn,
-    TableColumnGroup,
-    TableCaption,
-    Flex,
-};
-
-enum class FlexDirection {
-    Row,
-    RowReverse,
-    Column,
-    ColumnReverse,
-};
-
-enum class FlexWrap {
-    Nowrap,
-    Wrap,
-    WrapReverse
-};
-
-enum class FlexBasis {
-    Content,
-    Length,
-    Auto,
-};
-
-enum class WhiteSpace {
-    Normal,
-    Pre,
-    Nowrap,
-    PreLine,
-    PreWrap,
-};
-
-enum class Float {
-    None,
-    Left,
-    Right,
+    Baseline,
+    Stretch,
 };
 
 enum class Clear {
@@ -160,6 +84,57 @@ enum class Cursor {
     ZoomOut,
 };
 
+enum class Display {
+    None,
+    Block,
+    Inline,
+    InlineBlock,
+    ListItem,
+    Table,
+    TableRow,
+    TableCell,
+    TableHeaderGroup,
+    TableRowGroup,
+    TableFooterGroup,
+    TableColumn,
+    TableColumnGroup,
+    TableCaption,
+    Flex,
+};
+
+enum class FlexBasis {
+    Content,
+    Length,
+    Auto,
+};
+
+enum class FlexDirection {
+    Row,
+    RowReverse,
+    Column,
+    ColumnReverse,
+};
+
+enum class FlexWrap {
+    Nowrap,
+    Wrap,
+    WrapReverse
+};
+
+enum class Float {
+    None,
+    Left,
+    Right,
+};
+
+enum class JustifyContent {
+    FlexStart,
+    FlexEnd,
+    Center,
+    SpaceBetween,
+    SpaceAround,
+};
+
 enum class LineStyle {
     None,
     Hidden,
@@ -196,6 +171,14 @@ enum class Overflow : u8 {
     Visible,
 };
 
+enum class Position {
+    Static,
+    Relative,
+    Absolute,
+    Fixed,
+    Sticky,
+};
+
 enum class Repeat : u8 {
     NoRepeat,
     Repeat,
@@ -203,24 +186,41 @@ enum class Repeat : u8 {
     Space,
 };
 
-enum class JustifyContent {
-    FlexStart,
-    FlexEnd,
+enum class TextAlign {
+    Left,
     Center,
-    SpaceBetween,
-    SpaceAround,
+    Right,
+    Justify,
+    LibwebCenter,
 };
 
-enum class AlignItems {
-    FlexStart,
-    FlexEnd,
-    Center,
-    Baseline,
-    Stretch,
+enum class TextDecorationLine {
+    None,
+    Underline,
+    Overline,
+    LineThrough,
+    Blink,
+};
+
+enum class TextTransform {
+    None,
+    Capitalize,
+    Uppercase,
+    Lowercase,
+    FullWidth,
+    FullSizeKana,
 };
 
 enum class TransformFunction {
     TranslateY,
+};
+
+enum class WhiteSpace {
+    Normal,
+    Pre,
+    Nowrap,
+    PreLine,
+    PreWrap,
 };
 
 class StyleValue : public RefCounted<StyleValue> {
