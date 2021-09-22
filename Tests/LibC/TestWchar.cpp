@@ -8,6 +8,33 @@
 
 #include <wchar.h>
 
+TEST_CASE(wcspbrk)
+{
+    const wchar_t* input;
+    wchar_t* ret;
+
+    // Test empty haystack.
+    ret = wcspbrk(L"", L"ab");
+    EXPECT_EQ(ret, nullptr);
+
+    // Test empty needle.
+    ret = wcspbrk(L"ab", L"");
+    EXPECT_EQ(ret, nullptr);
+
+    // Test search for a single character.
+    input = L"abcd";
+    ret = wcspbrk(input, L"a");
+    EXPECT_EQ(ret, input);
+
+    // Test search for multiple characters, none matches.
+    ret = wcspbrk(input, L"zxy");
+    EXPECT_EQ(ret, nullptr);
+
+    // Test search for multiple characters, last matches.
+    ret = wcspbrk(input, L"zxyc");
+    EXPECT_EQ(ret, input + 2);
+}
+
 TEST_CASE(wcscoll)
 {
     // Check if wcscoll is sorting correctly. At the moment we are doing raw char comparisons,

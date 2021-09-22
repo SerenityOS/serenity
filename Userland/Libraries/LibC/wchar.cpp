@@ -344,4 +344,15 @@ int mbsinit(const mbstate_t* state)
 
     return 1;
 }
+
+wchar_t* wcspbrk(const wchar_t* wcs, const wchar_t* accept)
+{
+    for (const wchar_t* cur = accept; *cur; cur++) {
+        wchar_t* res = wcschr(wcs, *cur);
+        if (res)
+            return res;
+    }
+
+    return nullptr;
+}
 }
