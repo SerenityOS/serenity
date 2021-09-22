@@ -41,6 +41,8 @@ void GlyphMapWidget::resize_event(GUI::ResizeEvent& event)
     int content_height = rows() * (font().glyph_height() + m_vertical_spacing) + frame_thickness();
     set_content_size({ content_width, content_height });
 
+    scroll_to_glyph(m_selected_glyph);
+
     AbstractScrollableWidget::resize_event(event);
 }
 
