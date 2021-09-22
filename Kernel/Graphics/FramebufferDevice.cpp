@@ -21,7 +21,7 @@
 
 namespace Kernel {
 
-NonnullRefPtr<FramebufferDevice> FramebufferDevice::create(const GraphicsDevice& adapter, size_t output_port_index, PhysicalAddress paddr, size_t width, size_t height, size_t pitch)
+NonnullRefPtr<FramebufferDevice> FramebufferDevice::create(const GenericGraphicsAdapter& adapter, size_t output_port_index, PhysicalAddress paddr, size_t width, size_t height, size_t pitch)
 {
     auto framebuffer_device_or_error = DeviceManagement::try_create_device<FramebufferDevice>(adapter, output_port_index, paddr, width, height, pitch);
     // FIXME: Find a way to propagate errors
@@ -99,14 +99,14 @@ UNMAP_AFTER_INIT KResult FramebufferDevice::initialize()
     return KSuccess;
 }
 
-UNMAP_AFTER_INIT FramebufferDevice::FramebufferDevice(const GraphicsDevice& adapter, size_t output_port_index)
+UNMAP_AFTER_INIT FramebufferDevice::FramebufferDevice(const GenericGraphicsAdapter& adapter, size_t output_port_index)
     : BlockDevice(29, GraphicsManagement::the().allocate_minor_device_number())
     , m_graphics_adapter(adapter)
     , m_output_port_index(output_port_index)
 {
 }
 
-UNMAP_AFTER_INIT FramebufferDevice::FramebufferDevice(const GraphicsDevice& adapter, size_t output_port_index, PhysicalAddress addr, size_t width, size_t height, size_t pitch)
+UNMAP_AFTER_INIT FramebufferDevice::FramebufferDevice(const GenericGraphicsAdapter& adapter, size_t output_port_index, PhysicalAddress addr, size_t width, size_t height, size_t pitch)
     : BlockDevice(29, GraphicsManagement::the().allocate_minor_device_number())
     , m_graphics_adapter(adapter)
     , m_framebuffer_address(addr)

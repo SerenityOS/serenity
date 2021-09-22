@@ -10,7 +10,7 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/Graphics/GraphicsDevice.h>
+#include <Kernel/Graphics/GenericGraphicsAdapter.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/PhysicalAddress.h>
@@ -22,7 +22,7 @@ class FramebufferDevice : public BlockDevice {
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<FramebufferDevice> create(const GraphicsDevice&, size_t, PhysicalAddress, size_t, size_t, size_t);
+    static NonnullRefPtr<FramebufferDevice> create(const GenericGraphicsAdapter&, size_t, PhysicalAddress, size_t, size_t, size_t);
 
     virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
     virtual KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
@@ -35,11 +35,11 @@ public:
     KResult initialize();
 
 protected:
-    FramebufferDevice(const GraphicsDevice&, size_t);
-    NonnullRefPtr<GraphicsDevice> m_graphics_adapter;
+    FramebufferDevice(const GenericGraphicsAdapter&, size_t);
+    NonnullRefPtr<GenericGraphicsAdapter> m_graphics_adapter;
 
 private:
-    FramebufferDevice(const GraphicsDevice&, size_t, PhysicalAddress, size_t, size_t, size_t);
+    FramebufferDevice(const GenericGraphicsAdapter&, size_t, PhysicalAddress, size_t, size_t, size_t);
 
     // ^File
     virtual StringView class_name() const override { return "FramebufferDevice"sv; }

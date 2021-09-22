@@ -11,7 +11,7 @@
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
-#include <Kernel/Graphics/GraphicsDevice.h>
+#include <Kernel/Graphics/GenericGraphicsAdapter.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/PhysicalAddress.h>
 
@@ -20,7 +20,7 @@ namespace Kernel {
 class GraphicsManagement;
 struct BochsDisplayMMIORegisters;
 
-class BochsGraphicsAdapter final : public GraphicsDevice
+class BochsGraphicsAdapter final : public GenericGraphicsAdapter
     , public PCI::Device {
     AK_MAKE_ETERNAL
     friend class GraphicsManagement;
@@ -39,7 +39,7 @@ public:
     virtual bool vga_compatible() const override;
 
 private:
-    // ^GraphicsDevice
+    // ^GenericGraphicsAdapter
     virtual bool try_to_set_resolution(size_t output_port_index, size_t width, size_t height) override;
     virtual bool set_y_offset(size_t output_port_index, size_t y) override;
 

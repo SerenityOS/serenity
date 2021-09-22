@@ -11,12 +11,12 @@
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
-#include <Kernel/Graphics/GraphicsDevice.h>
+#include <Kernel/Graphics/GenericGraphicsAdapter.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 
-class VGACompatibleAdapter : public GraphicsDevice
+class VGACompatibleAdapter : public GenericGraphicsAdapter
     , public PCI::Device {
     AK_MAKE_ETERNAL
 public:
@@ -39,7 +39,7 @@ protected:
 private:
     VGACompatibleAdapter(PCI::Address, PhysicalAddress, size_t framebuffer_width, size_t framebuffer_height, size_t framebuffer_pitch);
 
-    // ^GraphicsDevice
+    // ^GenericGraphicsAdapter
     virtual void initialize_framebuffer_devices() override;
 
     virtual void enable_consoles() override;

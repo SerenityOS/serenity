@@ -71,7 +71,7 @@ static inline bool is_display_controller_pci_device(PCI::DeviceIdentifier const&
 UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_device(PCI::DeviceIdentifier const& device_identifier)
 {
     VERIFY(is_vga_compatible_pci_device(device_identifier) || is_display_controller_pci_device(device_identifier));
-    auto add_and_configure_adapter = [&](GraphicsDevice& graphics_device) {
+    auto add_and_configure_adapter = [&](GenericGraphicsAdapter& graphics_device) {
         m_graphics_devices.append(graphics_device);
         if (!framebuffer_devices_allowed()) {
             graphics_device.enable_consoles();
@@ -80,7 +80,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
         graphics_device.initialize_framebuffer_devices();
     };
 
-    RefPtr<GraphicsDevice> adapter;
+    RefPtr<GenericGraphicsAdapter> adapter;
     switch (device_identifier.hardware_id().vendor_id) {
     case PCI::VendorID::QEMUOld:
         if (device_identifier.hardware_id().device_id == 0x1111)
@@ -104,7 +104,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
         // non-compatible VGA graphics device that was initialized by the
         // Multiboot bootloader to provide a framebuffer, in practice we
         // probably want to support these devices natively instead of
-        // initializing them as some sort of a generic GraphicsDevice. For now,
+        // initializing them as some sort of a generic GenericGraphicsAdapter. For now,
         // the only known example of this sort of device is qxl in QEMU. For VGA
         // compatible devices we don't have a special driver for (e.g. ati-vga,
         // qxl-vga, cirrus-vga, vmware-svga in QEMU), it's much more likely that

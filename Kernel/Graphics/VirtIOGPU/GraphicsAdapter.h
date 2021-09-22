@@ -11,7 +11,7 @@
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/Graphics/GraphicsDevice.h>
+#include <Kernel/Graphics/GenericGraphicsAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/Console.h>
 #include <Kernel/Graphics/VirtIOGPU/FramebufferDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/Protocol.h>
@@ -33,7 +33,7 @@ namespace Kernel::Graphics::VirtIOGPU {
 
 class FramebufferDevice;
 class GraphicsAdapter final
-    : public GraphicsDevice
+    : public GenericGraphicsAdapter
     , public VirtIO::Device {
     AK_MAKE_ETERNAL
     friend class FramebufferDevice;
