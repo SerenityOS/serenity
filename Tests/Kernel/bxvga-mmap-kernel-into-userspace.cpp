@@ -25,18 +25,20 @@ int main()
     size_t pitch = width * 4;
     size_t framebuffer_size_in_bytes = pitch * height * 2;
 
-    FBResolution original_resolution;
-    if (ioctl(fd, FB_IOCTL_GET_RESOLUTION, &original_resolution) < 0) {
+    FBHeadProperties original_properties;
+    original_properties.head_index = 0;
+    if (ioctl(fd, FB_IOCTL_GET_HEAD_PROPERTIES, &original_properties) < 0) {
         perror("ioctl");
         return 1;
     }
 
-    FBResolution resolution;
+    FBHeadResolution resolution;
+    resolution.head_index = 0;
     resolution.width = width;
     resolution.height = height;
     resolution.pitch = pitch;
 
-    if (ioctl(fd, FB_IOCTL_SET_RESOLUTION, &resolution) < 0) {
+    if (ioctl(fd, FB_IOCTL_SET_HEAD_RESOLUTION, &resolution) < 0) {
         perror("ioctl");
         return 1;
     }
@@ -87,7 +89,12 @@ int main()
         process->uid = 0;
     }
 
-    if (ioctl(fd, FB_IOCTL_SET_RESOLUTION, &original_resolution) < 0) {
+    FBHeadResolution original_resolution;
+    original_resolution.head_index = 0;
+    original_resolution.width = original_properties.width;
+    original_resolution.height = original_properties.height;
+    original_resolution.pitch = original_properties.pitch;
+    if (ioctl(fd, FB_IOCTL_SET_HEAD_RESOLUTION, &original_resolution) < 0) {
         perror("ioctl");
         return 1;
     }

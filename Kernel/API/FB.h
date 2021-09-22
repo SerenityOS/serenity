@@ -13,39 +13,42 @@
 
 __BEGIN_DECLS
 
-ALWAYS_INLINE int fb_get_size_in_bytes(int fd, size_t* out)
+ALWAYS_INLINE int fb_get_properties(int fd, FBProperties* info)
 {
-    return ioctl(fd, FB_IOCTL_GET_SIZE_IN_BYTES, out);
+    return ioctl(fd, FB_IOCTL_GET_PROPERTIES, info);
 }
 
-ALWAYS_INLINE int fb_get_resolution(int fd, FBResolution* info)
+ALWAYS_INLINE int fb_get_head_properties(int fd, FBHeadProperties* info)
 {
-    return ioctl(fd, FB_IOCTL_GET_RESOLUTION, info);
+    return ioctl(fd, FB_IOCTL_GET_HEAD_PROPERTIES, info);
 }
 
-ALWAYS_INLINE int fb_set_resolution(int fd, FBResolution* info)
+ALWAYS_INLINE int fb_get_resolution(int fd, FBHeadResolution* info)
 {
-    return ioctl(fd, FB_IOCTL_SET_RESOLUTION, info);
+    FBHeadProperties head_properties;
+    head_properties.head_index = info->head_index;
+    if (auto rc = ioctl(fd, FB_IOCTL_GET_HEAD_PROPERTIES, &head_properties); rc < 0)
+        return rc;
+    info->head_index = head_properties.head_index;
+    info->pitch = head_properties.pitch;
+    info->width = head_properties.width;
+    info->height = head_properties.height;
+    return 0;
 }
 
-ALWAYS_INLINE int fb_get_buffer_offset(int fd, int index, unsigned* offset)
+ALWAYS_INLINE int fb_set_resolution(int fd, FBHeadResolution* info)
 {
-    FBBufferOffset fb_buffer_offset;
-    fb_buffer_offset.buffer_index = index;
-    int result = ioctl(fd, FB_IOCTL_GET_BUFFER_OFFSET, &fb_buffer_offset);
-    if (result == 0)
-        *offset = fb_buffer_offset.offset;
-    return result;
+    return ioctl(fd, FB_IOCTL_SET_HEAD_RESOLUTION, info);
 }
 
-ALWAYS_INLINE int fb_get_buffer(int fd, int* index)
+ALWAYS_INLINE int fb_get_head_vertical_offset_buffer(int fd, FBHeadVerticalOffset* vertical_offset)
 {
-    return ioctl(fd, FB_IOCTL_GET_BUFFER, index);
+    return ioctl(fd, FB_IOCTL_GET_HEAD_VERITCAL_OFFSET_BUFFER, vertical_offset);
 }
 
-ALWAYS_INLINE int fb_set_buffer(int fd, int index)
+ALWAYS_INLINE int fb_set_head_vertical_offset_buffer(int fd, FBHeadVerticalOffset* vertical_offset)
 {
-    return ioctl(fd, FB_IOCTL_SET_BUFFER, index);
+    return ioctl(fd, FB_IOCTL_SET_HEAD_VERITCAL_OFFSET_BUFFER, vertical_offset);
 }
 
 ALWAYS_INLINE int fb_flush_buffers(int fd, int index, FBRect const* rects, unsigned count)
@@ -54,7 +57,7 @@ ALWAYS_INLINE int fb_flush_buffers(int fd, int index, FBRect const* rects, unsig
     fb_flush_rects.buffer_index = index;
     fb_flush_rects.count = count;
     fb_flush_rects.rects = rects;
-    return ioctl(fd, FB_IOCTL_FLUSH_BUFFERS, &fb_flush_rects);
+    return ioctl(fd, FB_IOCTL_FLUSH_HEAD_BUFFERS, &fb_flush_rects);
 }
 
 __END_DECLS

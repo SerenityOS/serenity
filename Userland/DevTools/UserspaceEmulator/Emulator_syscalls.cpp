@@ -1155,20 +1155,20 @@ int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unus
     if (request == TIOCNOTTY || request == TIOCSCTTY) {
         return syscall(SC_ioctl, fd, request, 0);
     }
-    if (request == FB_IOCTL_GET_SIZE_IN_BYTES) {
+    if (request == FB_IOCTL_GET_PROPERTIES) {
         size_t size = 0;
         auto rc = syscall(SC_ioctl, fd, request, &size);
         mmu().copy_to_vm(arg, &size, sizeof(size));
         return rc;
     }
-    if (request == FB_IOCTL_SET_RESOLUTION) {
-        FBResolution user_resolution;
+    if (request == FB_IOCTL_SET_HEAD_RESOLUTION) {
+        FBHeadResolution user_resolution;
         mmu().copy_from_vm(&user_resolution, arg, sizeof(user_resolution));
         auto rc = syscall(SC_ioctl, fd, request, &user_resolution);
         mmu().copy_to_vm(arg, &user_resolution, sizeof(user_resolution));
         return rc;
     }
-    if (request == FB_IOCTL_SET_BUFFER) {
+    if (request == FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER) {
         return syscall(SC_ioctl, fd, request, arg);
     }
     reportln("Unsupported ioctl: {}", request);
