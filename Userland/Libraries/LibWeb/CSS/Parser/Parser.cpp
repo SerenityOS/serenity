@@ -2872,15 +2872,15 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
     case PropertyID::Background:
         if (auto parsed_value = parse_background_value(m_context, component_values))
             return parsed_value.release_nonnull();
-        break;
+        return ParsingResult::SyntaxError;
     case PropertyID::BackgroundImage:
         if (auto parsed_value = parse_background_image_value(m_context, component_values))
             return parsed_value.release_nonnull();
-        break;
+        return ParsingResult::SyntaxError;
     case PropertyID::BackgroundRepeat:
         if (auto parsed_value = parse_background_repeat_value(m_context, component_values))
             return parsed_value.release_nonnull();
-        break;
+        return ParsingResult::SyntaxError;
     case PropertyID::Border:
     case PropertyID::BorderBottom:
     case PropertyID::BorderLeft:
@@ -2888,54 +2888,54 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
     case PropertyID::BorderTop:
         if (auto parsed_value = parse_border_value(m_context, component_values))
             return parsed_value.release_nonnull();
-        break;
+        return ParsingResult::SyntaxError;
     case PropertyID::BorderTopLeftRadius:
     case PropertyID::BorderTopRightRadius:
     case PropertyID::BorderBottomRightRadius:
     case PropertyID::BorderBottomLeftRadius:
         if (auto parsed_value = parse_border_radius_value(m_context, component_values))
             return parsed_value.release_nonnull();
-        break;
+        return ParsingResult::SyntaxError;
     case PropertyID::BorderRadius:
         if (auto parsed_value = parse_border_radius_shorthand_value(m_context, component_values))
             return parsed_value.release_nonnull();
-        break;
+        return ParsingResult::SyntaxError;
     case PropertyID::BoxShadow:
         if (auto parsed_value = parse_box_shadow_value(m_context, component_values))
             return parsed_value.release_nonnull();
-        break;
+        return ParsingResult::SyntaxError;
     case PropertyID::Flex:
         if (auto parsed_value = parse_flex_value(m_context, component_values))
             return parsed_value.release_nonnull();
-        break;
+        return ParsingResult::SyntaxError;
     case PropertyID::FlexFlow:
         if (auto parsed_value = parse_flex_flow_value(m_context, component_values))
             return parsed_value.release_nonnull();
-        break;
+        return ParsingResult::SyntaxError;
     case PropertyID::Font:
         if (auto parsed_value = parse_font_value(m_context, component_values))
             return parsed_value.release_nonnull();
-        break;
+        return ParsingResult::SyntaxError;
     case PropertyID::FontFamily:
         if (auto parsed_value = parse_font_family_value(m_context, component_values))
             return parsed_value.release_nonnull();
-        break;
+        return ParsingResult::SyntaxError;
     case PropertyID::ListStyle:
         if (auto parsed_value = parse_list_style_value(m_context, component_values))
             return parsed_value.release_nonnull();
-        break;
+        return ParsingResult::SyntaxError;
     case PropertyID::Overflow:
         if (auto parsed_value = parse_overflow_value(m_context, component_values))
             return parsed_value.release_nonnull();
-        break;
+        return ParsingResult::SyntaxError;
     case PropertyID::TextDecoration:
         if (auto parsed_value = parse_text_decoration_value(m_context, component_values))
             return parsed_value.release_nonnull();
-        break;
+        return ParsingResult::SyntaxError;
     case PropertyID::Transform:
         if (auto parsed_value = parse_transform_value(m_context, component_values))
             return parsed_value.release_nonnull();
-        break;
+        return ParsingResult::SyntaxError;
     default:
         break;
     }
