@@ -447,4 +447,10 @@ long double wcstold(const wchar_t*, wchar_t**)
     dbgln("TODO: Implement wcstold()");
     TODO();
 }
+
+int swprintf(wchar_t*, size_t, const wchar_t*, ...)
+{
+    dbgln("TODO: Implement swprintf()");
+    TODO();
+}
 }
