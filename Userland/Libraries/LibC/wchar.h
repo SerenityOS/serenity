@@ -43,5 +43,6 @@ int wctob(wint_t);
 int mbsinit(const mbstate_t*);
 wchar_t* wcspbrk(const wchar_t*, const wchar_t*);
 wchar_t* wcsstr(const wchar_t*, const wchar_t*);
+wchar_t* wmemchr(const wchar_t*, wchar_t, size_t);
 
 __END_DECLS
