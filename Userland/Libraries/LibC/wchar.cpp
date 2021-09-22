@@ -355,4 +355,24 @@ wchar_t* wcspbrk(const wchar_t* wcs, const wchar_t* accept)
 
     return nullptr;
 }
+
+wchar_t* wcsstr(const wchar_t* haystack, const wchar_t* needle)
+{
+    size_t nlen = wcslen(needle);
+
+    if (nlen == 0)
+        return const_cast<wchar_t*>(haystack);
+
+    size_t hlen = wcslen(haystack);
+
+    while (hlen >= nlen) {
+        if (wcsncmp(haystack, needle, nlen) == 0)
+            return const_cast<wchar_t*>(haystack);
+
+        haystack++;
+        hlen--;
+    }
+
+    return nullptr;
+}
 }
