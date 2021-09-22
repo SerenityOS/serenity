@@ -42,9 +42,9 @@ Console::Console(RefPtr<FramebufferDevice> const& framebuffer_device)
     enqueue_refresh_timer();
 }
 
-void Console::set_resolution(size_t width, size_t height, size_t)
+void Console::set_resolution(size_t width, size_t height, size_t pitch)
 {
-    auto did_set_resolution = m_framebuffer_device->try_to_set_resolution(width, height);
+    auto did_set_resolution = m_framebuffer_device->set_head_resolution(0, width, height, pitch);
     VERIFY(!did_set_resolution.is_error());
 }
 

@@ -11,18 +11,137 @@
 
 namespace Kernel::Graphics::VirtIOGPU {
 
-GraphicsAdapter const& FramebufferDevice::adapter() const
+RefPtr<GraphicsAdapter> FramebufferDevice::adapter() const
 {
-    return static_cast<GraphicsAdapter const&>(*m_graphics_adapter);
+    auto adapter = m_graphics_adapter.strong_ref();
+    // FIXME: Propagate error gracefully
+    VERIFY(adapter);
+    return static_cast<GraphicsAdapter&>(*adapter);
 }
 
-GraphicsAdapter& FramebufferDevice::adapter()
+KResultOr<size_t> FramebufferDevice::buffer_length(size_t head) const
 {
-    return static_cast<GraphicsAdapter&>(*m_graphics_adapter);
+    // Note: This FramebufferDevice class doesn't support multihead setup.
+    // We take care to verify this at the GenericFramebufferDevice::ioctl method
+    // so if we happen to accidentally have a value different than 0, assert.
+    VERIFY(head == 0);
+    MutexLocker locker(m_resolution_lock);
+    return display_info().rect.width * display_info().rect.height * 4;
+}
+KResultOr<size_t> FramebufferDevice::pitch(size_t head) const
+{
+    // Note: This FramebufferDevice class doesn't support multihead setup.
+    // We take care to verify this at the GenericFramebufferDevice::ioctl method
+    // so if we happen to accidentally have a value different than 0, assert.
+    VERIFY(head == 0);
+    MutexLocker locker(m_resolution_lock);
+    return display_info().rect.width * 4;
+}
+KResultOr<size_t> FramebufferDevice::height(size_t head) const
+{
+    // Note: This FramebufferDevice class doesn't support multihead setup.
+    // We take care to verify this at the GenericFramebufferDevice::ioctl method
+    // so if we happen to accidentally have a value different than 0, assert.
+    VERIFY(head == 0);
+    MutexLocker locker(m_resolution_lock);
+    return display_info().rect.height;
+}
+KResultOr<size_t> FramebufferDevice::width(size_t head) const
+{
+    // Note: This FramebufferDevice class doesn't support multihead setup.
+    // We take care to verify this at the GenericFramebufferDevice::ioctl method
+    // so if we happen to accidentally have a value different than 0, assert.
+    VERIFY(head == 0);
+    MutexLocker locker(m_resolution_lock);
+    return display_info().rect.width;
+}
+KResultOr<size_t> FramebufferDevice::vertical_offset(size_t head) const
+{
+    // Note: This FramebufferDevice class doesn't support multihead setup.
+    // We take care to verify this at the GenericFramebufferDevice::ioctl method
+    // so if we happen to accidentally have a value different than 0, assert.
+    VERIFY(head == 0);
+    return 0;
+}
+KResultOr<bool> FramebufferDevice::vertical_offseted(size_t head) const
+{
+    // Note: This FramebufferDevice class doesn't support multihead setup.
+    // We take care to verify this at the GenericFramebufferDevice::ioctl method
+    // so if we happen to accidentally have a value different than 0, assert.
+    VERIFY(head == 0);
+    return false;
+}
+
+KResult FramebufferDevice::set_head_resolution(size_t head, size_t width, size_t height, size_t)
+{
+    // Note: This class doesn't support multihead setup (yet!).
+    // We take care to verify this at the GenericFramebufferDevice::ioctl method
+    // so if we happen to accidentally have a value different than 0, assert.
+    VERIFY(head == 0);
+    if (width > MAX_VIRTIOGPU_RESOLUTION_WIDTH || height > MAX_VIRTIOGPU_RESOLUTION_HEIGHT)
+        return KResult(ENOTSUP);
+
+    auto& info = display_info();
+
+    MutexLocker locker(adapter()->operation_lock());
+
+    info.rect = {
+        .x = 0,
+        .y = 0,
+        .width = (u32)width,
+        .height = (u32)height,
+    };
+
+    // FIXME: Would be nice to be able to return KResultOr here.
+    TRY(create_framebuffer());
+    return KSuccess;
+}
+KResult FramebufferDevice::set_head_buffer(size_t, bool)
+{
+    return KResult(ENOTSUP);
+}
+KResult FramebufferDevice::flush_head_buffer(size_t)
+{
+    // Note: This class doesn't support flushing.
+    // We take care to verify this at the GenericFramebufferDevice::ioctl method
+    // so if we happen to accidentally reach this code, assert.
+    VERIFY_NOT_REACHED();
+}
+KResult FramebufferDevice::flush_rectangle(size_t buffer_index, FBRect const& rect)
+{
+    MutexLocker locker(adapter()->operation_lock());
+    Protocol::Rect dirty_rect {
+        .x = rect.x,
+        .y = rect.y,
+        .width = rect.width,
+        .height = rect.height
+    };
+    // FIXME: Find a better KResult here.
+    if (!m_are_writes_active)
+        return KResult(EIO);
+    auto& buffer = buffer_from_index(buffer_index);
+    transfer_framebuffer_data_to_host(dirty_rect, buffer);
+    if (&buffer == m_current_buffer) {
+        // Flushing directly to screen
+        flush_displayed_image(dirty_rect, buffer);
+        buffer.dirty_rect = {};
+    } else {
+        if (buffer.dirty_rect.width == 0 || buffer.dirty_rect.height == 0) {
+            buffer.dirty_rect = dirty_rect;
+        } else {
+            auto current_dirty_right = buffer.dirty_rect.x + buffer.dirty_rect.width;
+            auto current_dirty_bottom = buffer.dirty_rect.y + buffer.dirty_rect.height;
+            buffer.dirty_rect.x = min(buffer.dirty_rect.x, dirty_rect.x);
+            buffer.dirty_rect.y = min(buffer.dirty_rect.y, dirty_rect.y);
+            buffer.dirty_rect.width = max(current_dirty_right, dirty_rect.x + dirty_rect.width) - buffer.dirty_rect.x;
+            buffer.dirty_rect.height = max(current_dirty_bottom, dirty_rect.y + dirty_rect.height) - buffer.dirty_rect.y;
+        }
+    }
+    return KSuccess;
 }
 
 FramebufferDevice::FramebufferDevice(GraphicsAdapter const& adapter, ScanoutID scanout)
-    : Kernel::FramebufferDevice(adapter, scanout.value())
+    : GenericFramebufferDevice(adapter)
     , m_scanout(scanout)
 {
     if (display_info().enabled) {
@@ -55,7 +174,7 @@ KResult FramebufferDevice::create_framebuffer()
     }
     m_framebuffer_sink_vmobject = TRY(Memory::AnonymousVMObject::try_create_with_physical_pages(pages.span()));
 
-    MutexLocker locker(adapter().operation_lock());
+    MutexLocker locker(adapter()->operation_lock());
     m_current_buffer = &buffer_from_index(m_last_set_buffer_index.load());
     create_buffer(m_main_buffer, 0, m_buffer_size);
     create_buffer(m_back_buffer, m_buffer_size, m_buffer_size);
@@ -72,14 +191,14 @@ void FramebufferDevice::create_buffer(Buffer& buffer, size_t framebuffer_offset,
 
     // 1. Create BUFFER using VIRTIO_GPU_CMD_RESOURCE_CREATE_2D
     if (buffer.resource_id.value() != 0)
-        adapter().delete_resource(buffer.resource_id);
-    buffer.resource_id = adapter().create_2d_resource(info.rect);
+        adapter()->delete_resource(buffer.resource_id);
+    buffer.resource_id = adapter()->create_2d_resource(info.rect);
 
     // 2. Attach backing storage using  VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING
-    adapter().ensure_backing_storage(buffer.resource_id, *m_framebuffer, buffer.framebuffer_offset, framebuffer_size);
+    adapter()->ensure_backing_storage(buffer.resource_id, *m_framebuffer, buffer.framebuffer_offset, framebuffer_size);
     // 3. Use VIRTIO_GPU_CMD_SET_SCANOUT to link the framebuffer to a display scanout.
     if (&buffer == m_current_buffer)
-        adapter().set_scanout_resource(m_scanout.value(), buffer.resource_id, info.rect);
+        adapter()->set_scanout_resource(m_scanout.value(), buffer.resource_id, info.rect);
     // 4. Render our test pattern
     draw_ntsc_test_pattern(buffer);
     // 5. Use VIRTIO_GPU_CMD_TRANSFER_TO_HOST_2D to update the host resource from guest memory.
@@ -101,146 +220,39 @@ void FramebufferDevice::create_buffer(Buffer& buffer, size_t framebuffer_offset,
 
 Protocol::DisplayInfoResponse::Display const& FramebufferDevice::display_info() const
 {
-    return adapter().display_info(m_scanout);
+    return adapter()->display_info(m_scanout);
 }
 
 Protocol::DisplayInfoResponse::Display& FramebufferDevice::display_info()
 {
-    return adapter().display_info(m_scanout);
+    return adapter()->display_info(m_scanout);
 }
 
 void FramebufferDevice::transfer_framebuffer_data_to_host(Protocol::Rect const& rect, Buffer& buffer)
 {
-    adapter().transfer_framebuffer_data_to_host(m_scanout, buffer.resource_id, rect);
+    adapter()->transfer_framebuffer_data_to_host(m_scanout, buffer.resource_id, rect);
 }
 
 void FramebufferDevice::flush_dirty_window(Protocol::Rect const& dirty_rect, Buffer& buffer)
 {
-    adapter().flush_dirty_rectangle(m_scanout, buffer.resource_id, dirty_rect);
+    adapter()->flush_dirty_rectangle(m_scanout, buffer.resource_id, dirty_rect);
 }
 
 void FramebufferDevice::flush_displayed_image(Protocol::Rect const& dirty_rect, Buffer& buffer)
 {
-    adapter().flush_displayed_image(buffer.resource_id, dirty_rect);
-}
-
-KResult FramebufferDevice::try_to_set_resolution(size_t width, size_t height)
-{
-    if (width > MAX_VIRTIOGPU_RESOLUTION_WIDTH || height > MAX_VIRTIOGPU_RESOLUTION_HEIGHT)
-        return EINVAL;
-
-    auto& info = display_info();
-
-    MutexLocker locker(adapter().operation_lock());
-
-    info.rect = {
-        .x = 0,
-        .y = 0,
-        .width = (u32)width,
-        .height = (u32)height,
-    };
-
-    return create_framebuffer();
+    adapter()->flush_displayed_image(buffer.resource_id, dirty_rect);
 }
 
 void FramebufferDevice::set_buffer(int buffer_index)
 {
     auto& buffer = buffer_index == 0 ? m_main_buffer : m_back_buffer;
-    MutexLocker locker(adapter().operation_lock());
+    MutexLocker locker(adapter()->operation_lock());
     if (&buffer == m_current_buffer)
         return;
     m_current_buffer = &buffer;
-    adapter().set_scanout_resource(m_scanout.value(), buffer.resource_id, display_info().rect);
-    adapter().flush_displayed_image(buffer.resource_id, buffer.dirty_rect); // QEMU SDL backend requires this (as per spec)
+    adapter()->set_scanout_resource(m_scanout.value(), buffer.resource_id, display_info().rect);
+    adapter()->flush_displayed_image(buffer.resource_id, buffer.dirty_rect); // QEMU SDL backend requires this (as per spec)
     buffer.dirty_rect = {};
-}
-
-KResult FramebufferDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
-{
-    REQUIRE_PROMISE(video);
-    switch (request) {
-    case FB_IOCTL_GET_SIZE_IN_BYTES: {
-        auto out = static_ptr_cast<size_t*>(arg);
-        size_t value = m_buffer_size * 2;
-        return copy_to_user(out, &value);
-    }
-    case FB_IOCTL_SET_RESOLUTION: {
-        auto user_resolution = static_ptr_cast<FBResolution*>(arg);
-        FBResolution resolution;
-        TRY(copy_from_user(&resolution, user_resolution));
-        TRY(try_to_set_resolution(resolution.width, resolution.height));
-        resolution.pitch = pitch();
-        return copy_to_user(user_resolution, &resolution);
-    }
-    case FB_IOCTL_GET_RESOLUTION: {
-        auto user_resolution = static_ptr_cast<FBResolution*>(arg);
-        FBResolution resolution {};
-        resolution.pitch = pitch();
-        resolution.width = width();
-        resolution.height = height();
-        return copy_to_user(user_resolution, &resolution);
-    }
-    case FB_IOCTL_SET_BUFFER: {
-        auto buffer_index = static_cast<int>(arg.ptr());
-        if (!is_valid_buffer_index(buffer_index))
-            return EINVAL;
-        if (m_last_set_buffer_index.exchange(buffer_index) != buffer_index && m_are_writes_active)
-            set_buffer(buffer_index);
-        return KSuccess;
-    }
-    case FB_IOCTL_FLUSH_BUFFERS: {
-        auto user_flush_rects = static_ptr_cast<FBFlushRects*>(arg);
-        FBFlushRects flush_rects;
-        TRY(copy_from_user(&flush_rects, user_flush_rects));
-        if (!is_valid_buffer_index(flush_rects.buffer_index))
-            return EINVAL;
-        if (Checked<unsigned>::multiplication_would_overflow(flush_rects.count, sizeof(FBRect)))
-            return EFAULT;
-        if (m_are_writes_active && flush_rects.count > 0) {
-            auto& buffer = buffer_from_index(flush_rects.buffer_index);
-            MutexLocker locker(adapter().operation_lock());
-            for (unsigned i = 0; i < flush_rects.count; i++) {
-                FBRect user_dirty_rect;
-                TRY(copy_from_user(&user_dirty_rect, &flush_rects.rects[i]));
-                Protocol::Rect dirty_rect {
-                    .x = user_dirty_rect.x,
-                    .y = user_dirty_rect.y,
-                    .width = user_dirty_rect.width,
-                    .height = user_dirty_rect.height
-                };
-                transfer_framebuffer_data_to_host(dirty_rect, buffer);
-                if (&buffer == m_current_buffer) {
-                    // Flushing directly to screen
-                    flush_displayed_image(dirty_rect, buffer);
-                    buffer.dirty_rect = {};
-                } else {
-                    if (buffer.dirty_rect.width == 0 || buffer.dirty_rect.height == 0) {
-                        buffer.dirty_rect = dirty_rect;
-                    } else {
-                        auto current_dirty_right = buffer.dirty_rect.x + buffer.dirty_rect.width;
-                        auto current_dirty_bottom = buffer.dirty_rect.y + buffer.dirty_rect.height;
-                        buffer.dirty_rect.x = min(buffer.dirty_rect.x, dirty_rect.x);
-                        buffer.dirty_rect.y = min(buffer.dirty_rect.y, dirty_rect.y);
-                        buffer.dirty_rect.width = max(current_dirty_right, dirty_rect.x + dirty_rect.width) - buffer.dirty_rect.x;
-                        buffer.dirty_rect.height = max(current_dirty_bottom, dirty_rect.y + dirty_rect.height) - buffer.dirty_rect.y;
-                    }
-                }
-            }
-        }
-        return KSuccess;
-    }
-    case FB_IOCTL_GET_BUFFER_OFFSET: {
-        auto user_buffer_offset = static_ptr_cast<FBBufferOffset*>(arg);
-        FBBufferOffset buffer_offset;
-        TRY(copy_from_user(&buffer_offset, user_buffer_offset));
-        if (!is_valid_buffer_index(buffer_offset.buffer_index))
-            return EINVAL;
-        buffer_offset.offset = (size_t)buffer_offset.buffer_index * m_buffer_size;
-        return copy_to_user(user_buffer_offset, &buffer_offset);
-    }
-    default:
-        return EINVAL;
-    };
 }
 
 KResultOr<Memory::Region*> FramebufferDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
