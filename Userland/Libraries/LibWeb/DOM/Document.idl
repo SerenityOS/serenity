@@ -21,6 +21,7 @@ interface Document : Node {
     Element? getElementById(DOMString id);
     HTMLCollection getElementsByName(DOMString name);
     HTMLCollection getElementsByTagName(DOMString tagName);
+    HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
     HTMLCollection getElementsByClassName(DOMString className);
 
     readonly attribute HTMLCollection applets;

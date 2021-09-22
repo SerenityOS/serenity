@@ -89,7 +89,6 @@ public:
 
     bool is_active() const;
 
-    NonnullRefPtr<HTMLCollection> get_elements_by_tag_name(FlyString const&);
     NonnullRefPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
 
     ShadowRoot* shadow_root() { return m_shadow_root; }

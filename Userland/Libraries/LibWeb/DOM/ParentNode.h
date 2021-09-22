@@ -27,6 +27,9 @@ public:
 
     NonnullRefPtr<HTMLCollection> children();
 
+    NonnullRefPtr<HTMLCollection> get_elements_by_tag_name(FlyString const&);
+    NonnullRefPtr<HTMLCollection> get_elements_by_tag_name_ns(FlyString const&, FlyString const&);
+
 protected:
     ParentNode(Document& document, NodeType type)
         : Node(document, type)

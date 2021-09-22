@@ -511,17 +511,6 @@ NonnullRefPtr<HTMLCollection> Document::get_elements_by_name(String const& name)
     });
 }
 
-NonnullRefPtr<HTMLCollection> Document::get_elements_by_tag_name(FlyString const& tag_name)
-{
-    // FIXME: Support "*" for tag_name
-    // https://dom.spec.whatwg.org/#concept-getelementsbytagname
-    return HTMLCollection::create(*this, [tag_name](Element const& element) {
-        if (element.namespace_() == Namespace::HTML)
-            return element.local_name().to_lowercase() == tag_name.to_lowercase();
-        return element.local_name() == tag_name;
-    });
-}
-
 NonnullRefPtr<HTMLCollection> Document::get_elements_by_class_name(FlyString const& class_name)
 {
     return HTMLCollection::create(*this, [class_name, quirks_mode = document().in_quirks_mode()](Element const& element) {
