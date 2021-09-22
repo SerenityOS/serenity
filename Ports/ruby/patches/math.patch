@@ -1,0 +1,27 @@
+--- ruby-3.0.2/ext/bigdecimal/bigdecimal.h  2021-09-15 10:18:47.365241873 -0700
++++ ruby-3.0.2/ext/bigdecimal/bigdecimal.h  2021-09-16 11:56:52.989171237 -0700
+@@ -74,23 +74,6 @@
+ #endif
+ #endif
+
+-#ifndef HAVE_LABS
+-static inline long
+-labs(long const x)
+-{
+-    if (x < 0) return -x;
+-    return x;
+-}
+-#endif
+-
+-#ifndef HAVE_LLABS
+-static inline LONG_LONG
+-llabs(LONG_LONG const x)
+-{
+-    if (x < 0) return -x;
+-    return x;
+-}
+-#endif
+
+ #ifndef HAVE_FINITE
+ static int
+
