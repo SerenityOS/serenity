@@ -19,15 +19,7 @@ class DeclarativeEnvironment : public Environment {
 public:
     DeclarativeEnvironment();
     explicit DeclarativeEnvironment(Environment* parent_scope);
-    DeclarativeEnvironment(HashMap<FlyString, Variable> variables, Environment* parent_scope);
     virtual ~DeclarativeEnvironment() override;
-
-    // ^Environment
-    virtual Optional<Variable> get_from_environment(FlyString const&) const override;
-    virtual bool put_into_environment(FlyString const&, Variable) override;
-    virtual bool delete_from_environment(FlyString const&) override;
-
-    HashMap<FlyString, Variable> const& variables() const { return m_variables; }
 
     virtual bool has_binding(FlyString const& name) const override;
     virtual void create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted) override;
@@ -37,13 +29,13 @@ public:
     virtual Value get_binding_value(GlobalObject&, FlyString const& name, bool strict) override;
     virtual bool delete_binding(GlobalObject&, FlyString const& name) override;
 
+    void initialize_or_set_mutable_binding(Badge<ScopeNode>, GlobalObject& global_object, FlyString const& name, Value value);
+
 protected:
     virtual void visit_edges(Visitor&) override;
 
 private:
     virtual bool is_declarative_environment() const override { return true; }
-
-    HashMap<FlyString, Variable> m_variables;
 
     struct Binding {
         Value value;

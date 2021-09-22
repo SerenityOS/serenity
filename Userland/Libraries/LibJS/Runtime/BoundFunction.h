@@ -20,7 +20,7 @@ public:
 
     virtual Value call() override;
     virtual Value construct(FunctionObject& new_target) override;
-    virtual FunctionEnvironment* create_environment(FunctionObject&) override;
+    virtual FunctionEnvironment* new_function_environment(Object* new_target) override;
     virtual const FlyString& name() const override { return m_name; }
     virtual bool is_strict_mode() const override { return m_bound_target_function->is_strict_mode(); }
     virtual bool has_constructor() const override { return true; }

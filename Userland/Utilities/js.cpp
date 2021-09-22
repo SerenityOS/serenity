@@ -1332,14 +1332,21 @@ int main(int argc, char** argv)
 
             switch (mode) {
             case CompleteProperty: {
-                auto maybe_variable = vm->get_variable(variable_name, interpreter->global_object());
-                if (maybe_variable.is_empty()) {
-                    maybe_variable = interpreter->global_object().get(FlyString(variable_name));
-                    if (maybe_variable.is_empty())
+                Optional<JS::Value> maybe_value;
+                auto maybe_variable = vm->resolve_binding(variable_name);
+                if (vm->exception())
+                    break;
+                if (!maybe_variable.is_unresolvable()) {
+                    maybe_value = maybe_variable.get_value(interpreter->global_object());
+                    if (vm->exception())
+                        break;
+                } else {
+                    maybe_value = interpreter->global_object().get(FlyString(variable_name));
+                    if (maybe_value->is_empty())
                         break;
                 }
 
-                auto variable = maybe_variable;
+                auto variable = *maybe_value;
                 if (!variable.is_object())
                     break;
 

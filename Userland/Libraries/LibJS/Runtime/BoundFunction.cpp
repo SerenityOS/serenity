@@ -43,9 +43,9 @@ Value BoundFunction::construct(FunctionObject& new_target)
     return m_bound_target_function->construct(new_target);
 }
 
-FunctionEnvironment* BoundFunction::create_environment(FunctionObject& function_being_invoked)
+FunctionEnvironment* BoundFunction::new_function_environment(Object* new_target)
 {
-    return m_bound_target_function->create_environment(function_being_invoked);
+    return m_bound_target_function->new_function_environment(new_target);
 }
 
 void BoundFunction::visit_edges(Visitor& visitor)

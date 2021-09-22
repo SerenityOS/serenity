@@ -217,12 +217,22 @@ void ConcatString::execute_impl(Bytecode::Interpreter& interpreter) const
 
 void GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = interpreter.vm().get_variable(interpreter.current_executable().get_string(m_identifier), interpreter.global_object());
+    auto& vm = interpreter.vm();
+    auto reference = vm.resolve_binding(interpreter.current_executable().get_string(m_identifier));
+    if (vm.exception())
+        return;
+
+    interpreter.accumulator() = reference.get_value(interpreter.global_object());
 }
 
 void SetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.vm().set_variable(interpreter.current_executable().get_string(m_identifier), interpreter.accumulator(), interpreter.global_object());
+    auto& vm = interpreter.vm();
+    auto reference = vm.resolve_binding(interpreter.current_executable().get_string(m_identifier));
+    if (vm.exception())
+        return;
+
+    reference.put_value(interpreter.global_object(), interpreter.accumulator());
 }
 
 void GetById::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -390,10 +400,7 @@ void ContinuePendingUnwind::replace_references_impl(BasicBlock const& from, Basi
 
 void PushDeclarativeEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    HashMap<FlyString, Variable> resolved_variables;
-    for (auto& it : m_variables)
-        resolved_variables.set(interpreter.current_executable().get_string(it.key), it.value);
-    auto* environment = interpreter.vm().heap().allocate<DeclarativeEnvironment>(interpreter.global_object(), move(resolved_variables), interpreter.vm().lexical_environment());
+    auto* environment = interpreter.vm().heap().allocate<DeclarativeEnvironment>(interpreter.global_object(), interpreter.vm().lexical_environment());
     interpreter.vm().running_execution_context().lexical_environment = environment;
     interpreter.vm().running_execution_context().variable_environment = environment;
 }

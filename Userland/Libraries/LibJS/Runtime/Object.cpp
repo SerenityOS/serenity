@@ -469,6 +469,34 @@ MarkedValueList Object::enumerable_own_property_names(PropertyKind kind) const
     return properties;
 }
 
+// 7.3.25 CopyDataProperties ( target, source, excludedItems ), https://tc39.es/ecma262/#sec-copydataproperties
+ThrowCompletionOr<Object*> Object::copy_data_properties(Value source, HashTable<PropertyName, PropertyNameTraits> const& seen_names, GlobalObject& global_object)
+{
+    if (source.is_nullish())
+        return this;
+
+    auto* from_object = source.to_object(global_object);
+    VERIFY(from_object);
+
+    for (auto& next_key_value : TRY(from_object->internal_own_property_keys())) {
+        auto next_key = PropertyName::from_value(global_object, next_key_value);
+        if (seen_names.contains(next_key))
+            continue;
+
+        auto desc = TRY(from_object->internal_get_own_property(next_key));
+
+        if (desc.has_value() && desc->attributes().is_enumerable()) {
+            auto prop_value = from_object->get(next_key);
+            if (auto* thrown_exception = vm().exception())
+                return JS::throw_completion(thrown_exception->value());
+            create_data_property_or_throw(next_key, prop_value);
+            if (auto* thrown_exception = vm().exception())
+                return JS::throw_completion(thrown_exception->value());
+        }
+    }
+    return this;
+}
+
 // 10.1 Ordinary Object Internal Methods and Internal Slots, https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots
 
 // 10.1.1 [[GetPrototypeOf]] ( ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-getprototypeof

@@ -67,11 +67,6 @@ public:
 
     Environment* lexical_environment() { return vm().lexical_environment(); }
 
-    FunctionEnvironment* current_function_environment();
-
-    void enter_scope(const ScopeNode&, ScopeType, GlobalObject&);
-    void exit_scope(const ScopeNode&);
-
     void push_ast_node(ExecutingASTNodeChain& chain_node)
     {
         chain_node.previous = m_ast_node_chain;
@@ -85,17 +80,10 @@ public:
     }
 
     const ASTNode* current_node() const { return m_ast_node_chain ? &m_ast_node_chain->node : nullptr; }
-    ExecutingASTNodeChain* executing_ast_node_chain() { return m_ast_node_chain; }
-    const ExecutingASTNodeChain* executing_ast_node_chain() const { return m_ast_node_chain; }
-
-    Value execute_statement(GlobalObject&, const Statement&, ScopeType = ScopeType::Block);
 
 private:
     explicit Interpreter(VM&);
 
-    void push_scope(ScopeFrame frame);
-
-    Vector<ScopeFrame> m_scope_stack;
     ExecutingASTNodeChain* m_ast_node_chain { nullptr };
 
     NonnullRefPtr<VM> m_vm;

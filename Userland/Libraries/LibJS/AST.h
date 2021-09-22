@@ -24,10 +24,12 @@
 
 namespace JS {
 
-class VariableDeclaration;
+class Declaration;
+class ClassDeclaration;
 class FunctionDeclaration;
 class Identifier;
 class MemberExpression;
+class VariableDeclaration;
 
 enum class FunctionKind {
     Generator,
@@ -137,6 +139,25 @@ private:
     NonnullRefPtr<Expression> m_expression;
 };
 
+template<typename... Args>
+class IteratorOrVoidFunction : public Function<IterationDecision(Args...)> {
+public:
+    template<typename CallableType>
+    IteratorOrVoidFunction(CallableType&& callable) requires(VoidFunction<CallableType, Args...>)
+        : Function<IterationDecision(Args...)>([callable = forward<CallableType>(callable)](Args... args) {
+            callable(forward<Args>(args)...);
+            return IterationDecision::Continue;
+        })
+    {
+    }
+
+    template<typename CallableType>
+    IteratorOrVoidFunction(CallableType&& callable) requires(IteratorFunction<CallableType, Args...>)
+        : Function<IterationDecision(Args...)>(forward<CallableType>(callable))
+    {
+    }
+};
+
 class ScopeNode : public LabelableStatement {
 public:
     template<typename T, typename... Args>
@@ -152,16 +173,26 @@ public:
     }
 
     NonnullRefPtrVector<Statement> const& children() const { return m_children; }
-    virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
 
-    void add_variables(NonnullRefPtrVector<VariableDeclaration>);
-    void add_functions(NonnullRefPtrVector<FunctionDeclaration>);
-    void add_hoisted_function(NonnullRefPtr<FunctionDeclaration>);
-    NonnullRefPtrVector<VariableDeclaration> const& variables() const { return m_variables; }
-    NonnullRefPtrVector<FunctionDeclaration> const& functions() const { return m_functions; }
-    NonnullRefPtrVector<FunctionDeclaration> const& hoisted_functions() const { return m_hoisted_functions; }
+    Value evaluate_statements(Interpreter& interpreter, GlobalObject& global_object) const;
+
+    void add_var_scoped_declaration(NonnullRefPtr<Declaration> variables);
+    void add_lexical_declaration(NonnullRefPtr<Declaration> variables);
+    void add_hoisted_function(NonnullRefPtr<FunctionDeclaration> declaration);
+
+    void for_each_lexically_scoped_declaration(IteratorOrVoidFunction<Declaration const&>&& callback) const;
+    void for_each_lexically_declared_name(IteratorOrVoidFunction<FlyString const&>&& callback) const;
+
+    void for_each_var_declared_name(IteratorOrVoidFunction<FlyString const&>&& callback) const;
+
+    void for_each_var_function_declaration_in_reverse_order(IteratorOrVoidFunction<FunctionDeclaration const&>&& callback) const;
+    void for_each_var_scoped_variable_declaration(IteratorOrVoidFunction<VariableDeclaration const&>&& callback) const;
+
+    void block_declaration_instantiation(GlobalObject& global_object, Environment* environment) const;
+
+    void for_each_function_hoistable_with_annexB_extension(IteratorOrVoidFunction<FunctionDeclaration&>&& callback) const;
 
 protected:
     explicit ScopeNode(SourceRange source_range)
@@ -173,9 +204,10 @@ private:
     virtual bool is_scope_node() const final { return true; }
 
     NonnullRefPtrVector<Statement> m_children;
-    NonnullRefPtrVector<VariableDeclaration> m_variables;
-    NonnullRefPtrVector<FunctionDeclaration> m_functions;
-    NonnullRefPtrVector<FunctionDeclaration> m_hoisted_functions;
+    NonnullRefPtrVector<Declaration> m_lexical_declarations;
+    NonnullRefPtrVector<Declaration> m_var_declarations;
+
+    NonnullRefPtrVector<FunctionDeclaration> m_functions_hoistable_with_annexB_extension;
 };
 
 class ImportStatement final : public Statement {
@@ -280,6 +312,8 @@ public:
     NonnullRefPtrVector<ImportStatement> const& imports() const { return m_imports; }
     NonnullRefPtrVector<ExportStatement> const& exports() const { return m_exports; }
 
+    ThrowCompletionOr<void> global_declaration_instantiation(Interpreter& interpreter, GlobalObject& global_object, GlobalEnvironment& global_environment) const;
+
 private:
     virtual bool is_program() const override { return true; }
 
@@ -296,6 +330,24 @@ public:
         : ScopeNode(source_range)
     {
     }
+    Value execute(Interpreter& interpreter, GlobalObject& object) const override;
+};
+
+class FunctionBody final : public ScopeNode {
+public:
+    explicit FunctionBody(SourceRange source_range)
+        : ScopeNode(source_range)
+    {
+    }
+
+    void set_strict_mode() { m_in_strict_mode = true; }
+
+    bool in_strict_mode() const { return m_in_strict_mode; }
+
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+
+private:
+    bool m_in_strict_mode { false };
 };
 
 class Expression : public ASTNode {
@@ -313,6 +365,15 @@ public:
         : Statement(source_range)
     {
     }
+
+    virtual void for_each_bound_name(IteratorOrVoidFunction<FlyString const&> callback) const = 0;
+
+    // 8.1.3 Static Semantics: IsConstantDeclaration, https://tc39.es/ecma262/#sec-static-semantics-isconstantdeclaration
+    virtual bool is_constant_declaration() const { return false; }
+
+    virtual bool is_function_declaration() const { return false; }
+
+    virtual bool is_lexical_declaration() const { return false; }
 };
 
 class ErrorDeclaration final : public Declaration {
@@ -322,6 +383,11 @@ public:
     {
     }
     Value execute(Interpreter&, GlobalObject&) const override { return {}; }
+
+    void for_each_bound_name(IteratorOrVoidFunction<FlyString const&>) const override
+    {
+        VERIFY_NOT_REACHED();
+    }
 };
 
 struct BindingPattern : RefCounted<BindingPattern> {
@@ -345,6 +411,8 @@ struct BindingPattern : RefCounted<BindingPattern> {
 
     template<typename C>
     void for_each_bound_name(C&& callback) const;
+
+    bool contains_expression() const;
 
     Vector<BindingEntry> entries;
     Kind kind { Kind::Object };
@@ -412,6 +480,15 @@ public:
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
+
+    void for_each_bound_name(IteratorOrVoidFunction<FlyString const&> callback) const override;
+
+    virtual bool is_function_declaration() const override { return true; }
+
+    void set_should_do_additional_annexB_steps() { m_is_hoisted = true; }
+
+private:
+    bool m_is_hoisted { false };
 };
 
 class FunctionExpression final
@@ -429,25 +506,11 @@ public:
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
 
-    void set_name_if_possible(FlyString new_name)
-    {
-        if (m_cannot_auto_rename)
-            return;
-        m_cannot_auto_rename = true;
-        if (name().is_empty()) {
-            set_name(move(new_name));
-            m_is_auto_renamed = true;
-        }
-    }
-    bool cannot_auto_rename() const { return m_cannot_auto_rename; }
-    bool is_auto_renamed() const { return m_is_auto_renamed; }
-    void set_cannot_auto_rename() { m_cannot_auto_rename = true; }
-
     virtual void generate_bytecode(Bytecode::Generator&) const override;
 
-private:
-    bool m_cannot_auto_rename { false };
-    bool m_is_auto_renamed { false };
+    bool has_name() const { return !name().is_empty(); }
+
+    Value instantiate_ordinary_function_expression(Interpreter& interpreter, GlobalObject& global_object, FlyString given_name) const;
 };
 
 class ErrorExpression final : public Expression {
@@ -614,7 +677,7 @@ private:
 
 class ForInStatement final : public IterationStatement {
 public:
-    ForInStatement(SourceRange source_range, NonnullRefPtr<ASTNode> lhs, NonnullRefPtr<Expression> rhs, NonnullRefPtr<Statement> body)
+    ForInStatement(SourceRange source_range, Variant<NonnullRefPtr<ASTNode>, NonnullRefPtr<BindingPattern>> lhs, NonnullRefPtr<Expression> rhs, NonnullRefPtr<Statement> body)
         : IterationStatement(source_range)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
@@ -622,7 +685,7 @@ public:
     {
     }
 
-    ASTNode const& lhs() const { return *m_lhs; }
+    auto const& lhs() const { return m_lhs; }
     Expression const& rhs() const { return *m_rhs; }
     Statement const& body() const { return *m_body; }
 
@@ -630,14 +693,14 @@ public:
     virtual void dump(int indent) const override;
 
 private:
-    NonnullRefPtr<ASTNode> m_lhs;
+    Variant<NonnullRefPtr<ASTNode>, NonnullRefPtr<BindingPattern>> m_lhs;
     NonnullRefPtr<Expression> m_rhs;
     NonnullRefPtr<Statement> m_body;
 };
 
 class ForOfStatement final : public IterationStatement {
 public:
-    ForOfStatement(SourceRange source_range, NonnullRefPtr<ASTNode> lhs, NonnullRefPtr<Expression> rhs, NonnullRefPtr<Statement> body)
+    ForOfStatement(SourceRange source_range, Variant<NonnullRefPtr<ASTNode>, NonnullRefPtr<BindingPattern>> lhs, NonnullRefPtr<Expression> rhs, NonnullRefPtr<Statement> body)
         : IterationStatement(source_range)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
@@ -645,7 +708,7 @@ public:
     {
     }
 
-    ASTNode const& lhs() const { return *m_lhs; }
+    auto const& lhs() const { return m_lhs; }
     Expression const& rhs() const { return *m_rhs; }
     Statement const& body() const { return *m_body; }
 
@@ -653,7 +716,7 @@ public:
     virtual void dump(int indent) const override;
 
 private:
-    NonnullRefPtr<ASTNode> m_lhs;
+    Variant<NonnullRefPtr<ASTNode>, NonnullRefPtr<BindingPattern>> m_lhs;
     NonnullRefPtr<Expression> m_rhs;
     NonnullRefPtr<Statement> m_body;
 };
@@ -1000,6 +1063,10 @@ public:
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
 
+    bool has_name() const { return !m_name.is_empty(); }
+
+    ThrowCompletionOr<Value> class_definition_evaluation(Interpreter& interpreter, GlobalObject& global_object, FlyString const& binding_name = {}, FlyString const& class_name = {}) const;
+
 private:
     String m_name;
     RefPtr<FunctionExpression> m_constructor;
@@ -1019,6 +1086,10 @@ public:
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
+
+    void for_each_bound_name(IteratorOrVoidFunction<FlyString const&> callback) const override;
+
+    virtual bool is_lexical_declaration() const override { return true; }
 
 private:
     NonnullRefPtr<ClassExpression> m_class_expression;
@@ -1238,6 +1309,12 @@ public:
     virtual void generate_bytecode(Bytecode::Generator&) const override;
 
     NonnullRefPtrVector<VariableDeclarator> const& declarations() const { return m_declarations; }
+
+    virtual void for_each_bound_name(IteratorOrVoidFunction<FlyString const&> callback) const override;
+
+    virtual bool is_constant_declaration() const override { return m_declaration_kind == DeclarationKind::Const; };
+
+    virtual bool is_lexical_declaration() const override { return m_declaration_kind != DeclarationKind::Var; }
 
 private:
     DeclarationKind m_declaration_kind;
@@ -1550,38 +1627,36 @@ private:
     NonnullRefPtr<Expression> m_argument;
 };
 
-class SwitchCase final : public ASTNode {
+class SwitchCase final : public ScopeNode {
 public:
-    SwitchCase(SourceRange source_range, RefPtr<Expression> test, NonnullRefPtrVector<Statement> consequent)
-        : ASTNode(source_range)
+    SwitchCase(SourceRange source_range, RefPtr<Expression> test)
+        : ScopeNode(source_range)
         , m_test(move(test))
-        , m_consequent(move(consequent))
     {
     }
 
     Expression const* test() const { return m_test; }
-    NonnullRefPtrVector<Statement> const& consequent() const { return m_consequent; }
 
     virtual void dump(int indent) const override;
     virtual Value execute(Interpreter&, GlobalObject&) const override;
 
 private:
     RefPtr<Expression> m_test;
-    NonnullRefPtrVector<Statement> m_consequent;
 };
 
-class SwitchStatement final : public LabelableStatement {
+class SwitchStatement final : public ScopeNode {
 public:
-    SwitchStatement(SourceRange source_range, NonnullRefPtr<Expression> discriminant, NonnullRefPtrVector<SwitchCase> cases)
-        : LabelableStatement(source_range)
+    SwitchStatement(SourceRange source_range, NonnullRefPtr<Expression> discriminant)
+        : ScopeNode(source_range)
         , m_discriminant(move(discriminant))
-        , m_cases(move(cases))
     {
     }
 
     virtual void dump(int indent) const override;
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
+
+    void add_case(NonnullRefPtr<SwitchCase> switch_case) { m_cases.append(move(switch_case)); }
 
 private:
     NonnullRefPtr<Expression> m_discriminant;
