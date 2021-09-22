@@ -796,4 +796,10 @@ int pause()
 {
     return select(0, nullptr, nullptr, nullptr, nullptr);
 }
+
+int chroot(const char* path)
+{
+    dbgln("FIXME: chroot(\"{}\")", path);
+    return -1;
+}
 }

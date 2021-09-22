@@ -114,6 +114,7 @@ int pledge(const char* promises, const char* execpromises);
 int unveil(const char* path, const char* permissions);
 char* getpass(const char* prompt);
 int pause();
+int chroot(const char*);
 
 enum {
     _PC_NAME_MAX,
