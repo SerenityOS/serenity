@@ -65,6 +65,38 @@ TEST_CASE(wcsstr)
     EXPECT_EQ(ret, nullptr);
 }
 
+TEST_CASE(wmemchr)
+{
+    const wchar_t* input = L"abcde";
+    wchar_t* ret;
+
+    // Empty haystack returns nothing.
+    ret = wmemchr(L"", L'c', 0);
+    EXPECT_EQ(ret, nullptr);
+
+    // Not included character returns nothing.
+    ret = wmemchr(input, L'z', 5);
+    EXPECT_EQ(ret, nullptr);
+
+    // Match at string start.
+    ret = wmemchr(input, L'a', 5);
+    EXPECT_EQ(ret, input);
+
+    // Match at string end.
+    ret = wmemchr(input, L'e', 5);
+    EXPECT_EQ(ret, input + 4);
+
+    input = L"abcde\0fg";
+
+    // Handle finding null characters.
+    ret = wmemchr(input, L'\0', 8);
+    EXPECT_EQ(ret, input + 5);
+
+    // Don't stop at null characters.
+    ret = wmemchr(input, L'f', 8);
+    EXPECT_EQ(ret, input + 6);
+}
+
 TEST_CASE(wcscoll)
 {
     // Check if wcscoll is sorting correctly. At the moment we are doing raw char comparisons,

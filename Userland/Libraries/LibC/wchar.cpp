@@ -375,4 +375,14 @@ wchar_t* wcsstr(const wchar_t* haystack, const wchar_t* needle)
 
     return nullptr;
 }
+
+wchar_t* wmemchr(const wchar_t* s, wchar_t c, size_t n)
+{
+    for (size_t i = 0; i < n; i++) {
+        if (s[i] == c)
+            return const_cast<wchar_t*>(&s[i]);
+    }
+
+    return nullptr;
+}
 }
