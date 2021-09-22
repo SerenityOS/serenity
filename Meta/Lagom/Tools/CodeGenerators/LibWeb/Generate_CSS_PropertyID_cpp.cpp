@@ -252,6 +252,32 @@ bool property_has_quirk(PropertyID property_id, Quirk quirk)
     }
 }
 
+size_t property_maximum_value_count(PropertyID property_id)
+{
+    switch (property_id) {
+)~~~");
+
+    properties.for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+        if (value.as_object().has("max-values")) {
+            auto max_values = value.as_object().get("max-values");
+            VERIFY(max_values.is_number() && !max_values.is_double());
+            auto property_generator = generator.fork();
+            property_generator.set("name:titlecase", title_casify(name));
+            property_generator.set("max_values", max_values.to_string());
+            property_generator.append(R"~~~(
+    case PropertyID::@name:titlecase@:
+        return @max_values@;
+)~~~");
+        }
+    });
+
+    generator.append(R"~~~(
+    default:
+        return 1;
+    }
+}
+
 } // namespace Web::CSS
 
 )~~~");
