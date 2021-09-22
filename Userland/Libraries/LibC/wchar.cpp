@@ -435,4 +435,10 @@ float wcstof(const wchar_t*, wchar_t**)
     dbgln("TODO: Implement wcstof()");
     TODO();
 }
+
+double wcstod(const wchar_t*, wchar_t**)
+{
+    dbgln("TODO: Implement wcstod()");
+    TODO();
+}
 }

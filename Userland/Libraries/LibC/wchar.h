@@ -50,5 +50,6 @@ wchar_t* wmemmove(wchar_t*, const wchar_t*, size_t);
 unsigned long wcstoul(const wchar_t*, wchar_t**, int);
 unsigned long long wcstoull(const wchar_t*, wchar_t**, int);
 float wcstof(const wchar_t*, wchar_t**);
+double wcstod(const wchar_t*, wchar_t**);
 
 __END_DECLS
