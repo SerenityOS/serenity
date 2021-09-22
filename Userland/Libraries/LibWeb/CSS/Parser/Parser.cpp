@@ -1282,8 +1282,12 @@ Optional<StyleProperty> Parser::convert_to_style_property(StyleDeclarationRule& 
     auto value_token_stream = TokenStream(declaration.m_values);
     auto value = parse_css_value(property_id, value_token_stream);
     if (value.is_error()) {
-        if (value.error() != ParsingResult::IncludesIgnoredVendorPrefix)
-            dbgln("Unable to parse value for CSS property '{}'", property_name);
+        if (value.error() != ParsingResult::IncludesIgnoredVendorPrefix) {
+            dbgln("Unable to parse value for CSS property '{}'.", property_name);
+            if constexpr (CSS_PARSER_DEBUG) {
+                value_token_stream.dump_all_tokens();
+            }
+        }
         return {};
     }
 
