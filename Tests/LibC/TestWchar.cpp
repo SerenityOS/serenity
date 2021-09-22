@@ -137,6 +137,32 @@ TEST_CASE(wmemset)
     free(buf);
 }
 
+TEST_CASE(wmemmove)
+{
+    wchar_t* ret;
+    const wchar_t* string = L"abc\0def";
+    auto buf = static_cast<wchar_t*>(calloc(32, sizeof(wchar_t)));
+
+    if (!buf) {
+        FAIL("Could not allocate memory for target buffer");
+        return;
+    }
+
+    // Test moving to smaller addresses.
+    wmemcpy(buf + 3, string, 8);
+    ret = wmemmove(buf + 1, buf + 3, 8);
+    EXPECT_EQ(ret, buf + 1);
+    EXPECT_EQ(memcmp(string, buf + 1, 8 * sizeof(wchar_t)), 0);
+
+    // Test moving to larger addresses.
+    wmemcpy(buf + 16, string, 8);
+    ret = wmemmove(buf + 18, buf + 16, 8);
+    EXPECT_EQ(ret, buf + 18);
+    EXPECT_EQ(memcmp(string, buf + 18, 8 * sizeof(wchar_t)), 0);
+
+    free(buf);
+}
+
 TEST_CASE(wcscoll)
 {
     // Check if wcscoll is sorting correctly. At the moment we are doing raw char comparisons,

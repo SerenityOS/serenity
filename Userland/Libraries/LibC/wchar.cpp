@@ -402,4 +402,19 @@ wchar_t* wmemset(wchar_t* wcs, wchar_t wc, size_t n)
 
     return wcs;
 }
+
+wchar_t* wmemmove(wchar_t* dest, const wchar_t* src, size_t n)
+{
+    if (dest > src) {
+        for (size_t i = 1; i <= n; i++) {
+            dest[n - i] = src[n - i];
+        }
+    } else if (dest < src) {
+        for (size_t i = 0; i < n; i++) {
+            dest[i] = src[i];
+        }
+    }
+
+    return dest;
+}
 }

@@ -46,5 +46,6 @@ wchar_t* wcsstr(const wchar_t*, const wchar_t*);
 wchar_t* wmemchr(const wchar_t*, wchar_t, size_t);
 wchar_t* wmemcpy(wchar_t*, const wchar_t*, size_t);
 wchar_t* wmemset(wchar_t*, wchar_t, size_t);
+wchar_t* wmemmove(wchar_t*, const wchar_t*, size_t);
 
 __END_DECLS
