@@ -129,10 +129,10 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
 
     if (url.protocol() == "about") {
         dbgln_if(SPAM_DEBUG, "Loading about: URL {}", url);
+        log_success(request);
         deferred_invoke([success_callback = move(success_callback)] {
             success_callback(String::empty().to_byte_buffer(), {}, {});
         });
-        log_success(request);
         return;
     }
 
@@ -148,10 +148,10 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
         else
             data = url.data_payload().to_byte_buffer();
 
+        log_success(request);
         deferred_invoke([data = move(data), success_callback = move(success_callback)] {
             success_callback(data, {}, {});
         });
-        log_success(request);
         return;
     }
 
@@ -167,10 +167,10 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
 
         auto file = file_result.release_value();
         auto data = file->read_all();
+        log_success(request);
         deferred_invoke([data = move(data), success_callback = move(success_callback)] {
             success_callback(data, {}, {});
         });
-        log_success(request);
         return;
     }
 
@@ -203,8 +203,8 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
                     error_callback(http_load_failure_msg, {});
                 return;
             }
-            success_callback(payload, response_headers, status_code);
             log_success(request);
+            success_callback(payload, response_headers, status_code);
             deferred_invoke([this, &protocol_request] {
                 m_active_requests.remove(protocol_request);
             });
