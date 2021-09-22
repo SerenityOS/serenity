@@ -22,6 +22,7 @@ set(LIBC_SOURCES
     net.cpp
     netdb.cpp
     poll.cpp
+    priority.cpp
     pthread_forward.cpp
     pthread_integration.cpp
     pthread_tls.cpp

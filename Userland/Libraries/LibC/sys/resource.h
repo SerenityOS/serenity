@@ -58,4 +58,11 @@ struct rlimit {
 int getrlimit(int, struct rlimit*);
 int setrlimit(int, struct rlimit const*);
 
+#define PRIO_PROCESS 0
+#define PRIO_PGRP 1
+#define PRIO_USER 2
+
+int getpriority(int, id_t);
+int setpriority(int, id_t, int);
+
 __END_DECLS
