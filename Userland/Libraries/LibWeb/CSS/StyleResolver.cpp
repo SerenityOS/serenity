@@ -263,7 +263,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             assign_edge_values(PropertyID::BorderTopStyle, PropertyID::BorderRightStyle, PropertyID::BorderBottomStyle, PropertyID::BorderLeftStyle, values_list.values());
             return;
         }
-        if (value.is_builtin()) {
+        if (value.is_builtin() || value.is_custom_property() || value.is_identifier()) {
             style.set_property(CSS::PropertyID::BorderTopStyle, value);
             style.set_property(CSS::PropertyID::BorderRightStyle, value);
             style.set_property(CSS::PropertyID::BorderBottomStyle, value);
@@ -279,7 +279,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             assign_edge_values(PropertyID::BorderTopWidth, PropertyID::BorderRightWidth, PropertyID::BorderBottomWidth, PropertyID::BorderLeftWidth, values_list.values());
             return;
         }
-        if (value.is_builtin()) {
+        if (value.is_builtin() || value.is_custom_property() || value.is_length()) {
             style.set_property(CSS::PropertyID::BorderTopWidth, value);
             style.set_property(CSS::PropertyID::BorderRightWidth, value);
             style.set_property(CSS::PropertyID::BorderBottomWidth, value);
@@ -295,7 +295,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             assign_edge_values(PropertyID::BorderTopColor, PropertyID::BorderRightColor, PropertyID::BorderBottomColor, PropertyID::BorderLeftColor, values_list.values());
             return;
         }
-        if (value.is_builtin()) {
+        if (value.is_builtin() || value.is_custom_property() || value.is_color()) {
             style.set_property(CSS::PropertyID::BorderTopColor, value);
             style.set_property(CSS::PropertyID::BorderRightColor, value);
             style.set_property(CSS::PropertyID::BorderBottomColor, value);
@@ -399,7 +399,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             assign_edge_values(PropertyID::MarginTop, PropertyID::MarginRight, PropertyID::MarginBottom, PropertyID::MarginLeft, values_list.values());
             return;
         }
-        if (value.is_length() || value.is_builtin()) {
+        if (value.is_length() || value.is_builtin() || value.is_custom_property() || value.is_calculated()) {
             style.set_property(CSS::PropertyID::MarginTop, value);
             style.set_property(CSS::PropertyID::MarginRight, value);
             style.set_property(CSS::PropertyID::MarginBottom, value);
@@ -415,7 +415,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             assign_edge_values(PropertyID::PaddingTop, PropertyID::PaddingRight, PropertyID::PaddingBottom, PropertyID::PaddingLeft, values_list.values());
             return;
         }
-        if (value.is_length() || value.is_builtin()) {
+        if (value.is_length() || value.is_builtin() || value.is_custom_property() || value.is_calculated()) {
             style.set_property(CSS::PropertyID::PaddingTop, value);
             style.set_property(CSS::PropertyID::PaddingRight, value);
             style.set_property(CSS::PropertyID::PaddingBottom, value);
