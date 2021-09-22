@@ -385,7 +385,11 @@ now.__documentation = JSON.stringify({
     argc: 0,
     argnames: [],
     doc: "Returns a Date instance for the current moment",
-    examples: {},
+    examples: {
+        "now().toString()":
+            "Returns a string containing the current date. Ex: 'Tue Sep 21 2021 02:38:10 GMT+0000 (UTC)'",
+        "now().getFullYear()": "Returns the current year. Ex: 2021",
+    },
 });
 
 repeat.__documentation = JSON.stringify({
@@ -403,7 +407,9 @@ randRange.__documentation = JSON.stringify({
     argc: 2,
     argnames: ["start", "end"],
     doc: "Returns a random number in the range (`start`, `end`)",
-    examples: {},
+    examples: {
+        "randRange(0, 10)": "Returns a number from 0 through 10. Ex: 5.185799582250052",
+    },
 });
 
 integer.__documentation = JSON.stringify({
@@ -649,7 +655,9 @@ row.__documentation = JSON.stringify({
     argc: 0,
     argnames: [],
     doc: "Returns the row number of the current cell",
-    examples: {},
+    examples: {
+        "row()": "Evaluates to 6 if placed in A6",
+    },
 });
 
 column.__documentation = JSON.stringify({
@@ -657,7 +665,9 @@ column.__documentation = JSON.stringify({
     argc: 0,
     argnames: [],
     doc: "Returns the column name of the current cell",
-    examples: {},
+    examples: {
+        "column()": "Evaluates to A if placed in A6",
+    },
 });
 
 here.__documentation = JSON.stringify({
