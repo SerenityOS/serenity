@@ -9,7 +9,6 @@
 #include <AK/FlyString.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>
 
 namespace Web::DOM {
