@@ -6,7 +6,9 @@ files="https://www.php.net/distributions/php-${version}.tar.xz php-${version}.ta
 auth_type=sha256
 depends="libiconv libxml2 openssl readline sqlite zlib"
 configopts="
+    --disable-cgi
     --disable-opcache
+    --enable-fpm
     --prefix=${SERENITY_INSTALL_ROOT}/usr/local
     --with-iconv=${SERENITY_INSTALL_ROOT}/usr/local
     --with-openssl
