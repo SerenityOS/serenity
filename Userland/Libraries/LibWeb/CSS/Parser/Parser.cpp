@@ -1733,30 +1733,6 @@ RefPtr<StyleValue> Parser::parse_image_value(ParsingContext const& context, Styl
     return {};
 }
 
-static inline bool is_background_repeat(StyleValue const& value)
-{
-    switch (value.to_identifier()) {
-    case ValueID::NoRepeat:
-    case ValueID::Repeat:
-    case ValueID::RepeatX:
-    case ValueID::RepeatY:
-    case ValueID::Round:
-    case ValueID::Space:
-        return true;
-    default:
-        return false;
-    }
-}
-
-static inline bool is_background_image(StyleValue const& value)
-{
-    if (value.is_image())
-        return true;
-    if (value.to_identifier() == ValueID::None)
-        return true;
-    return false;
-}
-
 RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
     RefPtr<StyleValue> background_color;
@@ -1783,19 +1759,19 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
             return nullptr;
         }
 
-        if (value->is_color()) {
+        if (property_accepts_value(PropertyID::BackgroundColor, *value)) {
             if (background_color)
                 return nullptr;
             background_color = value.release_nonnull();
             continue;
         }
-        if (is_background_image(*value)) {
+        if (property_accepts_value(PropertyID::BackgroundImage, *value)) {
             if (background_image)
                 return nullptr;
             background_image = value.release_nonnull();
             continue;
         }
-        if (is_background_repeat(*value)) {
+        if (property_accepts_value(PropertyID::BackgroundRepeat, *value)) {
             if (repeat_x)
                 return nullptr;
 
@@ -1809,7 +1785,7 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
             // Check following value, if it's also a repeat, set both.
             if (i + 1 < component_values.size()) {
                 auto next_value = parse_css_value(context, component_values[i + 1]);
-                if (next_value && is_background_repeat(*next_value)) {
+                if (next_value && property_accepts_value(PropertyID::BackgroundRepeat, *next_value)) {
                     ++i;
                     repeat_x = value.release_nonnull();
                     repeat_y = next_value.release_nonnull();
@@ -1844,7 +1820,7 @@ RefPtr<StyleValue> Parser::parse_background_image_value(ParsingContext const& co
         if (!maybe_value)
             return nullptr;
         auto value = maybe_value.release_nonnull();
-        if (is_background_image(*value))
+        if (property_accepts_value(PropertyID::BackgroundImage, *value))
             return value;
         return nullptr;
     }
@@ -1866,7 +1842,7 @@ RefPtr<StyleValue> Parser::parse_background_repeat_value(ParsingContext const& c
         if (!maybe_value)
             return nullptr;
         auto value = maybe_value.release_nonnull();
-        if (!is_background_repeat(*value))
+        if (!property_accepts_value(PropertyID::BackgroundRepeat, *value))
             return nullptr;
 
         if (is_directional_repeat(value)) {
@@ -1886,7 +1862,7 @@ RefPtr<StyleValue> Parser::parse_background_repeat_value(ParsingContext const& c
 
         auto x_value = maybe_x_value.release_nonnull();
         auto y_value = maybe_y_value.release_nonnull();
-        if (!is_background_repeat(x_value) || !is_background_repeat(y_value))
+        if (!property_accepts_value(PropertyID::BackgroundRepeat, x_value) || !property_accepts_value(PropertyID::BackgroundRepeat, y_value))
             return nullptr;
         if (is_directional_repeat(x_value) || is_directional_repeat(y_value))
             return nullptr;
