@@ -100,13 +100,17 @@ int main()
         dbgln("New coredump file: {}", coredump_path);
         wait_until_coredump_is_ready(coredump_path);
 
+        // this might be needed, compression failure is not a concern, if it failed we'll still have the original coredump file
+        // alse why skipping on launching the crash reporter if mapping the compression file is unsuccessful!
         auto file_or_error = MappedFile::map(coredump_path);
         if (file_or_error.is_error()) {
             dbgln("Unable to map coredump {}: {}", coredump_path, file_or_error.error().string());
             continue;
         }
-
-        launch_crash_reporter(coredump_path, true);
+        
+        // I believe the purpose of the second argument is to cleanup the coredump when compression is successful
+        // the second argument should be removed (if not needed elsewhere) as it's not needed if we are compressing after launching crash reporter
+        launch_crash_reporter(coredump_path, false);
 
         // FIXME: This is a hack to give CrashReporter time to parse the coredump
         //        before we start compressing it.
@@ -115,7 +119,10 @@ int main()
         sleep(3);
 
         auto compress_timer = Core::ElapsedTimer::start_new();
+        // since we won't rely on launch_crash_reporter's second argument to cleanup coredump file after compression
+        // we should delete it ourselves if compression is successful
         if (compress_coredump(coredump_path, file_or_error.release_value()))
+            // delete coredump file as it's compressed successfully
             dbgln("Compressing coredump took {} ms", compress_timer.elapsed());
     }
 }
