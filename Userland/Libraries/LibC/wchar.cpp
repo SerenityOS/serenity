@@ -417,4 +417,10 @@ wchar_t* wmemmove(wchar_t* dest, const wchar_t* src, size_t n)
 
     return dest;
 }
+
+unsigned long wcstoul(const wchar_t*, wchar_t**, int)
+{
+    dbgln("TODO: Implement wcstoul()");
+    TODO();
+}
 }
