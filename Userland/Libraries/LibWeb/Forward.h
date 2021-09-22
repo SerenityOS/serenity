@@ -59,6 +59,9 @@ class Timer;
 class Window;
 class Range;
 enum class QuirksMode;
+
+template<typename ValueType>
+class ExceptionOr;
 }
 
 namespace Web::HTML {
