@@ -35,6 +35,36 @@ TEST_CASE(wcspbrk)
     EXPECT_EQ(ret, input + 2);
 }
 
+TEST_CASE(wcsstr)
+{
+    const wchar_t* input = L"abcde";
+    wchar_t* ret;
+
+    // Empty needle should return haystack.
+    ret = wcsstr(input, L"");
+    EXPECT_EQ(ret, input);
+
+    // Test exact match.
+    ret = wcsstr(input, input);
+    EXPECT_EQ(ret, input);
+
+    // Test match at string start.
+    ret = wcsstr(input, L"ab");
+    EXPECT_EQ(ret, input);
+
+    // Test match at string end.
+    ret = wcsstr(input, L"de");
+    EXPECT_EQ(ret, input + 3);
+
+    // Test no match.
+    ret = wcsstr(input, L"z");
+    EXPECT_EQ(ret, nullptr);
+
+    // Test needle that is longer than the haystack.
+    ret = wcsstr(input, L"abcdef");
+    EXPECT_EQ(ret, nullptr);
+}
+
 TEST_CASE(wcscoll)
 {
     // Check if wcscoll is sorting correctly. At the moment we are doing raw char comparisons,
