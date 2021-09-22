@@ -106,6 +106,7 @@ bool is_inherited_property(PropertyID);
 bool is_pseudo_property(PropertyID);
 RefPtr<StyleValue> property_initial_value(PropertyID);
 
+bool property_accepts_value(PropertyID, StyleValue&);
 size_t property_maximum_value_count(PropertyID);
 
 constexpr PropertyID first_property_id = PropertyID::@first_property_id@;

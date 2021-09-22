@@ -252,6 +252,109 @@ bool property_has_quirk(PropertyID property_id, Quirk quirk)
     }
 }
 
+bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
+{
+    if (style_value.is_builtin() || style_value.is_custom_property())
+        return true;
+
+    switch (property_id) {
+)~~~");
+
+    properties.for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+        auto& object = value.as_object();
+        bool has_valid_types = object.has("valid-types");
+        auto has_valid_identifiers = object.has("valid-identifiers");
+        if (has_valid_types || has_valid_identifiers) {
+            auto property_generator = generator.fork();
+            property_generator.set("name:titlecase", title_casify(name));
+            property_generator.append(R"~~~(
+    case PropertyID::@name:titlecase@: {
+)~~~");
+
+            if (has_valid_types) {
+                auto valid_types_value = object.get("valid-types");
+                VERIFY(valid_types_value.is_array());
+                auto valid_types = valid_types_value.as_array();
+                if (!valid_types.is_empty()) {
+                    for (auto& type : valid_types.values()) {
+                        VERIFY(type.is_string());
+                        auto type_name = type.as_string();
+                        if (type_name == "color") {
+                            property_generator.append(R"~~~(
+        if (style_value.is_color())
+            return true;
+)~~~");
+                        } else if (type_name == "image") {
+                            property_generator.append(R"~~~(
+        if (style_value.is_image())
+            return true;
+)~~~");
+                        } else if (type_name == "length" || type_name == "percentage") {
+                            // FIXME: Handle lengths and percentages separately
+                            property_generator.append(R"~~~(
+        if (style_value.is_length() || style_value.is_calculated())
+            return true;
+)~~~");
+                        } else if (type_name == "number" || type_name == "integer") {
+                            // FIXME: Handle integers separately
+                            property_generator.append(R"~~~(
+        if (style_value.is_numeric())
+            return true;
+)~~~");
+                        } else if (type_name == "string") {
+                            property_generator.append(R"~~~(
+        if (style_value.is_string())
+            return true;
+)~~~");
+                        } else if (type_name == "url") {
+                            // FIXME: Handle urls!
+                        } else {
+                            warnln("Unrecognized valid-type name: '{}'", type_name);
+                            VERIFY_NOT_REACHED();
+                        }
+                    }
+                }
+            }
+
+            if (has_valid_identifiers) {
+                auto valid_identifiers_value = object.get("valid-identifiers");
+                VERIFY(valid_identifiers_value.is_array());
+                auto valid_identifiers = valid_identifiers_value.as_array();
+                if (!valid_identifiers.is_empty()) {
+                    property_generator.append(R"~~~(
+        switch (style_value.to_identifier()) {
+)~~~");
+                    for (auto& identifier : valid_identifiers.values()) {
+                        VERIFY(identifier.is_string());
+                        auto identifier_generator = generator.fork();
+                        identifier_generator.set("identifier:titlecase", title_casify(identifier.as_string()));
+                        identifier_generator.append(R"~~~(
+        case ValueID::@identifier:titlecase@:
+)~~~");
+                    }
+                    property_generator.append(R"~~~(
+            return true;
+        default:
+            break;
+        }
+)~~~");
+                }
+            }
+
+            generator.append(R"~~~(
+        return false;
+    }
+)~~~");
+        }
+    });
+
+    generator.append(R"~~~(
+    default:
+        return true;
+    }
+}
+
 size_t property_maximum_value_count(PropertyID property_id)
 {
     switch (property_id) {
