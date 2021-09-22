@@ -12,7 +12,7 @@
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Graphics/Console/Console.h>
-#include <Kernel/Graphics/GraphicsDevice.h>
+#include <Kernel/Graphics/GenericGraphicsAdapter.h>
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
 #include <Kernel/Memory/Region.h>
@@ -48,7 +48,7 @@ public:
 
 private:
     bool determine_and_initialize_graphics_device(PCI::DeviceIdentifier const&);
-    NonnullRefPtrVector<GraphicsDevice> m_graphics_devices;
+    NonnullRefPtrVector<GenericGraphicsAdapter> m_graphics_devices;
     RefPtr<Graphics::Console> m_console;
 
     // Note: there could be multiple VGA adapters, but only one can operate in VGA mode

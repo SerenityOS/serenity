@@ -13,9 +13,9 @@
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
-class GraphicsDevice : public RefCounted<GraphicsDevice> {
+class GenericGraphicsAdapter : public RefCounted<GenericGraphicsAdapter> {
 public:
-    virtual ~GraphicsDevice() = default;
+    virtual ~GenericGraphicsAdapter() = default;
     virtual void initialize_framebuffer_devices() = 0;
     virtual void enable_consoles() = 0;
     virtual void disable_consoles() = 0;
@@ -31,7 +31,7 @@ public:
     virtual bool set_y_offset(size_t output_port_index, size_t y) = 0;
 
 protected:
-    GraphicsDevice() = default;
+    GenericGraphicsAdapter() = default;
 
     bool m_consoles_enabled { false };
 };
