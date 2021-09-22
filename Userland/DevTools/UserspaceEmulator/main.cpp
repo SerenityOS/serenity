@@ -56,7 +56,7 @@ int main(int argc, char** argv, char** env)
     }
 
     if (dump_profile && profile_dump_path.is_empty())
-        profile_dump_path = String::formatted("{}.{}.profile", executable_path, getpid());
+        profile_dump_path = String::formatted("{}.{}.profile", LexicalPath(executable_path).basename(), getpid());
 
     OwnPtr<OutputFileStream> profile_stream;
     if (dump_profile) {
