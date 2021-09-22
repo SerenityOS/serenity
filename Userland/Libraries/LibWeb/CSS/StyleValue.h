@@ -261,7 +261,7 @@ public:
     bool is_inherit() const { return type() == Type::Inherit; }
     bool is_initial() const { return type() == Type::Initial; }
     bool is_unset() const { return type() == Type::Unset; }
-    bool is_color() const { return type() == Type::Color; }
+    bool is_color() const;
     bool is_identifier() const { return type() == Type::Identifier || is_auto(); }
     bool is_image() const { return type() == Type::Image; }
     bool is_string() const { return type() == Type::String; }

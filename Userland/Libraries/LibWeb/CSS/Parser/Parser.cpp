@@ -1369,75 +1369,6 @@ Optional<float> Parser::try_parse_float(StringView string)
     return is_negative ? -value : value;
 }
 
-static bool is_color(StyleValue& style_value)
-{
-    if (style_value.is_color())
-        return true;
-    switch (style_value.to_identifier()) {
-    case ValueID::Currentcolor:
-    case ValueID::LibwebLink:
-    case ValueID::LibwebPaletteActiveLink:
-    case ValueID::LibwebPaletteActiveWindowBorder1:
-    case ValueID::LibwebPaletteActiveWindowBorder2:
-    case ValueID::LibwebPaletteActiveWindowTitle:
-    case ValueID::LibwebPaletteBase:
-    case ValueID::LibwebPaletteBaseText:
-    case ValueID::LibwebPaletteButton:
-    case ValueID::LibwebPaletteButtonText:
-    case ValueID::LibwebPaletteDesktopBackground:
-    case ValueID::LibwebPaletteFocusOutline:
-    case ValueID::LibwebPaletteHighlightWindowBorder1:
-    case ValueID::LibwebPaletteHighlightWindowBorder2:
-    case ValueID::LibwebPaletteHighlightWindowTitle:
-    case ValueID::LibwebPaletteHoverHighlight:
-    case ValueID::LibwebPaletteInactiveSelection:
-    case ValueID::LibwebPaletteInactiveSelectionText:
-    case ValueID::LibwebPaletteInactiveWindowBorder1:
-    case ValueID::LibwebPaletteInactiveWindowBorder2:
-    case ValueID::LibwebPaletteInactiveWindowTitle:
-    case ValueID::LibwebPaletteLink:
-    case ValueID::LibwebPaletteMenuBase:
-    case ValueID::LibwebPaletteMenuBaseText:
-    case ValueID::LibwebPaletteMenuSelection:
-    case ValueID::LibwebPaletteMenuSelectionText:
-    case ValueID::LibwebPaletteMenuStripe:
-    case ValueID::LibwebPaletteMovingWindowBorder1:
-    case ValueID::LibwebPaletteMovingWindowBorder2:
-    case ValueID::LibwebPaletteMovingWindowTitle:
-    case ValueID::LibwebPaletteRubberBandBorder:
-    case ValueID::LibwebPaletteRubberBandFill:
-    case ValueID::LibwebPaletteRuler:
-    case ValueID::LibwebPaletteRulerActiveText:
-    case ValueID::LibwebPaletteRulerBorder:
-    case ValueID::LibwebPaletteRulerInactiveText:
-    case ValueID::LibwebPaletteSelection:
-    case ValueID::LibwebPaletteSelectionText:
-    case ValueID::LibwebPaletteSyntaxComment:
-    case ValueID::LibwebPaletteSyntaxControlKeyword:
-    case ValueID::LibwebPaletteSyntaxIdentifier:
-    case ValueID::LibwebPaletteSyntaxKeyword:
-    case ValueID::LibwebPaletteSyntaxNumber:
-    case ValueID::LibwebPaletteSyntaxOperator:
-    case ValueID::LibwebPaletteSyntaxPreprocessorStatement:
-    case ValueID::LibwebPaletteSyntaxPreprocessorValue:
-    case ValueID::LibwebPaletteSyntaxPunctuation:
-    case ValueID::LibwebPaletteSyntaxString:
-    case ValueID::LibwebPaletteSyntaxType:
-    case ValueID::LibwebPaletteTextCursor:
-    case ValueID::LibwebPaletteThreedHighlight:
-    case ValueID::LibwebPaletteThreedShadow1:
-    case ValueID::LibwebPaletteThreedShadow2:
-    case ValueID::LibwebPaletteVisitedLink:
-    case ValueID::LibwebPaletteWindow:
-    case ValueID::LibwebPaletteWindowText:
-        return true;
-    default:
-        break;
-    }
-
-    return false;
-}
-
 RefPtr<StyleValue> Parser::parse_builtin_value(ParsingContext const&, StyleComponentValueRule const& component_value)
 {
     if (component_value.is(Token::Type::Ident)) {
@@ -1848,7 +1779,7 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
             return nullptr;
         }
 
-        if (is_color(*value)) {
+        if (value->is_color()) {
             if (background_color)
                 return nullptr;
             background_color = value.release_nonnull();
@@ -2014,7 +1945,7 @@ RefPtr<StyleValue> Parser::parse_border_value(ParsingContext const& context, Vec
             border_width = value.release_nonnull();
             continue;
         }
-        if (is_color(*value)) {
+        if (value->is_color()) {
             if (border_color)
                 return nullptr;
             border_color = value.release_nonnull();
@@ -2756,7 +2687,7 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(ParsingContext const& con
         if (!value)
             return nullptr;
 
-        if (is_color(*value)) {
+        if (value->is_color()) {
             if (decoration_color)
                 return nullptr;
             decoration_color = value.release_nonnull();

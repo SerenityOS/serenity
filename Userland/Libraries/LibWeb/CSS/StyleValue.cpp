@@ -26,6 +26,78 @@ StyleValue::~StyleValue()
 {
 }
 
+bool StyleValue::is_color() const
+{
+    if (type() == Type::Color)
+        return true;
+    if (type() != Type::Identifier)
+        return false;
+
+    switch (to_identifier()) {
+    case ValueID::Currentcolor:
+    case ValueID::LibwebLink:
+    case ValueID::LibwebPaletteActiveLink:
+    case ValueID::LibwebPaletteActiveWindowBorder1:
+    case ValueID::LibwebPaletteActiveWindowBorder2:
+    case ValueID::LibwebPaletteActiveWindowTitle:
+    case ValueID::LibwebPaletteBase:
+    case ValueID::LibwebPaletteBaseText:
+    case ValueID::LibwebPaletteButton:
+    case ValueID::LibwebPaletteButtonText:
+    case ValueID::LibwebPaletteDesktopBackground:
+    case ValueID::LibwebPaletteFocusOutline:
+    case ValueID::LibwebPaletteHighlightWindowBorder1:
+    case ValueID::LibwebPaletteHighlightWindowBorder2:
+    case ValueID::LibwebPaletteHighlightWindowTitle:
+    case ValueID::LibwebPaletteHoverHighlight:
+    case ValueID::LibwebPaletteInactiveSelection:
+    case ValueID::LibwebPaletteInactiveSelectionText:
+    case ValueID::LibwebPaletteInactiveWindowBorder1:
+    case ValueID::LibwebPaletteInactiveWindowBorder2:
+    case ValueID::LibwebPaletteInactiveWindowTitle:
+    case ValueID::LibwebPaletteLink:
+    case ValueID::LibwebPaletteMenuBase:
+    case ValueID::LibwebPaletteMenuBaseText:
+    case ValueID::LibwebPaletteMenuSelection:
+    case ValueID::LibwebPaletteMenuSelectionText:
+    case ValueID::LibwebPaletteMenuStripe:
+    case ValueID::LibwebPaletteMovingWindowBorder1:
+    case ValueID::LibwebPaletteMovingWindowBorder2:
+    case ValueID::LibwebPaletteMovingWindowTitle:
+    case ValueID::LibwebPaletteRubberBandBorder:
+    case ValueID::LibwebPaletteRubberBandFill:
+    case ValueID::LibwebPaletteRuler:
+    case ValueID::LibwebPaletteRulerActiveText:
+    case ValueID::LibwebPaletteRulerBorder:
+    case ValueID::LibwebPaletteRulerInactiveText:
+    case ValueID::LibwebPaletteSelection:
+    case ValueID::LibwebPaletteSelectionText:
+    case ValueID::LibwebPaletteSyntaxComment:
+    case ValueID::LibwebPaletteSyntaxControlKeyword:
+    case ValueID::LibwebPaletteSyntaxIdentifier:
+    case ValueID::LibwebPaletteSyntaxKeyword:
+    case ValueID::LibwebPaletteSyntaxNumber:
+    case ValueID::LibwebPaletteSyntaxOperator:
+    case ValueID::LibwebPaletteSyntaxPreprocessorStatement:
+    case ValueID::LibwebPaletteSyntaxPreprocessorValue:
+    case ValueID::LibwebPaletteSyntaxPunctuation:
+    case ValueID::LibwebPaletteSyntaxString:
+    case ValueID::LibwebPaletteSyntaxType:
+    case ValueID::LibwebPaletteTextCursor:
+    case ValueID::LibwebPaletteThreedHighlight:
+    case ValueID::LibwebPaletteThreedShadow1:
+    case ValueID::LibwebPaletteThreedShadow2:
+    case ValueID::LibwebPaletteVisitedLink:
+    case ValueID::LibwebPaletteWindow:
+    case ValueID::LibwebPaletteWindowText:
+        return true;
+    default:
+        break;
+    }
+
+    return false;
+}
+
 String IdentifierStyleValue::to_string() const
 {
     return CSS::string_from_value_id(m_id);
