@@ -53,7 +53,7 @@ static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
 {
     auto window = GUI::Window::construct();
     window->set_window_type(GUI::WindowType::ToolWindow);
-    window->set_title("Font preview");
+    window->set_title("Preview");
     window->resize(400, 150);
     window->set_minimum_size(200, 100);
     window->center_within(*editor.window());
@@ -109,9 +109,9 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     load_from_gml(font_editor_window_gml);
 
     auto& toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
-    auto& statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     auto& glyph_map_container = *find_descendant_of_type_named<GUI::Widget>("glyph_map_container");
     auto& move_glyph_button = *find_descendant_of_type_named<GUI::Button>("move_glyph_button");
+    m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     m_glyph_editor_container = *find_descendant_of_type_named<GUI::Widget>("glyph_editor_container");
     m_left_column_container = *find_descendant_of_type_named<GUI::Widget>("left_column_container");
     m_glyph_editor_width_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("glyph_editor_width_spinbox");
@@ -128,32 +128,6 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
 
     m_glyph_editor_widget = m_glyph_editor_container->add<GlyphEditorWidget>();
     m_glyph_map_widget = glyph_map_container.add<GlyphMapWidget>();
-
-    auto update_statusbar = [&] {
-        auto glyph = m_glyph_map_widget->selected_glyph();
-        StringBuilder builder;
-        builder.appendff("U+{:04X} (", glyph);
-
-        if (AK::UnicodeUtils::is_unicode_control_code_point(glyph)) {
-            builder.append(AK::UnicodeUtils::get_unicode_control_code_point_alias(glyph).value());
-        } else if (Gfx::get_char_bidi_class(glyph) == Gfx::BidirectionalClass::STRONG_RTL) {
-            // FIXME: This is a necessary hack, as RTL text will mess up the painting of the statusbar text.
-            // For now, replace RTL glyphs with U+FFFD, the replacement character.
-            builder.append_code_point(0xFFFD);
-        } else {
-            builder.append_code_point(glyph);
-        }
-
-        builder.append(")");
-        if (m_edited_font->raw_glyph_width(glyph) > 0)
-            builder.appendff(" [{}x{}]", m_edited_font->raw_glyph_width(glyph), m_edited_font->glyph_height());
-        statusbar.set_text(builder.to_string());
-    };
-
-    auto update_demo = [&] {
-        if (m_font_preview_window)
-            m_font_preview_window->update();
-    };
 
     m_new_action = GUI::Action::create("&New Font...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-font.png"), [&](auto&) {
         if (window()->is_modified()) {
@@ -241,7 +215,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
     });
     m_paste_action->set_enabled(GUI::Clipboard::the().mime_type() == "glyph/x-fonteditor");
-    m_delete_action = GUI::CommonActions::make_delete_action([this, update_statusbar](auto&) {
+    m_delete_action = GUI::CommonActions::make_delete_action([this](auto&) {
         if (m_glyph_editor_widget->is_glyph_empty() && m_edited_font->raw_glyph_width(m_glyph_map_widget->selected_glyph()) == 0)
             return;
         m_glyph_editor_widget->delete_glyph();
@@ -376,9 +350,9 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         m_paste_action->set_enabled(data_type == "glyph/x-fonteditor");
     };
 
-    m_glyph_editor_widget->on_glyph_altered = [this, update_demo](int glyph) {
+    m_glyph_editor_widget->on_glyph_altered = [this](int glyph) {
         m_glyph_map_widget->update_glyph(glyph);
-        update_demo();
+        update_preview();
         did_modify_font();
     };
 
@@ -386,7 +360,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         m_undo_stack->push(make<GlyphUndoCommand>(*m_undo_glyph));
     };
 
-    m_glyph_map_widget->on_glyph_selected = [&, update_statusbar](int glyph) {
+    m_glyph_map_widget->on_glyph_selected = [this](int glyph) {
         if (m_undo_glyph)
             m_undo_glyph->set_code_point(glyph);
         m_glyph_editor_widget->set_glyph(glyph);
@@ -408,7 +382,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         did_modify_font();
     };
 
-    m_fixed_width_checkbox->on_checked = [&, update_demo](bool checked) {
+    m_fixed_width_checkbox->on_checked = [this](bool checked) {
         m_edited_font->set_fixed_width(checked);
         auto glyph_width = m_edited_font->raw_glyph_width(m_glyph_map_widget->selected_glyph());
         m_glyph_editor_width_spinbox->set_visible(!checked);
@@ -416,26 +390,26 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         m_glyph_editor_present_checkbox->set_visible(checked);
         m_glyph_editor_present_checkbox->set_checked(glyph_width > 0, GUI::AllowCallback::No);
         m_glyph_editor_widget->update();
-        update_demo();
+        update_preview();
         did_modify_font();
     };
 
-    m_glyph_editor_width_spinbox->on_change = [this, update_demo, update_statusbar](int value) {
+    m_glyph_editor_width_spinbox->on_change = [this](int value) {
         m_undo_stack->push(make<GlyphUndoCommand>(*m_undo_glyph));
         m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), value);
         m_glyph_editor_widget->update();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
-        update_demo();
+        update_preview();
         update_statusbar();
         did_modify_font();
     };
 
-    m_glyph_editor_present_checkbox->on_checked = [this, update_demo, update_statusbar](bool checked) {
+    m_glyph_editor_present_checkbox->on_checked = [this](bool checked) {
         m_undo_stack->push(make<GlyphUndoCommand>(*m_undo_glyph));
         m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), checked ? m_edited_font->glyph_fixed_width() : 0);
         m_glyph_editor_widget->update();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
-        update_demo();
+        update_preview();
         update_statusbar();
         did_modify_font();
     };
@@ -445,41 +419,41 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         did_modify_font();
     };
 
-    m_presentation_spinbox->on_change = [this, update_demo](int value) {
+    m_presentation_spinbox->on_change = [this](int value) {
         m_edited_font->set_presentation_size(value);
-        update_demo();
+        update_preview();
         did_modify_font();
     };
 
-    m_spacing_spinbox->on_change = [this, update_demo](int value) {
+    m_spacing_spinbox->on_change = [this](int value) {
         m_edited_font->set_glyph_spacing(value);
-        update_demo();
+        update_preview();
         did_modify_font();
     };
 
-    m_baseline_spinbox->on_change = [this, update_demo](int value) {
+    m_baseline_spinbox->on_change = [this](int value) {
         m_edited_font->set_baseline(value);
         m_glyph_editor_widget->update();
-        update_demo();
+        update_preview();
         did_modify_font();
     };
 
-    m_mean_line_spinbox->on_change = [this, update_demo](int value) {
+    m_mean_line_spinbox->on_change = [this](int value) {
         m_edited_font->set_mean_line(value);
         m_glyph_editor_widget->update();
-        update_demo();
+        update_preview();
         did_modify_font();
     };
 
-    GUI::Application::the()->on_action_enter = [&statusbar](GUI::Action& action) {
+    GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
         auto text = action.status_tip();
         if (text.is_empty())
             text = Gfx::parse_ampersand_string(action.text());
-        statusbar.set_override_text(move(text));
+        m_statusbar->set_override_text(move(text));
     };
 
-    GUI::Application::the()->on_action_leave = [&statusbar](GUI::Action&) {
-        statusbar.set_override_text({});
+    GUI::Application::the()->on_action_leave = [this](GUI::Action&) {
+        m_statusbar->set_override_text({});
     };
 
     initialize(path, move(edited_font));
@@ -639,8 +613,8 @@ void FontEditorWidget::undo()
     m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), glyph_width);
     m_glyph_editor_widget->update();
     m_glyph_map_widget->update_glyph(glyph);
-    if (m_font_preview_window)
-        m_font_preview_window->update();
+    update_preview();
+    update_statusbar();
 }
 
 void FontEditorWidget::redo()
@@ -660,8 +634,8 @@ void FontEditorWidget::redo()
     m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), glyph_width);
     m_glyph_editor_widget->update();
     m_glyph_map_widget->update_glyph(glyph);
-    if (m_font_preview_window)
-        m_font_preview_window->update();
+    update_preview();
+    update_statusbar();
 }
 
 bool FontEditorWidget::request_close()
@@ -696,4 +670,32 @@ void FontEditorWidget::did_modify_font()
         return;
     window()->set_modified(true);
     update_title();
+}
+
+void FontEditorWidget::update_statusbar()
+{
+    auto glyph = m_glyph_map_widget->selected_glyph();
+    StringBuilder builder;
+    builder.appendff("U+{:04X} (", glyph);
+
+    if (AK::UnicodeUtils::is_unicode_control_code_point(glyph)) {
+        builder.append(AK::UnicodeUtils::get_unicode_control_code_point_alias(glyph).value());
+    } else if (Gfx::get_char_bidi_class(glyph) == Gfx::BidirectionalClass::STRONG_RTL) {
+        // FIXME: This is a necessary hack, as RTL text will mess up the painting of the statusbar text.
+        // For now, replace RTL glyphs with U+FFFD, the replacement character.
+        builder.append_code_point(0xFFFD);
+    } else {
+        builder.append_code_point(glyph);
+    }
+
+    builder.append(")");
+    if (m_edited_font->raw_glyph_width(glyph) > 0)
+        builder.appendff(" [{}x{}]", m_edited_font->raw_glyph_width(glyph), m_edited_font->glyph_height());
+    m_statusbar->set_text(builder.to_string());
+}
+
+void FontEditorWidget::update_preview()
+{
+    if (m_font_preview_window)
+        m_font_preview_window->update();
 }
