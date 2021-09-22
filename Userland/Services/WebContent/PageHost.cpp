@@ -7,6 +7,7 @@
 #include "PageHost.h"
 #include "ClientConnection.h"
 #include <LibGfx/Painter.h>
+#include <LibGfx/ShareableBitmap.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
@@ -192,9 +193,10 @@ void PageHost::page_did_change_favicon(const Gfx::Bitmap& favicon)
     m_client.async_did_change_favicon(favicon.to_shareable_bitmap());
 }
 
-void PageHost::page_did_request_image_context_menu(const Gfx::IntPoint& content_position, const URL& url, const String& target, unsigned modifiers, const Gfx::Bitmap* bitmap)
+void PageHost::page_did_request_image_context_menu(const Gfx::IntPoint& content_position, const URL& url, const String& target, unsigned modifiers, const Gfx::Bitmap* bitmap_pointer)
 {
-    m_client.async_did_request_image_context_menu(content_position, url, target, modifiers, bitmap->to_shareable_bitmap());
+    auto bitmap = bitmap_pointer ? bitmap_pointer->to_shareable_bitmap() : Gfx::ShareableBitmap();
+    m_client.async_did_request_image_context_menu(content_position, url, target, modifiers, bitmap);
 }
 
 String PageHost::page_did_request_cookie(const URL& url, Web::Cookie::Source source)
