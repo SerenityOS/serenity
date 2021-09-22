@@ -1,0 +1,12 @@
+--- ruby-3.0.2/include/ruby/internal/intern/select/posix.h
++++ ruby-3.0.2/include/ruby/internal/intern/select/posix.h
+@@ -55,7 +55,7 @@ rb_fd_copy(rb_fdset_t *dst, const fd_set *src, int n)
+ }
+
+ static inline void
+-rb_fd_dup(rb_fdset_t *dst, const fd_set *src, int n)
++rb_fd_dup(rb_fdset_t *dst, const fd_set *src)
+ {
+     *dst = *src;
+ }
+
