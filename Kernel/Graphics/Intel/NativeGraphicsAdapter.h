@@ -113,7 +113,7 @@ private:
     void write_to_register(IntelGraphics::RegisterIndex, u32 value) const;
     u32 read_from_register(IntelGraphics::RegisterIndex) const;
 
-    // ^GraphicsDevice
+    // ^GenericGraphicsAdapter
     virtual void initialize_framebuffer_devices() override;
 
     bool pipe_a_enabled() const;
