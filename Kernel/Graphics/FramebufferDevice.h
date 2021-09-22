@@ -9,7 +9,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/String.h>
 #include <AK/Types.h>
-#include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Graphics/GenericFramebufferDevice.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -17,38 +17,38 @@
 
 namespace Kernel {
 
-class FramebufferDevice : public BlockDevice {
+class FramebufferDevice final : public GenericFramebufferDevice {
     AK_MAKE_ETERNAL
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<FramebufferDevice> create(const GenericGraphicsAdapter&, size_t, PhysicalAddress, size_t, size_t, size_t);
+    static NonnullRefPtr<FramebufferDevice> create(const GenericGraphicsAdapter&, PhysicalAddress, size_t, size_t, size_t);
 
-    virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
     virtual KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
 
-    virtual void deactivate_writes();
-    virtual void activate_writes();
-    size_t framebuffer_size_in_bytes() const;
+    virtual void deactivate_writes() override;
+    virtual void activate_writes() override;
 
-    virtual ~FramebufferDevice() {};
-    KResult initialize();
+    virtual KResult try_to_initialize() override;
 
-protected:
-    FramebufferDevice(const GenericGraphicsAdapter&, size_t);
-    NonnullRefPtr<GenericGraphicsAdapter> m_graphics_adapter;
+    virtual bool multihead_support() const override { return false; }
+    virtual bool flushing_support() const override { return false; }
+    virtual bool partial_flushing_support() const override { return false; }
+    virtual size_t heads_count() const override { return 1; }
+    virtual KResultOr<size_t> buffer_length(size_t head) const override;
+    virtual KResultOr<size_t> pitch(size_t head) const override;
+    virtual KResultOr<size_t> height(size_t head) const override;
+    virtual KResultOr<size_t> width(size_t head) const override;
+    virtual KResultOr<size_t> vertical_offset(size_t head) const override;
+    virtual KResultOr<bool> vertical_offseted(size_t head) const override;
 
 private:
-    FramebufferDevice(const GenericGraphicsAdapter&, size_t, PhysicalAddress, size_t, size_t, size_t);
+    virtual KResult set_head_resolution(size_t head, size_t width, size_t height, size_t pitch) override;
+    virtual KResult set_head_buffer(size_t head, bool second_buffer) override;
+    virtual KResult flush_head_buffer(size_t head) override;
+    virtual KResult flush_rectangle(size_t head, FBRect const&) override;
 
-    // ^File
-    virtual StringView class_name() const override { return "FramebufferDevice"sv; }
-
-    virtual bool can_read(const OpenFileDescription&, size_t) const override final { return true; }
-    virtual bool can_write(const OpenFileDescription&, size_t) const override final { return true; }
-    virtual void start_request(AsyncBlockDeviceRequest& request) override final { request.complete(AsyncDeviceRequest::Failure); }
-    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return EINVAL; }
-    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return EINVAL; }
+    FramebufferDevice(const GenericGraphicsAdapter&, PhysicalAddress, size_t, size_t, size_t);
 
     PhysicalAddress m_framebuffer_address;
     size_t m_framebuffer_pitch { 0 };
@@ -56,6 +56,7 @@ private:
     size_t m_framebuffer_height { 0 };
 
     Spinlock m_activation_lock;
+    mutable Mutex m_buffer_offset_lock;
 
     RefPtr<Memory::AnonymousVMObject> m_real_framebuffer_vmobject;
     RefPtr<Memory::AnonymousVMObject> m_swapped_framebuffer_vmobject;
@@ -68,7 +69,6 @@ private:
     Memory::Region* m_userspace_framebuffer_region { nullptr };
 
     size_t m_y_offset { 0 };
-    size_t m_output_port_index;
 };
 
 }

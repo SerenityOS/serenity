@@ -301,7 +301,9 @@ bool ScreenLayout::try_auto_add_framebuffer(String const& device_path)
     ScopeGuard fd_guard([&] {
         close(framebuffer_fd);
     });
-    FBResolution resolution {};
+    // FIXME: Add multihead support for one framebuffer
+    FBHeadResolution resolution {};
+    memset(&resolution, 0, sizeof(FBHeadResolution));
     if (fb_get_resolution(framebuffer_fd, &resolution) < 0) {
         int err = errno;
         dbgln("Error ({}) querying resolution from framebuffer device {}", err, device_path);

@@ -18,13 +18,38 @@ struct winsize {
     unsigned short ws_ypixel;
 };
 
-struct FBResolution {
+struct FBProperties {
+    bool multihead_support;
+    bool doublebuffer_support;
+    bool flushing_support;
+    bool partial_flushing_support;
+};
+
+struct FBHeadProperties {
+    int head_index;
+
     unsigned pitch;
     unsigned width;
     unsigned height;
+
+    unsigned offset;
+    unsigned buffer_length;
+};
+
+struct FBHeadResolution {
+    int head_index;
+    int pitch;
+    int width;
+    int height;
+};
+
+struct FBHeadVerticalOffset {
+    int head_index;
+    int offseted;
 };
 
 struct FBRect {
+    int head_index;
     unsigned x;
     unsigned y;
     unsigned width;
@@ -57,13 +82,13 @@ enum IOCtlNumber {
     TIOCSTI,
     TIOCNOTTY,
     TIOCSWINSZ,
-    FB_IOCTL_GET_SIZE_IN_BYTES,
-    FB_IOCTL_GET_RESOLUTION,
-    FB_IOCTL_SET_RESOLUTION,
-    FB_IOCTL_GET_BUFFER,
-    FB_IOCTL_GET_BUFFER_OFFSET,
-    FB_IOCTL_SET_BUFFER,
-    FB_IOCTL_FLUSH_BUFFERS,
+    FB_IOCTL_GET_PROPERTIES,
+    FB_IOCTL_GET_HEAD_PROPERTIES,
+    FB_IOCTL_SET_HEAD_RESOLUTION,
+    FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER,
+    FB_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER,
+    FB_IOCTL_FLUSH_HEAD_BUFFERS,
+    FB_IOCTL_FLUSH_HEAD,
     KEYBOARD_IOCTL_GET_NUM_LOCK,
     KEYBOARD_IOCTL_SET_NUM_LOCK,
     KEYBOARD_IOCTL_GET_CAPS_LOCK,
@@ -105,13 +130,13 @@ enum IOCtlNumber {
 #define TIOCSTI TIOCSTI
 #define TIOCNOTTY TIOCNOTTY
 #define TIOCSWINSZ TIOCSWINSZ
-#define FB_IOCTL_GET_SIZE_IN_BYTES FB_IOCTL_GET_SIZE_IN_BYTES
-#define FB_IOCTL_GET_RESOLUTION FB_IOCTL_GET_RESOLUTION
-#define FB_IOCTL_SET_RESOLUTION FB_IOCTL_SET_RESOLUTION
-#define FB_IOCTL_GET_BUFFER FB_IOCTL_GET_BUFFER
-#define FB_IOCTL_GET_BUFFER_OFFSET FB_IOCTL_GET_BUFFER_OFFSET
-#define FB_IOCTL_SET_BUFFER FB_IOCTL_SET_BUFFER
-#define FB_IOCTL_FLUSH_BUFFERS FB_IOCTL_FLUSH_BUFFERS
+#define FB_IOCTL_GET_PROPERTIES FB_IOCTL_GET_PROPERTIES
+#define FB_IOCTL_GET_HEAD_PROPERTIES FB_IOCTL_GET_HEAD_PROPERTIES
+#define FB_IOCTL_SET_HEAD_RESOLUTION FB_IOCTL_SET_HEAD_RESOLUTION
+#define FB_IOCTL_SET_HEAD_VERITCAL_OFFSET_BUFFER FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER
+#define FB_IOCTL_GET_HEAD_VERITCAL_OFFSET_BUFFER FB_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER
+#define FB_IOCTL_FLUSH_HEAD_BUFFERS FB_IOCTL_FLUSH_HEAD_BUFFERS
+#define FB_IOCTL_FLUSH_HEAD FB_IOCTL_FLUSH_HEAD
 #define KEYBOARD_IOCTL_GET_NUM_LOCK KEYBOARD_IOCTL_GET_NUM_LOCK
 #define KEYBOARD_IOCTL_SET_NUM_LOCK KEYBOARD_IOCTL_SET_NUM_LOCK
 #define KEYBOARD_IOCTL_GET_CAPS_LOCK KEYBOARD_IOCTL_GET_CAPS_LOCK

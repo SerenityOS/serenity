@@ -15,7 +15,7 @@
 namespace Kernel::Graphics::VirtIOGPU {
 
 class GraphicsAdapter;
-class FramebufferDevice final : public Kernel::FramebufferDevice {
+class FramebufferDevice final : public GenericFramebufferDevice {
     friend class Console;
     struct Buffer {
         size_t framebuffer_offset { 0 };
@@ -28,11 +28,10 @@ public:
     FramebufferDevice(GraphicsAdapter const&, ScanoutID);
     virtual ~FramebufferDevice() override;
 
+    virtual KResult try_to_initialize() override { return KSuccess; }
+
     virtual void deactivate_writes();
     virtual void activate_writes();
-
-    KResult try_to_set_resolution(size_t width, size_t height);
-    void clear_to_black(Buffer&);
 
     size_t width() const { return display_info().rect.width; }
     size_t height() const { return display_info().rect.height; }
@@ -44,25 +43,40 @@ public:
         return Memory::page_round_up(sizeof(u32) * width * height);
     }
 
+    u8* framebuffer_data();
+
+private:
+    virtual bool multihead_support() const override { return false; }
+    virtual bool flushing_support() const override { return false; }
+    virtual bool partial_flushing_support() const override { return true; }
+    virtual size_t heads_count() const override { return 1; }
+    virtual KResultOr<size_t> buffer_length(size_t head) const override;
+    virtual KResultOr<size_t> pitch(size_t head) const override;
+    virtual KResultOr<size_t> height(size_t head) const override;
+    virtual KResultOr<size_t> width(size_t head) const override;
+    virtual KResultOr<size_t> vertical_offset(size_t head) const override;
+    virtual KResultOr<bool> vertical_offseted(size_t head) const override;
+
+    virtual KResult set_head_resolution(size_t head, size_t width, size_t height, size_t pitch) override;
+    virtual KResult set_head_buffer(size_t head, bool second_buffer) override;
+    virtual KResult flush_head_buffer(size_t head) override;
+    virtual KResult flush_rectangle(size_t head, FBRect const&) override;
+
     void flush_dirty_window(Protocol::Rect const&, Buffer&);
     void transfer_framebuffer_data_to_host(Protocol::Rect const&, Buffer&);
     void flush_displayed_image(Protocol::Rect const&, Buffer&);
 
     void draw_ntsc_test_pattern(Buffer&);
 
-    u8* framebuffer_data();
-
-private:
-    virtual StringView class_name() const override { return "VirtIOFrameBuffer"sv; }
-
     Protocol::DisplayInfoResponse::Display const& display_info() const;
     Protocol::DisplayInfoResponse::Display& display_info();
+
+    void clear_to_black(Buffer&);
 
     KResult create_framebuffer();
     void create_buffer(Buffer&, size_t, size_t);
     void set_buffer(int);
 
-    virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
     virtual KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
 
     static bool is_valid_buffer_index(int buffer_index)
@@ -76,8 +90,7 @@ private:
     }
     Buffer& current_buffer() const { return *m_current_buffer; }
 
-    GraphicsAdapter const& adapter() const;
-    GraphicsAdapter& adapter();
+    RefPtr<GraphicsAdapter> adapter() const;
 
     const ScanoutID m_scanout;
     Buffer* m_current_buffer { nullptr };

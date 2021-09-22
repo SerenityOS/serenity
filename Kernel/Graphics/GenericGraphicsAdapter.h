@@ -8,12 +8,15 @@
 
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <AK/Weakable.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
-class GenericGraphicsAdapter : public RefCounted<GenericGraphicsAdapter> {
+class GenericGraphicsAdapter
+    : public RefCounted<GenericGraphicsAdapter>
+    , public Weakable<GenericGraphicsAdapter> {
 public:
     virtual ~GenericGraphicsAdapter() = default;
     virtual void initialize_framebuffer_devices() = 0;
