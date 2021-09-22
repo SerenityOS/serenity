@@ -2872,22 +2872,25 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
     }
 
     if (component_values.size() == 1) {
-        if (auto parsed_value = parse_css_value(m_context, component_values.first()))
-            return parsed_value.release_nonnull();
+        if (auto parsed_value = parse_css_value(m_context, component_values.first())) {
+            if (property_accepts_value(property_id, *parsed_value))
+                return parsed_value.release_nonnull();
+        }
         return ParsingResult::SyntaxError;
     }
 
     // We have multiple values, so treat them as a StyleValueList.
-    // FIXME: Specify in Properties.json whether to permit this for each property.
-    NonnullRefPtrVector<StyleValue> parsed_values;
-    for (auto& component_value : component_values) {
-        auto parsed = parse_css_value(m_context, component_value);
-        if (!parsed)
-            return ParsingResult::SyntaxError;
-        parsed_values.append(parsed.release_nonnull());
+    if (property_maximum_value_count(property_id) > 1) {
+        NonnullRefPtrVector<StyleValue> parsed_values;
+        for (auto& component_value : component_values) {
+            auto parsed_value = parse_css_value(m_context, component_value);
+            if (!parsed_value || !property_accepts_value(property_id, *parsed_value))
+                return ParsingResult::SyntaxError;
+            parsed_values.append(parsed_value.release_nonnull());
+        }
+        if (!parsed_values.is_empty() && parsed_values.size() <= property_maximum_value_count(property_id))
+            return { StyleValueList::create(move(parsed_values)) };
     }
-    if (!parsed_values.is_empty())
-        return { StyleValueList::create(move(parsed_values)) };
 
     return ParsingResult::SyntaxError;
 }
