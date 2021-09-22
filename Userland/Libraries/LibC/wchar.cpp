@@ -385,4 +385,12 @@ wchar_t* wmemchr(const wchar_t* s, wchar_t c, size_t n)
 
     return nullptr;
 }
+
+wchar_t* wmemcpy(wchar_t* dest, const wchar_t* src, size_t n)
+{
+    for (size_t i = 0; i < n; i++)
+        dest[i] = src[i];
+
+    return dest;
+}
 }
