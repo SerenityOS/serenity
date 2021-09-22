@@ -40,8 +40,6 @@ jobs:
           echo "$HOME/.sonar/sonar-scanner-${{ env.SONAR_SCANNER_VERSION }}-linux/bin" >> $GITHUB_PATH
           echo "sonar.projectKey=SerenityOS_serenity" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.organization=serenityos" >> ${{ github.workspace }}/sonar-project.properties
-          echo "sonar.cfamily.cache.enabled=true" >> ${{ github.workspace }}/sonar-project.properties
-          echo "sonar.cfamily.cache.path=.sonar" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.cfamily.compile-commands=${{ github.workspace }}/Build/${{ env.SONAR_ANALYSIS_ARCH }}/compile_commands.json" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.cfamily.threads=2" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.host.url=${{ env.SONAR_SERVER_URL }}" >> ${{ github.workspace }}/sonar-project.properties
