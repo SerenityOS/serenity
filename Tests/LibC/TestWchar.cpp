@@ -6,6 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
+#include <string.h>
 #include <wchar.h>
 
 TEST_CASE(wcspbrk)
@@ -95,6 +96,22 @@ TEST_CASE(wmemchr)
     // Don't stop at null characters.
     ret = wmemchr(input, L'f', 8);
     EXPECT_EQ(ret, input + 6);
+}
+
+TEST_CASE(wmemcpy)
+{
+    const wchar_t* input = L"abc\0def";
+    auto buf = static_cast<wchar_t*>(malloc(8 * sizeof(wchar_t)));
+
+    if (!buf) {
+        FAIL("Could not allocate space for copy target");
+        return;
+    }
+
+    wchar_t* ret = wmemcpy(buf, input, 8);
+
+    EXPECT_EQ(ret, buf);
+    EXPECT_EQ(memcmp(buf, input, 8 * sizeof(wchar_t)), 0);
 }
 
 TEST_CASE(wcscoll)
