@@ -78,9 +78,10 @@ protected:
 
 private:
     virtual bool is_ecmascript_function_object() const override { return true; }
-    virtual FunctionEnvironment* create_environment(FunctionObject&) override;
+    virtual FunctionEnvironment* new_function_environment(Object* new_target) override;
     virtual void visit_edges(Visitor&) override;
 
+    ThrowCompletionOr<void> function_declaration_instantiation(Interpreter*);
     Value execute_function_body();
 
     // Internal Slots of ECMAScript Function Objects, https://tc39.es/ecma262/#table-internal-slots-of-ecmascript-function-objects

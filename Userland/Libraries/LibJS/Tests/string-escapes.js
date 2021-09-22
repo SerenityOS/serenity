@@ -58,6 +58,8 @@ describe("octal escapes", () => {
         expect("'use strict'; '\\123'").not.toEval();
         expect('"use strict"; "\\123"').not.toEval();
         // Special case, string literal precedes use strict directive
-        expect("'\\123'; somethingElse; 'use strict'").not.toEval();
+        expect("'\\123'; 'use strict'").not.toEval();
+        // Because of the non string statement in the middle strict mode is not enabled.
+        expect("'\\123'; somethingElse; 'use strict'").toEval();
     });
 });

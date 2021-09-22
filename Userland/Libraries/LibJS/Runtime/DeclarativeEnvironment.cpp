@@ -23,12 +23,6 @@ DeclarativeEnvironment::DeclarativeEnvironment(Environment* parent_scope)
 {
 }
 
-DeclarativeEnvironment::DeclarativeEnvironment(HashMap<FlyString, Variable> variables, Environment* parent_scope)
-    : Environment(parent_scope)
-    , m_variables(move(variables))
-{
-}
-
 DeclarativeEnvironment::~DeclarativeEnvironment()
 {
 }
@@ -36,26 +30,8 @@ DeclarativeEnvironment::~DeclarativeEnvironment()
 void DeclarativeEnvironment::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto& it : m_variables)
-        visitor.visit(it.value.value);
     for (auto& it : m_bindings)
         visitor.visit(it.value.value);
-}
-
-Optional<Variable> DeclarativeEnvironment::get_from_environment(FlyString const& name) const
-{
-    return m_variables.get(name);
-}
-
-bool DeclarativeEnvironment::put_into_environment(FlyString const& name, Variable variable)
-{
-    m_variables.set(name, variable);
-    return true;
-}
-
-bool DeclarativeEnvironment::delete_from_environment(FlyString const& name)
-{
-    return m_variables.remove(name);
 }
 
 // 9.1.1.1.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-declarative-environment-records-hasbinding-n
@@ -154,6 +130,16 @@ bool DeclarativeEnvironment::delete_binding(GlobalObject&, FlyString const& name
         return false;
     m_bindings.remove(it);
     return true;
+}
+
+void DeclarativeEnvironment::initialize_or_set_mutable_binding(Badge<ScopeNode>, GlobalObject& global_object, FlyString const& name, Value value)
+{
+    auto it = m_bindings.find(name);
+    VERIFY(it != m_bindings.end());
+    if (!it->value.initialized)
+        initialize_binding(global_object, name, value);
+    else
+        set_mutable_binding(global_object, name, value, false);
 }
 
 }

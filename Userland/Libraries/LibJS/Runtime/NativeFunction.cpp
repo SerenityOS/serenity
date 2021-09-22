@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Value.h>
@@ -55,14 +56,22 @@ Value NativeFunction::construct(FunctionObject&)
     return {};
 }
 
-FunctionEnvironment* NativeFunction::create_environment(FunctionObject&)
+FunctionEnvironment* NativeFunction::new_function_environment(Object* new_target)
 {
-    return nullptr;
+    // Simplified version of 9.1.2.4 NewFunctionEnvironment ( F, newTarget )
+    Environment* parent_scope = nullptr;
+    if (!vm().execution_context_stack().is_empty())
+        parent_scope = vm().lexical_environment();
+
+    auto* environment = heap().allocate<FunctionEnvironment>(global_object(), parent_scope);
+    environment->set_new_target(new_target ? new_target : js_undefined());
+
+    return environment;
 }
 
 bool NativeFunction::is_strict_mode() const
 {
-    return vm().in_strict_mode();
+    return true;
 }
 
 }

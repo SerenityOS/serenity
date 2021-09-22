@@ -88,6 +88,7 @@ public:
     bool set_integrity_level(IntegrityLevel);
     bool test_integrity_level(IntegrityLevel) const;
     MarkedValueList enumerable_own_property_names(PropertyKind kind) const;
+    ThrowCompletionOr<Object*> copy_data_properties(Value source, HashTable<PropertyName, PropertyNameTraits> const& seen_names, GlobalObject& global_object);
 
     // 10.1 Ordinary Object Internal Methods and Internal Slots, https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots
 

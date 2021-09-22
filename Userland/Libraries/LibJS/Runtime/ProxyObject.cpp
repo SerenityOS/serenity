@@ -891,10 +891,10 @@ const FlyString& ProxyObject::name() const
     return static_cast<FunctionObject&>(m_target).name();
 }
 
-FunctionEnvironment* ProxyObject::create_environment(FunctionObject& function_being_invoked)
+FunctionEnvironment* ProxyObject::new_function_environment(Object* new_target)
 {
     VERIFY(is_function());
-    return static_cast<FunctionObject&>(m_target).create_environment(function_being_invoked);
+    return static_cast<FunctionObject&>(m_target).new_function_environment(new_target);
 }
 
 }
