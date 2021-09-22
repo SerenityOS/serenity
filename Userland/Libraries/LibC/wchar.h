@@ -51,5 +51,6 @@ unsigned long wcstoul(const wchar_t*, wchar_t**, int);
 unsigned long long wcstoull(const wchar_t*, wchar_t**, int);
 float wcstof(const wchar_t*, wchar_t**);
 double wcstod(const wchar_t*, wchar_t**);
+long double wcstold(const wchar_t*, wchar_t**);
 
 __END_DECLS
