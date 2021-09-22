@@ -114,6 +114,29 @@ TEST_CASE(wmemcpy)
     EXPECT_EQ(memcmp(buf, input, 8 * sizeof(wchar_t)), 0);
 }
 
+TEST_CASE(wmemset)
+{
+    auto buf_length = 8;
+    auto buf = static_cast<wchar_t*>(calloc(buf_length, sizeof(wchar_t)));
+
+    if (!buf) {
+        FAIL("Could not allocate memory for target buffer");
+        return;
+    }
+
+    wchar_t* ret = wmemset(buf, L'\U0001f41e', buf_length - 1);
+
+    EXPECT_EQ(ret, buf);
+
+    for (int i = 0; i < buf_length - 1; i++) {
+        EXPECT_EQ(buf[i], L'\U0001f41e');
+    }
+
+    EXPECT_EQ(buf[buf_length - 1], L'\0');
+
+    free(buf);
+}
+
 TEST_CASE(wcscoll)
 {
     // Check if wcscoll is sorting correctly. At the moment we are doing raw char comparisons,
