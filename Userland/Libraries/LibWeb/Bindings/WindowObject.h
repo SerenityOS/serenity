@@ -11,6 +11,7 @@
 #include <AK/Weakable.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/GlobalEventHandlers.h>
 
 namespace Web {
 namespace Bindings {
@@ -97,6 +98,12 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(get_computed_style);
     JS_DECLARE_NATIVE_FUNCTION(match_media);
+
+#define __ENUMERATE(attribute, event_name)          \
+    JS_DECLARE_NATIVE_FUNCTION(attribute##_getter); \
+    JS_DECLARE_NATIVE_FUNCTION(attribute##_setter);
+    ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE);
+#undef __ENUMERATE
 
     NonnullRefPtr<DOM::Window> m_impl;
 

@@ -16,6 +16,7 @@
 #include <LibWeb/CSS/Screen.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventTarget.h>
+#include <LibWeb/HTML/GlobalEventHandlers.h>
 
 namespace Web::DOM {
 
@@ -23,7 +24,8 @@ class RequestAnimationFrameCallback;
 
 class Window final
     : public RefCounted<Window>
-    , public EventTarget {
+    , public EventTarget
+    , public HTML::GlobalEventHandlers {
 public:
     static NonnullRefPtr<Window> create_with_document(Document&);
     ~Window();
@@ -80,6 +82,9 @@ public:
 
 private:
     explicit Window(Document&);
+
+    // ^HTML::GlobalEventHandlers
+    virtual DOM::EventTarget& global_event_handlers_to_event_target() override { return *this; }
 
     // https://html.spec.whatwg.org/multipage/window-object.html#concept-document-window
     WeakPtr<Document> m_associated_document;
