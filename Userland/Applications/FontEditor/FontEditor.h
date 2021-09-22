@@ -40,6 +40,8 @@ private:
     void undo();
     void redo();
     void did_modify_font();
+    void update_statusbar();
+    void update_preview();
 
     RefPtr<Gfx::BitmapFont> m_edited_font;
 
@@ -73,6 +75,7 @@ private:
     RefPtr<GUI::Action> m_scale_ten_action;
     RefPtr<GUI::Action> m_scale_fifteen_action;
 
+    RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::Window> m_font_preview_window;
     RefPtr<GUI::Widget> m_left_column_container;
     RefPtr<GUI::Widget> m_glyph_editor_container;
