@@ -100,7 +100,7 @@ int main()
         dbgln("New coredump file: {}", coredump_path);
         wait_until_coredump_is_ready(coredump_path);
 
-        // this might be needed, compression failure is not a concern, if it failed we'll still have the original coredump file
+        // this might not be needed, compression failure is not a concern, if it failed we'll still have the original coredump file
         // alse why skipping on launching the crash reporter if mapping the compression file is unsuccessful!
         auto file_or_error = MappedFile::map(coredump_path);
         if (file_or_error.is_error()) {
