@@ -11,6 +11,7 @@ interface Element : Node {
     boolean hasAttributes();
 
     HTMLCollection getElementsByTagName(DOMString tagName);
+    HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
     HTMLCollection getElementsByClassName(DOMString className);
 
     // FIXME: This should come from a InnerHTML mixin.
