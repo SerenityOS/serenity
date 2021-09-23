@@ -8,7 +8,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/FontPicker.h>
 #include <LibGUI/FontPickerDialogGML.h>
-#include <LibGUI/FontPickerWeightModel.h>
+#include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/SpinBox.h>
@@ -33,9 +33,9 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     m_family_list_view->set_model(ItemListModel<String>::create(m_families));
     m_family_list_view->horizontal_scrollbar().set_visible(false);
 
-    m_weight_list_view = *widget.find_descendant_of_type_named<ListView>("weight_list_view");
-    m_weight_list_view->set_model(adopt_ref(*new FontWeightListModel(m_weights)));
-    m_weight_list_view->horizontal_scrollbar().set_visible(false);
+    m_variant_list_view = *widget.find_descendant_of_type_named<ListView>("variant_list_view");
+    m_variant_list_view->set_model(ItemListModel<String>::create(m_variants));
+    m_variant_list_view->horizontal_scrollbar().set_visible(false);
 
     m_size_spin_box = *widget.find_descendant_of_type_named<SpinBox>("size_spin_box");
     m_size_spin_box->set_range(1, 255);
@@ -58,34 +58,32 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     m_family_list_view->on_selection_change = [this] {
         const auto& index = m_family_list_view->selection().first();
         m_family = index.data().to_string();
-        m_weights.clear();
+        m_variants.clear();
         Gfx::FontDatabase::the().for_each_typeface([&](auto& typeface) {
             if (m_fixed_width_only && !typeface.is_fixed_width())
                 return;
-            if (typeface.family() == m_family.value() && !m_weights.contains_slow(typeface.weight())) {
-                m_weights.append(typeface.weight());
-            }
+            if (typeface.family() == m_family.value() && !m_variants.contains_slow(typeface.variant()))
+                m_variants.append(typeface.variant());
         });
-        quick_sort(m_weights);
-        Optional<size_t> index_of_old_weight_in_new_list;
-        if (m_weight.has_value())
-            index_of_old_weight_in_new_list = m_weights.find_first_index(m_weight.value());
+        quick_sort(m_variants);
+        Optional<size_t> index_of_old_variant_in_new_list;
+        if (m_variant.has_value())
+            index_of_old_variant_in_new_list = m_variants.find_first_index(m_variant.value());
 
-        m_weight_list_view->model()->invalidate();
-        m_weight_list_view->set_cursor(m_weight_list_view->model()->index(index_of_old_weight_in_new_list.value_or(0)), GUI::AbstractView::SelectionUpdate::Set);
+        m_variant_list_view->model()->invalidate();
+        m_variant_list_view->set_cursor(m_variant_list_view->model()->index(index_of_old_variant_in_new_list.value_or(0)), GUI::AbstractView::SelectionUpdate::Set);
         update_font();
     };
 
-    m_weight_list_view->on_selection_change = [this] {
-        const auto& index = m_weight_list_view->selection().first();
+    m_variant_list_view->on_selection_change = [this] {
+        const auto& index = m_variant_list_view->selection().first();
         bool font_is_fixed_size = false;
-        m_weight = index.data(ModelRole::Custom).to_i32();
+        m_variant = index.data().to_string();
         m_sizes.clear();
-        dbgln("Selected weight: {}", m_weight.value());
         Gfx::FontDatabase::the().for_each_typeface([&](auto& typeface) {
             if (m_fixed_width_only && !typeface.is_fixed_width())
                 return;
-            if (typeface.family() == m_family.value() && (int)typeface.weight() == m_weight.value()) {
+            if (typeface.family() == m_family.value() && typeface.variant() == m_variant.value()) {
                 font_is_fixed_size = typeface.is_fixed_size();
                 if (font_is_fixed_size) {
                     m_size_spin_box->set_visible(false);
@@ -184,27 +182,26 @@ void FontPicker::set_font(const Gfx::Font* font)
 
     if (!m_font) {
         m_family = {};
-        m_weight = {};
+        m_variant = {};
         m_size = {};
-        m_weights.clear();
+        m_variants.clear();
         m_sizes.clear();
-        m_weight_list_view->model()->invalidate();
+        m_variant_list_view->model()->invalidate();
         m_size_list_view->model()->invalidate();
         return;
     }
 
     m_family = font->family();
-    m_weight = font->weight();
+    m_variant = font->variant();
     m_size = font->presentation_size();
 
     auto family_index = m_families.find_first_index(m_font->family());
     if (family_index.has_value())
         m_family_list_view->set_cursor(m_family_list_view->model()->index(family_index.value()), GUI::AbstractView::SelectionUpdate::Set);
 
-    auto weight_index = m_weights.find_first_index(m_font->weight());
-    if (weight_index.has_value()) {
-        m_weight_list_view->set_cursor(m_weight_list_view->model()->index(weight_index.value()), GUI::AbstractView::SelectionUpdate::Set);
-    }
+    auto variant_index = m_variants.find_first_index(m_font->variant());
+    if (variant_index.has_value())
+        m_variant_list_view->set_cursor(m_variant_list_view->model()->index(variant_index.value()), GUI::AbstractView::SelectionUpdate::Set);
 
     auto size_index = m_sizes.find_first_index(m_font->presentation_size());
     if (size_index.has_value())
@@ -213,8 +210,8 @@ void FontPicker::set_font(const Gfx::Font* font)
 
 void FontPicker::update_font()
 {
-    if (m_family.has_value() && m_size.has_value() && m_weight.has_value()) {
-        m_font = Gfx::FontDatabase::the().get(m_family.value(), m_size.value(), m_weight.value());
+    if (m_family.has_value() && m_size.has_value() && m_variant.has_value()) {
+        m_font = Gfx::FontDatabase::the().get(m_family.value(), m_variant.value(), m_size.value());
         m_sample_text_label->set_font(m_font);
     }
 }
