@@ -213,7 +213,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::is_array)
 {
     auto value = vm.argument(0);
-    return Value(value.is_array(global_object));
+    return Value(TRY_OR_DISCARD(value.is_array(global_object)));
 }
 
 // 23.1.2.3 Array.of ( ...items ), https://tc39.es/ecma262/#sec-array.of

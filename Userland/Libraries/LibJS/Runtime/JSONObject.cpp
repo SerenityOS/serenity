@@ -54,9 +54,7 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
         if (replacer.as_object().is_function()) {
             state.replacer_function = &replacer.as_function();
         } else {
-            auto is_array = replacer.is_array(global_object);
-            if (vm.exception())
-                return {};
+            auto is_array = TRY_OR_DISCARD(replacer.is_array(global_object));
             if (is_array) {
                 auto& replacer_object = replacer.as_object();
                 auto replacer_length = TRY_OR_DISCARD(length_of_array_like(global_object, replacer_object));
@@ -200,9 +198,7 @@ String JSONObject::serialize_json_property(GlobalObject& global_object, Stringif
         return {};
     }
     if (value.is_object() && !value.is_function()) {
-        auto is_array = value.is_array(global_object);
-        if (vm.exception())
-            return {};
+        auto is_array = TRY_OR_DISCARD(value.is_array(global_object));
         if (is_array) {
             auto result = serialize_json_array(global_object, state, static_cast<Array&>(value.as_object()));
             if (vm.exception())
@@ -479,9 +475,7 @@ Value JSONObject::internalize_json_property(GlobalObject& global_object, Object*
     if (vm.exception())
         return {};
     if (value.is_object()) {
-        auto is_array = value.is_array(global_object);
-        if (vm.exception())
-            return {};
+        auto is_array = TRY_OR_DISCARD(value.is_array(global_object));
 
         auto& value_object = value.as_object();
         auto process_property = [&](const PropertyName& key) {

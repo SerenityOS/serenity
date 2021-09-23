@@ -192,8 +192,10 @@ static String double_to_string(double d)
 }
 
 // 7.2.2 IsArray ( argument ), https://tc39.es/ecma262/#sec-isarray
-bool Value::is_array(GlobalObject& global_object) const
+ThrowCompletionOr<bool> Value::is_array(GlobalObject& global_object) const
 {
+    auto& vm = global_object.vm();
+
     if (!is_object())
         return false;
     auto& object = as_object();
@@ -201,11 +203,8 @@ bool Value::is_array(GlobalObject& global_object) const
         return true;
     if (is<ProxyObject>(object)) {
         auto& proxy = static_cast<ProxyObject const&>(object);
-        if (proxy.is_revoked()) {
-            auto& vm = global_object.vm();
-            vm.throw_exception<TypeError>(global_object, ErrorType::ProxyRevoked);
-            return false;
-        }
+        if (proxy.is_revoked())
+            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
         return Value(&proxy.target()).is_array(global_object);
     }
     return false;
