@@ -181,11 +181,25 @@ private:
     const u8 m_ptr;
 };
 
+TYPEDEF_DISTINCT_ORDERED_ID(u8, ClassCode);
+TYPEDEF_DISTINCT_ORDERED_ID(u8, SubclassCode);
+TYPEDEF_DISTINCT_ORDERED_ID(u8, ProgrammingInterface);
+TYPEDEF_DISTINCT_ORDERED_ID(u8, RevisionID);
+TYPEDEF_DISTINCT_ORDERED_ID(u16, SubsystemID);
+TYPEDEF_DISTINCT_ORDERED_ID(u16, SubsystemVendorID);
+
+class Access;
 class PhysicalID {
 public:
-    PhysicalID(Address address, ID id, Vector<Capability> capabilities)
+    PhysicalID(Address address, ID id, RevisionID revision_id, ClassCode class_code, SubclassCode subclass_code, ProgrammingInterface prog_if, SubsystemID subsystem_id, SubsystemVendorID subsystem_vendor_id, Vector<Capability> capabilities)
         : m_address(address)
         , m_id(id)
+        , m_revision_id(revision_id)
+        , m_class_code(class_code)
+        , m_subclass_code(subclass_code)
+        , m_prog_if(prog_if)
+        , m_subsystem_id(subsystem_id)
+        , m_subsystem_vendor_id(subsystem_vendor_id)
         , m_capabilities(capabilities)
     {
         if constexpr (PCI_DEBUG) {
@@ -198,13 +212,36 @@ public:
     const ID& id() const { return m_id; }
     const Address& address() const { return m_address; }
 
+    RevisionID revision_id() const { return m_revision_id; }
+    ClassCode class_code() const { return m_class_code; }
+    SubclassCode subclass_code() const { return m_subclass_code; }
+    ProgrammingInterface prog_if() const { return m_prog_if; }
+    SubsystemID subsystem_id() const { return m_subsystem_id; }
+    SubsystemVendorID subsystem_vendor_id() const { return m_subsystem_vendor_id; }
+
+    void apply_subclass_code_change(Badge<Access>, SubclassCode new_subclass)
+    {
+        m_subclass_code = new_subclass;
+    }
+    void apply_prog_if_change(Badge<Access>, ProgrammingInterface new_progif)
+    {
+        m_prog_if = new_progif;
+    }
+
 private:
     Address m_address;
     ID m_id;
+
+    RevisionID m_revision_id;
+    ClassCode m_class_code;
+    SubclassCode m_subclass_code;
+    ProgrammingInterface m_prog_if;
+    SubsystemID m_subsystem_id;
+    SubsystemVendorID m_subsystem_vendor_id;
+
     Vector<Capability> m_capabilities;
 };
 
-class Access;
 class Domain;
 class Device;
 }

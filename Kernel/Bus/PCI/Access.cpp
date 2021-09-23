@@ -381,7 +381,14 @@ UNMAP_AFTER_INIT void Access::enumerate_functions(int type, u8 bus, u8 device, u
     Address address(0, bus, device, function);
     auto read_type = (read8_field(address, PCI_CLASS) << 8u) | read8_field(address, PCI_SUBCLASS);
     if (type == -1 || type == read_type) {
-        m_physical_ids.append(PhysicalID { address, { read16_field(address, PCI_VENDOR_ID), read16_field(address, PCI_DEVICE_ID) }, get_capabilities(address) });
+        PCI::ID id = { read16_field(address, PCI_VENDOR_ID), read16_field(address, PCI_DEVICE_ID) };
+        ClassCode class_code = read8_field(address, PCI_CLASS);
+        SubclassCode subclass_code = read8_field(address, PCI_SUBCLASS);
+        ProgrammingInterface prog_if = read8_field(address, PCI_PROG_IF);
+        RevisionID revision_id = read8_field(address, PCI_REVISION_ID);
+        SubsystemID subsystem_id = read16_field(address, PCI_SUBSYSTEM_ID);
+        SubsystemVendorID subsystem_vendor_id = read16_field(address, PCI_SUBSYSTEM_VENDOR_ID);
+        m_physical_ids.append(PhysicalID { address, id, revision_id, class_code, subclass_code, prog_if, subsystem_id, subsystem_vendor_id, get_capabilities(address) });
     }
 
     if (read_type == PCI_TYPE_BRIDGE && recursive && (!m_enumerated_buses.get(read8_field(address, PCI_SECONDARY_BUS)))) {
@@ -416,12 +423,12 @@ UNMAP_AFTER_INIT void Access::enumerate_bus(int type, u8 bus, bool recursive)
         enumerate_device(type, bus, device, recursive);
 }
 
-void Access::fast_enumerate(Function<void(Address, ID)>& callback) const
+void Access::fast_enumerate(Function<void(Address, PhysicalID const&)>& callback) const
 {
     MutexLocker locker(m_scan_lock);
     VERIFY(!m_physical_ids.is_empty());
     for (auto& physical_id : m_physical_ids) {
-        callback(physical_id.address(), physical_id.id());
+        callback(physical_id.address(), physical_id);
     }
 }
 
