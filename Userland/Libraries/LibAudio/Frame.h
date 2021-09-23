@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
+ * Copyright (c) 2021, David Isaksson <davidisaksson93@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,8 +12,7 @@
 
 namespace Audio {
 using namespace AK::Exponentials;
-
-// Constants for logarithmic volume. See Frame::operator*
+// Constants for logarithmic volume. See Frame::linear_to_log
 // Corresponds to 60dB
 constexpr double DYNAMIC_RANGE = 1000;
 constexpr double VOLUME_A = 1 / DYNAMIC_RANGE;
@@ -59,14 +59,26 @@ struct Frame {
     // This is a good dynamic range because it can represent all loudness values from
     // 30 dB(A) (barely hearable with background noise)
     // to 90 dB(A) (almost too loud to hear and about the reasonable limit of actual sound equipment).
-    ALWAYS_INLINE double log_factor(double const change)
+    //
+    // Format ranges:
+    // - Linear:        0.0 to 1.0
+    // - Logarithmic:   0.0 to 1.0
+
+    ALWAYS_INLINE double linear_to_log(double const change)
     {
+        // TODO: Add linear slope around 0
         return VOLUME_A * exp(VOLUME_B * change);
+    }
+
+    ALWAYS_INLINE double log_to_linear(double const val)
+    {
+        // TODO: Add linear slope around 0
+        return log(val / VOLUME_A) / VOLUME_B;
     }
 
     ALWAYS_INLINE Frame& log_multiply(double const change)
     {
-        double factor = log_factor(change);
+        double factor = linear_to_log(change);
         left *= factor;
         right *= factor;
         return *this;
@@ -81,8 +93,8 @@ struct Frame {
 
     ALWAYS_INLINE Frame& log_pan(double const pan)
     {
-        left *= log_factor(min(pan * -1 + 1.0, 1.0));
-        right *= log_factor(min(pan + 1.0, 1.0));
+        left *= linear_to_log(min(pan * -1 + 1.0, 1.0));
+        right *= linear_to_log(min(pan + 1.0, 1.0));
         return *this;
     }
 
