@@ -36,7 +36,7 @@ public:
     NonnullRefPtr<NetworkAdapter> loopback_adapter() const;
 
 private:
-    RefPtr<NetworkAdapter> determine_network_device(PCI::Address address) const;
+    RefPtr<NetworkAdapter> determine_network_device(PCI::DeviceIdentifier const&) const;
 
     NonnullRefPtrVector<NetworkAdapter> m_adapters;
     RefPtr<NetworkAdapter> m_loopback_adapter;

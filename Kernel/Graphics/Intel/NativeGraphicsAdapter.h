@@ -105,7 +105,7 @@ private:
     };
 
 public:
-    static RefPtr<IntelNativeGraphicsAdapter> initialize(PCI::Address);
+    static RefPtr<IntelNativeGraphicsAdapter> initialize(PCI::DeviceIdentifier const&);
 
 private:
     explicit IntelNativeGraphicsAdapter(PCI::Address);

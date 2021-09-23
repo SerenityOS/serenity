@@ -18,20 +18,20 @@ UNMAP_AFTER_INIT void detect()
 {
     if (kernel_command_line().disable_virtio())
         return;
-    PCI::enumerate([&](const PCI::Address& address, PCI::DeviceIdentifier const& device_identifier) {
-        if (address.is_null() || device_identifier.hardware_id().is_null())
+    PCI::enumerate([&](const PCI::Address&, PCI::DeviceIdentifier const& device_identifier) {
+        if (device_identifier.hardware_id().is_null())
             return;
         // TODO: We should also be checking that the device_id is in between 0x1000 - 0x107F inclusive
         if (device_identifier.hardware_id().vendor_id != PCI::VendorID::VirtIO)
             return;
         switch (device_identifier.hardware_id().device_id) {
         case PCI::DeviceID::VirtIOConsole: {
-            auto& console = Console::must_create(address).leak_ref();
+            auto& console = Console::must_create(device_identifier).leak_ref();
             console.initialize();
             break;
         }
         case PCI::DeviceID::VirtIOEntropy: {
-            auto& rng = RNG::must_create(address).leak_ref();
+            auto& rng = RNG::must_create(device_identifier).leak_ref();
             rng.initialize();
             break;
         }
@@ -46,12 +46,12 @@ UNMAP_AFTER_INIT void detect()
     });
 }
 
-static StringView const determine_device_class(const PCI::Address& address)
+static StringView const determine_device_class(PCI::DeviceIdentifier const& device_identifier)
 {
-    if (PCI::get_revision_id(address) == 0) {
+    if (device_identifier.revision_id().value() == 0) {
         // Note: If the device is a legacy (or transitional) device, therefore,
         // probe the subsystem ID in the PCI header and figure out the
-        auto subsystem_device_id = PCI::get_subsystem_id(address);
+        auto subsystem_device_id = device_identifier.subsystem_id().value();
         switch (subsystem_device_id) {
         case 1:
             return "VirtIONetAdapter"sv;
@@ -67,7 +67,7 @@ static StringView const determine_device_class(const PCI::Address& address)
         }
     }
 
-    auto id = PCI::get_hardware_id(address);
+    auto id = device_identifier.hardware_id();
     VERIFY(id.vendor_id == PCI::VendorID::VirtIO);
     switch (id.device_id) {
     case PCI::DeviceID::VirtIONetAdapter:
@@ -150,11 +150,11 @@ UNMAP_AFTER_INIT void Device::initialize()
     set_status_bit(DEVICE_STATUS_DRIVER);
 }
 
-UNMAP_AFTER_INIT VirtIO::Device::Device(PCI::Address address)
-    : PCI::Device(address)
-    , IRQHandler(PCI::get_interrupt_line(address))
+UNMAP_AFTER_INIT VirtIO::Device::Device(PCI::DeviceIdentifier const& device_identifier)
+    : PCI::Device(device_identifier.address())
+    , IRQHandler(PCI::get_interrupt_line(device_identifier.address()))
     , m_io_base(IOAddress(PCI::get_BAR0(pci_address()) & ~1))
-    , m_class_name(VirtIO::determine_device_class(address))
+    , m_class_name(VirtIO::determine_device_class(device_identifier))
 {
     dbgln("{}: Found @ {}", m_class_name, pci_address());
 }

@@ -46,8 +46,8 @@ void GPU::initialize()
     }
 }
 
-GPU::GPU(PCI::Address address)
-    : VirtIO::Device(address)
+GPU::GPU(PCI::DeviceIdentifier const& device_identifier)
+    : VirtIO::Device(device_identifier)
 {
     auto region_or_error = MM.allocate_contiguous_kernel_region(32 * PAGE_SIZE, "VirtGPU Scratch Space", Memory::Region::Access::ReadWrite);
     if (region_or_error.is_error())

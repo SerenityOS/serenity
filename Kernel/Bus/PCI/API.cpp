@@ -120,36 +120,6 @@ u32 get_BAR(Address address, u8 bar)
     }
 }
 
-u8 get_revision_id(Address address)
-{
-    return read8(address, PCI_REVISION_ID);
-}
-
-u8 get_subclass(Address address)
-{
-    return read8(address, PCI_SUBCLASS);
-}
-
-u8 get_class(Address address)
-{
-    return read8(address, PCI_CLASS);
-}
-
-u8 get_programming_interface(Address address)
-{
-    return read8(address, PCI_PROG_IF);
-}
-
-u16 get_subsystem_id(Address address)
-{
-    return read16(address, PCI_SUBSYSTEM_ID);
-}
-
-u16 get_subsystem_vendor_id(Address address)
-{
-    return read16(address, PCI_SUBSYSTEM_VENDOR_ID);
-}
-
 void enable_bus_mastering(Address address)
 {
     auto value = read16(address, PCI_COMMAND);
