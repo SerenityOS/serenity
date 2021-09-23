@@ -20,6 +20,9 @@ public:
 
     void layout_marker();
 
+    DOM::Element& dom_node() { return static_cast<DOM::Element&>(*BlockBox::dom_node()); }
+    DOM::Element const& dom_node() const { return static_cast<DOM::Element const&>(*BlockBox::dom_node()); }
+
 private:
     RefPtr<ListItemMarkerBox> m_marker;
 };
