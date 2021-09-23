@@ -7,6 +7,8 @@
 
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Variant.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/Rect.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
@@ -14,35 +16,47 @@
 
 namespace Web::CSS {
 
-float Length::relative_length_to_px(const Layout::Node& layout_node) const
+float Length::relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float root_font_size) const
 {
     switch (m_type) {
     case Type::Ex:
-        return m_value * layout_node.font().x_height();
+        return m_value * font_metrics.x_height;
     case Type::Em:
-        return m_value * layout_node.font_size();
+        return m_value * font_metrics.size;
     case Type::Ch:
         // FIXME: Use layout_node.font().glyph_height() when writing-mode is not horizontal-tb (it has to be implemented first)
-        return m_value * (layout_node.font().glyph_width('0') + layout_node.font().glyph_spacing());
+        return m_value * (font_metrics.glyph_width + font_metrics.glyph_spacing);
     case Type::Rem:
-        return m_value * layout_node.document().document_element()->layout_node()->font_size();
+        return m_value * root_font_size;
     case Type::Vw:
-        return layout_node.document().browsing_context()->viewport_rect().width() * (m_value / 100);
+        return viewport_rect.width() * (m_value / 100);
     case Type::Vh:
-        return layout_node.document().browsing_context()->viewport_rect().height() * (m_value / 100);
-    case Type::Vmin: {
-        auto viewport = layout_node.document().browsing_context()->viewport_rect();
-
-        return min(viewport.width(), viewport.height()) * (m_value / 100);
-    }
-    case Type::Vmax: {
-        auto viewport = layout_node.document().browsing_context()->viewport_rect();
-
-        return max(viewport.width(), viewport.height()) * (m_value / 100);
-    }
+        return viewport_rect.height() * (m_value / 100);
+    case Type::Vmin:
+        return min(viewport_rect.width(), viewport_rect.height()) * (m_value / 100);
+    case Type::Vmax:
+        return max(viewport_rect.width(), viewport_rect.height()) * (m_value / 100);
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+float Length::to_px(Layout::Node const& layout_node) const
+{
+    if (!layout_node.document().browsing_context())
+        return 0;
+    auto viewport_rect = layout_node.document().browsing_context()->viewport_rect();
+    auto* root_element = layout_node.document().document_element();
+    if (!root_element || !root_element->layout_node())
+        return 0;
+    return to_px(viewport_rect, layout_node.font().metrics('M'), root_element->layout_node()->font().presentation_size());
+}
+
+float Length::relative_length_to_px(Layout::Node const& layout_node) const
+{
+    auto viewport_rect = layout_node.document().browsing_context()->viewport_rect();
+    auto root_element = layout_node.document().document_element();
+    return relative_length_to_px(viewport_rect, layout_node.font().metrics('M'), root_element->layout_node()->font().presentation_size());
 }
 
 static float resolve_calc_value(CalculatedStyleValue::CalcValue const&, const Layout::Node& layout_node, float reference_for_percent);

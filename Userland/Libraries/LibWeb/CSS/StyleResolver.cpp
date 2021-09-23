@@ -7,6 +7,8 @@
  */
 
 #include <AK/QuickSort.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
@@ -15,6 +17,8 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/FontCache.h>
+#include <LibWeb/Page/BrowsingContext.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -574,50 +578,253 @@ void StyleResolver::compute_cascaded_values(StyleProperties& style, DOM::Element
     // FIXME: Transition declarations [css-transitions-1]
 }
 
-// https://drafts.csswg.org/css-cascade/#defaulting
-void StyleResolver::compute_defaulted_values(StyleProperties& style, DOM::Element const& element) const
+static NonnullRefPtr<StyleValue> get_initial_value(CSS::PropertyID property_id)
+{
+    auto value = property_initial_value(property_id);
+    if (!value)
+        return InitialStyleValue::the();
+    return value.release_nonnull();
+};
+
+static NonnullRefPtr<StyleValue> get_inherit_value(CSS::PropertyID property_id, DOM::Element const& element)
+{
+    if (!element.parent_element() || !element.parent_element()->specified_css_values())
+        return get_initial_value(property_id);
+    auto& map = element.parent_element()->specified_css_values()->properties();
+    auto it = map.find(property_id);
+    VERIFY(it != map.end());
+    return *it->value;
+};
+
+void StyleResolver::compute_defaulted_property_value(StyleProperties& style, DOM::Element const& element, CSS::PropertyID property_id) const
 {
     // FIXME: If we don't know the correct initial value for a property, we fall back to InitialStyleValue.
 
-    auto get_initial_value = [&](PropertyID property_id) -> NonnullRefPtr<StyleValue> {
-        auto value = property_initial_value(property_id);
-        if (!value)
-            return InitialStyleValue::the();
-        return value.release_nonnull();
-    };
+    auto it = style.m_property_values.find(property_id);
+    if (it == style.m_property_values.end()) {
+        if (is_inherited_property(property_id))
+            style.m_property_values.set(property_id, get_inherit_value(property_id, element));
+        else
+            style.m_property_values.set(property_id, get_initial_value(property_id));
+        return;
+    }
 
-    auto get_inherit_value = [&](PropertyID property_id) -> NonnullRefPtr<StyleValue> {
-        if (!element.parent_element() || !element.parent_element()->specified_css_values())
-            return get_initial_value(property_id);
-        auto& map = element.parent_element()->specified_css_values()->m_property_values;
-        auto it = map.find(property_id);
-        VERIFY(it != map.end());
-        return const_cast<StyleValue&>(*it->value);
-    };
+    if (it->value->is_initial()) {
+        it->value = get_initial_value(property_id);
+        return;
+    }
 
+    if (it->value->is_inherit()) {
+        it->value = get_inherit_value(property_id, element);
+        return;
+    }
+}
+
+// https://drafts.csswg.org/css-cascade/#defaulting
+void StyleResolver::compute_defaulted_values(StyleProperties& style, DOM::Element const& element) const
+{
     // Walk the list of all known CSS properties and:
     // - Add them to `style` if they are missing.
     // - Resolve `inherit` and `initial` as needed.
     for (auto i = to_underlying(CSS::first_longhand_property_id); i <= to_underlying(CSS::last_longhand_property_id); ++i) {
         auto property_id = (CSS::PropertyID)i;
-        auto it = style.m_property_values.find(property_id);
-        if (it == style.m_property_values.end()) {
+        compute_defaulted_property_value(style, element, property_id);
+    }
+}
 
-            if (is_inherited_property(property_id))
-                style.m_property_values.set(property_id, get_inherit_value(property_id));
-            else
-                style.m_property_values.set(property_id, get_initial_value(property_id));
-            continue;
+void StyleResolver::compute_font(StyleProperties& style, DOM::Element const& element) const
+{
+    // To compute the font, first ensure that we've defaulted the relevant CSS font properties.
+    // FIXME: This should be more sophisticated.
+    compute_defaulted_property_value(style, element, CSS::PropertyID::FontFamily);
+    compute_defaulted_property_value(style, element, CSS::PropertyID::FontSize);
+    compute_defaulted_property_value(style, element, CSS::PropertyID::FontWeight);
+
+    auto viewport_rect = document().browsing_context()->viewport_rect();
+
+    auto font_size = style.property(CSS::PropertyID::FontSize).value();
+    auto font_weight = style.property(CSS::PropertyID::FontWeight).value();
+
+    int weight = Gfx::FontWeight::Regular;
+    if (font_weight->is_identifier()) {
+        switch (static_cast<IdentifierStyleValue const&>(*font_weight).id()) {
+        case CSS::ValueID::Normal:
+            weight = Gfx::FontWeight::Regular;
+            break;
+        case CSS::ValueID::Bold:
+            weight = Gfx::FontWeight::Bold;
+            break;
+        case CSS::ValueID::Lighter:
+            // FIXME: This should be relative to the parent.
+            weight = Gfx::FontWeight::Regular;
+            break;
+        case CSS::ValueID::Bolder:
+            // FIXME: This should be relative to the parent.
+            weight = Gfx::FontWeight::Bold;
+            break;
+        default:
+            break;
         }
+    } else if (font_weight->is_numeric()) {
+        int font_weight_integer = roundf(static_cast<NumericStyleValue const&>(*font_weight).value());
+        if (font_weight_integer <= Gfx::FontWeight::Regular)
+            weight = Gfx::FontWeight::Regular;
+        else if (font_weight_integer <= Gfx::FontWeight::Bold)
+            weight = Gfx::FontWeight::Bold;
+        else
+            weight = Gfx::FontWeight::Black;
+    }
+    // FIXME: calc() for font-weight
 
-        if (it->value->is_initial()) {
-            it->value = get_initial_value(property_id);
-            continue;
+    bool bold = weight > Gfx::FontWeight::Regular;
+
+    int size = 10;
+
+    if (font_size->is_identifier()) {
+        switch (static_cast<const IdentifierStyleValue&>(*font_size).id()) {
+        case CSS::ValueID::XxSmall:
+        case CSS::ValueID::XSmall:
+        case CSS::ValueID::Small:
+        case CSS::ValueID::Medium:
+            // FIXME: Should be based on "user's default font size"
+            size = 10;
+            break;
+        case CSS::ValueID::Large:
+        case CSS::ValueID::XLarge:
+        case CSS::ValueID::XxLarge:
+        case CSS::ValueID::XxxLarge:
+            // FIXME: Should be based on "user's default font size"
+            size = 12;
+            break;
+        case CSS::ValueID::Smaller:
+        case CSS::ValueID::Larger:
+            // FIXME: Should be based on parent element
+            break;
+        default:
+            break;
         }
+    } else {
+        float root_font_size = 10;
+        if (element.document().document_element() != &element)
+            root_font_size = element.document().document_element()->layout_node()->font().presentation_size();
 
-        if (it->value->is_inherit()) {
-            it->value = get_inherit_value(property_id);
+        Gfx::FontMetrics font_metrics;
+        if (element.parent_element())
+            font_metrics = element.parent_element()->specified_css_values()->computed_font().metrics('M');
+        else
+            font_metrics = Gfx::FontDatabase::default_font().metrics('M');
+
+        Optional<Length> maybe_length;
+        if (font_size->is_length()) {
+            maybe_length = font_size->to_length();
+            if (maybe_length->is_percentage()) {
+                auto parent_font_size = size;
+                if (element.parent_element() && element.parent_element()->layout_node() && element.parent_element()->specified_css_values()) {
+                    auto value = element.parent_element()->specified_css_values()->property(CSS::PropertyID::FontSize).value();
+                    if (value->is_length()) {
+                        auto length = static_cast<LengthStyleValue const&>(*value).to_length();
+                        if (length.is_absolute() || length.is_relative())
+                            parent_font_size = length.to_px(viewport_rect, font_metrics, root_font_size);
+                    }
+                }
+
+                maybe_length = Length::make_px(maybe_length->raw_value() / 100.0f * (parent_font_size));
+            }
+        } else if (font_size->is_calculated()) {
+            Length length = Length(0, Length::Type::Calculated);
+            length.set_calculated_style(verify_cast<CalculatedStyleValue>(font_size.ptr()));
+            maybe_length = length;
+        }
+        if (maybe_length.has_value()) {
+            auto calculated_size = maybe_length.value().to_px(viewport_rect, font_metrics, root_font_size);
+            if (calculated_size != 0)
+                size = calculated_size;
+        }
+    }
+
+    // FIXME: Implement the full font-matching algorithm: https://www.w3.org/TR/css-fonts-4/#font-matching-algorithm
+
+    // Note: This is modified by the find_font() lambda
+    FontSelector font_selector;
+    bool monospace = false;
+
+    auto find_font = [&](String const& family) -> RefPtr<Gfx::Font> {
+        font_selector = { family, size, weight };
+
+        if (auto found_font = FontCache::the().get(font_selector))
+            return found_font;
+
+        if (auto found_font = Gfx::FontDatabase::the().get(family, size, weight))
+            return found_font;
+
+        return {};
+    };
+
+    // FIXME: Replace hard-coded font names with a relevant call to FontDatabase.
+    // Currently, we cannot request the default font's name, or request it at a specific size and weight.
+    // So, hard-coded font names it is.
+    auto find_generic_font = [&](ValueID font_id) -> RefPtr<Gfx::Font> {
+        switch (font_id) {
+        case ValueID::Monospace:
+        case ValueID::UiMonospace:
+            monospace = true;
+            return find_font("Csilla");
+        case ValueID::Serif:
+        case ValueID::SansSerif:
+        case ValueID::Cursive:
+        case ValueID::Fantasy:
+        case ValueID::UiSerif:
+        case ValueID::UiSansSerif:
+        case ValueID::UiRounded:
+            return find_font("Katica");
+        default:
+            return {};
+        }
+    };
+
+    RefPtr<Gfx::Font> found_font;
+
+    auto family_value = style.property(PropertyID::FontFamily).value();
+    if (family_value->is_value_list()) {
+        auto& family_list = static_cast<StyleValueList const&>(*family_value).values();
+        for (auto& family : family_list) {
+            if (family.is_identifier()) {
+                found_font = find_generic_font(family.to_identifier());
+            } else if (family.is_string()) {
+                found_font = find_font(family.to_string());
+            }
+            if (found_font)
+                break;
+        }
+    } else if (family_value->is_identifier()) {
+        found_font = find_generic_font(family_value->to_identifier());
+    } else if (family_value->is_string()) {
+        found_font = find_font(family_value->to_string());
+    }
+
+    if (!found_font) {
+        found_font = StyleProperties::font_fallback(monospace, bold);
+    }
+
+    FontCache::the().set(font_selector, *found_font);
+
+    style.set_computed_font(found_font.release_nonnull());
+}
+
+void StyleResolver::absolutize_values(StyleProperties& style, DOM::Element const&) const
+{
+    auto viewport_rect = document().browsing_context()->viewport_rect();
+    auto font_metrics = style.computed_font().metrics('M');
+    // FIXME: Get the root element font.
+    float root_font_size = 10;
+
+    for (auto& it : style.properties()) {
+        if (!it.value->is_length())
             continue;
+        auto length = it.value->to_length();
+        if (length.is_relative()) {
+            auto px = length.relative_length_to_px(viewport_rect, font_metrics, root_font_size);
+            it.value = LengthStyleValue::create(CSS::Length::make_px(px));
         }
     }
 }
@@ -625,9 +832,18 @@ void StyleResolver::compute_defaulted_values(StyleProperties& style, DOM::Elemen
 NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(DOM::Element& element) const
 {
     auto style = StyleProperties::create();
+    // 1. Perform the cascade. This produces the "specified style"
     compute_cascaded_values(style, element);
+
+    // 2. Compute the font, since that may be needed for font-relative CSS units
+    compute_font(style, element);
+
+    // 3. Absolutize values, turning font/viewport relative lengths into absolute lengths
+    absolutize_values(style, element);
+
+    // 4. Default the values, applying inheritance and 'initial' as needed
     compute_defaulted_values(style, element);
+
     return style;
 }
-
 }

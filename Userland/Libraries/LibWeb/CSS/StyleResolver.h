@@ -53,7 +53,11 @@ public:
 
 private:
     void compute_cascaded_values(StyleProperties&, DOM::Element&) const;
+    void compute_font(StyleProperties&, DOM::Element const&) const;
     void compute_defaulted_values(StyleProperties&, DOM::Element const&) const;
+    void absolutize_values(StyleProperties&, DOM::Element const&) const;
+
+    void compute_defaulted_property_value(StyleProperties&, DOM::Element const&, CSS::PropertyID) const;
 
     template<typename Callback>
     void for_each_stylesheet(CascadeOrigin, Callback) const;

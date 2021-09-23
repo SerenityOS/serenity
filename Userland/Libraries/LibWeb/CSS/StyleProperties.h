@@ -33,6 +33,9 @@ public:
             callback((CSS::PropertyID)it.key, *it.value);
     }
 
+    HashMap<CSS::PropertyID, NonnullRefPtr<StyleValue>>& properties() { return m_property_values; }
+    HashMap<CSS::PropertyID, NonnullRefPtr<StyleValue>> const& properties() const { return m_property_values; }
+
     void set_property(CSS::PropertyID, NonnullRefPtr<StyleValue> value);
     void set_property(CSS::PropertyID, const StringView&);
     Optional<NonnullRefPtr<StyleValue>> property(CSS::PropertyID) const;
@@ -73,6 +76,17 @@ public:
         return *m_font;
     }
 
+    Gfx::Font const& computed_font() const
+    {
+        VERIFY(m_font);
+        return *m_font;
+    }
+
+    void set_computed_font(NonnullRefPtr<Gfx::Font> font)
+    {
+        m_font = move(font);
+    }
+
     float line_height(const Layout::Node&) const;
 
     bool operator==(const StyleProperties&) const;
@@ -81,6 +95,8 @@ public:
     Optional<CSS::Position> position() const;
     Optional<int> z_index() const;
 
+    static NonnullRefPtr<Gfx::Font> font_fallback(bool monospace, bool bold);
+
 private:
     friend class StyleResolver;
 
@@ -88,7 +104,6 @@ private:
     Optional<CSS::Overflow> overflow(CSS::PropertyID) const;
 
     void load_font(Layout::Node const&) const;
-    RefPtr<Gfx::Font> font_fallback(bool monospace, bool bold) const;
 
     mutable RefPtr<Gfx::Font> m_font;
 };
