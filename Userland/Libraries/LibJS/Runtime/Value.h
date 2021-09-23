@@ -375,7 +375,7 @@ bool is_strictly_equal(Value lhs, Value rhs);
 bool same_value(Value lhs, Value rhs);
 bool same_value_zero(Value lhs, Value rhs);
 bool same_value_non_numeric(Value lhs, Value rhs);
-TriState abstract_relation(GlobalObject&, bool left_first, Value lhs, Value rhs);
+TriState is_less_than(GlobalObject&, bool left_first, Value lhs, Value rhs);
 
 inline bool Value::operator==(Value const& value) const { return same_value(*this, value); }
 
