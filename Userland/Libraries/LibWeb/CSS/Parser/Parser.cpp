@@ -2066,24 +2066,6 @@ RefPtr<StyleValue> Parser::parse_box_shadow_value(ParsingContext const& context,
 
 RefPtr<StyleValue> Parser::parse_flex_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
-    auto is_flex_grow_or_shrink = [](StyleValue const& value) -> bool {
-        if (value.is_numeric())
-            return true;
-        return false;
-    };
-
-    auto is_flex_basis = [](StyleValue const& value) -> bool {
-        if (value.is_length())
-            return true;
-        switch (value.to_identifier()) {
-        case ValueID::Auto:
-        case ValueID::Content:
-            return true;
-        default:
-            return false;
-        }
-    };
-
     if (component_values.size() == 1) {
         auto value = parse_css_value(context, component_values[0]);
         if (!value)
@@ -2120,7 +2102,7 @@ RefPtr<StyleValue> Parser::parse_flex_value(ParsingContext const& context, Vecto
             }
         }
 
-        if (is_flex_grow_or_shrink(*value)) {
+        if (property_accepts_value(PropertyID::FlexGrow, *value)) {
             if (flex_grow)
                 return nullptr;
             flex_grow = value.release_nonnull();
@@ -2128,7 +2110,7 @@ RefPtr<StyleValue> Parser::parse_flex_value(ParsingContext const& context, Vecto
             // Flex-shrink may optionally follow directly after.
             if (i + 1 < component_values.size()) {
                 auto second_value = parse_css_value(context, component_values[i + 1]);
-                if (second_value && is_flex_grow_or_shrink(*second_value)) {
+                if (second_value && property_accepts_value(PropertyID::FlexShrink, *second_value)) {
                     flex_shrink = second_value.release_nonnull();
                     i++;
                 }
@@ -2136,7 +2118,7 @@ RefPtr<StyleValue> Parser::parse_flex_value(ParsingContext const& context, Vecto
             continue;
         }
 
-        if (is_flex_basis(*value)) {
+        if (property_accepts_value(PropertyID::FlexBasis, *value)) {
             if (flex_basis)
                 return nullptr;
             flex_basis = value.release_nonnull();
@@ -2158,29 +2140,6 @@ RefPtr<StyleValue> Parser::parse_flex_value(ParsingContext const& context, Vecto
 
 RefPtr<StyleValue> Parser::parse_flex_flow_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
-    auto is_flex_direction = [](StyleValue const& value) -> bool {
-        switch (value.to_identifier()) {
-        case ValueID::Row:
-        case ValueID::RowReverse:
-        case ValueID::Column:
-        case ValueID::ColumnReverse:
-            return true;
-        default:
-            return false;
-        }
-    };
-
-    auto is_flex_wrap = [](StyleValue const& value) -> bool {
-        switch (value.to_identifier()) {
-        case ValueID::Wrap:
-        case ValueID::Nowrap:
-        case ValueID::WrapReverse:
-            return true;
-        default:
-            return false;
-        }
-    };
-
     if (component_values.size() > 2)
         return nullptr;
 
@@ -2191,13 +2150,13 @@ RefPtr<StyleValue> Parser::parse_flex_flow_value(ParsingContext const& context, 
         auto value = parse_css_value(context, part);
         if (!value)
             return nullptr;
-        if (is_flex_direction(*value)) {
+        if (property_accepts_value(PropertyID::FlexDirection, *value)) {
             if (flex_direction)
                 return nullptr;
             flex_direction = value.release_nonnull();
             continue;
         }
-        if (is_flex_wrap(*value)) {
+        if (property_accepts_value(PropertyID::FlexWrap, *value)) {
             if (flex_wrap)
                 return nullptr;
             flex_wrap = value.release_nonnull();
