@@ -614,12 +614,12 @@ private:
     virtual KResult try_generate(KBufferBuilder& builder) override
     {
         JsonArraySerializer array { builder };
-        PCI::enumerate([&array](PCI::Address address, PCI::DeviceIdentifier const& device_identifier) {
+        PCI::enumerate([&array](PCI::DeviceIdentifier const& device_identifier) {
             auto obj = array.add_object();
-            obj.add("domain", address.domain());
-            obj.add("bus", address.bus());
-            obj.add("device", address.device());
-            obj.add("function", address.function());
+            obj.add("domain", device_identifier.address().domain());
+            obj.add("bus", device_identifier.address().bus());
+            obj.add("device", device_identifier.address().device());
+            obj.add("function", device_identifier.address().function());
             obj.add("vendor_id", device_identifier.hardware_id().vendor_id);
             obj.add("device_id", device_identifier.hardware_id().device_id);
             obj.add("revision_id", device_identifier.revision_id().value());

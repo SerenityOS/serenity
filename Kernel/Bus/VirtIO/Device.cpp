@@ -18,7 +18,7 @@ UNMAP_AFTER_INIT void detect()
 {
     if (kernel_command_line().disable_virtio())
         return;
-    PCI::enumerate([&](const PCI::Address&, PCI::DeviceIdentifier const& device_identifier) {
+    PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
         if (device_identifier.hardware_id().is_null())
             return;
         // TODO: We should also be checking that the device_id is in between 0x1000 - 0x107F inclusive

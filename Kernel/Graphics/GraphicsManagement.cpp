@@ -179,7 +179,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
         dbgln("Forcing no initialization of framebuffer devices");
     }
 
-    PCI::enumerate([&](const PCI::Address&, PCI::DeviceIdentifier const& device_identifier) {
+    PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
         // Note: Each graphics controller will try to set its native screen resolution
         // upon creation. Later on, if we don't want to have framebuffer devices, a
         // framebuffer console will take the control instead.
