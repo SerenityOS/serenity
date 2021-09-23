@@ -2174,64 +2174,6 @@ RefPtr<StyleValue> Parser::parse_flex_flow_value(ParsingContext const& context, 
 
 RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
-    auto is_font_size = [](StyleValue const& value) -> bool {
-        if (value.is_length())
-            return true;
-        switch (value.to_identifier()) {
-        case ValueID::XxSmall:
-        case ValueID::XSmall:
-        case ValueID::Small:
-        case ValueID::Medium:
-        case ValueID::Large:
-        case ValueID::XLarge:
-        case ValueID::XxLarge:
-        case ValueID::XxxLarge:
-        case ValueID::Smaller:
-        case ValueID::Larger:
-            return true;
-        default:
-            return false;
-        }
-    };
-
-    auto is_font_style = [](StyleValue const& value) -> bool {
-        // FIXME: Handle angle parameter to `oblique`: https://www.w3.org/TR/css-fonts-4/#font-style-prop
-        switch (value.to_identifier()) {
-        case ValueID::Normal:
-        case ValueID::Italic:
-        case ValueID::Oblique:
-            return true;
-        default:
-            return false;
-        }
-    };
-
-    auto is_font_weight = [](StyleValue const& value) -> bool {
-        if (value.is_numeric()) {
-            auto weight = static_cast<NumericStyleValue const&>(value).value();
-            return (weight >= 1 && weight <= 1000);
-        }
-        switch (value.to_identifier()) {
-        case ValueID::Normal:
-        case ValueID::Bold:
-        case ValueID::Bolder:
-        case ValueID::Lighter:
-            return true;
-        default:
-            return false;
-        }
-    };
-
-    auto is_line_height = [](StyleValue const& value) -> bool {
-        if (value.is_numeric())
-            return true;
-        if (value.is_length())
-            return true;
-        if (value.to_identifier() == ValueID::Normal)
-            return true;
-        return false;
-    };
-
     RefPtr<StyleValue> font_style;
     RefPtr<StyleValue> font_weight;
     RefPtr<StyleValue> font_size;
@@ -2254,19 +2196,20 @@ RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vecto
             normal_count++;
             continue;
         }
-        if (is_font_style(*value)) {
+        // FIXME: Handle angle parameter to `oblique`: https://www.w3.org/TR/css-fonts-4/#font-style-prop
+        if (property_accepts_value(PropertyID::FontStyle, *value)) {
             if (font_style)
                 return nullptr;
             font_style = value.release_nonnull();
             continue;
         }
-        if (is_font_weight(*value)) {
+        if (property_accepts_value(PropertyID::FontWeight, *value)) {
             if (font_weight)
                 return nullptr;
             font_weight = value.release_nonnull();
             continue;
         }
-        if (is_font_size(*value)) {
+        if (property_accepts_value(PropertyID::FontSize, *value)) {
             if (font_size)
                 return nullptr;
             font_size = value.release_nonnull();
@@ -2276,7 +2219,7 @@ RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vecto
                 auto maybe_solidus = component_values[i + 1];
                 if (maybe_solidus.is(Token::Type::Delim) && maybe_solidus.token().delim() == "/"sv) {
                     auto maybe_line_height = parse_css_value(context, component_values[i + 2]);
-                    if (!(maybe_line_height && is_line_height(*maybe_line_height)))
+                    if (!(maybe_line_height && property_accepts_value(PropertyID::LineHeight, *maybe_line_height)))
                         return nullptr;
                     line_height = maybe_line_height.release_nonnull();
                     i += 2;
