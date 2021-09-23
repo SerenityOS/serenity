@@ -156,7 +156,7 @@ UNMAP_AFTER_INIT RefPtr<NE2000NetworkAdapter> NE2000NetworkAdapter::try_to_initi
     };
     if (!ne2k_ids.span().contains_slow(pci_device_identifier.hardware_id()))
         return {};
-    u8 irq = PCI::get_interrupt_line(pci_device_identifier.address());
+    u8 irq = pci_device_identifier.interrupt_line().value();
     return adopt_ref_if_nonnull(new (nothrow) NE2000NetworkAdapter(pci_device_identifier.address(), irq));
 }
 
@@ -169,9 +169,8 @@ UNMAP_AFTER_INIT NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address
 
     dmesgln("NE2000: Found @ {}", pci_address());
 
-    m_interrupt_line = PCI::get_interrupt_line(pci_address());
     dmesgln("NE2000: Port base: {}", m_io_base);
-    dmesgln("NE2000: Interrupt line: {}", m_interrupt_line);
+    dmesgln("NE2000: Interrupt line: {}", interrupt_number());
 
     int ram_errors = ram_test();
     dmesgln("NE2000: RAM test {}, got {} byte errors", (ram_errors == 0 ? "OK" : "KO"), ram_errors);

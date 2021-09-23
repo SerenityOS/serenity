@@ -64,11 +64,6 @@ void disable_interrupt_line(Address address)
     write16(address, PCI_COMMAND, read16(address, PCI_COMMAND) | 1 << 10);
 }
 
-u8 get_interrupt_line(Address address)
-{
-    return read8(address, PCI_INTERRUPT_LINE);
-}
-
 u32 get_BAR0(Address address)
 {
     return read32(address, PCI_BAR0);

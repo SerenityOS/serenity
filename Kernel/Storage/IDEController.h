@@ -46,5 +46,6 @@ private:
     NonnullRefPtrVector<IDEChannel> m_channels;
     // FIXME: Find a better way to get the ProgrammingInterface
     PCI::ProgrammingInterface m_prog_if;
+    PCI::InterruptLine m_interrupt_line;
 };
 }

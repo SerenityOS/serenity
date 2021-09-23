@@ -186,7 +186,7 @@ UNMAP_AFTER_INIT RefPtr<E1000ENetworkAdapter> E1000ENetworkAdapter::try_to_initi
         return {};
     if (!is_valid_device_id(pci_device_identifier.hardware_id().device_id))
         return {};
-    u8 irq = PCI::get_interrupt_line(pci_device_identifier.address());
+    u8 irq = pci_device_identifier.interrupt_line().value();
     auto adapter = adopt_ref_if_nonnull(new (nothrow) E1000ENetworkAdapter(pci_device_identifier.address(), irq));
     if (!adapter)
         return {};
@@ -210,11 +210,10 @@ UNMAP_AFTER_INIT bool E1000ENetworkAdapter::initialize()
     m_mmio_region = region_or_error.release_value();
     m_mmio_base = m_mmio_region->vaddr();
     m_use_mmio = true;
-    m_interrupt_line = PCI::get_interrupt_line(pci_address());
     dmesgln("E1000e: port base: {}", m_io_base);
     dmesgln("E1000e: MMIO base: {}", PhysicalAddress(PCI::get_BAR0(pci_address()) & 0xfffffffc));
     dmesgln("E1000e: MMIO base size: {} bytes", mmio_base_size);
-    dmesgln("E1000e: Interrupt line: {}", m_interrupt_line);
+    dmesgln("E1000e: Interrupt line: {}", interrupt_number());
     detect_eeprom();
     dmesgln("E1000e: Has EEPROM? {}", m_has_eeprom);
     read_mac_address();

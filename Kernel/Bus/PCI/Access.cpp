@@ -388,7 +388,9 @@ UNMAP_AFTER_INIT void Access::enumerate_functions(int type, u8 bus, u8 device, u
         RevisionID revision_id = read8_field(address, PCI_REVISION_ID);
         SubsystemID subsystem_id = read16_field(address, PCI_SUBSYSTEM_ID);
         SubsystemVendorID subsystem_vendor_id = read16_field(address, PCI_SUBSYSTEM_VENDOR_ID);
-        m_device_identifiers.append(DeviceIdentifier { address, id, revision_id, class_code, subclass_code, prog_if, subsystem_id, subsystem_vendor_id, get_capabilities(address) });
+        InterruptLine interrupt_line = read8_field(address, PCI_INTERRUPT_LINE);
+        InterruptPin interrupt_pin = read8_field(address, PCI_INTERRUPT_PIN);
+        m_device_identifiers.append(DeviceIdentifier { address, id, revision_id, class_code, subclass_code, prog_if, subsystem_id, subsystem_vendor_id, interrupt_line, interrupt_pin, get_capabilities(address) });
     }
 
     if (read_type == PCI_TYPE_BRIDGE && recursive && (!m_enumerated_buses.get(read8_field(address, PCI_SECONDARY_BUS)))) {

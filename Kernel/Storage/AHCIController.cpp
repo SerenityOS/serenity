@@ -17,7 +17,7 @@ namespace Kernel {
 
 NonnullRefPtr<AHCIController> AHCIController::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    return adopt_ref(*new AHCIController(pci_device_identifier.address()));
+    return adopt_ref(*new AHCIController(pci_device_identifier));
 }
 
 bool AHCIController::reset()
@@ -79,13 +79,13 @@ volatile AHCI::HBA& AHCIController::hba() const
     return static_cast<volatile AHCI::HBA&>(*(volatile AHCI::HBA*)(m_hba_region->vaddr().as_ptr()));
 }
 
-AHCIController::AHCIController(PCI::Address address)
+AHCIController::AHCIController(PCI::DeviceIdentifier const& pci_device_identifier)
     : StorageController()
-    , PCI::Device(address)
+    , PCI::Device(pci_device_identifier.address())
     , m_hba_region(default_hba_region())
     , m_capabilities(capabilities())
 {
-    initialize();
+    initialize_hba(pci_device_identifier);
 }
 
 AHCI::HBADefinedCapabilities AHCIController::capabilities() const
@@ -134,7 +134,7 @@ AHCIController::~AHCIController()
 {
 }
 
-void AHCIController::initialize()
+void AHCIController::initialize_hba(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     if (!reset()) {
         dmesgln("{}: AHCI controller reset failed", pci_address());
@@ -150,7 +150,7 @@ void AHCIController::initialize()
     PCI::enable_interrupt_line(pci_address());
     PCI::enable_bus_mastering(pci_address());
     enable_global_interrupts();
-    m_handlers.append(AHCIPortHandler::create(*this, PCI::get_interrupt_line(pci_address()),
+    m_handlers.append(AHCIPortHandler::create(*this, pci_device_identifier.interrupt_line().value(),
         AHCI::MaskedBitField((volatile u32&)(hba().control_regs.pi))));
 }
 
