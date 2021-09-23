@@ -21,11 +21,7 @@ double const VOLUME_B = log(DYNAMIC_RANGE);
 // A single sample in an audio buffer.
 // Values are floating point, and should range from -1.0 to +1.0
 struct Frame {
-    constexpr Frame()
-        : left(0)
-        , right(0)
-    {
-    }
+    constexpr Frame() = default;
 
     // For mono
     constexpr Frame(double left)
@@ -127,8 +123,8 @@ struct Frame {
         return { left + other.left, right + other.right };
     }
 
-    double left;
-    double right;
+    double left { 0 };
+    double right { 0 };
 };
 
 }
