@@ -1145,7 +1145,7 @@ private:
 
 inline CSS::ValueID StyleValue::to_identifier() const
 {
-    if (is_identifier())
+    if (type() == Type::Identifier)
         return static_cast<const IdentifierStyleValue&>(*this).id();
     if (is_auto())
         return CSS::ValueID::Auto;
