@@ -2447,32 +2447,6 @@ RefPtr<StyleValue> Parser::parse_overflow_value(ParsingContext const& context, V
 
 RefPtr<StyleValue> Parser::parse_text_decoration_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
-    auto is_text_decoration_line = [](StyleValue const& value) -> bool {
-        switch (value.to_identifier()) {
-        case ValueID::None:
-        case ValueID::Underline:
-        case ValueID::Overline:
-        case ValueID::LineThrough:
-        case ValueID::Blink:
-            return true;
-        default:
-            return false;
-        }
-    };
-
-    auto is_text_decoration_style = [](StyleValue const& value) -> bool {
-        switch (value.to_identifier()) {
-        case ValueID::Solid:
-        case ValueID::Double:
-        case ValueID::Dotted:
-        case ValueID::Dashed:
-        case ValueID::Wavy:
-            return true;
-        default:
-            return false;
-        }
-    };
-
     if (component_values.size() > 3)
         return nullptr;
 
@@ -2486,19 +2460,19 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(ParsingContext const& con
         if (!value)
             return nullptr;
 
-        if (value->is_color()) {
+        if (property_accepts_value(PropertyID::TextDecorationColor, *value)) {
             if (decoration_color)
                 return nullptr;
             decoration_color = value.release_nonnull();
             continue;
         }
-        if (is_text_decoration_line(*value)) {
+        if (property_accepts_value(PropertyID::TextDecorationLine, *value)) {
             if (decoration_line)
                 return nullptr;
             decoration_line = value.release_nonnull();
             continue;
         }
-        if (is_text_decoration_style(*value)) {
+        if (property_accepts_value(PropertyID::TextDecorationStyle, *value)) {
             if (decoration_style)
                 return nullptr;
             decoration_style = value.release_nonnull();
