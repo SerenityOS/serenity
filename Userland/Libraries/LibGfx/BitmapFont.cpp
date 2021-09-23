@@ -10,6 +10,7 @@
 #include <AK/Utf8View.h>
 #include <LibCore/FileStream.h>
 #include <LibGfx/FontDatabase.h>
+#include <LibGfx/FontStyleMapping.h>
 
 namespace Gfx {
 
@@ -346,6 +347,20 @@ ALWAYS_INLINE int BitmapFont::unicode_view_width(T const& view) const
 String BitmapFont::qualified_name() const
 {
     return String::formatted("{} {} {}", family(), presentation_size(), weight());
+}
+
+String BitmapFont::variant() const
+{
+    StringBuilder builder;
+    builder.append(weight_to_name(weight()));
+    if (slope()) {
+        if (builder.string_view() == "Regular"sv)
+            builder.clear();
+        else
+            builder.append(" ");
+        builder.append(slope_to_name(slope()));
+    }
+    return builder.to_string();
 }
 
 Font const& Font::bold_variant() const
