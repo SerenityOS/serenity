@@ -60,7 +60,7 @@ Length StyleProperties::length_or_fallback(CSS::PropertyID id, const Length& fal
 
     if (value.value()->is_calculated()) {
         Length length = Length(0, Length::Type::Calculated);
-        length.set_calculated_style(verify_cast<CalculatedStyleValue>(value.value().ptr()));
+        length.set_calculated_style(&value.value()->as_calculated());
         return length;
     }
 
@@ -80,7 +80,7 @@ LengthBox StyleProperties::length_box(CSS::PropertyID left_id, CSS::PropertyID t
 Color StyleProperties::color_or_fallback(CSS::PropertyID id, Layout::NodeWithStyle const& node, Color fallback) const
 {
     auto value = property(id);
-    if (!value.has_value())
+    if (!value.has_value() || !value.value()->has_color())
         return fallback;
     return value.value()->to_color(node);
 }
@@ -91,8 +91,8 @@ void StyleProperties::load_font(Layout::Node const& node) const
     auto font_weight = property(CSS::PropertyID::FontWeight).value_or(IdentifierStyleValue::create(CSS::ValueID::Normal));
 
     int weight = Gfx::FontWeight::Regular;
-    if (font_weight->is_identifier()) {
-        switch (static_cast<const IdentifierStyleValue&>(*font_weight).id()) {
+    if (font_weight->has_identifier()) {
+        switch (font_weight->to_identifier()) {
         case CSS::ValueID::Normal:
             weight = Gfx::FontWeight::Regular;
             break;
@@ -111,7 +111,7 @@ void StyleProperties::load_font(Layout::Node const& node) const
             break;
         }
     } else if (font_weight->is_numeric()) {
-        int font_weight_integer = roundf(static_cast<NumericStyleValue const&>(*font_weight).value());
+        int font_weight_integer = font_weight->as_numeric().int_value();
         if (font_weight_integer <= Gfx::FontWeight::Regular)
             weight = Gfx::FontWeight::Regular;
         else if (font_weight_integer <= Gfx::FontWeight::Bold)
@@ -127,8 +127,8 @@ void StyleProperties::load_font(Layout::Node const& node) const
     auto parent_font_size = node.parent() == nullptr ? size : node.parent()->font_size();
     constexpr float font_size_ratio = 1.2f;
 
-    if (font_size->is_identifier()) {
-        switch (static_cast<const IdentifierStyleValue&>(*font_size).id()) {
+    if (font_size->has_identifier()) {
+        switch (font_size->to_identifier()) {
         case CSS::ValueID::XxSmall:
         case CSS::ValueID::XSmall:
         case CSS::ValueID::Small:
@@ -159,7 +159,7 @@ void StyleProperties::load_font(Layout::Node const& node) const
             maybe_length = font_size->to_length();
         } else if (font_size->is_calculated()) {
             Length length = Length(0, Length::Type::Calculated);
-            length.set_calculated_style(verify_cast<CalculatedStyleValue>(font_size.ptr()));
+            length.set_calculated_style(&font_size->as_calculated());
             maybe_length = length;
         }
         if (maybe_length.has_value()) {
@@ -214,7 +214,7 @@ void StyleProperties::load_font(Layout::Node const& node) const
 
     auto family_value = property(PropertyID::FontFamily).value_or(StringStyleValue::create("Katica"));
     if (family_value->is_value_list()) {
-        auto& family_list = static_cast<StyleValueList const&>(*family_value).values();
+        auto& family_list = family_value->as_value_list().values();
         for (auto& family : family_list) {
             if (family.is_identifier()) {
                 found_font = find_generic_font(family.to_identifier());
@@ -271,7 +271,7 @@ Optional<int> StyleProperties::z_index() const
     if (value->has_auto())
         return 0;
     if (value->is_numeric())
-        return static_cast<int>(static_cast<NumericStyleValue&>(*value).value());
+        return value->as_numeric().int_value();
     return {};
 }
 
@@ -282,10 +282,10 @@ Optional<float> StyleProperties::opacity() const
         return {};
     auto& value = maybe_value.value();
 
-    if (value->is_numeric())
-        return clamp(static_cast<NumericStyleValue&>(*value).value(), 0.0f, 1.0f);
+    if (value->has_number())
+        return clamp(value->to_number(), 0.0f, 1.0f);
 
-    if (value->is_length()) {
+    if (value->has_length()) {
         auto length = value->to_length();
         if (length.is_percentage())
             return clamp(length.raw_value() / 100.0f, 0.0f, 1.0f);
@@ -342,7 +342,7 @@ Optional<CSS::FlexBasisData> StyleProperties::flex_basis() const
     if (value.value()->has_auto())
         return { { CSS::FlexBasis::Auto, {} } };
 
-    if (value.value()->is_length())
+    if (value.value()->has_length())
         return { { CSS::FlexBasis::Length, value.value()->to_length() } };
 
     return {};
@@ -353,12 +353,8 @@ Optional<float> StyleProperties::flex_grow_factor() const
     auto value = property(CSS::PropertyID::FlexGrow);
     if (!value.has_value())
         return {};
-    if (value.value()->is_numeric()) {
-        auto numeric = verify_cast<CSS::NumericStyleValue>(value.value().ptr());
-        return numeric->value();
-    }
-    if (value.value()->is_length() && value.value()->to_length().raw_value() == 0)
-        return { 0 };
+    if (value.value()->has_number())
+        return value.value()->to_number();
     return {};
 }
 
@@ -367,12 +363,8 @@ Optional<float> StyleProperties::flex_shrink_factor() const
     auto value = property(CSS::PropertyID::FlexShrink);
     if (!value.has_value())
         return {};
-    if (value.value()->is_numeric()) {
-        auto numeric = verify_cast<CSS::NumericStyleValue>(value.value().ptr());
-        return numeric->value();
-    }
-    if (value.value()->is_length() && value.value()->to_length().raw_value() == 0)
-        return { 0 };
+    if (value.value()->has_number())
+        return value.value()->to_number();
     return {};
 }
 Optional<CSS::JustifyContent> StyleProperties::justify_content() const
@@ -408,14 +400,14 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
     if (!value.value()->is_value_list())
         return {};
 
-    auto& list = static_cast<const StyleValueList&>(*value.value());
+    auto& list = value.value()->as_value_list();
 
     Vector<CSS::Transformation> transformations;
 
     for (auto& it : list.values()) {
         if (!it.is_transformation())
             return {};
-        auto& transformation_style_value = static_cast<TransformationStyleValue const&>(it);
+        auto& transformation_style_value = it.as_transformation();
         CSS::Transformation transformation;
         transformation.function = transformation_style_value.transform_function();
         Vector<Variant<CSS::Length, float>> values;
@@ -423,7 +415,7 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
             if (transformation_value.is_length()) {
                 values.append({ transformation_value.to_length() });
             } else if (transformation_value.is_numeric()) {
-                values.append({ static_cast<NumericStyleValue const&>(transformation_value).value() });
+                values.append({ transformation_value.to_number() });
             } else {
                 dbgln("FIXME: Unsupported value in transform!");
             }
@@ -458,9 +450,9 @@ Optional<CSS::AlignItems> StyleProperties::align_items() const
 Optional<CSS::Position> StyleProperties::position() const
 {
     auto value = property(CSS::PropertyID::Position);
-    if (!value.has_value() || !value.value()->is_identifier())
+    if (!value.has_value())
         return {};
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (value.value()->to_identifier()) {
     case CSS::ValueID::Static:
         return CSS::Position::Static;
     case CSS::ValueID::Relative:
@@ -499,10 +491,9 @@ bool StyleProperties::operator==(const StyleProperties& other) const
 Optional<CSS::TextAlign> StyleProperties::text_align() const
 {
     auto value = property(CSS::PropertyID::TextAlign);
-    if (!value.has_value() || !value.value()->is_identifier())
+    if (!value.has_value())
         return {};
-
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (value.value()->to_identifier()) {
     case CSS::ValueID::Left:
         return CSS::TextAlign::Left;
     case CSS::ValueID::Center:
@@ -521,9 +512,9 @@ Optional<CSS::TextAlign> StyleProperties::text_align() const
 Optional<CSS::WhiteSpace> StyleProperties::white_space() const
 {
     auto value = property(CSS::PropertyID::WhiteSpace);
-    if (!value.has_value() || !value.value()->is_identifier())
+    if (!value.has_value())
         return {};
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (value.value()->to_identifier()) {
     case CSS::ValueID::Normal:
         return CSS::WhiteSpace::Normal;
     case CSS::ValueID::Nowrap:
@@ -542,9 +533,9 @@ Optional<CSS::WhiteSpace> StyleProperties::white_space() const
 Optional<CSS::LineStyle> StyleProperties::line_style(CSS::PropertyID property_id) const
 {
     auto value = property(property_id);
-    if (!value.has_value() || !value.value()->is_identifier())
+    if (!value.has_value())
         return {};
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (value.value()->to_identifier()) {
     case CSS::ValueID::None:
         return CSS::LineStyle::None;
     case CSS::ValueID::Hidden:
@@ -573,9 +564,9 @@ Optional<CSS::LineStyle> StyleProperties::line_style(CSS::PropertyID property_id
 Optional<CSS::Float> StyleProperties::float_() const
 {
     auto value = property(CSS::PropertyID::Float);
-    if (!value.has_value() || !value.value()->is_identifier())
+    if (!value.has_value())
         return {};
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (value.value()->to_identifier()) {
     case CSS::ValueID::None:
         return CSS::Float::None;
     case CSS::ValueID::Left:
@@ -590,9 +581,9 @@ Optional<CSS::Float> StyleProperties::float_() const
 Optional<CSS::Clear> StyleProperties::clear() const
 {
     auto value = property(CSS::PropertyID::Clear);
-    if (!value.has_value() || !value.value()->is_identifier())
+    if (!value.has_value())
         return {};
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (value.value()->to_identifier()) {
     case CSS::ValueID::None:
         return CSS::Clear::None;
     case CSS::ValueID::Left:
@@ -609,9 +600,9 @@ Optional<CSS::Clear> StyleProperties::clear() const
 Optional<CSS::Cursor> StyleProperties::cursor() const
 {
     auto value = property(CSS::PropertyID::Cursor);
-    if (!value.has_value() || !value.value()->is_identifier())
+    if (!value.has_value())
         return {};
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (value.value()->to_identifier()) {
     case CSS::ValueID::Auto:
         return CSS::Cursor::Auto;
     case CSS::ValueID::Default:
@@ -694,7 +685,7 @@ CSS::Display StyleProperties::display() const
     auto value = property(CSS::PropertyID::Display);
     if (!value.has_value() || !value.value()->is_identifier())
         return CSS::Display::Inline;
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (value.value()->to_identifier()) {
     case CSS::ValueID::None:
         return CSS::Display::None;
     case CSS::ValueID::Block:
@@ -733,9 +724,9 @@ CSS::Display StyleProperties::display() const
 Optional<CSS::TextDecorationLine> StyleProperties::text_decoration_line() const
 {
     auto value = property(CSS::PropertyID::TextDecorationLine);
-    if (!value.has_value() || !value.value()->is_identifier())
+    if (!value.has_value())
         return {};
-    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    switch (value.value()->to_identifier()) {
     case CSS::ValueID::None:
         return CSS::TextDecorationLine::None;
     case CSS::ValueID::Underline:
@@ -779,7 +770,6 @@ Optional<CSS::ListStyleType> StyleProperties::list_style_type() const
     auto value = property(CSS::PropertyID::ListStyleType);
     if (!value.has_value())
         return {};
-
     switch (value.value()->to_identifier()) {
     case CSS::ValueID::None:
         return CSS::ListStyleType::None;
@@ -825,7 +815,6 @@ Optional<CSS::Overflow> StyleProperties::overflow(CSS::PropertyID property_id) c
     auto value = property(property_id);
     if (!value.has_value())
         return {};
-
     switch (value.value()->to_identifier()) {
     case CSS::ValueID::Auto:
         return CSS::Overflow::Auto;
@@ -847,7 +836,6 @@ Optional<CSS::Repeat> StyleProperties::background_repeat_x() const
     auto value = property(CSS::PropertyID::BackgroundRepeatX);
     if (!value.has_value())
         return {};
-
     switch (value.value()->to_identifier()) {
     case CSS::ValueID::NoRepeat:
         return CSS::Repeat::NoRepeat;
@@ -867,7 +855,6 @@ Optional<CSS::Repeat> StyleProperties::background_repeat_y() const
     auto value = property(CSS::PropertyID::BackgroundRepeatY);
     if (!value.has_value())
         return {};
-
     switch (value.value()->to_identifier()) {
     case CSS::ValueID::NoRepeat:
         return CSS::Repeat::NoRepeat;
@@ -892,7 +879,7 @@ Optional<CSS::BoxShadowData> StyleProperties::box_shadow() const
     if (!value->is_box_shadow())
         return {};
 
-    auto box = verify_cast<CSS::BoxShadowStyleValue>(value.ptr());
-    return { { box->offset_x(), box->offset_y(), box->blur_radius(), box->color() } };
+    auto& box = value->as_box_shadow();
+    return { { box.offset_x(), box.offset_y(), box.blur_radius(), box.color() } };
 }
 }
