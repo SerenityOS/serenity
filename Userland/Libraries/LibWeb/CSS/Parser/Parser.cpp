@@ -1876,37 +1876,6 @@ RefPtr<StyleValue> Parser::parse_background_repeat_value(ParsingContext const& c
 
 RefPtr<StyleValue> Parser::parse_border_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
-    auto is_line_style = [](StyleValue const& value) -> bool {
-        switch (value.to_identifier()) {
-        case ValueID::Dotted:
-        case ValueID::Dashed:
-        case ValueID::Solid:
-        case ValueID::Double:
-        case ValueID::Groove:
-        case ValueID::Ridge:
-        case ValueID::None:
-        case ValueID::Hidden:
-        case ValueID::Inset:
-        case ValueID::Outset:
-            return true;
-        default:
-            return false;
-        }
-    };
-
-    auto is_line_width = [](StyleValue const& value) -> bool {
-        if (value.is_length())
-            return true;
-
-        // FIXME: Implement thin/medium/thick
-        switch (value.to_identifier()) {
-        case ValueID::None:
-            return true;
-        default:
-            return false;
-        }
-    };
-
     if (component_values.size() > 3)
         return nullptr;
 
@@ -1919,19 +1888,19 @@ RefPtr<StyleValue> Parser::parse_border_value(ParsingContext const& context, Vec
         if (!value)
             return nullptr;
 
-        if (is_line_width(*value)) {
+        if (property_accepts_value(PropertyID::BorderWidth, *value)) {
             if (border_width)
                 return nullptr;
             border_width = value.release_nonnull();
             continue;
         }
-        if (value->is_color()) {
+        if (property_accepts_value(PropertyID::BorderColor, *value)) {
             if (border_color)
                 return nullptr;
             border_color = value.release_nonnull();
             continue;
         }
-        if (is_line_style(*value)) {
+        if (property_accepts_value(PropertyID::BorderStyle, *value)) {
             if (border_style)
                 return nullptr;
             border_style = value.release_nonnull();
