@@ -31,6 +31,9 @@ struct AvailableSpaceForLineInfo {
 
 static AvailableSpaceForLineInfo available_space_for_line(const InlineFormattingContext& context, size_t line_index)
 {
+    if (!context.parent()->is_block_formatting_context())
+        return { 0, context.context_box().width() };
+
     AvailableSpaceForLineInfo info;
 
     // FIXME: This is a total hack guess since we don't actually know the final y position of lines here!
