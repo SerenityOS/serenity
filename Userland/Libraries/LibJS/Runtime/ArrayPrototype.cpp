@@ -806,7 +806,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::index_of)
                 return {};
 
             // ii. Let same be IsStrictlyEqual(searchElement, elementK).
-            auto same = strict_eq(search_element, element_k);
+            auto same = is_strictly_equal(search_element, element_k);
 
             // iii. If same is true, return 𝔽(k).
             if (same)
@@ -1302,7 +1302,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::last_index_of)
                 return {};
 
             // ii. Let same be IsStrictlyEqual(searchElement, elementK).
-            auto same = strict_eq(search_element, element_k);
+            auto same = is_strictly_equal(search_element, element_k);
 
             // iii. If same is true, return 𝔽(k).
             if (same)
