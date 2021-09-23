@@ -117,7 +117,7 @@ UNMAP_AFTER_INIT RefPtr<RTL8139NetworkAdapter> RTL8139NetworkAdapter::try_to_ini
     constexpr PCI::HardwareID rtl8139_id = { 0x10EC, 0x8139 };
     if (pci_device_identifier.hardware_id() != rtl8139_id)
         return {};
-    u8 irq = PCI::get_interrupt_line(pci_device_identifier.address());
+    u8 irq = pci_device_identifier.interrupt_line().value();
     return adopt_ref_if_nonnull(new (nothrow) RTL8139NetworkAdapter(pci_device_identifier.address(), irq));
 }
 
@@ -135,9 +135,8 @@ UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address addre
 
     enable_bus_mastering(pci_address());
 
-    m_interrupt_line = PCI::get_interrupt_line(pci_address());
     dmesgln("RTL8139: I/O port base: {}", m_io_base);
-    dmesgln("RTL8139: Interrupt line: {}", m_interrupt_line);
+    dmesgln("RTL8139: Interrupt line: {}", interrupt_number());
 
     // we add space to account for overhang from the last packet - the rtl8139
     // can optionally guarantee that packets will be contiguous by

@@ -55,6 +55,7 @@ UNMAP_AFTER_INIT IDEController::IDEController(PCI::DeviceIdentifier const& devic
     : StorageController()
     , PCI::Device(device_identifier.address())
     , m_prog_if(device_identifier.prog_if())
+    , m_interrupt_line(device_identifier.interrupt_line())
 {
     PCI::enable_io_space(device_identifier.address());
     PCI::enable_memory_space(device_identifier.address());
@@ -114,7 +115,7 @@ UNMAP_AFTER_INIT void IDEController::initialize(bool force_pio)
 {
     auto bus_master_base = IOAddress(PCI::get_BAR4(pci_address()) & (~1));
     dbgln("IDE controller @ {}: bus master base was set to {}", pci_address(), bus_master_base);
-    dbgln("IDE controller @ {}: interrupt line was set to {}", pci_address(), PCI::get_interrupt_line(pci_address()));
+    dbgln("IDE controller @ {}: interrupt line was set to {}", pci_address(), m_interrupt_line.value());
     dbgln("IDE controller @ {}: {}", pci_address(), detect_controller_type(m_prog_if.value()));
     dbgln("IDE controller @ {}: primary channel DMA capable? {}", pci_address(), ((bus_master_base.offset(2).in<u8>() >> 5) & 0b11));
     dbgln("IDE controller @ {}: secondary channel DMA capable? {}", pci_address(), ((bus_master_base.offset(2 + 8).in<u8>() >> 5) & 0b11));
@@ -131,7 +132,7 @@ UNMAP_AFTER_INIT void IDEController::initialize(bool force_pio)
     auto bar3 = PCI::get_BAR3(pci_address());
     auto secondary_control_io = (bar3 == 0x1 || bar3 == 0) ? IOAddress(0x376) : IOAddress(bar3 & (~1));
 
-    auto irq_line = PCI::get_interrupt_line(pci_address());
+    auto irq_line = m_interrupt_line.value();
     if (is_pci_native_mode_enabled()) {
         VERIFY(irq_line != 0);
     }

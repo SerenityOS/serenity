@@ -53,7 +53,7 @@ public:
     KResult clear_port_feature(Badge<UHCIRootHub>, u8, HubFeatureSelector);
 
 private:
-    explicit UHCIController(PCI::Address);
+    explicit UHCIController(PCI::DeviceIdentifier const& pci_device_identifier);
 
     u16 read_usbcmd() { return m_io_base.offset(0).in<u16>(); }
     u16 read_usbsts() { return m_io_base.offset(0x2).in<u16>(); }

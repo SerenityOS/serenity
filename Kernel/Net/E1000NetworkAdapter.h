@@ -91,7 +91,6 @@ protected:
     Array<void*, number_of_rx_descriptors> m_rx_buffers;
     Array<void*, number_of_tx_descriptors> m_tx_buffers;
     OwnPtr<Memory::Region> m_mmio_region;
-    u8 m_interrupt_line { 0 };
     bool m_has_eeprom { false };
     bool m_use_mmio { false };
     EntropySource m_entropy_source;

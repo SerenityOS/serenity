@@ -36,6 +36,7 @@ namespace Kernel {
 #define PCI_SUBSYSTEM_ID 0x2E         // u16
 #define PCI_CAPABILITIES_POINTER 0x34 // u8
 #define PCI_INTERRUPT_LINE 0x3C       // byte
+#define PCI_INTERRUPT_PIN 0x3D        // byte
 #define PCI_SECONDARY_BUS 0x19        // byte
 #define PCI_HEADER_TYPE_DEVICE 0
 #define PCI_HEADER_TYPE_BRIDGE 1
@@ -187,11 +188,13 @@ TYPEDEF_DISTINCT_ORDERED_ID(u8, ProgrammingInterface);
 TYPEDEF_DISTINCT_ORDERED_ID(u8, RevisionID);
 TYPEDEF_DISTINCT_ORDERED_ID(u16, SubsystemID);
 TYPEDEF_DISTINCT_ORDERED_ID(u16, SubsystemVendorID);
+TYPEDEF_DISTINCT_ORDERED_ID(u8, InterruptLine);
+TYPEDEF_DISTINCT_ORDERED_ID(u8, InterruptPin);
 
 class Access;
 class DeviceIdentifier {
 public:
-    DeviceIdentifier(Address address, HardwareID hardware_id, RevisionID revision_id, ClassCode class_code, SubclassCode subclass_code, ProgrammingInterface prog_if, SubsystemID subsystem_id, SubsystemVendorID subsystem_vendor_id, Vector<Capability> capabilities)
+    DeviceIdentifier(Address address, HardwareID hardware_id, RevisionID revision_id, ClassCode class_code, SubclassCode subclass_code, ProgrammingInterface prog_if, SubsystemID subsystem_id, SubsystemVendorID subsystem_vendor_id, InterruptLine interrupt_line, InterruptPin interrupt_pin, Vector<Capability> capabilities)
         : m_address(address)
         , m_hardware_id(hardware_id)
         , m_revision_id(revision_id)
@@ -200,6 +203,8 @@ public:
         , m_prog_if(prog_if)
         , m_subsystem_id(subsystem_id)
         , m_subsystem_vendor_id(subsystem_vendor_id)
+        , m_interrupt_line(interrupt_line)
+        , m_interrupt_pin(interrupt_pin)
         , m_capabilities(capabilities)
     {
         if constexpr (PCI_DEBUG) {
@@ -218,6 +223,9 @@ public:
     ProgrammingInterface prog_if() const { return m_prog_if; }
     SubsystemID subsystem_id() const { return m_subsystem_id; }
     SubsystemVendorID subsystem_vendor_id() const { return m_subsystem_vendor_id; }
+
+    InterruptLine interrupt_line() const { return m_interrupt_line; }
+    InterruptPin interrupt_pin() const { return m_interrupt_pin; }
 
     void apply_subclass_code_change(Badge<Access>, SubclassCode new_subclass)
     {
@@ -238,6 +246,9 @@ private:
     ProgrammingInterface m_prog_if;
     SubsystemID m_subsystem_id;
     SubsystemVendorID m_subsystem_vendor_id;
+
+    InterruptLine m_interrupt_line;
+    InterruptPin m_interrupt_pin;
 
     Vector<Capability> m_capabilities;
 };

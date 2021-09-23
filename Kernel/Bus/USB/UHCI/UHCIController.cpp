@@ -65,7 +65,7 @@ static constexpr u16 UHCI_NUMBER_OF_FRAMES = 1024;
 KResultOr<NonnullRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     // NOTE: This assumes that address is pointing to a valid UHCI controller.
-    auto controller = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) UHCIController(pci_device_identifier.address())));
+    auto controller = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) UHCIController(pci_device_identifier)));
     TRY(controller->initialize());
     return controller;
 }
@@ -74,7 +74,7 @@ KResult UHCIController::initialize()
 {
     dmesgln("UHCI: Controller found {} @ {}", PCI::get_hardware_id(pci_address()), pci_address());
     dmesgln("UHCI: I/O base {}", m_io_base);
-    dmesgln("UHCI: Interrupt line: {}", PCI::get_interrupt_line(pci_address()));
+    dmesgln("UHCI: Interrupt line: {}", interrupt_number());
 
     spawn_port_proc();
 
@@ -82,9 +82,9 @@ KResult UHCIController::initialize()
     return start();
 }
 
-UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::Address address)
-    : PCI::Device(address)
-    , IRQHandler(PCI::get_interrupt_line(address))
+UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::DeviceIdentifier const& pci_device_identifier)
+    : PCI::Device(pci_device_identifier.address())
+    , IRQHandler(pci_device_identifier.interrupt_line().value())
     , m_io_base(PCI::get_BAR4(pci_address()) & ~1)
 {
 }

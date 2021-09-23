@@ -152,7 +152,7 @@ UNMAP_AFTER_INIT void Device::initialize()
 
 UNMAP_AFTER_INIT VirtIO::Device::Device(PCI::DeviceIdentifier const& device_identifier)
     : PCI::Device(device_identifier.address())
-    , IRQHandler(PCI::get_interrupt_line(device_identifier.address()))
+    , IRQHandler(device_identifier.interrupt_line().value())
     , m_io_base(IOAddress(PCI::get_BAR0(pci_address()) & ~1))
     , m_class_name(VirtIO::determine_device_class(device_identifier))
 {

@@ -41,8 +41,8 @@ private:
     void disable_global_interrupts() const;
     void enable_global_interrupts() const;
 
-    UNMAP_AFTER_INIT explicit AHCIController(PCI::Address address);
-    UNMAP_AFTER_INIT void initialize();
+    UNMAP_AFTER_INIT explicit AHCIController(PCI::DeviceIdentifier const&);
+    UNMAP_AFTER_INIT void initialize_hba(PCI::DeviceIdentifier const&);
 
     AHCI::HBADefinedCapabilities capabilities() const;
     RefPtr<StorageDevice> device_by_port(u32 index) const;
