@@ -279,7 +279,9 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                 if (!valid_types.is_empty()) {
                     for (auto& type : valid_types.values()) {
                         VERIFY(type.is_string());
-                        auto type_name = type.as_string();
+                        auto type_parts = type.as_string().split_view(' ');
+                        auto type_name = type_parts.first();
+                        auto type_args = type_parts.size() > 1 ? type_parts[1] : ""sv;
                         if (type_name == "color") {
                             property_generator.append(R"~~~(
         if (style_value.is_color())
@@ -298,8 +300,25 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
 )~~~");
                         } else if (type_name == "number" || type_name == "integer") {
                             // FIXME: Handle integers separately
+                            StringView min_value;
+                            StringView max_value;
+                            if (!type_args.is_empty()) {
+                                VERIFY(type_args.starts_with('[') && type_args.ends_with(']'));
+                                auto comma_index = type_args.find(',').value();
+                                min_value = type_args.substring_view(1, comma_index - 1);
+                                max_value = type_args.substring_view(comma_index + 1, type_args.length() - comma_index - 2);
+                            }
                             property_generator.append(R"~~~(
-        if (style_value.is_numeric())
+        if (style_value.is_numeric())~~~");
+                            if (!min_value.is_empty()) {
+                                property_generator.set("minvalue", min_value);
+                                property_generator.append(" && (style_value.as_number() >= (float)@minvalue@)");
+                            }
+                            if (!max_value.is_empty()) {
+                                property_generator.set("maxvalue", max_value);
+                                property_generator.append(" && (style_value.as_number() <= (float)@maxvalue@)");
+                            }
+                            property_generator.append(R"~~~()
             return true;
 )~~~");
                         } else if (type_name == "string") {
