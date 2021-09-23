@@ -703,7 +703,7 @@ Value Object::internal_get(PropertyName const& property_name, Value receiver) co
         return js_undefined();
 
     // 8. Return ? Call(getter, Receiver).
-    return vm.call(*getter, receiver);
+    return TRY_OR_DISCARD(vm.call(*getter, receiver));
 }
 
 static bool ordinary_set_with_own_descriptor(Object&, PropertyName const&, Value, Value, Optional<PropertyDescriptor>);
@@ -1199,7 +1199,7 @@ Value Object::ordinary_to_primitive(Value::PreferredType preferred_type) const
         if (vm.exception())
             return {};
         if (method.is_function()) {
-            auto result = vm.call(method.as_function(), const_cast<Object*>(this));
+            auto result = TRY_OR_DISCARD(vm.call(method.as_function(), const_cast<Object*>(this)));
             if (!result.is_object())
                 return result;
         }

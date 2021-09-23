@@ -67,7 +67,7 @@ Value PromiseAllResolveElementFunction::resolve_element()
 
     if (--m_remaining_elements.value == 0) {
         auto values_array = Array::create_from(global_object, m_values.values());
-        return vm.call(*m_capability.resolve, js_undefined(), values_array);
+        return TRY_OR_DISCARD(vm.call(*m_capability.resolve, js_undefined(), values_array));
     }
 
     return js_undefined();
@@ -96,7 +96,7 @@ Value PromiseAllSettledResolveElementFunction::resolve_element()
 
     if (--m_remaining_elements.value == 0) {
         auto values_array = Array::create_from(global_object, m_values.values());
-        return vm.call(*m_capability.resolve, js_undefined(), values_array);
+        return TRY_OR_DISCARD(vm.call(*m_capability.resolve, js_undefined(), values_array));
     }
 
     return js_undefined();
@@ -125,7 +125,7 @@ Value PromiseAllSettledRejectElementFunction::resolve_element()
 
     if (--m_remaining_elements.value == 0) {
         auto values_array = Array::create_from(global_object, m_values.values());
-        return vm.call(*m_capability.resolve, js_undefined(), values_array);
+        return TRY_OR_DISCARD(vm.call(*m_capability.resolve, js_undefined(), values_array));
     }
 
     return js_undefined();
@@ -154,7 +154,7 @@ Value PromiseAnyRejectElementFunction::resolve_element()
         auto* error = AggregateError::create(global_object);
         error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true });
 
-        return vm.call(*m_capability.reject, js_undefined(), error);
+        return TRY_OR_DISCARD(vm.call(*m_capability.reject, js_undefined(), error));
     }
 
     return js_undefined();

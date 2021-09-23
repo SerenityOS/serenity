@@ -28,7 +28,7 @@ template<typename... Args>
 {
     VERIFY(job_callback.callback);
     auto& callback = *job_callback.callback;
-    return vm.call(callback, this_value, args...);
+    return TRY_OR_DISCARD(vm.call(callback, this_value, args...));
 }
 
 }

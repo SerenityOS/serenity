@@ -56,9 +56,9 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
     auto this_arg = vm.argument(0);
     auto arg_array = vm.argument(1);
     if (arg_array.is_nullish())
-        return vm.call(function, this_arg);
+        return TRY_OR_DISCARD(vm.call(function, this_arg));
     auto arguments = TRY_OR_DISCARD(create_list_from_array_like(global_object, arg_array));
-    return vm.call(function, this_arg, move(arguments));
+    return TRY_OR_DISCARD(vm.call(function, this_arg, move(arguments)));
 }
 
 // 20.2.3.2 Function.prototype.bind ( thisArg, ...args ), https://tc39.es/ecma262/#sec-function.prototype.bind
@@ -100,7 +100,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
         for (size_t i = 1; i < vm.argument_count(); ++i)
             arguments.append(vm.argument(i));
     }
-    return vm.call(function, this_arg, move(arguments));
+    return TRY_OR_DISCARD(vm.call(function, this_arg, move(arguments)));
 }
 
 // 20.2.3.5 Function.prototype.toString ( ), https://tc39.es/ecma262/#sec-function.prototype.tostring

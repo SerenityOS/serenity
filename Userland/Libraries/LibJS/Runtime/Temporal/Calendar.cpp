@@ -103,9 +103,7 @@ ThrowCompletionOr<Vector<String>> calendar_fields(GlobalObject& global_object, O
     // 3. If fields is not undefined, then
     if (fields) {
         // a. Set fieldsArray to ? Call(fields, calendar, « fieldsArray »).
-        fields_array = vm.call(*fields, &calendar, fields_array);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        fields_array = TRY(vm.call(*fields, &calendar, fields_array));
     }
 
     // 4. Return ? IterableToListOfType(fieldsArray, « String »).
@@ -124,9 +122,7 @@ ThrowCompletionOr<double> calendar_year(GlobalObject& global_object, Object& cal
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Let result be ? Invoke(calendar, "year", « dateLike »).
-    auto result = Value(&calendar).invoke(global_object, vm.names.year, &date_like);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto result = TRY(Value(&calendar).invoke(global_object, vm.names.year, &date_like));
 
     // 3. If result is undefined, throw a RangeError exception.
     if (result.is_undefined())
@@ -143,9 +139,7 @@ ThrowCompletionOr<double> calendar_month(GlobalObject& global_object, Object& ca
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Let result be ? Invoke(calendar, "month", « dateLike »).
-    auto result = Value(&calendar).invoke(global_object, vm.names.month, &date_like);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto result = TRY(Value(&calendar).invoke(global_object, vm.names.month, &date_like));
 
     // 3. If result is undefined, throw a RangeError exception.
     if (result.is_undefined())
@@ -162,9 +156,7 @@ ThrowCompletionOr<String> calendar_month_code(GlobalObject& global_object, Objec
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Let result be ? Invoke(calendar, "monthCode", « dateLike »).
-    auto result = Value(&calendar).invoke(global_object, vm.names.monthCode, &date_like);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto result = TRY(Value(&calendar).invoke(global_object, vm.names.monthCode, &date_like));
 
     // 3. If result is undefined, throw a RangeError exception.
     if (result.is_undefined())
@@ -181,9 +173,7 @@ ThrowCompletionOr<double> calendar_day(GlobalObject& global_object, Object& cale
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Let result be ? Invoke(calendar, "day", « dateLike »).
-    auto result = Value(&calendar).invoke(global_object, vm.names.day, &date_like);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto result = TRY(Value(&calendar).invoke(global_object, vm.names.day, &date_like));
 
     // 3. If result is undefined, throw a RangeError exception.
     if (result.is_undefined())
@@ -200,10 +190,7 @@ ThrowCompletionOr<Value> calendar_day_of_week(GlobalObject& global_object, Objec
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "dayOfWeek", « dateLike »).
-    auto day_of_week = Value(&calendar).invoke(global_object, vm.names.dayOfWeek, &date_like);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return day_of_week;
+    return TRY(Value(&calendar).invoke(global_object, vm.names.dayOfWeek, &date_like));
 }
 
 // 12.1.14 CalendarDayOfYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardayofyear
@@ -213,10 +200,7 @@ ThrowCompletionOr<Value> calendar_day_of_year(GlobalObject& global_object, Objec
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "dayOfYear", « dateLike »).
-    auto day_of_year = Value(&calendar).invoke(global_object, vm.names.dayOfYear, &date_like);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return day_of_year;
+    return TRY(Value(&calendar).invoke(global_object, vm.names.dayOfYear, &date_like));
 }
 
 // 12.1.15 CalendarWeekOfYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarweekofyear
@@ -226,10 +210,7 @@ ThrowCompletionOr<Value> calendar_week_of_year(GlobalObject& global_object, Obje
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "weekOfYear", « dateLike »).
-    auto week_of_year = Value(&calendar).invoke(global_object, vm.names.weekOfYear, &date_like);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return week_of_year;
+    return TRY(Value(&calendar).invoke(global_object, vm.names.weekOfYear, &date_like));
 }
 
 // 12.1.16 CalendarDaysInWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinweek
@@ -239,10 +220,7 @@ ThrowCompletionOr<Value> calendar_days_in_week(GlobalObject& global_object, Obje
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "daysInWeek", « dateLike »).
-    auto days_in_week = Value(&calendar).invoke(global_object, vm.names.daysInWeek, &date_like);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return days_in_week;
+    return TRY(Value(&calendar).invoke(global_object, vm.names.daysInWeek, &date_like));
 }
 
 // 12.1.17 CalendarDaysInMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinmonth
@@ -252,10 +230,7 @@ ThrowCompletionOr<Value> calendar_days_in_month(GlobalObject& global_object, Obj
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "daysInMonth", « dateLike »).
-    auto days_in_month = Value(&calendar).invoke(global_object, vm.names.daysInMonth, &date_like);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return days_in_month;
+    return TRY(Value(&calendar).invoke(global_object, vm.names.daysInMonth, &date_like));
 }
 
 // 12.1.18 CalendarDaysInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinyear
@@ -265,10 +240,7 @@ ThrowCompletionOr<Value> calendar_days_in_year(GlobalObject& global_object, Obje
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "daysInYear", « dateLike »).
-    auto days_in_year = Value(&calendar).invoke(global_object, vm.names.daysInYear, &date_like);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return days_in_year;
+    return TRY(Value(&calendar).invoke(global_object, vm.names.daysInYear, &date_like));
 }
 
 // 12.1.19 CalendarMonthsInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthsinyear
@@ -278,10 +250,7 @@ ThrowCompletionOr<Value> calendar_months_in_year(GlobalObject& global_object, Ob
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "monthsInYear", « dateLike »).
-    auto months_in_year = Value(&calendar).invoke(global_object, vm.names.monthsInYear, &date_like);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return months_in_year;
+    return TRY(Value(&calendar).invoke(global_object, vm.names.monthsInYear, &date_like));
 }
 
 // 12.1.20 CalendarInLeapYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarinleapyear
@@ -291,10 +260,7 @@ ThrowCompletionOr<Value> calendar_in_leap_year(GlobalObject& global_object, Obje
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "inLeapYear", « dateLike »).
-    auto in_leap_year = Value(&calendar).invoke(global_object, vm.names.inLeapYear, &date_like);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return in_leap_year;
+    return TRY(Value(&calendar).invoke(global_object, vm.names.inLeapYear, &date_like));
 }
 
 // 15.6.1.2 CalendarEra ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarera
@@ -305,9 +271,7 @@ ThrowCompletionOr<Value> calendar_era(GlobalObject& global_object, Object& calen
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Let result be ? Invoke(calendar, "era", « dateLike »).
-    auto result = Value(&calendar).invoke(global_object, vm.names.era, &date_like);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto result = TRY(Value(&calendar).invoke(global_object, vm.names.era, &date_like));
 
     // 3. If result is not undefined, set result to ? ToString(result).
     if (!result.is_undefined()) {
@@ -329,9 +293,7 @@ ThrowCompletionOr<Value> calendar_era_year(GlobalObject& global_object, Object& 
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Let result be ? Invoke(calendar, "eraYear", « dateLike »).
-    auto result = Value(&calendar).invoke(global_object, vm.names.eraYear, &date_like);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto result = TRY(Value(&calendar).invoke(global_object, vm.names.eraYear, &date_like));
 
     // 3. If result is not undefined, set result to ? ToIntegerThrowOnInfinity(result).
     if (!result.is_undefined())
@@ -451,9 +413,7 @@ ThrowCompletionOr<PlainDate*> date_from_fields(GlobalObject& global_object, Obje
     // 2. Assert: Type(fields) is Object.
 
     // 3. Let date be ? Invoke(calendar, "dateFromFields", « fields, options »).
-    auto date = Value(&calendar).invoke(global_object, vm.names.dateFromFields, &fields, &options);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto date = TRY(Value(&calendar).invoke(global_object, vm.names.dateFromFields, &fields, &options));
 
     // 4. Perform ? RequireInternalSlot(date, [[InitializedTemporalDate]]).
     auto* date_object = date.to_object(global_object);
@@ -479,9 +439,7 @@ ThrowCompletionOr<PlainYearMonth*> year_month_from_fields(GlobalObject& global_o
     //     a. Assert: Type(options) is Object.
 
     // 5. Let yearMonth be ? Invoke(calendar, "yearMonthFromFields", « fields, options »).
-    auto year_month = Value(&calendar).invoke(global_object, vm.names.yearMonthFromFields, &fields, options ?: js_undefined());
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto year_month = TRY(Value(&calendar).invoke(global_object, vm.names.yearMonthFromFields, &fields, options ?: js_undefined()));
 
     // 6. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
     auto* year_month_object = year_month.to_object(global_object);
@@ -507,9 +465,7 @@ ThrowCompletionOr<PlainMonthDay*> month_day_from_fields(GlobalObject& global_obj
     //     a. Assert: Type(options) is Object.
 
     // 5. Let monthDay be ? Invoke(calendar, "monthDayFromFields", « fields, options »).
-    auto month_day = Value(&calendar).invoke(global_object, vm.names.monthDayFromFields, &fields, options ?: js_undefined());
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto month_day = TRY(Value(&calendar).invoke(global_object, vm.names.monthDayFromFields, &fields, options ?: js_undefined()));
 
     // 6. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
     auto* month_day_object = month_day.to_object(global_object);

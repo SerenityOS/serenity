@@ -374,9 +374,7 @@ ThrowCompletionOr<double> get_offset_nanoseconds_for(GlobalObject& global_object
         get_offset_nanoseconds_for = global_object.temporal_time_zone_prototype_get_offset_nanoseconds_for_function();
 
     // 3. Let offsetNanoseconds be ? Call(getOffsetNanosecondsFor, timeZone, « instant »).
-    auto offset_nanoseconds_value = vm.call(*get_offset_nanoseconds_for, time_zone, &instant);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto offset_nanoseconds_value = TRY(vm.call(*get_offset_nanoseconds_for, time_zone, &instant));
 
     // 4. If Type(offsetNanoseconds) is not Number, throw a TypeError exception.
     if (!offset_nanoseconds_value.is_number())

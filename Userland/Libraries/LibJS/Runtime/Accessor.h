@@ -35,7 +35,7 @@ public:
     {
         if (!m_getter)
             return js_undefined();
-        return vm().call(*m_getter, this_value);
+        return TRY_OR_DISCARD(vm().call(*m_getter, this_value));
     }
 
     void call_setter(Value this_value, Value setter_value)

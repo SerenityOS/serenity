@@ -246,7 +246,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         return TRY_OR_DISCARD(perform_eval(script_value, global_object, vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct));
     }
 
-    return vm.call(function, this_value, move(arg_list));
+    return TRY_OR_DISCARD(vm.call(function, this_value, move(arg_list)));
 }
 
 // 13.3.7.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
@@ -976,11 +976,8 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
 
         if (field.is_static()) {
             Value field_value = js_undefined();
-            if (initializer) {
-                field_value = interpreter.vm().call(*initializer, class_constructor_value);
-                if (interpreter.exception())
-                    return {};
-            }
+            if (initializer)
+                field_value = TRY_OR_DISCARD(interpreter.vm().call(*initializer, class_constructor_value));
 
             class_constructor->create_data_property_or_throw(property_key, field_value);
             if (interpreter.exception())
@@ -2280,7 +2277,7 @@ Value TaggedTemplateLiteral::execute(Interpreter& interpreter, GlobalObject& glo
         raw_strings->indexed_properties().append(value);
     }
     strings->define_direct_property(vm.names.raw, raw_strings, 0);
-    return vm.call(tag_function, js_undefined(), move(arguments));
+    return TRY_OR_DISCARD(vm.call(tag_function, js_undefined(), move(arguments)));
 }
 
 void TryStatement::dump(int indent) const

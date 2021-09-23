@@ -29,9 +29,7 @@ Object* get_iterator(GlobalObject& global_object, Value value, IteratorHint hint
         vm.throw_exception<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects());
         return nullptr;
     }
-    auto iterator = vm.call(method.as_function(), value);
-    if (vm.exception())
-        return {};
+    auto iterator = TRY_OR_DISCARD(vm.call(method.as_function(), value));
     if (!iterator.is_object()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects());
         return nullptr;
@@ -56,12 +54,10 @@ Object* iterator_next(Object& iterator, Value value)
 
     Value result;
     if (value.is_empty())
-        result = vm.call(next_method.as_function(), &iterator);
+        result = TRY_OR_DISCARD(vm.call(next_method.as_function(), &iterator));
     else
-        result = vm.call(next_method.as_function(), &iterator, value);
+        result = TRY_OR_DISCARD(vm.call(next_method.as_function(), &iterator, value));
 
-    if (vm.exception())
-        return {};
     if (!result.is_object()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::IterableNextBadReturn);
         return nullptr;
@@ -132,11 +128,12 @@ void iterator_close(Object& iterator)
     if (!return_method)
         return restore_completion(); // If return is undefined, return Completion(completion).
 
-    auto result = vm.call(*return_method, &iterator);
+    auto result_or_error = vm.call(*return_method, &iterator);
     if (completion_exception)
         return restore_completion(); // If completion.[[Type]] is throw, return Completion(completion).
-    if (vm.exception())
+    if (result_or_error.is_error())
         return; // If innerResult.[[Type]] is throw, return Completion(innerResult).
+    auto result = result_or_error.release_value();
     if (!result.is_object()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::IterableReturnBadReturn);
         return; // If Type(innerResult.[[Value]]) is not Object, throw a TypeError exception.

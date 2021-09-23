@@ -190,8 +190,8 @@ Result<size_t, JS::Value> WebAssemblyObject::instantiate_module(Wasm::Module con
                             for (auto& entry : arguments)
                                 argument_values.append(to_js_value(entry, global_object));
 
-                            auto result = vm.call(function, JS::js_undefined(), move(argument_values));
-                            if (vm.exception()) {
+                            auto result_or_error = vm.call(function, JS::js_undefined(), move(argument_values));
+                            if (result_or_error.is_error()) {
                                 vm.clear_exception();
                                 return Wasm::Trap();
                             }
@@ -199,7 +199,7 @@ Result<size_t, JS::Value> WebAssemblyObject::instantiate_module(Wasm::Module con
                                 return Wasm::Result { Vector<Wasm::Value> {} };
 
                             if (type.results().size() == 1) {
-                                auto value = to_webassembly_value(result, type.results().first(), global_object);
+                                auto value = to_webassembly_value(result_or_error.release_value(), type.results().first(), global_object);
                                 if (!value.has_value())
                                     return Wasm::Trap {};
 

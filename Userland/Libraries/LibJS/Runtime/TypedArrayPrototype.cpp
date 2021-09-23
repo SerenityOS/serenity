@@ -122,9 +122,10 @@ static void for_each_item(VM& vm, GlobalObject& global_object, const String& nam
         if (vm.exception())
             return;
 
-        auto callback_result = vm.call(*callback_function, this_value, value, Value((i32)i), typed_array);
-        if (vm.exception())
+        auto callback_result_or_error = vm.call(*callback_function, this_value, value, Value((i32)i), typed_array);
+        if (callback_result_or_error.is_error())
             return;
+        auto callback_result = callback_result_or_error.release_value();
 
         if (callback(i, value, callback_result) == IterationDecision::Break)
             break;
@@ -150,9 +151,10 @@ static void for_each_item_from_last(VM& vm, GlobalObject& global_object, const S
         if (vm.exception())
             return;
 
-        auto callback_result = vm.call(*callback_function, this_value, value, Value((i32)i), typed_array);
-        if (vm.exception())
+        auto callback_result_or_error = vm.call(*callback_function, this_value, value, Value((i32)i), typed_array);
+        if (callback_result_or_error.is_error())
             return;
+        auto callback_result = callback_result_or_error.release_value();
 
         if (callback(i, value, callback_result) == IterationDecision::Break)
             break;
@@ -535,9 +537,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce)
     for (; k < length; ++k) {
         auto k_value = typed_array->get(k);
 
-        accumulator = vm.call(*callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array);
-        if (vm.exception())
-            return {};
+        accumulator = TRY_OR_DISCARD(vm.call(*callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array));
     }
 
     return accumulator;
@@ -573,9 +573,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce_right)
     for (; k >= 0; --k) {
         auto k_value = typed_array->get(k);
 
-        accumulator = vm.call(*callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array);
-        if (vm.exception())
-            return {};
+        accumulator = TRY_OR_DISCARD(vm.call(*callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array));
     }
 
     return accumulator;
@@ -996,9 +994,10 @@ static void typed_array_merge_sort(GlobalObject& global_object, FunctionObject* 
         double comparison_result;
 
         if (compare_function) {
-            auto result = vm.call(*compare_function, js_undefined(), x, y);
-            if (vm.exception())
+            auto result_or_error = vm.call(*compare_function, js_undefined(), x, y);
+            if (result_or_error.is_error())
                 return;
+            auto result = result_or_error.release_value();
 
             auto value = result.to_number(global_object);
             if (vm.exception())
@@ -1410,12 +1409,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::filter)
         auto value = typed_array->get(i);
 
         // c. Let selected be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
-        auto callback_result = vm.call(*callback_function, this_value, value, Value((i32)i), typed_array);
-        if (vm.exception())
-            return {};
+        auto callback_result = TRY_OR_DISCARD(vm.call(*callback_function, this_value, value, Value((i32)i), typed_array)).to_boolean();
 
         // d. If selected is true, then
-        if (callback_result.to_boolean()) {
+        if (callback_result) {
             // i. Append kValue to the end of kept.
             kept.append(value);
 
@@ -1483,9 +1480,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::map)
         auto value = typed_array->get(i);
 
         // c. Let mappedValue be ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
-        auto mapped_value = vm.call(*callback_function, this_value, value, Value((i32)i), typed_array);
-        if (vm.exception())
-            return {};
+        auto mapped_value = TRY_OR_DISCARD(vm.call(*callback_function, this_value, value, Value((i32)i), typed_array));
 
         // d. Perform ? Set(A, Pk, mappedValue, true).
         return_array->set(i, mapped_value, Object::ShouldThrowExceptions::Yes);
@@ -1517,9 +1512,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
             return {};
         if (value.is_nullish())
             continue;
-        auto locale_string_result = value.invoke(global_object, vm.names.toLocaleString);
-        if (vm.exception())
-            return {};
+        auto locale_string_result = TRY_OR_DISCARD(value.invoke(global_object, vm.names.toLocaleString));
         auto string = locale_string_result.to_string(global_object);
         if (vm.exception())
             return {};
