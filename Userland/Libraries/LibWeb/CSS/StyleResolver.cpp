@@ -586,17 +586,17 @@ static NonnullRefPtr<StyleValue> get_initial_value(CSS::PropertyID property_id)
     return value.release_nonnull();
 };
 
-static NonnullRefPtr<StyleValue> get_inherit_value(CSS::PropertyID property_id, DOM::Element const& element)
+static NonnullRefPtr<StyleValue> get_inherit_value(CSS::PropertyID property_id, DOM::Element const* element)
 {
-    if (!element.parent_element() || !element.parent_element()->specified_css_values())
+    if (!element || !element->parent_element() || !element->parent_element()->specified_css_values())
         return get_initial_value(property_id);
-    auto& map = element.parent_element()->specified_css_values()->properties();
+    auto& map = element->parent_element()->specified_css_values()->properties();
     auto it = map.find(property_id);
     VERIFY(it != map.end());
     return *it->value;
 };
 
-void StyleResolver::compute_defaulted_property_value(StyleProperties& style, DOM::Element const& element, CSS::PropertyID property_id) const
+void StyleResolver::compute_defaulted_property_value(StyleProperties& style, DOM::Element const* element, CSS::PropertyID property_id) const
 {
     // FIXME: If we don't know the correct initial value for a property, we fall back to InitialStyleValue.
 
@@ -621,7 +621,7 @@ void StyleResolver::compute_defaulted_property_value(StyleProperties& style, DOM
 }
 
 // https://drafts.csswg.org/css-cascade/#defaulting
-void StyleResolver::compute_defaulted_values(StyleProperties& style, DOM::Element const& element) const
+void StyleResolver::compute_defaulted_values(StyleProperties& style, DOM::Element const* element) const
 {
     // Walk the list of all known CSS properties and:
     // - Add them to `style` if they are missing.
@@ -632,7 +632,7 @@ void StyleResolver::compute_defaulted_values(StyleProperties& style, DOM::Elemen
     }
 }
 
-void StyleResolver::compute_font(StyleProperties& style, DOM::Element const& element) const
+void StyleResolver::compute_font(StyleProperties& style, DOM::Element const* element) const
 {
     // To compute the font, first ensure that we've defaulted the relevant CSS font properties.
     // FIXME: This should be more sophisticated.
@@ -705,12 +705,12 @@ void StyleResolver::compute_font(StyleProperties& style, DOM::Element const& ele
         }
     } else {
         float root_font_size = 10;
-        if (element.document().document_element() != &element)
-            root_font_size = element.document().document_element()->layout_node()->font().presentation_size();
+        if (element->document().document_element() != element)
+            root_font_size = element->document().document_element()->layout_node()->font().presentation_size();
 
         Gfx::FontMetrics font_metrics;
-        if (element.parent_element())
-            font_metrics = element.parent_element()->specified_css_values()->computed_font().metrics('M');
+        if (element && element->parent_element())
+            font_metrics = element->parent_element()->specified_css_values()->computed_font().metrics('M');
         else
             font_metrics = Gfx::FontDatabase::default_font().metrics('M');
 
@@ -719,8 +719,8 @@ void StyleResolver::compute_font(StyleProperties& style, DOM::Element const& ele
             maybe_length = font_size->to_length();
             if (maybe_length->is_percentage()) {
                 auto parent_font_size = size;
-                if (element.parent_element() && element.parent_element()->layout_node() && element.parent_element()->specified_css_values()) {
-                    auto value = element.parent_element()->specified_css_values()->property(CSS::PropertyID::FontSize).value();
+                if (element && element->parent_element() && element->parent_element()->layout_node() && element->parent_element()->specified_css_values()) {
+                    auto value = element->parent_element()->specified_css_values()->property(CSS::PropertyID::FontSize).value();
                     if (value->is_length()) {
                         auto length = static_cast<LengthStyleValue const&>(*value).to_length();
                         if (length.is_absolute() || length.is_relative())
@@ -811,7 +811,7 @@ void StyleResolver::compute_font(StyleProperties& style, DOM::Element const& ele
     style.set_computed_font(found_font.release_nonnull());
 }
 
-void StyleResolver::absolutize_values(StyleProperties& style, DOM::Element const&) const
+void StyleResolver::absolutize_values(StyleProperties& style, DOM::Element const*) const
 {
     auto viewport_rect = document().browsing_context()->viewport_rect();
     auto font_metrics = style.computed_font().metrics('M');
@@ -829,6 +829,15 @@ void StyleResolver::absolutize_values(StyleProperties& style, DOM::Element const
     }
 }
 
+NonnullRefPtr<StyleProperties> StyleResolver::create_document_style() const
+{
+    auto style = StyleProperties::create();
+    compute_font(style, nullptr);
+    compute_defaulted_values(style, nullptr);
+    absolutize_values(style, nullptr);
+    return style;
+}
+
 NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(DOM::Element& element) const
 {
     auto style = StyleProperties::create();
@@ -836,13 +845,13 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(DOM::Element& elemen
     compute_cascaded_values(style, element);
 
     // 2. Compute the font, since that may be needed for font-relative CSS units
-    compute_font(style, element);
+    compute_font(style, &element);
 
     // 3. Absolutize values, turning font/viewport relative lengths into absolute lengths
-    absolutize_values(style, element);
+    absolutize_values(style, &element);
 
     // 4. Default the values, applying inheritance and 'initial' as needed
-    compute_defaulted_values(style, element);
+    compute_defaulted_values(style, &element);
 
     return style;
 }
