@@ -14,6 +14,7 @@ class Color;
 class DisjointRectSet;
 class Emoji;
 class Font;
+class FontMetrics;
 class GlyphBitmap;
 class ImageDecoder;
 
