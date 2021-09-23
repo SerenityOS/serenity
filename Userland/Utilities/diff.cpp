@@ -61,13 +61,23 @@ int main(int argc, char** argv)
         if (num_added > 1)
             sb.appendff(",{}", target_start + num_added - 1);
 
+        bool color_output = isatty(STDOUT_FILENO);
+
         outln("Hunk: {}", sb.build());
-        for (const auto& line : hunk.removed_lines)
-            outln("\033[31;1m< {}\033[0m", line);
+        for (const auto& line : hunk.removed_lines) {
+            if (color_output)
+                outln("\033[31;1m< {}\033[0m", line);
+            else
+                outln("< {}", line);
+        }
         if (num_added > 0 && num_removed > 0)
             outln("---");
-        for (const auto& line : hunk.added_lines)
-            outln("\033[32;1m> {}\033[0m", line);
+        for (const auto& line : hunk.added_lines) {
+            if (color_output)
+                outln("\033[32;1m> {}\033[0m", line);
+            else
+                outln("> {}", line);
+        }
     }
 
     return hunks.is_empty() ? 0 : 1;
