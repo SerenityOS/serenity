@@ -31,13 +31,13 @@
             }
 
             @GUI::Label {
-                text: "Weight:"
+                text: "Style:"
                 text_alignment: "CenterLeft"
                 fixed_height: 16
             }
 
             @GUI::ListView {
-                name: "weight_list_view"
+                name: "variant_list_view"
             }
         }
 

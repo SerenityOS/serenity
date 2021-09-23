@@ -31,17 +31,17 @@ private:
     RefPtr<Gfx::Font> m_font;
 
     RefPtr<ListView> m_family_list_view;
-    RefPtr<ListView> m_weight_list_view;
+    RefPtr<ListView> m_variant_list_view;
     RefPtr<ListView> m_size_list_view;
     RefPtr<SpinBox> m_size_spin_box;
     RefPtr<Label> m_sample_text_label;
 
     Vector<String> m_families;
-    Vector<int> m_weights;
+    Vector<String> m_variants;
     Vector<int> m_sizes;
 
     Optional<String> m_family;
-    Optional<int> m_weight;
+    Optional<String> m_variant;
     Optional<int> m_size;
 };
 
