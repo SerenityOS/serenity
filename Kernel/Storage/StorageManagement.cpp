@@ -44,14 +44,14 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers(bool force_pio)
     VERIFY(m_controllers.is_empty());
     if (!kernel_command_line().disable_physical_storage()) {
         if (kernel_command_line().is_ide_enabled()) {
-            PCI::enumerate([&](const PCI::Address& address, PCI::ID) {
-                if (PCI::get_class(address) == PCI_MASS_STORAGE_CLASS_ID && PCI::get_subclass(address) == PCI_IDE_CTRL_SUBCLASS_ID) {
+            PCI::enumerate([&](const PCI::Address& address, PCI::PhysicalID const& physical_id) {
+                if (physical_id.class_code().value() == PCI_MASS_STORAGE_CLASS_ID && physical_id.subclass_code().value() == PCI_IDE_CTRL_SUBCLASS_ID) {
                     m_controllers.append(IDEController::initialize(address, force_pio));
                 }
             });
         }
-        PCI::enumerate([&](const PCI::Address& address, PCI::ID) {
-            if (PCI::get_class(address) == PCI_MASS_STORAGE_CLASS_ID && PCI::get_subclass(address) == PCI_SATA_CTRL_SUBCLASS_ID && PCI::get_programming_interface(address) == PCI_AHCI_IF_PROGIF) {
+        PCI::enumerate([&](const PCI::Address& address, PCI::PhysicalID const& physical_id) {
+            if (physical_id.class_code().value() == PCI_MASS_STORAGE_CLASS_ID && physical_id.subclass_code().value() == PCI_SATA_CTRL_SUBCLASS_ID && physical_id.prog_if().value() == PCI_AHCI_IF_PROGIF) {
                 m_controllers.append(AHCIController::initialize(address));
             }
         });

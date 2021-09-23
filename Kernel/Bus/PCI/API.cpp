@@ -17,7 +17,7 @@ u8 read8(Address address, u32 field) { return Access::the().read8_field(address,
 u16 read16(Address address, u32 field) { return Access::the().read16_field(address, field); }
 u32 read32(Address address, u32 field) { return Access::the().read32_field(address, field); }
 
-void enumerate(Function<void(Address, ID)> callback)
+void enumerate(Function<void(Address, PhysicalID const&)> callback)
 {
     Access::the().fast_enumerate(callback);
 }

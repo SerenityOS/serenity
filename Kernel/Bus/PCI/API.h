@@ -19,7 +19,7 @@ u32 read32(Address address, u32 field);
 
 ID get_id(PCI::Address);
 bool is_io_space_enabled(Address);
-void enumerate(Function<void(Address, ID)> callback);
+void enumerate(Function<void(Address, PhysicalID const&)> callback);
 void enable_interrupt_line(Address);
 void disable_interrupt_line(Address);
 u8 get_interrupt_line(Address);
