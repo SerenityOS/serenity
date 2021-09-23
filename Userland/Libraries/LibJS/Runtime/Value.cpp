@@ -1425,7 +1425,7 @@ bool is_strictly_equal(Value lhs, Value rhs)
 }
 
 // 7.2.14 IsLooselyEqual ( x, y ), https://tc39.es/ecma262/#sec-islooselyequal
-bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
+bool is_loosely_equal(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
 
@@ -1442,39 +1442,39 @@ bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
         return true;
 
     if (lhs.is_number() && rhs.is_string())
-        return abstract_eq(global_object, lhs, rhs.to_number(global_object));
+        return is_loosely_equal(global_object, lhs, rhs.to_number(global_object));
 
     if (lhs.is_string() && rhs.is_number())
-        return abstract_eq(global_object, lhs.to_number(global_object), rhs);
+        return is_loosely_equal(global_object, lhs.to_number(global_object), rhs);
 
     if (lhs.is_bigint() && rhs.is_string()) {
         auto& rhs_string = rhs.as_string().string();
         if (!is_valid_bigint_value(rhs_string))
             return false;
-        return abstract_eq(global_object, lhs, js_bigint(vm, Crypto::SignedBigInteger::from_base(10, rhs_string)));
+        return is_loosely_equal(global_object, lhs, js_bigint(vm, Crypto::SignedBigInteger::from_base(10, rhs_string)));
     }
 
     if (lhs.is_string() && rhs.is_bigint())
-        return abstract_eq(global_object, rhs, lhs);
+        return is_loosely_equal(global_object, rhs, lhs);
 
     if (lhs.is_boolean())
-        return abstract_eq(global_object, lhs.to_number(global_object), rhs);
+        return is_loosely_equal(global_object, lhs.to_number(global_object), rhs);
 
     if (rhs.is_boolean())
-        return abstract_eq(global_object, lhs, rhs.to_number(global_object));
+        return is_loosely_equal(global_object, lhs, rhs.to_number(global_object));
 
     if ((lhs.is_string() || lhs.is_number() || lhs.is_bigint() || lhs.is_symbol()) && rhs.is_object()) {
         auto rhs_primitive = rhs.to_primitive(global_object);
         if (vm.exception())
             return false;
-        return abstract_eq(global_object, lhs, rhs_primitive);
+        return is_loosely_equal(global_object, lhs, rhs_primitive);
     }
 
     if (lhs.is_object() && (rhs.is_string() || rhs.is_number() || lhs.is_bigint() || rhs.is_symbol())) {
         auto lhs_primitive = lhs.to_primitive(global_object);
         if (vm.exception())
             return false;
-        return abstract_eq(global_object, lhs_primitive, rhs);
+        return is_loosely_equal(global_object, lhs_primitive, rhs);
     }
 
     if ((lhs.is_bigint() && rhs.is_number()) || (lhs.is_number() && rhs.is_bigint())) {
