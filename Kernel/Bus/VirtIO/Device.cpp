@@ -18,13 +18,13 @@ UNMAP_AFTER_INIT void detect()
 {
     if (kernel_command_line().disable_virtio())
         return;
-    PCI::enumerate([&](const PCI::Address& address, PCI::PhysicalID const& physical_id) {
-        if (address.is_null() || physical_id.id().is_null())
+    PCI::enumerate([&](const PCI::Address& address, PCI::DeviceIdentifier const& device_identifier) {
+        if (address.is_null() || device_identifier.hardware_id().is_null())
             return;
         // TODO: We should also be checking that the device_id is in between 0x1000 - 0x107F inclusive
-        if (physical_id.id().vendor_id != PCI::VendorID::VirtIO)
+        if (device_identifier.hardware_id().vendor_id != PCI::VendorID::VirtIO)
             return;
-        switch (physical_id.id().device_id) {
+        switch (device_identifier.hardware_id().device_id) {
         case PCI::DeviceID::VirtIOConsole: {
             auto& console = Console::must_create(address).leak_ref();
             console.initialize();
@@ -40,7 +40,7 @@ UNMAP_AFTER_INIT void detect()
             break;
         }
         default:
-            dbgln_if(VIRTIO_DEBUG, "VirtIO: Unknown VirtIO device with ID: {}", physical_id.id().device_id);
+            dbgln_if(VIRTIO_DEBUG, "VirtIO: Unknown VirtIO device with ID: {}", device_identifier.hardware_id().device_id);
             break;
         }
     });
@@ -67,7 +67,7 @@ static StringView const determine_device_class(const PCI::Address& address)
         }
     }
 
-    auto id = PCI::get_id(address);
+    auto id = PCI::get_hardware_id(address);
     VERIFY(id.vendor_id == PCI::VendorID::VirtIO);
     switch (id.device_id) {
     case PCI::DeviceID::VirtIONetAdapter:
@@ -93,7 +93,7 @@ UNMAP_AFTER_INIT void Device::initialize()
     PCI::enable_interrupt_line(pci_address());
     enable_irq();
 
-    auto capabilities = PCI::get_physical_id(address).capabilities();
+    auto capabilities = PCI::get_device_identifier(address).capabilities();
     for (auto& capability : capabilities) {
         if (capability.id() == PCI_CAPABILITY_VENDOR_SPECIFIC) {
             // We have a virtio_pci_cap

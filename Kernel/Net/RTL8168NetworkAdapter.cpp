@@ -183,7 +183,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT RefPtr<RTL8168NetworkAdapter> RTL8168NetworkAdapter::try_to_initialize(PCI::Address address)
 {
-    auto id = PCI::get_id(address);
+    auto id = PCI::get_hardware_id(address);
     if (id.vendor_id != PCI::VendorID::Realtek)
         return {};
     if (id.device_id != 0x8168)

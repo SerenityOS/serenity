@@ -59,17 +59,17 @@ namespace Kernel {
 #define PCI_AHCI_IF_PROGIF 0x1
 
 namespace PCI {
-struct ID {
+struct HardwareID {
     u16 vendor_id { 0 };
     u16 device_id { 0 };
 
     bool is_null() const { return !vendor_id && !device_id; }
 
-    bool operator==(const ID& other) const
+    bool operator==(const HardwareID& other) const
     {
         return vendor_id == other.vendor_id && device_id == other.device_id;
     }
-    bool operator!=(const ID& other) const
+    bool operator!=(const HardwareID& other) const
     {
         return vendor_id != other.vendor_id || device_id != other.device_id;
     }
@@ -189,11 +189,11 @@ TYPEDEF_DISTINCT_ORDERED_ID(u16, SubsystemID);
 TYPEDEF_DISTINCT_ORDERED_ID(u16, SubsystemVendorID);
 
 class Access;
-class PhysicalID {
+class DeviceIdentifier {
 public:
-    PhysicalID(Address address, ID id, RevisionID revision_id, ClassCode class_code, SubclassCode subclass_code, ProgrammingInterface prog_if, SubsystemID subsystem_id, SubsystemVendorID subsystem_vendor_id, Vector<Capability> capabilities)
+    DeviceIdentifier(Address address, HardwareID hardware_id, RevisionID revision_id, ClassCode class_code, SubclassCode subclass_code, ProgrammingInterface prog_if, SubsystemID subsystem_id, SubsystemVendorID subsystem_vendor_id, Vector<Capability> capabilities)
         : m_address(address)
-        , m_id(id)
+        , m_hardware_id(hardware_id)
         , m_revision_id(revision_id)
         , m_class_code(class_code)
         , m_subclass_code(subclass_code)
@@ -209,7 +209,7 @@ public:
     }
 
     Vector<Capability> capabilities() const { return m_capabilities; }
-    const ID& id() const { return m_id; }
+    const HardwareID& hardware_id() const { return m_hardware_id; }
     const Address& address() const { return m_address; }
 
     RevisionID revision_id() const { return m_revision_id; }
@@ -230,7 +230,7 @@ public:
 
 private:
     Address m_address;
-    ID m_id;
+    HardwareID m_hardware_id;
 
     RevisionID m_revision_id;
     ClassCode m_class_code;
@@ -259,11 +259,11 @@ struct AK::Formatter<Kernel::PCI::Address> : Formatter<FormatString> {
 };
 
 template<>
-struct AK::Formatter<Kernel::PCI::ID> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, Kernel::PCI::ID value)
+struct AK::Formatter<Kernel::PCI::HardwareID> : Formatter<FormatString> {
+    void format(FormatBuilder& builder, Kernel::PCI::HardwareID value)
     {
         return Formatter<FormatString>::format(
             builder,
-            "PCI::ID [{:04x}:{:04x}]", value.vendor_id, value.device_id);
+            "PCI::HardwareID [{:04x}:{:04x}]", value.vendor_id, value.device_id);
     }
 };

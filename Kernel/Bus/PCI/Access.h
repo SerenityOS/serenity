@@ -25,7 +25,7 @@ public:
     static bool initialize_for_memory_access(PhysicalAddress mcfg_table);
     static bool initialize_for_io_access();
 
-    void fast_enumerate(Function<void(Address, PhysicalID const&)>&) const;
+    void fast_enumerate(Function<void(Address, DeviceIdentifier const&)>&) const;
     void rescan_hardware();
 
     static Access& the();
@@ -37,7 +37,7 @@ public:
     u8 read8_field(Address address, u32 field);
     u16 read16_field(Address address, u32 field);
     u32 read32_field(Address address, u32 field);
-    PhysicalID get_physical_id(Address address) const;
+    DeviceIdentifier get_device_identifier(Address address) const;
 
 private:
     void enumerate_bus(int type, u8 bus, bool recursive);
@@ -80,6 +80,6 @@ private:
     mutable Mutex m_scan_lock;
     Bitmap m_enumerated_buses;
     AccessType m_access_type;
-    Vector<PhysicalID> m_physical_ids;
+    Vector<DeviceIdentifier> m_device_identifiers;
 };
 }

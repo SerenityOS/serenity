@@ -299,7 +299,7 @@ u32 Access::read32_field(Address address, u32 field)
 UNMAP_AFTER_INIT void Access::rescan_hardware()
 {
     MutexLocker locker(m_scan_lock);
-    VERIFY(m_physical_ids.is_empty());
+    VERIFY(m_device_identifiers.is_empty());
     if (m_access_type == AccessType::IO) {
         dbgln_if(PCI_DEBUG, "PCI: IO enumerating hardware");
 
@@ -381,14 +381,14 @@ UNMAP_AFTER_INIT void Access::enumerate_functions(int type, u8 bus, u8 device, u
     Address address(0, bus, device, function);
     auto read_type = (read8_field(address, PCI_CLASS) << 8u) | read8_field(address, PCI_SUBCLASS);
     if (type == -1 || type == read_type) {
-        PCI::ID id = { read16_field(address, PCI_VENDOR_ID), read16_field(address, PCI_DEVICE_ID) };
+        HardwareID id = { read16_field(address, PCI_VENDOR_ID), read16_field(address, PCI_DEVICE_ID) };
         ClassCode class_code = read8_field(address, PCI_CLASS);
         SubclassCode subclass_code = read8_field(address, PCI_SUBCLASS);
         ProgrammingInterface prog_if = read8_field(address, PCI_PROG_IF);
         RevisionID revision_id = read8_field(address, PCI_REVISION_ID);
         SubsystemID subsystem_id = read16_field(address, PCI_SUBSYSTEM_ID);
         SubsystemVendorID subsystem_vendor_id = read16_field(address, PCI_SUBSYSTEM_VENDOR_ID);
-        m_physical_ids.append(PhysicalID { address, id, revision_id, class_code, subclass_code, prog_if, subsystem_id, subsystem_vendor_id, get_capabilities(address) });
+        m_device_identifiers.append(DeviceIdentifier { address, id, revision_id, class_code, subclass_code, prog_if, subsystem_id, subsystem_vendor_id, get_capabilities(address) });
     }
 
     if (read_type == PCI_TYPE_BRIDGE && recursive && (!m_enumerated_buses.get(read8_field(address, PCI_SECONDARY_BUS)))) {
@@ -423,23 +423,23 @@ UNMAP_AFTER_INIT void Access::enumerate_bus(int type, u8 bus, bool recursive)
         enumerate_device(type, bus, device, recursive);
 }
 
-void Access::fast_enumerate(Function<void(Address, PhysicalID const&)>& callback) const
+void Access::fast_enumerate(Function<void(Address, DeviceIdentifier const&)>& callback) const
 {
     MutexLocker locker(m_scan_lock);
-    VERIFY(!m_physical_ids.is_empty());
-    for (auto& physical_id : m_physical_ids) {
-        callback(physical_id.address(), physical_id);
+    VERIFY(!m_device_identifiers.is_empty());
+    for (auto& device_identifier : m_device_identifiers) {
+        callback(device_identifier.address(), device_identifier);
     }
 }
 
-PhysicalID Access::get_physical_id(Address address) const
+DeviceIdentifier Access::get_device_identifier(Address address) const
 {
-    for (auto physical_id : m_physical_ids) {
-        if (physical_id.address().domain() == address.domain()
-            && physical_id.address().bus() == address.bus()
-            && physical_id.address().device() == address.device()
-            && physical_id.address().function() == address.function()) {
-            return physical_id;
+    for (auto device_identifier : m_device_identifiers) {
+        if (device_identifier.address().domain() == address.domain()
+            && device_identifier.address().bus() == address.bus()
+            && device_identifier.address().device() == address.device()
+            && device_identifier.address().function() == address.function()) {
+            return device_identifier;
         }
     }
     VERIFY_NOT_REACHED();

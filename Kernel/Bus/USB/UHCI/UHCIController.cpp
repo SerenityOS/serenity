@@ -72,7 +72,7 @@ KResultOr<NonnullRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI::
 
 KResult UHCIController::initialize()
 {
-    dmesgln("UHCI: Controller found {} @ {}", PCI::get_id(pci_address()), pci_address());
+    dmesgln("UHCI: Controller found {} @ {}", PCI::get_hardware_id(pci_address()), pci_address());
     dmesgln("UHCI: I/O base {}", m_io_base);
     dmesgln("UHCI: Interrupt line: {}", PCI::get_interrupt_line(pci_address()));
 
