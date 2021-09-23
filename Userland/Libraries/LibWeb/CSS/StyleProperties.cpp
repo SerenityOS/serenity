@@ -268,7 +268,7 @@ Optional<int> StyleProperties::z_index() const
         return {};
     auto& value = maybe_value.value();
 
-    if (value->is_auto())
+    if (value->has_auto())
         return 0;
     if (value->is_numeric())
         return static_cast<int>(static_cast<NumericStyleValue&>(*value).value());
@@ -339,7 +339,7 @@ Optional<CSS::FlexBasisData> StyleProperties::flex_basis() const
     if (value.value()->is_identifier() && value.value()->to_identifier() == CSS::ValueID::Content)
         return { { CSS::FlexBasis::Content, {} } };
 
-    if (value.value()->is_auto())
+    if (value.value()->has_auto())
         return { { CSS::FlexBasis::Auto, {} } };
 
     if (value.value()->is_length())

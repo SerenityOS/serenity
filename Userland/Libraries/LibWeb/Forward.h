@@ -28,8 +28,33 @@ class Selector;
 class StyleProperties;
 class StyleResolver;
 class StyleSheet;
-class StyleValue;
 enum class Display;
+
+class StyleValue;
+class BackgroundRepeatStyleValue;
+class BackgroundStyleValue;
+class BorderRadiusStyleValue;
+class BorderStyleValue;
+class BoxShadowStyleValue;
+class CalculatedStyleValue;
+class ColorStyleValue;
+class CustomStyleValue;
+class FlexFlowStyleValue;
+class FlexStyleValue;
+class FontStyleValue;
+class IdentifierStyleValue;
+class ImageStyleValue;
+class InheritStyleValue;
+class InitialStyleValue;
+class LengthStyleValue;
+class ListStyleStyleValue;
+class NumericStyleValue;
+class OverflowStyleValue;
+class StringStyleValue;
+class TextDecorationStyleValue;
+class TransformationStyleValue;
+class UnsetStyleValue;
+class StyleValueList;
 }
 
 namespace Web::DOM {
