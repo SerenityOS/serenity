@@ -23,10 +23,10 @@
     O(GreaterThanEquals)             \
     O(LessThan)                      \
     O(LessThanEquals)                \
-    O(AbstractInequals)              \
-    O(AbstractEquals)                \
-    O(TypedInequals)                 \
-    O(TypedEquals)                   \
+    O(LooselyInequals)               \
+    O(LooselyEquals)                 \
+    O(StrictlyInequals)              \
+    O(StrictlyEquals)                \
     O(NewBigInt)                     \
     O(NewArray)                      \
     O(IteratorToArray)               \

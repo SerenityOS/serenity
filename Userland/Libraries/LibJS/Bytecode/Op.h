@@ -80,10 +80,10 @@ private:
     O(GreaterThanEquals, greater_than_equals) \
     O(LessThan, less_than)                    \
     O(LessThanEquals, less_than_equals)       \
-    O(AbstractInequals, abstract_inequals)    \
-    O(AbstractEquals, abstract_equals)        \
-    O(TypedInequals, typed_inequals)          \
-    O(TypedEquals, typed_equals)              \
+    O(LooselyInequals, abstract_inequals)     \
+    O(LooselyEquals, abstract_equals)         \
+    O(StrictlyInequals, typed_inequals)       \
+    O(StrictlyEquals, typed_equals)           \
     O(BitwiseAnd, bitwise_and)                \
     O(BitwiseOr, bitwise_or)                  \
     O(BitwiseXor, bitwise_xor)                \
