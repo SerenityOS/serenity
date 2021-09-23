@@ -15,6 +15,7 @@ using namespace AK::Exponentials;
 // Constants for logarithmic volume. See Frame::linear_to_log
 // Corresponds to 60dB
 constexpr double DYNAMIC_RANGE = 1000;
+constexpr double DYNAMIC_RANGE_DB = 60;
 constexpr double VOLUME_A = 1 / DYNAMIC_RANGE;
 double const VOLUME_B = log(DYNAMIC_RANGE);
 
@@ -63,6 +64,7 @@ struct Frame {
     // Format ranges:
     // - Linear:        0.0 to 1.0
     // - Logarithmic:   0.0 to 1.0
+    // - dB:          -60.0 to 0.0
 
     ALWAYS_INLINE double linear_to_log(double const change)
     {
@@ -74,6 +76,16 @@ struct Frame {
     {
         // TODO: Add linear slope around 0
         return log(val / VOLUME_A) / VOLUME_B;
+    }
+
+    ALWAYS_INLINE double db_to_linear(double const dB)
+    {
+        return (dB + DYNAMIC_RANGE_DB) / DYNAMIC_RANGE_DB;
+    }
+
+    ALWAYS_INLINE double linear_to_db(double const val)
+    {
+        return val * DYNAMIC_RANGE_DB - DYNAMIC_RANGE_DB;
     }
 
     ALWAYS_INLINE Frame& log_multiply(double const change)
