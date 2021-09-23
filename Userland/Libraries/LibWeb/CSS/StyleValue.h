@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
@@ -357,6 +358,8 @@ public:
         return to_string() == other.to_string();
     }
 
+    virtual void visit_lengths(Function<void(CSS::Length&)>) { }
+
 protected:
     explicit StyleValue(Type);
 
@@ -514,12 +517,18 @@ private:
         m_is_elliptical = (m_horizontal_radius != m_vertical_radius);
     }
 
+    virtual void visit_lengths(Function<void(CSS::Length&)> visitor) override
+    {
+        visitor(m_horizontal_radius);
+        visitor(m_vertical_radius);
+    }
+
     bool m_is_elliptical;
     Length m_horizontal_radius;
     Length m_vertical_radius;
 };
 
-class BoxShadowStyleValue : public StyleValue {
+class BoxShadowStyleValue final : public StyleValue {
 public:
     static NonnullRefPtr<BoxShadowStyleValue> create(Length const& offset_x, Length const& offset_y, Length const& blur_radius, Color const& color)
     {
@@ -543,6 +552,13 @@ private:
         , m_blur_radius(blur_radius)
         , m_color(color)
     {
+    }
+
+    virtual void visit_lengths(Function<void(CSS::Length&)> visitor) override
+    {
+        visitor(m_offset_x);
+        visitor(m_offset_y);
+        visitor(m_blur_radius);
     }
 
     Length m_offset_x;
@@ -962,6 +978,11 @@ private:
         : StyleValue(Type::Length)
         , m_length(length)
     {
+    }
+
+    virtual void visit_lengths(Function<void(CSS::Length&)> visitor) override
+    {
+        visitor(m_length);
     }
 
     Length m_length;
