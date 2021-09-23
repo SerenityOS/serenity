@@ -660,9 +660,9 @@ Value BinaryExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     case BinaryOp::TypedInequals:
         return Value(!is_strictly_equal(lhs_result, rhs_result));
     case BinaryOp::AbstractEquals:
-        return Value(abstract_eq(global_object, lhs_result, rhs_result));
+        return Value(is_loosely_equal(global_object, lhs_result, rhs_result));
     case BinaryOp::AbstractInequals:
-        return Value(!abstract_eq(global_object, lhs_result, rhs_result));
+        return Value(!is_loosely_equal(global_object, lhs_result, rhs_result));
     case BinaryOp::GreaterThan:
         return greater_than(global_object, lhs_result, rhs_result);
     case BinaryOp::GreaterThanEquals:

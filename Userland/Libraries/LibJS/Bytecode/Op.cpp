@@ -57,12 +57,12 @@ void Store::execute_impl(Bytecode::Interpreter& interpreter) const
 
 static Value abstract_inequals(GlobalObject& global_object, Value src1, Value src2)
 {
-    return Value(!abstract_eq(global_object, src1, src2));
+    return Value(!is_loosely_equal(global_object, src1, src2));
 }
 
 static Value abstract_equals(GlobalObject& global_object, Value src1, Value src2)
 {
-    return Value(abstract_eq(global_object, src1, src2));
+    return Value(is_loosely_equal(global_object, src1, src2));
 }
 
 static Value typed_inequals(GlobalObject&, Value src1, Value src2)
