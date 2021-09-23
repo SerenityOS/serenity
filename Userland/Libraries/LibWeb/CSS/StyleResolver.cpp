@@ -158,12 +158,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             style.set_property(CSS::PropertyID::TextDecorationColor, text_decoration.color());
             return;
         }
-        if (value.is_builtin()) {
-            style.set_property(CSS::PropertyID::TextDecorationLine, value);
-            style.set_property(CSS::PropertyID::TextDecorationStyle, value);
-            style.set_property(CSS::PropertyID::TextDecorationColor, value);
-            return;
-        }
+
+        style.set_property(CSS::PropertyID::TextDecorationLine, value);
+        style.set_property(CSS::PropertyID::TextDecorationStyle, value);
+        style.set_property(CSS::PropertyID::TextDecorationColor, value);
         return;
     }
 
@@ -174,11 +172,9 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             style.set_property(CSS::PropertyID::OverflowY, overflow.overflow_y());
             return;
         }
-        if (value.is_builtin()) {
-            style.set_property(CSS::PropertyID::OverflowX, value);
-            style.set_property(CSS::PropertyID::OverflowY, value);
-            return;
-        }
+
+        style.set_property(CSS::PropertyID::OverflowX, value);
+        style.set_property(CSS::PropertyID::OverflowY, value);
         return;
     }
 
@@ -197,13 +193,11 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             assign_edge_values(PropertyID::BorderTopLeftRadius, PropertyID::BorderTopRightRadius, PropertyID::BorderBottomRightRadius, PropertyID::BorderBottomLeftRadius, values_list.values());
             return;
         }
-        if (value.is_builtin()) {
-            style.set_property(CSS::PropertyID::BorderTopLeftRadius, value);
-            style.set_property(CSS::PropertyID::BorderTopRightRadius, value);
-            style.set_property(CSS::PropertyID::BorderBottomRightRadius, value);
-            style.set_property(CSS::PropertyID::BorderBottomLeftRadius, value);
-            return;
-        }
+
+        style.set_property(CSS::PropertyID::BorderTopLeftRadius, value);
+        style.set_property(CSS::PropertyID::BorderTopRightRadius, value);
+        style.set_property(CSS::PropertyID::BorderBottomRightRadius, value);
+        style.set_property(CSS::PropertyID::BorderBottomLeftRadius, value);
         return;
     }
 
@@ -263,13 +257,11 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             assign_edge_values(PropertyID::BorderTopStyle, PropertyID::BorderRightStyle, PropertyID::BorderBottomStyle, PropertyID::BorderLeftStyle, values_list.values());
             return;
         }
-        if (value.is_builtin() || value.is_custom_property() || value.is_identifier()) {
-            style.set_property(CSS::PropertyID::BorderTopStyle, value);
-            style.set_property(CSS::PropertyID::BorderRightStyle, value);
-            style.set_property(CSS::PropertyID::BorderBottomStyle, value);
-            style.set_property(CSS::PropertyID::BorderLeftStyle, value);
-            return;
-        }
+
+        style.set_property(CSS::PropertyID::BorderTopStyle, value);
+        style.set_property(CSS::PropertyID::BorderRightStyle, value);
+        style.set_property(CSS::PropertyID::BorderBottomStyle, value);
+        style.set_property(CSS::PropertyID::BorderLeftStyle, value);
         return;
     }
 
@@ -279,13 +271,11 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             assign_edge_values(PropertyID::BorderTopWidth, PropertyID::BorderRightWidth, PropertyID::BorderBottomWidth, PropertyID::BorderLeftWidth, values_list.values());
             return;
         }
-        if (value.is_builtin() || value.is_custom_property() || value.is_length()) {
-            style.set_property(CSS::PropertyID::BorderTopWidth, value);
-            style.set_property(CSS::PropertyID::BorderRightWidth, value);
-            style.set_property(CSS::PropertyID::BorderBottomWidth, value);
-            style.set_property(CSS::PropertyID::BorderLeftWidth, value);
-            return;
-        }
+
+        style.set_property(CSS::PropertyID::BorderTopWidth, value);
+        style.set_property(CSS::PropertyID::BorderRightWidth, value);
+        style.set_property(CSS::PropertyID::BorderBottomWidth, value);
+        style.set_property(CSS::PropertyID::BorderLeftWidth, value);
         return;
     }
 
@@ -295,13 +285,11 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             assign_edge_values(PropertyID::BorderTopColor, PropertyID::BorderRightColor, PropertyID::BorderBottomColor, PropertyID::BorderLeftColor, values_list.values());
             return;
         }
-        if (value.is_builtin() || value.is_custom_property() || value.is_color()) {
-            style.set_property(CSS::PropertyID::BorderTopColor, value);
-            style.set_property(CSS::PropertyID::BorderRightColor, value);
-            style.set_property(CSS::PropertyID::BorderBottomColor, value);
-            style.set_property(CSS::PropertyID::BorderLeftColor, value);
-            return;
-        }
+
+        style.set_property(CSS::PropertyID::BorderTopColor, value);
+        style.set_property(CSS::PropertyID::BorderRightColor, value);
+        style.set_property(CSS::PropertyID::BorderBottomColor, value);
+        style.set_property(CSS::PropertyID::BorderLeftColor, value);
         return;
     }
 
@@ -328,14 +316,11 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             }
             return;
         }
-        if (value.is_builtin()) {
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, value, document);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, value, document);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, value, document, true);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, value, document, true);
-            return;
-        }
 
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, value, document);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, value, document);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, value, document, true);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, value, document, true);
         return;
     }
 
@@ -349,10 +334,8 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             }
             return;
         }
-        if (value.is_builtin() || value.is_image() || value.to_identifier() == ValueID::None) {
-            style.set_property(CSS::PropertyID::BackgroundImage, value);
-            return;
-        }
+
+        style.set_property(CSS::PropertyID::BackgroundImage, value);
         return;
     }
 
@@ -376,11 +359,9 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatY, background_repeat.repeat_y(), document, true);
             return;
         }
-        if (value.is_builtin()) {
-            set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatX, value, document, true);
-            set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatY, value, document, true);
-            return;
-        }
+
+        set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatX, value, document, true);
+        set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatY, value, document, true);
         return;
     }
 
@@ -399,13 +380,11 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             assign_edge_values(PropertyID::MarginTop, PropertyID::MarginRight, PropertyID::MarginBottom, PropertyID::MarginLeft, values_list.values());
             return;
         }
-        if (value.is_length() || value.is_builtin() || value.is_custom_property() || value.is_calculated()) {
-            style.set_property(CSS::PropertyID::MarginTop, value);
-            style.set_property(CSS::PropertyID::MarginRight, value);
-            style.set_property(CSS::PropertyID::MarginBottom, value);
-            style.set_property(CSS::PropertyID::MarginLeft, value);
-            return;
-        }
+
+        style.set_property(CSS::PropertyID::MarginTop, value);
+        style.set_property(CSS::PropertyID::MarginRight, value);
+        style.set_property(CSS::PropertyID::MarginBottom, value);
+        style.set_property(CSS::PropertyID::MarginLeft, value);
         return;
     }
 
@@ -415,13 +394,11 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             assign_edge_values(PropertyID::PaddingTop, PropertyID::PaddingRight, PropertyID::PaddingBottom, PropertyID::PaddingLeft, values_list.values());
             return;
         }
-        if (value.is_length() || value.is_builtin() || value.is_custom_property() || value.is_calculated()) {
-            style.set_property(CSS::PropertyID::PaddingTop, value);
-            style.set_property(CSS::PropertyID::PaddingRight, value);
-            style.set_property(CSS::PropertyID::PaddingBottom, value);
-            style.set_property(CSS::PropertyID::PaddingLeft, value);
-            return;
-        }
+
+        style.set_property(CSS::PropertyID::PaddingTop, value);
+        style.set_property(CSS::PropertyID::PaddingRight, value);
+        style.set_property(CSS::PropertyID::PaddingBottom, value);
+        style.set_property(CSS::PropertyID::PaddingLeft, value);
         return;
     }
 
@@ -433,12 +410,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             style.set_property(CSS::PropertyID::ListStyleType, list_style.style_type());
             return;
         }
-        if (value.is_builtin()) {
-            style.set_property(CSS::PropertyID::ListStylePosition, value);
-            style.set_property(CSS::PropertyID::ListStyleImage, value);
-            style.set_property(CSS::PropertyID::ListStyleType, value);
-            return;
-        }
+
+        style.set_property(CSS::PropertyID::ListStylePosition, value);
+        style.set_property(CSS::PropertyID::ListStyleImage, value);
+        style.set_property(CSS::PropertyID::ListStyleType, value);
         return;
     }
 
@@ -453,15 +428,13 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             // FIXME: Implement font-stretch and font-variant
             return;
         }
-        if (value.is_builtin()) {
-            style.set_property(CSS::PropertyID::FontSize, value);
-            style.set_property(CSS::PropertyID::FontFamily, value);
-            style.set_property(CSS::PropertyID::FontStyle, value);
-            style.set_property(CSS::PropertyID::FontWeight, value);
-            style.set_property(CSS::PropertyID::LineHeight, value);
-            // FIXME: Implement font-stretch and font-variant
-            return;
-        }
+
+        style.set_property(CSS::PropertyID::FontSize, value);
+        style.set_property(CSS::PropertyID::FontFamily, value);
+        style.set_property(CSS::PropertyID::FontStyle, value);
+        style.set_property(CSS::PropertyID::FontWeight, value);
+        style.set_property(CSS::PropertyID::LineHeight, value);
+        // FIXME: Implement font-stretch and font-variant
         return;
     }
 
@@ -473,12 +446,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             style.set_property(CSS::PropertyID::FlexBasis, flex.basis());
             return;
         }
-        if (value.is_builtin()) {
-            style.set_property(CSS::PropertyID::FlexGrow, value);
-            style.set_property(CSS::PropertyID::FlexShrink, value);
-            style.set_property(CSS::PropertyID::FlexBasis, value);
-            return;
-        }
+
+        style.set_property(CSS::PropertyID::FlexGrow, value);
+        style.set_property(CSS::PropertyID::FlexShrink, value);
+        style.set_property(CSS::PropertyID::FlexBasis, value);
         return;
     }
 
@@ -489,11 +460,9 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             style.set_property(CSS::PropertyID::FlexWrap, flex_flow.flex_wrap());
             return;
         }
-        if (value.is_builtin()) {
-            style.set_property(CSS::PropertyID::FlexDirection, value);
-            style.set_property(CSS::PropertyID::FlexWrap, value);
-            return;
-        }
+
+        style.set_property(CSS::PropertyID::FlexDirection, value);
+        style.set_property(CSS::PropertyID::FlexWrap, value);
         return;
     }
 
