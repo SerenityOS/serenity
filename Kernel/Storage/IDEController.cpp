@@ -16,9 +16,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<IDEController> IDEController::initialize(PCI::Address address, bool force_pio)
+UNMAP_AFTER_INIT NonnullRefPtr<IDEController> IDEController::initialize(PCI::DeviceIdentifier const& device_identifier, bool force_pio)
 {
-    return adopt_ref(*new IDEController(address, force_pio));
+    return adopt_ref(*new IDEController(device_identifier, force_pio));
 }
 
 bool IDEController::reset()
@@ -51,12 +51,13 @@ void IDEController::complete_current_request(AsyncDeviceRequest::RequestResult)
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT IDEController::IDEController(PCI::Address address, bool force_pio)
+UNMAP_AFTER_INIT IDEController::IDEController(PCI::DeviceIdentifier const& device_identifier, bool force_pio)
     : StorageController()
-    , PCI::Device(address)
+    , PCI::Device(device_identifier.address())
+    , m_prog_if(device_identifier.prog_if())
 {
-    PCI::enable_io_space(address);
-    PCI::enable_memory_space(address);
+    PCI::enable_io_space(device_identifier.address());
+    PCI::enable_memory_space(device_identifier.address());
     initialize(force_pio);
 }
 
@@ -66,22 +67,22 @@ UNMAP_AFTER_INIT IDEController::~IDEController()
 
 bool IDEController::is_pci_native_mode_enabled() const
 {
-    return (PCI::get_programming_interface(pci_address()) & 0x05) != 0;
+    return (m_prog_if.value() & 0x05) != 0;
 }
 
 bool IDEController::is_pci_native_mode_enabled_on_primary_channel() const
 {
-    return (PCI::get_programming_interface(pci_address()) & 0x1) == 0x1;
+    return (m_prog_if.value() & 0x1) == 0x1;
 }
 
 bool IDEController::is_pci_native_mode_enabled_on_secondary_channel() const
 {
-    return (PCI::get_programming_interface(pci_address()) & 0x4) == 0x4;
+    return (m_prog_if.value() & 0x4) == 0x4;
 }
 
 bool IDEController::is_bus_master_capable() const
 {
-    return PCI::get_programming_interface(pci_address()) & (1 << 7);
+    return m_prog_if.value() & (1 << 7);
 }
 
 static const char* detect_controller_type(u8 programming_value)
@@ -114,7 +115,7 @@ UNMAP_AFTER_INIT void IDEController::initialize(bool force_pio)
     auto bus_master_base = IOAddress(PCI::get_BAR4(pci_address()) & (~1));
     dbgln("IDE controller @ {}: bus master base was set to {}", pci_address(), bus_master_base);
     dbgln("IDE controller @ {}: interrupt line was set to {}", pci_address(), PCI::get_interrupt_line(pci_address()));
-    dbgln("IDE controller @ {}: {}", pci_address(), detect_controller_type(PCI::get_programming_interface(pci_address())));
+    dbgln("IDE controller @ {}: {}", pci_address(), detect_controller_type(m_prog_if.value()));
     dbgln("IDE controller @ {}: primary channel DMA capable? {}", pci_address(), ((bus_master_base.offset(2).in<u8>() >> 5) & 0b11));
     dbgln("IDE controller @ {}: secondary channel DMA capable? {}", pci_address(), ((bus_master_base.offset(2 + 8).in<u8>() >> 5) & 0b11));
 

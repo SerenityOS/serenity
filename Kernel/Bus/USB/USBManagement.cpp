@@ -34,7 +34,7 @@ UNMAP_AFTER_INIT void USBManagement::enumerate_controllers()
             if (kernel_command_line().disable_uhci_controller())
                 return;
 
-            if (auto uhci_controller_or_error = UHCIController::try_to_initialize(address); !uhci_controller_or_error.is_error())
+            if (auto uhci_controller_or_error = UHCIController::try_to_initialize(device_identifier); !uhci_controller_or_error.is_error())
                 m_controllers.append(uhci_controller_or_error.release_value());
 
             return;

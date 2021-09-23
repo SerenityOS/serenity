@@ -73,17 +73,17 @@ RefPtr<NetworkAdapter> NetworkingManagement::lookup_by_name(const StringView& na
     return found_adapter;
 }
 
-UNMAP_AFTER_INIT RefPtr<NetworkAdapter> NetworkingManagement::determine_network_device(PCI::Address address) const
+UNMAP_AFTER_INIT RefPtr<NetworkAdapter> NetworkingManagement::determine_network_device(PCI::DeviceIdentifier const& device_identifier) const
 {
-    if (auto candidate = E1000NetworkAdapter::try_to_initialize(address); !candidate.is_null())
+    if (auto candidate = E1000NetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
         return candidate;
-    if (auto candidate = E1000ENetworkAdapter::try_to_initialize(address); !candidate.is_null())
+    if (auto candidate = E1000ENetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
         return candidate;
-    if (auto candidate = RTL8139NetworkAdapter::try_to_initialize(address); !candidate.is_null())
+    if (auto candidate = RTL8139NetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
         return candidate;
-    if (auto candidate = RTL8168NetworkAdapter::try_to_initialize(address); !candidate.is_null())
+    if (auto candidate = RTL8168NetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
         return candidate;
-    if (auto candidate = NE2000NetworkAdapter::try_to_initialize(address); !candidate.is_null())
+    if (auto candidate = NE2000NetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
         return candidate;
     return {};
 }
@@ -91,11 +91,11 @@ UNMAP_AFTER_INIT RefPtr<NetworkAdapter> NetworkingManagement::determine_network_
 bool NetworkingManagement::initialize()
 {
     if (!kernel_command_line().is_physical_networking_disabled()) {
-        PCI::enumerate([&](const PCI::Address& address, PCI::DeviceIdentifier const& device_identifier) {
+        PCI::enumerate([&](const PCI::Address&, PCI::DeviceIdentifier const& device_identifier) {
             // Note: PCI class 2 is the class of Network devices
             if (device_identifier.class_code().value() != 0x02)
                 return;
-            if (auto adapter = determine_network_device(address); !adapter.is_null())
+            if (auto adapter = determine_network_device(device_identifier); !adapter.is_null())
                 m_adapters.append(adapter.release_nonnull());
         });
     }

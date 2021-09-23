@@ -44,15 +44,15 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers(bool force_pio)
     VERIFY(m_controllers.is_empty());
     if (!kernel_command_line().disable_physical_storage()) {
         if (kernel_command_line().is_ide_enabled()) {
-            PCI::enumerate([&](const PCI::Address& address, PCI::DeviceIdentifier const& device_identifier) {
+            PCI::enumerate([&](const PCI::Address&, PCI::DeviceIdentifier const& device_identifier) {
                 if (device_identifier.class_code().value() == PCI_MASS_STORAGE_CLASS_ID && device_identifier.subclass_code().value() == PCI_IDE_CTRL_SUBCLASS_ID) {
-                    m_controllers.append(IDEController::initialize(address, force_pio));
+                    m_controllers.append(IDEController::initialize(device_identifier, force_pio));
                 }
             });
         }
-        PCI::enumerate([&](const PCI::Address& address, PCI::DeviceIdentifier const& device_identifier) {
+        PCI::enumerate([&](const PCI::Address&, PCI::DeviceIdentifier const& device_identifier) {
             if (device_identifier.class_code().value() == PCI_MASS_STORAGE_CLASS_ID && device_identifier.subclass_code().value() == PCI_SATA_CTRL_SUBCLASS_ID && device_identifier.prog_if().value() == PCI_AHCI_IF_PROGIF) {
-                m_controllers.append(AHCIController::initialize(address));
+                m_controllers.append(AHCIController::initialize(device_identifier));
             }
         });
     }

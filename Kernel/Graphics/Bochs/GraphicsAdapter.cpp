@@ -71,11 +71,11 @@ struct [[gnu::packed]] BochsDisplayMMIORegisters {
     ExtensionRegisters extension_regs;
 };
 
-UNMAP_AFTER_INIT NonnullRefPtr<BochsGraphicsAdapter> BochsGraphicsAdapter::initialize(PCI::Address address)
+UNMAP_AFTER_INIT NonnullRefPtr<BochsGraphicsAdapter> BochsGraphicsAdapter::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    PCI::HardwareID id = PCI::get_hardware_id(address);
+    PCI::HardwareID id = pci_device_identifier.hardware_id();
     VERIFY((id.vendor_id == PCI::VendorID::QEMUOld && id.device_id == 0x1111) || (id.vendor_id == PCI::VendorID::VirtualBox && id.device_id == 0xbeef));
-    return adopt_ref(*new BochsGraphicsAdapter(address));
+    return adopt_ref(*new BochsGraphicsAdapter(pci_device_identifier));
 }
 
 void BochsGraphicsAdapter::set_framebuffer_to_big_endian_format()
@@ -100,20 +100,22 @@ void BochsGraphicsAdapter::set_framebuffer_to_little_endian_format()
     full_memory_barrier();
 }
 
-UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address pci_address)
-    : PCI::Device(pci_address)
-    , m_mmio_registers(PCI::get_BAR2(pci_address) & 0xfffffff0)
+UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier)
+    : PCI::Device(pci_device_identifier.address())
+    , m_mmio_registers(PCI::get_BAR2(pci_device_identifier.address()) & 0xfffffff0)
     , m_registers(Memory::map_typed_writable<BochsDisplayMMIORegisters volatile>(m_mmio_registers))
 {
     // We assume safe resolutio is 1024x768x32
-    m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(PhysicalAddress(PCI::get_BAR0(pci_address) & 0xfffffff0), 1024, 768, 1024 * sizeof(u32));
+    m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(PhysicalAddress(PCI::get_BAR0(pci_device_identifier.address()) & 0xfffffff0), 1024, 768, 1024 * sizeof(u32));
     // FIXME: This is a very wrong way to do this...
     GraphicsManagement::the().m_console = m_framebuffer_console;
 
     // Note: If we use VirtualBox graphics adapter (which is based on Bochs one), we need to use IO ports
-    auto id = PCI::get_hardware_id(pci_address);
-    if (id.vendor_id == 0x80ee && id.device_id == 0xbeef)
+    if (pci_device_identifier.hardware_id().vendor_id == 0x80ee && pci_device_identifier.hardware_id().device_id == 0xbeef)
         m_io_required = true;
+
+    if (pci_device_identifier.class_code().value() == 0x3 && pci_device_identifier.subclass_code().value() == 0x0)
+        m_is_vga_capable = true;
 
     // Note: According to Gerd Hoffmann - "The linux driver simply does
     // the unblank unconditionally. With bochs-display this is not needed but
@@ -132,7 +134,7 @@ UNMAP_AFTER_INIT void BochsGraphicsAdapter::initialize_framebuffer_devices()
 
 GraphicsDevice::Type BochsGraphicsAdapter::type() const
 {
-    if (PCI::get_class(pci_address()) == 0x3 && PCI::get_subclass(pci_address()) == 0x0)
+    if (m_is_vga_capable)
         return Type::VGACompatible;
     return Type::Bochs;
 }
