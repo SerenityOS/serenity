@@ -81,10 +81,19 @@ private:
     int m_ascent;
 };
 
+struct FontMetrics {
+    float size { 0 };
+    float x_height { 0 };
+    float glyph_width { 0 };
+    float glyph_spacing { 0 };
+};
+
 class Font : public RefCounted<Font> {
 public:
     virtual NonnullRefPtr<Font> clone() const = 0;
     virtual ~Font() {};
+
+    FontMetrics metrics(u32 code_point) const;
 
     virtual u8 presentation_size() const = 0;
 
