@@ -36,6 +36,9 @@ public:
     u16 weight() const override { return m_weight; }
     void set_weight(u16 weight) { m_weight = weight; }
 
+    u8 slope() const { return m_slope; }
+    void set_slope(u8 slope) { m_slope = slope; }
+
     Glyph glyph(u32 code_point) const override;
     Glyph raw_glyph(u32 code_point) const;
     bool contains_glyph(u32 code_point) const override;
@@ -104,7 +107,7 @@ public:
 private:
     BitmapFont(String name, String family, u32* rows, u8* widths, bool is_fixed_width,
         u8 glyph_width, u8 glyph_height, u8 glyph_spacing, u16 range_mask_size, u8* range_mask,
-        u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, bool owns_arrays = false);
+        u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, u8 slope, bool owns_arrays = false);
 
     static RefPtr<BitmapFont> load_from_memory(u8 const*);
 
@@ -136,6 +139,7 @@ private:
     u8 m_mean_line { 0 };
     u8 m_presentation_size { 0 };
     u16 m_weight { 0 };
+    u8 m_slope { 0 };
 
     bool m_fixed_width { false };
     bool m_owns_arrays { false };
