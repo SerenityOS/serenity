@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <LibGfx/Forward.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::CSS {
@@ -103,10 +104,13 @@ public:
     }
 
     float raw_value() const { return m_value; }
-    ALWAYS_INLINE float to_px(const Layout::Node& layout_node) const
+
+    float to_px(Layout::Node const&) const;
+
+    ALWAYS_INLINE float to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float root_font_size) const
     {
         if (is_relative())
-            return relative_length_to_px(layout_node);
+            return relative_length_to_px(viewport_rect, font_metrics, root_font_size);
         constexpr float inch_pixels = 96.0f;
         constexpr float centimeter_pixels = (inch_pixels / 2.54f);
         switch (m_type) {
@@ -152,6 +156,8 @@ public:
     }
 
     void set_calculated_style(CalculatedStyleValue* value) { m_calculated_style = value; }
+
+    float relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float root_font_size) const;
 
 private:
     float relative_length_to_px(const Layout::Node&) const;

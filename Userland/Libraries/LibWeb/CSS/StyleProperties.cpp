@@ -231,7 +231,6 @@ void StyleProperties::load_font(Layout::Node const& node) const
     }
 
     if (!found_font) {
-        dbgln("Font not found: '{}' {} {}", family_value->to_string(), size, weight);
         found_font = font_fallback(monospace, bold);
     }
 
@@ -239,7 +238,7 @@ void StyleProperties::load_font(Layout::Node const& node) const
     FontCache::the().set(font_selector, *m_font);
 }
 
-RefPtr<Gfx::Font> StyleProperties::font_fallback(bool monospace, bool bold) const
+NonnullRefPtr<Gfx::Font> StyleProperties::font_fallback(bool monospace, bool bold)
 {
     if (monospace && bold)
         return Gfx::FontDatabase::default_fixed_width_font().bold_variant();
