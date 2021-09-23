@@ -19,7 +19,7 @@ u32 read32(Address address, u32 field);
 
 HardwareID get_hardware_id(PCI::Address);
 bool is_io_space_enabled(Address);
-void enumerate(Function<void(Address, DeviceIdentifier const&)> callback);
+void enumerate(Function<void(DeviceIdentifier const&)> callback);
 void enable_interrupt_line(Address);
 void disable_interrupt_line(Address);
 void raw_access(Address, u32, size_t, u32);

@@ -425,12 +425,12 @@ UNMAP_AFTER_INIT void Access::enumerate_bus(int type, u8 bus, bool recursive)
         enumerate_device(type, bus, device, recursive);
 }
 
-void Access::fast_enumerate(Function<void(Address, DeviceIdentifier const&)>& callback) const
+void Access::fast_enumerate(Function<void(DeviceIdentifier const&)>& callback) const
 {
     MutexLocker locker(m_scan_lock);
     VERIFY(!m_device_identifiers.is_empty());
     for (auto& device_identifier : m_device_identifiers) {
-        callback(device_identifier.address(), device_identifier);
+        callback(device_identifier);
     }
 }
 
