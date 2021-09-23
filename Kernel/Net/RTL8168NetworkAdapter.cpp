@@ -187,7 +187,7 @@ UNMAP_AFTER_INIT RefPtr<RTL8168NetworkAdapter> RTL8168NetworkAdapter::try_to_ini
         return {};
     if (pci_device_identifier.hardware_id().device_id != 0x8168)
         return {};
-    u8 irq = PCI::get_interrupt_line(pci_device_identifier.address());
+    u8 irq = pci_device_identifier.interrupt_line().value();
     return adopt_ref_if_nonnull(new (nothrow) RTL8168NetworkAdapter(pci_device_identifier.address(), irq));
 }
 
