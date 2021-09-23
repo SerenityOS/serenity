@@ -22,7 +22,7 @@ public:
 
 private:
     struct BoardDefinition {
-        PCI::ID device_id;
+        PCI::HardwareID device_id;
         StringView name;
         u32 port_count { 0 };
         u32 pci_bar { 0 };

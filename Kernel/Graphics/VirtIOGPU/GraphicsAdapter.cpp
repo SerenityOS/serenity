@@ -15,7 +15,7 @@ namespace Kernel::Graphics::VirtIOGPU {
 
 NonnullRefPtr<GraphicsAdapter> GraphicsAdapter::initialize(PCI::Address base_address)
 {
-    VERIFY(PCI::get_id(base_address).vendor_id == PCI::VendorID::VirtIO);
+    VERIFY(PCI::get_hardware_id(base_address).vendor_id == PCI::VendorID::VirtIO);
     return adopt_ref(*new GraphicsAdapter(base_address));
 }
 

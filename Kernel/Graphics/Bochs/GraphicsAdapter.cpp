@@ -73,7 +73,7 @@ struct [[gnu::packed]] BochsDisplayMMIORegisters {
 
 UNMAP_AFTER_INIT NonnullRefPtr<BochsGraphicsAdapter> BochsGraphicsAdapter::initialize(PCI::Address address)
 {
-    PCI::ID id = PCI::get_id(address);
+    PCI::HardwareID id = PCI::get_hardware_id(address);
     VERIFY((id.vendor_id == PCI::VendorID::QEMUOld && id.device_id == 0x1111) || (id.vendor_id == PCI::VendorID::VirtualBox && id.device_id == 0xbeef));
     return adopt_ref(*new BochsGraphicsAdapter(address));
 }
@@ -111,7 +111,7 @@ UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address pci_add
     GraphicsManagement::the().m_console = m_framebuffer_console;
 
     // Note: If we use VirtualBox graphics adapter (which is based on Bochs one), we need to use IO ports
-    auto id = PCI::get_id(pci_address);
+    auto id = PCI::get_hardware_id(pci_address);
     if (id.vendor_id == 0x80ee && id.device_id == 0xbeef)
         m_io_required = true;
 

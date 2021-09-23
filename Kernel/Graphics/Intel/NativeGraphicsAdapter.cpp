@@ -43,7 +43,7 @@ static bool is_supported_model(u16 device_id)
 
 RefPtr<IntelNativeGraphicsAdapter> IntelNativeGraphicsAdapter::initialize(PCI::Address address)
 {
-    auto id = PCI::get_id(address);
+    auto id = PCI::get_hardware_id(address);
     VERIFY(id.vendor_id == 0x8086);
     if (!is_supported_model(id.device_id))
         return {};

@@ -56,8 +56,8 @@ UNMAP_AFTER_INIT void initialize()
 
     PCI::PCIBusSysFSDirectory::initialize();
 
-    PCI::enumerate([&](const Address& address, PhysicalID const& physical_id) {
-        dmesgln("{} {}", address, physical_id.id());
+    PCI::enumerate([&](const Address& address, DeviceIdentifier const& device_identifier) {
+        dmesgln("{} {}", address, device_identifier.hardware_id());
     });
 }
 

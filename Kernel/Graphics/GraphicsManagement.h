@@ -47,7 +47,7 @@ public:
     void activate_graphical_mode();
 
 private:
-    bool determine_and_initialize_graphics_device(const PCI::Address& address, PCI::ID id);
+    bool determine_and_initialize_graphics_device(const PCI::Address& address, PCI::HardwareID id);
     NonnullRefPtrVector<GraphicsDevice> m_graphics_devices;
     RefPtr<Graphics::Console> m_console;
 

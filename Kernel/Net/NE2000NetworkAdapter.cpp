@@ -140,21 +140,21 @@ struct [[gnu::packed]] received_packet_header {
 UNMAP_AFTER_INIT RefPtr<NE2000NetworkAdapter> NE2000NetworkAdapter::try_to_initialize(PCI::Address address)
 {
     constexpr auto ne2k_ids = Array {
-        PCI::ID { 0x10EC, 0x8029 }, // RealTek RTL-8029(AS)
+        PCI::HardwareID { 0x10EC, 0x8029 }, // RealTek RTL-8029(AS)
 
         // List of clones, taken from Linux's ne2k-pci.c
-        PCI::ID { 0x1050, 0x0940 }, // Winbond 89C940
-        PCI::ID { 0x11f6, 0x1401 }, // Compex RL2000
-        PCI::ID { 0x8e2e, 0x3000 }, // KTI ET32P2
-        PCI::ID { 0x4a14, 0x5000 }, // NetVin NV5000SC
-        PCI::ID { 0x1106, 0x0926 }, // Via 86C926
-        PCI::ID { 0x10bd, 0x0e34 }, // SureCom NE34
-        PCI::ID { 0x1050, 0x5a5a }, // Winbond W89C940F
-        PCI::ID { 0x12c3, 0x0058 }, // Holtek HT80232
-        PCI::ID { 0x12c3, 0x5598 }, // Holtek HT80229
-        PCI::ID { 0x8c4a, 0x1980 }, // Winbond W89C940 (misprogrammed)
+        PCI::HardwareID { 0x1050, 0x0940 }, // Winbond 89C940
+        PCI::HardwareID { 0x11f6, 0x1401 }, // Compex RL2000
+        PCI::HardwareID { 0x8e2e, 0x3000 }, // KTI ET32P2
+        PCI::HardwareID { 0x4a14, 0x5000 }, // NetVin NV5000SC
+        PCI::HardwareID { 0x1106, 0x0926 }, // Via 86C926
+        PCI::HardwareID { 0x10bd, 0x0e34 }, // SureCom NE34
+        PCI::HardwareID { 0x1050, 0x5a5a }, // Winbond W89C940F
+        PCI::HardwareID { 0x12c3, 0x0058 }, // Holtek HT80232
+        PCI::HardwareID { 0x12c3, 0x5598 }, // Holtek HT80229
+        PCI::HardwareID { 0x8c4a, 0x1980 }, // Winbond W89C940 (misprogrammed)
     };
-    auto id = PCI::get_id(address);
+    auto id = PCI::get_hardware_id(address);
     if (!ne2k_ids.span().contains_slow(id))
         return {};
     u8 irq = PCI::get_interrupt_line(address);
