@@ -290,8 +290,11 @@ public:
         return is_builtin() || is_custom_property() || is_calculated();
     }
 
+    float as_number() const;
+
     virtual String to_string() const = 0;
     virtual Length to_length() const { return {}; }
+
     virtual Color to_color(Layout::NodeWithStyle const&) const { return {}; }
 
     CSS::ValueID to_identifier() const;

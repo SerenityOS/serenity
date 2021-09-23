@@ -98,6 +98,12 @@ bool StyleValue::is_color() const
     return false;
 }
 
+float StyleValue::as_number() const
+{
+    VERIFY(is_numeric());
+    return static_cast<NumericStyleValue const&>(*this).value();
+}
+
 String IdentifierStyleValue::to_string() const
 {
     return CSS::string_from_value_id(m_id);

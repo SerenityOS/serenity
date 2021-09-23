@@ -668,7 +668,7 @@
     "inherited": true,
     "initial": "normal",
     "valid-types": [
-      "integer"
+      "number [1,1000]"
     ],
     "valid-identifiers": [
       "bold",
