@@ -189,6 +189,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 
     for (size_t k = 0; k < length; ++k) {
         auto k_value = array_like->get(k);
+        if (vm.exception())
+            return {};
         Value mapped_value;
         if (map_fn)
             mapped_value = TRY_OR_DISCARD(vm.call(*map_fn, this_arg, k_value, Value(k)));
