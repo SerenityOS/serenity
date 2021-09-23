@@ -17,17 +17,17 @@ u8 read8(Address address, u32 field) { return Access::the().read8_field(address,
 u16 read16(Address address, u32 field) { return Access::the().read16_field(address, field); }
 u32 read32(Address address, u32 field) { return Access::the().read32_field(address, field); }
 
-void enumerate(Function<void(Address, PhysicalID const&)> callback)
+void enumerate(Function<void(Address, DeviceIdentifier const&)> callback)
 {
     Access::the().fast_enumerate(callback);
 }
 
-PhysicalID get_physical_id(Address address)
+DeviceIdentifier get_device_identifier(Address address)
 {
-    return Access::the().get_physical_id(address);
+    return Access::the().get_device_identifier(address);
 }
 
-ID get_id(Address address)
+HardwareID get_hardware_id(Address address)
 {
     return { read16(address, PCI_VENDOR_ID), read16(address, PCI_DEVICE_ID) };
 }

@@ -182,7 +182,7 @@ static bool is_valid_device_id(u16 device_id)
 
 UNMAP_AFTER_INIT RefPtr<E1000ENetworkAdapter> E1000ENetworkAdapter::try_to_initialize(PCI::Address address)
 {
-    auto id = PCI::get_id(address);
+    auto id = PCI::get_hardware_id(address);
     if (id.vendor_id != PCI::VendorID::Intel)
         return {};
     if (!is_valid_device_id(id.device_id))

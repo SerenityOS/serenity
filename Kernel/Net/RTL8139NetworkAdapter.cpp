@@ -114,8 +114,8 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT RefPtr<RTL8139NetworkAdapter> RTL8139NetworkAdapter::try_to_initialize(PCI::Address address)
 {
-    constexpr PCI::ID rtl8139_id = { 0x10EC, 0x8139 };
-    auto id = PCI::get_id(address);
+    constexpr PCI::HardwareID rtl8139_id = { 0x10EC, 0x8139 };
+    auto id = PCI::get_hardware_id(address);
     if (id != rtl8139_id)
         return {};
     u8 irq = PCI::get_interrupt_line(address);

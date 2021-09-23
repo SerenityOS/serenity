@@ -64,7 +64,7 @@ static inline bool is_display_controller_pci_device(PCI::Address address)
     return PCI::get_class(address) == 0x3;
 }
 
-UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_device(const PCI::Address& address, PCI::ID id)
+UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_device(const PCI::Address& address, PCI::HardwareID id)
 {
     VERIFY(is_vga_compatible_pci_device(address) || is_display_controller_pci_device(address));
     auto add_and_configure_adapter = [&](GraphicsDevice& graphics_device) {
@@ -179,13 +179,13 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
         dbgln("Forcing no initialization of framebuffer devices");
     }
 
-    PCI::enumerate([&](const PCI::Address& address, PCI::PhysicalID const& physical_id) {
+    PCI::enumerate([&](const PCI::Address& address, PCI::DeviceIdentifier const& device_identifier) {
         // Note: Each graphics controller will try to set its native screen resolution
         // upon creation. Later on, if we don't want to have framebuffer devices, a
         // framebuffer console will take the control instead.
         if (!is_vga_compatible_pci_device(address) && !is_display_controller_pci_device(address))
             return;
-        determine_and_initialize_graphics_device(address, physical_id.id());
+        determine_and_initialize_graphics_device(address, device_identifier.hardware_id());
     });
 
     if (m_graphics_devices.is_empty()) {

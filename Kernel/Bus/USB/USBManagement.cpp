@@ -27,10 +27,10 @@ UNMAP_AFTER_INIT void USBManagement::enumerate_controllers()
     if (kernel_command_line().disable_usb())
         return;
 
-    PCI::enumerate([this](PCI::Address const& address, PCI::PhysicalID const& physical_id) {
-        if (!(physical_id.class_code().value() == 0xc && physical_id.subclass_code().value() == 0x3))
+    PCI::enumerate([this](PCI::Address const& address, PCI::DeviceIdentifier const& device_identifier) {
+        if (!(device_identifier.class_code().value() == 0xc && device_identifier.subclass_code().value() == 0x3))
             return;
-        if (physical_id.prog_if().value() == 0x0) {
+        if (device_identifier.prog_if().value() == 0x0) {
             if (kernel_command_line().disable_uhci_controller())
                 return;
 
@@ -40,22 +40,22 @@ UNMAP_AFTER_INIT void USBManagement::enumerate_controllers()
             return;
         }
 
-        if (physical_id.prog_if().value() == 0x10) {
+        if (device_identifier.prog_if().value() == 0x10) {
             dmesgln("USBManagement: OHCI controller found at {} is not currently supported.", address);
             return;
         }
 
-        if (physical_id.prog_if().value() == 0x20) {
+        if (device_identifier.prog_if().value() == 0x20) {
             dmesgln("USBManagement: EHCI controller found at {} is not currently supported.", address);
             return;
         }
 
-        if (physical_id.prog_if().value() == 0x30) {
+        if (device_identifier.prog_if().value() == 0x30) {
             dmesgln("USBManagement: xHCI controller found at {} is not currently supported.", address);
             return;
         }
 
-        dmesgln("USBManagement: Unknown/unsupported controller at {} with programming interface 0x{:02x}", address, physical_id.prog_if().value());
+        dmesgln("USBManagement: Unknown/unsupported controller at {} with programming interface 0x{:02x}", address, device_identifier.prog_if().value());
     });
 }
 

@@ -17,9 +17,9 @@ u8 read8(Address address, u32 field);
 u16 read16(Address address, u32 field);
 u32 read32(Address address, u32 field);
 
-ID get_id(PCI::Address);
+HardwareID get_hardware_id(PCI::Address);
 bool is_io_space_enabled(Address);
-void enumerate(Function<void(Address, PhysicalID const&)> callback);
+void enumerate(Function<void(Address, DeviceIdentifier const&)> callback);
 void enable_interrupt_line(Address);
 void disable_interrupt_line(Address);
 u8 get_interrupt_line(Address);
@@ -44,6 +44,6 @@ void enable_io_space(Address);
 void disable_io_space(Address);
 void enable_memory_space(Address);
 void disable_memory_space(Address);
-PhysicalID get_physical_id(Address address);
+DeviceIdentifier get_device_identifier(Address address);
 
 }
