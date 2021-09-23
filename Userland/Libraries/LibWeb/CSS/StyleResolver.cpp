@@ -818,13 +818,12 @@ void StyleResolver::absolutize_values(StyleProperties& style, DOM::Element const
     float root_font_size = 10;
 
     for (auto& it : style.properties()) {
-        if (!it.value->is_length())
-            continue;
-        auto length = it.value->to_length();
-        if (length.is_relative()) {
-            auto px = length.relative_length_to_px(viewport_rect, font_metrics, root_font_size);
-            it.value = LengthStyleValue::create(CSS::Length::make_px(px));
-        }
+        it.value->visit_lengths([&](Length& length) {
+            if (length.is_absolute() || length.is_relative()) {
+                auto px = length.to_px(viewport_rect, font_metrics, root_font_size);
+                length = Length::make_px(px);
+            }
+        });
     }
 }
 
