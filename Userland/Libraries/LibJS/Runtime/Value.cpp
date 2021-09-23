@@ -418,9 +418,7 @@ Value Value::to_primitive(GlobalObject& global_object, PreferredType preferred_t
     };
     if (is_object()) {
         auto& vm = global_object.vm();
-        auto to_primitive_method = get_method(global_object, *vm.well_known_symbol_to_primitive());
-        if (vm.exception())
-            return {};
+        auto to_primitive_method = TRY_OR_DISCARD(get_method(global_object, *vm.well_known_symbol_to_primitive()));
         if (to_primitive_method) {
             auto hint = get_hint_for_preferred_type();
             auto result = TRY_OR_DISCARD(vm.call(*to_primitive_method, *this, js_string(vm, hint)));
@@ -818,7 +816,7 @@ Value Value::get(GlobalObject& global_object, PropertyName const& property_name)
 }
 
 // 7.3.10 GetMethod ( V, P ), https://tc39.es/ecma262/#sec-getmethod
-FunctionObject* Value::get_method(GlobalObject& global_object, PropertyName const& property_name) const
+ThrowCompletionOr<FunctionObject*> Value::get_method(GlobalObject& global_object, PropertyName const& property_name) const
 {
     auto& vm = global_object.vm();
 
@@ -827,18 +825,16 @@ FunctionObject* Value::get_method(GlobalObject& global_object, PropertyName cons
 
     // 2. Let func be ? GetV(V, P).
     auto function = get(global_object, property_name);
-    if (vm.exception())
-        return nullptr;
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 3. If func is either undefined or null, return undefined.
     if (function.is_nullish())
         return nullptr;
 
     // 4. If IsCallable(func) is false, throw a TypeError exception.
-    if (!function.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, function.to_string_without_side_effects());
-        return nullptr;
-    }
+    if (!function.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, function.to_string_without_side_effects());
 
     // 5. Return func.
     return &function.as_function();
@@ -1292,9 +1288,7 @@ Value instance_of(GlobalObject& global_object, Value lhs, Value rhs)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, rhs.to_string_without_side_effects());
         return {};
     }
-    auto has_instance_method = rhs.get_method(global_object, *vm.well_known_symbol_has_instance());
-    if (vm.exception())
-        return {};
+    auto has_instance_method = TRY_OR_DISCARD(rhs.get_method(global_object, *vm.well_known_symbol_has_instance()));
     if (has_instance_method) {
         auto has_instance_result = TRY_OR_DISCARD(vm.call(*has_instance_method, rhs, lhs));
         return Value(has_instance_result.to_boolean());

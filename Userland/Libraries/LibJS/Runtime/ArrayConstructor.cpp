@@ -108,9 +108,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
     auto this_arg = vm.argument(2);
 
     auto items = vm.argument(0);
-    auto using_iterator = items.get_method(global_object, *vm.well_known_symbol_iterator());
-    if (vm.exception())
-        return {};
+    auto using_iterator = TRY_OR_DISCARD(items.get_method(global_object, *vm.well_known_symbol_iterator()));
     if (using_iterator) {
         Value array;
         if (constructor.is_constructor()) {

@@ -62,9 +62,7 @@ Object* ProxyObject::internal_get_prototype_of() const
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "getPrototypeOf").
-    auto trap = Value(&m_handler).get_method(global_object, vm.names.getPrototypeOf);
-    if (vm.exception())
-        return {};
+    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.getPrototypeOf));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -124,9 +122,7 @@ bool ProxyObject::internal_set_prototype_of(Object* prototype)
     // 5. Let target be O.[[ProxyTarget]].
 
     // 6. Let trap be ? GetMethod(handler, "setPrototypeOf").
-    auto trap = Value(&m_handler).get_method(global_object, vm.names.setPrototypeOf);
-    if (vm.exception())
-        return {};
+    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.setPrototypeOf));
 
     // 7. If trap is undefined, then
     if (!trap) {
@@ -183,9 +179,7 @@ bool ProxyObject::internal_is_extensible() const
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "isExtensible").
-    auto trap = Value(&m_handler).get_method(global_object, vm.names.isExtensible);
-    if (vm.exception())
-        return {};
+    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.isExtensible));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -229,9 +223,7 @@ bool ProxyObject::internal_prevent_extensions()
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "preventExtensions").
-    auto trap = Value(&m_handler).get_method(global_object, vm.names.preventExtensions);
-    if (vm.exception())
-        return {};
+    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.preventExtensions));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -281,9 +273,7 @@ Optional<PropertyDescriptor> ProxyObject::internal_get_own_property(const Proper
     // 5. Let target be O.[[ProxyTarget]].
 
     // 6. Let trap be ? GetMethod(handler, "getOwnPropertyDescriptor").
-    auto trap = Value(&m_handler).get_method(global_object, vm.names.getOwnPropertyDescriptor);
-    if (vm.exception())
-        return {};
+    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.getOwnPropertyDescriptor));
 
     // 7. If trap is undefined, then
     if (!trap) {
@@ -397,9 +387,7 @@ bool ProxyObject::internal_define_own_property(PropertyName const& property_name
     // 5. Let target be O.[[ProxyTarget]].
 
     // 6. Let trap be ? GetMethod(handler, "defineProperty").
-    auto trap = Value(&m_handler).get_method(global_object, vm.names.defineProperty);
-    if (vm.exception())
-        return {};
+    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.defineProperty));
 
     // 7. If trap is undefined, then
     if (!trap) {
@@ -496,9 +484,7 @@ bool ProxyObject::internal_has_property(PropertyName const& property_name) const
     // 5. Let target be O.[[ProxyTarget]].
 
     // 6. Let trap be ? GetMethod(handler, "has").
-    auto trap = Value(&m_handler).get_method(global_object, vm.names.has);
-    if (vm.exception())
-        return {};
+    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.has));
 
     // 7. If trap is undefined, then
     if (!trap) {
@@ -582,9 +568,7 @@ Value ProxyObject::internal_get(PropertyName const& property_name, Value receive
     }
 
     // 6. Let trap be ? GetMethod(handler, "get").
-    auto trap = Value(&m_handler).get_method(global_object, vm.names.get);
-    if (vm.exception())
-        return {};
+    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.get));
 
     // 7. If trap is undefined, then
     if (!trap) {
@@ -648,9 +632,7 @@ bool ProxyObject::internal_set(PropertyName const& property_name, Value value, V
     // 5. Let target be O.[[ProxyTarget]].
 
     // 6. Let trap be ? GetMethod(handler, "set").
-    auto trap = Value(&m_handler).get_method(global_object, vm.names.set);
-    if (vm.exception())
-        return {};
+    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.set));
 
     // 7. If trap is undefined, then
     if (!trap) {
@@ -715,9 +697,7 @@ bool ProxyObject::internal_delete(PropertyName const& property_name)
     // 5. Let target be O.[[ProxyTarget]].
 
     // 6. Let trap be ? GetMethod(handler, "deleteProperty").
-    auto trap = Value(&m_handler).get_method(global_object, vm.names.deleteProperty);
-    if (vm.exception())
-        return {};
+    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.deleteProperty));
 
     // 7. If trap is undefined, then
     if (!trap) {
@@ -780,9 +760,10 @@ MarkedValueList ProxyObject::internal_own_property_keys() const
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "ownKeys").
-    auto trap = Value(&m_handler).get_method(global_object, vm.names.ownKeys);
-    if (vm.exception())
+    auto trap_or_error = Value(&m_handler).get_method(global_object, vm.names.ownKeys);
+    if (trap_or_error.is_error())
         return MarkedValueList { heap() };
+    auto trap = trap_or_error.release_value();
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -931,9 +912,7 @@ Value ProxyObject::call()
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "apply").
-    auto trap = Value(&m_handler).get_method(global_object, vm.names.apply);
-    if (vm.exception())
-        return {};
+    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.apply));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -976,9 +955,7 @@ Value ProxyObject::construct(FunctionObject& new_target)
     // 5. Assert: IsConstructor(target) is true.
 
     // 6. Let trap be ? GetMethod(handler, "construct").
-    auto trap = Value(&m_handler).get_method(global_object, vm.names.construct);
-    if (vm.exception())
-        return {};
+    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.construct));
 
     // 7. If trap is undefined, then
     if (!trap) {

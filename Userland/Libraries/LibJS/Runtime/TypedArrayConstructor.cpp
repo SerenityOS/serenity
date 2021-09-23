@@ -77,9 +77,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
     auto source = vm.argument(0);
     auto this_arg = vm.argument(2);
 
-    auto using_iterator = source.get_method(global_object, *vm.well_known_symbol_iterator());
-    if (vm.exception())
-        return {};
+    auto using_iterator = TRY_OR_DISCARD(source.get_method(global_object, *vm.well_known_symbol_iterator()));
     if (using_iterator) {
         auto values = iterable_to_list(global_object, source, using_iterator);
         if (vm.exception())
