@@ -372,7 +372,12 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
             lagom_unsupported
             build_target
             [ $# -ge 1 ] || usage
-            "$TOOLCHAIN_DIR/binutils/binutils/addr2line" -e "$BUILD_DIR/Kernel/Kernel" "$@"
+            if [ "$TOOLCHAIN_TYPE" = "Clang" ]; then
+                ADDR2LINE="$TOOLCHAIN_DIR/bin/llvm-addr2line"
+            else
+                ADDR2LINE="$TOOLCHAIN_DIR/binutils/binutils/addr2line"
+            fi
+            "$ADDR2LINE" -e "$BUILD_DIR/Kernel/Kernel" "$@"
             ;;
         addr2line)
             build_target
@@ -382,6 +387,8 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
             if [ "$TARGET" = "lagom" ]; then
                 command -v addr2line >/dev/null 2>&1 || die "Please install addr2line!"
                 ADDR2LINE=addr2line
+            elif [ "$TOOLCHAIN_TYPE" = "Clang" ]; then
+                ADDR2LINE="$TOOLCHAIN_DIR/bin/llvm-addr2line"
             else
                 ADDR2LINE="$TOOLCHAIN_DIR/binutils/binutils/addr2line"
             fi
