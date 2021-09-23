@@ -25,7 +25,7 @@ class AHCIController final : public StorageController
     friend class AHCIPort;
     AK_MAKE_ETERNAL
 public:
-    UNMAP_AFTER_INIT static NonnullRefPtr<AHCIController> initialize(PCI::Address address);
+    UNMAP_AFTER_INIT static NonnullRefPtr<AHCIController> initialize(PCI::DeviceIdentifier const& pci_device_identifier);
     virtual ~AHCIController() override;
 
     virtual RefPtr<StorageDevice> device(u32 index) const override;

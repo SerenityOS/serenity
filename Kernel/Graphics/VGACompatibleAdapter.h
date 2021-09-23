@@ -20,8 +20,8 @@ class VGACompatibleAdapter : public GraphicsDevice
     , public PCI::Device {
     AK_MAKE_ETERNAL
 public:
-    static NonnullRefPtr<VGACompatibleAdapter> initialize_with_preset_resolution(PCI::Address, PhysicalAddress, size_t framebuffer_width, size_t framebuffer_height, size_t framebuffer_pitch);
-    static NonnullRefPtr<VGACompatibleAdapter> initialize(PCI::Address);
+    static NonnullRefPtr<VGACompatibleAdapter> initialize_with_preset_resolution(PCI::DeviceIdentifier const&, PhysicalAddress, size_t framebuffer_width, size_t framebuffer_height, size_t framebuffer_pitch);
+    static NonnullRefPtr<VGACompatibleAdapter> initialize(PCI::DeviceIdentifier const&);
 
     virtual bool framebuffer_devices_initialized() const override { return !m_framebuffer_device.is_null(); }
 

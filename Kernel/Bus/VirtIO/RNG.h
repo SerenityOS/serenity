@@ -19,7 +19,7 @@ class RNG final
     : public RefCounted<RNG>
     , public VirtIO::Device {
 public:
-    static NonnullRefPtr<RNG> must_create(PCI::Address address);
+    static NonnullRefPtr<RNG> must_create(PCI::DeviceIdentifier const&);
     virtual StringView purpose() const override { return class_name(); }
     virtual ~RNG() override = default;
 
@@ -27,7 +27,7 @@ public:
 
 private:
     virtual StringView class_name() const override { return "VirtIOConsole"; }
-    explicit RNG(PCI::Address);
+    explicit RNG(PCI::DeviceIdentifier const&);
     virtual bool handle_device_config_change() override;
     virtual void handle_queue_update(u16 queue_index) override;
     void request_entropy_from_host();

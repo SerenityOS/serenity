@@ -93,7 +93,7 @@ public:
 
 protected:
     virtual StringView class_name() const { return "VirtIO::Device"; }
-    explicit Device(PCI::Address);
+    explicit Device(PCI::DeviceIdentifier const&);
     struct MappedMMIO {
         OwnPtr<Memory::Region> base;
         size_t size { 0 };

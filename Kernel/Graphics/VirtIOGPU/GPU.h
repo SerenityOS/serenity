@@ -40,7 +40,7 @@ class GPU final
     friend class FrameBufferDevice;
 
 public:
-    GPU(PCI::Address);
+    GPU(PCI::DeviceIdentifier const&);
     virtual ~GPU() override;
 
     void create_framebuffer_devices();

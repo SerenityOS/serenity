@@ -13,16 +13,16 @@
 
 namespace Kernel::Graphics::VirtIOGPU {
 
-NonnullRefPtr<GraphicsAdapter> GraphicsAdapter::initialize(PCI::Address base_address)
+NonnullRefPtr<GraphicsAdapter> GraphicsAdapter::initialize(PCI::DeviceIdentifier const& device_identifier)
 {
-    VERIFY(PCI::get_hardware_id(base_address).vendor_id == PCI::VendorID::VirtIO);
-    return adopt_ref(*new GraphicsAdapter(base_address));
+    VERIFY(device_identifier.hardware_id().vendor_id == PCI::VendorID::VirtIO);
+    return adopt_ref(*new GraphicsAdapter(device_identifier));
 }
 
-GraphicsAdapter::GraphicsAdapter(PCI::Address base_address)
-    : PCI::Device(base_address)
+GraphicsAdapter::GraphicsAdapter(PCI::DeviceIdentifier const& device_identifier)
+    : PCI::Device(device_identifier.address())
 {
-    m_gpu_device = adopt_ref(*new GPU(base_address)).leak_ref();
+    m_gpu_device = adopt_ref(*new GPU(device_identifier)).leak_ref();
     m_gpu_device->initialize();
 }
 

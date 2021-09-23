@@ -41,13 +41,12 @@ static bool is_supported_model(u16 device_id)
 
 #define DDC2_I2C_ADDRESS 0x50
 
-RefPtr<IntelNativeGraphicsAdapter> IntelNativeGraphicsAdapter::initialize(PCI::Address address)
+RefPtr<IntelNativeGraphicsAdapter> IntelNativeGraphicsAdapter::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    auto id = PCI::get_hardware_id(address);
-    VERIFY(id.vendor_id == 0x8086);
-    if (!is_supported_model(id.device_id))
+    VERIFY(pci_device_identifier.hardware_id().vendor_id == 0x8086);
+    if (!is_supported_model(pci_device_identifier.hardware_id().device_id))
         return {};
-    return adopt_ref(*new IntelNativeGraphicsAdapter(address));
+    return adopt_ref(*new IntelNativeGraphicsAdapter(pci_device_identifier.address()));
 }
 
 static size_t compute_dac_multiplier(size_t pixel_clock_in_khz)

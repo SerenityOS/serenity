@@ -50,23 +50,23 @@ void GraphicsManagement::activate_graphical_mode()
     }
 }
 
-static inline bool is_vga_compatible_pci_device(PCI::Address address)
+static inline bool is_vga_compatible_pci_device(PCI::DeviceIdentifier const& device_identifier)
 {
     // Note: Check for Display Controller, VGA Compatible Controller or
     // Unclassified, VGA-Compatible Unclassified Device
-    auto is_display_controller_vga_compatible = PCI::get_class(address) == 0x3 && PCI::get_subclass(address) == 0x0;
-    auto is_general_pci_vga_compatible = PCI::get_class(address) == 0x0 && PCI::get_subclass(address) == 0x1;
+    auto is_display_controller_vga_compatible = device_identifier.class_code().value() == 0x3 && device_identifier.subclass_code().value() == 0x0;
+    auto is_general_pci_vga_compatible = device_identifier.class_code().value() == 0x0 && device_identifier.subclass_code().value() == 0x1;
     return is_display_controller_vga_compatible || is_general_pci_vga_compatible;
 }
 
-static inline bool is_display_controller_pci_device(PCI::Address address)
+static inline bool is_display_controller_pci_device(PCI::DeviceIdentifier const& device_identifier)
 {
-    return PCI::get_class(address) == 0x3;
+    return device_identifier.class_code().value() == 0x3;
 }
 
-UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_device(const PCI::Address& address, PCI::HardwareID id)
+UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_device(PCI::DeviceIdentifier const& device_identifier)
 {
-    VERIFY(is_vga_compatible_pci_device(address) || is_display_controller_pci_device(address));
+    VERIFY(is_vga_compatible_pci_device(device_identifier) || is_display_controller_pci_device(device_identifier));
     auto add_and_configure_adapter = [&](GraphicsDevice& graphics_device) {
         m_graphics_devices.append(graphics_device);
         if (!m_framebuffer_devices_allowed) {
@@ -77,24 +77,24 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
     };
 
     RefPtr<GraphicsDevice> adapter;
-    switch (id.vendor_id) {
+    switch (device_identifier.hardware_id().vendor_id) {
     case PCI::VendorID::QEMUOld:
-        if (id.device_id == 0x1111)
-            adapter = BochsGraphicsAdapter::initialize(address);
+        if (device_identifier.hardware_id().device_id == 0x1111)
+            adapter = BochsGraphicsAdapter::initialize(device_identifier);
         break;
     case PCI::VendorID::VirtualBox:
-        if (id.device_id == 0xbeef)
-            adapter = BochsGraphicsAdapter::initialize(address);
+        if (device_identifier.hardware_id().device_id == 0xbeef)
+            adapter = BochsGraphicsAdapter::initialize(device_identifier);
         break;
     case PCI::VendorID::Intel:
-        adapter = IntelNativeGraphicsAdapter::initialize(address);
+        adapter = IntelNativeGraphicsAdapter::initialize(device_identifier);
         break;
     case PCI::VendorID::VirtIO:
         dmesgln("Graphics: Using VirtIO console");
-        adapter = Graphics::VirtIOGPU::GraphicsAdapter::initialize(address);
+        adapter = Graphics::VirtIOGPU::GraphicsAdapter::initialize(device_identifier);
         break;
     default:
-        if (!is_vga_compatible_pci_device(address))
+        if (!is_vga_compatible_pci_device(device_identifier))
             break;
         // Note: Although technically possible that a system has a
         // non-compatible VGA graphics device that was initialized by the
@@ -108,10 +108,10 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
         // utilize VESA BIOS extensions (that we don't currently) of these cards
         // support, so we want to utilize the provided framebuffer of these
         // devices, if possible.
-        if (!m_vga_adapter && PCI::is_io_space_enabled(address)) {
+        if (!m_vga_adapter && PCI::is_io_space_enabled(device_identifier.address())) {
             if (multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
                 dmesgln("Graphics: Using a preset resolution from the bootloader");
-                adapter = VGACompatibleAdapter::initialize_with_preset_resolution(address,
+                adapter = VGACompatibleAdapter::initialize_with_preset_resolution(device_identifier,
                     multiboot_framebuffer_addr,
                     multiboot_framebuffer_width,
                     multiboot_framebuffer_height,
@@ -119,7 +119,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
             }
         } else {
             dmesgln("Graphics: Using a VGA compatible generic adapter");
-            adapter = VGACompatibleAdapter::initialize(address);
+            adapter = VGACompatibleAdapter::initialize(device_identifier);
         }
         break;
     }
@@ -129,8 +129,8 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
 
     // Note: If IO space is enabled, this VGA adapter is operating in VGA mode.
     // Note: If no other VGA adapter is attached as m_vga_adapter, we should attach it then.
-    if (!m_vga_adapter && PCI::is_io_space_enabled(address) && adapter->type() == GraphicsDevice::Type::VGACompatible) {
-        dbgln("Graphics adapter @ {} is operating in VGA mode", address);
+    if (!m_vga_adapter && PCI::is_io_space_enabled(device_identifier.address()) && adapter->type() == GraphicsDevice::Type::VGACompatible) {
+        dbgln("Graphics adapter @ {} is operating in VGA mode", device_identifier.address());
         m_vga_adapter = static_ptr_cast<VGACompatibleAdapter>(adapter);
     }
     return true;
@@ -179,13 +179,13 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
         dbgln("Forcing no initialization of framebuffer devices");
     }
 
-    PCI::enumerate([&](const PCI::Address& address, PCI::DeviceIdentifier const& device_identifier) {
+    PCI::enumerate([&](const PCI::Address&, PCI::DeviceIdentifier const& device_identifier) {
         // Note: Each graphics controller will try to set its native screen resolution
         // upon creation. Later on, if we don't want to have framebuffer devices, a
         // framebuffer console will take the control instead.
-        if (!is_vga_compatible_pci_device(address) && !is_display_controller_pci_device(address))
+        if (!is_vga_compatible_pci_device(device_identifier) && !is_display_controller_pci_device(device_identifier))
             return;
-        determine_and_initialize_graphics_device(address, device_identifier.hardware_id());
+        determine_and_initialize_graphics_device(device_identifier);
     });
 
     if (m_graphics_devices.is_empty()) {

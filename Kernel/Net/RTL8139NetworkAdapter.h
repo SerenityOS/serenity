@@ -22,7 +22,7 @@ class RTL8139NetworkAdapter final : public NetworkAdapter
     , public PCI::Device
     , public IRQHandler {
 public:
-    static RefPtr<RTL8139NetworkAdapter> try_to_initialize(PCI::Address);
+    static RefPtr<RTL8139NetworkAdapter> try_to_initialize(PCI::DeviceIdentifier const&);
 
     virtual ~RTL8139NetworkAdapter() override;
 

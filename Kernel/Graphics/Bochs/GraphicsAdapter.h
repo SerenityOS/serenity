@@ -29,7 +29,7 @@ private:
     TYPEDEF_DISTINCT_ORDERED_ID(u16, IndexID);
 
 public:
-    static NonnullRefPtr<BochsGraphicsAdapter> initialize(PCI::Address);
+    static NonnullRefPtr<BochsGraphicsAdapter> initialize(PCI::DeviceIdentifier const&);
     virtual ~BochsGraphicsAdapter() = default;
     virtual bool framebuffer_devices_initialized() const override { return !m_framebuffer_device.is_null(); }
 
@@ -47,7 +47,7 @@ private:
     virtual void enable_consoles() override;
     virtual void disable_consoles() override;
 
-    explicit BochsGraphicsAdapter(PCI::Address);
+    explicit BochsGraphicsAdapter(PCI::DeviceIdentifier const&);
 
     IndexID index_id() const;
 
@@ -71,5 +71,6 @@ private:
     Spinlock m_console_mode_switch_lock;
     bool m_console_enabled { false };
     bool m_io_required { false };
+    bool m_is_vga_capable { false };
 };
 }

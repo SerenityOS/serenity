@@ -9,9 +9,9 @@
 
 namespace Kernel::VirtIO {
 
-UNMAP_AFTER_INIT NonnullRefPtr<RNG> RNG::must_create(PCI::Address address)
+UNMAP_AFTER_INIT NonnullRefPtr<RNG> RNG::must_create(PCI::DeviceIdentifier const& device_identifier)
 {
-    return adopt_ref_if_nonnull(new RNG(address)).release_nonnull();
+    return adopt_ref_if_nonnull(new RNG(device_identifier)).release_nonnull();
 }
 
 UNMAP_AFTER_INIT void RNG::initialize()
@@ -33,8 +33,8 @@ UNMAP_AFTER_INIT void RNG::initialize()
     }
 }
 
-UNMAP_AFTER_INIT RNG::RNG(PCI::Address address)
-    : VirtIO::Device(address)
+UNMAP_AFTER_INIT RNG::RNG(PCI::DeviceIdentifier const& device_identifier)
+    : VirtIO::Device(device_identifier)
 {
 }
 

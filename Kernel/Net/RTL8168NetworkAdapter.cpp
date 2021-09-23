@@ -181,15 +181,14 @@ namespace Kernel {
 #define TX_BUFFER_SIZE 0x1FF8
 #define RX_BUFFER_SIZE 0x1FF8 // FIXME: this should be increased (0x3FFF)
 
-UNMAP_AFTER_INIT RefPtr<RTL8168NetworkAdapter> RTL8168NetworkAdapter::try_to_initialize(PCI::Address address)
+UNMAP_AFTER_INIT RefPtr<RTL8168NetworkAdapter> RTL8168NetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    auto id = PCI::get_hardware_id(address);
-    if (id.vendor_id != PCI::VendorID::Realtek)
+    if (pci_device_identifier.hardware_id().vendor_id != PCI::VendorID::Realtek)
         return {};
-    if (id.device_id != 0x8168)
+    if (pci_device_identifier.hardware_id().device_id != 0x8168)
         return {};
-    u8 irq = PCI::get_interrupt_line(address);
-    return adopt_ref_if_nonnull(new (nothrow) RTL8168NetworkAdapter(address, irq));
+    u8 irq = PCI::get_interrupt_line(pci_device_identifier.address());
+    return adopt_ref_if_nonnull(new (nothrow) RTL8168NetworkAdapter(pci_device_identifier.address(), irq));
 }
 
 bool RTL8168NetworkAdapter::determine_supported_version() const

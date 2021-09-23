@@ -15,9 +15,9 @@
 
 namespace Kernel {
 
-NonnullRefPtr<AHCIController> AHCIController::initialize(PCI::Address address)
+NonnullRefPtr<AHCIController> AHCIController::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    return adopt_ref(*new AHCIController(address));
+    return adopt_ref(*new AHCIController(pci_device_identifier.address()));
 }
 
 bool AHCIController::reset()
