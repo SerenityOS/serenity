@@ -284,7 +284,7 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                         auto type_args = type_parts.size() > 1 ? type_parts[1] : ""sv;
                         if (type_name == "color") {
                             property_generator.append(R"~~~(
-        if (style_value.is_color())
+        if (style_value.has_color())
             return true;
 )~~~");
                         } else if (type_name == "image") {
@@ -295,7 +295,7 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                         } else if (type_name == "length" || type_name == "percentage") {
                             // FIXME: Handle lengths and percentages separately
                             property_generator.append(R"~~~(
-        if (style_value.is_length() || style_value.is_calculated())
+        if (style_value.has_length() || style_value.is_calculated())
             return true;
 )~~~");
                         } else if (type_name == "number" || type_name == "integer") {
@@ -309,14 +309,14 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                                 max_value = type_args.substring_view(comma_index + 1, type_args.length() - comma_index - 2);
                             }
                             property_generator.append(R"~~~(
-        if (style_value.is_numeric())~~~");
+        if (style_value.has_number())~~~");
                             if (!min_value.is_empty()) {
                                 property_generator.set("minvalue", min_value);
-                                property_generator.append(" && (style_value.as_number() >= (float)@minvalue@)");
+                                property_generator.append(" && (style_value.to_number() >= (float)@minvalue@)");
                             }
                             if (!max_value.is_empty()) {
                                 property_generator.set("maxvalue", max_value);
-                                property_generator.append(" && (style_value.as_number() <= (float)@maxvalue@)");
+                                property_generator.append(" && (style_value.to_number() <= (float)@maxvalue@)");
                             }
                             property_generator.append(R"~~~()
             return true;

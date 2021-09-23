@@ -26,14 +26,158 @@ StyleValue::~StyleValue()
 {
 }
 
-bool StyleValue::is_color() const
+BackgroundStyleValue const& StyleValue::as_background() const
 {
-    if (type() == Type::Color)
-        return true;
-    if (type() != Type::Identifier)
-        return false;
+    VERIFY(is_background());
+    return static_cast<BackgroundStyleValue const&>(*this);
+}
 
-    switch (to_identifier()) {
+BackgroundRepeatStyleValue const& StyleValue::as_background_repeat() const
+{
+    VERIFY(is_background_repeat());
+    return static_cast<BackgroundRepeatStyleValue const&>(*this);
+}
+
+BorderStyleValue const& StyleValue::as_border() const
+{
+    VERIFY(is_border());
+    return static_cast<BorderStyleValue const&>(*this);
+}
+
+BorderRadiusStyleValue const& StyleValue::as_border_radius() const
+{
+    VERIFY(is_border_radius());
+    return static_cast<BorderRadiusStyleValue const&>(*this);
+}
+
+BoxShadowStyleValue const& StyleValue::as_box_shadow() const
+{
+    VERIFY(is_box_shadow());
+    return static_cast<BoxShadowStyleValue const&>(*this);
+}
+
+CalculatedStyleValue const& StyleValue::as_calculated() const
+{
+    VERIFY(is_calculated());
+    return static_cast<CalculatedStyleValue const&>(*this);
+}
+
+ColorStyleValue const& StyleValue::as_color() const
+{
+    VERIFY(is_color());
+    return static_cast<ColorStyleValue const&>(*this);
+}
+
+CustomStyleValue const& StyleValue::as_custom_property() const
+{
+    VERIFY(is_custom_property());
+    return static_cast<CustomStyleValue const&>(*this);
+}
+
+FlexStyleValue const& StyleValue::as_flex() const
+{
+    VERIFY(is_flex());
+    return static_cast<FlexStyleValue const&>(*this);
+}
+
+FlexFlowStyleValue const& StyleValue::as_flex_flow() const
+{
+    VERIFY(is_flex_flow());
+    return static_cast<FlexFlowStyleValue const&>(*this);
+}
+
+FontStyleValue const& StyleValue::as_font() const
+{
+    VERIFY(is_font());
+    return static_cast<FontStyleValue const&>(*this);
+}
+
+IdentifierStyleValue const& StyleValue::as_identifier() const
+{
+    VERIFY(is_identifier());
+    return static_cast<IdentifierStyleValue const&>(*this);
+}
+
+ImageStyleValue const& StyleValue::as_image() const
+{
+    VERIFY(is_image());
+    return static_cast<ImageStyleValue const&>(*this);
+}
+
+InheritStyleValue const& StyleValue::as_inherit() const
+{
+    VERIFY(is_inherit());
+    return static_cast<InheritStyleValue const&>(*this);
+}
+
+InitialStyleValue const& StyleValue::as_initial() const
+{
+    VERIFY(is_initial());
+    return static_cast<InitialStyleValue const&>(*this);
+}
+
+LengthStyleValue const& StyleValue::as_length() const
+{
+    VERIFY(is_length());
+    return static_cast<LengthStyleValue const&>(*this);
+}
+
+ListStyleStyleValue const& StyleValue::as_list_style() const
+{
+    VERIFY(is_list_style());
+    return static_cast<ListStyleStyleValue const&>(*this);
+}
+
+NumericStyleValue const& StyleValue::as_numeric() const
+{
+    VERIFY(is_numeric());
+    return static_cast<NumericStyleValue const&>(*this);
+}
+
+OverflowStyleValue const& StyleValue::as_overflow() const
+{
+    VERIFY(is_overflow());
+    return static_cast<OverflowStyleValue const&>(*this);
+}
+
+StringStyleValue const& StyleValue::as_string() const
+{
+    VERIFY(is_string());
+    return static_cast<StringStyleValue const&>(*this);
+}
+
+TextDecorationStyleValue const& StyleValue::as_text_decoration() const
+{
+    VERIFY(is_text_decoration());
+    return static_cast<TextDecorationStyleValue const&>(*this);
+}
+
+TransformationStyleValue const& StyleValue::as_transformation() const
+{
+    VERIFY(is_transformation());
+    return static_cast<TransformationStyleValue const&>(*this);
+}
+
+UnsetStyleValue const& StyleValue::as_unset() const
+{
+    VERIFY(is_unset());
+    return static_cast<UnsetStyleValue const&>(*this);
+}
+
+StyleValueList const& StyleValue::as_value_list() const
+{
+    VERIFY(is_value_list());
+    return static_cast<StyleValueList const&>(*this);
+}
+
+String IdentifierStyleValue::to_string() const
+{
+    return CSS::string_from_value_id(m_id);
+}
+
+bool IdentifierStyleValue::has_color() const
+{
+    switch (m_id) {
     case ValueID::Currentcolor:
     case ValueID::LibwebLink:
     case ValueID::LibwebPaletteActiveLink:
@@ -92,21 +236,8 @@ bool StyleValue::is_color() const
     case ValueID::LibwebPaletteWindowText:
         return true;
     default:
-        break;
+        return false;
     }
-
-    return false;
-}
-
-float StyleValue::as_number() const
-{
-    VERIFY(is_numeric());
-    return static_cast<NumericStyleValue const&>(*this).value();
-}
-
-String IdentifierStyleValue::to_string() const
-{
-    return CSS::string_from_value_id(m_id);
 }
 
 Color IdentifierStyleValue::to_color(Layout::NodeWithStyle const& node) const
@@ -255,5 +386,4 @@ void ImageStyleValue::resource_did_load()
     if (m_document->browsing_context())
         m_document->browsing_context()->set_needs_display({});
 }
-
 }

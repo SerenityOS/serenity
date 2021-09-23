@@ -269,11 +269,11 @@ public:
     bool is_flex() const { return type() == Type::Flex; }
     bool is_flex_flow() const { return type() == Type::FlexFlow; }
     bool is_font() const { return type() == Type::Font; }
-    bool is_identifier() const { return type() == Type::Identifier || is_auto(); }
+    bool is_identifier() const { return type() == Type::Identifier; }
     bool is_image() const { return type() == Type::Image; }
     bool is_inherit() const { return type() == Type::Inherit; }
     bool is_initial() const { return type() == Type::Initial; }
-    virtual bool is_length() const { return type() == Type::Length; }
+    bool is_length() const { return type() == Type::Length; }
     bool is_list_style() const { return type() == Type::ListStyle; }
     bool is_numeric() const { return type() == Type::Numeric; }
     bool is_overflow() const { return type() == Type::Overflow; }
@@ -285,21 +285,67 @@ public:
 
     bool is_builtin() const { return is_inherit() || is_initial() || is_unset(); }
 
-    bool is_builtin_or_dynamic() const
-    {
-        return is_builtin() || is_custom_property() || is_calculated();
-    }
+    BackgroundRepeatStyleValue const& as_background_repeat() const;
+    BackgroundStyleValue const& as_background() const;
+    BorderRadiusStyleValue const& as_border_radius() const;
+    BorderStyleValue const& as_border() const;
+    BoxShadowStyleValue const& as_box_shadow() const;
+    CalculatedStyleValue const& as_calculated() const;
+    ColorStyleValue const& as_color() const;
+    CustomStyleValue const& as_custom_property() const;
+    FlexFlowStyleValue const& as_flex_flow() const;
+    FlexStyleValue const& as_flex() const;
+    FontStyleValue const& as_font() const;
+    IdentifierStyleValue const& as_identifier() const;
+    ImageStyleValue const& as_image() const;
+    InheritStyleValue const& as_inherit() const;
+    InitialStyleValue const& as_initial() const;
+    LengthStyleValue const& as_length() const;
+    ListStyleStyleValue const& as_list_style() const;
+    NumericStyleValue const& as_numeric() const;
+    OverflowStyleValue const& as_overflow() const;
+    StringStyleValue const& as_string() const;
+    TextDecorationStyleValue const& as_text_decoration() const;
+    TransformationStyleValue const& as_transformation() const;
+    UnsetStyleValue const& as_unset() const;
+    StyleValueList const& as_value_list() const;
 
-    float as_number() const;
+    BackgroundRepeatStyleValue& as_background_repeat() { return const_cast<BackgroundRepeatStyleValue&>(const_cast<StyleValue const&>(*this).as_background_repeat()); }
+    BackgroundStyleValue& as_background() { return const_cast<BackgroundStyleValue&>(const_cast<StyleValue const&>(*this).as_background()); }
+    BorderRadiusStyleValue& as_border_radius() { return const_cast<BorderRadiusStyleValue&>(const_cast<StyleValue const&>(*this).as_border_radius()); }
+    BorderStyleValue& as_border() { return const_cast<BorderStyleValue&>(const_cast<StyleValue const&>(*this).as_border()); }
+    BoxShadowStyleValue& as_box_shadow() { return const_cast<BoxShadowStyleValue&>(const_cast<StyleValue const&>(*this).as_box_shadow()); }
+    CalculatedStyleValue& as_calculated() { return const_cast<CalculatedStyleValue&>(const_cast<StyleValue const&>(*this).as_calculated()); }
+    ColorStyleValue& as_color() { return const_cast<ColorStyleValue&>(const_cast<StyleValue const&>(*this).as_color()); }
+    CustomStyleValue& as_custom_property() { return const_cast<CustomStyleValue&>(const_cast<StyleValue const&>(*this).as_custom_property()); }
+    FlexFlowStyleValue& as_flex_flow() { return const_cast<FlexFlowStyleValue&>(const_cast<StyleValue const&>(*this).as_flex_flow()); }
+    FlexStyleValue& as_flex() { return const_cast<FlexStyleValue&>(const_cast<StyleValue const&>(*this).as_flex()); }
+    FontStyleValue& as_font() { return const_cast<FontStyleValue&>(const_cast<StyleValue const&>(*this).as_font()); }
+    IdentifierStyleValue& as_identifier() { return const_cast<IdentifierStyleValue&>(const_cast<StyleValue const&>(*this).as_identifier()); }
+    ImageStyleValue& as_image() { return const_cast<ImageStyleValue&>(const_cast<StyleValue const&>(*this).as_image()); }
+    InheritStyleValue& as_inherit() { return const_cast<InheritStyleValue&>(const_cast<StyleValue const&>(*this).as_inherit()); }
+    InitialStyleValue& as_initial() { return const_cast<InitialStyleValue&>(const_cast<StyleValue const&>(*this).as_initial()); }
+    LengthStyleValue& as_length() { return const_cast<LengthStyleValue&>(const_cast<StyleValue const&>(*this).as_length()); }
+    ListStyleStyleValue& as_list_style() { return const_cast<ListStyleStyleValue&>(const_cast<StyleValue const&>(*this).as_list_style()); }
+    NumericStyleValue& as_numeric() { return const_cast<NumericStyleValue&>(const_cast<StyleValue const&>(*this).as_numeric()); }
+    OverflowStyleValue& as_overflow() { return const_cast<OverflowStyleValue&>(const_cast<StyleValue const&>(*this).as_overflow()); }
+    StringStyleValue& as_string() { return const_cast<StringStyleValue&>(const_cast<StyleValue const&>(*this).as_string()); }
+    TextDecorationStyleValue& as_text_decoration() { return const_cast<TextDecorationStyleValue&>(const_cast<StyleValue const&>(*this).as_text_decoration()); }
+    TransformationStyleValue& as_transformation() { return const_cast<TransformationStyleValue&>(const_cast<StyleValue const&>(*this).as_transformation()); }
+    UnsetStyleValue& as_unset() { return const_cast<UnsetStyleValue&>(const_cast<StyleValue const&>(*this).as_unset()); }
+    StyleValueList& as_value_list() { return const_cast<StyleValueList&>(const_cast<StyleValue const&>(*this).as_value_list()); }
 
-    virtual String to_string() const = 0;
-    virtual Length to_length() const { return {}; }
+    virtual bool has_auto() const { return false; }
+    virtual bool has_color() const { return false; }
+    virtual bool has_identifier() const { return false; }
+    virtual bool has_length() const { return false; }
+    virtual bool has_number() const { return false; }
 
     virtual Color to_color(Layout::NodeWithStyle const&) const { return {}; }
-
-    CSS::ValueID to_identifier() const;
-
-    virtual bool is_auto() const { return false; }
+    virtual CSS::ValueID to_identifier() const { return ValueID::Invalid; }
+    virtual Length to_length() const { return {}; }
+    virtual float to_number() const { return {}; }
+    virtual String to_string() const = 0;
 
     bool operator==(const StyleValue& other) const { return equals(other); }
     bool operator!=(const StyleValue& other) const { return !(*this == other); }
@@ -621,8 +667,9 @@ public:
     virtual ~ColorStyleValue() override { }
 
     Color color() const { return m_color; }
-    String to_string() const override { return m_color.to_string(); }
-    Color to_color(Layout::NodeWithStyle const&) const override { return m_color; }
+    virtual String to_string() const override { return m_color.to_string(); }
+    virtual bool has_color() const override { return true; }
+    virtual Color to_color(Layout::NodeWithStyle const&) const override { return m_color; }
 
     virtual bool equals(const StyleValue& other) const override
     {
@@ -806,8 +853,12 @@ public:
 
     CSS::ValueID id() const { return m_id; }
 
-    virtual String to_string() const override;
+    virtual bool has_auto() const override { return m_id == ValueID::Auto; }
+    virtual bool has_identifier() const override { return true; }
+    virtual CSS::ValueID to_identifier() const override { return m_id; }
+    virtual bool has_color() const override;
     virtual Color to_color(Layout::NodeWithStyle const& node) const override;
+    virtual String to_string() const override;
 
     virtual bool equals(const StyleValue& other) const override
     {
@@ -892,12 +943,12 @@ public:
     }
     virtual ~LengthStyleValue() override { }
 
+    Length const& length() const { return m_length; }
+
+    virtual bool has_auto() const override { return m_length.is_auto(); }
+    virtual bool has_length() const override { return true; }
     virtual String to_string() const override { return m_length.to_string(); }
     virtual Length to_length() const override { return m_length; }
-
-    const Length& length() const { return m_length; }
-
-    virtual bool is_auto() const override { return m_length.is_auto(); }
 
     virtual bool equals(const StyleValue& other) const override
     {
@@ -960,10 +1011,15 @@ public:
         return adopt_ref(*new NumericStyleValue(value));
     }
 
-    virtual bool is_length() const override { return m_value == 0; }
+    virtual bool has_length() const override { return m_value == 0; }
     virtual Length to_length() const override { return Length(0, Length::Type::Px); }
 
+    virtual bool has_number() const override { return true; }
+    virtual float to_number() const override { return m_value; }
+
     float value() const { return m_value; }
+    // FIXME: Store integer values separately
+    i64 int_value() const { return roundf(m_value); }
     String to_string() const override { return String::formatted("{}", m_value); }
 
     virtual bool equals(StyleValue const& other) const override
@@ -1143,12 +1199,4 @@ private:
     NonnullRefPtrVector<StyleValue> m_values;
 };
 
-inline CSS::ValueID StyleValue::to_identifier() const
-{
-    if (type() == Type::Identifier)
-        return static_cast<const IdentifierStyleValue&>(*this).id();
-    if (is_auto())
-        return CSS::ValueID::Auto;
-    return CSS::ValueID::Invalid;
-}
 }
