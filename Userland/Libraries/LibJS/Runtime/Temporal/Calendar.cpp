@@ -90,9 +90,7 @@ ThrowCompletionOr<Vector<String>> calendar_fields(GlobalObject& global_object, O
     auto& vm = global_object.vm();
 
     // 1. Let fields be ? GetMethod(calendar, "fields").
-    auto fields = Value(&calendar).get_method(global_object, vm.names.fields);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto fields = TRY(Value(&calendar).get_method(global_object, vm.names.fields));
 
     // 2. Let fieldsArray be ! CreateArrayFromList(fieldNames).
     auto field_names_values = MarkedValueList { vm.heap() };
