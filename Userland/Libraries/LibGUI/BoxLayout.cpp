@@ -33,6 +33,7 @@ Gfx::IntSize BoxLayout::preferred_size() const
 
 int BoxLayout::preferred_primary_size() const
 {
+    auto widget = verify_cast<GUI::Widget>(parent());
     int size = 0;
 
     for (auto& entry : m_entries) {
@@ -52,10 +53,11 @@ int BoxLayout::preferred_primary_size() const
     if (size > 0)
         size -= spacing();
 
+    auto content_margins = widget->content_margins();
     if (orientation() == Gfx::Orientation::Horizontal)
-        size += margins().left() + margins().right();
+        size += margins().left() + margins().right() + content_margins.left() + content_margins.right();
     else
-        size += margins().top() + margins().bottom();
+        size += margins().top() + margins().bottom() + content_margins.top() + content_margins.bottom();
 
     if (!size)
         return -1;
@@ -64,6 +66,7 @@ int BoxLayout::preferred_primary_size() const
 
 int BoxLayout::preferred_secondary_size() const
 {
+    auto widget = verify_cast<GUI::Widget>(parent());
     int size = 0;
     for (auto& entry : m_entries) {
         if (!entry.widget || !entry.widget->is_visible())
@@ -77,10 +80,11 @@ int BoxLayout::preferred_secondary_size() const
         size = max(min_size, size);
     }
 
+    auto content_margins = widget->content_margins();
     if (orientation() == Gfx::Orientation::Horizontal)
-        size += margins().top() + margins().bottom();
+        size += margins().top() + margins().bottom() + content_margins.top() + content_margins.bottom();
     else
-        size += margins().left() + margins().right();
+        size += margins().left() + margins().right() + content_margins.left() + content_margins.right();
 
     if (!size)
         return -1;
