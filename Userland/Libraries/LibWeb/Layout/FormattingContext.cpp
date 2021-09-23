@@ -75,13 +75,14 @@ void FormattingContext::layout_inside(Box& box, LayoutMode layout_mode)
         return;
     }
 
-    if (creates_block_formatting_context(box)) {
-        BlockFormattingContext context(box, this);
+    if (box.computed_values().display() == CSS::Display::Flex) {
+        FlexFormattingContext context(box, this);
         context.run(box, layout_mode);
         return;
     }
-    if (box.computed_values().display() == CSS::Display::Flex) {
-        FlexFormattingContext context(box, this);
+
+    if (creates_block_formatting_context(box)) {
+        BlockFormattingContext context(box, this);
         context.run(box, layout_mode);
         return;
     }
