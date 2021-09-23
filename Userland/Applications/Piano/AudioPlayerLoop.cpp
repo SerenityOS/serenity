@@ -12,10 +12,10 @@
 // Converts Piano-internal data to an Audio::Buffer that AudioServer receives
 static NonnullRefPtr<Audio::Buffer> music_samples_to_buffer(Array<Sample, sample_count> samples)
 {
-    Vector<Audio::Frame, sample_count> frames;
+    Vector<Audio::Sample, sample_count> frames;
     frames.ensure_capacity(sample_count);
     for (auto sample : samples) {
-        Audio::Frame frame = { sample.left / (double)NumericLimits<i16>::max(), sample.right / (double)NumericLimits<i16>::max() };
+        Audio::Sample frame = { sample.left / (double)NumericLimits<i16>::max(), sample.right / (double)NumericLimits<i16>::max() };
         frames.unchecked_append(frame);
     }
     return Audio::Buffer::create_with_samples(frames);

@@ -31,7 +31,7 @@ Track::~Track()
 
 void Track::fill_sample(Sample& sample)
 {
-    Audio::Frame new_sample;
+    Audio::Sample new_sample;
 
     for (size_t note = 0; note < note_count; ++note) {
         if (!m_roll_iterators[note].is_end()) {
@@ -72,7 +72,7 @@ void Track::fill_sample(Sample& sample)
             VERIFY_NOT_REACHED();
         }
 
-        Audio::Frame note_sample;
+        Audio::Sample note_sample;
         switch (m_wave) {
         case Wave::Sine:
             note_sample = sine(note);
@@ -161,7 +161,7 @@ String Track::set_recorded_sample(const StringView& path)
 
 // All of the information for these waves is on Wikipedia.
 
-Audio::Frame Track::sine(size_t note)
+Audio::Sample Track::sine(size_t note)
 {
     double pos = note_frequencies[note] / sample_rate;
     double sin_step = pos * 2 * M_PI;
@@ -170,7 +170,7 @@ Audio::Frame Track::sine(size_t note)
     return w;
 }
 
-Audio::Frame Track::saw(size_t note)
+Audio::Sample Track::saw(size_t note)
 {
     double saw_step = note_frequencies[note] / sample_rate;
     double t = m_pos[note];
@@ -179,7 +179,7 @@ Audio::Frame Track::saw(size_t note)
     return w;
 }
 
-Audio::Frame Track::square(size_t note)
+Audio::Sample Track::square(size_t note)
 {
     double pos = note_frequencies[note] / sample_rate;
     double square_step = pos * 2 * M_PI;
@@ -188,7 +188,7 @@ Audio::Frame Track::square(size_t note)
     return w;
 }
 
-Audio::Frame Track::triangle(size_t note)
+Audio::Sample Track::triangle(size_t note)
 {
     double triangle_step = note_frequencies[note] / sample_rate;
     double t = m_pos[note];
@@ -197,7 +197,7 @@ Audio::Frame Track::triangle(size_t note)
     return w;
 }
 
-Audio::Frame Track::noise(size_t note)
+Audio::Sample Track::noise(size_t note)
 {
     double step = note_frequencies[note] / sample_rate;
     // m_pos keeps track of the time since the last random sample
@@ -210,7 +210,7 @@ Audio::Frame Track::noise(size_t note)
     return m_last_w[note];
 }
 
-Audio::Frame Track::recorded_sample(size_t note)
+Audio::Sample Track::recorded_sample(size_t note)
 {
     int t = m_pos[note];
     if (t >= static_cast<int>(m_recorded_sample.size()))
