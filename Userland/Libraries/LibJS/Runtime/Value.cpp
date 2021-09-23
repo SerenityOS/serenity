@@ -242,7 +242,7 @@ bool Value::is_constructor() const
 }
 
 // 7.2.8 IsRegExp ( argument ), https://tc39.es/ecma262/#sec-isregexp
-bool Value::is_regexp(GlobalObject& global_object) const
+ThrowCompletionOr<bool> Value::is_regexp(GlobalObject& global_object) const
 {
     if (!is_object())
         return false;

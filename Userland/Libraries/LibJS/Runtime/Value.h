@@ -65,7 +65,7 @@ public:
     ThrowCompletionOr<bool> is_array(GlobalObject&) const;
     bool is_function() const;
     bool is_constructor() const;
-    bool is_regexp(GlobalObject&) const;
+    ThrowCompletionOr<bool> is_regexp(GlobalObject&) const;
 
     bool is_nan() const { return is_number() && __builtin_isnan(as_double()); }
     bool is_infinity() const { return is_number() && __builtin_isinf(as_double()); }
