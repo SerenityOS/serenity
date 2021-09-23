@@ -614,19 +614,19 @@ private:
     virtual KResult try_generate(KBufferBuilder& builder) override
     {
         JsonArraySerializer array { builder };
-        PCI::enumerate([&array](PCI::Address address, PCI::ID id) {
+        PCI::enumerate([&array](PCI::Address address, PCI::PhysicalID const& physical_id) {
             auto obj = array.add_object();
             obj.add("domain", address.domain());
             obj.add("bus", address.bus());
             obj.add("device", address.device());
             obj.add("function", address.function());
-            obj.add("vendor_id", id.vendor_id);
-            obj.add("device_id", id.device_id);
-            obj.add("revision_id", PCI::get_revision_id(address));
-            obj.add("subclass", PCI::get_subclass(address));
-            obj.add("class", PCI::get_class(address));
-            obj.add("subsystem_id", PCI::get_subsystem_id(address));
-            obj.add("subsystem_vendor_id", PCI::get_subsystem_vendor_id(address));
+            obj.add("vendor_id", physical_id.id().vendor_id);
+            obj.add("device_id", physical_id.id().device_id);
+            obj.add("revision_id", physical_id.revision_id().value());
+            obj.add("subclass", physical_id.subclass_code().value());
+            obj.add("class", physical_id.class_code().value());
+            obj.add("subsystem_id", physical_id.subsystem_id().value());
+            obj.add("subsystem_vendor_id", physical_id.subsystem_vendor_id().value());
         });
         array.finish();
         return KSuccess;

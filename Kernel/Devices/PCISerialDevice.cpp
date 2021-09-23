@@ -15,12 +15,12 @@ static SerialDevice* s_the = nullptr;
 UNMAP_AFTER_INIT void PCISerialDevice::detect()
 {
     size_t current_device_minor = 68;
-    PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
+    PCI::enumerate([&](const PCI::Address& address, PCI::PhysicalID const& physical_id) {
         if (address.is_null())
             return;
 
         for (auto& board_definition : board_definitions) {
-            if (board_definition.device_id != id)
+            if (board_definition.device_id != physical_id.id())
                 continue;
 
             auto bar_base = PCI::get_BAR(address, board_definition.pci_bar) & ~1;
