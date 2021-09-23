@@ -2348,46 +2348,6 @@ RefPtr<StyleValue> Parser::parse_font_family_value(ParsingContext const& context
 
 RefPtr<StyleValue> Parser::parse_list_style_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
-    auto is_list_style_image = [](StyleValue const& value) -> bool {
-        if (value.is_image())
-            return true;
-        if (value.is_identifier() && value.to_identifier() == ValueID::None)
-            return true;
-
-        return false;
-    };
-
-    auto is_list_style_position = [](StyleValue const& value) -> bool {
-        switch (value.to_identifier()) {
-        case ValueID::Inside:
-        case ValueID::Outside:
-            return true;
-        default:
-            return false;
-        }
-    };
-
-    auto is_list_style_type = [](StyleValue const& value) -> bool {
-        // FIXME: Handle strings and symbols("...") syntax
-        switch (value.to_identifier()) {
-        case CSS::ValueID::None:
-        case CSS::ValueID::Disc:
-        case CSS::ValueID::Circle:
-        case CSS::ValueID::Square:
-        case CSS::ValueID::Decimal:
-        case CSS::ValueID::DecimalLeadingZero:
-        case CSS::ValueID::LowerAlpha:
-        case CSS::ValueID::LowerLatin:
-        case CSS::ValueID::UpperAlpha:
-        case CSS::ValueID::UpperLatin:
-        case CSS::ValueID::UpperRoman:
-        case CSS::ValueID::LowerRoman:
-            return true;
-        default:
-            return false;
-        }
-    };
-
     if (component_values.size() > 3)
         return nullptr;
 
@@ -2406,19 +2366,19 @@ RefPtr<StyleValue> Parser::parse_list_style_value(ParsingContext const& context,
             continue;
         }
 
-        if (is_list_style_position(*value)) {
+        if (property_accepts_value(PropertyID::ListStylePosition, *value)) {
             if (list_position)
                 return nullptr;
             list_position = value.release_nonnull();
             continue;
         }
-        if (is_list_style_image(*value)) {
+        if (property_accepts_value(PropertyID::ListStyleImage, *value)) {
             if (list_image)
                 return nullptr;
             list_image = value.release_nonnull();
             continue;
         }
-        if (is_list_style_type(*value)) {
+        if (property_accepts_value(PropertyID::ListStyleType, *value)) {
             if (list_type)
                 return nullptr;
             list_type = value.release_nonnull();
