@@ -77,8 +77,8 @@ void Mixer::mix()
 
         active_mix_queues.remove_all_matching([&](auto& entry) { return !entry->client(); });
 
-        Audio::Frame mixed_buffer[1024];
-        auto mixed_buffer_length = (int)(sizeof(mixed_buffer) / sizeof(Audio::Frame));
+        Audio::Sample mixed_buffer[1024];
+        auto mixed_buffer_length = (int)(sizeof(mixed_buffer) / sizeof(Audio::Sample));
 
         m_main_volume.advance_time();
 
@@ -94,7 +94,7 @@ void Mixer::mix()
 
             for (int i = 0; i < mixed_buffer_length; ++i) {
                 auto& mixed_sample = mixed_buffer[i];
-                Audio::Frame sample;
+                Audio::Sample sample;
                 if (!queue->get_next_sample(sample))
                     break;
                 sample.log_multiply(SAMPLE_HEADROOM);

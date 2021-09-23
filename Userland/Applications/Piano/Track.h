@@ -24,7 +24,7 @@ public:
     explicit Track(const u32& time);
     ~Track();
 
-    const Vector<Audio::Frame>& recorded_sample() const { return m_recorded_sample; }
+    const Vector<Audio::Sample>& recorded_sample() const { return m_recorded_sample; }
     const SinglyLinkedList<RollNote>& roll_notes(int note) const { return m_roll_notes[note]; }
     int wave() const { return m_wave; }
     int volume() const { return m_volume; }
@@ -48,17 +48,17 @@ public:
     void set_release(int release);
 
 private:
-    Audio::Frame sine(size_t note);
-    Audio::Frame saw(size_t note);
-    Audio::Frame square(size_t note);
-    Audio::Frame triangle(size_t note);
-    Audio::Frame noise(size_t note);
-    Audio::Frame recorded_sample(size_t note);
+    Audio::Sample sine(size_t note);
+    Audio::Sample saw(size_t note);
+    Audio::Sample square(size_t note);
+    Audio::Sample triangle(size_t note);
+    Audio::Sample noise(size_t note);
+    Audio::Sample recorded_sample(size_t note);
 
     void sync_roll(int note);
     void set_sustain_impl(int sustain);
 
-    Vector<Audio::Frame> m_recorded_sample;
+    Vector<Audio::Sample> m_recorded_sample;
 
     u8 m_note_on[note_count] { 0 };
     double m_power[note_count] { 0 };

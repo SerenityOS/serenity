@@ -143,7 +143,7 @@ private:
     u64 m_data_start_location { 0 };
     OwnPtr<FlacInputStream> m_stream;
     Optional<FlacFrameHeader> m_current_frame;
-    Vector<Frame> m_current_frame_data;
+    Vector<Sample> m_current_frame_data;
     u64 m_current_sample_or_frame { 0 };
 };
 

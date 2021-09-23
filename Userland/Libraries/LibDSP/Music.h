@@ -14,7 +14,7 @@
 namespace LibDSP {
 
 // FIXME: Audio::Frame is 64-bit float, which is quite large for long clips.
-using Sample = Audio::Frame;
+using Sample = Audio::Sample;
 
 Sample const SAMPLE_OFF = { 0.0, 0.0 };
 

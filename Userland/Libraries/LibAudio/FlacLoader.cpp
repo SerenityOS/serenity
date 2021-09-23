@@ -231,7 +231,7 @@ void FlacLoaderPlugin::seek(const int position)
 
 RefPtr<Buffer> FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_input)
 {
-    Vector<Frame> samples;
+    Vector<Sample> samples;
     ssize_t remaining_samples = m_total_samples - m_loaded_samples;
     if (remaining_samples <= 0) {
         return nullptr;
@@ -417,7 +417,7 @@ void FlacLoaderPlugin::next_frame()
     m_current_frame_data.ensure_capacity(left.size());
     // zip together channels
     for (size_t i = 0; i < left.size(); ++i) {
-        Frame frame = { left[i] / sample_rescale, right[i] / sample_rescale };
+        Sample frame = { left[i] / sample_rescale, right[i] / sample_rescale };
         m_current_frame_data.unchecked_append(frame);
     }
 
