@@ -84,6 +84,11 @@ i16 Head::ymax() const
     return be_i16(m_slice.offset_pointer((u32)Offsets::YMax));
 }
 
+u16 Head::style() const
+{
+    return be_u16(m_slice.offset_pointer((u32)Offsets::Style));
+}
+
 u16 Head::lowest_recommended_ppem() const
 {
     return be_u16(m_slice.offset_pointer((u32)Offsets::LowestRecPPEM));
@@ -462,29 +467,11 @@ String Font::variant() const
 
 u16 Font::weight() const
 {
-    // FIXME: This is pretty naive, read weight from the actual font table(s)
-    auto variant_name = variant();
-
-    if (variant_name == "Thin")
-        return 100;
-    if (variant_name == "Extra Light")
-        return 200;
-    if (variant_name == "Light")
-        return 300;
-    if (variant_name == "Regular")
-        return 400;
-    if (variant_name == "Medium")
-        return 500;
-    if (variant_name == "Semi Bold")
-        return 600;
-    if (variant_name == "Bold")
+    constexpr u16 bold_bit { 1 };
+    if (m_os2.weight_class())
+        return m_os2.weight_class();
+    if (m_head.style() & bold_bit)
         return 700;
-    if (variant_name == "Extra Bold")
-        return 800;
-    if (variant_name == "Black")
-        return 900;
-    if (variant_name == "Extra Black")
-        return 950;
 
     return 400;
 }
@@ -557,6 +544,11 @@ int ScaledFont::glyph_or_emoji_width(u32 code_point) const
 u8 ScaledFont::glyph_fixed_width() const
 {
     return glyph_metrics(glyph_id_for_code_point(' ')).advance_width;
+}
+
+u16 OS2::weight_class() const
+{
+    return be_u16(m_slice.offset_pointer((u32)Offsets::WeightClass));
 }
 
 i16 OS2::typographic_ascender() const
