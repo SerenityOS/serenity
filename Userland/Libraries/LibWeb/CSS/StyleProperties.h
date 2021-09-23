@@ -69,13 +69,6 @@ public:
 
     Vector<CSS::Transformation> transformations() const;
 
-    const Gfx::Font& font(Layout::Node const& node) const
-    {
-        if (!m_font)
-            load_font(node);
-        return *m_font;
-    }
-
     Gfx::Font const& computed_font() const
     {
         VERIFY(m_font);
@@ -102,8 +95,6 @@ private:
 
     HashMap<CSS::PropertyID, NonnullRefPtr<StyleValue>> m_property_values;
     Optional<CSS::Overflow> overflow(CSS::PropertyID) const;
-
-    void load_font(Layout::Node const&) const;
 
     mutable RefPtr<Gfx::Font> m_font;
 };

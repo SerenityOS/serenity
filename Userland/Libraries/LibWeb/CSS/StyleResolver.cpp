@@ -704,9 +704,8 @@ void StyleResolver::compute_font(StyleProperties& style, DOM::Element const* ele
             break;
         }
     } else {
+        // FIXME: Get the root element font.
         float root_font_size = 10;
-        if (element->document().document_element() != element)
-            root_font_size = element->document().document_element()->layout_node()->font().presentation_size();
 
         Gfx::FontMetrics font_metrics;
         if (element && element->parent_element())
