@@ -80,12 +80,8 @@ static bool validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, Mem
     if (make_writable && make_executable)
         return false;
 
-    if (map_stack) {
-        if (make_executable)
-            return false;
-        if (!make_readable || !make_writable)
-            return false;
-    }
+    if (map_stack && make_executable)
+        return false;
 
     if (region) {
         if (make_writable && region->has_been_executable())
