@@ -100,7 +100,7 @@ public:
 
     String family() const override { return m_family; }
     void set_family(String family) { m_family = move(family); }
-    String variant() const override { return String::number(weight()); }
+    String variant() const override;
 
     String qualified_name() const override;
 
