@@ -267,9 +267,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
 
     auto search_string_value = vm.argument(0);
 
-    bool search_is_regexp = search_string_value.is_regexp(global_object);
-    if (vm.exception())
-        return {};
+    bool search_is_regexp = TRY_OR_DISCARD(search_string_value.is_regexp(global_object));
     if (search_is_regexp) {
         vm.throw_exception<TypeError>(global_object, ErrorType::IsNotA, "searchString", "string, but a regular expression");
         return {};
@@ -310,9 +308,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::ends_with)
 
     auto search_string_value = vm.argument(0);
 
-    bool search_is_regexp = search_string_value.is_regexp(global_object);
-    if (vm.exception())
-        return {};
+    bool search_is_regexp = TRY_OR_DISCARD(search_string_value.is_regexp(global_object));
     if (search_is_regexp) {
         vm.throw_exception<TypeError>(global_object, ErrorType::IsNotA, "searchString", "string, but a regular expression");
         return {};
@@ -646,9 +642,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::includes)
 
     auto search_string_value = vm.argument(0);
 
-    bool search_is_regexp = search_string_value.is_regexp(global_object);
-    if (vm.exception())
-        return {};
+    bool search_is_regexp = TRY_OR_DISCARD(search_string_value.is_regexp(global_object));
     if (search_is_regexp) {
         vm.throw_exception<TypeError>(global_object, ErrorType::IsNotA, "searchString", "string, but a regular expression");
         return {};
@@ -888,9 +882,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
     auto this_object = TRY_OR_DISCARD(require_object_coercible(global_object, vm.this_value(global_object)));
     auto regexp = vm.argument(0);
     if (!regexp.is_nullish()) {
-        auto is_regexp = regexp.is_regexp(global_object);
-        if (vm.exception())
-            return {};
+        auto is_regexp = TRY_OR_DISCARD(regexp.is_regexp(global_object));
         if (is_regexp) {
             auto flags = regexp.as_object().get("flags");
             if (vm.exception())
@@ -985,9 +977,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
     auto replace_value = vm.argument(1);
 
     if (!search_value.is_nullish()) {
-        bool is_regexp = search_value.is_regexp(global_object);
-        if (vm.exception())
-            return {};
+        bool is_regexp = TRY_OR_DISCARD(search_value.is_regexp(global_object));
 
         if (is_regexp) {
             auto flags = search_value.as_object().get(vm.names.flags);

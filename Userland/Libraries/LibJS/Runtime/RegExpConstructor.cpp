@@ -42,9 +42,7 @@ Value RegExpConstructor::call()
     auto pattern = vm.argument(0);
     auto flags = vm.argument(1);
 
-    bool pattern_is_regexp = pattern.is_regexp(global_object);
-    if (vm.exception())
-        return {};
+    bool pattern_is_regexp = TRY_OR_DISCARD(pattern.is_regexp(global_object));
 
     if (pattern_is_regexp && flags.is_undefined()) {
         auto pattern_constructor = pattern.as_object().get(vm.names.constructor);
@@ -67,9 +65,7 @@ Value RegExpConstructor::construct(FunctionObject&)
     auto pattern = vm.argument(0);
     auto flags = vm.argument(1);
 
-    bool pattern_is_regexp = pattern.is_regexp(global_object);
-    if (vm.exception())
-        return {};
+    bool pattern_is_regexp = TRY_OR_DISCARD(pattern.is_regexp(global_object));
 
     Value pattern_value;
     Value flags_value;
