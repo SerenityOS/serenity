@@ -2418,25 +2418,12 @@ RefPtr<StyleValue> Parser::parse_list_style_value(ParsingContext const& context,
 
 RefPtr<StyleValue> Parser::parse_overflow_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
-    auto is_overflow = [](StyleValue const& value) -> bool {
-        switch (value.to_identifier()) {
-        case ValueID::Auto:
-        case ValueID::Clip:
-        case ValueID::Hidden:
-        case ValueID::Scroll:
-        case ValueID::Visible:
-            return true;
-        default:
-            return false;
-        }
-    };
-
     if (component_values.size() == 1) {
         auto maybe_value = parse_css_value(context, component_values.first());
         if (!maybe_value)
             return nullptr;
         auto value = maybe_value.release_nonnull();
-        if (is_overflow(*value))
+        if (property_accepts_value(PropertyID::Overflow, *value))
             return OverflowStyleValue::create(value, value);
         return nullptr;
     }
@@ -2449,8 +2436,9 @@ RefPtr<StyleValue> Parser::parse_overflow_value(ParsingContext const& context, V
             return nullptr;
         auto x_value = maybe_x_value.release_nonnull();
         auto y_value = maybe_y_value.release_nonnull();
-        if (!is_overflow(x_value) || !is_overflow(y_value))
+        if (!property_accepts_value(PropertyID::OverflowX, x_value) || !property_accepts_value(PropertyID::OverflowY, y_value)) {
             return nullptr;
+        }
         return OverflowStyleValue::create(x_value, y_value);
     }
 
