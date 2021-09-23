@@ -13,7 +13,7 @@ namespace Web::Layout {
 
 class ListItemMarkerBox final : public Box {
 public:
-    explicit ListItemMarkerBox(DOM::Document&, CSS::ListStyleType, size_t index);
+    explicit ListItemMarkerBox(DOM::Document&, CSS::ListStyleType, size_t index, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~ListItemMarkerBox() override;
 
     virtual void paint(PaintContext&, PaintPhase) override;

@@ -11,8 +11,8 @@
 
 namespace Web::Layout {
 
-ListItemMarkerBox::ListItemMarkerBox(DOM::Document& document, CSS::ListStyleType style_type, size_t index)
-    : Box(document, nullptr, CSS::StyleProperties::create())
+ListItemMarkerBox::ListItemMarkerBox(DOM::Document& document, CSS::ListStyleType style_type, size_t index, NonnullRefPtr<CSS::StyleProperties> style)
+    : Box(document, nullptr, move(style))
     , m_list_style_type(style_type)
     , m_index(index)
 {
