@@ -149,11 +149,12 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 
             Value mapped_value;
             if (map_fn) {
-                mapped_value = TRY_OR_DISCARD(vm.call(*map_fn, this_arg, next_value, Value(k)));
-                if (vm.exception()) {
+                auto mapped_value_or_error = vm.call(*map_fn, this_arg, next_value, Value(k));
+                if (mapped_value_or_error.is_error()) {
                     iterator_close(*iterator);
                     return {};
                 }
+                mapped_value = mapped_value_or_error.release_value();
             } else {
                 mapped_value = next_value;
             }
