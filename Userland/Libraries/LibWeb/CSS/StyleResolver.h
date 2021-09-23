@@ -30,6 +30,7 @@ public:
     DOM::Document& document() { return m_document; }
     DOM::Document const& document() const { return m_document; }
 
+    NonnullRefPtr<StyleProperties> create_document_style() const;
     NonnullRefPtr<StyleProperties> resolve_style(DOM::Element&) const;
 
     // https://www.w3.org/TR/css-cascade/#origin
@@ -53,11 +54,11 @@ public:
 
 private:
     void compute_cascaded_values(StyleProperties&, DOM::Element&) const;
-    void compute_font(StyleProperties&, DOM::Element const&) const;
-    void compute_defaulted_values(StyleProperties&, DOM::Element const&) const;
-    void absolutize_values(StyleProperties&, DOM::Element const&) const;
+    void compute_font(StyleProperties&, DOM::Element const*) const;
+    void compute_defaulted_values(StyleProperties&, DOM::Element const*) const;
+    void absolutize_values(StyleProperties&, DOM::Element const*) const;
 
-    void compute_defaulted_property_value(StyleProperties&, DOM::Element const&, CSS::PropertyID) const;
+    void compute_defaulted_property_value(StyleProperties&, DOM::Element const*, CSS::PropertyID) const;
 
     template<typename Callback>
     void for_each_stylesheet(CascadeOrigin, Callback) const;

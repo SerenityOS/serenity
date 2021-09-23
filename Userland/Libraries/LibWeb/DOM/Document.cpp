@@ -451,7 +451,7 @@ void Document::update_style()
 
 RefPtr<Layout::Node> Document::create_layout_node()
 {
-    return adopt_ref(*new Layout::InitialContainingBlock(*this, CSS::StyleProperties::create()));
+    return adopt_ref(*new Layout::InitialContainingBlock(*this, style_resolver().create_document_style()));
 }
 
 void Document::set_link_color(Color color)
