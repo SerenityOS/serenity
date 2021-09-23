@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLBRElement.h>
 #include <LibWeb/Layout/BreakNode.h>
 
@@ -20,7 +21,10 @@ HTMLBRElement::~HTMLBRElement()
 
 RefPtr<Layout::Node> HTMLBRElement::create_layout_node()
 {
-    return adopt_ref(*new Layout::BreakNode(document(), *this));
+    auto style = document().style_resolver().resolve_style(*this);
+    if (style->display() == CSS::Display::None)
+        return nullptr;
+    return adopt_ref(*new Layout::BreakNode(document(), *this, move(style)));
 }
 
 }
