@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "InlineFormattingContext.h"
 #include <AK/StdLibExtras.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
@@ -61,6 +62,30 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         return length.resolved(CSS::Length::make_px(0), box, box.containing_block()->width()).to_px(box);
     };
     auto layout_for_maximum_main_size = [&](Box& box) {
+        bool main_constrained = false;
+        if (is_row) {
+            if (!box.computed_values().width().is_undefined_or_auto() || !box.computed_values().min_width().is_undefined_or_auto()) {
+                main_constrained = true;
+            }
+        } else {
+            if (!box.computed_values().height().is_undefined_or_auto() || !box.computed_values().min_height().is_undefined_or_auto()) {
+                main_constrained = true;
+            }
+        }
+
+        if (!main_constrained && box.children_are_inline()) {
+            BlockFormattingContext bfc(box, this);
+            bfc.run(box, LayoutMode::Default);
+            InlineFormattingContext ifc(box, &bfc);
+
+            if (is_row) {
+                ifc.run(box, LayoutMode::OnlyRequiredLineBreaks);
+                return box.width();
+            } else {
+                ifc.run(box, LayoutMode::AllPossibleLineBreaks);
+                return box.height();
+            }
+        }
         if (is_row) {
             layout_inside(box, LayoutMode::OnlyRequiredLineBreaks);
             return box.width();
@@ -175,11 +200,30 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         }
     };
     auto calculate_hypothetical_cross_size = [&is_row, this](Box& box) {
-        // FIXME: Don't use BFC exclusively, there are more FormattingContexts.
+        bool cross_constrained = false;
+        if (is_row) {
+            if (!box.computed_values().height().is_undefined_or_auto() || !box.computed_values().min_height().is_undefined_or_auto()) {
+                cross_constrained = true;
+            }
+        } else {
+            if (!box.computed_values().width().is_undefined_or_auto() || !box.computed_values().min_width().is_undefined_or_auto()) {
+                cross_constrained = true;
+            }
+        }
+
+        if (!cross_constrained && box.children_are_inline()) {
+            BlockFormattingContext bfc(box, this);
+            bfc.run(box, LayoutMode::Default);
+            InlineFormattingContext ifc(box, &bfc);
+            ifc.run(box, LayoutMode::OnlyRequiredLineBreaks);
+
+            if (is_row)
+                return box.height();
+            return box.width();
+        }
         if (is_row) {
             return BlockFormattingContext::compute_theoretical_height(box);
         } else {
-            // FIXME: This is very bad.
             BlockFormattingContext context(box, this);
             context.compute_width(box);
             return box.width();
