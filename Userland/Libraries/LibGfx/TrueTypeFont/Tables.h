@@ -23,6 +23,7 @@ public:
     i16 ymin() const;
     i16 xmax() const;
     i16 ymax() const;
+    u16 style() const;
     u16 lowest_recommended_ppem() const;
     IndexToLocFormat index_to_loc_format() const;
 
@@ -33,6 +34,7 @@ private:
         YMin = 38,
         XMax = 40,
         YMax = 42,
+        Style = 44,
         LowestRecPPEM = 46,
         IndexToLocFormat = 50,
     };
@@ -129,11 +131,13 @@ private:
 class OS2 {
 public:
     enum class Offsets {
+        WeightClass = 4,
         TypographicAscender = 68,
         TypographicDescender = 70,
         TypographicLineGap = 72,
     };
 
+    u16 weight_class() const;
     i16 typographic_ascender() const;
     i16 typographic_descender() const;
     i16 typographic_line_gap() const;
