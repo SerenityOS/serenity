@@ -276,7 +276,7 @@ public:
     bool to_boolean() const;
 
     Value get(GlobalObject&, PropertyName const&) const;
-    FunctionObject* get_method(GlobalObject&, PropertyName const&) const;
+    ThrowCompletionOr<FunctionObject*> get_method(GlobalObject&, PropertyName const&) const;
 
     String to_string_without_side_effects() const;
 

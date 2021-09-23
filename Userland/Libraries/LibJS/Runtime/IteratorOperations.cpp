@@ -124,16 +124,22 @@ void iterator_close(Object& iterator)
             vm.unwind(unwind_until, unwind_until_label);
     };
 
-    auto return_method = Value(&iterator).get_method(global_object, vm.names.return_);
-    if (!return_method)
-        return restore_completion(); // If return is undefined, return Completion(completion).
-
-    auto result_or_error = vm.call(*return_method, &iterator);
+    auto return_method_or_error = Value(&iterator).get_method(global_object, vm.names.return_);
+    Value result;
+    if (!return_method_or_error.is_error()) { // If innerResult.[[Type]] is normal, then
+        auto return_method = return_method_or_error.release_value();
+        if (!return_method)
+            return restore_completion(); // If return is undefined, return Completion(completion).
+        auto result_or_error = vm.call(*return_method, &iterator);
+        if (result_or_error.is_error())
+            return_method_or_error = result_or_error.release_error();
+        else
+            result = result_or_error.release_value();
+    }
     if (completion_exception)
         return restore_completion(); // If completion.[[Type]] is throw, return Completion(completion).
-    if (result_or_error.is_error())
+    if (return_method_or_error.is_error())
         return; // If innerResult.[[Type]] is throw, return Completion(innerResult).
-    auto result = result_or_error.release_value();
     if (!result.is_object()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::IterableReturnBadReturn);
         return; // If Type(innerResult.[[Value]]) is not Object, throw a TypeError exception.

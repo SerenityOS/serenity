@@ -365,9 +365,7 @@ ThrowCompletionOr<double> get_offset_nanoseconds_for(GlobalObject& global_object
     auto& vm = global_object.vm();
 
     // 1. Let getOffsetNanosecondsFor be ? GetMethod(timeZone, "getOffsetNanosecondsFor").
-    auto* get_offset_nanoseconds_for = time_zone.get_method(global_object, vm.names.getOffsetNanosecondsFor);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto* get_offset_nanoseconds_for = TRY(time_zone.get_method(global_object, vm.names.getOffsetNanosecondsFor));
 
     // 2. If getOffsetNanosecondsFor is undefined, set getOffsetNanosecondsFor to %Temporal.TimeZone.prototype.getOffsetNanosecondsFor%.
     if (!get_offset_nanoseconds_for)

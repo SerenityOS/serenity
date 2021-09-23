@@ -363,9 +363,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
                 if (vm.exception())                                                                                                    \
                     return {};                                                                                                         \
             } else {                                                                                                                   \
-                auto iterator = first_argument.get_method(global_object(), *vm.well_known_symbol_iterator());                          \
-                if (vm.exception())                                                                                                    \
-                    return {};                                                                                                         \
+                auto iterator = TRY_OR_DISCARD(first_argument.get_method(global_object(), *vm.well_known_symbol_iterator()));          \
                 if (iterator) {                                                                                                        \
                     auto values = iterable_to_list(global_object(), first_argument, iterator);                                         \
                     if (vm.exception())                                                                                                \

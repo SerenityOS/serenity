@@ -710,9 +710,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     auto limit_argument = vm.argument(1);
 
     if (!separator_argument.is_nullish()) {
-        auto splitter = separator_argument.get_method(global_object, *vm.well_known_symbol_split());
-        if (vm.exception())
-            return {};
+        auto splitter = TRY_OR_DISCARD(separator_argument.get_method(global_object, *vm.well_known_symbol_split()));
         if (splitter)
             return TRY_OR_DISCARD(vm.call(*splitter, separator_argument, object, limit_argument));
     }
@@ -860,10 +858,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
     auto this_object = TRY_OR_DISCARD(require_object_coercible(global_object, vm.this_value(global_object)));
     auto regexp = vm.argument(0);
     if (!regexp.is_nullish()) {
-        if (auto* matcher = regexp.get_method(global_object, *vm.well_known_symbol_match()))
+        if (auto* matcher = TRY_OR_DISCARD(regexp.get_method(global_object, *vm.well_known_symbol_match())))
             return TRY_OR_DISCARD(vm.call(*matcher, regexp, this_object));
-        if (vm.exception())
-            return {};
     }
 
     auto string = this_object.to_utf16_string(global_object);
@@ -896,10 +892,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
                 return {};
             }
         }
-        if (auto* matcher = regexp.get_method(global_object, *vm.well_known_symbol_match_all()))
+        if (auto* matcher = TRY_OR_DISCARD(regexp.get_method(global_object, *vm.well_known_symbol_match_all())))
             return TRY_OR_DISCARD(vm.call(*matcher, regexp, this_object));
-        if (vm.exception())
-            return {};
     }
 
     auto string = this_object.to_utf16_string(global_object);
@@ -920,10 +914,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
     auto replace_value = vm.argument(1);
 
     if (!search_value.is_nullish()) {
-        if (auto* replacer = search_value.get_method(global_object, *vm.well_known_symbol_replace()))
+        if (auto* replacer = TRY_OR_DISCARD(search_value.get_method(global_object, *vm.well_known_symbol_replace())))
             return TRY_OR_DISCARD(vm.call(*replacer, search_value, this_object, replace_value));
-        if (vm.exception())
-            return {};
     }
 
     auto string = this_object.to_utf16_string(global_object);
@@ -991,9 +983,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
             }
         }
 
-        auto* replacer = search_value.get_method(global_object, *vm.well_known_symbol_replace());
-        if (vm.exception())
-            return {};
+        auto* replacer = TRY_OR_DISCARD(search_value.get_method(global_object, *vm.well_known_symbol_replace()));
         if (replacer)
             return TRY_OR_DISCARD(vm.call(*replacer, search_value, this_object, replace_value));
     }
@@ -1061,10 +1051,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::search)
     auto this_object = TRY_OR_DISCARD(require_object_coercible(global_object, vm.this_value(global_object)));
     auto regexp = vm.argument(0);
     if (!regexp.is_nullish()) {
-        if (auto* searcher = regexp.get_method(global_object, *vm.well_known_symbol_search()))
+        if (auto* searcher = TRY_OR_DISCARD(regexp.get_method(global_object, *vm.well_known_symbol_search())))
             return TRY_OR_DISCARD(vm.call(*searcher, regexp, this_object));
-        if (vm.exception())
-            return {};
     }
 
     auto string = this_object.to_utf16_string(global_object);
