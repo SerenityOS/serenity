@@ -73,9 +73,7 @@ Object* ProxyObject::internal_get_prototype_of() const
     }
 
     // 7. Let handlerProto be ? Call(trap, handler, « target »).
-    auto handler_proto = vm.call(*trap, &m_handler, &m_target);
-    if (vm.exception())
-        return {};
+    auto handler_proto = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target));
 
     // 8. If Type(handlerProto) is neither Object nor Null, throw a TypeError exception.
     if (!handler_proto.is_object() && !handler_proto.is_null()) {
@@ -137,12 +135,10 @@ bool ProxyObject::internal_set_prototype_of(Object* prototype)
     }
 
     // 8. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, V »)).
-    auto trap_result = vm.call(*trap, &m_handler, &m_target, prototype);
-    if (vm.exception())
-        return {};
+    auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, prototype)).to_boolean();
 
     // 9. If booleanTrapResult is false, return false.
-    if (!trap_result.to_boolean())
+    if (!trap_result)
         return false;
 
     // 10. Let extensibleTarget be ? IsExtensible(target).
@@ -198,9 +194,7 @@ bool ProxyObject::internal_is_extensible() const
     }
 
     // 7. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target »)).
-    auto trap_result = vm.call(*trap, &m_handler, &m_target);
-    if (vm.exception())
-        return {};
+    auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target)).to_boolean();
 
     // 8. Let targetResult be ? IsExtensible(target).
     auto target_result = m_target.is_extensible();
@@ -208,13 +202,13 @@ bool ProxyObject::internal_is_extensible() const
         return {};
 
     // 9. If SameValue(booleanTrapResult, targetResult) is false, throw a TypeError exception.
-    if (trap_result.to_boolean() != target_result) {
+    if (trap_result != target_result) {
         vm.throw_exception<TypeError>(global_object, ErrorType::ProxyIsExtensibleReturn);
         return {};
     }
 
     // 10. Return booleanTrapResult.
-    return trap_result.to_boolean();
+    return trap_result;
 }
 
 // 10.5.4 [[PreventExtensions]] ( ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-preventextensions
@@ -246,12 +240,10 @@ bool ProxyObject::internal_prevent_extensions()
     }
 
     // 7. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target »)).
-    auto trap_result = vm.call(*trap, &m_handler, &m_target);
-    if (vm.exception())
-        return {};
+    auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target)).to_boolean();
 
     // 8. If booleanTrapResult is true, then
-    if (trap_result.to_boolean()) {
+    if (trap_result) {
         // a. Let extensibleTarget be ? IsExtensible(target).
         auto extensible_target = m_target.is_extensible();
         if (vm.exception())
@@ -265,7 +257,7 @@ bool ProxyObject::internal_prevent_extensions()
     }
 
     // 9. Return booleanTrapResult.
-    return trap_result.to_boolean();
+    return trap_result;
 }
 
 // 10.5.5 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p
@@ -300,9 +292,7 @@ Optional<PropertyDescriptor> ProxyObject::internal_get_own_property(const Proper
     }
 
     // 8. Let trapResultObj be ? Call(trap, handler, « target, P »).
-    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name));
-    if (vm.exception())
-        return {};
+    auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name)));
 
     // 9. If Type(trapResultObj) is neither Object nor Undefined, throw a TypeError exception.
     if (!trap_result.is_object() && !trap_result.is_undefined()) {
@@ -421,12 +411,10 @@ bool ProxyObject::internal_define_own_property(PropertyName const& property_name
     auto descriptor_object = from_property_descriptor(global_object, property_descriptor);
 
     // 9. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P, descObj »)).
-    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name), descriptor_object);
-    if (vm.exception())
-        return {};
+    auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name), descriptor_object)).to_boolean();
 
     // 10. If booleanTrapResult is false, return false.
-    if (!trap_result.to_boolean())
+    if (!trap_result)
         return false;
 
     // 11. Let targetDesc be ? target.[[GetOwnProperty]](P).
@@ -519,12 +507,10 @@ bool ProxyObject::internal_has_property(PropertyName const& property_name) const
     }
 
     // 8. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P »)).
-    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name));
-    if (vm.exception())
-        return {};
+    auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name))).to_boolean();
 
     // 9. If booleanTrapResult is false, then
-    if (!trap_result.to_boolean()) {
+    if (!trap_result) {
         // a. Let targetDesc be ? target.[[GetOwnProperty]](P).
         auto target_descriptor = m_target.internal_get_own_property(property_name);
         if (vm.exception())
@@ -552,7 +538,7 @@ bool ProxyObject::internal_has_property(PropertyName const& property_name) const
     }
 
     // 10. Return booleanTrapResult.
-    return trap_result.to_boolean();
+    return trap_result;
 }
 
 // 10.5.8 [[Get]] ( P, Receiver ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver
@@ -607,9 +593,7 @@ Value ProxyObject::internal_get(PropertyName const& property_name, Value receive
     }
 
     // 8. Let trapResult be ? Call(trap, handler, « target, P, Receiver »).
-    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name), receiver);
-    if (vm.exception())
-        return {};
+    auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name), receiver));
 
     // 9. Let targetDesc be ? target.[[GetOwnProperty]](P).
     auto target_descriptor = m_target.internal_get_own_property(property_name);
@@ -675,12 +659,10 @@ bool ProxyObject::internal_set(PropertyName const& property_name, Value value, V
     }
 
     // 8. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P, V, Receiver »)).
-    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name), value, receiver);
-    if (vm.exception())
-        return {};
+    auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name), value, receiver)).to_boolean();
 
     // 9. If booleanTrapResult is false, return false.
-    if (!trap_result.to_boolean())
+    if (!trap_result)
         return false;
 
     // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
@@ -744,12 +726,10 @@ bool ProxyObject::internal_delete(PropertyName const& property_name)
     }
 
     // 8. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P »)).
-    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name));
-    if (vm.exception())
-        return {};
+    auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name))).to_boolean();
 
     // 9. If booleanTrapResult is false, return false.
-    if (!trap_result.to_boolean())
+    if (!trap_result)
         return false;
 
     // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
@@ -811,9 +791,10 @@ MarkedValueList ProxyObject::internal_own_property_keys() const
     }
 
     // 7. Let trapResultArray be ? Call(trap, handler, « target »).
-    auto trap_result_array = vm.call(*trap, &m_handler, &m_target);
-    if (vm.exception())
+    auto trap_result_array_or_error = vm.call(*trap, &m_handler, &m_target);
+    if (trap_result_array_or_error.is_error())
         return MarkedValueList { heap() };
+    auto trap_result_array = trap_result_array_or_error.release_value();
 
     // 8. Let trapResult be ? CreateListFromArrayLike(trapResultArray, « String, Symbol »).
     HashTable<StringOrSymbol> unique_keys;
@@ -967,7 +948,7 @@ Value ProxyObject::call()
     });
 
     // 8. Return ? Call(trap, handler, « target, thisArgument, argArray »).
-    return vm.call(*trap, &m_handler, &m_target, this_argument, arguments_array);
+    return TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, this_argument, arguments_array));
 }
 
 // 10.5.13 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget
@@ -1012,7 +993,7 @@ Value ProxyObject::construct(FunctionObject& new_target)
     });
 
     // 9. Let newObj be ? Call(trap, handler, « target, argArray, newTarget »).
-    auto result = vm.call(*trap, &m_handler, &m_target, arguments_array, &new_target);
+    auto result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, arguments_array, &new_target));
 
     // 10. If Type(newObj) is not Object, throw a TypeError exception.
     if (!result.is_object()) {

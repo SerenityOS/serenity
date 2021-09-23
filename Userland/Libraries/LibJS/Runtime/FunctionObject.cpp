@@ -76,9 +76,10 @@ void FunctionObject::InstanceField::define_field(VM& vm, Object& receiver) const
 {
     Value init_value = js_undefined();
     if (initializer) {
-        init_value = vm.call(*initializer, receiver.value_of());
-        if (vm.exception())
+        auto init_value_or_error = vm.call(*initializer, receiver.value_of());
+        if (init_value_or_error.is_error())
             return;
+        init_value = init_value_or_error.release_value();
     }
     receiver.create_data_property_or_throw(name, init_value);
 }

@@ -842,7 +842,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_json)
     if (time_value.is_number() && !time_value.is_finite_number())
         return js_null();
 
-    return this_value.invoke(global_object, vm.names.toISOString);
+    return TRY_OR_DISCARD(this_value.invoke(global_object, vm.names.toISOString));
 }
 
 // 14.1.1 Date.prototype.toTemporalInstant ( ), https://tc39.es/proposal-temporal/#sec-date.prototype.totemporalinstant

@@ -72,8 +72,8 @@ Value WeakMapConstructor::construct(FunctionObject& new_target)
         auto value = iterator_value.as_object().get(1);
         if (vm.exception())
             return IterationDecision::Break;
-        (void)vm.call(adder.as_function(), Value(weak_map), key, value);
-        return vm.exception() ? IterationDecision::Break : IterationDecision::Continue;
+        auto result = vm.call(adder.as_function(), Value(weak_map), key, value);
+        return result.is_error() ? IterationDecision::Break : IterationDecision::Continue;
     });
     if (vm.exception())
         return {};

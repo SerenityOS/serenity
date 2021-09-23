@@ -295,16 +295,21 @@ void Call::execute_impl(Bytecode::Interpreter& interpreter) const
     Value return_value;
 
     if (m_argument_count == 0 && m_type == CallType::Call) {
-        return_value = interpreter.vm().call(function, this_value);
+        auto return_value_or_error = interpreter.vm().call(function, this_value);
+        if (!return_value_or_error.is_error())
+            return_value = return_value_or_error.release_value();
     } else {
         MarkedValueList argument_values { interpreter.vm().heap() };
         for (size_t i = 0; i < m_argument_count; ++i) {
             argument_values.append(interpreter.reg(m_arguments[i]));
         }
-        if (m_type == CallType::Call)
-            return_value = interpreter.vm().call(function, this_value, move(argument_values));
-        else
+        if (m_type == CallType::Call) {
+            auto return_value_or_error = interpreter.vm().call(function, this_value, move(argument_values));
+            if (!return_value_or_error.is_error())
+                return_value = return_value_or_error.release_value();
+        } else {
             return_value = interpreter.vm().construct(function, function, move(argument_values));
+        }
     }
 
     interpreter.accumulator() = return_value;

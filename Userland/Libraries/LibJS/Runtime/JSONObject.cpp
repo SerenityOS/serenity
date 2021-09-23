@@ -152,18 +152,12 @@ String JSONObject::serialize_json_property(GlobalObject& global_object, Stringif
         auto to_json = value_object->get(vm.names.toJSON);
         if (vm.exception())
             return {};
-        if (to_json.is_function()) {
-            value = vm.call(to_json.as_function(), value, js_string(vm, key.to_string()));
-            if (vm.exception())
-                return {};
-        }
+        if (to_json.is_function())
+            value = TRY_OR_DISCARD(vm.call(to_json.as_function(), value, js_string(vm, key.to_string())));
     }
 
-    if (state.replacer_function) {
-        value = vm.call(*state.replacer_function, holder, js_string(vm, key.to_string()), value);
-        if (vm.exception())
-            return {};
-    }
+    if (state.replacer_function)
+        value = TRY_OR_DISCARD(vm.call(*state.replacer_function, holder, js_string(vm, key.to_string()), value));
 
     if (value.is_object()) {
         auto& value_object = value.as_object();
@@ -507,7 +501,7 @@ Value JSONObject::internalize_json_property(GlobalObject& global_object, Object*
         }
     }
 
-    return vm.call(reviver, Value(holder), js_string(vm, name.to_string()), value);
+    return TRY_OR_DISCARD(vm.call(reviver, Value(holder), js_string(vm, name.to_string()), value));
 }
 
 }

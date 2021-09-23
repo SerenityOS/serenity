@@ -292,9 +292,7 @@ Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16Strin
         return {};
 
     if (exec.is_function()) {
-        auto result = vm.call(exec.as_function(), &regexp_object, js_string(vm, move(string)));
-        if (vm.exception())
-            return {};
+        auto result = TRY_OR_DISCARD(vm.call(exec.as_function(), &regexp_object, js_string(vm, move(string))));
 
         if (!result.is_object() && !result.is_null())
             vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOrNull, result.to_string_without_side_effects());
@@ -685,9 +683,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
                 replacer_args.append(move(named_captures));
             }
 
-            auto replace_result = vm.call(replace_value.as_function(), js_undefined(), move(replacer_args));
-            if (vm.exception())
-                return {};
+            auto replace_result = TRY_OR_DISCARD(vm.call(replace_value.as_function(), js_undefined(), move(replacer_args)));
 
             replacement = replace_result.to_string(global_object);
             if (vm.exception())

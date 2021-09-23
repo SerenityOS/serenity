@@ -62,11 +62,11 @@ Value PromiseReactionJob::call()
         vm.stop_unwind();
         auto* reject_function = promise_capability.value().reject;
         dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob @ {}]: Calling PromiseCapability's reject function @ {}", this, reject_function);
-        return vm.call(*reject_function, js_undefined(), handler_result);
+        return TRY_OR_DISCARD(vm.call(*reject_function, js_undefined(), handler_result));
     } else {
         auto* resolve_function = promise_capability.value().resolve;
         dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob @ {}]: Calling PromiseCapability's resolve function @ {}", this, resolve_function);
-        return vm.call(*resolve_function, js_undefined(), handler_result);
+        return TRY_OR_DISCARD(vm.call(*resolve_function, js_undefined(), handler_result));
     }
 }
 

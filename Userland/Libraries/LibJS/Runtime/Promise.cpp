@@ -32,9 +32,7 @@ Object* promise_resolve(GlobalObject& global_object, Object& constructor, Value 
     auto promise_capability = new_promise_capability(global_object, &constructor);
     if (vm.exception())
         return nullptr;
-    [[maybe_unused]] auto result = vm.call(*promise_capability.resolve, js_undefined(), value);
-    if (vm.exception())
-        return nullptr;
+    [[maybe_unused]] auto result = TRY_OR_DISCARD(vm.call(*promise_capability.resolve, js_undefined(), value));
     return promise_capability.promise;
 }
 

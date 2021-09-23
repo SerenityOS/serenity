@@ -399,8 +399,9 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
                 break;
             case Cell::Formula: {
                 auto& interpreter = sheet->interpreter();
-                auto value = interpreter.vm().call(parse_function, json, JS::js_string(interpreter.heap(), obj.get("value").as_string()));
-                cell = make<Cell>(obj.get("source").to_string(), move(value), position, *sheet);
+                auto value_or_error = interpreter.vm().call(parse_function, json, JS::js_string(interpreter.heap(), obj.get("value").as_string()));
+                VERIFY(!value_or_error.is_error());
+                cell = make<Cell>(obj.get("source").to_string(), value_or_error.release_value(), position, *sheet);
                 break;
             }
             }
@@ -526,8 +527,9 @@ JsonObject Sheet::to_json() const
         if (it.value->kind() == Cell::Formula) {
             data.set("source", it.value->data());
             auto json = interpreter().global_object().get("JSON");
-            auto stringified = interpreter().vm().call(json.as_object().get("stringify").as_function(), json, it.value->evaluated_data());
-            data.set("value", stringified.to_string_without_side_effects());
+            auto stringified_or_error = interpreter().vm().call(json.as_object().get("stringify").as_function(), json, it.value->evaluated_data());
+            VERIFY(!stringified_or_error.is_error());
+            data.set("value", stringified_or_error.release_value().to_string_without_side_effects());
         } else {
             data.set("value", it.value->data());
         }
