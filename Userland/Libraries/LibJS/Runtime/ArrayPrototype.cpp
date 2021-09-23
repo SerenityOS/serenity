@@ -206,12 +206,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::filter)
                 return {};
 
             // ii. Let selected be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
-            auto selected = vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object);
-            if (vm.exception())
-                return {};
+            auto selected = TRY_OR_DISCARD(vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
 
             // iii. If selected is true, then
-            if (selected.to_boolean()) {
+            if (selected) {
                 // 1. Perform ? CreateDataPropertyOrThrow(A, ! ToString(𝔽(to)), kValue).
                 array->create_data_property_or_throw(to, k_value);
 
@@ -322,9 +320,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
                 return {};
 
             // ii. Let mappedValue be ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
-            auto mapped_value = vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object);
-            if (vm.exception())
-                return {};
+            auto mapped_value = TRY_OR_DISCARD(vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object));
 
             // iii. Perform ? CreateDataPropertyOrThrow(A, Pk, mappedValue).
             array->create_data_property_or_throw(property_name, mapped_value);
@@ -495,7 +491,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
         return {};
     if (!join_function.is_function())
         return ObjectPrototype::to_string(vm, global_object);
-    return vm.call(join_function.as_function(), this_object);
+    return TRY_OR_DISCARD(vm.call(join_function.as_function(), this_object));
 }
 
 // 23.1.3.29 Array.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-array.prototype.tolocalestring
@@ -524,9 +520,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
             return {};
         if (value.is_nullish())
             continue;
-        auto locale_string_result = value.invoke(global_object, vm.names.toLocaleString);
-        if (vm.exception())
-            return {};
+        auto locale_string_result = TRY_OR_DISCARD(value.invoke(global_object, vm.names.toLocaleString));
         auto string = locale_string_result.to_string(global_object);
         if (vm.exception())
             return {};
@@ -912,9 +906,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
                 return {};
 
             // ii. Set accumulator to ? Call(callbackfn, undefined, « accumulator, kValue, 𝔽(k), O »).
-            accumulator = vm.call(callback_function.as_function(), js_undefined(), accumulator, k_value, Value(k), object);
-            if (vm.exception())
-                return {};
+            accumulator = TRY_OR_DISCARD(vm.call(callback_function.as_function(), js_undefined(), accumulator, k_value, Value(k), object));
         }
 
         // d. Set k to k + 1.
@@ -1012,9 +1004,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
                 return {};
 
             // ii. Set accumulator to ? Call(callbackfn, undefined, « accumulator, kValue, 𝔽(k), O »).
-            accumulator = vm.call(callback_function.as_function(), js_undefined(), accumulator, k_value, Value((size_t)k), object);
-            if (vm.exception())
-                return {};
+            accumulator = TRY_OR_DISCARD(vm.call(callback_function.as_function(), js_undefined(), accumulator, k_value, Value((size_t)k), object));
         }
 
         // d. Set k to k - 1.
@@ -1128,9 +1118,10 @@ static void array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject
         } else if (y.is_undefined()) {
             comparison_result = -1;
         } else if (compare_func) {
-            auto call_result = vm.call(*compare_func, js_undefined(), left[left_index], right[right_index]);
-            if (vm.exception())
+            auto call_result_or_error = vm.call(*compare_func, js_undefined(), left[left_index], right[right_index]);
+            if (call_result_or_error.is_error())
                 return;
+            auto call_result = call_result_or_error.release_value();
 
             auto number = call_result.to_number(global_object);
             if (vm.exception())
@@ -1393,12 +1384,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find)
             return {};
 
         // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
-        auto test_result = vm.call(predicate.as_function(), this_arg, k_value, Value(k), object);
-        if (vm.exception())
-            return {};
+        auto test_result = TRY_OR_DISCARD(vm.call(predicate.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
 
         // d. If testResult is true, return kValue.
-        if (test_result.to_boolean())
+        if (test_result)
             return k_value;
 
         // e. Set k to k + 1.
@@ -1440,12 +1429,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_index)
             return {};
 
         // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
-        auto test_result = vm.call(predicate.as_function(), this_arg, k_value, Value(k), object);
-        if (vm.exception())
-            return {};
+        auto test_result = TRY_OR_DISCARD(vm.call(predicate.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
 
         // d. If testResult is true, return 𝔽(k).
-        if (test_result.to_boolean())
+        if (test_result)
             return Value(k);
 
         // e. Set k to k + 1.
@@ -1487,12 +1474,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last)
             return {};
 
         // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
-        auto test_result = vm.call(predicate.as_function(), this_arg, k_value, Value((double)k), object);
-        if (vm.exception())
-            return {};
+        auto test_result = TRY_OR_DISCARD(vm.call(predicate.as_function(), this_arg, k_value, Value((double)k), object)).to_boolean();
 
         // d. If testResult is true, return kValue.
-        if (test_result.to_boolean())
+        if (test_result)
             return k_value;
 
         // e. Set k to k - 1.
@@ -1534,12 +1519,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last_index)
             return {};
 
         // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
-        auto test_result = vm.call(predicate.as_function(), this_arg, k_value, Value((double)k), object);
-        if (vm.exception())
-            return {};
+        auto test_result = TRY_OR_DISCARD(vm.call(predicate.as_function(), this_arg, k_value, Value((double)k), object)).to_boolean();
 
         // d. If testResult is true, return 𝔽(k).
-        if (test_result.to_boolean())
+        if (test_result)
             return Value((double)k);
 
         // e. Set k to k - 1.
@@ -1588,12 +1571,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::some)
                 return {};
 
             // ii. Let testResult be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
-            auto test_result = vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object);
-            if (vm.exception())
-                return {};
+            auto test_result = TRY_OR_DISCARD(vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
 
             // iii. If testResult is true, return true.
-            if (test_result.to_boolean())
+            if (test_result)
                 return Value(true);
         }
 
@@ -1643,12 +1624,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::every)
                 return {};
 
             // ii. Let testResult be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
-            auto test_result = vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object);
-            if (vm.exception())
-                return {};
+            auto test_result = TRY_OR_DISCARD(vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
 
             // iii. If testResult is false, return false.
-            if (!test_result.to_boolean())
+            if (!test_result)
                 return Value(false);
         }
 
@@ -1887,11 +1866,8 @@ static size_t flatten_into_array(GlobalObject& global_object, Object& new_array,
         if (vm.exception())
             return {};
 
-        if (mapper_func) {
-            value = vm.call(*mapper_func, this_arg, value, Value(j), &array);
-            if (vm.exception())
-                return {};
-        }
+        if (mapper_func)
+            value = TRY_OR_DISCARD(vm.call(*mapper_func, this_arg, value, Value(j), &array));
 
         if (depth > 0 && TRY_OR_DISCARD(value.is_array(global_object))) {
             if (vm.did_reach_stack_space_limit()) {

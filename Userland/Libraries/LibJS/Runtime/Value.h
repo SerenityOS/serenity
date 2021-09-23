@@ -292,12 +292,12 @@ public:
     bool operator==(Value const&) const;
 
     template<typename... Args>
-    [[nodiscard]] ALWAYS_INLINE Value invoke(GlobalObject& global_object, PropertyName const& property_name, Args... args);
+    [[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> invoke(GlobalObject& global_object, PropertyName const& property_name, Args... args);
 
 private:
     Type m_type { Type::Empty };
 
-    [[nodiscard]] Value invoke_internal(GlobalObject& global_object, PropertyName const&, Optional<MarkedValueList> arguments);
+    [[nodiscard]] ThrowCompletionOr<Value> invoke_internal(GlobalObject& global_object, PropertyName const&, Optional<MarkedValueList> arguments);
 
     i32 to_i32_slow_case(GlobalObject&) const;
 

@@ -64,8 +64,8 @@ Value WeakSetConstructor::construct(FunctionObject& new_target)
     get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) {
         if (vm.exception())
             return IterationDecision::Break;
-        (void)vm.call(adder.as_function(), Value(weak_set), iterator_value);
-        return vm.exception() ? IterationDecision::Break : IterationDecision::Continue;
+        auto result = vm.call(adder.as_function(), Value(weak_set), iterator_value);
+        return result.is_error() ? IterationDecision::Break : IterationDecision::Continue;
     });
     if (vm.exception())
         return {};

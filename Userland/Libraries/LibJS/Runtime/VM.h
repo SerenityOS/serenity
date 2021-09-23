@@ -255,7 +255,7 @@ public:
     Value get_new_target();
 
     template<typename... Args>
-    [[nodiscard]] ALWAYS_INLINE Value call(FunctionObject& function, Value this_value, Args... args)
+    [[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> call(FunctionObject& function, Value this_value, Args... args)
     {
         if constexpr (sizeof...(Args) > 0) {
             MarkedValueList arglist { heap() };
@@ -289,7 +289,7 @@ private:
 
     void ordinary_call_bind_this(FunctionObject&, ExecutionContext&, Value this_argument);
 
-    [[nodiscard]] Value call_internal(FunctionObject&, Value this_value, Optional<MarkedValueList> arguments);
+    [[nodiscard]] ThrowCompletionOr<Value> call_internal(FunctionObject&, Value this_value, Optional<MarkedValueList> arguments);
     void prepare_for_ordinary_call(FunctionObject&, ExecutionContext& callee_context, Object* new_target);
 
     Exception* m_exception { nullptr };
@@ -327,13 +327,13 @@ private:
 };
 
 template<>
-[[nodiscard]] ALWAYS_INLINE Value VM::call(FunctionObject& function, Value this_value, MarkedValueList arguments) { return call_internal(function, this_value, move(arguments)); }
+[[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> VM::call(FunctionObject& function, Value this_value, MarkedValueList arguments) { return call_internal(function, this_value, move(arguments)); }
 
 template<>
-[[nodiscard]] ALWAYS_INLINE Value VM::call(FunctionObject& function, Value this_value, Optional<MarkedValueList> arguments) { return call_internal(function, this_value, move(arguments)); }
+[[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> VM::call(FunctionObject& function, Value this_value, Optional<MarkedValueList> arguments) { return call_internal(function, this_value, move(arguments)); }
 
 template<>
-[[nodiscard]] ALWAYS_INLINE Value VM::call(FunctionObject& function, Value this_value) { return call(function, this_value, Optional<MarkedValueList> {}); }
+[[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> VM::call(FunctionObject& function, Value this_value) { return call(function, this_value, Optional<MarkedValueList> {}); }
 
 ALWAYS_INLINE Heap& Cell::heap() const
 {

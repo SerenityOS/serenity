@@ -94,13 +94,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
         for (size_t k = 0; k < values.size(); ++k) {
             auto k_value = values[k];
             Value mapped_value;
-            if (map_fn) {
-                mapped_value = vm.call(*map_fn, this_arg, k_value, Value(k));
-                if (vm.exception())
-                    return {};
-            } else {
+            if (map_fn)
+                mapped_value = TRY_OR_DISCARD(vm.call(*map_fn, this_arg, k_value, Value(k)));
+            else
                 mapped_value = k_value;
-            }
             target_object->set(k, mapped_value, Object::ShouldThrowExceptions::Yes);
             if (vm.exception())
                 return {};
@@ -121,13 +118,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
     for (size_t k = 0; k < length; ++k) {
         auto k_value = array_like->get(k);
         Value mapped_value;
-        if (map_fn) {
-            mapped_value = vm.call(*map_fn, this_arg, k_value, Value(k));
-            if (vm.exception())
-                return {};
-        } else {
+        if (map_fn)
+            mapped_value = TRY_OR_DISCARD(vm.call(*map_fn, this_arg, k_value, Value(k)));
+        else
             mapped_value = k_value;
-        }
         target_object->set(k, mapped_value, Object::ShouldThrowExceptions::Yes);
         if (vm.exception())
             return {};

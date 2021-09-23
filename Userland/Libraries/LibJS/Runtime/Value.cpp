@@ -423,9 +423,7 @@ Value Value::to_primitive(GlobalObject& global_object, PreferredType preferred_t
             return {};
         if (to_primitive_method) {
             auto hint = get_hint_for_preferred_type();
-            auto result = vm.call(*to_primitive_method, *this, js_string(vm, hint));
-            if (vm.exception())
-                return {};
+            auto result = TRY_OR_DISCARD(vm.call(*to_primitive_method, *this, js_string(vm, hint)));
             if (!result.is_object())
                 return result;
             vm.throw_exception<TypeError>(global_object, ErrorType::ToPrimitiveReturnedObject, to_string_without_side_effects(), hint);
@@ -1298,9 +1296,7 @@ Value instance_of(GlobalObject& global_object, Value lhs, Value rhs)
     if (vm.exception())
         return {};
     if (has_instance_method) {
-        auto has_instance_result = vm.call(*has_instance_method, rhs, lhs);
-        if (vm.exception())
-            return {};
+        auto has_instance_result = TRY_OR_DISCARD(vm.call(*has_instance_method, rhs, lhs));
         return Value(has_instance_result.to_boolean());
     }
     if (!rhs.is_function()) {
@@ -1618,16 +1614,14 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
 }
 
 // 7.3.20 Invoke ( V, P [ , argumentsList ] ), https://tc39.es/ecma262/#sec-invoke
-Value Value::invoke_internal(GlobalObject& global_object, JS::PropertyName const& property_name, Optional<MarkedValueList> arguments)
+ThrowCompletionOr<Value> Value::invoke_internal(GlobalObject& global_object, JS::PropertyName const& property_name, Optional<MarkedValueList> arguments)
 {
     auto& vm = global_object.vm();
     auto property = get(global_object, property_name);
-    if (vm.exception())
-        return {};
-    if (!property.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, property.to_string_without_side_effects());
-        return {};
-    }
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+    if (!property.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, property.to_string_without_side_effects());
 
     return vm.call(property.as_function(), *this, move(arguments));
 }

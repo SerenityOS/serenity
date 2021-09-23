@@ -662,7 +662,7 @@ void VM::ordinary_call_bind_this(FunctionObject& function, ExecutionContext& cal
     callee_context.this_value = this_value;
 }
 
-Value VM::call_internal(FunctionObject& function, Value this_value, Optional<MarkedValueList> arguments)
+ThrowCompletionOr<Value> VM::call_internal(FunctionObject& function, Value this_value, Optional<MarkedValueList> arguments)
 {
     VERIFY(!exception());
     VERIFY(!this_value.is_empty());
@@ -680,8 +680,8 @@ Value VM::call_internal(FunctionObject& function, Value this_value, Optional<Mar
     //        This needs to be moved to NativeFunction/OrdinaryFunctionObject's construct() (10.2.2 [[Construct]])
     ExecutionContext callee_context(heap());
     prepare_for_ordinary_call(function, callee_context, nullptr);
-    if (exception())
-        return {};
+    if (auto* exception = this->exception())
+        return JS::throw_completion(exception->value());
 
     ScopeGuard pop_guard = [&] {
         pop_execution_context();
@@ -696,10 +696,13 @@ Value VM::call_internal(FunctionObject& function, Value this_value, Optional<Mar
     if (callee_context.lexical_environment)
         ordinary_call_bind_this(function, callee_context, this_value);
 
-    if (exception())
-        return {};
+    if (auto* exception = this->exception())
+        return JS::throw_completion(exception->value());
 
-    return function.call();
+    auto result = function.call();
+    if (auto* exception = this->exception())
+        return JS::throw_completion(exception->value());
+    return result;
 }
 
 bool VM::in_strict_mode() const

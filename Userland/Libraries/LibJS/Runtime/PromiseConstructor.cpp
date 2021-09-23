@@ -113,9 +113,7 @@ static Value perform_promise_common(GlobalObject& global_object, Object& iterato
 
         values->values().append(js_undefined());
 
-        auto next_promise = vm.call(promise_resolve.as_function(), constructor, next_value);
-        if (vm.exception())
-            return {};
+        auto next_promise = TRY_OR_DISCARD(vm.call(promise_resolve.as_function(), constructor, next_value));
 
         ++remaining_elements_count->value;
 
@@ -410,7 +408,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::reject)
     if (vm.exception())
         return {};
     auto reason = vm.argument(0);
-    [[maybe_unused]] auto result = vm.call(*promise_capability.reject, js_undefined(), reason);
+    [[maybe_unused]] auto result = TRY_OR_DISCARD(vm.call(*promise_capability.reject, js_undefined(), reason));
     return promise_capability.promise;
 }
 
