@@ -1405,7 +1405,7 @@ bool same_value_non_numeric(Value lhs, Value rhs)
 }
 
 // 7.2.15 IsStrictlyEqual ( x, y ), https://tc39.es/ecma262/#sec-isstrictlyequal
-bool strict_eq(Value lhs, Value rhs)
+bool is_strictly_equal(Value lhs, Value rhs)
 {
     if (!same_type_for_equality(lhs, rhs))
         return false;
@@ -1430,7 +1430,7 @@ bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
     auto& vm = global_object.vm();
 
     if (same_type_for_equality(lhs, rhs))
-        return strict_eq(lhs, rhs);
+        return is_strictly_equal(lhs, rhs);
 
     if (lhs.is_nullish() && rhs.is_nullish())
         return true;

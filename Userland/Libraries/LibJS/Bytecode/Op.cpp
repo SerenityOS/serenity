@@ -67,12 +67,12 @@ static Value abstract_equals(GlobalObject& global_object, Value src1, Value src2
 
 static Value typed_inequals(GlobalObject&, Value src1, Value src2)
 {
-    return Value(!strict_eq(src1, src2));
+    return Value(!is_strictly_equal(src1, src2));
 }
 
 static Value typed_equals(GlobalObject&, Value src1, Value src2)
 {
-    return Value(strict_eq(src1, src2));
+    return Value(is_strictly_equal(src1, src2));
 }
 
 #define JS_DEFINE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)                            \

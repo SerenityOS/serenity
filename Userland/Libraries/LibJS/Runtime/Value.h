@@ -371,7 +371,7 @@ Value instance_of(GlobalObject&, Value lhs, Value rhs);
 Value ordinary_has_instance(GlobalObject&, Value lhs, Value rhs);
 
 bool abstract_eq(GlobalObject&, Value lhs, Value rhs);
-bool strict_eq(Value lhs, Value rhs);
+bool is_strictly_equal(Value lhs, Value rhs);
 bool same_value(Value lhs, Value rhs);
 bool same_value_zero(Value lhs, Value rhs);
 bool same_value_non_numeric(Value lhs, Value rhs);

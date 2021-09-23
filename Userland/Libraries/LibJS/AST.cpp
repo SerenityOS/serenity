@@ -656,9 +656,9 @@ Value BinaryExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     case BinaryOp::Exponentiation:
         return exp(global_object, lhs_result, rhs_result);
     case BinaryOp::TypedEquals:
-        return Value(strict_eq(lhs_result, rhs_result));
+        return Value(is_strictly_equal(lhs_result, rhs_result));
     case BinaryOp::TypedInequals:
-        return Value(!strict_eq(lhs_result, rhs_result));
+        return Value(!is_strictly_equal(lhs_result, rhs_result));
     case BinaryOp::AbstractEquals:
         return Value(abstract_eq(global_object, lhs_result, rhs_result));
     case BinaryOp::AbstractInequals:
@@ -2423,7 +2423,7 @@ Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
             auto test_result = switch_case.test()->execute(interpreter, global_object);
             if (interpreter.exception())
                 return {};
-            if (!strict_eq(discriminant_result, test_result))
+            if (!is_strictly_equal(discriminant_result, test_result))
                 continue;
         }
         falling_through = true;

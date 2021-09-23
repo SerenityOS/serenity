@@ -451,7 +451,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
         if (k_present) {
             auto element_k = typed_array->get(k);
 
-            if (strict_eq(search_element, element_k))
+            if (is_strictly_equal(search_element, element_k))
                 return Value(k);
         }
     }
@@ -499,7 +499,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
         if (k_present) {
             auto element_k = typed_array->get(k);
 
-            if (strict_eq(search_element, element_k))
+            if (is_strictly_equal(search_element, element_k))
                 return Value(k);
         }
     }
