@@ -159,7 +159,6 @@ RefPtr<Gfx::Font> FontDatabase::get(const String& family, unsigned size, unsigne
         if (typeface->family() == family && typeface->weight() == weight)
             return typeface->get_font(size);
     }
-    dbgln("Failed to get font: '{} {} {}'", family, size, weight);
     return nullptr;
 }
 
