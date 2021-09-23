@@ -62,7 +62,7 @@ public:
     bool is_bigint() const { return m_type == Type::BigInt; };
     bool is_nullish() const { return is_null() || is_undefined(); }
     bool is_cell() const { return is_string() || is_accessor() || is_object() || is_bigint() || is_symbol(); }
-    bool is_array(GlobalObject&) const;
+    ThrowCompletionOr<bool> is_array(GlobalObject&) const;
     bool is_function() const;
     bool is_constructor() const;
     bool is_regexp(GlobalObject&) const;

@@ -87,9 +87,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
     VERIFY(object);
 
     // 4. Let isArray be ? IsArray(O).
-    auto is_array = Value(object).is_array(global_object);
-    if (vm.exception())
-        return {};
+    auto is_array = TRY_OR_DISCARD(Value(object).is_array(global_object));
 
     String builtin_tag;
 

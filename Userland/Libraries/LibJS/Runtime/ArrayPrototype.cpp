@@ -107,9 +107,7 @@ static Object* array_species_create(GlobalObject& global_object, Object& origina
 {
     auto& vm = global_object.vm();
 
-    auto is_array = Value(&original_array).is_array(global_object);
-    if (vm.exception())
-        return {};
+    auto is_array = TRY_OR_DISCARD(Value(&original_array).is_array(global_object));
 
     if (!is_array) {
         auto array = Array::create(global_object, length);
@@ -593,7 +591,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
     size_t n = 0;
 
     // 23.1.3.1.1 IsConcatSpreadable ( O ), https://tc39.es/ecma262/#sec-isconcatspreadable
-    auto is_concat_spreadable = [&vm, &global_object](Value const& val) {
+    auto is_concat_spreadable = [&vm, &global_object](Value const& val) -> bool {
         if (!val.is_object()) {
             return false;
         }
@@ -608,7 +606,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
         if (!spreadable.is_undefined())
             return spreadable.to_boolean();
 
-        return val.is_array(global_object);
+        return TRY_OR_DISCARD(val.is_array(global_object));
     };
 
     auto append_to_new_array = [&vm, &is_concat_spreadable, &new_array, &global_object, &n](Value arg) {
@@ -1895,7 +1893,7 @@ static size_t flatten_into_array(GlobalObject& global_object, Object& new_array,
                 return {};
         }
 
-        if (depth > 0 && value.is_array(global_object)) {
+        if (depth > 0 && TRY_OR_DISCARD(value.is_array(global_object))) {
             if (vm.did_reach_stack_space_limit()) {
                 vm.throw_exception<Error>(global_object, ErrorType::CallStackSizeExceeded);
                 return {};
