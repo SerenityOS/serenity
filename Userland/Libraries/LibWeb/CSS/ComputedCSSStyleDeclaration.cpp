@@ -484,20 +484,20 @@ RefPtr<StyleValue> ComputedCSSStyleDeclaration::style_value_for_property(Layout:
         auto maybe_bottom_right_radius = property(CSS::PropertyID::BorderBottomRightRadius);
         RefPtr<BorderRadiusStyleValue> top_left_radius, top_right_radius, bottom_left_radius, bottom_right_radius;
         if (maybe_top_left_radius.has_value()) {
-            VERIFY(maybe_top_left_radius.value().value->type() == StyleValue::Type::BorderRadius);
-            top_left_radius = *static_cast<BorderRadiusStyleValue*>(maybe_top_left_radius.value().value.ptr());
+            VERIFY(maybe_top_left_radius.value().value->is_border_radius());
+            top_left_radius = maybe_top_left_radius.value().value->as_border_radius();
         }
         if (maybe_top_right_radius.has_value()) {
-            VERIFY(maybe_top_right_radius.value().value->type() == StyleValue::Type::BorderRadius);
-            top_right_radius = *static_cast<BorderRadiusStyleValue*>(maybe_top_right_radius.value().value.ptr());
+            VERIFY(maybe_top_right_radius.value().value->is_border_radius());
+            top_right_radius = maybe_top_right_radius.value().value->as_border_radius();
         }
         if (maybe_bottom_left_radius.has_value()) {
-            VERIFY(maybe_bottom_left_radius.value().value->type() == StyleValue::Type::BorderRadius);
-            bottom_left_radius = *static_cast<BorderRadiusStyleValue*>(maybe_bottom_left_radius.value().value.ptr());
+            VERIFY(maybe_bottom_left_radius.value().value->is_border_radius());
+            bottom_left_radius = maybe_bottom_left_radius.value().value->as_border_radius();
         }
         if (maybe_bottom_right_radius.has_value()) {
-            VERIFY(maybe_bottom_right_radius.value().value->type() == StyleValue::Type::BorderRadius);
-            bottom_right_radius = *static_cast<BorderRadiusStyleValue*>(maybe_bottom_right_radius.value().value.ptr());
+            VERIFY(maybe_bottom_right_radius.value().value->is_border_radius());
+            bottom_right_radius = maybe_bottom_right_radius.value().value->as_border_radius();
         }
 
         return CombinedBorderRadiusStyleValue::create(top_left_radius.release_nonnull(), top_right_radius.release_nonnull(), bottom_right_radius.release_nonnull(), bottom_left_radius.release_nonnull());
