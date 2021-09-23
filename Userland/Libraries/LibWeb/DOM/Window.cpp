@@ -6,7 +6,7 @@
 
 #include <LibGUI/DisplayLink.h>
 #include <LibJS/Runtime/FunctionObject.h>
-#include <LibWeb/CSS/ComputedCSSStyleDeclaration.h>
+#include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
@@ -252,7 +252,7 @@ Page const* Window::page() const
 
 NonnullRefPtr<CSS::CSSStyleDeclaration> Window::get_computed_style(DOM::Element& element) const
 {
-    return CSS::ComputedCSSStyleDeclaration::create(element);
+    return CSS::ResolvedCSSStyleDeclaration::create(element);
 }
 
 NonnullRefPtr<CSS::MediaQueryList> Window::match_media(String media)

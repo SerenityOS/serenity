@@ -10,14 +10,14 @@
 
 namespace Web::CSS {
 
-class ComputedCSSStyleDeclaration final : public CSSStyleDeclaration {
+class ResolvedCSSStyleDeclaration final : public CSSStyleDeclaration {
 public:
-    static NonnullRefPtr<ComputedCSSStyleDeclaration> create(DOM::Element& element)
+    static NonnullRefPtr<ResolvedCSSStyleDeclaration> create(DOM::Element& element)
     {
-        return adopt_ref(*new ComputedCSSStyleDeclaration(element));
+        return adopt_ref(*new ResolvedCSSStyleDeclaration(element));
     }
 
-    virtual ~ComputedCSSStyleDeclaration() override;
+    virtual ~ResolvedCSSStyleDeclaration() override;
 
     virtual size_t length() const override;
     virtual String item(size_t index) const override;
@@ -25,7 +25,7 @@ public:
     virtual bool set_property(PropertyID, StringView css_text) override;
 
 private:
-    explicit ComputedCSSStyleDeclaration(DOM::Element&);
+    explicit ResolvedCSSStyleDeclaration(DOM::Element&);
 
     RefPtr<StyleValue> style_value_for_property(Layout::NodeWithStyle const&, PropertyID) const;
 

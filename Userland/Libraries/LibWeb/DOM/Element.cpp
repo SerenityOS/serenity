@@ -6,9 +6,9 @@
 
 #include <AK/AnyOf.h>
 #include <AK/StringBuilder.h>
-#include <LibWeb/CSS/ComputedCSSStyleDeclaration.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
+#include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleInvalidator.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
@@ -231,7 +231,7 @@ void Element::recompute_style()
 
 NonnullRefPtr<CSS::StyleProperties> Element::computed_style()
 {
-    auto element_computed_style = CSS::ComputedCSSStyleDeclaration::create(*this);
+    auto element_computed_style = CSS::ResolvedCSSStyleDeclaration::create(*this);
     auto properties = CSS::StyleProperties::create();
 
     for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {

@@ -6,28 +6,28 @@
  */
 
 #include <AK/NonnullRefPtr.h>
-#include <LibWeb/CSS/ComputedCSSStyleDeclaration.h>
+#include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 
 namespace Web::CSS {
 
-ComputedCSSStyleDeclaration::ComputedCSSStyleDeclaration(DOM::Element& element)
+ResolvedCSSStyleDeclaration::ResolvedCSSStyleDeclaration(DOM::Element& element)
     : m_element(element)
 {
 }
 
-ComputedCSSStyleDeclaration::~ComputedCSSStyleDeclaration()
+ResolvedCSSStyleDeclaration::~ResolvedCSSStyleDeclaration()
 {
 }
 
-size_t ComputedCSSStyleDeclaration::length() const
+size_t ResolvedCSSStyleDeclaration::length() const
 {
     return 0;
 }
 
-String ComputedCSSStyleDeclaration::item(size_t index) const
+String ResolvedCSSStyleDeclaration::item(size_t index) const
 {
     (void)index;
     return {};
@@ -379,7 +379,7 @@ static NonnullRefPtr<StyleValue> value_or_default(Optional<StyleProperty> proper
     return default_style;
 }
 
-RefPtr<StyleValue> ComputedCSSStyleDeclaration::style_value_for_property(Layout::NodeWithStyle const& layout_node, PropertyID property_id) const
+RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout::NodeWithStyle const& layout_node, PropertyID property_id) const
 {
     switch (property_id) {
     case CSS::PropertyID::Float:
@@ -550,7 +550,7 @@ RefPtr<StyleValue> ComputedCSSStyleDeclaration::style_value_for_property(Layout:
     }
 }
 
-Optional<StyleProperty> ComputedCSSStyleDeclaration::property(PropertyID property_id) const
+Optional<StyleProperty> ResolvedCSSStyleDeclaration::property(PropertyID property_id) const
 {
     const_cast<DOM::Document&>(m_element->document()).ensure_layout();
 
@@ -575,7 +575,7 @@ Optional<StyleProperty> ComputedCSSStyleDeclaration::property(PropertyID propert
     };
 }
 
-bool ComputedCSSStyleDeclaration::set_property(PropertyID, StringView)
+bool ResolvedCSSStyleDeclaration::set_property(PropertyID, StringView)
 {
     return false;
 }
