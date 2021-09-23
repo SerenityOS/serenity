@@ -91,7 +91,7 @@ UNMAP_AFTER_INIT RefPtr<NetworkAdapter> NetworkingManagement::determine_network_
 bool NetworkingManagement::initialize()
 {
     if (!kernel_command_line().is_physical_networking_disabled()) {
-        PCI::enumerate([&](const PCI::Address&, PCI::DeviceIdentifier const& device_identifier) {
+        PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
             // Note: PCI class 2 is the class of Network devices
             if (device_identifier.class_code().value() != 0x02)
                 return;

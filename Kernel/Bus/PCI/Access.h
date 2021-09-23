@@ -25,7 +25,7 @@ public:
     static bool initialize_for_memory_access(PhysicalAddress mcfg_table);
     static bool initialize_for_io_access();
 
-    void fast_enumerate(Function<void(Address, DeviceIdentifier const&)>&) const;
+    void fast_enumerate(Function<void(DeviceIdentifier const&)>&) const;
     void rescan_hardware();
 
     static Access& the();
