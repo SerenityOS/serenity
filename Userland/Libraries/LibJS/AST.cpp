@@ -655,13 +655,13 @@ Value BinaryExpression::execute(Interpreter& interpreter, GlobalObject& global_o
         return mod(global_object, lhs_result, rhs_result);
     case BinaryOp::Exponentiation:
         return exp(global_object, lhs_result, rhs_result);
-    case BinaryOp::TypedEquals:
+    case BinaryOp::StrictlyEquals:
         return Value(is_strictly_equal(lhs_result, rhs_result));
-    case BinaryOp::TypedInequals:
+    case BinaryOp::StrictlyInequals:
         return Value(!is_strictly_equal(lhs_result, rhs_result));
-    case BinaryOp::AbstractEquals:
+    case BinaryOp::LooselyEquals:
         return Value(is_loosely_equal(global_object, lhs_result, rhs_result));
-    case BinaryOp::AbstractInequals:
+    case BinaryOp::LooselyInequals:
         return Value(!is_loosely_equal(global_object, lhs_result, rhs_result));
     case BinaryOp::GreaterThan:
         return greater_than(global_object, lhs_result, rhs_result);
@@ -1053,16 +1053,16 @@ void BinaryExpression::dump(int indent) const
     case BinaryOp::Exponentiation:
         op_string = "**";
         break;
-    case BinaryOp::TypedEquals:
+    case BinaryOp::StrictlyEquals:
         op_string = "===";
         break;
-    case BinaryOp::TypedInequals:
+    case BinaryOp::StrictlyInequals:
         op_string = "!==";
         break;
-    case BinaryOp::AbstractEquals:
+    case BinaryOp::LooselyEquals:
         op_string = "==";
         break;
-    case BinaryOp::AbstractInequals:
+    case BinaryOp::LooselyInequals:
         op_string = "!=";
         break;
     case BinaryOp::GreaterThan:

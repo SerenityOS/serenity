@@ -121,17 +121,17 @@ void BinaryExpression::generate_bytecode(Bytecode::Generator& generator) const
     case BinaryOp::LessThanEquals:
         generator.emit<Bytecode::Op::LessThanEquals>(lhs_reg);
         break;
-    case BinaryOp::AbstractInequals:
-        generator.emit<Bytecode::Op::AbstractInequals>(lhs_reg);
+    case BinaryOp::LooselyInequals:
+        generator.emit<Bytecode::Op::LooselyInequals>(lhs_reg);
         break;
-    case BinaryOp::AbstractEquals:
-        generator.emit<Bytecode::Op::AbstractEquals>(lhs_reg);
+    case BinaryOp::LooselyEquals:
+        generator.emit<Bytecode::Op::LooselyEquals>(lhs_reg);
         break;
-    case BinaryOp::TypedInequals:
-        generator.emit<Bytecode::Op::TypedInequals>(lhs_reg);
+    case BinaryOp::StrictlyInequals:
+        generator.emit<Bytecode::Op::StrictlyInequals>(lhs_reg);
         break;
-    case BinaryOp::TypedEquals:
-        generator.emit<Bytecode::Op::TypedEquals>(lhs_reg);
+    case BinaryOp::StrictlyEquals:
+        generator.emit<Bytecode::Op::StrictlyEquals>(lhs_reg);
         break;
     case BinaryOp::BitwiseAnd:
         generator.emit<Bytecode::Op::BitwiseAnd>(lhs_reg);
@@ -1268,7 +1268,7 @@ void SwitchStatement::generate_bytecode(Bytecode::Generator& generator) const
         if (switch_case.test()) {
             generator.switch_to_basic_block(*next_test_block);
             switch_case.test()->generate_bytecode(generator);
-            generator.emit<Bytecode::Op::TypedEquals>(discriminant_reg);
+            generator.emit<Bytecode::Op::StrictlyEquals>(discriminant_reg);
             next_test_block = &generator.make_block();
             generator.emit<Bytecode::Op::JumpConditional>().set_targets(Bytecode::Label { case_block }, Bytecode::Label { *next_test_block });
         } else {
