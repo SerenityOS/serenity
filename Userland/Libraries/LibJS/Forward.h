@@ -145,6 +145,7 @@ class Completion;
 class Console;
 class DeclarativeEnvironment;
 class DeferGC;
+class ECMAScriptFunctionObject;
 class Environment;
 class Error;
 class ErrorType;
