@@ -12,7 +12,7 @@
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
-#include <LibWeb/CSS/StyleResolver.h>
+#include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
@@ -24,12 +24,12 @@
 
 namespace Web::CSS {
 
-StyleResolver::StyleResolver(DOM::Document& document)
+StyleComputer::StyleComputer(DOM::Document& document)
     : m_document(document)
 {
 }
 
-StyleResolver::~StyleResolver()
+StyleComputer::~StyleComputer()
 {
 }
 
@@ -56,7 +56,7 @@ static StyleSheet& quirks_mode_stylesheet()
 }
 
 template<typename Callback>
-void StyleResolver::for_each_stylesheet(CascadeOrigin cascade_origin, Callback callback) const
+void StyleComputer::for_each_stylesheet(CascadeOrigin cascade_origin, Callback callback) const
 {
     if (cascade_origin == CascadeOrigin::Any || cascade_origin == CascadeOrigin::UserAgent) {
         callback(default_stylesheet());
@@ -70,7 +70,7 @@ void StyleResolver::for_each_stylesheet(CascadeOrigin cascade_origin, Callback c
     }
 }
 
-Vector<MatchingRule> StyleResolver::collect_matching_rules(DOM::Element const& element, CascadeOrigin declaration_type) const
+Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& element, CascadeOrigin declaration_type) const
 {
     Vector<MatchingRule> matching_rules;
 
@@ -94,7 +94,7 @@ Vector<MatchingRule> StyleResolver::collect_matching_rules(DOM::Element const& e
     return matching_rules;
 }
 
-void StyleResolver::sort_matching_rules(Vector<MatchingRule>& matching_rules) const
+void StyleComputer::sort_matching_rules(Vector<MatchingRule>& matching_rules) const
 {
     quick_sort(matching_rules, [&](MatchingRule& a, MatchingRule& b) {
         auto& a_selector = a.rule->selectors()[a.selector_index];
@@ -473,7 +473,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     style.set_property(property_id, value);
 }
 
-StyleResolver::CustomPropertyResolutionTuple StyleResolver::resolve_custom_property_with_specificity(DOM::Element& element, String const& custom_property_name) const
+StyleComputer::CustomPropertyResolutionTuple StyleComputer::resolve_custom_property_with_specificity(DOM::Element& element, String const& custom_property_name) const
 {
     if (auto maybe_property = element.resolve_custom_property(custom_property_name); maybe_property.has_value())
         return maybe_property.value();
@@ -501,7 +501,7 @@ StyleResolver::CustomPropertyResolutionTuple StyleResolver::resolve_custom_prope
     return parent_resolved;
 }
 
-Optional<StyleProperty> StyleResolver::resolve_custom_property(DOM::Element& element, String const& custom_property_name) const
+Optional<StyleProperty> StyleComputer::resolve_custom_property(DOM::Element& element, String const& custom_property_name) const
 {
     auto resolved_with_specificity = resolve_custom_property_with_specificity(element, custom_property_name);
 
@@ -513,7 +513,7 @@ struct MatchingDeclarations {
     Vector<MatchingRule> author_rules;
 };
 
-void StyleResolver::cascade_declarations(StyleProperties& style, DOM::Element& element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, bool important) const
+void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, bool important) const
 {
     for (auto& match : matching_rules) {
         for (auto& property : verify_cast<PropertyOwningCSSStyleDeclaration>(match.rule->declaration()).properties()) {
@@ -543,7 +543,7 @@ void StyleResolver::cascade_declarations(StyleProperties& style, DOM::Element& e
 }
 
 // https://drafts.csswg.org/css-cascade/#cascading
-void StyleResolver::compute_cascaded_values(StyleProperties& style, DOM::Element& element) const
+void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element& element) const
 {
     // First, we collect all the CSS rules whose selectors match `element`:
     MatchingRuleSet matching_rule_set;
@@ -596,7 +596,7 @@ static NonnullRefPtr<StyleValue> get_inherit_value(CSS::PropertyID property_id, 
     return *it->value;
 };
 
-void StyleResolver::compute_defaulted_property_value(StyleProperties& style, DOM::Element const* element, CSS::PropertyID property_id) const
+void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM::Element const* element, CSS::PropertyID property_id) const
 {
     // FIXME: If we don't know the correct initial value for a property, we fall back to InitialStyleValue.
 
@@ -621,7 +621,7 @@ void StyleResolver::compute_defaulted_property_value(StyleProperties& style, DOM
 }
 
 // https://drafts.csswg.org/css-cascade/#defaulting
-void StyleResolver::compute_defaulted_values(StyleProperties& style, DOM::Element const* element) const
+void StyleComputer::compute_defaulted_values(StyleProperties& style, DOM::Element const* element) const
 {
     // Walk the list of all known CSS properties and:
     // - Add them to `style` if they are missing.
@@ -632,7 +632,7 @@ void StyleResolver::compute_defaulted_values(StyleProperties& style, DOM::Elemen
     }
 }
 
-void StyleResolver::compute_font(StyleProperties& style, DOM::Element const* element) const
+void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* element) const
 {
     // To compute the font, first ensure that we've defaulted the relevant CSS font properties.
     // FIXME: This should be more sophisticated.
@@ -810,7 +810,7 @@ void StyleResolver::compute_font(StyleProperties& style, DOM::Element const* ele
     style.set_computed_font(found_font.release_nonnull());
 }
 
-void StyleResolver::absolutize_values(StyleProperties& style, DOM::Element const*) const
+void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const*) const
 {
     auto viewport_rect = document().browsing_context()->viewport_rect();
     auto font_metrics = style.computed_font().metrics('M');
@@ -827,7 +827,7 @@ void StyleResolver::absolutize_values(StyleProperties& style, DOM::Element const
     }
 }
 
-NonnullRefPtr<StyleProperties> StyleResolver::create_document_style() const
+NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
 {
     auto style = StyleProperties::create();
     compute_font(style, nullptr);
@@ -836,7 +836,7 @@ NonnullRefPtr<StyleProperties> StyleResolver::create_document_style() const
     return style;
 }
 
-NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(DOM::Element& element) const
+NonnullRefPtr<StyleProperties> StyleComputer::compute_style(DOM::Element& element) const
 {
     auto style = StyleProperties::create();
     // 1. Perform the cascade. This produces the "specified style"

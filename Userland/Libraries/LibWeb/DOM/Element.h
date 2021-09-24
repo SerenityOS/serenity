@@ -9,7 +9,7 @@
 #include <AK/FlyString.h>
 #include <AK/String.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
-#include <LibWeb/CSS/StyleResolver.h>
+#include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Attribute.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
@@ -95,11 +95,11 @@ public:
     const ShadowRoot* shadow_root() const { return m_shadow_root; }
     void set_shadow_root(RefPtr<ShadowRoot>);
 
-    Optional<CSS::StyleResolver::CustomPropertyResolutionTuple> resolve_custom_property(const String& custom_property_name) const
+    Optional<CSS::StyleComputer::CustomPropertyResolutionTuple> resolve_custom_property(const String& custom_property_name) const
     {
         return m_custom_properties.get(custom_property_name);
     }
-    void add_custom_property(const String& custom_property_name, CSS::StyleResolver::CustomPropertyResolutionTuple style_property)
+    void add_custom_property(const String& custom_property_name, CSS::StyleComputer::CustomPropertyResolutionTuple style_property)
     {
         m_custom_properties.set(custom_property_name, style_property);
     }
@@ -125,7 +125,7 @@ private:
     RefPtr<CSS::CSSStyleDeclaration> m_inline_style;
 
     RefPtr<CSS::StyleProperties> m_specified_css_values;
-    HashMap<String, CSS::StyleResolver::CustomPropertyResolutionTuple> m_custom_properties;
+    HashMap<String, CSS::StyleComputer::CustomPropertyResolutionTuple> m_custom_properties;
 
     Vector<FlyString> m_classes;
 

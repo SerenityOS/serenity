@@ -21,7 +21,7 @@ HTMLLabelElement::~HTMLLabelElement()
 
 RefPtr<Layout::Node> HTMLLabelElement::create_layout_node()
 {
-    auto style = document().style_resolver().resolve_style(*this);
+    auto style = document().style_computer().compute_style(*this);
     if (style->display() == CSS::Display::None)
         return nullptr;
 

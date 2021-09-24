@@ -91,7 +91,7 @@ public:
     static NonnullRefPtr<Gfx::Font> font_fallback(bool monospace, bool bold);
 
 private:
-    friend class StyleResolver;
+    friend class StyleComputer;
 
     HashMap<CSS::PropertyID, NonnullRefPtr<StyleValue>> m_property_values;
     Optional<CSS::Overflow> overflow(CSS::PropertyID) const;

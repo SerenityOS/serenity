@@ -7,7 +7,7 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
-#include <LibWeb/CSS/StyleResolver.h>
+#include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 
@@ -555,7 +555,7 @@ Optional<StyleProperty> ResolvedCSSStyleDeclaration::property(PropertyID propert
     const_cast<DOM::Document&>(m_element->document()).ensure_layout();
 
     if (!m_element->layout_node()) {
-        auto style = m_element->document().style_resolver().resolve_style(const_cast<DOM::Element&>(*m_element));
+        auto style = m_element->document().style_computer().compute_style(const_cast<DOM::Element&>(*m_element));
         if (auto maybe_property = style->property(property_id); maybe_property.has_value()) {
             return StyleProperty {
                 .property_id = property_id,

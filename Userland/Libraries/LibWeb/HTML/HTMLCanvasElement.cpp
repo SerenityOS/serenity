@@ -8,7 +8,7 @@
 #include <AK/Checked.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGWriter.h>
-#include <LibWeb/CSS/StyleResolver.h>
+#include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
@@ -39,7 +39,7 @@ unsigned HTMLCanvasElement::height() const
 
 RefPtr<Layout::Node> HTMLCanvasElement::create_layout_node()
 {
-    auto style = document().style_resolver().resolve_style(*this);
+    auto style = document().style_computer().compute_style(*this);
     if (style->display() == CSS::Display::None)
         return nullptr;
     return adopt_ref(*new Layout::CanvasBox(document(), *this, move(style)));

@@ -19,7 +19,7 @@
 #include <LibWeb/Bindings/ScriptExecutionContext.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
-#include <LibWeb/CSS/StyleResolver.h>
+#include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/CSS/StyleSheetList.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/DOM/DOMImplementation.h>
@@ -74,8 +74,8 @@ public:
 
     AK::URL parse_url(String const&) const;
 
-    CSS::StyleResolver& style_resolver() { return *m_style_resolver; }
-    const CSS::StyleResolver& style_resolver() const { return *m_style_resolver; }
+    CSS::StyleComputer& style_computer() { return *m_style_computer; }
+    const CSS::StyleComputer& style_computer() const { return *m_style_computer; }
 
     CSS::StyleSheetList& style_sheets() { return *m_style_sheets; }
     const CSS::StyleSheetList& style_sheets() const { return *m_style_sheets; }
@@ -314,7 +314,7 @@ private:
 
     unsigned m_referencing_node_count { 0 };
 
-    OwnPtr<CSS::StyleResolver> m_style_resolver;
+    OwnPtr<CSS::StyleComputer> m_style_computer;
     RefPtr<CSS::StyleSheetList> m_style_sheets;
     RefPtr<Node> m_hovered_node;
     RefPtr<Node> m_inspected_node;

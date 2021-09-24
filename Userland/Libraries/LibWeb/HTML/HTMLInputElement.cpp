@@ -46,7 +46,7 @@ RefPtr<Layout::Node> HTMLInputElement::create_layout_node()
     if (type() == "hidden")
         return nullptr;
 
-    auto style = document().style_resolver().resolve_style(*this);
+    auto style = document().style_computer().compute_style(*this);
     if (style->display() == CSS::Display::None)
         return nullptr;
 

@@ -23,7 +23,7 @@ HTMLIFrameElement::~HTMLIFrameElement()
 
 RefPtr<Layout::Node> HTMLIFrameElement::create_layout_node()
 {
-    auto style = document().style_resolver().resolve_style(*this);
+    auto style = document().style_computer().compute_style(*this);
     return adopt_ref(*new Layout::FrameBox(document(), *this, move(style)));
 }
 

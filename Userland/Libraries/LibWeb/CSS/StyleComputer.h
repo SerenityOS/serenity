@@ -22,16 +22,16 @@ struct MatchingRule {
     u32 specificity { 0 };
 };
 
-class StyleResolver {
+class StyleComputer {
 public:
-    explicit StyleResolver(DOM::Document&);
-    ~StyleResolver();
+    explicit StyleComputer(DOM::Document&);
+    ~StyleComputer();
 
     DOM::Document& document() { return m_document; }
     DOM::Document const& document() const { return m_document; }
 
     NonnullRefPtr<StyleProperties> create_document_style() const;
-    NonnullRefPtr<StyleProperties> resolve_style(DOM::Element&) const;
+    NonnullRefPtr<StyleProperties> compute_style(DOM::Element&) const;
 
     // https://www.w3.org/TR/css-cascade/#origin
     enum class CascadeOrigin {

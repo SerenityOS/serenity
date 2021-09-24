@@ -5,7 +5,7 @@
  */
 
 #include <LibGfx/Bitmap.h>
-#include <LibWeb/CSS/StyleResolver.h>
+#include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/HTMLObjectElement.h>
@@ -46,7 +46,7 @@ RefPtr<Layout::Node> HTMLObjectElement::create_layout_node()
     if (m_should_show_fallback_content)
         return HTMLElement::create_layout_node();
 
-    auto style = document().style_resolver().resolve_style(*this);
+    auto style = document().style_computer().compute_style(*this);
     if (style->display() == CSS::Display::None)
         return nullptr;
     if (m_image_loader.has_image())
