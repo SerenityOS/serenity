@@ -677,7 +677,7 @@ ThrowCompletionOr<Value> VM::call_internal(FunctionObject& function, Value this_
         MarkedValueList with_bound_arguments { heap() };
         append_bound_and_passed_arguments(with_bound_arguments, bound_function.bound_arguments(), move(arguments));
 
-        return call_internal(bound_function.target_function(), bound_function.bound_this(), move(with_bound_arguments));
+        return call_internal(bound_function.bound_target_function(), bound_function.bound_this(), move(with_bound_arguments));
     }
 
     // FIXME: prepare_for_ordinary_call() is not supposed to receive a BoundFunction, ProxyObject, etc. - ever.
