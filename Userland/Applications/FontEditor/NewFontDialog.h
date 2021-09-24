@@ -34,6 +34,7 @@ private:
         u8 mean_line;
         u8 presentation_size;
         u16 weight;
+        u8 slope;
         String name;
         String family;
         bool is_fixed_width;
@@ -47,6 +48,7 @@ private:
     RefPtr<GUI::TextBox> m_name_textbox;
     RefPtr<GUI::TextBox> m_family_textbox;
     RefPtr<GUI::ComboBox> m_weight_combobox;
+    RefPtr<GUI::ComboBox> m_slope_combobox;
     RefPtr<GUI::SpinBox> m_presentation_spinbox;
 
     RefPtr<GUI::WizardPage> m_glyph_properties_page;
@@ -60,4 +62,5 @@ private:
 
     Vector<String> m_font_list;
     Vector<String> m_font_weight_list;
+    Vector<String> m_font_slope_list;
 };
