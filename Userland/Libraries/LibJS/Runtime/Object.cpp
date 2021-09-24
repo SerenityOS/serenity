@@ -706,8 +706,6 @@ Value Object::internal_get(PropertyName const& property_name, Value receiver) co
     return TRY_OR_DISCARD(vm.call(*getter, receiver));
 }
 
-static bool ordinary_set_with_own_descriptor(Object&, PropertyName const&, Value, Value, Optional<PropertyDescriptor>);
-
 // 10.1.9 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-set-p-v-receiver
 bool Object::internal_set(PropertyName const& property_name, Value value, Value receiver)
 {
@@ -724,13 +722,13 @@ bool Object::internal_set(PropertyName const& property_name, Value value, Value 
         return {};
 
     // 3. Return OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc).
-    return ordinary_set_with_own_descriptor(*this, property_name, value, receiver, own_descriptor);
+    return ordinary_set_with_own_descriptor(property_name, value, receiver, own_descriptor);
 }
 
 // 10.1.9.2 OrdinarySetWithOwnDescriptor ( O, P, V, Receiver, ownDesc ), https://tc39.es/ecma262/#sec-ordinarysetwithowndescriptor
-bool ordinary_set_with_own_descriptor(Object& object, PropertyName const& property_name, Value value, Value receiver, Optional<PropertyDescriptor> own_descriptor)
+bool Object::ordinary_set_with_own_descriptor(PropertyName const& property_name, Value value, Value receiver, Optional<PropertyDescriptor> own_descriptor)
 {
-    auto& vm = object.vm();
+    auto& vm = this->vm();
 
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
@@ -738,7 +736,7 @@ bool ordinary_set_with_own_descriptor(Object& object, PropertyName const& proper
     // 2. If ownDesc is undefined, then
     if (!own_descriptor.has_value()) {
         // a. Let parent be ? O.[[GetPrototypeOf]]().
-        auto parent = object.internal_get_prototype_of();
+        auto parent = internal_get_prototype_of();
         if (vm.exception())
             return {};
 
