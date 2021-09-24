@@ -58,7 +58,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(GlobalObject& global_object, 
         m_this_mode = ThisMode::Global;
 
     // 15.1.3 Static Semantics: IsSimpleParameterList, https://tc39.es/ecma262/#sec-static-semantics-issimpleparameterlist
-    set_has_simple_parameter_list(all_of(m_formal_parameters, [&](auto& parameter) {
+    m_has_simple_parameter_list = all_of(m_formal_parameters, [&](auto& parameter) {
         if (parameter.is_rest)
             return false;
         if (parameter.default_value)
@@ -66,7 +66,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(GlobalObject& global_object, 
         if (!parameter.binding.template has<FlyString>())
             return false;
         return true;
-    }));
+    });
 }
 
 void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
