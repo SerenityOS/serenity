@@ -3,6 +3,7 @@ set -eu
 
 SCRIPT="$(dirname "${0}")"
 export SERENITY_ARCH="${SERENITY_ARCH:-i686}"
+export SERENITY_TOOLCHAIN="${SERENITY_TOOLCHAIN:-GCC}"
 
 if [ -z "${HOST_CC:=}" ]; then
     export HOST_CC="${CC:=cc}"
