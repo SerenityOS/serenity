@@ -132,16 +132,15 @@
                     }
 
                     @GUI::Label {
-                        name: "presentation_label"
+                        name: "slope_label"
                         fixed_width: 100
                         text_alignment: "CenterLeft"
-                        text: "Presentation size:"
+                        text: "Slope:"
                     }
 
-                    @GUI::SpinBox {
-                        name: "presentation_spinbox"
-                        min: 0
-                        max: 255
+                    @GUI::ComboBox {
+                        name: "slope_combobox"
+                        model_only: true
                     }
                 }
 
@@ -150,14 +149,14 @@
                     }
 
                     @GUI::Label {
-                        name: "spacing_label"
+                        name: "presentation_label"
                         fixed_width: 100
                         text_alignment: "CenterLeft"
-                        text: "Glyph spacing:"
+                        text: "Presentation size:"
                     }
 
                     @GUI::SpinBox {
-                        name: "spacing_spinbox"
+                        name: "presentation_spinbox"
                         min: 0
                         max: 255
                     }
@@ -200,6 +199,19 @@
                 @GUI::Widget {
                     fixed_height: 22
                     layout: @GUI::HorizontalBoxLayout {
+                    }
+
+                    @GUI::Label {
+                        name: "spacing_label"
+                        fixed_width: 100
+                        text_alignment: "CenterLeft"
+                        text: "Glyph spacing:"
+                    }
+
+                    @GUI::SpinBox {
+                        name: "spacing_spinbox"
+                        min: 0
+                        max: 255
                     }
 
                     @GUI::CheckBox {

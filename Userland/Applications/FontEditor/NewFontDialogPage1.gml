@@ -4,7 +4,7 @@
     }
 
     @GUI::Widget {
-        fixed_height: 138
+        fixed_height: 160
         layout: @GUI::VerticalBoxLayout {
         }
 
@@ -54,6 +54,23 @@
 
             @GUI::ComboBox {
                 name: "weight_combobox"
+                fixed_width: 180
+                model_only: true
+            }
+        }
+
+        @GUI::Widget {
+            layout: @GUI::HorizontalBoxLayout {
+            }
+
+            @GUI::Label {
+                fixed_width: 100
+                text_alignment: "CenterLeft"
+                text: "Slope:"
+            }
+
+            @GUI::ComboBox {
+                name: "slope_combobox"
                 fixed_width: 180
                 model_only: true
             }
