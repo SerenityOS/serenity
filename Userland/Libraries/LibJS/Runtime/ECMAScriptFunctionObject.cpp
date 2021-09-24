@@ -100,6 +100,11 @@ void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
     visitor.visit(m_environment);
     visitor.visit(m_realm);
     visitor.visit(m_home_object);
+
+    for (auto& field : m_fields) {
+        field.name.visit_edges(visitor);
+        visitor.visit(field.initializer);
+    }
 }
 
 FunctionEnvironment* ECMAScriptFunctionObject::create_environment(FunctionObject& function_being_invoked)
@@ -243,6 +248,19 @@ void ECMAScriptFunctionObject::set_name(const FlyString& name)
     m_name = name;
     auto success = define_property_or_throw(vm.names.name, { .value = js_string(vm, m_name), .writable = false, .enumerable = false, .configurable = true });
     VERIFY(success);
+}
+
+// 7.3.31 DefineField ( receiver, fieldRecord ), https://tc39.es/ecma262/#sec-definefield
+void ECMAScriptFunctionObject::InstanceField::define_field(VM& vm, Object& receiver) const
+{
+    Value init_value = js_undefined();
+    if (initializer) {
+        auto init_value_or_error = vm.call(*initializer, receiver.value_of());
+        if (init_value_or_error.is_error())
+            return;
+        init_value = init_value_or_error.release_value();
+    }
+    receiver.create_data_property_or_throw(name, init_value);
 }
 
 }

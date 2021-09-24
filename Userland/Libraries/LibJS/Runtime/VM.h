@@ -280,7 +280,7 @@ public:
     Function<void(const Promise&)> on_promise_unhandled_rejection;
     Function<void(const Promise&)> on_promise_rejection_handled;
 
-    void initialize_instance_elements(Object& object, FunctionObject& constructor);
+    void initialize_instance_elements(Object& object, ECMAScriptFunctionObject& constructor);
 
     CustomData* custom_data() { return m_custom_data; }
 

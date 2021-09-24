@@ -461,7 +461,7 @@ static void append_bound_and_passed_arguments(MarkedValueList& arguments, Vector
 }
 
 // 7.3.32 InitializeInstanceElements ( O, constructor ), https://tc39.es/ecma262/#sec-initializeinstanceelements
-void VM::initialize_instance_elements(Object& object, FunctionObject& constructor)
+void VM::initialize_instance_elements(Object& object, ECMAScriptFunctionObject& constructor)
 {
     for (auto& field : constructor.fields()) {
         field.define_field(*this, object);
@@ -509,9 +509,9 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
     // If we are a Derived constructor, |this| has not been constructed before super is called.
     callee_context.this_value = this_argument;
 
-    if (!is<ECMAScriptFunctionObject>(function) || static_cast<ECMAScriptFunctionObject&>(function).constructor_kind() == ECMAScriptFunctionObject::ConstructorKind::Base) {
+    if (is<ECMAScriptFunctionObject>(function) && static_cast<ECMAScriptFunctionObject&>(function).constructor_kind() == ECMAScriptFunctionObject::ConstructorKind::Base) {
         VERIFY(this_argument.is_object());
-        initialize_instance_elements(this_argument.as_object(), function);
+        initialize_instance_elements(this_argument.as_object(), static_cast<ECMAScriptFunctionObject&>(function));
         if (exception())
             return {};
     }
