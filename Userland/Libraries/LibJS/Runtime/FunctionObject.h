@@ -25,10 +25,6 @@ public:
 
     BoundFunction* bind(Value bound_this_value, Vector<Value> arguments);
 
-    Value bound_this() const { return m_bound_this; }
-
-    const Vector<Value>& bound_arguments() const { return m_bound_arguments; }
-
     virtual bool is_strict_mode() const { return false; }
 
     // [[Environment]]
@@ -40,15 +36,10 @@ public:
     virtual Realm* realm() const { return nullptr; }
 
 protected:
-    virtual void visit_edges(Visitor&) override;
-
     explicit FunctionObject(Object& prototype);
-    FunctionObject(Value bound_this, Vector<Value> bound_arguments, Object& prototype);
 
 private:
     virtual bool is_function() const override { return true; }
-    Value m_bound_this;
-    Vector<Value> m_bound_arguments;
 };
 
 }
