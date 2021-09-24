@@ -746,7 +746,11 @@ void FileSystemModel::set_data(ModelIndex const& index, Variant const& data)
     if (rc < 0) {
         if (on_rename_error)
             on_rename_error(errno, strerror(errno));
+        return;
     }
+
+    if (on_rename_successful)
+        on_rename_successful(node.full_path(), new_full_path);
 }
 
 Vector<ModelIndex> FileSystemModel::matches(StringView const& searching, unsigned flags, ModelIndex const& index)
