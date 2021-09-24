@@ -26,6 +26,7 @@
 #include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/Date.h>
+#include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -38,7 +39,6 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
-#include <LibJS/Runtime/OrdinaryFunctionObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Promise.h>
 #include <LibJS/Runtime/ProxyObject.h>
@@ -255,8 +255,8 @@ static void print_object(JS::Object& object, HashTable<JS::Object*>& seen_object
 static void print_function(JS::Object const& object, HashTable<JS::Object*>&)
 {
     print_type(object.class_name());
-    if (is<JS::OrdinaryFunctionObject>(object))
-        out(" {}", static_cast<JS::OrdinaryFunctionObject const&>(object).name());
+    if (is<JS::ECMAScriptFunctionObject>(object))
+        out(" {}", static_cast<JS::ECMAScriptFunctionObject const&>(object).name());
     else if (is<JS::NativeFunction>(object))
         out(" {}", static_cast<JS::NativeFunction const&>(object).name());
 }

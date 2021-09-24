@@ -18,6 +18,7 @@
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
+#include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -25,7 +26,6 @@
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
-#include <LibJS/Runtime/OrdinaryFunctionObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/RegExpObject.h>
@@ -68,8 +68,8 @@ static void update_function_name(Value value, FlyString const& name)
     if (!value.is_function())
         return;
     auto& function = value.as_function();
-    if (is<OrdinaryFunctionObject>(function) && function.name().is_empty())
-        static_cast<OrdinaryFunctionObject&>(function).set_name(name);
+    if (is<ECMAScriptFunctionObject>(function) && function.name().is_empty())
+        static_cast<ECMAScriptFunctionObject&>(function).set_name(name);
 }
 
 static String get_function_name(GlobalObject& global_object, Value value)
@@ -111,7 +111,7 @@ Value FunctionExpression::execute(Interpreter& interpreter, GlobalObject& global
         func_env->create_immutable_binding(global_object, name(), false);
     }
 
-    auto closure = OrdinaryFunctionObject::create(global_object, name(), body(), parameters(), function_length(), func_env, kind(), is_strict_mode(), is_arrow_function());
+    auto closure = ECMAScriptFunctionObject::create(global_object, name(), body(), parameters(), function_length(), func_env, kind(), is_strict_mode(), is_arrow_function());
 
     if (has_identifier)
         func_env->initialize_binding(global_object, name(), closure);
@@ -874,8 +874,8 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
 
     update_function_name(class_constructor_value, m_name);
 
-    VERIFY(class_constructor_value.is_function() && is<OrdinaryFunctionObject>(class_constructor_value.as_function()));
-    auto* class_constructor = static_cast<OrdinaryFunctionObject*>(&class_constructor_value.as_function());
+    VERIFY(class_constructor_value.is_function() && is<ECMAScriptFunctionObject>(class_constructor_value.as_function()));
+    auto* class_constructor = static_cast<ECMAScriptFunctionObject*>(&class_constructor_value.as_function());
     class_constructor->set_is_class_constructor();
     Value super_constructor = js_undefined();
     if (!m_super_class.is_null()) {
@@ -970,7 +970,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
             auto copy_initializer = field.initializer();
             auto body = create_ast_node<ExpressionStatement>(field.initializer()->source_range(), copy_initializer.release_nonnull());
             // FIXME: A potential optimization is not creating the functions here since these are never directly accessible.
-            initializer = OrdinaryFunctionObject::create(interpreter.global_object(), property_key.to_display_string(), *body, {}, 0, interpreter.lexical_environment(), FunctionKind::Regular, false);
+            initializer = ECMAScriptFunctionObject::create(interpreter.global_object(), property_key.to_display_string(), *body, {}, 0, interpreter.lexical_environment(), FunctionKind::Regular, false);
             initializer->set_home_object(field.is_static() ? class_constructor : &class_prototype.as_object());
         }
 
