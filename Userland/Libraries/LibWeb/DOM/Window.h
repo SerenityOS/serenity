@@ -80,6 +80,9 @@ public:
     NonnullRefPtr<CSS::CSSStyleDeclaration> get_computed_style(DOM::Element&) const;
     NonnullRefPtr<CSS::MediaQueryList> match_media(String);
 
+    float scroll_x() const;
+    float scroll_y() const;
+
 private:
     explicit Window(Document&);
 

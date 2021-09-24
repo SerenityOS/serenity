@@ -510,9 +510,7 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::scroll_x_getter)
     auto* impl = impl_from(vm, global_object);
     if (!impl)
         return {};
-    if (!impl->page())
-        return JS::Value(0);
-    return JS::Value(impl->page()->top_level_browsing_context().viewport_scroll_offset().x());
+    return JS::Value(impl->scroll_x());
 }
 
 // https://www.w3.org/TR/cssom-view/#dom-window-scrolly
@@ -521,9 +519,7 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::scroll_y_getter)
     auto* impl = impl_from(vm, global_object);
     if (!impl)
         return {};
-    if (!impl->page())
-        return JS::Value(0);
-    return JS::Value(impl->page()->top_level_browsing_context().viewport_scroll_offset().y());
+    return JS::Value(impl->scroll_y());
 }
 
 enum class ScrollBehavior {
