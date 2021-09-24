@@ -150,7 +150,7 @@ ThrowCompletionOr<Realm*> get_function_realm(GlobalObject& global_object, Functi
         auto& bound_function = static_cast<BoundFunction const&>(function);
 
         // a. Let target be obj.[[BoundTargetFunction]].
-        auto& target = bound_function.target_function();
+        auto& target = bound_function.bound_target_function();
 
         // b. Return ? GetFunctionRealm(target).
         return get_function_realm(global_object, target);
