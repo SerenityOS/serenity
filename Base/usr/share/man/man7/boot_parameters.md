@@ -16,7 +16,7 @@ trailer can be omitted for specific parameters.
 List of options:
 
 * **`acpi`** - This parameter expects one of the following values. **`on`** - Boot with full ACPI support, using ACPI 
-   Machine Language interpretation (default). **`limited`** - Booth with limited ACPI support. **`off`** - Don't initialize ACPI at all.
+   Machine Language interpretation (default). **`limited`** - Boot with limited ACPI support. **`off`** - Don't initialize ACPI at all.
 
 * **`ahci_reset_mode`** - This parameter expects one of the following values. **`controller`** - Reset just the AHCI controller on boot.
    **`none`** - Don't perform any AHCI reset.  **`complete`** - Reset the AHCI controller, and all AHCI ports on boot.
