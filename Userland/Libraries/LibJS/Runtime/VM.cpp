@@ -636,7 +636,6 @@ void VM::prepare_for_ordinary_call(FunctionObject& function, ExecutionContext& c
 // 10.2.1.2 OrdinaryCallBindThis ( F, calleeContext, thisArgument ), https://tc39.es/ecma262/#sec-ordinarycallbindthis
 void VM::ordinary_call_bind_this(FunctionObject& function, ExecutionContext& callee_context, Value this_argument)
 {
-    auto this_mode = function.this_mode();
     auto* callee_realm = function.realm();
 
     auto* local_environment = callee_context.lexical_environment;
@@ -644,7 +643,7 @@ void VM::ordinary_call_bind_this(FunctionObject& function, ExecutionContext& cal
 
     // This almost as the spec describes it however we sometimes don't have callee_realm when dealing
     // with proxies and arrow functions however this does seemingly achieve spec like behavior.
-    if (!callee_realm || this_mode == FunctionObject::ThisMode::Lexical) {
+    if (!callee_realm || (is<ECMAScriptFunctionObject>(function) && static_cast<ECMAScriptFunctionObject&>(function).this_mode() == ECMAScriptFunctionObject::ThisMode::Lexical)) {
         return;
     }
 
