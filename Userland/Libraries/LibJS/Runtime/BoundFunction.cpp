@@ -9,11 +9,11 @@
 
 namespace JS {
 
-BoundFunction::BoundFunction(GlobalObject& global_object, FunctionObject& target_function, Value bound_this, Vector<Value> arguments, i32 length, Object* constructor_prototype)
+BoundFunction::BoundFunction(GlobalObject& global_object, FunctionObject& bound_target_function, Value bound_this, Vector<Value> arguments, i32 length, Object* constructor_prototype)
     : FunctionObject(bound_this, move(arguments), *global_object.function_prototype())
-    , m_target_function(&target_function)
+    , m_bound_target_function(&bound_target_function)
     , m_constructor_prototype(constructor_prototype)
-    , m_name(String::formatted("bound {}", target_function.name()))
+    , m_name(String::formatted("bound {}", bound_target_function.name()))
     , m_length(length)
 {
 }
@@ -31,7 +31,7 @@ BoundFunction::~BoundFunction()
 
 Value BoundFunction::call()
 {
-    return m_target_function->call();
+    return m_bound_target_function->call();
 }
 
 Value BoundFunction::construct(FunctionObject& new_target)
@@ -41,18 +41,18 @@ Value BoundFunction::construct(FunctionObject& new_target)
         if (vm().exception())
             return {};
     }
-    return m_target_function->construct(new_target);
+    return m_bound_target_function->construct(new_target);
 }
 
 FunctionEnvironment* BoundFunction::create_environment(FunctionObject& function_being_invoked)
 {
-    return m_target_function->create_environment(function_being_invoked);
+    return m_bound_target_function->create_environment(function_being_invoked);
 }
 
 void BoundFunction::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_target_function);
+    visitor.visit(m_bound_target_function);
     visitor.visit(m_constructor_prototype);
 }
 

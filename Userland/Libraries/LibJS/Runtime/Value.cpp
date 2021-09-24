@@ -236,7 +236,7 @@ bool Value::is_constructor() const
     if (is<NativeFunction>(as_object()))
         return static_cast<const NativeFunction&>(as_object()).has_constructor();
     if (is<BoundFunction>(as_object()))
-        return Value(&static_cast<const BoundFunction&>(as_object()).target_function()).is_constructor();
+        return Value(&static_cast<const BoundFunction&>(as_object()).bound_target_function()).is_constructor();
     // ECMAScriptFunctionObject
     return true;
 }
@@ -1310,7 +1310,7 @@ Value ordinary_has_instance(GlobalObject& global_object, Value lhs, Value rhs)
 
     if (is<BoundFunction>(rhs_function)) {
         auto& bound_target = static_cast<const BoundFunction&>(rhs_function);
-        return instance_of(global_object, lhs, Value(&bound_target.target_function()));
+        return instance_of(global_object, lhs, Value(&bound_target.bound_target_function()));
     }
 
     if (!lhs.is_object())

@@ -30,7 +30,7 @@ FunctionObject::~FunctionObject()
 BoundFunction* FunctionObject::bind(Value bound_this_value, Vector<Value> arguments)
 {
     auto& vm = this->vm();
-    FunctionObject& target_function = is<BoundFunction>(*this) ? static_cast<BoundFunction&>(*this).target_function() : *this;
+    FunctionObject& target_function = is<BoundFunction>(*this) ? static_cast<BoundFunction&>(*this).bound_target_function() : *this;
 
     auto bound_this_object = [&vm, bound_this_value, this]() -> Value {
         if (!m_bound_this.is_empty())
