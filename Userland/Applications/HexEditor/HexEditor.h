@@ -14,6 +14,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StdLibExtras.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/TextAlignment.h>
@@ -38,7 +39,7 @@ public:
     bool write_to_file(int fd);
 
     void select_all();
-    bool has_selection() const { return !(m_selection_start == -1 || m_selection_end == -1 || (m_selection_end - m_selection_start) < 0 || m_buffer.is_empty()); }
+    bool has_selection() const { return !(m_selection_start == -1 || m_selection_end == -1 || (m_selection_end - m_selection_start) <= 0 || m_buffer.is_empty()); }
     size_t selection_size();
     int selection_start_offset() const { return m_selection_start; }
     bool copy_selected_text_to_clipboard();
@@ -79,6 +80,8 @@ private:
     int m_position { 0 };
     int m_byte_position { 0 }; // 0 or 1
     EditMode m_edit_mode { Hex };
+    NonnullRefPtr<Core::Timer> m_blink_timer;
+    bool m_cursor_blink_active { false };
 
     void scroll_position_into_view(int position);
 
@@ -93,4 +96,6 @@ private:
     void set_content_length(int); // I might make this public if I add fetching data on demand.
     void update_status();
     void did_change();
+
+    void reset_cursor_blink_state();
 };
