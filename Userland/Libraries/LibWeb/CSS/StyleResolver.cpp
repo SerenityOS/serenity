@@ -152,7 +152,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
     if (property_id == CSS::PropertyID::TextDecoration) {
         if (value.is_text_decoration()) {
-            auto& text_decoration = static_cast<TextDecorationStyleValue const&>(value);
+            auto& text_decoration = value.as_text_decoration();
             style.set_property(CSS::PropertyID::TextDecorationLine, text_decoration.line());
             style.set_property(CSS::PropertyID::TextDecorationStyle, text_decoration.style());
             style.set_property(CSS::PropertyID::TextDecorationColor, text_decoration.color());
@@ -167,7 +167,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
     if (property_id == CSS::PropertyID::Overflow) {
         if (value.is_overflow()) {
-            auto& overflow = static_cast<OverflowStyleValue const&>(value);
+            auto& overflow = value.as_overflow();
             style.set_property(CSS::PropertyID::OverflowX, overflow.overflow_x());
             style.set_property(CSS::PropertyID::OverflowY, overflow.overflow_y());
             return;
@@ -189,7 +189,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
     if (property_id == CSS::PropertyID::BorderRadius) {
         if (value.is_value_list()) {
-            auto& values_list = static_cast<StyleValueList const&>(value);
+            auto& values_list = value.as_value_list();
             assign_edge_values(PropertyID::BorderTopLeftRadius, PropertyID::BorderTopRightRadius, PropertyID::BorderBottomRightRadius, PropertyID::BorderBottomLeftRadius, values_list.values());
             return;
         }
@@ -225,7 +225,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         }
 
         if (value.is_border()) {
-            auto& border = static_cast<BorderStyleValue const&>(value);
+            auto& border = value.as_border();
             if (contains(Edge::Top, edge)) {
                 style.set_property(PropertyID::BorderTopWidth, border.border_width());
                 style.set_property(PropertyID::BorderTopStyle, border.border_style());
@@ -253,7 +253,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
     if (property_id == CSS::PropertyID::BorderStyle) {
         if (value.is_value_list()) {
-            auto& values_list = static_cast<StyleValueList const&>(value);
+            auto& values_list = value.as_value_list();
             assign_edge_values(PropertyID::BorderTopStyle, PropertyID::BorderRightStyle, PropertyID::BorderBottomStyle, PropertyID::BorderLeftStyle, values_list.values());
             return;
         }
@@ -267,7 +267,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
     if (property_id == CSS::PropertyID::BorderWidth) {
         if (value.is_value_list()) {
-            auto& values_list = static_cast<StyleValueList const&>(value);
+            auto& values_list = value.as_value_list();
             assign_edge_values(PropertyID::BorderTopWidth, PropertyID::BorderRightWidth, PropertyID::BorderBottomWidth, PropertyID::BorderLeftWidth, values_list.values());
             return;
         }
@@ -281,7 +281,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
     if (property_id == CSS::PropertyID::BorderColor) {
         if (value.is_value_list()) {
-            auto& values_list = static_cast<StyleValueList const&>(value);
+            auto& values_list = value.as_value_list();
             assign_edge_values(PropertyID::BorderTopColor, PropertyID::BorderRightColor, PropertyID::BorderBottomColor, PropertyID::BorderLeftColor, values_list.values());
             return;
         }
@@ -302,17 +302,17 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         };
 
         if (value.is_background()) {
-            auto& background = static_cast<CSS::BackgroundStyleValue const&>(value);
+            auto& background = value.as_background();
             set_single_background(background);
             return;
         }
         if (value.is_value_list()) {
-            auto& background_list = static_cast<CSS::StyleValueList const&>(value).values();
+            auto& background_list = value.as_value_list().values();
             // FIXME: Handle multiple backgrounds.
             if (!background_list.is_empty()) {
                 auto& background = background_list.first();
                 if (background.is_background())
-                    set_single_background(static_cast<CSS::BackgroundStyleValue const&>(background));
+                    set_single_background(background.as_background());
             }
             return;
         }
@@ -326,7 +326,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
     if (property_id == CSS::PropertyID::BackgroundImage) {
         if (value.is_value_list()) {
-            auto& background_image_list = static_cast<CSS::StyleValueList const&>(value).values();
+            auto& background_image_list = value.as_value_list().values();
             // FIXME: Handle multiple backgrounds.
             if (!background_image_list.is_empty()) {
                 auto& background_image = background_image_list.first();
@@ -341,12 +341,12 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
     if (property_id == CSS::PropertyID::BackgroundRepeat) {
         if (value.is_value_list()) {
-            auto& background_repeat_list = static_cast<CSS::StyleValueList const&>(value).values();
+            auto& background_repeat_list = value.as_value_list().values();
             // FIXME: Handle multiple backgrounds.
             if (!background_repeat_list.is_empty()) {
                 auto& maybe_background_repeat = background_repeat_list.first();
                 if (maybe_background_repeat.is_background_repeat()) {
-                    auto& background_repeat = static_cast<BackgroundRepeatStyleValue const&>(maybe_background_repeat);
+                    auto& background_repeat = maybe_background_repeat.as_background_repeat();
                     set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatX, background_repeat.repeat_x(), document, true);
                     set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatY, background_repeat.repeat_y(), document, true);
                 }
@@ -354,7 +354,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
         if (value.is_background_repeat()) {
-            auto& background_repeat = static_cast<BackgroundRepeatStyleValue const&>(value);
+            auto& background_repeat = value.as_background_repeat();
             set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatX, background_repeat.repeat_x(), document, true);
             set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatY, background_repeat.repeat_y(), document, true);
             return;
@@ -376,7 +376,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
     if (property_id == CSS::PropertyID::Margin) {
         if (value.is_value_list()) {
-            auto& values_list = static_cast<StyleValueList const&>(value);
+            auto& values_list = value.as_value_list();
             assign_edge_values(PropertyID::MarginTop, PropertyID::MarginRight, PropertyID::MarginBottom, PropertyID::MarginLeft, values_list.values());
             return;
         }
@@ -390,7 +390,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
     if (property_id == CSS::PropertyID::Padding) {
         if (value.is_value_list()) {
-            auto& values_list = static_cast<StyleValueList const&>(value);
+            auto& values_list = value.as_value_list();
             assign_edge_values(PropertyID::PaddingTop, PropertyID::PaddingRight, PropertyID::PaddingBottom, PropertyID::PaddingLeft, values_list.values());
             return;
         }
@@ -404,7 +404,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
     if (property_id == CSS::PropertyID::ListStyle) {
         if (value.is_list_style()) {
-            auto& list_style = static_cast<CSS::ListStyleStyleValue const&>(value);
+            auto& list_style = value.as_list_style();
             style.set_property(CSS::PropertyID::ListStylePosition, list_style.position());
             style.set_property(CSS::PropertyID::ListStyleImage, list_style.image());
             style.set_property(CSS::PropertyID::ListStyleType, list_style.style_type());
@@ -419,7 +419,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
     if (property_id == CSS::PropertyID::Font) {
         if (value.is_font()) {
-            auto& font_shorthand = static_cast<CSS::FontStyleValue const&>(value);
+            auto& font_shorthand = value.as_font();
             style.set_property(CSS::PropertyID::FontSize, font_shorthand.font_size());
             style.set_property(CSS::PropertyID::FontFamily, font_shorthand.font_families());
             style.set_property(CSS::PropertyID::FontStyle, font_shorthand.font_style());
@@ -440,7 +440,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
     if (property_id == CSS::PropertyID::Flex) {
         if (value.is_flex()) {
-            auto& flex = static_cast<CSS::FlexStyleValue const&>(value);
+            auto& flex = value.as_flex();
             style.set_property(CSS::PropertyID::FlexGrow, flex.grow());
             style.set_property(CSS::PropertyID::FlexShrink, flex.shrink());
             style.set_property(CSS::PropertyID::FlexBasis, flex.basis());
@@ -455,7 +455,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
     if (property_id == CSS::PropertyID::FlexFlow) {
         if (value.is_flex_flow()) {
-            auto& flex_flow = static_cast<FlexFlowStyleValue const&>(value);
+            auto& flex_flow = value.as_flex_flow();
             style.set_property(CSS::PropertyID::FlexDirection, flex_flow.flex_direction());
             style.set_property(CSS::PropertyID::FlexWrap, flex_flow.flex_wrap());
             return;
@@ -517,7 +517,7 @@ void StyleResolver::cascade_declarations(StyleProperties& style, DOM::Element& e
                 continue;
             auto property_value = property.value;
             if (property.value->is_custom_property()) {
-                auto custom_property_name = static_cast<CSS::CustomStyleValue const&>(*property.value).custom_property_name();
+                auto custom_property_name = property.value->as_custom_property().custom_property_name();
                 auto resolved = resolve_custom_property(element, custom_property_name);
                 if (resolved.has_value()) {
                     property_value = resolved.value().value;
