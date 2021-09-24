@@ -682,35 +682,37 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::history_getter)
     return wrap(global_object, impl->associated_document().history());
 }
 
-#define __ENUMERATE(attribute, event_name)                              \
-    JS_DEFINE_NATIVE_FUNCTION(WindowObject::attribute##_getter)         \
-    {                                                                   \
-        auto* impl = impl_from(vm, global_object);                      \
-        if (!impl)                                                      \
-            return {};                                                  \
-        auto retval = impl->attribute();                                \
-        if (retval.callback.is_null())                                  \
-            return JS::js_null();                                       \
-        return retval.callback.cell();                                  \
-    }                                                                   \
-    JS_DEFINE_NATIVE_FUNCTION(WindowObject::attribute##_setter)         \
-    {                                                                   \
-        auto* impl = impl_from(vm, global_object);                      \
-        if (!impl)                                                      \
-            return {};                                                  \
-        auto value = vm.argument(0);                                    \
-        HTML::EventHandler cpp_value;                                   \
-        if (value.is_function()) {                                      \
-            cpp_value.callback = JS::make_handle(&value.as_function()); \
-        } else if (value.is_string()) {                                 \
-            cpp_value.string = value.as_string().string();              \
-        } else {                                                        \
-            return {};                                                  \
-        }                                                               \
-        (void)throw_dom_exception_if_needed(vm, global_object, [&] {    \
-            return impl->set_##attribute(cpp_value);                    \
-        });                                                             \
-        return {};                                                      \
+#define __ENUMERATE(attribute, event_name)                                   \
+    JS_DEFINE_NATIVE_FUNCTION(WindowObject::attribute##_getter)              \
+    {                                                                        \
+        auto* impl = impl_from(vm, global_object);                           \
+        if (!impl)                                                           \
+            return {};                                                       \
+        auto retval = impl->attribute();                                     \
+        if (retval.callback.is_null())                                       \
+            return JS::js_null();                                            \
+        return retval.callback.cell();                                       \
+    }                                                                        \
+    JS_DEFINE_NATIVE_FUNCTION(WindowObject::attribute##_setter)              \
+    {                                                                        \
+        auto* impl = impl_from(vm, global_object);                           \
+        if (!impl)                                                           \
+            return {};                                                       \
+        auto value = vm.argument(0);                                         \
+        HTML::EventHandler cpp_value;                                        \
+        if (value.is_function()) {                                           \
+            cpp_value.callback = JS::make_handle(&value.as_function());      \
+        } else if (value.is_string()) {                                      \
+            cpp_value.string = value.as_string().string();                   \
+        } else {                                                             \
+            return JS::js_undefined();                                       \
+        }                                                                    \
+        auto result = throw_dom_exception_if_needed(vm, global_object, [&] { \
+            return impl->set_##attribute(cpp_value);                         \
+        });                                                                  \
+        if (should_return_empty(result))                                     \
+            return {};                                                       \
+        return JS::js_undefined();                                           \
     }
 ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
