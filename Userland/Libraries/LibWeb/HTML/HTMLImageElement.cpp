@@ -6,7 +6,7 @@
 
 #include <LibGfx/Bitmap.h>
 #include <LibWeb/CSS/Parser/Parser.h>
-#include <LibWeb/CSS/StyleResolver.h>
+#include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/EventNames.h>
@@ -70,7 +70,7 @@ void HTMLImageElement::parse_attribute(const FlyString& name, const String& valu
 
 RefPtr<Layout::Node> HTMLImageElement::create_layout_node()
 {
-    auto style = document().style_resolver().resolve_style(*this);
+    auto style = document().style_computer().compute_style(*this);
     if (style->display() == CSS::Display::None)
         return nullptr;
     return adopt_ref(*new Layout::ImageBox(document(), *this, move(style), m_image_loader));

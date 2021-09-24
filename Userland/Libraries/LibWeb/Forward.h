@@ -26,7 +26,7 @@ class PropertyOwningCSSStyleDeclaration;
 class Screen;
 class Selector;
 class StyleProperties;
-class StyleResolver;
+class StyleComputer;
 class StyleSheet;
 enum class Display;
 

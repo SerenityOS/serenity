@@ -5,7 +5,7 @@
  */
 
 #include <LibGfx/Painter.h>
-#include <LibWeb/CSS/StyleResolver.h>
+#include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/Layout/SVGSVGBox.h>
@@ -21,7 +21,7 @@ SVGSVGElement::SVGSVGElement(DOM::Document& document, QualifiedName qualified_na
 
 RefPtr<Layout::Node> SVGSVGElement::create_layout_node()
 {
-    auto style = document().style_resolver().resolve_style(*this);
+    auto style = document().style_computer().compute_style(*this);
     if (style->display() == CSS::Display::None)
         return nullptr;
     return adopt_ref(*new Layout::SVGSVGBox(document(), *this, move(style)));

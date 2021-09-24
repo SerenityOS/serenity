@@ -103,7 +103,7 @@ bool Element::has_class(const FlyString& class_name, CaseSensitivity case_sensit
 
 RefPtr<Layout::Node> Element::create_layout_node()
 {
-    auto style = document().style_resolver().resolve_style(*this);
+    auto style = document().style_computer().compute_style(*this);
     const_cast<Element&>(*this).m_specified_css_values = style;
     auto display = style->display();
 
@@ -203,7 +203,7 @@ void Element::recompute_style()
     set_needs_style_update(false);
     VERIFY(parent());
     auto old_specified_css_values = m_specified_css_values;
-    auto new_specified_css_values = document().style_resolver().resolve_style(*this);
+    auto new_specified_css_values = document().style_computer().compute_style(*this);
     m_specified_css_values = new_specified_css_values;
     if (!layout_node()) {
         if (new_specified_css_values->display() == CSS::Display::None)

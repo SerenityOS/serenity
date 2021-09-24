@@ -31,9 +31,9 @@ set(SOURCES
     CSS/Screen.cpp
     CSS/Selector.cpp
     CSS/SelectorEngine.cpp
+    CSS/StyleComputer.cpp
     CSS/StyleInvalidator.cpp
     CSS/StyleProperties.cpp
-    CSS/StyleResolver.cpp
     CSS/StyleSheet.cpp
     CSS/StyleSheetList.cpp
     CSS/StyleValue.cpp

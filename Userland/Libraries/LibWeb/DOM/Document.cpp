@@ -15,7 +15,7 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/CSS/StyleResolver.h>
+#include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/DOMException.h>
@@ -59,7 +59,7 @@ namespace Web::DOM {
 
 Document::Document(const AK::URL& url)
     : ParentNode(*this, NodeType::DOCUMENT_NODE)
-    , m_style_resolver(make<CSS::StyleResolver>(*this))
+    , m_style_computer(make<CSS::StyleComputer>(*this))
     , m_style_sheets(CSS::StyleSheetList::create(*this))
     , m_url(url)
     , m_window(Window::create_with_document(*this))
@@ -451,7 +451,7 @@ void Document::update_style()
 
 RefPtr<Layout::Node> Document::create_layout_node()
 {
-    return adopt_ref(*new Layout::InitialContainingBlock(*this, style_resolver().create_document_style()));
+    return adopt_ref(*new Layout::InitialContainingBlock(*this, style_computer().create_document_style()));
 }
 
 void Document::set_link_color(Color color)
