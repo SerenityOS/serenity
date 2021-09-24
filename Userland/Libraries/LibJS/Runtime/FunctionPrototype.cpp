@@ -121,7 +121,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
         auto& function = static_cast<ECMAScriptFunctionObject&>(*this_object);
         StringBuilder parameters_builder;
         auto first = true;
-        for (auto& parameter : function.parameters()) {
+        for (auto& parameter : function.formal_parameters()) {
             // FIXME: Also stringify binding patterns.
             if (auto* name_ptr = parameter.binding.get_pointer<FlyString>()) {
                 if (!first)

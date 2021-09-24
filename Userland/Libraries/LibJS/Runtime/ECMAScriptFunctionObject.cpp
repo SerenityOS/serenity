@@ -23,7 +23,7 @@
 
 namespace JS {
 
-ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind kind, bool is_strict, bool is_arrow_function)
+ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_object, FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind kind, bool is_strict, bool is_arrow_function)
 {
     Object* prototype = nullptr;
     switch (kind) {
@@ -34,31 +34,31 @@ ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_
         prototype = global_object.generator_function_prototype();
         break;
     }
-    return global_object.heap().allocate<ECMAScriptFunctionObject>(global_object, global_object, name, body, move(parameters), m_function_length, parent_scope, *prototype, kind, is_strict, is_arrow_function);
+    return global_object.heap().allocate<ECMAScriptFunctionObject>(global_object, global_object, move(name), ecmascript_code, move(parameters), m_function_length, parent_scope, *prototype, kind, is_strict, is_arrow_function);
 }
 
-ECMAScriptFunctionObject::ECMAScriptFunctionObject(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 function_length, Environment* parent_scope, Object& prototype, FunctionKind kind, bool is_strict, bool is_arrow_function)
+ECMAScriptFunctionObject::ECMAScriptFunctionObject(GlobalObject& global_object, FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> formal_parameters, i32 function_length, Environment* parent_scope, Object& prototype, FunctionKind kind, bool strict, bool is_arrow_function)
     : FunctionObject(is_arrow_function ? vm().this_value(global_object) : Value(), {}, prototype)
-    , m_name(name)
-    , m_body(body)
-    , m_parameters(move(parameters))
     , m_environment(parent_scope)
+    , m_formal_parameters(move(formal_parameters))
+    , m_ecmascript_code(ecmascript_code)
     , m_realm(vm().interpreter_if_exists() ? &vm().interpreter().realm() : nullptr)
+    , m_strict(strict)
+    , m_name(move(name))
     , m_function_length(function_length)
     , m_kind(kind)
-    , m_is_strict(is_strict)
     , m_is_arrow_function(is_arrow_function)
 {
     // NOTE: This logic is from OrdinaryFunctionCreate, https://tc39.es/ecma262/#sec-ordinaryfunctioncreate
     if (m_is_arrow_function)
         set_this_mode(ThisMode::Lexical);
-    else if (m_is_strict)
+    else if (m_strict)
         set_this_mode(ThisMode::Strict);
     else
         set_this_mode(ThisMode::Global);
 
     // 15.1.3 Static Semantics: IsSimpleParameterList, https://tc39.es/ecma262/#sec-static-semantics-issimpleparameterlist
-    set_has_simple_parameter_list(all_of(m_parameters, [&](auto& parameter) {
+    set_has_simple_parameter_list(all_of(m_formal_parameters, [&](auto& parameter) {
         if (parameter.is_rest)
             return false;
         if (parameter.default_value)
@@ -104,7 +104,7 @@ void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
 FunctionEnvironment* ECMAScriptFunctionObject::create_environment(FunctionObject& function_being_invoked)
 {
     HashMap<FlyString, Variable> variables;
-    for (auto& parameter : m_parameters) {
+    for (auto& parameter : m_formal_parameters) {
         parameter.binding.visit(
             [&](const FlyString& name) { variables.set(name, { js_undefined(), DeclarationKind::Var }); },
             [&](const NonnullRefPtr<BindingPattern>& binding) {
@@ -114,8 +114,8 @@ FunctionEnvironment* ECMAScriptFunctionObject::create_environment(FunctionObject
             });
     }
 
-    if (is<ScopeNode>(body())) {
-        for (auto& declaration : static_cast<const ScopeNode&>(body()).variables()) {
+    if (is<ScopeNode>(ecmascript_code())) {
+        for (auto& declaration : static_cast<const ScopeNode&>(ecmascript_code()).variables()) {
             for (auto& declarator : declaration.declarations()) {
                 declarator.target().visit(
                     [&](const NonnullRefPtr<Identifier>& id) {
@@ -149,8 +149,8 @@ Value ECMAScriptFunctionObject::execute_function_body()
 
     auto prepare_arguments = [&] {
         auto& execution_context_arguments = vm.running_execution_context().arguments;
-        for (size_t i = 0; i < m_parameters.size(); ++i) {
-            auto& parameter = m_parameters[i];
+        for (size_t i = 0; i < m_formal_parameters.size(); ++i) {
+            auto& parameter = m_formal_parameters[i];
             parameter.binding.visit(
                 [&](const auto& param) {
                     Value argument_value;
@@ -182,7 +182,7 @@ Value ECMAScriptFunctionObject::execute_function_body()
     if (bytecode_interpreter) {
         prepare_arguments();
         if (!m_bytecode_executable.has_value()) {
-            m_bytecode_executable = Bytecode::Generator::generate(m_body, m_kind == FunctionKind::Generator);
+            m_bytecode_executable = Bytecode::Generator::generate(m_ecmascript_code, m_kind == FunctionKind::Generator);
             auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
             passes.perform(*m_bytecode_executable);
             if constexpr (JS_BYTECODE_DEBUG) {
@@ -213,7 +213,7 @@ Value ECMAScriptFunctionObject::execute_function_body()
         if (vm.exception())
             return {};
 
-        return ast_interpreter->execute_statement(global_object(), m_body, ScopeType::Function);
+        return ast_interpreter->execute_statement(global_object(), m_ecmascript_code, ScopeType::Function);
     }
 }
 
