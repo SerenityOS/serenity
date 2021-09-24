@@ -132,6 +132,7 @@ private:
     void update_tree_view();
     void update_window_title();
     void on_cursor_change();
+    void file_renamed(String const& old_name, String const& new_name);
 
     struct ProjectLocation {
         String filename;
@@ -186,6 +187,7 @@ private:
     RefPtr<GUI::Action> m_open_selected_action;
     RefPtr<GUI::Action> m_show_in_file_manager_action;
     RefPtr<GUI::Action> m_delete_action;
+    RefPtr<GUI::Action> m_tree_view_rename_action;
     RefPtr<GUI::Action> m_new_project_action;
     RefPtr<GUI::Action> m_switch_to_next_editor;
     RefPtr<GUI::Action> m_switch_to_previous_editor;
