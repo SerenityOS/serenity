@@ -29,9 +29,6 @@ public:
 
     const Vector<Value>& bound_arguments() const { return m_bound_arguments; }
 
-    Object* home_object() const { return m_home_object; }
-    void set_home_object(Object* home_object) { m_home_object = home_object; }
-
     virtual bool is_strict_mode() const { return false; }
 
     // [[Environment]]
@@ -68,7 +65,6 @@ private:
     virtual bool is_function() const override { return true; }
     Value m_bound_this;
     Vector<Value> m_bound_arguments;
-    Object* m_home_object { nullptr };
     bool m_has_simple_parameter_list { false };
     Vector<InstanceField> m_fields;
 };

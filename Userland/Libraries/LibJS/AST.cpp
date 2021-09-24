@@ -924,7 +924,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         if (interpreter.exception())
             return {};
 
-        auto& method_function = method_value.as_function();
+        auto& method_function = static_cast<ECMAScriptFunctionObject&>(method_value.as_function());
 
         auto key = method.key().execute(interpreter, global_object);
         if (interpreter.exception())
@@ -965,7 +965,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         if (interpreter.exception())
             return {};
 
-        FunctionObject* initializer = nullptr;
+        ECMAScriptFunctionObject* initializer = nullptr;
         if (field.initializer()) {
             auto copy_initializer = field.initializer();
             auto body = create_ast_node<ExpressionStatement>(field.initializer()->source_range(), copy_initializer.release_nonnull());
@@ -1923,7 +1923,7 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
             return {};
 
         if (value.is_function() && property.is_method())
-            value.as_function().set_home_object(object);
+            static_cast<ECMAScriptFunctionObject&>(value.as_function()).set_home_object(object);
 
         String name = get_function_name(global_object, key);
         if (property.type() == ObjectProperty::Type::Getter) {

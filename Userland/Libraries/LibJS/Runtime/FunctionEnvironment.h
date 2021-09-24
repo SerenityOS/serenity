@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
+#include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 
 namespace JS {
 
@@ -35,9 +36,9 @@ public:
     void set_this_binding_status(ThisBindingStatus status) { m_this_binding_status = status; }
 
     // [[FunctionObject]]
-    FunctionObject& function_object() { return *m_function_object; }
-    FunctionObject const& function_object() const { return *m_function_object; }
-    void set_function_object(FunctionObject& function) { m_function_object = &function; }
+    ECMAScriptFunctionObject& function_object() { return *m_function_object; }
+    ECMAScriptFunctionObject const& function_object() const { return *m_function_object; }
+    void set_function_object(ECMAScriptFunctionObject& function) { m_function_object = &function; }
 
     // [[NewTarget]]
     Value new_target() const { return m_new_target; }
@@ -56,7 +57,7 @@ private:
 
     Value m_this_value;
     ThisBindingStatus m_this_binding_status { ThisBindingStatus::Uninitialized };
-    FunctionObject* m_function_object { nullptr };
+    ECMAScriptFunctionObject* m_function_object { nullptr };
     Value m_new_target;
 };
 

@@ -55,6 +55,9 @@ public:
 
     ThisMode this_mode() const { return m_this_mode; }
 
+    Object* home_object() const { return m_home_object; }
+    void set_home_object(Object* home_object) { m_home_object = home_object; }
+
 protected:
     virtual bool is_strict_mode() const final { return m_strict; }
 
@@ -73,6 +76,7 @@ private:
     Realm* m_realm { nullptr };                                   // [[Realm]]
     ThisMode m_this_mode { ThisMode::Global };                    // [[ThisMode]]
     bool m_strict { false };                                      // [[Strict]]
+    Object* m_home_object { nullptr };                            // [[HomeObject]]
     bool m_is_class_constructor { false };                        // [[IsClassConstructor]]
 
     FlyString m_name;
