@@ -172,6 +172,8 @@ bool FrameLoader::load(LoadRequest& request, Type type)
             favicon_url,
             [this, favicon_url](auto data, auto&, auto) {
                 dbgln_if(SPAM_DEBUG, "Favicon downloaded, {} bytes from {}", data.size(), favicon_url);
+                if (data.is_empty())
+                    return;
                 RefPtr<Gfx::Bitmap> favicon_bitmap;
                 auto decoder = Gfx::ImageDecoder::try_create(data);
                 if (!decoder) {
