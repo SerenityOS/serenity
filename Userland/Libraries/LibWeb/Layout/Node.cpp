@@ -220,7 +220,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 
     auto bgimage = specified_style.property(CSS::PropertyID::BackgroundImage);
     if (bgimage.has_value() && bgimage.value()->is_image()) {
-        m_background_image = static_ptr_cast<CSS::ImageStyleValue>(bgimage.value());
+        m_background_image = bgimage.value()->as_image();
     }
 
     // FIXME: BorderXRadius properties are now BorderRadiusStyleValues, so make use of that.
@@ -374,7 +374,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
         // FIXME: Converting to pixels isn't really correct - values should be in "user units"
         //        https://svgwg.org/svg2-draft/coords.html#TermUserUnits
         if (stroke_width.value()->is_numeric())
-            computed_values.set_stroke_width(CSS::Length::make_px(static_cast<CSS::NumericStyleValue const&>(*stroke_width.value()).value()));
+            computed_values.set_stroke_width(CSS::Length::make_px(stroke_width.value()->to_number()));
         else
             computed_values.set_stroke_width(stroke_width.value()->to_length());
     }

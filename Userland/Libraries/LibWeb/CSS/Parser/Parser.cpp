@@ -2095,7 +2095,7 @@ RefPtr<StyleValue> Parser::parse_flex_value(ParsingContext const& context, Vecto
             return nullptr;
 
         // Zero is a valid value for basis, but only if grow and shrink are already specified.
-        if (value->is_numeric() && static_cast<NumericStyleValue&>(*value).value() == 0) {
+        if (value->has_number() && value->to_number() == 0) {
             if (flex_grow && flex_shrink && !flex_basis) {
                 flex_basis = LengthStyleValue::create(Length(0, Length::Type::Px));
                 continue;
