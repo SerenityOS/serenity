@@ -118,6 +118,7 @@ public:
     Function<void()> on_complete;
     Function<void(int error, char const* error_string)> on_directory_change_error;
     Function<void(int error, char const* error_string)> on_rename_error;
+    Function<void(String const& old_name, String const& new_name)> on_rename_successful;
 
     virtual int tree_column() const override { return Column::Name; }
     virtual int row_count(ModelIndex const& = ModelIndex()) const override;
