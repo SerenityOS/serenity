@@ -12,14 +12,7 @@
 namespace JS {
 
 FunctionObject::FunctionObject(Object& prototype)
-    : FunctionObject({}, {}, prototype)
-{
-}
-
-FunctionObject::FunctionObject(Value bound_this, Vector<Value> bound_arguments, Object& prototype)
     : Object(prototype)
-    , m_bound_this(bound_this)
-    , m_bound_arguments(move(bound_arguments))
 {
 }
 
@@ -33,8 +26,8 @@ BoundFunction* FunctionObject::bind(Value bound_this_value, Vector<Value> argume
     FunctionObject& target_function = is<BoundFunction>(*this) ? static_cast<BoundFunction&>(*this).bound_target_function() : *this;
 
     auto bound_this_object = [&vm, bound_this_value, this]() -> Value {
-        if (!m_bound_this.is_empty())
-            return m_bound_this;
+        if (is<BoundFunction>(*this) && !static_cast<BoundFunction&>(*this).bound_this().is_empty())
+            return static_cast<BoundFunction&>(*this).bound_this();
         switch (bound_this_value.type()) {
         case Value::Type::Undefined:
         case Value::Type::Null:
@@ -60,20 +53,12 @@ BoundFunction* FunctionObject::bind(Value bound_this_value, Vector<Value> argume
     if (prototype_property.is_object())
         constructor_prototype = &prototype_property.as_object();
 
-    auto all_bound_arguments = bound_arguments();
+    Vector<Value> all_bound_arguments;
+    if (is<BoundFunction>(*this))
+        all_bound_arguments.extend(static_cast<BoundFunction&>(*this).bound_arguments());
     all_bound_arguments.extend(move(arguments));
 
     return heap().allocate<BoundFunction>(global_object(), global_object(), target_function, bound_this_object, move(all_bound_arguments), computed_length, constructor_prototype);
-}
-
-void FunctionObject::visit_edges(Visitor& visitor)
-{
-    Base::visit_edges(visitor);
-
-    visitor.visit(m_bound_this);
-
-    for (auto argument : m_bound_arguments)
-        visitor.visit(argument);
 }
 
 }

@@ -494,7 +494,12 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
     if (auto* interpreter = interpreter_if_exists())
         callee_context.current_node = interpreter->current_node();
 
-    append_bound_and_passed_arguments(callee_context.arguments, function.bound_arguments(), move(arguments));
+    if (is<BoundFunction>(function)) {
+        auto& bound_function = static_cast<BoundFunction&>(function);
+        append_bound_and_passed_arguments(callee_context.arguments, bound_function.bound_arguments(), move(arguments));
+    } else {
+        append_bound_and_passed_arguments(callee_context.arguments, {}, move(arguments));
+    }
 
     if (auto* environment = callee_context.lexical_environment) {
         auto& function_environment = verify_cast<FunctionEnvironment>(*environment);
@@ -694,8 +699,8 @@ ThrowCompletionOr<Value> VM::call_internal(FunctionObject& function, Value this_
     if (auto* interpreter = interpreter_if_exists())
         callee_context.current_node = interpreter->current_node();
 
-    callee_context.this_value = function.bound_this().value_or(this_value);
-    append_bound_and_passed_arguments(callee_context.arguments, function.bound_arguments(), move(arguments));
+    callee_context.this_value = this_value;
+    append_bound_and_passed_arguments(callee_context.arguments, {}, move(arguments));
 
     if (callee_context.lexical_environment)
         ordinary_call_bind_this(function, callee_context, this_value);
