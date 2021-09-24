@@ -735,9 +735,12 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             maybe_length = length;
         }
         if (maybe_length.has_value()) {
-            auto calculated_size = maybe_length.value().to_px(viewport_rect, font_metrics, root_font_size);
-            if (calculated_size != 0)
-                size = calculated_size;
+            // FIXME: Support font-size: calc(...)
+            if (!maybe_length->is_calculated()) {
+                auto px = maybe_length.value().to_px(viewport_rect, font_metrics, root_font_size);
+                if (px != 0)
+                    size = px;
+            }
         }
     }
 
