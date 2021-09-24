@@ -1,8 +1,0 @@
---- neofetch-7.1.0/neofetch	2021-01-29 21:35:11.839000000 +0100
-+++ neofetch-7.1.0/neofetch	2021-01-29 21:35:21.531205189 +0100
-@@ -1,4 +1,4 @@
--#!/usr/bin/env bash
-+#!/bin/bash
- # vim: noai:ts=4:sw=4:expandtab
- # shellcheck source=/dev/null
- # shellcheck disable=2009
