@@ -47,6 +47,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/RegularEditingEngine.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/StackWidget.h>
@@ -218,6 +219,12 @@ void HackStudioWidget::open_project(const String& root_path)
 
     m_locations_history.clear();
     m_locations_history_end_index = 0;
+
+    m_project->model().on_rename_successful = [this](auto& absolute_old_path, auto& absolute_new_path) {
+        file_renamed(
+            LexicalPath::relative_path(absolute_old_path, m_project->root_path()),
+            LexicalPath::relative_path(absolute_new_path, m_project->root_path()));
+    };
 }
 
 Vector<String> HackStudioWidget::selected_file_paths() const
@@ -385,6 +392,9 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
 
     m_new_directory_action = create_new_directory_action();
     m_delete_action = create_delete_action();
+    m_tree_view_rename_action = GUI::CommonActions::make_rename_action([this](GUI::Action const&) {
+        m_project_tree_view->begin_editing(m_project_tree_view->cursor_index());
+    });
     auto project_tree_view_context_menu = GUI::Menu::construct("Project Files");
 
     auto& new_file_submenu = project_tree_view_context_menu->add_submenu("New");
@@ -397,8 +407,9 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
 
     project_tree_view_context_menu->add_action(*m_open_selected_action);
     project_tree_view_context_menu->add_action(*m_show_in_file_manager_action);
-    // TODO: Rename, cut, copy, duplicate with new name...
+    // TODO: Cut, copy, duplicate with new name...
     project_tree_view_context_menu->add_separator();
+    project_tree_view_context_menu->add_action(*m_tree_view_rename_action);
     project_tree_view_context_menu->add_action(*m_delete_action);
     return project_tree_view_context_menu;
 }
@@ -907,10 +918,40 @@ void HackStudioWidget::set_current_editor_wrapper(RefPtr<EditorWrapper> editor_w
     update_tree_view();
 }
 
+void HackStudioWidget::file_renamed(String const& old_name, String const& new_name)
+{
+    auto editor_or_none = m_all_editor_wrappers.first_matching([&old_name](auto const& editor) {
+        return editor->filename() == old_name;
+    });
+    if (editor_or_none.has_value()) {
+        (*editor_or_none)->set_filename(new_name);
+        (*editor_or_none)->set_name(new_name);
+    }
+
+    if (m_open_files.contains(old_name)) {
+        VERIFY(m_open_files_vector.remove_first_matching([&old_name](auto const& file) { return file == old_name; }));
+        m_open_files_vector.append(new_name);
+
+        ProjectFile* f = m_open_files.get(old_name).release_value();
+        m_open_files.set(new_name, *f);
+        m_open_files.remove(old_name);
+        m_open_files_view->model()->invalidate();
+    }
+
+    if (m_file_watcher->is_watching(old_name)) {
+        VERIFY(!m_file_watcher->remove_watch(old_name).is_error());
+        VERIFY(!m_file_watcher->add_watch(new_name, Core::FileWatcherEvent::Type::Deleted).is_error());
+    }
+}
+
 void HackStudioWidget::configure_project_tree_view()
 {
     m_project_tree_view->set_model(m_project->model());
     m_project_tree_view->set_selection_mode(GUI::AbstractView::SelectionMode::MultiSelection);
+    m_project_tree_view->set_editable(true);
+    m_project_tree_view->aid_create_editing_delegate = [](auto&) {
+        return make<GUI::StringModelEditingDelegate>();
+    };
 
     for (int column_index = 0; column_index < m_project->model().column_count(); ++column_index)
         m_project_tree_view->set_column_visible(column_index, false);
@@ -1370,5 +1411,4 @@ void HackStudioWidget::update_history_actions()
     else
         m_locations_history_forward_action->set_enabled(true);
 }
-
 }
