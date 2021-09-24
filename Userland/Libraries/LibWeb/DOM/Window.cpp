@@ -260,4 +260,20 @@ NonnullRefPtr<CSS::MediaQueryList> Window::match_media(String media)
     return CSS::MediaQueryList::create(associated_document(), move(media));
 }
 
+// https://www.w3.org/TR/cssom-view/#dom-window-scrollx
+float Window::scroll_x() const
+{
+    if (auto* page = this->page())
+        return page->top_level_browsing_context().viewport_scroll_offset().x();
+    return 0;
+}
+
+// https://www.w3.org/TR/cssom-view/#dom-window-scrolly
+float Window::scroll_y() const
+{
+    if (auto* page = this->page())
+        return page->top_level_browsing_context().viewport_scroll_offset().y();
+    return 0;
+}
+
 }
