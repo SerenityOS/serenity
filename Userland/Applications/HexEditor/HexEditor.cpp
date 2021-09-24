@@ -26,6 +26,7 @@
 #include <unistd.h>
 
 HexEditor::HexEditor()
+    : m_blink_timer(Core::Timer::construct())
 {
     set_should_hide_unnecessary_scrollbars(true);
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
@@ -34,6 +35,13 @@ HexEditor::HexEditor()
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
     vertical_scrollbar().set_step(line_height());
+
+    m_blink_timer->set_interval(500);
+    m_blink_timer->on_timeout = [this]() {
+        m_cursor_blink_active = !m_cursor_blink_active;
+        update();
+    };
+    m_blink_timer->start();
 }
 
 HexEditor::~HexEditor()
@@ -63,7 +71,7 @@ void HexEditor::fill_selection(u8 fill_byte)
     if (!has_selection())
         return;
 
-    for (int i = m_selection_start; i <= m_selection_end; i++) {
+    for (int i = m_selection_start; i < m_selection_end; i++) {
         m_tracked_changes.set(i, m_buffer.data()[i]);
         m_buffer.data()[i] = fill_byte;
     }
@@ -79,6 +87,7 @@ void HexEditor::set_position(int position)
 
     m_position = position;
     m_byte_position = 0;
+    reset_cursor_blink_state();
     scroll_position_into_view(position);
     update_status();
 }
@@ -126,7 +135,7 @@ size_t HexEditor::selection_size()
 {
     if (!has_selection())
         return 0;
-    return abs(m_selection_end - m_selection_start) + 1;
+    return abs(m_selection_end - m_selection_start);
 }
 
 bool HexEditor::copy_selected_hex_to_clipboard()
@@ -135,7 +144,7 @@ bool HexEditor::copy_selected_hex_to_clipboard()
         return false;
 
     StringBuilder output_string_builder;
-    for (int i = m_selection_start; i <= m_selection_end; i++)
+    for (int i = m_selection_start; i < m_selection_end; i++)
         output_string_builder.appendff("{:02X} ", m_buffer.data()[i]);
 
     GUI::Clipboard::the().set_plain_text(output_string_builder.to_string());
@@ -148,7 +157,7 @@ bool HexEditor::copy_selected_text_to_clipboard()
         return false;
 
     StringBuilder output_string_builder;
-    for (int i = m_selection_start; i <= m_selection_end; i++)
+    for (int i = m_selection_start; i < m_selection_end; i++)
         output_string_builder.append(isprint(m_buffer.data()[i]) ? m_buffer[i] : '.');
 
     GUI::Clipboard::the().set_plain_text(output_string_builder.to_string());
@@ -163,7 +172,7 @@ bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
     StringBuilder output_string_builder;
     output_string_builder.appendff("unsigned char raw_data[{}] = {{\n", (m_selection_end - m_selection_start) + 1);
     output_string_builder.append("    ");
-    for (int i = m_selection_start, j = 1; i <= m_selection_end; i++, j++) {
+    for (int i = m_selection_start, j = 1; i < m_selection_end; i++, j++) {
         output_string_builder.appendff("{:#02X}", m_buffer.data()[i]);
         if (i != m_selection_end)
             output_string_builder.append(", ");
@@ -287,6 +296,7 @@ void HexEditor::mousemove_event(GUI::MouseEvent& event)
                 return;
 
             m_selection_end = offset;
+            m_position = offset;
             scroll_position_into_view(offset);
         }
 
@@ -298,6 +308,7 @@ void HexEditor::mousemove_event(GUI::MouseEvent& event)
                 return;
 
             m_selection_end = offset;
+            m_position = offset;
             scroll_position_into_view(offset);
         }
         update_status();
@@ -343,7 +354,9 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
     if (event.key() == KeyCode::Key_Up) {
         if (m_position - bytes_per_row() >= 0) {
             m_position -= bytes_per_row();
+            m_selection_start = m_selection_end = m_position;
             m_byte_position = 0;
+            reset_cursor_blink_state();
             scroll_position_into_view(m_position);
             update();
             update_status();
@@ -354,7 +367,9 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
     if (event.key() == KeyCode::Key_Down) {
         if (m_position + bytes_per_row() < static_cast<int>(m_buffer.size())) {
             m_position += bytes_per_row();
+            m_selection_start = m_selection_end = m_position;
             m_byte_position = 0;
+            reset_cursor_blink_state();
             scroll_position_into_view(m_position);
             update();
             update_status();
@@ -365,7 +380,9 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
     if (event.key() == KeyCode::Key_Left) {
         if (m_position - 1 >= 0) {
             m_position--;
+            m_selection_start = m_selection_end = m_position;
             m_byte_position = 0;
+            reset_cursor_blink_state();
             scroll_position_into_view(m_position);
             update();
             update_status();
@@ -376,7 +393,9 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
     if (event.key() == KeyCode::Key_Right) {
         if (m_position + 1 < static_cast<int>(m_buffer.size())) {
             m_position++;
+            m_selection_start = m_selection_end = m_position;
             m_byte_position = 0;
+            reset_cursor_blink_state();
             scroll_position_into_view(m_position);
             update();
             update_status();
@@ -387,7 +406,9 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
     if (event.key() == KeyCode::Key_Backspace) {
         if (m_position > 0) {
             m_position--;
+            m_selection_start = m_selection_end = m_position;
             m_byte_position = 0;
+            reset_cursor_blink_state();
             scroll_position_into_view(m_position);
             update();
             update_status();
@@ -409,8 +430,11 @@ void HexEditor::hex_mode_keydown_event(GUI::KeyEvent& event)
     if ((event.key() >= KeyCode::Key_0 && event.key() <= KeyCode::Key_9) || (event.key() >= KeyCode::Key_A && event.key() <= KeyCode::Key_F)) {
         if (m_buffer.is_empty())
             return;
+        if (m_position == static_cast<int>(m_buffer.size()))
+            return;
+
         VERIFY(m_position >= 0);
-        VERIFY(m_position < static_cast<int>(m_buffer.size()));
+        VERIFY(m_position <= static_cast<int>(m_buffer.size()));
 
         // yes, this is terrible... but it works.
         auto value = (event.key() >= KeyCode::Key_0 && event.key() <= KeyCode::Key_9)
@@ -428,6 +452,7 @@ void HexEditor::hex_mode_keydown_event(GUI::KeyEvent& event)
             m_byte_position = 0;
         }
 
+        reset_cursor_blink_state();
         update();
         update_status();
         did_change();
@@ -450,6 +475,7 @@ void HexEditor::text_mode_keydown_event(GUI::KeyEvent& event)
         m_position++;
     m_byte_position = 0;
 
+    reset_cursor_blink_state();
     update();
     update_status();
     did_change();
@@ -525,17 +551,14 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             if (byte_position >= static_cast<int>(m_buffer.size()))
                 return;
 
-            Color text_color = palette().color(foreground_role());
-            if (m_tracked_changes.contains(byte_position)) {
-                text_color = Color::Red;
-            }
+            const bool edited_flag = m_tracked_changes.contains(byte_position);
 
             auto highlight_flag = false;
             if (m_selection_start > -1 && m_selection_end > -1) {
-                if (byte_position >= m_selection_start && byte_position <= m_selection_end) {
+                if (byte_position >= m_selection_start && byte_position < m_selection_end) {
                     highlight_flag = true;
                 }
-                if (byte_position >= m_selection_end && byte_position <= m_selection_start) {
+                if (byte_position >= m_selection_end && byte_position < m_selection_start) {
                     highlight_flag = true;
                 }
             }
@@ -546,16 +569,30 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
                 (character_width() * 3),
                 line_height() - m_line_spacing
             };
+
+            Gfx::Color background_color = palette().color(background_role());
+            Gfx::Color text_color = edited_flag ? Color::Red : palette().color(foreground_role());
+
             if (highlight_flag) {
-                painter.fill_rect(hex_display_rect, palette().selection());
-                text_color = text_color == Color::Red ? Color::from_rgb(0xFFC0CB) : palette().selection_text();
-            } else if (byte_position == m_position) {
-                painter.fill_rect(hex_display_rect, palette().inactive_selection());
+                background_color = palette().selection();
+                text_color = edited_flag ? Color::from_rgb(0xFFC0CB) : palette().selection_text();
+            } else if (byte_position == m_position && m_edit_mode == EditMode::Text) {
+                background_color = palette().inactive_selection();
                 text_color = palette().inactive_selection_text();
             }
+            painter.fill_rect(hex_display_rect, background_color);
 
             auto line = String::formatted("{:02X}", m_buffer[byte_position]);
             painter.draw_text(hex_display_rect, line, Gfx::TextAlignment::TopLeft, text_color);
+
+            if (m_edit_mode == EditMode::Hex) {
+                if (byte_position == m_position && m_cursor_blink_active) {
+                    Gfx::IntRect cursor_position_rect {
+                        hex_display_rect.left() + m_byte_position * character_width(), hex_display_rect.top(), 2, hex_display_rect.height()
+                    };
+                    painter.fill_rect(cursor_position_rect, palette().text_cursor());
+                }
+            }
 
             Gfx::IntRect text_display_rect {
                 frame_thickness() + offset_margin_width() + (bytes_per_row() * (character_width() * 3)) + (j * character_width()) + 20,
@@ -563,14 +600,29 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
                 character_width(),
                 line_height() - m_line_spacing
             };
-            // selection highlighting.
+
+            background_color = palette().color(background_role());
+            text_color = edited_flag ? Color::Red : palette().color(foreground_role());
+
             if (highlight_flag) {
-                painter.fill_rect(text_display_rect, palette().selection());
-            } else if (byte_position == m_position) {
-                painter.fill_rect(text_display_rect, palette().inactive_selection());
+                background_color = palette().selection();
+                text_color = edited_flag ? Color::from_rgb(0xFFC0CB) : palette().selection_text();
+            } else if (byte_position == m_position && m_edit_mode == EditMode::Hex) {
+                background_color = palette().inactive_selection();
+                text_color = palette().inactive_selection_text();
             }
 
+            painter.fill_rect(text_display_rect, background_color);
             painter.draw_text(text_display_rect, String::formatted("{:c}", isprint(m_buffer[byte_position]) ? m_buffer[byte_position] : '.'), Gfx::TextAlignment::TopLeft, text_color);
+
+            if (m_edit_mode == EditMode::Text) {
+                if (byte_position == m_position && m_cursor_blink_active) {
+                    Gfx::IntRect cursor_position_rect {
+                        text_display_rect.left(), text_display_rect.top(), 2, text_display_rect.height()
+                    };
+                    painter.fill_rect(cursor_position_rect, palette().text_cursor());
+                }
+            }
         }
     }
 }
@@ -672,4 +724,10 @@ Vector<Match> HexEditor::find_all_strings(size_t min_length)
     highlight(first_match.offset, first_match.offset + first_match.value.length());
 
     return matches;
+}
+
+void HexEditor::reset_cursor_blink_state()
+{
+    m_cursor_blink_active = true;
+    m_blink_timer->restart();
 }
