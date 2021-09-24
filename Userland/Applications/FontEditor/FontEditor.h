@@ -80,6 +80,7 @@ private:
     RefPtr<GUI::Widget> m_left_column_container;
     RefPtr<GUI::Widget> m_glyph_editor_container;
     RefPtr<GUI::ComboBox> m_weight_combobox;
+    RefPtr<GUI::ComboBox> m_slope_combobox;
     RefPtr<GUI::SpinBox> m_spacing_spinbox;
     RefPtr<GUI::SpinBox> m_baseline_spinbox;
     RefPtr<GUI::SpinBox> m_mean_line_spinbox;
@@ -93,5 +94,6 @@ private:
 
     String m_path;
     Vector<String> m_font_weight_list;
+    Vector<String> m_font_slope_list;
     bool m_font_metadata { true };
 };

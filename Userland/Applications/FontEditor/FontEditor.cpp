@@ -20,9 +20,9 @@
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/FilePicker.h>
-#include <LibGUI/FontPickerWeightModel.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/InputBox.h>
+#include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
@@ -34,6 +34,7 @@
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/BitmapFont.h>
+#include <LibGfx/FontStyleMapping.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/TextDirection.h>
 #include <stdlib.h>
@@ -120,6 +121,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     m_family_textbox = *find_descendant_of_type_named<GUI::TextBox>("family_textbox");
     m_presentation_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("presentation_spinbox");
     m_weight_combobox = *find_descendant_of_type_named<GUI::ComboBox>("weight_combobox");
+    m_slope_combobox = *find_descendant_of_type_named<GUI::ComboBox>("slope_combobox");
     m_spacing_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("spacing_spinbox");
     m_mean_line_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("mean_line_spinbox");
     m_baseline_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("baseline_spinbox");
@@ -154,6 +156,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
             new_font->set_family(metadata.family);
             new_font->set_presentation_size(metadata.presentation_size);
             new_font->set_weight(metadata.weight);
+            new_font->set_slope(metadata.slope);
             new_font->set_baseline(metadata.baseline);
             new_font->set_mean_line(metadata.mean_line);
             window()->set_modified(true);
@@ -415,9 +418,20 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     };
 
     m_weight_combobox->on_change = [this](auto&, auto&) {
-        m_edited_font->set_weight(GUI::name_to_weight(m_weight_combobox->text()));
+        m_edited_font->set_weight(Gfx::name_to_weight(m_weight_combobox->text()));
         did_modify_font();
     };
+    for (auto& it : Gfx::font_weight_names)
+        m_font_weight_list.append(it.name);
+    m_weight_combobox->set_model(*GUI::ItemListModel<String>::create(m_font_weight_list));
+
+    m_slope_combobox->on_change = [this](auto&, auto&) {
+        m_edited_font->set_slope(Gfx::name_to_slope(m_slope_combobox->text()));
+        did_modify_font();
+    };
+    for (auto& it : Gfx::font_slope_names)
+        m_font_slope_list.append(it.name);
+    m_slope_combobox->set_model(*GUI::ItemListModel<String>::create(m_font_slope_list));
 
     m_presentation_spinbox->on_change = [this](int value) {
         m_edited_font->set_presentation_size(value);
@@ -495,15 +509,18 @@ void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& 
     m_mean_line_spinbox->set_value(m_edited_font->mean_line(), GUI::AllowCallback::No);
     m_baseline_spinbox->set_value(m_edited_font->baseline(), GUI::AllowCallback::No);
 
-    m_font_weight_list.clear();
-    for (auto& it : GUI::font_weight_names)
-        m_font_weight_list.append(it.name);
-    m_weight_combobox->set_model(*GUI::ItemListModel<String>::create(m_font_weight_list));
-
     int i = 0;
-    for (auto it : GUI::font_weight_names) {
-        if (it.weight == m_edited_font->weight()) {
+    for (auto& it : Gfx::font_weight_names) {
+        if (it.style == m_edited_font->weight()) {
             m_weight_combobox->set_selected_index(i);
+            break;
+        }
+        i++;
+    }
+    i = 0;
+    for (auto& it : Gfx::font_slope_names) {
+        if (it.style == m_edited_font->slope()) {
+            m_slope_combobox->set_selected_index(i);
             break;
         }
         i++;

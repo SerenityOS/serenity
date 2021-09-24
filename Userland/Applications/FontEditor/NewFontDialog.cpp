@@ -11,7 +11,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ComboBox.h>
-#include <LibGUI/FontPickerWeightModel.h>
+#include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
@@ -20,6 +20,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Wizards/WizardDialog.h>
 #include <LibGfx/BitmapFont.h>
+#include <LibGfx/FontStyleMapping.h>
 #include <LibGfx/Palette.h>
 
 static constexpr int s_max_width = 32;
@@ -135,12 +136,18 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
     m_name_textbox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::TextBox>("name_textbox");
     m_family_textbox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::TextBox>("family_textbox");
     m_weight_combobox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::ComboBox>("weight_combobox");
+    m_slope_combobox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::ComboBox>("slope_combobox");
     m_presentation_spinbox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::SpinBox>("presentation_spinbox");
 
-    for (auto& it : GUI::font_weight_names)
+    for (auto& it : Gfx::font_weight_names)
         m_font_weight_list.append(it.name);
     m_weight_combobox->set_model(*GUI::ItemListModel<String>::create(m_font_weight_list));
     m_weight_combobox->set_selected_index(3);
+
+    for (auto& it : Gfx::font_slope_names)
+        m_font_slope_list.append(it.name);
+    m_slope_combobox->set_model(*GUI::ItemListModel<String>::create(m_font_slope_list));
+    m_slope_combobox->set_selected_index(0);
 
     m_presentation_spinbox->set_value(12);
 
@@ -208,7 +215,8 @@ void NewFontDialog::save_metadata()
 {
     m_new_font_metadata.name = m_name_textbox->text();
     m_new_font_metadata.family = m_family_textbox->text();
-    m_new_font_metadata.weight = GUI::name_to_weight(m_weight_combobox->text());
+    m_new_font_metadata.weight = Gfx::name_to_weight(m_weight_combobox->text());
+    m_new_font_metadata.slope = Gfx::name_to_slope(m_slope_combobox->text());
     m_new_font_metadata.presentation_size = m_presentation_spinbox->value();
 
     m_new_font_metadata.baseline = m_baseline_spinbox->value();
