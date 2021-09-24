@@ -522,7 +522,11 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 auto& next_active_layer = editor->image().layer(active_layer_index > 0 ? active_layer_index - 1 : 0);
                 editor->set_active_layer(&next_active_layer);
             } else {
-                editor->set_active_layer(nullptr);
+                auto layer = PixelPaint::Layer::try_create_with_size(editor->image(), editor->image().size(), "Background");
+                VERIFY(layer);
+                editor->image().add_layer(layer.release_nonnull());
+                editor->layers_did_change();
+                m_layer_list_widget->select_top_layer();
             }
         }));
 
