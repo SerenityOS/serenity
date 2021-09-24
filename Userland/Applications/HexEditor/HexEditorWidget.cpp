@@ -44,12 +44,21 @@ HexEditorWidget::HexEditorWidget()
     m_search_results = *find_descendant_of_type_named<GUI::TableView>("search_results");
     m_search_results_container = *find_descendant_of_type_named<GUI::Widget>("search_results_container");
 
-    m_editor->on_status_change = [this](int position, HexEditor::EditMode edit_mode, int selection_start, int selection_end) {
+    auto update_statusbar_selection_and_offset_info = [this](int selection_start, int selection_end) {
+        if (m_show_selection_information_as_hex) {
+            m_statusbar->set_text(2, String::formatted("Selection Start: {:#x}", selection_start));
+            m_statusbar->set_text(3, String::formatted("Selection End: {:#x}", selection_end));
+        } else {
+            m_statusbar->set_text(2, String::formatted("Selection Start: {}", selection_start));
+            m_statusbar->set_text(3, String::formatted("Selection End: {}", selection_end));
+        }
+    };
+
+    m_editor->on_status_change = [this, update_statusbar_selection_and_offset_info](int position, HexEditor::EditMode edit_mode, int selection_start, int selection_end) {
+        m_statusbar->set_text(4, String::formatted("Selected Bytes: {}d ({:#x})", m_editor->selection_size(), m_editor->selection_size()));
         m_statusbar->set_text(0, String::formatted("Offset: {:#08X}", position));
         m_statusbar->set_text(1, String::formatted("Edit Mode: {}", edit_mode == HexEditor::EditMode::Hex ? "Hex" : "Text"));
-        m_statusbar->set_text(2, String::formatted("Selection Start: {}", selection_start));
-        m_statusbar->set_text(3, String::formatted("Selection End: {}", selection_end));
-        m_statusbar->set_text(4, String::formatted("Selected Bytes: {}", m_editor->selection_size()));
+        update_statusbar_selection_and_offset_info(selection_start, selection_end);
     };
 
     m_editor->on_change = [this] {
@@ -209,6 +218,13 @@ HexEditorWidget::HexEditorWidget()
         set_search_results_visible(action.is_checked());
     });
 
+    m_selection_information_format_mode_action = GUI::Action::create_checkable("Show Selection Info in Hex", [&, update_statusbar_selection_and_offset_info](auto& action) {
+        m_show_selection_information_as_hex = action.is_checked();
+        auto selection_start = m_editor->selection_start_offset();
+        auto selection_end = selection_start + m_editor->selection_size();
+        update_statusbar_selection_and_offset_info(selection_start, selection_end);
+    });
+
     m_toolbar->add_action(*m_new_action);
     m_toolbar->add_action(*m_open_action);
     m_toolbar->add_action(*m_save_action);
@@ -301,6 +317,8 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
     view_menu.add_action(*m_layout_toolbar_action);
     view_menu.add_action(*m_layout_search_results_action);
     view_menu.add_separator();
+
+    view_menu.add_action(*m_selection_information_format_mode_action);
 
     auto bytes_per_row = Config::read_i32("HexEditor", "Layout", "BytesPerRow", 16);
     m_editor->set_bytes_per_row(bytes_per_row);

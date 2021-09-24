@@ -53,6 +53,7 @@ private:
     RefPtr<GUI::Action> m_goto_offset_action;
     RefPtr<GUI::Action> m_layout_toolbar_action;
     RefPtr<GUI::Action> m_layout_search_results_action;
+    RefPtr<GUI::Action> m_selection_information_format_mode_action;
 
     GUI::ActionGroup m_bytes_per_row_actions;
 
@@ -63,4 +64,5 @@ private:
     RefPtr<GUI::Widget> m_search_results_container;
 
     bool m_document_dirty { false };
+    bool m_show_selection_information_as_hex { false };
 };
