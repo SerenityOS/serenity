@@ -470,12 +470,14 @@ void VM::initialize_instance_elements(Object& object, FunctionObject& constructo
     }
 }
 
+// FIXME: This function should not exist as-is, most of it should be moved to the individual
+//        [[Construct]] implementations so that this becomes the Construct() AO (3 steps).
 Value VM::construct(FunctionObject& function, FunctionObject& new_target, Optional<MarkedValueList> arguments)
 {
     auto& global_object = function.global_object();
 
     Value this_argument;
-    if (function.constructor_kind() == FunctionObject::ConstructorKind::Base)
+    if (!is<ECMAScriptFunctionObject>(function) || static_cast<ECMAScriptFunctionObject&>(function).constructor_kind() == ECMAScriptFunctionObject::ConstructorKind::Base)
         this_argument = TRY_OR_DISCARD(ordinary_create_from_constructor<Object>(global_object, new_target, &GlobalObject::object_prototype));
 
     // FIXME: prepare_for_ordinary_call() is not supposed to receive a BoundFunction, ProxyObject, etc. - ever.
@@ -507,7 +509,7 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
     // If we are a Derived constructor, |this| has not been constructed before super is called.
     callee_context.this_value = this_argument;
 
-    if (function.constructor_kind() == FunctionObject::ConstructorKind::Base) {
+    if (!is<ECMAScriptFunctionObject>(function) || static_cast<ECMAScriptFunctionObject&>(function).constructor_kind() == ECMAScriptFunctionObject::ConstructorKind::Base) {
         VERIFY(this_argument.is_object());
         initialize_instance_elements(this_argument.as_object(), function);
         if (exception())
@@ -521,7 +523,10 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
 
     // If we are constructing an instance of a derived class,
     // set the prototype on objects created by constructors that return an object (i.e. NativeFunction subclasses).
-    if (function.constructor_kind() == FunctionObject::ConstructorKind::Base && new_target.constructor_kind() == FunctionObject::ConstructorKind::Derived && result.is_object()) {
+
+    if ((!is<ECMAScriptFunctionObject>(function) || static_cast<ECMAScriptFunctionObject&>(function).constructor_kind() == ECMAScriptFunctionObject::ConstructorKind::Base)
+        && is<ECMAScriptFunctionObject>(new_target) && static_cast<ECMAScriptFunctionObject&>(new_target).constructor_kind() == ECMAScriptFunctionObject::ConstructorKind::Derived
+        && result.is_object()) {
         if (auto* environment = callee_context.lexical_environment)
             verify_cast<FunctionEnvironment>(environment)->replace_this_binding(result);
         auto prototype = new_target.get(names.prototype);

@@ -15,11 +15,6 @@ class FunctionObject : public Object {
     JS_OBJECT(Function, Object);
 
 public:
-    enum class ConstructorKind {
-        Base,
-        Derived,
-    };
-
     virtual ~FunctionObject();
     virtual void initialize(GlobalObject&) override { }
 
@@ -36,9 +31,6 @@ public:
 
     Object* home_object() const { return m_home_object; }
     void set_home_object(Object* home_object) { m_home_object = home_object; }
-
-    ConstructorKind constructor_kind() const { return m_constructor_kind; };
-    void set_constructor_kind(ConstructorKind constructor_kind) { m_constructor_kind = constructor_kind; }
 
     virtual bool is_strict_mode() const { return false; }
 
@@ -77,7 +69,6 @@ private:
     Value m_bound_this;
     Vector<Value> m_bound_arguments;
     Object* m_home_object { nullptr };
-    ConstructorKind m_constructor_kind = ConstructorKind::Base;
     bool m_has_simple_parameter_list { false };
     Vector<InstanceField> m_fields;
 };
