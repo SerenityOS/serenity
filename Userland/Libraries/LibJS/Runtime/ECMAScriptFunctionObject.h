@@ -68,6 +68,9 @@ public:
     Vector<InstanceField> const& fields() const { return m_fields; }
     void add_field(StringOrSymbol property_key, ECMAScriptFunctionObject* initializer) { m_fields.empend(property_key, initializer); }
 
+    // This is for IsSimpleParameterList (static semantics)
+    bool has_simple_parameter_list() const { return m_has_simple_parameter_list; }
+
 protected:
     virtual bool is_strict_mode() const final { return m_strict; }
 
@@ -95,6 +98,7 @@ private:
     i32 m_function_length { 0 };
     FunctionKind m_kind { FunctionKind::Regular };
     bool m_is_arrow_function { false };
+    bool m_has_simple_parameter_list { false };
 };
 
 }

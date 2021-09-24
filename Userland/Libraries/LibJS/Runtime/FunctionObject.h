@@ -39,22 +39,16 @@ public:
     // [[Realm]]
     virtual Realm* realm() const { return nullptr; }
 
-    // This is for IsSimpleParameterList (static semantics)
-    bool has_simple_parameter_list() const { return m_has_simple_parameter_list; }
-
 protected:
     virtual void visit_edges(Visitor&) override;
 
     explicit FunctionObject(Object& prototype);
     FunctionObject(Value bound_this, Vector<Value> bound_arguments, Object& prototype);
 
-    void set_has_simple_parameter_list(bool b) { m_has_simple_parameter_list = b; }
-
 private:
     virtual bool is_function() const override { return true; }
     Value m_bound_this;
     Vector<Value> m_bound_arguments;
-    bool m_has_simple_parameter_list { false };
 };
 
 }
