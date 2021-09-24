@@ -886,7 +886,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
             interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ClassExtendsValueNotAConstructorOrNull, super_constructor.to_string_without_side_effects());
             return {};
         }
-        class_constructor->set_constructor_kind(FunctionObject::ConstructorKind::Derived);
+        class_constructor->set_constructor_kind(ECMAScriptFunctionObject::ConstructorKind::Derived);
 
         Object* super_constructor_prototype = nullptr;
         if (!super_constructor.is_null()) {

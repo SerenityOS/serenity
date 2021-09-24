@@ -17,6 +17,11 @@ class ECMAScriptFunctionObject final : public FunctionObject {
     JS_OBJECT(ECMAScriptFunctionObject, FunctionObject);
 
 public:
+    enum class ConstructorKind : u8 {
+        Base,
+        Derived,
+    };
+
     enum class ThisMode : u8 {
         Lexical,
         Strict,
@@ -45,6 +50,9 @@ public:
     virtual Environment* environment() override { return m_environment; }
     virtual Realm* realm() const override { return m_realm; }
 
+    ConstructorKind constructor_kind() const { return m_constructor_kind; };
+    void set_constructor_kind(ConstructorKind constructor_kind) { m_constructor_kind = constructor_kind; }
+
     ThisMode this_mode() const { return m_this_mode; }
 
 protected:
@@ -58,13 +66,14 @@ private:
     Value execute_function_body();
 
     // Internal Slots of ECMAScript Function Objects, https://tc39.es/ecma262/#table-internal-slots-of-ecmascript-function-objects
-    Environment* m_environment { nullptr };                    // [[Environment]]
-    Vector<FunctionNode::Parameter> const m_formal_parameters; // [[FormalParameters]]
-    NonnullRefPtr<Statement> m_ecmascript_code;                // [[ECMAScriptCode]]
-    Realm* m_realm { nullptr };                                // [[Realm]]
-    ThisMode m_this_mode { ThisMode::Global };                 // [[ThisMode]]
-    bool m_strict { false };                                   // [[Strict]]
-    bool m_is_class_constructor { false };                     // [[IsClassConstructor]]
+    Environment* m_environment { nullptr };                       // [[Environment]]
+    Vector<FunctionNode::Parameter> const m_formal_parameters;    // [[FormalParameters]]
+    NonnullRefPtr<Statement> m_ecmascript_code;                   // [[ECMAScriptCode]]
+    ConstructorKind m_constructor_kind { ConstructorKind::Base }; // [[ConstructorKind]]
+    Realm* m_realm { nullptr };                                   // [[Realm]]
+    ThisMode m_this_mode { ThisMode::Global };                    // [[ThisMode]]
+    bool m_strict { false };                                      // [[Strict]]
+    bool m_is_class_constructor { false };                        // [[IsClassConstructor]]
 
     FlyString m_name;
     Optional<Bytecode::Executable> m_bytecode_executable;
