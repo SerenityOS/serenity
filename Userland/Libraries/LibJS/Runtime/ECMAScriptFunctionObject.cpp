@@ -34,11 +34,11 @@ ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_
         prototype = global_object.generator_function_prototype();
         break;
     }
-    return global_object.heap().allocate<ECMAScriptFunctionObject>(global_object, global_object, move(name), ecmascript_code, move(parameters), m_function_length, parent_scope, *prototype, kind, is_strict, is_arrow_function);
+    return global_object.heap().allocate<ECMAScriptFunctionObject>(global_object, move(name), ecmascript_code, move(parameters), m_function_length, parent_scope, *prototype, kind, is_strict, is_arrow_function);
 }
 
-ECMAScriptFunctionObject::ECMAScriptFunctionObject(GlobalObject& global_object, FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> formal_parameters, i32 function_length, Environment* parent_scope, Object& prototype, FunctionKind kind, bool strict, bool is_arrow_function)
-    : FunctionObject(is_arrow_function ? vm().this_value(global_object) : Value(), {}, prototype)
+ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> formal_parameters, i32 function_length, Environment* parent_scope, Object& prototype, FunctionKind kind, bool strict, bool is_arrow_function)
+    : FunctionObject(prototype)
     , m_environment(parent_scope)
     , m_formal_parameters(move(formal_parameters))
     , m_ecmascript_code(ecmascript_code)

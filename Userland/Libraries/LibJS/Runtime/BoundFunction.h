@@ -14,7 +14,7 @@ class BoundFunction final : public FunctionObject {
     JS_OBJECT(BoundFunction, FunctionObject);
 
 public:
-    BoundFunction(GlobalObject&, FunctionObject& target_function, Value bound_this, Vector<Value> arguments, i32 length, Object* constructor_prototype);
+    BoundFunction(GlobalObject&, FunctionObject& target_function, Value bound_this, Vector<Value> bound_arguments, i32 length, Object* constructor_prototype);
     virtual void initialize(GlobalObject&) override;
     virtual ~BoundFunction();
 
@@ -25,11 +25,15 @@ public:
     virtual bool is_strict_mode() const override { return m_bound_target_function->is_strict_mode(); }
 
     FunctionObject& bound_target_function() const { return *m_bound_target_function; }
+    Value bound_this() const { return m_bound_this; }
+    Vector<Value> const& bound_arguments() const { return m_bound_arguments; }
 
 private:
     virtual void visit_edges(Visitor&) override;
 
     FunctionObject* m_bound_target_function { nullptr }; // [[BoundTargetFunction]]
+    Value m_bound_this;                                  // [[BoundThis]]
+    Vector<Value> m_bound_arguments;                     // [[BoundArguments]]
 
     Object* m_constructor_prototype { nullptr };
     FlyString m_name;
