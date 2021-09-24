@@ -8,10 +8,10 @@
 #include <AK/ScopeGuard.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/OrdinaryFunctionObject.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/Value.h>
@@ -100,7 +100,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
             lexical_environment()->put_into_environment(declaration.name(), { js_undefined(), DeclarationKind::Var });
         }
         for (auto& declaration : scope_node.functions()) {
-            auto* function = OrdinaryFunctionObject::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), lexical_environment(), declaration.kind(), declaration.is_strict_mode());
+            auto* function = ECMAScriptFunctionObject::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), lexical_environment(), declaration.kind(), declaration.is_strict_mode());
             vm().set_variable(declaration.name(), function, global_object);
         }
     });

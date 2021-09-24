@@ -237,7 +237,7 @@ bool Value::is_constructor() const
         return static_cast<const NativeFunction&>(as_object()).has_constructor();
     if (is<BoundFunction>(as_object()))
         return Value(&static_cast<const BoundFunction&>(as_object()).target_function()).is_constructor();
-    // OrdinaryFunctionObject
+    // ECMAScriptFunctionObject
     return true;
 }
 

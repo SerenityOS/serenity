@@ -11,7 +11,6 @@
 
 namespace JS {
 
-// 10.2 ECMAScript Function Objects, https://tc39.es/ecma262/#sec-ecmascript-function-objects
 class FunctionObject : public Object {
     JS_OBJECT(Function, Object);
 

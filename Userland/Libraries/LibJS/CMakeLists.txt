@@ -53,6 +53,7 @@ set(SOURCES
     Runtime/DateConstructor.cpp
     Runtime/DatePrototype.cpp
     Runtime/DeclarativeEnvironment.cpp
+    Runtime/ECMAScriptFunctionObject.cpp
     Runtime/Environment.cpp
     Runtime/Error.cpp
     Runtime/ErrorConstructor.cpp
@@ -105,7 +106,6 @@ set(SOURCES
     Runtime/ObjectConstructor.cpp
     Runtime/ObjectEnvironment.cpp
     Runtime/ObjectPrototype.cpp
-    Runtime/OrdinaryFunctionObject.cpp
     Runtime/PrimitiveString.cpp
     Runtime/Promise.cpp
     Runtime/PromiseConstructor.cpp
