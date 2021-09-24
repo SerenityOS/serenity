@@ -9,13 +9,13 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/BoundFunction.h>
+#include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/FunctionPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/NativeFunction.h>
-#include <LibJS/Runtime/OrdinaryFunctionObject.h>
 
 namespace JS {
 
@@ -117,11 +117,11 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
     String function_parameters;
     String function_body;
 
-    if (is<OrdinaryFunctionObject>(this_object)) {
-        auto& ordinary_function = static_cast<OrdinaryFunctionObject&>(*this_object);
+    if (is<ECMAScriptFunctionObject>(this_object)) {
+        auto& function = static_cast<ECMAScriptFunctionObject&>(*this_object);
         StringBuilder parameters_builder;
         auto first = true;
-        for (auto& parameter : ordinary_function.parameters()) {
+        for (auto& parameter : function.parameters()) {
             // FIXME: Also stringify binding patterns.
             if (auto* name_ptr = parameter.binding.get_pointer<FlyString>()) {
                 if (!first)
@@ -134,10 +134,10 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
                 }
             }
         }
-        function_name = ordinary_function.name();
+        function_name = function.name();
         function_parameters = parameters_builder.build();
         // FIXME: ASTNodes should be able to dump themselves to source strings - something like this:
-        // auto& body = static_cast<OrdinaryFunctionObject*>(this_object)->body();
+        // auto& body = static_cast<ECMAScriptFunctionObject*>(this_object)->body();
         // function_body = body.to_source();
         function_body = "  ???";
     } else {

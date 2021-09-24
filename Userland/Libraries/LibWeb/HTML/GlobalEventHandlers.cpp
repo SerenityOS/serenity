@@ -6,7 +6,6 @@
 
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
-#include <LibJS/Runtime/OrdinaryFunctionObject.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/HTML/EventHandler.h>

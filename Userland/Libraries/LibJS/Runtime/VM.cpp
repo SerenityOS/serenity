@@ -12,6 +12,7 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BoundFunction.h>
+#include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FinalizationRegistry.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
@@ -19,7 +20,6 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/NativeFunction.h>
-#include <LibJS/Runtime/OrdinaryFunctionObject.h>
 #include <LibJS/Runtime/PromiseReaction.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/Symbol.h>
@@ -377,7 +377,7 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
                 if (context.function->is_strict_mode() || !context.function->has_simple_parameter_list()) {
                     context.arguments_object = create_unmapped_arguments_object(global_object, context.arguments.span());
                 } else {
-                    context.arguments_object = create_mapped_arguments_object(global_object, *context.function, verify_cast<OrdinaryFunctionObject>(context.function)->parameters(), context.arguments.span(), *lexical_environment());
+                    context.arguments_object = create_mapped_arguments_object(global_object, *context.function, verify_cast<ECMAScriptFunctionObject>(context.function)->parameters(), context.arguments.span(), *lexical_environment());
                 }
             }
             return context.arguments_object;
@@ -479,7 +479,7 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
         this_argument = TRY_OR_DISCARD(ordinary_create_from_constructor<Object>(global_object, new_target, &GlobalObject::object_prototype));
 
     // FIXME: prepare_for_ordinary_call() is not supposed to receive a BoundFunction, ProxyObject, etc. - ever.
-    //        This needs to be moved to NativeFunction/OrdinaryFunctionObject's construct() (10.2.2 [[Construct]])
+    //        This needs to be moved to NativeFunction/ECMAScriptFunctionObject's construct() (10.2.2 [[Construct]])
     ExecutionContext callee_context(heap());
     prepare_for_ordinary_call(function, callee_context, &new_target);
     if (exception())
@@ -677,7 +677,7 @@ ThrowCompletionOr<Value> VM::call_internal(FunctionObject& function, Value this_
     }
 
     // FIXME: prepare_for_ordinary_call() is not supposed to receive a BoundFunction, ProxyObject, etc. - ever.
-    //        This needs to be moved to NativeFunction/OrdinaryFunctionObject's construct() (10.2.2 [[Construct]])
+    //        This needs to be moved to NativeFunction/ECMAScriptFunctionObject's construct() (10.2.2 [[Construct]])
     ExecutionContext callee_context(heap());
     prepare_for_ordinary_call(function, callee_context, nullptr);
     if (auto* exception = this->exception())

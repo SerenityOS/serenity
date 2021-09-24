@@ -12,18 +12,18 @@
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GeneratorObject.h>
 #include <LibJS/Runtime/GeneratorObjectPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
-#include <LibJS/Runtime/OrdinaryFunctionObject.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-OrdinaryFunctionObject* OrdinaryFunctionObject::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind kind, bool is_strict, bool is_arrow_function)
+ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind kind, bool is_strict, bool is_arrow_function)
 {
     Object* prototype = nullptr;
     switch (kind) {
@@ -34,10 +34,10 @@ OrdinaryFunctionObject* OrdinaryFunctionObject::create(GlobalObject& global_obje
         prototype = global_object.generator_function_prototype();
         break;
     }
-    return global_object.heap().allocate<OrdinaryFunctionObject>(global_object, global_object, name, body, move(parameters), m_function_length, parent_scope, *prototype, kind, is_strict, is_arrow_function);
+    return global_object.heap().allocate<ECMAScriptFunctionObject>(global_object, global_object, name, body, move(parameters), m_function_length, parent_scope, *prototype, kind, is_strict, is_arrow_function);
 }
 
-OrdinaryFunctionObject::OrdinaryFunctionObject(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 function_length, Environment* parent_scope, Object& prototype, FunctionKind kind, bool is_strict, bool is_arrow_function)
+ECMAScriptFunctionObject::ECMAScriptFunctionObject(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 function_length, Environment* parent_scope, Object& prototype, FunctionKind kind, bool is_strict, bool is_arrow_function)
     : FunctionObject(is_arrow_function ? vm().this_value(global_object) : Value(), {}, prototype)
     , m_name(name)
     , m_body(body)
@@ -69,7 +69,7 @@ OrdinaryFunctionObject::OrdinaryFunctionObject(GlobalObject& global_object, cons
     }));
 }
 
-void OrdinaryFunctionObject::initialize(GlobalObject& global_object)
+void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     Base::initialize(global_object);
@@ -90,18 +90,18 @@ void OrdinaryFunctionObject::initialize(GlobalObject& global_object)
     define_property_or_throw(vm.names.name, { .value = js_string(vm, m_name.is_null() ? "" : m_name), .writable = false, .enumerable = false, .configurable = true });
 }
 
-OrdinaryFunctionObject::~OrdinaryFunctionObject()
+ECMAScriptFunctionObject::~ECMAScriptFunctionObject()
 {
 }
 
-void OrdinaryFunctionObject::visit_edges(Visitor& visitor)
+void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_environment);
     visitor.visit(m_realm);
 }
 
-FunctionEnvironment* OrdinaryFunctionObject::create_environment(FunctionObject& function_being_invoked)
+FunctionEnvironment* ECMAScriptFunctionObject::create_environment(FunctionObject& function_being_invoked)
 {
     HashMap<FlyString, Variable> variables;
     for (auto& parameter : m_parameters) {
@@ -140,7 +140,7 @@ FunctionEnvironment* OrdinaryFunctionObject::create_environment(FunctionObject& 
     return environment;
 }
 
-Value OrdinaryFunctionObject::execute_function_body()
+Value ECMAScriptFunctionObject::execute_function_body()
 {
     auto& vm = this->vm();
 
@@ -217,7 +217,7 @@ Value OrdinaryFunctionObject::execute_function_body()
     }
 }
 
-Value OrdinaryFunctionObject::call()
+Value ECMAScriptFunctionObject::call()
 {
     if (m_is_class_constructor) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::ClassConstructorWithoutNew, m_name);
@@ -226,7 +226,7 @@ Value OrdinaryFunctionObject::call()
     return execute_function_body();
 }
 
-Value OrdinaryFunctionObject::construct(FunctionObject&)
+Value ECMAScriptFunctionObject::construct(FunctionObject&)
 {
     if (m_is_arrow_function || m_kind == FunctionKind::Generator) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, m_name);
@@ -235,7 +235,7 @@ Value OrdinaryFunctionObject::construct(FunctionObject&)
     return execute_function_body();
 }
 
-void OrdinaryFunctionObject::set_name(const FlyString& name)
+void ECMAScriptFunctionObject::set_name(const FlyString& name)
 {
     VERIFY(!name.is_null());
     auto& vm = this->vm();

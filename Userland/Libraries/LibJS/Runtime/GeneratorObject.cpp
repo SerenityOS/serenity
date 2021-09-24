@@ -13,7 +13,7 @@
 
 namespace JS {
 
-GeneratorObject* GeneratorObject::create(GlobalObject& global_object, Value initial_value, OrdinaryFunctionObject* generating_function, Environment* generating_scope, Bytecode::RegisterWindow frame)
+GeneratorObject* GeneratorObject::create(GlobalObject& global_object, Value initial_value, ECMAScriptFunctionObject* generating_function, Environment* generating_scope, Bytecode::RegisterWindow frame)
 {
     // This is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
     auto generating_function_proto_property = generating_function->get(global_object.vm().names.prototype).to_object(global_object);

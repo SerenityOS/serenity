@@ -7,7 +7,6 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/FunctionObject.h>
-#include <LibJS/Runtime/OrdinaryFunctionObject.h>
 #include <LibProtocol/WebSocket.h>
 #include <LibProtocol/WebSocketClient.h>
 #include <LibWeb/Bindings/EventWrapper.h>

@@ -12,15 +12,16 @@
 
 namespace JS {
 
-class OrdinaryFunctionObject final : public FunctionObject {
-    JS_OBJECT(OrdinaryFunctionObject, FunctionObject);
+// 10.2 ECMAScript Function Objects, https://tc39.es/ecma262/#sec-ecmascript-function-objects
+class ECMAScriptFunctionObject final : public FunctionObject {
+    JS_OBJECT(ECMAScriptFunctionObject, FunctionObject);
 
 public:
-    static OrdinaryFunctionObject* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind, bool is_strict, bool is_arrow_function = false);
+    static ECMAScriptFunctionObject* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind, bool is_strict, bool is_arrow_function = false);
 
-    OrdinaryFunctionObject(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, Object& prototype, FunctionKind, bool is_strict, bool is_arrow_function = false);
+    ECMAScriptFunctionObject(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, Object& prototype, FunctionKind, bool is_strict, bool is_arrow_function = false);
     virtual void initialize(GlobalObject&) override;
-    virtual ~OrdinaryFunctionObject();
+    virtual ~ECMAScriptFunctionObject();
 
     const Statement& body() const { return m_body; }
     const Vector<FunctionNode::Parameter>& parameters() const { return m_parameters; };
@@ -42,7 +43,7 @@ protected:
     virtual bool is_strict_mode() const final { return m_is_strict; }
 
 private:
-    virtual bool is_ordinary_function_object() const override { return true; }
+    virtual bool is_ecmascript_function_object() const override { return true; }
     virtual FunctionEnvironment* create_environment(FunctionObject&) override;
     virtual void visit_edges(Visitor&) override;
 

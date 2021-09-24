@@ -15,7 +15,7 @@ test("bad argument values", () => {
         [{}, "[object Object]"],
         [true, "true"],
         ["foobar", "foobar"],
-        [function () {}, "[object OrdinaryFunctionObject]"], // FIXME: Better function stringification
+        [function () {}, "[object ECMAScriptFunctionObject]"], // FIXME: Better function stringification
     ].forEach(testCase => {
         expect(() => {
             Symbol.keyFor(testCase[0]);
