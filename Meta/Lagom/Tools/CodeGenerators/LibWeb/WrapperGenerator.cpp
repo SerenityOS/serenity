@@ -1739,12 +1739,15 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
                 }
             } else {
                 attribute_generator.append(R"~~~(
-    [[maybe_unused]] auto retval = throw_dom_exception_if_needed(vm, global_object, [&] { return impl->set_@attribute.name:snakecase@(cpp_value); });
+    auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return impl->set_@attribute.name:snakecase@(cpp_value); });
+
+    if (should_return_empty(result))
+        return JS::Value();
 )~~~");
             }
 
             attribute_generator.append(R"~~~(
-    return {};
+    return JS::js_undefined();
 }
 )~~~");
         }
