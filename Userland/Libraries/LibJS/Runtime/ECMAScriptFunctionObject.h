@@ -17,14 +17,14 @@ class ECMAScriptFunctionObject final : public FunctionObject {
     JS_OBJECT(ECMAScriptFunctionObject, FunctionObject);
 
 public:
-    static ECMAScriptFunctionObject* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind, bool is_strict, bool is_arrow_function = false);
+    static ECMAScriptFunctionObject* create(GlobalObject&, FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind, bool is_strict, bool is_arrow_function = false);
 
-    ECMAScriptFunctionObject(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, Object& prototype, FunctionKind, bool is_strict, bool is_arrow_function = false);
+    ECMAScriptFunctionObject(GlobalObject&, FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, Object& prototype, FunctionKind, bool is_strict, bool is_arrow_function = false);
     virtual void initialize(GlobalObject&) override;
     virtual ~ECMAScriptFunctionObject();
 
-    const Statement& body() const { return m_body; }
-    const Vector<FunctionNode::Parameter>& parameters() const { return m_parameters; };
+    Statement const& ecmascript_code() const { return m_ecmascript_code; }
+    Vector<FunctionNode::Parameter> const& formal_parameters() const { return m_formal_parameters; };
 
     virtual Value call() override;
     virtual Value construct(FunctionObject& new_target) override;
@@ -40,7 +40,7 @@ public:
     virtual Realm* realm() const override { return m_realm; }
 
 protected:
-    virtual bool is_strict_mode() const final { return m_is_strict; }
+    virtual bool is_strict_mode() const final { return m_strict; }
 
 private:
     virtual bool is_ecmascript_function_object() const override { return true; }
@@ -49,17 +49,19 @@ private:
 
     Value execute_function_body();
 
+    // Internal Slots of ECMAScript Function Objects, https://tc39.es/ecma262/#table-internal-slots-of-ecmascript-function-objects
+    Environment* m_environment { nullptr };                    // [[Environment]]
+    Vector<FunctionNode::Parameter> const m_formal_parameters; // [[FormalParameters]]
+    NonnullRefPtr<Statement> m_ecmascript_code;                // [[ECMAScriptCode]]
+    Realm* m_realm { nullptr };                                // [[Realm]]
+    bool m_strict { false };                                   // [[Strict]]
+    bool m_is_class_constructor { false };                     // [[IsClassConstructor]]
+
     FlyString m_name;
-    NonnullRefPtr<Statement> m_body;
-    const Vector<FunctionNode::Parameter> m_parameters;
     Optional<Bytecode::Executable> m_bytecode_executable;
-    Environment* m_environment { nullptr };
-    Realm* m_realm { nullptr };
     i32 m_function_length { 0 };
     FunctionKind m_kind { FunctionKind::Regular };
-    bool m_is_strict { false };
     bool m_is_arrow_function { false };
-    bool m_is_class_constructor { false };
 };
 
 }
