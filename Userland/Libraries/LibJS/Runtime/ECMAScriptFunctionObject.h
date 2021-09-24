@@ -17,6 +17,12 @@ class ECMAScriptFunctionObject final : public FunctionObject {
     JS_OBJECT(ECMAScriptFunctionObject, FunctionObject);
 
 public:
+    enum class ThisMode : u8 {
+        Lexical,
+        Strict,
+        Global,
+    };
+
     static ECMAScriptFunctionObject* create(GlobalObject&, FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind, bool is_strict, bool is_arrow_function = false);
 
     ECMAScriptFunctionObject(GlobalObject&, FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, Object& prototype, FunctionKind, bool is_strict, bool is_arrow_function = false);
@@ -39,6 +45,8 @@ public:
     virtual Environment* environment() override { return m_environment; }
     virtual Realm* realm() const override { return m_realm; }
 
+    ThisMode this_mode() const { return m_this_mode; }
+
 protected:
     virtual bool is_strict_mode() const final { return m_strict; }
 
@@ -54,6 +62,7 @@ private:
     Vector<FunctionNode::Parameter> const m_formal_parameters; // [[FormalParameters]]
     NonnullRefPtr<Statement> m_ecmascript_code;                // [[ECMAScriptCode]]
     Realm* m_realm { nullptr };                                // [[Realm]]
+    ThisMode m_this_mode { ThisMode::Global };                 // [[ThisMode]]
     bool m_strict { false };                                   // [[Strict]]
     bool m_is_class_constructor { false };                     // [[IsClassConstructor]]
 

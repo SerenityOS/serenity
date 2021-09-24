@@ -50,16 +50,6 @@ public:
     // [[Realm]]
     virtual Realm* realm() const { return nullptr; }
 
-    enum class ThisMode : u8 {
-        Lexical,
-        Strict,
-        Global,
-    };
-
-    // [[ThisMode]]
-    ThisMode this_mode() const { return m_this_mode; }
-    void set_this_mode(ThisMode this_mode) { m_this_mode = this_mode; }
-
     // This is for IsSimpleParameterList (static semantics)
     bool has_simple_parameter_list() const { return m_has_simple_parameter_list; }
 
@@ -88,7 +78,6 @@ private:
     Vector<Value> m_bound_arguments;
     Object* m_home_object { nullptr };
     ConstructorKind m_constructor_kind = ConstructorKind::Base;
-    ThisMode m_this_mode { ThisMode::Global };
     bool m_has_simple_parameter_list { false };
     Vector<InstanceField> m_fields;
 };
