@@ -218,12 +218,22 @@ String IODevice::read_line(size_t max_size)
     return {};
 }
 
-bool IODevice::populate_read_buffer() const
+bool IODevice::populate_read_buffer(size_t size) const
 {
     if (m_fd < 0)
         return false;
-    u8 buffer[1024];
-    int nread = ::read(m_fd, buffer, sizeof(buffer));
+    if (!size)
+        return false;
+
+    auto buffer_result = ByteBuffer::create_uninitialized(size);
+    if (!buffer_result.has_value()) {
+        dbgln("IODevice::populate_read_buffer: Not enough memory to allocate a buffer of {} bytes", size);
+        return {};
+    }
+    auto buffer = buffer_result.release_value();
+    auto* buffer_ptr = (char*)buffer.data();
+
+    int nread = ::read(m_fd, buffer_ptr, size);
     if (nread < 0) {
         set_error(errno);
         return false;
@@ -232,7 +242,7 @@ bool IODevice::populate_read_buffer() const
         set_eof(true);
         return false;
     }
-    m_buffered_data.append(buffer, nread);
+    m_buffered_data.append(buffer.data(), nread);
     return true;
 }
 
