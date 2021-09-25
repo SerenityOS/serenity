@@ -55,6 +55,10 @@ MainWidget::MainWidget()
         m_tool_properties_widget->set_active_tool(tool);
     };
 
+    m_tab_widget->on_middle_click = [&](auto& widget) {
+        m_tab_widget->on_tab_close_click(widget);
+    };
+
     m_tab_widget->on_tab_close_click = [&](auto& widget) {
         auto& image_editor = verify_cast<PixelPaint::ImageEditor>(widget);
 
