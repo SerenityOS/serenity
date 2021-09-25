@@ -16,8 +16,6 @@
 
 namespace ELF {
 
-static const char* name_for_dtag(ElfW(Sword) d_tag);
-
 DynamicObject::DynamicObject(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address)
     : m_filename(filename)
     , m_base_address(base_address)
@@ -337,7 +335,7 @@ DynamicObject::InitializationFunction DynamicObject::init_section_function() con
     return (InitializationFunction)init_section().address().as_ptr();
 }
 
-static const char* name_for_dtag(ElfW(Sword) d_tag)
+const char* DynamicObject::name_for_dtag(ElfW(Sword) d_tag)
 {
     switch (d_tag) {
     case DT_NULL:

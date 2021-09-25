@@ -20,6 +20,7 @@ namespace ELF {
 class DynamicObject : public RefCounted<DynamicObject> {
 public:
     static NonnullRefPtr<DynamicObject> create(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address);
+    static const char* name_for_dtag(ElfW(Sword) d_tag);
 
     ~DynamicObject();
     void dump() const;

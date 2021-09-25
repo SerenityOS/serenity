@@ -268,98 +268,6 @@ static const char* object_relocation_type_to_string(ElfW(Word) type)
     }
 }
 
-static const char* object_tag_to_string(ElfW(Sword) dt_tag)
-{
-    switch (dt_tag) {
-    case DT_NULL:
-        return "NULL"; /* marks end of _DYNAMIC array */
-    case DT_NEEDED:
-        return "NEEDED"; /* string table offset of needed lib */
-    case DT_PLTRELSZ:
-        return "PLTRELSZ"; /* size of relocation entries in PLT */
-    case DT_PLTGOT:
-        return "PLTGOT"; /* address PLT/GOT */
-    case DT_HASH:
-        return "HASH"; /* address of symbol hash table */
-    case DT_STRTAB:
-        return "STRTAB"; /* address of string table */
-    case DT_SYMTAB:
-        return "SYMTAB"; /* address of symbol table */
-    case DT_RELA:
-        return "RELA"; /* address of relocation table */
-    case DT_RELASZ:
-        return "RELASZ"; /* size of relocation table */
-    case DT_RELAENT:
-        return "RELAENT"; /* size of relocation entry */
-    case DT_STRSZ:
-        return "STRSZ"; /* size of string table */
-    case DT_SYMENT:
-        return "SYMENT"; /* size of symbol table entry */
-    case DT_INIT:
-        return "INIT"; /* address of initialization func. */
-    case DT_FINI:
-        return "FINI"; /* address of termination function */
-    case DT_SONAME:
-        return "SONAME"; /* string table offset of shared obj */
-    case DT_RPATH:
-        return "RPATH"; /* string table offset of library search path */
-    case DT_SYMBOLIC:
-        return "SYMBOLIC"; /* start sym search in shared obj. */
-    case DT_REL:
-        return "REL"; /* address of rel. tbl. w addends */
-    case DT_RELSZ:
-        return "RELSZ"; /* size of DT_REL relocation table */
-    case DT_RELENT:
-        return "RELENT"; /* size of DT_REL relocation entry */
-    case DT_PLTREL:
-        return "PLTREL"; /* PLT referenced relocation entry */
-    case DT_DEBUG:
-        return "DEBUG"; /* bugger */
-    case DT_TEXTREL:
-        return "TEXTREL"; /* Allow rel. mod. to unwritable seg */
-    case DT_JMPREL:
-        return "JMPREL"; /* add. of PLT's relocation entries */
-    case DT_BIND_NOW:
-        return "BIND_NOW"; /* Bind now regardless of env setting */
-    case DT_INIT_ARRAY:
-        return "INIT_ARRAY"; /* address of array of init func */
-    case DT_FINI_ARRAY:
-        return "FINI_ARRAY"; /* address of array of term func */
-    case DT_INIT_ARRAYSZ:
-        return "INIT_ARRAYSZ"; /* size of array of init func */
-    case DT_FINI_ARRAYSZ:
-        return "FINI_ARRAYSZ"; /* size of array of term func */
-    case DT_RUNPATH:
-        return "RUNPATH"; /* strtab offset of lib search path */
-    case DT_FLAGS:
-        return "FLAGS"; /* Set of DF_* flags */
-    case DT_ENCODING:
-        return "ENCODING"; /* further DT_* follow encoding rules */
-    case DT_PREINIT_ARRAY:
-        return "PREINIT_ARRAY"; /* address of array of preinit func */
-    case DT_PREINIT_ARRAYSZ:
-        return "PREINIT_ARRAYSZ"; /* size of array of preinit func */
-    case DT_LOOS:
-        return "LOOS"; /* reserved range for OS */
-    case DT_HIOS:
-        return "HIOS"; /*  specific dynamic array tags */
-    case DT_LOPROC:
-        return "LOPROC"; /* reserved range for processor */
-    case DT_HIPROC:
-        return "HIPROC"; /*  specific dynamic array tags */
-    case DT_GNU_HASH:
-        return "GNU_HASH"; /* address of GNU hash table */
-    case DT_RELACOUNT:
-        return "RELACOUNT"; /* if present, number of RELATIVE */
-    case DT_RELCOUNT:
-        return "RELCOUNT"; /* relocs, which must come first */
-    case DT_FLAGS_1:
-        return "FLAGS_1";
-    default:
-        return "??";
-    }
-}
-
 int main(int argc, char** argv)
 {
     if (pledge("stdio rpath", nullptr) < 0) {
@@ -616,7 +524,7 @@ int main(int argc, char** argv)
             outln("  Tag        Type              Name / Value");
             object->for_each_dynamic_entry([&library_index, &libraries, &object](const ELF::DynamicObject::DynamicEntry& entry) {
                 out("  {:#08x} ", entry.tag());
-                out("{:17} ", object_tag_to_string(entry.tag()));
+                out("{:17} ", ELF::DynamicObject::name_for_dtag(entry.tag()));
 
                 if (entry.tag() == DT_NEEDED) {
                     outln("Shared library: {}", libraries[library_index]);
