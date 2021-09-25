@@ -19,7 +19,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOMParsing/InnerHTML.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
-#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/ListItemBox.h>

@@ -23,10 +23,10 @@ public:
     bool is_ready_to_be_parser_executed() const { return m_ready_to_be_parser_executed; }
     bool failed_to_load() const { return m_failed_to_load; }
 
-    void set_parser_document(Badge<HTMLDocumentParser>, DOM::Document&);
-    void set_non_blocking(Badge<HTMLDocumentParser>, bool);
-    void set_already_started(Badge<HTMLDocumentParser>, bool b) { m_already_started = b; }
-    void prepare_script(Badge<HTMLDocumentParser>) { prepare_script(); }
+    void set_parser_document(Badge<HTMLParser>, DOM::Document&);
+    void set_non_blocking(Badge<HTMLParser>, bool);
+    void set_already_started(Badge<HTMLParser>, bool b) { m_already_started = b; }
+    void prepare_script(Badge<HTMLParser>) { prepare_script(); }
     void execute_script();
 
     bool is_parser_inserted() const { return !!m_parser_document; }

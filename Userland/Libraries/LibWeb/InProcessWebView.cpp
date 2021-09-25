@@ -14,7 +14,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
-#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TextNode.h>

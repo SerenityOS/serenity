@@ -782,7 +782,7 @@ void Document::set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement
     m_pending_parsing_blocking_script = script;
 }
 
-NonnullRefPtr<HTML::HTMLScriptElement> Document::take_pending_parsing_blocking_script(Badge<HTML::HTMLDocumentParser>)
+NonnullRefPtr<HTML::HTMLScriptElement> Document::take_pending_parsing_blocking_script(Badge<HTML::HTMLParser>)
 {
     return m_pending_parsing_blocking_script.release_nonnull();
 }
@@ -792,7 +792,7 @@ void Document::add_script_to_execute_when_parsing_has_finished(Badge<HTML::HTMLS
     m_scripts_to_execute_when_parsing_has_finished.append(script);
 }
 
-NonnullRefPtrVector<HTML::HTMLScriptElement> Document::take_scripts_to_execute_when_parsing_has_finished(Badge<HTML::HTMLDocumentParser>)
+NonnullRefPtrVector<HTML::HTMLScriptElement> Document::take_scripts_to_execute_when_parsing_has_finished(Badge<HTML::HTMLParser>)
 {
     return move(m_scripts_to_execute_when_parsing_has_finished);
 }
@@ -802,7 +802,7 @@ void Document::add_script_to_execute_as_soon_as_possible(Badge<HTML::HTMLScriptE
     m_scripts_to_execute_as_soon_as_possible.append(script);
 }
 
-NonnullRefPtrVector<HTML::HTMLScriptElement> Document::take_scripts_to_execute_as_soon_as_possible(Badge<HTML::HTMLDocumentParser>)
+NonnullRefPtrVector<HTML::HTMLScriptElement> Document::take_scripts_to_execute_as_soon_as_possible(Badge<HTML::HTMLParser>)
 {
     return move(m_scripts_to_execute_as_soon_as_possible);
 }

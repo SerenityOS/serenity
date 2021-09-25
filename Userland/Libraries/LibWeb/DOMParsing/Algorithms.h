@@ -8,7 +8,7 @@
 
 #include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/ExceptionOr.h>
-#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 
 namespace Web::DOMParsing {
 
@@ -17,7 +17,7 @@ static DOM::ExceptionOr<NonnullRefPtr<DOM::DocumentFragment>> parse_fragment(Str
 {
     // FIXME: Handle XML documents.
 
-    auto new_children = HTML::HTMLDocumentParser::parse_html_fragment(context_element, markup);
+    auto new_children = HTML::HTMLParser::parse_html_fragment(context_element, markup);
     auto fragment = make_ref_counted<DOM::DocumentFragment>(context_element.document());
 
     for (auto& child : new_children) {

@@ -5,7 +5,7 @@
  */
 
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Parser/StackOfOpenElements.h>
 
 namespace Web::HTML {
@@ -107,7 +107,7 @@ DOM::Element* StackOfOpenElements::topmost_special_node_below(const DOM::Element
         auto& element = m_elements[i];
         if (&element == &formatting_element)
             break;
-        if (HTMLDocumentParser::is_special_tag(element.local_name(), element.namespace_()))
+        if (HTMLParser::is_special_tag(element.local_name(), element.namespace_()))
             found_element = &element;
     }
     return found_element;

@@ -111,7 +111,7 @@ class HTMLDialogElement;
 class HTMLDirectoryElement;
 class HTMLDivElement;
 class HTMLDListElement;
-class HTMLDocumentParser;
+class HTMLParser;
 class HTMLElement;
 class HTMLEmbedElement;
 class HTMLFieldSetElement;

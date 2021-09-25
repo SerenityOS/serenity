@@ -31,12 +31,12 @@ HTMLScriptElement::~HTMLScriptElement()
 {
 }
 
-void HTMLScriptElement::set_parser_document(Badge<HTMLDocumentParser>, DOM::Document& document)
+void HTMLScriptElement::set_parser_document(Badge<HTMLParser>, DOM::Document& document)
 {
     m_parser_document = document;
 }
 
-void HTMLScriptElement::set_non_blocking(Badge<HTMLDocumentParser>, bool non_blocking)
+void HTMLScriptElement::set_non_blocking(Badge<HTMLParser>, bool non_blocking)
 {
     m_non_blocking = non_blocking;
 }

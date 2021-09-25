@@ -14,7 +14,7 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
-#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/BrowsingContext.h>
@@ -43,7 +43,7 @@ static bool build_markdown_document(DOM::Document& document, const ByteBuffer& d
     if (!markdown_document)
         return false;
 
-    HTML::HTMLDocumentParser parser(document, markdown_document->render_to_html(), "utf-8");
+    HTML::HTMLParser parser(document, markdown_document->render_to_html(), "utf-8");
     parser.run(document.url());
     return true;
 }
@@ -112,7 +112,7 @@ static bool build_gemini_document(DOM::Document& document, const ByteBuffer& dat
     dbgln_if(GEMINI_DEBUG, "Gemini data:\n\"\"\"{}\"\"\"", gemini_data);
     dbgln_if(GEMINI_DEBUG, "Converted to HTML:\n\"\"\"{}\"\"\"", html_data);
 
-    HTML::HTMLDocumentParser parser(document, html_data, "utf-8");
+    HTML::HTMLParser parser(document, html_data, "utf-8");
     parser.run(document.url());
     return true;
 }
@@ -121,7 +121,7 @@ bool FrameLoader::parse_document(DOM::Document& document, const ByteBuffer& data
 {
     auto& mime_type = document.content_type();
     if (mime_type == "text/html" || mime_type == "image/svg+xml") {
-        auto parser = HTML::HTMLDocumentParser::create_with_uncertain_encoding(document, data);
+        auto parser = HTML::HTMLParser::create_with_uncertain_encoding(document, data);
         parser->run(document.url());
         return true;
     }
@@ -213,7 +213,7 @@ bool FrameLoader::load(const AK::URL& url, Type type)
 void FrameLoader::load_html(const StringView& html, const AK::URL& url)
 {
     auto document = DOM::Document::create(url);
-    HTML::HTMLDocumentParser parser(document, html, "utf-8");
+    HTML::HTMLParser parser(document, html, "utf-8");
     parser.run(url);
     browsing_context().set_active_document(&parser.document());
 }
