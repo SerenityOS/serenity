@@ -6,8 +6,6 @@
 
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
-#include <LibJS/Interpreter.h>
-#include <LibJS/Parser.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
@@ -23,7 +21,6 @@ namespace Web::HTML {
 
 HTMLScriptElement::HTMLScriptElement(DOM::Document& document, QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
-    , m_script_filename("(document)")
 {
 }
 
@@ -291,7 +288,6 @@ void HTMLScriptElement::prepare_script()
             //    Fetch a classic script given url, settings object, options, classic script CORS setting, and encoding.
             auto request = LoadRequest::create_for_url_on_page(url, document().page());
 
-            m_script_filename = url.to_string();
             ResourceLoader::the().load(
                 request,
                 [this, url](auto data, auto&, auto) {

@@ -62,8 +62,6 @@ private:
 
     Function<void()> m_script_ready_callback;
 
-    String m_script_filename;
-
     RefPtr<Script> m_script;
 };
 
