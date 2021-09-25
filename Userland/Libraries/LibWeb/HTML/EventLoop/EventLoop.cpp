@@ -178,4 +178,11 @@ void EventLoop::process()
         schedule();
 }
 
+// https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-global-task
+void queue_global_task(HTML::Task::Source source, DOM::Document& document, Function<void()> steps)
+{
+    // FIXME: This should take a global object as input and find the relevant document for it.
+    main_thread_event_loop().task_queue().add(HTML::Task::create(source, &document, move(steps)));
+}
+
 }
