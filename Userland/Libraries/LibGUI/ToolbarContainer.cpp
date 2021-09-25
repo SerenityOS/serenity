@@ -25,8 +25,6 @@ ToolbarContainer::ToolbarContainer(Gfx::Orientation orientation)
 
     auto& layout = set_layout<VerticalBoxLayout>();
     layout.set_spacing(2);
-    layout.set_margins(2);
-
     set_shrink_to_fit(true);
 }
 
