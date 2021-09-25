@@ -110,7 +110,7 @@ public:
 
     Optional<HTMLToken> next_token();
 
-    void switch_to(Badge<HTMLDocumentParser>, State new_state);
+    void switch_to(Badge<HTMLParser>, State new_state);
     void switch_to(State new_state)
     {
         m_state = new_state;

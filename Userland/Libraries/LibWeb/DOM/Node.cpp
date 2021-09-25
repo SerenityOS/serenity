@@ -24,7 +24,7 @@
 #include <LibWeb/DOM/ProcessingInstruction.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
-#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
@@ -771,7 +771,7 @@ String Node::serialize_fragment(/* FIXME: Requires well-formed flag */) const
 
     // FIXME: If context document is an HTML document, return an HTML serialization of node.
     //        (We currently always do this)
-    return HTML::HTMLDocumentParser::serialize_html_fragment(*this);
+    return HTML::HTMLParser::serialize_html_fragment(*this);
 
     // FIXME: Otherwise, context document is an XML document; return an XML serialization of node passing the flag require well-formed.
 }

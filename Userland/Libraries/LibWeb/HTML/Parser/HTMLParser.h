@@ -41,12 +41,12 @@ namespace Web::HTML {
 
 RefPtr<DOM::Document> parse_html_document(const StringView&, const AK::URL&, const String& encoding);
 
-class HTMLDocumentParser {
+class HTMLParser {
 public:
-    HTMLDocumentParser(DOM::Document&, const StringView& input, const String& encoding);
-    ~HTMLDocumentParser();
+    HTMLParser(DOM::Document&, const StringView& input, const String& encoding);
+    ~HTMLParser();
 
-    static NonnullOwnPtr<HTMLDocumentParser> create_with_uncertain_encoding(DOM::Document&, const ByteBuffer& input);
+    static NonnullOwnPtr<HTMLParser> create_with_uncertain_encoding(DOM::Document&, const ByteBuffer& input);
 
     void run(const AK::URL&);
 

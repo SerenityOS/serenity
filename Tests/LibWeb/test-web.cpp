@@ -11,7 +11,7 @@
 #include <LibGUI/Window.h>
 #include <LibTest/JavaScriptTestRunner.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
@@ -103,7 +103,7 @@ TESTJS_GLOBAL_FUNCTION(wait_for_page_to_load, waitForPageToLoad)
     loader.load_sync(
         request,
         [&](auto data, auto&, auto) {
-            Web::HTML::HTMLDocumentParser parser(document, data, "utf-8");
+            Web::HTML::HTMLParser parser(document, data, "utf-8");
             // Now parse the HTML page.
             parser.run(next_page_to_load.value());
             g_page_view->set_document(&parser.document());

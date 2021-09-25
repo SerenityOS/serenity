@@ -2698,7 +2698,7 @@ void HTMLTokenizer::will_reconsume_in([[maybe_unused]] State new_state)
     dbgln_if(TOKENIZER_TRACE_DEBUG, "[{}] Reconsume in {}", state_name(m_state), state_name(new_state));
 }
 
-void HTMLTokenizer::switch_to(Badge<HTMLDocumentParser>, State new_state)
+void HTMLTokenizer::switch_to(Badge<HTMLParser>, State new_state)
 {
     dbgln_if(TOKENIZER_TRACE_DEBUG, "[{}] Parser switches tokenizer state to {}", state_name(m_state), state_name(new_state));
     m_state = new_state;

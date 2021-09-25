@@ -24,8 +24,8 @@
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLTableElement.h>
 #include <LibWeb/HTML/HTMLTemplateElement.h>
-#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/HTML/Parser/HTMLEncodingDetection.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Parser/HTMLToken.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/SVG/TagNames.h>
@@ -121,12 +121,12 @@ static bool is_html_integration_point(DOM::Element const& element)
 RefPtr<DOM::Document> parse_html_document(const StringView& data, const AK::URL& url, const String& encoding)
 {
     auto document = DOM::Document::create(url);
-    HTMLDocumentParser parser(document, data, encoding);
+    HTMLParser parser(document, data, encoding);
     parser.run(url);
     return document;
 }
 
-HTMLDocumentParser::HTMLDocumentParser(DOM::Document& document, const StringView& input, const String& encoding)
+HTMLParser::HTMLParser(DOM::Document& document, const StringView& input, const String& encoding)
     : m_tokenizer(input, encoding)
     , m_document(document)
 {
@@ -136,12 +136,12 @@ HTMLDocumentParser::HTMLDocumentParser(DOM::Document& document, const StringView
     m_document->set_encoding(standardized_encoding.value());
 }
 
-HTMLDocumentParser::~HTMLDocumentParser()
+HTMLParser::~HTMLParser()
 {
     m_document->set_should_invalidate_styles_on_attribute_changes(true);
 }
 
-void HTMLDocumentParser::run(const AK::URL& url)
+void HTMLParser::run(const AK::URL& url)
 {
     m_document->set_url(url);
     m_document->set_source(m_tokenizer.source());
@@ -210,7 +210,7 @@ void HTMLDocumentParser::run(const AK::URL& url)
     m_document->completely_finish_loading();
 }
 
-void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLToken& token)
+void HTMLParser::process_using_the_rules_for(InsertionMode mode, HTMLToken& token)
 {
     switch (mode) {
     case InsertionMode::Initial:
@@ -287,7 +287,7 @@ void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLTok
     }
 }
 
-DOM::QuirksMode HTMLDocumentParser::which_quirks_mode(const HTMLToken& doctype_token) const
+DOM::QuirksMode HTMLParser::which_quirks_mode(const HTMLToken& doctype_token) const
 {
     if (doctype_token.doctype_data().force_quirks)
         return DOM::QuirksMode::Yes;
@@ -341,7 +341,7 @@ DOM::QuirksMode HTMLDocumentParser::which_quirks_mode(const HTMLToken& doctype_t
     return DOM::QuirksMode::No;
 }
 
-void HTMLDocumentParser::handle_initial(HTMLToken& token)
+void HTMLParser::handle_initial(HTMLToken& token)
 {
     if (token.is_character() && token.is_parser_whitespace()) {
         return;
@@ -370,7 +370,7 @@ void HTMLDocumentParser::handle_initial(HTMLToken& token)
     process_using_the_rules_for(InsertionMode::BeforeHTML, token);
 }
 
-void HTMLDocumentParser::handle_before_html(HTMLToken& token)
+void HTMLParser::handle_before_html(HTMLToken& token)
 {
     if (token.is_doctype()) {
         log_parse_error();
@@ -414,12 +414,12 @@ AnythingElse:
     return;
 }
 
-DOM::Element& HTMLDocumentParser::current_node()
+DOM::Element& HTMLParser::current_node()
 {
     return m_stack_of_open_elements.current_node();
 }
 
-DOM::Element& HTMLDocumentParser::adjusted_current_node()
+DOM::Element& HTMLParser::adjusted_current_node()
 {
     if (m_parsing_fragment && m_stack_of_open_elements.elements().size() == 1)
         return *m_context_element;
@@ -427,15 +427,15 @@ DOM::Element& HTMLDocumentParser::adjusted_current_node()
     return current_node();
 }
 
-DOM::Element& HTMLDocumentParser::node_before_current_node()
+DOM::Element& HTMLParser::node_before_current_node()
 {
     return m_stack_of_open_elements.elements().at(m_stack_of_open_elements.elements().size() - 2);
 }
 
-HTMLDocumentParser::AdjustedInsertionLocation HTMLDocumentParser::find_appropriate_place_for_inserting_node()
+HTMLParser::AdjustedInsertionLocation HTMLParser::find_appropriate_place_for_inserting_node()
 {
     auto& target = current_node();
-    HTMLDocumentParser::AdjustedInsertionLocation adjusted_insertion_location;
+    HTMLParser::AdjustedInsertionLocation adjusted_insertion_location;
 
     if (m_foster_parenting && target.local_name().is_one_of(HTML::TagNames::table, HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::tr)) {
         auto last_template = m_stack_of_open_elements.last_element_with_tag_name(HTML::TagNames::template_);
@@ -464,7 +464,7 @@ HTMLDocumentParser::AdjustedInsertionLocation HTMLDocumentParser::find_appropria
     return adjusted_insertion_location;
 }
 
-NonnullRefPtr<DOM::Element> HTMLDocumentParser::create_element_for(const HTMLToken& token, const FlyString& namespace_)
+NonnullRefPtr<DOM::Element> HTMLParser::create_element_for(const HTMLToken& token, const FlyString& namespace_)
 {
     auto element = create_element(document(), token.tag_name(), namespace_);
     token.for_each_attribute([&](auto& attribute) {
@@ -475,7 +475,7 @@ NonnullRefPtr<DOM::Element> HTMLDocumentParser::create_element_for(const HTMLTok
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#insert-a-foreign-element
-NonnullRefPtr<DOM::Element> HTMLDocumentParser::insert_foreign_element(const HTMLToken& token, const FlyString& namespace_)
+NonnullRefPtr<DOM::Element> HTMLParser::insert_foreign_element(const HTMLToken& token, const FlyString& namespace_)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
 
@@ -501,12 +501,12 @@ NonnullRefPtr<DOM::Element> HTMLDocumentParser::insert_foreign_element(const HTM
     return element;
 }
 
-NonnullRefPtr<DOM::Element> HTMLDocumentParser::insert_html_element(const HTMLToken& token)
+NonnullRefPtr<DOM::Element> HTMLParser::insert_html_element(const HTMLToken& token)
 {
     return insert_foreign_element(token, Namespace::HTML);
 }
 
-void HTMLDocumentParser::handle_before_head(HTMLToken& token)
+void HTMLParser::handle_before_head(HTMLToken& token)
 {
     if (token.is_character() && token.is_parser_whitespace()) {
         return;
@@ -550,13 +550,13 @@ AnythingElse:
     return;
 }
 
-void HTMLDocumentParser::insert_comment(HTMLToken& token)
+void HTMLParser::insert_comment(HTMLToken& token)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
     adjusted_insertion_location.parent->insert_before(adopt_ref(*new DOM::Comment(document(), token.comment())), adjusted_insertion_location.insert_before_sibling);
 }
 
-void HTMLDocumentParser::handle_in_head(HTMLToken& token)
+void HTMLParser::handle_in_head(HTMLToken& token)
 {
     if (token.is_parser_whitespace()) {
         insert_character(token.code_point());
@@ -681,7 +681,7 @@ AnythingElse:
     process_using_the_rules_for(m_insertion_mode, token);
 }
 
-void HTMLDocumentParser::handle_in_head_noscript(HTMLToken& token)
+void HTMLParser::handle_in_head_noscript(HTMLToken& token)
 {
     if (token.is_doctype()) {
         log_parse_error();
@@ -720,7 +720,7 @@ AnythingElse:
     process_using_the_rules_for(m_insertion_mode, token);
 }
 
-void HTMLDocumentParser::parse_generic_raw_text_element(HTMLToken& token)
+void HTMLParser::parse_generic_raw_text_element(HTMLToken& token)
 {
     insert_html_element(token);
     m_tokenizer.switch_to({}, HTMLTokenizer::State::RAWTEXT);
@@ -728,7 +728,7 @@ void HTMLDocumentParser::parse_generic_raw_text_element(HTMLToken& token)
     m_insertion_mode = InsertionMode::Text;
 }
 
-DOM::Text* HTMLDocumentParser::find_character_insertion_node()
+DOM::Text* HTMLParser::find_character_insertion_node()
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
     if (adjusted_insertion_location.insert_before_sibling) {
@@ -743,7 +743,7 @@ DOM::Text* HTMLDocumentParser::find_character_insertion_node()
     return new_text_node;
 }
 
-void HTMLDocumentParser::flush_character_insertions()
+void HTMLParser::flush_character_insertions()
 {
     if (m_character_insertion_builder.is_empty())
         return;
@@ -752,7 +752,7 @@ void HTMLDocumentParser::flush_character_insertions()
     m_character_insertion_builder.clear();
 }
 
-void HTMLDocumentParser::insert_character(u32 data)
+void HTMLParser::insert_character(u32 data)
 {
     auto node = find_character_insertion_node();
     if (node == m_character_insertion_node) {
@@ -769,7 +769,7 @@ void HTMLDocumentParser::insert_character(u32 data)
     m_character_insertion_builder.append(Utf32View { &data, 1 });
 }
 
-void HTMLDocumentParser::handle_after_head(HTMLToken& token)
+void HTMLParser::handle_after_head(HTMLToken& token)
 {
     if (token.is_character() && token.is_parser_whitespace()) {
         insert_character(token.code_point());
@@ -834,19 +834,19 @@ AnythingElse:
     process_using_the_rules_for(m_insertion_mode, token);
 }
 
-void HTMLDocumentParser::generate_implied_end_tags(const FlyString& exception)
+void HTMLParser::generate_implied_end_tags(const FlyString& exception)
 {
     while (current_node().local_name() != exception && current_node().local_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc))
         m_stack_of_open_elements.pop();
 }
 
-void HTMLDocumentParser::generate_all_implied_end_tags_thoroughly()
+void HTMLParser::generate_all_implied_end_tags_thoroughly()
 {
     while (current_node().local_name().is_one_of(HTML::TagNames::caption, HTML::TagNames::colgroup, HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc, HTML::TagNames::tbody, HTML::TagNames::td, HTML::TagNames::tfoot, HTML::TagNames::th, HTML::TagNames::thead, HTML::TagNames::tr))
         m_stack_of_open_elements.pop();
 }
 
-void HTMLDocumentParser::close_a_p_element()
+void HTMLParser::close_a_p_element()
 {
     generate_implied_end_tags(HTML::TagNames::p);
     if (current_node().local_name() != HTML::TagNames::p) {
@@ -855,7 +855,7 @@ void HTMLDocumentParser::close_a_p_element()
     m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::p);
 }
 
-void HTMLDocumentParser::handle_after_body(HTMLToken& token)
+void HTMLParser::handle_after_body(HTMLToken& token)
 {
     if (token.is_character() && token.is_parser_whitespace()) {
         process_using_the_rules_for(InsertionMode::InBody, token);
@@ -897,7 +897,7 @@ void HTMLDocumentParser::handle_after_body(HTMLToken& token)
     process_using_the_rules_for(InsertionMode::InBody, token);
 }
 
-void HTMLDocumentParser::handle_after_after_body(HTMLToken& token)
+void HTMLParser::handle_after_after_body(HTMLToken& token)
 {
     if (token.is_comment()) {
         auto comment = adopt_ref(*new DOM::Comment(document(), token.comment()));
@@ -920,7 +920,7 @@ void HTMLDocumentParser::handle_after_after_body(HTMLToken& token)
     process_using_the_rules_for(m_insertion_mode, token);
 }
 
-void HTMLDocumentParser::reconstruct_the_active_formatting_elements()
+void HTMLParser::reconstruct_the_active_formatting_elements()
 {
     // FIXME: This needs to care about "markers"
 
@@ -964,7 +964,7 @@ Create:
         goto Advance;
 }
 
-HTMLDocumentParser::AdoptionAgencyAlgorithmOutcome HTMLDocumentParser::run_the_adoption_agency_algorithm(HTMLToken& token)
+HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_algorithm(HTMLToken& token)
 {
     auto subject = token.tag_name();
 
@@ -1019,7 +1019,7 @@ HTMLDocumentParser::AdoptionAgencyAlgorithmOutcome HTMLDocumentParser::run_the_a
     TODO();
 }
 
-bool HTMLDocumentParser::is_special_tag(const FlyString& tag_name, const FlyString& namespace_)
+bool HTMLParser::is_special_tag(const FlyString& tag_name, const FlyString& namespace_)
 {
     if (namespace_ == Namespace::HTML) {
         return tag_name.is_one_of(
@@ -1117,7 +1117,7 @@ bool HTMLDocumentParser::is_special_tag(const FlyString& tag_name, const FlyStri
     return false;
 }
 
-void HTMLDocumentParser::handle_in_body(HTMLToken& token)
+void HTMLParser::handle_in_body(HTMLToken& token)
 {
     if (token.is_character()) {
         if (token.code_point() == 0) {
@@ -1764,12 +1764,12 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 }
 
-void HTMLDocumentParser::adjust_mathml_attributes(HTMLToken& token)
+void HTMLParser::adjust_mathml_attributes(HTMLToken& token)
 {
     token.adjust_attribute_name("definitionurl", "definitionURL");
 }
 
-void HTMLDocumentParser::adjust_svg_tag_names(HTMLToken& token)
+void HTMLParser::adjust_svg_tag_names(HTMLToken& token)
 {
     token.adjust_tag_name("altglyph", "altGlyph");
     token.adjust_tag_name("altglyphdef", "altGlyphDef");
@@ -1807,7 +1807,7 @@ void HTMLDocumentParser::adjust_svg_tag_names(HTMLToken& token)
     token.adjust_tag_name("textpath", "textPath");
 }
 
-void HTMLDocumentParser::adjust_svg_attributes(HTMLToken& token)
+void HTMLParser::adjust_svg_attributes(HTMLToken& token)
 {
     token.adjust_attribute_name("attributename", "attributeName");
     token.adjust_attribute_name("attributetype", "attributeType");
@@ -1869,7 +1869,7 @@ void HTMLDocumentParser::adjust_svg_attributes(HTMLToken& token)
     token.adjust_attribute_name("zoomandpan", "zoomAndPan");
 }
 
-void HTMLDocumentParser::adjust_foreign_attributes(HTMLToken& token)
+void HTMLParser::adjust_foreign_attributes(HTMLToken& token)
 {
     token.adjust_foreign_attribute("xlink:actuate", "xlink", "actuate", Namespace::XLink);
     token.adjust_foreign_attribute("xlink:arcrole", "xlink", "arcrole", Namespace::XLink);
@@ -1886,18 +1886,18 @@ void HTMLDocumentParser::adjust_foreign_attributes(HTMLToken& token)
     token.adjust_foreign_attribute("xmlns:xlink", "xmlns", "xlink", Namespace::XMLNS);
 }
 
-void HTMLDocumentParser::increment_script_nesting_level()
+void HTMLParser::increment_script_nesting_level()
 {
     ++m_script_nesting_level;
 }
 
-void HTMLDocumentParser::decrement_script_nesting_level()
+void HTMLParser::decrement_script_nesting_level()
 {
     VERIFY(m_script_nesting_level);
     --m_script_nesting_level;
 }
 
-void HTMLDocumentParser::handle_text(HTMLToken& token)
+void HTMLParser::handle_text(HTMLToken& token)
 {
     if (token.is_character()) {
         insert_character(token.code_point());
@@ -1984,7 +1984,7 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
     TODO();
 }
 
-void HTMLDocumentParser::clear_the_stack_back_to_a_table_context()
+void HTMLParser::clear_the_stack_back_to_a_table_context()
 {
     while (!current_node().local_name().is_one_of(HTML::TagNames::table, HTML::TagNames::template_, HTML::TagNames::html))
         m_stack_of_open_elements.pop();
@@ -1993,7 +1993,7 @@ void HTMLDocumentParser::clear_the_stack_back_to_a_table_context()
         VERIFY(m_parsing_fragment);
 }
 
-void HTMLDocumentParser::clear_the_stack_back_to_a_table_row_context()
+void HTMLParser::clear_the_stack_back_to_a_table_row_context()
 {
     while (!current_node().local_name().is_one_of(HTML::TagNames::tr, HTML::TagNames::template_, HTML::TagNames::html))
         m_stack_of_open_elements.pop();
@@ -2002,7 +2002,7 @@ void HTMLDocumentParser::clear_the_stack_back_to_a_table_row_context()
         VERIFY(m_parsing_fragment);
 }
 
-void HTMLDocumentParser::clear_the_stack_back_to_a_table_body_context()
+void HTMLParser::clear_the_stack_back_to_a_table_body_context()
 {
     while (!current_node().local_name().is_one_of(HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::template_, HTML::TagNames::html))
         m_stack_of_open_elements.pop();
@@ -2011,7 +2011,7 @@ void HTMLDocumentParser::clear_the_stack_back_to_a_table_body_context()
         VERIFY(m_parsing_fragment);
 }
 
-void HTMLDocumentParser::handle_in_row(HTMLToken& token)
+void HTMLParser::handle_in_row(HTMLToken& token)
 {
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::th, HTML::TagNames::td)) {
         clear_the_stack_back_to_a_table_row_context();
@@ -2068,7 +2068,7 @@ void HTMLDocumentParser::handle_in_row(HTMLToken& token)
     process_using_the_rules_for(InsertionMode::InTable, token);
 }
 
-void HTMLDocumentParser::close_the_cell()
+void HTMLParser::close_the_cell()
 {
     generate_implied_end_tags();
     if (!current_node().local_name().is_one_of(HTML::TagNames::td, HTML::TagNames::th)) {
@@ -2081,7 +2081,7 @@ void HTMLDocumentParser::close_the_cell()
     m_insertion_mode = InsertionMode::InRow;
 }
 
-void HTMLDocumentParser::handle_in_cell(HTMLToken& token)
+void HTMLParser::handle_in_cell(HTMLToken& token)
 {
     if (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::td, HTML::TagNames::th)) {
         if (!m_stack_of_open_elements.has_in_table_scope(token.tag_name())) {
@@ -2131,7 +2131,7 @@ void HTMLDocumentParser::handle_in_cell(HTMLToken& token)
     process_using_the_rules_for(InsertionMode::InBody, token);
 }
 
-void HTMLDocumentParser::handle_in_table_text(HTMLToken& token)
+void HTMLParser::handle_in_table_text(HTMLToken& token)
 {
     if (token.is_character()) {
         if (token.code_point() == 0) {
@@ -2166,7 +2166,7 @@ void HTMLDocumentParser::handle_in_table_text(HTMLToken& token)
     process_using_the_rules_for(m_insertion_mode, token);
 }
 
-void HTMLDocumentParser::handle_in_table_body(HTMLToken& token)
+void HTMLParser::handle_in_table_body(HTMLToken& token)
 {
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::tr) {
         clear_the_stack_back_to_a_table_body_context();
@@ -2220,7 +2220,7 @@ void HTMLDocumentParser::handle_in_table_body(HTMLToken& token)
     process_using_the_rules_for(InsertionMode::InTable, token);
 }
 
-void HTMLDocumentParser::handle_in_table(HTMLToken& token)
+void HTMLParser::handle_in_table(HTMLToken& token)
 {
     if (token.is_character() && current_node().local_name().is_one_of(HTML::TagNames::table, HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::tr)) {
         m_pending_table_character_tokens.clear();
@@ -2341,7 +2341,7 @@ AnythingElse:
     m_foster_parenting = false;
 }
 
-void HTMLDocumentParser::handle_in_select_in_table(HTMLToken& token)
+void HTMLParser::handle_in_select_in_table(HTMLToken& token)
 {
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::caption, HTML::TagNames::table, HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::tr, HTML::TagNames::td, HTML::TagNames::th)) {
         log_parse_error();
@@ -2366,7 +2366,7 @@ void HTMLDocumentParser::handle_in_select_in_table(HTMLToken& token)
     process_using_the_rules_for(InsertionMode::InSelect, token);
 }
 
-void HTMLDocumentParser::handle_in_select(HTMLToken& token)
+void HTMLParser::handle_in_select(HTMLToken& token)
 {
     if (token.is_character()) {
         if (token.code_point() == 0) {
@@ -2490,7 +2490,7 @@ void HTMLDocumentParser::handle_in_select(HTMLToken& token)
     log_parse_error();
 }
 
-void HTMLDocumentParser::handle_in_caption(HTMLToken& token)
+void HTMLParser::handle_in_caption(HTMLToken& token)
 {
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::caption) {
         if (!m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::caption)) {
@@ -2540,7 +2540,7 @@ void HTMLDocumentParser::handle_in_caption(HTMLToken& token)
     process_using_the_rules_for(InsertionMode::InBody, token);
 }
 
-void HTMLDocumentParser::handle_in_column_group(HTMLToken& token)
+void HTMLParser::handle_in_column_group(HTMLToken& token)
 {
     if (token.is_character() && token.is_parser_whitespace()) {
         insert_character(token.code_point());
@@ -2605,7 +2605,7 @@ void HTMLDocumentParser::handle_in_column_group(HTMLToken& token)
     process_using_the_rules_for(m_insertion_mode, token);
 }
 
-void HTMLDocumentParser::handle_in_template(HTMLToken& token)
+void HTMLParser::handle_in_template(HTMLToken& token)
 {
     if (token.is_character() || token.is_comment() || token.is_doctype()) {
         process_using_the_rules_for(InsertionMode::InBody, token);
@@ -2683,7 +2683,7 @@ void HTMLDocumentParser::handle_in_template(HTMLToken& token)
     }
 }
 
-void HTMLDocumentParser::handle_in_frameset(HTMLToken& token)
+void HTMLParser::handle_in_frameset(HTMLToken& token)
 {
     if (token.is_character() && token.is_parser_whitespace()) {
         insert_character(token.code_point());
@@ -2743,7 +2743,7 @@ void HTMLDocumentParser::handle_in_frameset(HTMLToken& token)
     log_parse_error();
 }
 
-void HTMLDocumentParser::handle_after_frameset(HTMLToken& token)
+void HTMLParser::handle_after_frameset(HTMLToken& token)
 {
     if (token.is_character() && token.is_parser_whitespace()) {
         insert_character(token.code_point());
@@ -2783,7 +2783,7 @@ void HTMLDocumentParser::handle_after_frameset(HTMLToken& token)
     log_parse_error();
 }
 
-void HTMLDocumentParser::handle_after_after_frameset(HTMLToken& token)
+void HTMLParser::handle_after_after_frameset(HTMLToken& token)
 {
     if (token.is_comment()) {
         auto comment = adopt_ref(*new DOM::Comment(document(), token.comment()));
@@ -2809,7 +2809,7 @@ void HTMLDocumentParser::handle_after_after_frameset(HTMLToken& token)
     log_parse_error();
 }
 
-void HTMLDocumentParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
+void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
 {
     if (token.is_character()) {
         if (token.code_point() == 0) {
@@ -2916,7 +2916,7 @@ void HTMLDocumentParser::process_using_the_rules_for_foreign_content(HTMLToken& 
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#reset-the-insertion-mode-appropriately
-void HTMLDocumentParser::reset_the_insertion_mode_appropriately()
+void HTMLParser::reset_the_insertion_mode_appropriately()
 {
     for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
         bool last = i == 0;
@@ -3014,7 +3014,7 @@ void HTMLDocumentParser::reset_the_insertion_mode_appropriately()
     m_insertion_mode = InsertionMode::InBody;
 }
 
-const char* HTMLDocumentParser::insertion_mode_name() const
+const char* HTMLParser::insertion_mode_name() const
 {
     switch (m_insertion_mode) {
 #define __ENUMERATE_INSERTION_MODE(mode) \
@@ -3026,15 +3026,15 @@ const char* HTMLDocumentParser::insertion_mode_name() const
     VERIFY_NOT_REACHED();
 }
 
-DOM::Document& HTMLDocumentParser::document()
+DOM::Document& HTMLParser::document()
 {
     return *m_document;
 }
 
-NonnullRefPtrVector<DOM::Node> HTMLDocumentParser::parse_html_fragment(DOM::Element& context_element, const StringView& markup)
+NonnullRefPtrVector<DOM::Node> HTMLParser::parse_html_fragment(DOM::Element& context_element, const StringView& markup)
 {
     auto temp_document = DOM::Document::create();
-    HTMLDocumentParser parser(*temp_document, markup, "utf-8");
+    HTMLParser parser(*temp_document, markup, "utf-8");
     parser.m_context_element = context_element;
     parser.m_parsing_fragment = true;
     parser.document().set_quirks_mode(context_element.document().mode());
@@ -3082,17 +3082,17 @@ NonnullRefPtrVector<DOM::Node> HTMLDocumentParser::parse_html_fragment(DOM::Elem
     return children;
 }
 
-NonnullOwnPtr<HTMLDocumentParser> HTMLDocumentParser::create_with_uncertain_encoding(DOM::Document& document, const ByteBuffer& input)
+NonnullOwnPtr<HTMLParser> HTMLParser::create_with_uncertain_encoding(DOM::Document& document, const ByteBuffer& input)
 {
     if (document.has_encoding())
-        return make<HTMLDocumentParser>(document, input, document.encoding().value());
+        return make<HTMLParser>(document, input, document.encoding().value());
     auto encoding = run_encoding_sniffing_algorithm(input);
     dbgln("The encoding sniffing algorithm returned encoding '{}'", encoding);
-    return make<HTMLDocumentParser>(document, input, encoding);
+    return make<HTMLParser>(document, input, encoding);
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#html-fragment-serialisation-algorithm
-String HTMLDocumentParser::serialize_html_fragment(DOM::Node const& node)
+String HTMLParser::serialize_html_fragment(DOM::Node const& node)
 {
     // The algorithm takes as input a DOM Element, Document, or DocumentFragment referred to as the node.
     VERIFY(node.is_element() || node.is_document() || node.is_document_fragment());
