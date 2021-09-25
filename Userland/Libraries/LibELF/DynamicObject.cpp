@@ -166,7 +166,7 @@ void DynamicObject::parse()
         case DT_SYMBOLIC:
             break;
         default:
-            dbgln("DynamicObject: DYNAMIC tag handling not implemented for DT_{}", name_for_dtag(entry.tag()));
+            dbgln("DynamicObject: DYNAMIC tag handling not implemented for DT_{} ({})", name_for_dtag(entry.tag()), entry.tag());
             VERIFY_NOT_REACHED(); // FIXME: Maybe just break out here and return false?
             break;
         }
