@@ -240,6 +240,7 @@ public:
 
     Array& as_array();
     FunctionObject& as_function();
+    FunctionObject const& as_function() const;
 
     i32 as_i32() const;
     u32 as_u32() const;
