@@ -27,11 +27,6 @@ public:
 
     virtual bool is_strict_mode() const { return false; }
 
-    // [[Environment]]
-    // The Environment Record that the function was closed over.
-    // Used as the outer environment when evaluating the code of the function.
-    virtual Environment* environment() { return nullptr; }
-
     // [[Realm]]
     virtual Realm* realm() const { return nullptr; }
 

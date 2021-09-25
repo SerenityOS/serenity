@@ -47,7 +47,7 @@ public:
 
     auto& bytecode_executable() const { return m_bytecode_executable; }
 
-    virtual Environment* environment() override { return m_environment; }
+    Environment* environment() { return m_environment; }
     virtual Realm* realm() const override { return m_realm; }
 
     ConstructorKind constructor_kind() const { return m_constructor_kind; };
