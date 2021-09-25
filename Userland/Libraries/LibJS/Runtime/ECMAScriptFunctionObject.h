@@ -71,6 +71,8 @@ public:
     // This is for IsSimpleParameterList (static semantics)
     bool has_simple_parameter_list() const { return m_has_simple_parameter_list; }
 
+    virtual bool has_constructor() const override { return true; }
+
 protected:
     virtual bool is_strict_mode() const final { return m_strict; }
 

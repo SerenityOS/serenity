@@ -237,14 +237,16 @@ FunctionObject const& Value::as_function() const
 // 7.2.4 IsConstructor ( argument ), https://tc39.es/ecma262/#sec-isconstructor
 bool Value::is_constructor() const
 {
+    // 1. If Type(argument) is not Object, return false.
     if (!is_function())
         return false;
-    if (is<NativeFunction>(as_object()))
-        return static_cast<const NativeFunction&>(as_object()).has_constructor();
-    if (is<BoundFunction>(as_object()))
-        return Value(&static_cast<const BoundFunction&>(as_object()).bound_target_function()).is_constructor();
-    // ECMAScriptFunctionObject
-    return true;
+
+    // 2. If argument has a [[Construct]] internal method, return true.
+    if (as_function().has_constructor())
+        return true;
+
+    // 3. Return false.
+    return false;
 }
 
 // 7.2.8 IsRegExp ( argument ), https://tc39.es/ecma262/#sec-isregexp

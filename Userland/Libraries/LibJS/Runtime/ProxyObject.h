@@ -24,6 +24,7 @@ public:
     virtual Value construct(FunctionObject& new_target) override;
     virtual const FlyString& name() const override;
     virtual FunctionEnvironment* create_environment(FunctionObject&) override;
+    virtual bool has_constructor() const override { return true; }
 
     const Object& target() const { return m_target; }
     const Object& handler() const { return m_handler; }

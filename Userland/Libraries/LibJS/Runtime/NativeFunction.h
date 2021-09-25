@@ -23,12 +23,9 @@ public:
 
     virtual Value call() override;
     virtual Value construct(FunctionObject& new_target) override;
-
     virtual const FlyString& name() const override { return m_name; };
-    virtual bool has_constructor() const { return false; }
-
     virtual bool is_strict_mode() const override;
-
+    virtual bool has_constructor() const override { return false; }
     virtual Realm* realm() const override { return m_realm; }
 
 protected:

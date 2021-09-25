@@ -23,6 +23,7 @@ public:
     virtual FunctionEnvironment* create_environment(FunctionObject&) override;
     virtual const FlyString& name() const override { return m_name; }
     virtual bool is_strict_mode() const override { return m_bound_target_function->is_strict_mode(); }
+    virtual bool has_constructor() const override { return true; }
 
     FunctionObject& bound_target_function() const { return *m_bound_target_function; }
     Value bound_this() const { return m_bound_this; }
