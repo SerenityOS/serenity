@@ -1,0 +1,33 @@
+--- openssl-1.1.1k/Configurations/10-main.conf	2021-03-25 21:28:38.000000000 +0800
++++ openssl-1.1.1k/Configurations/10-main.conf	2021-09-26 00:05:04.340004623 +0800
+@@ -627,6 +627,30 @@
+         shared_extension => ".so",
+     },
+ 
++### Serenity
++    "serenity-generic" => {
++        inherit_from     => [ "BASE_unix" ],
++        CC               => "gcc",
++        CXX              => "g++",
++        CFLAGS           => picker(default => "-Wall",
++                                   debug   => "-O0 -g",
++                                   release => "-O3"),
++        CXXFLAGS         => picker(default => "-Wall",
++                                   debug   => "-O0 -g",
++                                   release => "-O3"),
++        cflags           => threads("-pthread"),
++        cxxflags         => combine("-std=c++11", threads("-pthread")),
++        lib_cppflags     => "-DOPENSSL_USE_NODELETE",
++        ex_libs          => add("-ldl", threads("-pthread")),
++        bn_ops           => "BN_LLONG RC4_CHAR",
++        thread_scheme    => "pthreads",
++        dso_scheme       => "dlfcn",
++        shared_target    => "serenity-shared",
++        shared_cflag     => "-fPIC",
++        shared_ldflag    => sub { $disabled{pinshared} ? () : "-Wl,-znodelete" },
++        shared_extension => ".so.\$(SHLIB_VERSION_NUMBER)",
++    },
++
+ ####
+ #### Variety of LINUX:-)
+ ####
