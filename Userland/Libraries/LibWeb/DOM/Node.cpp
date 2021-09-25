@@ -163,11 +163,6 @@ bool Node::is_link() const
     return enclosing_link_element();
 }
 
-bool Node::dispatch_event(NonnullRefPtr<Event> event)
-{
-    return EventDispatcher::dispatch(*this, event);
-}
-
 String Node::child_text_content() const
 {
     if (!is<ParentNode>(*this))

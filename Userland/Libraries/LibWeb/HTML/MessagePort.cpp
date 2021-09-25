@@ -84,11 +84,6 @@ void MessagePort::post_message(JS::Value message)
     }));
 }
 
-bool MessagePort::dispatch_event(NonnullRefPtr<DOM::Event> event)
-{
-    return DOM::EventDispatcher::dispatch(*this, move(event));
-}
-
 JS::Object* MessagePort::create_wrapper(JS::GlobalObject& global_object)
 {
     return wrap(global_object, *this);

@@ -41,11 +41,6 @@ void Performance::unref_event_target()
     m_window.unref();
 }
 
-bool Performance::dispatch_event(NonnullRefPtr<DOM::Event> event)
-{
-    return DOM::EventDispatcher::dispatch(*this, event);
-}
-
 JS::Object* Performance::create_wrapper(JS::GlobalObject& global_object)
 {
     return Bindings::wrap(global_object, *this);

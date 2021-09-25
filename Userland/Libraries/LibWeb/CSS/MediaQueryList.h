@@ -39,7 +39,6 @@ public:
     // ^EventTarget
     virtual void ref_event_target() override { ref(); }
     virtual void unref_event_target() override { unref(); }
-    virtual bool dispatch_event(NonnullRefPtr<DOM::Event>) override;
     virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
 
     void add_listener(RefPtr<DOM::EventListener> listener);

@@ -37,11 +37,6 @@ bool MediaQueryList::matches() const
     return false;
 }
 
-bool MediaQueryList::dispatch_event(NonnullRefPtr<DOM::Event> event)
-{
-    return DOM::EventDispatcher::dispatch(*this, event);
-}
-
 JS::Object* MediaQueryList::create_wrapper(JS::GlobalObject& global_object)
 {
     return wrap(global_object, *this);
