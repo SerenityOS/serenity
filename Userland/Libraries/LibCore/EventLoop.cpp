@@ -366,6 +366,13 @@ int EventLoop::exec()
     VERIFY_NOT_REACHED();
 }
 
+void EventLoop::spin_until(Function<bool()> goal_condition)
+{
+    EventLoopPusher pusher(*this);
+    while (!goal_condition())
+        pump();
+}
+
 void EventLoop::pump(WaitMode mode)
 {
     wait_for_event(mode);
