@@ -18,8 +18,12 @@ class MMIO {
 public:
     static MMIO& the();
 
-    u32 read(FlatPtr offset) { return *(u32 volatile*)(m_base_address + offset); }
-    void write(FlatPtr offset, u32 value) { *(u32 volatile*)(m_base_address + offset) = value; }
+    u32 read(FlatPtr offset) { return *peripheral_address(offset); }
+    void write(FlatPtr offset, u32 value) { *peripheral_address(offset) = value; }
+
+    u32 volatile* peripheral_address(FlatPtr offset) { return (u32 volatile*)(m_base_address + offset); }
+    template<class T>
+    T volatile* peripheral(FlatPtr offset) { return (T volatile*)peripheral_address(offset); }
 
 private:
     MMIO();
