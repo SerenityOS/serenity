@@ -43,44 +43,31 @@ ByteBuffer IODevice::read(size_t max_size)
         return {};
     if (!max_size)
         return {};
-    auto buffer_result = ByteBuffer::create_uninitialized(max_size);
+
+    if (m_buffered_data.size() < max_size)
+        populate_read_buffer(max(max_size - m_buffered_data.size(), 1024));
+
+    if (m_buffered_data.size() > max_size) {
+        if (m_error)
+            return {};
+        if (m_eof) {
+            dbgln("IODevice::read: At EOF but there's more than max_size({}) buffered", max_size);
+            return {};
+        }
+    }
+
+    auto size = min(max_size, m_buffered_data.size());
+    auto buffer_result = ByteBuffer::create_uninitialized(size);
     if (!buffer_result.has_value()) {
         dbgln("IODevice::read: Not enough memory to allocate a buffer of {} bytes", max_size);
         return {};
     }
     auto buffer = buffer_result.release_value();
     auto* buffer_ptr = (char*)buffer.data();
-    size_t remaining_buffer_space = buffer.size();
-    size_t taken_from_buffered = 0;
-    if (!m_buffered_data.is_empty()) {
-        taken_from_buffered = min(remaining_buffer_space, m_buffered_data.size());
-        memcpy(buffer_ptr, m_buffered_data.data(), taken_from_buffered);
-        Vector<u8> new_buffered_data;
-        new_buffered_data.append(m_buffered_data.data() + taken_from_buffered, m_buffered_data.size() - taken_from_buffered);
-        m_buffered_data = move(new_buffered_data);
-        remaining_buffer_space -= taken_from_buffered;
-        buffer_ptr += taken_from_buffered;
-    }
-    if (!remaining_buffer_space)
-        return buffer;
-    int nread = ::read(m_fd, buffer_ptr, remaining_buffer_space);
-    if (nread < 0) {
-        if (taken_from_buffered) {
-            buffer.resize(taken_from_buffered);
-            return buffer;
-        }
-        set_error(errno);
-        return {};
-    }
-    if (nread == 0) {
-        set_eof(true);
-        if (taken_from_buffered) {
-            buffer.resize(taken_from_buffered);
-            return buffer;
-        }
-        return {};
-    }
-    buffer.resize(taken_from_buffered + nread);
+
+    memcpy(buffer_ptr, m_buffered_data.data(), size);
+    m_buffered_data.remove(0, size);
+
     return buffer;
 }
 
