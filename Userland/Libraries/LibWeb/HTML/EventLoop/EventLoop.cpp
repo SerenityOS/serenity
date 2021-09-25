@@ -45,18 +45,11 @@ EventLoop& main_thread_event_loop()
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#spin-the-event-loop
-void EventLoop::spin_until([[maybe_unused]] Function<bool()> goal_condition)
+void EventLoop::spin_until(Function<bool()> goal_condition)
 {
     // FIXME: This is an ad-hoc hack until we implement the proper mechanism.
-    if (goal_condition())
-        return;
     Core::EventLoop loop;
-    auto timer = Core::Timer::create_repeating(16, [&] {
-        if (goal_condition())
-            loop.quit(0);
-    });
-    timer->start();
-    loop.exec();
+    loop.spin_until(move(goal_condition));
 
     // Real spec steps:
 
