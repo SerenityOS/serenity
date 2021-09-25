@@ -744,7 +744,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     } else if (@js_name@@js_suffix@.is_string()) {
         @cpp_name@.string = @js_name@@js_suffix@.as_string().string();
     } else {
-        @return_statement@
+        return JS::js_undefined();
     }
 )~~~");
     } else if (parameter.type.name == "any") {
