@@ -64,6 +64,7 @@ class CharacterData;
 class Comment;
 class Document;
 class DocumentFragment;
+class DocumentLoadEventDelayer;
 class DocumentType;
 class DOMException;
 class DOMImplementation;
