@@ -94,6 +94,8 @@ private:
     void handle_after_frameset(HTMLToken&);
     void handle_after_after_frameset(HTMLToken&);
 
+    void the_end();
+
     void stop_parsing() { m_stop_parsing = true; }
 
     void generate_implied_end_tags(const FlyString& exception = {});

@@ -175,11 +175,22 @@ void HTMLParser::run(const AK::URL& url)
 
     flush_character_insertions();
 
-    // "The end"
+    the_end();
+}
 
+// https://html.spec.whatwg.org/multipage/parsing.html#the-end
+void HTMLParser::the_end()
+{
+    // Once the user agent stops parsing the document, the user agent must run the following steps:
+
+    // FIXME: 1. If the active speculative HTML parser is not null, then stop the speculative HTML parser and return.
+
+    // FIXME: 2. Set the insertion point to undefined.
+
+    // 3. Update the current document readiness to "interactive".
     m_document->set_ready_state("interactive");
 
-    // 3. Pop all the nodes off the stack of open elements.
+    // 4. Pop all the nodes off the stack of open elements.
     while (!m_stack_of_open_elements.is_empty())
         m_stack_of_open_elements.pop();
 
