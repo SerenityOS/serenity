@@ -228,6 +228,12 @@ FunctionObject& Value::as_function()
     return static_cast<FunctionObject&>(as_object());
 }
 
+FunctionObject const& Value::as_function() const
+{
+    VERIFY(is_function());
+    return static_cast<FunctionObject const&>(as_object());
+}
+
 // 7.2.4 IsConstructor ( argument ), https://tc39.es/ecma262/#sec-isconstructor
 bool Value::is_constructor() const
 {
