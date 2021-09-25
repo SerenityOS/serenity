@@ -231,7 +231,11 @@ void HTMLParser::the_end()
         return m_document->scripts_to_execute_as_soon_as_possible().is_empty();
     });
 
-    // FIXME: 8. Spin the event loop until there is nothing that delays the load event in the Document.
+    // 8. Spin the event loop until there is nothing that delays the load event in the Document.
+    // FIXME: Track down all the things that are supposed to delay the load event.
+    main_thread_event_loop().spin_until([&] {
+        return m_document->number_of_things_delaying_the_load_event() == 0;
+    });
 
     // 9. Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following steps:
     queue_global_task(HTML::Task::Source::DOMManipulation, *m_document, [document = m_document]() mutable {

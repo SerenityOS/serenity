@@ -48,6 +48,7 @@ set(SOURCES
     DOM/DOMImplementation.cpp
     DOM/Document.cpp
     DOM/DocumentFragment.cpp
+    DOM/DocumentLoadEventDelayer.cpp
     DOM/DocumentType.cpp
     DOM/Element.cpp
     DOM/ElementFactory.cpp

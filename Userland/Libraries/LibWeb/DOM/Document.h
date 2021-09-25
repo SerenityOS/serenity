@@ -285,6 +285,14 @@ public:
 
     Bindings::LocationObject* location();
 
+    size_t number_of_things_delaying_the_load_event() { return m_number_of_things_delaying_the_load_event; }
+    void increment_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>) { ++m_number_of_things_delaying_the_load_event; }
+    void decrement_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>)
+    {
+        VERIFY(m_number_of_things_delaying_the_load_event);
+        --m_number_of_things_delaying_the_load_event;
+    }
+
 private:
     explicit Document(const AK::URL&);
 
@@ -367,6 +375,8 @@ private:
     u32 m_script_blocking_style_sheet_counter { 0 };
 
     NonnullRefPtr<HTML::History> m_history;
+
+    size_t m_number_of_things_delaying_the_load_event { 0 };
 };
 
 }
