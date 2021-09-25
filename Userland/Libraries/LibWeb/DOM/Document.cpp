@@ -445,6 +445,8 @@ static void update_style_recursively(DOM::Node& node)
 
 void Document::update_style()
 {
+    if (!browsing_context())
+        return;
     update_style_recursively(*this);
     update_layout();
 }
