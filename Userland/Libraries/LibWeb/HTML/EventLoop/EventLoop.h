@@ -58,5 +58,6 @@ private:
 };
 
 EventLoop& main_thread_event_loop();
+void queue_global_task(HTML::Task::Source, DOM::Document&, Function<void()> steps);
 
 }

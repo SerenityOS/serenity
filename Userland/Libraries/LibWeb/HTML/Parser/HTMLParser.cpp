@@ -194,31 +194,85 @@ void HTMLParser::the_end()
     while (!m_stack_of_open_elements.is_empty())
         m_stack_of_open_elements.pop();
 
-    auto scripts_to_execute_when_parsing_has_finished = m_document->take_scripts_to_execute_when_parsing_has_finished({});
-
-    for (auto& script : scripts_to_execute_when_parsing_has_finished) {
+    // 5. While the list of scripts that will execute when the document has finished parsing is not empty:
+    while (!m_document->scripts_to_execute_when_parsing_has_finished().is_empty()) {
+        // 1. Spin the event loop until the first script in the list of scripts that will execute when the document has finished parsing
+        //    has its "ready to be parser-executed" flag set and the parser's Document has no style sheet that is blocking scripts.
         main_thread_event_loop().spin_until([&] {
-            return script.is_ready_to_be_parser_executed() && !document().has_a_style_sheet_that_is_blocking_scripts();
+            return m_document->scripts_to_execute_when_parsing_has_finished().first().is_ready_to_be_parser_executed()
+                && !m_document->has_a_style_sheet_that_is_blocking_scripts();
         });
-        script.execute_script();
+
+        // 2. Execute the first script in the list of scripts that will execute when the document has finished parsing.
+        m_document->scripts_to_execute_when_parsing_has_finished().first().execute_script();
+
+        // 3. Remove the first script element from the list of scripts that will execute when the document has finished parsing (i.e. shift out the first entry in the list).
+        m_document->scripts_to_execute_when_parsing_has_finished().take_first();
     }
 
-    auto content_loaded_event = DOM::Event::create(HTML::EventNames::DOMContentLoaded);
-    content_loaded_event->set_bubbles(true);
-    m_document->dispatch_event(content_loaded_event);
+    // 6. Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following substeps:
+    queue_global_task(HTML::Task::Source::DOMManipulation, *m_document, [document = m_document]() mutable {
+        // FIXME: 1. Set the Document's load timing info's DOM content loaded event start time to the current high resolution time given the Document's relevant global object.
+
+        // 2. Fire an event named DOMContentLoaded at the Document object, with its bubbles attribute initialized to true.
+        auto content_loaded_event = DOM::Event::create(HTML::EventNames::DOMContentLoaded);
+        content_loaded_event->set_bubbles(true);
+        document->dispatch_event(content_loaded_event);
+
+        // FIXME: 3. Set the Document's load timing info's DOM content loaded event end time to the current high resolution time given the Document's relevant global object.
+
+        // FIXME: 4. Enable the client message queue of the ServiceWorkerContainer object whose associated service worker client is the Document object's relevant settings object.
+
+        // FIXME: 5. Invoke WebDriver BiDi DOM content loaded with the Document's browsing context, and a new WebDriver BiDi navigation status whose id is the Document object's navigation id, status is "pending", and url is the Document object's URL.
+    });
 
     // 7. Spin the event loop until the set of scripts that will execute as soon as possible and the list of scripts that will execute in order as soon as possible are empty.
     main_thread_event_loop().spin_until([&] {
         return m_document->scripts_to_execute_as_soon_as_possible().is_empty();
     });
 
-    // FIXME: Spin the event loop until there is nothing that delays the load event in the Document.
+    // FIXME: 8. Spin the event loop until there is nothing that delays the load event in the Document.
 
-    m_document->set_ready_state("complete");
-    m_document->window().dispatch_event(DOM::Event::create(HTML::EventNames::load));
+    // 9. Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following steps:
+    queue_global_task(HTML::Task::Source::DOMManipulation, *m_document, [document = m_document]() mutable {
+        // 1. Update the current document readiness to "complete".
+        document->set_ready_state("complete");
 
+        // 2. If the Document object's browsing context is null, then abort these steps.
+        if (!document->browsing_context())
+            return;
+
+        // FIXME: 3. Let window be the Document's relevant global object.
+
+        // FIXME: 4. Set the Document's load timing info's load event start time to the current high resolution time given window.
+
+        // 5. Fire an event named load at window, with legacy target override flag set.
+        // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
+        //        We should reorganize this so that the flag appears explicitly here instead.
+        document->window().dispatch_event(DOM::Event::create(HTML::EventNames::load));
+
+        // FIXME: 6. Invoke WebDriver BiDi load complete with the Document's browsing context, and a new WebDriver BiDi navigation status whose id is the Document object's navigation id, status is "complete", and url is the Document object's URL.
+
+        // FIXME: 7. Set the Document object's navigation id to null.
+
+        // FIXME: 8. Set the Document's load timing info's load event end time to the current high resolution time given window.
+
+        // FIXME: 9. Assert: Document's page showing is false.
+
+        // FIXME: 10. Set the Document's page showing flag to true.
+
+        // FIXME: 11. Fire a page transition event named pageshow at window with false.
+
+        // 12. Completely finish loading the Document.
+        document->completely_finish_loading();
+
+        // FIXME: 13. Queue the navigation timing entry for the Document.
+    });
+
+    // FIXME: 10. If the Document's print when loaded flag is set, then run the printing steps.
+
+    // 11. The Document is now ready for post-load tasks.
     m_document->set_ready_for_post_load_tasks(true);
-    m_document->completely_finish_loading();
 }
 
 void HTMLParser::process_using_the_rules_for(InsertionMode mode, HTMLToken& token)
