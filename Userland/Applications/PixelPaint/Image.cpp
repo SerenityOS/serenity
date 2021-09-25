@@ -259,13 +259,20 @@ void Image::restore_snapshot(Image const& snapshot)
 {
     m_layers.clear();
     select_layer(nullptr);
+
+    bool layer_selected = false;
     for (const auto& snapshot_layer : snapshot.m_layers) {
         auto layer = Layer::try_create_snapshot(*this, snapshot_layer);
         VERIFY(layer);
-        if (layer->is_selected())
+        if (layer->is_selected()) {
             select_layer(layer.ptr());
+            layer_selected = true;
+        }
         add_layer(*layer);
     }
+
+    if (!layer_selected)
+        select_layer(&layer(0));
 
     did_modify_layer_stack();
 }
