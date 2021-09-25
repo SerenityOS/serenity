@@ -27,6 +27,8 @@ public:
 
     virtual bool is_strict_mode() const { return false; }
 
+    virtual bool has_constructor() const { return false; }
+
     // [[Realm]]
     virtual Realm* realm() const { return nullptr; }
 

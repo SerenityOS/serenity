@@ -181,7 +181,7 @@ Value NewExpression::execute(Interpreter& interpreter, GlobalObject& global_obje
     if (vm.exception())
         return {};
 
-    if (!callee_value.is_function() || (is<NativeFunction>(callee_value.as_object()) && !static_cast<NativeFunction&>(callee_value.as_object()).has_constructor())) {
+    if (!callee_value.is_function() || !callee_value.as_function().has_constructor()) {
         throw_type_error_for_callee(interpreter, global_object, callee_value, "constructor"sv);
         return {};
     }
