@@ -20,11 +20,6 @@ AbortSignal::~AbortSignal()
 {
 }
 
-bool AbortSignal::dispatch_event(NonnullRefPtr<Event> event)
-{
-    return EventDispatcher::dispatch(*this, event);
-}
-
 JS::Object* AbortSignal::create_wrapper(JS::GlobalObject& global_object)
 {
     return wrap(global_object, *this);

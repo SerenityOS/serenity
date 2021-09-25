@@ -207,11 +207,6 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
     TODO();
 }
 
-bool WebSocket::dispatch_event(NonnullRefPtr<DOM::Event> event)
-{
-    return DOM::EventDispatcher::dispatch(*this, move(event));
-}
-
 JS::Object* WebSocket::create_wrapper(JS::GlobalObject& global_object)
 {
     return wrap(global_object, *this);

@@ -11,6 +11,7 @@
 #include <LibWeb/Bindings/ScriptExecutionContext.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/Window.h>
@@ -147,4 +148,10 @@ void EventTarget::set_event_handler_attribute(FlyString const& name, HTML::Event
         target->add_event_listener(name, listener.release_nonnull());
     }
 }
+
+bool EventTarget::dispatch_event(NonnullRefPtr<Event> event)
+{
+    return EventDispatcher::dispatch(*this, move(event));
+}
+
 }

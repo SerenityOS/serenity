@@ -31,7 +31,7 @@ public:
 
     void remove_from_event_listener_list(NonnullRefPtr<EventListener>);
 
-    virtual bool dispatch_event(NonnullRefPtr<Event>) = 0;
+    virtual bool dispatch_event(NonnullRefPtr<Event>);
     ExceptionOr<bool> dispatch_event_binding(NonnullRefPtr<Event>);
 
     virtual JS::Object* create_wrapper(JS::GlobalObject&) = 0;

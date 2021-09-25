@@ -252,11 +252,6 @@ DOM::ExceptionOr<void> XMLHttpRequest::send()
     return {};
 }
 
-bool XMLHttpRequest::dispatch_event(NonnullRefPtr<DOM::Event> event)
-{
-    return DOM::EventDispatcher::dispatch(*this, move(event));
-}
-
 JS::Object* XMLHttpRequest::create_wrapper(JS::GlobalObject& global_object)
 {
     return wrap(global_object, *this);
