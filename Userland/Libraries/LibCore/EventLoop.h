@@ -44,6 +44,8 @@ public:
     // this should really only be used for integrating with other event loops
     void pump(WaitMode = WaitMode::WaitForEvents);
 
+    void spin_until(Function<bool()>);
+
     void post_event(Object& receiver, NonnullOwnPtr<Event>&&);
 
     static EventLoop& main();
