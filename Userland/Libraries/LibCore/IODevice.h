@@ -103,7 +103,7 @@ protected:
     virtual void did_update_fd(int) { }
 
 private:
-    bool populate_read_buffer() const;
+    bool populate_read_buffer(size_t size = 1024) const;
     bool can_read_from_fd() const;
 
     int m_fd { -1 };
