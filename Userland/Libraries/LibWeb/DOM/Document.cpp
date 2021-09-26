@@ -899,7 +899,7 @@ void Document::set_active_element(Element* element)
 
 String Document::ready_state() const
 {
-    switch (m_ready_state) {
+    switch (m_readiness) {
     case HTML::DocumentReadyState::Loading:
         return "loading"sv;
     case HTML::DocumentReadyState::Interactive:
@@ -910,11 +910,23 @@ String Document::ready_state() const
     VERIFY_NOT_REACHED();
 }
 
-void Document::set_ready_state(HTML::DocumentReadyState ready_state)
+// https://html.spec.whatwg.org/#update-the-current-document-readiness
+void Document::update_readiness(HTML::DocumentReadyState readiness_value)
 {
-    if (m_ready_state == ready_state)
+    // 1. If document's current document readiness equals readinessValue, then return.
+    if (m_readiness == readiness_value)
         return;
-    m_ready_state = ready_state;
+
+    // The spec doesn't actually mention updating the current readiness value.
+    // FIXME: https://github.com/whatwg/html/issues/7120
+    m_readiness = readiness_value;
+
+    // FIXME: 2. If document is associated with an HTML parser, then:
+    // FIXME:    1. If document is associated with an HTML parser, then:
+    // FIXME:    2. If readinessValue is "complete", and document's load timing info's DOM complete time is 0, then set document's load timing info's DOM complete time to now.
+    // FIXME:    3. Otherwise, if readinessValue is "interactive", and document's load timing info's DOM interactive time is 0, then set document's load timing info's DOM interactive time to now.
+
+    // 3. Fire an event named readystatechange at document.
     dispatch_event(Event::create(HTML::EventNames::readystatechange));
 }
 
