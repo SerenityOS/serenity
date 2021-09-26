@@ -12,6 +12,9 @@ interface HTMLElement : Element {
     readonly attribute long offsetTop;
     readonly attribute long offsetLeft;
 
+    // FIXME: This should come from a HTMLOrSVGElement mixin
+    [SameObject] readonly attribute DOMStringMap dataset;
+
     // FIXME: These should all come from a GlobalEventHandlers mixin
     attribute EventHandler onabort;
     attribute EventHandler onauxclick;

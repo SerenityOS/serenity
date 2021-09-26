@@ -28,6 +28,8 @@
 #include <LibWeb/Bindings/DOMImplementationPrototype.h>
 #include <LibWeb/Bindings/DOMParserConstructor.h>
 #include <LibWeb/Bindings/DOMParserPrototype.h>
+#include <LibWeb/Bindings/DOMStringMapConstructor.h>
+#include <LibWeb/Bindings/DOMStringMapPrototype.h>
 #include <LibWeb/Bindings/DocumentConstructor.h>
 #include <LibWeb/Bindings/DocumentFragmentConstructor.h>
 #include <LibWeb/Bindings/DocumentFragmentPrototype.h>
@@ -268,6 +270,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(DOMException)              \
     ADD_WINDOW_OBJECT_INTERFACE(DOMImplementation)         \
     ADD_WINDOW_OBJECT_INTERFACE(DOMParser)                 \
+    ADD_WINDOW_OBJECT_INTERFACE(DOMStringMap)              \
     ADD_WINDOW_OBJECT_INTERFACE(Element)                   \
     ADD_WINDOW_OBJECT_INTERFACE(Event)                     \
     ADD_WINDOW_OBJECT_INTERFACE(EventTarget)               \
