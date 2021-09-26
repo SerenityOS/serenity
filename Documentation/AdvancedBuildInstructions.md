@@ -15,7 +15,11 @@ cat << 'EOF' > mnt/etc/Keyboard.ini
 [Mapping]
 Keymap=de
 EOF
+
+# Add a file in anon's home dir
+cp /somewhere/on/your/system/file.txt mnt/home/anon
 ```
+
 
 This will configure your keymap to German (`de`) instead of US English. See [`Base/res/keymaps/`](../Base/res/keymaps/) for a full list. Note that the `keymap` program itself will also modify the `/etc/Keyboard.ini` config file, but this way the change will persist across image rebuilds.
 
