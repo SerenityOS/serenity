@@ -4,10 +4,10 @@ version=git
 workdir=SDL-main-serenity
 useconfigure=true
 files="https://github.com/SerenityPorts/SDL/archive/main-serenity.tar.gz SDL2-git.tar.gz"
-configopts="-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt -DPULSEAUDIO=OFF -DJACK=OFF"
+configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt" "-DPULSEAUDIO=OFF" "-DJACK=OFF")
 
 configure() {
-    run cmake $configopts
+    run cmake "${configopts[@]}"
 }
 
 install() {

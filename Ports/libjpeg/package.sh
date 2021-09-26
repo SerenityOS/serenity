@@ -7,7 +7,7 @@ auth_type=sha256
 workdir="jpeg-$version"
 
 install() {
-    run make DESTDIR=${SERENITY_INSTALL_ROOT} $installopts install
+    run make DESTDIR=${SERENITY_INSTALL_ROOT} "${installopts[@]}" install
     ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libjpeg.so -Wl,-soname,libjpeg.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libjpeg.a -Wl,--no-whole-archive
     rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libjpeg.la
 }

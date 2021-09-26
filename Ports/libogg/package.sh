@@ -6,7 +6,7 @@ files="https://github.com/xiph/ogg/releases/download/v${version}/libogg-${versio
 auth_type=sha256
 
 install() {
-    run make DESTDIR=${SERENITY_INSTALL_ROOT} $installopts install
+    run make DESTDIR=${SERENITY_INSTALL_ROOT} "${installopts[@]}" install
     ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libogg.so -Wl,-soname,libogg.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libogg.a -Wl,--no-whole-archive
     rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libogg.la
 }

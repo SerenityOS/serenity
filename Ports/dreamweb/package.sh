@@ -3,7 +3,7 @@ port=dreamweb
 version="1.1"
 files="https://downloads.scummvm.org/frs/extras/Dreamweb/dreamweb-cd-uk-1.1.zip ${port}-${version}.zip 4a6f13911ce67d62c526e41048ec067b279f1b378c9210f39e0ce8d3f2b80142"
 auth_type=sha256
-depends="scummvm"
+depends=("scummvm")
 
 resource_path="/usr/local/share/games/${port}-${version}"
 

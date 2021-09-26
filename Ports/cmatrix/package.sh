@@ -2,9 +2,9 @@
 port=cmatrix
 useconfigure=true
 version=git
-depends="ncurses"
+depends=("ncurses")
 workdir=cmatrix-master
-configopts="-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
 files="https://github.com/abishekvashok/cmatrix/archive/refs/heads/master.zip cmatrix.zip c32ca7562e58fb1fd7a96ebdfbe51c5de060709d39b67fce3c0bc42547e0ccb2"
 auth_type=sha256
 launcher_name=cmatrix
@@ -13,7 +13,7 @@ launcher_command=cmatrix
 launcher_run_in_terminal=true
 
 configure() {
-    run cmake $configopts
+    run cmake "${configopts[@]}"
 }
 
 install() {

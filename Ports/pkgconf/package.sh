@@ -5,7 +5,7 @@ files="https://distfiles.dereferenced.org/pkgconf/pkgconf-${version}.tar.xz pkgc
 auth_type=sha256
 useconfigure=true
 # FIXME: This looks suspiciously host-y... 
-configopts="--prefix=/usr/local --with-pkg-config-dir=/usr/local/lib/pkgconfig"
+configopts=("--prefix=/usr/local" "--with-pkg-config-dir=/usr/local/lib/pkgconfig")
 
 post_install() {
     run mkdir -p "${SERENITY_INSTALL_ROOT}/bin"
