@@ -574,8 +574,8 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             Gfx::Color text_color = edited_flag ? Color::Red : palette().color(foreground_role());
 
             if (highlight_flag) {
-                background_color = palette().selection();
-                text_color = edited_flag ? Color::from_rgb(0xFFC0CB) : palette().selection_text();
+                background_color = edited_flag ? palette().selection().inverted() : palette().selection();
+                text_color = edited_flag ? palette().selection_text().inverted() : palette().selection_text();
             } else if (byte_position == m_position && m_edit_mode == EditMode::Text) {
                 background_color = palette().inactive_selection();
                 text_color = palette().inactive_selection_text();
@@ -605,8 +605,8 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             text_color = edited_flag ? Color::Red : palette().color(foreground_role());
 
             if (highlight_flag) {
-                background_color = palette().selection();
-                text_color = edited_flag ? Color::from_rgb(0xFFC0CB) : palette().selection_text();
+                background_color = edited_flag ? palette().selection().inverted() : palette().selection();
+                text_color = edited_flag ? palette().selection_text().inverted() : palette().selection_text();
             } else if (byte_position == m_position && m_edit_mode == EditMode::Hex) {
                 background_color = palette().inactive_selection();
                 text_color = palette().inactive_selection_text();
