@@ -37,11 +37,15 @@ void CSSLoader::load_from_url(const AK::URL& url)
 
     auto request = LoadRequest::create_for_url_on_page(url, m_owner_element.document().page());
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+
+    m_document_load_event_delayer.emplace(m_owner_element.document());
 }
 
 void CSSLoader::resource_did_load()
 {
     VERIFY(resource());
+
+    m_document_load_event_delayer.clear();
 
     if (!resource()->has_encoded_data()) {
         dbgln_if(CSS_LOADER_DEBUG, "CSSLoader: Resource did load, no encoded data. URL: {}", resource()->url());
@@ -73,6 +77,8 @@ void CSSLoader::resource_did_load()
 void CSSLoader::resource_did_fail()
 {
     dbgln_if(CSS_LOADER_DEBUG, "CSSLoader: Resource did fail. URL: {}", resource()->url());
+
+    m_document_load_event_delayer.clear();
 
     load_next_import_if_needed();
 }
