@@ -4,8 +4,8 @@ version=1.1.1
 useconfigure=true
 files="https://downloads.xiph.org/releases/theora/libtheora-${version}.tar.bz2 libtheora-${version}.tar.bz2 b6ae1ee2fa3d42ac489287d3ec34c5885730b1296f0801ae577a35193d3affbc"
 auth_type="sha256"
-depends="libvorbis"
-configopts="--disable-examples"
+depends=("libvorbis")
+configopts=("--disable-examples")
 
 build_shared() {
     local name=$1
@@ -14,7 +14,7 @@ build_shared() {
 }
 
 install() {
-    run make DESTDIR=${SERENITY_INSTALL_ROOT} $installopts install
+    run make DESTDIR=${SERENITY_INSTALL_ROOT} "${installopts[@]}" install
     build_shared libtheora
     build_shared libtheoradec
     build_shared libtheoraenc

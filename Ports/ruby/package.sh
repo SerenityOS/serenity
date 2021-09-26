@@ -14,7 +14,7 @@ launcher_command="/usr/local/bin/ruby /usr/local/bin/irb --nomultiline --nosingl
 launcher_run_in_terminal="true"
 icon_file="../ruby-kit/ruby.png"
 
-configopts="--with-coroutine=x86 --disable-install-doc"
+configopts=("--with-coroutine=x86" "--disable-install-doc")
 
 export CFLAGS="-DNGROUPS_MAX=65536"
 

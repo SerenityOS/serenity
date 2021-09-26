@@ -7,4 +7,4 @@ files="https://mirror.freedif.org/GNU/gsl/gsl-${version}.tar.gz gsl-${version}.t
 https://mirror.freedif.org/GNU/gsl/gsl-${version}.tar.gz.sig gsl-${version}.tar.gz.sig
 https://ftpmirror.gnu.org/gnu/gnu-keyring.gpg gnu-keyring.gpg"
 auth_type=sig
-auth_opts="--keyring ./gnu-keyring.gpg gsl-${version}.tar.gz.sig"
+auth_opts=("--keyring" "./gnu-keyring.gpg" "gsl-${version}.tar.gz.sig")

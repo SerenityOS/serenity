@@ -6,7 +6,7 @@ https://invisible-mirror.net/archives/mawk/mawk-${version}.tgz.asc mawk-${versio
 useconfigure=true
 auth_type="sig"
 auth_import_key="C52048C0C0748FEE227D47A2702353E0F7E48EDB"
-auth_opts="mawk-${version}.tgz.asc mawk-${version}.tgz"
+auth_opts=("mawk-${version}.tgz.asc" "mawk-${version}.tgz")
 
 post_install() {
     ln -sf mawk "${SERENITY_INSTALL_ROOT}/usr/local/bin/awk"

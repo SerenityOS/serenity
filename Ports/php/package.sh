@@ -4,18 +4,18 @@ useconfigure="true"
 version="8.0.10"
 files="https://www.php.net/distributions/php-${version}.tar.xz php-${version}.tar.xz 66dc4d1bc86d9c1bc255b51b79d337ed1a7a035cf71230daabbf9a4ca35795eb"
 auth_type=sha256
-depends="libiconv libxml2 openssl readline sqlite zlib"
-configopts="
-    --disable-cgi
-    --disable-opcache
-    --enable-fpm
-    --prefix=${SERENITY_INSTALL_ROOT}/usr/local
-    --with-iconv=${SERENITY_INSTALL_ROOT}/usr/local
-    --with-openssl
-    --with-readline=${SERENITY_INSTALL_ROOT}/usr/local
-    --with-zlib
-    --without-pcre-jit
-"
+depends=("libiconv" "libxml2" "openssl" "readline" "sqlite" "zlib")
+configopts=(
+    "--disable-cgi"
+    "--disable-opcache"
+    "--enable-fpm"
+    "--prefix=${SERENITY_INSTALL_ROOT}/usr/local"
+    "--with-iconv=${SERENITY_INSTALL_ROOT}/usr/local"
+    "--with-openssl"
+    "--with-readline=${SERENITY_INSTALL_ROOT}/usr/local"
+    "--with-zlib"
+    "--without-pcre-jit"
+)
 launcher_name="PHP"
 launcher_category="Development"
 launcher_command="/usr/local/bin/php -a"

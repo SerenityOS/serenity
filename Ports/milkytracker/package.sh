@@ -5,14 +5,14 @@ workdir=MilkyTracker-$version
 useconfigure=true
 files="https://github.com/milkytracker/MilkyTracker/archive/v$version.tar.gz MilkyTracker-$version.tar.gz 72d5357e303380b52383b66b51f944a77cd77e2b3bfeb227d87cc0e72ab292f7"
 auth_type=sha256
-configopts="-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
-depends="SDL2 zlib"
+configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
+depends=("SDL2" "zlib")
 launcher_name="MilkyTracker"
 launcher_category=Sound
 launcher_command=/usr/local/bin/milkytracker
 
 configure() {
-    run cmake $configopts
+    run cmake "${configopts[@]}"
 }
 
 install() {
