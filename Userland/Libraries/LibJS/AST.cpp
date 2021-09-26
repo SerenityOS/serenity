@@ -2409,31 +2409,25 @@ Value ThrowStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
 
 Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
+    // FIXME: This needs a massive refactoring, ideally once we start using continue, break, and return completions.
+    // Instead of having an optional test expression, SwitchCase should be split into CaseClause and DefaultClause.
+    // https://tc39.es/ecma262/#sec-switch-statement
+
     InterpreterNodeScope node_scope { interpreter, *this };
 
     auto discriminant_result = m_discriminant->execute(interpreter, global_object);
     if (interpreter.exception())
         return {};
 
-    bool falling_through = false;
     auto last_value = js_undefined();
 
-    for (auto& switch_case : m_cases) {
-        if (!falling_through && switch_case.test()) {
-            auto test_result = switch_case.test()->execute(interpreter, global_object);
-            if (interpreter.exception())
-                return {};
-            if (!is_strictly_equal(discriminant_result, test_result))
-                continue;
-        }
-        falling_through = true;
-
+    auto execute_switch_case = [&](auto const& switch_case) -> Optional<Value> {
         for (auto& statement : switch_case.consequent()) {
             auto value = statement.execute(interpreter, global_object);
             if (!value.is_empty())
                 last_value = value;
             if (interpreter.exception())
-                return {};
+                return Value {};
             if (interpreter.vm().should_unwind()) {
                 if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
                     // No stop_unwind(), the outer loop will handle that - we just need to break out of the switch/case.
@@ -2446,7 +2440,33 @@ Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
                 }
             }
         }
+        return {};
+    };
+
+    bool falling_through = false;
+    SwitchCase const* default_switch_case = nullptr;
+    for (auto& switch_case : m_cases) {
+        if (!switch_case.test()) {
+            default_switch_case = &switch_case;
+            falling_through = true;
+            continue;
+        }
+        if (!falling_through) {
+            auto test_result = switch_case.test()->execute(interpreter, global_object);
+            if (interpreter.exception())
+                return {};
+            if (!is_strictly_equal(discriminant_result, test_result))
+                continue;
+        }
+        falling_through = true;
+        if (auto result = execute_switch_case(switch_case); result.has_value())
+            return *result;
     }
+    if (default_switch_case) {
+        if (auto result = execute_switch_case(*default_switch_case); result.has_value())
+            return *result;
+    }
+
     return last_value;
 }
 
