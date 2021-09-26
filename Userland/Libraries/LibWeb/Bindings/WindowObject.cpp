@@ -136,6 +136,13 @@ Origin WindowObject::origin() const
     return impl().associated_document().origin();
 }
 
+// https://heycam.github.io/webidl/#platform-object-setprototypeof
+bool WindowObject::internal_set_prototype_of(JS::Object* prototype)
+{
+    // 1. Return ? SetImmutablePrototype(O, V).
+    return set_immutable_prototype(prototype);
+}
+
 static DOM::Window* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 {
     // Since this is a non built-in function we must treat it as non-strict mode

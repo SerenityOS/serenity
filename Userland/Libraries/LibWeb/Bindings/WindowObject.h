@@ -60,6 +60,8 @@ public:
         return *constructor;
     }
 
+    virtual bool internal_set_prototype_of(JS::Object* prototype) override;
+
 private:
     virtual void visit_edges(Visitor&) override;
 
