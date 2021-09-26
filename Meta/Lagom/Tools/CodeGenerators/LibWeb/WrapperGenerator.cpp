@@ -139,6 +139,14 @@ struct Interface {
     bool has_stringifier { false };
     Optional<String> stringifier_attribute;
 
+    Optional<Function> named_property_getter;
+    Optional<Function> named_property_setter;
+
+    Optional<Function> indexed_property_getter;
+    Optional<Function> indexed_property_setter;
+
+    Optional<Function> named_property_deleter;
+
     // Added for convenience after parsing
     String wrapper_class;
     String wrapper_base_class;
@@ -146,6 +154,15 @@ struct Interface {
     String constructor_class;
     String prototype_class;
     String prototype_base_class;
+
+    // https://heycam.github.io/webidl/#dfn-support-indexed-properties
+    bool supports_indexed_properties() const { return indexed_property_getter.has_value(); }
+
+    // https://heycam.github.io/webidl/#dfn-support-named-properties
+    bool supports_named_properties() const { return named_property_getter.has_value(); }
+
+    // https://heycam.github.io/webidl/#dfn-legacy-platform-object
+    bool is_legacy_platform_object() const { return !extended_attributes.contains("Global") && (supports_indexed_properties() || supports_named_properties()); }
 };
 
 static OwnPtr<Interface> parse_interface(StringView filename, StringView const& input)
@@ -300,7 +317,14 @@ static OwnPtr<Interface> parse_interface(StringView filename, StringView const& 
         return parameters;
     };
 
-    auto parse_function = [&](HashMap<String, String>& extended_attributes) {
+    // https://heycam.github.io/webidl/#dfn-special-operation
+    // A special operation is a getter, setter or deleter.
+    enum class IsSpecialOperation {
+        No,
+        Yes,
+    };
+
+    auto parse_function = [&](HashMap<String, String>& extended_attributes, IsSpecialOperation is_special_operation = IsSpecialOperation::No) {
         bool static_ = false;
         if (lexer.consume_specific("static")) {
             static_ = true;
@@ -317,10 +341,17 @@ static OwnPtr<Interface> parse_interface(StringView filename, StringView const& 
         consume_whitespace();
         assert_specific(';');
 
-        if (!static_)
-            interface->functions.append(Function { return_type, name, move(parameters), move(extended_attributes) });
-        else
-            interface->static_functions.append(Function { return_type, name, move(parameters), move(extended_attributes) });
+        Function function { move(return_type), name, move(parameters), move(extended_attributes) };
+
+        // "Defining a special operation with an identifier is equivalent to separating the special operation out into its own declaration without an identifier."
+        if (is_special_operation == IsSpecialOperation::No || (is_special_operation == IsSpecialOperation::Yes && !name.is_empty())) {
+            if (!static_)
+                interface->functions.append(function);
+            else
+                interface->static_functions.append(function);
+        }
+
+        return function;
     };
 
     auto parse_constructor = [&] {
@@ -344,6 +375,109 @@ static OwnPtr<Interface> parse_interface(StringView filename, StringView const& 
             interface->stringifier_attribute = interface->attributes.last().name;
         } else {
             assert_specific(';');
+        }
+    };
+
+    auto parse_getter = [&](HashMap<String, String>& extended_attributes) {
+        assert_string("getter");
+        consume_whitespace();
+        auto function = parse_function(extended_attributes, IsSpecialOperation::Yes);
+
+        if (function.parameters.size() != 1)
+            report_parsing_error(String::formatted("Named/indexed property getters must have only 1 parameter, got {} parameters.", function.parameters.size()), filename, input, lexer.tell());
+
+        auto& identifier = function.parameters.first();
+
+        if (identifier.type.nullable)
+            report_parsing_error("identifier's type must not be nullable.", filename, input, lexer.tell());
+
+        if (identifier.optional)
+            report_parsing_error("identifier must not be optional.", filename, input, lexer.tell());
+
+        // FIXME: Disallow variadic functions once they're supported.
+
+        if (identifier.type.name == "DOMString") {
+            if (interface->named_property_getter.has_value())
+                report_parsing_error("An interface can only have one named property getter.", filename, input, lexer.tell());
+
+            interface->named_property_getter = move(function);
+        } else if (identifier.type.name == "unsigned long") {
+            if (interface->indexed_property_getter.has_value())
+                report_parsing_error("An interface can only have one indexed property getter.", filename, input, lexer.tell());
+
+            interface->indexed_property_getter = move(function);
+        } else {
+            report_parsing_error(String::formatted("Named/indexed property getter's identifier's type must be either 'DOMString' or 'unsigned long', got '{}'.", identifier.type.name), filename, input, lexer.tell());
+        }
+    };
+
+    auto parse_setter = [&](HashMap<String, String>& extended_attributes) {
+        assert_string("setter");
+        consume_whitespace();
+        auto function = parse_function(extended_attributes, IsSpecialOperation::Yes);
+
+        if (function.parameters.size() != 2)
+            report_parsing_error(String::formatted("Named/indexed property setters must have only 2 parameters, got {} parameter(s).", function.parameters.size()), filename, input, lexer.tell());
+
+        auto& identifier = function.parameters.first();
+
+        if (identifier.type.nullable)
+            report_parsing_error("identifier's type must not be nullable.", filename, input, lexer.tell());
+
+        if (identifier.optional)
+            report_parsing_error("identifier must not be optional.", filename, input, lexer.tell());
+
+        // FIXME: Disallow variadic functions once they're supported.
+
+        if (identifier.type.name == "DOMString") {
+            if (interface->named_property_setter.has_value())
+                report_parsing_error("An interface can only have one named property setter.", filename, input, lexer.tell());
+
+            if (!interface->named_property_getter.has_value())
+                report_parsing_error("A named property setter must be accompanied by a named property getter.", filename, input, lexer.tell());
+
+            interface->named_property_setter = move(function);
+        } else if (identifier.type.name == "unsigned long") {
+            if (interface->indexed_property_setter.has_value())
+                report_parsing_error("An interface can only have one indexed property setter.", filename, input, lexer.tell());
+
+            if (!interface->indexed_property_getter.has_value())
+                report_parsing_error("An indexed property setter must be accompanied by an indexed property getter.", filename, input, lexer.tell());
+
+            interface->indexed_property_setter = move(function);
+        } else {
+            report_parsing_error(String::formatted("Named/indexed property setter's identifier's type must be either 'DOMString' or 'unsigned long', got '{}'.", identifier.type.name), filename, input, lexer.tell());
+        }
+    };
+
+    auto parse_deleter = [&](HashMap<String, String>& extended_attributes) {
+        assert_string("deleter");
+        consume_whitespace();
+        auto function = parse_function(extended_attributes, IsSpecialOperation::Yes);
+
+        if (function.parameters.size() != 1)
+            report_parsing_error(String::formatted("Named property deleter must have only 1 parameter, got {} parameters.", function.parameters.size()), filename, input, lexer.tell());
+
+        auto& identifier = function.parameters.first();
+
+        if (identifier.type.nullable)
+            report_parsing_error("identifier's type must not be nullable.", filename, input, lexer.tell());
+
+        if (identifier.optional)
+            report_parsing_error("identifier must not be optional.", filename, input, lexer.tell());
+
+        // FIXME: Disallow variadic functions once they're supported.
+
+        if (identifier.type.name == "DOMString") {
+            if (interface->named_property_deleter.has_value())
+                report_parsing_error("An interface can only have one named property deleter.", filename, input, lexer.tell());
+
+            if (!interface->named_property_getter.has_value())
+                report_parsing_error("A named property deleter must be accompanied by a named property getter.", filename, input, lexer.tell());
+
+            interface->named_property_deleter = move(function);
+        } else {
+            report_parsing_error(String::formatted("Named property deleter's identifier's type must be 'DOMString', got '{}'.", identifier.type.name), filename, input, lexer.tell());
         }
     };
 
@@ -379,6 +513,21 @@ static OwnPtr<Interface> parse_interface(StringView filename, StringView const& 
 
         if (lexer.next_is("readonly") || lexer.next_is("attribute")) {
             parse_attribute(extended_attributes);
+            continue;
+        }
+
+        if (lexer.next_is("getter")) {
+            parse_getter(extended_attributes);
+            continue;
+        }
+
+        if (lexer.next_is("setter")) {
+            parse_setter(extended_attributes);
+            continue;
+        }
+
+        if (lexer.next_is("deleter")) {
+            parse_deleter(extended_attributes);
             continue;
         }
 
@@ -1013,6 +1162,17 @@ public:
 )~~~");
     }
 
+    if (interface.is_legacy_platform_object()) {
+        generator.append(R"~~~(
+    virtual Optional<JS::PropertyDescriptor> internal_get_own_property(JS::PropertyName const&) const override;
+    virtual bool internal_set(JS::PropertyName const&, JS::Value, JS::Value) override;
+    virtual bool internal_define_own_property(JS::PropertyName const&, JS::PropertyDescriptor const&) override;
+    virtual bool internal_delete(JS::PropertyName const&) override;
+    virtual bool internal_prevent_extensions() override;
+    virtual JS::MarkedValueList internal_own_property_keys() const override;
+)~~~");
+    }
+
     if (interface.wrapper_base_class == "Wrapper") {
         generator.append(R"~~~(
     @fully_qualified_name@& impl() { return *m_impl; }
@@ -1028,6 +1188,14 @@ public:
     generator.append(R"~~~(
 private:
 )~~~");
+
+    if (interface.is_legacy_platform_object()) {
+        generator.append(R"~~~(
+    bool is_named_property_exposed_on_object(JS::PropertyName const&) const;
+    Optional<JS::PropertyDescriptor> legacy_platform_object_get_own_property_for_get_own_property_slot(JS::PropertyName const&) const;
+    Optional<JS::PropertyDescriptor> legacy_platform_object_get_own_property_for_set_slot(JS::PropertyName const&) const;
+)~~~");
+    }
 
     if (interface.wrapper_base_class == "Wrapper") {
         generator.append(R"~~~(
@@ -1081,6 +1249,7 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/EventTargetWrapperFactory.h>
 #include <LibWeb/Bindings/EventWrapperFactory.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
 #include <LibWeb/Bindings/HTMLCollectionWrapper.h>
 #include <LibWeb/Bindings/HTMLFormElementWrapper.h>
@@ -1088,6 +1257,7 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
 #include <LibWeb/Bindings/HTMLTableCaptionElementWrapper.h>
 #include <LibWeb/Bindings/HTMLTableSectionElementWrapper.h>
+#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/ImageDataWrapper.h>
 #include <LibWeb/Bindings/MessagePortWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
@@ -1148,6 +1318,775 @@ void @wrapper_class@::initialize(JS::GlobalObject& global_object)
 @wrapper_class@* wrap(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
 {
     return static_cast<@wrapper_class@*>(wrap_impl(global_object, impl));
+}
+)~~~");
+    }
+
+    if (interface.is_legacy_platform_object()) {
+        auto scoped_generator = generator.fork();
+        scoped_generator.set("class_name", interface.wrapper_class);
+        scoped_generator.set("fully_qualified_name", interface.fully_qualified_name);
+
+        // FIXME: This is a hack to avoid duplicating/refactoring a lot of code.
+        scoped_generator.append(R"~~~(
+static JS::Value wrap_for_legacy_platform_object_get_own_property(JS::GlobalObject& global_object, [[maybe_unused]] auto& retval)
+{
+    [[maybe_unused]] auto& vm = global_object.vm();
+)~~~");
+
+        if (interface.named_property_getter.has_value()) {
+            generate_return_statement(scoped_generator, interface.named_property_getter->return_type);
+        } else {
+            VERIFY(interface.indexed_property_getter.has_value());
+            generate_return_statement(scoped_generator, interface.indexed_property_getter->return_type);
+        }
+
+        scoped_generator.append(R"~~~(
+}
+)~~~");
+
+        if (interface.supports_named_properties()) {
+            // https://heycam.github.io/webidl/#dfn-named-property-visibility
+
+            scoped_generator.append(R"~~~(
+bool @class_name@::is_named_property_exposed_on_object(JS::PropertyName const& property_name) const
+{
+    auto& vm = this->vm();
+
+    // The spec doesn't say anything about the type of the property name here.
+    // Numbers can be converted to a string, which is fine and what other engines do.
+    // However, since a symbol cannot be converted to a string, it cannot be a supported property name. Return early if it's a symbol.
+    if (property_name.is_symbol())
+        return false;
+
+    // 1. If P is not a supported property name of O, then return false.
+    // NOTE: This is in it's own variable to enforce the type.
+    // FIXME: Can this throw?
+    Vector<String> supported_property_names = impl().supported_property_names();
+    auto property_name_string = property_name.to_string();
+    if (!supported_property_names.contains_slow(property_name_string))
+        return false;
+
+    // 2. If O has an own property named P, then return false.
+    // NOTE: This has to be done manually instead of using Object::has_own_property, as that would use the overrided internal_get_own_property.
+    auto own_property_named_p = Object::internal_get_own_property(property_name);
+    if (vm.exception())
+        return {};
+
+    if (own_property_named_p.has_value())
+        return false;
+)~~~");
+
+            if (interface.extended_attributes.contains("LegacyOverrideBuiltIns")) {
+                scoped_generator.append(R"~~~(
+    // 3. If O implements an interface that has the [LegacyOverrideBuiltIns] extended attribute, then return true.
+    return true;
+}
+)~~~");
+            } else {
+                scoped_generator.append(R"~~~(
+    // NOTE: Step 3 is not here as the interface doesn't have the LegacyOverrideBuiltIns extended attribute.
+    // 4. Let prototype be O.[[GetPrototypeOf]]().
+    auto* prototype = internal_get_prototype_of();
+    if (vm.exception())
+        return {};
+
+    // 5. While prototype is not null:
+    while (prototype) {
+        // FIXME: 1. If prototype is not a named properties object, and prototype has an own property named P, then return false.
+        //           (It currently does not check for named property objects)
+        bool prototype_has_own_property_named_p = prototype->has_own_property(property_name);
+        if (vm.exception())
+            return {};
+
+        if (prototype_has_own_property_named_p)
+            return false;
+
+        // 2. Set prototype to prototype.[[GetPrototypeOf]]().
+        prototype = prototype->internal_get_prototype_of();
+        if (vm.exception())
+            return {};
+    }
+
+    // 6. Return true.
+    return true;
+}
+)~~~");
+            }
+        }
+
+        enum class IgnoreNamedProps {
+            No,
+            Yes,
+        };
+
+        auto generate_legacy_platform_object_get_own_property_function = [&](IgnoreNamedProps ignore_named_props, String const& for_which_internal_method) {
+            // https://heycam.github.io/webidl/#LegacyPlatformObjectGetOwnProperty
+
+            auto get_own_property_generator = scoped_generator.fork();
+
+            get_own_property_generator.set("internal_method"sv, for_which_internal_method);
+
+            get_own_property_generator.append(R"~~~(
+Optional<JS::PropertyDescriptor> @class_name@::legacy_platform_object_get_own_property_for_@internal_method@_slot(JS::PropertyName const& property_name) const
+{
+)~~~");
+
+            get_own_property_generator.append(R"~~~(
+    [[maybe_unused]] auto& vm = this->vm();
+    [[maybe_unused]] auto& global_object = this->global_object();
+)~~~");
+
+            // 1. If O supports indexed properties...
+            if (interface.supports_indexed_properties()) {
+                // ...and P is an array index, then:
+                get_own_property_generator.append(R"~~~(
+    if (IDL::is_an_array_index(global_object, property_name)) {
+        // 1. Let index be the result of calling ToUint32(P).
+        u32 index = property_name.as_number();
+
+        // 2. If index is a supported property index, then:
+        // FIXME: Can this throw?
+        if (impl().is_supported_property_index(index)) {
+)~~~");
+                // 1. Let operation be the operation used to declare the indexed property getter. (NOTE: Not necessary)
+                // 2. Let value be an uninitialized variable. (NOTE: Not necessary)
+
+                // 3. If operation was defined without an identifier, then set value to the result of performing the steps listed in the interface description to determine the value of an indexed property with index as the index.
+                if (interface.indexed_property_getter->name.is_empty()) {
+                    get_own_property_generator.append(R"~~~(
+            auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return impl().determine_value_of_indexed_property(index); });
+)~~~");
+                }
+
+                // 4. Otherwise, operation was defined with an identifier. Set value to the result of performing the method steps of operation with O as this and « index » as the argument values.
+                else {
+                    auto function_scoped_generator = get_own_property_generator.fork();
+
+                    function_scoped_generator.set("function.cpp_name", make_input_acceptable_cpp(interface.indexed_property_getter->name.to_snakecase()));
+
+                    function_scoped_generator.append(R"~~~(
+            auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return impl().@function.cpp_name@(index); });
+)~~~");
+                }
+
+                get_own_property_generator.append(R"~~~(
+            if (should_return_empty(result))
+                return {};
+
+            auto value = result.release_value();
+
+            // 5. Let desc be a newly created Property Descriptor with no fields.
+            JS::PropertyDescriptor descriptor;
+
+            // 6. Set desc.[[Value]] to the result of converting value to an ECMAScript value.
+            descriptor.value = wrap_for_legacy_platform_object_get_own_property(global_object, value);
+)~~~");
+
+                // 7. If O implements an interface with an indexed property setter, then set desc.[[Writable]] to true, otherwise set it to false.
+                if (interface.indexed_property_setter.has_value()) {
+                    get_own_property_generator.append(R"~~~(
+            descriptor.writable = true;
+)~~~");
+                } else {
+                    get_own_property_generator.append(R"~~~(
+            descriptor.writable = false;
+)~~~");
+                }
+
+                get_own_property_generator.append(R"~~~(
+
+            // 8. Set desc.[[Enumerable]] and desc.[[Configurable]] to true.
+            descriptor.enumerable = true;
+            descriptor.configurable = true;
+
+            // 9. Return desc.
+            return descriptor;
+        }
+
+        // 3. Set ignoreNamedProps to true.
+        // NOTE: To reduce complexity of WrapperGenerator, this just returns early instead of keeping track of another variable.
+        return Object::internal_get_own_property(property_name);
+    }
+)~~~");
+            }
+
+            // 2. If O supports named properties and ignoreNamedProps is false, then:
+            if (interface.supports_named_properties() && ignore_named_props == IgnoreNamedProps::No) {
+                get_own_property_generator.append(R"~~~(
+    // 1. If the result of running the named property visibility algorithm with property name P and object O is true, then:
+    if (is_named_property_exposed_on_object(property_name)) {
+        // FIXME: It's unfortunate that this is done twice, once in is_named_property_exposed_on_object and here.
+        auto property_name_string = property_name.to_string();
+)~~~");
+
+                // 1. Let operation be the operation used to declare the named property getter. (NOTE: Not necessary)
+                // 2. Let value be an uninitialized variable. (NOTE: Not necessary)
+
+                // 3. If operation was defined without an identifier, then set value to the result of performing the steps listed in the interface description to determine the value of a named property with P as the name.
+                if (interface.named_property_getter->name.is_empty()) {
+                    get_own_property_generator.append(R"~~~(
+        auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return impl().determine_value_of_named_property(property_name_string); });
+)~~~");
+                }
+
+                // 4. Otherwise, operation was defined with an identifier. Set value to the result of performing the method steps of operation with O as this and « index » as the argument values.
+                else {
+                    auto function_scoped_generator = get_own_property_generator.fork();
+                    function_scoped_generator.set("function.cpp_name", make_input_acceptable_cpp(interface.named_property_getter->name.to_snakecase()));
+
+                    function_scoped_generator.append(R"~~~(
+        auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return impl().@function.cpp_name@(property_name_string); });
+)~~~");
+                }
+
+                get_own_property_generator.append(R"~~~(
+        if (should_return_empty(result))
+            return {};
+
+        auto value = result.release_value();
+
+        // 5. Let desc be a newly created Property Descriptor with no fields.
+        JS::PropertyDescriptor descriptor;
+
+        // 6. Set desc.[[Value]] to the result of converting value to an ECMAScript value.
+        descriptor.value = wrap_for_legacy_platform_object_get_own_property(global_object, value);
+)~~~");
+
+                // 7. If O implements an interface with a named property setter, then set desc.[[Writable]] to true, otherwise set it to false.
+                if (interface.named_property_setter.has_value()) {
+                    get_own_property_generator.append(R"~~~(
+        descriptor.writable = true;
+)~~~");
+                } else {
+                    get_own_property_generator.append(R"~~~(
+        descriptor.writable = false;
+)~~~");
+                }
+
+                // 8. If O implements an interface with the [LegacyUnenumerableNamedProperties] extended attribute, then set desc.[[Enumerable]] to false, otherwise set it to true.
+                if (interface.extended_attributes.contains("LegacyUnenumerableNamedProperties")) {
+                    get_own_property_generator.append(R"~~~(
+        descriptor.enumerable = false;
+)~~~");
+                } else {
+                    get_own_property_generator.append(R"~~~(
+        descriptor.enumerable = true;
+)~~~");
+                }
+
+                get_own_property_generator.append(R"~~~(
+        // 9. Set desc.[[Configurable]] to true.
+        descriptor.configurable = true;
+
+        // 10. Return desc.
+        return descriptor;
+    }
+)~~~");
+            }
+
+            // 3. Return OrdinaryGetOwnProperty(O, P).
+            get_own_property_generator.append(R"~~~(
+    return Object::internal_get_own_property(property_name);
+}
+)~~~");
+        };
+
+        // Step 1 of [[GetOwnProperty]]: Return LegacyPlatformObjectGetOwnProperty(O, P, false).
+        generate_legacy_platform_object_get_own_property_function(IgnoreNamedProps::No, "get_own_property");
+
+        // Step 2 of [[Set]]: Let ownDesc be LegacyPlatformObjectGetOwnProperty(O, P, true).
+        generate_legacy_platform_object_get_own_property_function(IgnoreNamedProps::Yes, "set");
+
+        if (interface.named_property_setter.has_value()) {
+            // https://heycam.github.io/webidl/#invoke-named-setter
+            // NOTE: All users of invoke_named_property_setter check that JS::PropertyName is a String before calling it.
+            // FIXME: It's not necessary to determine "creating" if the named property setter specifies an identifier.
+            //        Try avoiding it somehow, e.g. by enforcing supported_property_names doesn't have side effects so it can be skipped.
+            scoped_generator.append(R"~~~(
+static void invoke_named_property_setter(JS::GlobalObject& global_object, @fully_qualified_name@& impl, String const& property_name, JS::Value value)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let creating be true if P is not a supported property name, and false otherwise.
+    // NOTE: This is in it's own variable to enforce the type.
+    // FIXME: Can this throw?
+    Vector<String> supported_property_names = impl.supported_property_names();
+    [[maybe_unused]] bool creating = !supported_property_names.contains_slow(property_name);
+)~~~");
+            // 2. Let operation be the operation used to declare the named property setter. (NOTE: Not necessary)
+            // 3. Let T be the type of the second argument of operation. (NOTE: Not necessary)
+
+            // 4. Let value be the result of converting V to an IDL value of type T.
+            // NOTE: This takes the last parameter as it's enforced that there's only two parameters.
+            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", true);
+
+            // 5. If operation was defined without an identifier, then:
+            if (interface.named_property_setter->name.is_empty()) {
+                scoped_generator.append(R"~~~(
+    if (creating) {
+        // 5.1. If creating is true, then perform the steps listed in the interface description to set the value of a new named property with P as the name and value as the value.
+        auto result = throw_dom_exception_if_needed(vm, global_object, [&] { impl.set_value_of_new_named_property(property_name, converted_value); });
+        if (should_return_empty(result))
+            return;
+    } else {
+        // 5.2 Otherwise, creating is false. Perform the steps listed in the interface description to set the value of an existing named property with P as the name and value as the value.
+        auto result = throw_dom_exception_if_needed(vm, global_object, [&] { impl.set_value_of_existing_named_property(property_name, converted_value); });
+        if (should_return_empty(result))
+            return;
+    }
+)~~~");
+            } else {
+                // 6. Otherwise, operation was defined with an identifier.
+                //    Perform the method steps of operation with O as this and « P, value » as the argument values.
+                auto function_scoped_generator = scoped_generator.fork();
+                function_scoped_generator.set("function.cpp_name", make_input_acceptable_cpp(interface.named_property_setter->name.to_snakecase()));
+
+                function_scoped_generator.append(R"~~~(
+    auto result = throw_dom_exception_if_needed(vm, global_object, [&] { impl.@function.cpp_name@(property_name, converted_value); });
+    if (should_return_empty(result))
+        return;
+)~~~");
+            }
+
+            scoped_generator.append(R"~~~(
+}
+)~~~");
+        }
+
+        if (interface.indexed_property_setter.has_value()) {
+            // https://heycam.github.io/webidl/#invoke-indexed-setter
+            // NOTE: All users of invoke_indexed_property_setter check if property name is an IDL array index before calling it.
+            // FIXME: It's not necessary to determine "creating" if the indexed property setter specifies an identifier.
+            //        Try avoiding it somehow, e.g. by enforcing supported_property_indices doesn't have side effects so it can be skipped.
+            scoped_generator.append(R"~~~(
+static void invoke_indexed_property_setter(JS::GlobalObject& global_object, @fully_qualified_name@& impl, JS::PropertyName const& property_name, JS::Value value)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let index be the result of calling ToUint32(P).
+    u32 index = property_name.as_number();
+
+    // 2. Let creating be true if index is not a supported property index, and false otherwise.
+    // FIXME: Can this throw?
+    [[maybe_unused]] bool creating = !impl.is_supported_property_index(index);
+)~~~");
+
+            // 3. Let operation be the operation used to declare the named property setter. (NOTE: Not necessary)
+            // 4. Let T be the type of the second argument of operation. (NOTE: Not necessary)
+
+            // 5. Let value be the result of converting V to an IDL value of type T.
+            // NOTE: This takes the last parameter as it's enforced that there's only two parameters.
+            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", true);
+
+            // 6. If operation was defined without an identifier, then:
+            if (interface.indexed_property_setter->name.is_empty()) {
+                scoped_generator.append(R"~~~(
+    if (creating) {
+        // 6.1 If creating is true, then perform the steps listed in the interface description to set the value of a new indexed property with index as the index and value as the value.
+        auto result = throw_dom_exception_if_needed(vm, global_object, [&] { impl.set_value_of_new_indexed_property(index, converted_value); });
+        if (should_return_empty(result))
+            return;
+    } else {
+        // 6.2 Otherwise, creating is false. Perform the steps listed in the interface description to set the value of an existing indexed property with index as the index and value as the value.
+        auto result = throw_dom_exception_if_needed(vm, global_object, [&] { impl.set_value_of_existing_indexed_property(index, converted_value); });
+        if (should_return_empty(result))
+            return;
+    }
+)~~~");
+            } else {
+                // 7. Otherwise, operation was defined with an identifier.
+                //    Perform the method steps of operation with O as this and « index, value » as the argument values.
+                auto function_scoped_generator = scoped_generator.fork();
+                function_scoped_generator.set("function.cpp_name", make_input_acceptable_cpp(interface.indexed_property_setter->name.to_snakecase()));
+
+                function_scoped_generator.append(R"~~~(
+    auto result = throw_dom_exception_if_needed(vm, global_object, [&] { impl.@function.cpp_name@(index, converted_value); });
+    if (should_return_empty(result))
+        return;
+)~~~");
+            }
+
+            scoped_generator.append(R"~~~(
+}
+)~~~");
+        }
+
+        // == Internal Slot Generation ==
+
+        // 3.9.1. [[GetOwnProperty]], https://heycam.github.io/webidl/#legacy-platform-object-getownproperty
+        scoped_generator.append(R"~~~(
+Optional<JS::PropertyDescriptor> @class_name@::internal_get_own_property(JS::PropertyName const& property_name) const
+{
+    // 1. Return LegacyPlatformObjectGetOwnProperty(O, P, false).
+    return legacy_platform_object_get_own_property_for_get_own_property_slot(property_name);
+}
+)~~~");
+
+        // 3.9.2. [[Set]], https://heycam.github.io/webidl/#legacy-platform-object-set
+        scoped_generator.append(R"~~~(
+bool @class_name@::internal_set(JS::PropertyName const& property_name, JS::Value value, JS::Value receiver)
+{
+    auto& vm = this->vm();
+    [[maybe_unused]] auto& global_object = this->global_object();
+)~~~");
+
+        // The step 1 if statement will be empty if the interface has no setters, so don't generate the if statement if there's no setters.
+        if (interface.named_property_setter.has_value() || interface.indexed_property_setter.has_value()) {
+            scoped_generator.append(R"~~~(
+    // 1. If O and Receiver are the same object, then:
+    if (JS::same_value(this, receiver)) {
+)~~~");
+
+            // 1. If O implements an interface with an indexed property setter...
+            if (interface.indexed_property_setter.has_value()) {
+                // ...and P is an array index, then:
+                scoped_generator.append(R"~~~(
+        if (IDL::is_an_array_index(global_object, property_name)) {
+            // 1. Invoke the indexed property setter on O with P and V.
+            invoke_indexed_property_setter(global_object, impl(), property_name, value);
+            if (vm.exception())
+                return {};
+
+            // 2. Return true.
+            return true;
+        }
+)~~~");
+            }
+
+            // 2. If O implements an interface with a named property setter...
+            if (interface.named_property_setter.has_value()) {
+                // ... and Type(P) is String, then:
+                scoped_generator.append(R"~~~(
+        if (property_name.is_string()) {
+            // 1. Invoke the named property setter on O with P and V.
+            invoke_named_property_setter(global_object, impl(), property_name.as_string(), value);
+            if (vm.exception())
+                return {};
+
+            // 2. Return true.
+            return true;
+        }
+)~~~");
+            }
+
+            scoped_generator.append(R"~~~(
+    }
+)~~~");
+        }
+
+        scoped_generator.append(R"~~~(
+    // 2. Let ownDesc be LegacyPlatformObjectGetOwnProperty(O, P, true).
+    auto own_descriptor = legacy_platform_object_get_own_property_for_set_slot(property_name);
+    if (vm.exception())
+        return {};
+
+    // 3. Perform ? OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc).
+    // NOTE: The spec says "perform" instead of "return", meaning nothing will be returned on this path according to the spec, which isn't possible to do.
+    //       Let's treat it as though it says "return" instead of "perform".
+    return ordinary_set_with_own_descriptor(property_name, value, receiver, own_descriptor);
+}
+)~~~");
+
+        // 3.9.3. [[DefineOwnProperty]], https://heycam.github.io/webidl/#legacy-platform-object-defineownproperty
+        scoped_generator.append(R"~~~(
+bool @class_name@::internal_define_own_property(JS::PropertyName const& property_name, JS::PropertyDescriptor const& property_descriptor)
+{
+    [[maybe_unused]] auto& vm = this->vm();
+    auto& global_object = this->global_object();
+)~~~");
+
+        // 1. If O supports indexed properties...
+        if (interface.supports_indexed_properties()) {
+            // ...and P is an array index, then:
+            scoped_generator.append(R"~~~(
+    if (IDL::is_an_array_index(global_object, property_name)) {
+        // 1. If the result of calling IsDataDescriptor(Desc) is false, then return false.
+        if (!property_descriptor.is_data_descriptor())
+            return false;
+)~~~");
+
+            // 2. If O does not implement an interface with an indexed property setter, then return false.
+            if (!interface.indexed_property_setter.has_value()) {
+                scoped_generator.append(R"~~~(
+        return false;
+)~~~");
+            } else {
+                scoped_generator.append(R"~~~(
+        // 3. Invoke the indexed property setter on O with P and Desc.[[Value]].
+        invoke_indexed_property_setter(global_object, impl(), property_name, *property_descriptor.value);
+        if (vm.exception())
+            return {};
+
+        // 4. Return true.
+        return true;
+)~~~");
+            }
+
+            scoped_generator.append(R"~~~(
+    }
+)~~~");
+        }
+
+        // 2. If O supports named properties, O does not implement an interface with the [Global] extended attribute,
+        if (interface.supports_named_properties() && !interface.extended_attributes.contains("Global")) {
+            // Type(P) is String,
+            // FIXME: and P is not an unforgeable property name of O, then:
+            // FIXME: It's not necessary to determine "creating" if the named property setter specifies an identifier.
+            //        Try avoiding it somehow, e.g. by enforcing supported_property_names doesn't have side effects so it can be skipped.
+            scoped_generator.append(R"~~~(
+    if (property_name.is_string()) {
+        auto& property_name_as_string = property_name.as_string();
+
+        // 1. Let creating be true if P is not a supported property name, and false otherwise.
+        // NOTE: This is in it's own variable to enforce the type.
+        // FIXME: Can this throw?
+        Vector<String> supported_property_names = impl().supported_property_names();
+        [[maybe_unused]] bool creating = !supported_property_names.contains_slow(property_name_as_string);
+)~~~");
+
+            // 2. If O implements an interface with the [LegacyOverrideBuiltIns] extended attribute or O does not have an own property named P, then:
+            if (!interface.extended_attributes.contains("LegacyOverrideBuiltIns")) {
+                scoped_generator.append(R"~~~(
+        // NOTE: This has to be done manually instead of using Object::has_own_property, as that would use the overrided internal_get_own_property.
+        auto own_property_named_p = Object::internal_get_own_property(property_name);
+        if (vm.exception())
+            return {};
+
+        if (!own_property_named_p.has_value()))~~~");
+            }
+
+            // A scope is created regardless of the fact that the interface may have [LegacyOverrideBuiltIns] specified to prevent code duplication.
+            scoped_generator.append(R"~~~(
+        {
+)~~~");
+
+            // 1. If creating is false and O does not implement an interface with a named property setter, then return false.
+            if (!interface.named_property_setter.has_value()) {
+                scoped_generator.append(R"~~~(
+            if (!creating)
+                return false;
+)~~~");
+            } else {
+                // 2. If O implements an interface with a named property setter, then:
+                scoped_generator.append(R"~~~(
+            // 1. If the result of calling IsDataDescriptor(Desc) is false, then return false.
+            if (!property_descriptor.is_data_descriptor())
+                return false;
+
+            // 2. Invoke the named property setter on O with P and Desc.[[Value]].
+            invoke_named_property_setter(global_object, impl(), property_name_as_string, *property_descriptor.value);
+            if (vm.exception())
+                return {};
+
+            // 3. Return true.
+            return true;
+)~~~");
+            }
+
+            scoped_generator.append(R"~~~(
+        }
+)~~~");
+
+            scoped_generator.append(R"~~~(
+    }
+)~~~");
+        }
+
+        // 3. If O does not implement an interface with the [Global] extended attribute, then set Desc.[[Configurable]] to true.
+        if (!interface.extended_attributes.contains("Global")) {
+            scoped_generator.append(R"~~~(
+    // property_descriptor is a const&, thus we need to create a copy here to set [[Configurable]]
+    JS::PropertyDescriptor descriptor_copy(property_descriptor);
+    descriptor_copy.configurable = true;
+
+    // 4. Return OrdinaryDefineOwnProperty(O, P, Desc).
+    return Object::internal_define_own_property(property_name, descriptor_copy);
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    // 4. Return OrdinaryDefineOwnProperty(O, P, Desc).
+    return Object::internal_define_own_property(property_name, property_descriptor);
+)~~~");
+        }
+
+        scoped_generator.append(R"~~~(
+}
+)~~~");
+
+        // 3.9.4. [[Delete]], https://heycam.github.io/webidl/#legacy-platform-object-delete
+        scoped_generator.append(R"~~~(
+bool @class_name@::internal_delete(JS::PropertyName const& property_name)
+{
+    auto& vm = this->vm();
+    auto& global_object = this->global_object();
+)~~~");
+
+        // 1. If O supports indexed properties...
+        if (interface.supports_indexed_properties()) {
+            // ...and P is an array index, then:
+            scoped_generator.append(R"~~~(
+    if (IDL::is_an_array_index(global_object, property_name)) {
+        // 1. Let index be the result of calling ToUint32(P).
+        u32 index = property_name.as_number();
+
+        // 2. If index is not a supported property index, then return true.
+        // FIXME: Can this throw?
+        if (!impl().is_supported_property_index(index))
+            return true;
+
+        // 3. Return false.
+        return false;
+    }
+)~~~");
+        }
+
+        // 2. If O supports named properties, O does not implement an interface with the [Global] extended attribute...
+        if (interface.supports_named_properties() && !interface.extended_attributes.contains("Global")) {
+            // ...and the result of calling the named property visibility algorithm with property name P and object O is true, then:
+            scoped_generator.append(R"~~~(
+    if (is_named_property_exposed_on_object(property_name)) {
+)~~~");
+
+            // 1. If O does not implement an interface with a named property deleter, then return false.
+            if (!interface.named_property_deleter.has_value()) {
+                scoped_generator.append(R"~~~(
+        return false;
+)~~~");
+            } else {
+                // 2. Let operation be the operation used to declare the named property deleter. (NOTE: Not necessary)
+
+                scoped_generator.append(R"~~~(
+        // FIXME: It's unfortunate that this is done twice, once in is_named_property_exposed_on_object and here.
+        auto property_name_string = property_name.to_string();
+)~~~");
+
+                // 3. If operation was defined without an identifier, then:
+                if (interface.named_property_deleter->name.is_empty()) {
+                    scoped_generator.append(R"~~~(
+        // 1. Perform the steps listed in the interface description to delete an existing named property with P as the name.
+        auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return impl().delete_existing_named_property(property_name_string); });
+        if (should_return_empty(result))
+            return {};
+
+        bool succeeded = result.release_value();
+
+        // 2. If the steps indicated that the deletion failed, then return false.
+        if (!succeeded)
+            return false;
+)~~~");
+                } else {
+                    // 4. Otherwise, operation was defined with an identifier:
+                    auto function_scoped_generator = scoped_generator.fork();
+                    function_scoped_generator.set("function.cpp_name", make_input_acceptable_cpp(interface.named_property_deleter->name.to_snakecase()));
+
+                    function_scoped_generator.append(R"~~~(
+        // 1. Perform method steps of operation with O as this and « P » as the argument values.
+        auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return impl().@function.cpp_name@(property_name_string); });
+        if (should_return_empty(result))
+            return {};
+)~~~");
+
+                    // 2. If operation was declared with a return type of boolean and the steps returned false, then return false.
+                    if (interface.named_property_deleter->return_type.name == "boolean") {
+                        function_scoped_generator.append(R"~~~(
+        bool succeeded = result.release_value();
+        if (!succeeded)
+            return false;
+)~~~");
+                    }
+                }
+
+                scoped_generator.append(R"~~~(
+        // 5. Return true.
+        return true;
+)~~~");
+            }
+
+            scoped_generator.append(R"~~~(
+    }
+)~~~");
+        }
+
+        scoped_generator.append(R"~~~(
+    // 3. If O has an own property with name P, then:
+    auto own_property_named_p_descriptor = Object::internal_get_own_property(property_name);
+    if (vm.exception())
+        return {};
+
+    if (own_property_named_p_descriptor.has_value()) {
+        // 1. If the property is not configurable, then return false.
+        // 2. Otherwise, remove the property from O.
+        if (*own_property_named_p_descriptor->configurable)
+            storage_delete(property_name);
+        else
+            return false;
+    }
+
+    // 4. Return true.
+    return true;
+}
+)~~~");
+
+        // 3.9.5. [[PreventExtensions]], https://heycam.github.io/webidl/#legacy-platform-object-preventextensions
+        scoped_generator.append(R"~~~(
+bool @class_name@::internal_prevent_extensions()
+{
+    // 1. Return false.
+    return false;
+}
+)~~~");
+
+        // 3.9.6. [[OwnPropertyKeys]], https://heycam.github.io/webidl/#legacy-platform-object-ownpropertykeys
+        scoped_generator.append(R"~~~(
+JS::MarkedValueList @class_name@::internal_own_property_keys() const
+{
+    auto& vm = this->vm();
+
+    // 1. Let keys be a new empty list of ECMAScript String and Symbol values.
+    JS::MarkedValueList keys { heap() };
+
+)~~~");
+
+        // 2. If O supports indexed properties, then for each index of O’s supported property indices, in ascending numerical order, append ! ToString(index) to keys.
+        if (interface.supports_indexed_properties()) {
+            scoped_generator.append(R"~~~(
+    for (u64 index = 0; index <= NumericLimits<u32>::max(); ++index) {
+        if (impl().is_supported_property_index(index))
+            keys.append(js_string(vm, String::number(index)));
+        else
+            break;
+    }
+)~~~");
+        }
+
+        // 3. If O supports named properties, then for each P of O’s supported property names that is visible according to the named property visibility algorithm, append P to keys.
+        if (interface.supports_named_properties()) {
+            scoped_generator.append(R"~~~(
+    for (auto& named_property : impl().supported_property_names()) {
+        if (is_named_property_exposed_on_object(named_property))
+            keys.append(js_string(vm, named_property));
+    }
+)~~~");
+        }
+
+        scoped_generator.append(R"~~~(
+    // 4. For each P of O’s own property keys that is a String, in ascending chronological order of property creation, append P to keys.
+    for (auto& it : shape().property_table_ordered()) {
+        if (it.key.is_string())
+            keys.append(it.key.to_value(vm));
+    }
+
+    // 5. For each P of O’s own property keys that is a Symbol, in ascending chronological order of property creation, append P to keys.
+    for (auto& it : shape().property_table_ordered()) {
+        if (it.key.is_symbol())
+            keys.append(it.key.to_value(vm));
+    }
+
+    // FIXME: 6. Assert: keys has no duplicate items.
+
+    // 7. Return keys.
+    return keys;
 }
 )~~~");
     }
@@ -1467,6 +2406,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/CommentWrapper.h>
 #include <LibWeb/Bindings/DOMImplementationWrapper.h>
+#include <LibWeb/Bindings/DOMStringMapWrapper.h>
 #include <LibWeb/Bindings/DocumentFragmentWrapper.h>
 #include <LibWeb/Bindings/DocumentTypeWrapper.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
