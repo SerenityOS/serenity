@@ -654,12 +654,12 @@ JS::Interpreter& Document::interpreter()
                     auto message = object.get_without_side_effects(vm.names.message).value_or(JS::js_undefined());
                     if (name.is_accessor() || message.is_accessor()) {
                         // The result is not going to be useful, let's just print the value. This affects DOMExceptions, for example.
-                        dbgln("Unhandled JavaScript exception: {}", value);
+                        dbgln("\033[31;1mUnhandled JavaScript exception:\033[0m {}", value);
                     } else {
-                        dbgln("Unhandled JavaScript exception: [{}] {}", name, message);
+                        dbgln("\033[31;1mUnhandled JavaScript exception:\033[0m [{}] {}", name, message);
                     }
                 } else {
-                    dbgln("Unhandled JavaScript exception: {}", value);
+                    dbgln("\033[31;1mUnhandled JavaScript exception:\033[0m {}", value);
                 }
                 for (auto& traceback_frame : exception->traceback()) {
                     auto& function_name = traceback_frame.function_name;
