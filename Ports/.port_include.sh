@@ -54,25 +54,26 @@ host_env() {
 
 packagesdb="${DESTDIR}/usr/Ports/packages.db"
 
+makeopts=-j$(nproc)
+installopts=
+configscript=configure
+configopts=
+useconfigure=false
+depends=
+patchlevel=1
+auth_type=
+auth_import_key=
+auth_opts=
+launcher_name=
+launcher_category=
+launcher_command=
+launcher_run_in_terminal=false
+icon_file=
+
 . "$@"
 shift
 
-: "${makeopts:=-j$(nproc)}"
-: "${installopts:=}"
 : "${workdir:=$port-$version}"
-: "${configscript:=configure}"
-: "${configopts:=}"
-: "${useconfigure:=false}"
-: "${depends:=}"
-: "${patchlevel:=1}"
-: "${auth_type:=}"
-: "${auth_import_key:=}"
-: "${auth_opts:=}"
-: "${launcher_name:=}"
-: "${launcher_category:=}"
-: "${launcher_command:=}"
-: "${launcher_run_in_terminal:=false}"
-: "${icon_file:=}"
 
 run_nocd() {
     echo "+ $@ (nocd)"
