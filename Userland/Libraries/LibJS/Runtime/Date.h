@@ -17,7 +17,7 @@ class Date final : public Object {
 public:
     static constexpr double time_clip = 8.64e15;
 
-    static Date* create(GlobalObject&, Core::DateTime, i16 milliseconds, bool is_invalid = false);
+    static Date* create(GlobalObject&, Core::DateTime, i16 milliseconds, bool is_invalid);
     static Date* now(GlobalObject&);
 
     Date(Core::DateTime datetime, i16 milliseconds, bool is_invalid, Object& prototype);
