@@ -5,21 +5,25 @@
  */
 
 #include <AK/Types.h>
-#include <Kernel/Prekernel/Arch/aarch64/GPIO.h>
 #include <Kernel/Prekernel/Arch/aarch64/Mailbox.h>
+#include <Kernel/Prekernel/Arch/aarch64/UART.h>
 
 extern "C" [[noreturn]] void halt();
 
 extern "C" [[noreturn]] void init();
 extern "C" [[noreturn]] void init()
 {
-    auto& gpio = Prekernel::GPIO::the();
-    gpio.set_pin_function(14, Prekernel::GPIO::PinFunction::Alternate0);
-    gpio.set_pin_function(15, Prekernel::GPIO::PinFunction::Alternate0);
+    auto& uart = Prekernel::UART::the();
 
-    gpio.set_pin_pull_up_down_state(Array { 14, 15 }, Prekernel::GPIO::PullUpDownState::Disable);
+    uart.print_str("\r\nWelcome to Serenity OS!\r\n");
+    uart.print_str("Imagine this being your ideal operating system.\r\n");
+    uart.print_str("Observed deviations from that ideal are shortcomings of your imagination.\r\n\r\n");
 
-    [[maybe_unused]] u32 firmware_version = Prekernel::Mailbox::query_firmware_version();
+    u32 firmware_version = Prekernel::Mailbox::query_firmware_version();
+    uart.print_str("Firmware version: ");
+    uart.print_num(firmware_version);
+    uart.print_str("\r\n");
+
     halt();
 }
 
