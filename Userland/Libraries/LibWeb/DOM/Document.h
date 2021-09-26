@@ -202,6 +202,7 @@ public:
     bool in_quirks_mode() const { return m_quirks_mode == QuirksMode::Yes; }
     void set_quirks_mode(QuirksMode mode) { m_quirks_mode = mode; }
 
+    ExceptionOr<NonnullRefPtr<Node>> import_node(NonnullRefPtr<Node> node, bool deep);
     void adopt_node(Node&);
     ExceptionOr<NonnullRefPtr<Node>> adopt_node_binding(NonnullRefPtr<Node>);
 
