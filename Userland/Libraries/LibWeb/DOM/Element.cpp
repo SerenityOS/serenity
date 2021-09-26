@@ -18,6 +18,7 @@
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOMParsing/InnerHTML.h>
+#include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Layout/BlockBox.h>
@@ -29,6 +30,7 @@
 #include <LibWeb/Layout/TableRowGroupBox.h>
 #include <LibWeb/Layout/TreeBuilder.h>
 #include <LibWeb/Namespace.h>
+#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::DOM {
 
@@ -323,6 +325,21 @@ bool Element::is_void_element() const
 bool Element::serializes_as_void() const
 {
     return is_void_element() || local_name().is_one_of(HTML::TagNames::basefont, HTML::TagNames::bgsound, HTML::TagNames::frame, HTML::TagNames::keygen);
+}
+
+// https://drafts.csswg.org/cssom-view/#dom-element-getboundingclientrect
+NonnullRefPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
+{
+    // FIXME: Support inline layout nodes as well.
+
+    if (!layout_node() || !layout_node()->is_box())
+        return Geometry::DOMRect::create(0, 0, 0, 0);
+
+    VERIFY(document().browsing_context());
+    auto viewport_offset = document().browsing_context()->viewport_scroll_offset();
+
+    auto& box = static_cast<Layout::Box const&>(*layout_node());
+    return Geometry::DOMRect::create(box.absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()));
 }
 
 }

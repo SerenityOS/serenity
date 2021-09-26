@@ -588,7 +588,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (namespace_.is_one_of("CSS", "DOM", "HTML", "UIEvents", "HighResolutionTime", "NavigationTiming", "RequestIdleCallback", "SVG", "XHR", "URL")) {
+    if (namespace_.is_one_of("CSS", "DOM", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "NavigationTiming", "RequestIdleCallback", "SVG", "XHR", "URL")) {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::");
@@ -1107,6 +1107,8 @@ static void generate_header(IDL::Interface const& interface)
 #    include <LibWeb/CSS/@name@.h>
 #elif __has_include(<LibWeb/DOM/@name@.h>)
 #    include <LibWeb/DOM/@name@.h>
+#elif __has_include(<LibWeb/Geometry/@name@.h>)
+#    include <LibWeb/Geometry/@name@.h>
 #elif __has_include(<LibWeb/HTML/@name@.h>)
 #    include <LibWeb/HTML/@name@.h>
 #elif __has_include(<LibWeb/UIEvents/@name@.h>)
@@ -1244,6 +1246,7 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/CommentWrapper.h>
 #include <LibWeb/Bindings/DOMImplementationWrapper.h>
+#include <LibWeb/Bindings/DOMRectWrapper.h>
 #include <LibWeb/Bindings/DocumentFragmentWrapper.h>
 #include <LibWeb/Bindings/DocumentTypeWrapper.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
@@ -1271,6 +1274,7 @@ void generate_implementation(IDL::Interface const& interface)
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
 using namespace Web::DOM;
+using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::RequestIdleCallback;
 
@@ -2170,6 +2174,8 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #    include <LibWeb/CSS/@name@.h>
 #elif __has_include(<LibWeb/DOM/@name@.h>)
 #    include <LibWeb/DOM/@name@.h>
+#elif __has_include(<LibWeb/Geometry/@name@.h>)
+#    include <LibWeb/Geometry/@name@.h>
 #elif __has_include(<LibWeb/HTML/@name@.h>)
 #    include <LibWeb/HTML/@name@.h>
 #elif __has_include(<LibWeb/UIEvents/@name@.h>)
@@ -2191,6 +2197,7 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
 using namespace Web::DOM;
+using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::RequestIdleCallback;
 
@@ -2406,6 +2413,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/CommentWrapper.h>
 #include <LibWeb/Bindings/DOMImplementationWrapper.h>
+#include <LibWeb/Bindings/DOMRectWrapper.h>
 #include <LibWeb/Bindings/DOMStringMapWrapper.h>
 #include <LibWeb/Bindings/DocumentFragmentWrapper.h>
 #include <LibWeb/Bindings/DocumentTypeWrapper.h>
@@ -2447,6 +2455,8 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #    include <LibWeb/CSS/@name@.h>
 #elif __has_include(<LibWeb/DOM/@name@.h>)
 #    include <LibWeb/DOM/@name@.h>
+#elif __has_include(<LibWeb/Geometry/@name@.h>)
+#    include <LibWeb/Geometry/@name@.h>
 #elif __has_include(<LibWeb/HTML/@name@.h>)
 #    include <LibWeb/HTML/@name@.h>
 #elif __has_include(<LibWeb/UIEvents/@name@.h>)
@@ -2468,6 +2478,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
 using namespace Web::DOM;
+using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::NavigationTiming;
 using namespace Web::RequestIdleCallback;
