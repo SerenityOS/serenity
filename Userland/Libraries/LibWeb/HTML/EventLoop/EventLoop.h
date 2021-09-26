@@ -32,6 +32,9 @@ public:
     TaskQueue& task_queue() { return m_task_queue; }
     TaskQueue const& task_queue() const { return m_task_queue; }
 
+    TaskQueue& microtask_queue() { return m_microtask_queue; }
+    TaskQueue const& microtask_queue() const { return m_microtask_queue; }
+
     void spin_until(Function<bool()> goal_condition);
     void process();
 
@@ -44,10 +47,13 @@ public:
 
     void schedule();
 
+    void perform_a_microtask_checkpoint();
+
 private:
     Type m_type { Type::Window };
 
     TaskQueue m_task_queue;
+    TaskQueue m_microtask_queue;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#currently-running-task
     Task* m_currently_running_task { nullptr };
@@ -55,9 +61,14 @@ private:
     JS::VM* m_vm { nullptr };
 
     RefPtr<Core::Timer> m_system_event_loop_timer;
+
+    // https://html.spec.whatwg.org/#performing-a-microtask-checkpoint
+    bool m_performing_a_microtask_checkpoint { false };
 };
 
 EventLoop& main_thread_event_loop();
 void queue_global_task(HTML::Task::Source, DOM::Document&, Function<void()> steps);
+void queue_a_microtask(DOM::Document&, Function<void()> steps);
+void perform_a_microtask_checkpoint();
 
 }

@@ -99,6 +99,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(get_computed_style);
     JS_DECLARE_NATIVE_FUNCTION(match_media);
 
+    JS_DECLARE_NATIVE_FUNCTION(queue_microtask);
+
 #define __ENUMERATE(attribute, event_name)          \
     JS_DECLARE_NATIVE_FUNCTION(attribute##_getter); \
     JS_DECLARE_NATIVE_FUNCTION(attribute##_setter);

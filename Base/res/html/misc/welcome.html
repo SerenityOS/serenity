@@ -178,7 +178,9 @@
         </ul>
     </nav>
     <script>
-        document.getElementById("loadtime").innerHTML = performance.now();
+        queueMicrotask(function() {
+            document.getElementById("loadtime").innerHTML = performance.now();
+        });
     </script>
 </body>
 

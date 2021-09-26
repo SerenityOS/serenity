@@ -21,6 +21,14 @@ public:
     void add(NonnullOwnPtr<HTML::Task>);
     OwnPtr<HTML::Task> take_first_runnable() { return m_tasks.dequeue(); }
 
+    void enqueue(NonnullOwnPtr<HTML::Task> task) { add(move(task)); }
+    OwnPtr<HTML::Task> dequeue()
+    {
+        if (m_tasks.is_empty())
+            return {};
+        return m_tasks.dequeue();
+    }
+
 private:
     HTML::EventLoop& m_event_loop;
 

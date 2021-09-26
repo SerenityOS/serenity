@@ -80,6 +80,8 @@ void WindowObject::initialize_global_object()
     define_native_function("atob", atob, 1, attr);
     define_native_function("btoa", btoa, 1, attr);
 
+    define_native_function("queueMicrotask", queue_microtask, 1, attr);
+
     define_native_function("getComputedStyle", get_computed_style, 1, attr);
     define_native_function("matchMedia", match_media, 1, attr);
 
@@ -335,6 +337,27 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::cancel_animation_frame)
     if (vm.exception())
         return {};
     impl->cancel_animation_frame(id);
+    return JS::js_undefined();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::queue_microtask)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    if (!vm.argument_count()) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "queueMicrotask");
+        return {};
+    }
+    auto* callback_object = vm.argument(0).to_object(global_object);
+    if (!callback_object)
+        return {};
+    if (!callback_object->is_function()) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAFunctionNoParam);
+        return {};
+    }
+
+    impl->queue_microtask(static_cast<JS::FunctionObject&>(*callback_object));
     return JS::js_undefined();
 }
 

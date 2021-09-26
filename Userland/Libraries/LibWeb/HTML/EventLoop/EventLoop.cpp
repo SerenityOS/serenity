@@ -14,6 +14,7 @@ namespace Web::HTML {
 
 EventLoop::EventLoop()
     : m_task_queue(*this)
+    , m_microtask_queue(*this)
 {
 }
 
@@ -49,7 +50,12 @@ void EventLoop::spin_until(Function<bool()> goal_condition)
 {
     // FIXME: This is an ad-hoc hack until we implement the proper mechanism.
     Core::EventLoop loop;
-    loop.spin_until(move(goal_condition));
+    loop.spin_until([&]() -> bool {
+        if (goal_condition())
+            return true;
+        perform_a_microtask_checkpoint();
+        return goal_condition();
+    });
 
     // Real spec steps:
 
@@ -84,27 +90,24 @@ void EventLoop::process()
     // 1. Let taskQueue be one of the event loop's task queues, chosen in an implementation-defined manner, with the constraint that the chosen task queue must contain at least one runnable task. If there is no such task queue, then jump to the microtasks step below.
     auto& task_queue = m_task_queue;
 
-    if (task_queue.is_empty())
-        return;
+    if (!task_queue.is_empty()) {
+        // 2. Let oldestTask be the first runnable task in taskQueue, and remove it from taskQueue.
+        auto oldest_task = task_queue.take_first_runnable();
 
-    // 2. Let oldestTask be the first runnable task in taskQueue, and remove it from taskQueue.
-    auto oldest_task = task_queue.take_first_runnable();
+        // 3. Set the event loop's currently running task to oldestTask.
+        m_currently_running_task = oldest_task.ptr();
 
-    // FIXME: Figure out if we need to be here when there's no task.
-    VERIFY(oldest_task);
+        // FIXME: 4. Let taskStartTime be the current high resolution time.
 
-    // 3. Set the event loop's currently running task to oldestTask.
-    m_currently_running_task = oldest_task.ptr();
+        // 5. Perform oldestTask's steps.
+        oldest_task->execute();
 
-    // FIXME: 4. Let taskStartTime be the current high resolution time.
+        // 6. Set the event loop's currently running task back to null.
+        m_currently_running_task = nullptr;
+    }
 
-    // 5. Perform oldestTask's steps.
-    oldest_task->execute();
-
-    // 6. Set the event loop's currently running task back to null.
-    m_currently_running_task = nullptr;
-
-    // FIXME: 7. Microtasks: Perform a microtask checkpoint.
+    // 7. Microtasks: Perform a microtask checkpoint.
+    perform_a_microtask_checkpoint();
 
     // 8. Let hasARenderingOpportunity be false.
     [[maybe_unused]] bool has_a_rendering_opportunity = false;
@@ -174,7 +177,7 @@ void EventLoop::process()
     // FIXME:     2. If there are no tasks in the event loop's task queues and the WorkerGlobalScope object's closing flag is true, then destroy the event loop, aborting these steps, resuming the run a worker steps described in the Web workers section below.
 
     // If there are tasks in the queue, schedule a new round of processing. :^)
-    if (!m_task_queue.is_empty())
+    if (!m_task_queue.is_empty() || !m_microtask_queue.is_empty())
         schedule();
 }
 
@@ -183,6 +186,61 @@ void queue_global_task(HTML::Task::Source source, DOM::Document& document, Funct
 {
     // FIXME: This should take a global object as input and find the relevant document for it.
     main_thread_event_loop().task_queue().add(HTML::Task::create(source, &document, move(steps)));
+}
+
+// https://html.spec.whatwg.org/#queue-a-microtask
+void queue_a_microtask(DOM::Document& document, Function<void()> steps)
+{
+    // 1. If event loop was not given, set event loop to the implied event loop.
+    auto& event_loop = HTML::main_thread_event_loop();
+
+    // FIXME: 2. If document was not given, set document to the implied document.
+
+    // 3. Let microtask be a new task.
+    // 4. Set microtask's steps to steps.
+    // 5. Set microtask's source to the microtask task source.
+    // 6. Set microtask's document to document.
+    auto microtask = HTML::Task::create(HTML::Task::Source::Microtask, &document, move(steps));
+
+    // FIXME: 7. Set microtask's script evaluation environment settings object set to an empty set.
+
+    // 8. Enqueue microtask on event loop's microtask queue.
+    event_loop.microtask_queue().enqueue(move(microtask));
+}
+
+// https://html.spec.whatwg.org/#perform-a-microtask-checkpoint
+void EventLoop::perform_a_microtask_checkpoint()
+{
+    // 1. If the event loop's performing a microtask checkpoint is true, then return.
+    if (m_performing_a_microtask_checkpoint)
+        return;
+
+    // 2. Set the event loop's performing a microtask checkpoint to true.
+    m_performing_a_microtask_checkpoint = true;
+
+    // 3. While the event loop's microtask queue is not empty:
+    while (!m_microtask_queue.is_empty()) {
+        // 1. Let oldestMicrotask be the result of dequeuing from the event loop's microtask queue.
+        auto oldest_microtask = m_microtask_queue.dequeue();
+
+        // 2. Set the event loop's currently running task to oldestMicrotask.
+        m_currently_running_task = oldest_microtask;
+
+        // 3. Run oldestMicrotask.
+        oldest_microtask->execute();
+
+        // 4. Set the event loop's currently running task back to null.
+        m_currently_running_task = nullptr;
+    }
+
+    // FIXME: 4. For each environment settings object whose responsible event loop is this event loop, notify about rejected promises on that environment settings object.
+
+    // FIXME: 5. Cleanup Indexed Database transactions.
+
+    // FIXME: 6. Perform ClearKeptObjects().
+
+    // 7. Set the event loop's performing a microtask checkpoint to false.
+    m_performing_a_microtask_checkpoint = false;
 }
 
 }
