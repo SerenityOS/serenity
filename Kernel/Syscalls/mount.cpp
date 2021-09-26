@@ -8,6 +8,7 @@
 #include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/FileSystem/DevTmpFS.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
+#include <Kernel/FileSystem/FATFileSystem.h>
 #include <Kernel/FileSystem/ISO9660FileSystem.h>
 #include <Kernel/FileSystem/Plan9FileSystem.h>
 #include <Kernel/FileSystem/ProcFS.h>
@@ -98,6 +99,16 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
         }
         dbgln("mount: attempting to mount {} on {}", description->absolute_path(), target);
         fs = TRY(ISO9660FS::try_create(*description));
+    } else if (fs_type == "fat"sv || fs_type == "FATFS"sv) {
+        if (params.flags & MS_RDONLY) {
+            if (description_or_error.is_error())
+                return EBADF;
+            auto description = description_or_error.release_value();
+            fs = TRY(FATFS::try_create(*description));
+        } else {
+            dbgln("mount: must mount FAT filesystem read only.");
+            return ENOTSUP;
+        }
     } else {
         return ENODEV;
     }

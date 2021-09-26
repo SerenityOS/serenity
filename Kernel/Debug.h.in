@@ -70,6 +70,10 @@
 #cmakedefine01 EXT2_DEBUG
 #endif
 
+#ifndef FAT_DEBUG
+#cmakedefine01 FAT_DEBUG
+#endif
+
 #ifndef FRAMEBUFFER_DEVICE_DEBUG
 #cmakedefine01 FRAMEBUFFER_DEVICE_DEBUG
 #endif
