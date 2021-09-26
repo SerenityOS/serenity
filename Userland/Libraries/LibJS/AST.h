@@ -80,11 +80,12 @@ public:
     {
     }
 
-    FlyString const& label() const { return m_label; }
-    void set_label(FlyString string) { m_label = move(string); }
+    HashTable<FlyString> const& labels() const { return m_labels; }
+    void add_label(FlyString label) { m_labels.set(move(label)); }
+    bool has_label(FlyString const& label) const { return m_labels.contains(label); }
 
 protected:
-    FlyString m_label;
+    HashTable<FlyString> m_labels;
 };
 
 class EmptyStatement final : public Statement {

@@ -193,7 +193,7 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
         if (!value.is_empty())
             last_value = value;
         if (vm().should_unwind()) {
-            if (!block.label().is_null() && vm().should_unwind_until(ScopeType::Breakable, block.label()))
+            if (!block.labels().is_empty() && vm().should_unwind_until(ScopeType::Breakable, block.labels()))
                 vm().stop_unwind();
             break;
         }

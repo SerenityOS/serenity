@@ -621,7 +621,7 @@ RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction all
 
     m_state.labels_in_scope.remove(identifier);
 
-    labelled_statement->set_label(identifier);
+    labelled_statement->add_label(identifier);
     state_rollback_guard.disarm();
     discard_saved_state();
     return labelled_statement.release_nonnull();
