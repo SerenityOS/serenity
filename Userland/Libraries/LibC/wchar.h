@@ -55,5 +55,6 @@ float wcstof(const wchar_t*, wchar_t**);
 double wcstod(const wchar_t*, wchar_t**);
 long double wcstold(const wchar_t*, wchar_t**);
 int swprintf(wchar_t*, size_t, const wchar_t*, ...);
+int wcwidth(wchar_t);
 
 __END_DECLS
