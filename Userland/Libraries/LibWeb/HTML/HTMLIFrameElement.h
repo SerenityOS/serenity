@@ -26,4 +26,6 @@ private:
     void load_src(const String&);
 };
 
+void run_iframe_load_event_steps(HTML::HTMLIFrameElement&);
+
 }

@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/Layout/FrameBox.h>
 #include <LibWeb/Origin.h>
@@ -61,6 +62,25 @@ void HTMLIFrameElement::load_src(const String& value)
 
     dbgln("Loading iframe document from {}", value);
     m_nested_browsing_context->loader().load(url, FrameLoader::Type::IFrame);
+}
+
+// https://html.spec.whatwg.org/multipage/iframe-embed-object.html#iframe-load-event-steps
+void run_iframe_load_event_steps(HTML::HTMLIFrameElement& element)
+{
+    // 1. Assert: element's nested browsing context is not null.
+    VERIFY(element.nested_browsing_context());
+
+    // 2. Let childDocument be the active document of element's nested browsing context.
+    [[maybe_unused]] auto* child_document = element.nested_browsing_context()->active_document();
+
+    // FIXME: 3. If childDocument has its mute iframe load flag set, then return.
+
+    // FIXME: 4. Set childDocument's iframe load in progress flag.
+
+    // 5. Fire an event named load at element.
+    element.dispatch_event(DOM::Event::create(HTML::EventNames::load));
+
+    // FIXME: 6. Unset childDocument's iframe load in progress flag.
 }
 
 }
