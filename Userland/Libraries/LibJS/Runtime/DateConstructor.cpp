@@ -22,7 +22,6 @@ namespace JS {
 // 21.4.3.2 Date.parse ( string ), https://tc39.es/ecma262/#sec-date.parse
 static Value parse_simplified_iso8601(const String& iso_8601)
 {
-    // Date.parse() is allowed to accept many formats. We strictly only accept things matching
     // 21.4.1.15 Date Time String Format, https://tc39.es/ecma262/#sec-date-time-string-format
     GenericLexer lexer(iso_8601);
     auto lex_n_digits = [&](size_t n, Optional<int>& out) {
@@ -126,6 +125,21 @@ static Value parse_simplified_iso8601(const String& iso_8601)
     return Value(1000.0 * timestamp + milliseconds.value_or(0));
 }
 
+static Value parse_date_string(String const& date_string)
+{
+    auto value = parse_simplified_iso8601(date_string);
+    if (value.is_finite_number())
+        return value;
+
+    // Date.parse() is allowed to accept an arbitrary number of implementation-defined formats.
+    // Parse formats of this type: "Wed Apr 17 23:08:53 +0000 2019"
+    auto maybe_datetime = Core::DateTime::parse("%a %b %e %T %z %Y", date_string);
+    if (maybe_datetime.has_value())
+        return Value(1000.0 * maybe_datetime.value().timestamp());
+
+    return js_nan();
+}
+
 DateConstructor::DateConstructor(GlobalObject& global_object)
     : NativeFunction(vm().names.Date.as_string(), *global_object.function_prototype())
 {
@@ -169,7 +183,7 @@ static DatetimeAndMilliseconds now()
 Value DateConstructor::call()
 {
     auto [datetime, milliseconds] = JS::now();
-    auto* date = Date::create(global_object(), datetime, milliseconds);
+    auto* date = Date::create(global_object(), datetime, milliseconds, false);
     return js_string(heap(), date->string());
 }
 
@@ -193,7 +207,7 @@ Value DateConstructor::construct(FunctionObject& new_target)
     if (vm.argument_count() == 1) {
         auto value = vm.argument(0);
         if (value.is_string())
-            value = parse_simplified_iso8601(value.as_string().string());
+            value = parse_date_string(value.as_string().string());
         else
             value = value.to_number(global_object);
 
@@ -305,11 +319,11 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
     if (!vm.argument_count())
         return js_nan();
 
-    auto iso_8601 = vm.argument(0).to_string(global_object);
+    auto date_string = vm.argument(0).to_string(global_object);
     if (vm.exception())
         return {};
 
-    return parse_simplified_iso8601(iso_8601);
+    return parse_date_string(date_string);
 }
 
 // 21.4.3.4 Date.UTC ( year [ , month [ , date [ , hours [ , minutes [ , seconds [ , ms ] ] ] ] ] ] ), https://tc39.es/ecma262/#sec-date.utc
