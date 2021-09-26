@@ -192,7 +192,7 @@ fi
 
 if [ -z "$SERENITY_MACHINE" ]; then
     if [ "$SERENITY_ARCH" = "aarch64" ]; then
-        SERENITY_MACHINE="-M raspi3"
+        SERENITY_MACHINE="-M raspi3 -serial stdio"
     else
         SERENITY_MACHINE="
         -m $SERENITY_RAM_SIZE
@@ -211,6 +211,7 @@ if [ -z "$SERENITY_MACHINE" ]; then
         -device i82801b11-bridge,bus=bridge1,id=bridge2 -device sdhci-pci,bus=bridge2
         -device i82801b11-bridge,id=bridge3 -device sdhci-pci,bus=bridge3
         -device ich9-ahci,bus=bridge3
+        -chardev stdio,id=stdout,mux=on
         "
     fi
 fi
@@ -224,7 +225,6 @@ $SERENITY_MACHINE
 -d guest_errors
 -usb
 $SERENITY_SPICE_SERVER_CHARDEV
--chardev stdio,id=stdout,mux=on
 "
 
 if [ "$SERENITY_ARCH" != "aarch64" ]; then
