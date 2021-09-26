@@ -44,7 +44,8 @@ bool CSSStyleDeclarationWrapper::internal_set(JS::PropertyName const& name, JS::
     if (vm().exception())
         return false;
 
-    return impl().set_property(property_id, css_text);
+    impl().set_property(property_id, css_text);
+    return true;
 }
 
 }

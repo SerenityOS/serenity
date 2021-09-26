@@ -64,9 +64,12 @@ Optional<StyleProperty> PropertyOwningCSSStyleDeclaration::property(PropertyID p
 bool PropertyOwningCSSStyleDeclaration::set_property(PropertyID property_id, StringView css_text)
 {
     auto new_value = parse_css_value(CSS::ParsingContext {}, css_text, property_id);
-    // FIXME: What are we supposed to do if we can't parse it?
-    if (!new_value)
+    if (!new_value) {
+        m_properties.remove_all_matching([&](auto& entry) {
+            return entry.property_id == property_id;
+        });
         return false;
+    }
 
     ScopeGuard style_invalidation_guard = [&] {
         auto& declaration = verify_cast<CSS::ElementInlineCSSStyleDeclaration>(*this);
@@ -100,6 +103,14 @@ String CSSStyleDeclaration::get_property_value(StringView property_name) const
     if (!maybe_property.has_value())
         return {};
     return maybe_property->value->to_string();
+}
+
+void CSSStyleDeclaration::set_property(StringView property_name, StringView css_text)
+{
+    auto property_id = property_id_from_string(property_name);
+    if (property_id == CSS::PropertyID::Invalid)
+        return;
+    set_property(property_id, css_text);
 }
 
 }
