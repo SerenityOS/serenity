@@ -33,6 +33,7 @@ set(LIBC_SOURCES
     resolv.cpp
     scanf.cpp
     sched.cpp
+    search.cpp
     serenity.cpp
     shadow.cpp
     signal.cpp
