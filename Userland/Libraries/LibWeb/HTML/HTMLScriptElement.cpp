@@ -31,6 +31,10 @@ HTMLScriptElement::~HTMLScriptElement()
 void HTMLScriptElement::set_parser_document(Badge<HTMLParser>, DOM::Document& document)
 {
     m_parser_document = document;
+
+    // https://html.spec.whatwg.org/multipage/scripting.html#concept-script-script
+    // The user agent must delay the load event of the element's node document until the script is ready.
+    m_document_load_event_delayer.emplace(document);
 }
 
 void HTMLScriptElement::set_non_blocking(Badge<HTMLParser>, bool non_blocking)
@@ -437,6 +441,7 @@ void HTMLScriptElement::prepare_script()
 void HTMLScriptElement::script_became_ready()
 {
     m_script_ready = true;
+    m_document_load_event_delayer.clear();
     if (!m_script_ready_callback)
         return;
     m_script_ready_callback();
