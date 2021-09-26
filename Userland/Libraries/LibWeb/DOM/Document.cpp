@@ -897,8 +897,23 @@ void Document::set_active_element(Element* element)
         m_layout_root->set_needs_display();
 }
 
-void Document::set_ready_state(const String& ready_state)
+String Document::ready_state() const
 {
+    switch (m_ready_state) {
+    case HTML::DocumentReadyState::Loading:
+        return "loading"sv;
+    case HTML::DocumentReadyState::Interactive:
+        return "interactive"sv;
+    case HTML::DocumentReadyState::Complete:
+        return "complete"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+void Document::set_ready_state(HTML::DocumentReadyState ready_state)
+{
+    if (m_ready_state == ready_state)
+        return;
     m_ready_state = ready_state;
     dispatch_event(Event::create(HTML::EventNames::readystatechange));
 }

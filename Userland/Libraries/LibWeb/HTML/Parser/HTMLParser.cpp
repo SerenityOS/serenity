@@ -188,7 +188,7 @@ void HTMLParser::the_end()
     // FIXME: 2. Set the insertion point to undefined.
 
     // 3. Update the current document readiness to "interactive".
-    m_document->set_ready_state("interactive");
+    m_document->set_ready_state(HTML::DocumentReadyState::Interactive);
 
     // 4. Pop all the nodes off the stack of open elements.
     while (!m_stack_of_open_elements.is_empty())
@@ -240,7 +240,7 @@ void HTMLParser::the_end()
     // 9. Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following steps:
     queue_global_task(HTML::Task::Source::DOMManipulation, *m_document, [document = m_document]() mutable {
         // 1. Update the current document readiness to "complete".
-        document->set_ready_state("complete");
+        document->set_ready_state(HTML::DocumentReadyState::Complete);
 
         // 2. If the Document object's browsing context is null, then abort these steps.
         if (!document->browsing_context())
