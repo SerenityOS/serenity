@@ -41,6 +41,7 @@ interface Document : Node {
     Range createRange();
     Event createEvent(DOMString interface);
 
+    [CEReactions, NewObject] Node importNode(Node node, optional boolean deep = false);
     [CEReactions, ImplementedAs=adopt_node_binding] Node adoptNode(Node node);
 
     [ImplementedAs=style_sheets_for_bindings] readonly attribute StyleSheetList styleSheets;
