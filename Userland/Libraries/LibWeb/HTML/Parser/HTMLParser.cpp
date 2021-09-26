@@ -261,9 +261,11 @@ void HTMLParser::the_end()
 
         // FIXME: 8. Set the Document's load timing info's load event end time to the current high resolution time given window.
 
-        // FIXME: 9. Assert: Document's page showing is false.
+        // 9. Assert: Document's page showing is false.
+        VERIFY(!document->page_showing());
 
-        // FIXME: 10. Set the Document's page showing flag to true.
+        // 10. Set the Document's page showing flag to true.
+        document->set_page_showing(true);
 
         // FIXME: 11. Fire a page transition event named pageshow at window with false.
 
