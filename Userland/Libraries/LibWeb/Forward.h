@@ -94,6 +94,7 @@ namespace Web::HTML {
 class CanvasRenderingContext2D;
 class CloseEvent;
 class DOMParser;
+class DOMStringMap;
 struct EventHandler;
 class EventLoop;
 class HTMLAnchorElement;
@@ -260,6 +261,7 @@ class DocumentWrapper;
 class DOMExceptionWrapper;
 class DOMImplementationWrapper;
 class DOMParserWrapper;
+class DOMStringMapWrapper;
 class ElementWrapper;
 class EventListenerWrapper;
 class EventTargetWrapper;
