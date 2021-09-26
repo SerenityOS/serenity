@@ -90,6 +90,10 @@ template<typename ValueType>
 class ExceptionOr;
 }
 
+namespace Web::Geometry {
+class DOMRect;
+}
+
 namespace Web::HTML {
 class CanvasRenderingContext2D;
 class CloseEvent;
@@ -261,6 +265,7 @@ class DocumentWrapper;
 class DOMExceptionWrapper;
 class DOMImplementationWrapper;
 class DOMParserWrapper;
+class DOMRectWrapper;
 class DOMStringMapWrapper;
 class ElementWrapper;
 class EventListenerWrapper;

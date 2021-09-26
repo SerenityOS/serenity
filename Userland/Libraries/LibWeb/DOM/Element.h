@@ -109,6 +109,8 @@ public:
     bool is_void_element() const;
     bool serializes_as_void() const;
 
+    NonnullRefPtr<Geometry::DOMRect> get_bounding_client_rect() const;
+
 protected:
     RefPtr<Layout::Node> create_layout_node() override;
 

@@ -34,4 +34,7 @@ interface Element : Node {
     ArrayFromVector querySelectorAll(DOMString selectors);
 
     [SameObject] readonly attribute HTMLCollection children;
+
+    DOMRect getBoundingClientRect();
+
 };
