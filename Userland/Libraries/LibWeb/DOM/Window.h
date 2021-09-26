@@ -83,6 +83,8 @@ public:
     float scroll_x() const;
     float scroll_y() const;
 
+    void fire_a_page_transition_event(FlyString event_name, bool persisted);
+
 private:
     explicit Window(Document&);
 

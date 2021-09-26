@@ -12,6 +12,7 @@
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/Timer.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/PageTransitionEvent.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Page/BrowsingContext.h>
@@ -274,6 +275,24 @@ float Window::scroll_y() const
     if (auto* page = this->page())
         return page->top_level_browsing_context().viewport_scroll_offset().y();
     return 0;
+}
+
+// https://html.spec.whatwg.org/#fire-a-page-transition-event
+void Window::fire_a_page_transition_event(FlyString event_name, bool persisted)
+{
+    // To fire a page transition event named eventName at a Window window with a boolean persisted,
+    // fire an event named eventName at window, using PageTransitionEvent,
+    // with the persisted attribute initialized to persisted,
+    auto event = HTML::PageTransitionEvent::create(move(event_name), persisted);
+
+    // ...the cancelable attribute intialized to true,
+    event->set_cancelable(true);
+
+    // the bubbles attribute initialized to true,
+    event->set_bubbles(true);
+
+    // and legacy target override flag set.
+    dispatch_event(move(event));
 }
 
 }
