@@ -11,7 +11,7 @@ jobs:
     if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
     env:
       # Latest scanner version is tracked on: https://sonarcloud.io/documentation/analysis/scan/sonarscanner/
-      SONAR_SCANNER_VERSION: 4.6.2.2475
+      SONAR_SCANNER_VERSION: 4.6.2.2472
       SONAR_SERVER_URL: "https://sonarcloud.io"
       SONAR_ANALYSIS_ARCH: i686
     steps:
