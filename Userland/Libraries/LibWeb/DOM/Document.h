@@ -26,6 +26,7 @@
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
+#include <LibWeb/HTML/DocumentReadyState.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/History.h>
 
@@ -226,8 +227,8 @@ public:
     const Document* associated_inert_template_document() const { return m_associated_inert_template_document; }
     void set_associated_inert_template_document(Document& document) { m_associated_inert_template_document = document; }
 
-    const String& ready_state() const { return m_ready_state; }
-    void set_ready_state(const String&);
+    String ready_state() const;
+    void set_ready_state(HTML::DocumentReadyState);
 
     void ref_from_node(Badge<Node>)
     {
@@ -358,7 +359,7 @@ private:
     bool m_created_for_appropriate_template_contents { false };
     RefPtr<Document> m_associated_inert_template_document;
 
-    String m_ready_state { "loading" };
+    HTML::DocumentReadyState m_ready_state { HTML::DocumentReadyState::Loading };
     String m_content_type { "application/xml" };
     Optional<String> m_encoding;
 
