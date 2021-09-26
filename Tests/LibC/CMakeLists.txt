@@ -11,6 +11,7 @@ set(TEST_SOURCES
     TestQsort.cpp
     TestRealpath.cpp
     TestScanf.cpp
+    TestSearch.cpp
     TestSnprintf.cpp
     TestStackSmash.cpp
     TestStrlcpy.cpp
