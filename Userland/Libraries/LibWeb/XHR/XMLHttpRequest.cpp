@@ -157,7 +157,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(const String& method, const String& 
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-send
-DOM::ExceptionOr<void> XMLHttpRequest::send()
+DOM::ExceptionOr<void> XMLHttpRequest::send(String const& body)
 {
     if (m_ready_state != ReadyState::Opened)
         return DOM::InvalidStateError::create("XHR readyState is not OPENED");
@@ -188,6 +188,8 @@ DOM::ExceptionOr<void> XMLHttpRequest::send()
 
     auto request = LoadRequest::create_for_url_on_page(request_url, m_window->page());
     request.set_method(m_method);
+    if (!body.is_null())
+        request.set_body(body.to_byte_buffer());
     for (auto& it : m_request_headers)
         request.set_header(it.key, it.value);
 

@@ -52,7 +52,7 @@ public:
     String response_text() const;
 
     DOM::ExceptionOr<void> open(const String& method, const String& url);
-    DOM::ExceptionOr<void> send();
+    DOM::ExceptionOr<void> send(String const& body);
 
     DOM::ExceptionOr<void> set_request_header(const String& header, const String& value);
 
