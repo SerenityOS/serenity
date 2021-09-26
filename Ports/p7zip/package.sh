@@ -5,7 +5,7 @@ version="17.04"
 useconfigure=true
 auth_type=sha256
 files="https://github.com/jinfeihan57/p7zip/archive/refs/tags/v${version}.tar.gz p7zip-${version}.tar.gz ea029a2e21d2d6ad0a156f6679bd66836204aa78148a4c5e498fe682e77127ef"
-configopts="-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
 workdir=$port-$version/CPP
 
 post_fetch() {
@@ -13,11 +13,11 @@ post_fetch() {
 }
 
 configure() {
-    run cmake 7zip/CMAKE $configopts
+    run cmake 7zip/CMAKE "${configopts[@]}"
 }
 
 build() {
-    run make $makeopts
+    run make "${makeopts[@]}"
 }
 
 install() {

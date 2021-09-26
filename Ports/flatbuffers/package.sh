@@ -7,10 +7,10 @@ files="https://github.com/google/flatbuffers/archive/refs/tags/v${version}.tar.g
 useconfigure=true
 # Since we are cross-compiling, we cannot build the tests, because we need
 # the flatbuffers compiler to build them
-configopts="-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt -DFLATBUFFERS_BUILD_TESTS=off"
+configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt" "-DFLATBUFFERS_BUILD_TESTS=off")
 
 configure() {
-    run cmake $configopts
+    run cmake "${configopts[@]}"
 }
 
 install() {

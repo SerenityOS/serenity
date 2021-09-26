@@ -5,5 +5,5 @@ files="http://ftp.figlet.org/pub/figlet/program/unix/figlet-${version}.tar.gz fi
 auth_type=sha256
 
 build() {
-    run make CC="${CC}" LD="${CC}" $makeopts
+    run make CC="${CC}" LD="${CC}" "${makeopts[@]}"
 }

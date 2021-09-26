@@ -54,16 +54,16 @@ host_env() {
 
 packagesdb="${DESTDIR}/usr/Ports/packages.db"
 
-makeopts=-j$(nproc)
-installopts=
+makeopts=("-j$(nproc)")
+installopts=()
 configscript=configure
-configopts=
+configopts=()
 useconfigure=false
-depends=
+depends=()
 patchlevel=1
 auth_type=
 auth_import_key=
-auth_opts=
+auth_opts=()
 launcher_name=
 launcher_category=
 launcher_command=
@@ -260,7 +260,7 @@ fetch() {
             if $NO_GPG; then
                 echo "WARNING: gpg signature check was disabled by --no-gpg-verification"
             else
-                if $(gpg --verify $auth_opts); then
+                if $(gpg --verify "${auth_opts[@]}"); then
                     echo "- Signature check OK."
                 else
                     echo "- Signature check NOT OK"
@@ -344,16 +344,16 @@ func_defined pre_configure || pre_configure() {
 }
 func_defined configure || configure() {
     chmod +x "${workdir}"/"$configscript"
-    run ./"$configscript" --host="${SERENITY_ARCH}-pc-serenity" $configopts
+    run ./"$configscript" --host="${SERENITY_ARCH}-pc-serenity" "${configopts[@]}"
 }
 func_defined post_configure || post_configure() {
     :
 }
 func_defined build || build() {
-    run make $makeopts
+    run make "${makeopts[@]}"
 }
 func_defined install || install() {
-    run make DESTDIR=$DESTDIR $installopts install
+    run make DESTDIR=$DESTDIR "${installopts[@]}" install
 }
 func_defined post_install || post_install() {
     echo
@@ -402,10 +402,10 @@ addtodb() {
     fi
 }
 installdepends() {
-    for depend in $depends; do
+    for depend in "${depends[@]}"; do
         dependlist="${dependlist:-} $depend"
     done
-    for depend in $depends; do
+    for depend in "${depends[@]}"; do
         if ! grep "$depend" "$packagesdb" > /dev/null; then
             (cd "../$depend" && ./package.sh --auto)
         fi
@@ -489,11 +489,18 @@ do_uninstall() {
     uninstall
 }
 do_showproperty() {
-    if [ -z ${!1+x} ]; then
+    if ! declare -p "${1}" > /dev/null 2>&1; then
         echo "Property '$1' is not set." >&2
         exit 1
     fi
-    echo ${!1}
+    property_declaration="$(declare -p "${1}")"
+    if [[ "$property_declaration" =~ "declare -a" ]]; then
+        prop_array="${1}[@]"
+        # Some magic to avoid empty arrays being considered unset.
+        echo "${!prop_array+"${!prop_array}"}"
+    else
+        echo ${!1}
+    fi
 }
 do_all() {
     do_installdepends

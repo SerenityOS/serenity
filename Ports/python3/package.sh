@@ -16,16 +16,16 @@ launcher_run_in_terminal="true"
 icon_file="../launcher.ico" # This is an older icon that's downloaded separately, so we need to go outside of $workdir
 
 # We could also add `openssl` here, but the _ssl modules doesn't build at the moment 
-depends="bzip2 libffi libuuid ncurses readline sqlite termcap zlib"
+depends=("bzip2" "libffi" "libuuid" "ncurses" "readline" "sqlite" "termcap" "zlib")
 
-configopts="--enable-optimizations --disable-ipv6 --without-ensurepip ac_cv_file__dev_ptmx=no ac_cv_file__dev_ptc=no"
+configopts=("--enable-optimizations" "--disable-ipv6" "--without-ensurepip" "ac_cv_file__dev_ptmx=no" "ac_cv_file__dev_ptc=no")
 
 export CC="${CC} --sysroot=${SERENITY_INSTALL_ROOT}"
 export BLDSHARED="${CC} -shared"
 
 pre_configure() {
     build="$("${workdir}/config.guess")"  # e.g. 'x86_64-pc-linux-gnu'
-    configopts="${configopts} --build=${build}"
+    configopts+=("--build=${build}")
 }
 
 # Note: The showproperty command is used when linting ports, we don't actually need python at this time.
