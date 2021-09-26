@@ -814,6 +814,17 @@ NonnullRefPtrVector<HTML::HTMLScriptElement> Document::take_scripts_to_execute_a
     return move(m_scripts_to_execute_as_soon_as_possible);
 }
 
+// https://dom.spec.whatwg.org/#dom-document-importnode
+ExceptionOr<NonnullRefPtr<Node>> Document::import_node(NonnullRefPtr<Node> node, bool deep)
+{
+    // 1. If node is a document or shadow root, then throw a "NotSupportedError" DOMException.
+    if (is<Document>(*node) || is<ShadowRoot>(*node))
+        return DOM::NotSupportedError::create("Cannot import a document or shadow root.");
+
+    // 2. Return a clone of node, with this and the clone children flag set if deep is true.
+    return node->clone_node(this, deep);
+}
+
 // https://dom.spec.whatwg.org/#concept-node-adopt
 void Document::adopt_node(Node& node)
 {
