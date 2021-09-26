@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -246,14 +246,15 @@ void HTMLParser::the_end()
         if (!document->browsing_context())
             return;
 
-        // FIXME: 3. Let window be the Document's relevant global object.
+        // 3. Let window be the Document's relevant global object.
+        NonnullRefPtr<DOM::Window> window = document->window();
 
         // FIXME: 4. Set the Document's load timing info's load event start time to the current high resolution time given window.
 
         // 5. Fire an event named load at window, with legacy target override flag set.
         // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
         //        We should reorganize this so that the flag appears explicitly here instead.
-        document->window().dispatch_event(DOM::Event::create(HTML::EventNames::load));
+        window->dispatch_event(DOM::Event::create(HTML::EventNames::load));
 
         // FIXME: 6. Invoke WebDriver BiDi load complete with the Document's browsing context, and a new WebDriver BiDi navigation status whose id is the Document object's navigation id, status is "complete", and url is the Document object's URL.
 
@@ -267,7 +268,8 @@ void HTMLParser::the_end()
         // 10. Set the Document's page showing flag to true.
         document->set_page_showing(true);
 
-        // FIXME: 11. Fire a page transition event named pageshow at window with false.
+        // 11. Fire a page transition event named pageshow at window with false.
+        window->fire_a_page_transition_event(HTML::EventNames::pageshow, false);
 
         // 12. Completely finish loading the Document.
         document->completely_finish_loading();

@@ -1,0 +1,5 @@
+interface PageTransitionEvent : Event {
+
+    readonly attribute boolean persisted;
+
+};

@@ -346,6 +346,7 @@ class MessageEventWrapper;
 class MessagePortWrapper;
 class MouseEventWrapper;
 class NodeWrapper;
+class PageTransitionEventWrapper;
 class PerformanceTimingWrapper;
 class PerformanceWrapper;
 class ProcessingInstructionWrapper;
