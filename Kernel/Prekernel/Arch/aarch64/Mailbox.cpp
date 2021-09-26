@@ -75,6 +75,7 @@ bool Mailbox::call(u8 channel, u32 volatile* __attribute__((aligned(16))) messag
 }
 
 constexpr u32 MBOX_TAG_GET_FIRMWARE_VERSION = 0x0000'0001;
+constexpr u32 MBOX_TAG_SET_CLOCK_RATE = 0x0003'8002;
 
 u32 Mailbox::query_firmware_version()
 {
@@ -94,6 +95,25 @@ u32 Mailbox::query_firmware_version()
         return message[5];
 
     return 0xffff'ffff;
+}
+
+u32 Mailbox::set_clock_rate(ClockID clock_id, u32 rate_hz, bool skip_setting_turbo)
+{
+    u32 __attribute__((aligned(16))) message[9];
+    message[0] = sizeof(message);
+    message[1] = MBOX_REQUEST;
+
+    message[2] = MBOX_TAG_SET_CLOCK_RATE;
+    message[3] = 12; // Tag data size.
+    message[4] = MBOX_REQUEST;
+    message[5] = static_cast<u32>(clock_id);
+    message[6] = rate_hz;
+    message[7] = skip_setting_turbo ? 1 : 0;
+
+    message[8] = 0;
+
+    call(ARM_TO_VIDEOCORE_CHANNEL, message);
+    return message[6];
 }
 
 }
