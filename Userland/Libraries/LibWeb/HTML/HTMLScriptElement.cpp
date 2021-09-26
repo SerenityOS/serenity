@@ -380,10 +380,8 @@ void HTMLScriptElement::prepare_script()
             // 1. If the element is not now the first element in the list of scripts
             //    that will execute in order as soon as possible to which it was added above,
             //    then mark the element as ready but return without executing the script yet.
-            if (this != &m_preparation_time_document->scripts_to_execute_as_soon_as_possible().first()) {
-                m_script_ready = true;
+            if (this != &m_preparation_time_document->scripts_to_execute_as_soon_as_possible().first())
                 return;
-            }
 
             for (;;) {
                 // 2. Execution: Execute the script block corresponding to the first script element
