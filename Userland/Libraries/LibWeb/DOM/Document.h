@@ -294,6 +294,9 @@ public:
         --m_number_of_things_delaying_the_load_event;
     }
 
+    bool page_showing() const { return m_page_showing; }
+    void set_page_showing(bool value) { m_page_showing = value; }
+
 private:
     explicit Document(const AK::URL&);
 
@@ -378,6 +381,9 @@ private:
     NonnullRefPtr<HTML::History> m_history;
 
     size_t m_number_of_things_delaying_the_load_event { 0 };
+
+    // https://html.spec.whatwg.org/#page-showing
+    bool m_page_showing { false };
 };
 
 }
