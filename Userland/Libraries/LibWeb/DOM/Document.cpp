@@ -642,6 +642,10 @@ JS::Interpreter& Document::interpreter()
             auto& vm = m_interpreter->vm();
             vm.run_queued_promise_jobs();
             vm.run_queued_finalization_registry_cleanup_jobs();
+
+            // FIXME: This isn't exactly the right place for this.
+            HTML::main_thread_event_loop().perform_a_microtask_checkpoint();
+
             // Note: This is not an exception check for the promise jobs, they will just leave any
             // exception that already exists intact and never throw a new one (without cleaning it
             // up, that is). Taking care of any previous unhandled exception just happens to be the

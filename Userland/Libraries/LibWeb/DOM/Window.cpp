@@ -12,6 +12,7 @@
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/Timer.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/PageTransitionEvent.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
@@ -293,6 +294,19 @@ void Window::fire_a_page_transition_event(FlyString event_name, bool persisted)
 
     // and legacy target override flag set.
     dispatch_event(move(event));
+}
+
+// https://html.spec.whatwg.org/#dom-queuemicrotask
+void Window::queue_microtask(JS::FunctionObject& callback)
+{
+    // The queueMicrotask(callback) method must queue a microtask to invoke callback,
+    HTML::queue_a_microtask(associated_document(), [&callback, handle = JS::make_handle(&callback)]() {
+        auto& vm = callback.vm();
+        [[maybe_unused]] auto rc = vm.call(callback, JS::js_null());
+        // FIXME: ...and if callback throws an exception, report the exception.
+        if (vm.exception())
+            vm.clear_exception();
+    });
 }
 
 }
