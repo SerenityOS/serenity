@@ -14,7 +14,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
 
     undefined open(DOMString method, DOMString url);
     undefined setRequestHeader(DOMString name, DOMString value);
-    undefined send();
+    undefined send(optional USVString body = {});
 
     ByteString? getResponseHeader(ByteString name);
     ByteString getAllResponseHeaders();
