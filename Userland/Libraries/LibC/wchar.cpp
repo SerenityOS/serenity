@@ -432,4 +432,21 @@ int swprintf(wchar_t*, size_t, const wchar_t*, ...)
     dbgln("TODO: Implement swprintf()");
     TODO();
 }
+
+int wcwidth(wchar_t wc)
+{
+    if (wc == L'\0')
+        return 0;
+
+    // Printable ASCII.
+    if (wc >= 0x20 && wc <= 0x7e)
+        return 1;
+
+    // Non-printable ASCII.
+    if (wc <= 0x7f)
+        return -1;
+
+    // TODO: Implement wcwidth for non-ASCII characters.
+    return 1;
+}
 }
