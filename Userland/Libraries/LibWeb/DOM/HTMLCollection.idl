@@ -1,8 +1,8 @@
-[CustomGet]
+[Exposed=Window, LegacyUnenumerableNamedProperties]
 interface HTMLCollection {
 
     readonly attribute unsigned long length;
-    Element? item(unsigned long index);
-    Element? namedItem(DOMString name);
+    getter Element? item(unsigned long index);
+    getter Element? namedItem(DOMString name);
 
 };

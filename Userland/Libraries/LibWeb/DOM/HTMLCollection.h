@@ -42,10 +42,13 @@ public:
     ~HTMLCollection();
 
     size_t length();
-    Element* item(size_t index);
-    Element* named_item(FlyString const& name);
+    Element* item(size_t index) const;
+    Element* named_item(FlyString const& name) const;
 
-    Vector<NonnullRefPtr<Element>> collect_matching_elements();
+    Vector<NonnullRefPtr<Element>> collect_matching_elements() const;
+
+    Vector<String> supported_property_names() const;
+    bool is_supported_property_index(u32) const;
 
 protected:
     HTMLCollection(ParentNode& root, Function<bool(Element const&)> filter);
