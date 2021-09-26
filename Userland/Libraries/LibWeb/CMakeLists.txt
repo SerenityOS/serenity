@@ -4,6 +4,7 @@ set(SOURCES
     Bindings/EventTargetWrapperFactory.cpp
     Bindings/EventWrapperFactory.cpp
     Bindings/HTMLCollectionWrapperCustom.cpp
+    Bindings/IDLAbstractOperations.cpp
     Bindings/ImageConstructor.cpp
     Bindings/LocationObject.cpp
     Bindings/MainThreadVM.cpp
