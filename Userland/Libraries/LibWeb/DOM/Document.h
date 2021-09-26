@@ -228,7 +228,7 @@ public:
     void set_associated_inert_template_document(Document& document) { m_associated_inert_template_document = document; }
 
     String ready_state() const;
-    void set_ready_state(HTML::DocumentReadyState);
+    void update_readiness(HTML::DocumentReadyState);
 
     void ref_from_node(Badge<Node>)
     {
@@ -359,7 +359,7 @@ private:
     bool m_created_for_appropriate_template_contents { false };
     RefPtr<Document> m_associated_inert_template_document;
 
-    HTML::DocumentReadyState m_ready_state { HTML::DocumentReadyState::Loading };
+    HTML::DocumentReadyState m_readiness { HTML::DocumentReadyState::Loading };
     String m_content_type { "application/xml" };
     Optional<String> m_encoding;
 
