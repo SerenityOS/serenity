@@ -7,17 +7,24 @@ serenity_component(
 
 set(SOURCES
     main.cpp
+    AmpButton.cpp
+    AmpPlayerView.cpp
+    AmpSlider.cpp
+    AmpTimeDisplay.cpp
+    AmpToggleButton.cpp
+    AmpWidget.cpp
+    AudioAlgorithms.cpp
+    BarsVisualizationWidget.cpp
+    M3UParser.cpp
+    NoVisualizationWidget.cpp
+    PlaybackManager.cpp
     Player.cpp
     Playlist.cpp
-    PlaybackManager.cpp
-    SampleWidget.cpp
-    SoundPlayerWidgetAdvancedView.cpp
-    BarsVisualizationWidget.cpp
-    AudioAlgorithms.cpp
-    NoVisualizationWidget.cpp
-    M3UParser.cpp
     PlaylistWidget.cpp
+    SampleWidget.cpp
+    Skin.cpp
+    SoundPlayerWidgetAdvancedView.cpp
 )
 
 serenity_app(SoundPlayer ICON app-sound-player)
-target_link_libraries(SoundPlayer LibAudio LibGUI)
+target_link_libraries(SoundPlayer LibAudio LibGUI LibArchive LibCompress LibGfx)

@@ -1,14 +1,17 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021, Leandro A. F. Pereira <leandro@tia.mat.br>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AmpPlayerView.h"
 #include "BarsVisualizationWidget.h"
 #include "NoVisualizationWidget.h"
 #include "Player.h"
 #include "SampleWidget.h"
+#include "Skin.h"
 #include "SoundPlayerWidgetAdvancedView.h"
 #include <LibAudio/ClientConnection.h>
 #include <LibGUI/Action.h>
@@ -44,7 +47,8 @@ int main(int argc, char** argv)
 
     String path = argv[1];
     // start in advanced view by default
-    Player* player = &window->set_main_widget<SoundPlayerWidgetAdvancedView>(window, audio_client);
+    //Player* player = &window->set_main_widget<SoundPlayerWidgetAdvancedView>(window, audio_client);
+    Player* player = &window->set_main_widget<AmpPlayerView>(window, audio_client);
     if (argc > 1) {
         player->play_file_path(path);
     }

@@ -16,24 +16,26 @@ u32 round_previous_power_of_2(u32 x);
 
 void BarsVisualizationWidget::paint_event(GUI::PaintEvent& event)
 {
+    const bool small = frame_inner_rect().width() < 100;
+
     GUI::Frame::paint_event(event);
     GUI::Painter painter(*this);
 
     painter.add_clip_rect(event.rect());
-    painter.fill_rect(frame_inner_rect(), Color::Black);
+    if (!small)
+        painter.fill_rect(frame_inner_rect(), Color::Black);
 
     if (m_sample_buffer.is_empty())
         return;
 
     fft(m_sample_buffer, false);
     double max = AK::sqrt(m_sample_count * 2.);
-
     double freq_bin = m_samplerate / (double)m_sample_count;
 
-    constexpr int group_count = 60;
-    Vector<double, group_count> groups;
+    const int group_count = small ? 18 : 60;
+    Vector<double> groups;
     groups.resize(group_count);
-    if (m_gfx_falling_bars.size() != group_count) {
+    if ((int)m_gfx_falling_bars.size() != group_count) {
         m_gfx_falling_bars.resize(group_count);
         for (int& i : m_gfx_falling_bars)
             i = 0;
@@ -48,12 +50,22 @@ void BarsVisualizationWidget::paint_event(GUI::PaintEvent& event)
     for (int i = 0; i < group_count; i++)
         groups[i] /= max * freq_bin / (m_adjust_frequencies ? (clamp(AK::pow(AK::E<double>, (double)i / group_count * 3.) - 1.75, 1., 15.)) : 1.);
 
-    const int horizontal_margin = 30;
-    const int top_vertical_margin = 15;
-    const int pixels_inbetween_groups = frame_inner_rect().width() > 350 ? 5 : 2;
+    const int horizontal_margin = small ? 0 : 30;
+    const int top_vertical_margin = small ? 0 : 15;
+    const int pixels_inbetween_groups = small ? 2 : 5;
     int pixel_per_group_width = (frame_inner_rect().width() - horizontal_margin * 2 - pixels_inbetween_groups * (group_count - 1)) / group_count;
     int max_height = frame_inner_rect().height() - top_vertical_margin;
     int current_xpos = horizontal_margin;
+    // FIXME: This is not right, but things are crashing here
+    auto clamp = [](int value, int min, int max) {
+        if (min > max) {
+            int tmp = min;
+            min = max;
+            max = tmp;
+        }
+        return AK::clamp(value, min, max);
+    };
+
     for (int g = 0; g < group_count; g++) {
         m_gfx_falling_bars[g] = AK::min(clamp(max_height - (int)(groups[g] * max_height * 0.8), 0, max_height), m_gfx_falling_bars[g]);
         painter.fill_rect(Gfx::Rect(current_xpos, max_height - (int)(groups[g] * max_height * 0.8), pixel_per_group_width, (int)(groups[g] * max_height * 0.8)), Gfx::Color::from_rgb(0x95d437));

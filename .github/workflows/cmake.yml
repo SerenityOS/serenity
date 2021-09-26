@@ -144,7 +144,8 @@ jobs:
             -DCMAKE_CXX_COMPILER=g++-10 \
             -DENABLE_ALL_DEBUG_FACILITIES=ON \
             -DENABLE_PCI_IDS_DOWNLOAD=OFF \
-            -DENABLE_USB_IDS_DOWNLOAD=OFF
+            -DENABLE_USB_IDS_DOWNLOAD=OFF \
+            -DENABLE_WINAMP_BASE_SKIN_DOWNLOAD=OFF
         if: ${{ matrix.debug-options == 'ALL_DEBUG' }}
       - name: Create build environment
         working-directory: ${{ github.workspace }}
@@ -158,7 +159,8 @@ jobs:
             -DCMAKE_CXX_COMPILER=g++-10 \
             -DENABLE_UNDEFINED_SANITIZER=ON \
             -DENABLE_PCI_IDS_DOWNLOAD=OFF \
-            -DENABLE_USB_IDS_DOWNLOAD=OFF
+            -DENABLE_USB_IDS_DOWNLOAD=OFF \
+            -DENABLE_WINAMP_BASE_SKIN_DOWNLOAD=OFF
         if: ${{ matrix.debug-options == 'NORMAL_DEBUG' }}
 
       # === ACTUALLY BUILD ===

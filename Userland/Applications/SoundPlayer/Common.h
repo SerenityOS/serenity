@@ -8,7 +8,7 @@
 
 #include <LibGUI/Slider.h>
 
-class AutoSlider final : public GUI::Slider {
+class AutoSlider : public GUI::Slider {
     C_OBJECT(AutoSlider)
 public:
     ~AutoSlider() override = default;

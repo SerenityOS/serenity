@@ -47,9 +47,6 @@ public:
     ShuffleMode shuffle_mode() const { return m_shuffle_mode; }
     void set_shuffle_mode(ShuffleMode);
 
-    LoopMode loop_mode() const { return m_loop_mode; }
-    void set_loop_mode(LoopMode);
-
     double volume() const { return m_volume; }
     void set_volume(double);
 
