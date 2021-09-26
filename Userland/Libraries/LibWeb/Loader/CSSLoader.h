@@ -8,6 +8,8 @@
 
 #include <AK/Function.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/DocumentLoadEventDelayer.h>
 #include <LibWeb/Loader/Resource.h>
 
 namespace Web {
@@ -34,6 +36,8 @@ private:
     DOM::Element& m_owner_element;
 
     RefPtr<CSS::CSSStyleSheet> m_style_sheet;
+
+    Optional<DOM::DocumentLoadEventDelayer> m_document_load_event_delayer;
 };
 
 }
