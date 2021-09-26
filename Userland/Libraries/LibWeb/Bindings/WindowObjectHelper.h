@@ -56,6 +56,8 @@
 #include <LibWeb/Bindings/HTMLButtonElementPrototype.h>
 #include <LibWeb/Bindings/HTMLCanvasElementConstructor.h>
 #include <LibWeb/Bindings/HTMLCanvasElementPrototype.h>
+#include <LibWeb/Bindings/HTMLCollectionConstructor.h>
+#include <LibWeb/Bindings/HTMLCollectionPrototype.h>
 #include <LibWeb/Bindings/HTMLDListElementConstructor.h>
 #include <LibWeb/Bindings/HTMLDListElementPrototype.h>
 #include <LibWeb/Bindings/HTMLDataElementConstructor.h>
@@ -278,6 +280,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(HTMLBRElement)             \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLButtonElement)         \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLCanvasElement)         \
+    ADD_WINDOW_OBJECT_INTERFACE(HTMLCollection)            \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLDataElement)           \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLDataListElement)       \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLDetailsElement)        \
