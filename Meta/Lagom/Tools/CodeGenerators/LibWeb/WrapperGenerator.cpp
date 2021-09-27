@@ -897,9 +897,27 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     }
 )~~~");
     } else if (parameter.type.name == "any") {
-        scoped_generator.append(R"~~~(
+        if (!optional) {
+            scoped_generator.append(R"~~~(
     auto @cpp_name@ = @js_name@@js_suffix@;
 )~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    JS::Value @cpp_name@;
+    if (!@js_name@@js_suffix@.is_undefined())
+        @cpp_name@ = @js_name@@js_suffix@;
+)~~~");
+            if (optional_default_value.has_value()) {
+                if (optional_default_value == "null") {
+                    scoped_generator.append(R"~~~(
+    else
+        @cpp_name@ = JS::js_null();
+)~~~");
+                } else {
+                    TODO();
+                }
+            }
+        }
     } else {
         dbgln("Unimplemented JS-to-C++ conversion: {}", parameter.type.name);
         VERIFY_NOT_REACHED();
@@ -1000,7 +1018,7 @@ static void generate_return_statement(SourceGenerator& generator, IDL::Type cons
         scoped_generator.append(R"~~~(
     return JS::Value((i32)retval);
 )~~~");
-    } else if (return_type.name == "Uint8ClampedArray") {
+    } else if (return_type.name == "Uint8ClampedArray" || return_type.name == "any") {
         scoped_generator.append(R"~~~(
     return retval;
 )~~~");
