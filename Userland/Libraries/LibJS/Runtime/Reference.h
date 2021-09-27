@@ -109,6 +109,8 @@ public:
 
     String to_string() const;
 
+    bool is_valid_reference() const { return m_name.is_valid(); }
+
 private:
     void throw_reference_error(GlobalObject&) const;
 
