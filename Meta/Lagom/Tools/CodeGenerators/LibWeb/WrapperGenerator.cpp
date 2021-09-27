@@ -14,6 +14,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
+#include <AK/Tuple.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <ctype.h>
@@ -138,6 +139,7 @@ struct Interface {
     Vector<Function> static_functions;
     bool has_stringifier { false };
     Optional<String> stringifier_attribute;
+    Optional<Tuple<Type, Type>> iterator_types;
 
     Optional<Function> named_property_getter;
     Optional<Function> named_property_setter;
@@ -378,6 +380,23 @@ static OwnPtr<Interface> parse_interface(StringView filename, StringView const& 
         }
     };
 
+    auto parse_iterable = [&]() {
+        assert_string("iterable");
+        assert_specific('<');
+        auto first_type = parse_type();
+        Optional<Type> second_type;
+        if (lexer.next_is(',')) {
+            assert_specific(',');
+            consume_whitespace();
+            second_type = parse_type();
+        } else {
+            TODO();
+        }
+        assert_specific('>');
+        assert_specific(';');
+        interface->iterator_types = Tuple { first_type, *second_type };
+    };
+
     auto parse_getter = [&](HashMap<String, String>& extended_attributes) {
         assert_string("getter");
         consume_whitespace();
@@ -511,6 +530,11 @@ static OwnPtr<Interface> parse_interface(StringView filename, StringView const& 
             continue;
         }
 
+        if (lexer.next_is("iterable")) {
+            parse_iterable();
+            continue;
+        }
+
         if (lexer.next_is("readonly") || lexer.next_is("attribute")) {
             parse_attribute(extended_attributes);
             continue;
@@ -551,6 +575,10 @@ static void generate_prototype_header(IDL::Interface const&);
 static void generate_prototype_implementation(IDL::Interface const&);
 static void generate_header(IDL::Interface const&);
 static void generate_implementation(IDL::Interface const&);
+static void generate_iterator_prototype_header(IDL::Interface const&);
+static void generate_iterator_prototype_implementation(IDL::Interface const&);
+static void generate_iterator_header(IDL::Interface const&);
+static void generate_iterator_implementation(IDL::Interface const&);
 
 int main(int argc, char** argv)
 {
@@ -562,12 +590,20 @@ int main(int argc, char** argv)
     bool constructor_implementation_mode = false;
     bool prototype_header_mode = false;
     bool prototype_implementation_mode = false;
+    bool iterator_header_mode = false;
+    bool iterator_implementation_mode = false;
+    bool iterator_prototype_header_mode = false;
+    bool iterator_prototype_implementation_mode = false;
     args_parser.add_option(header_mode, "Generate the wrapper .h file", "header", 'H');
     args_parser.add_option(implementation_mode, "Generate the wrapper .cpp file", "implementation", 'I');
     args_parser.add_option(constructor_header_mode, "Generate the constructor .h file", "constructor-header", 'C');
     args_parser.add_option(constructor_implementation_mode, "Generate the constructor .cpp file", "constructor-implementation", 'O');
     args_parser.add_option(prototype_header_mode, "Generate the prototype .h file", "prototype-header", 'P');
     args_parser.add_option(prototype_implementation_mode, "Generate the prototype .cpp file", "prototype-implementation", 'R');
+    args_parser.add_option(iterator_header_mode, "Generate the iterator wrapper .h file", "iterator-header", 0);
+    args_parser.add_option(iterator_implementation_mode, "Generate the iterator wrapper .cpp file", "iterator-implementation", 0);
+    args_parser.add_option(iterator_prototype_header_mode, "Generate the iterator prototype .h file", "iterator-prototype-header", 0);
+    args_parser.add_option(iterator_prototype_implementation_mode, "Generate the iterator prototype .cpp file", "iterator-prototype-implementation", 0);
     args_parser.add_positional_argument(path, "IDL file", "idl-file");
     args_parser.parse(argc, argv);
 
@@ -654,6 +690,18 @@ int main(int argc, char** argv)
 
     if (prototype_implementation_mode)
         generate_prototype_implementation(*interface);
+
+    if (iterator_header_mode)
+        generate_iterator_header(*interface);
+
+    if (iterator_implementation_mode)
+        generate_iterator_implementation(*interface);
+
+    if (iterator_prototype_header_mode)
+        generate_iterator_prototype_header(*interface);
+
+    if (iterator_prototype_implementation_mode)
+        generate_iterator_prototype_implementation(*interface);
 
     return 0;
 }
@@ -1059,6 +1107,16 @@ enum class StaticFunction {
 static void generate_return_statement(SourceGenerator& generator, IDL::Type const& return_type)
 {
     return generate_wrap_statement(generator, "retval", return_type, "return"sv);
+}
+
+static void generate_variable_statement(SourceGenerator& generator, String const& variable_name, IDL::Type const& value_type, String const& value_name)
+{
+    auto variable_generator = generator.fork();
+    variable_generator.set("variable_name", variable_name);
+    variable_generator.append(R"~~~(
+    JS::Value @variable_name@;
+)~~~");
+    return generate_wrap_statement(generator, value_name, value_type, String::formatted("{} = ", variable_name));
 }
 
 static void generate_function(SourceGenerator& generator, IDL::Function const& function, StaticFunction is_static_function, String const& class_name, String const& interface_fully_qualified_name)
@@ -2410,6 +2468,16 @@ private:
         )~~~");
     }
 
+    if (interface.iterator_types.has_value()) {
+        auto iterator_generator = generator.fork();
+        iterator_generator.append(R"~~~(
+    JS_DECLARE_NATIVE_FUNCTION(entries);
+    JS_DECLARE_NATIVE_FUNCTION(for_each);
+    JS_DECLARE_NATIVE_FUNCTION(keys);
+    JS_DECLARE_NATIVE_FUNCTION(values);
+        )~~~");
+    }
+
     for (auto& attribute : interface.attributes) {
         auto attribute_generator = generator.fork();
         attribute_generator.set("attribute.name:snakecase", attribute.name.to_snakecase());
@@ -2446,6 +2514,14 @@ void generate_prototype_implementation(IDL::Interface const& interface)
     generator.set("constructor_class", interface.constructor_class);
     generator.set("prototype_class:snakecase", interface.prototype_class.to_snakecase());
     generator.set("fully_qualified_name", interface.fully_qualified_name);
+
+    if (interface.iterator_types.has_value()) {
+        generator.set("iterator_name", String::formatted("{}Iterator", interface.name));
+        generator.set("iterator_wrapper_class", String::formatted("{}IteratorWrapper", interface.name));
+        generator.append(R"~~~(
+#include <LibWeb/Bindings/@iterator_wrapper_class@.h>
+)~~~");
+    }
 
     generator.append(R"~~~(
 #include <AK/Function.h>
@@ -2523,6 +2599,38 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #elif __has_include(<LibWeb/URL/@name@.h>)
 #    include <LibWeb/URL/@name@.h>
 #endif
+
+)~~~");
+
+    if (interface.iterator_types.has_value()) {
+        generator.append(R"~~~(
+#if __has_include(<LibWeb/CSS/@iterator_name@.h>)
+#    include <LibWeb/CSS/@iterator_name@.h>
+#elif __has_include(<LibWeb/DOM/@iterator_name@.h>)
+#    include <LibWeb/DOM/@iterator_name@.h>
+#elif __has_include(<LibWeb/Geometry/@iterator_name@.h>)
+#    include <LibWeb/Geometry/@iterator_name@.h>
+#elif __has_include(<LibWeb/HTML/@iterator_name@.h>)
+#    include <LibWeb/HTML/@iterator_name@.h>
+#elif __has_include(<LibWeb/UIEvents/@iterator_name@.h>)
+#    include <LibWeb/UIEvents/@iterator_name@.h>
+#elif __has_include(<LibWeb/HighResolutionTime/@iterator_name@.h>)
+#    include <LibWeb/HighResolutionTime/@iterator_name@.h>
+#elif __has_include(<LibWeb/NavigationTiming/@iterator_name@.h>)
+#    include <LibWeb/NavigationTiming/@iterator_name@.h>
+#elif __has_include(<LibWeb/RequestIdleCallback/@iterator_name@.h>)
+#    include <LibWeb/RequestIdleCallback/@iterator_name@.h>
+#elif __has_include(<LibWeb/SVG/@iterator_name@.h>)
+#    include <LibWeb/SVG/@iterator_name@.h>
+#elif __has_include(<LibWeb/XHR/@iterator_name@.h>)
+#    include <LibWeb/XHR/@iterator_name@.h>
+#elif __has_include(<LibWeb/URL/@iterator_name@.h>)
+#    include <LibWeb/URL/@iterator_name@.h>
+#endif
+)~~~");
+    }
+
+    generator.append(R"~~~(
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
@@ -2614,6 +2722,18 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
         auto stringifier_generator = generator.fork();
         stringifier_generator.append(R"~~~(
     define_native_function("toString", to_string, 0, default_attributes);
+)~~~");
+    }
+
+    if (interface.iterator_types.has_value()) {
+        auto iterator_generator = generator.fork();
+        iterator_generator.append(R"~~~(
+    define_native_function(vm.names.entries, entries, 0, default_attributes);
+    define_native_function(vm.names.forEach, for_each, 1, default_attributes);
+    define_native_function(vm.names.keys, keys, 0, default_attributes);
+    define_native_function(vm.names.values, values, 0, default_attributes);
+
+    define_direct_property(*vm.well_known_symbol_iterator(), Object::get(vm.names.entries), JS::Attribute::Configurable | JS::Attribute::Writable);
 )~~~");
     }
 
@@ -2793,7 +2913,345 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
 )~~~");
     }
 
+    if (interface.iterator_types.has_value()) {
+        auto iterator_generator = generator.fork();
+        iterator_generator.append(R"~~~(
+JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::entries)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+
+    return wrap(global_object, @iterator_name@::create(*impl, Object::PropertyKind::KeyAndValue));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+
+    auto callback = vm.argument(0);
+    if (!callback.is_function()) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAFunction, callback.to_string_without_side_effects());
+        return {};
+    }
+
+    auto this_value = vm.this_value(global_object);
+    impl->for_each([&](auto key, auto value) {
+)~~~");
+        generate_variable_statement(iterator_generator, "wrapped_key", interface.iterator_types->get<0>(), "key");
+        generate_variable_statement(iterator_generator, "wrapped_value", interface.iterator_types->get<1>(), "value");
+        iterator_generator.append(R"~~~(
+        auto result = vm.call(callback.as_function(), vm.argument(1), wrapped_value, wrapped_key, this_value);
+        return result.is_error() ? IterationDecision::Break : IterationDecision::Continue;
+    });
+    if (vm.exception())
+        return {};
+
+    return JS::js_undefined();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::keys)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+
+    return wrap(global_object, @iterator_name@::create(*impl, Object::PropertyKind::Key));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::values)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+
+    return wrap(global_object, @iterator_name@::create(*impl, Object::PropertyKind::Value));
+}
+)~~~");
+    }
+
     generator.append(R"~~~(
+} // namespace Web::Bindings
+)~~~");
+
+    outln("{}", generator.as_string_view());
+}
+
+static void generate_iterator_header(IDL::Interface const& interface)
+{
+    VERIFY(interface.iterator_types.has_value());
+    StringBuilder builder;
+    SourceGenerator generator { builder };
+
+    generator.set("name", String::formatted("{}Iterator", interface.name));
+    generator.set("fully_qualified_name", String::formatted("{}Iterator", interface.fully_qualified_name));
+    generator.set("wrapper_class", String::formatted("{}IteratorWrapper", interface.name));
+
+    generator.append(R"~~~(
+#pragma once
+
+#include <LibWeb/Bindings/Wrapper.h>
+
+// FIXME: This is very strange.
+#if __has_include(<LibWeb/CSS/@name@.h>)
+#    include <LibWeb/CSS/@name@.h>
+#elif __has_include(<LibWeb/DOM/@name@.h>)
+#    include <LibWeb/DOM/@name@.h>
+#elif __has_include(<LibWeb/Geometry/@name@.h>)
+#    include <LibWeb/Geometry/@name@.h>
+#elif __has_include(<LibWeb/HTML/@name@.h>)
+#    include <LibWeb/HTML/@name@.h>
+#elif __has_include(<LibWeb/UIEvents/@name@.h>)
+#    include <LibWeb/UIEvents/@name@.h>
+#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
+#    include <LibWeb/HighResolutionTime/@name@.h>
+#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
+#    include <LibWeb/NavigationTiming/@name@.h>
+#elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
+#    include <LibWeb/RequestIdleCallback/@name@.h>
+#elif __has_include(<LibWeb/SVG/@name@.h>)
+#    include <LibWeb/SVG/@name@.h>
+#elif __has_include(<LibWeb/XHR/@name@.h>)
+#    include <LibWeb/XHR/@name@.h>
+#elif __has_include(<LibWeb/URL/@name@.h>)
+#    include <LibWeb/URL/@name@.h>
+#endif
+
+namespace Web::Bindings {
+
+class @wrapper_class@ : public Wrapper {
+    JS_OBJECT(@name@, Wrapper);
+public:
+    static @wrapper_class@* create(JS::GlobalObject&, @fully_qualified_name@&);
+
+    @wrapper_class@(JS::GlobalObject&, @fully_qualified_name@&);
+    virtual void initialize(JS::GlobalObject&) override;
+    virtual ~@wrapper_class@() override;
+
+    @fully_qualified_name@& impl() { return *m_impl; }
+    @fully_qualified_name@ const& impl() const { return *m_impl; }
+
+private:
+    virtual void visit_edges(Cell::Visitor&) override; // The Iterator implementation has to visit the wrapper it's iterating
+
+    NonnullRefPtr<@fully_qualified_name@> m_impl;
+};
+
+@wrapper_class@* wrap(JS::GlobalObject&, @fully_qualified_name@&);
+
+} // namespace Web::Bindings
+)~~~");
+
+    outln("{}", generator.as_string_view());
+}
+
+void generate_iterator_implementation(IDL::Interface const& interface)
+{
+    VERIFY(interface.iterator_types.has_value());
+    StringBuilder builder;
+    SourceGenerator generator { builder };
+
+    generator.set("name", String::formatted("{}Iterator", interface.name));
+    generator.set("fully_qualified_name", String::formatted("{}Iterator", interface.fully_qualified_name));
+    generator.set("prototype_class", String::formatted("{}IteratorPrototype", interface.name));
+    generator.set("wrapper_class", String::formatted("{}IteratorWrapper", interface.name));
+
+    generator.append(R"~~~(
+#include <AK/FlyString.h>
+#include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/FunctionObject.h>
+#include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/TypedArray.h>
+#include <LibJS/Runtime/Value.h>
+#include <LibWeb/Bindings/@prototype_class@.h>
+#include <LibWeb/Bindings/@wrapper_class@.h>
+#include <LibWeb/Bindings/IDLAbstractOperations.h>
+#include <LibWeb/Bindings/WindowObject.h>
+
+// FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+using namespace Web::CSS;
+using namespace Web::DOM;
+using namespace Web::Geometry;
+using namespace Web::HTML;
+using namespace Web::RequestIdleCallback;
+
+namespace Web::Bindings {
+
+@wrapper_class@* @wrapper_class@::create(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
+{
+    return global_object.heap().allocate<@wrapper_class@>(global_object, global_object, impl);
+}
+
+@wrapper_class@::@wrapper_class@(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
+    : Wrapper(static_cast<WindowObject&>(global_object).ensure_web_prototype<@prototype_class@>("@name@"))
+    , m_impl(impl)
+{
+}
+
+void @wrapper_class@::initialize(JS::GlobalObject& global_object)
+{
+    Wrapper::initialize(global_object);
+}
+
+@wrapper_class@::~@wrapper_class@()
+{
+}
+
+void @wrapper_class@::visit_edges(Cell::Visitor& visitor)
+{
+    Wrapper::visit_edges(visitor);
+    impl().visit_edges(visitor);
+}
+
+@wrapper_class@* wrap(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
+{
+    return static_cast<@wrapper_class@*>(wrap_impl(global_object, impl));
+}
+
+} // namespace Web::Bindings
+)~~~");
+
+    outln("{}", generator.as_string_view());
+}
+
+static void generate_iterator_prototype_header(IDL::Interface const& interface)
+{
+    VERIFY(interface.iterator_types.has_value());
+    StringBuilder builder;
+    SourceGenerator generator { builder };
+
+    generator.set("prototype_class", String::formatted("{}IteratorPrototype", interface.name));
+
+    generator.append(R"~~~(
+#pragma once
+
+#include <LibJS/Runtime/Object.h>
+
+namespace Web::Bindings {
+
+class @prototype_class@ : public JS::Object {
+    JS_OBJECT(@prototype_class@, JS::Object);
+public:
+    explicit @prototype_class@(JS::GlobalObject&);
+    virtual void initialize(JS::GlobalObject&) override;
+    virtual ~@prototype_class@() override;
+
+private:
+    JS_DECLARE_NATIVE_FUNCTION(next);
+};
+
+} // namespace Web::Bindings
+    )~~~");
+
+    outln("{}", generator.as_string_view());
+}
+
+void generate_iterator_prototype_implementation(IDL::Interface const& interface)
+{
+    VERIFY(interface.iterator_types.has_value());
+    StringBuilder builder;
+    SourceGenerator generator { builder };
+
+    generator.set("name", String::formatted("{}Iterator", interface.name));
+    generator.set("prototype_class", String::formatted("{}IteratorPrototype", interface.name));
+    generator.set("wrapper_class", String::formatted("{}IteratorWrapper", interface.name));
+    generator.set("fully_qualified_name", String::formatted("{}Iterator", interface.fully_qualified_name));
+
+    generator.append(R"~~~(
+#include <AK/Function.h>
+#include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/FunctionObject.h>
+#include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/TypedArray.h>
+#include <LibWeb/Bindings/@prototype_class@.h>
+#include <LibWeb/Bindings/@wrapper_class@.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/Bindings/WindowObject.h>
+
+#if __has_include(<LibWeb/CSS/@name@.h>)
+#    include <LibWeb/CSS/@name@.h>
+#elif __has_include(<LibWeb/DOM/@name@.h>)
+#    include <LibWeb/DOM/@name@.h>
+#elif __has_include(<LibWeb/Geometry/@name@.h>)
+#    include <LibWeb/Geometry/@name@.h>
+#elif __has_include(<LibWeb/HTML/@name@.h>)
+#    include <LibWeb/HTML/@name@.h>
+#elif __has_include(<LibWeb/UIEvents/@name@.h>)
+#    include <LibWeb/UIEvents/@name@.h>
+#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
+#    include <LibWeb/HighResolutionTime/@name@.h>
+#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
+#    include <LibWeb/NavigationTiming/@name@.h>
+#elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
+#    include <LibWeb/RequestIdleCallback/@name@.h>
+#elif __has_include(<LibWeb/SVG/@name@.h>)
+#    include <LibWeb/SVG/@name@.h>
+#elif __has_include(<LibWeb/XHR/@name@.h>)
+#    include <LibWeb/XHR/@name@.h>
+#elif __has_include(<LibWeb/URL/@name@.h>)
+#    include <LibWeb/URL/@name@.h>
+#endif
+
+// FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+using namespace Web::CSS;
+using namespace Web::DOM;
+using namespace Web::Geometry;
+using namespace Web::HTML;
+using namespace Web::NavigationTiming;
+using namespace Web::RequestIdleCallback;
+using namespace Web::XHR;
+using namespace Web::URL;
+
+namespace Web::Bindings {
+
+@prototype_class@::@prototype_class@(JS::GlobalObject& global_object)
+    : Object(*global_object.iterator_prototype())
+{
+}
+
+@prototype_class@::~@prototype_class@()
+{
+}
+
+void @prototype_class@::initialize(JS::GlobalObject& global_object)
+{
+    auto& vm = this->vm();
+    Object::initialize(global_object);
+
+    define_native_function(vm.names.next, next, 0, JS::Attribute::Configurable | JS::Attribute::Writable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Iterator"), JS::Attribute::Configurable);
+}
+
+static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
+{
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return {};
+    if (!is<@wrapper_class@>(this_object)) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@fully_qualified_name@");
+        return nullptr;
+    }
+    return &static_cast<@wrapper_class@*>(this_object)->impl();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::next)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+
+    auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return impl->next(); });
+
+    if (should_return_empty(result))
+        return JS::Value();
+
+    return result.release_value();
+}
+
 } // namespace Web::Bindings
 )~~~");
 
