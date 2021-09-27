@@ -148,7 +148,7 @@ void iterator_close(Object& iterator)
 }
 
 // 7.4.8 CreateIterResultObject ( value, done ), https://tc39.es/ecma262/#sec-createiterresultobject
-Value create_iterator_result_object(GlobalObject& global_object, Value value, bool done)
+Object* create_iterator_result_object(GlobalObject& global_object, Value value, bool done)
 {
     auto& vm = global_object.vm();
     auto* object = Object::create(global_object, global_object.object_prototype());
