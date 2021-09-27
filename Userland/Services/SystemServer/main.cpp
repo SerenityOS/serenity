@@ -8,6 +8,7 @@
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
+#include <LibCore/Account.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Event.h>
@@ -180,7 +181,7 @@ static void populate_devfs_char_devices()
         case 42: {
             switch (minor_number) {
             case 42: {
-                create_devfs_char_device("/dev/audio", 0220, 42, 42);
+                create_devfs_char_device("/dev/audio", 0200, 42, 42);
                 break;
             }
             default:
@@ -395,9 +396,9 @@ static void prepare_synthetic_filesystems()
     // FIXME: Try to find a way to not hardcode the major number of tty nodes.
     chown_all_matching_device_nodes(tty_group, 4);
 
-    auto audio_group = getgrnam("audio");
-    VERIFY(audio_group);
-    chown_wrapper("/dev/audio", 0, audio_group->gr_gid);
+    auto audio_user = Core::Account::from_name("audio");
+    VERIFY(!audio_user.is_error());
+    chown_wrapper("/dev/audio", audio_user.value().uid(), audio_user.value().gid());
 
     // Note: We open the /dev/null device and set file descriptors 0, 1, 2 to it
     // because otherwise these file descriptors won't have a custody, making

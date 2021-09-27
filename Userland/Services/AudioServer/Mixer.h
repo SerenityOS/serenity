@@ -108,7 +108,7 @@ private:
 class Mixer : public Core::Object {
     C_OBJECT(Mixer)
 public:
-    Mixer(NonnullRefPtr<Core::ConfigFile> config);
+    Mixer();
     virtual ~Mixer() override;
 
     NonnullRefPtr<ClientAudioStream> create_queue(ClientConnection&);
@@ -124,8 +124,6 @@ public:
     u16 audiodevice_get_sample_rate() const;
 
 private:
-    void request_setting_sync();
-
     Vector<NonnullRefPtr<ClientAudioStream>> m_pending_mixing;
     Threading::Mutex m_pending_mutex;
     Threading::ConditionVariable m_mixing_necessary { m_pending_mutex };
@@ -136,9 +134,6 @@ private:
 
     bool m_muted { false };
     FadingProperty<double> m_main_volume { 1 };
-
-    NonnullRefPtr<Core::ConfigFile> m_config;
-    RefPtr<Core::Timer> m_config_write_timer;
 
     static u8 m_zero_filled_buffer[4096];
 
