@@ -18,6 +18,7 @@
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Comment.h>
+#include <LibWeb/DOM/CustomEvent.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentFragment.h>
@@ -739,7 +740,7 @@ NonnullRefPtr<Event> Document::create_event(const String& interface)
     } else if (interface_lowercase == "compositionevent") {
         event = Event::create(""); // FIXME: Create CompositionEvent
     } else if (interface_lowercase == "customevent") {
-        event = Event::create(""); // FIXME: Create CustomEvent
+        event = CustomEvent::create("");
     } else if (interface_lowercase == "devicemotionevent") {
         event = Event::create(""); // FIXME: Create DeviceMotionEvent
     } else if (interface_lowercase == "deviceorientationevent") {
