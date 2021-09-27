@@ -1990,11 +1990,9 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
                 syntax_error("Generator function parameter initializer cannot contain a reference to an identifier named \"yield\"");
         }
         parameters.append({ move(parameter), default_value, is_rest });
-        if (match(TokenType::ParenClose))
+        if (match(TokenType::ParenClose) || is_rest)
             break;
         consume(TokenType::Comma);
-        if (is_rest)
-            break;
     }
     if (parse_options & FunctionNodeParseOptions::IsSetterFunction && parameters.is_empty())
         syntax_error("Setter function must have one argument");
