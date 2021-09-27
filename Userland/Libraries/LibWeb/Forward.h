@@ -178,6 +178,8 @@ class ImageData;
 class MessageChannel;
 class MessageEvent;
 class MessagePort;
+class PageTransitionEvent;
+class SubmitEvent;
 class WebSocket;
 }
 
