@@ -139,4 +139,7 @@ interface Document : Node {
     attribute EventHandler onwebkittransitionend;
     attribute EventHandler onwheel;
 
+    readonly boolean hidden;
+    readonly DOMString visibilityState;
+
 };

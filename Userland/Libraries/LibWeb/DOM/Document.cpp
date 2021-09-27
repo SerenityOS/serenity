@@ -1062,4 +1062,16 @@ Bindings::LocationObject* Document::location()
     return window().wrapper()->location_object();
 }
 
+// https://w3c.github.io/page-visibility/#hidden-attribute
+bool Document::hidden() const
+{
+    return false;
+}
+
+// https://w3c.github.io/page-visibility/#visibilitystate-attribute
+String Document::visibility_state() const
+{
+    return hidden() ? "hidden" : "visible";
+}
+
 }

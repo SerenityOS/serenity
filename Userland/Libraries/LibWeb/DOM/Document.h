@@ -298,6 +298,9 @@ public:
     bool page_showing() const { return m_page_showing; }
     void set_page_showing(bool value) { m_page_showing = value; }
 
+    bool hidden() const;
+    String visibility_state() const;
+
 private:
     explicit Document(const AK::URL&);
 
