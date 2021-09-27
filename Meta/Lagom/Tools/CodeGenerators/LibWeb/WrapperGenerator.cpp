@@ -230,7 +230,7 @@ static OwnPtr<Interface> parse_interface(StringView filename, StringView const& 
         bool unsigned_ = lexer.consume_specific("unsigned");
         if (unsigned_)
             consume_whitespace();
-        auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '?'; });
+        auto name = lexer.consume_until([](auto ch) { return !isalnum(ch) && ch != '_'; });
         auto nullable = lexer.consume_specific('?');
         StringBuilder builder;
         if (unsigned_)
