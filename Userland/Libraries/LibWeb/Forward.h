@@ -75,7 +75,6 @@ class EventHandler;
 class EventListener;
 class EventTarget;
 class HTMLCollection;
-class MouseEvent;
 class Node;
 class ParentNode;
 class Position;
@@ -248,6 +247,12 @@ class XMLHttpRequest;
 class XMLHttpRequestEventTarget;
 }
 
+namespace Web::UIEvents {
+class MouseEvent;
+class KeyboardEvent;
+class UIEvents;
+}
+
 namespace Web::URL {
 class URL;
 class URLSearchParams;
@@ -351,6 +356,7 @@ class HTMLUnknownElementWrapper;
 class HTMLVideoElementWrapper;
 class IdleDeadlineWrapper;
 class ImageDataWrapper;
+class KeyboardEventWrapper;
 class LocationObject;
 class MediaQueryListWrapper;
 class MessageChannelWrapper;

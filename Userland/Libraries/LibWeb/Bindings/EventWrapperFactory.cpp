@@ -9,6 +9,7 @@
 #include <LibWeb/Bindings/CustomEventWrapper.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/EventWrapperFactory.h>
+#include <LibWeb/Bindings/KeyboardEventWrapper.h>
 #include <LibWeb/Bindings/MessageEventWrapper.h>
 #include <LibWeb/Bindings/MouseEventWrapper.h>
 #include <LibWeb/Bindings/PageTransitionEventWrapper.h>
@@ -29,6 +30,8 @@ EventWrapper* wrap(JS::GlobalObject& global_object, DOM::Event& event)
         return static_cast<PageTransitionEventWrapper*>(wrap_impl(global_object, static_cast<HTML::PageTransitionEvent&>(event)));
     if (is<HTML::SubmitEvent>(event))
         return static_cast<SubmitEventWrapper*>(wrap_impl(global_object, static_cast<HTML::SubmitEvent&>(event)));
+    if (is<UIEvents::KeyboardEvent>(event))
+        return static_cast<KeyboardEventWrapper*>(wrap_impl(global_object, static_cast<UIEvents::KeyboardEvent&>(event)));
     if (is<UIEvents::MouseEvent>(event))
         return static_cast<MouseEventWrapper*>(wrap_impl(global_object, static_cast<UIEvents::MouseEvent&>(event)));
     if (is<XHR::ProgressEvent>(event))
