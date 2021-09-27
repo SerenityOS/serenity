@@ -56,6 +56,9 @@ private:
     bool validate_setup_resolution_with_io(size_t width, size_t height);
     void set_y_offset(size_t);
 
+    void set_framebuffer_to_big_endian_format();
+    void set_framebuffer_to_little_endian_format();
+
     PhysicalAddress m_mmio_registers;
     Memory::TypedMapping<BochsDisplayMMIORegisters volatile> m_registers;
     RefPtr<FramebufferDevice> m_framebuffer_device;

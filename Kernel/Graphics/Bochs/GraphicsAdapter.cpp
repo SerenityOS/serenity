@@ -32,6 +32,8 @@
 #define VBE_DISPI_DISABLED 0x00
 #define VBE_DISPI_ENABLED 0x01
 #define VBE_DISPI_LFB_ENABLED 0x40
+#define BOCHS_DISPLAY_LITTLE_ENDIAN 0x1e1e1e1e
+#define BOCHS_DISPLAY_BIG_ENDIAN 0xbebebebe
 
 namespace Kernel {
 
@@ -48,11 +50,18 @@ struct [[gnu::packed]] DISPIInterface {
     u16 y_offset;
 };
 
+struct [[gnu::packed]] ExtensionRegisters {
+    u32 region_size;
+    u32 framebuffer_byteorder;
+};
+
 struct [[gnu::packed]] BochsDisplayMMIORegisters {
     u8 edid_data[0x400];
     u16 vga_ioports[0x10];
     u8 reserved[0xE0];
     DISPIInterface bochs_regs;
+    u8 reserved2[0x100 - sizeof(DISPIInterface)];
+    ExtensionRegisters extension_regs;
 };
 
 UNMAP_AFTER_INIT NonnullRefPtr<BochsGraphicsAdapter> BochsGraphicsAdapter::initialize(PCI::Address address)
@@ -60,6 +69,28 @@ UNMAP_AFTER_INIT NonnullRefPtr<BochsGraphicsAdapter> BochsGraphicsAdapter::initi
     PCI::ID id = PCI::get_id(address);
     VERIFY((id.vendor_id == PCI::VendorID::QEMUOld && id.device_id == 0x1111) || (id.vendor_id == PCI::VendorID::VirtualBox && id.device_id == 0xbeef));
     return adopt_ref(*new BochsGraphicsAdapter(address));
+}
+
+void BochsGraphicsAdapter::set_framebuffer_to_big_endian_format()
+{
+    dbgln_if(BXVGA_DEBUG, "BochsGraphicsAdapter set_framebuffer_to_big_endian_format");
+    full_memory_barrier();
+    if (m_registers->extension_regs.region_size == 0xFFFFFFFF || m_registers->extension_regs.region_size == 0)
+        return;
+    full_memory_barrier();
+    m_registers->extension_regs.framebuffer_byteorder = BOCHS_DISPLAY_BIG_ENDIAN;
+    full_memory_barrier();
+}
+
+void BochsGraphicsAdapter::set_framebuffer_to_little_endian_format()
+{
+    dbgln_if(BXVGA_DEBUG, "BochsGraphicsAdapter set_framebuffer_to_little_endian_format");
+    full_memory_barrier();
+    if (m_registers->extension_regs.region_size == 0xFFFFFFFF || m_registers->extension_regs.region_size == 0)
+        return;
+    full_memory_barrier();
+    m_registers->extension_regs.framebuffer_byteorder = BOCHS_DISPLAY_LITTLE_ENDIAN;
+    full_memory_barrier();
 }
 
 UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address pci_address)
@@ -153,6 +184,7 @@ void BochsGraphicsAdapter::set_resolution_registers(size_t width, size_t height)
     m_registers->bochs_regs.enable = VBE_DISPI_ENABLED | VBE_DISPI_LFB_ENABLED;
     full_memory_barrier();
     m_registers->bochs_regs.bank = 0;
+    set_framebuffer_to_little_endian_format();
 }
 
 bool BochsGraphicsAdapter::try_to_set_resolution(size_t output_port_index, size_t width, size_t height)
