@@ -6,6 +6,7 @@
  */
 
 #include "InlineFormattingContext.h"
+#include "InlineNode.h"
 #include <AK/StdLibExtras.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
@@ -48,7 +49,7 @@ struct FlexLine {
     float cross_size { 0 };
 };
 
-void FlexFormattingContext::run(Box& box, LayoutMode)
+void FlexFormattingContext::run(Box& box, LayoutMode layout_mode)
 {
     // This implements https://www.w3.org/TR/css-flexbox-1/#layout-algorithm
 
@@ -270,6 +271,12 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
     Vector<FlexItem> flex_items;
     if (!box.has_definite_width())
         box.set_width(box.width_of_logical_containing_block());
+
+    if (box.children_are_inline()) {
+        InlineFormattingContext context(box, this);
+        context.run(box, layout_mode);
+        return;
+    }
 
     box.for_each_child_of_type<Box>([&](Box& child_box) {
         layout_inside(child_box, LayoutMode::Default);
