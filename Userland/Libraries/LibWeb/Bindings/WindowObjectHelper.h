@@ -22,6 +22,8 @@
 #include <LibWeb/Bindings/CloseEventPrototype.h>
 #include <LibWeb/Bindings/CommentConstructor.h>
 #include <LibWeb/Bindings/CommentPrototype.h>
+#include <LibWeb/Bindings/CustomEventConstructor.h>
+#include <LibWeb/Bindings/CustomEventPrototype.h>
 #include <LibWeb/Bindings/DOMExceptionConstructor.h>
 #include <LibWeb/Bindings/DOMExceptionPrototype.h>
 #include <LibWeb/Bindings/DOMImplementationConstructor.h>
@@ -265,6 +267,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(CharacterData)             \
     ADD_WINDOW_OBJECT_INTERFACE(CloseEvent)                \
     ADD_WINDOW_OBJECT_INTERFACE(Comment)                   \
+    ADD_WINDOW_OBJECT_INTERFACE(CustomEvent)               \
     ADD_WINDOW_OBJECT_INTERFACE(CSSStyleSheet)             \
     ADD_WINDOW_OBJECT_INTERFACE(DocumentFragment)          \
     ADD_WINDOW_OBJECT_INTERFACE(Document)                  \

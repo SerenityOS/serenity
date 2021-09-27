@@ -1,10 +1,12 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/Bindings/CloseEventWrapper.h>
+#include <LibWeb/Bindings/CustomEventWrapper.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/MessageEventWrapper.h>
@@ -17,6 +19,8 @@ namespace Web::Bindings {
 
 EventWrapper* wrap(JS::GlobalObject& global_object, DOM::Event& event)
 {
+    if (is<DOM::CustomEvent>(event))
+        return static_cast<CustomEventWrapper*>(wrap_impl(global_object, static_cast<DOM::CustomEvent&>(event)));
     if (is<HTML::CloseEvent>(event))
         return static_cast<CloseEventWrapper*>(wrap_impl(global_object, static_cast<HTML::CloseEvent&>(event)));
     if (is<HTML::MessageEvent>(event))

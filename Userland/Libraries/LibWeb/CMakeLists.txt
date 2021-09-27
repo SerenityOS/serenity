@@ -45,6 +45,7 @@ set(SOURCES
     DOM/CharacterData.cpp
     DOM/CharacterData.idl
     DOM/Comment.cpp
+    DOM/CustomEvent.cpp
     DOM/DOMImplementation.cpp
     DOM/Document.cpp
     DOM/DocumentFragment.cpp
@@ -328,6 +329,7 @@ libweb_js_wrapper(DOM/AbortController)
 libweb_js_wrapper(DOM/AbortSignal)
 libweb_js_wrapper(DOM/CharacterData)
 libweb_js_wrapper(DOM/Comment)
+libweb_js_wrapper(DOM/CustomEvent)
 libweb_js_wrapper(DOM/Document)
 libweb_js_wrapper(DOM/DocumentFragment)
 libweb_js_wrapper(DOM/DocumentType)
