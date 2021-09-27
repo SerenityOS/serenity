@@ -15,6 +15,11 @@ RequestClient::RequestClient()
 {
 }
 
+void RequestClient::ensure_connection(URL const& url, ::RequestServer::CacheLevel cache_level)
+{
+    async_ensure_connection(url, cache_level);
+}
+
 template<typename RequestHashMapTraits>
 RefPtr<Request> RequestClient::start_request(String const& method, URL const& url, HashMap<String, String, RequestHashMapTraits> const& request_headers, ReadonlyBytes request_body)
 {

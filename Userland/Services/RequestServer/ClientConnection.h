@@ -34,6 +34,7 @@ private:
     virtual Messages::RequestServer::StartRequestResponse start_request(String const&, URL const&, IPC::Dictionary const&, ByteBuffer const&) override;
     virtual Messages::RequestServer::StopRequestResponse stop_request(i32) override;
     virtual Messages::RequestServer::SetCertificateResponse set_certificate(i32, String const&, String const&) override;
+    virtual void ensure_connection(URL const& url, ::RequestServer::CacheLevel const& cache_level) override;
 
     HashMap<i32, OwnPtr<Request>> m_requests;
 };
