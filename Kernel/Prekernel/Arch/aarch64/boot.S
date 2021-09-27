@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-.text
+// In a specially-named text section so that the linker script can put it first in .text.
+.section ".text.first"
 
 .global start
 .type start, @function
