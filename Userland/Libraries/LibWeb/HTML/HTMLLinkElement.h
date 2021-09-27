@@ -32,8 +32,11 @@ private:
         enum {
             Alternate = 1 << 0,
             Stylesheet = 1 << 1,
+            Preload = 1 << 2,
         };
     };
+
+    RefPtr<Resource> m_preload_resource;
 
     CSSLoader m_css_loader;
     unsigned m_relationship { 0 };
