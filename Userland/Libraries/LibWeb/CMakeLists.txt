@@ -240,6 +240,7 @@ set(SOURCES
     SVG/ViewBox.cpp
     StylePropertiesModel.cpp
     UIEvents/EventNames.cpp
+    UIEvents/KeyboardEvent.cpp
     UIEvents/MouseEvent.cpp
     URL/URL.cpp
     URL/URLSearchParams.cpp
@@ -453,6 +454,7 @@ libweb_js_wrapper(SVG/SVGGeometryElement)
 libweb_js_wrapper(SVG/SVGGraphicsElement)
 libweb_js_wrapper(SVG/SVGPathElement)
 libweb_js_wrapper(SVG/SVGSVGElement)
+libweb_js_wrapper(UIEvents/KeyboardEvent)
 libweb_js_wrapper(UIEvents/MouseEvent)
 libweb_js_wrapper(UIEvents/UIEvent)
 libweb_js_wrapper(XHR/ProgressEvent)

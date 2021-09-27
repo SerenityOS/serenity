@@ -6,9 +6,9 @@
  */
 
 #include <LibGUI/Event.h>
-#include <LibGUI/Window.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
@@ -17,6 +17,7 @@
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/UIEvents/EventNames.h>
+#include <LibWeb/UIEvents/KeyboardEvent.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
 namespace Web {
@@ -454,7 +455,9 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
         }
     }
 
-    return false;
+    auto event = UIEvents::KeyboardEvent::create_from_platform_event(UIEvents::EventNames::keydown, key, modifiers, code_point);
+    // FIXME: Figure out the right event target.
+    return m_frame.active_document()->window().dispatch_event(move(event));
 }
 
 void EventHandler::set_mouse_event_tracking_layout_node(Layout::Node* layout_node)

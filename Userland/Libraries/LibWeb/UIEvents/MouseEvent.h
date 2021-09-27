@@ -11,7 +11,7 @@
 
 namespace Web::UIEvents {
 
-class MouseEvent final : public UIEvents::UIEvent {
+class MouseEvent final : public UIEvent {
 public:
     using WrapperType = Bindings::MouseEventWrapper;
 
