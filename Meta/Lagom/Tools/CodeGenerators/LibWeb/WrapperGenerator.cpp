@@ -970,73 +970,83 @@ static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter
     arguments_builder.join(", ", parameter_names);
 }
 
-static void generate_return_statement(SourceGenerator& generator, IDL::Type const& return_type)
+static void generate_wrap_statement(SourceGenerator& generator, String const& value, IDL::Type const& type, StringView const& result_expression)
 {
     auto scoped_generator = generator.fork();
-    scoped_generator.set("return_type", return_type.name);
+    scoped_generator.set("value", value);
+    scoped_generator.set("type", type.name);
+    scoped_generator.set("result_expression", result_expression);
 
-    if (return_type.name == "undefined") {
+    if (type.name == "undefined") {
         scoped_generator.append(R"~~~(
-    return JS::js_undefined();
+    @result_expression@ JS::js_undefined();
 )~~~");
         return;
     }
 
-    if (return_type.nullable) {
-        if (return_type.is_string()) {
+    if (type.nullable) {
+        if (type.is_string()) {
             scoped_generator.append(R"~~~(
-    if (retval.is_null())
-        return JS::js_null();
+    if (@value@.is_null()) {
+        @result_expression@ JS::js_null();
+    } else {
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
-    if (!retval)
-        return JS::js_null();
+    if (!@value@) {
+        @result_expression@ JS::js_null();
+    } else {
 )~~~");
         }
     }
 
-    if (return_type.is_string()) {
+    if (type.is_string()) {
         scoped_generator.append(R"~~~(
-    return JS::js_string(vm, retval);
+    @result_expression@ JS::js_string(vm, @value@);
 )~~~");
-    } else if (return_type.name == "ArrayFromVector") {
+    } else if (type.name == "ArrayFromVector") {
         // FIXME: Remove this fake type hack once it's no longer needed.
         //        Basically once we have NodeList we can throw this out.
         scoped_generator.append(R"~~~(
     auto* new_array = JS::Array::create(global_object, 0);
-    for (auto& element : retval)
+    for (auto& element : @value@)
         new_array->indexed_properties().append(wrap(global_object, element));
 
-    return new_array;
+    @result_expression@ new_array;
 )~~~");
-    } else if (return_type.name == "boolean" || return_type.name == "double") {
+    } else if (type.name == "boolean" || type.name == "double") {
         scoped_generator.append(R"~~~(
-    return JS::Value(retval);
+    @result_expression@ JS::Value(@value@);
 )~~~");
-    } else if (return_type.name == "short" || return_type.name == "unsigned short" || return_type.name == "long" || return_type.name == "unsigned long") {
+    } else if (type.name == "short" || type.name == "unsigned short" || type.name == "long" || type.name == "unsigned long") {
         scoped_generator.append(R"~~~(
-    return JS::Value((i32)retval);
+    @result_expression@ JS::Value((i32)@value@);
 )~~~");
-    } else if (return_type.name == "Uint8ClampedArray" || return_type.name == "any") {
+    } else if (type.name == "Uint8ClampedArray" || type.name == "any") {
         scoped_generator.append(R"~~~(
-    return retval;
+    @result_expression@ @value@;
 )~~~");
-    } else if (return_type.name == "EventHandler") {
+    } else if (type.name == "EventHandler") {
         scoped_generator.append(R"~~~(
-    if (retval.callback.is_null())
-        return JS::js_null();
-
-    return retval.callback.cell();
+    if (@value@.callback.is_null())
+        @result_expression@ JS::js_null();
+    else
+        @result_expression@ @value@.callback.cell();
 )~~~");
-    } else if (return_type.name == "Location") {
+    } else if (type.name == "Location") {
         // Location is special cased as it is already a JS::Object.
         scoped_generator.append(R"~~~(
-    return JS::Value(retval);
+    @result_expression@ JS::Value(@value@);
 )~~~");
     } else {
         scoped_generator.append(R"~~~(
-    return wrap(global_object, const_cast<@return_type@&>(*retval));
+    @result_expression@ wrap(global_object, const_cast<@type@&>(*@value@));
+)~~~");
+    }
+
+    if (type.nullable) {
+        scoped_generator.append(R"~~~(
+    }
 )~~~");
     }
 }
@@ -1045,6 +1055,11 @@ enum class StaticFunction {
     No,
     Yes,
 };
+
+static void generate_return_statement(SourceGenerator& generator, IDL::Type const& return_type)
+{
+    return generate_wrap_statement(generator, "retval", return_type, "return"sv);
+}
 
 static void generate_function(SourceGenerator& generator, IDL::Function const& function, StaticFunction is_static_function, String const& class_name, String const& interface_fully_qualified_name)
 {
