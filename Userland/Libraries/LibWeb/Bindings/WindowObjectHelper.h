@@ -201,6 +201,8 @@
 #include <LibWeb/Bindings/MouseEventPrototype.h>
 #include <LibWeb/Bindings/NodeConstructor.h>
 #include <LibWeb/Bindings/NodePrototype.h>
+#include <LibWeb/Bindings/PageTransitionEventConstructor.h>
+#include <LibWeb/Bindings/PageTransitionEventPrototype.h>
 #include <LibWeb/Bindings/PerformanceConstructor.h>
 #include <LibWeb/Bindings/PerformancePrototype.h>
 #include <LibWeb/Bindings/PerformanceTimingConstructor.h>
@@ -353,6 +355,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(MessageEvent)              \
     ADD_WINDOW_OBJECT_INTERFACE(MouseEvent)                \
     ADD_WINDOW_OBJECT_INTERFACE(Node)                      \
+    ADD_WINDOW_OBJECT_INTERFACE(PageTransitionEvent)       \
     ADD_WINDOW_OBJECT_INTERFACE(Performance)               \
     ADD_WINDOW_OBJECT_INTERFACE(PerformanceTiming)         \
     ADD_WINDOW_OBJECT_INTERFACE(ProcessingInstruction)     \

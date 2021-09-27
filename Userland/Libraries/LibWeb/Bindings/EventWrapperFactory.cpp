@@ -9,20 +9,27 @@
 #include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/MessageEventWrapper.h>
 #include <LibWeb/Bindings/MouseEventWrapper.h>
+#include <LibWeb/Bindings/PageTransitionEventWrapper.h>
+#include <LibWeb/Bindings/ProgressEventWrapper.h>
+#include <LibWeb/Bindings/SubmitEventWrapper.h>
 
-namespace Web {
-namespace Bindings {
+namespace Web::Bindings {
 
 EventWrapper* wrap(JS::GlobalObject& global_object, DOM::Event& event)
 {
-    if (is<HTML::MessageEvent>(event))
-        return static_cast<MessageEventWrapper*>(wrap_impl(global_object, static_cast<HTML::MessageEvent&>(event)));
     if (is<HTML::CloseEvent>(event))
         return static_cast<CloseEventWrapper*>(wrap_impl(global_object, static_cast<HTML::CloseEvent&>(event)));
+    if (is<HTML::MessageEvent>(event))
+        return static_cast<MessageEventWrapper*>(wrap_impl(global_object, static_cast<HTML::MessageEvent&>(event)));
+    if (is<HTML::PageTransitionEvent>(event))
+        return static_cast<PageTransitionEventWrapper*>(wrap_impl(global_object, static_cast<HTML::PageTransitionEvent&>(event)));
+    if (is<HTML::SubmitEvent>(event))
+        return static_cast<SubmitEventWrapper*>(wrap_impl(global_object, static_cast<HTML::SubmitEvent&>(event)));
     if (is<UIEvents::MouseEvent>(event))
         return static_cast<MouseEventWrapper*>(wrap_impl(global_object, static_cast<UIEvents::MouseEvent&>(event)));
+    if (is<XHR::ProgressEvent>(event))
+        return static_cast<ProgressEventWrapper*>(wrap_impl(global_object, static_cast<XHR::ProgressEvent&>(event)));
     return static_cast<EventWrapper*>(wrap_impl(global_object, event));
 }
 
-}
 }
