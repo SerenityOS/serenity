@@ -21,23 +21,28 @@
 
 #define VBE_DISPI_ID5 0xB0C5
 
-#define VBE_DISPI_INDEX_ID 0x0
-#define VBE_DISPI_INDEX_XRES 0x1
-#define VBE_DISPI_INDEX_YRES 0x2
-#define VBE_DISPI_INDEX_BPP 0x3
-#define VBE_DISPI_INDEX_ENABLE 0x4
-#define VBE_DISPI_INDEX_BANK 0x5
-#define VBE_DISPI_INDEX_VIRT_WIDTH 0x6
-#define VBE_DISPI_INDEX_VIRT_HEIGHT 0x7
-#define VBE_DISPI_INDEX_X_OFFSET 0x8
-#define VBE_DISPI_INDEX_Y_OFFSET 0x9
-#define VBE_DISPI_DISABLED 0x00
-#define VBE_DISPI_ENABLED 0x01
-#define VBE_DISPI_LFB_ENABLED 0x40
 #define BOCHS_DISPLAY_LITTLE_ENDIAN 0x1e1e1e1e
 #define BOCHS_DISPLAY_BIG_ENDIAN 0xbebebebe
 
 namespace Kernel {
+
+enum class BochsFramebufferSettings {
+    Enabled = 0x1,
+    LinearFramebuffer = 0x40,
+};
+
+enum class BochsDISPIRegisters {
+    ID = 0x0,
+    XRES = 0x1,
+    YRES = 0x2,
+    BPP = 0x3,
+    ENABLE = 0x4,
+    BANK = 0x5,
+    VIRT_WIDTH = 0x6,
+    VIRT_HEIGHT = 0x7,
+    X_OFFSET = 0x8,
+    Y_OFFSET = 0x9,
+};
 
 struct [[gnu::packed]] DISPIInterface {
     u16 index_id;
@@ -170,20 +175,20 @@ void BochsGraphicsAdapter::set_resolution_registers_via_io(size_t width, size_t 
 {
     dbgln_if(BXVGA_DEBUG, "BochsGraphicsAdapter resolution registers set to - {}x{}", width, height);
 
-    set_register_with_io(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_DISABLED);
-    set_register_with_io(VBE_DISPI_INDEX_XRES, (u16)width);
-    set_register_with_io(VBE_DISPI_INDEX_YRES, (u16)height);
-    set_register_with_io(VBE_DISPI_INDEX_VIRT_WIDTH, (u16)width);
-    set_register_with_io(VBE_DISPI_INDEX_VIRT_HEIGHT, (u16)height * 2);
-    set_register_with_io(VBE_DISPI_INDEX_BPP, 32);
-    set_register_with_io(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_ENABLED | VBE_DISPI_LFB_ENABLED);
-    set_register_with_io(VBE_DISPI_INDEX_BANK, 0);
+    set_register_with_io(to_underlying(BochsDISPIRegisters::ENABLE), 0);
+    set_register_with_io(to_underlying(BochsDISPIRegisters::XRES), (u16)width);
+    set_register_with_io(to_underlying(BochsDISPIRegisters::YRES), (u16)height);
+    set_register_with_io(to_underlying(BochsDISPIRegisters::VIRT_WIDTH), (u16)width);
+    set_register_with_io(to_underlying(BochsDISPIRegisters::VIRT_HEIGHT), (u16)height * 2);
+    set_register_with_io(to_underlying(BochsDISPIRegisters::BPP), 32);
+    set_register_with_io(to_underlying(BochsDISPIRegisters::ENABLE), to_underlying(BochsFramebufferSettings::Enabled) | to_underlying(BochsFramebufferSettings::LinearFramebuffer));
+    set_register_with_io(to_underlying(BochsDISPIRegisters::BANK), 0);
 }
 
 void BochsGraphicsAdapter::set_resolution_registers(size_t width, size_t height)
 {
     dbgln_if(BXVGA_DEBUG, "BochsGraphicsAdapter resolution registers set to - {}x{}", width, height);
-    m_registers->bochs_regs.enable = VBE_DISPI_DISABLED;
+    m_registers->bochs_regs.enable = 0;
     full_memory_barrier();
     m_registers->bochs_regs.xres = width;
     m_registers->bochs_regs.yres = height;
@@ -191,7 +196,7 @@ void BochsGraphicsAdapter::set_resolution_registers(size_t width, size_t height)
     m_registers->bochs_regs.virt_height = height * 2;
     m_registers->bochs_regs.bpp = 32;
     full_memory_barrier();
-    m_registers->bochs_regs.enable = VBE_DISPI_ENABLED | VBE_DISPI_LFB_ENABLED;
+    m_registers->bochs_regs.enable = to_underlying(BochsFramebufferSettings::Enabled) | to_underlying(BochsFramebufferSettings::LinearFramebuffer);
     full_memory_barrier();
     m_registers->bochs_regs.bank = 0;
     if (index_id().value() == VBE_DISPI_ID5) {
@@ -227,7 +232,7 @@ bool BochsGraphicsAdapter::try_to_set_resolution(size_t output_port_index, size_
 
 bool BochsGraphicsAdapter::validate_setup_resolution_with_io(size_t width, size_t height)
 {
-    if ((u16)width != get_register_with_io(VBE_DISPI_INDEX_XRES) || (u16)height != get_register_with_io(VBE_DISPI_INDEX_YRES)) {
+    if ((u16)width != get_register_with_io(to_underlying(BochsDISPIRegisters::XRES)) || (u16)height != get_register_with_io(to_underlying(BochsDISPIRegisters::YRES))) {
         return false;
     }
     return true;
