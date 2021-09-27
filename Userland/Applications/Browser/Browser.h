@@ -12,5 +12,6 @@ namespace Browser {
 
 extern String g_home_url;
 extern String g_search_engine;
+extern Vector<String> g_content_filters;
 
 }

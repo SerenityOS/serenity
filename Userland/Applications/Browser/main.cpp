@@ -19,9 +19,6 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/TabWidget.h>
-#include <LibWeb/HTML/WebSocket.h>
-#include <LibWeb/Loader/ContentFilter.h>
-#include <LibWeb/Loader/ResourceLoader.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -29,6 +26,7 @@ namespace Browser {
 
 String g_search_engine;
 String g_home_url;
+Vector<String> g_content_filters;
 
 }
 
@@ -107,7 +105,7 @@ int main(int argc, char** argv)
             auto line = ad_filter_list.read_line();
             if (line.is_empty())
                 continue;
-            Web::ContentFilter::the().add_pattern(line);
+            Browser::g_content_filters.append(move(line));
         }
     }
 
