@@ -83,11 +83,15 @@ private:
     NonnullRefPtr<Core::Timer> m_blink_timer;
     bool m_cursor_blink_active { false };
 
+    static constexpr int m_address_bar_width = 90;
+    static constexpr int m_padding = 5;
+
     void scroll_position_into_view(size_t position);
 
     size_t total_rows() const { return ceil_div(m_content_length, m_bytes_per_row); }
     size_t line_height() const { return font().glyph_height() + m_line_spacing; }
     size_t character_width() const { return font().glyph_width('W'); }
+    size_t cell_width() const { return character_width() * 3; }
     size_t offset_margin_width() const { return 80; }
 
     void hex_mode_keydown_event(GUI::KeyEvent&);
