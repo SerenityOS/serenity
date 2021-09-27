@@ -7,17 +7,16 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <AK/Vector.h>
 #include <LibMarkdown/Block.h>
+#include <LibMarkdown/ContainerBlock.h>
 #include <LibMarkdown/LineIterator.h>
-#include <LibMarkdown/Text.h>
 
 namespace Markdown {
 
 class List final : public Block {
 public:
-    List(Vector<Text>&& text, bool is_ordered)
-        : m_items(move(text))
+    List(Vector<OwnPtr<ContainerBlock>> items, bool is_ordered)
+        : m_items(move(items))
         , m_is_ordered(is_ordered)
     {
     }
@@ -29,8 +28,7 @@ public:
     static OwnPtr<List> parse(LineIterator& lines);
 
 private:
-    // TODO: List items should be considered blocks of their own kind.
-    Vector<Text> m_items;
+    Vector<OwnPtr<ContainerBlock>> m_items;
     bool m_is_ordered { false };
 };
 
