@@ -4,19 +4,13 @@ set(SOURCES
 )
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     set(SOURCES
-        # This has to be first, so that the entry point is at the start of the image.
-        # Needed because:
-        # - execution starts at the start of the image
-        # - the stack pointer currently starts before the start symbol, so if the start symbol isn't the first symbol, the stack will clobber arbitrary code
-        # FIXME: Use an aarch64-specific linker script instead.
-        Arch/aarch64/boot.S
-
         ${SOURCES}
         Arch/aarch64/GPIO.cpp
         Arch/aarch64/Mailbox.cpp
         Arch/aarch64/MainIdRegister.cpp
         Arch/aarch64/MMIO.cpp
         Arch/aarch64/UART.cpp
+        Arch/aarch64/boot.S
         Arch/aarch64/init.cpp
     )
 else()
