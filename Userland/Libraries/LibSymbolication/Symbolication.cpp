@@ -4,10 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <AK/Checked.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
 #include <LibCore/File.h>
 #include <LibDebug/DebugInfo.h>
@@ -61,24 +63,41 @@ Optional<FlatPtr> kernel_base()
 
 Optional<Symbol> symbolicate(String const& path, FlatPtr address)
 {
-    if (!s_cache.contains(path)) {
-        auto mapped_file = MappedFile::map(path);
-        if (mapped_file.is_error()) {
-            dbgln("Failed to map {}: {}", path, mapped_file.error().string());
+    String full_path = path;
+    if (!path.starts_with('/')) {
+        Array<StringView, 2> search_paths { "/usr/lib"sv, "/usr/local/lib"sv };
+        bool found = false;
+        for (auto& search_path : search_paths) {
+            full_path = LexicalPath::join(search_path, path).string();
+            if (Core::File::exists(full_path)) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            dbgln("Failed to find candidate for {}", path);
             s_cache.set(path, {});
+            return {};
+        }
+    }
+    if (!s_cache.contains(full_path)) {
+        auto mapped_file = MappedFile::map(full_path);
+        if (mapped_file.is_error()) {
+            dbgln("Failed to map {}: {}", full_path, mapped_file.error().string());
+            s_cache.set(full_path, {});
             return {};
         }
         auto elf = make<ELF::Image>(mapped_file.value()->bytes());
         if (!elf->is_valid()) {
-            dbgln("ELF not valid: {}", path);
-            s_cache.set(path, {});
+            dbgln("ELF not valid: {}", full_path);
+            s_cache.set(full_path, {});
             return {};
         }
         auto cached_elf = make<CachedELF>(mapped_file.release_value(), make<Debug::DebugInfo>(*elf), move(elf));
-        s_cache.set(path, move(cached_elf));
+        s_cache.set(full_path, move(cached_elf));
     }
 
-    auto it = s_cache.find(path);
+    auto it = s_cache.find(full_path);
     VERIFY(it != s_cache.end());
     auto& cached_elf = it->value;
 
@@ -172,8 +191,6 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
             } else if (name.ends_with(": .text") || name.ends_with(": .rodata")) {
                 auto parts = name.split_view(':');
                 path = parts[0];
-                if (!path.starts_with('/'))
-                    path = String::formatted("/usr/lib/{}", path);
             } else {
                 continue;
             }
