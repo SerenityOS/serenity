@@ -36,6 +36,13 @@ void HTMLLinkElement::inserted()
         if (auto sheet = m_css_loader.style_sheet())
             document().style_sheets().add_sheet(sheet.release_nonnull());
     }
+
+    if (m_relationship & Relationship::Preload) {
+        // FIXME: Respect the "as" attribute.
+        LoadRequest request;
+        request.set_url(attribute(HTML::AttributeNames::href));
+        m_preload_resource = ResourceLoader::the().load_resource(Resource::Type::Generic, request);
+    }
 }
 
 void HTMLLinkElement::parse_attribute(const FlyString& name, const String& value)
@@ -48,6 +55,8 @@ void HTMLLinkElement::parse_attribute(const FlyString& name, const String& value
                 m_relationship |= Relationship::Stylesheet;
             else if (part == "alternate")
                 m_relationship |= Relationship::Alternate;
+            else if (part == "preload")
+                m_relationship |= Relationship::Preload;
         }
     }
 }
