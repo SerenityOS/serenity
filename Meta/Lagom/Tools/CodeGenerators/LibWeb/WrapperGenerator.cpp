@@ -1164,6 +1164,12 @@ public:
 )~~~");
     }
 
+    if (interface.extended_attributes.contains("CustomVisit")) {
+        generator.append(R"~~~(
+    virtual void visit_edges(JS::Cell::Visitor&) override;
+)~~~");
+    }
+
     if (interface.is_legacy_platform_object()) {
         generator.append(R"~~~(
     virtual Optional<JS::PropertyDescriptor> internal_get_own_property(JS::PropertyName const&) const override;
@@ -1322,6 +1328,16 @@ void @wrapper_class@::initialize(JS::GlobalObject& global_object)
 @wrapper_class@* wrap(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
 {
     return static_cast<@wrapper_class@*>(wrap_impl(global_object, impl));
+}
+)~~~");
+    }
+
+    if (interface.extended_attributes.contains("CustomVisit")) {
+        generator.append(R"~~~(
+void @wrapper_class@::visit_edges(JS::Cell::Visitor& visitor)
+{
+    @wrapper_base_class@::visit_edges(visitor);
+    impl().visit_edges(visitor);
 }
 )~~~");
     }
