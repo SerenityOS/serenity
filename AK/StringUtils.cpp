@@ -29,7 +29,7 @@ bool matches(const StringView& str, const StringView& mask, CaseSensitivity case
     if (str.is_null() || mask.is_null())
         return str.is_null() && mask.is_null();
 
-    if (mask == "*") {
+    if (mask == "*"sv) {
         record_span(0, str.length());
         return true;
     }
@@ -40,24 +40,15 @@ bool matches(const StringView& str, const StringView& mask, CaseSensitivity case
     const char* mask_ptr = mask.characters_without_null_termination();
     const char* mask_end = mask_ptr + mask.length();
 
-    auto matches_one = [](char ch, char p, CaseSensitivity case_sensitivity) {
-        if (p == '?')
-            return true;
-        if (ch == 0)
-            return false;
-        if (case_sensitivity == CaseSensitivity::CaseSensitive)
-            return p == ch;
-        return to_ascii_lowercase(p) == to_ascii_lowercase(ch);
-    };
     while (string_ptr < string_end && mask_ptr < mask_end) {
         auto string_start_ptr = string_ptr;
         switch (*mask_ptr) {
         case '*':
-            if (mask_ptr[1] == 0) {
+            if (mask_ptr == mask_end - 1) {
                 record_span(string_ptr - string_start, string_end - string_ptr);
                 return true;
             }
-            while (string_ptr < string_end && !matches(string_ptr, mask_ptr + 1, case_sensitivity))
+            while (string_ptr < string_end && !matches({ string_ptr, static_cast<size_t>(string_end - string_ptr) }, { mask_ptr + 1, static_cast<size_t>(mask_end - mask_ptr - 1) }, case_sensitivity))
                 ++string_ptr;
             record_span(string_start_ptr - string_start, string_ptr - string_start_ptr);
             --string_ptr;
@@ -66,7 +57,9 @@ bool matches(const StringView& str, const StringView& mask, CaseSensitivity case
             record_span(string_ptr - string_start, 1);
             break;
         default:
-            if (!matches_one(*string_ptr, *mask_ptr, case_sensitivity))
+            auto p = *mask_ptr;
+            auto ch = *string_ptr;
+            if (case_sensitivity == CaseSensitivity::CaseSensitive ? p != ch : to_ascii_lowercase(p) != to_ascii_lowercase(ch))
                 return false;
             break;
         }
