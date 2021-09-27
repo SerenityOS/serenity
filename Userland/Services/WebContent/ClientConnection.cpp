@@ -19,6 +19,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/BrowsingContext.h>
 #include <WebContent/ClientConnection.h>
@@ -336,6 +337,12 @@ Messages::WebContentServer::DumpLayoutTreeResponse ClientConnection::dump_layout
     StringBuilder builder;
     Web::dump_tree(builder, *layout_root);
     return builder.to_string();
+}
+
+void ClientConnection::set_content_filters(Vector<String> const& filters)
+{
+    for (auto& filter : filters)
+        Web::ContentFilter::the().add_pattern(filter);
 }
 
 }

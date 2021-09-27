@@ -38,4 +38,7 @@ endpoint WebContentServer
 
     get_selected_text() => (String selection)
     select_all() =|
+
+    set_content_filters(Vector<String> filters) =|
+
 }

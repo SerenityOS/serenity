@@ -472,4 +472,9 @@ String OutOfProcessWebView::dump_layout_tree()
     return client().dump_layout_tree();
 }
 
+void OutOfProcessWebView::set_content_filters(Vector<String> filters)
+{
+    client().async_set_content_filters(filters);
+}
+
 }
