@@ -190,8 +190,8 @@ bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
 void HexEditor::set_bytes_per_row(size_t bytes_per_row)
 {
     m_bytes_per_row = bytes_per_row;
-    auto newWidth = offset_margin_width() + (m_bytes_per_row * (character_width() * 3)) + 10 + (m_bytes_per_row * character_width()) + 20;
-    auto newHeight = total_rows() * line_height() + 10;
+    auto newWidth = offset_margin_width() + (m_bytes_per_row * cell_width()) + 2 * m_padding + (m_bytes_per_row * character_width()) + 4 * m_padding;
+    auto newHeight = total_rows() * line_height() + 2 * m_padding;
     set_content_size({ static_cast<int>(newWidth), static_cast<int>(newHeight) });
     update();
 }
@@ -201,8 +201,8 @@ void HexEditor::set_content_length(size_t length)
     if (length == m_content_length)
         return;
     m_content_length = length;
-    auto newWidth = offset_margin_width() + (m_bytes_per_row * (character_width() * 3)) + 10 + (m_bytes_per_row * character_width()) + 20;
-    auto newHeight = total_rows() * line_height() + 10;
+    auto newWidth = offset_margin_width() + (m_bytes_per_row * cell_width()) + 2 * m_padding + (m_bytes_per_row * character_width()) + 4 * m_padding;
+    auto newHeight = total_rows() * line_height() + 2 * m_padding;
     set_content_size({ static_cast<int>(newWidth), static_cast<int>(newHeight) });
 }
 
@@ -215,21 +215,21 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
     auto absolute_x = horizontal_scrollbar().value() + event.x();
     auto absolute_y = vertical_scrollbar().value() + event.y();
 
-    auto hex_start_x = frame_thickness() + 90;
-    auto hex_start_y = frame_thickness() + 5;
-    auto hex_end_x = static_cast<int>(hex_start_x + (bytes_per_row() * (character_width() * 3)));
-    auto hex_end_y = static_cast<int>(hex_start_y + 5 + (total_rows() * line_height()));
+    auto hex_start_x = frame_thickness() + m_address_bar_width;
+    auto hex_start_y = frame_thickness() + m_padding;
+    auto hex_end_x = static_cast<int>(hex_start_x + bytes_per_row() * cell_width());
+    auto hex_end_y = static_cast<int>(hex_start_y + m_padding + total_rows() * line_height());
 
-    auto text_start_x = static_cast<int>(frame_thickness() + 100 + (bytes_per_row() * (character_width() * 3)));
-    auto text_start_y = frame_thickness() + 5;
-    auto text_end_x = static_cast<int>(text_start_x + (bytes_per_row() * character_width()));
-    auto text_end_y = static_cast<int>(text_start_y + 5 + (total_rows() * line_height()));
+    auto text_start_x = static_cast<int>(frame_thickness() + m_address_bar_width + 2 * m_padding + bytes_per_row() * cell_width());
+    auto text_start_y = frame_thickness() + m_padding;
+    auto text_end_x = static_cast<int>(text_start_x + bytes_per_row() * character_width());
+    auto text_end_y = static_cast<int>(text_start_y + m_padding + total_rows() * line_height());
 
     if (absolute_x >= hex_start_x && absolute_x <= hex_end_x && absolute_y >= hex_start_y && absolute_y <= hex_end_y) {
         if (absolute_x < hex_start_x || absolute_y < hex_start_y)
             return;
 
-        auto byte_x = (absolute_x - hex_start_x) / (character_width() * 3);
+        auto byte_x = (absolute_x - hex_start_x) / cell_width();
         auto byte_y = (absolute_y - hex_start_y) / line_height();
         auto offset = (byte_y * m_bytes_per_row) + byte_x;
 
@@ -277,15 +277,15 @@ void HexEditor::mousemove_event(GUI::MouseEvent& event)
     auto absolute_x = horizontal_scrollbar().value() + event.x();
     auto absolute_y = vertical_scrollbar().value() + event.y();
 
-    auto hex_start_x = frame_thickness() + 90;
-    auto hex_start_y = frame_thickness() + 5;
-    auto hex_end_x = static_cast<int>(hex_start_x + (bytes_per_row() * (character_width() * 3)));
-    auto hex_end_y = static_cast<int>(hex_start_y + 5 + (total_rows() * line_height()));
+    auto hex_start_x = frame_thickness() + m_address_bar_width;
+    auto hex_start_y = frame_thickness() + m_padding;
+    auto hex_end_x = static_cast<int>(hex_start_x + bytes_per_row() * cell_width());
+    auto hex_end_y = static_cast<int>(hex_start_y + m_padding + total_rows() * line_height());
 
-    auto text_start_x = static_cast<int>(frame_thickness() + 100 + (bytes_per_row() * (character_width() * 3)));
-    auto text_start_y = frame_thickness() + 5;
-    auto text_end_x = static_cast<int>(text_start_x + (bytes_per_row() * character_width()));
-    auto text_end_y = static_cast<int>(text_start_y + 5 + (total_rows() * line_height()));
+    auto text_start_x = static_cast<int>(frame_thickness() + m_address_bar_width + 2 * m_padding + bytes_per_row() * cell_width());
+    auto text_start_y = frame_thickness() + m_padding;
+    auto text_end_x = static_cast<int>(text_start_x + bytes_per_row() * character_width());
+    auto text_end_y = static_cast<int>(text_start_y + m_padding + total_rows() * line_height());
 
     if ((absolute_x >= hex_start_x && absolute_x <= hex_end_x
             && absolute_y >= hex_start_y && absolute_y <= hex_end_y)
@@ -301,7 +301,7 @@ void HexEditor::mousemove_event(GUI::MouseEvent& event)
             if (absolute_x < hex_start_x || absolute_y < hex_start_y)
                 return;
 
-            auto byte_x = (absolute_x - hex_start_x) / (character_width() * 3);
+            auto byte_x = (absolute_x - hex_start_x) / cell_width();
             auto byte_y = (absolute_y - hex_start_y) / line_height();
             auto offset = (byte_y * m_bytes_per_row) + byte_x;
 
@@ -356,9 +356,9 @@ void HexEditor::scroll_position_into_view(size_t position)
     size_t y = position / bytes_per_row();
     size_t x = position % bytes_per_row();
     Gfx::IntRect rect {
-        static_cast<int>(frame_thickness() + offset_margin_width() + (x * (character_width() * 3)) + 10),
-        static_cast<int>(frame_thickness() + 5 + (y * line_height())),
-        static_cast<int>((character_width() * 3)),
+        static_cast<int>(frame_thickness() + offset_margin_width() + x * cell_width() + 2 * m_padding),
+        static_cast<int>(frame_thickness() + m_padding + y * line_height()),
+        static_cast<int>(cell_width()),
         static_cast<int>(line_height() - m_line_spacing)
     };
     scroll_into_view(rect, true, true);
@@ -526,13 +526,13 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
     Gfx::IntRect offset_clip_rect {
         0,
         vertical_scrollbar().value(),
-        85,
+        m_address_bar_width - m_padding,
         height() - height_occupied_by_horizontal_scrollbar() //(total_rows() * line_height()) + 5
     };
     painter.fill_rect(offset_clip_rect, palette().ruler());
     painter.draw_line(offset_clip_rect.top_right(), offset_clip_rect.bottom_right(), palette().ruler_border());
 
-    auto margin_and_hex_width = static_cast<int>(offset_margin_width() + (m_bytes_per_row * (character_width() * 3)) + 15);
+    auto margin_and_hex_width = static_cast<int>(offset_margin_width() + m_bytes_per_row * cell_width() + 3 * m_padding);
     painter.draw_line({ margin_and_hex_width, 0 },
         { margin_and_hex_width, vertical_scrollbar().value() + (height() - height_occupied_by_horizontal_scrollbar()) },
         palette().ruler_border());
@@ -544,8 +544,8 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
     // paint offsets
     for (size_t i = min_row; i < max_row; i++) {
         Gfx::IntRect side_offset_rect {
-            frame_thickness() + 5,
-            static_cast<int>(frame_thickness() + 5 + (i * line_height())),
+            frame_thickness() + m_padding,
+            static_cast<int>(frame_thickness() + m_padding + i * line_height()),
             width() - width_occupied_by_vertical_scrollbar(),
             height() - height_occupied_by_horizontal_scrollbar()
         };
@@ -573,9 +573,9 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             const bool highlight_flag = selection_inbetween_start_end || selection_inbetween_end_start;
 
             Gfx::IntRect hex_display_rect {
-                frame_thickness() + offset_margin_width() + (static_cast<int>(j) * (character_width() * 3)) + 10,
-                frame_thickness() + 5 + (static_cast<int>(i) * line_height()),
-                (character_width() * 3),
+                frame_thickness() + offset_margin_width() + static_cast<int>(j) * cell_width() + 2 * m_padding,
+                frame_thickness() + m_padding + static_cast<int>(i) * line_height(),
+                cell_width(),
                 line_height() - m_line_spacing
             };
 
@@ -607,8 +607,8 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             }
 
             Gfx::IntRect text_display_rect {
-                static_cast<int>(frame_thickness() + offset_margin_width() + (bytes_per_row() * (character_width() * 3)) + (j * character_width()) + 20),
-                static_cast<int>(frame_thickness() + 5 + (i * line_height())),
+                static_cast<int>(frame_thickness() + offset_margin_width() + bytes_per_row() * cell_width() + j * character_width() + 4 * m_padding),
+                static_cast<int>(frame_thickness() + m_padding + i * line_height()),
                 static_cast<int>(character_width()),
                 static_cast<int>(line_height() - m_line_spacing)
             };
