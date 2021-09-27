@@ -11,7 +11,7 @@
 #include <AK/MemoryStream.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibAudio/Frame.h>
+#include <LibAudio/Sample.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <string.h>
 
@@ -68,7 +68,7 @@ class Buffer : public RefCounted<Buffer> {
 public:
     static RefPtr<Buffer> from_pcm_data(ReadonlyBytes data, int num_channels, PcmSampleFormat sample_format);
     static RefPtr<Buffer> from_pcm_stream(InputMemoryStream& stream, int num_channels, PcmSampleFormat sample_format, int num_samples);
-    static NonnullRefPtr<Buffer> create_with_samples(Vector<Frame>&& samples)
+    static NonnullRefPtr<Buffer> create_with_samples(Vector<Sample>&& samples)
     {
         return adopt_ref(*new Buffer(move(samples)));
     }
@@ -77,20 +77,20 @@ public:
         return adopt_ref(*new Buffer(move(buffer), buffer_id, sample_count));
     }
 
-    const Frame* samples() const { return (const Frame*)data(); }
+    const Sample* samples() const { return (const Sample*)data(); }
     int sample_count() const { return m_sample_count; }
     const void* data() const { return m_buffer.data<void>(); }
-    int size_in_bytes() const { return m_sample_count * (int)sizeof(Frame); }
+    int size_in_bytes() const { return m_sample_count * (int)sizeof(Sample); }
     int id() const { return m_id; }
     const Core::AnonymousBuffer& anonymous_buffer() const { return m_buffer; }
 
 private:
-    explicit Buffer(const Vector<Frame> samples)
-        : m_buffer(Core::AnonymousBuffer::create_with_size(samples.size() * sizeof(Frame)))
+    explicit Buffer(const Vector<Sample> samples)
+        : m_buffer(Core::AnonymousBuffer::create_with_size(samples.size() * sizeof(Sample)))
         , m_id(allocate_id())
         , m_sample_count(samples.size())
     {
-        memcpy(m_buffer.data<void>(), samples.data(), samples.size() * sizeof(Frame));
+        memcpy(m_buffer.data<void>(), samples.data(), samples.size() * sizeof(Sample));
     }
 
     explicit Buffer(Core::AnonymousBuffer buffer, i32 buffer_id, int sample_count)

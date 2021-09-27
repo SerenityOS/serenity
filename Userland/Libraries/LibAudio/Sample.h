@@ -12,7 +12,7 @@
 
 namespace Audio {
 using namespace AK::Exponentials;
-// Constants for logarithmic volume. See Frame::linear_to_log
+// Constants for logarithmic volume. See Sample::linear_to_log
 // Corresponds to 60dB
 constexpr double DYNAMIC_RANGE = 1000;
 constexpr double DYNAMIC_RANGE_DB = 60;
@@ -21,18 +21,18 @@ double const VOLUME_B = log(DYNAMIC_RANGE);
 
 // A single sample in an audio buffer.
 // Values are floating point, and should range from -1.0 to +1.0
-struct Frame {
-    constexpr Frame() = default;
+struct Sample {
+    constexpr Sample() = default;
 
     // For mono
-    constexpr Frame(double left)
+    constexpr Sample(double left)
         : left(left)
         , right(left)
     {
     }
 
     // For stereo
-    constexpr Frame(double left, double right)
+    constexpr Sample(double left, double right)
         : left(left)
         , right(right)
     {
@@ -88,7 +88,7 @@ struct Frame {
         return val * DYNAMIC_RANGE_DB - DYNAMIC_RANGE_DB;
     }
 
-    ALWAYS_INLINE Frame& log_multiply(double const change)
+    ALWAYS_INLINE Sample& log_multiply(double const change)
     {
         double factor = linear_to_log(change);
         left *= factor;
@@ -96,53 +96,53 @@ struct Frame {
         return *this;
     }
 
-    ALWAYS_INLINE Frame log_multiplied(double const volume_change) const
+    ALWAYS_INLINE Sample log_multiplied(double const volume_change) const
     {
-        Frame new_frame { left, right };
+        Sample new_frame { left, right };
         new_frame.log_multiply(volume_change);
         return new_frame;
     }
 
-    ALWAYS_INLINE Frame& log_pan(double const pan)
+    ALWAYS_INLINE Sample& log_pan(double const pan)
     {
         left *= linear_to_log(min(pan * -1 + 1.0, 1.0));
         right *= linear_to_log(min(pan + 1.0, 1.0));
         return *this;
     }
 
-    ALWAYS_INLINE Frame log_pan(double const pan) const
+    ALWAYS_INLINE Sample log_pan(double const pan) const
     {
-        Frame new_frame { left, right };
+        Sample new_frame { left, right };
         new_frame.log_pan(pan);
         return new_frame;
     }
 
-    constexpr Frame& operator*=(double const mult)
+    constexpr Sample& operator*=(double const mult)
     {
         left *= mult;
         right *= mult;
         return *this;
     }
 
-    constexpr Frame operator*(double const mult)
+    constexpr Sample operator*(double const mult)
     {
         return { left * mult, right * mult };
     }
 
-    constexpr Frame& operator+=(Frame const& other)
+    constexpr Sample& operator+=(Sample const& other)
     {
         left += other.left;
         right += other.right;
         return *this;
     }
-    constexpr Frame& operator+=(double other)
+    constexpr Sample& operator+=(double other)
     {
         left += other;
         right += other;
         return *this;
     }
 
-    constexpr Frame operator+(Frame const& other)
+    constexpr Sample operator+(Sample const& other)
     {
         return { left + other.left, right + other.right };
     }
