@@ -42,6 +42,10 @@ void HTMLLinkElement::inserted()
         LoadRequest request;
         request.set_url(document().parse_url(attribute(HTML::AttributeNames::href)));
         m_preload_resource = ResourceLoader::the().load_resource(Resource::Type::Generic, request);
+    } else if (m_relationship & Relationship::DNSPrefetch) {
+        ResourceLoader::the().prefetch_dns(document().parse_url(attribute(HTML::AttributeNames::href)));
+    } else if (m_relationship & Relationship::Preconnect) {
+        ResourceLoader::the().preconnect(document().parse_url(attribute(HTML::AttributeNames::href)));
     }
 }
 
@@ -51,12 +55,16 @@ void HTMLLinkElement::parse_attribute(const FlyString& name, const String& value
         m_relationship = 0;
         auto parts = value.split_view(' ');
         for (auto& part : parts) {
-            if (part == "stylesheet")
+            if (part == "stylesheet"sv)
                 m_relationship |= Relationship::Stylesheet;
-            else if (part == "alternate")
+            else if (part == "alternate"sv)
                 m_relationship |= Relationship::Alternate;
-            else if (part == "preload")
+            else if (part == "preload"sv)
                 m_relationship |= Relationship::Preload;
+            else if (part == "dns-prefetch"sv)
+                m_relationship |= Relationship::DNSPrefetch;
+            else if (part == "preconnect"sv)
+                m_relationship |= Relationship::Preconnect;
         }
     }
 }

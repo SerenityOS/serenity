@@ -52,6 +52,16 @@ void ResourceLoader::load_sync(LoadRequest& request, Function<void(ReadonlyBytes
     loop.exec();
 }
 
+void ResourceLoader::prefetch_dns(AK::URL const& url)
+{
+    m_protocol_client->ensure_connection(url, RequestServer::CacheLevel::ResolveOnly);
+}
+
+void ResourceLoader::preconnect(AK::URL const& url)
+{
+    m_protocol_client->ensure_connection(url, RequestServer::CacheLevel::CreateConnection);
+}
+
 static HashMap<LoadRequest, NonnullRefPtr<Resource>> s_resource_cache;
 
 RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, LoadRequest& request)
