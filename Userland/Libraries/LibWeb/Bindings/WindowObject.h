@@ -81,6 +81,8 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(parent_getter);
 
+    JS_DECLARE_NATIVE_FUNCTION(device_pixel_ratio_getter);
+
     JS_DECLARE_NATIVE_GETTER(scroll_x_getter);
     JS_DECLARE_NATIVE_GETTER(scroll_y_getter);
     JS_DECLARE_NATIVE_FUNCTION(scroll);
