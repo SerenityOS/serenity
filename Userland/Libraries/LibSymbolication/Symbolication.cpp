@@ -72,7 +72,7 @@ Optional<Symbol> symbolicate(String const& path, FlatPtr address)
         if (!elf->is_valid()) {
             dbgln("ELF not valid: {}", path);
             s_cache.set(path, {});
-            {};
+            return {};
         }
         auto cached_elf = make<CachedELF>(mapped_file.release_value(), make<Debug::DebugInfo>(*elf), move(elf));
         s_cache.set(path, move(cached_elf));
