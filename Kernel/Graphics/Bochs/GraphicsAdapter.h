@@ -25,6 +25,9 @@ class BochsGraphicsAdapter final : public GraphicsDevice
     AK_MAKE_ETERNAL
     friend class GraphicsManagement;
 
+private:
+    TYPEDEF_DISTINCT_ORDERED_ID(u16, IndexID);
+
 public:
     static NonnullRefPtr<BochsGraphicsAdapter> initialize(PCI::Address);
     virtual ~BochsGraphicsAdapter() = default;
@@ -45,6 +48,8 @@ private:
     virtual void disable_consoles() override;
 
     explicit BochsGraphicsAdapter(PCI::Address);
+
+    IndexID index_id() const;
 
     void set_safe_resolution();
     void unblank();

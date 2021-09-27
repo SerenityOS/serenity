@@ -19,6 +19,8 @@
 #define VBE_DISPI_IOPORT_INDEX 0x01CE
 #define VBE_DISPI_IOPORT_DATA 0x01CF
 
+#define VBE_DISPI_ID5 0xB0C5
+
 #define VBE_DISPI_INDEX_ID 0x0
 #define VBE_DISPI_INDEX_XRES 0x1
 #define VBE_DISPI_INDEX_YRES 0x2
@@ -156,6 +158,14 @@ static u16 get_register_with_io(u16 index)
     return IO::in16(VBE_DISPI_IOPORT_DATA);
 }
 
+BochsGraphicsAdapter::IndexID BochsGraphicsAdapter::index_id() const
+{
+    if (m_io_required) {
+        return get_register_with_io(0);
+    }
+    return m_registers->bochs_regs.index_id;
+}
+
 void BochsGraphicsAdapter::set_resolution_registers_via_io(size_t width, size_t height)
 {
     dbgln_if(BXVGA_DEBUG, "BochsGraphicsAdapter resolution registers set to - {}x{}", width, height);
@@ -184,7 +194,9 @@ void BochsGraphicsAdapter::set_resolution_registers(size_t width, size_t height)
     m_registers->bochs_regs.enable = VBE_DISPI_ENABLED | VBE_DISPI_LFB_ENABLED;
     full_memory_barrier();
     m_registers->bochs_regs.bank = 0;
-    set_framebuffer_to_little_endian_format();
+    if (index_id().value() == VBE_DISPI_ID5) {
+        set_framebuffer_to_little_endian_format();
+    }
 }
 
 bool BochsGraphicsAdapter::try_to_set_resolution(size_t output_port_index, size_t width, size_t height)
