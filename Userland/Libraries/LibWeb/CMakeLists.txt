@@ -271,6 +271,7 @@ serenity_lib(LibWeb web)
 target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGUI LibGfx LibTextCodec LibProtocol LibImageDecoderClient LibWasm)
 
 function(libweb_js_wrapper class)
+    cmake_parse_arguments(PARSE_ARGV 1 LIBWEB_WRAPPER "ITERABLE" "" "")
     get_filename_component(basename "${class}" NAME)
     set(BINDINGS_SOURCES
         "Bindings/${basename}Wrapper.h"
@@ -288,6 +289,21 @@ function(libweb_js_wrapper class)
         prototype-header
         prototype-implementation
     )
+    # FIXME: Instead of requiring a manual declaration of iterable wrappers, we should ask WrapperGenerator if it's iterable
+    if(LIBWEB_WRAPPER_ITERABLE)
+        list(APPEND BINDINGS_SOURCES
+            "Bindings/${basename}IteratorWrapper.h"
+            "Bindings/${basename}IteratorWrapper.cpp"
+            "Bindings/${basename}IteratorPrototype.h"
+            "Bindings/${basename}IteratorPrototype.cpp"
+        )
+        list(APPEND BINDINGS_TYPES
+            iterator-header
+            iterator-implementation
+            iterator-prototype-header
+            iterator-prototype-implementation
+        )
+    endif()
     target_sources(LibWeb PRIVATE ${BINDINGS_SOURCES})
     # FIXME: cmake_minimum_required(3.17) for ZIP_LISTS
     list(LENGTH BINDINGS_SOURCES num_bindings)
