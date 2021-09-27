@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2021, Peter Elliott <pelliott@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,8 +18,8 @@ String List::render_to_html() const
     builder.appendff("<{}>\n", tag);
 
     for (auto& item : m_items) {
-        builder.append("<li>");
-        builder.append(item.render_to_html());
+        builder.append("<li>\n");
+        builder.append(item->render_to_html());
         builder.append("</li>\n");
     }
 
@@ -38,7 +39,7 @@ String List::render_for_terminal(size_t) const
             builder.appendff("{}. ", ++i);
         else
             builder.append("* ");
-        builder.append(item.render_for_terminal());
+        builder.append(item->render_for_terminal());
         builder.append("\n");
     }
     builder.append("\n");
@@ -48,26 +49,13 @@ String List::render_for_terminal(size_t) const
 
 OwnPtr<List> List::parse(LineIterator& lines)
 {
-    Vector<Text> items;
-    bool is_ordered = false;
+    Vector<OwnPtr<ContainerBlock>> items;
 
     bool first = true;
-    size_t offset = 0;
-    StringBuilder item_builder;
-    auto flush_item_if_needed = [&] {
-        if (first)
-            return true;
+    bool is_ordered = false;
+    while (!lines.is_end()) {
+        size_t offset = 0;
 
-        auto text = Text::parse(item_builder.string_view());
-        items.append(move(text));
-
-        item_builder.clear();
-        return true;
-    };
-
-    while (true) {
-        if (lines.is_end())
-            break;
         const StringView& line = *lines;
         if (line.is_empty())
             break;
@@ -76,7 +64,7 @@ OwnPtr<List> List::parse(LineIterator& lines)
         if (line.length() > 2) {
             if (line[1] == ' ' && (line[0] == '*' || line[0] == '-')) {
                 appears_unordered = true;
-                offset = 2;
+                offset = 1;
             }
         }
 
@@ -94,39 +82,33 @@ OwnPtr<List> List::parse(LineIterator& lines)
         }
 
         VERIFY(!(appears_unordered && appears_ordered));
-
-        if (appears_unordered || appears_ordered) {
-            if (first)
-                is_ordered = appears_ordered;
-            else if (is_ordered != appears_ordered)
-                return {};
-
-            if (!flush_item_if_needed())
-                return {};
-
-            while (offset + 1 < line.length() && line[offset + 1] == ' ')
-                offset++;
-
-        } else {
+        if (!appears_unordered && !appears_ordered) {
             if (first)
                 return {};
-            for (size_t i = 0; i < offset; i++) {
-                if (line[i] != ' ')
-                    return {};
-            }
+
+            break;
         }
 
+        while (offset < line.length() && line[offset] == ' ')
+            offset++;
+
+        if (first) {
+            is_ordered = appears_ordered;
+        } else if (appears_ordered != is_ordered) {
+            break;
+        }
+
+        size_t saved_indent = lines.indent();
+        lines.set_indent(saved_indent + offset);
+        lines.ignore_next_prefix();
+
+        items.append(ContainerBlock::parse(lines));
+
+        lines.set_indent(saved_indent);
+
         first = false;
-        if (!item_builder.is_empty())
-            item_builder.append(' ');
-        VERIFY(offset <= line.length());
-        item_builder.append(line.substring_view(offset, line.length() - offset));
-        ++lines;
-        offset = 0;
     }
 
-    if (!flush_item_if_needed() || first)
-        return {};
     return make<List>(move(items), is_ordered);
 }
 
