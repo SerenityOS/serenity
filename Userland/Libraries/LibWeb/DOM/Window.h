@@ -87,6 +87,8 @@ public:
 
     void fire_a_page_transition_event(FlyString event_name, bool persisted);
 
+    float device_pixel_ratio() const;
+
 private:
     explicit Window(Document&);
 

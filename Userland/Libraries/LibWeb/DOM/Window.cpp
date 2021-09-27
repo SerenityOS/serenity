@@ -309,4 +309,10 @@ void Window::queue_microtask(JS::FunctionObject& callback)
     });
 }
 
+float Window::device_pixel_ratio() const
+{
+    // FIXME: Return 2.0f if we're in HiDPI mode!
+    return 1.0f;
+}
+
 }

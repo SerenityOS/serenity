@@ -67,6 +67,7 @@ void WindowObject::initialize_global_object()
     define_native_accessor("screen", screen_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("innerWidth", inner_width_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("innerHeight", inner_height_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor("devicePixelRatio", device_pixel_ratio_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable;
     define_native_function("alert", alert, 0, attr);
     define_native_function("confirm", confirm, 0, attr);
@@ -504,6 +505,14 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::inner_height_getter)
     if (!impl)
         return {};
     return JS::Value(impl->inner_height());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::device_pixel_ratio_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    return JS::Value(impl->device_pixel_ratio());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_computed_style)
