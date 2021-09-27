@@ -13,6 +13,15 @@
 #include <LibCore/Timer.h>
 #include <LibTLS/TLSv12.h>
 
+namespace RequestServer {
+
+enum class CacheLevel {
+    ResolveOnly,
+    CreateConnection,
+};
+
+}
+
 namespace RequestServer::ConnectionCache {
 
 template<typename Socket>

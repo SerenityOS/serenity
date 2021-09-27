@@ -24,6 +24,8 @@ public:
     template<typename RequestHashMapTraits = Traits<String>>
     RefPtr<Request> start_request(String const& method, URL const&, HashMap<String, String, RequestHashMapTraits> const& request_headers = {}, ReadonlyBytes request_body = {});
 
+    void ensure_connection(URL const&, ::RequestServer::CacheLevel);
+
     bool stop_request(Badge<Request>, Request&);
     bool set_certificate(Badge<Request>, Request&, String, String);
 

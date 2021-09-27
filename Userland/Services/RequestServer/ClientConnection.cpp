@@ -9,6 +9,7 @@
 #include <RequestServer/Protocol.h>
 #include <RequestServer/Request.h>
 #include <RequestServer/RequestClientEndpoint.h>
+#include <netdb.h>
 
 namespace RequestServer {
 
@@ -108,6 +109,39 @@ Messages::RequestServer::SetCertificateResponse ClientConnection::set_certificat
         success = true;
     }
     return success;
+}
+
+void ClientConnection::ensure_connection(URL const& url, ::RequestServer::CacheLevel const& cache_level)
+{
+    if (!url.is_valid()) {
+        dbgln("EnsureConnection: Invalid URL requested: '{}'", url);
+        return;
+    }
+
+    if (cache_level == CacheLevel::ResolveOnly) {
+        return Core::deferred_invoke([host = url.host()] {
+            dbgln("EnsureConnection: DNS-preload for {}", host);
+            (void)gethostbyname(host.characters());
+        });
+    }
+
+    struct {
+        URL const& m_url;
+        void start(NonnullRefPtr<Core::Socket> socket) { socket->connect(m_url.host(), m_url.port_or_default()); }
+    } job { url };
+
+    dbgln("EnsureConnection: Pre-connect to {}", url);
+    auto do_preconnect = [&](auto& cache) {
+        auto& connection = ConnectionCache::get_or_create_connection(cache, url, job);
+        connection.removal_timer->start();
+    };
+
+    if (url.scheme() == "http"sv)
+        do_preconnect(ConnectionCache::g_tcp_connection_cache);
+    else if (url.scheme() == "https"sv)
+        do_preconnect(ConnectionCache::g_tls_connection_cache);
+    else
+        dbgln("EnsureConnection: Invalid URL scheme: '{}'", url.scheme());
 }
 
 }
