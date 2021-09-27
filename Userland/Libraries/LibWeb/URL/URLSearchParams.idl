@@ -12,6 +12,6 @@ interface URLSearchParams {
 
   undefined sort();
 
-  // TODO: iterable<USVString, USVString>;
+  iterable<USVString, USVString>;
   stringifier;
 };

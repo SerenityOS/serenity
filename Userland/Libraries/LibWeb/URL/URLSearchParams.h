@@ -42,8 +42,11 @@ public:
 
     String to_string();
 
+    void for_each(Function<IterationDecision(String const&, String const&)>);
+
 private:
     friend class URL;
+    friend class URLSearchParamsIterator;
 
     explicit URLSearchParams(Vector<QueryParam> list)
         : m_list(move(list)) {};
