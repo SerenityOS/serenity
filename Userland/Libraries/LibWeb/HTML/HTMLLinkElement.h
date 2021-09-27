@@ -33,6 +33,8 @@ private:
             Alternate = 1 << 0,
             Stylesheet = 1 << 1,
             Preload = 1 << 2,
+            DNSPrefetch = 1 << 3,
+            Preconnect = 1 << 4,
         };
     };
 

@@ -37,6 +37,9 @@ public:
     void load(const AK::URL&, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback = nullptr);
     void load_sync(LoadRequest&, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback = nullptr);
 
+    void prefetch_dns(AK::URL const&);
+    void preconnect(AK::URL const&);
+
     Function<void()> on_load_counter_change;
 
     int pending_loads() const { return m_pending_loads; }
