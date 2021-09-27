@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 #define VIRTIO_GPU_MAX_SCANOUTS 16
 
 namespace Kernel::Graphics::VirtIOGPU::Protocol {
