@@ -16,7 +16,7 @@ start:
   cbnz x13, halt
 
   // Let stack start before .text for now.
-  // 512 kiB (0x8000) of stack are probably not sufficient, especially once we give the other cores some stack too,
+  // 512 kiB (0x80000) of stack are probably not sufficient, especially once we give the other cores some stack too,
   // but for now it's ok.
   ldr x14, =start
   mov sp, x14
