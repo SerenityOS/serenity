@@ -105,7 +105,7 @@ KeypadValue::KeypadValue(double d)
     while (AK::pow(10.0, (double)current_pow) <= d)
         current_pow += 1;
     current_pow -= 1;
-    while (d != 0) {
+    while (current_pow >= 0) {
         m_value *= 10;
         m_value += (u64)(d / AK::pow(10.0, (double)current_pow)) % 10;
         if (current_pow < 0)
