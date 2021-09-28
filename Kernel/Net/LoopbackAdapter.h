@@ -14,7 +14,7 @@ class LoopbackAdapter final : public NetworkAdapter {
     AK_MAKE_ETERNAL
 
 private:
-    LoopbackAdapter();
+    LoopbackAdapter(NonnullOwnPtr<KString>);
 
 public:
     static RefPtr<LoopbackAdapter> try_create();

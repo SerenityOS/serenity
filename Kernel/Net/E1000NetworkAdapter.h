@@ -20,7 +20,7 @@ class E1000NetworkAdapter : public NetworkAdapter
     , public PCI::Device
     , public IRQHandler {
 public:
-    static RefPtr<E1000NetworkAdapter> try_to_initialize(PCI::DeviceIdentifier const&);
+    static RefPtr<E1000NetworkAdapter> try_to_initialize(PCI::DeviceIdentifier const&, NonnullOwnPtr<KString>);
 
     virtual bool initialize();
 
@@ -37,7 +37,7 @@ protected:
     void setup_interrupts();
     void setup_link();
 
-    E1000NetworkAdapter(PCI::Address, u8 irq);
+    E1000NetworkAdapter(PCI::Address, u8 irq, NonnullOwnPtr<KString>);
     virtual bool handle_irq(const RegisterState&) override;
     virtual StringView class_name() const override { return "E1000NetworkAdapter"sv; }
 

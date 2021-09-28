@@ -20,7 +20,7 @@ class NE2000NetworkAdapter final : public NetworkAdapter
     , public PCI::Device
     , public IRQHandler {
 public:
-    static RefPtr<NE2000NetworkAdapter> try_to_initialize(PCI::DeviceIdentifier const&);
+    static RefPtr<NE2000NetworkAdapter> try_to_initialize(PCI::DeviceIdentifier const&, NonnullOwnPtr<KString>);
 
     virtual ~NE2000NetworkAdapter() override;
 
@@ -41,7 +41,7 @@ public:
     virtual StringView purpose() const override { return class_name(); }
 
 private:
-    NE2000NetworkAdapter(PCI::Address, u8 irq);
+    NE2000NetworkAdapter(PCI::Address, u8, NonnullOwnPtr<KString>);
     virtual bool handle_irq(const RegisterState&) override;
     virtual StringView class_name() const override { return "NE2000NetworkAdapter"sv; }
 

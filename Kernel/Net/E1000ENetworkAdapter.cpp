@@ -180,14 +180,14 @@ static bool is_valid_device_id(u16 device_id)
     }
 }
 
-UNMAP_AFTER_INIT RefPtr<E1000ENetworkAdapter> E1000ENetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT RefPtr<E1000ENetworkAdapter> E1000ENetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<KString> interface_name)
 {
     if (pci_device_identifier.hardware_id().vendor_id != PCI::VendorID::Intel)
         return {};
     if (!is_valid_device_id(pci_device_identifier.hardware_id().device_id))
         return {};
     u8 irq = pci_device_identifier.interrupt_line().value();
-    auto adapter = adopt_ref_if_nonnull(new (nothrow) E1000ENetworkAdapter(pci_device_identifier.address(), irq));
+    auto adapter = adopt_ref_if_nonnull(new (nothrow) E1000ENetworkAdapter(pci_device_identifier.address(), irq, move(interface_name)));
     if (!adapter)
         return {};
     if (adapter->initialize())
@@ -228,8 +228,8 @@ UNMAP_AFTER_INIT bool E1000ENetworkAdapter::initialize()
     return true;
 }
 
-UNMAP_AFTER_INIT E1000ENetworkAdapter::E1000ENetworkAdapter(PCI::Address address, u8 irq)
-    : E1000NetworkAdapter(address, irq)
+UNMAP_AFTER_INIT E1000ENetworkAdapter::E1000ENetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<KString> interface_name)
+    : E1000NetworkAdapter(address, irq, move(interface_name))
 {
 }
 
