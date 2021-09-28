@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace Web::Bindings {
@@ -22,7 +23,7 @@ public:
     ConsoleGlobalObject(Web::Bindings::WindowObject&);
     virtual ~ConsoleGlobalObject() override;
 
-    virtual Object* internal_get_prototype_of() const override;
+    virtual JS::ThrowCompletionOr<Object*> internal_get_prototype_of() const override;
     virtual bool internal_set_prototype_of(Object* prototype) override;
     virtual bool internal_is_extensible() const override;
     virtual bool internal_prevent_extensions() override;

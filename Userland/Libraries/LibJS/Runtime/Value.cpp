@@ -1334,9 +1334,7 @@ Value ordinary_has_instance(GlobalObject& global_object, Value lhs, Value rhs)
         return {};
     }
     while (true) {
-        lhs_object = lhs_object->internal_get_prototype_of();
-        if (vm.exception())
-            return {};
+        lhs_object = TRY_OR_DISCARD(lhs_object->internal_get_prototype_of());
         if (!lhs_object)
             return Value(false);
         if (same_value(rhs_prototype, lhs_object))

@@ -5,6 +5,7 @@
  */
 
 #include "ConsoleGlobalObject.h"
+#include <LibJS/Runtime/Completion.h>
 #include <LibWeb/Bindings/NodeWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/WindowObject.h>
@@ -36,7 +37,7 @@ void ConsoleGlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_window_object);
 }
 
-JS::Object* ConsoleGlobalObject::internal_get_prototype_of() const
+JS::ThrowCompletionOr<JS::Object*> ConsoleGlobalObject::internal_get_prototype_of() const
 {
     return m_window_object->internal_get_prototype_of();
 }

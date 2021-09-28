@@ -489,7 +489,7 @@ MarkedValueList Object::enumerable_own_property_names(PropertyKind kind) const
 // 10.1 Ordinary Object Internal Methods and Internal Slots, https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots
 
 // 10.1.1 [[GetPrototypeOf]] ( ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-getprototypeof
-Object* Object::internal_get_prototype_of() const
+ThrowCompletionOr<Object*> Object::internal_get_prototype_of() const
 {
     // 1. Return O.[[Prototype]].
     return const_cast<Object*>(prototype());
@@ -645,9 +645,7 @@ bool Object::internal_has_property(PropertyName const& property_name) const
         return true;
 
     // 4. Let parent be ? O.[[GetPrototypeOf]]().
-    auto parent = internal_get_prototype_of();
-    if (vm.exception())
-        return {};
+    auto* parent = TRY_OR_DISCARD(internal_get_prototype_of());
 
     // 5. If parent is not null, then
     if (parent) {
@@ -676,9 +674,7 @@ Value Object::internal_get(PropertyName const& property_name, Value receiver) co
     // 3. If desc is undefined, then
     if (!descriptor.has_value()) {
         // a. Let parent be ? O.[[GetPrototypeOf]]().
-        auto parent = internal_get_prototype_of();
-        if (vm.exception())
-            return {};
+        auto* parent = TRY_OR_DISCARD(internal_get_prototype_of());
 
         // b. If parent is null, return undefined.
         if (!parent)
@@ -736,9 +732,7 @@ bool Object::ordinary_set_with_own_descriptor(PropertyName const& property_name,
     // 2. If ownDesc is undefined, then
     if (!own_descriptor.has_value()) {
         // a. Let parent be ? O.[[GetPrototypeOf]]().
-        auto parent = internal_get_prototype_of();
-        if (vm.exception())
-            return {};
+        auto* parent = TRY_OR_DISCARD(internal_get_prototype_of());
 
         // b. If parent is not null, then
         if (parent) {
@@ -882,14 +876,10 @@ MarkedValueList Object::internal_own_property_keys() const
 // 10.4.7.2 SetImmutablePrototype ( O, V ), https://tc39.es/ecma262/#sec-set-immutable-prototype
 bool Object::set_immutable_prototype(Object* prototype)
 {
-    auto& vm = this->vm();
-
     // 1. Assert: Either Type(V) is Object or Type(V) is Null.
 
     // 2. Let current be ? O.[[GetPrototypeOf]]().
-    auto* current = internal_get_prototype_of();
-    if (vm.exception())
-        return {};
+    auto* current = TRY_OR_DISCARD(internal_get_prototype_of());
 
     // 3. If SameValue(V, current) is true, return true.
     if (prototype == current)

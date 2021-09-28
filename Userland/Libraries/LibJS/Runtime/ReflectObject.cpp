@@ -212,7 +212,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get_prototype_of)
     }
 
     // 2. Return ? target.[[GetPrototypeOf]]().
-    return target.as_object().internal_get_prototype_of();
+    return TRY_OR_DISCARD(target.as_object().internal_get_prototype_of());
 }
 
 // 28.1.8 Reflect.has ( target, propertyKey ), https://tc39.es/ecma262/#sec-reflect.has

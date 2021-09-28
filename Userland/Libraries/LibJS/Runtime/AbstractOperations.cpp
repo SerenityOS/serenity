@@ -383,9 +383,18 @@ Environment& get_this_environment(VM& vm)
 // 13.3.7.2 GetSuperConstructor ( ), https://tc39.es/ecma262/#sec-getsuperconstructor
 Object* get_super_constructor(VM& vm)
 {
+    // 1. Let envRec be GetThisEnvironment().
     auto& env = get_this_environment(vm);
+
+    // 2. Assert: envRec is a function Environment Record.
+    // 3. Let activeFunction be envRec.[[FunctionObject]].
+    // 4. Assert: activeFunction is an ECMAScript function object.
     auto& active_function = verify_cast<FunctionEnvironment>(env).function_object();
-    auto* super_constructor = active_function.internal_get_prototype_of();
+
+    // 5. Let superConstructor be ! activeFunction.[[GetPrototypeOf]]().
+    auto* super_constructor = active_function.internal_get_prototype_of().release_value();
+
+    // 6. Return superConstructor.
     return super_constructor;
 }
 

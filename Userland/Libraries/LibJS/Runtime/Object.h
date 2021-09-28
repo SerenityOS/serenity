@@ -12,6 +12,7 @@
 #include <AK/String.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/IndexedProperties.h>
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/PrimitiveString.h>
@@ -90,7 +91,7 @@ public:
 
     // 10.1 Ordinary Object Internal Methods and Internal Slots, https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots
 
-    virtual Object* internal_get_prototype_of() const;
+    virtual ThrowCompletionOr<Object*> internal_get_prototype_of() const;
     virtual bool internal_set_prototype_of(Object* prototype);
     virtual bool internal_is_extensible() const;
     virtual bool internal_prevent_extensions();
