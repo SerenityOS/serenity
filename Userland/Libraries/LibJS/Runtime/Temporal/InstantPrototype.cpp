@@ -462,7 +462,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
     // 5. If calendarLike is undefined, then
     if (calendar_like.is_undefined()) {
         // a. Throw a TypeError exception.
-        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, vm.names.calendar.as_string());
+        vm.throw_exception<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.calendar.as_string());
         return {};
     }
 
@@ -477,7 +477,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
     // 8. If temporalTimeZoneLike is undefined, then
     if (temporal_time_zone_like.is_undefined()) {
         // a. Throw a TypeError exception.
-        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, vm.names.timeZone.as_string());
+        vm.throw_exception<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.timeZone.as_string());
         return {};
     }
 

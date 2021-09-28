@@ -55,6 +55,7 @@
     M(JsonBigInt, "Cannot serialize BigInt value to JSON")                                                                              \
     M(JsonCircular, "Cannot stringify circular object")                                                                                 \
     M(JsonMalformed, "Malformed JSON string")                                                                                           \
+    M(MissingRequiredProperty, "Required property {} is missing or undefined")                                                          \
     M(NegativeExponent, "Exponent must be positive")                                                                                    \
     M(NonExtensibleDefine, "Cannot define property {} on non-extensible object")                                                        \
     M(NotAConstructor, "{} is not a constructor")                                                                                       \
@@ -199,7 +200,6 @@
     M(TemporalInvalidTimeZoneName, "Invalid time zone name")                                                                            \
     M(TemporalInvalidUnitRange, "Invalid unit range, {} is larger than {}")                                                             \
     M(TemporalMissingOptionsObject, "Required options object is missing or undefined")                                                  \
-    M(TemporalMissingRequiredProperty, "Required property {} is missing or undefined")                                                  \
     M(TemporalPlainTimeWithArgumentMustNotHave, "Argument must not have a defined {} property")                                         \
     M(TemporalPropertyMustBeFinite, "Property must not be Infinity")                                                                    \
     M(TemporalPropertyMustBePositiveInteger, "Property must be a positive integer")                                                     \

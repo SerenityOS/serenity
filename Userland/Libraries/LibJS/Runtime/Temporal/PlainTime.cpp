@@ -374,7 +374,7 @@ ThrowCompletionOr<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject&
         // c. If value is undefined, then
         if (value.is_undefined()) {
             // i. Throw a TypeError exception.
-            return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, property);
+            return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, property);
         }
 
         // d. Set value to ? ToIntegerThrowOnInfinity(value).

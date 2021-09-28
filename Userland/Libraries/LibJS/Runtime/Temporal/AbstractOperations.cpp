@@ -1060,7 +1060,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, 
             // i. If requiredFields contains property, then
             if (required_fields.contains_slow(property)) {
                 // 1. Throw a TypeError exception.
-                return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, property);
+                return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, property);
             }
             // ii. If property is in the Property column of Table 13, then
             // NOTE: The other properties in the table are automatically handled as their default value is undefined
