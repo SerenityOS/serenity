@@ -10,7 +10,8 @@
 
 namespace LibDSP {
 
-enum class EnvelopeState : u8 {
+// For now, this cannot be optimal as clang doesn't know underlying type specifications.
+enum EnvelopeState {
     Off,
     Attack,
     Decay,
