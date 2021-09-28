@@ -27,7 +27,7 @@ void ScrollableContainerWidget::update_widget_position()
 {
     if (!m_widget)
         return;
-    m_widget->move_to(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
+    m_widget->move_to(-horizontal_scrollbar().value() + content_margins().left(), -vertical_scrollbar().value() + content_margins().top());
 }
 
 void ScrollableContainerWidget::update_widget_size()
@@ -36,7 +36,7 @@ void ScrollableContainerWidget::update_widget_size()
         return;
     m_widget->do_layout();
     if (m_widget->is_shrink_to_fit() && m_widget->layout()) {
-        auto new_size = frame_inner_rect().size();
+        auto new_size = Widget::content_size();
         auto preferred_size = m_widget->layout()->preferred_size();
         if (preferred_size.width() != -1)
             new_size.set_width(preferred_size.width());
