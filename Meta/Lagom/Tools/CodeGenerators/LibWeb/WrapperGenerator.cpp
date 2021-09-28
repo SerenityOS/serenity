@@ -818,7 +818,7 @@ static bool is_wrappable_type(IDL::Type const& type)
 }
 
 template<typename ParameterType>
-static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, String const& js_name, String const& js_suffix, String const& cpp_name, bool return_void = false, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {})
+static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, String const& js_name, String const& js_suffix, String const& cpp_name, HashMap<String, IDL::Dictionary> const& dictionaries, bool return_void = false, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {})
 {
     auto scoped_generator = generator.fork();
     scoped_generator.set("cpp_name", make_input_acceptable_cpp(cpp_name));
@@ -1038,6 +1038,54 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
                 }
             }
         }
+    } else if (dictionaries.contains(parameter.type.name)) {
+        if (optional_default_value.has_value() && optional_default_value != "{}")
+            TODO();
+        auto dictionary_generator = scoped_generator.fork();
+        dictionary_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_nullish() && !@js_name@@js_suffix@.is_object()) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
+        @return_statement@
+    }
+    @parameter.type.name@ @cpp_name@ {};
+)~~~");
+        auto* current_dictionary = &dictionaries.find(parameter.type.name)->value;
+        while (true) {
+            for (auto& member : current_dictionary->members) {
+                dictionary_generator.set("member_key", member.name);
+                auto member_js_name = make_input_acceptable_cpp(member.name.to_snakecase());
+                dictionary_generator.set("member_name", member_js_name);
+                dictionary_generator.append(R"~~~(
+    JS::Value @member_name@;
+    if (@js_name@@js_suffix@.is_nullish()) {
+        @member_name@ = JS::js_undefined();
+    } else {
+        @member_name@ = @js_name@@js_suffix@.as_object().get("@member_key@");
+        if (vm.exception())
+            @return_statement@
+    }
+)~~~");
+                if (member.required) {
+                    dictionary_generator.append(R"~~~(
+    if (@member_name@.is_undefined()) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::MissingRequiredProperty, "@member_key@");
+        @return_statement@
+    }
+)~~~");
+                }
+
+                auto member_value_name = String::formatted("{}_value", member_js_name);
+                dictionary_generator.set("member_value_name", member_value_name);
+                generate_to_cpp(dictionary_generator, member, member_js_name, "", member_value_name, dictionaries, return_void, member.extended_attributes.contains("LegacyNullToEmptyString"), !member.required, member.default_value);
+                dictionary_generator.append(R"~~~(
+    @cpp_name@.@member_name@ = @member_value_name@;
+)~~~");
+            }
+            if (current_dictionary->parent_name.is_null())
+                break;
+            VERIFY(dictionaries.contains(current_dictionary->parent_name));
+            current_dictionary = &dictionaries.find(current_dictionary->parent_name)->value;
+        }
     } else {
         dbgln("Unimplemented JS-to-C++ conversion: {}", parameter.type.name);
         VERIFY_NOT_REACHED();
@@ -1069,7 +1117,7 @@ static void generate_argument_count_check(SourceGenerator& generator, FunctionTy
 )~~~");
 }
 
-static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter> const& parameters, StringBuilder& arguments_builder, bool return_void = false)
+static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter> const& parameters, StringBuilder& arguments_builder, HashMap<String, IDL::Dictionary> const& dictionaries, bool return_void = false)
 {
     auto arguments_generator = generator.fork();
 
@@ -1083,7 +1131,7 @@ static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter
     auto arg@argument.index@ = vm.argument(@argument.index@);
 )~~~");
         bool legacy_null_to_empty_string = parameter.extended_attributes.contains("LegacyNullToEmptyString");
-        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), return_void, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value);
+        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), dictionaries, return_void, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value);
         ++argument_index;
     }
 
@@ -1191,7 +1239,7 @@ static void generate_variable_statement(SourceGenerator& generator, String const
     return generate_wrap_statement(generator, value_name, value_type, String::formatted("{} = ", variable_name));
 }
 
-static void generate_function(SourceGenerator& generator, IDL::Function const& function, StaticFunction is_static_function, String const& class_name, String const& interface_fully_qualified_name)
+static void generate_function(SourceGenerator& generator, IDL::Function const& function, StaticFunction is_static_function, String const& class_name, String const& interface_fully_qualified_name, HashMap<String, IDL::Dictionary> const& dictionaries)
 {
     auto function_generator = generator.fork();
     function_generator.set("class_name", class_name);
@@ -1222,7 +1270,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
     generate_argument_count_check(generator, function);
 
     StringBuilder arguments_builder;
-    generate_arguments(generator, function.parameters, arguments_builder);
+    generate_arguments(generator, function.parameters, arguments_builder, dictionaries);
     function_generator.set(".arguments", arguments_builder.string_view());
 
     if (is_static_function == StaticFunction::No) {
@@ -1802,7 +1850,7 @@ static void invoke_named_property_setter(JS::GlobalObject& global_object, @fully
 
             // 4. Let value be the result of converting V to an IDL value of type T.
             // NOTE: This takes the last parameter as it's enforced that there's only two parameters.
-            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", true);
+            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface.dictionaries, true);
 
             // 5. If operation was defined without an identifier, then:
             if (interface.named_property_setter->name.is_empty()) {
@@ -1860,7 +1908,7 @@ static void invoke_indexed_property_setter(JS::GlobalObject& global_object, @ful
 
             // 5. Let value be the result of converting V to an IDL value of type T.
             // NOTE: This takes the last parameter as it's enforced that there's only two parameters.
-            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", true);
+            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface.dictionaries, true);
 
             // 6. If operation was defined without an identifier, then:
             if (interface.indexed_property_setter->name.is_empty()) {
@@ -2425,7 +2473,7 @@ JS::Value @constructor_class@::construct(FunctionObject&)
             generate_argument_count_check(generator, constructor);
 
             StringBuilder arguments_builder;
-            generate_arguments(generator, constructor.parameters, arguments_builder);
+            generate_arguments(generator, constructor.parameters, arguments_builder, interface.dictionaries);
             generator.set(".constructor_arguments", arguments_builder.string_view());
 
             generator.append(R"~~~(
@@ -2489,7 +2537,7 @@ define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::
 
     // Implementation: Static Functions
     for (auto& function : interface.static_functions) {
-        generate_function(generator, function, StaticFunction::Yes, interface.constructor_class, interface.fully_qualified_name);
+        generate_function(generator, function, StaticFunction::Yes, interface.constructor_class, interface.fully_qualified_name, interface.dictionaries);
     }
 
     generator.append(R"~~~(
@@ -2914,7 +2962,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
     auto value = vm.argument(0);
 )~~~");
 
-            generate_to_cpp(generator, attribute, "value", "", "cpp_value", false, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
+            generate_to_cpp(generator, attribute, "value", "", "cpp_value", interface.dictionaries, false, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
 
             if (attribute.extended_attributes.contains("Reflect")) {
                 if (attribute.type.name != "boolean") {
@@ -2947,7 +2995,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
 
     // Implementation: Functions
     for (auto& function : interface.functions) {
-        generate_function(generator, function, StaticFunction::No, interface.prototype_class, interface.fully_qualified_name);
+        generate_function(generator, function, StaticFunction::No, interface.prototype_class, interface.fully_qualified_name, interface.dictionaries);
     }
 
     if (interface.has_stringifier) {
