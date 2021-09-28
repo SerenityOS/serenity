@@ -317,4 +317,16 @@ struct [[gnu::packed]] AttributeSpecification {
     ssize_t value;
 };
 
+// Dwarf version 5, section 7.25
+enum class RangeListEntryType : u8 {
+    EndOfList = 0,
+    BaseAddressX = 0x1,
+    StartXEndX = 0x2,
+    StartXLength = 0x3,
+    OffsetPair = 0x4,
+    BaseAddress = 0x5,
+    StartEnd = 0x6,
+    StartLength = 0x7
+};
+
 }
