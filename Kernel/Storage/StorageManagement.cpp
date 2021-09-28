@@ -45,13 +45,16 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers(bool force_pio)
     if (!kernel_command_line().disable_physical_storage()) {
         if (kernel_command_line().is_ide_enabled()) {
             PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
-                if (device_identifier.class_code().value() == PCI_MASS_STORAGE_CLASS_ID && device_identifier.subclass_code().value() == PCI_IDE_CTRL_SUBCLASS_ID) {
+                if (device_identifier.class_code().value() == to_underlying(PCI::ClassID::MassStorage)
+                    && device_identifier.subclass_code().value() == to_underlying(PCI::MassStorage::SubclassID::IDEController)) {
                     m_controllers.append(IDEController::initialize(device_identifier, force_pio));
                 }
             });
         }
         PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
-            if (device_identifier.class_code().value() == PCI_MASS_STORAGE_CLASS_ID && device_identifier.subclass_code().value() == PCI_SATA_CTRL_SUBCLASS_ID && device_identifier.prog_if().value() == PCI_AHCI_IF_PROGIF) {
+            if (device_identifier.class_code().value() == to_underlying(PCI::ClassID::MassStorage)
+                && device_identifier.subclass_code().value() == to_underlying(PCI::MassStorage::SubclassID::SATAController)
+                && device_identifier.prog_if().value() == to_underlying(PCI::MassStorage::SATAProgIF::AHCI)) {
                 m_controllers.append(AHCIController::initialize(device_identifier));
             }
         });

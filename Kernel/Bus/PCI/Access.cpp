@@ -18,7 +18,6 @@
 namespace Kernel::PCI {
 
 #define PCI_MMIO_CONFIG_SPACE_SIZE 4096
-#define MEMORY_RANGE_PER_BUS (PCI_MMIO_CONFIG_SPACE_SIZE * PCI_MAX_FUNCTIONS_PER_DEVICE * PCI_MAX_DEVICES_PER_BUS)
 
 static Access* s_access;
 
@@ -109,7 +108,7 @@ Optional<PhysicalAddress> Access::determine_memory_mapped_bus_base_address(u32 d
         return {};
     if (!(chosen_domain.value().start_bus() <= bus && bus <= chosen_domain.value().end_bus()))
         return {};
-    return chosen_domain.value().paddr().offset(MEMORY_RANGE_PER_BUS * (bus - chosen_domain.value().start_bus()));
+    return chosen_domain.value().paddr().offset(memory_range_per_bus * (bus - chosen_domain.value().start_bus()));
 }
 
 void Access::map_bus_region(u32 domain, u8 bus)
@@ -121,7 +120,7 @@ void Access::map_bus_region(u32 domain, u8 bus)
     // FIXME: Find a way to propagate error from here.
     if (!bus_base_address.has_value())
         VERIFY_NOT_REACHED();
-    auto region_or_error = MM.allocate_kernel_region(bus_base_address.value(), MEMORY_RANGE_PER_BUS, "PCI ECAM", Memory::Region::Access::ReadWrite);
+    auto region_or_error = MM.allocate_kernel_region(bus_base_address.value(), memory_range_per_bus, "PCI ECAM", Memory::Region::Access::ReadWrite);
     // FIXME: Find a way to propagate error from here.
     if (region_or_error.is_error())
         VERIFY_NOT_REACHED();
@@ -135,50 +134,50 @@ VirtualAddress Access::get_device_configuration_memory_mapped_space(Address addr
     VERIFY(m_access_lock.is_locked());
     dbgln_if(PCI_DEBUG, "PCI: Getting device configuration space for {}", address);
     map_bus_region(address.domain(), address.bus());
-    return m_mapped_bus_region->vaddr().offset(PCI_MMIO_CONFIG_SPACE_SIZE * address.function() + (PCI_MMIO_CONFIG_SPACE_SIZE * PCI_MAX_FUNCTIONS_PER_DEVICE) * address.device());
+    return m_mapped_bus_region->vaddr().offset(mmio_device_space_size * address.function() + (mmio_device_space_size * to_underlying(Limits::MaxFunctionsPerDevice)) * address.device());
 }
 
 u8 Access::io_read8_field(Address address, u32 field)
 {
     MutexLocker lock(m_access_lock);
     dbgln_if(PCI_DEBUG, "PCI: IO Reading 8-bit field {:#08x} for {}", field, address);
-    IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
-    return IO::in8(PCI_VALUE_PORT + (field & 3));
+    IO::out32(PCI::address_port, address.io_address_for_field(field));
+    return IO::in8(PCI::value_port + (field & 3));
 }
 u16 Access::io_read16_field(Address address, u32 field)
 {
     MutexLocker lock(m_access_lock);
     dbgln_if(PCI_DEBUG, "PCI: IO Reading 16-bit field {:#08x} for {}", field, address);
-    IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
-    return IO::in16(PCI_VALUE_PORT + (field & 2));
+    IO::out32(PCI::address_port, address.io_address_for_field(field));
+    return IO::in16(PCI::value_port + (field & 2));
 }
 u32 Access::io_read32_field(Address address, u32 field)
 {
     MutexLocker lock(m_access_lock);
     dbgln_if(PCI_DEBUG, "PCI: IO Reading 32-bit field {:#08x} for {}", field, address);
-    IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
-    return IO::in32(PCI_VALUE_PORT);
+    IO::out32(PCI::address_port, address.io_address_for_field(field));
+    return IO::in32(PCI::value_port);
 }
 void Access::io_write8_field(Address address, u32 field, u8 value)
 {
     MutexLocker lock(m_access_lock);
     dbgln_if(PCI_DEBUG, "PCI: IO Writing to 8-bit field {:#08x}, value={:#02x} for {}", field, value, address);
-    IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
-    IO::out8(PCI_VALUE_PORT + (field & 3), value);
+    IO::out32(PCI::address_port, address.io_address_for_field(field));
+    IO::out8(PCI::value_port + (field & 3), value);
 }
 void Access::io_write16_field(Address address, u32 field, u16 value)
 {
     MutexLocker lock(m_access_lock);
     dbgln_if(PCI_DEBUG, "PCI: IO Writing to 16-bit field {:#08x}, value={:#02x} for {}", field, value, address);
-    IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
-    IO::out16(PCI_VALUE_PORT + (field & 2), value);
+    IO::out32(PCI::address_port, address.io_address_for_field(field));
+    IO::out16(PCI::value_port + (field & 2), value);
 }
 void Access::io_write32_field(Address address, u32 field, u32 value)
 {
     MutexLocker lock(m_access_lock);
     dbgln_if(PCI_DEBUG, "PCI: IO Writing to 32-bit field {:#08x}, value={:#02x} for {}", field, value, address);
-    IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
-    IO::out32(PCI_VALUE_PORT, value);
+    IO::out32(PCI::address_port, address.io_address_for_field(field));
+    IO::out32(PCI::value_port, value);
 }
 
 u8 Access::memory_read8_field(Address address, u32 field)
@@ -265,6 +264,15 @@ void Access::write32_field(Address address, u32 field, u32 value)
     VERIFY_NOT_REACHED();
 }
 
+u8 Access::read8_field(Address address, RegisterOffset field)
+{
+    return read8_field(address, to_underlying(field));
+}
+u16 Access::read16_field(Address address, RegisterOffset field)
+{
+    return read16_field(address, to_underlying(field));
+}
+
 u8 Access::read8_field(Address address, u32 field)
 {
     switch (m_access_type) {
@@ -311,11 +319,11 @@ UNMAP_AFTER_INIT void Access::rescan_hardware()
         // Handle Multiple PCI host bridges on slot 0, device 0.
         // If we happen to miss some PCI buses because they are not reachable through
         // recursive PCI-to-PCI bridges starting from bus 0, we might find them here.
-        if ((read8_field(Address(), PCI_HEADER_TYPE) & 0x80) != 0) {
+        if ((read8_field(Address(), PCI::RegisterOffset::HEADER_TYPE) & 0x80) != 0) {
             for (int bus = 1; bus < 256; ++bus) {
-                if (read16_field(Address(0, 0, 0, bus), PCI_VENDOR_ID) == PCI_NONE)
+                if (read16_field(Address(0, 0, 0, bus), PCI::RegisterOffset::VENDOR_ID) == PCI::none_value)
                     continue;
-                if (read16_field(Address(0, 0, 0, bus), PCI_CLASS) != 0x6)
+                if (read16_field(Address(0, 0, 0, bus), PCI::RegisterOffset::CLASS) != 0x6)
                     continue;
                 if (m_enumerated_buses.get(bus))
                     continue;
@@ -330,14 +338,14 @@ UNMAP_AFTER_INIT void Access::rescan_hardware()
     for (u32 domain = 0; domain < m_domains.size(); domain++) {
         dbgln_if(PCI_DEBUG, "PCI: Scan memory mapped domain {}", domain);
         // Single PCI host controller.
-        if ((read8_field(Address(domain), PCI_HEADER_TYPE) & 0x80) == 0) {
+        if ((read8_field(Address(domain), PCI::RegisterOffset::HEADER_TYPE) & 0x80) == 0) {
             enumerate_bus(-1, 0, true);
             return;
         }
 
         // Multiple PCI host controllers.
         for (u8 function = 0; function < 8; ++function) {
-            if (read16_field(Address(domain, 0, 0, function), PCI_VENDOR_ID) == PCI_NONE)
+            if (read16_field(Address(domain, 0, 0, function), PCI::RegisterOffset::VENDOR_ID) == PCI::none_value)
                 break;
             enumerate_bus(-1, function, false);
         }
@@ -347,9 +355,9 @@ UNMAP_AFTER_INIT void Access::rescan_hardware()
 UNMAP_AFTER_INIT Optional<u8> Access::get_capabilities_pointer(Address address)
 {
     dbgln_if(PCI_DEBUG, "PCI: Getting capabilities pointer for {}", address);
-    if (read16_field(address, PCI_STATUS) & (1 << 4)) {
+    if (read16_field(address, PCI::RegisterOffset::STATUS) & (1 << 4)) {
         dbgln_if(PCI_DEBUG, "PCI: Found capabilities pointer for {}", address);
-        return read8_field(address, PCI_CAPABILITIES_POINTER);
+        return read8_field(address, PCI::RegisterOffset::CAPABILITIES_POINTER);
     }
     dbgln_if(PCI_DEBUG, "PCI: No capabilities pointer for {}", address);
     return {};
@@ -379,22 +387,24 @@ UNMAP_AFTER_INIT void Access::enumerate_functions(int type, u8 bus, u8 device, u
 {
     dbgln_if(PCI_DEBUG, "PCI: Enumerating function type={}, bus={}, device={}, function={}", type, bus, device, function);
     Address address(0, bus, device, function);
-    auto read_type = (read8_field(address, PCI_CLASS) << 8u) | read8_field(address, PCI_SUBCLASS);
+    auto read_type = (read8_field(address, PCI::RegisterOffset::CLASS) << 8u) | read8_field(address, PCI::RegisterOffset::SUBCLASS);
     if (type == -1 || type == read_type) {
-        HardwareID id = { read16_field(address, PCI_VENDOR_ID), read16_field(address, PCI_DEVICE_ID) };
-        ClassCode class_code = read8_field(address, PCI_CLASS);
-        SubclassCode subclass_code = read8_field(address, PCI_SUBCLASS);
-        ProgrammingInterface prog_if = read8_field(address, PCI_PROG_IF);
-        RevisionID revision_id = read8_field(address, PCI_REVISION_ID);
-        SubsystemID subsystem_id = read16_field(address, PCI_SUBSYSTEM_ID);
-        SubsystemVendorID subsystem_vendor_id = read16_field(address, PCI_SUBSYSTEM_VENDOR_ID);
-        InterruptLine interrupt_line = read8_field(address, PCI_INTERRUPT_LINE);
-        InterruptPin interrupt_pin = read8_field(address, PCI_INTERRUPT_PIN);
+        HardwareID id = { read16_field(address, PCI::RegisterOffset::VENDOR_ID), read16_field(address, PCI::RegisterOffset::DEVICE_ID) };
+        ClassCode class_code = read8_field(address, PCI::RegisterOffset::CLASS);
+        SubclassCode subclass_code = read8_field(address, PCI::RegisterOffset::SUBCLASS);
+        ProgrammingInterface prog_if = read8_field(address, PCI::RegisterOffset::PROG_IF);
+        RevisionID revision_id = read8_field(address, PCI::RegisterOffset::REVISION_ID);
+        SubsystemID subsystem_id = read16_field(address, PCI::RegisterOffset::SUBSYSTEM_ID);
+        SubsystemVendorID subsystem_vendor_id = read16_field(address, PCI::RegisterOffset::SUBSYSTEM_VENDOR_ID);
+        InterruptLine interrupt_line = read8_field(address, PCI::RegisterOffset::INTERRUPT_LINE);
+        InterruptPin interrupt_pin = read8_field(address, PCI::RegisterOffset::INTERRUPT_PIN);
         m_device_identifiers.append(DeviceIdentifier { address, id, revision_id, class_code, subclass_code, prog_if, subsystem_id, subsystem_vendor_id, interrupt_line, interrupt_pin, get_capabilities(address) });
     }
 
-    if (read_type == PCI_TYPE_BRIDGE && recursive && (!m_enumerated_buses.get(read8_field(address, PCI_SECONDARY_BUS)))) {
-        u8 secondary_bus = read8_field(address, PCI_SECONDARY_BUS);
+    if (read_type == (to_underlying(PCI::ClassID::Bridge) << 8 | to_underlying(PCI::Bridge::SubclassID::PCI_TO_PCI))
+        && recursive
+        && (!m_enumerated_buses.get(read8_field(address, PCI::RegisterOffset::SECONDARY_BUS)))) {
+        u8 secondary_bus = read8_field(address, PCI::RegisterOffset::SECONDARY_BUS);
         dbgln_if(PCI_DEBUG, "PCI: Found secondary bus: {}", secondary_bus);
         VERIFY(secondary_bus != bus);
         m_enumerated_buses.set(secondary_bus, true);
@@ -406,14 +416,14 @@ UNMAP_AFTER_INIT void Access::enumerate_device(int type, u8 bus, u8 device, bool
 {
     dbgln_if(PCI_DEBUG, "PCI: Enumerating device type={}, bus={}, device={}", type, bus, device);
     Address address(0, bus, device, 0);
-    if (read16_field(address, PCI_VENDOR_ID) == PCI_NONE)
+    if (read16_field(address, PCI::RegisterOffset::VENDOR_ID) == PCI::none_value)
         return;
     enumerate_functions(type, bus, device, 0, recursive);
-    if (!(read8_field(address, PCI_HEADER_TYPE) & 0x80))
+    if (!(read8_field(address, PCI::RegisterOffset::HEADER_TYPE) & 0x80))
         return;
     for (u8 function = 1; function < 8; ++function) {
         Address address(0, bus, device, function);
-        if (read16_field(address, PCI_VENDOR_ID) != PCI_NONE)
+        if (read16_field(address, PCI::RegisterOffset::VENDOR_ID) != PCI::none_value)
             enumerate_functions(type, bus, device, function, recursive);
     }
 }
