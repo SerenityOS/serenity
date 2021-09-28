@@ -703,7 +703,7 @@ ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object 
     if (month_code.is_undefined()) {
         // a. If month is undefined, throw a TypeError exception.
         if (month.is_undefined())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, vm.names.month.as_string());
+            return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.month.as_string());
 
         // b. Return month.
         return month.as_double();
@@ -766,7 +766,7 @@ ThrowCompletionOr<ISODate> iso_date_from_fields(GlobalObject& global_object, Obj
 
     // 5. If year is undefined, throw a TypeError exception.
     if (year.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, vm.names.year.as_string());
+        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.year.as_string());
 
     // 6. Let month be ? ResolveISOMonth(fields).
     auto month = TRY(resolve_iso_month(global_object, *prepared_fields));
@@ -778,7 +778,7 @@ ThrowCompletionOr<ISODate> iso_date_from_fields(GlobalObject& global_object, Obj
 
     // 8. If day is undefined, throw a TypeError exception.
     if (day.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, vm.names.day.as_string());
+        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.day.as_string());
 
     // 9. Return ? RegulateISODate(year, month, day, overflow).
     return regulate_iso_date(global_object, year.as_double(), month, day.as_double(), overflow);
@@ -804,7 +804,7 @@ ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_
 
     // 5. If year is undefined, throw a TypeError exception.
     if (year.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, vm.names.year.as_string());
+        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.year.as_string());
 
     // 6. Let month be ? ResolveISOMonth(fields).
     auto month = TRY(resolve_iso_month(global_object, *prepared_fields));
@@ -847,7 +847,7 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     // 7. If month is not undefined, and monthCode and year are both undefined, then
     if (!month_value.is_undefined() && month_code.is_undefined() && year.is_undefined()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, "monthCode or year");
+        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, "monthCode or year");
     }
 
     // 8. Set month to ? ResolveISOMonth(fields).
@@ -860,7 +860,7 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
 
     // 10. If day is undefined, throw a TypeError exception.
     if (day.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, vm.names.day.as_string());
+        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.day.as_string());
 
     // 11. Let referenceISOYear be 1972 (the first leap year after the Unix epoch).
     i32 reference_iso_year = 1972;
