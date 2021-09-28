@@ -4,12 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ProcessorParameterSlider.h"
+#include "Slider.h"
+#include "WidgetWithLabel.h"
 
 ProcessorParameterSlider::ProcessorParameterSlider(Orientation orientation, LibDSP::ProcessorRangeParameter& parameter, RefPtr<GUI::Label> value_label)
     : Slider(orientation)
+    , WidgetWithLabel(move(value_label))
     , m_parameter(parameter)
-    , m_value_label(move(value_label))
 {
     set_range(m_parameter.min_value().raw(), m_parameter.max_value().raw());
     set_value(m_parameter.value().raw());
