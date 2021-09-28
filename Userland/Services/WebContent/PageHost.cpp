@@ -21,6 +21,10 @@ PageHost::PageHost(ClientConnection& client)
     , m_page(make<Web::Page>(*this))
 {
     setup_palette();
+    m_invalidation_coalescing_timer = Core::Timer::create_single_shot(0, [this] {
+        m_client.async_did_invalidate_content_rect(m_invalidation_rect);
+        m_invalidation_rect = {};
+    });
 }
 
 PageHost::~PageHost()
@@ -77,9 +81,11 @@ void PageHost::set_viewport_rect(const Gfx::IntRect& rect)
     page().top_level_browsing_context().set_viewport_rect(rect);
 }
 
-void PageHost::page_did_invalidate(const Gfx::IntRect& content_rect)
+void PageHost::page_did_invalidate(Gfx::IntRect const& content_rect)
 {
-    m_client.async_did_invalidate_content_rect(content_rect);
+    m_invalidation_rect = m_invalidation_rect.united(content_rect);
+    if (!m_invalidation_coalescing_timer->is_active())
+        m_invalidation_coalescing_timer->start();
 }
 
 void PageHost::page_did_change_selection()

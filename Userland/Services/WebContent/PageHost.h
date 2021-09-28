@@ -72,6 +72,9 @@ private:
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
     Gfx::IntRect m_screen_rect;
     bool m_should_show_line_box_borders { false };
+
+    RefPtr<Core::Timer> m_invalidation_coalescing_timer;
+    Gfx::IntRect m_invalidation_rect;
 };
 
 }
