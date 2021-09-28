@@ -5,6 +5,7 @@
  */
 
 #include "DwarfInfo.h"
+#include "AddressRanges.h"
 #include "AttributeValue.h"
 #include "CompilationUnit.h"
 
@@ -21,6 +22,7 @@ DwarfInfo::DwarfInfo(ELF::Image const& elf)
     m_debug_strings_data = section_data(".debug_str"sv);
     m_debug_line_data = section_data(".debug_line"sv);
     m_debug_line_strings_data = section_data(".debug_line_str"sv);
+    m_debug_range_lists_data = section_data(".debug_rnglists"sv);
 
     populate_compilation_units();
 }
@@ -241,8 +243,20 @@ void DwarfInfo::build_cached_dies() const
         m_cached_dies_by_range.insert(range.start_address, DIEAndRange { die, range });
         m_cached_dies_by_offset.insert(die.offset(), die);
     };
-    auto get_ranges_of_die = [](DIE const& die) -> Vector<DIERange> {
-        // TODO support DW_AT_ranges (appears when range is non-contiguous)
+    auto get_ranges_of_die = [this](DIE const& die) -> Vector<DIERange> {
+        auto ranges = die.get_attribute(Attribute::Ranges);
+        if (ranges.has_value()) {
+            // TODO Support DW_FORM_rnglistx
+            if (ranges->form != AttributeDataForm::SecOffset)
+                return {};
+            auto offset = ranges->data.as_addr;
+            AddressRanges address_ranges(debug_range_lists_data(), offset, die.compilation_unit());
+            Vector<DIERange> entries;
+            address_ranges.for_each_range([&entries](auto range) {
+                entries.empend(range.start, range.end);
+            });
+            return entries;
+        }
 
         auto start = die.get_attribute(Attribute::LowPc);
         auto end = die.get_attribute(Attribute::HighPc);

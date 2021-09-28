@@ -30,6 +30,7 @@ public:
     ReadonlyBytes abbreviation_data() const { return m_abbreviation_data; }
     ReadonlyBytes debug_strings_data() const { return m_debug_strings_data; }
     ReadonlyBytes debug_line_strings_data() const { return m_debug_line_strings_data; }
+    ReadonlyBytes debug_range_lists_data() const { return m_debug_range_lists_data; }
 
     template<typename Callback>
     void for_each_compilation_unit(Callback) const;
@@ -58,6 +59,7 @@ private:
     ReadonlyBytes m_debug_strings_data;
     ReadonlyBytes m_debug_line_data;
     ReadonlyBytes m_debug_line_strings_data;
+    ReadonlyBytes m_debug_range_lists_data;
 
     NonnullOwnPtrVector<Dwarf::CompilationUnit> m_compilation_units;
 
