@@ -204,7 +204,6 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
     }
 
     Vector<Symbol> symbols;
-    bool first_frame = true;
 
     for (auto address : stack) {
         const RegionWithSymbols* found_region = nullptr;
@@ -239,13 +238,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
 
         FlatPtr adjusted_address = address - base_region->base;
 
-        // We're subtracting 1 from the address because this is the return address,
-        // i.e. it is one instruction past the call instruction.
-        // However, because the first frame represents the current
-        // instruction pointer rather than the return address we don't
-        // subtract 1 for that.
-        auto result = symbolicate(found_region->path, adjusted_address - (first_frame ? 0 : 1));
-        first_frame = false;
+        auto result = symbolicate(found_region->path, adjusted_address);
         if (!result.has_value()) {
             symbols.append(Symbol {
                 .address = address,
