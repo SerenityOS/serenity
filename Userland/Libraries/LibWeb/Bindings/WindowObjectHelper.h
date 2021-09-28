@@ -12,6 +12,8 @@
 #include <LibWeb/Bindings/AbortControllerPrototype.h>
 #include <LibWeb/Bindings/AbortSignalConstructor.h>
 #include <LibWeb/Bindings/AbortSignalPrototype.h>
+#include <LibWeb/Bindings/CSSStyleDeclarationConstructor.h>
+#include <LibWeb/Bindings/CSSStyleDeclarationPrototype.h>
 #include <LibWeb/Bindings/CSSStyleSheetConstructor.h>
 #include <LibWeb/Bindings/CSSStyleSheetPrototype.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DConstructor.h>
@@ -268,6 +270,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(CloseEvent)                \
     ADD_WINDOW_OBJECT_INTERFACE(Comment)                   \
     ADD_WINDOW_OBJECT_INTERFACE(CustomEvent)               \
+    ADD_WINDOW_OBJECT_INTERFACE(CSSStyleDeclaration)       \
     ADD_WINDOW_OBJECT_INTERFACE(CSSStyleSheet)             \
     ADD_WINDOW_OBJECT_INTERFACE(DocumentFragment)          \
     ADD_WINDOW_OBJECT_INTERFACE(Document)                  \
