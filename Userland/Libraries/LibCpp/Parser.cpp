@@ -397,7 +397,6 @@ bool Parser::match_secondary_expression()
         || type == Token::Type::AndAnd
         || type == Token::Type::PipePipe
         || type == Token::Type::ExclamationMarkEquals
-        || type == Token::Type::PipePipe
         || type == Token::Type::Arrow
         || type == Token::Type::LeftParen;
 }
