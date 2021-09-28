@@ -29,7 +29,6 @@ void Delay::handle_delay_time_change()
     if (sample_count != m_delay_buffer.size()) {
         m_delay_buffer.resize(sample_count, true);
         m_delay_index %= max(m_delay_buffer.size(), 1);
-        m_old_delay_size = m_delay_buffer.size();
     }
 }
 
