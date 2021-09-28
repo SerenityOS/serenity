@@ -23,6 +23,7 @@ protected:
     explicit GroupBox(const StringView& title = {});
 
     virtual void paint_event(PaintEvent&) override;
+    virtual void fonts_change_event(FontsChangeEvent&) override;
 
 private:
     String m_title;
