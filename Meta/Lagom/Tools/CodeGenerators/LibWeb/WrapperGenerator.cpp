@@ -12,6 +12,7 @@
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
 #include <AK/OwnPtr.h>
+#include <AK/QuickSort.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
 #include <AK/Tuple.h>
@@ -126,6 +127,19 @@ struct Attribute {
     String setter_callback_name;
 };
 
+struct DictionaryMember {
+    bool required { false };
+    Type type;
+    String name;
+    HashMap<String, String> extended_attributes;
+    Optional<String> default_value;
+};
+
+struct Dictionary {
+    String parent_name;
+    Vector<DictionaryMember> members;
+};
+
 struct Interface {
     String name;
     String parent_name;
@@ -148,6 +162,8 @@ struct Interface {
     Optional<Function> indexed_property_setter;
 
     Optional<Function> named_property_deleter;
+
+    HashMap<String, Dictionary> dictionaries;
 
     // Added for convenience after parsing
     String wrapper_class;
@@ -563,6 +579,67 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
     interface->constructor_class = String::formatted("{}Constructor", interface->name);
     interface->prototype_class = String::formatted("{}Prototype", interface->name);
     interface->prototype_base_class = String::formatted("{}Prototype", interface->parent_name.is_empty() ? "Object" : interface->parent_name);
+
+    consume_whitespace();
+    while (!lexer.is_eof()) {
+        assert_string("dictionary");
+        consume_whitespace();
+
+        Dictionary dictionary {};
+
+        auto name = lexer.consume_until([](auto ch) { return isspace(ch); });
+        consume_whitespace();
+
+        if (lexer.consume_specific(':')) {
+            consume_whitespace();
+            dictionary.parent_name = lexer.consume_until([](auto ch) { return isspace(ch); });
+            consume_whitespace();
+        }
+        assert_specific('{');
+
+        for (;;) {
+            consume_whitespace();
+
+            if (lexer.consume_specific('}')) {
+                consume_whitespace();
+                assert_specific(';');
+                break;
+            }
+
+            DictionaryMember member {};
+            if (lexer.consume_specific("required")) {
+                member.required = true;
+                consume_whitespace();
+                if (lexer.consume_specific('['))
+                    member.extended_attributes = parse_extended_attributes();
+            }
+
+            member.type = parse_type();
+            consume_whitespace();
+
+            member.name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
+            consume_whitespace();
+
+            if (lexer.consume_specific('=')) {
+                VERIFY(!member.required);
+                consume_whitespace();
+                auto default_value = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
+                member.default_value = default_value;
+                consume_whitespace();
+            }
+
+            assert_specific(';');
+            dictionary.members.append(move(member));
+        }
+
+        // dictionary members need to be evaluated in lexicographical order
+        quick_sort(dictionary.members, [&](auto& one, auto& two) {
+            return one.name < two.name;
+        });
+
+        interface->dictionaries.set(name, move(dictionary));
+        consume_whitespace();
+    }
 
     return interface;
 }
