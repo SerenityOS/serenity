@@ -79,7 +79,7 @@ void ThreadStackWidget::custom_event(Core::CustomEvent& event)
     StringBuilder builder;
 
     for (auto& symbol : completion_event.symbols()) {
-        builder.appendff("{:p}", symbol.address);
+        builder.appendff("{:p} {:30s}", symbol.address, symbol.object);
         if (!symbol.name.is_empty())
             builder.appendff("  {}", symbol.name);
         builder.append('\n');
