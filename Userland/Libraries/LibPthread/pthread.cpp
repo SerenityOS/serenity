@@ -781,8 +781,9 @@ int pthread_rwlock_unlock(pthread_rwlock_t* lockval_p)
         --count;
         auto desired = (current & 0xffff0000u) | count;
         auto did_exchange = AK::atomic_compare_exchange_strong(lockp, current, desired, AK::MemoryOrder::memory_order_release);
-        if (!did_exchange)
-            continue; // tough luck, try again.
+        if (did_exchange)
+            break;
+        // tough luck, try again.
     }
 
     // Finally, unlocked at last!
