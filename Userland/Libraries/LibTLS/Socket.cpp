@@ -226,6 +226,9 @@ bool TLSv12::check_connection_state(bool read)
         m_context.has_invoked_finish_or_error_callback = true;
         if (on_tls_error)
             on_tls_error((AlertDescription)m_context.critical_error);
+        m_context.connection_finished = true;
+        m_context.connection_status = ConnectionStatus::Disconnected;
+        Core::Socket::close();
         return false;
     }
     if (((read && m_context.application_buffer.size() == 0) || !read) && m_context.connection_finished) {
