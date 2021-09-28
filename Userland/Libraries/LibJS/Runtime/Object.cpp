@@ -48,7 +48,8 @@ Object::Object(ConstructWithoutPrototypeTag, GlobalObject& global_object)
 Object::Object(Object& prototype)
 {
     m_shape = prototype.global_object().empty_object_shape();
-    auto success = internal_set_prototype_of(&prototype);
+    // FIXME: Factor out step 9 into a simple prototype setter and use that
+    auto success = internal_set_prototype_of(&prototype).release_value();
     VERIFY(success);
 }
 
@@ -496,7 +497,7 @@ ThrowCompletionOr<Object*> Object::internal_get_prototype_of() const
 }
 
 // 10.1.2 [[SetPrototypeOf]] ( V ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-setprototypeof-v
-bool Object::internal_set_prototype_of(Object* new_prototype)
+ThrowCompletionOr<bool> Object::internal_set_prototype_of(Object* new_prototype)
 {
     // 1. Assert: Either Type(V) is Object or Type(V) is Null.
 

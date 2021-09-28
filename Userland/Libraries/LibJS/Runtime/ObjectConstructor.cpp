@@ -162,9 +162,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
         return object;
 
     // 4. Let status be ? O.[[SetPrototypeOf]](proto).
-    auto status = object.as_object().internal_set_prototype_of(proto.is_null() ? nullptr : &proto.as_object());
-    if (vm.exception())
-        return {};
+    auto status = TRY_OR_DISCARD(object.as_object().internal_set_prototype_of(proto.is_null() ? nullptr : &proto.as_object()));
 
     // 5. If status is false, throw a TypeError exception.
     if (!status) {

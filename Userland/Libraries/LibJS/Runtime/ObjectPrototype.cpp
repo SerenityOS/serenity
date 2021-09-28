@@ -10,6 +10,7 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/BooleanObject.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NumberObject.h>
@@ -52,7 +53,7 @@ ObjectPrototype::~ObjectPrototype()
 }
 
 // 10.4.7.1 [[SetPrototypeOf]] ( V ), https://tc39.es/ecma262/#sec-immutable-prototype-exotic-objects-setprototypeof-v
-bool ObjectPrototype::internal_set_prototype_of(Object* prototype)
+ThrowCompletionOr<bool> ObjectPrototype::internal_set_prototype_of(Object* prototype)
 {
     return set_immutable_prototype(prototype);
 }
@@ -320,9 +321,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::proto_setter)
     if (!object.is_object())
         return js_undefined();
 
-    auto status = object.as_object().internal_set_prototype_of(proto.is_object() ? &proto.as_object() : nullptr);
-    if (vm.exception())
-        return {};
+    auto status = TRY_OR_DISCARD(object.as_object().internal_set_prototype_of(proto.is_object() ? &proto.as_object() : nullptr));
     if (!status) {
         // FIXME: Improve/contextualize error message
         vm.throw_exception<TypeError>(global_object, ErrorType::ObjectSetPrototypeOfReturnedFalse);

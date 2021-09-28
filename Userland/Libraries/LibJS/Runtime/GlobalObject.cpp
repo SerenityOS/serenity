@@ -144,7 +144,7 @@ void GlobalObject::initialize_global_object()
     static_cast<ObjectPrototype*>(m_object_prototype)->initialize(*this);
     m_object_prototype->set_initialized(Badge<GlobalObject> {});
 
-    auto success = Object::internal_set_prototype_of(m_object_prototype);
+    auto success = Object::internal_set_prototype_of(m_object_prototype).release_value();
     VERIFY(success);
 
     // This must be initialized before allocating AggregateErrorPrototype, which uses ErrorPrototype as its prototype.

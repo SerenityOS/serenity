@@ -6,6 +6,7 @@
 
 #include <AK/FlyString.h>
 #include <AK/StringBuilder.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Document.h>
@@ -125,7 +126,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::reload)
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#location-setprototypeof
-bool LocationObject::internal_set_prototype_of(Object* prototype)
+JS::ThrowCompletionOr<bool> LocationObject::internal_set_prototype_of(Object* prototype)
 {
     // 1. Return ! SetImmutablePrototype(this, V).
     return set_immutable_prototype(prototype);

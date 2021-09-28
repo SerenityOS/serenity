@@ -92,7 +92,7 @@ public:
     // 10.1 Ordinary Object Internal Methods and Internal Slots, https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots
 
     virtual ThrowCompletionOr<Object*> internal_get_prototype_of() const;
-    virtual bool internal_set_prototype_of(Object* prototype);
+    virtual ThrowCompletionOr<bool> internal_set_prototype_of(Object* prototype);
     virtual bool internal_is_extensible() const;
     virtual bool internal_prevent_extensions();
     virtual Optional<PropertyDescriptor> internal_get_own_property(PropertyName const&) const;

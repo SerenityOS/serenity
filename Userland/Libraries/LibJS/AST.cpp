@@ -906,7 +906,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         class_constructor->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
         if (interpreter.exception())
             return {};
-        class_constructor->internal_set_prototype_of(super_constructor.is_null() ? global_object.function_prototype() : &super_constructor.as_object());
+        TRY_OR_DISCARD(class_constructor->internal_set_prototype_of(super_constructor.is_null() ? global_object.function_prototype() : &super_constructor.as_object()));
     }
 
     auto class_prototype = class_constructor->get(vm.names.prototype);
