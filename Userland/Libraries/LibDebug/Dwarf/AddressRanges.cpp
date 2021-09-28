@@ -54,6 +54,7 @@ void AddressRanges::for_each_range(Function<void(Range)> callback)
             size_t length;
             m_range_lists_stream.read_LEB128_unsigned(length);
             callback(Range { start, start + length });
+            break;
         }
         case RangeListEntryType::EndOfList:
             return;
