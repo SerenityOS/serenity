@@ -22,7 +22,7 @@ public:
 
     virtual ~Paragraph() override { }
 
-    virtual String render_to_html() const override;
+    virtual String render_to_html(bool tight = false) const override;
     virtual String render_for_terminal(size_t view_width = 0) const override;
 
 private:

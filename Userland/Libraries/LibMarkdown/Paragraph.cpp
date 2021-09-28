@@ -9,12 +9,20 @@
 
 namespace Markdown {
 
-String Paragraph::render_to_html() const
+String Paragraph::render_to_html(bool tight) const
 {
     StringBuilder builder;
-    builder.append("<p>");
+
+    if (!tight)
+        builder.append("<p>");
+
     builder.append(m_text.render_to_html());
-    builder.append("</p>\n");
+
+    if (!tight)
+        builder.append("</p>");
+
+    builder.append('\n');
+
     return builder.build();
 }
 

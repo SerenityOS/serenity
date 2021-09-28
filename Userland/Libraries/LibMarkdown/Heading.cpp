@@ -9,7 +9,7 @@
 
 namespace Markdown {
 
-String Heading::render_to_html() const
+String Heading::render_to_html(bool) const
 {
     return String::formatted("<h{}>{}</h{}>\n", m_level, m_text.render_to_html(), m_level);
 }
