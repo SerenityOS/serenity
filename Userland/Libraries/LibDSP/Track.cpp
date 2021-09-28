@@ -4,9 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Track.h"
-#include "Processor.h"
+#include <AK/Optional.h>
 #include <AK/Types.h>
+#include <LibDSP/Processor.h>
+#include <LibDSP/Track.h>
 
 using namespace std;
 
@@ -49,15 +50,17 @@ bool NoteTrack::check_processor_chain_valid() const
 
 Sample Track::current_signal()
 {
-    Signal the_signal = current_clips_signal();
+    compute_current_clips_signal();
+    Optional<Signal> the_signal;
+
     for (auto& processor : m_processor_chain) {
-        the_signal = processor.process(the_signal);
+        the_signal = processor.process(the_signal.value_or(m_current_signal));
     }
-    VERIFY(the_signal.type() == SignalType::Sample);
-    return the_signal.get<Sample>();
+    VERIFY(the_signal.has_value() && the_signal->type() == SignalType::Sample);
+    return the_signal->get<Sample>();
 }
 
-Signal NoteTrack::current_clips_signal()
+void NoteTrack::compute_current_clips_signal()
 {
     u32 time = m_transport->time();
     // Find the currently playing clip.
@@ -68,26 +71,25 @@ Signal NoteTrack::current_clips_signal()
             break;
         }
     }
-    if (playing_clip == nullptr) {
-        return Signal(Vector<RollNote>());
-    }
 
-    // Find the playing notes inside the clip.
-    Vector<RollNote> playing_notes;
+    auto& current_notes = m_current_signal.get<RollNotes>();
+    m_current_signal.get<RollNotes>().clear_with_capacity();
+
+    if (playing_clip == nullptr)
+        return;
+
     // FIXME: performance?
     for (auto& note_list : playing_clip->notes()) {
         for (auto& note : note_list) {
             if (note.on_sample >= time && note.off_sample >= time)
                 break;
             if (note.on_sample <= time && note.off_sample >= time)
-                // FIXME: This copies the note, but we don't rely on playing_clip to keep its notes around.
-                playing_notes.append(note);
+                current_notes.set(note.pitch, note);
         }
     }
-    return Signal(playing_notes);
 }
 
-Signal AudioTrack::current_clips_signal()
+void AudioTrack::compute_current_clips_signal()
 {
     // Find the currently playing clip.
     u32 time = m_transport->time();
@@ -99,12 +101,12 @@ Signal AudioTrack::current_clips_signal()
         }
     }
     if (playing_clip == nullptr) {
-        return Signal(static_cast<Sample const&>(SAMPLE_OFF));
+        m_current_signal = Signal(static_cast<Sample const&>(SAMPLE_OFF));
     }
 
     // Index into the clip's samples.
     u32 effective_sample = time - playing_clip->start();
-    return Signal(playing_clip->sample_at(effective_sample));
+    m_current_signal = Signal(playing_clip->sample_at(effective_sample));
 }
 
 }

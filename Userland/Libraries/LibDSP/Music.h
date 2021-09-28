@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <AK/Types.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
@@ -33,12 +34,14 @@ enum class SignalType : u8 {
     Note
 };
 
-struct Signal : public Variant<Sample, Vector<RollNote>> {
+using RollNotes = OrderedHashMap<u8, RollNote>;
+
+struct Signal : public Variant<Sample, RollNotes> {
     using Variant::Variant;
     ALWAYS_INLINE SignalType type() const
     {
-        return has<Sample>() ? SignalType::Sample : has<Vector<RollNote>>() ? SignalType::Note
-                                                                            : SignalType::Invalid;
+        return has<Sample>() ? SignalType::Sample : has<RollNotes>() ? SignalType::Note
+                                                                     : SignalType::Invalid;
     }
 };
 
