@@ -65,7 +65,7 @@ String Table::render_for_terminal(size_t view_width) const
     return builder.to_string();
 }
 
-String Table::render_to_html() const
+String Table::render_to_html(bool) const
 {
     StringBuilder builder;
 

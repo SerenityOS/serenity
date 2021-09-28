@@ -10,7 +10,7 @@
 
 namespace Markdown {
 
-String HorizontalRule::render_to_html() const
+String HorizontalRule::render_to_html(bool) const
 {
     return "<hr />\n";
 }

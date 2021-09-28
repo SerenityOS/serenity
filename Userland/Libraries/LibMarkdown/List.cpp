@@ -7,10 +7,11 @@
 
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/List.h>
+#include <LibMarkdown/Paragraph.h>
 
 namespace Markdown {
 
-String List::render_to_html() const
+String List::render_to_html(bool) const
 {
     StringBuilder builder;
 
@@ -18,8 +19,10 @@ String List::render_to_html() const
     builder.appendff("<{}>\n", tag);
 
     for (auto& item : m_items) {
-        builder.append("<li>\n");
-        builder.append(item->render_to_html());
+        builder.append("<li>");
+        if (!m_is_tight || (item->blocks().size() != 0 && !dynamic_cast<Paragraph const*>(&(item->blocks()[0]))))
+            builder.append("\n");
+        builder.append(item->render_to_html(m_is_tight));
         builder.append("</li>\n");
     }
 
@@ -53,12 +56,15 @@ OwnPtr<List> List::parse(LineIterator& lines)
 
     bool first = true;
     bool is_ordered = false;
+
+    bool is_tight = true;
+    bool has_trailing_blank_lines = false;
+
     while (!lines.is_end()) {
+
         size_t offset = 0;
 
         const StringView& line = *lines;
-        if (line.is_empty())
-            break;
 
         bool appears_unordered = false;
         if (line.length() > 2) {
@@ -98,18 +104,23 @@ OwnPtr<List> List::parse(LineIterator& lines)
             break;
         }
 
+        is_tight = is_tight && !has_trailing_blank_lines;
+
         size_t saved_indent = lines.indent();
         lines.set_indent(saved_indent + offset);
         lines.ignore_next_prefix();
 
-        items.append(ContainerBlock::parse(lines));
+        auto list_item = ContainerBlock::parse(lines);
+        is_tight = is_tight && !list_item->has_blank_lines();
+        has_trailing_blank_lines = has_trailing_blank_lines || list_item->has_trailing_blank_lines();
+        items.append(move(list_item));
 
         lines.set_indent(saved_indent);
 
         first = false;
     }
 
-    return make<List>(move(items), is_ordered);
+    return make<List>(move(items), is_ordered, is_tight);
 }
 
 }
