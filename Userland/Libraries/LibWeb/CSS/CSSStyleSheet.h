@@ -10,6 +10,7 @@
 #include <AK/TypeCasts.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSRule.h>
+#include <LibWeb/CSS/CSSRuleList.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/Loader/Resource.h>
 
@@ -28,8 +29,8 @@ public:
 
     virtual String type() const override { return "text/css"; }
 
-    const NonnullRefPtrVector<CSSRule>& rules() const { return m_rules; }
-    NonnullRefPtrVector<CSSRule>& rules() { return m_rules; }
+    CSSRuleList const& rules() const { return m_rules; }
+    CSSRuleList& rules() { return m_rules; }
 
     template<typename Callback>
     void for_each_effective_style_rule(Callback callback) const
@@ -66,7 +67,7 @@ public:
 private:
     explicit CSSStyleSheet(NonnullRefPtrVector<CSSRule>);
 
-    NonnullRefPtrVector<CSSRule> m_rules;
+    CSSRuleList m_rules;
 };
 
 }

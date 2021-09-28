@@ -523,7 +523,7 @@ void dump_sheet(StringBuilder& builder, CSS::StyleSheet const& sheet)
 {
     auto& css_stylesheet = verify_cast<CSS::CSSStyleSheet>(sheet);
 
-    builder.appendff("CSSStyleSheet{{{}}}: {} rule(s)\n", &sheet, css_stylesheet.rules().size());
+    builder.appendff("CSSStyleSheet{{{}}}: {} rule(s)\n", &sheet, css_stylesheet.rules().length());
 
     for (auto& rule : css_stylesheet.rules()) {
         dump_rule(builder, rule);
