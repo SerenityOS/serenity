@@ -81,4 +81,9 @@ bool Page::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
     return focused_context().event_handler().handle_keydown(key, modifiers, code_point);
 }
 
+bool Page::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
+{
+    return focused_context().event_handler().handle_keyup(key, modifiers, code_point);
+}
+
 }

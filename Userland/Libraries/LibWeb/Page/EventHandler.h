@@ -30,6 +30,7 @@ public:
     bool handle_mousewheel(const Gfx::IntPoint&, unsigned buttons, unsigned modifiers, int wheel_delta);
 
     bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
+    bool handle_keyup(KeyCode, unsigned modifiers, u32 code_point);
 
     void set_mouse_event_tracking_layout_node(Layout::Node*);
 

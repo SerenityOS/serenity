@@ -52,6 +52,7 @@ public:
     bool handle_mousewheel(const Gfx::IntPoint&, unsigned button, unsigned modifiers, int wheel_delta);
 
     bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
+    bool handle_keyup(KeyCode, unsigned modifiers, u32 code_point);
 
     Gfx::Palette palette() const;
     Gfx::IntRect screen_rect() const;

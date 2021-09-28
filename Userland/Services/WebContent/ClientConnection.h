@@ -47,6 +47,7 @@ private:
     virtual void mouse_up(Gfx::IntPoint const&, unsigned, unsigned, unsigned) override;
     virtual void mouse_wheel(Gfx::IntPoint const&, unsigned, unsigned, unsigned, i32) override;
     virtual void key_down(i32, unsigned, u32) override;
+    virtual void key_up(i32, unsigned, u32) override;
     virtual void add_backing_store(i32, Gfx::ShareableBitmap const&) override;
     virtual void remove_backing_store(i32) override;
     virtual void debug_request(String const&, String const&) override;

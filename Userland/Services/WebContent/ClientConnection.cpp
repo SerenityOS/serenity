@@ -169,6 +169,11 @@ void ClientConnection::key_down(i32 key, unsigned int modifiers, u32 code_point)
     page().handle_keydown((KeyCode)key, modifiers, code_point);
 }
 
+void ClientConnection::key_up(i32 key, unsigned int modifiers, u32 code_point)
+{
+    page().handle_keyup((KeyCode)key, modifiers, code_point);
+}
+
 void ClientConnection::debug_request(const String& request, const String& argument)
 {
     if (request == "dump-dom-tree") {

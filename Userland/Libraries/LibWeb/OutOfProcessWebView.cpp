@@ -161,6 +161,11 @@ void OutOfProcessWebView::keydown_event(GUI::KeyEvent& event)
     client().async_key_down(event.key(), event.modifiers(), event.code_point());
 }
 
+void OutOfProcessWebView::keyup_event(GUI::KeyEvent& event)
+{
+    client().async_key_up(event.key(), event.modifiers(), event.code_point());
+}
+
 void OutOfProcessWebView::mousedown_event(GUI::MouseEvent& event)
 {
     client().async_mouse_down(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());

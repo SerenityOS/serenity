@@ -23,6 +23,7 @@ endpoint WebContentServer
     mouse_wheel(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers, i32 wheel_delta) =|
 
     key_down(i32 key, unsigned modifiers, u32 code_point) =|
+    key_up(i32 key, unsigned modifiers, u32 code_point) =|
 
     debug_request(String request, String argument) =|
     get_source() =|
