@@ -167,7 +167,7 @@ struct Interface {
     bool is_legacy_platform_object() const { return !extended_attributes.contains("Global") && (supports_indexed_properties() || supports_named_properties()); }
 };
 
-static OwnPtr<Interface> parse_interface(StringView filename, StringView const& input)
+static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView const& input)
 {
     auto interface = make<Interface>();
 
@@ -618,11 +618,6 @@ int main(int argc, char** argv)
 
     auto data = file_or_error.value()->read_all();
     auto interface = IDL::parse_interface(path, data);
-
-    if (!interface) {
-        warnln("Cannot parse {}", path);
-        return 1;
-    }
 
     if (namespace_.is_one_of("CSS", "DOM", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "NavigationTiming", "RequestIdleCallback", "SVG", "XHR", "URL")) {
         StringBuilder builder;
