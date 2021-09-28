@@ -618,7 +618,7 @@ static int rwlock_rdlock_maybe_timed(u32* lockp, const struct timespec* timeout 
             auto count = (u16)current;
             if (!(current & writer_intent_mask) || count > 1) {
                 ++count;
-                auto desired = (current << 16) | count;
+                auto desired = (current & 0xffff0000u) | count;
                 auto did_exchange = AK::atomic_compare_exchange_strong(lockp, current, desired, AK::MemoryOrder::memory_order_acquire);
                 if (!did_exchange)
                     continue; // tough luck, try again.
@@ -779,7 +779,7 @@ int pthread_rwlock_unlock(pthread_rwlock_t* lockval_p)
             return EINVAL;
         }
         --count;
-        auto desired = (current << 16) | count;
+        auto desired = (current & 0xffff0000u) | count;
         auto did_exchange = AK::atomic_compare_exchange_strong(lockp, current, desired, AK::MemoryOrder::memory_order_release);
         if (!did_exchange)
             continue; // tough luck, try again.
