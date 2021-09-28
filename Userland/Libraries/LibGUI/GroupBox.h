@@ -17,6 +17,7 @@ public:
 
     String title() const { return m_title; }
     void set_title(const StringView&);
+    virtual Margins content_margins() const override;
 
 protected:
     explicit GroupBox(const StringView& title = {});

@@ -24,6 +24,16 @@ GroupBox::~GroupBox()
 {
 }
 
+Margins GroupBox::content_margins() const
+{
+    return {
+        (!m_title.is_empty() ? font().glyph_height() + 1 /*room for the focus rect*/ : 2),
+        2,
+        2,
+        2
+    };
+}
+
 void GroupBox::paint_event(PaintEvent& event)
 {
     Painter painter(*this);
