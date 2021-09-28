@@ -537,11 +537,8 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
         auto prototype = new_target.get(names.prototype);
         if (exception())
             return {};
-        if (prototype.is_object()) {
-            result.as_object().internal_set_prototype_of(&prototype.as_object());
-            if (exception())
-                return {};
-        }
+        if (prototype.is_object())
+            TRY_OR_DISCARD(result.as_object().internal_set_prototype_of(&prototype.as_object()));
         return result;
     }
 

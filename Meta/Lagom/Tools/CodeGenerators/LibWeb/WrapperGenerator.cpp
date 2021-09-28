@@ -1548,7 +1548,7 @@ namespace Web::Bindings {
 @wrapper_class@::@wrapper_class@(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
     : @wrapper_base_class@(global_object, impl)
 {
-    auto success = internal_set_prototype_of(&static_cast<WindowObject&>(global_object).ensure_web_prototype<@prototype_class@>("@name@"));
+    auto success = internal_set_prototype_of(&static_cast<WindowObject&>(global_object).ensure_web_prototype<@prototype_class@>("@name@")).release_value();
     VERIFY(success);
 }
 )~~~");
@@ -2800,12 +2800,12 @@ namespace Web::Bindings {
         // https://heycam.github.io/webidl/#es-DOMException-specialness
         // Object.getPrototypeOf(DOMException.prototype) === Error.prototype
         generator.append(R"~~~(
-    auto success = internal_set_prototype_of(global_object.error_prototype());
+    auto success = internal_set_prototype_of(global_object.error_prototype()).release_value();
     VERIFY(success);
 )~~~");
     } else if (!interface.parent_name.is_empty()) {
         generator.append(R"~~~(
-    auto success = internal_set_prototype_of(&static_cast<WindowObject&>(global_object).ensure_web_prototype<@prototype_base_class@>("@parent_name@"));
+    auto success = internal_set_prototype_of(&static_cast<WindowObject&>(global_object).ensure_web_prototype<@prototype_base_class@>("@parent_name@")).release_value();
     VERIFY(success);
 )~~~");
     }

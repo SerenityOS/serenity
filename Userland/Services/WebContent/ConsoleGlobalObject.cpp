@@ -42,7 +42,7 @@ JS::ThrowCompletionOr<JS::Object*> ConsoleGlobalObject::internal_get_prototype_o
     return m_window_object->internal_get_prototype_of();
 }
 
-bool ConsoleGlobalObject::internal_set_prototype_of(JS::Object* prototype)
+JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_set_prototype_of(JS::Object* prototype)
 {
     return m_window_object->internal_set_prototype_of(prototype);
 }

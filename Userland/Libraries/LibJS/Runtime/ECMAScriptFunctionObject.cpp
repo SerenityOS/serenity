@@ -81,7 +81,7 @@ void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
             break;
         case FunctionKind::Generator:
             // prototype is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
-            prototype->internal_set_prototype_of(global_object.generator_object_prototype());
+            (void)prototype->internal_set_prototype_of(global_object.generator_object_prototype());
             break;
         }
         define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
