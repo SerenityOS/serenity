@@ -113,7 +113,9 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
     }
 
     HashMap<FlyString, Variable> scope_variables_with_declaration_kind;
-    scope_variables_with_declaration_kind.ensure_capacity(16);
+
+    if (!scope_node.variables().is_empty())
+        scope_variables_with_declaration_kind.ensure_capacity(16);
 
     bool is_program_node = is<Program>(scope_node);
 
