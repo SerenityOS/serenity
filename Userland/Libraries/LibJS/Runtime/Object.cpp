@@ -301,9 +301,7 @@ bool Object::set_integrity_level(IntegrityLevel level)
     VERIFY(level == IntegrityLevel::Sealed || level == IntegrityLevel::Frozen);
 
     // 3. Let status be ? O.[[PreventExtensions]]().
-    auto status = internal_prevent_extensions();
-    if (vm.exception())
-        return {};
+    auto status = TRY_OR_DISCARD(internal_prevent_extensions());
 
     // 4. If status is false, return false.
     if (!status)
@@ -554,7 +552,7 @@ ThrowCompletionOr<bool> Object::internal_is_extensible() const
 }
 
 // 10.1.4 [[PreventExtensions]] ( ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-preventextensions
-bool Object::internal_prevent_extensions()
+ThrowCompletionOr<bool> Object::internal_prevent_extensions()
 {
     // 1. Set O.[[Extensible]] to false.
     m_is_extensible = false;
