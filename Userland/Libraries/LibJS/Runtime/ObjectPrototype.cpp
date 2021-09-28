@@ -187,7 +187,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::is_prototype_of)
         return {};
 
     for (;;) {
-        object = object->internal_get_prototype_of();
+        object = TRY_OR_DISCARD(object->internal_get_prototype_of());
         if (!object)
             return Value(false);
         if (same_value(this_object, object))
@@ -267,9 +267,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_getter)
                 return *desc->get ?: js_undefined();
             return js_undefined();
         }
-        object = object->internal_get_prototype_of();
-        if (vm.exception())
-            return {};
+        object = TRY_OR_DISCARD(object->internal_get_prototype_of());
     }
 
     return js_undefined();
@@ -295,9 +293,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_setter)
                 return *desc->set ?: js_undefined();
             return js_undefined();
         }
-        object = object->internal_get_prototype_of();
-        if (vm.exception())
-            return {};
+        object = TRY_OR_DISCARD(object->internal_get_prototype_of());
     }
 
     return js_undefined();
@@ -309,10 +305,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::proto_getter)
     auto object = vm.this_value(global_object).to_object(global_object);
     if (vm.exception())
         return {};
-    auto proto = object->internal_get_prototype_of();
-    if (vm.exception())
-        return {};
-    return proto;
+    return TRY_OR_DISCARD(object->internal_get_prototype_of());
 }
 
 // B.2.2.1.2 set Object.prototype.__proto__, https://tc39.es/ecma262/#sec-set-object.prototype.__proto__

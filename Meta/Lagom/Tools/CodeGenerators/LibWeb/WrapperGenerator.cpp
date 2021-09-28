@@ -1649,9 +1649,7 @@ bool @class_name@::is_named_property_exposed_on_object(JS::PropertyName const& p
                 scoped_generator.append(R"~~~(
     // NOTE: Step 3 is not here as the interface doesn't have the LegacyOverrideBuiltIns extended attribute.
     // 4. Let prototype be O.[[GetPrototypeOf]]().
-    auto* prototype = internal_get_prototype_of();
-    if (vm.exception())
-        return {};
+    auto* prototype = TRY_OR_DISCARD(internal_get_prototype_of());
 
     // 5. While prototype is not null:
     while (prototype) {
@@ -1665,9 +1663,7 @@ bool @class_name@::is_named_property_exposed_on_object(JS::PropertyName const& p
             return false;
 
         // 2. Set prototype to prototype.[[GetPrototypeOf]]().
-        prototype = prototype->internal_get_prototype_of();
-        if (vm.exception())
-            return {};
+        prototype = TRY_OR_DISCARD(prototype->internal_get_prototype_of());
     }
 
     // 6. Return true.

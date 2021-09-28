@@ -140,7 +140,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
         return {};
 
     // 2. Return ? obj.[[GetPrototypeOf]]().
-    return object->internal_get_prototype_of();
+    return TRY_OR_DISCARD(object->internal_get_prototype_of());
 }
 
 // 20.1.2.21 Object.setPrototypeOf ( O, proto ), https://tc39.es/ecma262/#sec-object.setprototypeof
