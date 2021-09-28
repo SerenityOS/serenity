@@ -315,4 +315,20 @@ float Window::device_pixel_ratio() const
     return 1.0f;
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-window-screenx
+int Window::screen_x() const
+{
+    // The screenX and screenLeft attributes must return the x-coordinate, relative to the origin of the Web-exposed screen area,
+    // of the left of the client window as number of CSS pixels, or zero if there is no such thing.
+    return 0;
+}
+
+// https://drafts.csswg.org/cssom-view/#dom-window-screeny
+int Window::screen_y() const
+{
+    // The screenY and screenTop attributes must return the y-coordinate, relative to the origin of the screen of the Web-exposed screen area,
+    // of the top of the client window as number of CSS pixels, or zero if there is no such thing.
+    return 0;
+}
+
 }

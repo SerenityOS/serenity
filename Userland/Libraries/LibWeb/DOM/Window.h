@@ -89,6 +89,9 @@ public:
 
     float device_pixel_ratio() const;
 
+    int screen_x() const;
+    int screen_y() const;
+
 private:
     explicit Window(Document&);
 
