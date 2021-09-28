@@ -188,7 +188,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_is_extensible() const
 }
 
 // 10.5.4 [[PreventExtensions]] ( ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-preventextensions
-bool ProxyObject::internal_prevent_extensions()
+ThrowCompletionOr<bool> ProxyObject::internal_prevent_extensions()
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -196,16 +196,14 @@ bool ProxyObject::internal_prevent_extensions()
     // 1. Let handler be O.[[ProxyHandler]].
 
     // 2. If handler is null, throw a TypeError exception.
-    if (m_is_revoked) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyRevoked);
-        return {};
-    }
+    if (m_is_revoked)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "preventExtensions").
-    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.preventExtensions));
+    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.preventExtensions));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -214,20 +212,18 @@ bool ProxyObject::internal_prevent_extensions()
     }
 
     // 7. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target »)).
-    auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target)).to_boolean();
+    auto trap_result = TRY(vm.call(*trap, &m_handler, &m_target)).to_boolean();
 
     // 8. If booleanTrapResult is true, then
     if (trap_result) {
         // a. Let extensibleTarget be ? IsExtensible(target).
         auto extensible_target = m_target.is_extensible();
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // b. If extensibleTarget is true, throw a TypeError exception.
-        if (extensible_target) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::ProxyPreventExtensionsReturn);
-            return {};
-        }
+        if (extensible_target)
+            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyPreventExtensionsReturn);
     }
 
     // 9. Return booleanTrapResult.

@@ -140,7 +140,7 @@ JS::ThrowCompletionOr<bool> LocationObject::internal_is_extensible() const
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#location-preventextensions
-bool LocationObject::internal_prevent_extensions()
+JS::ThrowCompletionOr<bool> LocationObject::internal_prevent_extensions()
 {
     // 1. Return false.
     return false;

@@ -23,7 +23,7 @@ public:
 
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(Object* prototype) override;
     virtual JS::ThrowCompletionOr<bool> internal_is_extensible() const override;
-    virtual bool internal_prevent_extensions() override;
+    virtual JS::ThrowCompletionOr<bool> internal_prevent_extensions() override;
 
     // FIXME: There should also be a custom [[GetPrototypeOf]], [[GetOwnProperty]], [[DefineOwnProperty]], [[Get]], [[Set]], [[Delete]] and [[OwnPropertyKeys]],
     //        but we don't have the infrastructure in place to implement them yet.

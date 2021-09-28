@@ -208,9 +208,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::prevent_extensions)
     auto argument = vm.argument(0);
     if (!argument.is_object())
         return argument;
-    auto status = argument.as_object().internal_prevent_extensions();
-    if (vm.exception())
-        return {};
+    auto status = TRY_OR_DISCARD(argument.as_object().internal_prevent_extensions());
     if (!status) {
         // FIXME: Improve/contextualize error message
         vm.throw_exception<TypeError>(global_object, ErrorType::ObjectPreventExtensionsReturnedFalse);

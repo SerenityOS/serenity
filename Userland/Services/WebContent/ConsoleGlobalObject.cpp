@@ -52,7 +52,7 @@ JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_is_extensible() const
     return m_window_object->internal_is_extensible();
 }
 
-bool ConsoleGlobalObject::internal_prevent_extensions()
+JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_prevent_extensions()
 {
     return m_window_object->internal_prevent_extensions();
 }

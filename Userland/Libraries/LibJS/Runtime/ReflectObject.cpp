@@ -283,7 +283,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::prevent_extensions)
     }
 
     // 2. Return ? target.[[PreventExtensions]]().
-    return Value(target.as_object().internal_prevent_extensions());
+    return Value(TRY_OR_DISCARD(target.as_object().internal_prevent_extensions()));
 }
 
 // 28.1.12 Reflect.set ( target, propertyKey, V [ , receiver ] ), https://tc39.es/ecma262/#sec-reflect.set

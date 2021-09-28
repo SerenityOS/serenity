@@ -94,7 +94,7 @@ public:
     virtual ThrowCompletionOr<Object*> internal_get_prototype_of() const;
     virtual ThrowCompletionOr<bool> internal_set_prototype_of(Object* prototype);
     virtual ThrowCompletionOr<bool> internal_is_extensible() const;
-    virtual bool internal_prevent_extensions();
+    virtual ThrowCompletionOr<bool> internal_prevent_extensions();
     virtual Optional<PropertyDescriptor> internal_get_own_property(PropertyName const&) const;
     virtual bool internal_define_own_property(PropertyName const&, PropertyDescriptor const&);
     virtual bool internal_has_property(PropertyName const&) const;
