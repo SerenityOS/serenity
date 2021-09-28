@@ -122,7 +122,7 @@ private:
     };
 
     void identify_chip_version();
-    String possible_device_name();
+    StringView possible_device_name();
 
     void reset();
     void read_mac_address();
