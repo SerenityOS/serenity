@@ -12,7 +12,7 @@
 namespace JS {
 
 FunctionEnvironment::FunctionEnvironment(Environment* parent_scope, HashMap<FlyString, Variable> variables)
-    : DeclarativeEnvironment(variables, parent_scope)
+    : DeclarativeEnvironment(move(variables), parent_scope)
 {
 }
 
