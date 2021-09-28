@@ -51,7 +51,7 @@ static FuzzyMatchResult fuzzy_match_recursive(String const& needle, String const
                 first_match = false;
             }
 
-            u8 recursive_matches[recursive_match_limit];
+            u8 recursive_matches[recursive_match_limit] {};
             auto result = fuzzy_match_recursive(needle, haystack, needle_idx, haystack_idx + 1, matches, recursive_matches, next_match, recursion_count);
             if (result.matched) {
                 if (!had_recursive_match || result.score > best_recursive_score) {
@@ -116,7 +116,7 @@ static FuzzyMatchResult fuzzy_match_recursive(String const& needle, String const
 FuzzyMatchResult fuzzy_match(String needle, String haystack)
 {
     int recursion_count = 0;
-    u8 matches[MAX_MATCHES];
+    u8 matches[MAX_MATCHES] {};
     return fuzzy_match_recursive(needle, haystack, 0, 0, nullptr, matches, 0, recursion_count);
 }
 
