@@ -1417,7 +1417,7 @@ public:
     virtual bool internal_set(JS::PropertyName const&, JS::Value, JS::Value) override;
     virtual bool internal_define_own_property(JS::PropertyName const&, JS::PropertyDescriptor const&) override;
     virtual bool internal_delete(JS::PropertyName const&) override;
-    virtual bool internal_prevent_extensions() override;
+    virtual JS::ThrowCompletionOr<bool> internal_prevent_extensions() override;
     virtual JS::MarkedValueList internal_own_property_keys() const override;
 )~~~");
     }
@@ -2288,7 +2288,7 @@ bool @class_name@::internal_delete(JS::PropertyName const& property_name)
 
         // 3.9.5. [[PreventExtensions]], https://heycam.github.io/webidl/#legacy-platform-object-preventextensions
         scoped_generator.append(R"~~~(
-bool @class_name@::internal_prevent_extensions()
+JS::ThrowCompletionOr<bool> @class_name@::internal_prevent_extensions()
 {
     // 1. Return false.
     return false;
