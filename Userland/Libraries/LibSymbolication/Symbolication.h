@@ -14,6 +14,7 @@ namespace Symbolication {
 struct Symbol {
     FlatPtr address { 0 };
     String name {};
+    String object {};
     u32 offset { 0 };
     Vector<Debug::DebugInfo::SourcePosition> source_positions;
 };

@@ -121,6 +121,7 @@ Optional<Symbol> symbolicate(String const& path, FlatPtr address)
     return Symbol {
         .address = address,
         .name = move(symbol),
+        .object = LexicalPath::basename(path),
         .offset = offset,
         .source_positions = move(positions),
     };
