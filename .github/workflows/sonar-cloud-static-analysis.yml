@@ -42,6 +42,7 @@ jobs:
           echo "sonar.organization=serenityos" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.cfamily.compile-commands=${{ github.workspace }}/Build/${{ env.SONAR_ANALYSIS_ARCH }}/compile_commands.json" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.cfamily.threads=2" >> ${{ github.workspace }}/sonar-project.properties
+          echo "sonar.cfamily.cache.enabled=false" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.exclusions=Userland/Libraries/LibWasm/Parser/Parser.cpp" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.host.url=${{ env.SONAR_SERVER_URL }}" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.sources=AK,Build,Userland,Kernel,Meta" >> ${{ github.workspace }}/sonar-project.properties
