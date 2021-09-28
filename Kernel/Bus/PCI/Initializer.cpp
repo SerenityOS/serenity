@@ -65,8 +65,8 @@ UNMAP_AFTER_INIT bool test_pci_io()
 {
     dmesgln("Testing PCI via manual probing...");
     u32 tmp = 0x80000000;
-    IO::out32(PCI_ADDRESS_PORT, tmp);
-    tmp = IO::in32(PCI_ADDRESS_PORT);
+    IO::out32(PCI::address_port, tmp);
+    tmp = IO::in32(PCI::address_port);
     if (tmp == 0x80000000) {
         dmesgln("PCI IO supported");
         return true;

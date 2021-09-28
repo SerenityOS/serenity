@@ -40,6 +40,9 @@ public:
     DeviceIdentifier get_device_identifier(Address address) const;
 
 private:
+    u8 read8_field(Address address, RegisterOffset field);
+    u16 read16_field(Address address, RegisterOffset field);
+
     void enumerate_bus(int type, u8 bus, bool recursive);
     void enumerate_functions(int type, u8 bus, u8 device, u8 function, bool recursive);
     void enumerate_device(int type, u8 bus, u8 device, bool recursive);
