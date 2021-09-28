@@ -7,10 +7,12 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Desktop.h>
+#include <LibGUI/Event.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Scrollbar.h>
 #include <LibGUI/TextBox.h>
+#include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 
 REGISTER_WIDGET(GUI, ComboBox)
@@ -35,6 +37,16 @@ private:
             set_focus(true);
         if (on_mousewheel)
             on_mousewheel(event.wheel_delta());
+    }
+
+    virtual void keydown_event(KeyEvent& event) override
+    {
+        if (event.key() == Key_Escape) {
+            if (is_focused())
+                set_focus(false);
+            event.accept();
+        } else
+            TextEditor::keydown_event(event);
     }
 };
 
