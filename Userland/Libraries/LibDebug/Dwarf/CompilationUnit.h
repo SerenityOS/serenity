@@ -34,6 +34,7 @@ public:
     DwarfInfo const& dwarf_info() const { return m_dwarf_info; }
     AbbreviationsMap const& abbreviations_map() const { return m_abbreviations; }
     LineProgram const& line_program() const { return *m_line_program; }
+    Optional<FlatPtr> base_address() const;
 
 private:
     DwarfInfo const& m_dwarf_info;
@@ -41,6 +42,8 @@ private:
     CompilationUnitHeader m_header;
     AbbreviationsMap m_abbreviations;
     NonnullOwnPtr<LineProgram> m_line_program;
+    mutable bool m_has_cached_base_address { false };
+    mutable Optional<FlatPtr> m_cached_base_address;
 };
 
 }

@@ -30,4 +30,18 @@ DIE CompilationUnit::get_die_at_offset(u32 die_offset) const
     return DIE(*this, die_offset);
 }
 
+Optional<FlatPtr> CompilationUnit::base_address() const
+{
+    if (m_has_cached_base_address)
+        return m_cached_base_address;
+
+    auto die = root_die();
+    auto res = die.get_attribute(Attribute::LowPc);
+    if (res.has_value()) {
+        m_cached_base_address = res->data.as_addr;
+    }
+    m_has_cached_base_address = true;
+    return m_cached_base_address;
+}
+
 }
