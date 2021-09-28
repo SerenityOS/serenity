@@ -1630,55 +1630,55 @@ void RTL8168NetworkAdapter::identify_chip_version()
     }
 }
 
-String RTL8168NetworkAdapter::possible_device_name()
+StringView RTL8168NetworkAdapter::possible_device_name()
 {
     switch (m_version) { // We are following *BSD's versioning scheme, the comments note linux's versioning scheme, but they dont match up exactly
     case ChipVersion::Version1:
     case ChipVersion::Version2:
     case ChipVersion::Version3:
-        return "RTL8168B/8111B"; // 11, 12, 17
+        return "RTL8168B/8111B"sv; // 11, 12, 17
     case ChipVersion::Version4:
     case ChipVersion::Version5:
     case ChipVersion::Version6:
-        return "RTL8168C/8111C"; // 19, 20, 21, 22
+        return "RTL8168C/8111C"sv; // 19, 20, 21, 22
     case ChipVersion::Version7:
     case ChipVersion::Version8:
-        return "RTL8168CP/8111CP"; // 18, 23, 24
+        return "RTL8168CP/8111CP"sv; // 18, 23, 24
     case ChipVersion::Version9:
     case ChipVersion::Version10:
-        return "RTL8168D/8111D"; // 25, 26
+        return "RTL8168D/8111D"sv; // 25, 26
     case ChipVersion::Version11:
     case ChipVersion::Version12:
     case ChipVersion::Version13:
-        return "RTL8168DP/8111DP"; // 27, 28, 31
+        return "RTL8168DP/8111DP"sv; // 27, 28, 31
     case ChipVersion::Version14:
     case ChipVersion::Version15:
-        return "RTL8168E/8111E"; // 32, 33
+        return "RTL8168E/8111E"sv; // 32, 33
     case ChipVersion::Version16:
     case ChipVersion::Version17:
-        return "RTL8168E-VL/8111E-VL"; // 34
+        return "RTL8168E-VL/8111E-VL"sv; // 34
     case ChipVersion::Version18:
     case ChipVersion::Version19:
-        return "RTL8168F/8111F"; // 35, 36
+        return "RTL8168F/8111F"sv; // 35, 36
     case ChipVersion::Version20:
         return "RTL8411"; // 38
     case ChipVersion::Version21:
     case ChipVersion::Version22:
-        return "RTL8168G/8111G"; // 40, 41, 42
+        return "RTL8168G/8111G"sv; // 40, 41, 42
     case ChipVersion::Version23:
     case ChipVersion::Version27:
     case ChipVersion::Version28:
-        return "RTL8168EP/8111EP"; // 49, 50, 51
+        return "RTL8168EP/8111EP"sv; // 49, 50, 51
     case ChipVersion::Version24:
     case ChipVersion::Version25:
-        return "RTL8168GU/8111GU"; // ???
+        return "RTL8168GU/8111GU"sv; // ???
     case ChipVersion::Version26:
         return "RTL8411B"; // 44
     case ChipVersion::Version29:
     case ChipVersion::Version30:
-        return "RTL8168H/8111H"; // 45, 46
+        return "RTL8168H/8111H"sv; // 45, 46
     case ChipVersion::Unknown:
-        return "Unknown";
+        return "Unknown"sv;
     }
     VERIFY_NOT_REACHED();
 }
