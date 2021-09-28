@@ -71,7 +71,7 @@ Signal Mastering::process_impl(Signal const& input_signal)
         return Signal(out);
     }
 
-    out += in.log_pan(static_cast<double>(m_pan));
+    out += in.panned(static_cast<double>(m_pan));
     out += in.log_multiplied(static_cast<double>(m_master_volume));
     return Signal(out);
 }
