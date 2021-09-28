@@ -170,9 +170,10 @@ KResult Socket::getsockopt(OpenFileDescription&, int level, int option, Userspac
         if (size < IFNAMSIZ)
             return EINVAL;
         if (m_bound_interface) {
-            const auto& name = m_bound_interface->name();
+            auto name = m_bound_interface->name();
             auto length = name.length() + 1;
-            TRY(copy_to_user(static_ptr_cast<char*>(value), name.characters(), length));
+            auto characters = name.characters_without_null_termination();
+            TRY(copy_to_user(static_ptr_cast<char*>(value), characters, length));
             size = length;
             return copy_to_user(value_size, &size);
         } else {

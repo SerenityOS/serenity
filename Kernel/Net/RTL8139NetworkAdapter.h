@@ -22,7 +22,7 @@ class RTL8139NetworkAdapter final : public NetworkAdapter
     , public PCI::Device
     , public IRQHandler {
 public:
-    static RefPtr<RTL8139NetworkAdapter> try_to_initialize(PCI::DeviceIdentifier const&);
+    static RefPtr<RTL8139NetworkAdapter> try_to_initialize(PCI::DeviceIdentifier const&, NonnullOwnPtr<KString>);
 
     virtual ~RTL8139NetworkAdapter() override;
 
@@ -34,7 +34,7 @@ public:
     virtual StringView purpose() const override { return class_name(); }
 
 private:
-    RTL8139NetworkAdapter(PCI::Address, u8 irq);
+    RTL8139NetworkAdapter(PCI::Address, u8 irq, NonnullOwnPtr<KString>);
     virtual bool handle_irq(const RegisterState&) override;
     virtual StringView class_name() const override { return "RTL8139NetworkAdapter"sv; }
 

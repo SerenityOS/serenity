@@ -50,7 +50,7 @@ public:
 
     virtual StringView class_name() const = 0;
 
-    const String& name() const { return m_name; }
+    StringView name() const { return m_name->view(); }
     MACAddress mac_address() { return m_mac_address; }
     IPv4Address ipv4_address() const { return m_ipv4_address; }
     IPv4Address ipv4_netmask() const { return m_ipv4_netmask; }
@@ -94,13 +94,10 @@ public:
     void send_packet(ReadonlyBytes);
 
 protected:
-    NetworkAdapter();
-    void set_interface_name(const PCI::Address&);
+    NetworkAdapter(NonnullOwnPtr<KString>);
     void set_mac_address(const MACAddress& mac_address) { m_mac_address = mac_address; }
     void did_receive(ReadonlyBytes);
     virtual void send_raw(ReadonlyBytes) = 0;
-
-    void set_loopback_name();
 
 private:
     MACAddress m_mac_address;
@@ -116,7 +113,7 @@ private:
     PacketList m_packet_queue;
     size_t m_packet_queue_size { 0 };
     PacketList m_unused_packets;
-    String m_name;
+    NonnullOwnPtr<KString> m_name;
     u32 m_packets_in { 0 };
     u32 m_bytes_in { 0 };
     u32 m_packets_out { 0 };
