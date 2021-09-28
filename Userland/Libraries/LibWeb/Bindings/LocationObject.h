@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibWeb/Forward.h>
 
@@ -20,7 +21,7 @@ public:
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~LocationObject() override;
 
-    virtual bool internal_set_prototype_of(Object* prototype) override;
+    virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(Object* prototype) override;
     virtual bool internal_is_extensible() const override;
     virtual bool internal_prevent_extensions() override;
 

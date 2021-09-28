@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS {
@@ -20,7 +21,7 @@ public:
 
     // 10.4.7 Immutable Prototype Exotic Objects, https://tc39.es/ecma262/#sec-immutable-prototype-exotic-objects
 
-    virtual bool internal_set_prototype_of(Object* prototype) override;
+    virtual ThrowCompletionOr<bool> internal_set_prototype_of(Object* prototype) override;
 
     // public to serve as intrinsic function %Object.prototype.toString%
     JS_DECLARE_NATIVE_FUNCTION(to_string);

@@ -9,6 +9,7 @@
 
 #include <AK/TypeCasts.h>
 #include <AK/Weakable.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/GlobalEventHandlers.h>
@@ -60,7 +61,7 @@ public:
         return *constructor;
     }
 
-    virtual bool internal_set_prototype_of(JS::Object* prototype) override;
+    virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(JS::Object* prototype) override;
 
 private:
     virtual void visit_edges(Visitor&) override;

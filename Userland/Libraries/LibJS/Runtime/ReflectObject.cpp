@@ -334,7 +334,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::set_prototype_of)
     }
 
     // 3. Return ? target.[[SetPrototypeOf]](proto).
-    return Value(target.as_object().internal_set_prototype_of(proto.is_null() ? nullptr : &proto.as_object()));
+    return Value(TRY_OR_DISCARD(target.as_object().internal_set_prototype_of(proto.is_null() ? nullptr : &proto.as_object())));
 }
 
 }

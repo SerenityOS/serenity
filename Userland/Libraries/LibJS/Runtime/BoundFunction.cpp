@@ -38,11 +38,8 @@ Value BoundFunction::call()
 
 Value BoundFunction::construct(FunctionObject& new_target)
 {
-    if (auto this_value = vm().this_value(global_object()); m_constructor_prototype && this_value.is_object()) {
-        this_value.as_object().internal_set_prototype_of(m_constructor_prototype);
-        if (vm().exception())
-            return {};
-    }
+    if (auto this_value = vm().this_value(global_object()); m_constructor_prototype && this_value.is_object())
+        TRY_OR_DISCARD(this_value.as_object().internal_set_prototype_of(m_constructor_prototype));
     return m_bound_target_function->construct(new_target);
 }
 

@@ -36,7 +36,7 @@ public:
     // 10.5 Proxy Object Internal Methods and Internal Slots, https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots
 
     virtual ThrowCompletionOr<Object*> internal_get_prototype_of() const override;
-    virtual bool internal_set_prototype_of(Object* prototype) override;
+    virtual ThrowCompletionOr<bool> internal_set_prototype_of(Object* prototype) override;
     virtual bool internal_is_extensible() const override;
     virtual bool internal_prevent_extensions() override;
     virtual Optional<PropertyDescriptor> internal_get_own_property(PropertyName const&) const override;
