@@ -6,19 +6,20 @@
 
 #pragma once
 
+#include "WidgetWithLabel.h"
 #include <LibDSP/ProcessorParameter.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Slider.h>
 #include <LibGfx/Orientation.h>
 
-class ProcessorParameterSlider : public GUI::Slider {
+class ProcessorParameterSlider
+    : public GUI::Slider
+    , public WidgetWithLabel {
     C_OBJECT(ProcessorParameterSlider);
 
 public:
     ProcessorParameterSlider(Orientation, LibDSP::ProcessorRangeParameter&, RefPtr<GUI::Label>);
-    RefPtr<GUI::Label> value_label() { return m_value_label; }
 
-private:
+protected:
     LibDSP::ProcessorRangeParameter& m_parameter;
-    RefPtr<GUI::Label> m_value_label;
 };

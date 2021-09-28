@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "ProcessorParameterSlider.h"
+#include "ProcessorParameterWidget/Slider.h"
 #include <AK/NonnullRefPtrVector.h>
 #include <LibGUI/Frame.h>
 
