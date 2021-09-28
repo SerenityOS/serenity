@@ -96,6 +96,11 @@ void WindowObject::initialize_global_object()
     define_native_function("scrollTo", scroll, 2, attr);
     define_native_function("scrollBy", scroll_by, 2, attr);
 
+    define_native_accessor("screenX", screen_x_getter, {}, attr);
+    define_native_accessor("screenY", screen_y_getter, {}, attr);
+    define_native_accessor("screenLeft", screen_left_getter, {}, attr);
+    define_native_accessor("screenTop", screen_top_getter, {}, attr);
+
     // Legacy
     define_native_accessor("event", event_getter, event_setter, JS::Attribute::Enumerable);
 
@@ -715,6 +720,38 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::history_getter)
     if (!impl)
         return {};
     return wrap(global_object, impl->associated_document().history());
+}
+
+JS_DEFINE_NATIVE_GETTER(WindowObject::screen_left_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    return JS::Value(impl->screen_x());
+}
+
+JS_DEFINE_NATIVE_GETTER(WindowObject::screen_top_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    return JS::Value(impl->screen_y());
+}
+
+JS_DEFINE_NATIVE_GETTER(WindowObject::screen_x_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    return JS::Value(impl->screen_x());
+}
+
+JS_DEFINE_NATIVE_GETTER(WindowObject::screen_y_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    return JS::Value(impl->screen_y());
 }
 
 #define __ENUMERATE(attribute, event_name)                                   \
