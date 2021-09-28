@@ -40,7 +40,7 @@ void HTMLLinkElement::inserted()
     if (m_relationship & Relationship::Preload) {
         // FIXME: Respect the "as" attribute.
         LoadRequest request;
-        request.set_url(attribute(HTML::AttributeNames::href));
+        request.set_url(document().parse_url(attribute(HTML::AttributeNames::href)));
         m_preload_resource = ResourceLoader::the().load_resource(Resource::Type::Generic, request);
     }
 }
