@@ -29,7 +29,6 @@ private:
 
     Vector<Sample> m_delay_buffer;
     size_t m_delay_index { 0 };
-    size_t m_old_delay_size = m_delay_buffer.size();
 };
 
 // A simple effect that applies volume, mute and pan to its input signal.
