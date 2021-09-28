@@ -1,7 +1,6 @@
 interface Event {
 
-    // FIXME: second parameter: 'optional EventInit eventInitDict = {}'
-    constructor(DOMString type);
+    constructor(DOMString type, optional EventInit eventInitDict = {});
 
     readonly attribute DOMString type;
     readonly attribute EventTarget? target;
@@ -25,4 +24,10 @@ interface Event {
 
     undefined initEvent(DOMString type, optional boolean bubbles = false, optional boolean cancelable = false);
 
+};
+
+dictionary EventInit {
+    boolean bubbles = false;
+    boolean cancelable = false;
+    boolean composed = false;
 };
