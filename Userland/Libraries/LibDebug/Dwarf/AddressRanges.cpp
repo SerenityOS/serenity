@@ -57,6 +57,7 @@ void AddressRanges::for_each_range(Function<void(Range)> callback)
         }
         case RangeListEntryType::EndOfList:
             return;
+            [[fallthrough]];
         default:
             dbgln("unsupported range list entry type: 0x{:x}", (int)entry_type);
             return;
