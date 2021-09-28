@@ -112,3 +112,60 @@ TEST_CASE(string_view_literal_operator)
     EXPECT_EQ(literal_view, test_string);
 }
 ```
+
+## Source Location
+
+C++20 added std::source_location, which lets you capture the
+callers __FILE__ / __LINE__ / __FUNCTION__ etc as a default
+argument to functions.
+See: https://en.cppreference.com/w/cpp/utility/source_location
+
+`AK::SourceLocation` is the implementation of this feature in
+SerenityOS. It's become the idiomatic way to capture the location
+when adding extra debugging instrumentation, without resorting to
+litering the code with preprocessor macros.
+
+To use it, you can add the `AK::SourceLocation` as a default argument
+to any function, using `AK::SourceLocatin::current()` to initialize the
+default argument.
+
+Example Usage:
+```cpp
+#include <AK/SourceLocation.h>
+#include <AK/StringView.h>
+
+static StringView example_fn(const SourceLocation& loc = SourceLocation::current())
+{
+    return loc.function_name();
+}
+
+int main(int, char**)
+{
+    return example_fn().length();
+}
+```
+
+If you only want to only capture `AK::SourceLocation` data with a certain debug macro enabled, avoid
+adding `#ifdef`'s to all functions which have the  `AK::SourceLocation` argument. Since SourceLocation
+is just a simple struct, you can just declare an empty class which can be optimized away by the
+compiler, and alias both to the same name.
+
+Example Usage:
+
+```cpp
+
+#if LOCK_DEBUG
+#    include <AK/SourceLocation.h>
+#endif
+
+#if LOCK_DEBUG
+using LockLocation = SourceLocation;
+#else
+struct LockLocation {
+    static constexpr LockLocation current() { return {}; }
+
+private:
+    constexpr LockLocation() = default;
+};
+#endif
+```
