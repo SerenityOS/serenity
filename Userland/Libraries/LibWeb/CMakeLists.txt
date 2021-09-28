@@ -12,6 +12,7 @@ set(SOURCES
     Bindings/ScriptExecutionContext.cpp
     Bindings/WindowObject.cpp
     Bindings/Wrappable.cpp
+    CSS/CSSConditionRule.cpp
     CSS/CSSGroupingRule.cpp
     CSS/CSSImportRule.cpp
     CSS/CSSRule.cpp
