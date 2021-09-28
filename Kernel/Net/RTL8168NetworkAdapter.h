@@ -22,7 +22,7 @@ class RTL8168NetworkAdapter final : public NetworkAdapter
     , public PCI::Device
     , public IRQHandler {
 public:
-    static RefPtr<RTL8168NetworkAdapter> try_to_initialize(PCI::DeviceIdentifier const&);
+    static RefPtr<RTL8168NetworkAdapter> try_to_initialize(PCI::DeviceIdentifier const&, NonnullOwnPtr<KString>);
 
     virtual ~RTL8168NetworkAdapter() override;
 
@@ -38,7 +38,7 @@ private:
     static const size_t number_of_rx_descriptors = 64;
     static const size_t number_of_tx_descriptors = 16;
 
-    RTL8168NetworkAdapter(PCI::Address, u8 irq);
+    RTL8168NetworkAdapter(PCI::Address, u8 irq, NonnullOwnPtr<KString>);
 
     virtual bool handle_irq(const RegisterState&) override;
     virtual StringView class_name() const override { return "RTL8168NetworkAdapter"sv; }

@@ -21,7 +21,7 @@ namespace Kernel {
 class E1000ENetworkAdapter final
     : public E1000NetworkAdapter {
 public:
-    static RefPtr<E1000ENetworkAdapter> try_to_initialize(PCI::DeviceIdentifier const&);
+    static RefPtr<E1000ENetworkAdapter> try_to_initialize(PCI::DeviceIdentifier const&, NonnullOwnPtr<KString>);
 
     virtual bool initialize() override;
 
@@ -30,7 +30,7 @@ public:
     virtual StringView purpose() const override { return class_name(); }
 
 private:
-    E1000ENetworkAdapter(PCI::Address, u8 irq);
+    E1000ENetworkAdapter(PCI::Address, u8 irq, NonnullOwnPtr<KString>);
 
     virtual StringView class_name() const override { return "E1000ENetworkAdapter"sv; }
 

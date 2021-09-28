@@ -15,7 +15,8 @@
 
 namespace Kernel {
 
-NetworkAdapter::NetworkAdapter()
+NetworkAdapter::NetworkAdapter(NonnullOwnPtr<KString> interface_name)
+    : m_name(move(interface_name))
 {
 }
 
@@ -165,18 +166,4 @@ void NetworkAdapter::set_ipv4_gateway(const IPv4Address& gateway)
     m_ipv4_gateway = gateway;
 }
 
-void NetworkAdapter::set_interface_name(const PCI::Address& pci_address)
-{
-    // Note: This stands for e - "Ethernet", p - "Port" as for PCI bus, "s" for slot as for PCI slot
-    auto name = String::formatted("ep{}s{}", pci_address.bus(), pci_address.device());
-    VERIFY(!NetworkingManagement::the().lookup_by_name(name));
-    m_name = move(name);
-}
-
-void NetworkAdapter::set_loopback_name()
-{
-    auto name = String("loop");
-    VERIFY(!NetworkingManagement::the().lookup_by_name(name));
-    m_name = move(name);
-}
 }
