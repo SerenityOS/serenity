@@ -72,7 +72,7 @@ Object::~Object()
 // 7.2.5 IsExtensible ( O ), https://tc39.es/ecma262/#sec-isextensible-o
 bool Object::is_extensible() const
 {
-    return internal_is_extensible();
+    return TRY_OR_DISCARD(internal_is_extensible());
 }
 
 // 7.3 Operations on Objects, https://tc39.es/ecma262/#sec-operations-on-objects
@@ -547,7 +547,7 @@ ThrowCompletionOr<bool> Object::internal_set_prototype_of(Object* new_prototype)
 }
 
 // 10.1.3 [[IsExtensible]] ( ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-isextensible
-bool Object::internal_is_extensible() const
+ThrowCompletionOr<bool> Object::internal_is_extensible() const
 {
     // 1. Return O.[[Extensible]].
     return m_is_extensible;

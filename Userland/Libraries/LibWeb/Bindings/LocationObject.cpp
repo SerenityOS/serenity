@@ -133,7 +133,7 @@ JS::ThrowCompletionOr<bool> LocationObject::internal_set_prototype_of(Object* pr
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#location-isextensible
-bool LocationObject::internal_is_extensible() const
+JS::ThrowCompletionOr<bool> LocationObject::internal_is_extensible() const
 {
     // 1. Return true.
     return true;
