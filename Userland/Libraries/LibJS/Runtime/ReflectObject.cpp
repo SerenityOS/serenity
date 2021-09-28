@@ -248,7 +248,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::is_extensible)
     }
 
     // 2. Return ? target.[[IsExtensible]]().
-    return Value(target.as_object().internal_is_extensible());
+    return Value(TRY_OR_DISCARD(target.as_object().internal_is_extensible()));
 }
 
 // 28.1.10 Reflect.ownKeys ( target ), https://tc39.es/ecma262/#sec-reflect.ownkeys

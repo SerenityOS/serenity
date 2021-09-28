@@ -47,7 +47,7 @@ JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_set_prototype_of(JS::O
     return m_window_object->internal_set_prototype_of(prototype);
 }
 
-bool ConsoleGlobalObject::internal_is_extensible() const
+JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_is_extensible() const
 {
     return m_window_object->internal_is_extensible();
 }
