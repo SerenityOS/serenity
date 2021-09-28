@@ -63,6 +63,7 @@ Signal Classic::process_impl(Signal const& input_signal)
     return out;
 }
 
+// Linear ADSR envelope with no peak adjustment.
 double Classic::volume_from_envelope(Envelope envelope)
 {
     switch (static_cast<EnvelopeState>(envelope)) {
@@ -71,10 +72,12 @@ double Classic::volume_from_envelope(Envelope envelope)
     case EnvelopeState::Attack:
         return envelope.attack();
     case EnvelopeState::Decay:
-        return (1. - envelope.decay()) * m_sustain + m_sustain;
+        // As we fade from high (1) to low (headroom above the sustain level) here, use 1-decay as the interpolation.
+        return (1. - envelope.decay()) * (1. - m_sustain) + m_sustain;
     case EnvelopeState::Sustain:
         return m_sustain;
     case EnvelopeState::Release:
+        // Same goes for the release fade from high to low.
         return (1. - envelope.release()) * m_sustain;
     }
     VERIFY_NOT_REACHED();

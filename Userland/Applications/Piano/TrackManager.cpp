@@ -7,6 +7,7 @@
  */
 
 #include "TrackManager.h"
+#include "Applications/Piano/Music.h"
 
 TrackManager::TrackManager()
 {
@@ -61,9 +62,9 @@ void TrackManager::reset()
         track->reset();
 }
 
-void TrackManager::set_note_current_octave(int note, Switch switch_note)
+void TrackManager::set_keyboard_note(int note, Switch note_switch)
 {
-    current_track().set_note(note + octave_base(), switch_note);
+    m_tracks[m_current_track]->set_keyboard_note(note, note_switch);
 }
 
 void TrackManager::set_octave(Direction direction)

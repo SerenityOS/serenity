@@ -7,9 +7,14 @@
 
 #pragma once
 
+#include "ProcessorParameterWidget/Dropdown.h"
 #include "ProcessorParameterWidget/Slider.h"
 #include <AK/NonnullRefPtrVector.h>
+#include <LibDSP/ProcessorParameter.h>
+#include <LibDSP/Synthesizers.h>
 #include <LibGUI/Frame.h>
+#include <LibGUI/Label.h>
+#include <LibGUI/Widget.h>
 
 class TrackManager;
 class MainWidget;
@@ -20,6 +25,7 @@ public:
     virtual ~KnobsWidget() override;
 
     void update_knobs();
+    void cycle_waveform();
 
 private:
     KnobsWidget(TrackManager&, MainWidget&);
@@ -30,31 +36,20 @@ private:
     RefPtr<GUI::Widget> m_labels_container;
     RefPtr<GUI::Label> m_volume_label;
     RefPtr<GUI::Label> m_octave_label;
-    RefPtr<GUI::Label> m_wave_label;
-    RefPtr<GUI::Label> m_attack_label;
-    RefPtr<GUI::Label> m_decay_label;
-    RefPtr<GUI::Label> m_sustain_label;
-    RefPtr<GUI::Label> m_release_label;
+    NonnullRefPtrVector<GUI::Label> m_synth_labels;
     NonnullRefPtrVector<GUI::Label> m_delay_labels;
 
     RefPtr<GUI::Widget> m_values_container;
     RefPtr<GUI::Label> m_volume_value;
     RefPtr<GUI::Label> m_octave_value;
-    RefPtr<GUI::Label> m_wave_value;
-    RefPtr<GUI::Label> m_attack_value;
-    RefPtr<GUI::Label> m_decay_value;
-    RefPtr<GUI::Label> m_sustain_value;
-    RefPtr<GUI::Label> m_release_value;
+    NonnullRefPtrVector<GUI::Label> m_synth_values;
     NonnullRefPtrVector<GUI::Label> m_delay_values;
 
     RefPtr<GUI::Widget> m_knobs_container;
     RefPtr<GUI::Slider> m_volume_knob;
     RefPtr<GUI::Slider> m_octave_knob;
-    RefPtr<GUI::Slider> m_wave_knob;
-    RefPtr<GUI::Slider> m_attack_knob;
-    RefPtr<GUI::Slider> m_decay_knob;
-    RefPtr<GUI::Slider> m_sustain_knob;
-    RefPtr<GUI::Slider> m_release_knob;
+    RefPtr<ProcessorParameterDropdown<LibDSP::Synthesizers::Waveform>> m_synth_waveform;
+    NonnullRefPtrVector<GUI::Widget> m_synth_knobs;
     NonnullRefPtrVector<ProcessorParameterSlider> m_delay_knobs;
 
     bool m_change_underlying { true };
