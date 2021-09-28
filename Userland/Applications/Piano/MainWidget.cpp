@@ -117,8 +117,7 @@ void MainWidget::special_key_action(int key_code)
         set_octave_and_ensure_note_change(Up);
         break;
     case Key_C:
-        m_track_manager.current_track().set_wave(Up);
-        m_knobs_widget->update_knobs();
+        m_knobs_widget->cycle_waveform();
         break;
     }
 }

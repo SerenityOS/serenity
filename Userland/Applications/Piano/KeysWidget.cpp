@@ -42,7 +42,7 @@ void KeysWidget::set_key(int key, Switch switch_key)
     }
     VERIFY(m_key_on[key] <= 2);
 
-    m_track_manager.set_note_current_octave(key, switch_key);
+    m_track_manager.set_keyboard_note(key + m_track_manager.octave_base(), switch_key);
 }
 
 bool KeysWidget::note_is_set(int note) const
