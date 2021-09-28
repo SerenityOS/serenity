@@ -17,18 +17,30 @@ namespace LibDSP {
 
 using ParameterFixedPoint = FixedPoint<8, i64>;
 
+// Identifies the different kinds of parameters.
+// Note that achieving parameter type identification is NOT possible with typeid().
+enum class ParameterType : u8 {
+    Invalid = 0,
+    Range,
+    Enum,
+    Boolean,
+};
+
 // Processors have modifiable parameters that should be presented to the UI in a uniform way without requiring the processor itself to implement custom interfaces.
 class ProcessorParameter {
 public:
-    ProcessorParameter(String name)
+    ProcessorParameter(String name, ParameterType type)
         : m_name(move(name))
+        , m_type(type)
     {
     }
 
     String const& name() const { return m_name; }
+    ParameterType type() const { return m_type; }
 
 private:
     String const m_name;
+    ParameterType const m_type;
 };
 
 namespace Detail {
@@ -41,8 +53,8 @@ template<typename ParameterT>
 class ProcessorParameterSingleValue : public ProcessorParameter {
 
 public:
-    ProcessorParameterSingleValue(String name, ParameterT initial_value)
-        : ProcessorParameter(move(name))
+    ProcessorParameterSingleValue(String name, ParameterType type, ParameterT initial_value)
+        : ProcessorParameter(move(name), type)
         , m_value(move(initial_value))
     {
     }
@@ -82,7 +94,7 @@ protected:
 class ProcessorBooleanParameter final : public Detail::ProcessorParameterSingleValue<bool> {
 public:
     ProcessorBooleanParameter(String name, bool initial_value)
-        : Detail::ProcessorParameterSingleValue<bool>(move(name), move(initial_value))
+        : Detail::ProcessorParameterSingleValue<bool>(move(name), ParameterType::Boolean, move(initial_value))
     {
     }
 };
@@ -90,7 +102,7 @@ public:
 class ProcessorRangeParameter final : public Detail::ProcessorParameterSingleValue<ParameterFixedPoint> {
 public:
     ProcessorRangeParameter(String name, ParameterFixedPoint min_value, ParameterFixedPoint max_value, ParameterFixedPoint initial_value)
-        : Detail::ProcessorParameterSingleValue<ParameterFixedPoint>(move(name), move(initial_value))
+        : Detail::ProcessorParameterSingleValue<ParameterFixedPoint>(move(name), ParameterType::Range, move(initial_value))
         , m_min_value(move(min_value))
         , m_max_value(move(max_value))
         , m_default_value(move(initial_value))
@@ -122,7 +134,7 @@ template<typename EnumT>
 requires(IsEnum<EnumT>) class ProcessorEnumParameter final : public Detail::ProcessorParameterSingleValue<EnumT> {
 public:
     ProcessorEnumParameter(String name, EnumT initial_value)
-        : Detail::ProcessorParameterSingleValue<EnumT>(move(name), initial_value, ParameterType::Enum)
+        : Detail::ProcessorParameterSingleValue<EnumT>(move(name), ParameterType::Enum, initial_value)
     {
     }
 };

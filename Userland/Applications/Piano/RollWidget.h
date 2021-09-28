@@ -10,9 +10,11 @@
 
 #include "KeysWidget.h"
 #include "Music.h"
+#include <LibDSP/Music.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 
 class TrackManager;
+using LibDSP::RollNote;
 
 class RollWidget final : public GUI::AbstractScrollableWidget {
     C_OBJECT(RollWidget)

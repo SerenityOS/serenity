@@ -36,8 +36,8 @@ void WaveWidget::paint_event(GUI::PaintEvent& event)
     painter.fill_rect(frame_inner_rect(), Color::Black);
     painter.translate(frame_thickness(), frame_thickness());
 
-    Color left_wave_color = left_wave_colors[m_track_manager.current_track().wave()];
-    Color right_wave_color = right_wave_colors[m_track_manager.current_track().wave()];
+    Color left_wave_color = left_wave_colors[m_track_manager.current_track().synth()->wave()];
+    Color right_wave_color = right_wave_colors[m_track_manager.current_track().synth()->wave()];
     auto buffer = m_track_manager.buffer();
     double width_scale = static_cast<double>(frame_inner_rect().width()) / buffer.size();
 
