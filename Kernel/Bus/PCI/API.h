@@ -10,12 +10,12 @@
 
 namespace Kernel::PCI {
 
-void write8(Address address, u32 field, u8 value);
-void write16(Address address, u32 field, u16 value);
-void write32(Address address, u32 field, u32 value);
-u8 read8(Address address, u32 field);
-u16 read16(Address address, u32 field);
-u32 read32(Address address, u32 field);
+void write8(Address address, PCI::RegisterOffset field, u8 value);
+void write16(Address address, PCI::RegisterOffset field, u16 value);
+void write32(Address address, PCI::RegisterOffset field, u32 value);
+u8 read8(Address address, PCI::RegisterOffset field);
+u16 read16(Address address, PCI::RegisterOffset field);
+u32 read32(Address address, PCI::RegisterOffset field);
 
 HardwareID get_hardware_id(PCI::Address);
 bool is_io_space_enabled(Address);

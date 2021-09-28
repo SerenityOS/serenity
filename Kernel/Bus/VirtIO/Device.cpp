@@ -95,7 +95,7 @@ UNMAP_AFTER_INIT void Device::initialize()
 
     auto capabilities = PCI::get_device_identifier(address).capabilities();
     for (auto& capability : capabilities) {
-        if (capability.id() == PCI_CAPABILITY_VENDOR_SPECIFIC) {
+        if (capability.id().value() == PCI::Capabilities::ID::VendorSpecific) {
             // We have a virtio_pci_cap
             auto cfg = make<Configuration>();
             auto raw_config_type = capability.read8(0x3);

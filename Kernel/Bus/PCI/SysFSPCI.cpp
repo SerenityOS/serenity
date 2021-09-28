@@ -22,14 +22,14 @@ UNMAP_AFTER_INIT PCIDeviceSysFSDirectory::PCIDeviceSysFSDirectory(const SysFSDir
     : SysFSDirectory(String::formatted("{:04x}:{:02x}:{:02x}.{}", address.domain(), address.bus(), address.device(), address.function()), parent_directory)
     , m_address(address)
 {
-    m_components.append(PCIDeviceAttributeSysFSComponent::create("vendor", *this, PCI_VENDOR_ID, 2));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create("device_id", *this, PCI_DEVICE_ID, 2));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create("class", *this, PCI_CLASS, 1));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create("subclass", *this, PCI_SUBCLASS, 1));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create("revision", *this, PCI_REVISION_ID, 1));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create("progif", *this, PCI_PROG_IF, 1));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create("subsystem_vendor", *this, PCI_SUBSYSTEM_VENDOR_ID, 2));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create("subsystem_id", *this, PCI_SUBSYSTEM_ID, 2));
+    m_components.append(PCIDeviceAttributeSysFSComponent::create("vendor", *this, PCI::RegisterOffset::VENDOR_ID, 2));
+    m_components.append(PCIDeviceAttributeSysFSComponent::create("device_id", *this, PCI::RegisterOffset::DEVICE_ID, 2));
+    m_components.append(PCIDeviceAttributeSysFSComponent::create("class", *this, PCI::RegisterOffset::CLASS, 1));
+    m_components.append(PCIDeviceAttributeSysFSComponent::create("subclass", *this, PCI::RegisterOffset::SUBCLASS, 1));
+    m_components.append(PCIDeviceAttributeSysFSComponent::create("revision", *this, PCI::RegisterOffset::REVISION_ID, 1));
+    m_components.append(PCIDeviceAttributeSysFSComponent::create("progif", *this, PCI::RegisterOffset::PROG_IF, 1));
+    m_components.append(PCIDeviceAttributeSysFSComponent::create("subsystem_vendor", *this, PCI::RegisterOffset::SUBSYSTEM_VENDOR_ID, 2));
+    m_components.append(PCIDeviceAttributeSysFSComponent::create("subsystem_id", *this, PCI::RegisterOffset::SUBSYSTEM_ID, 2));
 }
 
 UNMAP_AFTER_INIT void PCIBusSysFSDirectory::initialize()
@@ -47,12 +47,12 @@ UNMAP_AFTER_INIT PCIBusSysFSDirectory::PCIBusSysFSDirectory()
     });
 }
 
-NonnullRefPtr<PCIDeviceAttributeSysFSComponent> PCIDeviceAttributeSysFSComponent::create(String name, const PCIDeviceSysFSDirectory& device, size_t offset, size_t field_bytes_width)
+NonnullRefPtr<PCIDeviceAttributeSysFSComponent> PCIDeviceAttributeSysFSComponent::create(String name, const PCIDeviceSysFSDirectory& device, PCI::RegisterOffset offset, size_t field_bytes_width)
 {
     return adopt_ref(*new (nothrow) PCIDeviceAttributeSysFSComponent(name, device, offset, field_bytes_width));
 }
 
-PCIDeviceAttributeSysFSComponent::PCIDeviceAttributeSysFSComponent(String name, const PCIDeviceSysFSDirectory& device, size_t offset, size_t field_bytes_width)
+PCIDeviceAttributeSysFSComponent::PCIDeviceAttributeSysFSComponent(String name, const PCIDeviceSysFSDirectory& device, PCI::RegisterOffset offset, size_t field_bytes_width)
     : SysFSComponent(name)
     , m_device(device)
     , m_offset(offset)

@@ -10,12 +10,12 @@
 
 namespace Kernel::PCI {
 
-void write8(Address address, u32 field, u8 value) { Access::the().write8_field(address, field, value); }
-void write16(Address address, u32 field, u16 value) { Access::the().write16_field(address, field, value); }
-void write32(Address address, u32 field, u32 value) { Access::the().write32_field(address, field, value); }
-u8 read8(Address address, u32 field) { return Access::the().read8_field(address, field); }
-u16 read16(Address address, u32 field) { return Access::the().read16_field(address, field); }
-u32 read32(Address address, u32 field) { return Access::the().read32_field(address, field); }
+void write8(Address address, PCI::RegisterOffset field, u8 value) { Access::the().write8_field(address, to_underlying(field), value); }
+void write16(Address address, PCI::RegisterOffset field, u16 value) { Access::the().write16_field(address, to_underlying(field), value); }
+void write32(Address address, PCI::RegisterOffset field, u32 value) { Access::the().write32_field(address, to_underlying(field), value); }
+u8 read8(Address address, PCI::RegisterOffset field) { return Access::the().read8_field(address, to_underlying(field)); }
+u16 read16(Address address, PCI::RegisterOffset field) { return Access::the().read16_field(address, to_underlying(field)); }
+u32 read32(Address address, PCI::RegisterOffset field) { return Access::the().read32_field(address, to_underlying(field)); }
 
 void enumerate(Function<void(DeviceIdentifier const&)> callback)
 {
@@ -29,69 +29,69 @@ DeviceIdentifier get_device_identifier(Address address)
 
 HardwareID get_hardware_id(Address address)
 {
-    return { read16(address, PCI_VENDOR_ID), read16(address, PCI_DEVICE_ID) };
+    return { read16(address, PCI::RegisterOffset::VENDOR_ID), read16(address, PCI::RegisterOffset::DEVICE_ID) };
 }
 
 void enable_io_space(Address address)
 {
-    write16(address, PCI_COMMAND, read16(address, PCI_COMMAND) | (1 << 0));
+    write16(address, PCI::RegisterOffset::COMMAND, read16(address, PCI::RegisterOffset::COMMAND) | (1 << 0));
 }
 void disable_io_space(Address address)
 {
-    write16(address, PCI_COMMAND, read16(address, PCI_COMMAND) & ~(1 << 0));
+    write16(address, PCI::RegisterOffset::COMMAND, read16(address, PCI::RegisterOffset::COMMAND) & ~(1 << 0));
 }
 
 void enable_memory_space(Address address)
 {
-    write16(address, PCI_COMMAND, read16(address, PCI_COMMAND) | (1 << 1));
+    write16(address, PCI::RegisterOffset::COMMAND, read16(address, PCI::RegisterOffset::COMMAND) | (1 << 1));
 }
 void disable_memory_space(Address address)
 {
-    write16(address, PCI_COMMAND, read16(address, PCI_COMMAND) & ~(1 << 1));
+    write16(address, PCI::RegisterOffset::COMMAND, read16(address, PCI::RegisterOffset::COMMAND) & ~(1 << 1));
 }
 bool is_io_space_enabled(Address address)
 {
-    return (read16(address, PCI_COMMAND) & 1) != 0;
+    return (read16(address, PCI::RegisterOffset::COMMAND) & 1) != 0;
 }
 
 void enable_interrupt_line(Address address)
 {
-    write16(address, PCI_COMMAND, read16(address, PCI_COMMAND) & ~(1 << 10));
+    write16(address, PCI::RegisterOffset::COMMAND, read16(address, PCI::RegisterOffset::COMMAND) & ~(1 << 10));
 }
 
 void disable_interrupt_line(Address address)
 {
-    write16(address, PCI_COMMAND, read16(address, PCI_COMMAND) | 1 << 10);
+    write16(address, PCI::RegisterOffset::COMMAND, read16(address, PCI::RegisterOffset::COMMAND) | 1 << 10);
 }
 
 u32 get_BAR0(Address address)
 {
-    return read32(address, PCI_BAR0);
+    return read32(address, PCI::RegisterOffset::BAR0);
 }
 
 u32 get_BAR1(Address address)
 {
-    return read32(address, PCI_BAR1);
+    return read32(address, PCI::RegisterOffset::BAR1);
 }
 
 u32 get_BAR2(Address address)
 {
-    return read32(address, PCI_BAR2);
+    return read32(address, PCI::RegisterOffset::BAR2);
 }
 
 u32 get_BAR3(Address address)
 {
-    return read16(address, PCI_BAR3);
+    return read16(address, PCI::RegisterOffset::BAR3);
 }
 
 u32 get_BAR4(Address address)
 {
-    return read32(address, PCI_BAR4);
+    return read32(address, PCI::RegisterOffset::BAR4);
 }
 
 u32 get_BAR5(Address address)
 {
-    return read32(address, PCI_BAR5);
+    return read32(address, PCI::RegisterOffset::BAR5);
 }
 
 u32 get_BAR(Address address, u8 bar)
@@ -117,29 +117,36 @@ u32 get_BAR(Address address, u8 bar)
 
 void enable_bus_mastering(Address address)
 {
-    auto value = read16(address, PCI_COMMAND);
+    auto value = read16(address, PCI::RegisterOffset::COMMAND);
     value |= (1 << 2);
     value |= (1 << 0);
-    write16(address, PCI_COMMAND, value);
+    write16(address, PCI::RegisterOffset::COMMAND, value);
 }
 
 void disable_bus_mastering(Address address)
 {
-    auto value = read16(address, PCI_COMMAND);
+    auto value = read16(address, PCI::RegisterOffset::COMMAND);
     value &= ~(1 << 2);
     value |= (1 << 0);
-    write16(address, PCI_COMMAND, value);
+    write16(address, PCI::RegisterOffset::COMMAND, value);
 }
+
+static void write8_offseted(Address address, u32 field, u8 value) { Access::the().write8_field(address, field, value); }
+static void write16_offseted(Address address, u32 field, u16 value) { Access::the().write16_field(address, field, value); }
+static void write32_offseted(Address address, u32 field, u32 value) { Access::the().write32_field(address, field, value); }
+static u8 read8_offseted(Address address, u32 field) { return Access::the().read8_field(address, field); }
+static u16 read16_offseted(Address address, u32 field) { return Access::the().read16_field(address, field); }
+static u32 read32_offseted(Address address, u32 field) { return Access::the().read32_field(address, field); }
 
 size_t get_BAR_space_size(Address address, u8 bar_number)
 {
     // See PCI Spec 2.3, Page 222
     VERIFY(bar_number < 6);
-    u8 field = (PCI_BAR0 + (bar_number << 2));
-    u32 bar_reserved = read32(address, field);
-    write32(address, field, 0xFFFFFFFF);
-    u32 space_size = read32(address, field);
-    write32(address, field, bar_reserved);
+    u8 field = to_underlying(PCI::RegisterOffset::BAR0) + (bar_number << 2);
+    u32 bar_reserved = read32_offseted(address, field);
+    write32_offseted(address, field, 0xFFFFFFFF);
+    u32 space_size = read32_offseted(address, field);
+    write32_offseted(address, field, bar_reserved);
     space_size &= 0xfffffff0;
     space_size = (~space_size) + 1;
     return space_size;
@@ -149,15 +156,15 @@ void raw_access(Address address, u32 field, size_t access_size, u32 value)
 {
     VERIFY(access_size != 0);
     if (access_size == 1) {
-        write8(address, field, value);
+        write8_offseted(address, field, value);
         return;
     }
     if (access_size == 2) {
-        write16(address, field, value);
+        write16_offseted(address, field, value);
         return;
     }
     if (access_size == 4) {
-        write32(address, field, value);
+        write32_offseted(address, field, value);
         return;
     }
     VERIFY_NOT_REACHED();
@@ -165,32 +172,32 @@ void raw_access(Address address, u32 field, size_t access_size, u32 value)
 
 u8 Capability::read8(u32 field) const
 {
-    return PCI::read8(m_address, m_ptr + field);
+    return read8_offseted(m_address, m_ptr + field);
 }
 
 u16 Capability::read16(u32 field) const
 {
-    return PCI::read16(m_address, m_ptr + field);
+    return read16_offseted(m_address, m_ptr + field);
 }
 
 u32 Capability::read32(u32 field) const
 {
-    return PCI::read32(m_address, m_ptr + field);
+    return read32_offseted(m_address, m_ptr + field);
 }
 
 void Capability::write8(u32 field, u8 value)
 {
-    PCI::write8(m_address, m_ptr + field, value);
+    write8_offseted(m_address, m_ptr + field, value);
 }
 
 void Capability::write16(u32 field, u16 value)
 {
-    PCI::write16(m_address, m_ptr + field, value);
+    write16_offseted(m_address, m_ptr + field, value);
 }
 
 void Capability::write32(u32 field, u32 value)
 {
-    PCI::write32(m_address, m_ptr + field, value);
+    write32_offseted(m_address, m_ptr + field, value);
 }
 
 }

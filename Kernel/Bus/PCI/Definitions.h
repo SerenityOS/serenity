@@ -14,52 +14,89 @@
 
 namespace Kernel {
 
-#define PCI_VENDOR_ID 0x00            // word
-#define PCI_DEVICE_ID 0x02            // word
-#define PCI_COMMAND 0x04              // word
-#define PCI_STATUS 0x06               // word
-#define PCI_REVISION_ID 0x08          // byte
-#define PCI_PROG_IF 0x09              // byte
-#define PCI_SUBCLASS 0x0a             // byte
-#define PCI_CLASS 0x0b                // byte
-#define PCI_CACHE_LINE_SIZE 0x0c      // byte
-#define PCI_LATENCY_TIMER 0x0d        // byte
-#define PCI_HEADER_TYPE 0x0e          // byte
-#define PCI_BIST 0x0f                 // byte
-#define PCI_BAR0 0x10                 // u32
-#define PCI_BAR1 0x14                 // u32
-#define PCI_BAR2 0x18                 // u32
-#define PCI_BAR3 0x1C                 // u32
-#define PCI_BAR4 0x20                 // u32
-#define PCI_BAR5 0x24                 // u32
-#define PCI_SUBSYSTEM_VENDOR_ID 0x2C  // u16
-#define PCI_SUBSYSTEM_ID 0x2E         // u16
-#define PCI_CAPABILITIES_POINTER 0x34 // u8
-#define PCI_INTERRUPT_LINE 0x3C       // byte
-#define PCI_INTERRUPT_PIN 0x3D        // byte
-#define PCI_SECONDARY_BUS 0x19        // byte
-#define PCI_HEADER_TYPE_DEVICE 0
-#define PCI_HEADER_TYPE_BRIDGE 1
-#define PCI_TYPE_BRIDGE 0x0604
-#define PCI_ADDRESS_PORT 0xCF8
-#define PCI_VALUE_PORT 0xCFC
-#define PCI_NONE 0xFFFF
-#define PCI_MAX_DEVICES_PER_BUS 32
-#define PCI_MAX_BUSES 256
-#define PCI_MAX_FUNCTIONS_PER_DEVICE 8
+namespace PCI {
 
-#define PCI_CAPABILITY_NULL 0x0
-#define PCI_CAPABILITY_MSI 0x5
-#define PCI_CAPABILITY_VENDOR_SPECIFIC 0x9
-#define PCI_CAPABILITY_MSIX 0x11
+enum class HeaderType {
+    Device = 0,
+    Bridge = 1,
+};
+
+enum class RegisterOffset {
+    VENDOR_ID = 0x00,            // word
+    DEVICE_ID = 0x02,            // word
+    COMMAND = 0x04,              // word
+    STATUS = 0x06,               // word
+    REVISION_ID = 0x08,          // byte
+    PROG_IF = 0x09,              // byte
+    SUBCLASS = 0x0a,             // byte
+    CLASS = 0x0b,                // byte
+    CACHE_LINE_SIZE = 0x0c,      // byte
+    LATENCY_TIMER = 0x0d,        // byte
+    HEADER_TYPE = 0x0e,          // byte
+    BIST = 0x0f,                 // byte
+    BAR0 = 0x10,                 // u32
+    BAR1 = 0x14,                 // u32
+    BAR2 = 0x18,                 // u32
+    SECONDARY_BUS = 0x19,        // byte
+    BAR3 = 0x1C,                 // u32
+    BAR4 = 0x20,                 // u32
+    BAR5 = 0x24,                 // u32
+    SUBSYSTEM_VENDOR_ID = 0x2C,  // u16
+    SUBSYSTEM_ID = 0x2E,         // u16
+    CAPABILITIES_POINTER = 0x34, // u8
+    INTERRUPT_LINE = 0x3C,       // byte
+    INTERRUPT_PIN = 0x3D,        // byte
+};
+
+enum class Limits {
+    MaxDevicesPerBus = 32,
+    MaxBusesPerDomain = 256,
+    MaxFunctionsPerDevice = 8,
+};
+
+static constexpr u16 address_port = 0xcf8;
+static constexpr u16 value_port = 0xcfc;
+
+static constexpr size_t mmio_device_space_size = 4096;
+static constexpr u16 none_value = 0xffff;
+static constexpr size_t memory_range_per_bus = mmio_device_space_size * to_underlying(Limits::MaxFunctionsPerDevice) * to_underlying(Limits::MaxDevicesPerBus);
 
 // Taken from https://pcisig.com/sites/default/files/files/PCI_Code-ID_r_1_11__v24_Jan_2019.pdf
-#define PCI_MASS_STORAGE_CLASS_ID 0x1
-#define PCI_IDE_CTRL_SUBCLASS_ID 0x1
-#define PCI_SATA_CTRL_SUBCLASS_ID 0x6
-#define PCI_AHCI_IF_PROGIF 0x1
+enum class ClassID {
+    MassStorage = 0x1,
+    Bridge = 0x6,
+};
 
-namespace PCI {
+namespace MassStorage {
+
+enum class SubclassID {
+    IDEController = 0x1,
+    SATAController = 0x6,
+};
+enum class SATAProgIF {
+    AHCI = 0x1,
+};
+
+}
+
+namespace Bridge {
+
+enum class SubclassID {
+    PCI_TO_PCI = 0x4,
+};
+
+}
+
+TYPEDEF_DISTINCT_ORDERED_ID(u8, CapabilityID);
+namespace Capabilities {
+enum ID {
+    Null = 0x0,
+    MSI = 0x5,
+    VendorSpecific = 0x9,
+    MSIX = 0x11,
+};
+}
+
 struct HardwareID {
     u16 vendor_id { 0 };
     u16 device_id { 0 };
@@ -167,7 +204,7 @@ public:
     {
     }
 
-    u8 id() const { return m_id; }
+    CapabilityID id() const { return m_id; }
 
     u8 read8(u32) const;
     u16 read16(u32) const;
@@ -178,7 +215,7 @@ public:
 
 private:
     Address m_address;
-    const u8 m_id;
+    const CapabilityID m_id;
     const u8 m_ptr;
 };
 

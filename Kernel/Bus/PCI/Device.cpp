@@ -18,7 +18,7 @@ Device::Device(Address address)
 bool Device::is_msi_capable() const
 {
     for (const auto& capability : PCI::get_device_identifier(pci_address()).capabilities()) {
-        if (capability.id() == PCI_CAPABILITY_MSI)
+        if (capability.id().value() == PCI::Capabilities::ID::MSI)
             return true;
     }
     return false;
@@ -26,7 +26,7 @@ bool Device::is_msi_capable() const
 bool Device::is_msix_capable() const
 {
     for (const auto& capability : PCI::get_device_identifier(pci_address()).capabilities()) {
-        if (capability.id() == PCI_CAPABILITY_MSIX)
+        if (capability.id().value() == PCI::Capabilities::ID::MSIX)
             return true;
     }
     return false;
