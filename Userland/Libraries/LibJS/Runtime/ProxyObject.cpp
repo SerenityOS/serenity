@@ -45,7 +45,7 @@ static Value property_name_to_value(VM& vm, PropertyName const& name)
 }
 
 // 10.5.1 [[GetPrototypeOf]] ( ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getprototypeof
-Object* ProxyObject::internal_get_prototype_of() const
+ThrowCompletionOr<Object*> ProxyObject::internal_get_prototype_of() const
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -53,51 +53,43 @@ Object* ProxyObject::internal_get_prototype_of() const
     // 1. Let handler be O.[[ProxyHandler]].
 
     // 2. If handler is null, throw a TypeError exception.
-    if (m_is_revoked) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyRevoked);
-        return {};
-    }
+    if (m_is_revoked)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "getPrototypeOf").
-    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.getPrototypeOf));
+    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.getPrototypeOf));
 
     // 6. If trap is undefined, then
     if (!trap) {
         // a. Return ? target.[[GetPrototypeOf]]().
-        return m_target.internal_get_prototype_of();
+        return TRY(m_target.internal_get_prototype_of());
     }
 
     // 7. Let handlerProto be ? Call(trap, handler, « target »).
-    auto handler_proto = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target));
+    auto handler_proto = TRY(vm.call(*trap, &m_handler, &m_target));
 
     // 8. If Type(handlerProto) is neither Object nor Null, throw a TypeError exception.
-    if (!handler_proto.is_object() && !handler_proto.is_null()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyGetPrototypeOfReturn);
-        return {};
-    }
+    if (!handler_proto.is_object() && !handler_proto.is_null())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetPrototypeOfReturn);
 
     // 9. Let extensibleTarget be ? IsExtensible(target).
     auto extensible_target = m_target.is_extensible();
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 10. If extensibleTarget is true, return handlerProto.
     if (extensible_target)
         return handler_proto.is_null() ? nullptr : &handler_proto.as_object();
 
     // 11. Let targetProto be ? target.[[GetPrototypeOf]]().
-    auto target_proto = m_target.internal_get_prototype_of();
-    if (vm.exception())
-        return {};
+    auto* target_proto = TRY(m_target.internal_get_prototype_of());
 
     // 12. If SameValue(handlerProto, targetProto) is false, throw a TypeError exception.
-    if (!same_value(handler_proto, target_proto)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyGetPrototypeOfNonExtensible);
-        return {};
-    }
+    if (!same_value(handler_proto, target_proto))
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetPrototypeOfNonExtensible);
 
     // 13. Return handlerProto.
     return handler_proto.is_null() ? nullptr : &handler_proto.as_object();
@@ -147,9 +139,7 @@ bool ProxyObject::internal_set_prototype_of(Object* prototype)
         return true;
 
     // 12. Let targetProto be ? target.[[GetPrototypeOf]]().
-    auto* target_proto = m_target.internal_get_prototype_of();
-    if (vm.exception())
-        return {};
+    auto* target_proto = TRY_OR_DISCARD(m_target.internal_get_prototype_of());
 
     // 13. If SameValue(V, targetProto) is false, throw a TypeError exception.
     if (!same_value(prototype, target_proto)) {

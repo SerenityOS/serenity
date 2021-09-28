@@ -580,9 +580,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
                 }
             }
         }
-        object = object->internal_get_prototype_of();
-        if (interpreter.exception())
-            return {};
+        object = TRY_OR_DISCARD(object->internal_get_prototype_of());
     }
     return last_value;
 }
