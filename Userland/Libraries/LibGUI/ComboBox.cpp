@@ -193,8 +193,11 @@ void ComboBox::set_selected_index(size_t index)
 {
     if (!m_list_view->model())
         return;
+    size_t previous_index = selected_index();
     TemporaryChange change(m_updating_model, true);
     m_list_view->set_cursor(m_list_view->model()->index(index, 0), AbstractView::SelectionUpdate::Set);
+    if (previous_index != selected_index() && on_change)
+        on_change(m_editor->text(), m_list_view->cursor_index());
 }
 
 size_t ComboBox::selected_index() const
