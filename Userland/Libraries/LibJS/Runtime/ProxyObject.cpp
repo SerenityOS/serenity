@@ -148,7 +148,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_set_prototype_of(Object* prototype
 }
 
 // 10.5.3 [[IsExtensible]] ( ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-isextensible
-bool ProxyObject::internal_is_extensible() const
+ThrowCompletionOr<bool> ProxyObject::internal_is_extensible() const
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -156,16 +156,14 @@ bool ProxyObject::internal_is_extensible() const
     // 1. Let handler be O.[[ProxyHandler]].
 
     // 2. If handler is null, throw a TypeError exception.
-    if (m_is_revoked) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyRevoked);
-        return {};
-    }
+    if (m_is_revoked)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "isExtensible").
-    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.isExtensible));
+    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.isExtensible));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -174,18 +172,16 @@ bool ProxyObject::internal_is_extensible() const
     }
 
     // 7. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target »)).
-    auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target)).to_boolean();
+    auto trap_result = TRY(vm.call(*trap, &m_handler, &m_target)).to_boolean();
 
     // 8. Let targetResult be ? IsExtensible(target).
     auto target_result = m_target.is_extensible();
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 9. If SameValue(booleanTrapResult, targetResult) is false, throw a TypeError exception.
-    if (trap_result != target_result) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyIsExtensibleReturn);
-        return {};
-    }
+    if (trap_result != target_result)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyIsExtensibleReturn);
 
     // 10. Return booleanTrapResult.
     return trap_result;

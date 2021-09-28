@@ -25,7 +25,7 @@ public:
 
     virtual JS::ThrowCompletionOr<Object*> internal_get_prototype_of() const override;
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(Object* prototype) override;
-    virtual bool internal_is_extensible() const override;
+    virtual JS::ThrowCompletionOr<bool> internal_is_extensible() const override;
     virtual bool internal_prevent_extensions() override;
     virtual Optional<JS::PropertyDescriptor> internal_get_own_property(JS::PropertyName const& name) const override;
     virtual bool internal_define_own_property(JS::PropertyName const& name, JS::PropertyDescriptor const& descriptor) override;

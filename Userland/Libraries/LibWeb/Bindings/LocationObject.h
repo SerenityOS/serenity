@@ -22,7 +22,7 @@ public:
     virtual ~LocationObject() override;
 
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(Object* prototype) override;
-    virtual bool internal_is_extensible() const override;
+    virtual JS::ThrowCompletionOr<bool> internal_is_extensible() const override;
     virtual bool internal_prevent_extensions() override;
 
     // FIXME: There should also be a custom [[GetPrototypeOf]], [[GetOwnProperty]], [[DefineOwnProperty]], [[Get]], [[Set]], [[Delete]] and [[OwnPropertyKeys]],
