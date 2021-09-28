@@ -11,7 +11,7 @@
 
 namespace Markdown {
 
-String CodeBlock::render_to_html() const
+String CodeBlock::render_to_html(bool) const
 {
     StringBuilder builder;
 

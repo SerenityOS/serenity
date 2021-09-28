@@ -14,13 +14,24 @@
 
 namespace Markdown {
 
-String ContainerBlock::render_to_html() const
+String ContainerBlock::render_to_html(bool tight) const
 {
     StringBuilder builder;
 
-    for (auto& block : m_blocks) {
-        auto s = block.render_to_html();
+    for (size_t i = 0; i + 1 < m_blocks.size(); ++i) {
+        auto s = m_blocks[i].render_to_html(tight);
         builder.append(s);
+    }
+
+    // I don't like this edge case.
+    if (m_blocks.size() != 0) {
+        auto& block = m_blocks[m_blocks.size() - 1];
+        auto s = block.render_to_html(tight);
+        if (tight && dynamic_cast<Paragraph const*>(&block)) {
+            builder.append(s.substring_view(0, s.length() - 1));
+        } else {
+            builder.append(s);
+        }
     }
 
     return builder.build();
@@ -62,15 +73,21 @@ OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
         paragraph_text.clear();
     };
 
+    bool has_blank_lines = false;
+    bool has_trailing_blank_lines = false;
+
     while (true) {
         if (lines.is_end())
             break;
 
         if ((*lines).is_empty()) {
+            has_trailing_blank_lines = true;
             ++lines;
 
             flush_paragraph();
             continue;
+        } else {
+            has_blank_lines = has_blank_lines || has_trailing_blank_lines;
         }
 
         bool any = try_parse_block<Table>(lines, blocks) || try_parse_block<List>(lines, blocks) || try_parse_block<CodeBlock>(lines, blocks)
@@ -92,7 +109,7 @@ OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
 
     flush_paragraph();
 
-    return make<ContainerBlock>(move(blocks));
+    return make<ContainerBlock>(move(blocks), has_blank_lines, has_trailing_blank_lines);
 }
 
 }
