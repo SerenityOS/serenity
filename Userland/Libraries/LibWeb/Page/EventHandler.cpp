@@ -460,6 +460,13 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
     return m_frame.active_document()->window().dispatch_event(move(event));
 }
 
+bool EventHandler::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
+{
+    auto event = UIEvents::KeyboardEvent::create_from_platform_event(UIEvents::EventNames::keyup, key, modifiers, code_point);
+    // FIXME: Figure out the right event target.
+    return m_frame.active_document()->window().dispatch_event(move(event));
+}
+
 void EventHandler::set_mouse_event_tracking_layout_node(Layout::Node* layout_node)
 {
     if (layout_node)
