@@ -127,13 +127,47 @@ void ClientConnection::ensure_connection(URL const& url, ::RequestServer::CacheL
 
     struct {
         URL const& m_url;
-        void start(NonnullRefPtr<Core::Socket> socket) { socket->connect(m_url.host(), m_url.port_or_default()); }
+        void start(NonnullRefPtr<Core::Socket> socket)
+        {
+            auto is_tls = is<TLS::TLSv12>(*socket);
+            auto* tls_instance = is_tls ? static_cast<TLS::TLSv12*>(socket.ptr()) : nullptr;
+
+            auto is_connected = false;
+            if (is_tls && tls_instance->is_established())
+                is_connected = true;
+            if (!is_tls && socket->is_connected())
+                is_connected = true;
+
+            if (is_connected)
+                return ConnectionCache::request_did_finish(m_url, socket);
+
+            bool did_connect;
+            if (is_tls) {
+                tls_instance->set_root_certificates(DefaultRootCACertificates::the().certificates());
+                tls_instance->on_tls_connected = [socket, url = m_url, tls_instance] {
+                    tls_instance->set_on_tls_ready_to_write([socket, url](auto&) {
+                        ConnectionCache::request_did_finish(url, socket);
+                    });
+                };
+                tls_instance->on_tls_error = [socket, url = m_url](auto) {
+                    ConnectionCache::request_did_finish(url, socket);
+                };
+                did_connect = tls_instance->connect(m_url.host(), m_url.port_or_default());
+            } else {
+                socket->on_connected = [socket, url = m_url]() mutable {
+                    ConnectionCache::request_did_finish(url, socket);
+                };
+                did_connect = socket->connect(m_url.host(), m_url.port_or_default());
+            }
+
+            if (!did_connect)
+                ConnectionCache::request_did_finish(m_url, socket);
+        }
     } job { url };
 
     dbgln("EnsureConnection: Pre-connect to {}", url);
     auto do_preconnect = [&](auto& cache) {
-        auto& connection = ConnectionCache::get_or_create_connection(cache, url, job);
-        connection.removal_timer->start();
+        ConnectionCache::get_or_create_connection(cache, url, job);
     };
 
     if (url.scheme() == "http"sv)
