@@ -36,7 +36,7 @@ public:
     [[nodiscard]] static String relative_path(StringView const& absolute_path, StringView const& prefix);
 
     template<typename... S>
-    [[nodiscard]] static LexicalPath join(String const& first, S&&... rest)
+    [[nodiscard]] static LexicalPath join(StringView first, S&&... rest)
     {
         StringBuilder builder;
         builder.append(first);
