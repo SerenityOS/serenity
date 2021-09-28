@@ -16,12 +16,13 @@ namespace LibDSP {
 class Transport final : public Core::Object {
     C_OBJECT(Transport)
 public:
-    u32 const& time() const { return m_time; }
-    u16 beats_per_minute() const { return m_beats_per_minute; }
-    double current_second() const { return m_time / m_sample_rate; }
-    double samples_per_measure() const { return (1.0 / m_beats_per_minute) * 60.0 * m_sample_rate; }
-    double sample_rate() const { return m_sample_rate; }
-    double current_measure() const { return m_time / samples_per_measure(); }
+    constexpr u32& time() { return m_time; }
+    constexpr u16 beats_per_minute() const { return m_beats_per_minute; }
+    constexpr double current_second() const { return static_cast<double>(m_time) / m_sample_rate; }
+    constexpr double samples_per_measure() const { return (1.0 / m_beats_per_minute) * 60.0 * m_sample_rate; }
+    constexpr double sample_rate() const { return m_sample_rate; }
+    constexpr double ms_sample_rate() const { return m_sample_rate / 1000.; }
+    constexpr double current_measure() const { return m_time / samples_per_measure(); }
 
 private:
     Transport(u16 beats_per_minute, u8 beats_per_measure, u32 sample_rate)
@@ -35,6 +36,8 @@ private:
     {
     }
 
+    // FIXME: You can't make more than 24h of (48kHz) music with this.
+    // But do you want to, really? :^)
     u32 m_time { 0 };
     u16 const m_beats_per_minute { 0 };
     u8 const m_beats_per_measure { 0 };
