@@ -14,6 +14,7 @@ set(SOURCES
     Bindings/Wrappable.cpp
     CSS/CSSImportRule.cpp
     CSS/CSSRule.cpp
+    CSS/CSSRuleList.cpp
     CSS/CSSStyleDeclaration.cpp
     CSS/CSSStyleRule.cpp
     CSS/CSSStyleSheet.cpp
