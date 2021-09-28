@@ -136,7 +136,7 @@ FunctionEnvironment* ECMAScriptFunctionObject::create_environment(FunctionObject
         }
     }
 
-    auto* environment = heap().allocate<FunctionEnvironment>(global_object(), m_environment, variables);
+    auto* environment = heap().allocate<FunctionEnvironment>(global_object(), m_environment, move(variables));
     environment->set_function_object(static_cast<ECMAScriptFunctionObject&>(function_being_invoked));
     if (m_is_arrow_function) {
         environment->set_this_binding_status(FunctionEnvironment::ThisBindingStatus::Lexical);
