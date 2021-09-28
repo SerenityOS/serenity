@@ -13,6 +13,12 @@
 
 namespace Web::DOM {
 
+struct EventInit {
+    bool bubbles { false };
+    bool cancelable { false };
+    bool composed { false };
+};
+
 class Event
     : public RefCounted<Event>
     , public Bindings::Wrappable {
@@ -41,13 +47,13 @@ public:
 
     using Path = Vector<PathEntry>;
 
-    static NonnullRefPtr<Event> create(const FlyString& event_name)
+    static NonnullRefPtr<Event> create(const FlyString& event_name, EventInit const& event_init = {})
     {
-        return adopt_ref(*new Event(event_name));
+        return adopt_ref(*new Event(event_name, event_init));
     }
-    static NonnullRefPtr<Event> create_with_global_object(Bindings::WindowObject&, const FlyString& event_name)
+    static NonnullRefPtr<Event> create_with_global_object(Bindings::WindowObject&, const FlyString& event_name, EventInit const& event_init)
     {
-        return Event::create(event_name);
+        return Event::create(event_name, event_init);
     }
 
     virtual ~Event() { }
@@ -137,8 +143,16 @@ public:
     void init_event(const String&, bool, bool);
 
 protected:
-    explicit Event(const FlyString& type)
+    explicit Event(FlyString const& type)
         : m_type(type)
+        , m_initialized(true)
+    {
+    }
+    Event(FlyString const& type, EventInit const& event_init)
+        : m_type(type)
+        , m_bubbles(event_init.bubbles)
+        , m_cancelable(event_init.cancelable)
+        , m_composed(event_init.composed)
         , m_initialized(true)
     {
     }
