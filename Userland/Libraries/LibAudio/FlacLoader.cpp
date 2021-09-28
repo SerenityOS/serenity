@@ -6,6 +6,7 @@
 
 #include "FlacLoader.h"
 #include "Buffer.h"
+#include <AK/BinarySearch.h>
 #include <AK/BitStream.h>
 #include <AK/Debug.h>
 #include <AK/FlyString.h>
@@ -141,14 +142,41 @@ bool FlacLoaderPlugin::parse_header()
     md5_checksum.span().copy_to({ m_md5_checksum, sizeof(m_md5_checksum) });
 
     // Parse other blocks
-    // TODO: For a simple first implementation, all other blocks are skipped as allowed by the FLAC specification.
-    // Especially the SEEKTABLE block may become useful in a more sophisticated version.
+    // TODO: For a simple implementation, all block types except SEEKTABLE and STREAMINFO are skipped as allowed by the FLAC specification.
     [[maybe_unused]] u16 meta_blocks_parsed = 1;
     [[maybe_unused]] u16 total_meta_blocks = meta_blocks_parsed;
     FlacRawMetadataBlock block = streaminfo;
     while (!block.is_last_block) {
         block = next_meta_block(bit_input);
         ++total_meta_blocks;
+
+        if (block.type == FlacMetadataBlockType::SEEKTABLE) {
+            InputMemoryStream steektable_data_memory(block.data.bytes());
+            InputBitStream seektable_data(steektable_data_memory);
+
+            // The number of seek points is implied by the metadata header 'length' field, i.e. equal to length / 18.
+            m_seektable.ensure_capacity(block.length / 18);
+            for (size_t i = 0; i < (block.length / 18); ++i) {
+                // <64> Sample number of first sample in the target frame, or 0xFFFFFFFFFFFFFFFF for a placeholder point.
+                u64 sample_index = seektable_data.read_bits_big_endian(64);
+                if (sample_index == 0xFFFF'FFFF'FFFF'FFFF)
+                    continue;
+
+                // <64> Offset (in bytes) from the first byte of the first frame header to the first byte of the target frame's header.
+                u64 offset = seektable_data.read_bits_big_endian(64);
+
+                // <16> Number of samples in the target frame.
+                u16 sample_count = seektable_data.read_bits_big_endian(16);
+
+                m_seektable.unchecked_append({
+                    sample_index,
+                    offset,
+                    sample_count,
+                });
+            }
+            ++meta_blocks_parsed;
+        }
+
         ok = ok && m_error_string.is_empty();
         CHECK_OK(m_error_string);
     }
@@ -223,10 +251,19 @@ void FlacLoaderPlugin::reset()
 
 void FlacLoaderPlugin::seek(const int position)
 {
-    if (!m_stream->seek(position)) {
-        m_error_string = String::formatted("Invalid seek position {}", position);
+    size_t nearby_index;
+    binary_search(m_seektable, position, &nearby_index, [](auto& position, auto& seek_point) {
+        return position - (i64)seek_point.sample_index;
+    });
+    auto nearest_seek_point = m_seektable.is_empty() ? FlacSeekPoint {} : m_seektable[nearby_index];
+
+    if (!m_stream->seek(m_data_start_location + nearest_seek_point.offset)) {
+        m_error_string = String::formatted("Seeking to {} failed (the closest seek point to {})", m_data_start_location + nearest_seek_point.offset, position);
         m_valid = false;
+        return;
     }
+
+    m_loaded_samples = nearest_seek_point.sample_index;
 }
 
 RefPtr<Buffer> FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_input)

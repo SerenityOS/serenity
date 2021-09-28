@@ -141,6 +141,7 @@ private:
 
     // keep track of the start of the data in the FLAC stream to seek back more easily
     u64 m_data_start_location { 0 };
+    Vector<FlacSeekPoint> m_seektable;
     OwnPtr<FlacInputStream> m_stream;
     Optional<FlacFrameHeader> m_current_frame;
     Vector<Frame> m_current_frame_data;

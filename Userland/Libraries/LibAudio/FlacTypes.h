@@ -25,7 +25,7 @@ enum FlacMetadataBlockType : u8 {
     STREAMINFO = 0,     // Important data about the audio format
     PADDING = 1,        // Non-data block to be ignored
     APPLICATION = 2,    // Ignored
-    SEEKTABLE = 3,      // Seeking info, maybe to be used later
+    SEEKTABLE = 3,      // Seeking info
     VORBIS_COMMENT = 4, // Ignored
     CUESHEET = 5,       // Ignored
     PICTURE = 6,        // Ignored
@@ -69,6 +69,12 @@ struct FlacRawMetadataBlock {
     FlacMetadataBlockType type;
     u32 length; // 24 bits
     ByteBuffer data;
+};
+
+struct FlacSeekPoint {
+    u64 sample_index;
+    u64 offset;
+    u16 sample_count;
 };
 
 // An abstract, parsed and validated FLAC frame
