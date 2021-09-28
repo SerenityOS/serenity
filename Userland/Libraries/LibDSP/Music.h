@@ -19,7 +19,7 @@ using Sample = Audio::Sample;
 Sample const SAMPLE_OFF = { 0.0, 0.0 };
 
 struct RollNote {
-    u32 length() const { return (off_sample - on_sample) + 1; }
+    constexpr u32 length() const { return (off_sample - on_sample) + 1; }
 
     u32 on_sample;
     u32 off_sample;
