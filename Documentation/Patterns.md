@@ -80,3 +80,35 @@ struct Empty { };
 
 static_assert(AssertSize<Empty, 1>());
 ```
+
+## String View Literals
+
+`AK::StringView` support for `operator"" sv` which is a special string literal operator that was added as of
+[C++17 to enable `std::string_view` literals](https://en.cppreference.com/w/cpp/string/basic_string_view/operator%22%22sv).
+
+```cpp
+[[nodiscard]] ALWAYS_INLINE constexpr AK::StringView operator"" sv(const char* cstring, size_t length)
+{
+    return AK::StringView(cstring, length);
+}
+```
+
+This allows `AK::StringView` to be constructed from string literals with no runtime
+cost to find the string length, and the data the `AK::StringView` points to will 
+reside in the  data section of the binary.
+
+Example Usage:
+```cpp
+#include <AK/String.h>
+#include <AK/StringView.h>
+#include <LibTest/TestCase.h>
+
+TEST_CASE(string_view_literal_operator)
+{
+    StringView literal_view = "foo"sv;
+    String test_string = "foo";
+
+    EXPECT_EQ(literal_view.length(), test_string.length());
+    EXPECT_EQ(literal_view, test_string);
+}
+```
