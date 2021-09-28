@@ -11,6 +11,7 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibAudio/Buffer.h>
+#include <LibDSP/Envelope.h>
 
 namespace LibDSP {
 
@@ -26,6 +27,38 @@ struct RollNote {
     u32 off_sample;
     u8 pitch;
     i8 velocity;
+
+    Envelope to_envelope(u32 time, u32 attack_samples, u32 decay_samples, u32 release_samples)
+    {
+        i64 time_since_end = static_cast<i64>(time) - static_cast<i64>(off_sample);
+        // We're before the end of this note.
+        if (time_since_end < 0) {
+            i64 time_since_start = static_cast<i64>(time) - static_cast<i64>(on_sample);
+            if (time_since_start < 0)
+                return {};
+
+            if (time_since_start < attack_samples) {
+                if (attack_samples == 0)
+                    return Envelope::from_attack(0);
+                return Envelope::from_attack(static_cast<double>(time_since_start) / static_cast<double>(attack_samples));
+            }
+            if (time_since_start < attack_samples + decay_samples) {
+                if (decay_samples == 0)
+                    return Envelope::from_decay(0);
+                return Envelope::from_decay(static_cast<double>(time_since_start - attack_samples) / static_cast<double>(decay_samples));
+            }
+            // This is a note-dependent value!
+            u32 sustain_samples = length() - attack_samples - decay_samples;
+            return Envelope::from_sustain(static_cast<double>(time_since_start - attack_samples - decay_samples) / static_cast<double>(sustain_samples));
+        }
+
+        // Overshot the release time
+        if (time_since_end > release_samples)
+            return {};
+        return Envelope::from_release(static_cast<double>(time_since_end) / static_cast<double>(release_samples));
+    }
+
+    constexpr bool is_playing(u32 time) { return on_sample <= time && time <= off_sample; }
 };
 
 enum class SignalType : u8 {
