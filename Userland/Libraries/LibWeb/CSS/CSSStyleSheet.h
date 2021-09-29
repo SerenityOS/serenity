@@ -27,6 +27,8 @@ public:
 
     virtual ~CSSStyleSheet() override;
 
+    void set_owner_css_rule(CSSRule* rule) { m_owner_css_rule = rule; }
+
     virtual String type() const override { return "text/css"; }
 
     CSSRuleList const& rules() const { return m_rules; }
@@ -76,6 +78,9 @@ private:
     explicit CSSStyleSheet(NonnullRefPtrVector<CSSRule>);
 
     NonnullRefPtr<CSSRuleList> m_rules;
+
+    // FIXME: Use WeakPtr.
+    CSSRule* m_owner_css_rule { nullptr };
 };
 
 }
