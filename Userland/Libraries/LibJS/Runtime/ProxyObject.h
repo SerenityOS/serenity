@@ -43,7 +43,7 @@ public:
     virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyName const&, PropertyDescriptor const&) override;
     virtual ThrowCompletionOr<bool> internal_has_property(PropertyName const&) const override;
     virtual ThrowCompletionOr<Value> internal_get(PropertyName const&, Value receiver) const override;
-    virtual bool internal_set(PropertyName const&, Value value, Value receiver) override;
+    virtual ThrowCompletionOr<bool> internal_set(PropertyName const&, Value value, Value receiver) override;
     virtual bool internal_delete(PropertyName const&) override;
     virtual MarkedValueList internal_own_property_keys() const override;
 

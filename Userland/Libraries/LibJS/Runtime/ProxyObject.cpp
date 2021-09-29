@@ -543,7 +543,7 @@ ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyName const& property_
 }
 
 // 10.5.9 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver
-bool ProxyObject::internal_set(PropertyName const& property_name, Value value, Value receiver)
+ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyName const& property_name, Value value, Value receiver)
 {
     VERIFY(!value.is_empty());
     VERIFY(!receiver.is_empty());
@@ -557,16 +557,14 @@ bool ProxyObject::internal_set(PropertyName const& property_name, Value value, V
     // 2. Let handler be O.[[ProxyHandler]].
 
     // 3. If handler is null, throw a TypeError exception.
-    if (m_is_revoked) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyRevoked);
-        return {};
-    }
+    if (m_is_revoked)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
 
     // 4. Assert: Type(handler) is Object.
     // 5. Let target be O.[[ProxyTarget]].
 
     // 6. Let trap be ? GetMethod(handler, "set").
-    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.set));
+    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.set));
 
     // 7. If trap is undefined, then
     if (!trap) {
@@ -575,32 +573,28 @@ bool ProxyObject::internal_set(PropertyName const& property_name, Value value, V
     }
 
     // 8. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P, V, Receiver »)).
-    auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name), value, receiver)).to_boolean();
+    auto trap_result = TRY(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name), value, receiver)).to_boolean();
 
     // 9. If booleanTrapResult is false, return false.
     if (!trap_result)
         return false;
 
     // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
-    auto target_descriptor = TRY_OR_DISCARD(m_target.internal_get_own_property(property_name));
+    auto target_descriptor = TRY(m_target.internal_get_own_property(property_name));
 
     // 11. If targetDesc is not undefined and targetDesc.[[Configurable]] is false, then
     if (target_descriptor.has_value() && !*target_descriptor->configurable) {
         // a. If IsDataDescriptor(targetDesc) is true and targetDesc.[[Writable]] is false, then
         if (target_descriptor->is_data_descriptor() && !*target_descriptor->writable) {
             // i. If SameValue(V, targetDesc.[[Value]]) is false, throw a TypeError exception.
-            if (!same_value(value, *target_descriptor->value)) {
-                vm.throw_exception<TypeError>(global_object, ErrorType::ProxySetImmutableDataProperty);
-                return {};
-            }
+            if (!same_value(value, *target_descriptor->value))
+                return vm.throw_completion<TypeError>(global_object, ErrorType::ProxySetImmutableDataProperty);
         }
         // b. If IsAccessorDescriptor(targetDesc) is true, then
         if (target_descriptor->is_accessor_descriptor()) {
             // i. If targetDesc.[[Set]] is undefined, throw a TypeError exception.
-            if (!*target_descriptor->set) {
-                vm.throw_exception<TypeError>(global_object, ErrorType::ProxySetNonConfigurableAccessor);
-                return {};
-            }
+            if (!*target_descriptor->set)
+                return vm.throw_completion<TypeError>(global_object, ErrorType::ProxySetNonConfigurableAccessor);
         }
     }
 

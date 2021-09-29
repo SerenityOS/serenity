@@ -83,7 +83,7 @@ JS::ThrowCompletionOr<JS::Value> ConsoleGlobalObject::internal_get(JS::PropertyN
     return Base::internal_get(property_name, receiver);
 }
 
-bool ConsoleGlobalObject::internal_set(JS::PropertyName const& property_name, JS::Value value, JS::Value receiver)
+JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_set(JS::PropertyName const& property_name, JS::Value value, JS::Value receiver)
 {
     return m_window_object->internal_set(property_name, value, (receiver == this) ? m_window_object : receiver);
 }

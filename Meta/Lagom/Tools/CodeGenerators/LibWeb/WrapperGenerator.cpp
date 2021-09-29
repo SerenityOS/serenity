@@ -1397,7 +1397,7 @@ public:
     }
     if (interface.extended_attributes.contains("CustomSet")) {
         generator.append(R"~~~(
-    virtual bool internal_set(JS::PropertyName const&, JS::Value, JS::Value receiver) override;
+    virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyName const&, JS::Value, JS::Value receiver) override;
 )~~~");
     }
 
@@ -1416,7 +1416,7 @@ public:
     if (interface.is_legacy_platform_object()) {
         generator.append(R"~~~(
     virtual JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> internal_get_own_property(JS::PropertyName const&) const override;
-    virtual bool internal_set(JS::PropertyName const&, JS::Value, JS::Value) override;
+    virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyName const&, JS::Value, JS::Value) override;
     virtual JS::ThrowCompletionOr<bool> internal_define_own_property(JS::PropertyName const&, JS::PropertyDescriptor const&) override;
     virtual bool internal_delete(JS::PropertyName const&) override;
     virtual JS::ThrowCompletionOr<bool> internal_prevent_extensions() override;
@@ -1986,7 +1986,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::internal_g
 
         // 3.9.2. [[Set]], https://heycam.github.io/webidl/#legacy-platform-object-set
         scoped_generator.append(R"~~~(
-bool @class_name@::internal_set(JS::PropertyName const& property_name, JS::Value value, JS::Value receiver)
+JS::ThrowCompletionOr<bool> @class_name@::internal_set(JS::PropertyName const& property_name, JS::Value value, JS::Value receiver)
 {
     auto& vm = this->vm();
     [[maybe_unused]] auto& global_object = this->global_object();
@@ -2006,8 +2006,8 @@ bool @class_name@::internal_set(JS::PropertyName const& property_name, JS::Value
         if (IDL::is_an_array_index(global_object, property_name)) {
             // 1. Invoke the indexed property setter on O with P and V.
             invoke_indexed_property_setter(global_object, impl(), property_name, value);
-            if (vm.exception())
-                return {};
+            if (auto* exception = vm.exception())
+                return JS::throw_completion(exception->value());
 
             // 2. Return true.
             return true;
@@ -2022,8 +2022,8 @@ bool @class_name@::internal_set(JS::PropertyName const& property_name, JS::Value
         if (property_name.is_string()) {
             // 1. Invoke the named property setter on O with P and V.
             invoke_named_property_setter(global_object, impl(), property_name.as_string(), value);
-            if (vm.exception())
-                return {};
+            if (auto* exception = vm.exception())
+                return JS::throw_completion(exception->value());
 
             // 2. Return true.
             return true;
@@ -2039,13 +2039,16 @@ bool @class_name@::internal_set(JS::PropertyName const& property_name, JS::Value
         scoped_generator.append(R"~~~(
     // 2. Let ownDesc be LegacyPlatformObjectGetOwnProperty(O, P, true).
     auto own_descriptor = legacy_platform_object_get_own_property_for_set_slot(property_name);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return JS::throw_completion(exception->value());
 
     // 3. Perform ? OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc).
     // NOTE: The spec says "perform" instead of "return", meaning nothing will be returned on this path according to the spec, which isn't possible to do.
     //       Let's treat it as though it says "return" instead of "perform".
-    return ordinary_set_with_own_descriptor(property_name, value, receiver, own_descriptor);
+    auto result = ordinary_set_with_own_descriptor(property_name, value, receiver, own_descriptor);
+    if (auto* exception = vm.exception())
+        return JS::throw_completion(exception->value());
+    return result;
 }
 )~~~");
 
