@@ -40,7 +40,7 @@ JS::ThrowCompletionOr<JS::Value> DebuggerGlobalJSObject::internal_get(JS::Proper
     return vm().throw_completion<JS::TypeError>(const_cast<DebuggerGlobalJSObject&>(*this), move(error_string));
 }
 
-bool DebuggerGlobalJSObject::internal_set(JS::PropertyName const& property_name, JS::Value value, JS::Value receiver)
+JS::ThrowCompletionOr<bool> DebuggerGlobalJSObject::internal_set(JS::PropertyName const& property_name, JS::Value value, JS::Value receiver)
 {
     if (m_variables.is_empty() || !property_name.is_string())
         return Base::internal_set(property_name, value, receiver);
@@ -55,8 +55,7 @@ bool DebuggerGlobalJSObject::internal_set(JS::PropertyName const& property_name,
     if (debugger_value.has_value())
         return Debugger::the().session()->poke((u32*)target_variable.location_data.address, debugger_value.value());
     auto error_string = String::formatted("Cannot convert JS value {} to variable {} of type {}", value.to_string_without_side_effects(), property_name.as_string(), target_variable.type_name);
-    vm().throw_exception<JS::TypeError>(const_cast<DebuggerGlobalJSObject&>(*this), error_string);
-    return {};
+    return vm().throw_completion<JS::TypeError>(const_cast<DebuggerGlobalJSObject&>(*this), move(error_string));
 }
 
 Optional<JS::Value> DebuggerGlobalJSObject::debugger_to_js(const Debug::DebugInfo::VariableInfo& variable) const

@@ -39,9 +39,10 @@ void Reference::put_value(GlobalObject& global_object, Value value)
         if (!base_obj)
             return;
 
-        bool succeeded = base_obj->internal_set(m_name, value, get_this_value());
-        if (vm.exception())
+        auto succeeded_or_error = base_obj->internal_set(m_name, value, get_this_value());
+        if (succeeded_or_error.is_error())
             return;
+        auto succeeded = succeeded_or_error.release_value();
         if (!succeeded && m_strict) {
             vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishSetProperty, m_name, m_base_value.to_string_without_side_effects());
             return;

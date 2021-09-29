@@ -7,6 +7,7 @@
 
 #include "DebuggerVariableJSObject.h"
 #include "Debugger.h"
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/PropertyName.h>
@@ -28,30 +29,26 @@ DebuggerVariableJSObject::~DebuggerVariableJSObject()
 {
 }
 
-bool DebuggerVariableJSObject::internal_set(const JS::PropertyName& property_name, JS::Value value, JS::Value)
+JS::ThrowCompletionOr<bool> DebuggerVariableJSObject::internal_set(const JS::PropertyName& property_name, JS::Value value, JS::Value)
 {
-    if (!property_name.is_string()) {
-        vm().throw_exception<JS::TypeError>(global_object(), String::formatted("Invalid variable name {}", property_name.to_string()));
-        return false;
-    }
+    auto& vm = this->vm();
+
+    if (!property_name.is_string())
+        return vm.throw_completion<JS::TypeError>(global_object(), String::formatted("Invalid variable name {}", property_name.to_string()));
 
     auto name = property_name.as_string();
     auto it = m_variable_info.members.find_if([&](auto& variable) {
         return variable->name == name;
     });
 
-    if (it.is_end()) {
-        vm().throw_exception<JS::TypeError>(global_object(), String::formatted("Variable of type {} has no property {}", m_variable_info.type_name, property_name));
-        return false;
-    }
+    if (it.is_end())
+        return vm.throw_completion<JS::TypeError>(global_object(), String::formatted("Variable of type {} has no property {}", m_variable_info.type_name, property_name));
 
     auto& member = **it;
     auto new_value = debugger_object().js_to_debugger(value, member);
-    if (!new_value.has_value()) {
-        auto string_error = String::formatted("Cannot convert JS value {} to variable {} of type {}", value.to_string_without_side_effects(), name, member.type_name);
-        vm().throw_exception<JS::TypeError>(global_object(), string_error);
-        return false;
-    }
+    if (!new_value.has_value())
+        return vm.throw_completion<JS::TypeError>(global_object(), String::formatted("Cannot convert JS value {} to variable {} of type {}", value.to_string_without_side_effects(), name, member.type_name));
+
     Debugger::the().session()->poke((u32*)member.location_data.address, new_value.value());
     return true;
 }

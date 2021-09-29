@@ -54,7 +54,7 @@ ThrowCompletionOr<Value> ArgumentsObject::internal_get(PropertyName const& prope
 }
 
 // 10.4.4.4 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-arguments-exotic-objects-set-p-v-receiver
-bool ArgumentsObject::internal_set(PropertyName const& property_name, Value value, Value receiver)
+ThrowCompletionOr<bool> ArgumentsObject::internal_set(PropertyName const& property_name, Value value, Value receiver)
 {
     bool is_mapped = false;
 
