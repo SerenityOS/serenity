@@ -26,8 +26,8 @@ public:
 
     int track_size() const { return 2; }
     int track_margin() const { return 10; }
-    int knob_fixed_primary_size() const { return 8; }
-    int knob_secondary_size() const { return 20; }
+    virtual int knob_fixed_primary_size() const { return 8; }
+    virtual int knob_secondary_size() const { return 20; }
 
     bool knob_dragging() const { return m_dragging; }
     Gfx::IntRect knob_rect() const;
