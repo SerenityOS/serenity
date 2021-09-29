@@ -108,7 +108,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> StringObject::internal_get_own_p
 }
 
 // 10.4.3.2 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-string-exotic-objects-defineownproperty-p-desc
-bool StringObject::internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
+ThrowCompletionOr<bool> StringObject::internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
 {
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());

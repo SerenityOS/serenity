@@ -24,7 +24,7 @@ public:
     Environment& environment() { return m_environment; }
 
     virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyName const&) const override;
-    virtual bool internal_define_own_property(PropertyName const&, PropertyDescriptor const&) override;
+    virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyName const&, PropertyDescriptor const&) override;
     virtual Value internal_get(PropertyName const&, Value receiver) const override;
     virtual bool internal_set(PropertyName const&, Value value, Value receiver) override;
     virtual bool internal_delete(PropertyName const&) override;

@@ -330,7 +330,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_pr
 }
 
 // 10.5.6 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc
-bool ProxyObject::internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
+ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -341,16 +341,14 @@ bool ProxyObject::internal_define_own_property(PropertyName const& property_name
     // 2. Let handler be O.[[ProxyHandler]].
 
     // 3. If handler is null, throw a TypeError exception.
-    if (m_is_revoked) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyRevoked);
-        return {};
-    }
+    if (m_is_revoked)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
 
     // 4. Assert: Type(handler) is Object.
     // 5. Let target be O.[[ProxyTarget]].
 
     // 6. Let trap be ? GetMethod(handler, "defineProperty").
-    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.defineProperty));
+    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.defineProperty));
 
     // 7. If trap is undefined, then
     if (!trap) {
@@ -362,19 +360,19 @@ bool ProxyObject::internal_define_own_property(PropertyName const& property_name
     auto descriptor_object = from_property_descriptor(global_object, property_descriptor);
 
     // 9. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P, descObj »)).
-    auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name), descriptor_object)).to_boolean();
+    auto trap_result = TRY(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name), descriptor_object)).to_boolean();
 
     // 10. If booleanTrapResult is false, return false.
     if (!trap_result)
         return false;
 
     // 11. Let targetDesc be ? target.[[GetOwnProperty]](P).
-    auto target_descriptor = TRY_OR_DISCARD(m_target.internal_get_own_property(property_name));
+    auto target_descriptor = TRY(m_target.internal_get_own_property(property_name));
 
     // 12. Let extensibleTarget be ? IsExtensible(target).
     auto extensible_target = m_target.is_extensible();
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 14. Else, let settingConfigFalse be false.
     bool setting_config_false = false;
@@ -388,35 +386,28 @@ bool ProxyObject::internal_define_own_property(PropertyName const& property_name
     // 15. If targetDesc is undefined, then
     if (!target_descriptor.has_value()) {
         // a. If extensibleTarget is false, throw a TypeError exception.
-        if (!extensible_target) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::ProxyDefinePropNonExtensible);
-            return {};
-        }
+        if (!extensible_target)
+            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyDefinePropNonExtensible);
+
         // b. If settingConfigFalse is true, throw a TypeError exception.
-        if (setting_config_false) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::ProxyDefinePropNonConfigurableNonExisting);
-            return {};
-        }
+        if (setting_config_false)
+            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyDefinePropNonConfigurableNonExisting);
     }
     // 16. Else,
     else {
         // a. If IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) is false, throw a TypeError exception.
-        if (!is_compatible_property_descriptor(extensible_target, property_descriptor, target_descriptor)) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::ProxyDefinePropIncompatibleDescriptor);
-            return {};
-        }
+        if (!is_compatible_property_descriptor(extensible_target, property_descriptor, target_descriptor))
+            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyDefinePropIncompatibleDescriptor);
+
         // b. If settingConfigFalse is true and targetDesc.[[Configurable]] is true, throw a TypeError exception.
-        if (setting_config_false && *target_descriptor->configurable) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::ProxyDefinePropExistingConfigurable);
-            return {};
-        }
+        if (setting_config_false && *target_descriptor->configurable)
+            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyDefinePropExistingConfigurable);
+
         // c. If IsDataDescriptor(targetDesc) is true, targetDesc.[[Configurable]] is false, and targetDesc.[[Writable]] is true, then
         if (target_descriptor->is_data_descriptor() && !*target_descriptor->configurable && *target_descriptor->writable) {
             // i. If Desc has a [[Writable]] field and Desc.[[Writable]] is false, throw a TypeError exception.
-            if (property_descriptor.writable.has_value() && !*property_descriptor.writable) {
-                vm.throw_exception<TypeError>(global_object, ErrorType::ProxyDefinePropNonWritable);
-                return {};
-            }
+            if (property_descriptor.writable.has_value() && !*property_descriptor.writable)
+                return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyDefinePropNonWritable);
         }
     }
 
