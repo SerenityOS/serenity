@@ -29,7 +29,7 @@ public:
 private:
     virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyName const&) const override;
     virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyName const&, PropertyDescriptor const&) override;
-    virtual MarkedValueList internal_own_property_keys() const override;
+    virtual ThrowCompletionOr<MarkedValueList> internal_own_property_keys() const override;
 
     virtual bool is_string_object() const final { return true; }
     virtual void visit_edges(Visitor&) override;

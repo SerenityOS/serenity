@@ -398,7 +398,7 @@ public:
     }
 
     // 10.4.5.7 [[OwnPropertyKeys]] ( ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-ownpropertykeys
-    virtual MarkedValueList internal_own_property_keys() const override
+    virtual ThrowCompletionOr<MarkedValueList> internal_own_property_keys() const override
     {
         auto& vm = this->vm();
 
@@ -433,7 +433,7 @@ public:
         }
 
         // 6. Return keys.
-        return keys;
+        return { move(keys) };
     }
 
     Span<const UnderlyingBufferDataType> data() const

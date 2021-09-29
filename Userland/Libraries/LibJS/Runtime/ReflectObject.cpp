@@ -261,9 +261,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::own_keys)
     }
 
     // 2. Let keys be ? target.[[OwnPropertyKeys]]().
-    auto keys = target.as_object().internal_own_property_keys();
-    if (vm.exception())
-        return {};
+    auto keys = TRY_OR_DISCARD(target.as_object().internal_own_property_keys());
 
     // 3. Return CreateArrayFromList(keys).
     return Array::create_from(global_object, keys);
