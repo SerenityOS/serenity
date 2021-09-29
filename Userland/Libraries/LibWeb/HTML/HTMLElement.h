@@ -31,8 +31,10 @@ public:
     String inner_text();
     void set_inner_text(StringView);
 
-    unsigned offset_top() const;
-    unsigned offset_left() const;
+    int offset_top() const;
+    int offset_left() const;
+    int offset_width() const;
+    int offset_height() const;
 
     bool cannot_navigate() const;
 
