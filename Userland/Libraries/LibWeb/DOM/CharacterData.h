@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <LibWeb/DOM/ChildNode.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
 
@@ -14,6 +15,7 @@ namespace Web::DOM {
 
 class CharacterData
     : public Node
+    , public ChildNode<CharacterData>
     , public NonDocumentTypeChildNode<CharacterData> {
 public:
     using WrapperType = Bindings::CharacterDataWrapper;
