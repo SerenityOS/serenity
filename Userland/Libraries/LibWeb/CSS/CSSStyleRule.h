@@ -20,6 +20,8 @@ class CSSStyleRule : public CSSRule {
     AK_MAKE_NONMOVABLE(CSSStyleRule);
 
 public:
+    using WrapperType = Bindings::CSSStyleRuleWrapper;
+
     static NonnullRefPtr<CSSStyleRule> create(NonnullRefPtrVector<Selector>&& selectors, NonnullRefPtr<CSSStyleDeclaration>&& declaration)
     {
         return adopt_ref(*new CSSStyleRule(move(selectors), move(declaration)));
@@ -32,6 +34,11 @@ public:
 
     virtual StringView class_name() const { return "CSSStyleRule"; };
     virtual Type type() const { return Type::Style; };
+
+    String selector_text() const;
+    void set_selector_text(StringView);
+
+    CSSStyleDeclaration* style();
 
 private:
     CSSStyleRule(NonnullRefPtrVector<Selector>&&, NonnullRefPtr<CSSStyleDeclaration>&&);
