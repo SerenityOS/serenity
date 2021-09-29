@@ -632,6 +632,47 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
     return ParsingResult::SyntaxError;
 }
 
+NonnullRefPtrVector<MediaQuery> Parser::parse_as_media_query_list()
+{
+    return parse_a_media_query_list(m_token_stream);
+}
+
+template<typename T>
+NonnullRefPtrVector<MediaQuery> Parser::parse_a_media_query_list(TokenStream<T>& tokens)
+{
+    // https://www.w3.org/TR/mediaqueries-4/#mq-list
+
+    auto comma_separated_lists = parse_a_comma_separated_list_of_component_values(tokens);
+
+    AK::NonnullRefPtrVector<MediaQuery> media_queries;
+    for (auto& media_query_parts : comma_separated_lists) {
+        auto stream = TokenStream(media_query_parts);
+        media_queries.append(parse_media_query(stream));
+    }
+
+    return media_queries;
+}
+
+RefPtr<MediaQuery> Parser::parse_as_media_query()
+{
+    // https://www.w3.org/TR/cssom-1/#parse-a-media-query
+    auto media_query_list = parse_as_media_query_list();
+    if (media_query_list.is_empty())
+        return MediaQuery::create_not_all();
+    if (media_query_list.size() == 1)
+        return media_query_list.first();
+    return nullptr;
+}
+
+NonnullRefPtr<MediaQuery> Parser::parse_media_query(TokenStream<StyleComponentValueRule>&)
+{
+    // "A media query that does not match the grammar in the previous section must be replaced by `not all`
+    // during parsing." - https://www.w3.org/TR/mediaqueries-5/#error-handling
+
+    // FIXME: Implement media queries!
+    return MediaQuery::create_not_all();
+}
+
 NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(bool top_level)
 {
     return consume_a_list_of_rules(m_token_stream, top_level);
@@ -3308,6 +3349,18 @@ Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const& context, S
 {
     CSS::Parser parser(context, selector_text);
     return parser.parse_as_selector();
+}
+
+RefPtr<CSS::MediaQuery> parse_media_query(CSS::ParsingContext const& context, StringView const& string)
+{
+    CSS::Parser parser(context, string);
+    return parser.parse_as_media_query();
+}
+
+NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::ParsingContext const& context, StringView const& string)
+{
+    CSS::Parser parser(context, string);
+    return parser.parse_as_media_query_list();
 }
 
 RefPtr<CSS::StyleValue> parse_html_length(DOM::Document const& document, StringView const& string)
