@@ -71,6 +71,8 @@ public:
     virtual bool requires_svg_container() const { return false; }
     virtual bool is_svg_container() const { return false; }
 
+    bool in_a_document_tree() const;
+
     // NOTE: This is intended for the JS bindings.
     u16 node_type() const { return (u16)m_type; }
 
