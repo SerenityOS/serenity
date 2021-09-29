@@ -11,6 +11,7 @@
 #include <AK/GenericLexer.h>
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/QuickSort.h>
 #include <AK/SourceGenerator.h>
@@ -32,7 +33,7 @@ static String make_input_acceptable_cpp(String const& input)
     return input.replace("-", "_");
 }
 
-static void report_parsing_error(StringView message, StringView filename, StringView input, size_t offset)
+[[noreturn]] static void report_parsing_error(StringView message, StringView filename, StringView input, size_t offset)
 {
     // FIXME: Spaghetti code ahead.
 
@@ -184,7 +185,7 @@ struct Interface {
     bool is_legacy_platform_object() const { return !extended_attributes.contains("Global") && (supports_indexed_properties() || supports_named_properties()); }
 };
 
-static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView const& input)
+static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView input)
 {
     auto interface = make<Interface>();
 
@@ -230,6 +231,27 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
         consume_whitespace();
         return extended_attributes;
     };
+
+    auto resolve_import = [&](auto path) {
+        auto include_path = LexicalPath::join(LexicalPath::dirname(filename), path).string();
+        if (!Core::File::exists(include_path))
+            report_parsing_error(String::formatted("{}: No such file or directory", include_path), filename, input, lexer.tell());
+
+        auto file_or_error = Core::File::open(include_path, Core::OpenMode::ReadOnly);
+        if (file_or_error.is_error())
+            report_parsing_error(String::formatted("Failed to open {}: {}", include_path, file_or_error.error()), filename, input, lexer.tell());
+
+        auto data = file_or_error.value()->read_all();
+        return IDL::parse_interface(include_path, data);
+    };
+
+    NonnullOwnPtrVector<Interface> imports;
+    while (lexer.consume_specific("#import")) {
+        consume_whitespace();
+        assert_specific('<');
+        imports.append(resolve_import(lexer.consume_until('>')));
+        consume_whitespace();
+    }
 
     if (lexer.consume_specific('['))
         interface->extended_attributes = parse_extended_attributes();
@@ -642,6 +664,11 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
 
         interface->dictionaries.set(name, move(dictionary));
         consume_whitespace();
+    }
+
+    for (auto& import : imports) { // FIXME: Instead of copying every imported dictionary into the current interface, query imports directly
+        for (auto& dictionary : import.dictionaries)
+            interface->dictionaries.set(dictionary.key, dictionary.value);
     }
 
     return interface;
