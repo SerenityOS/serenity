@@ -86,7 +86,7 @@ Value Object::get(PropertyName const& property_name) const
     VERIFY(property_name.is_valid());
 
     // 3. Return ? O.[[Get]](P, O).
-    return internal_get(property_name, this);
+    return TRY_OR_DISCARD(internal_get(property_name, this));
 }
 
 // 7.3.3 GetV ( V, P ) is defined as Value::get().
@@ -647,7 +647,7 @@ ThrowCompletionOr<bool> Object::internal_has_property(PropertyName const& proper
 }
 
 // 10.1.8 [[Get]] ( P, Receiver ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-get-p-receiver
-Value Object::internal_get(PropertyName const& property_name, Value receiver) const
+ThrowCompletionOr<Value> Object::internal_get(PropertyName const& property_name, Value receiver) const
 {
     VERIFY(!receiver.is_empty());
     auto& vm = this->vm();
@@ -656,12 +656,12 @@ Value Object::internal_get(PropertyName const& property_name, Value receiver) co
     VERIFY(property_name.is_valid());
 
     // 2. Let desc be ? O.[[GetOwnProperty]](P).
-    auto descriptor = TRY_OR_DISCARD(internal_get_own_property(property_name));
+    auto descriptor = TRY(internal_get_own_property(property_name));
 
     // 3. If desc is undefined, then
     if (!descriptor.has_value()) {
         // a. Let parent be ? O.[[GetPrototypeOf]]().
-        auto* parent = TRY_OR_DISCARD(internal_get_prototype_of());
+        auto* parent = TRY(internal_get_prototype_of());
 
         // b. If parent is null, return undefined.
         if (!parent)
@@ -686,7 +686,7 @@ Value Object::internal_get(PropertyName const& property_name, Value receiver) co
         return js_undefined();
 
     // 8. Return ? Call(getter, Receiver).
-    return TRY_OR_DISCARD(vm.call(*getter, receiver));
+    return TRY(vm.call(*getter, receiver));
 }
 
 // 10.1.9 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-set-p-v-receiver

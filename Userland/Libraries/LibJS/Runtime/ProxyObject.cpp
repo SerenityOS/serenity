@@ -472,7 +472,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyName const& p
 }
 
 // 10.5.8 [[Get]] ( P, Receiver ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver
-Value ProxyObject::internal_get(PropertyName const& property_name, Value receiver) const
+ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyName const& property_name, Value receiver) const
 {
     VERIFY(!receiver.is_empty());
 
@@ -485,10 +485,8 @@ Value ProxyObject::internal_get(PropertyName const& property_name, Value receive
     // 2. Let handler be O.[[ProxyHandler]].
 
     // 3. If handler is null, throw a TypeError exception.
-    if (m_is_revoked) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyRevoked);
-        return {};
-    }
+    if (m_is_revoked)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
 
     // 4. Assert: Type(handler) is Object.
     // 5. Let target be O.[[ProxyTarget]].
@@ -506,13 +504,11 @@ Value ProxyObject::internal_get(PropertyName const& property_name, Value receive
     // 6. goto 1
     //
     // In JS code: `h = {}; p = new Proxy({}, h); h.__proto__ = p; p.foo // or h.foo`
-    if (vm.did_reach_stack_space_limit()) {
-        vm.throw_exception<Error>(global_object, ErrorType::CallStackSizeExceeded);
-        return {};
-    }
+    if (vm.did_reach_stack_space_limit())
+        return vm.throw_completion<Error>(global_object, ErrorType::CallStackSizeExceeded);
 
     // 6. Let trap be ? GetMethod(handler, "get").
-    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.get));
+    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.get));
 
     // 7. If trap is undefined, then
     if (!trap) {
@@ -521,28 +517,24 @@ Value ProxyObject::internal_get(PropertyName const& property_name, Value receive
     }
 
     // 8. Let trapResult be ? Call(trap, handler, « target, P, Receiver »).
-    auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name), receiver));
+    auto trap_result = TRY(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name), receiver));
 
     // 9. Let targetDesc be ? target.[[GetOwnProperty]](P).
-    auto target_descriptor = TRY_OR_DISCARD(m_target.internal_get_own_property(property_name));
+    auto target_descriptor = TRY(m_target.internal_get_own_property(property_name));
 
     // 10. If targetDesc is not undefined and targetDesc.[[Configurable]] is false, then
     if (target_descriptor.has_value() && !*target_descriptor->configurable) {
         // a. If IsDataDescriptor(targetDesc) is true and targetDesc.[[Writable]] is false, then
         if (target_descriptor->is_data_descriptor() && !*target_descriptor->writable) {
             // i. If SameValue(trapResult, targetDesc.[[Value]]) is false, throw a TypeError exception.
-            if (!same_value(trap_result, *target_descriptor->value)) {
-                vm.throw_exception<TypeError>(global_object, ErrorType::ProxyGetImmutableDataProperty);
-                return {};
-            }
+            if (!same_value(trap_result, *target_descriptor->value))
+                return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetImmutableDataProperty);
         }
         // b. If IsAccessorDescriptor(targetDesc) is true and targetDesc.[[Get]] is undefined, then
         if (target_descriptor->is_accessor_descriptor() && !*target_descriptor->get) {
             // i. If trapResult is not undefined, throw a TypeError exception.
-            if (!trap_result.is_undefined()) {
-                vm.throw_exception<TypeError>(global_object, ErrorType::ProxyGetNonConfigurableAccessor);
-                return {};
-            }
+            if (!trap_result.is_undefined())
+                return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetNonConfigurableAccessor);
         }
     }
 

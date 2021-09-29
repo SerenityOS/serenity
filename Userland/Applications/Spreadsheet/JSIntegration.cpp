@@ -8,6 +8,7 @@
 #include "Spreadsheet.h"
 #include "Workbook.h"
 #include <LibJS/Lexer.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
@@ -101,7 +102,7 @@ SheetGlobalObject::~SheetGlobalObject()
 {
 }
 
-JS::Value SheetGlobalObject::internal_get(const JS::PropertyName& property_name, JS::Value receiver) const
+JS::ThrowCompletionOr<JS::Value> SheetGlobalObject::internal_get(const JS::PropertyName& property_name, JS::Value receiver) const
 {
     if (property_name.is_string()) {
         if (property_name.as_string() == "value") {
