@@ -8,7 +8,6 @@
 #include "Spreadsheet.h"
 #include "Workbook.h"
 #include <LibJS/Lexer.h>
-#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
@@ -100,6 +99,17 @@ SheetGlobalObject::SheetGlobalObject(Sheet& sheet)
 
 SheetGlobalObject::~SheetGlobalObject()
 {
+}
+
+JS::ThrowCompletionOr<bool> SheetGlobalObject::internal_has_property(JS::PropertyName const& name) const
+{
+    if (name.is_string()) {
+        if (name.as_string() == "value")
+            return true;
+        if (m_sheet.parse_cell_name(name.as_string()).has_value())
+            return true;
+    }
+    return Object::internal_has_property(name);
 }
 
 JS::ThrowCompletionOr<JS::Value> SheetGlobalObject::internal_get(const JS::PropertyName& property_name, JS::Value receiver) const

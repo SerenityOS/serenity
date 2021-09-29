@@ -27,6 +27,7 @@ public:
 
     virtual ~SheetGlobalObject() override;
 
+    virtual JS::ThrowCompletionOr<bool> internal_has_property(JS::PropertyName const& name) const override;
     virtual JS::ThrowCompletionOr<JS::Value> internal_get(JS::PropertyName const&, JS::Value receiver) const override;
     virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyName const&, JS::Value value, JS::Value receiver) override;
     virtual void initialize_global_object() override;
