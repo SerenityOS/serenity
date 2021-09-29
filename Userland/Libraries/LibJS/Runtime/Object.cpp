@@ -261,7 +261,7 @@ bool Object::has_property(PropertyName const& property_name) const
     VERIFY(property_name.is_valid());
 
     // 3. Return ? O.[[HasProperty]](P).
-    return internal_has_property(property_name);
+    return TRY_OR_DISCARD(internal_has_property(property_name));
 }
 
 // 7.3.12 HasOwnProperty ( O, P ), https://tc39.es/ecma262/#sec-hasownproperty
@@ -616,25 +616,30 @@ ThrowCompletionOr<bool> Object::internal_define_own_property(PropertyName const&
 }
 
 // 10.1.7 [[HasProperty]] ( P ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-hasproperty-p
-bool Object::internal_has_property(PropertyName const& property_name) const
+ThrowCompletionOr<bool> Object::internal_has_property(PropertyName const& property_name) const
 {
+    auto& vm = this->vm();
+
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
 
     // 2. Let hasOwn be ? O.[[GetOwnProperty]](P).
-    auto has_own = TRY_OR_DISCARD(internal_get_own_property(property_name));
+    auto has_own = TRY(internal_get_own_property(property_name));
 
     // 3. If hasOwn is not undefined, return true.
     if (has_own.has_value())
         return true;
 
     // 4. Let parent be ? O.[[GetPrototypeOf]]().
-    auto* parent = TRY_OR_DISCARD(internal_get_prototype_of());
+    auto* parent = TRY(internal_get_prototype_of());
 
     // 5. If parent is not null, then
     if (parent) {
         // a. Return ? parent.[[HasProperty]](P).
-        return parent->internal_has_property(property_name);
+        auto result = parent->internal_has_property(property_name);
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
+        return result;
     }
 
     // 6. Return false.
