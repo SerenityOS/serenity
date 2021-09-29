@@ -254,7 +254,7 @@ public:
     }
 
     // 10.4.5.3 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-defineownproperty-p-desc
-    virtual bool internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor) override
+    virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor) override
     {
         // 1. Assert: IsPropertyKey(P) is true.
         VERIFY(property_name.is_valid());
@@ -295,8 +295,8 @@ public:
                 // vi. If Desc has a [[Value]] field, perform ? IntegerIndexedElementSet(O, numericIndex, Desc.[[Value]]).
                 if (property_descriptor.value.has_value()) {
                     integer_indexed_element_set<T>(*this, numeric_index, *property_descriptor.value);
-                    if (vm().exception())
-                        return {};
+                    if (auto* exception = vm().exception())
+                        return throw_completion(exception->value());
                 }
 
                 // vii. Return true.

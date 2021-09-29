@@ -65,7 +65,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> ConsoleGlobalObject::int
     return Base::internal_get_own_property(property_name);
 }
 
-bool ConsoleGlobalObject::internal_define_own_property(JS::PropertyName const& property_name, JS::PropertyDescriptor const& descriptor)
+JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_define_own_property(JS::PropertyName const& property_name, JS::PropertyDescriptor const& descriptor)
 {
     return m_window_object->internal_define_own_property(property_name, descriptor);
 }

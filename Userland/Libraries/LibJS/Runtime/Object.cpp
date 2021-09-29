@@ -137,7 +137,7 @@ bool Object::create_data_property(PropertyName const& property_name, Value value
     };
 
     // 4. Return ? O.[[DefineOwnProperty]](P, newDesc).
-    return internal_define_own_property(property_name, new_descriptor);
+    return TRY_OR_DISCARD(internal_define_own_property(property_name, new_descriptor));
 }
 
 // 7.3.6 CreateMethodProperty ( O, P, V ), https://tc39.es/ecma262/#sec-createmethodproperty
@@ -159,7 +159,7 @@ bool Object::create_method_property(PropertyName const& property_name, Value val
     };
 
     // 4. Return ? O.[[DefineOwnProperty]](P, newDesc).
-    return internal_define_own_property(property_name, new_descriptor);
+    return TRY_OR_DISCARD(internal_define_own_property(property_name, new_descriptor));
 }
 
 // 7.3.7 CreateDataPropertyOrThrow ( O, P, V ), https://tc39.es/ecma262/#sec-createdatapropertyorthrow
@@ -213,9 +213,7 @@ bool Object::define_property_or_throw(PropertyName const& property_name, Propert
     VERIFY(property_name.is_valid());
 
     // 3. Let success be ? O.[[DefineOwnProperty]](P, desc).
-    auto success = internal_define_own_property(property_name, property_descriptor);
-    if (vm.exception())
-        return {};
+    auto success = TRY_OR_DISCARD(internal_define_own_property(property_name, property_descriptor));
 
     // 4. If success is false, throw a TypeError exception.
     if (!success) {
@@ -600,18 +598,18 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> Object::internal_get_own_propert
 }
 
 // 10.1.6 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-defineownproperty-p-desc
-bool Object::internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
+ThrowCompletionOr<bool> Object::internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
 {
     VERIFY(property_name.is_valid());
     auto& vm = this->vm();
 
     // 1. Let current be ? O.[[GetOwnProperty]](P).
-    auto current = TRY_OR_DISCARD(internal_get_own_property(property_name));
+    auto current = TRY(internal_get_own_property(property_name));
 
     // 2. Let extensible be ? IsExtensible(O).
     auto extensible = is_extensible();
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 3. Return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current).
     return validate_and_apply_property_descriptor(this, property_name, extensible, property_descriptor, current);
@@ -759,7 +757,7 @@ bool Object::ordinary_set_with_own_descriptor(PropertyName const& property_name,
             auto value_descriptor = PropertyDescriptor { .value = value };
 
             // iv. Return ? Receiver.[[DefineOwnProperty]](P, valueDesc).
-            return receiver.as_object().internal_define_own_property(property_name, value_descriptor);
+            return TRY_OR_DISCARD(receiver.as_object().internal_define_own_property(property_name, value_descriptor));
         }
         // e. Else,
         else {
@@ -783,6 +781,8 @@ bool Object::ordinary_set_with_own_descriptor(PropertyName const& property_name,
 
     // 7. Perform ? Call(setter, Receiver, « V »).
     (void)vm.call(*setter, receiver, value);
+    if (vm.exception())
+        return {};
 
     // 8. Return true.
     return true;

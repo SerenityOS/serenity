@@ -39,7 +39,7 @@ public:
     virtual ~Array() override;
 
     virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyName const&) const override;
-    virtual bool internal_define_own_property(PropertyName const&, PropertyDescriptor const&) override;
+    virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyName const&, PropertyDescriptor const&) override;
     virtual bool internal_delete(PropertyName const&) override;
     virtual MarkedValueList internal_own_property_keys() const override;
 
