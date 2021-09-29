@@ -26,6 +26,27 @@ static String title_casify(const String& dashy_name)
     return builder.to_string();
 }
 
+static String camel_casify(StringView dashy_name)
+{
+    auto parts = dashy_name.split_view('-');
+    StringBuilder builder;
+    bool first = true;
+    for (auto& part : parts) {
+        if (part.is_empty())
+            continue;
+        char ch = part[0];
+        if (!first)
+            ch = toupper(ch);
+        else
+            first = false;
+        builder.append(ch);
+        if (part.length() == 1)
+            continue;
+        builder.append(part.substring_view(1, part.length() - 1));
+    }
+    return builder.to_string();
+}
+
 int main(int argc, char** argv)
 {
     if (argc != 2) {
@@ -52,6 +73,27 @@ int main(int argc, char** argv)
 #include <LibWeb/CSS/StyleValue.h>
 
 namespace Web::CSS {
+
+PropertyID property_id_from_camel_case_string(StringView string)
+{
+)~~~");
+
+    properties.for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+
+        auto member_generator = generator.fork();
+        member_generator.set("name", name);
+        member_generator.set("name:titlecase", title_casify(name));
+        member_generator.set("name:camelcase", camel_casify(name));
+        member_generator.append(R"~~~(
+    if (string.equals_ignoring_case("@name:camelcase@"sv))
+        return PropertyID::@name:titlecase@;
+)~~~");
+    });
+
+    generator.append(R"~~~(
+    return PropertyID::Invalid;
+}
 
 PropertyID property_id_from_string(const StringView& string)
 {
