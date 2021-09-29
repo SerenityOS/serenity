@@ -37,6 +37,8 @@ public:
 
     size_t length() const { return m_sheets.size(); }
 
+    bool is_supported_property_index(u32) const;
+
 private:
     explicit StyleSheetList(DOM::Document&);
 
