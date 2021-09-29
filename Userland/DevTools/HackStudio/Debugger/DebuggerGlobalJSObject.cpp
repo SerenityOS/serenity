@@ -7,6 +7,7 @@
 #include "DebuggerGlobalJSObject.h"
 #include "Debugger.h"
 #include "DebuggerVariableJSObject.h"
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/ProxyObject.h>
 
@@ -21,7 +22,7 @@ DebuggerGlobalJSObject::DebuggerGlobalJSObject()
     m_variables = lib->debug_info->get_variables_in_current_scope(regs);
 }
 
-JS::Value DebuggerGlobalJSObject::internal_get(JS::PropertyName const& property_name, JS::Value receiver) const
+JS::ThrowCompletionOr<JS::Value> DebuggerGlobalJSObject::internal_get(JS::PropertyName const& property_name, JS::Value receiver) const
 {
     if (m_variables.is_empty() || !property_name.is_string())
         return Base::internal_get(property_name, receiver);
@@ -36,8 +37,7 @@ JS::Value DebuggerGlobalJSObject::internal_get(JS::PropertyName const& property_
     if (js_value.has_value())
         return js_value.value();
     auto error_string = String::formatted("Variable {} of type {} is not convertible to a JS Value", property_name.as_string(), target_variable.type_name);
-    vm().throw_exception<JS::TypeError>(const_cast<DebuggerGlobalJSObject&>(*this), error_string);
-    return {};
+    return vm().throw_completion<JS::TypeError>(const_cast<DebuggerGlobalJSObject&>(*this), move(error_string));
 }
 
 bool DebuggerGlobalJSObject::internal_set(JS::PropertyName const& property_name, JS::Value value, JS::Value receiver)

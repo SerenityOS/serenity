@@ -171,7 +171,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get)
     }
 
     // 4. Return ? target.[[Get]](key, receiver).
-    return target.as_object().internal_get(key, receiver);
+    return TRY_OR_DISCARD(target.as_object().internal_get(key, receiver));
 }
 
 // 28.1.6 Reflect.getOwnPropertyDescriptor ( target, propertyKey ), https://tc39.es/ecma262/#sec-reflect.getownpropertydescriptor

@@ -309,7 +309,7 @@ public:
     }
 
     // 10.4.5.4 [[Get]] ( P, Receiver ), 10.4.5.4 [[Get]] ( P, Receiver )
-    virtual Value internal_get(PropertyName const& property_name, Value receiver) const override
+    virtual ThrowCompletionOr<Value> internal_get(PropertyName const& property_name, Value receiver) const override
     {
         VERIFY(!receiver.is_empty());
 

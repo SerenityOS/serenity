@@ -8,6 +8,7 @@
 
 #include "Forward.h"
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace Spreadsheet {
@@ -26,7 +27,7 @@ public:
 
     virtual ~SheetGlobalObject() override;
 
-    virtual JS::Value internal_get(JS::PropertyName const&, JS::Value receiver) const override;
+    virtual JS::ThrowCompletionOr<JS::Value> internal_get(JS::PropertyName const&, JS::Value receiver) const override;
     virtual bool internal_set(JS::PropertyName const&, JS::Value value, JS::Value receiver) override;
     virtual void initialize_global_object() override;
 
