@@ -9,7 +9,7 @@
 namespace Web::CSS {
 
 CSSStyleSheet::CSSStyleSheet(NonnullRefPtrVector<CSSRule> rules)
-    : m_rules(move(rules))
+    : m_rules(CSSRuleList::create(move(rules)))
 {
 }
 

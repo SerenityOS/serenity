@@ -262,6 +262,8 @@ class URLSearchParamsIterator;
 namespace Web::Bindings {
 class AbortControllerWrapper;
 class AbortSignalWrapper;
+class CSSRuleWrapper;
+class CSSRuleListWrapper;
 class CSSStyleDeclarationWrapper;
 class CSSStyleSheetWrapper;
 class CanvasRenderingContext2DWrapper;

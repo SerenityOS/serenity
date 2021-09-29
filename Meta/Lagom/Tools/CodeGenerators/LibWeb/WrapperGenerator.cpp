@@ -1490,6 +1490,8 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
+#include <LibWeb/Bindings/CSSRuleListWrapper.h>
+#include <LibWeb/Bindings/CSSRuleWrapper.h>
 #include <LibWeb/Bindings/CSSStyleSheetWrapper.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/CommentWrapper.h>
@@ -2684,6 +2686,8 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
 #include <LibWeb/Bindings/AbortSignalWrapper.h>
+#include <LibWeb/Bindings/CSSRuleListWrapper.h>
+#include <LibWeb/Bindings/CSSRuleWrapper.h>
 #include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
 #include <LibWeb/Bindings/CSSStyleSheetWrapper.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>

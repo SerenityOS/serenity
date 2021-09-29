@@ -10,7 +10,7 @@
 namespace Web::CSS {
 
 CSSGroupingRule::CSSGroupingRule(NonnullRefPtrVector<CSSRule>&& rules)
-    : m_rules(CSSRuleList { move(rules) })
+    : m_rules(CSSRuleList::create(move(rules)))
 {
 }
 

@@ -64,8 +64,9 @@ void CSSLoader::resource_did_load()
     });
 
     // Transfer the rules from the successfully parsed sheet into the sheet we've already inserted.
+    // FIXME: @import rules need work.
     if (!was_imported) {
-        m_style_sheet->rules() = sheet->rules();
+        m_style_sheet->set_rules(sheet->rules());
     }
 
     if (on_load)
