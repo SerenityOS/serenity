@@ -1392,7 +1392,7 @@ public:
 
     if (interface.extended_attributes.contains("CustomGet")) {
         generator.append(R"~~~(
-    virtual JS::Value internal_get(JS::PropertyName const&, JS::Value receiver) const override;
+    virtual JS::ThrowCompletionOr<JS::Value> internal_get(JS::PropertyName const&, JS::Value receiver) const override;
 )~~~");
     }
     if (interface.extended_attributes.contains("CustomSet")) {

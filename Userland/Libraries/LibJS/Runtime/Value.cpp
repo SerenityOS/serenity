@@ -820,7 +820,7 @@ Value Value::get(GlobalObject& global_object, PropertyName const& property_name)
         return {};
 
     // 3. Return ? O.[[Get]](P, V).
-    return object->internal_get(property_name, *this);
+    return TRY_OR_DISCARD(object->internal_get(property_name, *this));
 }
 
 // 7.3.10 GetMethod ( V, P ), https://tc39.es/ecma262/#sec-getmethod
