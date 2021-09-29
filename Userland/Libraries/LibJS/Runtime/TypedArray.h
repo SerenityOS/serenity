@@ -369,7 +369,7 @@ public:
     }
 
     // 10.4.5.6 [[Delete]] ( P ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-delete-p
-    virtual bool internal_delete(PropertyName const& property_name) override
+    virtual ThrowCompletionOr<bool> internal_delete(PropertyName const& property_name) override
     {
         // 1. Assert: IsPropertyKey(P) is true.
         VERIFY(property_name.is_valid());

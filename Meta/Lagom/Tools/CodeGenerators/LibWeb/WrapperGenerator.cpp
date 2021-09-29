@@ -1416,7 +1416,7 @@ public:
     virtual JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> internal_get_own_property(JS::PropertyName const&) const override;
     virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyName const&, JS::Value, JS::Value) override;
     virtual JS::ThrowCompletionOr<bool> internal_define_own_property(JS::PropertyName const&, JS::PropertyDescriptor const&) override;
-    virtual bool internal_delete(JS::PropertyName const&) override;
+    virtual JS::ThrowCompletionOr<bool> internal_delete(JS::PropertyName const&) override;
     virtual JS::ThrowCompletionOr<bool> internal_prevent_extensions() override;
     virtual JS::MarkedValueList internal_own_property_keys() const override;
 )~~~");
@@ -2173,7 +2173,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::Prope
 
         // 3.9.4. [[Delete]], https://heycam.github.io/webidl/#legacy-platform-object-delete
         scoped_generator.append(R"~~~(
-bool @class_name@::internal_delete(JS::PropertyName const& property_name)
+JS::ThrowCompletionOr<bool> @class_name@::internal_delete(JS::PropertyName const& property_name)
 {
     [[maybe_unused]] auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -2223,8 +2223,9 @@ bool @class_name@::internal_delete(JS::PropertyName const& property_name)
                     scoped_generator.append(R"~~~(
         // 1. Perform the steps listed in the interface description to delete an existing named property with P as the name.
         auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return impl().delete_existing_named_property(property_name_string); });
+        // FIXME: Make this nicer for ThrowCompletionOr.
         if (should_return_empty(result))
-            return {};
+            return JS::throw_completion(vm.exception()->value());
 
         bool succeeded = result.release_value();
 
@@ -2240,8 +2241,9 @@ bool @class_name@::internal_delete(JS::PropertyName const& property_name)
                     function_scoped_generator.append(R"~~~(
         // 1. Perform method steps of operation with O as this and « P » as the argument values.
         auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return impl().@function.cpp_name@(property_name_string); });
+        // FIXME: Make this nicer for ThrowCompletionOr.
         if (should_return_empty(result))
-            return {};
+            return JS::throw_completion(vm.exception()->value());
 )~~~");
 
                     // 2. If operation was declared with a return type of boolean and the steps returned false, then return false.
@@ -2267,7 +2269,7 @@ bool @class_name@::internal_delete(JS::PropertyName const& property_name)
 
         scoped_generator.append(R"~~~(
     // 3. If O has an own property with name P, then:
-    auto own_property_named_p_descriptor = TRY_OR_DISCARD(Object::internal_get_own_property(property_name));
+    auto own_property_named_p_descriptor = TRY(Object::internal_get_own_property(property_name));
 
     if (own_property_named_p_descriptor.has_value()) {
         // 1. If the property is not configurable, then return false.

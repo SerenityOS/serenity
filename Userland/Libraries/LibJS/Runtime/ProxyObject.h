@@ -44,7 +44,7 @@ public:
     virtual ThrowCompletionOr<bool> internal_has_property(PropertyName const&) const override;
     virtual ThrowCompletionOr<Value> internal_get(PropertyName const&, Value receiver) const override;
     virtual ThrowCompletionOr<bool> internal_set(PropertyName const&, Value value, Value receiver) override;
-    virtual bool internal_delete(PropertyName const&) override;
+    virtual ThrowCompletionOr<bool> internal_delete(PropertyName const&) override;
     virtual MarkedValueList internal_own_property_keys() const override;
 
 private:

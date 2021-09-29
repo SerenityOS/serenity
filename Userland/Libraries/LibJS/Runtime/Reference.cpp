@@ -153,9 +153,7 @@ bool Reference::delete_(GlobalObject& global_object)
         VERIFY(base_obj);
 
         // d. Let deleteStatus be ? baseObj.[[Delete]](ref.[[ReferencedName]]).
-        bool delete_status = base_obj->internal_delete(m_name);
-        if (vm.exception())
-            return {};
+        bool delete_status = TRY_OR_DISCARD(base_obj->internal_delete(m_name));
 
         // e. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
         if (!delete_status && m_strict) {

@@ -472,32 +472,30 @@ Value JSONObject::internalize_json_property(GlobalObject& global_object, Object*
         auto is_array = TRY_OR_DISCARD(value.is_array(global_object));
 
         auto& value_object = value.as_object();
-        auto process_property = [&](const PropertyName& key) {
+        auto process_property = [&](const PropertyName& key) -> ThrowCompletionOr<void> {
             auto element = internalize_json_property(global_object, &value_object, key, reviver);
-            if (vm.exception())
-                return;
-            if (element.is_undefined())
-                value_object.internal_delete(key);
-            else
+            if (auto* exception = vm.exception())
+                return throw_completion(exception->value());
+            if (element.is_undefined()) {
+                TRY(value_object.internal_delete(key));
+            } else {
                 value_object.create_data_property(key, element);
+                if (auto* exception = vm.exception())
+                    return throw_completion(exception->value());
+            }
+            return {};
         };
 
         if (is_array) {
             auto length = TRY_OR_DISCARD(length_of_array_like(global_object, value_object));
-            for (size_t i = 0; i < length; ++i) {
-                process_property(i);
-                if (vm.exception())
-                    return {};
-            }
+            for (size_t i = 0; i < length; ++i)
+                TRY_OR_DISCARD(process_property(i));
         } else {
             auto property_list = value_object.enumerable_own_property_names(Object::PropertyKind::Key);
             if (vm.exception())
                 return {};
-            for (auto& property_name : property_list) {
-                process_property(property_name.as_string().string());
-                if (vm.exception())
-                    return {};
-            }
+            for (auto& property_name : property_list)
+                TRY_OR_DISCARD(process_property(property_name.as_string().string()));
         }
     }
 
