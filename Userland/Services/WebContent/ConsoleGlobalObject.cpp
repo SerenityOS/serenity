@@ -70,9 +70,9 @@ JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_define_own_property(JS
     return m_window_object->internal_define_own_property(property_name, descriptor);
 }
 
-bool ConsoleGlobalObject::internal_has_property(JS::PropertyName const& property_name) const
+JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_has_property(JS::PropertyName const& property_name) const
 {
-    return Object::internal_has_property(property_name) || m_window_object->internal_has_property(property_name);
+    return TRY(Object::internal_has_property(property_name)) || TRY(m_window_object->internal_has_property(property_name));
 }
 
 JS::Value ConsoleGlobalObject::internal_get(JS::PropertyName const& property_name, JS::Value receiver) const

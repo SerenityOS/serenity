@@ -1403,7 +1403,7 @@ public:
 
     if (interface.extended_attributes.contains("CustomHasProperty")) {
         generator.append(R"~~~(
-    virtual bool internal_has_property(JS::PropertyName const&) const override;
+    virtual JS::ThrowCompletionOr<bool> internal_has_property(JS::PropertyName const&) const override;
 )~~~");
     }
 

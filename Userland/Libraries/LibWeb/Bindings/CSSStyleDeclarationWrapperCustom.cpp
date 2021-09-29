@@ -4,12 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/Completion.h>
 #include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
 #include <LibWeb/DOM/Element.h>
 
 namespace Web::Bindings {
 
-bool CSSStyleDeclarationWrapper::internal_has_property(JS::PropertyName const& name) const
+JS::ThrowCompletionOr<bool> CSSStyleDeclarationWrapper::internal_has_property(JS::PropertyName const& name) const
 {
     if (!name.is_string())
         return Base::internal_has_property(name);
