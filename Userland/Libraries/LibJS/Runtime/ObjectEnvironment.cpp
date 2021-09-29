@@ -39,7 +39,7 @@ bool ObjectEnvironment::put_into_environment(FlyString const& name, Variable var
 
 bool ObjectEnvironment::delete_from_environment(FlyString const& name)
 {
-    return m_binding_object.internal_delete(name);
+    return TRY_OR_DISCARD(m_binding_object.internal_delete(name));
 }
 
 // 9.1.1.2.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n
@@ -134,7 +134,7 @@ Value ObjectEnvironment::get_binding_value(GlobalObject& global_object, FlyStrin
 // 9.1.1.2.7 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-object-environment-records-deletebinding-n
 bool ObjectEnvironment::delete_binding(GlobalObject&, FlyString const& name)
 {
-    return m_binding_object.internal_delete(name);
+    return TRY_OR_DISCARD(m_binding_object.internal_delete(name));
 }
 
 }

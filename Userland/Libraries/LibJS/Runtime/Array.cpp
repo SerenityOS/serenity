@@ -217,7 +217,7 @@ ThrowCompletionOr<bool> Array::internal_define_own_property(PropertyName const& 
 }
 
 // NON-STANDARD: Used to reject deletes to ephemeral (non-configurable) length property
-bool Array::internal_delete(PropertyName const& property_name)
+ThrowCompletionOr<bool> Array::internal_delete(PropertyName const& property_name)
 {
     auto& vm = this->vm();
     if (property_name.is_string() && property_name.as_string() == vm.names.length.as_string())

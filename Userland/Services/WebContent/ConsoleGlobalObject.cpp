@@ -88,7 +88,7 @@ JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_set(JS::PropertyName c
     return m_window_object->internal_set(property_name, value, (receiver == this) ? m_window_object : receiver);
 }
 
-bool ConsoleGlobalObject::internal_delete(JS::PropertyName const& property_name)
+JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_delete(JS::PropertyName const& property_name)
 {
     return m_window_object->internal_delete(property_name);
 }

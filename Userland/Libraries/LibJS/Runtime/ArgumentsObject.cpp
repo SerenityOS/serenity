@@ -81,21 +81,21 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_set(PropertyName const& proper
 }
 
 // 10.4.4.5 [[Delete]] ( P ), https://tc39.es/ecma262/#sec-arguments-exotic-objects-delete-p
-bool ArgumentsObject::internal_delete(PropertyName const& property_name)
+ThrowCompletionOr<bool> ArgumentsObject::internal_delete(PropertyName const& property_name)
 {
     // 1. Let map be args.[[ParameterMap]].
     auto& map = parameter_map();
+
     // 2. Let isMapped be ! HasOwnProperty(map, P).
     bool is_mapped = map.has_own_property(property_name);
+
     // 3. Let result be ? OrdinaryDelete(args, P).
-    bool result = Object::internal_delete(property_name);
-    if (vm().exception())
-        return false;
+    bool result = TRY(Object::internal_delete(property_name));
 
     // 4. If result is true and isMapped is true, then
     if (result && is_mapped) {
         // a. Call map.[[Delete]](P).
-        map.internal_delete(property_name);
+        (void)map.internal_delete(property_name);
     }
 
     // 5. Return result.
@@ -157,7 +157,7 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyNa
         // a. If IsAccessorDescriptor(Desc) is true, then
         if (descriptor.is_accessor_descriptor()) {
             // i. Call map.[[Delete]](P).
-            map.internal_delete(property_name);
+            (void)map.internal_delete(property_name);
         } else {
             // i. If Desc.[[Value]] is present, then
             if (descriptor.value.has_value()) {
@@ -169,7 +169,7 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyNa
             // ii. If Desc.[[Writable]] is present and its value is false, then
             if (descriptor.writable == false) {
                 // 1. Call map.[[Delete]](P).
-                map.internal_delete(property_name);
+                (void)map.internal_delete(property_name);
             }
         }
     }

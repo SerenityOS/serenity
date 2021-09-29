@@ -603,7 +603,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyName const& property_n
 }
 
 // 10.5.10 [[Delete]] ( P ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-delete-p
-bool ProxyObject::internal_delete(PropertyName const& property_name)
+ThrowCompletionOr<bool> ProxyObject::internal_delete(PropertyName const& property_name)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -614,16 +614,14 @@ bool ProxyObject::internal_delete(PropertyName const& property_name)
     // 2. Let handler be O.[[ProxyHandler]].
 
     // 3. If handler is null, throw a TypeError exception.
-    if (m_is_revoked) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyRevoked);
-        return {};
-    }
+    if (m_is_revoked)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
 
     // 4. Assert: Type(handler) is Object.
     // 5. Let target be O.[[ProxyTarget]].
 
     // 6. Let trap be ? GetMethod(handler, "deleteProperty").
-    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.deleteProperty));
+    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.deleteProperty));
 
     // 7. If trap is undefined, then
     if (!trap) {
@@ -632,35 +630,31 @@ bool ProxyObject::internal_delete(PropertyName const& property_name)
     }
 
     // 8. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P »)).
-    auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name))).to_boolean();
+    auto trap_result = TRY(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name))).to_boolean();
 
     // 9. If booleanTrapResult is false, return false.
     if (!trap_result)
         return false;
 
     // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
-    auto target_descriptor = TRY_OR_DISCARD(m_target.internal_get_own_property(property_name));
+    auto target_descriptor = TRY(m_target.internal_get_own_property(property_name));
 
     // 11. If targetDesc is undefined, return true.
     if (!target_descriptor.has_value())
         return true;
 
     // 12. If targetDesc.[[Configurable]] is false, throw a TypeError exception.
-    if (!*target_descriptor->configurable) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyDeleteNonConfigurable);
-        return {};
-    }
+    if (!*target_descriptor->configurable)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyDeleteNonConfigurable);
 
     // 13. Let extensibleTarget be ? IsExtensible(target).
     auto extensible_target = m_target.is_extensible();
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 14. If extensibleTarget is false, throw a TypeError exception.
-    if (!extensible_target) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyDeleteNonExtensible);
-        return {};
-    }
+    if (!extensible_target)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyDeleteNonExtensible);
 
     // 15. Return true.
     return true;
