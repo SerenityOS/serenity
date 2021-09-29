@@ -331,10 +331,12 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
                 changed_event.is_active(),
                 changed_event.is_minimized());
         }
-        if (changed_event.window_type() != GUI::WindowType::Normal || changed_event.is_frameless()) {
-            if (auto* window = WindowList::the().window(identifier))
-                remove_window_button(*window, false);
-            break;
+        if (!changed_event.should_always_show_in_taskbar()) {
+            if (changed_event.window_type() != GUI::WindowType::Normal || changed_event.is_frameless()) {
+                if (auto* window = WindowList::the().window(identifier))
+                    remove_window_button(*window, false);
+                break;
+            }
         }
         auto& window = WindowList::the().ensure_window(identifier);
         window.set_parent_identifier({ changed_event.parent_client_id(), changed_event.parent_window_id() });
