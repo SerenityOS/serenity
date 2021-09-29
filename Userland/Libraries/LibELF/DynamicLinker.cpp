@@ -257,9 +257,12 @@ static void initialize_libc(DynamicObject& libc)
 }
 
 template<typename Callback>
-static void for_each_unfinished_dependency_of(const String& name, HashTable<String>& seen_names, Callback callback)
+static void for_each_unfinished_dependency_of(const String& name, HashTable<String>& seen_names, bool first, bool skip_global_objects, Callback callback)
 {
     if (!s_loaders.contains(name))
+        return;
+
+    if (!first && skip_global_objects && s_global_objects.contains(name))
         return;
 
     if (seen_names.contains(name))
@@ -267,28 +270,28 @@ static void for_each_unfinished_dependency_of(const String& name, HashTable<Stri
     seen_names.set(name);
 
     for (const auto& needed_name : get_dependencies(name))
-        for_each_unfinished_dependency_of(get_library_name(needed_name), seen_names, callback);
+        for_each_unfinished_dependency_of(get_library_name(needed_name), seen_names, false, skip_global_objects, callback);
 
     callback(*s_loaders.get(name).value());
 }
 
-static NonnullRefPtrVector<DynamicLoader> collect_loaders_for_library(const String& name)
+static NonnullRefPtrVector<DynamicLoader> collect_loaders_for_library(const String& name, bool skip_global_objects)
 {
     HashTable<String> seen_names;
     NonnullRefPtrVector<DynamicLoader> loaders;
-    for_each_unfinished_dependency_of(name, seen_names, [&](auto& loader) {
+    for_each_unfinished_dependency_of(name, seen_names, true, skip_global_objects, [&](auto& loader) {
         loaders.append(loader);
     });
     return loaders;
 }
 
-static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> load_main_library(const String& name, int flags)
+static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> load_main_library(const String& name, int flags, bool skip_global_objects)
 {
     auto main_library_loader = *s_loaders.get(name);
     auto main_library_object = main_library_loader->map();
     s_global_objects.set(name, *main_library_object);
 
-    auto loaders = collect_loaders_for_library(name);
+    auto loaders = collect_loaders_for_library(name, skip_global_objects);
 
     for (auto& loader : loaders) {
         auto dynamic_object = loader.map();
@@ -411,7 +414,7 @@ static Result<void*, DlErrorMessage> __dlopen(const char* filename, int flags)
         return result2.error();
     }
 
-    auto result = load_main_library(library_name, flags);
+    auto result = load_main_library(library_name, flags, true);
     if (result.is_error())
         return result.error();
 
@@ -535,7 +538,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
 
     auto entry_point_function = [&main_program_name] {
         auto library_name = get_library_name(main_program_name);
-        auto result = load_main_library(library_name, RTLD_GLOBAL | RTLD_LAZY);
+        auto result = load_main_library(library_name, RTLD_GLOBAL | RTLD_LAZY, false);
         if (result.is_error()) {
             warnln("{}", result.error().text);
             _exit(1);
