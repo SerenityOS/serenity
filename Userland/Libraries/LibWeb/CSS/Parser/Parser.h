@@ -227,7 +227,10 @@ private:
     Optional<Selector::Combinator> parse_selector_combinator(TokenStream<StyleComponentValueRule>&);
     Result<Selector::SimpleSelector, ParsingResult> parse_simple_selector(TokenStream<StyleComponentValueRule>&);
 
-    static NonnullRefPtr<MediaQuery> parse_media_query(TokenStream<StyleComponentValueRule>&);
+    NonnullRefPtr<MediaQuery> parse_media_query(TokenStream<StyleComponentValueRule>&);
+    OwnPtr<MediaQuery::MediaCondition> consume_media_condition(TokenStream<StyleComponentValueRule>&);
+    Optional<MediaQuery::MediaFeature> consume_media_feature(TokenStream<StyleComponentValueRule>&);
+    Optional<MediaQuery::MediaType> consume_media_type(TokenStream<StyleComponentValueRule>&);
 
     static bool has_ignored_vendor_prefix(StringView const&);
 
