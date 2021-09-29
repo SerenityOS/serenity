@@ -9,6 +9,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
 #include <LibWeb/CSS/CSSImportRule.h>
+#include <LibWeb/CSS/CSSMediaRule.h>
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
@@ -27,6 +28,12 @@
 #include <stdio.h>
 
 namespace Web {
+
+static void indent(StringBuilder& builder, int levels)
+{
+    for (int i = 0; i < levels; i++)
+        builder.append("  ");
+}
 
 void dump_tree(DOM::Node const& node)
 {
@@ -478,33 +485,51 @@ void dump_rule(CSS::CSSRule const& rule)
     dbgln("{}", builder.string_view());
 }
 
-void dump_rule(StringBuilder& builder, CSS::CSSRule const& rule)
+void dump_rule(StringBuilder& builder, CSS::CSSRule const& rule, int indent_levels)
 {
+    indent(builder, indent_levels);
     builder.appendff("{}:\n", rule.class_name());
+
     switch (rule.type()) {
     case CSS::CSSRule::Type::Style:
-        dump_style_rule(builder, verify_cast<CSS::CSSStyleRule const>(rule));
+        dump_style_rule(builder, verify_cast<CSS::CSSStyleRule const>(rule), indent_levels);
         break;
     case CSS::CSSRule::Type::Import:
-        dump_import_rule(builder, verify_cast<CSS::CSSImportRule const>(rule));
+        dump_import_rule(builder, verify_cast<CSS::CSSImportRule const>(rule), indent_levels);
         break;
-    default:
+    case CSS::CSSRule::Type::Media:
+        dump_media_rule(builder, verify_cast<CSS::CSSMediaRule const>(rule), indent_levels);
+        break;
+    case CSS::CSSRule::Type::__Count:
         VERIFY_NOT_REACHED();
     }
 }
 
-void dump_import_rule(StringBuilder& builder, CSS::CSSImportRule const& rule)
+void dump_import_rule(StringBuilder& builder, CSS::CSSImportRule const& rule, int indent_levels)
 {
+    indent(builder, indent_levels);
     builder.appendff("  Document URL: {}\n", rule.url());
 }
 
-void dump_style_rule(StringBuilder& builder, CSS::CSSStyleRule const& rule)
+void dump_media_rule(StringBuilder& builder, CSS::CSSMediaRule const& media, int indent_levels)
+{
+    indent(builder, indent_levels);
+    builder.appendff("  Media: {}\n  Rules ({}):\n", media.condition_text(), media.css_rules().length());
+
+    for (auto& rule : media.css_rules()) {
+        dump_rule(builder, rule, indent_levels + 1);
+    }
+}
+
+void dump_style_rule(StringBuilder& builder, CSS::CSSStyleRule const& rule, int indent_levels)
 {
     for (auto& selector : rule.selectors()) {
         dump_selector(builder, selector);
     }
+    indent(builder, indent_levels);
     builder.append("  Declarations:\n");
     for (auto& property : verify_cast<CSS::PropertyOwningCSSStyleDeclaration>(rule.declaration()).properties()) {
+        indent(builder, indent_levels);
         builder.appendff("    {}: '{}'", CSS::string_from_property_id(property.property_id), property.value->to_string());
         if (property.important)
             builder.append(" \033[31;1m!important\033[0m");

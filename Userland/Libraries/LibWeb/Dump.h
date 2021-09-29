@@ -18,10 +18,11 @@ void dump_tree(StringBuilder&, Layout::Node const&, bool show_box_model = false,
 void dump_tree(Layout::Node const&, bool show_box_model = false, bool show_specified_style = false);
 void dump_sheet(StringBuilder&, CSS::StyleSheet const&);
 void dump_sheet(CSS::StyleSheet const&);
-void dump_rule(StringBuilder&, CSS::CSSRule const&);
+void dump_rule(StringBuilder&, CSS::CSSRule const&, int indent_levels = 0);
 void dump_rule(CSS::CSSRule const&);
-void dump_style_rule(StringBuilder&, CSS::CSSStyleRule const&);
-void dump_import_rule(StringBuilder&, CSS::CSSImportRule const&);
+void dump_style_rule(StringBuilder&, CSS::CSSStyleRule const&, int indent_levels = 0);
+void dump_import_rule(StringBuilder&, CSS::CSSImportRule const&, int indent_levels = 0);
+void dump_media_rule(StringBuilder&, CSS::CSSMediaRule const&, int indent_levels = 0);
 void dump_selector(StringBuilder&, CSS::Selector const&);
 void dump_selector(CSS::Selector const&);
 
