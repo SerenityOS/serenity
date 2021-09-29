@@ -340,6 +340,8 @@ function(libweb_js_wrapper class)
     add_dependencies(all_generated generate_${basename}Prototype.cpp)
 endfunction()
 
+libweb_js_wrapper(CSS/CSSRule)
+libweb_js_wrapper(CSS/CSSRuleList)
 libweb_js_wrapper(CSS/CSSStyleDeclaration)
 libweb_js_wrapper(CSS/CSSStyleSheet)
 libweb_js_wrapper(CSS/MediaQueryList)

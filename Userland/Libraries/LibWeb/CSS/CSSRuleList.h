@@ -15,10 +15,18 @@
 
 namespace Web::CSS {
 
-class CSSRuleList {
+// https://drafts.csswg.org/cssom/#the-cssrulelist-interface
+class CSSRuleList
+    : public RefCounted<CSSRuleList>
+    , public Bindings::Wrappable {
 public:
-    explicit CSSRuleList(NonnullRefPtrVector<CSSRule>&&);
-    virtual ~CSSRuleList();
+    using WrapperType = Bindings::CSSRuleListWrapper;
+
+    static NonnullRefPtr<CSSRuleList> create(NonnullRefPtrVector<CSSRule>&& rules)
+    {
+        return adopt_ref(*new CSSRuleList(move(rules)));
+    }
+    ~CSSRuleList();
 
     RefPtr<CSSRule> item(size_t index) const
     {
@@ -37,7 +45,11 @@ public:
     ConstIterator const end() const { return m_rules.end(); }
     Iterator end() { return m_rules.end(); }
 
+    bool is_supported_property_index(u32 index) const;
+
 private:
+    explicit CSSRuleList(NonnullRefPtrVector<CSSRule>&&);
+
     NonnullRefPtrVector<CSSRule> m_rules;
 };
 

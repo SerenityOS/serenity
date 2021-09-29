@@ -31,11 +31,15 @@ public:
 
     CSSRuleList const& rules() const { return m_rules; }
     CSSRuleList& rules() { return m_rules; }
+    void set_rules(NonnullRefPtr<CSSRuleList> rules) { m_rules = move(rules); }
+
+    CSSRuleList* css_rules() { return m_rules; }
+    CSSRuleList const* css_rules() const { return m_rules; }
 
     template<typename Callback>
     void for_each_effective_style_rule(Callback callback) const
     {
-        for (auto& rule : m_rules)
+        for (auto& rule : *m_rules)
             if (rule.type() == CSSRule::Type::Style) {
                 callback(verify_cast<CSSStyleRule>(rule));
             } else if (rule.type() == CSSRule::Type::Import) {
@@ -48,7 +52,7 @@ public:
     template<typename Callback>
     bool for_first_not_loaded_import_rule(Callback callback)
     {
-        for (auto& rule : m_rules)
+        for (auto& rule : *m_rules)
             if (rule.type() == CSSRule::Type::Import) {
                 auto& import_rule = verify_cast<CSSImportRule>(rule);
                 if (!import_rule.has_import_result()) {
@@ -67,7 +71,7 @@ public:
 private:
     explicit CSSStyleSheet(NonnullRefPtrVector<CSSRule>);
 
-    CSSRuleList m_rules;
+    NonnullRefPtr<CSSRuleList> m_rules;
 };
 
 }

@@ -12,6 +12,10 @@
 #include <LibWeb/Bindings/AbortControllerPrototype.h>
 #include <LibWeb/Bindings/AbortSignalConstructor.h>
 #include <LibWeb/Bindings/AbortSignalPrototype.h>
+#include <LibWeb/Bindings/CSSRuleConstructor.h>
+#include <LibWeb/Bindings/CSSRuleListConstructor.h>
+#include <LibWeb/Bindings/CSSRuleListPrototype.h>
+#include <LibWeb/Bindings/CSSRulePrototype.h>
 #include <LibWeb/Bindings/CSSStyleDeclarationConstructor.h>
 #include <LibWeb/Bindings/CSSStyleDeclarationPrototype.h>
 #include <LibWeb/Bindings/CSSStyleSheetConstructor.h>
@@ -265,6 +269,8 @@
     auto& vm = this->vm();                                 \
     ADD_WINDOW_OBJECT_INTERFACE(AbortController)           \
     ADD_WINDOW_OBJECT_INTERFACE(AbortSignal)               \
+    ADD_WINDOW_OBJECT_INTERFACE(CSSRule)                   \
+    ADD_WINDOW_OBJECT_INTERFACE(CSSRuleList)               \
     ADD_WINDOW_OBJECT_INTERFACE(CanvasRenderingContext2D)  \
     ADD_WINDOW_OBJECT_INTERFACE(CharacterData)             \
     ADD_WINDOW_OBJECT_INTERFACE(CloseEvent)                \

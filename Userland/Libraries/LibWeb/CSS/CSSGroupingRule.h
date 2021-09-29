@@ -28,7 +28,7 @@ protected:
     explicit CSSGroupingRule(NonnullRefPtrVector<CSSRule>&&);
 
 private:
-    CSSRuleList m_rules;
+    NonnullRefPtr<CSSRuleList> m_rules;
 };
 
 }
