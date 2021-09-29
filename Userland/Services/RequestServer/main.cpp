@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <AK/OwnPtr.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
@@ -16,9 +17,18 @@
 
 int main(int, char**)
 {
-    if (pledge("stdio inet accept unix rpath sendfd recvfd", nullptr) < 0) {
-        perror("pledge");
-        return 1;
+    if constexpr (REQUEST_SERVER_DEBUG) {
+        if (pledge("stdio inet accept unix rpath sendfd recvfd sigaction", nullptr) < 0) {
+            perror("pledge");
+            return 1;
+        }
+
+        signal(SIGINFO, [](int) { RequestServer::ConnectionCache::dump_jobs(); });
+    } else {
+        if (pledge("stdio inet accept unix rpath sendfd recvfd", nullptr) < 0) {
+            perror("pledge");
+            return 1;
+        }
     }
 
     // Ensure the certificates are read out here.
