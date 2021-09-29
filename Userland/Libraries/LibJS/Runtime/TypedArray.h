@@ -188,7 +188,7 @@ class TypedArray : public TypedArrayBase {
 
 public:
     // 10.4.5.1 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-getownproperty-p
-    virtual Optional<PropertyDescriptor> internal_get_own_property(PropertyName const& property_name) const override
+    virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyName const& property_name) const override
     {
         // 1. Assert: IsPropertyKey(P) is true.
         VERIFY(property_name.is_valid());
@@ -211,15 +211,15 @@ public:
 
                 // ii. If value is undefined, return undefined.
                 if (value.is_undefined())
-                    return {};
+                    return Optional<PropertyDescriptor> {};
 
                 // iii. Return the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
-                return PropertyDescriptor {
+                return { PropertyDescriptor {
                     .value = value,
                     .writable = true,
                     .enumerable = true,
                     .configurable = true,
-                };
+                } };
             }
         }
 

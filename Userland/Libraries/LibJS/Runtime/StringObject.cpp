@@ -92,12 +92,12 @@ static Optional<PropertyDescriptor> string_get_own_property(GlobalObject& global
 }
 
 // 10.4.3.1 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-string-exotic-objects-getownproperty-p
-Optional<PropertyDescriptor> StringObject::internal_get_own_property(PropertyName const& property_name) const
+ThrowCompletionOr<Optional<PropertyDescriptor>> StringObject::internal_get_own_property(PropertyName const& property_name) const
 {
     // Assert: IsPropertyKey(P) is true.
 
     // 2. Let desc be OrdinaryGetOwnProperty(S, P).
-    auto descriptor = Object::internal_get_own_property(property_name);
+    auto descriptor = Object::internal_get_own_property(property_name).release_value();
 
     // 3. If desc is not undefined, return desc.
     if (descriptor.has_value())

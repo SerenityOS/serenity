@@ -9,6 +9,7 @@
 #include <AK/Assertions.h>
 #include <AK/Function.h>
 #include <AK/Vector.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -37,7 +38,7 @@ public:
     explicit Array(Object& prototype);
     virtual ~Array() override;
 
-    virtual Optional<PropertyDescriptor> internal_get_own_property(PropertyName const&) const override;
+    virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyName const&) const override;
     virtual bool internal_define_own_property(PropertyName const&, PropertyDescriptor const&) override;
     virtual bool internal_delete(PropertyName const&) override;
     virtual MarkedValueList internal_own_property_keys() const override;

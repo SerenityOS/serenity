@@ -166,9 +166,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::property_is_enumerable)
     if (!this_object)
         return {};
     // 3. Let desc be ? O.[[GetOwnProperty]](P).
-    auto property_descriptor = this_object->internal_get_own_property(property_key);
-    if (vm.exception())
-        return {};
+    auto property_descriptor = TRY_OR_DISCARD(this_object->internal_get_own_property(property_key));
     // 4. If desc is undefined, return false.
     if (!property_descriptor.has_value())
         return Value(false);
@@ -260,9 +258,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_getter)
         return {};
 
     while (object) {
-        auto desc = object->internal_get_own_property(key);
-        if (vm.exception())
-            return {};
+        auto desc = TRY_OR_DISCARD(object->internal_get_own_property(key));
         if (desc.has_value()) {
             if (desc->is_accessor_descriptor())
                 return *desc->get ?: js_undefined();
@@ -286,9 +282,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_setter)
         return {};
 
     while (object) {
-        auto desc = object->internal_get_own_property(key);
-        if (vm.exception())
-            return {};
+        auto desc = TRY_OR_DISCARD(object->internal_get_own_property(key));
         if (desc.has_value()) {
             if (desc->is_accessor_descriptor())
                 return *desc->set ?: js_undefined();

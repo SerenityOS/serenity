@@ -231,7 +231,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_prevent_extensions()
 }
 
 // 10.5.5 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p
-Optional<PropertyDescriptor> ProxyObject::internal_get_own_property(const PropertyName& property_name) const
+ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_property(const PropertyName& property_name) const
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -242,16 +242,14 @@ Optional<PropertyDescriptor> ProxyObject::internal_get_own_property(const Proper
     // 2. Let handler be O.[[ProxyHandler]].
 
     // 3. If handler is null, throw a TypeError exception.
-    if (m_is_revoked) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyRevoked);
-        return {};
-    }
+    if (m_is_revoked)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
 
     // 4. Assert: Type(handler) is Object.
     // 5. Let target be O.[[ProxyTarget]].
 
     // 6. Let trap be ? GetMethod(handler, "getOwnPropertyDescriptor").
-    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.getOwnPropertyDescriptor));
+    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.getOwnPropertyDescriptor));
 
     // 7. If trap is undefined, then
     if (!trap) {
@@ -260,55 +258,47 @@ Optional<PropertyDescriptor> ProxyObject::internal_get_own_property(const Proper
     }
 
     // 8. Let trapResultObj be ? Call(trap, handler, « target, P »).
-    auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name)));
+    auto trap_result = TRY(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name)));
 
     // 9. If Type(trapResultObj) is neither Object nor Undefined, throw a TypeError exception.
-    if (!trap_result.is_object() && !trap_result.is_undefined()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorReturn);
-        return {};
-    }
+    if (!trap_result.is_object() && !trap_result.is_undefined())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorReturn);
 
     // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
-    auto target_descriptor = m_target.internal_get_own_property(property_name);
-    if (vm.exception())
-        return {};
+    auto target_descriptor = TRY(m_target.internal_get_own_property(property_name));
 
     // 11. If trapResultObj is undefined, then
     if (trap_result.is_undefined()) {
         // a. If targetDesc is undefined, return undefined.
         if (!target_descriptor.has_value())
-            return {};
+            return Optional<PropertyDescriptor> {};
 
         // b. If targetDesc.[[Configurable]] is false, throw a TypeError exception.
-        if (!*target_descriptor->configurable) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorNonConfigurable);
-            return {};
-        }
+        if (!*target_descriptor->configurable)
+            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorNonConfigurable);
 
         // c. Let extensibleTarget be ? IsExtensible(target).
         auto extensible_target = m_target.is_extensible();
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
 
         // d. If extensibleTarget is false, throw a TypeError exception.
-        if (!extensible_target) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorUndefinedReturn);
-            return {};
-        }
+        if (!extensible_target)
+            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorUndefinedReturn);
 
         // e. Return undefined.
-        return {};
+        return Optional<PropertyDescriptor> {};
     }
 
     // 12. Let extensibleTarget be ? IsExtensible(target).
     auto extensible_target = m_target.is_extensible();
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 13. Let resultDesc be ? ToPropertyDescriptor(trapResultObj).
     auto result_desc = to_property_descriptor(global_object, trap_result);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 14. Call CompletePropertyDescriptor(resultDesc).
     result_desc.complete();
@@ -317,31 +307,26 @@ Optional<PropertyDescriptor> ProxyObject::internal_get_own_property(const Proper
     auto valid = is_compatible_property_descriptor(extensible_target, result_desc, target_descriptor);
 
     // 16. If valid is false, throw a TypeError exception.
-    if (!valid) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorInvalidDescriptor);
-        return {};
-    }
+    if (!valid)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorInvalidDescriptor);
 
     // 17. If resultDesc.[[Configurable]] is false, then
     if (!*result_desc.configurable) {
         // a. If targetDesc is undefined or targetDesc.[[Configurable]] is true, then
-        if (!target_descriptor.has_value() || *target_descriptor->configurable) {
+        if (!target_descriptor.has_value() || *target_descriptor->configurable)
             // i. Throw a TypeError exception.
-            vm.throw_exception<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorInvalidNonConfig);
-            return {};
-        }
+            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorInvalidNonConfig);
+
         // b. If resultDesc has a [[Writable]] field and resultDesc.[[Writable]] is false, then
         if (result_desc.writable.has_value() && !*result_desc.writable) {
             // i. If targetDesc.[[Writable]] is true, throw a TypeError exception.
-            if (*target_descriptor->writable) {
-                vm.throw_exception<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorNonConfigurableNonWritable);
-                return {};
-            }
+            if (*target_descriptor->writable)
+                return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorNonConfigurableNonWritable);
         }
     }
 
     // 18. Return resultDesc.
-    return result_desc;
+    return { result_desc };
 }
 
 // 10.5.6 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc
@@ -384,9 +369,7 @@ bool ProxyObject::internal_define_own_property(PropertyName const& property_name
         return false;
 
     // 11. Let targetDesc be ? target.[[GetOwnProperty]](P).
-    auto target_descriptor = m_target.internal_get_own_property(property_name);
-    if (vm.exception())
-        return {};
+    auto target_descriptor = TRY_OR_DISCARD(m_target.internal_get_own_property(property_name));
 
     // 12. Let extensibleTarget be ? IsExtensible(target).
     auto extensible_target = m_target.is_extensible();
@@ -476,9 +459,7 @@ bool ProxyObject::internal_has_property(PropertyName const& property_name) const
     // 9. If booleanTrapResult is false, then
     if (!trap_result) {
         // a. Let targetDesc be ? target.[[GetOwnProperty]](P).
-        auto target_descriptor = m_target.internal_get_own_property(property_name);
-        if (vm.exception())
-            return {};
+        auto target_descriptor = TRY_OR_DISCARD(m_target.internal_get_own_property(property_name));
 
         // b. If targetDesc is not undefined, then
         if (target_descriptor.has_value()) {
@@ -558,9 +539,7 @@ Value ProxyObject::internal_get(PropertyName const& property_name, Value receive
     auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name), receiver));
 
     // 9. Let targetDesc be ? target.[[GetOwnProperty]](P).
-    auto target_descriptor = m_target.internal_get_own_property(property_name);
-    if (vm.exception())
-        return {};
+    auto target_descriptor = TRY_OR_DISCARD(m_target.internal_get_own_property(property_name));
 
     // 10. If targetDesc is not undefined and targetDesc.[[Configurable]] is false, then
     if (target_descriptor.has_value() && !*target_descriptor->configurable) {
@@ -626,9 +605,7 @@ bool ProxyObject::internal_set(PropertyName const& property_name, Value value, V
         return false;
 
     // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
-    auto target_descriptor = m_target.internal_get_own_property(property_name);
-    if (vm.exception())
-        return {};
+    auto target_descriptor = TRY_OR_DISCARD(m_target.internal_get_own_property(property_name));
 
     // 11. If targetDesc is not undefined and targetDesc.[[Configurable]] is false, then
     if (target_descriptor.has_value() && !*target_descriptor->configurable) {
@@ -691,9 +668,7 @@ bool ProxyObject::internal_delete(PropertyName const& property_name)
         return false;
 
     // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
-    auto target_descriptor = m_target.internal_get_own_property(property_name);
-    if (vm.exception())
-        return {};
+    auto target_descriptor = TRY_OR_DISCARD(m_target.internal_get_own_property(property_name));
 
     // 11. If targetDesc is undefined, return true.
     if (!target_descriptor.has_value())
@@ -799,7 +774,10 @@ MarkedValueList ProxyObject::internal_own_property_keys() const
     // 16. For each element key of targetKeys, do
     for (auto& key : target_keys) {
         // a. Let desc be ? target.[[GetOwnProperty]](key).
-        auto descriptor = m_target.internal_get_own_property(PropertyName::from_value(global_object, key));
+        auto descriptor_or_error = m_target.internal_get_own_property(PropertyName::from_value(global_object, key));
+        if (descriptor_or_error.is_error())
+            return MarkedValueList { heap() };
+        auto descriptor = descriptor_or_error.release_value();
 
         // b. If desc is not undefined and desc.[[Configurable]] is false, then
         if (descriptor.has_value() && !*descriptor->configurable) {

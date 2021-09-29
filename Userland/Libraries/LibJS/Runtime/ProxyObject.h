@@ -39,7 +39,7 @@ public:
     virtual ThrowCompletionOr<bool> internal_set_prototype_of(Object* prototype) override;
     virtual ThrowCompletionOr<bool> internal_is_extensible() const override;
     virtual ThrowCompletionOr<bool> internal_prevent_extensions() override;
-    virtual Optional<PropertyDescriptor> internal_get_own_property(PropertyName const&) const override;
+    virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyName const&) const override;
     virtual bool internal_define_own_property(PropertyName const&, PropertyDescriptor const&) override;
     virtual bool internal_has_property(PropertyName const&) const override;
     virtual Value internal_get(PropertyName const&, Value receiver) const override;

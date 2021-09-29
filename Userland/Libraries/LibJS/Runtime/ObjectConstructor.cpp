@@ -291,9 +291,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
     auto key = vm.argument(1).to_property_key(global_object);
     if (vm.exception())
         return {};
-    auto descriptor = object->internal_get_own_property(key);
-    if (vm.exception())
-        return {};
+    auto descriptor = TRY_OR_DISCARD(object->internal_get_own_property(key));
     return from_property_descriptor(global_object, descriptor);
 }
 
@@ -315,9 +313,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
         auto property_name = PropertyName::from_value(global_object, key);
 
         // a. Let desc be ? obj.[[GetOwnProperty]](key).
-        auto desc = object->internal_get_own_property(property_name);
-        if (vm.exception())
-            return {};
+        auto desc = TRY_OR_DISCARD(object->internal_get_own_property(property_name));
 
         // b. Let descriptor be ! FromPropertyDescriptor(desc).
         auto descriptor = from_property_descriptor(global_object, desc);
@@ -484,9 +480,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
             auto property_name = PropertyName::from_value(global_object, next_key);
 
             // 1. Let desc be ? from.[[GetOwnProperty]](nextKey).
-            auto desc = from->internal_get_own_property(property_name);
-            if (vm.exception())
-                return {};
+            auto desc = TRY_OR_DISCARD(from->internal_get_own_property(property_name));
 
             // 2. If desc is not undefined and desc.[[Enumerable]] is true, then
             if (!desc.has_value() || !*desc->enumerable)

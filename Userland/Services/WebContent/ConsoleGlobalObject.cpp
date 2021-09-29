@@ -57,9 +57,9 @@ JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_prevent_extensions()
     return m_window_object->internal_prevent_extensions();
 }
 
-Optional<JS::PropertyDescriptor> ConsoleGlobalObject::internal_get_own_property(JS::PropertyName const& property_name) const
+JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> ConsoleGlobalObject::internal_get_own_property(JS::PropertyName const& property_name) const
 {
-    if (auto result = m_window_object->internal_get_own_property(property_name); result.has_value())
+    if (auto result = TRY(m_window_object->internal_get_own_property(property_name)); result.has_value())
         return result;
 
     return Base::internal_get_own_property(property_name);
