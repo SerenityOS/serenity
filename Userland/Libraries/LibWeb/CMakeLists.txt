@@ -1,4 +1,5 @@
 set(SOURCES
+    Bindings/CSSRuleWrapperFactory.cpp
     Bindings/CSSStyleDeclarationWrapperCustom.cpp
     Bindings/EventListenerWrapper.cpp
     Bindings/EventTargetWrapperFactory.cpp
@@ -343,6 +344,7 @@ endfunction()
 libweb_js_wrapper(CSS/CSSRule)
 libweb_js_wrapper(CSS/CSSRuleList)
 libweb_js_wrapper(CSS/CSSStyleDeclaration)
+libweb_js_wrapper(CSS/CSSStyleRule)
 libweb_js_wrapper(CSS/CSSStyleSheet)
 libweb_js_wrapper(CSS/MediaQueryList)
 libweb_js_wrapper(CSS/Screen)

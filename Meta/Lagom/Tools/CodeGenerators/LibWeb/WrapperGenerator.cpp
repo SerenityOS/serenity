@@ -825,6 +825,8 @@ static bool should_emit_wrapper_factory(IDL::Interface const& interface)
         return false;
     if (interface.name.ends_with("Element"))
         return false;
+    if (interface.name.starts_with("CSS") && interface.name.ends_with("Rule"))
+        return false;
     return true;
 }
 
@@ -1492,6 +1494,7 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/@wrapper_class@.h>
 #include <LibWeb/Bindings/CSSRuleListWrapper.h>
 #include <LibWeb/Bindings/CSSRuleWrapper.h>
+#include <LibWeb/Bindings/CSSRuleWrapperFactory.h>
 #include <LibWeb/Bindings/CSSStyleSheetWrapper.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/CommentWrapper.h>
@@ -2688,6 +2691,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/AbortSignalWrapper.h>
 #include <LibWeb/Bindings/CSSRuleListWrapper.h>
 #include <LibWeb/Bindings/CSSRuleWrapper.h>
+#include <LibWeb/Bindings/CSSRuleWrapperFactory.h>
 #include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
 #include <LibWeb/Bindings/CSSStyleSheetWrapper.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
