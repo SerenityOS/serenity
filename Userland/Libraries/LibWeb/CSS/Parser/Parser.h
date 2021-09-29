@@ -12,6 +12,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Result.h>
 #include <AK/Vector.h>
+#include <LibWeb/CSS/MediaQuery.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
@@ -97,6 +98,9 @@ public:
     Optional<SelectorList> parse_as_selector();
     Optional<SelectorList> parse_as_relative_selector();
 
+    NonnullRefPtrVector<MediaQuery> parse_as_media_query_list();
+    RefPtr<MediaQuery> parse_as_media_query();
+
     RefPtr<StyleValue> parse_as_css_value(PropertyID);
 
 private:
@@ -130,6 +134,8 @@ private:
     Result<SelectorList, ParsingResult> parse_a_selector_list(TokenStream<T>&);
     template<typename T>
     Result<SelectorList, ParsingResult> parse_a_relative_selector_list(TokenStream<T>&);
+    template<typename T>
+    NonnullRefPtrVector<MediaQuery> parse_a_media_query_list(TokenStream<T>&);
 
     Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>&);
 
@@ -218,6 +224,8 @@ private:
     Optional<Selector::Combinator> parse_selector_combinator(TokenStream<StyleComponentValueRule>&);
     Result<Selector::SimpleSelector, ParsingResult> parse_simple_selector(TokenStream<StyleComponentValueRule>&);
 
+    static NonnullRefPtr<MediaQuery> parse_media_query(TokenStream<StyleComponentValueRule>&);
+
     static bool has_ignored_vendor_prefix(StringView const&);
 
     ParsingContext m_context;
@@ -236,6 +244,8 @@ RefPtr<CSS::PropertyOwningCSSStyleDeclaration> parse_css_declaration(CSS::Parsin
 RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const&, StringView const&, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
 Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const&, StringView const&);
 RefPtr<CSS::CSSRule> parse_css_rule(CSS::ParsingContext const&, StringView);
+RefPtr<CSS::MediaQuery> parse_media_query(CSS::ParsingContext const&, StringView const&);
+NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::ParsingContext const&, StringView const&);
 
 RefPtr<CSS::StyleValue> parse_html_length(DOM::Document const&, StringView const&);
 
