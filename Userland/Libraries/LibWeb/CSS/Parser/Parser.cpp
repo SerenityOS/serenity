@@ -11,6 +11,7 @@
 #include <AK/Debug.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/SourceLocation.h>
+#include <LibWeb/CSS/CSSMediaRule.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
@@ -1242,6 +1243,21 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
     if (rule->m_type == StyleRule::Type::At) {
         if (has_ignored_vendor_prefix(rule->m_name)) {
             return {};
+        } else if (rule->m_name.equals_ignoring_case("media"sv)) {
+
+            auto media_query_tokens = TokenStream { rule->prelude() };
+            auto media_query_list = parse_a_media_query_list(media_query_tokens);
+
+            auto child_tokens = TokenStream { rule->block().values() };
+            auto parser_rules = consume_a_list_of_rules(child_tokens, false);
+            NonnullRefPtrVector<CSSRule> child_rules;
+            for (auto& raw_rule : parser_rules) {
+                if (auto child_rule = convert_to_rule(raw_rule))
+                    child_rules.append(*child_rule);
+            }
+
+            return CSSMediaRule::create(MediaList::create(move(media_query_list)), move(child_rules));
+
         } else if (rule->m_name.equals_ignoring_case("import"sv) && !rule->prelude().is_empty()) {
 
             Optional<AK::URL> url;
