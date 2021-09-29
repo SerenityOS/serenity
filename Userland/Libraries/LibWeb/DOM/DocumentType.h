@@ -7,11 +7,14 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <LibWeb/DOM/ChildNode.h>
 #include <LibWeb/DOM/Node.h>
 
 namespace Web::DOM {
 
-class DocumentType final : public Node {
+class DocumentType final
+    : public Node
+    , public ChildNode<DocumentType> {
 public:
     using WrapperType = Bindings::DocumentTypeWrapper;
 

@@ -11,6 +11,7 @@
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Attribute.h>
+#include <LibWeb/DOM/ChildNode.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
 #include <LibWeb/DOM/ParentNode.h>
@@ -24,6 +25,7 @@ namespace Web::DOM {
 
 class Element
     : public ParentNode
+    , public ChildNode<Element>
     , public NonDocumentTypeChildNode<Element> {
 
 public:
