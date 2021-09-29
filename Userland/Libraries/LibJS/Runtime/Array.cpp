@@ -7,6 +7,7 @@
 
 #include <AK/Function.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
@@ -157,11 +158,11 @@ bool Array::set_length(PropertyDescriptor const& property_descriptor)
 }
 
 // NON-STANDARD: Used to return the value of the ephemeral length property
-Optional<PropertyDescriptor> Array::internal_get_own_property(PropertyName const& property_name) const
+ThrowCompletionOr<Optional<PropertyDescriptor>> Array::internal_get_own_property(PropertyName const& property_name) const
 {
     auto& vm = this->vm();
     if (property_name.is_string() && property_name.as_string() == vm.names.length.as_string())
-        return PropertyDescriptor { .value = Value(indexed_properties().array_like_size()), .writable = m_length_writable, .enumerable = false, .configurable = false };
+        return { PropertyDescriptor { .value = Value(indexed_properties().array_like_size()), .writable = m_length_writable, .enumerable = false, .configurable = false } };
 
     return Object::internal_get_own_property(property_name);
 }

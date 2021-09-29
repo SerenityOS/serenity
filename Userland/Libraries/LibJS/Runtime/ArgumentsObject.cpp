@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/ArgumentsObject.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
@@ -102,10 +103,10 @@ bool ArgumentsObject::internal_delete(PropertyName const& property_name)
 }
 
 // 10.4.4.1 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-arguments-exotic-objects-getownproperty-p
-Optional<PropertyDescriptor> ArgumentsObject::internal_get_own_property(PropertyName const& property_name) const
+ThrowCompletionOr<Optional<PropertyDescriptor>> ArgumentsObject::internal_get_own_property(PropertyName const& property_name) const
 {
     // 1. Let desc be OrdinaryGetOwnProperty(args, P).
-    auto desc = Object::internal_get_own_property(property_name);
+    auto desc = Object::internal_get_own_property(property_name).release_value();
     // 2. If desc is undefined, return desc.
     if (!desc.has_value())
         return desc;

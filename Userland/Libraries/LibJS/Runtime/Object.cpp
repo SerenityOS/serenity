@@ -269,17 +269,13 @@ bool Object::has_property(PropertyName const& property_name) const
 // 7.3.12 HasOwnProperty ( O, P ), https://tc39.es/ecma262/#sec-hasownproperty
 bool Object::has_own_property(PropertyName const& property_name) const
 {
-    auto& vm = this->vm();
-
     // 1. Assert: Type(O) is Object.
 
     // 2. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
 
     // 3. Let desc be ? O.[[GetOwnProperty]](P).
-    auto descriptor = internal_get_own_property(property_name);
-    if (vm.exception())
-        return {};
+    auto descriptor = TRY_OR_DISCARD(internal_get_own_property(property_name));
 
     // 4. If desc is undefined, return false.
     if (!descriptor.has_value())
@@ -333,9 +329,7 @@ bool Object::set_integrity_level(IntegrityLevel level)
             auto property_name = PropertyName::from_value(global_object, key);
 
             // i. Let currentDesc be ? O.[[GetOwnProperty]](k).
-            auto current_descriptor = internal_get_own_property(property_name);
-            if (vm.exception())
-                return {};
+            auto current_descriptor = TRY_OR_DISCARD(internal_get_own_property(property_name));
 
             // ii. If currentDesc is not undefined, then
             if (!current_descriptor.has_value())
@@ -395,9 +389,7 @@ bool Object::test_integrity_level(IntegrityLevel level) const
         auto property_name = PropertyName::from_value(global_object(), key);
 
         // a. Let currentDesc be ? O.[[GetOwnProperty]](k).
-        auto current_descriptor = internal_get_own_property(property_name);
-        if (vm.exception())
-            return {};
+        auto current_descriptor = TRY_OR_DISCARD(internal_get_own_property(property_name));
 
         // b. If currentDesc is not undefined, then
         if (!current_descriptor.has_value())
@@ -445,9 +437,10 @@ MarkedValueList Object::enumerable_own_property_names(PropertyKind kind) const
         auto property_name = PropertyName::from_value(global_object, key);
 
         // i. Let desc be ? O.[[GetOwnProperty]](key).
-        auto descriptor = internal_get_own_property(property_name);
-        if (vm.exception())
+        auto descriptor_or_error = internal_get_own_property(property_name);
+        if (descriptor_or_error.is_error())
             return MarkedValueList { heap() };
+        auto descriptor = descriptor_or_error.release_value();
 
         // ii. If desc is not undefined and desc.[[Enumerable]] is true, then
         if (descriptor.has_value() && *descriptor->enumerable) {
@@ -562,14 +555,14 @@ ThrowCompletionOr<bool> Object::internal_prevent_extensions()
 }
 
 // 10.1.5 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-getownproperty-p
-Optional<PropertyDescriptor> Object::internal_get_own_property(PropertyName const& property_name) const
+ThrowCompletionOr<Optional<PropertyDescriptor>> Object::internal_get_own_property(PropertyName const& property_name) const
 {
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
 
     // 2. If O does not have an own property with key P, return undefined.
     if (!storage_has(property_name))
-        return {};
+        return Optional<PropertyDescriptor> {};
 
     // 3. Let D be a newly created Property Descriptor with no fields.
     PropertyDescriptor descriptor;
@@ -603,7 +596,7 @@ Optional<PropertyDescriptor> Object::internal_get_own_property(PropertyName cons
     descriptor.configurable = attributes.is_configurable();
 
     // 9. Return D.
-    return descriptor;
+    return { descriptor };
 }
 
 // 10.1.6 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-defineownproperty-p-desc
@@ -613,9 +606,7 @@ bool Object::internal_define_own_property(PropertyName const& property_name, Pro
     auto& vm = this->vm();
 
     // 1. Let current be ? O.[[GetOwnProperty]](P).
-    auto current = internal_get_own_property(property_name);
-    if (vm.exception())
-        return {};
+    auto current = TRY_OR_DISCARD(internal_get_own_property(property_name));
 
     // 2. Let extensible be ? IsExtensible(O).
     auto extensible = is_extensible();
@@ -629,15 +620,11 @@ bool Object::internal_define_own_property(PropertyName const& property_name, Pro
 // 10.1.7 [[HasProperty]] ( P ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-hasproperty-p
 bool Object::internal_has_property(PropertyName const& property_name) const
 {
-    auto& vm = this->vm();
-
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
 
     // 2. Let hasOwn be ? O.[[GetOwnProperty]](P).
-    auto has_own = internal_get_own_property(property_name);
-    if (vm.exception())
-        return {};
+    auto has_own = TRY_OR_DISCARD(internal_get_own_property(property_name));
 
     // 3. If hasOwn is not undefined, return true.
     if (has_own.has_value())
@@ -666,9 +653,7 @@ Value Object::internal_get(PropertyName const& property_name, Value receiver) co
     VERIFY(property_name.is_valid());
 
     // 2. Let desc be ? O.[[GetOwnProperty]](P).
-    auto descriptor = internal_get_own_property(property_name);
-    if (vm.exception())
-        return {};
+    auto descriptor = TRY_OR_DISCARD(internal_get_own_property(property_name));
 
     // 3. If desc is undefined, then
     if (!descriptor.has_value()) {
@@ -706,15 +691,12 @@ bool Object::internal_set(PropertyName const& property_name, Value value, Value 
 {
     VERIFY(!value.is_empty());
     VERIFY(!receiver.is_empty());
-    auto& vm = this->vm();
 
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
 
     // 2. Let ownDesc be ? O.[[GetOwnProperty]](P).
-    auto own_descriptor = internal_get_own_property(property_name);
-    if (vm.exception())
-        return {};
+    auto own_descriptor = TRY_OR_DISCARD(internal_get_own_property(property_name));
 
     // 3. Return OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc).
     return ordinary_set_with_own_descriptor(property_name, value, receiver, own_descriptor);
@@ -761,9 +743,7 @@ bool Object::ordinary_set_with_own_descriptor(PropertyName const& property_name,
             return false;
 
         // c. Let existingDescriptor be ? Receiver.[[GetOwnProperty]](P).
-        auto existing_descriptor = receiver.as_object().internal_get_own_property(property_name);
-        if (vm.exception())
-            return {};
+        auto existing_descriptor = TRY_OR_DISCARD(receiver.as_object().internal_get_own_property(property_name));
 
         // d. If existingDescriptor is not undefined, then
         if (existing_descriptor.has_value()) {
@@ -811,15 +791,11 @@ bool Object::ordinary_set_with_own_descriptor(PropertyName const& property_name,
 // 10.1.10 [[Delete]] ( P ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-delete-p
 bool Object::internal_delete(PropertyName const& property_name)
 {
-    auto& vm = this->vm();
-
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
 
     // 2. Let desc be ? O.[[GetOwnProperty]](P).
-    auto descriptor = internal_get_own_property(property_name);
-    if (vm.exception())
-        return {};
+    auto descriptor = TRY_OR_DISCARD(internal_get_own_property(property_name));
 
     // 3. If desc is undefined, return true.
     if (!descriptor.has_value())
@@ -1119,9 +1095,7 @@ Object* Object::define_properties(Value properties)
         auto property_name = PropertyName::from_value(global_object, next_key);
 
         // a. Let propDesc be ? props.[[GetOwnProperty]](nextKey).
-        auto property_descriptor = props->internal_get_own_property(property_name);
-        if (vm.exception())
-            return {};
+        auto property_descriptor = TRY_OR_DISCARD(props->internal_get_own_property(property_name));
 
         // b. If propDesc is not undefined and propDesc.[[Enumerable]] is true, then
         if (property_descriptor.has_value() && *property_descriptor->enumerable) {

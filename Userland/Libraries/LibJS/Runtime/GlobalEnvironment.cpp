@@ -142,11 +142,8 @@ bool GlobalEnvironment::has_lexical_declaration(FlyString const& name) const
 // 9.1.1.4.14 HasRestrictedGlobalProperty ( N ), https://tc39.es/ecma262/#sec-hasrestrictedglobalproperty
 bool GlobalEnvironment::has_restricted_global_property(FlyString const& name) const
 {
-    auto& vm = this->vm();
     auto& global_object = m_object_record->binding_object();
-    auto existing_prop = global_object.internal_get_own_property(name);
-    if (vm.exception())
-        return {};
+    auto existing_prop = TRY_OR_DISCARD(global_object.internal_get_own_property(name));
     if (!existing_prop.has_value())
         return false;
     if (*existing_prop->configurable)
@@ -170,11 +167,8 @@ bool GlobalEnvironment::can_declare_global_var(FlyString const& name) const
 // 9.1.1.4.16 CanDeclareGlobalFunction ( N ), https://tc39.es/ecma262/#sec-candeclareglobalfunction
 bool GlobalEnvironment::can_declare_global_function(FlyString const& name) const
 {
-    auto& vm = this->vm();
     auto& global_object = m_object_record->binding_object();
-    auto existing_prop = global_object.internal_get_own_property(name);
-    if (vm.exception())
-        return {};
+    auto existing_prop = TRY_OR_DISCARD(global_object.internal_get_own_property(name));
     if (!existing_prop.has_value())
         return global_object.is_extensible();
     if (*existing_prop->configurable)
@@ -212,9 +206,10 @@ void GlobalEnvironment::create_global_function_binding(FlyString const& name, Va
 {
     auto& vm = this->vm();
     auto& global_object = m_object_record->binding_object();
-    auto existing_prop = global_object.internal_get_own_property(name);
-    if (vm.exception())
+    auto existing_prop_or_error = global_object.internal_get_own_property(name);
+    if (existing_prop_or_error.is_error())
         return;
+    auto existing_prop = existing_prop_or_error.release_value();
     PropertyDescriptor desc;
     if (!existing_prop.has_value() || *existing_prop->configurable)
         desc = { .value = value, .writable = true, .enumerable = true, .configurable = can_be_deleted };
