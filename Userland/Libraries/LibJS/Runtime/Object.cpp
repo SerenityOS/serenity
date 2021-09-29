@@ -298,9 +298,7 @@ bool Object::set_integrity_level(IntegrityLevel level)
         return false;
 
     // 5. Let keys be ? O.[[OwnPropertyKeys]]().
-    auto keys = internal_own_property_keys();
-    if (vm.exception())
-        return {};
+    auto keys = TRY_OR_DISCARD(internal_own_property_keys());
 
     // 6. If level is sealed, then
     if (level == IntegrityLevel::Sealed) {
@@ -374,9 +372,7 @@ bool Object::test_integrity_level(IntegrityLevel level) const
         return false;
 
     // 6. Let keys be ? O.[[OwnPropertyKeys]]().
-    auto keys = internal_own_property_keys();
-    if (vm.exception())
-        return {};
+    auto keys = TRY_OR_DISCARD(internal_own_property_keys());
 
     // 7. For each element k of keys, do
     for (auto& key : keys) {
@@ -416,9 +412,10 @@ MarkedValueList Object::enumerable_own_property_names(PropertyKind kind) const
     // 1. Assert: Type(O) is Object.
 
     // 2. Let ownKeys be ? O.[[OwnPropertyKeys]]().
-    auto own_keys = internal_own_property_keys();
-    if (vm.exception())
+    auto own_keys_or_error = internal_own_property_keys();
+    if (own_keys_or_error.is_error())
         return MarkedValueList { heap() };
+    auto own_keys = own_keys_or_error.release_value();
 
     // 3. Let properties be a new empty List.
     auto properties = MarkedValueList { heap() };
@@ -820,7 +817,7 @@ ThrowCompletionOr<bool> Object::internal_delete(PropertyName const& property_nam
 }
 
 // 10.1.11 [[OwnPropertyKeys]] ( ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-ownpropertykeys
-MarkedValueList Object::internal_own_property_keys() const
+ThrowCompletionOr<MarkedValueList> Object::internal_own_property_keys() const
 {
     auto& vm = this->vm();
 
@@ -850,7 +847,7 @@ MarkedValueList Object::internal_own_property_keys() const
     }
 
     // 5. Return keys.
-    return keys;
+    return { move(keys) };
 }
 
 // 10.4.7.2 SetImmutablePrototype ( O, V ), https://tc39.es/ecma262/#sec-set-immutable-prototype
@@ -1083,9 +1080,7 @@ Object* Object::define_properties(Value properties)
         return {};
 
     // 3. Let keys be ? props.[[OwnPropertyKeys]]().
-    auto keys = props->internal_own_property_keys();
-    if (vm.exception())
-        return {};
+    auto keys = TRY_OR_DISCARD(props->internal_own_property_keys());
 
     struct NameAndDescriptor {
         PropertyName name;

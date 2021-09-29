@@ -101,7 +101,7 @@ public:
     virtual ThrowCompletionOr<Value> internal_get(PropertyName const&, Value receiver) const;
     virtual ThrowCompletionOr<bool> internal_set(PropertyName const&, Value value, Value receiver);
     virtual ThrowCompletionOr<bool> internal_delete(PropertyName const&);
-    virtual MarkedValueList internal_own_property_keys() const;
+    virtual ThrowCompletionOr<MarkedValueList> internal_own_property_keys() const;
 
     bool ordinary_set_with_own_descriptor(PropertyName const&, Value, Value, Optional<PropertyDescriptor>);
 

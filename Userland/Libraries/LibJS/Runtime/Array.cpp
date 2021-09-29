@@ -226,15 +226,13 @@ ThrowCompletionOr<bool> Array::internal_delete(PropertyName const& property_name
 }
 
 // NON-STANDARD: Used to inject the ephemeral length property's key
-MarkedValueList Array::internal_own_property_keys() const
+ThrowCompletionOr<MarkedValueList> Array::internal_own_property_keys() const
 {
     auto& vm = this->vm();
-    auto keys = Object::internal_own_property_keys();
-    if (vm.exception())
-        return MarkedValueList { vm.heap() };
+    auto keys = TRY(Object::internal_own_property_keys());
     // FIXME: This is pretty expensive, find a better way to do this
     keys.insert(indexed_properties().real_size(), js_string(vm, vm.names.length.as_string()));
-    return keys;
+    return { move(keys) };
 }
 
 }

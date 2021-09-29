@@ -1420,7 +1420,7 @@ public:
     virtual JS::ThrowCompletionOr<bool> internal_define_own_property(JS::PropertyName const&, JS::PropertyDescriptor const&) override;
     virtual JS::ThrowCompletionOr<bool> internal_delete(JS::PropertyName const&) override;
     virtual JS::ThrowCompletionOr<bool> internal_prevent_extensions() override;
-    virtual JS::MarkedValueList internal_own_property_keys() const override;
+    virtual JS::ThrowCompletionOr<JS::MarkedValueList> internal_own_property_keys() const override;
 )~~~");
     }
 
@@ -2301,7 +2301,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_prevent_extensions()
 
         // 3.9.6. [[OwnPropertyKeys]], https://heycam.github.io/webidl/#legacy-platform-object-ownpropertykeys
         scoped_generator.append(R"~~~(
-JS::MarkedValueList @class_name@::internal_own_property_keys() const
+JS::ThrowCompletionOr<JS::MarkedValueList> @class_name@::internal_own_property_keys() const
 {
     auto& vm = this->vm();
 
@@ -2348,7 +2348,7 @@ JS::MarkedValueList @class_name@::internal_own_property_keys() const
     // FIXME: 6. Assert: keys has no duplicate items.
 
     // 7. Return keys.
-    return keys;
+    return { move(keys) };
 }
 )~~~");
     }
