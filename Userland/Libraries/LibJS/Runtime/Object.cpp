@@ -235,9 +235,7 @@ bool Object::delete_property_or_throw(PropertyName const& property_name)
     VERIFY(property_name.is_valid());
 
     // 3. Let success be ? O.[[Delete]](P).
-    auto success = internal_delete(property_name);
-    if (vm.exception())
-        return {};
+    auto success = TRY_OR_DISCARD(internal_delete(property_name));
 
     // 4. If success is false, throw a TypeError exception.
     if (!success) {
@@ -796,13 +794,13 @@ bool Object::ordinary_set_with_own_descriptor(PropertyName const& property_name,
 }
 
 // 10.1.10 [[Delete]] ( P ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-delete-p
-bool Object::internal_delete(PropertyName const& property_name)
+ThrowCompletionOr<bool> Object::internal_delete(PropertyName const& property_name)
 {
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
 
     // 2. Let desc be ? O.[[GetOwnProperty]](P).
-    auto descriptor = TRY_OR_DISCARD(internal_get_own_property(property_name));
+    auto descriptor = TRY(internal_get_own_property(property_name));
 
     // 3. If desc is undefined, return true.
     if (!descriptor.has_value())

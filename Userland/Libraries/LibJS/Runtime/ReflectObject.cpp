@@ -143,7 +143,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::delete_property)
         return {};
 
     // 3. Return ? target.[[Delete]](key).
-    return Value(target.as_object().internal_delete(key));
+    return Value(TRY_OR_DISCARD(target.as_object().internal_delete(key)));
 }
 
 // 28.1.5 Reflect.get ( target, propertyKey [ , receiver ] ), https://tc39.es/ecma262/#sec-reflect.get
