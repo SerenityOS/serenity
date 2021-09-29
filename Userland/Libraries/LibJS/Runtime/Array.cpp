@@ -24,7 +24,7 @@ Array* Array::create(GlobalObject& global_object, size_t length, Object* prototy
     if (!prototype)
         prototype = global_object.array_prototype();
     auto* array = global_object.heap().allocate<Array>(global_object, *prototype);
-    array->internal_define_own_property(vm.names.length, { .value = Value(length), .writable = true, .enumerable = false, .configurable = false });
+    (void)array->internal_define_own_property(vm.names.length, { .value = Value(length), .writable = true, .enumerable = false, .configurable = false });
     return array;
 }
 
@@ -168,7 +168,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> Array::internal_get_own_property
 }
 
 // 10.4.2.1 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc
-bool Array::internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
+ThrowCompletionOr<bool> Array::internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
 {
     auto& vm = this->vm();
 
@@ -178,7 +178,10 @@ bool Array::internal_define_own_property(PropertyName const& property_name, Prop
     // 2. If P is "length", then
     if (property_name.is_string() && property_name.as_string() == vm.names.length.as_string()) {
         // a. Return ? ArraySetLength(A, Desc).
-        return set_length(property_descriptor);
+        auto success = set_length(property_descriptor);
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
+        return success;
     }
 
     // 3. Else if P is an array index, then
@@ -195,7 +198,7 @@ bool Array::internal_define_own_property(PropertyName const& property_name, Prop
             return false;
 
         // h. Let succeeded be ! OrdinaryDefineOwnProperty(A, P, Desc).
-        auto succeeded = Object::internal_define_own_property(property_name, property_descriptor);
+        auto succeeded = Object::internal_define_own_property(property_name, property_descriptor).release_value();
         // i. If succeeded is false, return false.
         if (!succeeded)
             return false;

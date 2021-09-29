@@ -1415,7 +1415,7 @@ public:
         generator.append(R"~~~(
     virtual JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> internal_get_own_property(JS::PropertyName const&) const override;
     virtual bool internal_set(JS::PropertyName const&, JS::Value, JS::Value) override;
-    virtual bool internal_define_own_property(JS::PropertyName const&, JS::PropertyDescriptor const&) override;
+    virtual JS::ThrowCompletionOr<bool> internal_define_own_property(JS::PropertyName const&, JS::PropertyDescriptor const&) override;
     virtual bool internal_delete(JS::PropertyName const&) override;
     virtual JS::ThrowCompletionOr<bool> internal_prevent_extensions() override;
     virtual JS::MarkedValueList internal_own_property_keys() const override;
@@ -2046,7 +2046,7 @@ bool @class_name@::internal_set(JS::PropertyName const& property_name, JS::Value
 
         // 3.9.3. [[DefineOwnProperty]], https://heycam.github.io/webidl/#legacy-platform-object-defineownproperty
         scoped_generator.append(R"~~~(
-bool @class_name@::internal_define_own_property(JS::PropertyName const& property_name, JS::PropertyDescriptor const& property_descriptor)
+JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::PropertyName const& property_name, JS::PropertyDescriptor const& property_descriptor)
 {
     [[maybe_unused]] auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -2071,8 +2071,8 @@ bool @class_name@::internal_define_own_property(JS::PropertyName const& property
                 scoped_generator.append(R"~~~(
         // 3. Invoke the indexed property setter on O with P and Desc.[[Value]].
         invoke_indexed_property_setter(global_object, impl(), property_name, *property_descriptor.value);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return JS::throw_completion(exception->value());
 
         // 4. Return true.
         return true;
@@ -2105,7 +2105,7 @@ bool @class_name@::internal_define_own_property(JS::PropertyName const& property
             if (!interface.extended_attributes.contains("LegacyOverrideBuiltIns")) {
                 scoped_generator.append(R"~~~(
         // NOTE: This has to be done manually instead of using Object::has_own_property, as that would use the overrided internal_get_own_property.
-        auto own_property_named_p = TRY_OR_DISCARD(Object::internal_get_own_property(property_name));
+        auto own_property_named_p = TRY(Object::internal_get_own_property(property_name));
 
         if (!own_property_named_p.has_value()))~~~");
             }
@@ -2130,8 +2130,8 @@ bool @class_name@::internal_define_own_property(JS::PropertyName const& property
 
             // 2. Invoke the named property setter on O with P and Desc.[[Value]].
             invoke_named_property_setter(global_object, impl(), property_name_as_string, *property_descriptor.value);
-            if (vm.exception())
-                return {};
+            if (auto* exception = vm.exception())
+                return JS::throw_completion(exception->value());
 
             // 3. Return true.
             return true;

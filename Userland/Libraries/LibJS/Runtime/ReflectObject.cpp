@@ -122,7 +122,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::define_property)
         return {};
 
     // 4. Return ? target.[[DefineOwnProperty]](key, desc).
-    return Value(target.as_object().internal_define_own_property(key, descriptor));
+    return Value(TRY_OR_DISCARD(target.as_object().internal_define_own_property(key, descriptor)));
 }
 
 // 28.1.4 Reflect.deleteProperty ( target, propertyKey ), https://tc39.es/ecma262/#sec-reflect.deleteproperty
