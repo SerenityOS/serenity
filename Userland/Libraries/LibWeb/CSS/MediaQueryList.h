@@ -9,6 +9,7 @@
 #include <AK/Forward.h>
 #include <AK/RefCounted.h>
 #include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/CSS/MediaQuery.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
 
@@ -26,9 +27,9 @@ public:
     using RefCounted::ref;
     using RefCounted::unref;
 
-    static NonnullRefPtr<MediaQueryList> create(DOM::Document& document, String media)
+    static NonnullRefPtr<MediaQueryList> create(DOM::Document& document, NonnullRefPtrVector<MediaQuery>&& media_queries)
     {
-        return adopt_ref(*new MediaQueryList(document, move(media)));
+        return adopt_ref(*new MediaQueryList(document, move(media_queries)));
     }
 
     virtual ~MediaQueryList() override;
@@ -48,10 +49,10 @@ public:
     HTML::EventHandler onchange();
 
 private:
-    MediaQueryList(DOM::Document&, String);
+    MediaQueryList(DOM::Document&, NonnullRefPtrVector<MediaQuery>&&);
 
     DOM::Document& m_document;
-    String m_media;
+    NonnullRefPtrVector<MediaQuery> m_media;
 };
 
 }

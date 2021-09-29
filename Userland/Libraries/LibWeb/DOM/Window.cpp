@@ -6,6 +6,7 @@
 
 #include <LibGUI/DisplayLink.h>
 #include <LibJS/Runtime/FunctionObject.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
 #include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/DOM/Document.h>
@@ -261,7 +262,7 @@ NonnullRefPtr<CSS::CSSStyleDeclaration> Window::get_computed_style(DOM::Element&
 
 NonnullRefPtr<CSS::MediaQueryList> Window::match_media(String media)
 {
-    return CSS::MediaQueryList::create(associated_document(), move(media));
+    return CSS::MediaQueryList::create(associated_document(), parse_media_query_list(CSS::ParsingContext(associated_document()), media));
 }
 
 // https://www.w3.org/TR/cssom-view/#dom-window-scrollx
