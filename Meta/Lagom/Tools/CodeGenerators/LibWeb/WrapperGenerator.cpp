@@ -1415,7 +1415,7 @@ public:
 
     if (interface.is_legacy_platform_object()) {
         generator.append(R"~~~(
-    virtual Optional<JS::PropertyDescriptor> internal_get_own_property(JS::PropertyName const&) const override;
+    virtual JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> internal_get_own_property(JS::PropertyName const&) const override;
     virtual bool internal_set(JS::PropertyName const&, JS::Value, JS::Value) override;
     virtual bool internal_define_own_property(JS::PropertyName const&, JS::PropertyDescriptor const&) override;
     virtual bool internal_delete(JS::PropertyName const&) override;
@@ -1618,7 +1618,7 @@ static JS::Value wrap_for_legacy_platform_object_get_own_property(JS::GlobalObje
             scoped_generator.append(R"~~~(
 bool @class_name@::is_named_property_exposed_on_object(JS::PropertyName const& property_name) const
 {
-    auto& vm = this->vm();
+    [[maybe_unused]] auto& vm = this->vm();
 
     // The spec doesn't say anything about the type of the property name here.
     // Numbers can be converted to a string, which is fine and what other engines do.
@@ -1636,9 +1636,7 @@ bool @class_name@::is_named_property_exposed_on_object(JS::PropertyName const& p
 
     // 2. If O has an own property named P, then return false.
     // NOTE: This has to be done manually instead of using Object::has_own_property, as that would use the overrided internal_get_own_property.
-    auto own_property_named_p = Object::internal_get_own_property(property_name);
-    if (vm.exception())
-        return {};
+    auto own_property_named_p = TRY_OR_DISCARD(Object::internal_get_own_property(property_name));
 
     if (own_property_named_p.has_value())
         return false;
@@ -1769,7 +1767,7 @@ Optional<JS::PropertyDescriptor> @class_name@::legacy_platform_object_get_own_pr
 
         // 3. Set ignoreNamedProps to true.
         // NOTE: To reduce complexity of WrapperGenerator, this just returns early instead of keeping track of another variable.
-        return Object::internal_get_own_property(property_name);
+        return TRY_OR_DISCARD(Object::internal_get_own_property(property_name));
     }
 )~~~");
             }
@@ -1850,7 +1848,7 @@ Optional<JS::PropertyDescriptor> @class_name@::legacy_platform_object_get_own_pr
 
             // 3. Return OrdinaryGetOwnProperty(O, P).
             get_own_property_generator.append(R"~~~(
-    return Object::internal_get_own_property(property_name);
+    return TRY_OR_DISCARD(Object::internal_get_own_property(property_name));
 }
 )~~~");
         };
@@ -1979,7 +1977,7 @@ static void invoke_indexed_property_setter(JS::GlobalObject& global_object, @ful
 
         // 3.9.1. [[GetOwnProperty]], https://heycam.github.io/webidl/#legacy-platform-object-getownproperty
         scoped_generator.append(R"~~~(
-Optional<JS::PropertyDescriptor> @class_name@::internal_get_own_property(JS::PropertyName const& property_name) const
+JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::internal_get_own_property(JS::PropertyName const& property_name) const
 {
     // 1. Return LegacyPlatformObjectGetOwnProperty(O, P, false).
     return legacy_platform_object_get_own_property_for_get_own_property_slot(property_name);
@@ -2112,9 +2110,7 @@ bool @class_name@::internal_define_own_property(JS::PropertyName const& property
             if (!interface.extended_attributes.contains("LegacyOverrideBuiltIns")) {
                 scoped_generator.append(R"~~~(
         // NOTE: This has to be done manually instead of using Object::has_own_property, as that would use the overrided internal_get_own_property.
-        auto own_property_named_p = Object::internal_get_own_property(property_name);
-        if (vm.exception())
-            return {};
+        auto own_property_named_p = TRY_OR_DISCARD(Object::internal_get_own_property(property_name));
 
         if (!own_property_named_p.has_value()))~~~");
             }
@@ -2181,7 +2177,7 @@ bool @class_name@::internal_define_own_property(JS::PropertyName const& property
         scoped_generator.append(R"~~~(
 bool @class_name@::internal_delete(JS::PropertyName const& property_name)
 {
-    auto& vm = this->vm();
+    [[maybe_unused]] auto& vm = this->vm();
     auto& global_object = this->global_object();
 )~~~");
 
@@ -2273,9 +2269,7 @@ bool @class_name@::internal_delete(JS::PropertyName const& property_name)
 
         scoped_generator.append(R"~~~(
     // 3. If O has an own property with name P, then:
-    auto own_property_named_p_descriptor = Object::internal_get_own_property(property_name);
-    if (vm.exception())
-        return {};
+    auto own_property_named_p_descriptor = TRY_OR_DISCARD(Object::internal_get_own_property(property_name));
 
     if (own_property_named_p_descriptor.has_value()) {
         // 1. If the property is not configurable, then return false.

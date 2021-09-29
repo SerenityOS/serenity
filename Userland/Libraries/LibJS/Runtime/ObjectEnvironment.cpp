@@ -103,7 +103,10 @@ void ObjectEnvironment::set_mutable_binding(GlobalObject& global_object, FlyStri
 
     // Note: Nothing like this in the spec, this is here to produce nicer errors instead of the generic one thrown by Object::set().
     if (!result && strict) {
-        auto property = m_binding_object.internal_get_own_property(name);
+        auto property_or_error = m_binding_object.internal_get_own_property(name);
+        if (property_or_error.is_error())
+            return;
+        auto property = property_or_error.release_value();
         if (property.has_value() && !property->writable.value_or(true)) {
             vm.clear_exception();
             vm.throw_exception<TypeError>(global_object, ErrorType::DescWriteNonWritable, name);
