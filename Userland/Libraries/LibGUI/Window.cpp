@@ -985,6 +985,16 @@ void Window::set_frameless(bool frameless)
         apply_icon();
 }
 
+void Window::set_always_show_in_taskbar(bool show)
+{
+    if (m_always_show_in_taskbar == show)
+        return;
+    m_always_show_in_taskbar = show;
+    if (!is_visible())
+        return;
+    WindowServerConnection::the().async_set_always_show_in_taskbar(m_window_id, show);
+}
+
 void Window::set_forced_shadow(bool shadow)
 {
     if (m_forced_shadow == shadow)

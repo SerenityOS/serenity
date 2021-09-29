@@ -310,6 +310,9 @@ public:
     void set_frameless(bool);
     bool is_frameless() const { return m_frameless; }
 
+    void set_always_show_in_taskbar(bool);
+    bool should_always_show_in_taskbar() const { return m_always_show_in_taskbar; }
+
     bool should_show_menubar() const { return m_should_show_menubar; }
 
     Optional<int> progress() const { return m_progress; }
@@ -415,6 +418,7 @@ private:
     bool m_modal { false };
     bool m_minimizable { false };
     bool m_frameless { false };
+    bool m_always_show_in_taskbar { false };
     bool m_forced_shadow { false };
     bool m_resizable { false };
     Optional<Gfx::IntSize> m_resize_aspect_ratio {};

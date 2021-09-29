@@ -627,6 +627,18 @@ void Window::set_frameless(bool frameless)
     }
 }
 
+void Window::set_always_show_in_taskbar(bool show)
+{
+    if (m_always_show_in_taskbar == show)
+        return;
+    m_always_show_in_taskbar = show;
+    if (m_visible) {
+        Compositor::the().invalidate_occlusions();
+        invalidate(true, true);
+        invalidate_last_rendered_screen_rects();
+    }
+}
+
 void Window::invalidate(bool invalidate_frame, bool re_render_frame)
 {
     m_invalidated = true;

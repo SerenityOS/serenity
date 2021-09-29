@@ -234,6 +234,17 @@ void ClientConnection::set_frameless(i32 window_id, bool frameless)
     WindowManager::the().tell_wms_window_state_changed(*it->value);
 }
 
+void ClientConnection::set_always_show_in_taskbar(i32 window_id, bool show)
+{
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        did_misbehave("SetAlwaysShowInTaskbar: Bad window ID");
+        return;
+    }
+    it->value->set_always_show_in_taskbar(show);
+    WindowManager::the().tell_wms_window_state_changed(*it->value);
+}
+
 void ClientConnection::set_forced_shadow(i32 window_id, bool shadow)
 {
     auto it = m_windows.find(window_id);

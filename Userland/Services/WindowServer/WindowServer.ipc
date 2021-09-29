@@ -86,6 +86,7 @@ endpoint WindowServer
     set_fullscreen(i32 window_id, bool fullscreen) =|
     set_frameless(i32 window_id, bool frameless) =|
     set_forced_shadow(i32 window_id, bool shadow) =|
+    set_always_show_in_taskbar(i32 window_id, bool show) =|
     popup_menu(i32 menu_id, Gfx::IntPoint screen_position) =|
     dismiss_menu(i32 menu_id) =|
 

@@ -138,7 +138,7 @@ public:
 
 class WMWindowStateChangedEvent : public WMEvent {
 public:
-    WMWindowStateChangedEvent(int client_id, int window_id, int parent_client_id, int parent_window_id, const StringView& title, const Gfx::IntRect& rect, unsigned virtual_desktop_row, unsigned virtual_desktop_column, bool is_active, bool is_modal, WindowType window_type, bool is_minimized, bool is_frameless, Optional<int> progress)
+    WMWindowStateChangedEvent(int client_id, int window_id, int parent_client_id, int parent_window_id, const StringView& title, const Gfx::IntRect& rect, unsigned virtual_desktop_row, unsigned virtual_desktop_column, bool is_active, bool is_modal, WindowType window_type, bool is_minimized, bool is_frameless, bool always_show_in_taskbar, Optional<int> progress)
         : WMEvent(Event::Type::WM_WindowStateChanged, client_id, window_id)
         , m_parent_client_id(parent_client_id)
         , m_parent_window_id(parent_window_id)
@@ -151,6 +151,7 @@ public:
         , m_modal(is_modal)
         , m_minimized(is_minimized)
         , m_frameless(is_frameless)
+        , m_always_show_in_taskbar(always_show_in_taskbar)
         , m_progress(progress)
     {
     }
@@ -164,6 +165,7 @@ public:
     WindowType window_type() const { return m_window_type; }
     bool is_minimized() const { return m_minimized; }
     bool is_frameless() const { return m_frameless; }
+    bool should_always_show_in_taskbar() const { return m_always_show_in_taskbar; }
     Optional<int> progress() const { return m_progress; }
     unsigned virtual_desktop_row() const { return m_virtual_desktop_row; }
     unsigned virtual_desktop_column() const { return m_virtual_desktop_column; }
@@ -180,6 +182,7 @@ private:
     bool m_modal;
     bool m_minimized;
     bool m_frameless;
+    bool m_always_show_in_taskbar;
     Optional<int> m_progress;
 };
 

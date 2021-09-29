@@ -20,11 +20,11 @@ WindowManagerServerConnection& WindowManagerServerConnection::the()
 
 void WindowManagerServerConnection::window_state_changed(i32 wm_id, i32 client_id, i32 window_id,
     i32 parent_client_id, i32 parent_window_id, u32 virtual_desktop_row, u32 virtual_desktop_column,
-    bool is_active, bool is_minimized, bool is_modal, bool is_frameless, i32 window_type,
-    String const& title, Gfx::IntRect const& rect, Optional<i32> const& progress)
+    bool is_active, bool is_minimized, bool is_modal, bool is_frameless, bool should_always_show_in_taskbar,
+    i32 window_type, String const& title, Gfx::IntRect const& rect, Optional<i32> const& progress)
 {
     if (auto* window = Window::from_window_id(wm_id))
-        Core::EventLoop::current().post_event(*window, make<WMWindowStateChangedEvent>(client_id, window_id, parent_client_id, parent_window_id, title, rect, virtual_desktop_row, virtual_desktop_column, is_active, is_modal, static_cast<WindowType>(window_type), is_minimized, is_frameless, progress));
+        Core::EventLoop::current().post_event(*window, make<WMWindowStateChangedEvent>(client_id, window_id, parent_client_id, parent_window_id, title, rect, virtual_desktop_row, virtual_desktop_column, is_active, is_modal, static_cast<WindowType>(window_type), is_minimized, is_frameless, should_always_show_in_taskbar, progress));
 }
 
 void WindowManagerServerConnection::applet_area_size_changed(i32 wm_id, const Gfx::IntSize& size)

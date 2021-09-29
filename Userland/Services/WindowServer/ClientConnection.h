@@ -121,6 +121,7 @@ private:
     virtual void move_window_to_front(i32) override;
     virtual void set_fullscreen(i32, bool) override;
     virtual void set_frameless(i32, bool) override;
+    virtual void set_always_show_in_taskbar(i32, bool) override;
     virtual void set_forced_shadow(i32, bool) override;
     virtual void set_wallpaper(String const&) override;
     virtual void set_background_color(String const&) override;

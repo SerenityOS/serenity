@@ -45,6 +45,9 @@ public:
     bool is_frameless() const { return m_frameless; }
     void set_frameless(bool);
 
+    bool should_always_show_in_taskbar() const { return m_always_show_in_taskbar; }
+    void set_always_show_in_taskbar(bool);
+
     void set_forced_shadow(bool);
 
     bool is_resizable() const { return m_resizable; }
@@ -271,6 +274,7 @@ private:
     bool m_minimizable { true };
     bool m_fullscreen { false };
     bool m_frameless { false };
+    bool m_always_show_in_taskbar { false };
     bool m_forced_shadow { false };
     bool m_layout_pending { false };
     bool m_visible_for_timer_purposes { true };
