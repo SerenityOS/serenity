@@ -18,6 +18,8 @@
 #include <LibWeb/Bindings/CSSRulePrototype.h>
 #include <LibWeb/Bindings/CSSStyleDeclarationConstructor.h>
 #include <LibWeb/Bindings/CSSStyleDeclarationPrototype.h>
+#include <LibWeb/Bindings/CSSStyleRuleConstructor.h>
+#include <LibWeb/Bindings/CSSStyleRulePrototype.h>
 #include <LibWeb/Bindings/CSSStyleSheetConstructor.h>
 #include <LibWeb/Bindings/CSSStyleSheetPrototype.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DConstructor.h>
@@ -271,13 +273,14 @@
     ADD_WINDOW_OBJECT_INTERFACE(AbortSignal)               \
     ADD_WINDOW_OBJECT_INTERFACE(CSSRule)                   \
     ADD_WINDOW_OBJECT_INTERFACE(CSSRuleList)               \
+    ADD_WINDOW_OBJECT_INTERFACE(CSSStyleDeclaration)       \
+    ADD_WINDOW_OBJECT_INTERFACE(CSSStyleRule)              \
+    ADD_WINDOW_OBJECT_INTERFACE(CSSStyleSheet)             \
     ADD_WINDOW_OBJECT_INTERFACE(CanvasRenderingContext2D)  \
     ADD_WINDOW_OBJECT_INTERFACE(CharacterData)             \
     ADD_WINDOW_OBJECT_INTERFACE(CloseEvent)                \
     ADD_WINDOW_OBJECT_INTERFACE(Comment)                   \
     ADD_WINDOW_OBJECT_INTERFACE(CustomEvent)               \
-    ADD_WINDOW_OBJECT_INTERFACE(CSSStyleDeclaration)       \
-    ADD_WINDOW_OBJECT_INTERFACE(CSSStyleSheet)             \
     ADD_WINDOW_OBJECT_INTERFACE(DocumentFragment)          \
     ADD_WINDOW_OBJECT_INTERFACE(Document)                  \
     ADD_WINDOW_OBJECT_INTERFACE(DocumentType)              \
