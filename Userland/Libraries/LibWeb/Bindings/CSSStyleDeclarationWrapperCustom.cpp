@@ -13,8 +13,7 @@ bool CSSStyleDeclarationWrapper::internal_has_property(JS::PropertyName const& n
 {
     if (!name.is_string())
         return Base::internal_has_property(name);
-    // FIXME: These should actually use camelCase versions of the property names!
-    auto property_id = CSS::property_id_from_string(name.to_string());
+    auto property_id = CSS::property_id_from_camel_case_string(name.to_string());
     return property_id != CSS::PropertyID::Invalid;
 }
 
@@ -22,8 +21,7 @@ JS::Value CSSStyleDeclarationWrapper::internal_get(JS::PropertyName const& name,
 {
     if (!name.is_string())
         return Base::internal_get(name, receiver);
-    // FIXME: These should actually use camelCase versions of the property names!
-    auto property_id = CSS::property_id_from_string(name.to_string());
+    auto property_id = CSS::property_id_from_camel_case_string(name.to_string());
     if (property_id == CSS::PropertyID::Invalid)
         return Base::internal_get(name, receiver);
     if (auto maybe_property = impl().property(property_id); maybe_property.has_value())
@@ -35,8 +33,7 @@ bool CSSStyleDeclarationWrapper::internal_set(JS::PropertyName const& name, JS::
 {
     if (!name.is_string())
         return Base::internal_set(name, value, receiver);
-    // FIXME: These should actually use camelCase versions of the property names!
-    auto property_id = CSS::property_id_from_string(name.to_string());
+    auto property_id = CSS::property_id_from_camel_case_string(name.to_string());
     if (property_id == CSS::PropertyID::Invalid)
         return Base::internal_set(name, value, receiver);
 
