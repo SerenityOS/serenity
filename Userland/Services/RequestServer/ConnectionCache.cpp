@@ -9,8 +9,8 @@
 
 namespace RequestServer::ConnectionCache {
 
-HashMap<ConnectionKey, Vector<Connection<Core::TCPSocket>>> g_tcp_connection_cache {};
-HashMap<ConnectionKey, Vector<Connection<TLS::TLSv12>>> g_tls_connection_cache {};
+HashMap<ConnectionKey, NonnullOwnPtrVector<Connection<Core::TCPSocket>>> g_tcp_connection_cache {};
+HashMap<ConnectionKey, NonnullOwnPtrVector<Connection<TLS::TLSv12>>> g_tls_connection_cache {};
 
 void request_did_finish(URL const& url, Core::Socket const* socket)
 {
@@ -28,37 +28,45 @@ void request_did_finish(URL const& url, Core::Socket const* socket)
             dbgln("Request for URL {} finished, but we don't own that!", url);
             return;
         }
-        auto connection_it = it->value.find_if([&](auto& connection) { return connection.socket == socket; });
+        auto connection_it = it->value.find_if([&](auto& connection) { return connection->socket == socket; });
         if (connection_it.is_end()) {
             dbgln("Request for URL {} finished, but we don't have a socket for that!", url);
             return;
         }
 
         auto& connection = *connection_it;
-        if (connection.request_queue.is_empty()) {
-            connection.has_started = false;
-            connection.removal_timer->on_timeout = [&connection, &cache_entry = it->value] {
+        if (connection->request_queue.is_empty()) {
+            connection->has_started = false;
+            if constexpr (REQUEST_SERVER_DEBUG)
+                connection->current_url = {};
+            connection->removal_timer->on_timeout = [ptr = connection.ptr(), &cache_entry = it->value, &key = it->key, &cache] {
                 Core::deferred_invoke([&] {
-                    dbgln("Removing no-longer-used connection {}", &connection);
-                    cache_entry.remove_first_matching([&](auto& entry) { return &entry == &connection; });
+                    dbgln("Removing no-longer-used connection {}", ptr);
+                    cache_entry.remove_first_matching([&](auto& entry) { return entry.ptr() == ptr; });
+                    if (cache_entry.is_empty())
+                        cache.remove(key);
                 });
             };
-            connection.removal_timer->start();
+            connection->removal_timer->start();
         } else {
-            using SocketType = RemoveCVReference<decltype(*connection.socket)>;
+            using SocketType = RemoveCVReference<decltype(*connection->socket)>;
             bool is_connected;
             if constexpr (IsSame<SocketType, TLS::TLSv12>)
-                is_connected = connection.socket->is_established();
+                is_connected = connection->socket->is_established();
             else
-                is_connected = connection.socket->is_connected();
+                is_connected = connection->socket->is_connected();
             if (!is_connected) {
                 // Create another socket for the connection.
                 dbgln("Creating a new socket for {}", url);
-                connection.socket = SocketType::construct(nullptr);
+                connection->socket = SocketType::construct(nullptr);
             }
             dbgln("Running next job in queue for connection {}", &connection);
-            auto request = connection.request_queue.take_first();
-            request(connection.socket);
+            auto request = connection->request_queue.take_first();
+            if constexpr (REQUEST_SERVER_DEBUG) {
+                connection->timer.start();
+                connection->current_url = url;
+            }
+            request(connection->socket);
         }
     };
 
@@ -69,5 +77,33 @@ void request_did_finish(URL const& url, Core::Socket const* socket)
     else
         dbgln("Unknown socket {} finished for URL {}", *socket, url);
 }
+
+#if REQUEST_SERVER_DEBUG
+void dump_jobs()
+{
+    dbgln("=========== TLS Connection Cache ==========");
+    for (auto& connection : g_tls_connection_cache) {
+        dbgln(" - {}:{}", connection.key.hostname, connection.key.port);
+        for (auto& entry : connection.value) {
+            dbgln("  - Connection {} (started={})", &entry, entry.has_started);
+            dbgln("    Currently loading {} ({} elapsed)", entry.current_url, entry.timer.elapsed());
+            dbgln("    Request Queue:");
+            for (auto& job : entry.request_queue)
+                dbgln("    - {}", &job);
+        }
+    }
+    dbgln("=========== TCP Connection Cache ==========");
+    for (auto& connection : g_tcp_connection_cache) {
+        dbgln(" - {}:{}", connection.key.hostname, connection.key.port);
+        for (auto& entry : connection.value) {
+            dbgln("  - Connection {} (started={})", &entry, entry.has_started);
+            dbgln("    Currently loading {} ({} elapsed)", entry.current_url, entry.timer.elapsed());
+            dbgln("    Request Queue:");
+            for (auto& job : entry.request_queue)
+                dbgln("    - {}", &job);
+        }
+    }
+}
+#endif
 
 }
