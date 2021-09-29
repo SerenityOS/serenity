@@ -36,6 +36,10 @@ public:
     CSSRuleList* css_rules() { return m_rules; }
     CSSRuleList const* css_rules() const { return m_rules; }
 
+    DOM::ExceptionOr<unsigned> insert_rule(StringView rule, unsigned index);
+    DOM::ExceptionOr<void> remove_rule(unsigned index);
+    DOM::ExceptionOr<void> delete_rule(unsigned index);
+
     template<typename Callback>
     void for_each_effective_style_rule(Callback callback) const
     {
