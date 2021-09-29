@@ -2825,6 +2825,7 @@ Value ThrowStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     return {};
 }
 
+// 14.12.2 Runtime Semantics: CaseBlockEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-caseblockevaluation
 Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     // FIXME: This needs a massive refactoring, ideally once we start using continue, break, and return completions.
@@ -2845,16 +2846,46 @@ Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
     block_declaration_instantiation(global_object, block_environment);
 
     interpreter.vm().running_execution_context().lexical_environment = block_environment;
+    Optional<size_t> first_passing_case;
+    for (size_t i = 0; i < m_cases.size(); ++i) {
+        auto& switch_case = m_cases[i];
+        if (switch_case.test()) {
+            auto test_result = switch_case.test()->execute(interpreter, global_object);
+            if (interpreter.exception())
+                return {};
+            if (is_strictly_equal(discriminant_result, test_result)) {
+                first_passing_case = i;
+                break;
+            }
+        }
+    }
+
+    // FIXME: we could optimize and store the location of the default case in a member variable.
+    if (!first_passing_case.has_value()) {
+        for (size_t i = 0; i < m_cases.size(); ++i) {
+            auto& switch_case = m_cases[i];
+            if (!switch_case.test()) {
+                first_passing_case = i;
+                break;
+            }
+        }
+    }
 
     auto last_value = js_undefined();
 
-    auto execute_switch_case = [&](auto const& switch_case) -> Optional<Value> {
+    if (!first_passing_case.has_value()) {
+        return last_value;
+    }
+    VERIFY(first_passing_case.value() < m_cases.size());
+
+    for (size_t i = first_passing_case.value(); i < m_cases.size(); ++i) {
+        auto& switch_case = m_cases[i];
         for (auto& statement : switch_case.children()) {
             auto value = statement.execute(interpreter, global_object);
             if (!value.is_empty())
                 last_value = value;
             if (interpreter.exception())
-                return Value {};
+                return {};
             if (interpreter.vm().should_unwind()) {
                 if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_labels)) {
                     // No stop_unwind(), the outer loop will handle that - we just need to break out of the switch/case.
@@ -2867,33 +2898,7 @@ Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
                 }
             }
         }
-        return {};
-    };
-
-    bool falling_through = false;
-    SwitchCase const* default_switch_case = nullptr;
-    for (auto& switch_case : m_cases) {
-        if (!switch_case.test()) {
-            default_switch_case = &switch_case;
-            falling_through = true;
-            continue;
-        }
-        if (!falling_through) {
-            auto test_result = switch_case.test()->execute(interpreter, global_object);
-            if (interpreter.exception())
-                return {};
-            if (!is_strictly_equal(discriminant_result, test_result))
-                continue;
-        }
-        falling_through = true;
-        if (auto result = execute_switch_case(switch_case); result.has_value())
-            return *result;
     }
-    if (default_switch_case) {
-        if (auto result = execute_switch_case(*default_switch_case); result.has_value())
-            return *result;
-    }
-
     return last_value;
 }
 

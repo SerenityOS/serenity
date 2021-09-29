@@ -67,11 +67,43 @@ describe("basic switch tests", () => {
         }
         expect(i).toBe(5);
     });
+
+    test("default branch is not taken if more exact branch exists", () => {
+        function switchTest(i) {
+            let result = 0;
+            switch (i) {
+                case 1:
+                    result += 1;
+                    break;
+                case 1:
+                    expect().fail();
+                case 2:
+                    result += 2;
+                default:
+                    result += 4;
+                case 3:
+                    result += 8;
+                    break;
+                case 2:
+                    expect().fail();
+            }
+            return result;
+        }
+
+        expect(switchTest(1)).toBe(1);
+        expect(switchTest(2)).toBe(14);
+        expect(switchTest(3)).toBe(8);
+        expect(switchTest(4)).toBe(12);
+    });
 });
 
 describe("errors", () => {
     test("syntax errors", () => {
         expect("switch () {}").not.toEval();
+        expect("switch () { case 1: continue; }").not.toEval();
+        expect("switch () { case 1: break doesnotexist; }").not.toEval();
+        expect("label: switch () { case 1: break not_the_right_label; }").not.toEval();
+        expect("label: switch () { case 1: continue label; }").not.toEval();
         expect("switch (foo) { bar }").not.toEval();
         expect("switch (foo) { default: default: }").not.toEval();
     });
