@@ -866,4 +866,11 @@ bool Node::is_equal_node(Node const* other_node) const
     return true;
 }
 
+// https://dom.spec.whatwg.org/#in-a-document-tree
+bool Node::in_a_document_tree() const
+{
+    // An element is in a document tree if its root is a document.
+    return root().is_document();
+}
+
 }
