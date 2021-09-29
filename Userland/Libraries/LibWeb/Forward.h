@@ -19,8 +19,9 @@ class Crypto;
 
 namespace Web::CSS {
 class CalculatedStyleValue;
-class CSSRule;
 class CSSImportRule;
+class CSSMediaRule;
+class CSSRule;
 class CSSStyleDeclaration;
 class CSSStyleRule;
 class CSSStyleSheet;
