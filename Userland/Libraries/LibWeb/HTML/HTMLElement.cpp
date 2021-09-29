@@ -15,6 +15,7 @@
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/UIEvents/EventNames.h>
@@ -122,7 +123,8 @@ String HTMLElement::inner_text()
     return builder.to_string();
 }
 
-unsigned HTMLElement::offset_top() const
+// // https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsettop
+int HTMLElement::offset_top() const
 {
     if (is<HTML::HTMLBodyElement>(this) || !layout_node() || !parent_element() || !parent_element()->layout_node())
         return 0;
@@ -131,13 +133,30 @@ unsigned HTMLElement::offset_top() const
     return position.y() - parent_position.y();
 }
 
-unsigned HTMLElement::offset_left() const
+// https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsetleft
+int HTMLElement::offset_left() const
 {
     if (is<HTML::HTMLBodyElement>(this) || !layout_node() || !parent_element() || !parent_element()->layout_node())
         return 0;
     auto position = layout_node()->box_type_agnostic_position();
     auto parent_position = parent_element()->layout_node()->box_type_agnostic_position();
     return position.x() - parent_position.x();
+}
+
+// https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsetwidth
+int HTMLElement::offset_width() const
+{
+    if (!layout_node() || !layout_node()->is_box())
+        return 0;
+    return static_cast<Layout::Box const&>(*layout_node()).border_box_width();
+}
+
+// https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsetheight
+int HTMLElement::offset_height() const
+{
+    if (!layout_node() || !layout_node()->is_box())
+        return 0;
+    return static_cast<Layout::Box const&>(*layout_node()).border_box_height();
 }
 
 bool HTMLElement::cannot_navigate() const

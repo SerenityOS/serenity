@@ -11,6 +11,8 @@ interface HTMLElement : Element {
 
     readonly attribute long offsetTop;
     readonly attribute long offsetLeft;
+    readonly attribute long offsetWidth;
+    readonly attribute long offsetHeight;
 
     // FIXME: This should come from a HTMLOrSVGElement mixin
     [SameObject] readonly attribute DOMStringMap dataset;
