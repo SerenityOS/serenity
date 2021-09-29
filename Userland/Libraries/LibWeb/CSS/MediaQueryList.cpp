@@ -13,7 +13,7 @@
 
 namespace Web::CSS {
 
-MediaQueryList::MediaQueryList(DOM::Document& document, String media)
+MediaQueryList::MediaQueryList(DOM::Document& document, NonnullRefPtrVector<MediaQuery>&& media)
     : DOM::EventTarget(static_cast<Bindings::ScriptExecutionContext&>(document))
     , m_document(document)
     , m_media(move(media))
@@ -27,8 +27,9 @@ MediaQueryList::~MediaQueryList()
 // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-media
 String MediaQueryList::media() const
 {
-    // TODO: Replace this with a "media query list" and serialize on demand
-    return m_media;
+    StringBuilder builder;
+    builder.join(", ", m_media);
+    return builder.to_string();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-matches
