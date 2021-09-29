@@ -97,9 +97,7 @@ static Array* get_own_property_keys(GlobalObject& global_object, Value value, Ge
         return {};
 
     // 2. Let keys be ? obj.[[OwnPropertyKeys]]().
-    auto keys = object->internal_own_property_keys();
-    if (vm.exception())
-        return {};
+    auto keys = TRY_OR_DISCARD(object->internal_own_property_keys());
 
     // 3. Let nameList be a new empty List.
     auto name_list = MarkedValueList { vm.heap() };
@@ -302,12 +300,13 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
     auto* object = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
+
     // 2. Let ownKeys be ? obj.[[OwnPropertyKeys]]().
-    auto own_keys = object->internal_own_property_keys();
-    if (vm.exception())
-        return {};
+    auto own_keys = TRY_OR_DISCARD(object->internal_own_property_keys());
+
     // 3. Let descriptors be ! OrdinaryObjectCreate(%Object.prototype%).
     auto* descriptors = Object::create(global_object, global_object.object_prototype());
+
     // 4. For each element key of ownKeys, do
     for (auto& key : own_keys) {
         auto property_name = PropertyName::from_value(global_object, key);
@@ -471,9 +470,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
         VERIFY(!vm.exception());
 
         // ii. Let keys be ? from.[[OwnPropertyKeys]]().
-        auto keys = from->internal_own_property_keys();
-        if (vm.exception())
-            return {};
+        auto keys = TRY_OR_DISCARD(from->internal_own_property_keys());
 
         // iii. For each element nextKey of keys, do
         for (auto& next_key : keys) {

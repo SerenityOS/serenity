@@ -661,7 +661,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_delete(PropertyName const& propert
 }
 
 // 10.5.11 [[OwnPropertyKeys]] ( ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-ownpropertykeys
-MarkedValueList ProxyObject::internal_own_property_keys() const
+ThrowCompletionOr<MarkedValueList> ProxyObject::internal_own_property_keys() const
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -669,19 +669,14 @@ MarkedValueList ProxyObject::internal_own_property_keys() const
     // 1. Let handler be O.[[ProxyHandler]].
 
     // 2. If handler is null, throw a TypeError exception.
-    if (m_is_revoked) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyRevoked);
-        return MarkedValueList { heap() };
-    }
+    if (m_is_revoked)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "ownKeys").
-    auto trap_or_error = Value(&m_handler).get_method(global_object, vm.names.ownKeys);
-    if (trap_or_error.is_error())
-        return MarkedValueList { heap() };
-    auto trap = trap_or_error.release_value();
+    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.ownKeys));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -690,14 +685,11 @@ MarkedValueList ProxyObject::internal_own_property_keys() const
     }
 
     // 7. Let trapResultArray be ? Call(trap, handler, « target »).
-    auto trap_result_array_or_error = vm.call(*trap, &m_handler, &m_target);
-    if (trap_result_array_or_error.is_error())
-        return MarkedValueList { heap() };
-    auto trap_result_array = trap_result_array_or_error.release_value();
+    auto trap_result_array = TRY(vm.call(*trap, &m_handler, &m_target));
 
     // 8. Let trapResult be ? CreateListFromArrayLike(trapResultArray, « String, Symbol »).
     HashTable<StringOrSymbol> unique_keys;
-    auto throw_completion_or_trap_result = create_list_from_array_like(global_object, trap_result_array, [&](auto value) -> ThrowCompletionOr<void> {
+    auto trap_result = TRY(create_list_from_array_like(global_object, trap_result_array, [&](auto value) -> ThrowCompletionOr<void> {
         auto& vm = global_object.vm();
         if (!value.is_string() && !value.is_symbol())
             return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyOwnPropertyKeysNotStringOrSymbol);
@@ -705,27 +697,19 @@ MarkedValueList ProxyObject::internal_own_property_keys() const
         VERIFY(!vm.exception());
         unique_keys.set(property_key, AK::HashSetExistingEntryBehavior::Keep);
         return {};
-    });
-    // TODO: This becomes a lot nicer once this function returns a ThrowCompletionOr as well.
-    if (throw_completion_or_trap_result.is_throw_completion())
-        return MarkedValueList { heap() };
-    auto trap_result = throw_completion_or_trap_result.release_value();
+    }));
 
     // 9. If trapResult contains any duplicate entries, throw a TypeError exception.
-    if (unique_keys.size() != trap_result.size()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyOwnPropertyKeysDuplicates);
-        return MarkedValueList { heap() };
-    }
+    if (unique_keys.size() != trap_result.size())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyOwnPropertyKeysDuplicates);
 
     // 10. Let extensibleTarget be ? IsExtensible(target).
     auto extensible_target = m_target.is_extensible();
-    if (vm.exception())
-        return MarkedValueList { heap() };
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 11. Let targetKeys be ? target.[[OwnPropertyKeys]]().
-    auto target_keys = m_target.internal_own_property_keys();
-    if (vm.exception())
-        return MarkedValueList { heap() };
+    auto target_keys = TRY(m_target.internal_own_property_keys());
 
     // 12. Assert: targetKeys is a List whose elements are only String and Symbol values.
     // 13. Assert: targetKeys contains no duplicate entries.
@@ -739,10 +723,7 @@ MarkedValueList ProxyObject::internal_own_property_keys() const
     // 16. For each element key of targetKeys, do
     for (auto& key : target_keys) {
         // a. Let desc be ? target.[[GetOwnProperty]](key).
-        auto descriptor_or_error = m_target.internal_get_own_property(PropertyName::from_value(global_object, key));
-        if (descriptor_or_error.is_error())
-            return MarkedValueList { heap() };
-        auto descriptor = descriptor_or_error.release_value();
+        auto descriptor = TRY(m_target.internal_get_own_property(PropertyName::from_value(global_object, key)));
 
         // b. If desc is not undefined and desc.[[Configurable]] is false, then
         if (descriptor.has_value() && !*descriptor->configurable) {
@@ -759,7 +740,7 @@ MarkedValueList ProxyObject::internal_own_property_keys() const
     // 17. If extensibleTarget is true and targetNonconfigurableKeys is empty, then
     if (extensible_target && target_nonconfigurable_keys.is_empty()) {
         // a. Return trapResult.
-        return trap_result;
+        return { move(trap_result) };
     }
 
     // 18. Let uncheckedResultKeys be a List whose elements are the elements of trapResult.
@@ -769,10 +750,8 @@ MarkedValueList ProxyObject::internal_own_property_keys() const
     // 19. For each element key of targetNonconfigurableKeys, do
     for (auto& key : target_nonconfigurable_keys) {
         // a. If key is not an element of uncheckedResultKeys, throw a TypeError exception.
-        if (!unchecked_result_keys.contains_slow(key)) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
-            return MarkedValueList { heap() };
-        }
+        if (!unchecked_result_keys.contains_slow(key))
+            return vm.throw_completion<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
 
         // b. Remove key from uncheckedResultKeys.
         unchecked_result_keys.remove_first_matching([&](auto& value) {
@@ -782,15 +761,13 @@ MarkedValueList ProxyObject::internal_own_property_keys() const
 
     // 20. If extensibleTarget is true, return trapResult.
     if (extensible_target)
-        return trap_result;
+        return { move(trap_result) };
 
     // 21. For each element key of targetConfigurableKeys, do
     for (auto& key : target_configurable_keys) {
         // a. If key is not an element of uncheckedResultKeys, throw a TypeError exception.
-        if (!unchecked_result_keys.contains_slow(key)) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
-            return MarkedValueList { heap() };
-        }
+        if (!unchecked_result_keys.contains_slow(key))
+            return vm.throw_completion<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
 
         // b. Remove key from uncheckedResultKeys.
         unchecked_result_keys.remove_first_matching([&](auto& value) {
@@ -799,13 +776,11 @@ MarkedValueList ProxyObject::internal_own_property_keys() const
     }
 
     // 22. If uncheckedResultKeys is not empty, throw a TypeError exception.
-    if (!unchecked_result_keys.is_empty()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
-        return MarkedValueList { heap() };
-    }
+    if (!unchecked_result_keys.is_empty())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
 
     // 23. Return trapResult.
-    return trap_result;
+    return { move(trap_result) };
 }
 
 // 10.5.12 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist

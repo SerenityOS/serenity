@@ -130,7 +130,7 @@ ThrowCompletionOr<bool> StringObject::internal_define_own_property(PropertyName 
 }
 
 // 10.4.3.3 [[OwnPropertyKeys]] ( ), https://tc39.es/ecma262/#sec-string-exotic-objects-ownpropertykeys
-MarkedValueList StringObject::internal_own_property_keys() const
+ThrowCompletionOr<MarkedValueList> StringObject::internal_own_property_keys() const
 {
     auto& vm = this->vm();
 
@@ -176,7 +176,7 @@ MarkedValueList StringObject::internal_own_property_keys() const
     }
 
     // 9. Return keys.
-    return keys;
+    return { move(keys) };
 }
 
 }
