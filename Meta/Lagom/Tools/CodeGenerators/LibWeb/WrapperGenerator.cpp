@@ -154,6 +154,7 @@ struct Interface {
     bool has_stringifier { false };
     Optional<String> stringifier_attribute;
     Optional<Tuple<Type, Type>> iterator_types;
+    bool has_unscopable_member { false };
 
     Optional<Function> named_property_getter;
     Optional<Function> named_property_setter;
@@ -529,6 +530,8 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
 
         if (lexer.consume_specific('[')) {
             extended_attributes = parse_extended_attributes();
+            if (!interface->has_unscopable_member && extended_attributes.contains("Unscopable"))
+                interface->has_unscopable_member = true;
         }
 
         if (lexer.next_is("constructor")) {
@@ -2800,6 +2803,12 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 
 )~~~");
 
+    if (interface.has_unscopable_member) {
+        generator.append(R"~~~(
+    auto* unscopable_object = JS::Object::create(global_object, nullptr);
+)~~~");
+    }
+
     // https://heycam.github.io/webidl/#es-attributes
     for (auto& attribute : interface.attributes) {
         auto attribute_generator = generator.fork();
@@ -2811,6 +2820,12 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
         else
             attribute_generator.set("attribute.setter_callback", attribute.setter_callback_name);
 
+        if (attribute.extended_attributes.contains("Unscopable")) {
+            attribute_generator.append(R"~~~(
+    unscopable_object->create_data_property("@attribute.name@", JS::Value(true));
+)~~~");
+        }
+
         attribute_generator.append(R"~~~(
     define_native_accessor("@attribute.name@", @attribute.getter_callback@, @attribute.setter_callback@, default_attributes);
 )~~~");
@@ -2818,6 +2833,8 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 
     // https://heycam.github.io/webidl/#es-constants
     for (auto& constant : interface.constants) {
+        // FIXME: Do constants need to be added to the unscopable list?
+
         auto constant_generator = generator.fork();
         constant_generator.set("constant.name", constant.name);
         constant_generator.set("constant.value", constant.value);
@@ -2834,12 +2851,20 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
         function_generator.set("function.name:snakecase", make_input_acceptable_cpp(function.name.to_snakecase()));
         function_generator.set("function.length", String::number(function.length()));
 
+        if (function.extended_attributes.contains("Unscopable")) {
+            function_generator.append(R"~~~(
+    unscopable_object->create_data_property("@function.name@", JS::Value(true));
+)~~~");
+        }
+
         function_generator.append(R"~~~(
     define_native_function("@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
 )~~~");
     }
 
     if (interface.has_stringifier) {
+        // FIXME: Do stringifiers need to be added to the unscopable list?
+
         auto stringifier_generator = generator.fork();
         stringifier_generator.append(R"~~~(
     define_native_function("toString", to_string, 0, default_attributes);
@@ -2847,6 +2872,8 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
     }
 
     if (interface.iterator_types.has_value()) {
+        // FIXME: Do pair iterators need to be added to the unscopable list?
+
         auto iterator_generator = generator.fork();
         iterator_generator.append(R"~~~(
     define_native_function(vm.names.entries, entries, 0, default_attributes);
@@ -2855,6 +2882,12 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
     define_native_function(vm.names.values, values, 0, default_attributes);
 
     define_direct_property(*vm.well_known_symbol_iterator(), Object::get(vm.names.entries), JS::Attribute::Configurable | JS::Attribute::Writable);
+)~~~");
+    }
+
+    if (interface.has_unscopable_member) {
+        generator.append(R"~~~(
+    define_direct_property(*vm.well_known_symbol_unscopables(), unscopable_object, JS::Attribute::Configurable);
 )~~~");
     }
 
