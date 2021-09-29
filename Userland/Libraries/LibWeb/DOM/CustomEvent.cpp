@@ -8,15 +8,6 @@
 
 namespace Web::DOM {
 
-CustomEvent::CustomEvent(FlyString const& event_name)
-    : Event(event_name)
-{
-}
-
-CustomEvent::~CustomEvent()
-{
-}
-
 void CustomEvent::visit_edges(JS::Cell::Visitor& visitor)
 {
     visitor.visit(m_detail);
