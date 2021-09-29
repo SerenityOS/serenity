@@ -6,9 +6,12 @@
 
 #pragma once
 
+#include <AK/Debug.h>
 #include <AK/HashMap.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/URL.h>
 #include <AK/Vector.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibCore/TCPSocket.h>
 #include <LibCore/Timer.h>
 #include <LibTLS/TLSv12.h>
@@ -33,6 +36,10 @@ struct Connection {
     QueueType request_queue;
     NonnullRefPtr<Core::Timer> removal_timer;
     bool has_started { false };
+#if REQUEST_SERVER_DEBUG
+    URL current_url {};
+    Core::ElapsedTimer timer {};
+#endif
 };
 
 struct ConnectionKey {
@@ -54,10 +61,11 @@ struct AK::Traits<RequestServer::ConnectionCache::ConnectionKey> : public AK::Ge
 
 namespace RequestServer::ConnectionCache {
 
-extern HashMap<ConnectionKey, Vector<Connection<Core::TCPSocket>>> g_tcp_connection_cache;
-extern HashMap<ConnectionKey, Vector<Connection<TLS::TLSv12>>> g_tls_connection_cache;
+extern HashMap<ConnectionKey, NonnullOwnPtrVector<Connection<Core::TCPSocket>>> g_tcp_connection_cache;
+extern HashMap<ConnectionKey, NonnullOwnPtrVector<Connection<TLS::TLSv12>>> g_tls_connection_cache;
 
 void request_did_finish(URL const&, Core::Socket const*);
+void dump_jobs();
 
 constexpr static inline size_t MaxConcurrentConnectionsPerURL = 2;
 constexpr static inline size_t ConnectionKeepAliveTimeMilliseconds = 10'000;
@@ -68,14 +76,14 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job)
         job.start(socket);
     };
     auto& sockets_for_url = cache.ensure({ url.host(), url.port_or_default() });
-    auto it = sockets_for_url.find_if([](auto& connection) { return connection.request_queue.is_empty(); });
+    auto it = sockets_for_url.find_if([](auto& connection) { return connection->request_queue.is_empty(); });
     auto did_add_new_connection = false;
     if (it.is_end() && sockets_for_url.size() < ConnectionCache::MaxConcurrentConnectionsPerURL) {
-        sockets_for_url.append({
-            RemoveCVReference<decltype(cache.begin()->value.at(0))>::SocketType::construct(nullptr),
-            {},
-            Core::Timer::create_single_shot(ConnectionKeepAliveTimeMilliseconds, nullptr),
-        });
+        using ConnectionType = RemoveCVReference<decltype(cache.begin()->value.at(0))>;
+        sockets_for_url.append(make<ConnectionType>(
+            ConnectionType::SocketType::construct(nullptr),
+            typename ConnectionType::QueueType {},
+            Core::Timer::create_single_shot(ConnectionKeepAliveTimeMilliseconds, nullptr)));
         did_add_new_connection = true;
     }
     size_t index;
@@ -101,6 +109,10 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job)
         dbgln("Immediately start request for url {} in {}", url, &connection);
         connection.has_started = true;
         connection.removal_timer->stop();
+        if constexpr (REQUEST_SERVER_DEBUG) {
+            connection.timer.start();
+            connection.current_url = url;
+        }
         start_job(*connection.socket);
     } else {
         dbgln("Enqueue request for URL {} in {}", url, &connection);
