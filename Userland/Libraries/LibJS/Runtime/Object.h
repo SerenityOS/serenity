@@ -61,7 +61,7 @@ public:
     // Methods named [[Foo]]() in the spec are named internal_foo()
     // here, as they are "The [[Foo]] internal method of a ... object".
     // They must be virtual and may be overridden. All other methods
-    // follow the the regular PascalCase name converted to camel_case
+    // follow the regular PascalCase name converted to camel_case
     // naming convention and must not be virtual.
 
     // 7.1 Type Conversion, https://tc39.es/ecma262/#sec-type-conversion
