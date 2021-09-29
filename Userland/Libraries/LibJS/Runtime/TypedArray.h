@@ -336,7 +336,7 @@ public:
     }
 
     // 10.4.5.5 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-set-p-v-receiver
-    virtual bool internal_set(PropertyName const& property_name, Value value, Value receiver) override
+    virtual ThrowCompletionOr<bool> internal_set(PropertyName const& property_name, Value value, Value receiver) override
     {
         VERIFY(!value.is_empty());
         VERIFY(!receiver.is_empty());
@@ -356,8 +356,8 @@ public:
             if (!numeric_index.is_undefined()) {
                 // i. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
                 integer_indexed_element_set<T>(*this, numeric_index, value);
-                if (vm().exception())
-                    return {};
+                if (auto* exception = vm().exception())
+                    return throw_completion(exception->value());
 
                 // ii. Return true.
                 return true;

@@ -310,7 +310,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::set)
     }
 
     // 4. Return ? target.[[Set]](key, V, receiver).
-    return Value(target.as_object().internal_set(key, value, receiver));
+    return Value(TRY_OR_DISCARD(target.as_object().internal_set(key, value, receiver)));
 }
 
 // 28.1.13 Reflect.setPrototypeOf ( target, proto ), https://tc39.es/ecma262/#sec-reflect.setprototypeof

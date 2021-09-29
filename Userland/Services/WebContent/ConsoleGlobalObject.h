@@ -31,7 +31,7 @@ public:
     virtual JS::ThrowCompletionOr<bool> internal_define_own_property(JS::PropertyName const& name, JS::PropertyDescriptor const& descriptor) override;
     virtual JS::ThrowCompletionOr<bool> internal_has_property(JS::PropertyName const& name) const override;
     virtual JS::ThrowCompletionOr<JS::Value> internal_get(JS::PropertyName const&, JS::Value) const override;
-    virtual bool internal_set(JS::PropertyName const&, JS::Value value, JS::Value receiver) override;
+    virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyName const&, JS::Value value, JS::Value receiver) override;
     virtual bool internal_delete(JS::PropertyName const& name) override;
     virtual JS::MarkedValueList internal_own_property_keys() const override;
 

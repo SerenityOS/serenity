@@ -30,7 +30,7 @@ JS::ThrowCompletionOr<JS::Value> CSSStyleDeclarationWrapper::internal_get(JS::Pr
     return { js_string(vm(), String::empty()) };
 }
 
-bool CSSStyleDeclarationWrapper::internal_set(JS::PropertyName const& name, JS::Value value, JS::Value receiver)
+JS::ThrowCompletionOr<bool> CSSStyleDeclarationWrapper::internal_set(JS::PropertyName const& name, JS::Value value, JS::Value receiver)
 {
     if (!name.is_string())
         return Base::internal_set(name, value, receiver);
@@ -39,8 +39,8 @@ bool CSSStyleDeclarationWrapper::internal_set(JS::PropertyName const& name, JS::
         return Base::internal_set(name, value, receiver);
 
     auto css_text = value.to_string(global_object());
-    if (vm().exception())
-        return false;
+    if (auto* exception = vm().exception())
+        return JS::throw_completion(exception->value());
 
     impl().set_property(property_id, css_text);
     return true;

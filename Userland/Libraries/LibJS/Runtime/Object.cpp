@@ -105,9 +105,7 @@ bool Object::set(PropertyName const& property_name, Value value, ShouldThrowExce
     // 3. Assert: Type(Throw) is Boolean.
 
     // 4. Let success be ? O.[[Set]](P, V, O).
-    auto success = internal_set(property_name, value, this);
-    if (vm.exception())
-        return {};
+    auto success = TRY_OR_DISCARD(internal_set(property_name, value, this));
 
     // 5. If success is false and Throw is true, throw a TypeError exception.
     if (!success && throw_exceptions == ShouldThrowExceptions::Yes) {
@@ -690,19 +688,23 @@ ThrowCompletionOr<Value> Object::internal_get(PropertyName const& property_name,
 }
 
 // 10.1.9 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-set-p-v-receiver
-bool Object::internal_set(PropertyName const& property_name, Value value, Value receiver)
+ThrowCompletionOr<bool> Object::internal_set(PropertyName const& property_name, Value value, Value receiver)
 {
     VERIFY(!value.is_empty());
     VERIFY(!receiver.is_empty());
+    auto& vm = this->vm();
 
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
 
     // 2. Let ownDesc be ? O.[[GetOwnProperty]](P).
-    auto own_descriptor = TRY_OR_DISCARD(internal_get_own_property(property_name));
+    auto own_descriptor = TRY(internal_get_own_property(property_name));
 
     // 3. Return OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc).
-    return ordinary_set_with_own_descriptor(property_name, value, receiver, own_descriptor);
+    auto success = ordinary_set_with_own_descriptor(property_name, value, receiver, own_descriptor);
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+    return success;
 }
 
 // 10.1.9.2 OrdinarySetWithOwnDescriptor ( O, P, V, Receiver, ownDesc ), https://tc39.es/ecma262/#sec-ordinarysetwithowndescriptor
@@ -721,7 +723,7 @@ bool Object::ordinary_set_with_own_descriptor(PropertyName const& property_name,
         // b. If parent is not null, then
         if (parent) {
             // i. Return ? parent.[[Set]](P, V, Receiver).
-            return parent->internal_set(property_name, value, receiver);
+            return TRY_OR_DISCARD(parent->internal_set(property_name, value, receiver));
         }
         // c. Else,
         else {
