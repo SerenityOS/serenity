@@ -21,9 +21,10 @@ public:
     bool is_autosize() const { return m_autosize; }
     void set_autosize(bool);
 
-private:
+protected:
     explicit CheckBox(String = {});
 
+private:
     void size_to_fit();
 
     // These don't make sense for a check box, so hide them.
