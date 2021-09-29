@@ -25,6 +25,7 @@ set(SOURCES
     CSS/ResolvedCSSStyleDeclaration.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Length.cpp
+    CSS/MediaList.cpp
     CSS/MediaQuery.cpp
     CSS/MediaQueryList.cpp
     CSS/Parser/Parser.cpp
