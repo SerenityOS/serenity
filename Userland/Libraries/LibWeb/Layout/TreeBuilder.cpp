@@ -33,6 +33,10 @@ static Layout::Node& insertion_parent_for_inline_node(Layout::NodeWithStyle& lay
     if (layout_parent.is_inline() && !layout_parent.is_inline_block())
         return layout_parent;
 
+    if (layout_parent.computed_values().display() == CSS::Display::Flex) {
+        layout_parent.append_child(layout_parent.create_anonymous_wrapper());
+    }
+
     if (!layout_parent.has_children() || layout_parent.children_are_inline())
         return layout_parent;
 
