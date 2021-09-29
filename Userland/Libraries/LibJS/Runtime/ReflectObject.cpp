@@ -231,7 +231,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::has)
         return {};
 
     // 3. Return ? target.[[HasProperty]](key).
-    return Value(target.as_object().internal_has_property(key));
+    return Value(TRY_OR_DISCARD(target.as_object().internal_has_property(key)));
 }
 
 // 28.1.9 Reflect.isExtensible ( target ), https://tc39.es/ecma262/#sec-reflect.isextensible

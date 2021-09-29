@@ -97,7 +97,7 @@ public:
     virtual ThrowCompletionOr<bool> internal_prevent_extensions();
     virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyName const&) const;
     virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyName const&, PropertyDescriptor const&);
-    virtual bool internal_has_property(PropertyName const&) const;
+    virtual ThrowCompletionOr<bool> internal_has_property(PropertyName const&) const;
     virtual Value internal_get(PropertyName const&, Value receiver) const;
     virtual bool internal_set(PropertyName const&, Value value, Value receiver);
     virtual bool internal_delete(PropertyName const&);

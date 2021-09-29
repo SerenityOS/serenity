@@ -416,7 +416,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyName c
 }
 
 // 10.5.7 [[HasProperty]] ( P ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p
-bool ProxyObject::internal_has_property(PropertyName const& property_name) const
+ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyName const& property_name) const
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -427,16 +427,14 @@ bool ProxyObject::internal_has_property(PropertyName const& property_name) const
     // 2. Let handler be O.[[ProxyHandler]].
 
     // 3. If handler is null, throw a TypeError exception.
-    if (m_is_revoked) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyRevoked);
-        return {};
-    }
+    if (m_is_revoked)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
 
     // 4. Assert: Type(handler) is Object.
     // 5. Let target be O.[[ProxyTarget]].
 
     // 6. Let trap be ? GetMethod(handler, "has").
-    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.has));
+    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.has));
 
     // 7. If trap is undefined, then
     if (!trap) {
@@ -445,31 +443,27 @@ bool ProxyObject::internal_has_property(PropertyName const& property_name) const
     }
 
     // 8. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P »)).
-    auto trap_result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name))).to_boolean();
+    auto trap_result = TRY(vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name))).to_boolean();
 
     // 9. If booleanTrapResult is false, then
     if (!trap_result) {
         // a. Let targetDesc be ? target.[[GetOwnProperty]](P).
-        auto target_descriptor = TRY_OR_DISCARD(m_target.internal_get_own_property(property_name));
+        auto target_descriptor = TRY(m_target.internal_get_own_property(property_name));
 
         // b. If targetDesc is not undefined, then
         if (target_descriptor.has_value()) {
             // i. If targetDesc.[[Configurable]] is false, throw a TypeError exception.
-            if (!*target_descriptor->configurable) {
-                vm.throw_exception<TypeError>(global_object, ErrorType::ProxyHasExistingNonConfigurable);
-                return {};
-            }
+            if (!*target_descriptor->configurable)
+                return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyHasExistingNonConfigurable);
 
             // ii. Let extensibleTarget be ? IsExtensible(target).
             auto extensible_target = m_target.is_extensible();
-            if (vm.exception())
-                return {};
+            if (auto* exception = vm.exception())
+                return throw_completion(exception->value());
 
             // iii. If extensibleTarget is false, throw a TypeError exception.
-            if (!extensible_target) {
-                vm.throw_exception<TypeError>(global_object, ErrorType::ProxyHasExistingNonExtensible);
-                return false;
-            }
+            if (!extensible_target)
+                return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyHasExistingNonExtensible);
         }
     }
 

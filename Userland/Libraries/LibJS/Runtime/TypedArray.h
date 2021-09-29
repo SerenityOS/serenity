@@ -228,7 +228,7 @@ public:
     }
 
     // 10.4.5.2 [[HasProperty]] ( P ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-hasproperty-p
-    virtual bool internal_has_property(PropertyName const& property_name) const override
+    virtual ThrowCompletionOr<bool> internal_has_property(PropertyName const& property_name) const override
     {
         // 1. Assert: IsPropertyKey(P) is true.
         VERIFY(property_name.is_valid());
