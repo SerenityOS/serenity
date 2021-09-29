@@ -25,6 +25,31 @@ bool CSSRuleList::is_supported_property_index(u32 index) const
     return index < m_rules.size();
 }
 
+// https://drafts.csswg.org/cssom/#insert-a-css-rule
+DOM::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(NonnullRefPtr<CSSRule> rule, u32 index)
+{
+    // 1. Set length to the number of items in list.
+    auto length = m_rules.size();
+
+    // 2. If index is greater than length, then throw an IndexSizeError exception.
+    if (index > length)
+        return DOM::IndexSizeError::create("CSS rule index out of bounds.");
+
+    // NOTE: These steps don't apply since we're receiving a parsed rule.
+    // 3. Set new rule to the results of performing parse a CSS rule on argument rule.
+    // 4. If new rule is a syntax error, throw a SyntaxError exception.
+
+    // FIXME: 5. If new rule cannot be inserted into list at the zero-index position index due to constraints specified by CSS, then throw a HierarchyRequestError exception. [CSS21]
+
+    // FIXME: 6. If new rule is an @namespace at-rule, and list contains anything other than @import at-rules, and @namespace at-rules, throw an InvalidStateError exception.
+
+    // 7. Insert new rule into list at the zero-indexed position index.
+    m_rules.insert(index, move(rule));
+
+    // 8. Return index.
+    return index;
+}
+
 // https://drafts.csswg.org/cssom/#remove-a-css-rule
 DOM::ExceptionOr<void> CSSRuleList::remove_a_css_rule(u32 index)
 {

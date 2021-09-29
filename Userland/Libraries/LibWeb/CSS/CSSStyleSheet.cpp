@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/CSS/CSSStyleSheet.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 
 namespace Web::CSS {
@@ -25,17 +26,17 @@ DOM::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsigned 
 
     // FIXME: 2. If the disallow modification flag is set, throw a NotAllowedError DOMException.
 
-    // Let parsed rule be the return value of invoking parse a rule with rule.
+    // 3. Let parsed rule be the return value of invoking parse a rule with rule.
+    auto parsed_rule = parse_css_rule(CSS::ParsingContext {}, rule);
 
-    // If parsed rule is a syntax error, return parsed rule.
+    // 4. If parsed rule is a syntax error, return parsed rule.
+    if (!parsed_rule)
+        return DOM::SyntaxError::create("Unable to parse CSS rule.");
 
-    // If parsed rule is an @import rule, and the constructed flag is set, throw a SyntaxError DOMException.
+    // FIXME: 5. If parsed rule is an @import rule, and the constructed flag is set, throw a SyntaxError DOMException.
 
-    // Return the result of invoking insert a CSS rule rule in the CSS rules at index.
-
-    (void)index;
-    (void)rule;
-    TODO();
+    // 6. Return the result of invoking insert a CSS rule rule in the CSS rules at index.
+    return m_rules->insert_a_css_rule(parsed_rule.release_nonnull(), index);
 }
 
 // https://drafts.csswg.org/cssom/#dom-cssstylesheet-deleterule

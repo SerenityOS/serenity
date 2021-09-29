@@ -48,6 +48,7 @@ public:
     bool is_supported_property_index(u32 index) const;
 
     DOM::ExceptionOr<void> remove_a_css_rule(u32 index);
+    DOM::ExceptionOr<unsigned> insert_a_css_rule(NonnullRefPtr<CSSRule>, u32 index);
 
 private:
     explicit CSSRuleList(NonnullRefPtrVector<CSSRule>&&);

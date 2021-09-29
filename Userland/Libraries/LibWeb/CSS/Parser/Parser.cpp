@@ -3298,6 +3298,12 @@ RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const& context, Stri
     return parser.parse_as_css_value(property_id);
 }
 
+RefPtr<CSS::CSSRule> parse_css_rule(CSS::ParsingContext const& context, StringView css_text)
+{
+    CSS::Parser parser(context, css_text);
+    return parser.parse_as_rule();
+}
+
 Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const& context, StringView const& selector_text)
 {
     CSS::Parser parser(context, selector_text);
