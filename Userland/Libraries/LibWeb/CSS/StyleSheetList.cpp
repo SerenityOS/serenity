@@ -10,7 +10,13 @@ namespace Web::CSS {
 
 void StyleSheetList::add_sheet(NonnullRefPtr<CSSStyleSheet> sheet)
 {
+    VERIFY(!m_sheets.contains_slow(sheet));
     m_sheets.append(move(sheet));
+}
+
+void StyleSheetList::remove_sheet(CSSStyleSheet& sheet)
+{
+    m_sheets.remove_first_matching([&](auto& entry) { return &*entry == &sheet; });
 }
 
 StyleSheetList::StyleSheetList(DOM::Document& document)

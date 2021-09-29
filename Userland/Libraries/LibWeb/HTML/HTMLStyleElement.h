@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -8,7 +8,6 @@
 #pragma once
 
 #include <LibWeb/HTML/HTMLElement.h>
-#include <LibWeb/Loader/CSSLoader.h>
 
 namespace Web::HTML {
 
@@ -22,8 +21,11 @@ public:
     virtual void children_changed() override;
     virtual void removed_from(Node*) override;
 
+    void update_a_style_block();
+
 private:
-    CSSLoader m_css_loader;
+    // https://drafts.csswg.org/cssom/#associated-css-style-sheet
+    RefPtr<CSS::CSSStyleSheet> m_associated_css_style_sheet;
 };
 
 }
