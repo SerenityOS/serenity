@@ -235,6 +235,7 @@ RefPtr<CSS::CSSStyleSheet> parse_css(CSS::ParsingContext const&, StringView cons
 RefPtr<CSS::PropertyOwningCSSStyleDeclaration> parse_css_declaration(CSS::ParsingContext const&, StringView const&);
 RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const&, StringView const&, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
 Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const&, StringView const&);
+RefPtr<CSS::CSSRule> parse_css_rule(CSS::ParsingContext const&, StringView);
 
 RefPtr<CSS::StyleValue> parse_html_length(DOM::Document const&, StringView const&);
 
