@@ -25,8 +25,8 @@ effects of the disadvantages of each design.
 
 Since it was decided that heap allocations for ProcFS are *mostly* bad, the new
 design layout tries to achieve most of the principle of "Don't allocate anything
-until actually needed". For that to happen, `InodeIndex` (u64 value) is splitted
-to 3 Segments:
+until actually needed". For that to happen, `InodeIndex` (u64 value) is split
+into 3 Segments:
 - The primary segment: value 0 is reserved for all non-PID inodes in the procfs.
 All values from 1 to 0xFFFFFFF are valid PID indices, which represents all PIDs from 0 to 0xFFFFFFE
 
