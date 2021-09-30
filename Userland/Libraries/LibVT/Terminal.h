@@ -12,6 +12,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <Kernel/API/KeyCode.h>
+#include <LibVT/CharacterSet.h>
 #include <LibVT/EscapeSequenceParser.h>
 #include <LibVT/Position.h>
 
@@ -443,6 +444,10 @@ protected:
     Optional<u16> m_column_before_carriage_return;
     bool m_controls_are_logically_generated { false };
     CursorKeysMode m_cursor_keys_mode { Cursor };
+
+    CharacterSetTranslator m_character_set_translator {};
+    size_t m_active_working_set_index { 0 };
+    CharacterSet m_working_sets[4] { Iso_8859_1 };
 };
 
 }
