@@ -10,6 +10,11 @@
 
 namespace SQL {
 
+u32 Relation::hash() const
+{
+    return key().hash();
+}
+
 SchemaDef::SchemaDef(String name)
     : Relation(move(name))
 {

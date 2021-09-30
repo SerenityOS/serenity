@@ -14,8 +14,8 @@
 #include <AK/Vector.h>
 #include <LibCore/Object.h>
 #include <LibSQL/Forward.h>
-#include <LibSQL/Key.h>
 #include <LibSQL/Type.h>
+#include <LibSQL/Value.h>
 
 namespace SQL {
 
@@ -28,7 +28,7 @@ class Relation : public Core::Object {
     C_OBJECT_ABSTRACT(Relation);
 
 public:
-    u32 hash() const { return key().hash(); }
+    u32 hash() const;
     u32 pointer() const { return m_pointer; }
     void set_pointer(u32 pointer) { m_pointer = pointer; }
     ~Relation() override = default;
