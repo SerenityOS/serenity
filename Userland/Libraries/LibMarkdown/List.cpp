@@ -67,15 +67,19 @@ OwnPtr<List> List::parse(LineIterator& lines)
         const StringView& line = *lines;
 
         bool appears_unordered = false;
-        if (line.length() > 2) {
-            if (line[1] == ' ' && (line[0] == '*' || line[0] == '-')) {
+
+        while (offset < line.length() && line[offset] == ' ')
+            ++offset;
+
+        if (offset + 2 <= line.length()) {
+            if (line[offset + 1] == ' ' && (line[offset] == '*' || line[offset] == '-' || line[offset] == '+')) {
                 appears_unordered = true;
-                offset = 1;
+                offset++;
             }
         }
 
         bool appears_ordered = false;
-        for (size_t i = 0; i < 10 && i < line.length(); i++) {
+        for (size_t i = offset; i < 10 && i < line.length(); i++) {
             char ch = line[i];
             if ('0' <= ch && ch <= '9')
                 continue;
