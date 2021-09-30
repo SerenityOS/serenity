@@ -149,6 +149,7 @@ Join our Discord server: [SerenityOS Discord](https://discord.gg/serenityos)
 * **Peter Elliott** - [Petelliott](https://github.com/Petelliott)
 * **Karol Kosek** - [krkk](https://github.com/krkk)
 * **Mustafa Quraish** - [mustafaquraish](https://github.com/mustafaquraish)
+* **David Tuin** - [davidot](https://github.com/davidot)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 
