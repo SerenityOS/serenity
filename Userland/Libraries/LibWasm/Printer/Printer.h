@@ -10,6 +10,7 @@
 
 namespace Wasm {
 
+class Reference;
 class Value;
 
 String instruction_name(OpCode const& opcode);
