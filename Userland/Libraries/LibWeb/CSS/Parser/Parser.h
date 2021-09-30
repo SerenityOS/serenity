@@ -61,6 +61,9 @@ public:
     T const& current_token();
     void reconsume_current_input_token();
 
+    int position() const { return m_iterator_offset; }
+    void rewind_to_position(int);
+
     void skip_whitespace();
 
     void dump_all_tokens();
