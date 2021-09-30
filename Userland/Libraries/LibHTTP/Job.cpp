@@ -412,6 +412,10 @@ void Job::finish_up()
     m_has_scheduled_finish = true;
     auto response = HttpResponse::create(m_code, move(m_headers));
     deferred_invoke([this, response = move(response)] {
+        // If the server responded with "Connection: close", close the connection
+        // as the server may or may not want to close the socket.
+        if (auto result = response->headers().get("Connection"sv); result.has_value() && result.value().equals_ignoring_case("close"sv))
+            shutdown(ShutdownMode::CloseSocket);
         did_finish(response);
     });
 }

@@ -20,7 +20,7 @@ public:
     virtual ~Job() override;
 
     virtual void start(NonnullRefPtr<Core::Socket>) override = 0;
-    virtual void shutdown() override = 0;
+    virtual void shutdown(ShutdownMode) override = 0;
 
     GeminiResponse* response() { return static_cast<GeminiResponse*>(Core::NetworkJob::response()); }
     const GeminiResponse* response() const { return static_cast<const GeminiResponse*>(Core::NetworkJob::response()); }
