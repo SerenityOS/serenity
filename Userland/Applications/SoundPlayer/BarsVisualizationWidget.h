@@ -6,13 +6,12 @@
 
 #pragma once
 
-#include "VisualizationBase.h"
+#include "VisualizationWidget.h"
 #include <AK/Complex.h>
 #include <LibAudio/Buffer.h>
 #include <LibGUI/Frame.h>
 
-class BarsVisualizationWidget final : public GUI::Frame
-    , public Visualization {
+class BarsVisualizationWidget final : public VisualizationWidget {
     C_OBJECT(BarsVisualizationWidget)
 
 public:
