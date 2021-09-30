@@ -23,6 +23,8 @@ public:
 
     void update_a_style_block();
 
+    RefPtr<CSS::CSSStyleSheet> sheet() const;
+
 private:
     // https://drafts.csswg.org/cssom/#associated-css-style-sheet
     RefPtr<CSS::CSSStyleSheet> m_associated_css_style_sheet;
