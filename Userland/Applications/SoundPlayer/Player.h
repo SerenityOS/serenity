@@ -7,65 +7,74 @@
 #pragma once
 
 #include "PlaybackManager.h"
+#include "Playlist.h"
 #include "PlaylistWidget.h"
-#include "VisualizationBase.h"
 #include <AK/RefPtr.h>
-
-struct PlayerState {
-    bool is_paused;
-    bool is_stopped;
-    bool has_loaded_file;
-    bool is_looping_file;
-    bool is_looping_playlist;
-    int loaded_file_samplerate;
-    double volume;
-    Audio::ClientConnection& connection;
-    PlaybackManager& manager;
-    String loaded_filename;
-};
 
 class Player {
 public:
-    explicit Player(PlayerState& state)
-        : m_player_state(state) {};
-    virtual void open_file(StringView path) = 0;
-    virtual void play() = 0;
+    enum class PlayState {
+        NoFileLoaded,
+        Paused,
+        Stopped,
+        Playing,
+    };
+    enum class LoopMode {
+        None,
+        File,
+        Playlist,
+    };
 
-    PlayerState& get_player_state() { return m_player_state; }
-    bool is_stopped() const { return m_player_state.is_stopped; }
-    bool is_paused() const { return m_player_state.is_paused; }
-    bool has_loaded_file() const { return m_player_state.has_loaded_file; }
-    double volume() const { return m_player_state.volume; }
-    bool looping() const { return m_player_state.is_looping_file; }
-    bool looping_playlist() const { return m_player_state.is_looping_playlist; }
-    const String& loaded_filename() { return m_player_state.loaded_filename; }
-    int loaded_file_samplerate() { return m_player_state.loaded_file_samplerate; }
+    explicit Player(Audio::ClientConnection& audio_client_connection);
+    virtual ~Player() { }
 
-    virtual void set_stopped(bool stopped) { m_player_state.is_stopped = stopped; }
-    virtual void set_paused(bool paused) { m_player_state.is_paused = paused; }
-    virtual void set_has_loaded_file(bool loaded) { m_player_state.has_loaded_file = loaded; }
-    virtual void set_volume(double volume)
-    {
-        m_player_state.volume = volume;
-        client_connection().set_self_volume(volume);
-    }
-    virtual void set_loaded_file_samplerate(int samplerate) { m_player_state.loaded_file_samplerate = samplerate; }
-    virtual void set_looping_file(bool loop)
-    {
-        m_player_state.is_looping_file = loop;
-    }
-    virtual void set_looping_playlist(bool loop)
-    {
-        m_player_state.is_looping_playlist = loop;
-    }
-    virtual void set_loaded_filename(StringView& filename) { m_player_state.loaded_filename = filename; }
+    void play_file_path(StringView path);
 
-    Audio::ClientConnection& client_connection() { return m_player_state.connection; }
-    PlaybackManager& manager() { return m_player_state.manager; }
+    Playlist& playlist() { return m_playlist; }
+    StringView loaded_filename() const { return m_loaded_filename; }
+
+    PlayState play_state() const { return m_play_state; }
+    void set_play_state(PlayState state);
+
+    LoopMode loop_mode() const { return m_loop_mode; }
+    void set_loop_mode(LoopMode mode);
+
+    double volume() const { return m_volume; }
+    void set_volume(double value);
+
+    void play();
+    void pause();
+    void toggle_pause();
+    void stop();
+    void seek(int sample);
+
+    virtual void play_state_changed(PlayState) = 0;
+    virtual void loop_mode_changed(LoopMode) = 0;
+    virtual void time_elapsed(int) = 0;
+    virtual void file_name_changed(StringView) = 0;
+    virtual void playlist_loaded(StringView, bool) { }
+    virtual void audio_load_error(StringView, StringView) { }
+    virtual void volume_changed(double) { }
+    virtual void total_samples_changed(int) { }
+    virtual void sound_buffer_played(RefPtr<Audio::Buffer>, [[maybe_unused]] int sample_rate, [[maybe_unused]] int samples_played) { }
 
 protected:
-    virtual ~Player() = default;
+    void done_initializing()
+    {
+        set_play_state(PlayState::NoFileLoaded);
+        set_loop_mode(LoopMode::None);
+        time_elapsed(0);
+        set_volume(1.);
+    }
 
-    PlayerState m_player_state;
-    RefPtr<PlaylistModel> m_playlist_model;
+private:
+    Playlist m_playlist;
+    PlayState m_play_state;
+    LoopMode m_loop_mode;
+
+    Audio::ClientConnection& m_audio_client_connection;
+    PlaybackManager m_playback_manager;
+
+    StringView m_loaded_filename;
+    double m_volume { 0 };
 };
