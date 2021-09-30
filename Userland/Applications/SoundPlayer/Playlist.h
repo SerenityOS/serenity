@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
  * Copyright (c) 2021, Leandro A. F. Pereira <leandro@tia.mat.br>
+ * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -74,6 +74,7 @@ private:
         u32 m_bitmap2 { 0 };
     };
 
+private:
     void try_fill_missing_info(Vector<M3UEntry>&, StringView);
 
     RefPtr<PlaylistModel> m_model;

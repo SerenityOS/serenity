@@ -5,11 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "SoundPlayerWidgetAdvancedView.h"
 #include "BarsVisualizationWidget.h"
 #include "Common.h"
 #include "M3UParser.h"
 #include "PlaybackManager.h"
+#include "SoundPlayerWidgetAdvancedView.h"
 #include <AK/LexicalPath.h>
 #include <AK/SIMD.h>
 #include <LibGUI/Action.h>
@@ -132,7 +132,7 @@ void SoundPlayerWidgetAdvancedView::drop_event(GUI::DropEvent& event)
         if (urls.is_empty())
             return;
         window()->move_to_front();
-        // FIXME: Add all paths from drop event to the playlist
+        // FIXME: Add all paths from drop event to the playlist.
         play_file_path(urls.first().path());
     }
 }

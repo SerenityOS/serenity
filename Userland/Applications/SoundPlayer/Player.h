@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Cesar Torres <shortanemoia@protonmail.com>
+ * Copyright (c) 2021, Leandro A. F. Pereira <leandro@tia.mat.br>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -46,8 +47,11 @@ public:
     ShuffleMode shuffle_mode() const { return m_shuffle_mode; }
     void set_shuffle_mode(ShuffleMode);
 
+    LoopMode loop_mode() const { return m_loop_mode; }
+    void set_loop_mode(LoopMode);
+
     double volume() const { return m_volume; }
-    void set_volume(double value);
+    void set_volume(double);
 
     void play();
     void pause();
