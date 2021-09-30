@@ -44,7 +44,7 @@ function(export_components_helper file_name current_dir)
     foreach(target IN LISTS targets)
         get_target_property(type "${target}" TYPE)
         if (type STREQUAL "INTERFACE_LIBRARY")
-            continue() # Custom properties are not allowed to be set on INTERFACE libaries
+            continue() # Custom properties are not allowed to be set on INTERFACE libraries
         endif()
         get_target_property(component_name "${target}" SERENITY_COMPONENT_NAME)
         if(NOT "${component_name}" STREQUAL "")
