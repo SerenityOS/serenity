@@ -24,8 +24,8 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 
-SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window, PlayerState& state)
-    : Player(state)
+SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window, Audio::ClientConnection& connection)
+    : Player(connection)
     , m_window(window)
 {
     window.resize(455, 350);
@@ -36,10 +36,9 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     set_layout<GUI::VerticalBoxLayout>();
     m_splitter = add<GUI::HorizontalSplitter>();
     m_player_view = m_splitter->add<GUI::Widget>();
-    m_playlist_model = adopt_ref(*new PlaylistModel());
 
     m_playlist_widget = PlaylistWidget::construct();
-    m_playlist_widget->set_data_model(m_playlist_model);
+    m_playlist_widget->set_data_model(playlist().model());
     m_playlist_widget->set_fixed_width(150);
 
     m_player_view->set_layout<GUI::VerticalBoxLayout>();
@@ -52,84 +51,56 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
 
     m_visualization = m_player_view->add<BarsVisualizationWidget>();
 
-    // Set a temporary value for total samples.
-    // This value will be set properly when we load a new file.
-    const int total_samples = this->manager().total_length() * this->manager().device_sample_rate();
-
     m_playback_progress_slider = m_player_view->add<AutoSlider>(Orientation::Horizontal);
     m_playback_progress_slider->set_fixed_height(20);
     m_playback_progress_slider->set_jump_to_cursor(true);
     m_playback_progress_slider->set_min(0);
-    m_playback_progress_slider->set_max(total_samples);
-    m_playback_progress_slider->set_page_step(total_samples / 10);
     m_playback_progress_slider->on_knob_released = [&](int value) {
-        this->manager().seek(value);
+        seek(value);
     };
 
     auto& toolbar_container = m_player_view->add<GUI::ToolbarContainer>();
     auto& menubar = toolbar_container.add<GUI::Toolbar>();
 
     m_play_button = menubar.add<GUI::Button>();
-    m_play_button->set_icon(is_paused() ? (!has_loaded_file() ? *m_play_icon : *m_pause_icon) : *m_pause_icon);
+    m_play_button->set_icon(*m_play_icon);
     m_play_button->set_fixed_width(50);
-    m_play_button->set_enabled(has_loaded_file());
+    m_play_button->set_enabled(false);
     m_play_button->on_click = [&](unsigned) {
-        bool paused = this->manager().toggle_pause();
-        set_paused(paused);
-        m_play_button->set_icon(paused ? *m_play_icon : *m_pause_icon);
-        m_stop_button->set_enabled(has_loaded_file());
+        toggle_pause();
     };
 
     m_stop_button = menubar.add<GUI::Button>();
     m_stop_button->set_icon(*m_stop_icon);
     m_stop_button->set_fixed_width(50);
-    m_stop_button->set_enabled(has_loaded_file());
+    m_stop_button->set_enabled(false);
     m_stop_button->on_click = [&](unsigned) {
-        this->manager().stop();
-        set_stopped(true);
-        m_play_button->set_icon(*m_play_icon);
-        m_stop_button->set_enabled(false);
+        stop();
     };
 
-    auto& timestamp_label = menubar.add<GUI::Label>();
-    timestamp_label.set_fixed_width(110);
-    timestamp_label.set_text("Elapsed: 00:00:00");
+    m_timestamp_label = menubar.add<GUI::Label>();
+    m_timestamp_label->set_fixed_width(110);
 
     // filler_label
     menubar.add<GUI::Label>();
     m_back_button = menubar.add<GUI::Button>();
     m_back_button->set_fixed_width(50);
     m_back_button->set_icon(*m_back_icon);
-    m_back_button->set_enabled(has_loaded_file());
+    m_back_button->set_enabled(false);
     m_back_button->on_click = [&](unsigned) {
-        if (!m_playlist_model.is_null()) {
-            auto it = m_playlist_model->items().find_if([&](const M3UEntry& e) { return e.path == loaded_filename(); });
-            if (it.index() == 0) {
-                open_file(m_playlist_model->items().at(m_playlist_model->items().size() - 1).path);
-            } else
-                open_file((it - 1)->path);
-            play();
-        }
+        play_file_path(playlist().previous());
     };
 
     m_next_button = menubar.add<GUI::Button>();
     m_next_button->set_fixed_width(50);
     m_next_button->set_icon(*m_next_icon);
-    m_next_button->set_enabled(has_loaded_file());
+    m_next_button->set_enabled(false);
     m_next_button->on_click = [&](unsigned) {
-        if (!m_playlist_model.is_null()) {
-            auto it = m_playlist_model->items().find_if([&](const M3UEntry& e) { return e.path == loaded_filename(); });
-            if (it.index() + 1 == m_playlist_model->items().size()) {
-                open_file(m_playlist_model->items().at(0).path);
-            } else
-                open_file((it + 1)->path);
-            play();
-        }
+        play_file_path(playlist().next());
     };
 
     m_volume_label = &menubar.add<GUI::Label>();
     m_volume_label->set_fixed_width(30);
-    m_volume_label->set_text("100%");
 
     auto& volume_slider = menubar.add<GUI::HorizontalSlider>();
     volume_slider.set_fixed_width(95);
@@ -139,88 +110,12 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
 
     volume_slider.on_change = [&](int value) {
         double volume = m_nonlinear_volume_slider ? (double)(value * value) / (100 * 100) : value / 100.;
-        m_volume_label->set_text(String::formatted("{}%", (int)(volume * 100)));
         set_volume(volume);
     };
 
-    set_volume(1.);
     set_nonlinear_volume_slider(false);
 
-    manager().on_update = [&]() {
-        // Determine how many of the source file samples have played.
-        int samples_played = client_connection().get_played_samples();
-        float source_to_dest_ratio = static_cast<float>(loaded_file_samplerate()) / manager().device_sample_rate();
-        samples_played *= source_to_dest_ratio;
-        samples_played += this->manager().last_seek();
-
-        int current_second = samples_played / loaded_file_samplerate();
-        timestamp_label.set_text(String::formatted("Elapsed: {:02}:{:02}:{:02}", current_second / 3600, current_second / 60, current_second % 60));
-        if (!m_playback_progress_slider->mouse_is_down()) {
-            m_playback_progress_slider->set_value(samples_played);
-        }
-
-        dynamic_cast<Visualization*>(m_visualization.ptr())->set_buffer(this->manager().current_buffer());
-        dynamic_cast<Visualization*>(m_visualization.ptr())->set_samplerate(manager().device_sample_rate());
-    };
-
-    manager().on_load_sample_buffer = [&](Audio::Buffer&) {
-        //TODO: Implement an equalizer
-        return;
-    };
-
-    manager().on_finished_playing = [&] {
-        m_play_button->set_icon(*m_play_icon);
-        if (looping()) {
-            open_file(loaded_filename());
-            return;
-        }
-
-        if (!m_playlist_model.is_null() && !m_playlist_model->items().is_empty()) {
-            auto it = m_playlist_model->items().find_if([&](const M3UEntry& e) { return e.path == loaded_filename(); });
-            if (it.index() + 1 == m_playlist_model->items().size()) {
-                if (looping_playlist()) {
-                    open_file(m_playlist_model->items().at(0).path);
-                    return;
-                }
-            } else
-                open_file((it + 1)->path);
-        }
-
-        m_stop_button->set_enabled(false);
-    };
-}
-
-void SoundPlayerWidgetAdvancedView::open_file(StringView path)
-{
-    if (!Core::File::exists(path)) {
-        GUI::MessageBox::show(window(), String::formatted("File \"{}\" does not exist", path), "Error opening file", GUI::MessageBox::Type::Error);
-        return;
-    }
-
-    if (path.ends_with(".m3u", AK::CaseSensitivity::CaseInsensitive) || path.ends_with(".m3u8", AK::CaseSensitivity::CaseInsensitive)) {
-        read_playlist(path);
-        return;
-    }
-
-    NonnullRefPtr<Audio::Loader> loader = Audio::Loader::create(path);
-    if (loader->has_error() || !loader->sample_rate()) {
-        const String error_string = loader->error_string();
-        GUI::MessageBox::show(&m_window, String::formatted("Failed to load audio file: {} ({})", path, error_string.is_null() ? "Unknown error" : error_string),
-            "Filetype error", GUI::MessageBox::Type::Error);
-        return;
-    }
-    m_window.set_title(String::formatted("{} - Sound Player", loader->file()->filename()));
-    m_playback_progress_slider->set_max(loader->total_samples());
-    m_playback_progress_slider->set_page_step(loader->total_samples() / 10);
-    m_playback_progress_slider->set_enabled(true);
-    m_play_button->set_enabled(true);
-    m_play_button->set_icon(*m_pause_icon);
-    m_stop_button->set_enabled(true);
-    manager().set_loader(move(loader));
-    set_has_loaded_file(true);
-    set_loaded_file_samplerate(loader->sample_rate());
-    set_loaded_filename(path);
-    play();
+    done_initializing();
 }
 
 void SoundPlayerWidgetAdvancedView::set_nonlinear_volume_slider(bool nonlinear)
@@ -237,7 +132,8 @@ void SoundPlayerWidgetAdvancedView::drop_event(GUI::DropEvent& event)
         if (urls.is_empty())
             return;
         window()->move_to_front();
-        open_file(urls.first().path());
+        // FIXME: Add all paths from drop event to the playlist
+        play_file_path(urls.first().path());
     }
 }
 
@@ -249,85 +145,73 @@ void SoundPlayerWidgetAdvancedView::keydown_event(GUI::KeyEvent& event)
     GUI::Widget::keydown_event(event);
 }
 
-SoundPlayerWidgetAdvancedView::~SoundPlayerWidgetAdvancedView()
-{
-    manager().on_load_sample_buffer = nullptr;
-    manager().on_update = nullptr;
-}
-
-void SoundPlayerWidgetAdvancedView::play()
-{
-    manager().play();
-    set_paused(false);
-    set_stopped(false);
-}
-
-void SoundPlayerWidgetAdvancedView::read_playlist(StringView path)
-{
-    auto parser = M3UParser::from_file(path);
-    auto items = parser->parse(true);
-    VERIFY(items->size() > 0);
-    try_fill_missing_info(*items, path);
-    for (auto& item : *items)
-        m_playlist_model->items().append(item);
-    set_playlist_visible(true);
-    m_playlist_model->invalidate();
-
-    open_file(items->at(0).path);
-
-    if (items->size() > 1) {
-        m_back_button->set_enabled(true);
-        m_next_button->set_enabled(true);
-    } else {
-        m_back_button->set_enabled(false);
-        m_next_button->set_enabled(false);
-    }
-}
-
 void SoundPlayerWidgetAdvancedView::set_playlist_visible(bool visible)
 {
-    if (visible) {
-        if (!m_playlist_widget->parent()) {
-            m_player_view->parent_widget()->add_child(*m_playlist_widget);
-        }
-    } else {
+    if (!visible) {
         m_playlist_widget->remove_from_parent();
         m_player_view->set_max_width(window()->width());
+    } else if (!m_playlist_widget->parent()) {
+        m_player_view->parent_widget()->add_child(*m_playlist_widget);
     }
 }
 
-void SoundPlayerWidgetAdvancedView::try_fill_missing_info(Vector<M3UEntry>& entries, StringView playlist_p)
+void SoundPlayerWidgetAdvancedView::play_state_changed(Player::PlayState state)
 {
-    LexicalPath playlist_path(playlist_p);
-    Vector<M3UEntry*> to_delete;
-    for (auto& entry : entries) {
-        if (!LexicalPath(entry.path).is_absolute()) {
-            entry.path = String::formatted("{}/{}", playlist_path.dirname(), entry.path);
-        }
+    m_back_button->set_enabled(playlist().size() > 1);
+    m_next_button->set_enabled(playlist().size() > 1);
 
-        if (!Core::File::exists(entry.path)) {
-            GUI::MessageBox::show(window(), String::formatted("The file \"{}\" present in the playlist does not exist or was not found. This file will be ignored.", entry.path), "Error reading playlist", GUI::MessageBox::Type::Warning);
-            to_delete.append(&entry);
-            continue;
-        }
+    m_play_button->set_enabled(state != PlayState::NoFileLoaded);
+    m_play_button->set_icon(state == PlayState::Playing ? *m_pause_icon : *m_play_icon);
 
-        if (!entry.extended_info->track_display_title.has_value())
-            entry.extended_info->track_display_title = LexicalPath::title(entry.path);
-        if (!entry.extended_info->track_length_in_seconds.has_value()) {
-            if (auto reader = Audio::Loader::create(entry.path); !reader->has_error())
-                entry.extended_info->track_length_in_seconds = reader->total_samples() / reader->sample_rate();
-            //TODO: Implement embedded metadata extractor for other audio formats
-        }
-        //TODO: Implement a metadata parser for the uncomfortably numerous popular embedded metadata formats
+    m_stop_button->set_enabled(state != PlayState::Stopped && state != PlayState::NoFileLoaded);
 
-        if (!entry.extended_info->file_size_in_bytes.has_value()) {
-            FILE* f = fopen(entry.path.characters(), "r");
-            VERIFY(f != nullptr);
-            fseek(f, 0, SEEK_END);
-            entry.extended_info->file_size_in_bytes = ftell(f);
-            fclose(f);
-        }
+    m_playback_progress_slider->set_enabled(state != PlayState::NoFileLoaded);
+}
+
+void SoundPlayerWidgetAdvancedView::loop_mode_changed(Player::LoopMode)
+{
+}
+
+void SoundPlayerWidgetAdvancedView::time_elapsed(int seconds)
+{
+    m_timestamp_label->set_text(String::formatted("Elapsed: {:02}:{:02}:{:02}", seconds / 3600, seconds / 60, seconds % 60));
+}
+
+void SoundPlayerWidgetAdvancedView::file_name_changed(StringView name)
+{
+    m_window.set_title(String::formatted("{} - Sound Player", name));
+}
+
+void SoundPlayerWidgetAdvancedView::total_samples_changed(int total_samples)
+{
+    m_playback_progress_slider->set_max(total_samples);
+    m_playback_progress_slider->set_page_step(total_samples / 10);
+}
+
+void SoundPlayerWidgetAdvancedView::sound_buffer_played(RefPtr<Audio::Buffer> buffer, int sample_rate, int samples_played)
+{
+    m_visualization->set_buffer(buffer);
+    m_visualization->set_samplerate(sample_rate);
+    m_playback_progress_slider->set_value(samples_played);
+}
+
+void SoundPlayerWidgetAdvancedView::volume_changed(double volume)
+{
+    m_volume_label->set_text(String::formatted("{}%", static_cast<int>(volume * 100)));
+}
+
+void SoundPlayerWidgetAdvancedView::playlist_loaded(StringView path, bool loaded)
+{
+    if (!loaded) {
+        GUI::MessageBox::show(&m_window, String::formatted("Could not load playlist at \"{}\".", path), "Error opening playlist", GUI::MessageBox::Type::Error);
+        return;
     }
-    for (M3UEntry* entry : to_delete)
-        entries.remove_first_matching([&](M3UEntry& e) { return &e == entry; });
+    set_playlist_visible(true);
+    play_file_path(playlist().next());
+}
+
+void SoundPlayerWidgetAdvancedView::audio_load_error(StringView path, StringView error_string)
+{
+    GUI::MessageBox::show(&m_window, String::formatted("Failed to load audio file: {} ({})", path, error_string.is_null() ? "Unknown error" : error_string),
+        "Filetype error", GUI::MessageBox::Type::Error);
 }

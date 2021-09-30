@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "BarsVisualizationWidget.h"
 #include "NoVisualizationWidget.h"
 #include "Player.h"
 #include "SampleWidget.h"
@@ -35,59 +36,26 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    PlaybackManager playback_manager(audio_client);
-    PlayerState initial_player_state { true,
-        true,
-        false,
-        false,
-        false,
-        44100,
-        1.0,
-        audio_client,
-        playback_manager,
-        "" };
-
     auto app_icon = GUI::Icon::default_icon("app-sound-player");
 
     auto window = GUI::Window::construct();
     window->set_title("Sound Player");
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto& file_menu = window->add_menu("&File");
-
-    auto& playlist_menu = window->add_menu("Play&list");
-
     String path = argv[1];
     // start in advanced view by default
-    Player* player = &window->set_main_widget<SoundPlayerWidgetAdvancedView>(window, initial_player_state);
+    Player* player = &window->set_main_widget<SoundPlayerWidgetAdvancedView>(window, audio_client);
     if (argc > 1) {
-        player->open_file(path);
+        player->play_file_path(path);
     }
 
+    auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> path = GUI::FilePicker::get_open_filepath(window, "Open sound file...");
         if (path.has_value()) {
-            player->open_file(path.value());
+            player->play_file_path(path.value());
         }
     }));
-
-    auto linear_volume_slider = GUI::Action::create_checkable("&Nonlinear Volume Slider", [&](auto& action) {
-        static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_nonlinear_volume_slider(action.is_checked());
-    });
-    file_menu.add_action(linear_volume_slider);
-
-    auto playlist_toggle = GUI::Action::create_checkable("&Show Playlist", [&](auto& action) {
-        static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_playlist_visible(action.is_checked());
-    });
-    playlist_menu.add_action(playlist_toggle);
-    if (path.ends_with(".m3u") || path.ends_with(".m3u8"))
-        playlist_toggle->set_checked(true);
-    playlist_menu.add_separator();
-
-    auto playlist_loop_toggle = GUI::Action::create_checkable("&Loop Playlist", [&](auto& action) {
-        static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_looping_playlist(action.is_checked());
-    });
-    playlist_menu.add_action(playlist_loop_toggle);
 
     file_menu.add_separator();
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
@@ -95,12 +63,40 @@ int main(int argc, char** argv)
     }));
 
     auto& playback_menu = window->add_menu("&Playback");
-
-    auto loop = GUI::Action::create_checkable("&Loop", { Mod_Ctrl, Key_R }, [&](auto& action) {
-        player->set_looping_file(action.is_checked());
+    GUI::ActionGroup loop_actions;
+    loop_actions.set_exclusive(true);
+    auto loop_none = GUI::Action::create_checkable("&No Loop", [&](auto&) {
+        player->set_loop_mode(Player::LoopMode::None);
     });
+    loop_none->set_checked(true);
+    loop_actions.add_action(loop_none);
+    playback_menu.add_action(loop_none);
 
-    playback_menu.add_action(move(loop));
+    auto loop_file = GUI::Action::create_checkable("Loop &File", { Mod_Ctrl, Key_F }, [&](auto&) {
+        player->set_loop_mode(Player::LoopMode::File);
+    });
+    loop_actions.add_action(loop_file);
+    playback_menu.add_action(loop_file);
+
+    auto loop_playlist = GUI::Action::create_checkable("Loop &Playlist", { Mod_Ctrl, Key_P }, [&](auto&) {
+        player->set_loop_mode(Player::LoopMode::Playlist);
+    });
+    loop_actions.add_action(loop_playlist);
+    playback_menu.add_action(loop_playlist);
+
+    auto linear_volume_slider = GUI::Action::create_checkable("&Nonlinear Volume Slider", [&](auto& action) {
+        static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_nonlinear_volume_slider(action.is_checked());
+    });
+    playback_menu.add_separator();
+    playback_menu.add_action(linear_volume_slider);
+    playback_menu.add_separator();
+
+    auto playlist_toggle = GUI::Action::create_checkable("&Show Playlist", [&](auto& action) {
+        static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_playlist_visible(action.is_checked());
+    });
+    if (path.ends_with(".m3u") || path.ends_with(".m3u8"))
+        playlist_toggle->set_checked(true);
+    playback_menu.add_action(playlist_toggle);
 
     auto& visualization_menu = window->add_menu("&Visualization");
     GUI::ActionGroup visualization_actions;

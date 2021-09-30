@@ -6,15 +6,14 @@
 
 #pragma once
 
-#include "VisualizationBase.h"
+#include "VisualizationWidget.h"
 #include <LibGUI/Frame.h>
 
 namespace Audio {
 class Buffer;
 }
 
-class SampleWidget final : public GUI::Frame
-    , public Visualization {
+class SampleWidget final : public VisualizationWidget {
     C_OBJECT(SampleWidget)
 public:
     virtual ~SampleWidget() override;

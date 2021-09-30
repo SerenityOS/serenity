@@ -6,12 +6,11 @@
 
 #pragma once
 
-#include "VisualizationBase.h"
+#include "VisualizationWidget.h"
 #include <LibAudio/Buffer.h>
 #include <LibGUI/Frame.h>
 
-class NoVisualizationWidget final : public GUI::Frame
-    , public Visualization {
+class NoVisualizationWidget final : public VisualizationWidget {
     C_OBJECT(NoVisualizationWidget)
 
 public:

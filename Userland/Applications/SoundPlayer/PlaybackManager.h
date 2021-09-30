@@ -24,6 +24,7 @@ public:
     void loop(bool);
     bool toggle_pause();
     void set_loader(NonnullRefPtr<Audio::Loader>&&);
+    RefPtr<Audio::Loader> loader() const { return m_loader; }
     size_t device_sample_rate() const { return m_device_sample_rate; }
 
     int last_seek() const { return m_last_seek; }
