@@ -10,6 +10,7 @@
 #include <AK/RefPtr.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Meta.h>
+#include <LibSQL/Tuple.h>
 #include <LibSQL/Value.h>
 
 namespace SQL {
