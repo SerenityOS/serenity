@@ -61,8 +61,8 @@ struct AK::Traits<RequestServer::ConnectionCache::ConnectionKey> : public AK::Ge
 
 namespace RequestServer::ConnectionCache {
 
-extern HashMap<ConnectionKey, NonnullOwnPtrVector<Connection<Core::TCPSocket>>> g_tcp_connection_cache;
-extern HashMap<ConnectionKey, NonnullOwnPtrVector<Connection<TLS::TLSv12>>> g_tls_connection_cache;
+extern HashMap<ConnectionKey, NonnullOwnPtr<NonnullOwnPtrVector<Connection<Core::TCPSocket>>>> g_tcp_connection_cache;
+extern HashMap<ConnectionKey, NonnullOwnPtr<NonnullOwnPtrVector<Connection<TLS::TLSv12>>>> g_tls_connection_cache;
 
 void request_did_finish(URL const&, Core::Socket const*);
 void dump_jobs();
@@ -72,14 +72,15 @@ constexpr static inline size_t ConnectionKeepAliveTimeMilliseconds = 10'000;
 
 decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job)
 {
+    using CacheEntryType = RemoveCVReference<decltype(*cache.begin()->value)>;
     auto start_job = [&job](auto& socket) {
         job.start(socket);
     };
-    auto& sockets_for_url = cache.ensure({ url.host(), url.port_or_default() });
+    auto& sockets_for_url = *cache.ensure({ url.host(), url.port_or_default() }, [] { return make<CacheEntryType>(); });
     auto it = sockets_for_url.find_if([](auto& connection) { return connection->request_queue.is_empty(); });
     auto did_add_new_connection = false;
     if (it.is_end() && sockets_for_url.size() < ConnectionCache::MaxConcurrentConnectionsPerURL) {
-        using ConnectionType = RemoveCVReference<decltype(cache.begin()->value.at(0))>;
+        using ConnectionType = RemoveCVReference<decltype(cache.begin()->value->at(0))>;
         sockets_for_url.append(make<ConnectionType>(
             ConnectionType::SocketType::construct(nullptr),
             typename ConnectionType::QueueType {},
@@ -106,7 +107,7 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job)
     }
     auto& connection = sockets_for_url[index];
     if (!connection.has_started) {
-        dbgln("Immediately start request for url {} in {}", url, &connection);
+        dbgln("Immediately start request for url {} in {} - {}", url, &connection, connection.socket);
         connection.has_started = true;
         connection.removal_timer->stop();
         if constexpr (REQUEST_SERVER_DEBUG) {
@@ -115,7 +116,7 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job)
         }
         start_job(*connection.socket);
     } else {
-        dbgln("Enqueue request for URL {} in {}", url, &connection);
+        dbgln("Enqueue request for URL {} in {} - {}", url, &connection, connection.socket);
         connection.request_queue.append(move(start_job));
     }
     return connection;
