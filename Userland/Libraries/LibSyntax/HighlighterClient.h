@@ -6,7 +6,10 @@
 
 #pragma once
 
-#include <LibGUI/Forward.h>
+#include <AK/String.h>
+#include <AK/Vector.h>
+#include <LibGUI/TextDocument.h>
+#include <LibGUI/TextPosition.h>
 
 namespace Syntax {
 
