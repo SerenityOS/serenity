@@ -64,13 +64,13 @@ void PlaybackManager::seek(const int position)
     if (!m_loader)
         return;
 
-    m_last_seek = position;
     bool paused_state = m_paused;
     set_paused(true);
 
     m_connection->clear_buffer(true);
     m_current_buffer = nullptr;
     m_loader->seek(position);
+    m_last_seek = m_loader->loaded_samples();
 
     if (!paused_state)
         set_paused(false);
