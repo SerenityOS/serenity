@@ -15,10 +15,11 @@ namespace Markdown {
 
 class List final : public Block {
 public:
-    List(Vector<OwnPtr<ContainerBlock>> items, bool is_ordered, bool is_tight)
+    List(Vector<OwnPtr<ContainerBlock>> items, bool is_ordered, bool is_tight, size_t start_number)
         : m_items(move(items))
         , m_is_ordered(is_ordered)
         , m_is_tight(is_tight)
+        , m_start_number(start_number)
     {
     }
     virtual ~List() override { }
@@ -32,6 +33,7 @@ private:
     Vector<OwnPtr<ContainerBlock>> m_items;
     bool m_is_ordered { false };
     bool m_is_tight { false };
+    size_t m_start_number { 1 };
 };
 
 }

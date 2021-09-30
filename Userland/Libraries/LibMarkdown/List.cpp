@@ -16,7 +16,12 @@ String List::render_to_html(bool) const
     StringBuilder builder;
 
     const char* tag = m_is_ordered ? "ol" : "ul";
-    builder.appendff("<{}>\n", tag);
+    builder.appendff("<{}", tag);
+
+    if (m_start_number != 1)
+        builder.appendff(" start=\"{}\"", m_start_number);
+
+    builder.append(">\n");
 
     for (auto& item : m_items) {
         builder.append("<li>");
@@ -59,6 +64,7 @@ OwnPtr<List> List::parse(LineIterator& lines)
 
     bool is_tight = true;
     bool has_trailing_blank_lines = false;
+    size_t start_number = 1;
 
     while (!lines.is_end()) {
 
@@ -85,6 +91,11 @@ OwnPtr<List> List::parse(LineIterator& lines)
                 continue;
             if (ch == '.' || ch == ')')
                 if (i + 1 < line.length() && line[i + 1] == ' ') {
+                    auto maybe_start_number = line.substring_view(offset, i - offset).to_uint<size_t>();
+                    if (!maybe_start_number.has_value())
+                        break;
+                    if (first)
+                        start_number = maybe_start_number.value();
                     appears_ordered = true;
                     offset = i + 1;
                 }
@@ -124,7 +135,7 @@ OwnPtr<List> List::parse(LineIterator& lines)
         first = false;
     }
 
-    return make<List>(move(items), is_ordered, is_tight);
+    return make<List>(move(items), is_ordered, is_tight, start_number);
 }
 
 }
