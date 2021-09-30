@@ -38,6 +38,7 @@ public:
 
     virtual void play_state_changed(PlayState) override;
     virtual void loop_mode_changed(LoopMode) override;
+    virtual void shuffle_mode_changed(ShuffleMode) override;
     virtual void time_elapsed(int) override;
     virtual void file_name_changed(StringView) override;
     virtual void playlist_loaded(StringView, bool) override;
@@ -50,6 +51,8 @@ protected:
     void keydown_event(GUI::KeyEvent&) override;
 
 private:
+    void sync_previous_next_buttons();
+
     void drop_event(GUI::DropEvent& event) override;
     GUI::Window& m_window;
 

@@ -8,6 +8,7 @@
 #include "Playlist.h"
 
 #include <AK/LexicalPath.h>
+#include <AK/Random.h>
 #include <LibAudio/Loader.h>
 #include <LibGUI/MessageBox.h>
 
@@ -33,7 +34,9 @@ void Playlist::try_fill_missing_info(Vector<M3UEntry>& entries, StringView path)
     Vector<M3UEntry*> to_delete;
 
     for (auto& entry : entries) {
-        if (!LexicalPath(entry.path).is_absolute())
+        auto const lexical_path = LexicalPath { entry.path };
+
+        if (!lexical_path.is_absolute())
             entry.path = String::formatted("{}/{}", playlist_path.dirname(), entry.path);
 
         if (!entry.extended_info->file_size_in_bytes.has_value()) {
@@ -47,7 +50,7 @@ void Playlist::try_fill_missing_info(Vector<M3UEntry>& entries, StringView path)
         }
 
         if (!entry.extended_info->track_display_title.has_value())
-            entry.extended_info->track_display_title = LexicalPath::title(entry.path);
+            entry.extended_info->track_display_title = playlist_path.title();
 
         if (!entry.extended_info->track_length_in_seconds.has_value()) {
             //TODO: Implement embedded metadata extractor for other audio formats
@@ -69,8 +72,32 @@ StringView Playlist::next()
             return {};
         m_next_index_to_play = 0;
     }
+
     auto next = m_model->items().at(m_next_index_to_play).path;
-    m_next_index_to_play++;
+    if (!shuffling()) {
+        m_next_index_to_play++;
+        return next;
+    }
+
+    // Try a few times getting an item to play that has not been
+    // recently played.  But do not try too hard, as we don't want
+    // to wait forever.
+    int shuffle_try;
+    int const max_times_to_try = min(4, size());
+    for (shuffle_try = 0; shuffle_try < max_times_to_try; shuffle_try++) {
+        if (!m_previously_played_paths.maybe_contains(next))
+            break;
+
+        m_next_index_to_play = get_random_uniform(size());
+        next = m_model->items().at(m_next_index_to_play).path;
+    }
+    if (shuffle_try == max_times_to_try) {
+        // If we tried too much, maybe it's time to try resetting
+        // the bloom filter and start over.
+        m_previously_played_paths.reset();
+    }
+
+    m_previously_played_paths.add(next);
     return next;
 }
 
