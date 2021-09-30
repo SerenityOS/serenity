@@ -144,17 +144,17 @@ void ClientConnection::ensure_connection(URL const& url, ::RequestServer::CacheL
             bool did_connect;
             if (is_tls) {
                 tls_instance->set_root_certificates(DefaultRootCACertificates::the().certificates());
-                tls_instance->on_tls_connected = [socket, url = m_url, tls_instance] {
+                tls_instance->on_tls_connected = [socket = socket.ptr(), url = m_url, tls_instance] {
                     tls_instance->set_on_tls_ready_to_write([socket, url](auto&) {
                         ConnectionCache::request_did_finish(url, socket);
                     });
                 };
-                tls_instance->on_tls_error = [socket, url = m_url](auto) {
+                tls_instance->on_tls_error = [socket = socket.ptr(), url = m_url](auto) {
                     ConnectionCache::request_did_finish(url, socket);
                 };
                 did_connect = tls_instance->connect(m_url.host(), m_url.port_or_default());
             } else {
-                socket->on_connected = [socket, url = m_url]() mutable {
+                socket->on_connected = [socket = socket.ptr(), url = m_url]() mutable {
                     ConnectionCache::request_did_finish(url, socket);
                 };
                 did_connect = socket->connect(m_url.host(), m_url.port_or_default());
