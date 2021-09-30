@@ -16,6 +16,55 @@
 
 namespace Web::CSS {
 
+Length::Length() = default;
+Length::Length(int value, Type type)
+    : m_type(type)
+    , m_value(value)
+{
+}
+Length::Length(float value, Type type)
+    : m_type(type)
+    , m_value(value)
+{
+}
+
+Length Length::make_auto()
+{
+    return Length(0, Type::Auto);
+}
+Length Length::make_px(float value)
+{
+    return Length(value, Type::Px);
+}
+
+Length Length::resolved(const Length& fallback_for_undefined, const Layout::Node& layout_node, float reference_for_percent) const
+{
+    if (is_undefined())
+        return fallback_for_undefined;
+    if (is_calculated())
+        return Length(resolve_calculated_value(layout_node, reference_for_percent), Type::Px);
+    if (is_percentage())
+        return make_px(raw_value() / 100.0f * reference_for_percent);
+    if (is_relative())
+        return make_px(to_px(layout_node));
+    return *this;
+}
+
+Length Length::resolved_or_auto(const Layout::Node& layout_node, float reference_for_percent) const
+{
+    return resolved(make_auto(), layout_node, reference_for_percent);
+}
+
+Length Length::resolved_or_zero(const Layout::Node& layout_node, float reference_for_percent) const
+{
+    return resolved(make_px(0), layout_node, reference_for_percent);
+}
+
+void Length::set_calculated_style(CalculatedStyleValue* value)
+{
+    m_calculated_style = value;
+}
+
 float Length::relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float root_font_size) const
 {
     switch (m_type) {
