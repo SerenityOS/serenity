@@ -7,6 +7,8 @@ serenity_component(
 
 set(SOURCES
     main.cpp
+    Player.cpp
+    Playlist.cpp
     PlaybackManager.cpp
     SampleWidget.cpp
     SoundPlayerWidgetAdvancedView.cpp
