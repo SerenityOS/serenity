@@ -36,43 +36,18 @@ public:
         Vmin,
     };
 
-    Length() = default;
-    Length(int value, Type type)
-        : m_type(type)
-        , m_value(value)
-    {
-    }
-    Length(float value, Type type)
-        : m_type(type)
-        , m_value(value)
-    {
-    }
+    // We have a RefPtr<CalculatedStyleValue> member, but can't include the header StyleValue.h as it includes
+    // this file already. To break the cyclic dependency, we must move all method definitions out.
+    Length();
+    Length(int value, Type type);
+    Length(float value, Type type);
 
-    static Length make_auto() { return Length(0, Type::Auto); }
-    static Length make_px(float value) { return Length(value, Type::Px); }
+    static Length make_auto();
+    static Length make_px(float value);
 
-    Length resolved(const Length& fallback_for_undefined, const Layout::Node& layout_node, float reference_for_percent) const
-    {
-        if (is_undefined())
-            return fallback_for_undefined;
-        if (is_calculated())
-            return Length(resolve_calculated_value(layout_node, reference_for_percent), Type::Px);
-        if (is_percentage())
-            return make_px(raw_value() / 100.0f * reference_for_percent);
-        if (is_relative())
-            return make_px(to_px(layout_node));
-        return *this;
-    }
-
-    Length resolved_or_auto(const Layout::Node& layout_node, float reference_for_percent) const
-    {
-        return resolved(make_auto(), layout_node, reference_for_percent);
-    }
-
-    Length resolved_or_zero(const Layout::Node& layout_node, float reference_for_percent) const
-    {
-        return resolved(make_px(0), layout_node, reference_for_percent);
-    }
+    Length resolved(const Length& fallback_for_undefined, const Layout::Node& layout_node, float reference_for_percent) const;
+    Length resolved_or_auto(const Layout::Node& layout_node, float reference_for_percent) const;
+    Length resolved_or_zero(const Layout::Node& layout_node, float reference_for_percent) const;
 
     bool is_undefined_or_auto() const { return m_type == Type::Undefined || m_type == Type::Auto; }
     bool is_undefined() const { return m_type == Type::Undefined; }
@@ -157,7 +132,7 @@ public:
         return !(*this == other);
     }
 
-    void set_calculated_style(CalculatedStyleValue* value) { m_calculated_style = value; }
+    void set_calculated_style(CalculatedStyleValue* value);
 
     float relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float root_font_size) const;
 
