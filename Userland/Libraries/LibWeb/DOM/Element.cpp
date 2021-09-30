@@ -9,6 +9,7 @@
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
+#include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleInvalidator.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
@@ -245,6 +246,21 @@ NonnullRefPtr<CSS::StyleProperties> Element::computed_style()
     }
 
     return properties;
+}
+
+// https://dom.spec.whatwg.org/#dom-element-matches
+DOM::ExceptionOr<bool> Element::matches(StringView selectors) const
+{
+    auto maybe_selectors = parse_selector(CSS::ParsingContext(static_cast<ParentNode&>(const_cast<Element&>(*this))), selectors);
+    if (!maybe_selectors.has_value())
+        return DOM::SyntaxError::create("Failed to parse selector");
+
+    auto sel = maybe_selectors.value();
+    for (auto& s : sel) {
+        if (SelectorEngine::matches(s, *this))
+            return true;
+    }
+    return false;
 }
 
 ExceptionOr<void> Element::set_inner_html(String const& markup)

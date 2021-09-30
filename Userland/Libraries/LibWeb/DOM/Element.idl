@@ -20,6 +20,8 @@ interface Element : Node {
     [Reflect] attribute DOMString id;
     [Reflect=class] attribute DOMString className;
 
+    boolean matches(DOMString selectors);
+
     readonly attribute Element? nextElementSibling;
     readonly attribute Element? previousElementSibling;
 

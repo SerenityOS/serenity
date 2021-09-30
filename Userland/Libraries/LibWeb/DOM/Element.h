@@ -56,6 +56,8 @@ public:
     void remove_attribute(const FlyString& name);
     size_t attribute_list_size() const { return m_attributes.size(); }
 
+    DOM::ExceptionOr<bool> matches(StringView selectors) const;
+
     template<typename Callback>
     void for_each_attribute(Callback callback) const
     {
