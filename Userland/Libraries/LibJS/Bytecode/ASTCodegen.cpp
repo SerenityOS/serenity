@@ -26,6 +26,24 @@ void ASTNode::generate_bytecode(Bytecode::Generator&) const
 
 void ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
 {
+    // FIXME: This is an ad-hoc fix but should be done as the spec says in
+    //        {Global, Block, Function, Eval}DeclarationInstantiation.
+    for (auto& function : m_functions_hoistable_with_annexB_extension) {
+        generator.emit<Bytecode::Op::NewFunction>(function);
+        generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(function.name()));
+    }
+
+    HashTable<FlyString> functions_initialized;
+    for_each_var_function_declaration_in_reverse_order([&](FunctionDeclaration const& function) {
+        if (functions_initialized.set(function.name()) != AK::HashSetResult::InsertedNewEntry)
+            return IterationDecision::Continue;
+
+        generator.emit<Bytecode::Op::NewFunction>(function);
+        generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(function.name()));
+
+        return IterationDecision::Continue;
+    });
+
     // FIXME: Register lexical and variable scope declarations
     for (auto& child : children()) {
         child.generate_bytecode(generator);
