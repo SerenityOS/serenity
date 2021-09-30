@@ -1082,7 +1082,7 @@ void RTL8168NetworkAdapter::set_phy_speed()
     gigabyte_control |= ADVERTISE_1000_FULL; // 1000 mbit full duplex
     phy_out(PHY_REG_GBCR, gigabyte_control);
 
-    // restart auto-negotation with set advertisements
+    // restart auto-negotiation with set advertisements
     phy_out(PHY_REG_BMCR, BMCR_AUTO_NEGOTIATE | BMCR_RESTART_AUTO_NEGOTIATE);
 }
 
@@ -1216,7 +1216,7 @@ void RTL8168NetworkAdapter::send_raw(ReadonlyBytes payload)
     free_descriptor.frame_length = payload.size() & 0x3FFF;
     free_descriptor.flags = free_descriptor.flags | TXDescriptor::Ownership;
 
-    out8(REG_TXSTART, TXSTART_START); // FIXME: this shouldnt be done so often, we should look into doing this using the watchdog timer
+    out8(REG_TXSTART, TXSTART_START); // FIXME: this shouldn't be done so often, we should look into doing this using the watchdog timer
 }
 
 void RTL8168NetworkAdapter::receive()
