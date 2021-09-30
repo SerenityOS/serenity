@@ -37,6 +37,11 @@ enum CursorStyle {
     SteadyBar
 };
 
+enum CursorKeysMode {
+    Application,
+    Cursor,
+};
+
 class TerminalClient {
 public:
     virtual ~TerminalClient() { }
@@ -437,6 +442,7 @@ protected:
 
     Optional<u16> m_column_before_carriage_return;
     bool m_controls_are_logically_generated { false };
+    CursorKeysMode m_cursor_keys_mode { Cursor };
 };
 
 }

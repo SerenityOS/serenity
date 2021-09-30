@@ -89,6 +89,11 @@ void Terminal::alter_private_mode(bool should_set, Parameters params)
 
     for (auto mode : params) {
         switch (mode) {
+        case 1:
+            // Cursor Keys Mode (DECCKM)
+            dbgln_if(TERMINAL_DEBUG, "Setting cursor keys mode (should_set={})", should_set);
+            m_cursor_keys_mode = should_set ? CursorKeysMode::Application : CursorKeysMode::Cursor;
+            break;
         case 3: {
             // 80/132-column mode (DECCOLM)
             unsigned new_columns = should_set ? 132 : 80;
@@ -1297,10 +1302,11 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
     unsigned modifier_mask = int(shift) + (int(alt) << 1) + (int(ctrl) << 2);
 
     auto emit_final_with_modifier = [this, modifier_mask](char final) {
+        char escape_character = m_cursor_keys_mode == CursorKeysMode::Application ? 'O' : '[';
         if (modifier_mask)
-            emit_string(String::formatted("\e[1;{}{:c}", modifier_mask + 1, final));
+            emit_string(String::formatted("\e{}1;{}{:c}", escape_character, modifier_mask + 1, final));
         else
-            emit_string(String::formatted("\e[{:c}", final));
+            emit_string(String::formatted("\e{}{:c}", escape_character, final));
     };
     auto emit_tilde_with_modifier = [this, modifier_mask](unsigned num) {
         if (modifier_mask)
