@@ -98,6 +98,14 @@ int main(int argc, char** argv)
         playlist_toggle->set_checked(true);
     playback_menu.add_action(playlist_toggle);
 
+    auto shuffle_mode = GUI::Action::create_checkable("S&huffle Playlist", [&](auto& action) {
+        if (action.is_checked())
+            player->set_shuffle_mode(Player::ShuffleMode::Shuffling);
+        else
+            player->set_shuffle_mode(Player::ShuffleMode::None);
+    });
+    playback_menu.add_action(shuffle_mode);
+
     auto& visualization_menu = window->add_menu("&Visualization");
     GUI::ActionGroup visualization_actions;
     visualization_actions.set_exclusive(true);
