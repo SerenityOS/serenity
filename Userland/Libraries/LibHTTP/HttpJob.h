@@ -28,7 +28,7 @@ public:
     }
 
     virtual void start(NonnullRefPtr<Core::Socket>) override;
-    virtual void shutdown() override;
+    virtual void shutdown(ShutdownMode) override;
 
     Core::Socket const* socket() const { return m_socket; }
     URL url() const { return m_request.url(); }

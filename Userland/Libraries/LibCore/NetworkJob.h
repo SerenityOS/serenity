@@ -35,12 +35,16 @@ public:
     NetworkResponse* response() { return m_response.ptr(); }
     const NetworkResponse* response() const { return m_response.ptr(); }
 
+    enum class ShutdownMode {
+        DetachFromSocket,
+        CloseSocket,
+    };
     virtual void start(NonnullRefPtr<Core::Socket>) = 0;
-    virtual void shutdown() = 0;
+    virtual void shutdown(ShutdownMode) = 0;
 
     void cancel()
     {
-        shutdown();
+        shutdown(ShutdownMode::DetachFromSocket);
         m_error = Error::Cancelled;
     }
 

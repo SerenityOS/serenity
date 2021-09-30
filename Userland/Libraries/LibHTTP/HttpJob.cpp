@@ -43,13 +43,17 @@ void HttpJob::start(NonnullRefPtr<Core::Socket> socket)
     };
 }
 
-void HttpJob::shutdown()
+void HttpJob::shutdown(ShutdownMode mode)
 {
     if (!m_socket)
         return;
-    m_socket->on_ready_to_read = nullptr;
-    m_socket->on_connected = nullptr;
-    m_socket = nullptr;
+    if (mode == ShutdownMode::CloseSocket) {
+        m_socket->close();
+    } else {
+        m_socket->on_ready_to_read = nullptr;
+        m_socket->on_connected = nullptr;
+        m_socket = nullptr;
+    }
 }
 
 void HttpJob::register_on_ready_to_read(Function<void()> callback)

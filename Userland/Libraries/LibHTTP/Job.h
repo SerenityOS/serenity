@@ -22,7 +22,7 @@ public:
     virtual ~Job() override;
 
     virtual void start(NonnullRefPtr<Core::Socket>) override = 0;
-    virtual void shutdown() override = 0;
+    virtual void shutdown(ShutdownMode) override = 0;
 
     HttpResponse* response() { return static_cast<HttpResponse*>(Core::NetworkJob::response()); }
     const HttpResponse* response() const { return static_cast<const HttpResponse*>(Core::NetworkJob::response()); }

@@ -208,6 +208,16 @@ void Socket::did_update_fd(int fd)
     }
 }
 
+bool Socket::close()
+{
+    m_connected = false;
+    if (m_notifier)
+        m_notifier->close();
+    if (m_read_notifier)
+        m_read_notifier->close();
+    return IODevice::close();
+}
+
 void Socket::ensure_read_notifier()
 {
     VERIFY(m_connected);

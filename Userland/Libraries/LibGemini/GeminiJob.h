@@ -28,7 +28,7 @@ public:
     }
 
     virtual void start(NonnullRefPtr<Core::Socket>) override;
-    virtual void shutdown() override;
+    virtual void shutdown(ShutdownMode) override;
     void set_certificate(String certificate, String key);
 
     Core::Socket const* socket() const { return m_socket; }

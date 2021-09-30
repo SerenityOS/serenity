@@ -62,14 +62,18 @@ void HttpsJob::start(NonnullRefPtr<Core::Socket> socket)
     }
 }
 
-void HttpsJob::shutdown()
+void HttpsJob::shutdown(ShutdownMode mode)
 {
     if (!m_socket)
         return;
-    m_socket->on_tls_ready_to_read = nullptr;
-    m_socket->on_tls_connected = nullptr;
-    m_socket->set_on_tls_ready_to_write(nullptr);
-    m_socket = nullptr;
+    if (mode == ShutdownMode::CloseSocket) {
+        m_socket->close();
+    } else {
+        m_socket->on_tls_ready_to_read = nullptr;
+        m_socket->on_tls_connected = nullptr;
+        m_socket->set_on_tls_ready_to_write(nullptr);
+        m_socket = nullptr;
+    }
 }
 
 void HttpsJob::set_certificate(String certificate, String private_key)
