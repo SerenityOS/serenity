@@ -74,6 +74,8 @@ public:
 
     HighResolutionTime::Performance& performance() { return *m_performance; }
 
+    Crypto::Crypto& crypto() { return *m_crypto; }
+
     CSS::Screen& screen() { return *m_screen; }
 
     Event const* current_event() const { return m_current_event; }
@@ -107,6 +109,7 @@ private:
     HashMap<int, NonnullRefPtr<Timer>> m_timers;
 
     NonnullOwnPtr<HighResolutionTime::Performance> m_performance;
+    NonnullRefPtr<Crypto::Crypto> m_crypto;
     NonnullRefPtr<CSS::Screen> m_screen;
     RefPtr<Event> m_current_event;
 

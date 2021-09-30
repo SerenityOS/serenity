@@ -7,6 +7,7 @@
 #include <LibGUI/DisplayLink.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
+#include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
@@ -94,6 +95,7 @@ Window::Window(Document& document)
     : EventTarget(static_cast<Bindings::ScriptExecutionContext&>(document))
     , m_associated_document(document)
     , m_performance(make<HighResolutionTime::Performance>(*this))
+    , m_crypto(Crypto::Crypto::create())
     , m_screen(CSS::Screen::create(*this))
 {
 }

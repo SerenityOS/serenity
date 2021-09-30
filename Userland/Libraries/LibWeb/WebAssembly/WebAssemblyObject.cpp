@@ -361,7 +361,7 @@ JS::Value to_js_value(Wasm::Value& wasm_value, JS::GlobalObject& global_object)
 {
     switch (wasm_value.type().kind()) {
     case Wasm::ValueType::I64:
-        return global_object.heap().allocate<JS::BigInt>(global_object, Crypto::SignedBigInteger::create_from(wasm_value.to<i64>().value()));
+        return global_object.heap().allocate<JS::BigInt>(global_object, ::Crypto::SignedBigInteger::create_from(wasm_value.to<i64>().value()));
     case Wasm::ValueType::I32:
         return JS::Value(wasm_value.to<i32>().value());
     case Wasm::ValueType::F64:
@@ -382,7 +382,7 @@ JS::Value to_js_value(Wasm::Value& wasm_value, JS::GlobalObject& global_object)
 
 Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueType& type, JS::GlobalObject& global_object)
 {
-    static Crypto::SignedBigInteger two_64 = "1"_sbigint.shift_left(64);
+    static ::Crypto::SignedBigInteger two_64 = "1"_sbigint.shift_left(64);
     auto& vm = global_object.vm();
 
     switch (type.kind()) {

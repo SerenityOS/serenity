@@ -13,6 +13,7 @@ set(SOURCES
     Bindings/ScriptExecutionContext.cpp
     Bindings/WindowObject.cpp
     Bindings/Wrappable.cpp
+    Crypto/Crypto.cpp
     CSS/CSSConditionRule.cpp
     CSS/CSSGroupingRule.cpp
     CSS/CSSImportRule.cpp
@@ -341,6 +342,7 @@ function(libweb_js_wrapper class)
     add_dependencies(all_generated generate_${basename}Prototype.cpp)
 endfunction()
 
+libweb_js_wrapper(Crypto/Crypto)
 libweb_js_wrapper(CSS/CSSRule)
 libweb_js_wrapper(CSS/CSSRuleList)
 libweb_js_wrapper(CSS/CSSStyleDeclaration)

@@ -13,6 +13,10 @@ struct ParsedCookie;
 enum class Source;
 }
 
+namespace Web::Crypto {
+class Crypto;
+}
+
 namespace Web::CSS {
 class CalculatedStyleValue;
 class CSSRule;
@@ -262,6 +266,7 @@ class URLSearchParamsIterator;
 namespace Web::Bindings {
 class AbortControllerWrapper;
 class AbortSignalWrapper;
+class CryptoWrapper;
 class CSSRuleListWrapper;
 class CSSRuleWrapper;
 class CSSStyleDeclarationWrapper;
