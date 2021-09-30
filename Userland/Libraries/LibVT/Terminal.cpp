@@ -998,6 +998,9 @@ void Terminal::on_input(u8 byte)
 
 void Terminal::emit_code_point(u32 code_point)
 {
+    auto working_set = m_working_sets[m_active_working_set_index];
+    code_point = m_character_set_translator.translate_code_point(working_set, code_point);
+
     auto new_column = cursor_column() + 1;
     if (new_column < columns()) {
         put_character_at(cursor_row(), cursor_column(), code_point);
@@ -1099,7 +1102,13 @@ void Terminal::execute_escape_sequence(Intermediates intermediates, bool ignore,
             DECPNM();
             return;
         }
-    } else if (intermediates[0] == '#') {
+        unimplemented_escape_sequence(intermediates, last_byte);
+        return;
+    }
+
+    char intermediate = intermediates[0];
+    switch (intermediate) {
+    case '#':
         switch (last_byte) {
         case '8':
             // Confidence Test - Fill screen with E's
@@ -1110,7 +1119,39 @@ void Terminal::execute_escape_sequence(Intermediates intermediates, bool ignore,
             }
             return;
         }
+        break;
+    case '(':
+    case ')':
+    case '*':
+    case '+':
+        // Determine G0..G3 index
+        size_t working_set_index = intermediate - '(';
+
+        CharacterSet new_set;
+        switch (last_byte) {
+        case 'B':
+            new_set = CharacterSet::Iso_8859_1;
+            break;
+        case '0':
+            new_set = CharacterSet::VT100;
+            break;
+        case 'U':
+            new_set = CharacterSet::Null;
+            break;
+        case 'K':
+            new_set = CharacterSet::UserDefined;
+            break;
+        default:
+            unimplemented_escape_sequence(intermediates, last_byte);
+            return;
+        }
+
+        dbgln_if(TERMINAL_DEBUG, "Setting G{} working set to character set {}", working_set_index, to_underlying(new_set));
+        VERIFY(working_set_index <= 3);
+        m_working_sets[working_set_index] = new_set;
+        return;
     }
+
     unimplemented_escape_sequence(intermediates, last_byte);
 }
 
