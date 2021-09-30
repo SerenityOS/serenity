@@ -107,6 +107,13 @@ void TokenStream<T>::reconsume_current_input_token()
 }
 
 template<typename T>
+void TokenStream<T>::rewind_to_position(int position)
+{
+    VERIFY(position <= m_iterator_offset);
+    m_iterator_offset = position;
+}
+
+template<typename T>
 void TokenStream<T>::skip_whitespace()
 {
     while (peek_token().is(Token::Type::Whitespace))
