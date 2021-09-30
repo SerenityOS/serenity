@@ -951,7 +951,7 @@ static void normalize_script_extensions(PropList& script_extensions, PropList co
 
     // Lastly, the Common and Inherited script extensions are special. They must not contain any
     // code points which appear in other script extensions. The ScriptExtensions UCD file does not
-    // list these extensions, therefore this peculiarity must be handled programatically.
+    // list these extensions, therefore this peculiarity must be handled programmatically.
     // https://www.unicode.org/reports/tr24/#Assignment_ScriptX_Values
     auto code_point_has_other_extension = [&](StringView key, u32 code_point) {
         for (auto const& extension : extensions) {
