@@ -11,6 +11,7 @@
 #include <AK/Debug.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/SourceLocation.h>
+#include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSMediaRule.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
