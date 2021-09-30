@@ -9,8 +9,8 @@
 
 namespace RequestServer::ConnectionCache {
 
-HashMap<ConnectionKey, NonnullOwnPtrVector<Connection<Core::TCPSocket>>> g_tcp_connection_cache {};
-HashMap<ConnectionKey, NonnullOwnPtrVector<Connection<TLS::TLSv12>>> g_tls_connection_cache {};
+HashMap<ConnectionKey, NonnullOwnPtr<NonnullOwnPtrVector<Connection<Core::TCPSocket>>>> g_tcp_connection_cache {};
+HashMap<ConnectionKey, NonnullOwnPtr<NonnullOwnPtrVector<Connection<TLS::TLSv12>>>> g_tls_connection_cache {};
 
 void request_did_finish(URL const& url, Core::Socket const* socket)
 {
@@ -28,7 +28,7 @@ void request_did_finish(URL const& url, Core::Socket const* socket)
             dbgln("Request for URL {} finished, but we don't own that!", url);
             return;
         }
-        auto connection_it = it->value.find_if([&](auto& connection) { return connection->socket == socket; });
+        auto connection_it = it->value->find_if([&](auto& connection) { return connection->socket == socket; });
         if (connection_it.is_end()) {
             dbgln("Request for URL {} finished, but we don't have a socket for that!", url);
             return;
@@ -39,10 +39,11 @@ void request_did_finish(URL const& url, Core::Socket const* socket)
             connection->has_started = false;
             if constexpr (REQUEST_SERVER_DEBUG)
                 connection->current_url = {};
-            connection->removal_timer->on_timeout = [ptr = connection.ptr(), &cache_entry = it->value, &key = it->key, &cache] {
-                Core::deferred_invoke([&] {
-                    dbgln("Removing no-longer-used connection {}", ptr);
-                    cache_entry.remove_first_matching([&](auto& entry) { return entry.ptr() == ptr; });
+            connection->removal_timer->on_timeout = [ptr = connection.ptr(), &cache_entry = *it->value, key = it->key, &cache]() mutable {
+                Core::deferred_invoke([&, key = move(key), ptr] {
+                    dbgln("Removing no-longer-used connection {} (socket {})", ptr, ptr->socket);
+                    auto did_remove = cache_entry.remove_first_matching([&](auto& entry) { return entry == ptr; });
+                    VERIFY(did_remove);
                     if (cache_entry.is_empty())
                         cache.remove(key);
                 });
@@ -57,10 +58,10 @@ void request_did_finish(URL const& url, Core::Socket const* socket)
                 is_connected = connection->socket->is_connected();
             if (!is_connected) {
                 // Create another socket for the connection.
-                dbgln("Creating a new socket for {}", url);
                 connection->socket = SocketType::construct(nullptr);
+                dbgln("Creating a new socket for {} -> {}", url, connection->socket);
             }
-            dbgln("Running next job in queue for connection {}", &connection);
+            dbgln("Running next job in queue for connection {} @{}", &connection, connection->socket);
             auto request = connection->request_queue.take_first();
             if constexpr (REQUEST_SERVER_DEBUG) {
                 connection->timer.start();
@@ -84,8 +85,8 @@ void dump_jobs()
     dbgln("=========== TLS Connection Cache ==========");
     for (auto& connection : g_tls_connection_cache) {
         dbgln(" - {}:{}", connection.key.hostname, connection.key.port);
-        for (auto& entry : connection.value) {
-            dbgln("  - Connection {} (started={})", &entry, entry.has_started);
+        for (auto& entry : *connection.value) {
+            dbgln("  - Connection {} (started={}) (socket={})", &entry, entry.has_started, entry.socket);
             dbgln("    Currently loading {} ({} elapsed)", entry.current_url, entry.timer.elapsed());
             dbgln("    Request Queue:");
             for (auto& job : entry.request_queue)
@@ -95,8 +96,8 @@ void dump_jobs()
     dbgln("=========== TCP Connection Cache ==========");
     for (auto& connection : g_tcp_connection_cache) {
         dbgln(" - {}:{}", connection.key.hostname, connection.key.port);
-        for (auto& entry : connection.value) {
-            dbgln("  - Connection {} (started={})", &entry, entry.has_started);
+        for (auto& entry : *connection.value) {
+            dbgln("  - Connection {} (started={}) (socket={})", &entry, entry.has_started, entry.socket);
             dbgln("    Currently loading {} ({} elapsed)", entry.current_url, entry.timer.elapsed());
             dbgln("    Request Queue:");
             for (auto& job : entry.request_queue)
