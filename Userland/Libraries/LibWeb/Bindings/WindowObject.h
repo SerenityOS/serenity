@@ -111,6 +111,8 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(queue_microtask);
 
+    JS_DECLARE_NATIVE_FUNCTION(crypto_getter);
+
 #define __ENUMERATE(attribute, event_name)          \
     JS_DECLARE_NATIVE_FUNCTION(attribute##_getter); \
     JS_DECLARE_NATIVE_FUNCTION(attribute##_setter);

@@ -14,6 +14,7 @@
 #include <LibJS/Runtime/Shape.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
+#include <LibWeb/Bindings/CryptoWrapper.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/ElementWrapper.h>
 #include <LibWeb/Bindings/EventTargetConstructor.h>
@@ -30,6 +31,8 @@
 #include <LibWeb/Bindings/Replaceable.h>
 #include <LibWeb/Bindings/ScreenWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/Bindings/WindowObjectHelper.h>
+#include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Window.h>
@@ -38,8 +41,6 @@
 #include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
-
-#include <LibWeb/Bindings/WindowObjectHelper.h>
 
 namespace Web::Bindings {
 
@@ -65,6 +66,7 @@ void WindowObject::initialize_global_object()
     define_native_accessor("document", document_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("history", history_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("performance", performance_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor("crypto", crypto_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("screen", screen_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("innerWidth", inner_width_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("innerHeight", inner_height_getter, {}, JS::Attribute::Enumerable);
@@ -495,6 +497,14 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::event_getter)
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::event_setter)
 {
     REPLACEABLE_PROPERTY_SETTER(WindowObject, event);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::crypto_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    return wrap(global_object, impl->crypto());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::inner_width_getter)

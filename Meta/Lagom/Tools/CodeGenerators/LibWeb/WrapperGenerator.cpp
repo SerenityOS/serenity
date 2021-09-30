@@ -726,7 +726,7 @@ int main(int argc, char** argv)
     auto data = file_or_error.value()->read_all();
     auto interface = IDL::parse_interface(path, data);
 
-    if (namespace_.is_one_of("CSS", "DOM", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "NavigationTiming", "RequestIdleCallback", "SVG", "XHR", "URL")) {
+    if (namespace_.is_one_of("Crypto", "CSS", "DOM", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "NavigationTiming", "RequestIdleCallback", "SVG", "XHR", "URL")) {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::");
@@ -1346,7 +1346,9 @@ static void generate_header(IDL::Interface const& interface)
 #include <LibWeb/Bindings/Wrapper.h>
 
 // FIXME: This is very strange.
-#if __has_include(<LibWeb/CSS/@name@.h>)
+#if __has_include(<LibWeb/Crypto/@name@.h>)
+#    include <LibWeb/Crypto/@name@.h>
+#elif __has_include(<LibWeb/CSS/@name@.h>)
 #    include <LibWeb/CSS/@name@.h>
 #elif __has_include(<LibWeb/DOM/@name@.h>)
 #    include <LibWeb/DOM/@name@.h>
@@ -2428,7 +2430,9 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/@wrapper_class@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/WindowObject.h>
-#if __has_include(<LibWeb/CSS/@name@.h>)
+#if __has_include(<LibWeb/Crypto/@name@.h>)
+#    include <LibWeb/Crypto/@name@.h>
+#elif __has_include(<LibWeb/CSS/@name@.h>)
 #    include <LibWeb/CSS/@name@.h>
 #elif __has_include(<LibWeb/DOM/@name@.h>)
 #    include <LibWeb/DOM/@name@.h>
@@ -2730,7 +2734,9 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #if __has_include(<LibWeb/Bindings/@prototype_base_class@.h>)
 #    include <LibWeb/Bindings/@prototype_base_class@.h>
 #endif
-#if __has_include(<LibWeb/CSS/@name@.h>)
+#if __has_include(<LibWeb/Crypto/@name@.h>)
+#    include <LibWeb/Crypto/@name@.h>
+#elif __has_include(<LibWeb/CSS/@name@.h>)
 #    include <LibWeb/CSS/@name@.h>
 #elif __has_include(<LibWeb/DOM/@name@.h>)
 #    include <LibWeb/DOM/@name@.h>
@@ -3179,7 +3185,9 @@ static void generate_iterator_header(IDL::Interface const& interface)
 #include <LibWeb/Bindings/Wrapper.h>
 
 // FIXME: This is very strange.
-#if __has_include(<LibWeb/CSS/@name@.h>)
+#if __has_include(<LibWeb/Crypto/@name@.h>)
+#    include <LibWeb/Crypto/@name@.h>
+#elif __has_include(<LibWeb/CSS/@name@.h>)
 #    include <LibWeb/CSS/@name@.h>
 #elif __has_include(<LibWeb/DOM/@name@.h>)
 #    include <LibWeb/DOM/@name@.h>
@@ -3356,7 +3364,9 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/WindowObject.h>
 
-#if __has_include(<LibWeb/CSS/@name@.h>)
+#if __has_include(<LibWeb/Crypto/@name@.h>)
+#    include <LibWeb/Crypto/@name@.h>
+#elif __has_include(<LibWeb/CSS/@name@.h>)
 #    include <LibWeb/CSS/@name@.h>
 #elif __has_include(<LibWeb/DOM/@name@.h>)
 #    include <LibWeb/DOM/@name@.h>
