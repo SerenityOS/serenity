@@ -45,6 +45,9 @@ Sheet::Sheet(Workbook& workbook)
     global_object().define_direct_property("workbook", m_workbook.workbook_object(), JS::default_attributes);
     global_object().define_direct_property("thisSheet", &global_object(), JS::default_attributes); // Self-reference is unfortunate, but required.
 
+    // Note: We have to set the global object here otherwise the functions in runtime.js are not registered correctly.
+    interpreter().realm().set_global_object(global_object(), &global_object());
+
     // Sadly, these have to be evaluated once per sheet.
     auto file_or_error = Core::File::open("/res/js/Spreadsheet/runtime.js", Core::OpenMode::ReadOnly);
     if (!file_or_error.is_error()) {
