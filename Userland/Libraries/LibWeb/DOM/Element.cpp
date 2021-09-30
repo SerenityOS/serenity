@@ -358,4 +358,36 @@ NonnullRefPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
     return Geometry::DOMRect::create(box.absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()));
 }
 
+int Element::client_top() const
+{
+    if (!layout_node() || !layout_node()->is_box())
+        return 0;
+    auto& box = static_cast<Layout::Box const&>(*layout_node());
+    return box.absolute_rect().top();
+}
+
+int Element::client_left() const
+{
+    if (!layout_node() || !layout_node()->is_box())
+        return 0;
+    auto& box = static_cast<Layout::Box const&>(*layout_node());
+    return box.absolute_rect().left();
+}
+
+int Element::client_width() const
+{
+    if (!layout_node() || !layout_node()->is_box())
+        return 0;
+    auto& box = static_cast<Layout::Box const&>(*layout_node());
+    return box.absolute_rect().width();
+}
+
+int Element::client_height() const
+{
+    if (!layout_node() || !layout_node()->is_box())
+        return 0;
+    auto& box = static_cast<Layout::Box const&>(*layout_node());
+    return box.absolute_rect().height();
+}
+
 }

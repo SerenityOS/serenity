@@ -58,6 +58,11 @@ public:
 
     DOM::ExceptionOr<bool> matches(StringView selectors) const;
 
+    int client_top() const;
+    int client_left() const;
+    int client_width() const;
+    int client_height() const;
+
     template<typename Callback>
     void for_each_attribute(Callback callback) const
     {
