@@ -4,4 +4,7 @@ interface HTMLStyleElement : HTMLElement {
 
     [Reflect] attribute DOMString type;
 
+    // FIXME: This should come from a LinkStyle mixin
+    readonly attribute CSSStyleSheet? sheet;
+
 };
