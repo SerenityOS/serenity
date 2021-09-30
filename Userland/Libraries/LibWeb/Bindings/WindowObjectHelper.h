@@ -30,6 +30,8 @@
 #include <LibWeb/Bindings/CloseEventPrototype.h>
 #include <LibWeb/Bindings/CommentConstructor.h>
 #include <LibWeb/Bindings/CommentPrototype.h>
+#include <LibWeb/Bindings/CryptoConstructor.h>
+#include <LibWeb/Bindings/CryptoPrototype.h>
 #include <LibWeb/Bindings/CustomEventConstructor.h>
 #include <LibWeb/Bindings/CustomEventPrototype.h>
 #include <LibWeb/Bindings/DOMExceptionConstructor.h>
@@ -271,6 +273,7 @@
     auto& vm = this->vm();                                 \
     ADD_WINDOW_OBJECT_INTERFACE(AbortController)           \
     ADD_WINDOW_OBJECT_INTERFACE(AbortSignal)               \
+    ADD_WINDOW_OBJECT_INTERFACE(Crypto)                    \
     ADD_WINDOW_OBJECT_INTERFACE(CSSRule)                   \
     ADD_WINDOW_OBJECT_INTERFACE(CSSRuleList)               \
     ADD_WINDOW_OBJECT_INTERFACE(CSSStyleDeclaration)       \
