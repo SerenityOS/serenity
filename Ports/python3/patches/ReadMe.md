@@ -16,6 +16,10 @@ Enforce UTF-8 as encoding by defining `_Py_FORCE_UTF8_LOCALE`.
 
 As usual, make the `configure` script recognize Serenity. Also set `MACHDEP` (which is used for `sys.platform`) to a version-less `serenityos`, even when not cross-compiling.
 
+## `http-client.patch`
+
+Allows HTTPConnection to work without the TCP_NODELAY socket option, as this is not supported by Serenity.
+
 ## `tweak-setup-py.patch`
 
 Make some tweaks to Python's `setup.py` files:
