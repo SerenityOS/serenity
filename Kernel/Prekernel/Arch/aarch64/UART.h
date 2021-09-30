@@ -30,10 +30,10 @@ public:
     {
         char buf[11];
         int i = 0;
-        while (n) {
+        do {
             buf[i++] = (n % 10) + '0';
             n /= 10;
-        }
+        } while (n);
         for (i--; i >= 0; i--)
             send(buf[i]);
     }
