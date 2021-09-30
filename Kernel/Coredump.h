@@ -37,7 +37,7 @@ private:
 
     NonnullRefPtr<Process> m_process;
     NonnullRefPtr<OpenFileDescription> m_description;
-    const size_t m_num_program_headers;
+    size_t m_num_program_headers { 0 };
 };
 
 }
