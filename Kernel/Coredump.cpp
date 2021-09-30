@@ -21,7 +21,14 @@
 #include <LibC/elf.h>
 #include <LibELF/Core.h>
 
+#define INCLUDE_USERSPACE_HEAP_MEMORY_IN_COREDUMPS 0
+
 namespace Kernel {
+
+[[maybe_unused]] static bool looks_like_userspace_heap_region(Memory::Region const& region)
+{
+    return region.name().starts_with("LibJS:"sv) || region.name().starts_with("malloc:"sv);
+}
 
 KResultOr<NonnullOwnPtr<Coredump>> Coredump::try_create(NonnullRefPtr<Process> process, StringView output_path)
 {
@@ -37,8 +44,16 @@ KResultOr<NonnullOwnPtr<Coredump>> Coredump::try_create(NonnullRefPtr<Process> p
 Coredump::Coredump(NonnullRefPtr<Process> process, NonnullRefPtr<OpenFileDescription> description)
     : m_process(move(process))
     , m_description(move(description))
-    , m_num_program_headers(m_process->address_space().region_count() + 1) // +1 for NOTE segment
 {
+    m_num_program_headers = 0;
+    for ([[maybe_unused]] auto& region : m_process->address_space().regions()) {
+#if !INCLUDE_USERSPACE_HEAP_MEMORY_IN_COREDUMPS
+        if (looks_like_userspace_heap_region(*region))
+            continue;
+#endif
+        ++m_num_program_headers;
+    }
+    ++m_num_program_headers; // +1 for NOTE segment
 }
 
 KResultOr<NonnullRefPtr<OpenFileDescription>> Coredump::try_create_target_file(Process const& process, StringView output_path)
@@ -107,6 +122,12 @@ KResult Coredump::write_program_headers(size_t notes_size)
 {
     size_t offset = sizeof(ElfW(Ehdr)) + m_num_program_headers * sizeof(ElfW(Phdr));
     for (auto& region : m_process->address_space().regions()) {
+
+#if !INCLUDE_USERSPACE_HEAP_MEMORY_IN_COREDUMPS
+        if (looks_like_userspace_heap_region(*region))
+            continue;
+#endif
+
         ElfW(Phdr) phdr {};
 
         phdr.p_type = PT_LOAD;
@@ -147,8 +168,12 @@ KResult Coredump::write_program_headers(size_t notes_size)
 KResult Coredump::write_regions()
 {
     for (auto& region : m_process->address_space().regions()) {
-        if (region->is_kernel())
+        VERIFY(!region->is_kernel());
+
+#if !INCLUDE_USERSPACE_HEAP_MEMORY_IN_COREDUMPS
+        if (looks_like_userspace_heap_region(*region))
             continue;
+#endif
 
         region->set_readable(true);
         region->remap();
@@ -227,6 +252,12 @@ KResult Coredump::create_notes_regions_data(auto& builder) const
 {
     size_t region_index = 0;
     for (auto& region : m_process->address_space().regions()) {
+
+#if !INCLUDE_USERSPACE_HEAP_MEMORY_IN_COREDUMPS
+        if (looks_like_userspace_heap_region(*region))
+            continue;
+#endif
+
         ELF::Core::MemoryRegionInfo info {};
         info.header.type = ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo;
 
