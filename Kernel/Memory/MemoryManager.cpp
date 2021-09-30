@@ -638,7 +638,7 @@ Region* MemoryManager::find_user_region_from_vaddr(AddressSpace& space, VirtualA
 void MemoryManager::validate_syscall_preconditions(AddressSpace& space, RegisterState const& regs)
 {
     // We take the space lock once here and then use the no_lock variants
-    // to avoid excessive spinlock recursion in this extemely common path.
+    // to avoid excessive spinlock recursion in this extremely common path.
     SpinlockLocker lock(space.get_lock());
 
     auto unlock_and_handle_crash = [&lock, &regs](const char* description, int signal) {
