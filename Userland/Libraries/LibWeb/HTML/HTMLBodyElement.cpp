@@ -55,7 +55,7 @@ void HTMLBodyElement::parse_attribute(const FlyString& name, const String& value
         if (color.has_value())
             document().set_visited_link_color(color.value());
     } else if (name.equals_ignoring_case("background")) {
-        m_background_style_value = CSS::ImageStyleValue::create(document().parse_url(value), const_cast<DOM::Document&>(document()));
+        m_background_style_value = CSS::ImageStyleValue::create(document().parse_url(value), &document());
     }
 }
 

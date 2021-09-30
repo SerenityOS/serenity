@@ -368,12 +368,13 @@ Color IdentifierStyleValue::to_color(Layout::NodeWithStyle const& node) const
     }
 }
 
-ImageStyleValue::ImageStyleValue(const AK::URL& url, DOM::Document& document)
+ImageStyleValue::ImageStyleValue(const AK::URL& url, DOM::Document* document)
     : StyleValue(Type::Image)
     , m_url(url)
     , m_document(document)
 {
-    auto request = LoadRequest::create_for_url_on_page(url, document.page());
+    // FIXME: This doesn't work right without a document.
+    auto request = LoadRequest::create_for_url_on_page(url, document ? document->page() : nullptr);
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Image, request));
 }
 
@@ -383,7 +384,7 @@ void ImageStyleValue::resource_did_load()
         return;
     m_bitmap = resource()->bitmap();
     // FIXME: Do less than a full repaint if possible?
-    if (m_document->browsing_context())
+    if (m_document && m_document->browsing_context())
         m_document->browsing_context()->set_needs_display({});
 }
 }

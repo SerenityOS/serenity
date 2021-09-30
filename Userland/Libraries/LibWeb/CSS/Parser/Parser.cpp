@@ -1727,7 +1727,7 @@ RefPtr<StyleValue> Parser::parse_image_value(ParsingContext const& context, Styl
 {
     auto url = parse_url_function(context, component_value);
     if (url.has_value())
-        return ImageStyleValue::create(url.value(), *context.document());
+        return ImageStyleValue::create(url.value(), context.document());
     // FIXME: Handle gradients.
 
     return {};
