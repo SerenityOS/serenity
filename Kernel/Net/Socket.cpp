@@ -187,6 +187,12 @@ KResult Socket::getsockopt(OpenFileDescription&, int level, int option, Userspac
         TRY(copy_to_user(static_ptr_cast<int*>(value), &m_timestamp));
         size = sizeof(int);
         return copy_to_user(value_size, &size);
+    case SO_TYPE:
+        if (size < sizeof(int))
+            return EINVAL;
+        TRY(copy_to_user(static_ptr_cast<int*>(value), &m_type));
+        size = sizeof(int);
+        return copy_to_user(value_size, &size);
     default:
         dbgln("setsockopt({}) at SOL_SOCKET not implemented.", option);
         return ENOPROTOOPT;
