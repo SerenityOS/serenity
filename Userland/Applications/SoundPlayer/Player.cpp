@@ -92,6 +92,15 @@ void Player::set_volume(double volume)
     volume_changed(m_volume);
 }
 
+void Player::set_shuffle_mode(ShuffleMode mode)
+{
+    if (m_shuffle_mode != mode) {
+        m_shuffle_mode = mode;
+        m_playlist.set_shuffling(mode == ShuffleMode::Shuffling);
+        shuffle_mode_changed(mode);
+    }
+}
+
 void Player::play()
 {
     m_playback_manager.play();

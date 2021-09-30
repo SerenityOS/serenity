@@ -157,8 +157,7 @@ void SoundPlayerWidgetAdvancedView::set_playlist_visible(bool visible)
 
 void SoundPlayerWidgetAdvancedView::play_state_changed(Player::PlayState state)
 {
-    m_back_button->set_enabled(playlist().size() > 1);
-    m_next_button->set_enabled(playlist().size() > 1);
+    sync_previous_next_buttons();
 
     m_play_button->set_enabled(state != PlayState::NoFileLoaded);
     m_play_button->set_icon(state == PlayState::Playing ? *m_pause_icon : *m_play_icon);
@@ -170,6 +169,17 @@ void SoundPlayerWidgetAdvancedView::play_state_changed(Player::PlayState state)
 
 void SoundPlayerWidgetAdvancedView::loop_mode_changed(Player::LoopMode)
 {
+}
+
+void SoundPlayerWidgetAdvancedView::sync_previous_next_buttons()
+{
+    m_back_button->set_enabled(playlist().size() > 1 && !playlist().shuffling());
+    m_next_button->set_enabled(playlist().size() > 1);
+}
+
+void SoundPlayerWidgetAdvancedView::shuffle_mode_changed(Player::ShuffleMode)
+{
+    sync_previous_next_buttons();
 }
 
 void SoundPlayerWidgetAdvancedView::time_elapsed(int seconds)
