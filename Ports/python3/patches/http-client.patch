@@ -1,0 +1,24 @@
+--- Python-3.10/Lib/http/client.py	2021-09-07 21:18:28.000000000 +0800
++++ Python-3.10/Lib/http/client.py	2021-09-30 10:22:31.513921004 +0800
+@@ -70,6 +70,7 @@
+ 
+ import email.parser
+ import email.message
++import errno
+ import http
+ import io
+ import re
+@@ -939,7 +940,12 @@
+         sys.audit("http.client.connect", self, self.host, self.port)
+         self.sock = self._create_connection(
+             (self.host,self.port), self.timeout, self.source_address)
+-        self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
++        # Might fail in OSs that don't implement TCP_NODELAY
++        try:
++             self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
++        except OSError as e:
++            if e.errno != errno.ENOPROTOOPT:
++                raise
+ 
+         if self._tunnel_host:
+             self._tunnel()
