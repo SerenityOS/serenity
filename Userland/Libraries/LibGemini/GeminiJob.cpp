@@ -58,13 +58,17 @@ void GeminiJob::start(NonnullRefPtr<Core::Socket> socket)
     }
 }
 
-void GeminiJob::shutdown()
+void GeminiJob::shutdown(ShutdownMode mode)
 {
     if (!m_socket)
         return;
-    m_socket->on_tls_ready_to_read = nullptr;
-    m_socket->on_tls_connected = nullptr;
-    m_socket = nullptr;
+    if (mode == ShutdownMode::CloseSocket) {
+        m_socket->close();
+    } else {
+        m_socket->on_tls_ready_to_read = nullptr;
+        m_socket->on_tls_connected = nullptr;
+        m_socket = nullptr;
+    }
 }
 
 void GeminiJob::read_while_data_available(Function<IterationDecision()> read)

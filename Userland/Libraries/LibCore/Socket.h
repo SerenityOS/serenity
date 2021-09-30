@@ -42,6 +42,8 @@ public:
     SocketAddress destination_address() const { return m_destination_address; }
     int destination_port() const { return m_destination_port; }
 
+    virtual bool close() override;
+
     Function<void()> on_connected;
     Function<void()> on_error;
     Function<void()> on_ready_to_read;
