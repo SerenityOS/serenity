@@ -13,7 +13,7 @@ namespace Kernel {
 
 void Process::sys$exit(int status)
 {
-    // FIXME: We have callers from kernel which don't aquire the big process lock.
+    // FIXME: We have callers from kernel which don't acquire the big process lock.
     if (Thread::current()->previous_mode() == Thread::PreviousMode::UserMode) {
         VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     }

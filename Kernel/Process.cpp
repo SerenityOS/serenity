@@ -593,7 +593,7 @@ bool Process::dump_perfcore()
     auto json_buffer = UserOrKernelBuffer::for_kernel_buffer(json->data());
     if (description.write(json_buffer, json->size()).is_error()) {
         return false;
-        dbgln("Failed to generate perfcore for pid {}: Cound not write to perfcore file.", pid().value());
+        dbgln("Failed to generate perfcore for pid {}: Could not write to perfcore file.", pid().value());
     }
 
     dbgln("Wrote perfcore for pid {} to {}", pid().value(), description.absolute_path());
