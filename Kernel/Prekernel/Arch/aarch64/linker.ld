@@ -29,6 +29,10 @@ SECTIONS
 
     .bss ALIGN(4K) (NOLOAD) : AT (ADDR(.bss))
     {
+	start_of_bss = .;
         *(.bss)
+	end_of_bss = .;
     } :bss
 }
+
+size_of_bss_divided_by_8 = (end_of_bss - start_of_bss) / 8;

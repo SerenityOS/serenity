@@ -21,6 +21,14 @@ start:
   ldr x14, =start
   mov sp, x14
 
+  // Clear BSS.
+  ldr x14, =start_of_bss
+  ldr x15, =size_of_bss_divided_by_8
+Lbss_clear_loop:
+  str xzr, [x14], #8
+  subs x15, x15, #1
+  bne Lbss_clear_loop
+
   b init
 
 .globl wait_cycles
