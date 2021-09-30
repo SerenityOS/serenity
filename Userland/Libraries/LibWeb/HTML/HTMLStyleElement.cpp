@@ -144,4 +144,11 @@ void HTMLStyleElement::update_a_style_block()
         sheet.release_nonnull());
 }
 
+// https://drafts.csswg.org/cssom/#dom-linkstyle-sheet
+RefPtr<CSS::CSSStyleSheet> HTMLStyleElement::sheet() const
+{
+    // The sheet attribute must return the associated CSS style sheet for the node or null if there is no associated CSS style sheet.
+    return m_associated_css_style_sheet;
+}
+
 }
