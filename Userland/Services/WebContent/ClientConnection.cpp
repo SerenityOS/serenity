@@ -317,7 +317,8 @@ void ClientConnection::run_javascript(String const& js_source)
 
 void ClientConnection::js_console_request_messages(i32 start_index)
 {
-    m_console_client->send_messages(start_index);
+    if (m_console_client)
+        m_console_client->send_messages(start_index);
 }
 
 Messages::WebContentServer::GetSelectedTextResponse ClientConnection::get_selected_text()
