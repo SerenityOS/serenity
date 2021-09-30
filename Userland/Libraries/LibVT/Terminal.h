@@ -361,6 +361,12 @@ protected:
     // DECDC - Delete Column
     void DECDC(Parameters);
 
+    // DECPNM - Set numeric keypad mode
+    void DECPNM();
+
+    // DECPAM - Set application keypad mode
+    void DECPAM();
+
 #ifndef KERNEL
     TerminalClient& m_client;
 #else
