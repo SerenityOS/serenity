@@ -8,6 +8,7 @@
 
 #include <AK/URL.h>
 #include <LibWeb/CSS/CSSRule.h>
+#include <LibWeb/CSS/CSSStyleSheet.h>
 
 namespace Web::CSS {
 

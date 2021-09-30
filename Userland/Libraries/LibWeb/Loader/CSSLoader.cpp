@@ -6,6 +6,7 @@
 
 #include <AK/Debug.h>
 #include <AK/URL.h>
+#include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
