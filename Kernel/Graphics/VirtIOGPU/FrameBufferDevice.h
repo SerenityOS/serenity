@@ -9,10 +9,11 @@
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/Graphics/VirtIOGPU/GPU.h>
+#include <Kernel/Graphics/VirtIOGPU/Protocol.h>
 
 namespace Kernel::Graphics::VirtIOGPU {
 
+class GPU;
 class FrameBufferDevice final : public BlockDevice {
     friend class Console;
     struct Buffer {
@@ -23,7 +24,7 @@ class FrameBufferDevice final : public BlockDevice {
     };
 
 public:
-    FrameBufferDevice(VirtIOGPU::GPU& virtio_gpu, ScanoutID);
+    FrameBufferDevice(GPU& virtio_gpu, ScanoutID);
     virtual ~FrameBufferDevice() override;
 
     virtual void deactivate_writes();

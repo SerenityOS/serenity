@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
-#include <Kernel/Graphics/VirtIOGPU/GPU.h>
+#include <Kernel/Graphics/VirtIOGPU/FrameBufferDevice.h>
 #include <Kernel/TimerQueue.h>
 
 namespace Kernel::Graphics::VirtIOGPU {

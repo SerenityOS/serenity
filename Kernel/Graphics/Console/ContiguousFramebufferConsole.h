@@ -7,6 +7,8 @@
 #pragma once
 
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
+#include <Kernel/Memory/Region.h>
+#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel::Graphics {
 

@@ -212,7 +212,7 @@ IntelNativeGraphicsAdapter::IntelNativeGraphicsAdapter(PCI::Address address)
     VERIFY(m_framebuffer_width != 0);
     m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(framebuffer_address, m_framebuffer_width, m_framebuffer_height, m_framebuffer_pitch);
     // FIXME: This is a very wrong way to do this...
-    GraphicsManagement::the().m_console = m_framebuffer_console;
+    set_console(*m_framebuffer_console);
 }
 
 void IntelNativeGraphicsAdapter::enable_vga_plane()

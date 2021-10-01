@@ -6,6 +6,7 @@
 
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/VirtIOGPU/FrameBufferDevice.h>
+#include <Kernel/Graphics/VirtIOGPU/GPU.h>
 #include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel::Graphics::VirtIOGPU {

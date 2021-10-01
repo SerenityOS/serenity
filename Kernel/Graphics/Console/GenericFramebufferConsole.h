@@ -9,6 +9,7 @@
 #include <AK/RefCounted.h>
 #include <AK/Types.h>
 #include <Kernel/Graphics/Console/Console.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel::Graphics {

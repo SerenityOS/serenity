@@ -14,19 +14,12 @@
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/Graphics/GraphicsDevice.h>
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
-#include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
 #include <Kernel/Memory/Region.h>
 
 namespace Kernel {
 
-class BochsGraphicsAdapter;
-class IntelNativeGraphicsAdapter;
 class VGACompatibleAdapter;
 class GraphicsManagement {
-    friend class BochsGraphicsAdapter;
-    friend class IntelNativeGraphicsAdapter;
-    friend class VGACompatibleAdapter;
-    friend class Graphics::VirtIOGPU::GraphicsAdapter;
     AK_MAKE_ETERNAL
 
 public:
@@ -42,6 +35,8 @@ public:
 
     Spinlock& main_vga_lock() { return m_main_vga_lock; }
     RefPtr<Graphics::Console> console() const { return m_console; }
+
+    void set_console(Badge<GraphicsDevice>, Graphics::Console const&);
 
     void deactivate_graphical_mode();
     void activate_graphical_mode();

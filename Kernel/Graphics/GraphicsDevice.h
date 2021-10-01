@@ -10,9 +10,11 @@
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
+
 class GraphicsDevice : public RefCounted<GraphicsDevice> {
 public:
     enum class Type {
@@ -37,6 +39,8 @@ public:
 
 protected:
     GraphicsDevice() = default;
+
+    void set_console(Graphics::Console const&) const;
 
     bool m_consoles_enabled { false };
 };

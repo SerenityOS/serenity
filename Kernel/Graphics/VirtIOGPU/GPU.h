@@ -11,6 +11,8 @@
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
 #include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Graphics/VirtIOGPU/Console.h>
+#include <Kernel/Graphics/VirtIOGPU/FrameBufferDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/Protocol.h>
 
 #define VIRTIO_GPU_F_VIRGL (1 << 0)
@@ -27,12 +29,6 @@
 #define VIRTIO_GPU_EVENT_DISPLAY (1 << 0)
 
 namespace Kernel::Graphics::VirtIOGPU {
-
-class Console;
-class FrameBufferDevice;
-
-TYPEDEF_DISTINCT_ORDERED_ID(u32, ResourceID);
-TYPEDEF_DISTINCT_ORDERED_ID(u32, ScanoutID);
 
 class GPU final
     : public VirtIO::Device
