@@ -10,19 +10,29 @@
 
 namespace Web::Bindings {
 
+static CSS::PropertyID property_id_from_name(StringView name)
+{
+    if (auto property_id = CSS::property_id_from_camel_case_string(name); property_id != CSS::PropertyID::Invalid)
+        return property_id;
+
+    if (auto property_id = CSS::property_id_from_string(name); property_id != CSS::PropertyID::Invalid)
+        return property_id;
+
+    return CSS::PropertyID::Invalid;
+}
+
 JS::ThrowCompletionOr<bool> CSSStyleDeclarationWrapper::internal_has_property(JS::PropertyName const& name) const
 {
     if (!name.is_string())
         return Base::internal_has_property(name);
-    auto property_id = CSS::property_id_from_camel_case_string(name.to_string());
-    return property_id != CSS::PropertyID::Invalid;
+    return property_id_from_name(name.to_string()) != CSS::PropertyID::Invalid;
 }
 
 JS::ThrowCompletionOr<JS::Value> CSSStyleDeclarationWrapper::internal_get(JS::PropertyName const& name, JS::Value receiver) const
 {
     if (!name.is_string())
         return Base::internal_get(name, receiver);
-    auto property_id = CSS::property_id_from_camel_case_string(name.to_string());
+    auto property_id = property_id_from_name(name.to_string());
     if (property_id == CSS::PropertyID::Invalid)
         return Base::internal_get(name, receiver);
     if (auto maybe_property = impl().property(property_id); maybe_property.has_value())
@@ -34,7 +44,7 @@ JS::ThrowCompletionOr<bool> CSSStyleDeclarationWrapper::internal_set(JS::Propert
 {
     if (!name.is_string())
         return Base::internal_set(name, value, receiver);
-    auto property_id = CSS::property_id_from_camel_case_string(name.to_string());
+    auto property_id = property_id_from_name(name.to_string());
     if (property_id == CSS::PropertyID::Invalid)
         return Base::internal_set(name, value, receiver);
 
