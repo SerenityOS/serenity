@@ -651,7 +651,7 @@ BigInt* round_number_to_increment(GlobalObject& global_object, BigInt const& x, 
     // 3. Let quotient be x / increment.
     auto division_result = x.big_integer().divided_by(increment_big_int);
 
-    // OPTIMIZATION: If theres no remainder there number is already rounded
+    // OPTIMIZATION: If there's no remainder the number is already rounded
     if (division_result.remainder == Crypto::UnsignedBigInteger { 0 })
         return js_bigint(heap, x.big_integer());
 

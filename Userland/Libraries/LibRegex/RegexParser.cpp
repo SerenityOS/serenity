@@ -1195,7 +1195,7 @@ bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minim
         repetition_mark = Repetition::Explicit;
         if (!parse_interval_quantifier(repeat_min, repeat_max)) {
             if (unicode) {
-                // Invalid interval quantifiers are disallowed in Unicode mod - they must be esacped with '\{'.
+                // Invalid interval quantifiers are disallowed in Unicode mod - they must be escaped with '\{'.
                 set_error(Error::InvalidPattern);
             }
             return !has_error();
