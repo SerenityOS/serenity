@@ -2468,6 +2468,7 @@ using namespace Web::DOM;
 using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::RequestIdleCallback;
+using namespace Web::XHR;
 
 namespace Web::Bindings {
 

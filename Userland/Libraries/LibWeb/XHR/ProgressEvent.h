@@ -13,13 +13,23 @@ namespace Web::XHR {
 // FIXME: All the "u32"s should be "u64"s, however LibJS doesn't currently support constructing values with u64,
 //        and the IDL parser doesn't properly parse "unsigned long long".
 
+struct ProgressEventInit : public DOM::EventInit {
+    bool length_computable { false };
+    u32 loaded { 0 };
+    u32 total { 0 };
+};
+
 class ProgressEvent : public DOM::Event {
 public:
     using WrapperType = Bindings::ProgressEventWrapper;
 
-    static NonnullRefPtr<ProgressEvent> create(const FlyString& event_name, u32 transmitted, u32 length)
+    static NonnullRefPtr<ProgressEvent> create(FlyString const& event_name, ProgressEventInit const& event_init)
     {
-        return adopt_ref(*new ProgressEvent(event_name, transmitted, length));
+        return adopt_ref(*new ProgressEvent(event_name, event_init));
+    }
+    static NonnullRefPtr<ProgressEvent> create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, ProgressEventInit const& event_init)
+    {
+        return ProgressEvent::create(event_name, event_init);
     }
 
     virtual ~ProgressEvent() override { }
@@ -29,11 +39,11 @@ public:
     u32 total() const { return m_total; }
 
 protected:
-    ProgressEvent(const FlyString& event_name, u32 transmitted, u32 length)
-        : Event(event_name)
-        , m_length_computable(length != 0)
-        , m_loaded(transmitted)
-        , m_total(length)
+    ProgressEvent(FlyString const& event_name, ProgressEventInit const& event_init)
+        : Event(event_name, event_init)
+        , m_length_computable(event_init.length_computable)
+        , m_loaded(event_init.loaded)
+        , m_total(event_init.total)
     {
     }
 
