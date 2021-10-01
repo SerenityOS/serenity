@@ -256,17 +256,6 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
     if (lexer.consume_specific('['))
         interface->extended_attributes = parse_extended_attributes();
 
-    assert_string("interface");
-    consume_whitespace();
-    interface->name = lexer.consume_until([](auto ch) { return isspace(ch); });
-    consume_whitespace();
-    if (lexer.consume_specific(':')) {
-        consume_whitespace();
-        interface->parent_name = lexer.consume_until([](auto ch) { return isspace(ch); });
-        consume_whitespace();
-    }
-    assert_specific('{');
-
     auto parse_type = [&] {
         bool unsigned_ = lexer.consume_specific("unsigned");
         if (unsigned_)
@@ -539,73 +528,85 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
         }
     };
 
-    for (;;) {
-        HashMap<String, String> extended_attributes;
-
+    if (lexer.consume_specific("interface")) {
         consume_whitespace();
-
-        if (lexer.consume_specific('}')) {
+        interface->name = lexer.consume_until([](auto ch) { return isspace(ch); });
+        consume_whitespace();
+        if (lexer.consume_specific(':')) {
             consume_whitespace();
-            assert_specific(';');
-            break;
+            interface->parent_name = lexer.consume_until([](auto ch) { return isspace(ch); });
+            consume_whitespace();
+        }
+        assert_specific('{');
+
+        for (;;) {
+            HashMap<String, String> extended_attributes;
+
+            consume_whitespace();
+
+            if (lexer.consume_specific('}')) {
+                consume_whitespace();
+                assert_specific(';');
+                break;
+            }
+
+            if (lexer.consume_specific('[')) {
+                extended_attributes = parse_extended_attributes();
+                if (!interface->has_unscopable_member && extended_attributes.contains("Unscopable"))
+                    interface->has_unscopable_member = true;
+            }
+
+            if (lexer.next_is("constructor")) {
+                parse_constructor();
+                continue;
+            }
+
+            if (lexer.next_is("const")) {
+                parse_constant();
+                continue;
+            }
+
+            if (lexer.next_is("stringifier")) {
+                parse_stringifier(extended_attributes);
+                continue;
+            }
+
+            if (lexer.next_is("iterable")) {
+                parse_iterable();
+                continue;
+            }
+
+            if (lexer.next_is("readonly") || lexer.next_is("attribute")) {
+                parse_attribute(extended_attributes);
+                continue;
+            }
+
+            if (lexer.next_is("getter")) {
+                parse_getter(extended_attributes);
+                continue;
+            }
+
+            if (lexer.next_is("setter")) {
+                parse_setter(extended_attributes);
+                continue;
+            }
+
+            if (lexer.next_is("deleter")) {
+                parse_deleter(extended_attributes);
+                continue;
+            }
+
+            parse_function(extended_attributes);
         }
 
-        if (lexer.consume_specific('[')) {
-            extended_attributes = parse_extended_attributes();
-            if (!interface->has_unscopable_member && extended_attributes.contains("Unscopable"))
-                interface->has_unscopable_member = true;
-        }
-
-        if (lexer.next_is("constructor")) {
-            parse_constructor();
-            continue;
-        }
-
-        if (lexer.next_is("const")) {
-            parse_constant();
-            continue;
-        }
-
-        if (lexer.next_is("stringifier")) {
-            parse_stringifier(extended_attributes);
-            continue;
-        }
-
-        if (lexer.next_is("iterable")) {
-            parse_iterable();
-            continue;
-        }
-
-        if (lexer.next_is("readonly") || lexer.next_is("attribute")) {
-            parse_attribute(extended_attributes);
-            continue;
-        }
-
-        if (lexer.next_is("getter")) {
-            parse_getter(extended_attributes);
-            continue;
-        }
-
-        if (lexer.next_is("setter")) {
-            parse_setter(extended_attributes);
-            continue;
-        }
-
-        if (lexer.next_is("deleter")) {
-            parse_deleter(extended_attributes);
-            continue;
-        }
-
-        parse_function(extended_attributes);
+        interface->wrapper_class = String::formatted("{}Wrapper", interface->name);
+        interface->wrapper_base_class = String::formatted("{}Wrapper", interface->parent_name.is_empty() ? String::empty() : interface->parent_name);
+        interface->constructor_class = String::formatted("{}Constructor", interface->name);
+        interface->prototype_class = String::formatted("{}Prototype", interface->name);
+        interface->prototype_base_class = String::formatted("{}Prototype", interface->parent_name.is_empty() ? "Object" : interface->parent_name);
+        consume_whitespace();
     }
 
-    interface->wrapper_class = String::formatted("{}Wrapper", interface->name);
-    interface->wrapper_base_class = String::formatted("{}Wrapper", interface->parent_name.is_empty() ? String::empty() : interface->parent_name);
-    interface->constructor_class = String::formatted("{}Constructor", interface->name);
-    interface->prototype_class = String::formatted("{}Prototype", interface->name);
-    interface->prototype_base_class = String::formatted("{}Prototype", interface->parent_name.is_empty() ? "Object" : interface->parent_name);
-
-    consume_whitespace();
     while (!lexer.is_eof()) {
         assert_string("dictionary");
         consume_whitespace();
