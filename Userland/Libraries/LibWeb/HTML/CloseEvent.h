@@ -10,27 +10,37 @@
 
 namespace Web::HTML {
 
+struct CloseEventInit : public DOM::EventInit {
+    bool was_clean { false };
+    u16 code { 0 };
+    String reason { "" };
+};
+
 class CloseEvent : public DOM::Event {
 public:
     using WrapperType = Bindings::CloseEventWrapper;
 
-    static NonnullRefPtr<CloseEvent> create(const FlyString& event_name, bool was_clean, u16 code, const String& reason)
+    static NonnullRefPtr<CloseEvent> create(FlyString const& event_name, CloseEventInit const& event_init = {})
     {
-        return adopt_ref(*new CloseEvent(event_name, was_clean, code, reason));
+        return adopt_ref(*new CloseEvent(event_name, event_init));
+    }
+    static NonnullRefPtr<CloseEvent> create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, CloseEventInit const& event_init)
+    {
+        return CloseEvent::create(event_name, event_init);
     }
 
     virtual ~CloseEvent() override = default;
 
-    bool was_clean() { return m_was_clean; }
+    bool was_clean() const { return m_was_clean; }
     u16 code() const { return m_code; }
     String reason() const { return m_reason; }
 
 protected:
-    CloseEvent(const FlyString& event_name, bool was_clean, u16 code, const String& reason)
-        : Event(event_name)
-        , m_was_clean(was_clean)
-        , m_code(code)
-        , m_reason(reason)
+    CloseEvent(FlyString const& event_name, CloseEventInit const& event_init)
+        : Event(event_name, event_init)
+        , m_was_clean(event_init.was_clean)
+        , m_code(event_init.code)
+        , m_reason(event_init.reason)
     {
     }
 
