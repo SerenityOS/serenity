@@ -45,7 +45,11 @@ void XMLHttpRequest::set_ready_state(ReadyState ready_state)
 
 void XMLHttpRequest::fire_progress_event(const String& event_name, u64 transmitted, u64 length)
 {
-    dispatch_event(ProgressEvent::create(event_name, transmitted, length));
+    ProgressEventInit event_init {};
+    event_init.length_computable = true;
+    event_init.loaded = transmitted;
+    event_init.total = length;
+    dispatch_event(ProgressEvent::create(event_name, event_init));
 }
 
 String XMLHttpRequest::response_text() const
