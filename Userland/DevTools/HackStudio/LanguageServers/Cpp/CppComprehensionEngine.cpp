@@ -145,7 +145,7 @@ Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::autocomplete_na
             return false;
 
         if (symbol.is_local) {
-            // If this symbol was declared bellow us in a function, it's not available to us.
+            // If this symbol was declared below us in a function, it's not available to us.
             bool is_unavailable = symbol.is_local && symbol.declaration->start().line > node.start().line;
             if (is_unavailable)
                 return false;
@@ -500,7 +500,7 @@ RefPtr<Declaration> CppComprehensionEngine::find_declaration_of(const DocumentDa
         }
 
         if (match_variable || match_parameter) {
-            // If this symbol was declared bellow us in a function, it's not available to us.
+            // If this symbol was declared below us in a function, it's not available to us.
             bool is_unavailable = symbol.is_local && symbol.declaration->start().line > node.start().line;
 
             if (!is_unavailable && (symbol.name.name == target_decl->name)) {

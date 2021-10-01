@@ -80,7 +80,7 @@ static Vector<String> wrap_line(Utf8View const& string, size_t width)
             in_ansi = true;
 
         if (!in_ansi)
-            // FIXME: calcuate the printed width of the character.
+            // FIXME: calculate the printed width of the character.
             offset++;
 
         if (isalpha(codepoint))

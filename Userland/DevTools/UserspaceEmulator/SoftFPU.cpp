@@ -863,7 +863,7 @@ void SoftFPU::FICOM_RM32(const X86::Instruction& insn)
     // FIXME: Check for denormals
     VERIFY(insn.modrm().is_register());
     auto val_shd = insn.modrm().read32(m_cpu, insn);
-    warn_if_uninitialized(val_shd, "int32 comapre to float");
+    warn_if_uninitialized(val_shd, "int32 compare to float");
     auto val = static_cast<i32>(val_shd.value());
     if (fpu_isnan(0)) {
         fpu_set_unordered();
@@ -1288,16 +1288,16 @@ void SoftFPU::FNSETPM(const X86::Instruction&) { TODO_INSN(); }
 
 // MMX
 // helpers
-#define LOAD_MM_MM64M()                                                                 \
-    MMX mm;                                                                             \
-    MMX mm64m;                                                                          \
-    if (insn.modrm().mod() == 0b11) { /* 0b11 signals a register */                     \
-        mm64m = mmx_get(insn.modrm().rm());                                             \
-    } else {                                                                            \
-        auto temp = insn.modrm().read64(m_cpu, insn);                                   \
-        warn_if_uninitialized(temp, "Read of uninitialized Memmory as Packed integer"); \
-        mm64m.raw = temp.value();                                                       \
-    }                                                                                   \
+#define LOAD_MM_MM64M()                                                                \
+    MMX mm;                                                                            \
+    MMX mm64m;                                                                         \
+    if (insn.modrm().mod() == 0b11) { /* 0b11 signals a register */                    \
+        mm64m = mmx_get(insn.modrm().rm());                                            \
+    } else {                                                                           \
+        auto temp = insn.modrm().read64(m_cpu, insn);                                  \
+        warn_if_uninitialized(temp, "Read of uninitialized Memory as Packed integer"); \
+        mm64m.raw = temp.value();                                                      \
+    }                                                                                  \
     mm = mmx_get(insn.modrm().reg())
 
 #define MMX_intrinsic(intrinsic, res_type, actor_type)                         \
