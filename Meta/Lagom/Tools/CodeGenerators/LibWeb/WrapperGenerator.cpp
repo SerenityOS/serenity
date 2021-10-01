@@ -852,6 +852,8 @@ static bool is_wrappable_type(IDL::Type const& type)
         return true;
     if (type.name == "ImageData")
         return true;
+    if (type.name == "Window")
+        return true;
     return false;
 }
 
@@ -864,6 +866,10 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     scoped_generator.set("js_suffix", js_suffix);
     scoped_generator.set("legacy_null_to_empty_string", legacy_null_to_empty_string ? "true" : "false");
     scoped_generator.set("parameter.type.name", parameter.type.name);
+    if (parameter.type.name == "Window")
+        scoped_generator.set("wrapper_name", "WindowObject");
+    else
+        scoped_generator.set("wrapper_name", String::formatted("{}Wrapper", parameter.type.name));
 
     if (optional_default_value.has_value())
         scoped_generator.set("parameter.optional_default_value", *optional_default_value);
@@ -938,12 +944,12 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (vm.exception())
         @return_statement@
 
-    if (!is<@parameter.type.name@Wrapper>(@cpp_name@_object)) {
+    if (!is<@wrapper_name@>(@cpp_name@_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
         @return_statement@
     }
 
-    auto& @cpp_name@ = static_cast<@parameter.type.name@Wrapper*>(@cpp_name@_object)->impl();
+    auto& @cpp_name@ = static_cast<@wrapper_name@*>(@cpp_name@_object)->impl();
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
@@ -953,12 +959,12 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (vm.exception())
             @return_statement@
 
-        if (!is<@parameter.type.name@Wrapper>(@cpp_name@_object)) {
+        if (!is<@wrapper_name@>(@cpp_name@_object)) {
             vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
             @return_statement@
         }
 
-        @cpp_name@ = &static_cast<@parameter.type.name@Wrapper*>(@cpp_name@_object)->impl();
+        @cpp_name@ = &static_cast<@wrapper_name@*>(@cpp_name@_object)->impl();
     }
 )~~~");
         }
