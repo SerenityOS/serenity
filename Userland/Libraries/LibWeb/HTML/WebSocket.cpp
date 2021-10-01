@@ -203,7 +203,7 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
         return;
     if (is_text) {
         auto text_message = String(ReadonlyBytes(message));
-        dispatch_event(MessageEvent::create(EventNames::message, text_message, url()));
+        dispatch_event(MessageEvent::create(EventNames::message, JS::js_string(wrapper()->vm(), text_message), url()));
         return;
     }
     // type indicates that the data is Binary and binaryType is "blob"
