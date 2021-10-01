@@ -47,6 +47,7 @@
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
+#include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TreeBuilder.h>
@@ -55,6 +56,7 @@
 #include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/SVG/TagNames.h>
+#include <LibWeb/UIEvents/KeyboardEvent.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
 namespace Web::DOM {
@@ -756,9 +758,9 @@ NonnullRefPtr<Event> Document::create_event(const String& interface)
     } else if (interface_lowercase == "htmlevents") {
         event = Event::create("");
     } else if (interface_lowercase == "keyboardevent") {
-        event = Event::create(""); // FIXME: Create KeyboardEvent
+        event = UIEvents::KeyboardEvent::create("");
     } else if (interface_lowercase == "messageevent") {
-        event = Event::create(""); // FIXME: Create MessageEvent
+        event = HTML::MessageEvent::create("");
     } else if (interface_lowercase.is_one_of("mouseevent", "mouseevents")) {
         event = UIEvents::MouseEvent::create("", 0, 0, 0, 0);
     } else if (interface_lowercase == "storageevent") {
