@@ -116,7 +116,8 @@ Optional<T> convert_to_int(const StringView& str, TrimWhitespace trim_whitespace
 template Optional<i8> convert_to_int(const StringView& str, TrimWhitespace);
 template Optional<i16> convert_to_int(const StringView& str, TrimWhitespace);
 template Optional<i32> convert_to_int(const StringView& str, TrimWhitespace);
-template Optional<i64> convert_to_int(const StringView& str, TrimWhitespace);
+template Optional<long> convert_to_int(const StringView& str, TrimWhitespace);
+template Optional<long long> convert_to_int(const StringView& str, TrimWhitespace);
 
 template<typename T>
 Optional<T> convert_to_uint(const StringView& str, TrimWhitespace trim_whitespace)
@@ -146,7 +147,8 @@ Optional<T> convert_to_uint(const StringView& str, TrimWhitespace trim_whitespac
 template Optional<u8> convert_to_uint(const StringView& str, TrimWhitespace);
 template Optional<u16> convert_to_uint(const StringView& str, TrimWhitespace);
 template Optional<u32> convert_to_uint(const StringView& str, TrimWhitespace);
-template Optional<u64> convert_to_uint(const StringView& str, TrimWhitespace);
+template Optional<unsigned long> convert_to_uint(const StringView& str, TrimWhitespace);
+template Optional<unsigned long long> convert_to_uint(const StringView& str, TrimWhitespace);
 template Optional<long> convert_to_uint(const StringView& str, TrimWhitespace);
 template Optional<long long> convert_to_uint(const StringView& str, TrimWhitespace);
 
