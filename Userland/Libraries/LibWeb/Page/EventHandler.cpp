@@ -456,15 +456,23 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
     }
 
     auto event = UIEvents::KeyboardEvent::create_from_platform_event(UIEvents::EventNames::keydown, key, modifiers, code_point);
-    // FIXME: Figure out the right event target.
-    return m_frame.active_document()->window().dispatch_event(move(event));
+    if (m_frame.active_document()->focused_element())
+        return m_frame.active_document()->focused_element()->dispatch_event(move(event));
+    else if (m_frame.active_document()->body())
+        return m_frame.active_document()->body()->dispatch_event(move(event));
+    else
+        return m_frame.active_document()->root().dispatch_event(move(event));
 }
 
 bool EventHandler::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
 {
     auto event = UIEvents::KeyboardEvent::create_from_platform_event(UIEvents::EventNames::keyup, key, modifiers, code_point);
-    // FIXME: Figure out the right event target.
-    return m_frame.active_document()->window().dispatch_event(move(event));
+    if (m_frame.active_document()->focused_element())
+        return m_frame.active_document()->focused_element()->dispatch_event(move(event));
+    else if (m_frame.active_document()->body())
+        return m_frame.active_document()->body()->dispatch_event(move(event));
+    else
+        return m_frame.active_document()->root().dispatch_event(move(event));
 }
 
 void EventHandler::set_mouse_event_tracking_layout_node(Layout::Node* layout_node)
