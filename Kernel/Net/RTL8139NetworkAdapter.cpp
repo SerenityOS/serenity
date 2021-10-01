@@ -5,9 +5,9 @@
  */
 
 #include <AK/MACAddress.h>
+#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
-#include <Kernel/IO.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/Sections.h>
 

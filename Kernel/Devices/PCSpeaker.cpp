@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Devices/PCSpeaker.h>
-#include <Kernel/IO.h>
 #include <Kernel/Time/PIT.h>
 
 void PCSpeaker::tone_on(int frequency)

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/IO.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Sections.h>
 #include <Kernel/kstdio.h>
