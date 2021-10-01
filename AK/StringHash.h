@@ -10,9 +10,9 @@
 
 namespace AK {
 
-constexpr u32 string_hash(char const* characters, size_t length)
+constexpr u32 string_hash(char const* characters, size_t length, u32 seed = 0)
 {
-    u32 hash = 0;
+    u32 hash = seed;
     for (size_t i = 0; i < length; ++i) {
         hash += (u32)characters[i];
         hash += (hash << 10);
