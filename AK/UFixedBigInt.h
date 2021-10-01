@@ -318,7 +318,7 @@ public:
         return sizeof(R);
     }
 
-    // Arithmetics
+    // Arithmetic
 
     // implies size of less than u64, so passing references isn't useful
     template<Unsigned U>
@@ -676,18 +676,18 @@ public:
 
     constexpr size_t log2()
     {
-        // FIXME: propper rounding
+        // FIXME: proper rounding
         return sizeof(R) - clz();
     }
     constexpr size_t logn(u64 base)
     {
-        // FIXME: propper rounding
+        // FIXME: proper rounding
         return log2() / (sizeof(u64) - __builtin_clzll(base));
     }
     template<Unsigned U>
     requires(sizeof(U) > sizeof(u64)) constexpr size_t logn(U base)
     {
-        // FIXME: propper rounding
+        // FIXME: proper rounding
         return log2() / base.log2();
     }
 
