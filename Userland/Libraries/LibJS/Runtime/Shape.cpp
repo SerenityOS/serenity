@@ -36,9 +36,9 @@ Shape* Shape::get_or_prune_cached_forward_transition(TransitionKey const& key)
     return it->value;
 }
 
-Shape* Shape::get_or_prune_cached_prototype_transition(Object& prototype)
+Shape* Shape::get_or_prune_cached_prototype_transition(Object* prototype)
 {
-    auto it = m_prototype_transitions.find(&prototype);
+    auto it = m_prototype_transitions.find(prototype);
     if (it == m_prototype_transitions.end())
         return nullptr;
     if (!it->value) {
@@ -71,7 +71,7 @@ Shape* Shape::create_configure_transition(const StringOrSymbol& property_name, P
 
 Shape* Shape::create_prototype_transition(Object* new_prototype)
 {
-    if (auto* existing_shape = get_or_prune_cached_prototype_transition(*new_prototype))
+    if (auto* existing_shape = get_or_prune_cached_prototype_transition(new_prototype))
         return existing_shape;
     auto* new_shape = heap().allocate_without_global_object<Shape>(*this, new_prototype);
     m_prototype_transitions.set(new_prototype, new_shape);

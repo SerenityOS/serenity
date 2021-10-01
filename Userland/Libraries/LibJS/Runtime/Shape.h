@@ -91,7 +91,7 @@ private:
     virtual void did_become_zombie() override;
 
     Shape* get_or_prune_cached_forward_transition(TransitionKey const&);
-    Shape* get_or_prune_cached_prototype_transition(Object& prototype);
+    Shape* get_or_prune_cached_prototype_transition(Object* prototype);
 
     void ensure_property_table() const;
 
