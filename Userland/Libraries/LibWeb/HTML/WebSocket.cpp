@@ -189,7 +189,11 @@ void WebSocket::on_close(u16 code, String reason, bool was_clean)
 {
     // 1. Change the readyState attribute's value to CLOSED. This is handled by the Protocol's WebSocket
     // 2. If [needed], fire an event named error at the WebSocket object. This is handled by the Protocol's WebSocket
-    dispatch_event(CloseEvent::create(EventNames::close, was_clean, code, reason));
+    CloseEventInit event_init {};
+    event_init.was_clean = was_clean;
+    event_init.code = code;
+    event_init.reason = move(reason);
+    dispatch_event(CloseEvent::create(EventNames::close, event_init));
 }
 
 // https://html.spec.whatwg.org/multipage/web-sockets.html#feedback-from-the-protocol
