@@ -8,12 +8,12 @@
 #include <AK/Format.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
+#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Firmware/BIOS.h>
-#include <Kernel/IO.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>

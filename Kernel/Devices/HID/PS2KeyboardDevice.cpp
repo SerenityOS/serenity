@@ -8,11 +8,11 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Singleton.h>
 #include <AK/Types.h>
+#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Devices/HID/PS2KeyboardDevice.h>
-#include <Kernel/IO.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/WorkQueue.h>

@@ -7,11 +7,11 @@
 #include <AK/PrintfImplementation.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
+#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
-#include <Kernel/IO.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/kstdio.h>

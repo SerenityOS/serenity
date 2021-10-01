@@ -8,7 +8,7 @@
 
 #include <AK/Types.h>
 
-#include <Kernel/IO.h>
+#include <Kernel/Arch/x86/IO.h>
 
 #include <Kernel/Arch/x86/ASM_wrapper.h>
 

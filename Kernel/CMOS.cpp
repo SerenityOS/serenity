@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/CMOS.h>
-#include <Kernel/IO.h>
 
 namespace CMOS {
 
