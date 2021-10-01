@@ -116,7 +116,7 @@ TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
     }
 
     if (stream.handle_any_error()) {
-        vm.throw_exception<JS::SyntaxError>(global_object, "Bianry stream contained errors");
+        vm.throw_exception<JS::SyntaxError>(global_object, "Binary stream contained errors");
         return {};
     }
 
