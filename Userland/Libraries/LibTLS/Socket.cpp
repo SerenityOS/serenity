@@ -10,6 +10,11 @@
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
 
+// Each record can hold at most 18432 bytes, leaving some headroom and rounding down to
+// a nice number gives us a maximum of 16 KiB for user-supplied application data,
+// which will be sent as a single record containing a single ApplicationData message.
+constexpr static size_t MaximumApplicationDataChunkSize = 16 * KiB;
+
 namespace TLS {
 
 Optional<ByteBuffer> TLSv12::read()
@@ -67,12 +72,14 @@ bool TLSv12::write(ReadonlyBytes buffer)
         return false;
     }
 
-    PacketBuilder builder { MessageType::ApplicationData, m_context.options.version, buffer.size() };
-    builder.append(buffer);
-    auto packet = builder.build();
+    for (size_t offset = 0; offset < buffer.size(); offset += MaximumApplicationDataChunkSize) {
+        PacketBuilder builder { MessageType::ApplicationData, m_context.options.version, buffer.size() - offset };
+        builder.append(buffer.slice(offset, min(buffer.size() - offset, MaximumApplicationDataChunkSize)));
+        auto packet = builder.build();
 
-    update_packet(packet);
-    write_packet(packet);
+        update_packet(packet);
+        write_packet(packet);
+    }
 
     return true;
 }
