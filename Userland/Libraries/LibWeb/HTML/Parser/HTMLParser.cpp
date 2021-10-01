@@ -154,16 +154,27 @@ void HTMLParser::run(const AK::URL& url)
 
         dbgln_if(PARSER_DEBUG, "[{}] {}", insertion_mode_name(), token.to_string());
 
-        // FIXME: If the adjusted current node is a MathML text integration point and the token is a start tag whose tag name is neither "mglyph" nor "malignmark"
-        // FIXME: If the adjusted current node is a MathML text integration point and the token is a character token
-        // FIXME: If the adjusted current node is a MathML annotation-xml element and the token is a start tag whose tag name is "svg"
-        // FIXME: If the adjusted current node is an HTML integration point and the token is a start tag
-        // FIXME: If the adjusted current node is an HTML integration point and the token is a character token
+        // https://html.spec.whatwg.org/multipage/parsing.html#tree-construction-dispatcher
+        // As each token is emitted from the tokenizer, the user agent must follow the appropriate steps from the following list, known as the tree construction dispatcher:
         if (m_stack_of_open_elements.is_empty()
             || adjusted_current_node().namespace_() == Namespace::HTML
+            || (is_html_integration_point(adjusted_current_node()) && (token.is_start_tag() || token.is_character()))
             || token.is_end_of_file()) {
+            // -> If the stack of open elements is empty
+            // -> If the adjusted current node is an element in the HTML namespace
+            // FIXME: -> If the adjusted current node is a MathML text integration point and the token is a start tag whose tag name is neither "mglyph" nor "malignmark"
+            // FIXME: -> If the adjusted current node is a MathML text integration point and the token is a character token
+            // FIXME: -> If the adjusted current node is a MathML annotation-xml element and the token is a start tag whose tag name is "svg"
+            // -> If the adjusted current node is an HTML integration point and the token is a start tag
+            // -> If the adjusted current node is an HTML integration point and the token is a character token
+            // -> If the token is an end-of-file token
+
+            // Process the token according to the rules given in the section corresponding to the current insertion mode in HTML content.
             process_using_the_rules_for(m_insertion_mode, token);
         } else {
+            // -> Otherwise
+
+            // Process the token according to the rules given in the section for parsing tokens in foreign content.
             process_using_the_rules_for_foreign_content(token);
         }
 
