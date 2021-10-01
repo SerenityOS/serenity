@@ -185,7 +185,7 @@ struct Interface {
     bool is_legacy_platform_object() const { return !extended_attributes.contains("Global") && (supports_indexed_properties() || supports_named_properties()); }
 };
 
-static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView input)
+static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView input, StringView import_base_path)
 {
     auto interface = make<Interface>();
 
@@ -233,7 +233,7 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
     };
 
     auto resolve_import = [&](auto path) {
-        auto include_path = LexicalPath::join(LexicalPath::dirname(filename), path).string();
+        auto include_path = LexicalPath::join(import_base_path, path).string();
         if (!Core::File::exists(include_path))
             report_parsing_error(String::formatted("{}: No such file or directory", include_path), filename, input, lexer.tell());
 
@@ -242,7 +242,7 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
             report_parsing_error(String::formatted("Failed to open {}: {}", include_path, file_or_error.error()), filename, input, lexer.tell());
 
         auto data = file_or_error.value()->read_all();
-        return IDL::parse_interface(include_path, data);
+        return IDL::parse_interface(include_path, data, import_base_path);
     };
 
     NonnullOwnPtrVector<Interface> imports;
@@ -690,7 +690,8 @@ static void generate_iterator_implementation(IDL::Interface const&);
 int main(int argc, char** argv)
 {
     Core::ArgsParser args_parser;
-    char const* path = nullptr;
+    StringView path = nullptr;
+    StringView import_base_path = nullptr;
     bool header_mode = false;
     bool implementation_mode = false;
     bool constructor_header_mode = false;
@@ -712,6 +713,7 @@ int main(int argc, char** argv)
     args_parser.add_option(iterator_prototype_header_mode, "Generate the iterator prototype .h file", "iterator-prototype-header", 0);
     args_parser.add_option(iterator_prototype_implementation_mode, "Generate the iterator prototype .cpp file", "iterator-prototype-implementation", 0);
     args_parser.add_positional_argument(path, "IDL file", "idl-file");
+    args_parser.add_positional_argument(import_base_path, "Import base path", "import-base-path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
@@ -724,7 +726,11 @@ int main(int argc, char** argv)
     auto& namespace_ = lexical_path.parts_view().at(lexical_path.parts_view().size() - 2);
 
     auto data = file_or_error.value()->read_all();
-    auto interface = IDL::parse_interface(path, data);
+
+    if (import_base_path.is_null())
+        import_base_path = lexical_path.dirname();
+
+    auto interface = IDL::parse_interface(path, data, import_base_path);
 
     if (namespace_.is_one_of("Crypto", "CSS", "DOM", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "NavigationTiming", "RequestIdleCallback", "SVG", "XHR", "URL")) {
         StringBuilder builder;
