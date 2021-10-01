@@ -6,6 +6,7 @@
  */
 
 #include "InlineFormattingContext.h"
+#include <AK/Function.h>
 #include <AK/StdLibExtras.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
@@ -109,8 +110,22 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
     auto has_definite_main_size = [&is_row](Box& box) {
         return is_row ? box.has_definite_width() : box.has_definite_height();
     };
-    auto has_definite_cross_size = [&is_row](Box& box) {
-        return is_row ? box.has_definite_height() : box.has_definite_width();
+    Function<bool(NodeWithStyle&)> cross_size_is_absolute_or_resolved_nicely = [&](NodeWithStyle& box) {
+        auto length = is_row ? box.computed_values().height() : box.computed_values().width();
+
+        if (length.is_absolute() || length.is_relative())
+            return true;
+        if (length.is_undefined_or_auto())
+            return false;
+
+        if (!box.parent())
+            return false;
+        if (length.is_percentage() && cross_size_is_absolute_or_resolved_nicely(*box.parent()))
+            return true;
+        return false;
+    };
+    auto has_definite_cross_size = [&is_row, &cross_size_is_absolute_or_resolved_nicely](Box& box) {
+        return (is_row ? box.has_definite_height() : box.has_definite_width()) && cross_size_is_absolute_or_resolved_nicely(box);
     };
     auto specified_main_size = [&is_row](Box& box) {
         return is_row
