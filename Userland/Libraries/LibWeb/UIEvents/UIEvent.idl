@@ -1,3 +1,4 @@
 interface UIEvent : Event {
-
+    readonly attribute Window? view;
+    readonly attribute long detail;
 };
