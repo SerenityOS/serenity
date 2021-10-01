@@ -2025,7 +2025,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(ParsingContext co
 
 RefPtr<StyleValue> Parser::parse_box_shadow_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
-    // FIXME: Also support inset, spread-radius and multiple comma-seperated box-shadows
+    // FIXME: Also support inset, spread-radius and multiple comma-separated box-shadows
     Length offset_x {};
     Length offset_y {};
     Length blur_radius {};

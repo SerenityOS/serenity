@@ -21,7 +21,7 @@ void TrackManager::time_forward(int amount)
 {
     int new_value = (static_cast<int>(m_time) + amount) % roll_length;
 
-    if (new_value < 0) { // If the new time value is negaive add roll_length to wrap around
+    if (new_value < 0) { // If the new time value is negative add roll_length to wrap around
         m_time = roll_length + new_value;
     } else {
         m_time = new_value;

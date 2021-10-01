@@ -288,7 +288,7 @@ void Window::fire_a_page_transition_event(FlyString event_name, bool persisted)
     // with the persisted attribute initialized to persisted,
     auto event = HTML::PageTransitionEvent::create(move(event_name), persisted);
 
-    // ...the cancelable attribute intialized to true,
+    // ...the cancelable attribute initialized to true,
     event->set_cancelable(true);
 
     // the bubbles attribute initialized to true,
