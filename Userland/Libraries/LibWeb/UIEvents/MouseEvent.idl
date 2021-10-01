@@ -1,4 +1,4 @@
-interface MouseEvent : Event {
+interface MouseEvent : UIEvent {
 
     readonly attribute double offsetX;
     readonly attribute double offsetY;
