@@ -18,6 +18,8 @@
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TextEditor.h>
+#include <LibGUI/Toolbar.h>
+#include <LibGUI/ToolbarContainer.h>
 #include <LibGfx/FontDatabase.h>
 #include <string.h>
 
@@ -28,6 +30,10 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
 {
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>().set_margins(2);
+
+    auto& toolbar_container = add<GUI::ToolbarContainer>();
+    auto& toolbar = toolbar_container.add<GUI::Toolbar>();
+
     auto& container = add<GUI::VerticalSplitter>();
 
     auto& top_bar = container.add<GUI::Frame>();
@@ -207,6 +213,14 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
         window());
 
     m_about_action = GUI::CommonActions::make_about_action("Spreadsheet", GUI::Icon::default_icon("app-spreadsheet"), window());
+
+    toolbar.add_action(*m_new_action);
+    toolbar.add_action(*m_open_action);
+    toolbar.add_action(*m_save_action);
+    toolbar.add_separator();
+    toolbar.add_action(*m_cut_action);
+    toolbar.add_action(*m_copy_action);
+    toolbar.add_action(*m_paste_action);
 }
 
 void SpreadsheetWidget::resize_event(GUI::ResizeEvent& event)
