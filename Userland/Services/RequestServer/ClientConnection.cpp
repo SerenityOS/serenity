@@ -138,8 +138,7 @@ void ClientConnection::ensure_connection(URL const& url, ::RequestServer::CacheL
             if (!is_tls && socket->is_connected())
                 is_connected = true;
 
-            if (is_connected)
-                return ConnectionCache::request_did_finish(m_url, socket);
+            VERIFY(!is_connected);
 
             bool did_connect;
             if (is_tls) {
@@ -167,7 +166,9 @@ void ClientConnection::ensure_connection(URL const& url, ::RequestServer::CacheL
 
     dbgln("EnsureConnection: Pre-connect to {}", url);
     auto do_preconnect = [&](auto& cache) {
-        ConnectionCache::get_or_create_connection(cache, url, job);
+        auto it = cache.find({ url.host(), url.port_or_default() });
+        if (it == cache.end() || it->value->is_empty())
+            ConnectionCache::get_or_create_connection(cache, url, job);
     };
 
     if (url.scheme() == "http"sv)
