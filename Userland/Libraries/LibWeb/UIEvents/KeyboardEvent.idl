@@ -1,8 +1,9 @@
+#import <UIEvents/EventModifier.idl>
+
 [Exposed=Window]
 interface KeyboardEvent : UIEvent {
 
-    // FIXME: Implement this.
-    // constructor(DOMString type, optional KeyboardEventInit eventInitDict = {});
+    constructor(DOMString type, optional KeyboardEventInit eventInitDict = {});
 
     // KeyLocationCode
     const unsigned long DOM_KEY_LOCATION_STANDARD = 0x00;
@@ -27,4 +28,14 @@ interface KeyboardEvent : UIEvent {
 
     boolean getModifierState(DOMString keyArg);
 
+};
+
+dictionary KeyboardEventInit : EventModifierInit {
+    DOMString key = "";
+    DOMString code = "";
+    unsigned long location = 0;
+    boolean repeat = false;
+    boolean isComposing = false;
+    unsigned long charCode = 0;
+    unsigned long keyCode = 0;
 };

@@ -65,34 +65,29 @@ static unsigned long determine_key_code(KeyCode platform_key, u32 code_point)
     return platform_key;
 }
 
-NonnullRefPtr<KeyboardEvent> KeyboardEvent::create_from_platform_event(FlyString event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
+NonnullRefPtr<KeyboardEvent> KeyboardEvent::create_from_platform_event(FlyString const& event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
 {
     // FIXME: Figure out what these should actually contain.
     String event_key = key_code_to_string(platform_key);
     String event_code = "FIXME";
 
     auto key_code = determine_key_code(platform_key, code_point);
-    return KeyboardEvent::create(move(event_name), move(event_key), move(event_code), 0, modifiers & Mod_Ctrl, modifiers & Mod_Shift, modifiers & Mod_Alt, false, false, false, key_code, code_point);
-}
-
-KeyboardEvent::KeyboardEvent(FlyString event_name, String key, String code, unsigned long location, bool ctrl_key, bool shift_key, bool alt_key, bool meta_key, bool repeat, bool is_composing, unsigned long key_code, unsigned long char_code)
-    : UIEvent(move(event_name))
-    , m_key(move(key))
-    , m_code(move(code))
-    , m_location(location)
-    , m_ctrl_key(ctrl_key)
-    , m_shift_key(shift_key)
-    , m_alt_key(alt_key)
-    , m_meta_key(meta_key)
-    , m_repeat(repeat)
-    , m_is_composing(is_composing)
-    , m_key_code(key_code)
-    , m_char_code(char_code)
-{
-}
-
-KeyboardEvent::~KeyboardEvent()
-{
+    KeyboardEventInit event_init {};
+    event_init.key = move(event_key);
+    event_init.code = move(event_code);
+    event_init.location = 0;
+    event_init.ctrl_key = modifiers & Mod_Ctrl;
+    event_init.shift_key = modifiers & Mod_Shift;
+    event_init.alt_key = modifiers & Mod_Alt;
+    event_init.meta_key = false;
+    event_init.repeat = false;
+    event_init.is_composing = false;
+    event_init.key_code = key_code;
+    event_init.char_code = code_point;
+    event_init.bubbles = true;
+    event_init.cancelable = true;
+    event_init.composed = true;
+    return KeyboardEvent::create(event_name, event_init);
 }
 
 bool KeyboardEvent::get_modifier_state(String const& key_arg)

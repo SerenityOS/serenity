@@ -1,0 +1,10 @@
+#import <UIEvents/UIEvent.idl>
+
+dictionary EventModifierInit : UIEventInit {
+    boolean ctrlKey = false;
+    boolean shiftKey = false;
+    boolean altKey = false;
+    boolean metaKey = false;
+
+    // FIXME: modifier* fields
+};
