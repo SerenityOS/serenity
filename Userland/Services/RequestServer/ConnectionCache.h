@@ -36,10 +36,8 @@ struct Connection {
     QueueType request_queue;
     NonnullRefPtr<Core::Timer> removal_timer;
     bool has_started { false };
-#if REQUEST_SERVER_DEBUG
     URL current_url {};
     Core::ElapsedTimer timer {};
-#endif
 };
 
 struct ConnectionKey {
@@ -110,10 +108,8 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job)
         dbgln("Immediately start request for url {} in {} - {}", url, &connection, connection.socket);
         connection.has_started = true;
         connection.removal_timer->stop();
-        if constexpr (REQUEST_SERVER_DEBUG) {
-            connection.timer.start();
-            connection.current_url = url;
-        }
+        connection.timer.start();
+        connection.current_url = url;
         start_job(*connection.socket);
     } else {
         dbgln("Enqueue request for URL {} in {} - {}", url, &connection, connection.socket);

@@ -37,8 +37,7 @@ void request_did_finish(URL const& url, Core::Socket const* socket)
         auto& connection = *connection_it;
         if (connection->request_queue.is_empty()) {
             connection->has_started = false;
-            if constexpr (REQUEST_SERVER_DEBUG)
-                connection->current_url = {};
+            connection->current_url = {};
             connection->removal_timer->on_timeout = [ptr = connection.ptr(), &cache_entry = *it->value, key = it->key, &cache]() mutable {
                 Core::deferred_invoke([&, key = move(key), ptr] {
                     dbgln("Removing no-longer-used connection {} (socket {})", ptr, ptr->socket);
@@ -63,10 +62,8 @@ void request_did_finish(URL const& url, Core::Socket const* socket)
             }
             dbgln("Running next job in queue for connection {} @{}", &connection, connection->socket);
             auto request = connection->request_queue.take_first();
-            if constexpr (REQUEST_SERVER_DEBUG) {
-                connection->timer.start();
-                connection->current_url = url;
-            }
+            connection->timer.start();
+            connection->current_url = url;
             request(connection->socket);
         }
     };
@@ -79,7 +76,6 @@ void request_did_finish(URL const& url, Core::Socket const* socket)
         dbgln("Unknown socket {} finished for URL {}", *socket, url);
 }
 
-#if REQUEST_SERVER_DEBUG
 void dump_jobs()
 {
     dbgln("=========== TLS Connection Cache ==========");
@@ -105,6 +101,5 @@ void dump_jobs()
         }
     }
 }
-#endif
 
 }

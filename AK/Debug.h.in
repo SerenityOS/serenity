@@ -338,10 +338,6 @@
 #cmakedefine01 REGEX_DEBUG
 #endif
 
-#ifndef REQUEST_SERVER_DEBUG
-#cmakedefine01 REQUEST_SERVER_DEBUG
-#endif
-
 #ifndef RESIZE_DEBUG
 #cmakedefine01 RESIZE_DEBUG
 #endif
