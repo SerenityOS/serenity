@@ -172,7 +172,6 @@ set(SOURCES
     HTML/Parser/StackOfOpenElements.cpp
     HTML/Scripting/ClassicScript.cpp
     HTML/Scripting/Script.cpp
-    HTML/SubmitEvent.cpp
     HTML/SyntaxHighlighter/SyntaxHighlighter.cpp
     HTML/TagNames.cpp
     HTML/WebSocket.cpp

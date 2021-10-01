@@ -59,7 +59,9 @@ void HTMLFormElement::submit_form(RefPtr<HTMLElement> submitter, bool from_submi
         if (submitter != this)
             submitter_button = submitter;
 
-        auto submit_event = SubmitEvent::create(EventNames::submit, submitter_button);
+        SubmitEventInit event_init {};
+        event_init.submitter = submitter_button;
+        auto submit_event = SubmitEvent::create(EventNames::submit, event_init);
         submit_event->set_bubbles(true);
         submit_event->set_cancelable(true);
         bool continue_ = dispatch_event(submit_event);
