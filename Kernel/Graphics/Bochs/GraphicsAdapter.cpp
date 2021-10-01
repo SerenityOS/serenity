@@ -6,13 +6,13 @@
 
 #include <AK/Atomic.h>
 #include <AK/Checked.h>
+#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Graphics/Bochs/GraphicsAdapter.h>
 #include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
-#include <Kernel/IO.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
 

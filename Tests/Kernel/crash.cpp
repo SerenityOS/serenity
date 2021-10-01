@@ -8,7 +8,7 @@
 #include <AK/Assertions.h>
 #include <AK/Function.h>
 #include <AK/String.h>
-#include <Kernel/IO.h>
+#include <Kernel/Arch/x86/IO.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Object.h>
 #include <LibTest/CrashTest.h>

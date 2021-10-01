@@ -5,8 +5,8 @@
  */
 
 #include <AK/Time.h>
+#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/CMOS.h>
-#include <Kernel/IO.h>
 #include <Kernel/RTC.h>
 
 namespace RTC {

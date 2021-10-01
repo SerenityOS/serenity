@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Firmware/PowerStateSwitch.h>
-#include <Kernel/IO.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/ConsoleManagement.h>
