@@ -23,6 +23,7 @@ public:
 
     JS::Value data() const { return m_data; }
     String const& origin() const { return m_origin; }
+    String const& last_event_id() const { return m_last_event_id; }
 
 protected:
     MessageEvent(const FlyString& event_name, JS::Value data, String origin)
@@ -34,6 +35,7 @@ protected:
 
     JS::Value m_data;
     String m_origin;
+    String m_last_event_id;
 };
 
 }

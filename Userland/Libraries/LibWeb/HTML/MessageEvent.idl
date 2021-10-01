@@ -2,5 +2,7 @@ interface MessageEvent : Event {
 
     readonly attribute any data;
     readonly attribute USVString origin;
-
+    readonly attribute DOMString lastEventId;
+    // FIXME: readonly attribute MessageEventSource? source;
+    // FIXME: readonly attribute FrozenArray<MessagePort> ports;
 };
