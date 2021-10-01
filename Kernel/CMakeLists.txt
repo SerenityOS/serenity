@@ -69,7 +69,6 @@ set(KERNEL_SOURCES
     Devices/HID/PS2MouseDevice.cpp
     Devices/HID/VMWareMouseDevice.cpp
     GlobalProcessExposed.cpp
-    Graphics/Bochs/GraphicsAdapter.cpp
     Graphics/Console/GenericFramebufferConsole.cpp
     Graphics/Console/ContiguousFramebufferConsole.cpp
     Graphics/Console/TextModeConsole.cpp
@@ -77,11 +76,6 @@ set(KERNEL_SOURCES
     Graphics/FramebufferDevice.cpp
     Graphics/GraphicsDevice.cpp
     Graphics/GraphicsManagement.cpp
-    Graphics/Intel/NativeGraphicsAdapter.cpp
-    Graphics/VirtIOGPU/FrameBufferDevice.cpp
-    Graphics/VirtIOGPU/Console.cpp
-    Graphics/VirtIOGPU/GPU.cpp
-    Graphics/VirtIOGPU/GraphicsAdapter.cpp
     Graphics/VGACompatibleAdapter.cpp
     SanCov.cpp
     Storage/Partition/DiskPartition.cpp
@@ -438,6 +432,9 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
 endif()
 add_executable(Kernel ${SOURCES})
+
+include("${CMAKE_CURRENT_LIST_DIR}/Modules.cmake")
+
 add_dependencies(Kernel generate_EscapeSequenceStateMachine.h)
 
 add_custom_command(
@@ -475,8 +472,6 @@ add_custom_command(
     COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=Kernel.debug Kernel
     BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/kernel.map
 )
-
-include("${CMAKE_CURRENT_LIST_DIR}/Modules.cmake")
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel" DESTINATION boot)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel.debug" DESTINATION boot)

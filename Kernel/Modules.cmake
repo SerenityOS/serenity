@@ -15,6 +15,10 @@ set(COMPILE_RTL8139 ON)
 set(COMPILE_RTL8168 ON)
 set(COMPILE_NE2000 ON)
 
+set(COMPILE_BOCHS_GRAPHICS ON)
+set(COMPILE_INTEL_GRAPHICS ON)
+set(COMPILE_VIRTIO_GRAPHICS ON)
+
 file(READ "${CMAKE_CURRENT_BINARY_DIR}/config.ini" contents )
 string(REGEX REPLACE ";" "\\\\;" contents "${contents}")
 string(REGEX REPLACE "\n" ";" contents "${contents}")
@@ -119,4 +123,34 @@ if (COMPILE_RTL8168)
     )
     target_compile_definitions(Kernel PRIVATE COMPILE_RTL8168)
     target_link_libraries(Kernel PUBLIC RTL8168_NET)
+endif()
+
+message(VERBOSE "Compiling bochs graphics support was set to " "${COMPILE_BOCHS_GRAPHICS}" )
+if (COMPILE_BOCHS_GRAPHICS)
+    add_library(BOCHS_GRAPHICS OBJECT
+        Graphics/Bochs/GraphicsAdapter.cpp
+    )
+    target_compile_definitions(Kernel PRIVATE COMPILE_BOCHS_GRAPHICS)
+    target_link_libraries(Kernel PUBLIC BOCHS_GRAPHICS)
+endif()
+
+message(VERBOSE "Compiling Intel graphics support was set to " "${COMPILE_INTEL_GRAPHICS}" )
+if (COMPILE_INTEL_GRAPHICS)
+    add_library(INTEL_GRAPHICS OBJECT
+        Graphics/Intel/NativeGraphicsAdapter.cpp
+    )
+    target_compile_definitions(Kernel PRIVATE COMPILE_INTEL_GRAPHICS)
+    target_link_libraries(Kernel PUBLIC INTEL_GRAPHICS)
+endif()
+
+message(VERBOSE "Compiling virtio graphics support was set to " "${COMPILE_VIRTIO_GRAPHICS}" )
+if (COMPILE_VIRTIO_GRAPHICS)
+    target_compile_definitions(Kernel PRIVATE COMPILE_VIRTIO_GRAPHICS)
+    add_library(VIRTIO_GRAPHICS OBJECT
+        Graphics/VirtIOGPU/FrameBufferDevice.cpp
+        Graphics/VirtIOGPU/Console.cpp
+        Graphics/VirtIOGPU/GPU.cpp
+        Graphics/VirtIOGPU/GraphicsAdapter.cpp
+    )
+    target_link_libraries(Kernel PUBLIC VIRTIO_GRAPHICS)
 endif()

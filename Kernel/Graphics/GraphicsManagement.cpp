@@ -9,11 +9,17 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/CommandLine.h>
-#include <Kernel/Graphics/Bochs/GraphicsAdapter.h>
+#ifdef COMPILE_BOCHS_GRAPHICS
+#    include <Kernel/Graphics/Bochs/GraphicsAdapter.h>
+#endif
 #include <Kernel/Graphics/GraphicsManagement.h>
-#include <Kernel/Graphics/Intel/NativeGraphicsAdapter.h>
+#ifdef COMPILE_INTEL_GRAPHICS
+#    include <Kernel/Graphics/Intel/NativeGraphicsAdapter.h>
+#endif
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
-#include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
+#ifdef COMPILE_VIRTIO_GRAPHICS
+#    include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
+#endif
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Sections.h>
@@ -84,19 +90,27 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
     RefPtr<GraphicsDevice> adapter;
     switch (device_identifier.hardware_id().vendor_id) {
     case PCI::VendorID::QEMUOld:
+#ifdef COMPILE_BOCHS_GRAPHICS
         if (device_identifier.hardware_id().device_id == 0x1111)
             adapter = BochsGraphicsAdapter::initialize(device_identifier);
+#endif
         break;
     case PCI::VendorID::VirtualBox:
+#ifdef COMPILE_BOCHS_GRAPHICS
         if (device_identifier.hardware_id().device_id == 0xbeef)
             adapter = BochsGraphicsAdapter::initialize(device_identifier);
+#endif
         break;
     case PCI::VendorID::Intel:
+#ifdef COMPILE_INTEL_GRAPHICS
         adapter = IntelNativeGraphicsAdapter::initialize(device_identifier);
+#endif
         break;
     case PCI::VendorID::VirtIO:
+#ifdef COMPILE_VIRTIO_GRAPHICS
         dmesgln("Graphics: Using VirtIO console");
         adapter = Graphics::VirtIOGPU::GraphicsAdapter::initialize(device_identifier);
+#endif
         break;
     default:
         if (!is_vga_compatible_pci_device(device_identifier))
