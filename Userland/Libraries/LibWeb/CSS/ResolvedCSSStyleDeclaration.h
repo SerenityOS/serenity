@@ -24,6 +24,8 @@ public:
     virtual Optional<StyleProperty> property(PropertyID) const override;
     virtual bool set_property(PropertyID, StringView css_text) override;
 
+    virtual String serialized() const override;
+
 private:
     explicit ResolvedCSSStyleDeclaration(DOM::Element&);
 

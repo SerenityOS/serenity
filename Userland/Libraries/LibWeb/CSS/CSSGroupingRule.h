@@ -24,6 +24,8 @@ public:
     size_t insert_rule(StringView const& rule, size_t index = 0);
     void delete_rule(size_t index);
 
+    virtual String serialized() const;
+
 protected:
     explicit CSSGroupingRule(NonnullRefPtrVector<CSSRule>&&);
 

@@ -113,4 +113,83 @@ void CSSStyleDeclaration::set_property(StringView property_name, StringView css_
     set_property(property_id, css_text);
 }
 
+String CSSStyleDeclaration::css_text() const
+{
+    TODO();
+    return "";
+}
+
+void CSSStyleDeclaration::set_css_text(StringView)
+{
+    TODO();
+}
+
+// https://drafts.csswg.org/cssom/#serialize-a-css-declaration
+static String serialize_a_css_declaration(CSS::PropertyID property, String value, bool important)
+{
+    StringBuilder builder;
+
+    // 1. Let s be the empty string.
+    // 2. Append property to s.
+    builder.append(string_from_property_id(property));
+
+    // 3. Append ": " (U+003A U+0020) to s.
+    builder.append(": "sv);
+
+    // 4. Append value to s.
+    builder.append(value);
+
+    // 5. If the important flag is set, append " !important" (U+0020 U+0021 U+0069 U+006D U+0070 U+006F U+0072 U+0074 U+0061 U+006E U+0074) to s.
+    if (important)
+        builder.append(" !important"sv);
+
+    // 6. Append ";" (U+003B) to s.
+    builder.append(';');
+
+    // 7. Return s.
+    return builder.to_string();
+}
+
+// https://drafts.csswg.org/cssom/#serialize-a-css-declaration-block
+String PropertyOwningCSSStyleDeclaration::serialized() const
+{
+    // 1. Let list be an empty array.
+    Vector<String> list;
+
+    // 2. Let already serialized be an empty array.
+    HashTable<PropertyID> already_serialized;
+
+    // 3. Declaration loop: For each CSS declaration declaration in declaration block’s declarations, follow these substeps:
+    for (auto& declaration : m_properties) {
+        // 1. Let property be declaration’s property name.
+        auto property = declaration.property_id;
+
+        // 2. If property is in already serialized, continue with the steps labeled declaration loop.
+        if (already_serialized.contains(property))
+            continue;
+
+        // FIXME: 3. If property maps to one or more shorthand properties, let shorthands be an array of those shorthand properties, in preferred order.
+
+        // FIXME: 4. Shorthand loop: For each shorthand in shorthands, follow these substeps: ...
+
+        // 5. Let value be the result of invoking serialize a CSS value of declaration.
+        auto value = declaration.value->to_string();
+
+        // 6. Let serialized declaration be the result of invoking serialize a CSS declaration with property name property, value value,
+        //    and the important flag set if declaration has its important flag set.
+        auto serialized_declaration = serialize_a_css_declaration(property, move(value), declaration.important);
+
+        // 7. Append serialized declaration to list.
+        list.append(move(serialized_declaration));
+
+        // 8. Append property to already serialized.
+        already_serialized.set(property);
+    }
+
+    // 4. Return list joined with " " (U+0020).
+    StringBuilder builder;
+    builder.join(' ', list);
+    return builder.to_string();
+}
+
 }

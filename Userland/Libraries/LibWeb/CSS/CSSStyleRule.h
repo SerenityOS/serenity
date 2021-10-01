@@ -43,6 +43,8 @@ public:
 private:
     CSSStyleRule(NonnullRefPtrVector<Selector>&&, NonnullRefPtr<CSSStyleDeclaration>&&);
 
+    virtual String serialized() const override;
+
     NonnullRefPtrVector<Selector> m_selectors;
     NonnullRefPtr<CSSStyleDeclaration> m_declaration;
 };
