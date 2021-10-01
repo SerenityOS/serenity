@@ -468,8 +468,8 @@ NonnullOwnPtr<Text::Node> Text::parse_link(Vector<Token>::ConstIterator& tokens)
         link_text->children.prepend(make<TextNode>(opening.data));
         return link_text;
     }
-    auto seperator = *tokens;
-    VERIFY(seperator == "](");
+    auto separator = *tokens;
+    VERIFY(separator == "](");
 
     auto address = make<MultiNode>();
     for (auto iterator = tokens + 1; !iterator.is_end(); ++iterator) {
@@ -482,7 +482,7 @@ NonnullOwnPtr<Text::Node> Text::parse_link(Vector<Token>::ConstIterator& tokens)
     }
 
     link_text->children.prepend(make<TextNode>(opening.data));
-    link_text->children.append(make<TextNode>(seperator.data));
+    link_text->children.append(make<TextNode>(separator.data));
     return link_text;
 }
 }
