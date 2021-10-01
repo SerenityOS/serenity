@@ -40,6 +40,8 @@ public:
         return m_selected_view->cursor();
     }
 
+    void initialize_menubar(GUI::Window&);
+
 private:
     virtual void resize_event(GUI::ResizeEvent&) override;
 
@@ -60,6 +62,8 @@ private:
     bool m_should_change_selected_cells { false };
 
     OwnPtr<Workbook> m_workbook;
+
+    void clipboard_action(bool is_cut);
 };
 
 }
