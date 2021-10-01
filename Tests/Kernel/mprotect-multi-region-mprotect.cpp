@@ -56,7 +56,7 @@ int main()
     outln("Mprotect 2 ranges [2, -- ,2] -> Error");
     rc = mprotect(map1, 6 * PAGE_SIZE, PROT_READ);
     if (!rc) {
-        perror("mprotect full over missing succeded");
+        perror("mprotect full over missing succeeded");
         return 1;
     }
 
