@@ -17,19 +17,12 @@
 
 int main(int, char**)
 {
-    if constexpr (REQUEST_SERVER_DEBUG) {
-        if (pledge("stdio inet accept unix rpath sendfd recvfd sigaction", nullptr) < 0) {
-            perror("pledge");
-            return 1;
-        }
-
-        signal(SIGINFO, [](int) { RequestServer::ConnectionCache::dump_jobs(); });
-    } else {
-        if (pledge("stdio inet accept unix rpath sendfd recvfd", nullptr) < 0) {
-            perror("pledge");
-            return 1;
-        }
+    if (pledge("stdio inet accept unix rpath sendfd recvfd sigaction", nullptr) < 0) {
+        perror("pledge");
+        return 1;
     }
+
+    signal(SIGINFO, [](int) { RequestServer::ConnectionCache::dump_jobs(); });
 
     // Ensure the certificates are read out here.
     [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();
