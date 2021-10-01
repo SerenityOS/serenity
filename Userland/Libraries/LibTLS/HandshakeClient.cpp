@@ -368,7 +368,7 @@ ByteBuffer TLSv12::build_client_key_exchange()
         TODO();
         break;
     default:
-        dbgln("Unknonwn client key exchange algorithm");
+        dbgln("Unknown client key exchange algorithm");
         VERIFY_NOT_REACHED();
         break;
     }

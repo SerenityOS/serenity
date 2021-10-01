@@ -796,7 +796,7 @@ static bool decode_dds(DDSLoadingContext& context)
 
         decode_bitmap(stream, context, format, width, height);
 
-        // We support parsing mipmaps, but we only care about the largest one :^) (Atleast for now)
+        // We support parsing mipmaps, but we only care about the largest one :^) (At least for now)
         break;
     }
 
@@ -1020,7 +1020,7 @@ bool DDSImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 
 bool DDSImageDecoderPlugin::sniff()
 {
-    // The header is always atleast 128 bytes, so if the file is smaller, it cant be a DDS.
+    // The header is always at least 128 bytes, so if the file is smaller, it can't be a DDS.
     return m_context->data_size > 128
         && m_context->data[0] == 0x44
         && m_context->data[1] == 0x44

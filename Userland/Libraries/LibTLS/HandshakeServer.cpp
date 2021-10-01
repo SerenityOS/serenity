@@ -229,7 +229,7 @@ ssize_t TLSv12::handle_server_key_exchange(ReadonlyBytes buffer)
         TODO();
         break;
     default:
-        dbgln("Unknonwn server key exchange algorithm");
+        dbgln("Unknown server key exchange algorithm");
         VERIFY_NOT_REACHED();
         break;
     }
