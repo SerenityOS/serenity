@@ -80,7 +80,7 @@ void MessagePort::post_message(JS::Value message)
     // FIXME: This is an ad-hoc hack implementation instead, since we don't currently
     //        have serialization and deserialization of messages.
     main_thread_event_loop().task_queue().add(HTML::Task::create(HTML::Task::Source::PostedMessage, nullptr, [strong_port = NonnullRefPtr { *target_port }, message]() mutable {
-        strong_port->dispatch_event(MessageEvent::create(HTML::EventNames::message, message.to_string_without_side_effects(), "<origin>"));
+        strong_port->dispatch_event(MessageEvent::create(HTML::EventNames::message, message, "<origin>"));
     }));
 }
 
