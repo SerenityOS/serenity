@@ -122,7 +122,7 @@ private:
     struct Token {
         String data;
         // Flanking basically means that a delimiter run has a non-whitespace,
-        // non-punctuation character on the corresponsing side. For a more exact
+        // non-punctuation character on the corresponding side. For a more exact
         // definition, see the CommonMark spec.
         bool left_flanking;
         bool right_flanking;

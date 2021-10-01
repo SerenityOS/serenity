@@ -34,7 +34,7 @@ bool Clipper::point_within_clip_plane(const FloatVector4& vertex, ClipPlane plan
 GLVertex Clipper::clip_intersection_point(const GLVertex& p1, const GLVertex& p2, ClipPlane plane_index)
 {
     // See https://www.microsoft.com/en-us/research/wp-content/uploads/1978/01/p245-blinn.pdf
-    // "Clipping Using Homogenous Coordinates" Blinn/Newell, 1978
+    // "Clipping Using Homogeneous Coordinates" Blinn/Newell, 1978
 
     float w1 = p1.position.w();
     float w2 = p2.position.w();

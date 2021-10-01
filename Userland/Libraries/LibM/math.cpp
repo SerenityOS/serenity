@@ -403,7 +403,7 @@ MAKE_AK_BACKED2(remainder);
 long double truncl(long double x) NOEXCEPT
 {
     if (fabsl(x) < LONG_LONG_MAX) {
-        // This is 1.6 times faster than the implemenation using the "internal_to_integer"
+        // This is 1.6 times faster than the implementation using the "internal_to_integer"
         // helper (on x86_64)
         // https://quick-bench.com/q/xBmxuY8am9qibSYVna90Y6PIvqA
         u64 temp;

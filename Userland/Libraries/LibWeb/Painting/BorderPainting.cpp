@@ -209,7 +209,7 @@ void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rec
     Painting::paint_border(context, Painting::BorderEdge::Bottom, bottom_border_rect, border_radius_data, borders_data);
     Painting::paint_border(context, Painting::BorderEdge::Left, left_border_rect, border_radius_data, borders_data);
 
-    // Draws a quarter cirle clockwise
+    // Draws a quarter circle clockwise
     auto draw_quarter_circle = [&](Gfx::FloatPoint const& from, Gfx::FloatPoint const& to, Gfx::Color color, int thickness) {
         Gfx::FloatPoint center = { 0, 0 };
         Gfx::FloatPoint offset = { 0, 0 };
