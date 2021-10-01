@@ -128,9 +128,6 @@ public:
     void define_direct_property(PropertyName const& property_name, Value value, PropertyAttributes attributes) { storage_set(property_name, { value, attributes }); };
     void define_direct_accessor(PropertyName const&, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes);
 
-    void define_direct_property_without_transition(PropertyName const&, Value, PropertyAttributes);
-    void define_direct_accessor_without_transition(PropertyName const&, FunctionObject* getter, FunctionObject* setter, PropertyAttributes);
-
     void define_native_function(PropertyName const&, Function<Value(VM&, GlobalObject&)>, i32 length, PropertyAttributes attributes);
     void define_native_accessor(PropertyName const&, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attributes);
 
@@ -165,12 +162,6 @@ public:
 
     void ensure_shape_is_unique();
 
-    void enable_transitions() { m_transitions_enabled = true; }
-    void disable_transitions() { m_transitions_enabled = false; }
-
-    void set_initialized(Badge<Heap>) { m_initialized = true; }
-    void set_initialized(Badge<GlobalObject>) { m_initialized = true; }
-
     template<typename T>
     bool fast_is() const = delete;
 
@@ -192,8 +183,6 @@ private:
     Object* prototype() { return shape().prototype(); }
     Object const* prototype() const { return shape().prototype(); }
 
-    bool m_transitions_enabled { true };
-    bool m_initialized { false };
     Shape* m_shape { nullptr };
     Vector<Value> m_storage;
     IndexedProperties m_indexed_properties;

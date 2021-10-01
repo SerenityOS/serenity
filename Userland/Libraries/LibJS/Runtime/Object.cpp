@@ -938,20 +938,6 @@ void Object::storage_set(PropertyName const& property_name, ValueAndAttributes c
     }
 
     auto property_name_string_or_symbol = property_name.to_string_or_symbol();
-
-    // NOTE: We don't do transitions or check for attribute changes during object initialization,
-    // which makes building common runtime objects significantly faster. Transitions are primarily
-    // interesting when scripts add properties to objects.
-    if (!m_initialized) {
-        if (m_shape->is_unique())
-            m_shape->add_property_to_unique_shape(property_name_string_or_symbol, attributes);
-        else
-            m_shape->add_property_without_transition(property_name_string_or_symbol, attributes);
-
-        m_storage.append(value);
-        return;
-    }
-
     auto metadata = shape().lookup(property_name_string_or_symbol);
 
     if (!metadata.has_value()) {
@@ -963,8 +949,6 @@ void Object::storage_set(PropertyName const& property_name, ValueAndAttributes c
 
         if (m_shape->is_unique())
             m_shape->add_property_to_unique_shape(property_name_string_or_symbol, attributes);
-        else if (!m_transitions_enabled)
-            m_shape->add_property_without_transition(property_name_string_or_symbol, attributes);
         else
             set_shape(*m_shape->create_put_transition(property_name_string_or_symbol, attributes));
 
@@ -975,8 +959,6 @@ void Object::storage_set(PropertyName const& property_name, ValueAndAttributes c
     if (attributes != metadata->attributes) {
         if (m_shape->is_unique())
             m_shape->reconfigure_property_in_unique_shape(property_name_string_or_symbol, attributes);
-        else if (!m_transitions_enabled)
-            VERIFY_NOT_REACHED(); // We currently don't have a way of doing this, and it's not used anywhere either.
         else
             set_shape(*m_shape->create_configure_transition(property_name_string_or_symbol, attributes));
     }
@@ -1016,15 +998,15 @@ void Object::define_native_accessor(PropertyName const& property_name, Function<
     if (getter) {
         auto name = String::formatted("get {}", formatted_property_name);
         getter_function = NativeFunction::create(global_object(), name, move(getter));
-        getter_function->define_direct_property_without_transition(vm.names.length, Value(0), Attribute::Configurable);
-        getter_function->define_direct_property_without_transition(vm.names.name, js_string(vm, name), Attribute::Configurable);
+        getter_function->define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
+        getter_function->define_direct_property(vm.names.name, js_string(vm, name), Attribute::Configurable);
     }
     FunctionObject* setter_function = nullptr;
     if (setter) {
         auto name = String::formatted("set {}", formatted_property_name);
         setter_function = NativeFunction::create(global_object(), name, move(setter));
-        setter_function->define_direct_property_without_transition(vm.names.length, Value(1), Attribute::Configurable);
-        setter_function->define_direct_property_without_transition(vm.names.name, js_string(vm, name), Attribute::Configurable);
+        setter_function->define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
+        setter_function->define_direct_property(vm.names.name, js_string(vm, name), Attribute::Configurable);
     }
     return define_direct_accessor(property_name, getter_function, setter_function, attribute);
 }
@@ -1044,18 +1026,6 @@ void Object::define_direct_accessor(PropertyName const& property_name, FunctionO
         if (setter)
             accessor->set_setter(setter);
     }
-}
-
-void Object::define_direct_property_without_transition(PropertyName const& property_name, Value value, PropertyAttributes attributes)
-{
-    TemporaryChange disable_transitions(m_transitions_enabled, false);
-    define_direct_property(property_name, value, attributes);
-}
-
-void Object::define_direct_accessor_without_transition(PropertyName const& property_name, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes)
-{
-    TemporaryChange disable_transitions(m_transitions_enabled, false);
-    define_direct_accessor(property_name, getter, setter, attributes);
 }
 
 void Object::ensure_shape_is_unique()
@@ -1089,8 +1059,8 @@ void Object::define_native_function(PropertyName const& property_name, Function<
         function_name = String::formatted("[{}]", property_name.as_symbol()->description());
     }
     auto* function = NativeFunction::create(global_object(), function_name, move(native_function));
-    function->define_direct_property_without_transition(vm.names.length, Value(length), Attribute::Configurable);
-    function->define_direct_property_without_transition(vm.names.name, js_string(vm, function_name), Attribute::Configurable);
+    function->define_direct_property(vm.names.length, Value(length), Attribute::Configurable);
+    function->define_direct_property(vm.names.name, js_string(vm, function_name), Attribute::Configurable);
     define_direct_property(property_name, function, attribute);
 }
 

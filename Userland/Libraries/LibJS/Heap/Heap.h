@@ -46,14 +46,7 @@ public:
         auto* memory = allocate_cell(sizeof(T));
         new (memory) T(forward<Args>(args)...);
         auto* cell = static_cast<T*>(memory);
-        constexpr bool is_object = IsBaseOf<Object, T>;
-        if constexpr (is_object)
-            static_cast<Object*>(cell)->disable_transitions();
         cell->initialize(global_object);
-        if constexpr (is_object) {
-            static_cast<Object*>(cell)->enable_transitions();
-            static_cast<Object*>(cell)->set_initialized(Badge<Heap> {});
-        }
         return cell;
     }
 
