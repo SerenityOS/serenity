@@ -98,6 +98,46 @@ code64_sel:
 start:
     jmp real_start
 
+/*
+    param 1: pointer to C string
+    returns: Length of string (including null byte)
+*/
+print_no_halt:
+    pushl %ebp
+    movl %esp, %ebp
+
+    pushl %esi
+    pushl %ecx
+
+    movl 8(%ebp), %esi
+
+    mov $0xb8000, %ecx    /* VRAM address. */
+    mov $0x07, %ah        /* grey-on-black text. */
+
+.Lprint_str_loop:
+    lodsb                 /* Loads a byte from address at %esi into %al and increments %esi. */
+
+    test %al, %al
+    jz .Lprint_str_end
+
+    movw %ax, (%ecx)
+    add $2, %ecx
+
+    jmp .Lprint_str_loop
+.Lprint_str_end:
+
+    mov %esi, %eax
+    sub 8(%ebp), %eax
+
+    popl %ecx
+    popl %esi
+
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+
+
 /* 
     this function assumes that paging is disabled (or everything is mapped 1:1)
     param 1: pointer to string ended with null terminator (C string)
@@ -122,24 +162,13 @@ print_and_halt:
     movl %esp, %ebp
     movl 4(%ebp), %esi
 
-    mov $0xb8000, %ecx    /* VRAM address. */
-    mov $0x07, %ah        /* grey-on-black text. */
+    /* Print string using non-destructive methods */
+    pushl %esi
+    call print_no_halt
+    addl $4, %esp
 
-.print_str_loop:
-    lodsb                 /* Loads a byte from address at %esi into %al and increments %esi. */
-
-    test %al, %al
-    jz .print_str_end
-
-    movw %ax, (%ecx)
-    add $2, %ecx
-
-    jmp .print_str_loop
-.print_str_end:
-
-    /* Calculate string length into %ecx */
-    mov %esi, %ecx
-    sub 4(%ebp), %ecx
+    /* print_no_halt returns the string length (including null byte) in eax. */
+    mov %eax, %ecx
     movw %cx, (COPIED_STRING_LOCATION)    /* Store string length for later use. */
 
     /* Copy string into lower memory */
