@@ -37,24 +37,31 @@ void TLSv12::alert(AlertLevel level, AlertDescription code)
 
 void TLSv12::write_packet(ByteBuffer& packet)
 {
+    auto schedule_or_perform_flush = [&](bool immediate) {
+        if (m_context.connection_status > ConnectionStatus::Disconnected) {
+            if (!m_has_scheduled_write_flush && !immediate) {
+                dbgln_if(TLS_DEBUG, "Scheduling write of {}", m_context.tls_buffer.size());
+                deferred_invoke([this] { write_into_socket(); });
+                m_has_scheduled_write_flush = true;
+            } else {
+                // multiple packet are available, let's flush some out
+                dbgln_if(TLS_DEBUG, "Flushing scheduled write of {}", m_context.tls_buffer.size());
+                write_into_socket();
+                // the deferred invoke is still in place
+                m_has_scheduled_write_flush = true;
+            }
+        }
+    };
+    // Record size limit is 18432 bytes, leave some headroom and flush at 16K.
+    if (m_context.tls_buffer.size() + packet.size() > 16 * KiB)
+        schedule_or_perform_flush(true);
+
     auto ok = m_context.tls_buffer.try_append(packet.data(), packet.size());
     if (!ok) {
         // Toooooo bad, drop the record on the ground.
         return;
     }
-    if (m_context.connection_status > ConnectionStatus::Disconnected) {
-        if (!m_has_scheduled_write_flush) {
-            dbgln_if(TLS_DEBUG, "Scheduling write of {}", m_context.tls_buffer.size());
-            deferred_invoke([this] { write_into_socket(); });
-            m_has_scheduled_write_flush = true;
-        } else {
-            // multiple packet are available, let's flush some out
-            dbgln_if(TLS_DEBUG, "Flushing scheduled write of {}", m_context.tls_buffer.size());
-            write_into_socket();
-            // the deferred invoke is still in place
-            m_has_scheduled_write_flush = true;
-        }
-    }
+    schedule_or_perform_flush(false);
 }
 
 void TLSv12::update_packet(ByteBuffer& packet)
