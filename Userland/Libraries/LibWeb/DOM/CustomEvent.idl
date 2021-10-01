@@ -1,4 +1,4 @@
-#import <Event.idl>
+#import <DOM/Event.idl>
 
 [Exposed=(Window,Worker), CustomVisit]
 interface CustomEvent : Event {
