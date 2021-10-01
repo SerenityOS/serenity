@@ -46,6 +46,9 @@ public:
 
     void signal_abort();
 
+    void set_onabort(HTML::EventHandler);
+    HTML::EventHandler onabort();
+
     // ^EventTarget
     virtual void ref_event_target() override { ref(); }
     virtual void unref_event_target() override { unref(); }
