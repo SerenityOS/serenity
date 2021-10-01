@@ -215,7 +215,8 @@ Optional<T> StringView::to_int() const
 template Optional<i8> StringView::to_int() const;
 template Optional<i16> StringView::to_int() const;
 template Optional<i32> StringView::to_int() const;
-template Optional<i64> StringView::to_int() const;
+template Optional<long> StringView::to_int() const;
+template Optional<long long> StringView::to_int() const;
 
 template<typename T>
 Optional<T> StringView::to_uint() const
@@ -226,7 +227,8 @@ Optional<T> StringView::to_uint() const
 template Optional<u8> StringView::to_uint() const;
 template Optional<u16> StringView::to_uint() const;
 template Optional<u32> StringView::to_uint() const;
-template Optional<u64> StringView::to_uint() const;
+template Optional<unsigned long> StringView::to_uint() const;
+template Optional<unsigned long long> StringView::to_uint() const;
 template Optional<long> StringView::to_uint() const;
 template Optional<long long> StringView::to_uint() const;
 
