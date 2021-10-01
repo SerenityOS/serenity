@@ -9,7 +9,6 @@
 #include <Kernel/Arch/x86/Interrupts.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Firmware/ACPI/MultiProcessorParser.h>
-#include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/Interrupts/InterruptManagement.h>

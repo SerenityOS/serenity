@@ -13,7 +13,6 @@
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/kmalloc.h>
-#include <Kernel/IO.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/TTY/ConsoleManagement.h>
