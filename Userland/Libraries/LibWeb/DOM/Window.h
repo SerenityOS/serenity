@@ -87,7 +87,7 @@ public:
     float scroll_x() const;
     float scroll_y() const;
 
-    void fire_a_page_transition_event(FlyString event_name, bool persisted);
+    void fire_a_page_transition_event(FlyString const& event_name, bool persisted);
 
     float device_pixel_ratio() const;
 
