@@ -1,8 +1,19 @@
+#import <DOM/Event.idl>
+
 interface MessageEvent : Event {
+    constructor(DOMString type, optional MessageEventInit eventInitDict = {});
 
     readonly attribute any data;
     readonly attribute USVString origin;
     readonly attribute DOMString lastEventId;
     // FIXME: readonly attribute MessageEventSource? source;
     // FIXME: readonly attribute FrozenArray<MessagePort> ports;
+};
+
+dictionary MessageEventInit : EventInit {
+    any data = null;
+    USVString origin = "";
+    DOMString lastEventId = "";
+    // FIXME: MessageEventSource? source = null;
+    // FIXME: sequence<MessagePort> ports = [];
 };
