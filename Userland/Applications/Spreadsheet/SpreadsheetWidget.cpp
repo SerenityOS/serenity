@@ -83,7 +83,7 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
         m_workbook->add_sheet("Sheet 1");
 
     m_tab_context_menu = GUI::Menu::construct();
-    auto rename_action = GUI::Action::create("Rename...", [this](auto&) {
+    m_rename_action = GUI::Action::create("Rename...", [this](auto&) {
         VERIFY(m_tab_context_menu_sheet_view);
 
         auto* sheet_ptr = m_tab_context_menu_sheet_view->sheet_if_available();
@@ -96,7 +96,7 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
             m_tab_widget->set_tab_title(static_cast<GUI::Widget&>(*m_tab_context_menu_sheet_view), new_name);
         }
     });
-    m_tab_context_menu->add_action(rename_action);
+    m_tab_context_menu->add_action(*m_rename_action);
     m_tab_context_menu->add_action(GUI::Action::create("Add new sheet...", [this](auto&) {
         String name;
         if (GUI::InputBox::show(window(), name, "Name for new sheet", "Create sheet") == GUI::Dialog::ExecOK) {
@@ -107,6 +107,106 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
     }));
 
     setup_tabs(m_workbook->sheets());
+
+    m_new_action = GUI::Action::create("Add New Sheet", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-tab.png"), [&](auto&) {
+        add_sheet();
+    });
+
+    m_open_action = GUI::CommonActions::make_open_action([&](auto&) {
+        Optional<String> load_path = GUI::FilePicker::get_open_filepath(window());
+        if (!load_path.has_value())
+            return;
+
+        load(load_path.value());
+    });
+
+    m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
+        if (current_filename().is_empty()) {
+            String name = "workbook";
+            Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), name, "sheets");
+            if (!save_path.has_value())
+                return;
+
+            save(save_path.value());
+        } else {
+            save(current_filename());
+        }
+    });
+
+    m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
+        String name = "workbook";
+        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), name, "sheets");
+        if (!save_path.has_value())
+            return;
+
+        save(save_path.value());
+
+        if (!current_filename().is_empty())
+            set_filename(current_filename());
+    });
+
+    m_quit_action = GUI::CommonActions::make_quit_action([&](auto&) {
+        if (!request_close())
+            return;
+        GUI::Application::the()->quit(0);
+    });
+
+    m_cut_action = GUI::CommonActions::make_cut_action([&](auto&) { clipboard_action(true); }, window());
+    m_copy_action = GUI::CommonActions::make_copy_action([&](auto&) { clipboard_action(false); }, window());
+    m_paste_action = GUI::CommonActions::make_paste_action([&](auto&) {
+        ScopeGuard update_after_paste { [&] { update(); } };
+
+        auto* worksheet_ptr = current_worksheet_if_available();
+        if (!worksheet_ptr) {
+            GUI::MessageBox::show_error(window(), "There are no active worksheets");
+            return;
+        }
+        auto& sheet = *worksheet_ptr;
+        auto& cells = sheet.selected_cells();
+        VERIFY(!cells.is_empty());
+        const auto& data = GUI::Clipboard::the().data_and_type();
+        if (auto spreadsheet_data = data.metadata.get("text/x-spreadsheet-data"); spreadsheet_data.has_value()) {
+            Vector<Spreadsheet::Position> source_positions, target_positions;
+            auto lines = spreadsheet_data.value().split_view('\n');
+            auto action = lines.take_first();
+
+            for (auto& line : lines) {
+                dbgln("Paste line '{}'", line);
+                auto position = sheet.position_from_url(line);
+                if (position.has_value())
+                    source_positions.append(position.release_value());
+            }
+
+            for (auto& position : sheet.selected_cells())
+                target_positions.append(position);
+
+            if (source_positions.is_empty())
+                return;
+
+            auto first_position = source_positions.take_first();
+            sheet.copy_cells(move(source_positions), move(target_positions), first_position, action == "cut" ? Spreadsheet::Sheet::CopyOperation::Cut : Spreadsheet::Sheet::CopyOperation::Copy);
+        } else {
+            for (auto& cell : sheet.selected_cells())
+                sheet.ensure(cell).set_data(StringView { data.data.data(), data.data.size() });
+            update();
+        }
+    },
+        window());
+
+    m_functions_help_action = GUI::Action::create(
+        "&Functions Help", [&](auto&) {
+            if (auto* worksheet_ptr = current_worksheet_if_available()) {
+                auto docs = worksheet_ptr->gather_documentation();
+                auto help_window = Spreadsheet::HelpWindow::the(window());
+                help_window->set_docs(move(docs));
+                help_window->show();
+            } else {
+                GUI::MessageBox::show_error(window(), "Cannot prepare documentation/help without an active worksheet");
+            }
+        },
+        window());
+
+    m_about_action = GUI::CommonActions::make_about_action("Spreadsheet", GUI::Icon::default_icon("app-spreadsheet"), window());
 }
 
 void SpreadsheetWidget::resize_event(GUI::ResizeEvent& event)
@@ -391,112 +491,21 @@ void SpreadsheetWidget::clipboard_action(bool is_cut)
 void SpreadsheetWidget::initialize_menubar(GUI::Window& window)
 {
     auto& file_menu = window.add_menu("&File");
-
-    file_menu.add_action(GUI::Action::create("Add New Sheet", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-tab.png"), [&](auto&) {
-        add_sheet();
-    }));
-
-    file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        Optional<String> load_path = GUI::FilePicker::get_open_filepath(&window);
-        if (!load_path.has_value())
-            return;
-
-        load(load_path.value());
-    }));
-
-    file_menu.add_action(GUI::CommonActions::make_save_action([&](auto&) {
-        if (current_filename().is_empty()) {
-            String name = "workbook";
-            Optional<String> save_path = GUI::FilePicker::get_save_filepath(&window, name, "sheets");
-            if (!save_path.has_value())
-                return;
-
-            save(save_path.value());
-        } else {
-            save(current_filename());
-        }
-    }));
-
-    file_menu.add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
-        String name = "workbook";
-        Optional<String> save_path = GUI::FilePicker::get_save_filepath(&window, name, "sheets");
-        if (!save_path.has_value())
-            return;
-
-        save(save_path.value());
-
-        if (!current_filename().is_empty())
-            set_filename(current_filename());
-    }));
-
+    file_menu.add_action(*m_new_action);
+    file_menu.add_action(*m_open_action);
+    file_menu.add_action(*m_save_action);
+    file_menu.add_action(*m_save_as_action);
     file_menu.add_separator();
-
-    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
-        if (!request_close())
-            return;
-        GUI::Application::the()->quit(0);
-    }));
+    file_menu.add_action(*m_quit_action);
 
     auto& edit_menu = window.add_menu("&Edit");
-
-    edit_menu.add_action(GUI::CommonActions::make_cut_action([&](auto&) { clipboard_action(true); }, &window));
-    edit_menu.add_action(GUI::CommonActions::make_copy_action([&](auto&) { clipboard_action(false); }, &window));
-    edit_menu.add_action(GUI::CommonActions::make_paste_action([&](auto&) {
-        ScopeGuard update_after_paste { [&] { update(); } };
-
-        auto* worksheet_ptr = current_worksheet_if_available();
-        if (!worksheet_ptr) {
-            GUI::MessageBox::show_error(&window, "There are no active worksheets");
-            return;
-        }
-        auto& sheet = *worksheet_ptr;
-        auto& cells = sheet.selected_cells();
-        VERIFY(!cells.is_empty());
-        const auto& data = GUI::Clipboard::the().data_and_type();
-        if (auto spreadsheet_data = data.metadata.get("text/x-spreadsheet-data"); spreadsheet_data.has_value()) {
-            Vector<Spreadsheet::Position> source_positions, target_positions;
-            auto lines = spreadsheet_data.value().split_view('\n');
-            auto action = lines.take_first();
-
-            for (auto& line : lines) {
-                dbgln("Paste line '{}'", line);
-                auto position = sheet.position_from_url(line);
-                if (position.has_value())
-                    source_positions.append(position.release_value());
-            }
-
-            for (auto& position : sheet.selected_cells())
-                target_positions.append(position);
-
-            if (source_positions.is_empty())
-                return;
-
-            auto first_position = source_positions.take_first();
-            sheet.copy_cells(move(source_positions), move(target_positions), first_position, action == "cut" ? Spreadsheet::Sheet::CopyOperation::Cut : Spreadsheet::Sheet::CopyOperation::Copy);
-        } else {
-            for (auto& cell : sheet.selected_cells())
-                sheet.ensure(cell).set_data(StringView { data.data.data(), data.data.size() });
-            update();
-        }
-    },
-        &window));
+    edit_menu.add_action(*m_cut_action);
+    edit_menu.add_action(*m_copy_action);
+    edit_menu.add_action(*m_paste_action);
 
     auto& help_menu = window.add_menu("&Help");
-
-    help_menu.add_action(GUI::Action::create(
-        "&Functions Help", [&](auto&) {
-            if (auto* worksheet_ptr = current_worksheet_if_available()) {
-                auto docs = worksheet_ptr->gather_documentation();
-                auto help_window = Spreadsheet::HelpWindow::the(&window);
-                help_window->set_docs(move(docs));
-                help_window->show();
-            } else {
-                GUI::MessageBox::show_error(&window, "Cannot prepare documentation/help without an active worksheet");
-            }
-        },
-        &window));
-
-    help_menu.add_action(GUI::CommonActions::make_about_action("Spreadsheet", GUI::Icon::default_icon("app-spreadsheet"), &window));
+    help_menu.add_action(*m_functions_help_action);
+    help_menu.add_action(*m_about_action);
 }
 
 SpreadsheetWidget::~SpreadsheetWidget()
