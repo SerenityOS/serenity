@@ -365,7 +365,11 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         auto flex_basis = child_box.computed_values().flex_basis();
         if (flex_basis.type == CSS::FlexBasis::Length) {
             // A
-            flex_item.flex_base_size = get_pixel_size(child_box, flex_basis.length);
+            auto specified_base_size = get_pixel_size(child_box, flex_basis.length);
+            if (specified_base_size == 0)
+                flex_item.flex_base_size = calculated_main_size(flex_item.box);
+            else
+                flex_item.flex_base_size = specified_base_size;
         } else if (flex_basis.type == CSS::FlexBasis::Content
             && has_definite_cross_size(child_box)
             // FIXME: && has intrinsic aspect ratio.
@@ -504,12 +508,9 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         for (auto& flex_item : flex_line.items) {
             if (flex_item->flex_factor.has_value() && flex_item->flex_factor.value() == 0) {
                 freeze_item_setting_target_main_size_to_hypothetical_main_size(*flex_item);
-            } else if (flex_item->flex_factor.has_value()) {
-                // FIXME: This isn't spec
-                continue;
             } else if (used_flex_factor == FlexFactor::FlexGrowFactor) {
                 // FIXME: Spec doesn't include the == case, but we take a too basic approach to calculating the values used so this is appropriate
-                if (flex_item->flex_base_size >= flex_item->hypothetical_main_size) {
+                if (flex_item->flex_base_size > flex_item->hypothetical_main_size) {
                     freeze_item_setting_target_main_size_to_hypothetical_main_size(*flex_item);
                 }
             } else if (used_flex_factor == FlexFactor::FlexShrinkFactor) {
