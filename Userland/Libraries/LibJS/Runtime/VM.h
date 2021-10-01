@@ -81,6 +81,7 @@ public:
 
     Symbol* get_global_symbol(const String& description);
 
+    HashMap<String, PrimitiveString*>& string_cache() { return m_string_cache; }
     PrimitiveString& empty_string() { return *m_empty_string; }
     PrimitiveString& single_ascii_character_string(u8 character)
     {
@@ -293,6 +294,8 @@ private:
     ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, Object* iterator, bool& iterator_done, Environment* environment, GlobalObject& global_object);
 
     Exception* m_exception { nullptr };
+
+    HashMap<String, PrimitiveString*> m_string_cache;
 
     Heap m_heap;
     Vector<Interpreter*> m_interpreters;

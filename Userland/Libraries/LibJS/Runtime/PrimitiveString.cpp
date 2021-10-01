@@ -25,6 +25,7 @@ PrimitiveString::PrimitiveString(Utf16String string)
 
 PrimitiveString::~PrimitiveString()
 {
+    vm().string_cache().remove(m_utf8_string);
 }
 
 String const& PrimitiveString::string() const
@@ -90,7 +91,14 @@ PrimitiveString* js_string(Heap& heap, String string)
             return &heap.vm().single_ascii_character_string(ch);
     }
 
-    return heap.allocate_without_global_object<PrimitiveString>(move(string));
+    auto& string_cache = heap.vm().string_cache();
+    auto it = string_cache.find(string);
+    if (it == string_cache.end()) {
+        auto* new_string = heap.allocate_without_global_object<PrimitiveString>(string);
+        string_cache.set(move(string), new_string);
+        return new_string;
+    }
+    return it->value;
 }
 
 PrimitiveString* js_string(VM& vm, String string)
