@@ -91,6 +91,8 @@ private:
     virtual void did_become_zombie() override;
 
     Shape* get_or_prune_cached_forward_transition(TransitionKey const&);
+    Shape* get_or_prune_cached_prototype_transition(Object& prototype);
+
     void ensure_property_table() const;
 
     PropertyAttributes m_attributes { 0 };
@@ -102,6 +104,7 @@ private:
     mutable OwnPtr<HashMap<StringOrSymbol, PropertyMetadata>> m_property_table;
 
     HashMap<TransitionKey, WeakPtr<Shape>> m_forward_transitions;
+    HashMap<Object*, WeakPtr<Shape>> m_prototype_transitions;
     Shape* m_previous { nullptr };
     StringOrSymbol m_property_name;
     Object* m_prototype { nullptr };
