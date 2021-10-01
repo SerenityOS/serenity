@@ -9,6 +9,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/EventListener.h>
+#include <LibWeb/HTML/EventHandler.h>
 
 namespace Web::CSS {
 
@@ -63,6 +64,16 @@ void MediaQueryList::remove_listener(RefPtr<DOM::EventListener> listener)
     // NOTE: While the spec doesn't technically use remove_event_listener and instead manipulates the list directly, every major engine uses remove_event_listener.
     //       This means if an event listener removes another event listener that comes after it, the removed event listener will not be invoked.
     remove_event_listener(HTML::EventNames::change, listener);
+}
+
+void MediaQueryList::set_onchange(HTML::EventHandler event_handler)
+{
+    set_event_handler_attribute(HTML::EventNames::change, event_handler);
+}
+
+HTML::EventHandler MediaQueryList::onchange()
+{
+    return event_handler_attribute(HTML::EventNames::change);
 }
 
 }

@@ -44,6 +44,9 @@ public:
     void add_listener(RefPtr<DOM::EventListener> listener);
     void remove_listener(RefPtr<DOM::EventListener> listener);
 
+    void set_onchange(HTML::EventHandler);
+    HTML::EventHandler onchange();
+
 private:
     MediaQueryList(DOM::Document&, String);
 
