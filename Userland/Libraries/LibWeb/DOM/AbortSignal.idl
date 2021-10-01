@@ -4,5 +4,5 @@ interface AbortSignal : EventTarget {
 
     readonly attribute boolean aborted;
 
-    // FIXME: attribute EventHandler onabort;
+    attribute EventHandler onabort;
 };

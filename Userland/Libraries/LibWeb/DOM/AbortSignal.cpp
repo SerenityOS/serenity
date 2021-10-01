@@ -8,6 +8,7 @@
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/EventDispatcher.h>
+#include <LibWeb/HTML/EventHandler.h>
 
 namespace Web::DOM {
 
@@ -48,6 +49,16 @@ void AbortSignal::signal_abort()
     m_abort_algorithms.clear();
 
     dispatch_event(Event::create(HTML::EventNames::abort));
+}
+
+void AbortSignal::set_onabort(HTML::EventHandler event_handler)
+{
+    set_event_handler_attribute(HTML::EventNames::abort, event_handler);
+}
+
+HTML::EventHandler AbortSignal::onabort()
+{
+    return event_handler_attribute(HTML::EventNames::abort);
 }
 
 }
