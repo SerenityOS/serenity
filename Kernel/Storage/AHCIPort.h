@@ -11,7 +11,6 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/Devices/Device.h>
-#include <Kernel/IO.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/Spinlock.h>
