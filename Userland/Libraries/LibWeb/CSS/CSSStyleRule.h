@@ -15,7 +15,7 @@
 
 namespace Web::CSS {
 
-class CSSStyleRule : public CSSRule {
+class CSSStyleRule final : public CSSRule {
     AK_MAKE_NONCOPYABLE(CSSStyleRule);
     AK_MAKE_NONMOVABLE(CSSStyleRule);
 
@@ -27,13 +27,13 @@ public:
         return adopt_ref(*new CSSStyleRule(move(selectors), move(declaration)));
     }
 
-    ~CSSStyleRule();
+    virtual ~CSSStyleRule() override;
 
     const NonnullRefPtrVector<Selector>& selectors() const { return m_selectors; }
     const CSSStyleDeclaration& declaration() const { return m_declaration; }
 
-    virtual StringView class_name() const { return "CSSStyleRule"; };
-    virtual Type type() const { return Type::Style; };
+    virtual StringView class_name() const override { return "CSSStyleRule"; };
+    virtual Type type() const override { return Type::Style; };
 
     String selector_text() const;
     void set_selector_text(StringView);
