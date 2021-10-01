@@ -32,10 +32,14 @@ public:
     virtual StringView class_name() const = 0;
     virtual Type type() const = 0;
 
+    String css_text() const;
+    void set_css_text(StringView);
+
     template<typename T>
     bool fast_is() const = delete;
 
-private:
+protected:
+    virtual String serialized() const = 0;
 };
 
 }

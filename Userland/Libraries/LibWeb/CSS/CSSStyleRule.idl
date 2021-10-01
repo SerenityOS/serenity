@@ -1,6 +1,7 @@
 interface CSSStyleRule {
 
     attribute CSSOMString selectorText;
+    attribute CSSOMString cssText;
     [SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;
 
 };

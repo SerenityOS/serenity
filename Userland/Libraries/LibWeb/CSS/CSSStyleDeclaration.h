@@ -38,6 +38,11 @@ public:
 
     String get_property_value(StringView property) const;
 
+    String css_text() const;
+    void set_css_text(StringView);
+
+    virtual String serialized() const = 0;
+
 protected:
     CSSStyleDeclaration() { }
 };
@@ -62,6 +67,8 @@ public:
     const Vector<StyleProperty>& properties() const { return m_properties; }
     Optional<StyleProperty> custom_property(const String& custom_property_name) const { return m_custom_properties.get(custom_property_name); }
     size_t custom_property_count() const { return m_custom_properties.size(); }
+
+    virtual String serialized() const final override;
 
 protected:
     explicit PropertyOwningCSSStyleDeclaration(Vector<StyleProperty>, HashMap<String, StyleProperty>);

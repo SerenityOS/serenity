@@ -36,6 +36,8 @@ public:
 private:
     explicit CSSImportRule(AK::URL);
 
+    virtual String serialized() const override;
+
     AK::URL m_url;
     RefPtr<CSSStyleSheet> m_style_sheet;
 };
