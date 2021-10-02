@@ -2880,7 +2880,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 
         if (attribute.extended_attributes.contains("Unscopable")) {
             attribute_generator.append(R"~~~(
-    unscopable_object->create_data_property("@attribute.name@", JS::Value(true));
+    MUST(unscopable_object->create_data_property("@attribute.name@", JS::Value(true)));
 )~~~");
         }
 
@@ -2911,7 +2911,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 
         if (function.extended_attributes.contains("Unscopable")) {
             function_generator.append(R"~~~(
-    unscopable_object->create_data_property("@function.name@", JS::Value(true));
+    MUST(unscopable_object->create_data_property("@function.name@", JS::Value(true)));
 )~~~");
         }
 
