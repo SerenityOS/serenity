@@ -140,7 +140,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_char_code)
 // 22.1.2.2 String.fromCodePoint ( ...codePoints ), https://tc39.es/ecma262/#sec-string.fromcodepoint
 JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
 {
-    Vector<u16> string;
+    Vector<u16, 1> string;
     string.ensure_capacity(vm.argument_count()); // This will be an under-estimate if any code point is > 0xffff.
 
     for (size_t i = 0; i < vm.argument_count(); ++i) {
