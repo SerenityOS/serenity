@@ -21,7 +21,7 @@ public:
     virtual ~LoopbackAdapter() override;
 
     virtual void send_raw(ReadonlyBytes) override;
-    virtual StringView class_name() const override { return "LoopbackAdapter"; }
+    virtual StringView class_name() const override { return "LoopbackAdapter"sv; }
     virtual bool link_up() override { return true; }
     virtual bool link_full_duplex() override { return true; }
     virtual int link_speed() override { return 1000; }

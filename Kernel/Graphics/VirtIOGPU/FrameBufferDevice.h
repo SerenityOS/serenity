@@ -51,7 +51,7 @@ public:
     u8* framebuffer_data();
 
 private:
-    virtual StringView class_name() const override { return "VirtIOFrameBuffer"; }
+    virtual StringView class_name() const override { return "VirtIOFrameBuffer"sv; }
 
     Protocol::DisplayInfoResponse::Display const& display_info() const;
     Protocol::DisplayInfoResponse::Display& display_info();

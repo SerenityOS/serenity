@@ -26,7 +26,7 @@ public:
     virtual bool can_write(const Kernel::OpenFileDescription&, size_t) const override { return true; }
     virtual Kernel::KResultOr<size_t> read(OpenFileDescription&, u64, Kernel::UserOrKernelBuffer&, size_t) override;
     virtual Kernel::KResultOr<size_t> write(OpenFileDescription&, u64, const Kernel::UserOrKernelBuffer&, size_t) override;
-    virtual StringView class_name() const override { return "Console"; }
+    virtual StringView class_name() const override { return "Console"sv; }
 
     void put_char(char);
 

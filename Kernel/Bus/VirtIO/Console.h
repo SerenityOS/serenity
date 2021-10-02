@@ -31,7 +31,7 @@ public:
     virtual void initialize() override;
 
 private:
-    virtual StringView class_name() const override { return "VirtIOConsole"; }
+    virtual StringView class_name() const override { return "VirtIOConsole"sv; }
     explicit Console(PCI::DeviceIdentifier const&);
     enum class ControlEvent : u16 {
         DeviceReady = 0,

@@ -166,7 +166,7 @@ protected:
 
 private:
     explicit TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, NonnullOwnPtr<KBuffer> scratch_buffer);
-    virtual StringView class_name() const override { return "TCPSocket"; }
+    virtual StringView class_name() const override { return "TCPSocket"sv; }
 
     virtual void shut_down_for_writing() override;
 
