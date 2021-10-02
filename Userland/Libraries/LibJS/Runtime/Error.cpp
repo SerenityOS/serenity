@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
@@ -30,18 +31,28 @@ Error::Error(Object& prototype)
 }
 
 // 20.5.8.1 InstallErrorCause ( O, options ), https://tc39.es/proposal-error-cause/#sec-errorobjects-install-error-cause
-void Error::install_error_cause(Value options)
+ThrowCompletionOr<void> Error::install_error_cause(Value options)
 {
     auto& vm = this->vm();
+
+    // 1. If Type(options) is Object and ? HasProperty(options, "cause") is true, then
     if (!options.is_object())
-        return;
-    auto& options_object = options.as_object();
-    if (!options_object.has_property(vm.names.cause))
-        return;
-    auto cause = options_object.get(vm.names.cause);
-    if (vm.exception())
-        return;
-    create_non_enumerable_data_property_or_throw(vm.names.cause, cause);
+        return {};
+    auto has_property = options.as_object().has_property(vm.names.cause);
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+    if (has_property) {
+        // a. Let cause be ? Get(options, "cause").
+        auto cause = options.as_object().get(vm.names.cause);
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
+
+        // b. Perform ! CreateNonEnumerableDataPropertyOrThrow(O, "cause", cause).
+        create_non_enumerable_data_property_or_throw(vm.names.cause, cause);
+    }
+
+    // Return NormalCompletion(undefined).
+    return {};
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                         \
