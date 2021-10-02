@@ -24,7 +24,7 @@ static bool flag_beep_on_fail = false;
 static volatile int exit_code = 0;
 static volatile pid_t child_pid = -1;
 
-static String build_header_string(const Vector<const char*>& command, const struct timeval& interval)
+static String build_header_string(Vector<char const*> const& command, struct timeval const& interval)
 {
     StringBuilder builder;
     builder.appendff("Every {}", interval.tv_sec);
@@ -43,7 +43,7 @@ static struct timeval get_current_time()
     return tv;
 }
 
-static int64_t usecs_from(const struct timeval& start, const struct timeval& end)
+static int64_t usecs_from(struct timeval const& start, struct timeval const& end)
 {
     struct timeval diff;
     timeval_sub(end, start, diff);
@@ -66,7 +66,7 @@ static void handle_signal(int signal)
     exit(exit_code);
 }
 
-static int run_command(const Vector<const char*>& command)
+static int run_command(Vector<char const*> const& command)
 {
     if ((errno = posix_spawnp(const_cast<pid_t*>(&child_pid), command[0], nullptr, nullptr, const_cast<char**>(command.data()), environ))) {
         exit_code = 1;
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Vector<const char*> command;
+    Vector<char const*> command;
     Core::ArgsParser args_parser;
     args_parser.set_stop_on_first_non_option(true);
     args_parser.set_general_help("Execute a command repeatedly, and watch its output over time.");
