@@ -23,7 +23,7 @@ public:
     u32 child_element_count() const;
 
     ExceptionOr<RefPtr<Element>> query_selector(StringView);
-    ExceptionOr<NonnullRefPtrVector<Element>> query_selector_all(StringView);
+    ExceptionOr<NonnullRefPtr<NodeList>> query_selector_all(StringView);
 
     NonnullRefPtr<HTMLCollection> children();
 

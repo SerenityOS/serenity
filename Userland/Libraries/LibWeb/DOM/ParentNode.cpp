@@ -8,6 +8,7 @@
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/ParentNode.h>
+#include <LibWeb/DOM/StaticNodeList.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Namespace.h>
 
@@ -35,7 +36,7 @@ ExceptionOr<RefPtr<Element>> ParentNode::query_selector(StringView selector_text
     return result;
 }
 
-ExceptionOr<NonnullRefPtrVector<Element>> ParentNode::query_selector_all(StringView selector_text)
+ExceptionOr<NonnullRefPtr<NodeList>> ParentNode::query_selector_all(StringView selector_text)
 {
     auto maybe_selectors = parse_selector(CSS::ParsingContext(*this), selector_text);
     if (!maybe_selectors.has_value())
@@ -43,7 +44,7 @@ ExceptionOr<NonnullRefPtrVector<Element>> ParentNode::query_selector_all(StringV
 
     auto selectors = maybe_selectors.value();
 
-    NonnullRefPtrVector<Element> elements;
+    NonnullRefPtrVector<Node> elements;
     for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
         for (auto& selector : selectors) {
             if (SelectorEngine::matches(selector, element)) {
@@ -53,7 +54,7 @@ ExceptionOr<NonnullRefPtrVector<Element>> ParentNode::query_selector_all(StringV
         return IterationDecision::Continue;
     });
 
-    return elements;
+    return StaticNodeList::create(move(elements));
 }
 
 RefPtr<Element> ParentNode::first_element_child()

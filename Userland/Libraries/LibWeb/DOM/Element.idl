@@ -33,7 +33,7 @@ interface Element : Node {
     readonly attribute unsigned long childElementCount;
 
     Element? querySelector(DOMString selectors);
-    ArrayFromVector querySelectorAll(DOMString selectors);
+    [NewObject] NodeList querySelectorAll(DOMString selectors);
 
     [SameObject] readonly attribute HTMLCollection children;
 
