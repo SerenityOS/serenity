@@ -60,9 +60,7 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
                 auto replacer_length = TRY_OR_DISCARD(length_of_array_like(global_object, replacer_object));
                 Vector<String> list;
                 for (size_t i = 0; i < replacer_length; ++i) {
-                    auto replacer_value = replacer_object.get(i);
-                    if (vm.exception())
-                        return {};
+                    auto replacer_value = TRY_OR_DISCARD(replacer_object.get(i));
                     String item;
                     if (replacer_value.is_string()) {
                         item = replacer_value.as_string().string();
@@ -142,16 +140,12 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
 String JSONObject::serialize_json_property(GlobalObject& global_object, StringifyState& state, const PropertyName& key, Object* holder)
 {
     auto& vm = global_object.vm();
-    auto value = holder->get(key);
-    if (vm.exception())
-        return {};
+    auto value = TRY_OR_DISCARD(holder->get(key));
     if (value.is_object() || value.is_bigint()) {
         auto* value_object = value.to_object(global_object);
         if (vm.exception())
             return {};
-        auto to_json = value_object->get(vm.names.toJSON);
-        if (vm.exception())
-            return {};
+        auto to_json = TRY_OR_DISCARD(value_object->get(vm.names.toJSON));
         if (to_json.is_function())
             value = TRY_OR_DISCARD(vm.call(to_json.as_function(), value, js_string(vm, key.to_string())));
     }
@@ -465,9 +459,7 @@ Array* JSONObject::parse_json_array(GlobalObject& global_object, const JsonArray
 Value JSONObject::internalize_json_property(GlobalObject& global_object, Object* holder, PropertyName const& name, FunctionObject& reviver)
 {
     auto& vm = global_object.vm();
-    auto value = holder->get(name);
-    if (vm.exception())
-        return {};
+    auto value = TRY_OR_DISCARD(holder->get(name));
     if (value.is_object()) {
         auto is_array = TRY_OR_DISCARD(value.is_array(global_object));
 

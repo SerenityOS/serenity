@@ -99,7 +99,7 @@ void MarkupGenerator::array_to_html(const Array& array, StringBuilder& html_outp
             html_output.append(wrap_string_in_style(", ", StyleType::Punctuation));
         first = false;
         // FIXME: Exception check
-        value_to_html(array.get(it.index()), html_output, seen_objects);
+        value_to_html(array.get(it.index()).release_value(), html_output, seen_objects);
     }
     html_output.append(wrap_string_in_style(" ]", StyleType::Punctuation));
 }
@@ -115,7 +115,7 @@ void MarkupGenerator::object_to_html(const Object& object, StringBuilder& html_o
         html_output.append(wrap_string_in_style(String::number(entry.index()), StyleType::Number));
         html_output.append(wrap_string_in_style(": ", StyleType::Punctuation));
         // FIXME: Exception check
-        value_to_html(object.get(entry.index()), html_output, seen_objects);
+        value_to_html(object.get(entry.index()).release_value(), html_output, seen_objects);
     }
 
     if (!object.indexed_properties().is_empty() && object.shape().property_count())

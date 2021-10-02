@@ -23,9 +23,7 @@ Object* promise_resolve(GlobalObject& global_object, Object& constructor, Value 
 {
     auto& vm = global_object.vm();
     if (value.is_object() && is<Promise>(value.as_object())) {
-        auto value_constructor = value.as_object().get(vm.names.constructor);
-        if (vm.exception())
-            return nullptr;
+        auto value_constructor = TRY_OR_DISCARD(value.as_object().get(vm.names.constructor));
         if (same_value(value_constructor, &constructor))
             return &static_cast<Promise&>(value.as_object());
     }
@@ -72,14 +70,14 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
             dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Resolution is not an object, fulfilling with {}", &promise, resolution);
             return promise.fulfill(resolution);
         }
-        auto then_action = resolution.as_object().get(vm.names.then);
-        if (vm.exception()) {
+        auto then = resolution.as_object().get(vm.names.then);
+        if (then.is_throw_completion()) {
             dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Exception while getting 'then' property, rejecting with error", &promise);
-            auto error = vm.exception()->value();
             vm.clear_exception();
             vm.stop_unwind();
-            return promise.reject(error);
+            return promise.reject(then.throw_completion().value());
         }
+        auto then_action = then.release_value();
         if (!then_action.is_function()) {
             dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Then action is not a function, fulfilling with {}", &promise, resolution);
             return promise.fulfill(resolution);

@@ -28,7 +28,7 @@ void NavigatorObject::initialize(JS::GlobalObject& global_object)
     define_direct_property("appCodeName", js_string(heap, "Mozilla"), attr);
     define_direct_property("appName", js_string(heap, "Netscape"), attr);
     define_direct_property("appVersion", js_string(heap, "4.0"), attr);
-    define_direct_property("language", languages->get(0), attr);
+    define_direct_property("language", languages->get_without_side_effects(0), attr);
     define_direct_property("languages", languages, attr);
     define_direct_property("platform", js_string(heap, "SerenityOS"), attr);
     define_direct_property("product", js_string(heap, "Gecko"), attr);

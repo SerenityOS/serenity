@@ -72,7 +72,7 @@ Value Reference::get_value(GlobalObject& global_object) const
         auto* base_obj = m_base_value.to_object(global_object);
         if (!base_obj)
             return {};
-        return base_obj->get(m_name);
+        return TRY_OR_DISCARD(base_obj->get(m_name));
     }
 
     VERIFY(m_base_type == BaseType::Environment);

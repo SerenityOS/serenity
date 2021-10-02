@@ -140,9 +140,7 @@ ThrowCompletionOr<PartialUnregulatedTemporalTime> to_partial_time(GlobalObject& 
         // a. Let property be the Property value of the current row.
 
         // b. Let value be ? Get(temporalTimeLike, property).
-        auto value = temporal_time_like.get(property);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto value = TRY(temporal_time_like.get(property));
 
         // c. If value is not undefined, then
         if (!value.is_undefined()) {
@@ -367,9 +365,7 @@ ThrowCompletionOr<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject&
         // a. Let property be the Property value of the current row.
 
         // b. Let value be ? Get(temporalTimeLike, property).
-        auto value = temporal_time_like.get(property);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto value = TRY(temporal_time_like.get(property));
 
         // c. If value is undefined, then
         if (value.is_undefined()) {

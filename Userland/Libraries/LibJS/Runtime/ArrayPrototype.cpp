@@ -77,7 +77,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
     // evaluates to true
     // 23.1.3.33 Array.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-array.prototype-@@iterator
-    define_direct_property(*vm.well_known_symbol_iterator(), get(vm.names.values), attr);
+    define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.values), attr);
 
     // 23.1.3.34 Array.prototype [ @@unscopables ], https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
     // With proposal, https://tc39.es/proposal-array-find-from-last/index.html#sec-array.prototype-@@unscopables
@@ -116,9 +116,7 @@ static Object* array_species_create(GlobalObject& global_object, Object& origina
         return array;
     }
 
-    auto constructor = original_array.get(vm.names.constructor);
-    if (vm.exception())
-        return {};
+    auto constructor = TRY_OR_DISCARD(original_array.get(vm.names.constructor));
     if (constructor.is_constructor()) {
         auto& constructor_function = constructor.as_function();
         auto* this_realm = vm.current_realm();
@@ -130,9 +128,7 @@ static Object* array_species_create(GlobalObject& global_object, Object& origina
     }
 
     if (constructor.is_object()) {
-        constructor = constructor.as_object().get(*vm.well_known_symbol_species());
-        if (vm.exception())
-            return {};
+        constructor = TRY_OR_DISCARD(constructor.as_object().get(*vm.well_known_symbol_species()));
         if (constructor.is_null())
             constructor = js_undefined();
     }
@@ -201,9 +197,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::filter)
         // c. If kPresent is true, then
         if (k_present) {
             // i. Let kValue be ? Get(O, Pk).
-            auto k_value = object->get(k);
-            if (vm.exception())
-                return {};
+            auto k_value = TRY_OR_DISCARD(object->get(k));
 
             // ii. Let selected be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
             auto selected = TRY_OR_DISCARD(vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
@@ -259,9 +253,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::for_each)
         // c. If kPresent is true, then
         if (k_present) {
             // i. Let kValue be ? Get(O, Pk).
-            auto k_value = object->get(property_name);
-            if (vm.exception())
-                return {};
+            auto k_value = TRY_OR_DISCARD(object->get(property_name));
 
             // ii. Perform ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
             (void)vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object);
@@ -315,9 +307,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
         // c. If kPresent is true, then
         if (k_present) {
             // i. Let kValue be ? Get(O, Pk).
-            auto k_value = object->get(property_name);
-            if (vm.exception())
-                return {};
+            auto k_value = TRY_OR_DISCARD(object->get(property_name));
 
             // ii. Let mappedValue be ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
             auto mapped_value = TRY_OR_DISCARD(vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object));
@@ -383,9 +373,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
             if (vm.exception())
                 return {};
             if (from_present) {
-                auto from_value = this_object->get(from);
-                if (vm.exception())
-                    return {};
+                auto from_value = TRY_OR_DISCARD(this_object->get(from));
                 this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes);
                 if (vm.exception())
                     return {};
@@ -421,9 +409,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
         return js_undefined();
     }
     auto index = length - 1;
-    auto element = this_object->get(index);
-    if (vm.exception())
-        return {};
+    auto element = TRY_OR_DISCARD(this_object->get(index));
     this_object->delete_property_or_throw(index);
     if (vm.exception())
         return {};
@@ -446,10 +432,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
             return {};
         return js_undefined();
     }
-    auto first = this_object->get(0);
-    if (vm.exception())
-        return {};
-
+    auto first = TRY_OR_DISCARD(this_object->get(0));
     for (size_t k = 1; k < length; ++k) {
         size_t from = k;
         size_t to = k - 1;
@@ -457,9 +440,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
         if (vm.exception())
             return {};
         if (from_present) {
-            auto from_value = this_object->get(from);
-            if (vm.exception())
-                return {};
+            auto from_value = TRY_OR_DISCARD(this_object->get(from));
             this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes);
             if (vm.exception())
                 return {};
@@ -486,9 +467,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    auto join_function = this_object->get(vm.names.join);
-    if (vm.exception())
-        return {};
+    auto join_function = TRY_OR_DISCARD(this_object->get(vm.names.join));
     if (!join_function.is_function())
         return ObjectPrototype::to_string(vm, global_object);
     return TRY_OR_DISCARD(vm.call(join_function.as_function(), this_object));
@@ -515,9 +494,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
     for (size_t i = 0; i < length; ++i) {
         if (i > 0)
             builder.append(separator);
-        auto value = this_object->get(i);
-        if (vm.exception())
-            return {};
+        auto value = TRY_OR_DISCARD(this_object->get(i));
         if (value.is_nullish())
             continue;
         auto locale_string_result = TRY_OR_DISCARD(value.invoke(global_object, vm.names.toLocaleString));
@@ -557,9 +534,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
     for (size_t i = 0; i < length; ++i) {
         if (i > 0)
             builder.append(separator);
-        auto value = this_object->get(i);
-        if (vm.exception())
-            return {};
+        auto value = TRY_OR_DISCARD(this_object->get(i));
         if (value.is_nullish())
             continue;
         auto string = value.to_string(global_object);
@@ -593,10 +568,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
         if (vm.exception())
             return false;
 
-        auto spreadable = object->get(*vm.well_known_symbol_is_concat_spreadable());
-        if (vm.exception())
-            return false;
-
+        auto spreadable = TRY_OR_DISCARD(object->get(*vm.well_known_symbol_is_concat_spreadable()));
         if (!spreadable.is_undefined())
             return spreadable.to_boolean();
 
@@ -625,9 +597,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
                 if (vm.exception())
                     return;
                 if (k_exists) {
-                    auto k_value = obj.get(k);
-                    if (vm.exception())
+                    auto k_value_or_error = obj.get(k);
+                    if (k_value_or_error.is_error())
                         return;
+                    auto k_value = k_value_or_error.release_value();
                     new_array->create_data_property_or_throw(n, k_value);
                     if (vm.exception())
                         return;
@@ -720,10 +693,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
             return {};
 
         if (present) {
-            auto value = this_object->get(k);
-            if (vm.exception())
-                return {};
-
+            auto value = TRY_OR_DISCARD(this_object->get(k));
             new_array->create_data_property_or_throw(index, value);
             if (vm.exception())
                 return {};
@@ -801,9 +771,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::index_of)
         // b. If kPresent is true, then
         if (k_present) {
             // i. Let elementK be ? Get(O, ! ToString(𝔽(k))).
-            auto element_k = object->get(property_name);
-            if (vm.exception())
-                return {};
+            auto element_k = TRY_OR_DISCARD(object->get(property_name));
 
             // ii. Let same be IsStrictlyEqual(searchElement, elementK).
             auto same = is_strictly_equal(search_element, element_k);
@@ -875,9 +843,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
             // iii. If kPresent is true, then
             if (k_present) {
                 // 1. Set accumulator to ? Get(O, Pk).
-                accumulator = object->get(property_name);
-                if (vm.exception())
-                    return {};
+                accumulator = TRY_OR_DISCARD(object->get(property_name));
             }
 
             // iv. Set k to k + 1.
@@ -901,9 +867,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
         // c. If kPresent is true, then
         if (k_present) {
             // i. Let kValue be ? Get(O, Pk).
-            auto k_value = object->get(property_name);
-            if (vm.exception())
-                return {};
+            auto k_value = TRY_OR_DISCARD(object->get(property_name));
 
             // ii. Set accumulator to ? Call(callbackfn, undefined, « accumulator, kValue, 𝔽(k), O »).
             accumulator = TRY_OR_DISCARD(vm.call(callback_function.as_function(), js_undefined(), accumulator, k_value, Value(k), object));
@@ -971,9 +935,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
             // iii. If kPresent is true, then
             if (k_present) {
                 // 1. Set accumulator to ? Get(O, Pk).
-                accumulator = object->get(property_name);
-                if (vm.exception())
-                    return {};
+                accumulator = TRY_OR_DISCARD(object->get(property_name));
             }
 
             // iv. Set k to k - 1.
@@ -999,9 +961,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
         // c. If kPresent is true, then
         if (k_present) {
             // i. Let kValue be ? Get(O, Pk).
-            auto k_value = object->get(property_name);
-            if (vm.exception())
-                return {};
+            auto k_value = TRY_OR_DISCARD(object->get(property_name));
 
             // ii. Set accumulator to ? Call(callbackfn, undefined, « accumulator, kValue, 𝔽(k), O »).
             accumulator = TRY_OR_DISCARD(vm.call(callback_function.as_function(), js_undefined(), accumulator, k_value, Value((size_t)k), object));
@@ -1030,21 +990,15 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
         if (vm.exception())
             return {};
         Value lower_value;
-        if (lower_exists) {
-            lower_value = this_object->get(lower);
-            if (vm.exception())
-                return {};
-        }
+        if (lower_exists)
+            lower_value = TRY_OR_DISCARD(this_object->get(lower));
 
         auto upper_exists = this_object->has_property(upper);
         if (vm.exception())
             return {};
         Value upper_value;
-        if (upper_exists) {
-            upper_value = this_object->get(upper);
-            if (vm.exception())
-                return {};
-        }
+        if (upper_exists)
+            upper_value = TRY_OR_DISCARD(this_object->get(upper));
 
         if (lower_exists && upper_exists) {
             this_object->set(lower, upper_value, Object::ShouldThrowExceptions::Yes);
@@ -1204,10 +1158,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
             return {};
 
         if (k_present) {
-            auto k_value = object->get(k);
-            if (vm.exception())
-                return {};
-
+            auto k_value = TRY_OR_DISCARD(object->get(k));
             items.append(k_value);
         }
     }
@@ -1297,9 +1248,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::last_index_of)
         // b. If kPresent is true, then
         if (k_present) {
             // i. Let elementK be ? Get(O, ! ToString(𝔽(k))).
-            auto element_k = object->get(property_name);
-            if (vm.exception())
-                return {};
+            auto element_k = TRY_OR_DISCARD(object->get(property_name));
 
             // ii. Let same be IsStrictlyEqual(searchElement, elementK).
             auto same = is_strictly_equal(search_element, element_k);
@@ -1343,9 +1292,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::includes)
     }
     auto value_to_find = vm.argument(0);
     for (u64 i = from_index; i < length; ++i) {
-        auto element = this_object->get(i);
-        if (vm.exception())
-            return {};
+        auto element = TRY_OR_DISCARD(this_object->get(i));
         if (same_value_zero(element, value_to_find))
             return Value(true);
     }
@@ -1379,9 +1326,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find)
         auto property_name = PropertyName { k };
 
         // b. Let kValue be ? Get(O, Pk).
-        auto k_value = object->get(property_name);
-        if (vm.exception())
-            return {};
+        auto k_value = TRY_OR_DISCARD(object->get(property_name));
 
         // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
         auto test_result = TRY_OR_DISCARD(vm.call(predicate.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
@@ -1424,9 +1369,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_index)
         auto property_name = PropertyName { k };
 
         // b. Let kValue be ? Get(O, Pk).
-        auto k_value = object->get(property_name);
-        if (vm.exception())
-            return {};
+        auto k_value = TRY_OR_DISCARD(object->get(property_name));
 
         // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
         auto test_result = TRY_OR_DISCARD(vm.call(predicate.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
@@ -1469,9 +1412,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last)
         auto property_name = PropertyName { k };
 
         // b. Let kValue be ? Get(O, Pk).
-        auto k_value = object->get(property_name);
-        if (vm.exception())
-            return {};
+        auto k_value = TRY_OR_DISCARD(object->get(property_name));
 
         // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
         auto test_result = TRY_OR_DISCARD(vm.call(predicate.as_function(), this_arg, k_value, Value((double)k), object)).to_boolean();
@@ -1514,9 +1455,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last_index)
         auto property_name = PropertyName { k };
 
         // b. Let kValue be ? Get(O, Pk).
-        auto k_value = object->get(property_name);
-        if (vm.exception())
-            return {};
+        auto k_value = TRY_OR_DISCARD(object->get(property_name));
 
         // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
         auto test_result = TRY_OR_DISCARD(vm.call(predicate.as_function(), this_arg, k_value, Value((double)k), object)).to_boolean();
@@ -1566,9 +1505,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::some)
         // c. If kPresent is true, then
         if (k_present) {
             // i. Let kValue be ? Get(O, Pk).
-            auto k_value = object->get(property_name);
-            if (vm.exception())
-                return {};
+            auto k_value = TRY_OR_DISCARD(object->get(property_name));
 
             // ii. Let testResult be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
             auto test_result = TRY_OR_DISCARD(vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
@@ -1619,9 +1556,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::every)
         // c. If kPresent is true, then
         if (k_present) {
             // i. Let kValue be ? Get(O, Pk).
-            auto k_value = object->get(property_name);
-            if (vm.exception())
-                return {};
+            auto k_value = TRY_OR_DISCARD(object->get(property_name));
 
             // ii. Let testResult be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
             auto test_result = TRY_OR_DISCARD(vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
@@ -1693,9 +1628,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
             return {};
 
         if (from_present) {
-            auto from_value = this_object->get(from);
-            if (vm.exception())
-                return {};
+            auto from_value = TRY_OR_DISCARD(this_object->get(from));
 
             removed_elements->create_data_property_or_throw(i, from_value);
             if (vm.exception())
@@ -1717,10 +1650,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
                 return {};
 
             if (from_present) {
-                auto from_value = this_object->get(from);
-                if (vm.exception())
-                    return {};
-
+                auto from_value = TRY_OR_DISCARD(this_object->get(from));
                 this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes);
             } else {
                 this_object->delete_property_or_throw(to);
@@ -1744,9 +1674,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
             auto to = i + insert_count - 1;
 
             if (from_present) {
-                auto from_value = this_object->get(from_index);
-                if (vm.exception())
-                    return {};
+                auto from_value = TRY_OR_DISCARD(this_object->get(from_index));
                 this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes);
             } else {
                 this_object->delete_property_or_throw(to);
@@ -1862,9 +1790,7 @@ static size_t flatten_into_array(GlobalObject& global_object, Object& new_array,
 
         if (!value_exists)
             continue;
-        auto value = array.get(j);
-        if (vm.exception())
-            return {};
+        auto value = TRY_OR_DISCARD(array.get(j));
 
         if (mapper_func)
             value = TRY_OR_DISCARD(vm.call(*mapper_func, this_arg, value, Value(j), &array));
@@ -2019,9 +1945,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::copy_within)
             return {};
 
         if (from_present) {
-            auto from_value = this_object->get(from_i);
-            if (vm.exception())
-                return {};
+            auto from_value = TRY_OR_DISCARD(this_object->get(from_i));
             this_object->set(to_i, from_value, Object::ShouldThrowExceptions::Yes);
             if (vm.exception())
                 return {};
@@ -2060,7 +1984,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::at)
     }
     if (index.has_overflow() || index.value() >= length)
         return js_undefined();
-    return this_object->get(index.value());
+    return TRY_OR_DISCARD(this_object->get(index.value()));
 }
 
 }

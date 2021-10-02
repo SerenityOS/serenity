@@ -77,7 +77,7 @@ ThrowCompletionOr<bool> Object::is_extensible() const
 // 7.3 Operations on Objects, https://tc39.es/ecma262/#sec-operations-on-objects
 
 // 7.3.2 Get ( O, P ), https://tc39.es/ecma262/#sec-get-o-p
-Value Object::get(PropertyName const& property_name) const
+ThrowCompletionOr<Value> Object::get(PropertyName const& property_name) const
 {
     // 1. Assert: Type(O) is Object.
 
@@ -85,7 +85,7 @@ Value Object::get(PropertyName const& property_name) const
     VERIFY(property_name.is_valid());
 
     // 3. Return ? O.[[Get]](P, O).
-    return TRY_OR_DISCARD(internal_get(property_name, this));
+    return TRY(internal_get(property_name, this));
 }
 
 // 7.3.3 GetV ( V, P ) is defined as Value::get().
@@ -401,7 +401,6 @@ MarkedValueList Object::enumerable_own_property_names(PropertyKind kind) const
     // NOTE: This has been flattened for readability, so some `else` branches in the
     //       spec text have been replaced with `continue`s in the loop below.
 
-    auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     // 1. Assert: Type(O) is Object.
@@ -438,9 +437,10 @@ MarkedValueList Object::enumerable_own_property_names(PropertyKind kind) const
             // 2. Else,
 
             // a. Let value be ? Get(O, key).
-            auto value = get(property_name);
-            if (vm.exception())
+            auto value_or_error = get(property_name);
+            if (value_or_error.is_error())
                 return MarkedValueList { heap() };
+            auto value = value_or_error.release_value();
 
             // b. If kind is value, append value to properties.
             if (kind == PropertyKind::Value) {
@@ -481,9 +481,7 @@ ThrowCompletionOr<Object*> Object::copy_data_properties(Value source, HashTable<
         auto desc = TRY(from_object->internal_get_own_property(next_key));
 
         if (desc.has_value() && desc->attributes().is_enumerable()) {
-            auto prop_value = from_object->get(next_key);
-            if (auto* thrown_exception = vm().exception())
-                return JS::throw_completion(thrown_exception->value());
+            auto prop_value = TRY(from_object->get(next_key));
             create_data_property_or_throw(next_key, prop_value);
             if (auto* thrown_exception = vm().exception())
                 return JS::throw_completion(thrown_exception->value());
@@ -1096,9 +1094,7 @@ Object* Object::define_properties(Value properties)
         // b. If propDesc is not undefined and propDesc.[[Enumerable]] is true, then
         if (property_descriptor.has_value() && *property_descriptor->enumerable) {
             // i. Let descObj be ? Get(props, nextKey).
-            auto descriptor_object = props->get(property_name);
-            if (vm.exception())
-                return {};
+            auto descriptor_object = TRY_OR_DISCARD(props->get(property_name));
 
             // ii. Let desc be ? ToPropertyDescriptor(descObj).
             auto descriptor = to_property_descriptor(global_object, descriptor_object);
@@ -1159,9 +1155,7 @@ ThrowCompletionOr<Value> Object::ordinary_to_primitive(Value::PreferredType pref
     // 3. For each element name of methodNames, do
     for (auto& method_name : method_names) {
         // a. Let method be ? Get(O, name).
-        auto method = get(method_name);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto method = TRY(get(method_name));
 
         // b. If IsCallable(method) is true, then
         if (method.is_function()) {

@@ -378,8 +378,8 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
             sheet->add_column();
     }
 
-    auto json = sheet->interpreter().global_object().get("JSON");
-    auto& parse_function = json.as_object().get("parse").as_function();
+    auto json = sheet->interpreter().global_object().get_without_side_effects("JSON");
+    auto& parse_function = json.as_object().get_without_side_effects("parse").as_function();
 
     auto read_format = [](auto& format, const auto& obj) {
         if (auto value = obj.get("foreground_color"); value.is_string())
@@ -532,8 +532,8 @@ JsonObject Sheet::to_json() const
         data.set("kind", it.value->kind() == Cell::Kind::Formula ? "Formula" : "LiteralString");
         if (it.value->kind() == Cell::Formula) {
             data.set("source", it.value->data());
-            auto json = interpreter().global_object().get("JSON");
-            auto stringified_or_error = interpreter().vm().call(json.as_object().get("stringify").as_function(), json, it.value->evaluated_data());
+            auto json = interpreter().global_object().get_without_side_effects("JSON");
+            auto stringified_or_error = interpreter().vm().call(json.as_object().get_without_side_effects("stringify").as_function(), json, it.value->evaluated_data());
             VERIFY(!stringified_or_error.is_error());
             data.set("value", stringified_or_error.release_value().to_string_without_side_effects());
         } else {
@@ -651,7 +651,7 @@ JsonObject Sheet::gather_documentation() const
     const JS::PropertyName doc_name { "__documentation" };
 
     auto add_docs_from = [&](auto& it, auto& global_object) {
-        auto value = global_object.get(it.key);
+        auto value = global_object.get(it.key).release_value();
         if (!value.is_function() && !value.is_object())
             return;
 
@@ -660,7 +660,7 @@ JsonObject Sheet::gather_documentation() const
             return;
 
         dbgln("Found '{}'", it.key.to_display_string());
-        auto doc = value_object.get(doc_name);
+        auto doc = value_object.get(doc_name).release_value();
         if (!doc.is_string())
             return;
 

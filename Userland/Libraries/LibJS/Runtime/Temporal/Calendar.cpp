@@ -332,9 +332,7 @@ ThrowCompletionOr<Object*> to_temporal_calendar(GlobalObject& global_object, Val
             return &temporal_calendar_like_object;
 
         // c. Set temporalCalendarLike to ? Get(temporalCalendarLike, "calendar").
-        temporal_calendar_like = temporal_calendar_like_object.get(vm.names.calendar);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        temporal_calendar_like = TRY(temporal_calendar_like_object.get(vm.names.calendar));
 
         // d. If Type(temporalCalendarLike) is Object and ? HasProperty(temporalCalendarLike, "calendar") is false, return temporalCalendarLike.
         if (temporal_calendar_like.is_object()) {
@@ -394,9 +392,7 @@ ThrowCompletionOr<Object*> get_temporal_calendar_with_iso_default(GlobalObject& 
         return &static_cast<ZonedDateTime&>(item).calendar();
 
     // 2. Let calendar be ? Get(item, "calendar").
-    auto calendar = item.get(vm.names.calendar);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto calendar = TRY(item.get(vm.names.calendar));
 
     // 3. Return ? ToTemporalCalendarWithISODefault(calendar).
     return to_temporal_calendar_with_iso_default(global_object, calendar);
@@ -690,14 +686,10 @@ ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object 
     auto& vm = global_object.vm();
 
     // 1. Let month be ? Get(fields, "month").
-    auto month = fields.get(vm.names.month);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto month = TRY(fields.get(vm.names.month));
 
     // 2. Let monthCode be ? Get(fields, "monthCode").
-    auto month_code = fields.get(vm.names.monthCode);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto month_code = TRY(fields.get(vm.names.monthCode));
 
     // 3. If monthCode is undefined, then
     if (month_code.is_undefined()) {
@@ -760,9 +752,7 @@ ThrowCompletionOr<ISODate> iso_date_from_fields(GlobalObject& global_object, Obj
     auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day", "month", "monthCode", "year" }, {}));
 
     // 4. Let year be ? Get(fields, "year").
-    auto year = prepared_fields->get(vm.names.year);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto year = TRY(prepared_fields->get(vm.names.year));
 
     // 5. If year is undefined, throw a TypeError exception.
     if (year.is_undefined())
@@ -772,9 +762,7 @@ ThrowCompletionOr<ISODate> iso_date_from_fields(GlobalObject& global_object, Obj
     auto month = TRY(resolve_iso_month(global_object, *prepared_fields));
 
     // 7. Let day be ? Get(fields, "day").
-    auto day = prepared_fields->get(vm.names.day);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto day = TRY(prepared_fields->get(vm.names.day));
 
     // 8. If day is undefined, throw a TypeError exception.
     if (day.is_undefined())
@@ -798,9 +786,7 @@ ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_
     auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, {}));
 
     // 4. Let year be ? Get(fields, "year").
-    auto year = prepared_fields->get(vm.names.year);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto year = TRY(prepared_fields->get(vm.names.year));
 
     // 5. If year is undefined, throw a TypeError exception.
     if (year.is_undefined())
@@ -830,19 +816,13 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, {}));
 
     // 4. Let month be ? Get(fields, "month").
-    auto month_value = prepared_fields->get(vm.names.month);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto month_value = TRY(prepared_fields->get(vm.names.month));
 
     // 5. Let monthCode be ? Get(fields, "monthCode").
-    auto month_code = prepared_fields->get(vm.names.monthCode);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto month_code = TRY(prepared_fields->get(vm.names.monthCode));
 
     // 6. Let year be ? Get(fields, "year").
-    auto year = prepared_fields->get(vm.names.year);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto year = TRY(prepared_fields->get(vm.names.year));
 
     // 7. If month is not undefined, and monthCode and year are both undefined, then
     if (!month_value.is_undefined() && month_code.is_undefined() && year.is_undefined()) {
@@ -854,9 +834,7 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     auto month = TRY(resolve_iso_month(global_object, *prepared_fields));
 
     // 9. Let day be ? Get(fields, "day").
-    auto day = prepared_fields->get(vm.names.day);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto day = TRY(prepared_fields->get(vm.names.day));
 
     // 10. If day is undefined, throw a TypeError exception.
     if (day.is_undefined())
@@ -974,9 +952,7 @@ ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Obj
             auto property_name = PropertyName::from_value(global_object, next_key);
 
             // i. Let propValue be ? Get(fields, nextKey).
-            auto prop_value = fields.get(property_name);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
+            auto prop_value = TRY(fields.get(property_name));
 
             // ii. If propValue is not undefined, then
             if (!prop_value.is_undefined()) {
@@ -999,9 +975,7 @@ ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Obj
         auto property_name = PropertyName::from_value(global_object, next_key);
 
         // a. Let propValue be ? Get(additionalFields, nextKey).
-        auto prop_value = additional_fields.get(property_name);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto prop_value = TRY(additional_fields.get(property_name));
 
         // b. If propValue is not undefined, then
         if (!prop_value.is_undefined()) {
@@ -1016,9 +990,7 @@ ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Obj
     // 6. If newKeys does not contain either "month" or "monthCode", then
     if (!new_keys_contains_month_or_month_code_property) {
         // a. Let month be ? Get(fields, "month").
-        auto month = fields.get(vm.names.month);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto month = TRY(fields.get(vm.names.month));
 
         // b. If month is not undefined, then
         if (!month.is_undefined()) {
@@ -1027,9 +999,7 @@ ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Obj
         }
 
         // c. Let monthCode be ? Get(fields, "monthCode").
-        auto month_code = fields.get(vm.names.monthCode);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto month_code = TRY(fields.get(vm.names.monthCode));
 
         // d. If monthCode is not undefined, then
         if (!month_code.is_undefined()) {

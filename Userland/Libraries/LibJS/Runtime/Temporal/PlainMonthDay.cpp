@@ -81,9 +81,7 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(GlobalObject& global_obj
             calendar_absent = false;
         } else {
             // i. Let calendar be ? Get(item, "calendar").
-            auto calendar_value = item_object.get(vm.names.calendar);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
+            auto calendar_value = TRY(item_object.get(vm.names.calendar));
 
             // ii. If calendar is undefined, then
             //      1. Let calendarAbsent be true.
@@ -102,19 +100,13 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(GlobalObject& global_obj
         auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, {}));
 
         // f. Let month be ? Get(fields, "month").
-        auto month = fields->get(vm.names.month);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto month = TRY(fields->get(vm.names.month));
 
         // g. Let monthCode be ? Get(fields, "monthCode").
-        auto month_code = fields->get(vm.names.monthCode);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto month_code = TRY(fields->get(vm.names.monthCode));
 
         // h. Let year be ? Get(fields, "year").
-        auto year = fields->get(vm.names.year);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto year = TRY(fields->get(vm.names.year));
 
         // i. If calendarAbsent is true, and month is not undefined, and monthCode is undefined and year is undefined, then
         if (calendar_absent && !month.is_undefined() && month_code.is_undefined() && year.is_undefined()) {
