@@ -71,7 +71,7 @@ public:
 
     // 7.2 Testing and Comparison Operations, https://tc39.es/ecma262/#sec-testing-and-comparison-operations
 
-    bool is_extensible() const;
+    ThrowCompletionOr<bool> is_extensible() const;
 
     // 7.3 Operations on Objects, https://tc39.es/ecma262/#sec-operations-on-objects
 

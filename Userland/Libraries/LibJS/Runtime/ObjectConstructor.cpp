@@ -179,7 +179,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_extensible)
     auto argument = vm.argument(0);
     if (!argument.is_object())
         return Value(false);
-    return Value(argument.as_object().is_extensible());
+    return Value(TRY_OR_DISCARD(argument.as_object().is_extensible()));
 }
 
 // 20.1.2.15 Object.isFrozen ( O ), https://tc39.es/ecma262/#sec-object.isfrozen

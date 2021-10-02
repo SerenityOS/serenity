@@ -143,7 +143,7 @@ bool GlobalEnvironment::can_declare_global_var(FlyString const& name) const
         return {};
     if (has_property)
         return true;
-    return global_object.is_extensible();
+    return TRY_OR_DISCARD(global_object.is_extensible());
 }
 
 // 9.1.1.4.16 CanDeclareGlobalFunction ( N ), https://tc39.es/ecma262/#sec-candeclareglobalfunction
@@ -152,7 +152,7 @@ bool GlobalEnvironment::can_declare_global_function(FlyString const& name) const
     auto& global_object = m_object_record->binding_object();
     auto existing_prop = TRY_OR_DISCARD(global_object.internal_get_own_property(name));
     if (!existing_prop.has_value())
-        return global_object.is_extensible();
+        return TRY_OR_DISCARD(global_object.is_extensible());
     if (*existing_prop->configurable)
         return true;
     if (existing_prop->is_data_descriptor() && *existing_prop->writable && *existing_prop->enumerable)
@@ -168,9 +168,10 @@ void GlobalEnvironment::create_global_var_binding(FlyString const& name, bool ca
     bool has_property = global_object.has_own_property(name);
     if (vm.exception())
         return;
-    bool extensible = global_object.is_extensible();
-    if (vm.exception())
+    auto extensible_or_error = global_object.is_extensible();
+    if (extensible_or_error.is_error())
         return;
+    auto extensible = extensible_or_error.release_value();
     if (!has_property && extensible) {
         m_object_record->create_mutable_binding(m_object_record->global_object(), name, can_be_deleted);
         if (vm.exception())
