@@ -68,9 +68,10 @@ Object::~Object()
 // 7.2 Testing and Comparison Operations, https://tc39.es/ecma262/#sec-testing-and-comparison-operations
 
 // 7.2.5 IsExtensible ( O ), https://tc39.es/ecma262/#sec-isextensible-o
-bool Object::is_extensible() const
+ThrowCompletionOr<bool> Object::is_extensible() const
 {
-    return TRY_OR_DISCARD(internal_is_extensible());
+    // 1. Return ? O.[[IsExtensible]]().
+    return internal_is_extensible();
 }
 
 // 7.3 Operations on Objects, https://tc39.es/ecma262/#sec-operations-on-objects
@@ -352,17 +353,13 @@ bool Object::set_integrity_level(IntegrityLevel level)
 // 7.3.16 TestIntegrityLevel ( O, level ), https://tc39.es/ecma262/#sec-testintegritylevel
 bool Object::test_integrity_level(IntegrityLevel level) const
 {
-    auto& vm = this->vm();
-
     // 1. Assert: Type(O) is Object.
 
     // 2. Assert: level is either sealed or frozen.
     VERIFY(level == IntegrityLevel::Sealed || level == IntegrityLevel::Frozen);
 
     // 3. Let extensible be ? IsExtensible(O).
-    auto extensible = is_extensible();
-    if (vm.exception())
-        return {};
+    auto extensible = TRY_OR_DISCARD(is_extensible());
 
     // 4. If extensible is true, return false.
     // 5. NOTE: If the object is extensible, none of its properties are examined.
@@ -616,15 +613,11 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> Object::internal_get_own_propert
 ThrowCompletionOr<bool> Object::internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
 {
     VERIFY(property_name.is_valid());
-    auto& vm = this->vm();
-
     // 1. Let current be ? O.[[GetOwnProperty]](P).
     auto current = TRY(internal_get_own_property(property_name));
 
     // 2. Let extensible be ? IsExtensible(O).
-    auto extensible = is_extensible();
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto extensible = TRY(is_extensible());
 
     // 3. Return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current).
     return validate_and_apply_property_descriptor(this, property_name, extensible, property_descriptor, current);
