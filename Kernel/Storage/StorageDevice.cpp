@@ -13,16 +13,18 @@
 
 namespace Kernel {
 
-StorageDevice::StorageDevice(const StorageController& controller, size_t sector_size, u64 max_addressable_block)
+StorageDevice::StorageDevice(const StorageController& controller, size_t sector_size, u64 max_addressable_block, NonnullOwnPtr<KString> device_name)
     : BlockDevice(StorageManagement::major_number(), StorageManagement::minor_number(), sector_size)
     , m_storage_controller(controller)
+    , m_device_name(move(device_name))
     , m_max_addressable_block(max_addressable_block)
 {
 }
 
-StorageDevice::StorageDevice(const StorageController& controller, int major, int minor, size_t sector_size, u64 max_addressable_block)
+StorageDevice::StorageDevice(const StorageController& controller, int major, int minor, size_t sector_size, u64 max_addressable_block, NonnullOwnPtr<KString> device_name)
     : BlockDevice(major, minor, sector_size)
     , m_storage_controller(controller)
+    , m_storage_device_name(move(device_name))
     , m_max_addressable_block(max_addressable_block)
 {
 }
@@ -187,6 +189,11 @@ KResultOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const U
     }
 
     return pos + remaining;
+}
+
+StringView StorageDevice::storage_name() const
+{
+    return m_storage_device_name->view();
 }
 
 bool StorageDevice::can_write(const OpenFileDescription&, size_t offset) const
