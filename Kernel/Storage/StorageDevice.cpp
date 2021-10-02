@@ -13,14 +13,6 @@
 
 namespace Kernel {
 
-StorageDevice::StorageDevice(const StorageController& controller, size_t sector_size, u64 max_addressable_block, NonnullOwnPtr<KString> device_name)
-    : BlockDevice(StorageManagement::major_number(), StorageManagement::minor_number(), sector_size)
-    , m_storage_controller(controller)
-    , m_device_name(move(device_name))
-    , m_max_addressable_block(max_addressable_block)
-{
-}
-
 StorageDevice::StorageDevice(const StorageController& controller, int major, int minor, size_t sector_size, u64 max_addressable_block, NonnullOwnPtr<KString> device_name)
     : BlockDevice(major, minor, sector_size)
     , m_storage_controller(controller)
