@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include <LibGfx/Forward.h>
+#include <LibGfx/Color.h>
+#include <LibWeb/Painting/PaintContext.h>
 
 namespace Web::Painting {
 

@@ -24,7 +24,6 @@
 #include <LibGfx/Color.h>
 #include <LibWeb/CSS/Display.h>
 #include <LibWeb/CSS/Length.h>
-#include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/Forward.h>

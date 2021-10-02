@@ -10,6 +10,7 @@
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 
 namespace Web::CSS {
 
