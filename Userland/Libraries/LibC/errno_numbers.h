@@ -160,3 +160,4 @@ enum ErrnoCode {
 };
 
 #define EWOULDBLOCK EAGAIN
+#define ELAST EMAXERRNO
