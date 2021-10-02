@@ -52,7 +52,7 @@ static const char* pangrams[s_pangram_count] = {
 
 static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
 {
-    auto window = GUI::Window::construct();
+    auto window = GUI::Window::construct(&editor);
     window->set_window_type(GUI::WindowType::ToolWindow);
     window->set_title("Preview");
     window->resize(400, 150);
