@@ -76,9 +76,7 @@ ThrowCompletionOr<Object*> ProxyObject::internal_get_prototype_of() const
         return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetPrototypeOfReturn);
 
     // 9. Let extensibleTarget be ? IsExtensible(target).
-    auto extensible_target = m_target.is_extensible();
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto extensible_target = TRY(m_target.is_extensible());
 
     // 10. If extensibleTarget is true, return handlerProto.
     if (extensible_target)
@@ -128,9 +126,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_set_prototype_of(Object* prototype
         return false;
 
     // 10. Let extensibleTarget be ? IsExtensible(target).
-    auto extensible_target = m_target.is_extensible();
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto extensible_target = TRY(m_target.is_extensible());
 
     // 11. If extensibleTarget is true, return true.
     if (extensible_target)
@@ -175,9 +171,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_is_extensible() const
     auto trap_result = TRY(vm.call(*trap, &m_handler, &m_target)).to_boolean();
 
     // 8. Let targetResult be ? IsExtensible(target).
-    auto target_result = m_target.is_extensible();
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto target_result = TRY(m_target.is_extensible());
 
     // 9. If SameValue(booleanTrapResult, targetResult) is false, throw a TypeError exception.
     if (trap_result != target_result)
@@ -217,9 +211,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_prevent_extensions()
     // 8. If booleanTrapResult is true, then
     if (trap_result) {
         // a. Let extensibleTarget be ? IsExtensible(target).
-        auto extensible_target = m_target.is_extensible();
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto extensible_target = TRY(m_target.is_extensible());
 
         // b. If extensibleTarget is true, throw a TypeError exception.
         if (extensible_target)
@@ -278,9 +270,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_pr
             return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorNonConfigurable);
 
         // c. Let extensibleTarget be ? IsExtensible(target).
-        auto extensible_target = m_target.is_extensible();
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto extensible_target = TRY(m_target.is_extensible());
 
         // d. If extensibleTarget is false, throw a TypeError exception.
         if (!extensible_target)
@@ -291,9 +281,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_pr
     }
 
     // 12. Let extensibleTarget be ? IsExtensible(target).
-    auto extensible_target = m_target.is_extensible();
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto extensible_target = TRY(m_target.is_extensible());
 
     // 13. Let resultDesc be ? ToPropertyDescriptor(trapResultObj).
     auto result_desc = to_property_descriptor(global_object, trap_result);
@@ -370,9 +358,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyName c
     auto target_descriptor = TRY(m_target.internal_get_own_property(property_name));
 
     // 12. Let extensibleTarget be ? IsExtensible(target).
-    auto extensible_target = m_target.is_extensible();
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto extensible_target = TRY(m_target.is_extensible());
 
     // 14. Else, let settingConfigFalse be false.
     bool setting_config_false = false;
@@ -457,9 +443,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyName const& p
                 return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyHasExistingNonConfigurable);
 
             // ii. Let extensibleTarget be ? IsExtensible(target).
-            auto extensible_target = m_target.is_extensible();
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
+            auto extensible_target = TRY(m_target.is_extensible());
 
             // iii. If extensibleTarget is false, throw a TypeError exception.
             if (!extensible_target)
@@ -648,9 +632,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_delete(PropertyName const& propert
         return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyDeleteNonConfigurable);
 
     // 13. Let extensibleTarget be ? IsExtensible(target).
-    auto extensible_target = m_target.is_extensible();
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto extensible_target = TRY(m_target.is_extensible());
 
     // 14. If extensibleTarget is false, throw a TypeError exception.
     if (!extensible_target)
@@ -704,9 +686,7 @@ ThrowCompletionOr<MarkedValueList> ProxyObject::internal_own_property_keys() con
         return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyOwnPropertyKeysDuplicates);
 
     // 10. Let extensibleTarget be ? IsExtensible(target).
-    auto extensible_target = m_target.is_extensible();
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto extensible_target = TRY(m_target.is_extensible());
 
     // 11. Let targetKeys be ? target.[[OwnPropertyKeys]]().
     auto target_keys = TRY(m_target.internal_own_property_keys());
