@@ -137,7 +137,7 @@ ThrowCompletionOr<bool> Object::create_data_property(PropertyName const& propert
 }
 
 // 7.3.6 CreateMethodProperty ( O, P, V ), https://tc39.es/ecma262/#sec-createmethodproperty
-bool Object::create_method_property(PropertyName const& property_name, Value value)
+ThrowCompletionOr<bool> Object::create_method_property(PropertyName const& property_name, Value value)
 {
     VERIFY(!value.is_empty());
 
@@ -155,7 +155,7 @@ bool Object::create_method_property(PropertyName const& property_name, Value val
     };
 
     // 4. Return ? O.[[DefineOwnProperty]](P, newDesc).
-    return TRY_OR_DISCARD(internal_define_own_property(property_name, new_descriptor));
+    return internal_define_own_property(property_name, new_descriptor);
 }
 
 // 7.3.7 CreateDataPropertyOrThrow ( O, P, V ), https://tc39.es/ecma262/#sec-createdatapropertyorthrow
