@@ -48,7 +48,7 @@ public:
 
     static void must_initialize(PhysicalAddress rsdp, PhysicalAddress fadt, u8 irq_number);
 
-    virtual StringView purpose() const override { return "ACPI Parser"; }
+    virtual StringView purpose() const override { return "ACPI Parser"sv; }
     virtual bool handle_irq(const RegisterState&) override;
 
     Optional<PhysicalAddress> find_table(const StringView& signature);

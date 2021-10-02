@@ -21,7 +21,7 @@ public:
     [[noreturn]] virtual bool eoi() override;
 
     virtual HandlerType type() const override { return HandlerType::UnhandledInterruptHandler; }
-    virtual StringView purpose() const override { return "Unhandled Interrupt Handler"; }
+    virtual StringView purpose() const override { return "Unhandled Interrupt Handler"sv; }
     virtual StringView controller() const override { VERIFY_NOT_REACHED(); }
 
     virtual size_t sharing_devices_count() const override { return 0; }

@@ -99,7 +99,7 @@ public:
     RefPtr<StorageDevice> master_device() const;
     RefPtr<StorageDevice> slave_device() const;
 
-    virtual StringView purpose() const override { return "PATA Channel"; }
+    virtual StringView purpose() const override { return "PATA Channel"sv; }
 
     virtual bool is_dma_enabled() const { return false; }
 
