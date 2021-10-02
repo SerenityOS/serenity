@@ -381,7 +381,7 @@ void LayerListWidget::set_selected_layer(Layer* layer)
     if (!m_image)
         return;
 
-    if (layer->is_selected())
+    if (layer && layer->is_selected())
         return;
 
     for (size_t i = 0; i < m_image->layer_count(); ++i) {
