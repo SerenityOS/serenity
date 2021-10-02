@@ -245,6 +245,9 @@ no_long_mode_string:
 no_pae_string:
     .asciz "Your computer does not support PAE. Halting!"
 
+pentium_m_forcepae_string:
+    .asciz "Intel Pentium M detected. Assuming present but unadvertised PAE support."
+
 kernel_image_too_big_string:
     .asciz "Error: Kernel Image too big for memory slot. Halting!"
 
@@ -347,6 +350,18 @@ kernel_not_too_large:
     cpuid
     testl $(1 << 6), %edx /* Test if the PAE-bit, which is bit 6, is set in the edx register. */
     jnz pae_supported     /* If the bit is not set, there is no PAE capability. */
+
+    /* We might have a Pentium M, which supports PAE but doesn't advertise it. */
+    call is_pentium_m_with_hidden_pae
+    test %eax, %eax
+    jz .Lskip_forcepae
+
+    /* Print a warning message, but continue. */
+    pushl $pentium_m_forcepae_string
+    call print_no_halt
+    subl $4, %esp
+    jmp pae_supported
+.Lskip_forcepae:
 
     /* Since there is no PAE capability, halt with an error message */
     movl $no_pae_string, %esi
@@ -541,4 +556,120 @@ reload_cr3:
     movl %eax, %cr3
     popl %eax
 #endif
+    ret
+
+
+.code32
+
+/* Determines if the CPU is made by Intel */
+is_intel_cpu:
+    pushl %ebp
+    movl %esp, %ebp
+
+    pushl %ebx
+
+    xorl %eax, %eax
+    cpuid
+
+    xorl %eax, %eax
+    cmpl $0x756e6547, %ebx /* "Genu" */
+    jnz .Lis_intel_cpu_end
+    cmpl $0x49656e69, %edx /* "ineI" */
+    jnz .Lis_intel_cpu_end
+    cmpl $0x6c65746e, %ecx /* "ntel" */
+    jnz .Lis_intel_cpu_end
+
+    movl $1, %eax
+
+.Lis_intel_cpu_end:
+    popl %ebx
+
+    movl %ebp, %esp
+    popl %ebp
+
+    ret
+
+/* Fetches the CPU family (eax) and model (edx) */
+get_cpu_model_family:
+    pushl %ebp
+    movl %esp, %ebp
+
+    pushl %ebx
+
+    movl $0x1, %eax
+    cpuid
+    movl %eax, %ebx
+    movl %eax, %ecx
+    movl %eax, %edx
+
+    /* Bit 8 - 11: Processor Family */
+    shrl $8, %eax
+    andl $0xf, %eax
+
+    /* Bit 4 - 7: Processor Model */
+    shrl $4, %edx
+    andl $0xf, %edx
+
+    /* Bit 16 - 19: Extended Model ID */
+    /* (only applies if Family is 6 or 15) */
+    cmpl $6, %eax
+    jz .Ldo_ext_model
+    cmpl $15, %eax
+    jz .Ldo_ext_model
+    jmp .Lskip_ext_model
+.Ldo_ext_model:
+    shrl $16, %ebx
+    andl $0xf, %ebx
+    shll $4, %ebx
+    addl %ebx, %edx
+.Lskip_ext_model:
+
+    /* Bit 20 - 27: Extended Family */
+    /* (only applies if Family is 15) */
+    cmpl $15, %eax
+    jnz .Lskip_ext_family
+    shrl $20, %ecx
+    andl $0xff, %ecx
+    addl %ecx, %eax
+.Lskip_ext_family:
+
+    popl %ebx
+
+    movl %ebp, %esp
+    popl %ebp
+
+    ret
+
+/* Determines if the CPU is an Intel Pentium M with hidden PAE flag. */
+is_pentium_m_with_hidden_pae:
+    pushl %ebp
+    movl %esp, %ebp
+
+    /* Check the manufacturer string. */
+    call is_intel_cpu
+    testl %eax, %eax
+    jz .Lis_pentium_m_end
+
+    /* Check the processor model. */
+    call get_cpu_model_family
+    movl %eax, %ecx       /* Free up eax for the return value. */
+    xorl %eax, %eax
+
+    cmpl $6, %ecx         /* Family 6: Big Cores */
+    jnz .Lis_pentium_m_end
+
+    cmpl $9, %edx         /* Model 9: Pentium M (Banias) */
+    jz .Lpass_model_check
+    cmpl $13, %edx        /* Model 13: Pentium M (Dothan) */
+    jz .Lpass_model_check
+    jmp .Lis_pentium_m_end
+.Lpass_model_check:
+
+    /* We are a Pentium M. */
+    movl $1, %eax
+
+.Lis_pentium_m_end:
+    movl %ebp, %esp
+    popl %ebp
+
     ret
