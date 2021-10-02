@@ -67,7 +67,7 @@ public:
 
     // 7.1 Type Conversion, https://tc39.es/ecma262/#sec-type-conversion
 
-    Value ordinary_to_primitive(Value::PreferredType preferred_type) const;
+    ThrowCompletionOr<Value> ordinary_to_primitive(Value::PreferredType preferred_type) const;
 
     // 7.2 Testing and Comparison Operations, https://tc39.es/ecma262/#sec-testing-and-comparison-operations
 

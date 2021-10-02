@@ -437,7 +437,7 @@ Value Value::to_primitive(GlobalObject& global_object, PreferredType preferred_t
         }
         if (preferred_type == PreferredType::Default)
             preferred_type = PreferredType::Number;
-        return as_object().ordinary_to_primitive(preferred_type);
+        return TRY_OR_DISCARD(as_object().ordinary_to_primitive(preferred_type));
     }
     return *this;
 }

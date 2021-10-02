@@ -887,7 +887,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::symbol_to_primitive)
         vm.throw_exception<TypeError>(global_object, ErrorType::InvalidHint, hint);
         return {};
     }
-    return this_value.as_object().ordinary_to_primitive(try_first);
+    return TRY_OR_DISCARD(this_value.as_object().ordinary_to_primitive(try_first));
 }
 
 }
