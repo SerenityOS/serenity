@@ -1199,10 +1199,10 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
     paste_action->set_enabled(GUI::Clipboard::the().mime_type() == "text/uri-list" && access(initial_location.characters(), W_OK) == 0);
 
     window->set_rect({ left, top, width, height });
-    if (was_maximized)
-        window->set_maximized(true);
 
     window->show();
+    if (was_maximized)
+        window->set_maximized(true);
 
     directory_view.set_view_mode_from_string(Config::read_string("FileManager", "DirectoryView", "ViewMode", "Icon"));
 
