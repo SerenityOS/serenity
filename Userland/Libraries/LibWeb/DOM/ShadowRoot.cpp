@@ -44,7 +44,7 @@ String ShadowRoot::inner_html() const
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
 ExceptionOr<void> ShadowRoot::set_inner_html(String const& markup)
 {
-    auto result = DOMParsing::InnerHTML::inner_html_setter(*this, markup);
+    auto result = DOMParsing::inner_html_setter(*this, markup);
     if (result.is_exception())
         return result.exception();
 
