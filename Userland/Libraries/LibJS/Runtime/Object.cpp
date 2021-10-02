@@ -117,7 +117,7 @@ ThrowCompletionOr<bool> Object::set(PropertyName const& property_name, Value val
 }
 
 // 7.3.5 CreateDataProperty ( O, P, V ), https://tc39.es/ecma262/#sec-createdataproperty
-bool Object::create_data_property(PropertyName const& property_name, Value value)
+ThrowCompletionOr<bool> Object::create_data_property(PropertyName const& property_name, Value value)
 {
     // 1. Assert: Type(O) is Object.
 
@@ -133,7 +133,7 @@ bool Object::create_data_property(PropertyName const& property_name, Value value
     };
 
     // 4. Return ? O.[[DefineOwnProperty]](P, newDesc).
-    return TRY_OR_DISCARD(internal_define_own_property(property_name, new_descriptor));
+    return internal_define_own_property(property_name, new_descriptor);
 }
 
 // 7.3.6 CreateMethodProperty ( O, P, V ), https://tc39.es/ecma262/#sec-createmethodproperty
@@ -170,9 +170,7 @@ bool Object::create_data_property_or_throw(PropertyName const& property_name, Va
     VERIFY(property_name.is_valid());
 
     // 3. Let success be ? CreateDataProperty(O, P, V).
-    auto success = create_data_property(property_name, value);
-    if (vm.exception())
-        return {};
+    auto success = TRY_OR_DISCARD(create_data_property(property_name, value));
 
     // 4. If success is false, throw a TypeError exception.
     if (!success) {
@@ -779,7 +777,7 @@ bool Object::ordinary_set_with_own_descriptor(PropertyName const& property_name,
             VERIFY(!receiver.as_object().storage_has(property_name));
 
             // ii. Return ? CreateDataProperty(Receiver, P, V).
-            return receiver.as_object().create_data_property(property_name, value);
+            return TRY_OR_DISCARD(receiver.as_object().create_data_property(property_name, value));
         }
     }
 

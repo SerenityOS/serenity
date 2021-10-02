@@ -468,13 +468,10 @@ Value JSONObject::internalize_json_property(GlobalObject& global_object, Object*
             auto element = internalize_json_property(global_object, &value_object, key, reviver);
             if (auto* exception = vm.exception())
                 return throw_completion(exception->value());
-            if (element.is_undefined()) {
+            if (element.is_undefined())
                 TRY(value_object.internal_delete(key));
-            } else {
-                value_object.create_data_property(key, element);
-                if (auto* exception = vm.exception())
-                    return throw_completion(exception->value());
-            }
+            else
+                TRY(value_object.create_data_property(key, element));
             return {};
         };
 
