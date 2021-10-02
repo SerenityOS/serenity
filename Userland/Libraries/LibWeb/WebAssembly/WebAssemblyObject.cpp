@@ -164,16 +164,18 @@ Result<size_t, JS::Value> WebAssemblyObject::instantiate_module(Wasm::Module con
         dbgln("Trying to resolve stuff because import object was specified");
         for (const Wasm::Linker::Name& import_name : linker.unresolved_imports()) {
             dbgln("Trying to resolve {}::{}", import_name.module, import_name.name);
-            auto value = import_object->get(import_name.module);
-            if (vm.exception())
+            auto value_or_error = import_object->get(import_name.module);
+            if (value_or_error.is_error())
                 break;
+            auto value = value_or_error.release_value();
             auto object = value.to_object(global_object);
             if (vm.exception())
                 break;
 
-            auto import_ = object->get(import_name.name);
-            if (vm.exception())
+            auto import_or_error = object->get(import_name.name);
+            if (import_or_error.is_error())
                 break;
+            auto import_ = import_or_error.release_value();
             import_name.type.visit(
                 [&](Wasm::TypeIndex index) {
                     dbgln("Trying to resolve a function {}::{}, type index {}", import_name.module, import_name.name, index.value());

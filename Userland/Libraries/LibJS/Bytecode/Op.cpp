@@ -200,9 +200,10 @@ void CopyObjectExcludingProperties::execute_impl(Bytecode::Interpreter& interpre
     for (auto& key : own_keys) {
         if (!excluded_names.contains(key)) {
             auto property_name = PropertyName(key.to_property_key(interpreter.global_object()));
-            auto property_value = from_object->get(property_name);
-            if (interpreter.vm().exception())
+            auto property_value_or_error = from_object->get(property_name);
+            if (property_value_or_error.is_error())
                 return;
+            auto property_value = property_value_or_error.release_value();
             to_object->define_direct_property(property_name, property_value, JS::default_attributes);
         }
     }
@@ -237,8 +238,12 @@ void SetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 
 void GetById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    if (auto* object = interpreter.accumulator().to_object(interpreter.global_object()))
-        interpreter.accumulator() = object->get(interpreter.current_executable().get_string(m_property));
+    if (auto* object = interpreter.accumulator().to_object(interpreter.global_object())) {
+        auto value_or_error = object->get(interpreter.current_executable().get_string(m_property));
+        if (value_or_error.is_error())
+            return;
+        interpreter.accumulator() = value_or_error.release_value();
+    }
 }
 
 void PutById::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -429,7 +434,10 @@ void GetByValue::execute_impl(Bytecode::Interpreter& interpreter) const
         auto property_key = interpreter.accumulator().to_property_key(interpreter.global_object());
         if (interpreter.vm().exception())
             return;
-        interpreter.accumulator() = object->get(property_key);
+        auto value_or_error = object->get(property_key);
+        if (value_or_error.is_error())
+            return;
+        interpreter.accumulator() = value_or_error.release_value();
     }
 }
 

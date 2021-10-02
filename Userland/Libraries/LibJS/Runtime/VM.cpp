@@ -282,10 +282,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
             if (auto* thrown_exception = exception())
                 return JS::throw_completion(thrown_exception->value());
 
-            auto value_to_assign = object->get(name);
-            if (auto* thrown_exception = exception())
-                return JS::throw_completion(thrown_exception->value());
-
+            auto value_to_assign = TRY(object->get(name));
             if (property.initializer && value_to_assign.is_undefined()) {
                 value_to_assign = TRY(named_evaluation_if_anonymous_function(global_object, *property.initializer, identifier.string()));
             }
@@ -312,10 +309,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
         if (auto* thrown_exception = exception())
             return JS::throw_completion(thrown_exception->value());
 
-        auto value_to_assign = object->get(name);
-        if (auto* thrown_exception = exception())
-            return JS::throw_completion(thrown_exception->value());
-
+        auto value_to_assign = TRY(object->get(name));
         if (property.initializer && value_to_assign.is_undefined()) {
             if (auto* identifier_ptr = property.alias.get_pointer<NonnullRefPtr<Identifier>>())
                 value_to_assign = TRY(named_evaluation_if_anonymous_function(global_object, *property.initializer, (*identifier_ptr)->string()));
@@ -378,19 +372,13 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
                     return JS::throw_completion(exception()->value());
                 }
 
-                auto done_property = next_object->get(names.done);
-                if (auto* thrown_exception = exception())
-                    return JS::throw_completion(thrown_exception->value());
-
+                auto done_property = TRY(next_object->get(names.done));
                 if (done_property.to_boolean()) {
                     iterator_done = true;
                     break;
                 }
 
-                auto next_value = next_object->get(names.value);
-                if (auto* thrown_exception = exception())
-                    return JS::throw_completion(thrown_exception->value());
-
+                auto next_value = TRY(next_object->get(names.value));
                 array->indexed_properties().append(next_value);
             }
             value = array;
@@ -403,19 +391,17 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
                 return JS::throw_completion(exception()->value());
             }
 
-            auto done_property = next_object->get(names.done);
-            if (auto* thrown_exception = exception())
-                return JS::throw_completion(thrown_exception->value());
-
+            auto done_property = TRY(next_object->get(names.done));
             if (done_property.to_boolean()) {
                 iterator_done = true;
                 value = js_undefined();
             } else {
-                value = next_object->get(names.value);
-                if (auto* thrown_exception = exception()) {
+                auto value_or_error = next_object->get(names.value);
+                if (value_or_error.is_throw_completion()) {
                     iterator_done = true;
-                    return JS::throw_completion(thrown_exception->value());
+                    return JS::throw_completion(value_or_error.release_error().value());
                 }
+                value = value_or_error.release_value();
             }
         } else {
             value = js_undefined();
@@ -574,9 +560,7 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
         && result.is_object()) {
         verify_cast<FunctionEnvironment>(constructor_environment)->replace_this_binding(result);
 
-        auto prototype = new_target.get(names.prototype);
-        if (exception())
-            return {};
+        auto prototype = TRY_OR_DISCARD(new_target.get(names.prototype));
         if (prototype.is_object())
             TRY_OR_DISCARD(result.as_object().internal_set_prototype_of(&prototype.as_object()));
         return result;

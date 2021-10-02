@@ -373,9 +373,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(0)));
 
     // 4. Let timeZone be ? Get(options, "timeZone").
-    auto time_zone = options->get(vm.names.timeZone);
-    if (vm.exception())
-        return {};
+    auto time_zone = TRY_OR_DISCARD(options->get(vm.names.timeZone));
 
     // 5. If timeZone is not undefined, then
     if (!time_zone.is_undefined()) {
@@ -455,9 +453,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
     }
 
     // 4. Let calendarLike be ? Get(item, "calendar").
-    auto calendar_like = item.as_object().get(vm.names.calendar);
-    if (vm.exception())
-        return {};
+    auto calendar_like = TRY_OR_DISCARD(item.as_object().get(vm.names.calendar));
 
     // 5. If calendarLike is undefined, then
     if (calendar_like.is_undefined()) {
@@ -470,9 +466,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
     auto* calendar = TRY_OR_DISCARD(to_temporal_calendar(global_object, calendar_like));
 
     // 7. Let temporalTimeZoneLike be ? Get(item, "timeZone").
-    auto temporal_time_zone_like = item.as_object().get(vm.names.timeZone);
-    if (vm.exception())
-        return {};
+    auto temporal_time_zone_like = TRY_OR_DISCARD(item.as_object().get(vm.names.timeZone));
 
     // 8. If temporalTimeZoneLike is undefined, then
     if (temporal_time_zone_like.is_undefined()) {
@@ -502,9 +496,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time_iso)
     // 3. If Type(item) is Object, then
     if (item.is_object()) {
         // a. Let timeZoneProperty be ? Get(item, "timeZone").
-        auto time_zone_property = item.as_object().get(vm.names.timeZone);
-        if (vm.exception())
-            return {};
+        auto time_zone_property = TRY_OR_DISCARD(item.as_object().get(vm.names.timeZone));
 
         // b. If timeZoneProperty is not undefined, then
         if (!time_zone_property.is_undefined()) {

@@ -78,11 +78,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     if (vm.exception())
         return {};
 
-    auto raw_value = cooked->get(vm.names.raw);
-    if (vm.exception())
-        return {};
-
-    auto* raw = raw_value.to_object(global_object);
+    auto* raw = TRY_OR_DISCARD(cooked->get(vm.names.raw)).to_object(global_object);
     if (vm.exception())
         return {};
 
@@ -98,10 +94,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     StringBuilder builder;
     for (size_t i = 0; i < literal_segments; ++i) {
         auto next_key = String::number(i);
-        auto next_segment_value = raw->get(next_key);
-        if (vm.exception())
-            return {};
-        auto next_segment = next_segment_value.to_string(global_object);
+        auto next_segment = TRY_OR_DISCARD(raw->get(next_key)).to_string(global_object);
         if (vm.exception())
             return {};
 

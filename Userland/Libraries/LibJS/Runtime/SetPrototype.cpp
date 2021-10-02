@@ -31,10 +31,10 @@ void SetPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.values, values, 0, attr);
     define_native_accessor(vm.names.size, size_getter, {}, Attribute::Configurable);
 
-    define_direct_property(vm.names.keys, get(vm.names.values), attr);
+    define_direct_property(vm.names.keys, get_without_side_effects(vm.names.values), attr);
 
     // 24.2.3.11 Set.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-set.prototype-@@iterator
-    define_direct_property(*vm.well_known_symbol_iterator(), get(vm.names.values), attr);
+    define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.values), attr);
 
     // 24.2.3.12 Set.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-set.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.Set.as_string()), Attribute::Configurable);

@@ -113,9 +113,7 @@ ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& o
     // 2. Assert: Each element of types is Boolean, String, or Number.
 
     // 3. Let value be ? Get(options, property).
-    auto value = options.get(property);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto value = TRY(options.get(property));
 
     // 4. If value is undefined, return fallback.
     if (value.is_undefined())
@@ -1051,9 +1049,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, 
     // 3. For each value property of fieldNames, do
     for (auto& property : field_names) {
         // a. Let value be ? Get(fields, property).
-        auto value = fields.get(property);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto value = TRY(fields.get(property));
 
         // b. If value is undefined, then
         if (value.is_undefined()) {
