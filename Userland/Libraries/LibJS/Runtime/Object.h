@@ -171,6 +171,8 @@ protected:
     explicit Object(GlobalObjectTag);
     Object(ConstructWithoutPrototypeTag, GlobalObject&);
 
+    void set_prototype(Object*);
+
     // [[Extensible]]
     bool m_is_extensible { true };
 
