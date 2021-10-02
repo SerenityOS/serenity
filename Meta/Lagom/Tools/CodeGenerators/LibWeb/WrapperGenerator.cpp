@@ -154,8 +154,10 @@ struct Interface {
     Vector<Function> static_functions;
     bool has_stringifier { false };
     Optional<String> stringifier_attribute;
-    Optional<Tuple<Type, Type>> iterator_types;
     bool has_unscopable_member { false };
+
+    Optional<Type> value_iterator_type;
+    Optional<Tuple<Type, Type>> pair_iterator_types;
 
     Optional<Function> named_property_getter;
     Optional<Function> named_property_setter;
@@ -412,17 +414,22 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
         assert_string("iterable");
         assert_specific('<');
         auto first_type = parse_type();
-        Optional<Type> second_type;
         if (lexer.next_is(',')) {
+            if (interface->supports_indexed_properties())
+                report_parsing_error("Interfaces with a pair iterator must not supported indexed properties.", filename, input, lexer.tell());
+
             assert_specific(',');
             consume_whitespace();
-            second_type = parse_type();
+            auto second_type = parse_type();
+            interface->pair_iterator_types = Tuple { move(first_type), move(second_type) };
         } else {
-            TODO();
+            if (!interface->supports_indexed_properties())
+                report_parsing_error("Interfaces with a value iterator must supported indexed properties.", filename, input, lexer.tell());
+
+            interface->value_iterator_type = move(first_type);
         }
         assert_specific('>');
         assert_specific(';');
-        interface->iterator_types = Tuple { first_type, *second_type };
     };
 
     auto parse_getter = [&](HashMap<String, String>& extended_attributes) {
@@ -2637,7 +2644,7 @@ private:
         )~~~");
     }
 
-    if (interface.iterator_types.has_value()) {
+    if (interface.pair_iterator_types.has_value()) {
         auto iterator_generator = generator.fork();
         iterator_generator.append(R"~~~(
     JS_DECLARE_NATIVE_FUNCTION(entries);
@@ -2684,7 +2691,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
     generator.set("prototype_class:snakecase", interface.prototype_class.to_snakecase());
     generator.set("fully_qualified_name", interface.fully_qualified_name);
 
-    if (interface.iterator_types.has_value()) {
+    if (interface.pair_iterator_types.has_value()) {
         generator.set("iterator_name", String::formatted("{}Iterator", interface.name));
         generator.set("iterator_wrapper_class", String::formatted("{}IteratorWrapper", interface.name));
         generator.append(R"~~~(
@@ -2776,7 +2783,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 
 )~~~");
 
-    if (interface.iterator_types.has_value()) {
+    if (interface.pair_iterator_types.has_value()) {
         generator.append(R"~~~(
 #if __has_include(<LibWeb/CSS/@iterator_name@.h>)
 #    include <LibWeb/CSS/@iterator_name@.h>
@@ -2920,7 +2927,25 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 )~~~");
     }
 
-    if (interface.iterator_types.has_value()) {
+    // https://heycam.github.io/webidl/#define-the-iteration-methods
+    // This applies to this if block and the following if block.
+    if (interface.indexed_property_getter.has_value()) {
+        auto iterator_generator = generator.fork();
+        iterator_generator.append(R"~~~(
+    define_direct_property(*vm.well_known_symbol_iterator(), global_object.array_prototype()->get_without_side_effects(vm.names.values), JS::Attribute::Configurable | JS::Attribute::Writable);
+)~~~");
+
+        if (interface.value_iterator_type.has_value()) {
+            iterator_generator.append(R"~~~(
+    define_direct_property(vm.names.entries, global_object.array_prototype()->get_without_side_effects(vm.names.entries), default_attributes);
+    define_direct_property(vm.names.keys, global_object.array_prototype()->get_without_side_effects(vm.names.keys), default_attributes);
+    define_direct_property(vm.names.values, global_object.array_prototype()->get_without_side_effects(vm.names.values), default_attributes);
+    define_direct_property(vm.names.forEach, global_object.array_prototype()->get_without_side_effects(vm.names.forEach), default_attributes);
+)~~~");
+        }
+    }
+
+    if (interface.pair_iterator_types.has_value()) {
         // FIXME: Do pair iterators need to be added to the unscopable list?
 
         auto iterator_generator = generator.fork();
@@ -3116,7 +3141,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
 )~~~");
     }
 
-    if (interface.iterator_types.has_value()) {
+    if (interface.pair_iterator_types.has_value()) {
         auto iterator_generator = generator.fork();
         iterator_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::entries)
@@ -3143,8 +3168,8 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
     auto this_value = vm.this_value(global_object);
     impl->for_each([&](auto key, auto value) {
 )~~~");
-        generate_variable_statement(iterator_generator, "wrapped_key", interface.iterator_types->get<0>(), "key");
-        generate_variable_statement(iterator_generator, "wrapped_value", interface.iterator_types->get<1>(), "value");
+        generate_variable_statement(iterator_generator, "wrapped_key", interface.pair_iterator_types->get<0>(), "key");
+        generate_variable_statement(iterator_generator, "wrapped_value", interface.pair_iterator_types->get<1>(), "value");
         iterator_generator.append(R"~~~(
         auto result = vm.call(callback.as_function(), vm.argument(1), wrapped_value, wrapped_key, this_value);
         return result.is_error() ? IterationDecision::Break : IterationDecision::Continue;
@@ -3184,7 +3209,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::values)
 
 static void generate_iterator_header(IDL::Interface const& interface)
 {
-    VERIFY(interface.iterator_types.has_value());
+    VERIFY(interface.pair_iterator_types.has_value());
     StringBuilder builder;
     SourceGenerator generator { builder };
 
@@ -3254,7 +3279,7 @@ private:
 
 void generate_iterator_implementation(IDL::Interface const& interface)
 {
-    VERIFY(interface.iterator_types.has_value());
+    VERIFY(interface.pair_iterator_types.has_value());
     StringBuilder builder;
     SourceGenerator generator { builder };
 
@@ -3324,7 +3349,7 @@ void @wrapper_class@::visit_edges(Cell::Visitor& visitor)
 
 static void generate_iterator_prototype_header(IDL::Interface const& interface)
 {
-    VERIFY(interface.iterator_types.has_value());
+    VERIFY(interface.pair_iterator_types.has_value());
     StringBuilder builder;
     SourceGenerator generator { builder };
 
@@ -3356,7 +3381,7 @@ private:
 
 void generate_iterator_prototype_implementation(IDL::Interface const& interface)
 {
-    VERIFY(interface.iterator_types.has_value());
+    VERIFY(interface.pair_iterator_types.has_value());
     StringBuilder builder;
     SourceGenerator generator { builder };
 
