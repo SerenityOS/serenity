@@ -76,7 +76,7 @@ public:
     // 7.3 Operations on Objects, https://tc39.es/ecma262/#sec-operations-on-objects
 
     ThrowCompletionOr<Value> get(PropertyName const&) const;
-    bool set(PropertyName const&, Value, ShouldThrowExceptions);
+    ThrowCompletionOr<bool> set(PropertyName const&, Value, ShouldThrowExceptions);
     bool create_data_property(PropertyName const&, Value);
     bool create_method_property(PropertyName const&, Value);
     bool create_data_property_or_throw(PropertyName const&, Value);

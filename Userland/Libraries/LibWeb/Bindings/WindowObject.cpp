@@ -673,9 +673,9 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_by)
     } else if (vm.argument_count() >= 2) {
         // We ignore arguments 2+ in line with behavior of Chrome and Firefox
         options = JS::Object::create(global_object, nullptr);
-        options->set("left", vm.argument(0), ShouldThrowExceptions::No);
-        options->set("top", vm.argument(1), ShouldThrowExceptions::No);
-        options->set("behavior", JS::js_string(vm, "auto"), ShouldThrowExceptions::No);
+        MUST(options->set("left", vm.argument(0), ShouldThrowExceptions::No));
+        MUST(options->set("top", vm.argument(1), ShouldThrowExceptions::No));
+        MUST(options->set("behavior", JS::js_string(vm, "auto"), ShouldThrowExceptions::No));
     }
 
     auto left_value = TRY_OR_DISCARD(options->get("left"));

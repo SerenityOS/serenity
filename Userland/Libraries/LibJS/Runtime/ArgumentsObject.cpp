@@ -71,7 +71,8 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_set(PropertyName const& proper
     // 3. If isMapped is true, then
     if (is_mapped) {
         // a. Let setStatus be Set(map, P, V, false).
-        auto set_status = m_parameter_map->set(property_name, value, Object::ShouldThrowExceptions::No);
+        auto set_status = MUST(m_parameter_map->set(property_name, value, Object::ShouldThrowExceptions::No));
+
         // b. Assert: setStatus is true because formal parameters mapped by argument objects are always writable.
         VERIFY(set_status);
     }
@@ -163,7 +164,8 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyNa
             // i. If Desc.[[Value]] is present, then
             if (descriptor.value.has_value()) {
                 // 1. Let setStatus be Set(map, P, Desc.[[Value]], false).
-                bool set_status = map.set(property_name, descriptor.value.value(), Object::ShouldThrowExceptions::No);
+                bool set_status = MUST(map.set(property_name, descriptor.value.value(), Object::ShouldThrowExceptions::No));
+
                 // 2. Assert: setStatus is true because formal parameters mapped by argument objects are always writable.
                 VERIFY(set_status);
             }

@@ -196,8 +196,8 @@ static void initialize_typed_array_from_array_like(GlobalObject& global_object, 
         if (value_or_error.is_error())
             return;
         auto value = value_or_error.release_value();
-        typed_array.set(k, value, Object::ShouldThrowExceptions::Yes);
-        if (vm.exception())
+        auto result_or_error = typed_array.set(k, value, Object::ShouldThrowExceptions::Yes);
+        if (result_or_error.is_error())
             return;
     }
 }
@@ -230,8 +230,8 @@ static void initialize_typed_array_from_list(GlobalObject& global_object, TypedA
 
     for (size_t k = 0; k < list.size(); k++) {
         auto value = list[k];
-        typed_array.set(k, value, Object::ShouldThrowExceptions::Yes);
-        if (vm.exception())
+        auto result_or_error = typed_array.set(k, value, Object::ShouldThrowExceptions::Yes);
+        if (result_or_error.is_error())
             return;
     }
 }

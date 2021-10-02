@@ -91,7 +91,7 @@ ThrowCompletionOr<Value> Object::get(PropertyName const& property_name) const
 // 7.3.3 GetV ( V, P ) is defined as Value::get().
 
 // 7.3.4 Set ( O, P, V, Throw ), https://tc39.es/ecma262/#sec-set-o-p-v-throw
-bool Object::set(PropertyName const& property_name, Value value, ShouldThrowExceptions throw_exceptions)
+ThrowCompletionOr<bool> Object::set(PropertyName const& property_name, Value value, ShouldThrowExceptions throw_exceptions)
 {
     VERIFY(!value.is_empty());
     auto& vm = this->vm();
@@ -104,13 +104,12 @@ bool Object::set(PropertyName const& property_name, Value value, ShouldThrowExce
     // 3. Assert: Type(Throw) is Boolean.
 
     // 4. Let success be ? O.[[Set]](P, V, O).
-    auto success = TRY_OR_DISCARD(internal_set(property_name, value, this));
+    auto success = TRY(internal_set(property_name, value, this));
 
     // 5. If success is false and Throw is true, throw a TypeError exception.
     if (!success && throw_exceptions == ShouldThrowExceptions::Yes) {
         // FIXME: Improve/contextualize error message
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ObjectSetReturnedFalse);
-        return {};
+        return vm.throw_completion<TypeError>(global_object(), ErrorType::ObjectSetReturnedFalse);
     }
 
     // 6. Return success.

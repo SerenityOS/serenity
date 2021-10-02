@@ -96,9 +96,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
                 mapped_value = TRY_OR_DISCARD(vm.call(*map_fn, this_arg, k_value, Value(k)));
             else
                 mapped_value = k_value;
-            target_object->set(k, mapped_value, Object::ShouldThrowExceptions::Yes);
-            if (vm.exception())
-                return {};
+            TRY_OR_DISCARD(target_object->set(k, mapped_value, Object::ShouldThrowExceptions::Yes));
         }
 
         return target_object;
@@ -120,9 +118,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
             mapped_value = TRY_OR_DISCARD(vm.call(*map_fn, this_arg, k_value, Value(k)));
         else
             mapped_value = k_value;
-        target_object->set(k, mapped_value, Object::ShouldThrowExceptions::Yes);
-        if (vm.exception())
-            return {};
+        TRY_OR_DISCARD(target_object->set(k, mapped_value, Object::ShouldThrowExceptions::Yes));
     }
 
     return target_object;
@@ -143,9 +139,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::of)
     if (vm.exception())
         return {};
     for (size_t k = 0; k < length; ++k) {
-        auto success = new_object->set(k, vm.argument(k), Object::ShouldThrowExceptions::Yes);
-        if (vm.exception())
-            return {};
+        auto success = TRY_OR_DISCARD(new_object->set(k, vm.argument(k), Object::ShouldThrowExceptions::Yes));
         if (!success) {
             vm.throw_exception<TypeError>(global_object, ErrorType::TypedArrayFailedSettingIndex, k);
             return {};
