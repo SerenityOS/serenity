@@ -29,7 +29,7 @@ StorageDevice::StorageDevice(const StorageController& controller, int major, int
 
 StringView StorageDevice::class_name() const
 {
-    return "StorageDevice";
+    return "StorageDevice"sv;
 }
 
 NonnullRefPtr<StorageController> StorageDevice::controller() const

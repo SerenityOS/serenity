@@ -51,7 +51,7 @@ public:
     virtual KResult close() override;
 
     virtual String absolute_path(const OpenFileDescription&) const override;
-    virtual StringView class_name() const override { return "InodeWatcher"; };
+    virtual StringView class_name() const override { return "InodeWatcher"sv; };
     virtual bool is_inode_watcher() const override { return true; }
 
     void notify_inode_event(Badge<Inode>, InodeIdentifier, InodeWatcherEvent::Type, String const& name = {});

@@ -34,7 +34,7 @@ RamdiskDevice::~RamdiskDevice()
 
 StringView RamdiskDevice::class_name() const
 {
-    return "RamdiskDevice";
+    return "RamdiskDevice"sv;
 }
 
 void RamdiskDevice::start_request(AsyncBlockDeviceRequest& request)

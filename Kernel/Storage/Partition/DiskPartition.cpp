@@ -77,7 +77,7 @@ bool DiskPartition::can_write(const OpenFileDescription& fd, size_t offset) cons
 
 StringView DiskPartition::class_name() const
 {
-    return "DiskPartition";
+    return "DiskPartition"sv;
 }
 
 }

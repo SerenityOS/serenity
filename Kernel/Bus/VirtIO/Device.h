@@ -92,7 +92,7 @@ public:
     virtual void initialize();
 
 protected:
-    virtual StringView class_name() const { return "VirtIO::Device"; }
+    virtual StringView class_name() const { return "VirtIO::Device"sv; }
     explicit Device(PCI::DeviceIdentifier const&);
     struct MappedMMIO {
         OwnPtr<Memory::Region> base;

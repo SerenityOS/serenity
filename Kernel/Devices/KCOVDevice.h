@@ -29,7 +29,7 @@ public:
 protected:
     KCOVDevice();
 
-    virtual StringView class_name() const override { return "KCOVDevice"; }
+    virtual StringView class_name() const override { return "KCOVDevice"sv; }
 
     virtual bool can_read(const OpenFileDescription&, size_t) const override final { return true; }
     virtual bool can_write(const OpenFileDescription&, size_t) const override final { return true; }

@@ -34,7 +34,7 @@ public:
 
 private:
     // ^CharacterDevice
-    virtual StringView class_name() const override { return "PTYMultiplexer"; }
+    virtual StringView class_name() const override { return "PTYMultiplexer"sv; }
 
     static constexpr size_t max_pty_pairs = 64;
     MutexProtected<Vector<unsigned, max_pty_pairs>> m_freelist;

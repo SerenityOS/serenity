@@ -49,7 +49,7 @@ protected:
     mutable Spinlock m_queue_lock;
     CircularQueue<Event, 16> m_queue;
     // ^CharacterDevice
-    virtual StringView class_name() const override { return "KeyboardDevice"; }
+    virtual StringView class_name() const override { return "KeyboardDevice"sv; }
 
     u8 m_modifiers { 0 };
     bool m_caps_lock_to_ctrl_pressed { false };

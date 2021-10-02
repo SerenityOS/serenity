@@ -73,7 +73,7 @@ public:
 
 protected:
     IPv4Socket(int type, int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, OwnPtr<KBuffer> optional_scratch_buffer);
-    virtual StringView class_name() const override { return "IPv4Socket"; }
+    virtual StringView class_name() const override { return "IPv4Socket"sv; }
 
     PortAllocationResult allocate_local_port_if_needed();
 
