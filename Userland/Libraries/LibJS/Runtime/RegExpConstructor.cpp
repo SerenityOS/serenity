@@ -45,10 +45,7 @@ Value RegExpConstructor::call()
     bool pattern_is_regexp = TRY_OR_DISCARD(pattern.is_regexp(global_object));
 
     if (pattern_is_regexp && flags.is_undefined()) {
-        auto pattern_constructor = pattern.as_object().get(vm.names.constructor);
-        if (vm.exception())
-            return {};
-
+        auto pattern_constructor = TRY_OR_DISCARD(pattern.as_object().get(vm.names.constructor));
         if (same_value(this, pattern_constructor))
             return pattern;
     }
@@ -79,14 +76,10 @@ Value RegExpConstructor::construct(FunctionObject&)
         else
             flags_value = flags;
     } else if (pattern_is_regexp) {
-        pattern_value = pattern.as_object().get(vm.names.source);
-        if (vm.exception())
-            return {};
+        pattern_value = TRY_OR_DISCARD(pattern.as_object().get(vm.names.source));
 
         if (flags.is_undefined()) {
-            flags_value = pattern.as_object().get(vm.names.flags);
-            if (vm.exception())
-                return {};
+            flags_value = TRY_OR_DISCARD(pattern.as_object().get(vm.names.flags));
         } else {
             flags_value = flags;
         }

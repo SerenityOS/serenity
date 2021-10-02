@@ -88,45 +88,35 @@ PropertyDescriptor to_property_descriptor(GlobalObject& global_object, Value arg
     if (vm.exception())
         return {};
     if (has_enumerable) {
-        auto enumerable = object.get(vm.names.enumerable);
-        if (vm.exception())
-            return {};
+        auto enumerable = TRY_OR_DISCARD(object.get(vm.names.enumerable));
         descriptor.enumerable = enumerable.to_boolean();
     }
     auto has_configurable = object.has_property(vm.names.configurable);
     if (vm.exception())
         return {};
     if (has_configurable) {
-        auto configurable = object.get(vm.names.configurable);
-        if (vm.exception())
-            return {};
+        auto configurable = TRY_OR_DISCARD(object.get(vm.names.configurable));
         descriptor.configurable = configurable.to_boolean();
     }
     auto has_value = object.has_property(vm.names.value);
     if (vm.exception())
         return {};
     if (has_value) {
-        auto value = object.get(vm.names.value);
-        if (vm.exception())
-            return {};
+        auto value = TRY_OR_DISCARD(object.get(vm.names.value));
         descriptor.value = value;
     }
     auto has_writable = object.has_property(vm.names.writable);
     if (vm.exception())
         return {};
     if (has_writable) {
-        auto writable = object.get(vm.names.writable);
-        if (vm.exception())
-            return {};
+        auto writable = TRY_OR_DISCARD(object.get(vm.names.writable));
         descriptor.writable = writable.to_boolean();
     }
     auto has_get = object.has_property(vm.names.get);
     if (vm.exception())
         return {};
     if (has_get) {
-        auto getter = object.get(vm.names.get);
-        if (vm.exception())
-            return {};
+        auto getter = TRY_OR_DISCARD(object.get(vm.names.get));
         if (!getter.is_function() && !getter.is_undefined()) {
             vm.throw_exception<TypeError>(global_object, ErrorType::AccessorBadField, "get");
             return {};
@@ -137,9 +127,7 @@ PropertyDescriptor to_property_descriptor(GlobalObject& global_object, Value arg
     if (vm.exception())
         return {};
     if (has_set) {
-        auto setter = object.get(vm.names.set);
-        if (vm.exception())
-            return {};
+        auto setter = TRY_OR_DISCARD(object.get(vm.names.set));
         if (!setter.is_function() && !setter.is_undefined()) {
             vm.throw_exception<TypeError>(global_object, ErrorType::AccessorBadField, "set");
             return {};

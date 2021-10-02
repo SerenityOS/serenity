@@ -118,9 +118,10 @@ static void for_each_item(VM& vm, GlobalObject& global_object, const String& nam
     auto this_value = vm.argument(1);
 
     for (size_t i = 0; i < initial_length; ++i) {
-        auto value = typed_array->get(i);
-        if (vm.exception())
+        auto value_or_error = typed_array->get(i);
+        if (value_or_error.is_error())
             return;
+        auto value = value_or_error.release_value();
 
         auto callback_result_or_error = vm.call(*callback_function, this_value, value, Value((i32)i), typed_array);
         if (callback_result_or_error.is_error())
@@ -147,9 +148,10 @@ static void for_each_item_from_last(VM& vm, GlobalObject& global_object, const S
     auto this_value = vm.argument(1);
 
     for (ssize_t i = (ssize_t)initial_length - 1; i >= 0; --i) {
-        auto value = typed_array->get(i);
-        if (vm.exception())
+        auto value_or_error = typed_array->get(i);
+        if (value_or_error.is_error())
             return;
+        auto value = value_or_error.release_value();
 
         auto callback_result_or_error = vm.call(*callback_function, this_value, value, Value((i32)i), typed_array);
         if (callback_result_or_error.is_error())
@@ -225,7 +227,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::at)
     }
     if (index.has_overflow() || index.value() >= length)
         return js_undefined();
-    return typed_array->get(index.value());
+    return TRY_OR_DISCARD(typed_array->get(index.value()));
 }
 
 // 23.2.3.7 %TypedArray%.prototype.every ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.every
@@ -404,7 +406,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::includes)
 
     auto search_element = vm.argument(0);
     for (; k < length; ++k) {
-        auto element_k = typed_array->get(k);
+        auto element_k = MUST(typed_array->get(k));
 
         if (same_value_zero(search_element, element_k))
             return Value(true);
@@ -449,7 +451,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
     for (; k < length; ++k) {
         auto k_present = typed_array->has_property(k);
         if (k_present) {
-            auto element_k = typed_array->get(k);
+            auto element_k = MUST(typed_array->get(k));
 
             if (is_strictly_equal(search_element, element_k))
                 return Value(k);
@@ -497,7 +499,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
     for (; k >= 0; --k) {
         auto k_present = typed_array->has_property(k);
         if (k_present) {
-            auto element_k = typed_array->get(k);
+            auto element_k = MUST(typed_array->get(k));
 
             if (is_strictly_equal(search_element, element_k))
                 return Value(k);
@@ -530,12 +532,12 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce)
     if (vm.argument_count() > 1) {
         accumulator = vm.argument(1);
     } else {
-        accumulator = typed_array->get(k);
+        accumulator = MUST(typed_array->get(k));
         ++k;
     }
 
     for (; k < length; ++k) {
-        auto k_value = typed_array->get(k);
+        auto k_value = MUST(typed_array->get(k));
 
         accumulator = TRY_OR_DISCARD(vm.call(*callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array));
     }
@@ -566,12 +568,12 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce_right)
     if (vm.argument_count() > 1) {
         accumulator = vm.argument(1);
     } else {
-        accumulator = typed_array->get(k);
+        accumulator = MUST(typed_array->get(k));
         --k;
     }
 
     for (; k >= 0; --k) {
-        auto k_value = typed_array->get(k);
+        auto k_value = MUST(typed_array->get(k));
 
         accumulator = TRY_OR_DISCARD(vm.call(*callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array));
     }
@@ -611,9 +613,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
     for (size_t i = 0; i < length; ++i) {
         if (i > 0)
             builder.append(separator);
-        auto value = typed_array->get(i);
-        if (vm.exception())
-            return {};
+        auto value = TRY_OR_DISCARD(typed_array->get(i));
         if (value.is_nullish())
             continue;
         auto string = value.to_string(global_object);
@@ -842,9 +842,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
         auto limit = checked_limit.value();
         auto k = 0;
         while (target_byte_index < limit) {
-            auto value = src->get(k);
-            if (vm.exception())
-                return {};
+            auto value = TRY_OR_DISCARD(src->get(k));
             if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
                 value = value.to_bigint(global_object);
             else
@@ -919,7 +917,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
 
         if (typed_array->element_name() != new_array->element_name()) {
             for (i32 n = 0; k < final; ++k, ++n) {
-                auto k_value = typed_array->get(k);
+                auto k_value = MUST(typed_array->get(k));
                 new_array->set(n, k_value, Object::ShouldThrowExceptions::Yes);
             }
         } else {
@@ -1072,10 +1070,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
             return {};
 
         if (k_present) {
-            auto k_value = typed_array->get(k);
-            if (vm.exception())
-                return {};
-
+            auto k_value = TRY_OR_DISCARD(typed_array->get(k));
             items.append(k_value);
         }
     }
@@ -1178,11 +1173,11 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reverse)
 
         // b. Let upperP be ! ToString(𝔽(upper)).
         // d. Let lowerValue be ! Get(O, lowerP).
-        auto lower_value = typed_array->get(lower);
+        auto lower_value = MUST(typed_array->get(lower));
 
         // c. Let lowerP be ! ToString(𝔽(lower)).
         // e. Let upperValue be ! Get(O, upperP).
-        auto upper_value = typed_array->get(upper);
+        auto upper_value = MUST(typed_array->get(upper));
 
         // f. Perform ! Set(O, lowerP, upperValue, true).
         typed_array->set(lower, upper_value, Object::ShouldThrowExceptions::Yes);
@@ -1406,7 +1401,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::filter)
     for (size_t i = 0; i < initial_length; ++i) {
         // a. Let Pk be ! ToString(𝔽(k)).
         // b. Let kValue be ! Get(O, Pk).
-        auto value = typed_array->get(i);
+        auto value = MUST(typed_array->get(i));
 
         // c. Let selected be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
         auto callback_result = TRY_OR_DISCARD(vm.call(*callback_function, this_value, value, Value((i32)i), typed_array)).to_boolean();
@@ -1477,7 +1472,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::map)
     for (size_t i = 0; i < initial_length; ++i) {
         // a. Let Pk be ! ToString(𝔽(k)).
         // b. Let kValue be ! Get(O, Pk).
-        auto value = typed_array->get(i);
+        auto value = MUST(typed_array->get(i));
 
         // c. Let mappedValue be ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
         auto mapped_value = TRY_OR_DISCARD(vm.call(*callback_function, this_value, value, Value((i32)i), typed_array));
@@ -1507,9 +1502,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
     for (u32 k = 0; k < length; ++k) {
         if (k > 0)
             builder.append(','); // NOTE: Until we implement ECMA-402 (Intl) this is implementation specific.
-        auto value = typed_array->get(k);
-        if (vm.exception())
-            return {};
+        auto value = TRY_OR_DISCARD(typed_array->get(k));
         if (value.is_nullish())
             continue;
         auto locale_string_result = TRY_OR_DISCARD(value.invoke(global_object, vm.names.toLocaleString));

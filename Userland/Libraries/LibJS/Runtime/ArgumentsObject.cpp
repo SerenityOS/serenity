@@ -117,7 +117,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ArgumentsObject::internal_get_ow
     // 5. If isMapped is true, then
     if (is_mapped) {
         // a. Set desc.[[Value]] to Get(map, P).
-        desc->value = m_parameter_map->get(property_name);
+        desc->value = TRY(m_parameter_map->get(property_name));
     }
     // 6. Return desc.
     return desc;
@@ -142,7 +142,7 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyNa
             // i. Set newArgDesc to a copy of Desc.
             new_arg_desc = descriptor;
             // ii. Set newArgDesc.[[Value]] to Get(map, P).
-            new_arg_desc.value = map.get(property_name);
+            new_arg_desc.value = TRY(map.get(property_name));
         }
     }
 

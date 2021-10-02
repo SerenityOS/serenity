@@ -214,10 +214,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_
     }
 
     // 5. Let len be ? ToLength(? Get(O, "length")).
-    auto length_value = object->get(vm.names.length);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    auto length = length_value.to_length(global_object);
+    auto length = TRY(object->get(vm.names.length)).to_length(global_object);
     if (auto* exception = vm.exception())
         return throw_completion(exception->value());
 
@@ -235,9 +232,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_
         // c. If kPresent is true, then
         if (key_present) {
             // i. Let kValue be ? Get(O, Pk).
-            auto key_value = object->get(property_key);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
+            auto key_value = TRY(object->get(property_key));
 
             // ii. If Type(kValue) is not String or Object, throw a TypeError exception.
             if (!key_value.is_string() && !key_value.is_object())
@@ -619,10 +614,9 @@ ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& o
     auto& vm = global_object.vm();
 
     // 1. Assert: Type(options) is Object.
+
     // 2. Let value be ? Get(options, property).
-    auto value = options.get(property);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto value = TRY(options.get(property));
 
     // 3. If value is undefined, return fallback.
     if (value.is_undefined()) {
@@ -685,13 +679,10 @@ ThrowCompletionOr<Optional<int>> default_number_option(GlobalObject& global_obje
 // 9.2.15 GetNumberOption ( options, property, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-getnumberoption
 ThrowCompletionOr<Optional<int>> get_number_option(GlobalObject& global_object, Object const& options, PropertyName const& property, int minimum, int maximum, Optional<int> fallback)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: Type(options) is Object.
+
     // 2. Let value be ? Get(options, property).
-    auto value = options.get(property);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto value = TRY(options.get(property));
 
     // 3. Return ? DefaultNumberOption(value, minimum, maximum, fallback).
     return default_number_option(global_object, value, minimum, maximum, move(fallback));

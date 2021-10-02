@@ -256,9 +256,7 @@ ThrowCompletionOr<bool> Value::is_regexp(GlobalObject& global_object) const
         return false;
 
     auto& vm = global_object.vm();
-    auto matcher = as_object().get(*vm.well_known_symbol_match());
-    if (vm.exception())
-        return false;
+    auto matcher = TRY(as_object().get(*vm.well_known_symbol_match()));
     if (!matcher.is_undefined())
         return matcher.to_boolean();
 
@@ -1325,10 +1323,7 @@ Value ordinary_has_instance(GlobalObject& global_object, Value lhs, Value rhs)
         return Value(false);
 
     Object* lhs_object = &lhs.as_object();
-    auto rhs_prototype = rhs_function.get(vm.names.prototype);
-    if (vm.exception())
-        return {};
-
+    auto rhs_prototype = TRY_OR_DISCARD(rhs_function.get(vm.names.prototype));
     if (!rhs_prototype.is_object()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::InstanceOfOperatorBadPrototype, rhs.to_string_without_side_effects());
         return {};

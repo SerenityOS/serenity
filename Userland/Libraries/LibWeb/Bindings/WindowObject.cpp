@@ -609,21 +609,15 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll)
         if (vm.exception())
             return {};
 
-        auto left = options->get("left");
-        if (vm.exception())
-            return {};
+        auto left = TRY_OR_DISCARD(options->get("left"));
         if (!left.is_undefined())
             x_value = left;
 
-        auto top = options->get("top");
-        if (vm.exception())
-            return {};
+        auto top = TRY_OR_DISCARD(options->get("top"));
         if (!top.is_undefined())
             y_value = top;
 
-        auto behavior_string_value = options->get("behavior");
-        if (vm.exception())
-            return {};
+        auto behavior_string_value = TRY_OR_DISCARD(options->get("behavior"));
         if (!behavior_string_value.is_undefined())
             behavior_string = behavior_string_value.to_string(global_object);
         if (vm.exception())
@@ -684,16 +678,12 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_by)
         options->set("behavior", JS::js_string(vm, "auto"), ShouldThrowExceptions::No);
     }
 
-    auto left_value = options->get("left");
-    if (vm.exception())
-        return {};
+    auto left_value = TRY_OR_DISCARD(options->get("left"));
     auto left = left_value.to_double(global_object);
     if (vm.exception())
         return {};
 
-    auto top_value = options->get("top");
-    if (vm.exception())
-        return {};
+    auto top_value = TRY_OR_DISCARD(options->get("top"));
     auto top = top_value.to_double(global_object);
     if (vm.exception())
         return {};
@@ -705,9 +695,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_by)
     left = left + current_scroll_position.x();
     top = top + current_scroll_position.y();
 
-    auto behavior_string_value = options->get("behavior");
-    if (vm.exception())
-        return {};
+    auto behavior_string_value = TRY_OR_DISCARD(options->get("behavior"));
     auto behavior_string = behavior_string_value.is_undefined() ? "auto" : behavior_string_value.to_string(global_object);
     if (vm.exception())
         return {};

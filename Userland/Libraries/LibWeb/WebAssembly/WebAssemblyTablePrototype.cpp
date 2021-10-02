@@ -38,7 +38,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::grow)
     auto initial_size = table->elements().size();
     auto value_value = vm.argument(1);
     auto reference_value = [&]() -> Optional<Wasm::Value> {
-        if (value_value.is_empty() || value_value.is_undefined())
+        if (value_value.is_undefined())
             return Wasm::Value(table->type().element_type(), 0ull);
 
         return to_webassembly_value(value_value, table->type().element_type(), global_object);
@@ -111,7 +111,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::set)
 
     auto value_value = vm.argument(1);
     auto reference_value = [&]() -> Optional<Wasm::Value> {
-        if (value_value.is_empty() || value_value.is_undefined())
+        if (value_value.is_undefined())
             return Wasm::Value(table->type().element_type(), 0ull);
 
         return to_webassembly_value(value_value, table->type().element_type(), global_object);

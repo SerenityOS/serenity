@@ -124,9 +124,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
         builtin_tag = "Object";
 
     // 15. Let tag be ? Get(O, @@toStringTag).
-    auto to_string_tag = object->get(*vm.well_known_symbol_to_string_tag());
-    if (vm.exception())
-        return {};
+    auto to_string_tag = TRY_OR_DISCARD(object->get(*vm.well_known_symbol_to_string_tag()));
 
     // Optimization: Instead of creating another PrimitiveString from builtin_tag, we separate tag and to_string_tag and add an additional branch to step 16.
     String tag;

@@ -41,8 +41,8 @@ void NumberConstructor::initialize(GlobalObject& global_object)
     define_native_function(vm.names.isInteger, is_integer, 1, attr);
     define_native_function(vm.names.isNaN, is_nan, 1, attr);
     define_native_function(vm.names.isSafeInteger, is_safe_integer, 1, attr);
-    define_direct_property(vm.names.parseInt, global_object.get(vm.names.parseInt), attr);
-    define_direct_property(vm.names.parseFloat, global_object.get(vm.names.parseFloat), attr);
+    define_direct_property(vm.names.parseInt, global_object.get_without_side_effects(vm.names.parseInt), attr);
+    define_direct_property(vm.names.parseFloat, global_object.get_without_side_effects(vm.names.parseFloat), attr);
     define_direct_property(vm.names.EPSILON, Value(EPSILON_VALUE), 0);
     define_direct_property(vm.names.MAX_VALUE, Value(NumericLimits<double>::max()), 0);
     define_direct_property(vm.names.MIN_VALUE, Value(NumericLimits<double>::min()), 0);

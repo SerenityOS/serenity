@@ -75,7 +75,7 @@ public:
 
     // 7.3 Operations on Objects, https://tc39.es/ecma262/#sec-operations-on-objects
 
-    Value get(PropertyName const&) const;
+    ThrowCompletionOr<Value> get(PropertyName const&) const;
     bool set(PropertyName const&, Value, ShouldThrowExceptions);
     bool create_data_property(PropertyName const&, Value);
     bool create_method_property(PropertyName const&, Value);

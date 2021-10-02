@@ -880,9 +880,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
     if (!regexp.is_nullish()) {
         auto is_regexp = TRY_OR_DISCARD(regexp.is_regexp(global_object));
         if (is_regexp) {
-            auto flags = regexp.as_object().get("flags");
-            if (vm.exception())
-                return {};
+            auto flags = TRY_OR_DISCARD(regexp.as_object().get("flags"));
             auto flags_object = TRY_OR_DISCARD(require_object_coercible(global_object, flags));
             auto flags_string = flags_object.to_string(global_object);
             if (vm.exception())
@@ -970,9 +968,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
         bool is_regexp = TRY_OR_DISCARD(search_value.is_regexp(global_object));
 
         if (is_regexp) {
-            auto flags = search_value.as_object().get(vm.names.flags);
-            if (vm.exception())
-                return {};
+            auto flags = TRY_OR_DISCARD(search_value.as_object().get(vm.names.flags));
             auto flags_object = TRY_OR_DISCARD(require_object_coercible(global_object, flags));
             auto flags_string = flags_object.to_string(global_object);
             if (vm.exception())

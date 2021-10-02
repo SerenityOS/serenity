@@ -43,9 +43,7 @@ ThrowCompletionOr<void> Error::install_error_cause(Value options)
         return throw_completion(exception->value());
     if (has_property) {
         // a. Let cause be ? Get(options, "cause").
-        auto cause = options.as_object().get(vm.names.cause);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto cause = TRY(options.as_object().get(vm.names.cause));
 
         // b. Perform ! CreateNonEnumerableDataPropertyOrThrow(O, "cause", cause).
         create_non_enumerable_data_property_or_throw(vm.names.cause, cause);

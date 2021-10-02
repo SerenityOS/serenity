@@ -89,9 +89,7 @@ ThrowCompletionOr<TemporalDuration> to_temporal_duration_record(GlobalObject& gl
         // a. Let prop be the Property value of the current row.
 
         // b. Let val be ? Get(temporalDurationLike, prop).
-        auto value = temporal_duration_like.get(property);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto value = TRY(temporal_duration_like.get(property));
 
         // c. If val is undefined, then
         if (value.is_undefined()) {
@@ -194,9 +192,7 @@ ThrowCompletionOr<PartialDuration> to_partial_duration(GlobalObject& global_obje
         // a. Let property be the Property value of the current row.
 
         // b. Let value be ? Get(temporalDurationLike, property).
-        auto value = temporal_duration_like.as_object().get(property);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto value = TRY(temporal_duration_like.as_object().get(property));
 
         // c. If value is not undefined, then
         if (!value.is_undefined()) {

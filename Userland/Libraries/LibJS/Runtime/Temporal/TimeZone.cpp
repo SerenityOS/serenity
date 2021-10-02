@@ -333,9 +333,7 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(GlobalObject& global_object, Va
             return &temporal_time_zone_like.as_object();
 
         // c. Set temporalTimeZoneLike to ? Get(temporalTimeZoneLike, "timeZone").
-        temporal_time_zone_like = temporal_time_zone_like.as_object().get(vm.names.timeZone);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        temporal_time_zone_like = TRY(temporal_time_zone_like.as_object().get(vm.names.timeZone));
 
         // d. If Type(temporalTimeZoneLike) is Object and ? HasProperty(temporalTimeZoneLike, "timeZone") is false, return temporalTimeZoneLike.
         if (temporal_time_zone_like.is_object()) {

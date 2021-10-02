@@ -210,12 +210,13 @@ static void print_array(JS::Array& array, HashTable<JS::Object*>& seen_objects)
     bool first = true;
     for (auto it = array.indexed_properties().begin(false); it != array.indexed_properties().end(); ++it) {
         print_separator(first);
-        auto value = array.get(it.index());
+        auto value_or_error = array.get(it.index());
         // The V8 repl doesn't throw an exception here, and instead just
         // prints 'undefined'. We may choose to replicate that behavior in
         // the future, but for now lets just catch the error
-        if (vm->exception())
+        if (value_or_error.is_error())
             return;
+        auto value = value_or_error.release_value();
         print_value(value, seen_objects);
     }
     if (!first)
@@ -230,12 +231,13 @@ static void print_object(JS::Object& object, HashTable<JS::Object*>& seen_object
     for (auto& entry : object.indexed_properties()) {
         print_separator(first);
         out("\"\033[33;1m{}\033[0m\": ", entry.index());
-        auto value = object.get(entry.index());
+        auto value_or_error = object.get(entry.index());
         // The V8 repl doesn't throw an exception here, and instead just
         // prints 'undefined'. We may choose to replicate that behavior in
         // the future, but for now lets just catch the error
-        if (vm->exception())
+        if (value_or_error.is_error())
             return;
+        auto value = value_or_error.release_value();
         print_value(value, seen_objects);
     }
     for (auto& it : object.shape().property_table_ordered()) {
@@ -286,7 +288,7 @@ static void print_regexp_object(JS::Object const& object, HashTable<JS::Object*>
 {
     auto& regexp_object = static_cast<JS::RegExpObject const&>(object);
     // Use RegExp.prototype.source rather than RegExpObject::pattern() so we get proper escaping
-    auto source = regexp_object.get("source").to_primitive_string(object.global_object())->string();
+    auto source = regexp_object.get_without_side_effects("source").to_primitive_string(object.global_object())->string();
     print_type("RegExp");
     out(" \033[34;1m/{}/{}\033[0m", source, regexp_object.flags());
 }

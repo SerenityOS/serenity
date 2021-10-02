@@ -1112,9 +1112,10 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (@js_name@@js_suffix@.is_nullish()) {
         @member_name@ = JS::js_undefined();
     } else {
-        @member_name@ = @js_name@@js_suffix@.as_object().get("@member_key@");
-        if (vm.exception())
+        auto @member_name@_or_error = @js_name@@js_suffix@.as_object().get("@member_key@");
+        if (@member_name@_or_error.is_error())
             @return_statement@
+        @member_name@ = @member_name@_or_error.release_value();
     }
 )~~~");
                 if (member.required) {
@@ -2956,7 +2957,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
     define_native_function(vm.names.keys, keys, 0, default_attributes);
     define_native_function(vm.names.values, values, 0, default_attributes);
 
-    define_direct_property(*vm.well_known_symbol_iterator(), Object::get(vm.names.entries), JS::Attribute::Configurable | JS::Attribute::Writable);
+    define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.entries), JS::Attribute::Configurable | JS::Attribute::Writable);
 )~~~");
     }
 

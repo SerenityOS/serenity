@@ -40,16 +40,12 @@ BoundFunction* FunctionObject::bind(Value bound_this_value, Vector<Value> argume
     }();
 
     i32 computed_length = 0;
-    auto length_property = get(vm.names.length);
-    if (vm.exception())
-        return nullptr;
+    auto length_property = TRY_OR_DISCARD(get(vm.names.length));
     if (length_property.is_number())
         computed_length = max(0, length_property.as_i32() - static_cast<i32>(arguments.size()));
 
     Object* constructor_prototype = nullptr;
-    auto prototype_property = target_function.get(vm.names.prototype);
-    if (vm.exception())
-        return nullptr;
+    auto prototype_property = TRY_OR_DISCARD(target_function.get(vm.names.prototype));
     if (prototype_property.is_object())
         constructor_prototype = &prototype_property.as_object();
 

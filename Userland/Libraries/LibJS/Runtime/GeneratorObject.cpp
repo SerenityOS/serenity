@@ -16,11 +16,12 @@ namespace JS {
 GeneratorObject* GeneratorObject::create(GlobalObject& global_object, Value initial_value, ECMAScriptFunctionObject* generating_function, Environment* generating_scope, Bytecode::RegisterWindow frame)
 {
     // This is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
-    auto generating_function_proto_property = generating_function->get(global_object.vm().names.prototype).to_object(global_object);
-    if (!generating_function_proto_property)
+    auto generating_function_prototype = TRY_OR_DISCARD(generating_function->get(global_object.vm().names.prototype));
+    auto* generating_function_prototype_object = generating_function_prototype.to_object(global_object);
+    if (!generating_function_prototype_object)
         return {};
 
-    auto object = global_object.heap().allocate<GeneratorObject>(global_object, global_object, *generating_function_proto_property);
+    auto object = global_object.heap().allocate<GeneratorObject>(global_object, global_object, *generating_function_prototype_object);
     object->m_generating_function = generating_function;
     object->m_environment = generating_scope;
     object->m_frame = move(frame);
@@ -54,15 +55,15 @@ Value GeneratorObject::next_impl(VM& vm, GlobalObject& global_object, Optional<V
     auto bytecode_interpreter = Bytecode::Interpreter::current();
     VERIFY(bytecode_interpreter);
 
-    auto generated_value = [](Value value) {
+    auto generated_value = [](Value value) -> Value {
         if (value.is_object())
-            return value.as_object().get("result");
+            return TRY_OR_DISCARD(value.as_object().get("result"));
         return value.is_empty() ? js_undefined() : value;
     };
 
     auto generated_continuation = [&](Value value) -> Bytecode::BasicBlock const* {
         if (value.is_object())
-            return reinterpret_cast<Bytecode::BasicBlock const*>(static_cast<u64>(value.as_object().get("continuation").to_double(global_object)));
+            return reinterpret_cast<Bytecode::BasicBlock const*>(static_cast<u64>(TRY_OR_DISCARD(value.as_object().get("continuation")).to_double(global_object)));
         return nullptr;
     };
 

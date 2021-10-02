@@ -54,9 +54,7 @@ Value MapConstructor::construct(FunctionObject& new_target)
     if (vm.argument(0).is_nullish())
         return map;
 
-    auto adder = map->get(vm.names.set);
-    if (vm.exception())
-        return {};
+    auto adder = TRY_OR_DISCARD(map->get(vm.names.set));
     if (!adder.is_function()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, "'set' property of Map");
         return {};
@@ -68,12 +66,14 @@ Value MapConstructor::construct(FunctionObject& new_target)
             vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
             return IterationDecision::Break;
         }
-        auto key = iterator_value.as_object().get(0);
-        if (vm.exception())
+        auto key_or_error = iterator_value.as_object().get(0);
+        if (key_or_error.is_error())
             return IterationDecision::Break;
-        auto value = iterator_value.as_object().get(1);
-        if (vm.exception())
+        auto key = key_or_error.release_value();
+        auto value_or_error = iterator_value.as_object().get(1);
+        if (value_or_error.is_error())
             return IterationDecision::Break;
+        auto value = value_or_error.release_value();
         (void)vm.call(adder.as_function(), Value(map), key, value);
         return vm.exception() ? IterationDecision::Break : IterationDecision::Continue;
     });

@@ -21,9 +21,7 @@ Object* get_iterator(GlobalObject& global_object, Value value, IteratorHint hint
         auto object = value.to_object(global_object);
         if (!object)
             return {};
-        method = object->get(*vm.well_known_symbol_iterator());
-        if (vm.exception())
-            return {};
+        method = TRY_OR_DISCARD(object->get(*vm.well_known_symbol_iterator()));
     }
     if (!method.is_function()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects());
@@ -40,12 +38,11 @@ Object* get_iterator(GlobalObject& global_object, Value value, IteratorHint hint
 // 7.4.2 IteratorNext ( iteratorRecord [ , value ] ), https://tc39.es/ecma262/#sec-iteratornext
 Object* iterator_next(Object& iterator, Value value)
 {
+    // FIXME: Implement using iterator records, not ordinary objects
     auto& vm = iterator.vm();
     auto& global_object = iterator.global_object();
 
-    auto next_method = iterator.get(vm.names.next);
-    if (vm.exception())
-        return {};
+    auto next_method = TRY_OR_DISCARD(iterator.get(vm.names.next));
 
     if (!next_method.is_function()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::IterableNextNotAFunction);
@@ -70,20 +67,18 @@ Object* iterator_next(Object& iterator, Value value)
 bool iterator_complete(GlobalObject& global_object, Object& iterator_result)
 {
     auto& vm = global_object.vm();
-    auto done = iterator_result.get(vm.names.done);
-    if (vm.exception())
-        return {};
-    return done.to_boolean();
+
+    // 1. Return ! ToBoolean(? Get(iterResult, "done")).
+    return TRY_OR_DISCARD(iterator_result.get(vm.names.done)).to_boolean();
 }
 
 // 7.4.4 IteratorValue ( iterResult ), https://tc39.es/ecma262/#sec-iteratorvalue
 Value iterator_value(GlobalObject& global_object, Object& iterator_result)
 {
     auto& vm = global_object.vm();
-    auto value = iterator_result.get(vm.names.value);
-    if (vm.exception())
-        return {};
-    return value;
+
+    // 1. Return ? Get(iterResult, "value").
+    return TRY_OR_DISCARD(iterator_result.get(vm.names.value));
 }
 
 // 7.4.5 IteratorStep ( iteratorRecord ), https://tc39.es/ecma262/#sec-iteratorstep
@@ -186,18 +181,18 @@ void get_iterator_values(GlobalObject& global_object, Value value, Function<Iter
         if (!next_object)
             return;
 
-        auto done_property = next_object->get(vm.names.done);
-        if (vm.exception())
+        auto done_property_or_error = next_object->get(vm.names.done);
+        if (done_property_or_error.is_error())
             return;
 
-        if (!done_property.is_empty() && done_property.to_boolean())
+        if (done_property_or_error.release_value().to_boolean())
             return;
 
-        auto next_value = next_object->get(vm.names.value);
-        if (vm.exception())
+        auto next_value_or_error = next_object->get(vm.names.value);
+        if (next_value_or_error.is_error())
             return;
 
-        auto result = callback(next_value);
+        auto result = callback(next_value_or_error.release_value());
         if (result == IterationDecision::Break) {
             if (close_on_abrupt == CloseOnAbrupt::Yes)
                 iterator_close(*iterator);

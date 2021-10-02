@@ -1216,9 +1216,7 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
 
         Object* super_constructor_prototype = nullptr;
         if (!super_constructor.is_null()) {
-            auto super_constructor_prototype_value = super_constructor.as_object().get(vm.names.prototype);
-            if (auto* exception = interpreter.exception())
-                return throw_completion(exception->value());
+            auto super_constructor_prototype_value = TRY(super_constructor.as_object().get(vm.names.prototype));
 
             if (!super_constructor_prototype_value.is_object() && !super_constructor_prototype_value.is_null())
                 return interpreter.vm().throw_completion<TypeError>(global_object, ErrorType::ClassExtendsValueInvalidPrototype, super_constructor_prototype_value.to_string_without_side_effects());
@@ -1237,9 +1235,7 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
         TRY(class_constructor->internal_set_prototype_of(super_constructor.is_null() ? global_object.function_prototype() : &super_constructor.as_object()));
     }
 
-    auto class_prototype = class_constructor->get(vm.names.prototype);
-    if (auto* exception = interpreter.exception())
-        return throw_completion(exception->value());
+    auto class_prototype = TRY(class_constructor->get(vm.names.prototype));
 
     if (!class_prototype.is_object())
         return interpreter.vm().throw_completion<TypeError>(global_object, ErrorType::NotAnObject, "Class prototype");
@@ -2294,9 +2290,7 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
             if (key.is_object() && is<Array>(key.as_object())) {
                 auto& array_to_spread = static_cast<Array&>(key.as_object());
                 for (auto& entry : array_to_spread.indexed_properties()) {
-                    auto value = array_to_spread.get(entry.index());
-                    if (interpreter.exception())
-                        return {};
+                    auto value = TRY_OR_DISCARD(array_to_spread.get(entry.index()));
                     object->indexed_properties().put(entry.index(), value);
                     if (interpreter.exception())
                         return {};
@@ -2306,7 +2300,7 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 
                 for (auto& it : obj_to_spread.shape().property_table_ordered()) {
                     if (it.value.attributes.is_enumerable()) {
-                        object->define_direct_property(it.key, obj_to_spread.get(it.key), JS::default_attributes);
+                        object->define_direct_property(it.key, TRY_OR_DISCARD(obj_to_spread.get(it.key)), JS::default_attributes);
                         if (interpreter.exception())
                             return {};
                     }

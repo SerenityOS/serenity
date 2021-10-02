@@ -35,13 +35,9 @@ bool ObjectEnvironment::has_binding(FlyString const& name) const
         return false;
     if (!m_with_environment)
         return true;
-    auto unscopables = m_binding_object.get(*vm.well_known_symbol_unscopables());
-    if (vm.exception())
-        return {};
+    auto unscopables = TRY_OR_DISCARD(m_binding_object.get(*vm.well_known_symbol_unscopables()));
     if (unscopables.is_object()) {
-        auto blocked = unscopables.as_object().get(name);
-        if (vm.exception())
-            return {};
+        auto blocked = TRY_OR_DISCARD(unscopables.as_object().get(name));
         if (blocked.to_boolean())
             return false;
     }
@@ -110,7 +106,7 @@ Value ObjectEnvironment::get_binding_value(GlobalObject& global_object, FlyStrin
         global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
         return {};
     }
-    return m_binding_object.get(name);
+    return TRY_OR_DISCARD(m_binding_object.get(name));
 }
 
 // 9.1.1.2.7 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-object-environment-records-deletebinding-n

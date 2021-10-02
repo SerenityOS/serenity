@@ -54,9 +54,7 @@ Value WeakSetConstructor::construct(FunctionObject& new_target)
     if (vm.argument(0).is_nullish())
         return weak_set;
 
-    auto adder = weak_set->get(vm.names.add);
-    if (vm.exception())
-        return {};
+    auto adder = TRY_OR_DISCARD(weak_set->get(vm.names.add));
     if (!adder.is_function()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, "'add' property of WeakSet");
         return {};

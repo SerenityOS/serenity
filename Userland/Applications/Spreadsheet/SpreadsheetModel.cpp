@@ -35,7 +35,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
                 if (value.is_object()) {
                     auto& object = value.as_object();
                     if (is<JS::Error>(object)) {
-                        auto error = object.get("message").to_string_without_side_effects();
+                        auto error = object.get_without_side_effects("message").to_string_without_side_effects();
                         builder.append(error);
                         return builder.to_string();
                     }

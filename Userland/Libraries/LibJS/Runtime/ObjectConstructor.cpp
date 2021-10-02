@@ -245,12 +245,14 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
             vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
             return IterationDecision::Break;
         }
-        auto key = iterator_value.as_object().get(0);
-        if (vm.exception())
+        auto key_or_error = iterator_value.as_object().get(0);
+        if (key_or_error.is_error())
             return IterationDecision::Break;
-        auto value = iterator_value.as_object().get(1);
-        if (vm.exception())
+        auto key = key_or_error.release_value();
+        auto value_or_error = iterator_value.as_object().get(1);
+        if (value_or_error.is_error())
             return IterationDecision::Break;
+        auto value = value_or_error.release_value();
         auto property_key = key.to_property_key(global_object);
         if (vm.exception())
             return IterationDecision::Break;
@@ -484,9 +486,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
                 continue;
 
             // a. Let propValue be ? Get(from, nextKey).
-            auto prop_value = from->get(property_name);
-            if (vm.exception())
-                return {};
+            auto prop_value = TRY_OR_DISCARD(from->get(property_name));
 
             // b. Perform ? Set(to, nextKey, propValue, true).
             to->set(property_name, prop_value, Object::ShouldThrowExceptions::Yes);

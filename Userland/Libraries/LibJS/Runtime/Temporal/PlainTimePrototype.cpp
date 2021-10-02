@@ -163,9 +163,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     TRY_OR_DISCARD(reject_temporal_calendar_type(global_object, temporal_time_like));
 
     // 5. Let calendarProperty be ? Get(temporalTimeLike, "calendar").
-    auto calendar_property = temporal_time_like.get(vm.names.calendar);
-    if (vm.exception())
-        return {};
+    auto calendar_property = TRY_OR_DISCARD(temporal_time_like.get(vm.names.calendar));
 
     // 6. If calendarProperty is not undefined, then
     if (!calendar_property.is_undefined()) {
@@ -175,9 +173,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     }
 
     // 7. Let timeZoneProperty be ? Get(temporalTimeLike, "timeZone").
-    auto time_zone_property = temporal_time_like.get(vm.names.timeZone);
-    if (vm.exception())
-        return {};
+    auto time_zone_property = TRY_OR_DISCARD(temporal_time_like.get(vm.names.timeZone));
 
     // 8. If timeZoneProperty is not undefined, then
     if (!time_zone_property.is_undefined()) {

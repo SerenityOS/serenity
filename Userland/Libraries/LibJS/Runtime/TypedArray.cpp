@@ -192,9 +192,10 @@ static void initialize_typed_array_from_array_like(GlobalObject& global_object, 
     typed_array.set_array_length(length);
 
     for (size_t k = 0; k < length; k++) {
-        auto value = array_like.get(k);
-        if (vm.exception())
+        auto value_or_error = array_like.get(k);
+        if (value_or_error.is_error())
             return;
+        auto value = value_or_error.release_value();
         typed_array.set(k, value, Object::ShouldThrowExceptions::Yes);
         if (vm.exception())
             return;

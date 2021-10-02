@@ -46,9 +46,7 @@ ThrowCompletionOr<Value> require_object_coercible(GlobalObject& global_object, V
 ThrowCompletionOr<size_t> length_of_array_like(GlobalObject& global_object, Object const& object)
 {
     auto& vm = global_object.vm();
-    auto result = object.get(vm.names.length);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto result = TRY(object.get(vm.names.length));
     auto length = result.to_length(global_object);
     if (auto* exception = vm.exception())
         return throw_completion(exception->value());
@@ -82,9 +80,7 @@ ThrowCompletionOr<MarkedValueList> create_list_from_array_like(GlobalObject& glo
         auto index_name = String::number(i);
 
         // b. Let next be ? Get(obj, indexName).
-        auto next = array_like.get(index_name);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto next = TRY(array_like.get(index_name));
 
         // c. If Type(next) is not an element of elementTypes, throw a TypeError exception.
         if (check_value)
@@ -104,9 +100,7 @@ ThrowCompletionOr<FunctionObject*> species_constructor(GlobalObject& global_obje
     auto& vm = global_object.vm();
 
     // 1. Let C be ? Get(O, "constructor").
-    auto constructor = object.get(vm.names.constructor);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto constructor = TRY(object.get(vm.names.constructor));
 
     // 2. If C is undefined, return defaultConstructor.
     if (constructor.is_undefined())
@@ -117,9 +111,7 @@ ThrowCompletionOr<FunctionObject*> species_constructor(GlobalObject& global_obje
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
 
     // 4. Let S be ? Get(C, @@species).
-    auto species = constructor.as_object().get(*vm.well_known_symbol_species());
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto species = TRY(constructor.as_object().get(*vm.well_known_symbol_species()));
 
     // 5. If S is either undefined or null, return defaultConstructor.
     if (species.is_nullish())
@@ -340,9 +332,7 @@ ThrowCompletionOr<Object*> get_prototype_from_constructor(GlobalObject& global_o
     // 1. Assert: intrinsicDefaultProto is this specification's name of an intrinsic object. The corresponding object must be an intrinsic that is intended to be used as the [[Prototype]] value of an object.
 
     // 2. Let proto be ? Get(constructor, "prototype").
-    auto prototype = constructor.get(vm.names.prototype);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto prototype = TRY(constructor.get(vm.names.prototype));
 
     // 3. If Type(proto) is not Object, then
     if (!prototype.is_object()) {
@@ -917,9 +907,7 @@ ThrowCompletionOr<String> get_substitution(GlobalObject& global_object, Utf16Vie
                 auto group_name_view = replace_view.substring_view(start_position, *end_position - start_position);
                 auto group_name = group_name_view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes);
 
-                auto capture = named_captures.as_object().get(group_name);
-                if (auto* exception = vm.exception())
-                    return throw_completion(exception->value());
+                auto capture = TRY(named_captures.as_object().get(group_name));
 
                 if (!capture.is_undefined()) {
                     auto capture_string = capture.to_string(global_object);

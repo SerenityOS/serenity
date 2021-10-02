@@ -36,8 +36,8 @@ JS::Value WebAssemblyMemoryConstructor::construct(FunctionObject&)
     if (vm.exception())
         return {};
 
-    auto initial_value = descriptor->get_without_side_effects("initial");
-    auto maximum_value = descriptor->get_without_side_effects("maximum");
+    auto initial_value = TRY_OR_DISCARD(descriptor->get("initial"));
+    auto maximum_value = TRY_OR_DISCARD(descriptor->get("maximum"));
 
     if (initial_value.is_empty()) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Number");

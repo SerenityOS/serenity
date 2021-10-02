@@ -38,9 +38,7 @@ JS::Value WebAssemblyTableConstructor::construct(FunctionObject&)
     if (vm.exception())
         return {};
 
-    auto element_value = descriptor->get("element");
-    if (vm.exception())
-        return {};
+    auto element_value = TRY_OR_DISCARD(descriptor->get("element"));
     if (!element_value.is_string()) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::InvalidHint, element_value.to_string_without_side_effects());
         return {};
@@ -58,12 +56,8 @@ JS::Value WebAssemblyTableConstructor::construct(FunctionObject&)
         return {};
     }
 
-    auto initial_value = descriptor->get("initial");
-    if (vm.exception())
-        return {};
-    auto maximum_value = descriptor->get("maximum");
-    if (vm.exception())
-        return {};
+    auto initial_value = TRY_OR_DISCARD(descriptor->get("initial"));
+    auto maximum_value = TRY_OR_DISCARD(descriptor->get("maximum"));
 
     auto initial = initial_value.to_u32(global_object);
     if (vm.exception())
@@ -82,12 +76,9 @@ JS::Value WebAssemblyTableConstructor::construct(FunctionObject&)
         return {};
     }
 
-    auto value_value = descriptor->get("value");
-    if (vm.exception())
-        return {};
-
+    auto value_value = TRY_OR_DISCARD(descriptor->get("value"));
     auto reference_value = [&]() -> Optional<Wasm::Value> {
-        if (value_value.is_empty() || value_value.is_undefined())
+        if (value_value.is_undefined())
             return Wasm::Value(*reference_type, 0ull);
 
         return to_webassembly_value(value_value, *reference_type, global_object);

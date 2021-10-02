@@ -252,24 +252,16 @@ ThrowCompletionOr<void> set_number_format_digit_options(GlobalObject& global_obj
     auto min_integer_digits = TRY(get_number_option(global_object, options, vm.names.minimumIntegerDigits, 1, 21, 1));
 
     // 6. Let mnfd be ? Get(options, "minimumFractionDigits").
-    auto min_fraction_digits = options.get(vm.names.minimumFractionDigits);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto min_fraction_digits = TRY(options.get(vm.names.minimumFractionDigits));
 
     // 7. Let mxfd be ? Get(options, "maximumFractionDigits").
-    auto max_fraction_digits = options.get(vm.names.maximumFractionDigits);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto max_fraction_digits = TRY(options.get(vm.names.maximumFractionDigits));
 
     // 8. Let mnsd be ? Get(options, "minimumSignificantDigits").
-    auto min_significant_digits = options.get(vm.names.minimumSignificantDigits);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto min_significant_digits = TRY(options.get(vm.names.minimumSignificantDigits));
 
     // 9. Let mxsd be ? Get(options, "maximumSignificantDigits").
-    auto max_significant_digits = options.get(vm.names.maximumSignificantDigits);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto max_significant_digits = TRY(options.get(vm.names.maximumSignificantDigits));
 
     // 10. Set intlObj.[[MinimumIntegerDigits]] to mnid.
     intl_object.set_min_integer_digits(*min_integer_digits);

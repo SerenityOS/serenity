@@ -75,9 +75,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
     if (iteration_kind == Object::PropertyKind::Key)
         return create_iterator_result_object(global_object, Value(static_cast<i32>(index)), false);
 
-    auto value = array.get(index);
-    if (vm.exception())
-        return {};
+    auto value = TRY_OR_DISCARD(array.get(index));
+
     if (iteration_kind == Object::PropertyKind::Value)
         return create_iterator_result_object(global_object, value, false);
 
