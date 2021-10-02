@@ -1739,6 +1739,7 @@ void Painter::draw_line(IntPoint const& a_p1, IntPoint const& a_p2, Color color,
         } else {
             for (int y = min_y; y <= max_y; y += thickness)
                 draw_physical_pixel({ x, y }, color, thickness);
+            draw_physical_pixel({ x, max_y }, color, thickness);
         }
         return;
     }
@@ -1773,6 +1774,7 @@ void Painter::draw_line(IntPoint const& a_p1, IntPoint const& a_p2, Color color,
         } else {
             for (int x = min_x; x <= max_x; x += thickness)
                 draw_physical_pixel({ x, y }, color, thickness);
+            draw_physical_pixel({ max_x, y }, color, thickness);
         }
         return;
     }
