@@ -144,22 +144,16 @@ static Value make_indices_array(GlobalObject& global_object, Utf16View const& st
         if (match_indices.has_value())
             match_indices_array = get_match_indices_array(global_object, string, *match_indices);
 
-        array->create_data_property(i, match_indices_array);
-        if (vm.exception())
-            return {};
+        TRY_OR_DISCARD(array->create_data_property(i, match_indices_array));
     }
 
     for (auto const& entry : group_names) {
         auto match_indices_array = get_match_indices_array(global_object, string, entry.value);
 
-        groups.as_object().create_data_property(entry.key, match_indices_array);
-        if (vm.exception())
-            return {};
+        TRY_OR_DISCARD(groups.as_object().create_data_property(entry.key, match_indices_array));
     }
 
-    array->create_data_property(vm.names.groups, groups);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(array->create_data_property(vm.names.groups, groups));
 
     return array;
 }
@@ -257,9 +251,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
 
     if (has_indices) {
         auto indices_array = make_indices_array(global_object, string_view, indices, group_names, has_groups);
-        array->create_data_property(vm.names.indices, indices_array);
-        if (vm.exception())
-            return {};
+        TRY_OR_DISCARD(array->create_data_property(vm.names.indices, indices_array));
     }
 
     array->create_data_property_or_throw(vm.names.index, Value(match_index));
