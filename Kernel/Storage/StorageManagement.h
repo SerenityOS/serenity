@@ -24,7 +24,7 @@ class StorageManagement {
 public:
     StorageManagement();
     static bool initialized();
-    void initialize(String boot_argument, bool force_pio);
+    void initialize(StringView boot_argument, bool force_pio);
     static StorageManagement& the();
 
     NonnullRefPtr<FileSystem> root_filesystem() const;
@@ -48,7 +48,7 @@ private:
 
     RefPtr<BlockDevice> boot_block_device() const;
 
-    String m_boot_argument;
+    StringView m_boot_argument;
     WeakPtr<BlockDevice> m_boot_block_device;
     NonnullRefPtrVector<StorageController> m_controllers;
     IntrusiveList<&StorageDevice::m_list_node> m_storage_devices;
