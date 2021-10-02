@@ -338,15 +338,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::push)
         vm.throw_exception<TypeError>(global_object, ErrorType::ArrayMaxSize);
         return {};
     }
-    for (size_t i = 0; i < argument_count; ++i) {
-        this_object->set(length + i, vm.argument(i), Object::ShouldThrowExceptions::Yes);
-        if (vm.exception())
-            return {};
-    }
+    for (size_t i = 0; i < argument_count; ++i)
+        TRY_OR_DISCARD(this_object->set(length + i, vm.argument(i), Object::ShouldThrowExceptions::Yes));
     auto new_length_value = Value(new_length);
-    this_object->set(vm.names.length, new_length_value, Object::ShouldThrowExceptions::Yes);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(this_object->set(vm.names.length, new_length_value, Object::ShouldThrowExceptions::Yes));
     return new_length_value;
 }
 
@@ -374,9 +369,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
                 return {};
             if (from_present) {
                 auto from_value = TRY_OR_DISCARD(this_object->get(from));
-                this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes);
-                if (vm.exception())
-                    return {};
+                TRY_OR_DISCARD(this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes));
             } else {
                 this_object->delete_property_or_throw(to);
                 if (vm.exception())
@@ -384,16 +377,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
             }
         }
 
-        for (size_t j = 0; j < arg_count; j++) {
-            this_object->set(j, vm.argument(j), Object::ShouldThrowExceptions::Yes);
-            if (vm.exception())
-                return {};
-        }
+        for (size_t j = 0; j < arg_count; j++)
+            TRY_OR_DISCARD(this_object->set(j, vm.argument(j), Object::ShouldThrowExceptions::Yes));
     }
 
-    this_object->set(vm.names.length, Value(new_length), Object::ShouldThrowExceptions::Yes);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(this_object->set(vm.names.length, Value(new_length), Object::ShouldThrowExceptions::Yes));
     return Value(new_length);
 }
 
@@ -405,7 +393,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
         return {};
     auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
     if (length == 0) {
-        this_object->set(vm.names.length, Value(0), Object::ShouldThrowExceptions::Yes);
+        TRY_OR_DISCARD(this_object->set(vm.names.length, Value(0), Object::ShouldThrowExceptions::Yes));
         return js_undefined();
     }
     auto index = length - 1;
@@ -413,9 +401,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
     this_object->delete_property_or_throw(index);
     if (vm.exception())
         return {};
-    this_object->set(vm.names.length, Value(index), Object::ShouldThrowExceptions::Yes);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(this_object->set(vm.names.length, Value(index), Object::ShouldThrowExceptions::Yes));
     return element;
 }
 
@@ -427,9 +413,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
         return {};
     auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
     if (length == 0) {
-        this_object->set(vm.names.length, Value(0), Object::ShouldThrowExceptions::Yes);
-        if (vm.exception())
-            return {};
+        TRY_OR_DISCARD(this_object->set(vm.names.length, Value(0), Object::ShouldThrowExceptions::Yes));
         return js_undefined();
     }
     auto first = TRY_OR_DISCARD(this_object->get(0));
@@ -441,9 +425,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
             return {};
         if (from_present) {
             auto from_value = TRY_OR_DISCARD(this_object->get(from));
-            this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes);
-            if (vm.exception())
-                return {};
+            TRY_OR_DISCARD(this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes));
         } else {
             this_object->delete_property_or_throw(to);
             if (vm.exception())
@@ -455,9 +437,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
     if (vm.exception())
         return {};
 
-    this_object->set(vm.names.length, Value(length - 1), Object::ShouldThrowExceptions::Yes);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(this_object->set(vm.names.length, Value(length - 1), Object::ShouldThrowExceptions::Yes));
     return first;
 }
 
@@ -631,9 +611,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
             return {};
     }
 
-    new_array->set(vm.names.length, Value(n), Object::ShouldThrowExceptions::Yes);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(new_array->set(vm.names.length, Value(n), Object::ShouldThrowExceptions::Yes));
     return Value(new_array);
 }
 
@@ -703,10 +681,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
         ++index;
     }
 
-    new_array->set(vm.names.length, Value(index), Object::ShouldThrowExceptions::Yes);
-    if (vm.exception())
-        return {};
-
+    TRY_OR_DISCARD(new_array->set(vm.names.length, Value(index), Object::ShouldThrowExceptions::Yes));
     return new_array;
 }
 
@@ -1001,16 +976,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
             upper_value = TRY_OR_DISCARD(this_object->get(upper));
 
         if (lower_exists && upper_exists) {
-            this_object->set(lower, upper_value, Object::ShouldThrowExceptions::Yes);
-            if (vm.exception())
-                return {};
-            this_object->set(upper, lower_value, Object::ShouldThrowExceptions::Yes);
-            if (vm.exception())
-                return {};
+            TRY_OR_DISCARD(this_object->set(lower, upper_value, Object::ShouldThrowExceptions::Yes));
+            TRY_OR_DISCARD(this_object->set(upper, lower_value, Object::ShouldThrowExceptions::Yes));
         } else if (!lower_exists && upper_exists) {
-            this_object->set(lower, upper_value, Object::ShouldThrowExceptions::Yes);
-            if (vm.exception())
-                return {};
+            TRY_OR_DISCARD(this_object->set(lower, upper_value, Object::ShouldThrowExceptions::Yes));
             this_object->delete_property_or_throw(upper);
             if (vm.exception())
                 return {};
@@ -1018,9 +987,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
             this_object->delete_property_or_throw(lower);
             if (vm.exception())
                 return {};
-            this_object->set(upper, lower_value, Object::ShouldThrowExceptions::Yes);
-            if (vm.exception())
-                return {};
+            TRY_OR_DISCARD(this_object->set(upper, lower_value, Object::ShouldThrowExceptions::Yes));
         }
     }
 
@@ -1172,11 +1139,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
     if (vm.exception())
         return {};
 
-    for (size_t j = 0; j < items.size(); ++j) {
-        object->set(j, items[j], Object::ShouldThrowExceptions::Yes);
-        if (vm.exception())
-            return {};
-    }
+    for (size_t j = 0; j < items.size(); ++j)
+        TRY_OR_DISCARD(object->set(j, items[j], Object::ShouldThrowExceptions::Yes));
 
     // The empty parts of the array are always sorted to the end, regardless of the
     // compare function. FIXME: For performance, a similar process could be used
@@ -1636,9 +1600,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
         }
     }
 
-    removed_elements->set(vm.names.length, Value(actual_delete_count), Object::ShouldThrowExceptions::Yes);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(removed_elements->set(vm.names.length, Value(actual_delete_count), Object::ShouldThrowExceptions::Yes));
 
     if (insert_count < actual_delete_count) {
         for (u64 i = actual_start; i < initial_length - actual_delete_count; ++i) {
@@ -1651,12 +1613,12 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
 
             if (from_present) {
                 auto from_value = TRY_OR_DISCARD(this_object->get(from));
-                this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes);
+                TRY_OR_DISCARD(this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes));
             } else {
                 this_object->delete_property_or_throw(to);
+                if (vm.exception())
+                    return {};
             }
-            if (vm.exception())
-                return {};
         }
 
         for (u64 i = initial_length; i > new_length; --i) {
@@ -1675,24 +1637,19 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
 
             if (from_present) {
                 auto from_value = TRY_OR_DISCARD(this_object->get(from_index));
-                this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes);
+                TRY_OR_DISCARD(this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes));
             } else {
                 this_object->delete_property_or_throw(to);
+                if (vm.exception())
+                    return {};
             }
-            if (vm.exception())
-                return {};
         }
     }
 
-    for (u64 i = 0; i < insert_count; ++i) {
-        this_object->set(actual_start + i, vm.argument(i + 2), Object::ShouldThrowExceptions::Yes);
-        if (vm.exception())
-            return {};
-    }
+    for (u64 i = 0; i < insert_count; ++i)
+        TRY_OR_DISCARD(this_object->set(actual_start + i, vm.argument(i + 2), Object::ShouldThrowExceptions::Yes));
 
-    this_object->set(vm.names.length, Value(new_length), Object::ShouldThrowExceptions::Yes);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(this_object->set(vm.names.length, Value(new_length), Object::ShouldThrowExceptions::Yes));
 
     return removed_elements;
 }
@@ -1738,11 +1695,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::fill)
     else
         to = min(relative_end, length);
 
-    for (u64 i = from; i < to; i++) {
-        this_object->set(i, vm.argument(0), Object::ShouldThrowExceptions::Yes);
-        if (vm.exception())
-            return {};
-    }
+    for (u64 i = from; i < to; i++)
+        TRY_OR_DISCARD(this_object->set(i, vm.argument(0), Object::ShouldThrowExceptions::Yes));
 
     return this_object;
 }
@@ -1946,9 +1900,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::copy_within)
 
         if (from_present) {
             auto from_value = TRY_OR_DISCARD(this_object->get(from_i));
-            this_object->set(to_i, from_value, Object::ShouldThrowExceptions::Yes);
-            if (vm.exception())
-                return {};
+            TRY_OR_DISCARD(this_object->set(to_i, from_value, Object::ShouldThrowExceptions::Yes));
         } else {
             this_object->delete_property_or_throw(to_i);
             if (vm.exception())

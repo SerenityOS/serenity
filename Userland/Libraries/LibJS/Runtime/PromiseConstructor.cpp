@@ -71,7 +71,7 @@ static void set_iterator_record_complete(GlobalObject& global_object, Object& it
     // FIXME: Create a native iterator structure with the [[Done]] internal slot. For now, temporarily clear
     //        the exception so we can access the "done" property on the iterator object.
     TemporaryClearException clear_exception(vm);
-    iterator_record.set(vm.names.done, Value(true), Object::ShouldThrowExceptions::No);
+    MUST(iterator_record.set(vm.names.done, Value(true), Object::ShouldThrowExceptions::No));
 }
 
 using EndOfElementsCallback = Function<Value(PromiseValueList&)>;

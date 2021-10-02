@@ -183,9 +183,7 @@ RegExpObject* RegExpObject::regexp_initialize(GlobalObject& global_object, Value
     m_flags = move(f);
     m_regex = move(regex);
 
-    set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
     return this;
 }

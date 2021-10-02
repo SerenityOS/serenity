@@ -249,7 +249,7 @@ void GetById::execute_impl(Bytecode::Interpreter& interpreter) const
 void PutById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     if (auto* object = interpreter.reg(m_base).to_object(interpreter.global_object()))
-        object->set(interpreter.current_executable().get_string(m_property), interpreter.accumulator(), Object::ShouldThrowExceptions::Yes);
+        MUST(object->set(interpreter.current_executable().get_string(m_property), interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
 }
 
 void Jump::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -447,7 +447,7 @@ void PutByValue::execute_impl(Bytecode::Interpreter& interpreter) const
         auto property_key = interpreter.reg(m_property).to_property_key(interpreter.global_object());
         if (interpreter.vm().exception())
             return;
-        object->set(property_key, interpreter.accumulator(), Object::ShouldThrowExceptions::Yes);
+        MUST(object->set(property_key, interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
     }
 }
 
