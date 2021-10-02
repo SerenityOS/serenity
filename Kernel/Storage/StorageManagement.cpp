@@ -5,6 +5,7 @@
  */
 
 #include <AK/Singleton.h>
+#include <AK/StringView.h>
 #include <AK/UUID.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
@@ -25,6 +26,8 @@ namespace Kernel {
 static Singleton<StorageManagement> s_the;
 static Atomic<size_t> s_device_minor_number;
 
+static constexpr StringView partition_uuid_prefix = "PARTUUID="sv;
+
 UNMAP_AFTER_INIT StorageManagement::StorageManagement()
 {
 }
@@ -36,7 +39,7 @@ void StorageManagement::remove_device(StorageDevice& device)
 
 bool StorageManagement::boot_argument_contains_partition_uuid()
 {
-    return m_boot_argument.starts_with("PARTUUID=");
+    return m_boot_argument.starts_with(partition_uuid_prefix);
 }
 
 UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers(bool force_pio)
@@ -120,7 +123,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions() const
 UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
 {
     VERIFY(!m_controllers.is_empty());
-    if (m_boot_argument.starts_with("/dev/")) {
+    if (m_boot_argument.starts_with("/dev/"sv)) {
         StringView storage_name = m_boot_argument.substring_view(5);
         for (auto& storage_device : m_storage_devices) {
             if (storage_device.storage_name() == storage_name) {
@@ -137,9 +140,9 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
 UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_partition_uuid()
 {
     VERIFY(!m_storage_devices.is_empty());
-    VERIFY(m_boot_argument.starts_with("PARTUUID="));
+    VERIFY(m_boot_argument.starts_with(partition_uuid_prefix));
 
-    auto partition_uuid = UUID(m_boot_argument.substring_view(strlen("PARTUUID=")));
+    auto partition_uuid = UUID(m_boot_argument.substring_view(partition_uuid_prefix.length()));
 
     if (partition_uuid.to_string().length() != 36) {
         PANIC("StorageManagement: Specified partition UUID is not valid");
@@ -189,7 +192,7 @@ NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
     return file_system;
 }
 
-UNMAP_AFTER_INIT void StorageManagement::initialize(String root_device, bool force_pio)
+UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device, bool force_pio)
 {
     VERIFY(s_device_minor_number == 0);
     m_boot_argument = root_device;
