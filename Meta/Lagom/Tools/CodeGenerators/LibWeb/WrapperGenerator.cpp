@@ -1226,7 +1226,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
 )~~~");
     } else if (type.name == "ArrayFromVector") {
         // FIXME: Remove this fake type hack once it's no longer needed.
-        //        Basically once we have NodeList we can throw this out.
+        //        Basically once we have sequence<T> we can throw this out.
         scoped_generator.append(R"~~~(
     auto* new_array = JS::Array::create(global_object, 0);
     for (auto& element : @value@)
@@ -2736,6 +2736,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/ImageDataWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/MessagePortWrapper.h>
+#include <LibWeb/Bindings/NodeListWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/PerformanceTimingWrapper.h>
 #include <LibWeb/Bindings/RangeWrapper.h>

@@ -66,12 +66,14 @@ set(SOURCES
     DOM/EventListener.cpp
     DOM/EventTarget.cpp
     DOM/HTMLCollection.cpp
+    DOM/LiveNodeList.cpp
     DOM/Node.cpp
     DOM/ParentNode.cpp
     DOM/Position.cpp
     DOM/ProcessingInstruction.cpp
     DOM/Range.cpp
     DOM/ShadowRoot.cpp
+    DOM/StaticNodeList.cpp
     DOM/Text.cpp
     DOM/Text.idl
     DOM/Timer.cpp
@@ -371,6 +373,7 @@ libweb_js_wrapper(DOM/HTMLCollection)
 libweb_js_wrapper(DOM/ProcessingInstruction)
 libweb_js_wrapper(DOM/ShadowRoot)
 libweb_js_wrapper(DOM/Node)
+libweb_js_wrapper(DOM/NodeList)
 libweb_js_wrapper(DOM/Range)
 libweb_js_wrapper(DOM/Text)
 libweb_js_wrapper(Geometry/DOMRect)
