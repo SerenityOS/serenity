@@ -1146,30 +1146,43 @@ void Object::visit_edges(Cell::Visitor& visitor)
 }
 
 // 7.1.1.1 OrdinaryToPrimitive ( O, hint ), https://tc39.es/ecma262/#sec-ordinarytoprimitive
-Value Object::ordinary_to_primitive(Value::PreferredType preferred_type) const
+ThrowCompletionOr<Value> Object::ordinary_to_primitive(Value::PreferredType preferred_type) const
 {
     VERIFY(preferred_type == Value::PreferredType::String || preferred_type == Value::PreferredType::Number);
 
     auto& vm = this->vm();
 
     AK::Array<PropertyName, 2> method_names;
-    if (preferred_type == Value::PreferredType::String)
-        method_names = { vm.names.toString, vm.names.valueOf };
-    else
-        method_names = { vm.names.valueOf, vm.names.toString };
 
+    // 1. If hint is string, then
+    if (preferred_type == Value::PreferredType::String) {
+        // a. Let methodNames be « "toString", "valueOf" ».
+        method_names = { vm.names.toString, vm.names.valueOf };
+    } else {
+        // a. Let methodNames be « "valueOf", "toString" ».
+        method_names = { vm.names.valueOf, vm.names.toString };
+    }
+
+    // 3. For each element name of methodNames, do
     for (auto& method_name : method_names) {
+        // a. Let method be ? Get(O, name).
         auto method = get(method_name);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
+
+        // b. If IsCallable(method) is true, then
         if (method.is_function()) {
-            auto result = TRY_OR_DISCARD(vm.call(method.as_function(), const_cast<Object*>(this)));
+            // i. Let result be ? Call(method, O).
+            auto result = TRY(vm.call(method.as_function(), const_cast<Object*>(this)));
+
+            // ii. If Type(result) is not Object, return result.
             if (!result.is_object())
                 return result;
         }
     }
-    vm.throw_exception<TypeError>(global_object(), ErrorType::Convert, "object", preferred_type == Value::PreferredType::String ? "string" : "number");
-    return {};
+
+    // 4. Throw a TypeError exception.
+    return vm.throw_completion<TypeError>(global_object(), ErrorType::Convert, "object", preferred_type == Value::PreferredType::String ? "string" : "number");
 }
 
 }
