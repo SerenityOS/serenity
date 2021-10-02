@@ -43,10 +43,9 @@ public:
 
     // ^BlockDevice
     virtual void start_request(AsyncBlockDeviceRequest&) override;
-    virtual String storage_name() const override;
 
 private:
-    PATADiskDevice(const IDEController&, IDEChannel&, DriveType, InterfaceType, u16, u64);
+    PATADiskDevice(const IDEController&, IDEChannel&, DriveType, InterfaceType, u16, u64, int, NonnullOwnPtr<KString>);
 
     // ^DiskDevice
     virtual StringView class_name() const override;
