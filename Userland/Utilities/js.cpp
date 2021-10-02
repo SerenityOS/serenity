@@ -1113,7 +1113,6 @@ public:
 int main(int argc, char** argv)
 {
     bool gc_on_every_allocation = false;
-    bool zombify_dead_cells = false;
     bool disable_syntax_highlight = false;
     Vector<String> script_paths;
 
@@ -1126,7 +1125,10 @@ int main(int argc, char** argv)
     args_parser.add_option(s_as_module, "Treat as module", "as-module", 'm');
     args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
+#ifdef JS_TRACK_ZOMBIE_CELLS
+    bool zombify_dead_cells = false;
     args_parser.add_option(zombify_dead_cells, "Zombify dead cells (to catch missing GC marks)", "zombify-dead-cells", 'z');
+#endif
     args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');
     args_parser.add_positional_argument(script_paths, "Path to script files", "scripts", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
@@ -1167,7 +1169,9 @@ int main(int argc, char** argv)
         ReplConsoleClient console_client(interpreter->global_object().console());
         interpreter->global_object().console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
+#ifdef JS_TRACK_ZOMBIE_CELLS
         interpreter->heap().set_zombify_dead_cells(zombify_dead_cells);
+#endif
         interpreter->vm().set_underscore_is_last_value(true);
 
         s_editor = Line::Editor::construct();
@@ -1378,7 +1382,9 @@ int main(int argc, char** argv)
         ReplConsoleClient console_client(interpreter->global_object().console());
         interpreter->global_object().console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
+#ifdef JS_TRACK_ZOMBIE_CELLS
         interpreter->heap().set_zombify_dead_cells(zombify_dead_cells);
+#endif
 
         signal(SIGINT, [](int) {
             sigint_handler();

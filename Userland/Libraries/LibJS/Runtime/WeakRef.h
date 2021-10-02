@@ -31,7 +31,13 @@ public:
 
 private:
     virtual void visit_edges(Visitor&) override;
-    virtual void did_become_zombie() override { deregister(); }
+
+#ifdef JS_TRACK_ZOMBIE_CELLS
+    virtual void did_become_zombie() override
+    {
+        deregister();
+    }
+#endif
 
     Object* m_value { nullptr };
     u32 m_last_execution_generation { 0 };

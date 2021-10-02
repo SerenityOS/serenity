@@ -88,7 +88,10 @@ public:
 private:
     virtual const char* class_name() const override { return "Shape"; }
     virtual void visit_edges(Visitor&) override;
+
+#ifdef JS_TRACK_ZOMBIE_CELLS
     virtual void did_become_zombie() override;
+#endif
 
     Shape* get_or_prune_cached_forward_transition(TransitionKey const&);
     Shape* get_or_prune_cached_prototype_transition(Object* prototype);

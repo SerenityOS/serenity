@@ -25,7 +25,12 @@ protected:
     {
     }
 
-    virtual void did_become_zombie() override { revoke_weak_ptrs(); }
+#ifdef JS_TRACK_ZOMBIE_CELLS
+    virtual void did_become_zombie() override
+    {
+        revoke_weak_ptrs();
+    }
+#endif
 };
 
 }
