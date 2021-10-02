@@ -4,8 +4,7 @@ interface Node : EventTarget {
     readonly attribute DOMString nodeName;
 
     boolean hasChildNodes();
-    // FIXME: This should be a NodeList
-    readonly attribute ArrayFromVector childNodes;
+    [SameObject] readonly attribute NodeList childNodes;
     readonly attribute Node? firstChild;
     readonly attribute Node? lastChild;
     readonly attribute Node? previousSibling;
