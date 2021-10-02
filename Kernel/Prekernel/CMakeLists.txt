@@ -9,6 +9,7 @@ if ("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/Mailbox.cpp
         Arch/aarch64/MainIdRegister.cpp
         Arch/aarch64/MMIO.cpp
+        Arch/aarch64/Timer.cpp
         Arch/aarch64/UART.cpp
         Arch/aarch64/boot.S
         Arch/aarch64/init.cpp
