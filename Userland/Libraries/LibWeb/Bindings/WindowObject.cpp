@@ -54,8 +54,7 @@ void WindowObject::initialize_global_object()
 {
     Base::initialize_global_object();
 
-    auto success = Object::internal_set_prototype_of(&ensure_web_prototype<EventTargetPrototype>("EventTarget")).release_value();
-    VERIFY(success);
+    Object::set_prototype(&ensure_web_prototype<EventTargetPrototype>("EventTarget"));
 
     // FIXME: These should be native accessors, not properties
     define_direct_property("window", this, JS::Attribute::Enumerable);
