@@ -6,6 +6,7 @@
 
 #include <AK/Types.h>
 #include <Kernel/Prekernel/Arch/aarch64/Mailbox.h>
+#include <Kernel/Prekernel/Arch/aarch64/Timer.h>
 #include <Kernel/Prekernel/Arch/aarch64/UART.h>
 
 extern "C" [[noreturn]] void halt();
@@ -24,7 +25,17 @@ extern "C" [[noreturn]] void init()
     uart.print_num(firmware_version);
     uart.print_str("\r\n");
 
-    halt();
+    auto& timer = Prekernel::Timer::the();
+    u64 start_musec = 0;
+    for (;;) {
+        u64 now_musec;
+        while ((now_musec = timer.microseconds_since_boot()) - start_musec < 1'000'000)
+            ;
+        start_musec = now_musec;
+        uart.print_str("Timer: ");
+        uart.print_num(now_musec);
+        uart.print_str("\r\n");
+    }
 }
 
 // FIXME: Share this with the Intel Prekernel.
