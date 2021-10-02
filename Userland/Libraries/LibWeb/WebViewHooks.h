@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/URL.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/Forward.h>
 

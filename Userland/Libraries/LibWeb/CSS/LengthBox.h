@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibWeb/CSS/Length.h>
+#include <LibWeb/CSS/StyleValue.h>
 
 namespace Web::CSS {
 
