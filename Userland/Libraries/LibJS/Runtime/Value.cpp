@@ -1106,7 +1106,7 @@ Value add(GlobalObject& global_object, Value lhs, Value rhs)
             auto const& lhs_utf16_string = lhs_string.utf16_string();
             auto const& rhs_utf16_string = rhs_string.utf16_string();
 
-            Vector<u16> combined;
+            Vector<u16, 1> combined;
             combined.ensure_capacity(lhs_utf16_string.length_in_code_units() + rhs_utf16_string.length_in_code_units());
             combined.extend(lhs_utf16_string.string());
             combined.extend(rhs_utf16_string.string());

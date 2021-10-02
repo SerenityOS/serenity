@@ -124,7 +124,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
 // 22.1.2.1 String.fromCharCode ( ...codeUnits ), https://tc39.es/ecma262/#sec-string.fromcharcode
 JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_char_code)
 {
-    Vector<u16> string;
+    Vector<u16, 1> string;
     string.ensure_capacity(vm.argument_count());
 
     for (size_t i = 0; i < vm.argument_count(); ++i) {

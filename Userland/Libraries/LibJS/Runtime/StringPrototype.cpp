@@ -483,7 +483,7 @@ static Value pad_string(GlobalObject& global_object, Utf16String string, PadPlac
     if (max_length <= string_length)
         return js_string(vm, move(string));
 
-    Utf16String fill_string(Vector<u16> { 0x20 });
+    Utf16String fill_string(Vector<u16, 1> { 0x20 });
     if (!vm.argument(1).is_undefined()) {
         fill_string = vm.argument(1).to_utf16_string(global_object);
         if (vm.exception())
