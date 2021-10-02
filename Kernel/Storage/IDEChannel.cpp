@@ -284,21 +284,21 @@ bool IDEChannel::wait_until_not_busy(size_t milliseconds_timeout)
     return time_elapsed <= milliseconds_timeout;
 }
 
-String IDEChannel::channel_type_string() const
+StringView IDEChannel::channel_type_string() const
 {
     if (m_channel_type == ChannelType::Primary)
-        return "Primary";
+        return "Primary"sv;
 
-    return "Secondary";
+    return "Secondary"sv;
 }
 
 UNMAP_AFTER_INIT void IDEChannel::detect_disks()
 {
-    auto channel_string = [](u8 i) -> const char* {
+    auto channel_string = [](u8 i) -> StringView {
         if (i == 0)
-            return "master";
+            return "master"sv;
 
-        return "slave";
+        return "slave"sv;
     };
 
     // There are only two possible disks connected to a channel
@@ -310,7 +310,7 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
 
         auto status = m_io_group.control_base().in<u8>();
         if (status == 0x0) {
-            dbgln_if(PATA_DEBUG, "IDEChannel: No {} {} disk detected!", channel_type_string().to_lowercase(), channel_string(i));
+            dbgln_if(PATA_DEBUG, "IDEChannel: No {} {} disk detected!", channel_type_string(), channel_string(i));
             continue;
         }
 
@@ -322,7 +322,7 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
 
         // Wait 10 second for the BSY flag to clear
         if (!wait_until_not_busy(2000)) {
-            dbgln_if(PATA_DEBUG, "IDEChannel: No {} {} disk detected, BSY flag was not reset!", channel_type_string().to_lowercase(), channel_string(i));
+            dbgln_if(PATA_DEBUG, "IDEChannel: No {} {} disk detected, BSY flag was not reset!", channel_type_string(), channel_string(i));
             continue;
         }
 
