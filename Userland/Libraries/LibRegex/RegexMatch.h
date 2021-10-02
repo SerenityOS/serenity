@@ -139,7 +139,7 @@ public:
         return view;
     }
 
-    RegexStringView construct_as_same(Span<u32> data, Optional<String>& optional_string_storage, Vector<u16>& optional_utf16_storage) const
+    RegexStringView construct_as_same(Span<u32> data, Optional<String>& optional_string_storage, Vector<u16, 1>& optional_utf16_storage) const
     {
         auto view = m_view.visit(
             [&]<typename T>(T const&) {

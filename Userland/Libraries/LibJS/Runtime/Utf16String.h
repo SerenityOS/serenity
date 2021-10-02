@@ -20,18 +20,18 @@ public:
     ~Utf16StringImpl() = default;
 
     static NonnullRefPtr<Utf16StringImpl> create();
-    static NonnullRefPtr<Utf16StringImpl> create(Vector<u16>);
+    static NonnullRefPtr<Utf16StringImpl> create(Vector<u16, 1>);
     static NonnullRefPtr<Utf16StringImpl> create(StringView const&);
     static NonnullRefPtr<Utf16StringImpl> create(Utf16View const&);
 
-    Vector<u16> const& string() const;
+    Vector<u16, 1> const& string() const;
     Utf16View view() const;
 
 private:
     Utf16StringImpl() = default;
-    explicit Utf16StringImpl(Vector<u16> string);
+    explicit Utf16StringImpl(Vector<u16, 1> string);
 
-    Vector<u16> m_string;
+    Vector<u16, 1> m_string;
 };
 
 }
@@ -39,11 +39,11 @@ private:
 class Utf16String {
 public:
     Utf16String();
-    explicit Utf16String(Vector<u16>);
+    explicit Utf16String(Vector<u16, 1>);
     explicit Utf16String(StringView const&);
     explicit Utf16String(Utf16View const&);
 
-    Vector<u16> const& string() const;
+    Vector<u16, 1> const& string() const;
     Utf16View view() const;
     Utf16View substring_view(size_t code_unit_offset, size_t code_unit_length) const;
     Utf16View substring_view(size_t code_unit_offset) const;
