@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Debug.h>
+#include <AK/Format.h>
 #include <AK/Platform.h>
 #include <AK/Span.h>
 #include <AK/Types.h>
