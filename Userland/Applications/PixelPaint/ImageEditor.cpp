@@ -50,22 +50,34 @@ void ImageEditor::did_complete_action()
 
 bool ImageEditor::undo()
 {
-    if (m_undo_stack->can_undo()) {
-        m_undo_stack->undo();
-        layers_did_change();
-        return true;
-    }
-    return false;
+    if (!m_undo_stack->can_undo())
+        return false;
+
+    /* Without this you need to undo twice to actually start undoing stuff.
+     * This is due to the fact that the top of the UndoStack contains the snapshot of the currently
+     * shown image but what we actually want to restore is the snapshot right below it.
+     * Doing "undo->undo->redo" restores the 2nd topmost snapshot on the stack while lowering the
+     * stack pointer only by 1. This is important because we want the UndoStack's pointer to always point
+     * at the currently shown snapshot, otherwise doing 'undo->undo->draw something else' would delete
+     * one of the snapshots.
+     * This works because UndoStack::undo first decrements the stack pointer and then restores the snapshot,
+     * while UndoStack::redo first restores the snapshot and then increments the stack pointer.
+     */
+    m_undo_stack->undo();
+    m_undo_stack->undo();
+    m_undo_stack->redo();
+    layers_did_change();
+    return true;
 }
 
 bool ImageEditor::redo()
 {
-    if (m_undo_stack->can_redo()) {
-        m_undo_stack->redo();
-        layers_did_change();
-        return true;
-    }
-    return false;
+    if (!m_undo_stack->can_redo())
+        return false;
+
+    m_undo_stack->redo();
+    layers_did_change();
+    return true;
 }
 
 void ImageEditor::paint_event(GUI::PaintEvent& event)
