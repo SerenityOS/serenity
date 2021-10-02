@@ -546,11 +546,7 @@ ThrowCompletionOr<bool> Object::internal_set_prototype_of(Object* new_prototype)
     }
 
     // 9. Set O.[[Prototype]] to V.
-    auto& shape = this->shape();
-    if (shape.is_unique())
-        shape.set_prototype_without_transition(new_prototype);
-    else
-        m_shape = shape.create_prototype_transition(new_prototype);
+    set_prototype(new_prototype);
 
     // 10. Return true.
     return true;
@@ -981,6 +977,17 @@ void Object::storage_delete(PropertyName const& property_name)
 
     shape().remove_property_from_unique_shape(property_name.to_string_or_symbol(), metadata->offset);
     m_storage.remove(metadata->offset);
+}
+
+void Object::set_prototype(Object* new_prototype)
+{
+    if (prototype() == new_prototype)
+        return;
+    auto& shape = this->shape();
+    if (shape.is_unique())
+        shape.set_prototype_without_transition(new_prototype);
+    else
+        m_shape = shape.create_prototype_transition(new_prototype);
 }
 
 void Object::define_native_accessor(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
