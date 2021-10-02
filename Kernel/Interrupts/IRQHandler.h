@@ -27,7 +27,7 @@ public:
     virtual bool eoi() override;
 
     virtual HandlerType type() const override { return HandlerType::IRQHandler; }
-    virtual StringView purpose() const override { return "IRQ Handler"; }
+    virtual StringView purpose() const override { return "IRQ Handler"sv; }
     virtual StringView controller() const override { return m_responsible_irq_controller->model(); }
 
     virtual size_t sharing_devices_count() const override { return 0; }

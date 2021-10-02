@@ -41,7 +41,7 @@ bool SpuriousInterruptHandler::eoi()
 StringView SpuriousInterruptHandler::purpose() const
 {
     if (!m_real_handler)
-        return "Spurious Interrupt Handler";
+        return "Spurious Interrupt Handler"sv;
     return m_real_handler->purpose();
 }
 
