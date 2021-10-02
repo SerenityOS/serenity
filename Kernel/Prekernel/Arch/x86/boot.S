@@ -120,28 +120,31 @@ print_and_halt:
 .equ REAL_MODE_CODE, 0x500
 .equ PROTECTED_MODE_16_BIT_CODE, 0x600
     movl %esp, %ebp
-    movl 4(%ebp), %edi
+    movl 4(%ebp), %esi
 
-    /* Copy string to low memory section  */
-    movl %edi, %esi
-    xor %ecx, %ecx
+    mov $0xb8000, %ecx    /* VRAM address. */
+    mov $0x07, %ah        /* grey-on-black text. */
 
-    pushl %eax
-    pushl %edi
-check_string_length:
-    movb (%edi), %ah
-    cmp $0, %ah
-    je check_string_length_exit
-    inc %ecx
-    inc %edi
-    jmp check_string_length
-check_string_length_exit:
-    popl %edi
-    popl %eax
+.print_str_loop:
+    lodsb                 /* Loads a byte from address at %esi into %al and increments %esi. */
 
-    /* source address of the code is ESI */
-    movw %cx, (COPIED_STRING_LOCATION)
-    mov $COPIED_STRING_LOCATION + 2, %edi     /* destination address of the code */
+    test %al, %al
+    jz .print_str_end
+
+    movw %ax, (%ecx)
+    add $2, %ecx
+
+    jmp .print_str_loop
+.print_str_end:
+
+    /* Calculate string length into %ecx */
+    mov %esi, %ecx
+    sub 4(%ebp), %ecx
+    movw %cx, (COPIED_STRING_LOCATION)    /* Store string length for later use. */
+
+    /* Copy string into lower memory */
+    mov 4(%ebp), %esi
+    mov $COPIED_STRING_LOCATION + 2, %edi
     rep movsb
 
     /* Copy gdt_table_real_mode to low memory section  */
