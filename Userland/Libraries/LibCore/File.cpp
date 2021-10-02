@@ -153,6 +153,12 @@ bool File::exists(String const& filename)
     return stat(filename.characters(), &st) == 0;
 }
 
+ssize_t File::size(String const& filename)
+{
+    struct stat st;
+    return stat(filename.characters(), &st) < 0 ? -1 : st.st_size;
+}
+
 String File::real_path_for(String const& filename)
 {
     if (filename.is_null())
