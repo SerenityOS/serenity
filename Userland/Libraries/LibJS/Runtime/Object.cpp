@@ -48,9 +48,7 @@ Object::Object(ConstructWithoutPrototypeTag, GlobalObject& global_object)
 Object::Object(Object& prototype)
 {
     m_shape = prototype.global_object().empty_object_shape();
-    // FIXME: Factor out step 9 into a simple prototype setter and use that
-    auto success = internal_set_prototype_of(&prototype).release_value();
-    VERIFY(success);
+    set_prototype(&prototype);
 }
 
 Object::Object(Shape& shape)

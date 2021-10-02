@@ -1568,8 +1568,7 @@ namespace Web::Bindings {
 @wrapper_class@::@wrapper_class@(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
     : @wrapper_base_class@(global_object, impl)
 {
-    auto success = internal_set_prototype_of(&static_cast<WindowObject&>(global_object).ensure_web_prototype<@prototype_class@>("@name@")).release_value();
-    VERIFY(success);
+    set_prototype(&static_cast<WindowObject&>(global_object).ensure_web_prototype<@prototype_class@>("@name@"));
 }
 )~~~");
     }
