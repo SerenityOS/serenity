@@ -10,6 +10,8 @@
 #include <AK/Time.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
+#include <LibCore/FileWatcher.h>
 #include <errno.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -28,6 +30,15 @@ static String build_header_string(Vector<char const*> const& command, struct tim
 {
     StringBuilder builder;
     builder.appendff("Every {}.{}s: \x1b[1m", interval.tv_sec, interval.tv_usec / 100000);
+    builder.join(' ', command);
+    builder.append("\x1b[0m");
+    return builder.build();
+}
+
+static String build_header_string(Vector<char const*> const& command, Vector<String> const& filenames)
+{
+    StringBuilder builder;
+    builder.appendff("Every time any of {} changes: \x1b[1m", filenames);
     builder.join(' ', command);
     builder.append("\x1b[0m");
     return builder.build();
@@ -97,11 +108,12 @@ static int run_command(Vector<char const*> const& command)
 int main(int argc, char** argv)
 {
     signal(SIGINT, handle_signal);
-    if (pledge("stdio proc exec", nullptr) < 0) {
+    if (pledge("stdio proc exec rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
+    Vector<String> files_to_watch;
     Vector<char const*> command;
     Core::ArgsParser args_parser;
     args_parser.set_stop_on_first_non_option(true);
@@ -109,28 +121,26 @@ int main(int argc, char** argv)
     args_parser.add_option(opt_interval, "Amount of time between updates", "interval", 'n', "seconds");
     args_parser.add_option(flag_noheader, "Turn off the header describing the command and interval", "no-title", 't');
     args_parser.add_option(flag_beep_on_fail, "Beep if the command has a non-zero exit code", "beep", 'b');
+    Core::ArgsParser::Option file_arg {
+        .requires_argument = true,
+        .help_string = "Run command whenever this file changes. Can be used multiple times.",
+        .long_name = "file",
+        .short_name = 'f',
+        .value_name = "file",
+        .accept_value = [&files_to_watch](auto filename) {
+            files_to_watch.append(filename);
+            return true;
+        }
+    };
+    args_parser.add_option(move(file_arg));
     args_parser.add_positional_argument(command, "Command to run", "command");
     args_parser.parse(argc, argv);
 
-    struct timeval interval;
-    if (opt_interval <= 0) {
-        interval = { 0, 100000 };
-    } else {
-        interval = { opt_interval, 0 };
-    }
-
-    auto header = build_header_string(command, interval);
     command.append(nullptr);
 
-    auto now = get_current_time();
-    auto next_run_time = now;
-    while (true) {
-        int usecs_to_sleep = usecs_from(now, next_run_time);
-        while (usecs_to_sleep > 0) {
-            usleep(usecs_to_sleep);
-            now = get_current_time();
-            usecs_to_sleep = usecs_from(now, next_run_time);
-        }
+    String header;
+
+    auto watch_callback = [&] {
         // Clear the screen, then reset the cursor position to the top left.
         warn("\033[H\033[2J");
         // Print the header.
@@ -147,11 +157,65 @@ int main(int argc, char** argv)
                 fflush(stderr);
             }
         }
-        now = get_current_time();
-        timeval_add(next_run_time, interval, next_run_time);
-        if (usecs_from(now, next_run_time) < 0) {
-            // The next execution is overdue, so we set next_run_time to now to prevent drift.
-            next_run_time = now;
+    };
+
+    if (!files_to_watch.is_empty()) {
+        header = build_header_string(command, files_to_watch);
+
+        auto file_watcher = Core::BlockingFileWatcher();
+        for (auto const& file : files_to_watch) {
+            if (!Core::File::exists(file)) {
+                warnln("Cannot watch '{}', it does not exist.", file);
+                return 1;
+            }
+            if (!file_watcher.is_watching(file)) {
+                auto success_or_error = file_watcher.add_watch(file, Core::FileWatcherEvent::Type::MetadataModified);
+                if (success_or_error.is_error() && !success_or_error.value()) {
+                    warnln("Could not add '{}' to watch list.", file);
+                    return 1;
+                }
+            }
+        }
+
+        watch_callback();
+        while (true) {
+            auto maybe_event = file_watcher.wait_for_event();
+            if (maybe_event.has_value()) {
+                watch_callback();
+            }
+        }
+    } else {
+        if (pledge("stdio proc exec", nullptr) < 0) {
+            perror("pledge");
+            return 1;
+        }
+
+        struct timeval interval;
+        if (opt_interval <= 0) {
+            interval = { 0, 100000 };
+        } else {
+            interval = { opt_interval, 0 };
+        }
+
+        auto now = get_current_time();
+        auto next_run_time = now;
+        header = build_header_string(command, interval);
+        while (true) {
+            int usecs_to_sleep = usecs_from(now, next_run_time);
+            while (usecs_to_sleep > 0) {
+                usleep(usecs_to_sleep);
+                now = get_current_time();
+                usecs_to_sleep = usecs_from(now, next_run_time);
+            }
+
+            watch_callback();
+
+            now = get_current_time();
+            timeval_add(next_run_time, interval, next_run_time);
+            if (usecs_from(now, next_run_time) < 0) {
+                // The next execution is overdue, so we set next_run_time to now to prevent drift.
+                next_run_time = now;
+            }
         }
     }
 }
