@@ -87,9 +87,7 @@ static ThrowCompletionOr<void> increment_last_index(GlobalObject& global_object,
         return throw_completion(exception->value());
 
     last_index = advance_string_index(string, last_index, unicode);
-    regexp_object.set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    TRY(regexp_object.set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes));
     return {};
 }
 
@@ -190,11 +188,8 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
 
     while (true) {
         if (last_index > string.length_in_code_units()) {
-            if (global || sticky) {
-                regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes);
-                if (vm.exception())
-                    return {};
-            }
+            if (global || sticky)
+                TRY_OR_DISCARD(regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
             return js_null();
         }
@@ -206,9 +201,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
             break;
 
         if (sticky) {
-            regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes);
-            if (vm.exception())
-                return {};
+            TRY_OR_DISCARD(regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
             return js_null();
         }
@@ -228,11 +221,8 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
         end_index = string_view.code_unit_offset_of(end_index);
     }
 
-    if (global || sticky) {
-        regexp_object.set(vm.names.lastIndex, Value(end_index), Object::ShouldThrowExceptions::Yes);
-        if (vm.exception())
-            return {};
-    }
+    if (global || sticky)
+        TRY_OR_DISCARD(regexp_object.set(vm.names.lastIndex, Value(end_index), Object::ShouldThrowExceptions::Yes));
 
     auto* array = Array::create(global_object, result.n_named_capture_groups + 1);
     if (vm.exception())
@@ -437,9 +427,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
         return result;
     }
 
-    regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
     auto* array = Array::create(global_object, 0);
     if (vm.exception())
@@ -513,9 +501,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     if (vm.exception())
         return {};
 
-    matcher->set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(matcher->set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes));
 
     return RegExpStringIterator::create(global_object, *matcher, move(string), global, unicode);
 }
@@ -550,9 +536,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     if (global) {
         unicode = TRY_OR_DISCARD(regexp_object->get(vm.names.unicode)).to_boolean();
 
-        regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes);
-        if (vm.exception())
-            return {};
+        TRY_OR_DISCARD(regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
     }
 
     MarkedValueList results(vm.heap());
@@ -678,22 +662,16 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
         return {};
 
     auto previous_last_index = TRY_OR_DISCARD(regexp_object->get(vm.names.lastIndex));
-    if (!same_value(previous_last_index, Value(0))) {
-        regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes);
-        if (vm.exception())
-            return {};
-    }
+    if (!same_value(previous_last_index, Value(0)))
+        TRY_OR_DISCARD(regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
     auto result = regexp_exec(global_object, *regexp_object, move(string));
     if (vm.exception())
         return {};
 
     auto current_last_index = TRY_OR_DISCARD(regexp_object->get(vm.names.lastIndex));
-    if (!same_value(current_last_index, previous_last_index)) {
-        regexp_object->set(vm.names.lastIndex, previous_last_index, Object::ShouldThrowExceptions::Yes);
-        if (vm.exception())
-            return {};
-    }
+    if (!same_value(current_last_index, previous_last_index))
+        TRY_OR_DISCARD(regexp_object->set(vm.names.lastIndex, previous_last_index, Object::ShouldThrowExceptions::Yes));
 
     if (result.is_null())
         return Value(-1);
@@ -762,9 +740,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     size_t next_search_from = 0; // 'q' in the spec.
 
     while (next_search_from < string_view.length_in_code_units()) {
-        splitter->set(vm.names.lastIndex, Value(next_search_from), Object::ShouldThrowExceptions::Yes);
-        if (vm.exception())
-            return {};
+        TRY_OR_DISCARD(splitter->set(vm.names.lastIndex, Value(next_search_from), Object::ShouldThrowExceptions::Yes));
 
         auto result = regexp_exec(global_object, *splitter, string);
         if (vm.exception())

@@ -489,9 +489,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
             auto prop_value = TRY_OR_DISCARD(from->get(property_name));
 
             // b. Perform ? Set(to, nextKey, propValue, true).
-            to->set(property_name, prop_value, Object::ShouldThrowExceptions::Yes);
-            if (vm.exception())
-                return {};
+            TRY_OR_DISCARD(to->set(property_name, prop_value, Object::ShouldThrowExceptions::Yes));
         }
     }
 

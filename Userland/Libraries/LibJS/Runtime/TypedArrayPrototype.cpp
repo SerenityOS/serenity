@@ -298,11 +298,8 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
         return {};
     }
 
-    for (; k < final; ++k) {
-        typed_array->set(k, value, Object::ShouldThrowExceptions::Yes);
-        if (vm.exception())
-            return {};
-    }
+    for (; k < final; ++k)
+        TRY_OR_DISCARD(typed_array->set(k, value, Object::ShouldThrowExceptions::Yes));
 
     return typed_array;
 }
@@ -918,7 +915,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
         if (typed_array->element_name() != new_array->element_name()) {
             for (i32 n = 0; k < final; ++k, ++n) {
                 auto k_value = MUST(typed_array->get(k));
-                new_array->set(n, k_value, Object::ShouldThrowExceptions::Yes);
+                MUST(new_array->set(n, k_value, Object::ShouldThrowExceptions::Yes));
             }
         } else {
             auto element_size = typed_array->element_size();
@@ -1080,11 +1077,8 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
         return {};
 
     u32 j;
-    for (j = 0; j < items.size(); ++j) {
-        typed_array->set(j, items[j], Object::ShouldThrowExceptions::Yes);
-        if (vm.exception())
-            return {};
-    }
+    for (j = 0; j < items.size(); ++j)
+        TRY_OR_DISCARD(typed_array->set(j, items[j], Object::ShouldThrowExceptions::Yes));
 
     for (; j < length; ++j) {
         typed_array->delete_property_or_throw(j);
@@ -1180,10 +1174,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reverse)
         auto upper_value = MUST(typed_array->get(upper));
 
         // f. Perform ! Set(O, lowerP, upperValue, true).
-        typed_array->set(lower, upper_value, Object::ShouldThrowExceptions::Yes);
+        MUST(typed_array->set(lower, upper_value, Object::ShouldThrowExceptions::Yes));
 
         // g. Perform ! Set(O, upperP, lowerValue, true).
-        typed_array->set(upper, lower_value, Object::ShouldThrowExceptions::Yes);
+        MUST(typed_array->set(upper, lower_value, Object::ShouldThrowExceptions::Yes));
 
         // h. Set lower to lower + 1.
     }
@@ -1431,7 +1425,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::filter)
     // 11. For each element e of kept, do
     for (auto& value : kept) {
         // a. Perform ! Set(A, ! ToString(𝔽(n)), e, true).
-        filter_array->set(index, value, Object::ShouldThrowExceptions::Yes);
+        MUST(filter_array->set(index, value, Object::ShouldThrowExceptions::Yes));
 
         // b. Set n to n + 1.
         ++index;
@@ -1478,9 +1472,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::map)
         auto mapped_value = TRY_OR_DISCARD(vm.call(*callback_function, this_value, value, Value((i32)i), typed_array));
 
         // d. Perform ? Set(A, Pk, mappedValue, true).
-        return_array->set(i, mapped_value, Object::ShouldThrowExceptions::Yes);
-        if (vm.exception())
-            return {};
+        TRY_OR_DISCARD(return_array->set(i, mapped_value, Object::ShouldThrowExceptions::Yes));
 
         // e. Set k to k + 1.
     }

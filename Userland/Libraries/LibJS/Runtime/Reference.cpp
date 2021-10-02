@@ -26,7 +26,7 @@ void Reference::put_value(GlobalObject& global_object, Value value)
             throw_reference_error(global_object);
             return;
         }
-        global_object.set(m_name, value, Object::ShouldThrowExceptions::No);
+        MUST(global_object.set(m_name, value, Object::ShouldThrowExceptions::No));
         return;
     }
 

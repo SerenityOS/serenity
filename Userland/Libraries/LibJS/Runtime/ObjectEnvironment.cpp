@@ -77,10 +77,10 @@ void ObjectEnvironment::set_mutable_binding(GlobalObject& global_object, FlyStri
         return;
     }
 
-    auto result = m_binding_object.set(name, value, strict ? Object::ShouldThrowExceptions::Yes : Object::ShouldThrowExceptions::No);
+    auto result_or_error = m_binding_object.set(name, value, strict ? Object::ShouldThrowExceptions::Yes : Object::ShouldThrowExceptions::No);
 
     // Note: Nothing like this in the spec, this is here to produce nicer errors instead of the generic one thrown by Object::set().
-    if (!result && strict) {
+    if (result_or_error.is_error() && strict) {
         auto property_or_error = m_binding_object.internal_get_own_property(name);
         if (property_or_error.is_error())
             return;
