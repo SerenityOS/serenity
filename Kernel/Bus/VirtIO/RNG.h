@@ -26,7 +26,7 @@ public:
     virtual void initialize() override;
 
 private:
-    virtual StringView class_name() const override { return "VirtIOConsole"; }
+    virtual StringView class_name() const override { return "VirtIOConsole"sv; }
     explicit RNG(PCI::DeviceIdentifier const&);
     virtual bool handle_device_config_change() override;
     virtual void handle_queue_update(u16 queue_index) override;

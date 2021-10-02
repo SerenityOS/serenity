@@ -35,7 +35,7 @@ private:
     virtual bool can_read(const OpenFileDescription&, size_t) const override;
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual bool can_write(const OpenFileDescription&, size_t) const override;
-    virtual StringView class_name() const override { return "SlavePTY"; }
+    virtual StringView class_name() const override { return "SlavePTY"sv; }
     virtual KResult close() override;
 
     friend class MasterPTY;

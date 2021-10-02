@@ -123,7 +123,7 @@ protected:
     size_t backlog() const { return m_backlog; }
     void set_backlog(size_t backlog) { m_backlog = backlog; }
 
-    virtual StringView class_name() const override { return "Socket"; }
+    virtual StringView class_name() const override { return "Socket"sv; }
 
     virtual void shut_down_for_reading() { }
     virtual void shut_down_for_writing() { }

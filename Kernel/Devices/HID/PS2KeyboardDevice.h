@@ -44,7 +44,7 @@ private:
     virtual bool handle_irq(const RegisterState&) override;
 
     // ^CharacterDevice
-    virtual StringView class_name() const override { return "KeyboardDevice"; }
+    virtual StringView class_name() const override { return "KeyboardDevice"sv; }
 };
 
 }

@@ -53,7 +53,7 @@ public:
 
 private:
     explicit LocalSocket(int type, NonnullOwnPtr<DoubleBuffer> client_buffer, NonnullOwnPtr<DoubleBuffer> server_buffer);
-    virtual StringView class_name() const override { return "LocalSocket"; }
+    virtual StringView class_name() const override { return "LocalSocket"sv; }
     virtual bool is_local() const override { return true; }
     bool has_attached_peer(const OpenFileDescription&) const;
     DoubleBuffer* receive_buffer_for(OpenFileDescription&);

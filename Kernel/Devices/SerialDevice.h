@@ -110,7 +110,7 @@ private:
     friend class PCISerialDevice;
 
     // ^CharacterDevice
-    virtual StringView class_name() const override { return "SerialDevice"; }
+    virtual StringView class_name() const override { return "SerialDevice"sv; }
 
     void initialize();
     void set_interrupts(bool interrupt_enable);

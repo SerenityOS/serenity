@@ -38,7 +38,7 @@ private:
     FramebufferDevice(const GraphicsDevice&, size_t, PhysicalAddress, size_t, size_t, size_t);
 
     // ^File
-    virtual StringView class_name() const override { return "FramebufferDevice"; }
+    virtual StringView class_name() const override { return "FramebufferDevice"sv; }
 
     virtual bool can_read(const OpenFileDescription&, size_t) const override final { return true; }
     virtual bool can_write(const OpenFileDescription&, size_t) const override final { return true; }

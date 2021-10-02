@@ -46,7 +46,7 @@ private:
     virtual bool can_read(const OpenFileDescription&, size_t) const override;
     virtual bool can_write(const OpenFileDescription&, size_t) const override;
     virtual String absolute_path(const OpenFileDescription&) const override;
-    virtual StringView class_name() const override { return "FIFO"; }
+    virtual StringView class_name() const override { return "FIFO"sv; }
     virtual bool is_fifo() const override { return true; }
 
     explicit FIFO(UserID, NonnullOwnPtr<DoubleBuffer> buffer);

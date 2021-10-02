@@ -35,7 +35,7 @@ public:
 private:
     constexpr static size_t RINGBUFFER_SIZE = 2 * PAGE_SIZE;
 
-    virtual StringView class_name() const override { return "VirtIOConsolePort"; }
+    virtual StringView class_name() const override { return "VirtIOConsolePort"sv; }
 
     virtual bool can_read(const OpenFileDescription&, size_t) const override;
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;

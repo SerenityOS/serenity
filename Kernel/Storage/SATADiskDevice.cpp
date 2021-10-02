@@ -33,7 +33,7 @@ SATADiskDevice::~SATADiskDevice()
 
 StringView SATADiskDevice::class_name() const
 {
-    return "SATADiskDevice";
+    return "SATADiskDevice"sv;
 }
 
 void SATADiskDevice::start_request(AsyncBlockDeviceRequest& request)

@@ -37,7 +37,7 @@ UNMAP_AFTER_INIT PATADiskDevice::~PATADiskDevice()
 
 StringView PATADiskDevice::class_name() const
 {
-    return "PATADiskDevice";
+    return "PATADiskDevice"sv;
 }
 
 void PATADiskDevice::start_request(AsyncBlockDeviceRequest& request)

@@ -42,7 +42,7 @@ private:
     virtual bool handle_irq(const RegisterState&) override;
 
     // ^CharacterDevice
-    virtual StringView class_name() const override { return "SB16"; }
+    virtual StringView class_name() const override { return "SB16"sv; }
 
     void initialize();
     void wait_for_irq();

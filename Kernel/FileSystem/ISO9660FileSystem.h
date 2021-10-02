@@ -309,7 +309,7 @@ public:
 
     virtual ~ISO9660FS() override;
     virtual KResult initialize() override;
-    virtual StringView class_name() const override { return "ISO9660FS"; }
+    virtual StringView class_name() const override { return "ISO9660FS"sv; }
     virtual Inode& root_inode() override;
 
     virtual unsigned total_block_count() const override;
