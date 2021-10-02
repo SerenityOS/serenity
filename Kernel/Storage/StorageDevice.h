@@ -34,7 +34,6 @@ public:
     NonnullRefPtrVector<DiskPartition> partitions() const { return m_partitions; }
 
 protected:
-    StorageDevice(const StorageController&, size_t, u64, NonnullOwnPtr<KString>);
     StorageDevice(const StorageController&, int, int, size_t, u64, NonnullOwnPtr<KString>);
     // ^DiskDevice
     virtual StringView class_name() const override;
