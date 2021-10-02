@@ -23,7 +23,7 @@ KResultOr<FlatPtr> Process::sys$purge(int mode)
         NonnullRefPtrVector<Memory::AnonymousVMObject> vmobjects;
         {
             KResult result(KSuccess);
-            MM.for_each_vmobject([&](auto& vmobject) {
+            Memory::MemoryManager::for_each_vmobject([&](auto& vmobject) {
                 if (vmobject.is_anonymous()) {
                     // In the event that the append fails, only attempt to continue
                     // the purge if we have already appended something successfully.
@@ -46,7 +46,7 @@ KResultOr<FlatPtr> Process::sys$purge(int mode)
         NonnullRefPtrVector<Memory::InodeVMObject> vmobjects;
         {
             KResult result(KSuccess);
-            MM.for_each_vmobject([&](auto& vmobject) {
+            Memory::MemoryManager::for_each_vmobject([&](auto& vmobject) {
                 if (vmobject.is_inode()) {
                     // In the event that the append fails, only attempt to continue
                     // the purge if we have already appended something successfully.

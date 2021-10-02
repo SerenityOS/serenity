@@ -213,7 +213,7 @@ bool Region::do_remap_vmobject_page(size_t page_index, bool with_flush)
     VERIFY(physical_page(page_index));
     bool success = map_individual_page_impl(page_index);
     if (with_flush)
-        MM.flush_tlb(m_page_directory, vaddr_from_page_index(page_index));
+        MemoryManager::flush_tlb(m_page_directory, vaddr_from_page_index(page_index));
     return success;
 }
 
@@ -239,7 +239,7 @@ void Region::unmap(ShouldDeallocateVirtualRange deallocate_range)
         auto vaddr = vaddr_from_page_index(i);
         MM.release_pte(*m_page_directory, vaddr, i == count - 1);
     }
-    MM.flush_tlb(m_page_directory, vaddr(), page_count());
+    MemoryManager::flush_tlb(m_page_directory, vaddr(), page_count());
     if (deallocate_range == ShouldDeallocateVirtualRange::Yes) {
         m_page_directory->range_allocator().deallocate(range());
     }
@@ -272,7 +272,7 @@ KResult Region::map(PageDirectory& page_directory, ShouldFlushTLB should_flush_t
     }
     if (page_index > 0) {
         if (should_flush_tlb == ShouldFlushTLB::Yes)
-            MM.flush_tlb(m_page_directory, vaddr(), page_index);
+            MemoryManager::flush_tlb(m_page_directory, vaddr(), page_index);
         if (page_index == page_count())
             return KSuccess;
     }
