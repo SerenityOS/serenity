@@ -87,7 +87,7 @@ struct KmallocGlobalHeap {
                 // heap expansion may have been triggered while holding some
                 // other spinlock. If the expansion happens to need the same
                 // spinlock we would deadlock. So, if we're in any lock, defer
-                Processor::current().deferred_call_queue(kmalloc_allocate_backup_memory);
+                Processor::deferred_call_queue(kmalloc_allocate_backup_memory);
             });
 
             // Now that we added our backup memory, check if the backup heap
