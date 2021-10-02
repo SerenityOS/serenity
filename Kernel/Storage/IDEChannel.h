@@ -130,7 +130,7 @@ protected:
     virtual void ata_write_sectors(bool, u16);
 
     void detect_disks();
-    String channel_type_string() const;
+    StringView channel_type_string() const;
 
     void try_disambiguate_error();
     bool wait_until_not_busy(bool slave, size_t milliseconds_timeout);
