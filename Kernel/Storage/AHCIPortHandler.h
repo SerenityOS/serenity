@@ -36,7 +36,7 @@ public:
     virtual ~AHCIPortHandler() override;
 
     RefPtr<StorageDevice> device_at_port(size_t port_index) const;
-    virtual StringView purpose() const override { return "SATA Port Handler"; }
+    virtual StringView purpose() const override { return "SATA Port Handler"sv; }
 
     AHCI::HBADefinedCapabilities hba_capabilities() const;
     NonnullRefPtr<AHCIController> hba_controller() const { return m_parent_controller; }

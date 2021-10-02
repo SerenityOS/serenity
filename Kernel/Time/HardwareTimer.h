@@ -70,7 +70,7 @@ public:
     virtual StringView purpose() const override
     {
         if (TimeManagement::the().is_system_timer(*this))
-            return "System Timer";
+            return "System Timer"sv;
         return model();
     }
 

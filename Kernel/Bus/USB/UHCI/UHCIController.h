@@ -36,7 +36,7 @@ public:
     static KResultOr<NonnullRefPtr<UHCIController>> try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier);
     virtual ~UHCIController() override;
 
-    virtual StringView purpose() const override { return "UHCI"; }
+    virtual StringView purpose() const override { return "UHCI"sv; }
 
     virtual KResult initialize() override;
     virtual KResult reset() override;
