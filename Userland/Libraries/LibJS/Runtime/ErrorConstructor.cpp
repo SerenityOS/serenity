@@ -48,9 +48,7 @@ Value ErrorConstructor::construct(FunctionObject& new_target)
         error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, message));
     }
 
-    error->install_error_cause(vm.argument(1));
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(error->install_error_cause(vm.argument(1)));
 
     return error;
 }
@@ -97,9 +95,7 @@ Value ErrorConstructor::construct(FunctionObject& new_target)
             error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, message)); \
         }                                                                                                  \
                                                                                                            \
-        error->install_error_cause(vm.argument(1));                                                        \
-        if (vm.exception())                                                                                \
-            return {};                                                                                     \
+        TRY_OR_DISCARD(error->install_error_cause(vm.argument(1)));                                        \
                                                                                                            \
         return error;                                                                                      \
     }
