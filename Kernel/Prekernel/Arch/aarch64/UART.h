@@ -26,9 +26,9 @@ public:
         while (*s)
             send(*s++);
     }
-    void print_num(u32 n)
+    void print_num(u64 n)
     {
-        char buf[11];
+        char buf[21];
         int i = 0;
         do {
             buf[i++] = (n % 10) + '0';
