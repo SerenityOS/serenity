@@ -14,7 +14,7 @@ ScopedAddressSpaceSwitcher::ScopedAddressSpaceSwitcher(Process& process)
 {
     VERIFY(Thread::current() != nullptr);
     m_previous_cr3 = read_cr3();
-    MM.enter_process_address_space(process);
+    Memory::MemoryManager::enter_process_address_space(process);
 }
 
 ScopedAddressSpaceSwitcher::~ScopedAddressSpaceSwitcher()

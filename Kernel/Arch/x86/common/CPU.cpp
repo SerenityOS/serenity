@@ -9,6 +9,8 @@
 #include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 
+using namespace Kernel;
+
 void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func)
 {
     asm volatile("cli");
@@ -28,7 +30,7 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
     // Switch back to the current process's page tables if there are any.
     // Otherwise stack walking will be a disaster.
     if (Process::has_current())
-        MM.enter_process_address_space(Process::current());
+        Memory::MemoryManager::enter_process_address_space(Process::current());
 
     PANIC("Aborted");
 }
