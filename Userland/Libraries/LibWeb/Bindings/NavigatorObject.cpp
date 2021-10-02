@@ -34,6 +34,7 @@ void NavigatorObject::initialize(JS::GlobalObject& global_object)
     define_direct_property("product", js_string(heap, "Gecko"), attr);
 
     define_native_accessor("userAgent", user_agent_getter, {}, JS::Attribute::Configurable | JS::Attribute::Enumerable);
+    define_native_accessor("cookieEnabled", cookie_enabled_getter, {}, JS::Attribute::Configurable | JS::Attribute::Enumerable);
 
     // FIXME: Reflect actual connectivity status.
     define_direct_property("onLine", JS::Value(true), attr);
@@ -46,6 +47,12 @@ NavigatorObject::~NavigatorObject()
 JS_DEFINE_NATIVE_FUNCTION(NavigatorObject::user_agent_getter)
 {
     return JS::js_string(vm, ResourceLoader::the().user_agent());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(NavigatorObject::cookie_enabled_getter)
+{
+    // No way of disabling cookies right now :^)
+    return JS::Value(true);
 }
 
 }
