@@ -33,14 +33,13 @@ private:
 public:
     DiskPartitionMetadata(u64 block_offset, u64 block_limit, u8 partition_type);
     DiskPartitionMetadata(u64 start_block, u64 end_block, Array<u8, 16> partition_type);
-    DiskPartitionMetadata(u64 block_offset, u64 block_limit, Array<u8, 16> partition_type, UUID unique_guid, u64 special_attributes, String name);
+    DiskPartitionMetadata(u64 block_offset, u64 block_limit, Array<u8, 16> partition_type, UUID unique_guid, u64 special_attributes);
     u64 start_block() const;
     u64 end_block() const;
 
     DiskPartitionMetadata offset(u64 blocks_count) const;
 
     Optional<u64> special_attributes() const;
-    Optional<String> name() const;
     const PartitionType& type() const;
     const UUID& unique_guid() const;
 
@@ -50,7 +49,6 @@ private:
     PartitionType m_type;
     UUID m_unique_guid {};
     u64 m_attributes { 0 };
-    String m_name;
 };
 
 }
