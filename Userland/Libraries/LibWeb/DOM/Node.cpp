@@ -20,6 +20,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/EventListener.h>
+#include <LibWeb/DOM/LiveNodeList.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/ProcessingInstruction.h>
 #include <LibWeb/DOM/ShadowRoot.h>
@@ -258,7 +259,7 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
 {
     NonnullRefPtrVector<Node> nodes;
     if (is<DocumentFragment>(*node))
-        nodes = verify_cast<DocumentFragment>(*node).child_nodes();
+        nodes = verify_cast<DocumentFragment>(*node).children_as_vector();
     else
         nodes.append(node);
 
@@ -591,7 +592,16 @@ ParentNode* Node::parent_or_shadow_host()
     return verify_cast<ParentNode>(parent());
 }
 
-NonnullRefPtrVector<Node> Node::child_nodes() const
+NonnullRefPtr<NodeList> Node::child_nodes()
+{
+    // FIXME: This should return the same LiveNodeList object every time,
+    //        but that would cause a reference cycle since NodeList refs the root.
+    return LiveNodeList::create(*this, [this](auto& node) {
+        return is_parent_of(node);
+    });
+}
+
+NonnullRefPtrVector<Node> Node::children_as_vector() const
 {
     NonnullRefPtrVector<Node> nodes;
 

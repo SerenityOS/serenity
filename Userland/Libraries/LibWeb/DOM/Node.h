@@ -96,7 +96,8 @@ public:
 
     // NOTE: This is intended for the JS bindings.
     bool has_child_nodes() const { return has_children(); }
-    NonnullRefPtrVector<Node> child_nodes() const;
+    NonnullRefPtr<NodeList> child_nodes();
+    NonnullRefPtrVector<Node> children_as_vector() const;
 
     virtual RefPtr<Layout::Node> create_layout_node();
 
