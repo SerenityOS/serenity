@@ -2819,28 +2819,27 @@ using namespace Web::URL;
 
 namespace Web::Bindings {
 
-@prototype_class@::@prototype_class@(JS::GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
-{
-)~~~");
-
+@prototype_class@::@prototype_class@([[maybe_unused]] JS::GlobalObject& global_object))~~~");
     if (interface.name == "DOMException") {
         // https://heycam.github.io/webidl/#es-DOMException-specialness
         // Object.getPrototypeOf(DOMException.prototype) === Error.prototype
         generator.append(R"~~~(
-    auto success = internal_set_prototype_of(global_object.error_prototype()).release_value();
-    VERIFY(success);
+    : Object(*global_object.error_prototype())
 )~~~");
     } else if (!interface.parent_name.is_empty()) {
         generator.append(R"~~~(
-    auto success = internal_set_prototype_of(&static_cast<WindowObject&>(global_object).ensure_web_prototype<@prototype_base_class@>("@parent_name@")).release_value();
-    VERIFY(success);
+    : Object(static_cast<WindowObject&>(global_object).ensure_web_prototype<@prototype_base_class@>("@parent_name@"))
+)~~~");
+    } else {
+        generator.append(R"~~~(
+    : Object(*global_object.object_prototype())
 )~~~");
     }
 
     // FIXME: Currently almost everything gets default_attributes but it should be configurable per attribute.
     //        See the spec links for details
     generator.append(R"~~~(
+{
 }
 
 @prototype_class@::~@prototype_class@()
