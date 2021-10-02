@@ -70,7 +70,7 @@ public:
     {
     }
 
-    bool operator==(Utf16View const& other) const;
+    bool operator==(Utf16View const& other) const { return m_code_units == other.m_code_units; }
 
     enum class AllowInvalidCodeUnits {
         Yes,

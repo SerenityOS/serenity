@@ -224,21 +224,6 @@ size_t Utf16View::calculate_length_in_code_points() const
     return code_points;
 }
 
-bool Utf16View::operator==(Utf16View const& other) const
-{
-    if (length_in_code_units() == 0)
-        return other.length_in_code_units() == 0;
-    if (length_in_code_units() != other.length_in_code_units())
-        return false;
-
-    for (size_t i = 0; i < length_in_code_units(); ++i) {
-        if (m_code_units[i] != other.m_code_units[i])
-            return false;
-    }
-
-    return true;
-}
-
 bool Utf16View::equals_ignoring_case(Utf16View const& other) const
 {
     if (length_in_code_units() == 0)
