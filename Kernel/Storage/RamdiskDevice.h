@@ -23,10 +23,9 @@ public:
 
     // ^DiskDevice
     virtual StringView class_name() const override;
-    virtual String storage_name() const override;
 
 private:
-    RamdiskDevice(const RamdiskController&, NonnullOwnPtr<Memory::Region>&&, int major, int minor);
+    RamdiskDevice(const RamdiskController&, NonnullOwnPtr<Memory::Region>&&, int major, int minor, NonnullOwnPtr<KString> device_name);
 
     // ^BlockDevice
     virtual void start_request(AsyncBlockDeviceRequest&) override;
