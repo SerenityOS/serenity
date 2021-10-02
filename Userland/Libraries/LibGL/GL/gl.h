@@ -317,7 +317,6 @@ typedef float GLclampf;
 typedef double GLdouble;
 typedef unsigned int GLenum;
 typedef unsigned int GLbitfield;
-typedef unsigned char GLboolean;
 
 GLAPI void glBegin(GLenum mode);
 GLAPI void glClear(GLbitfield mask);
