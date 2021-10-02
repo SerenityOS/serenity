@@ -265,7 +265,7 @@ DOM::ExceptionOr<bool> Element::matches(StringView selectors) const
 
 ExceptionOr<void> Element::set_inner_html(String const& markup)
 {
-    auto result = DOMParsing::InnerHTML::inner_html_setter(*this, markup);
+    auto result = DOMParsing::inner_html_setter(*this, markup);
     if (result.is_exception())
         return result.exception();
 

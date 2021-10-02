@@ -78,6 +78,7 @@ set(SOURCES
     DOM/Text.idl
     DOM/Timer.cpp
     DOM/Window.cpp
+    DOMParsing/InnerHTML.cpp
     DOMTreeModel.cpp
     Dump.cpp
     FontCache.cpp
