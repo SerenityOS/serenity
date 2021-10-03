@@ -340,7 +340,7 @@ ThrowCompletionOr<bool> Object::set_integrity_level(IntegrityLevel level)
 }
 
 // 7.3.16 TestIntegrityLevel ( O, level ), https://tc39.es/ecma262/#sec-testintegritylevel
-bool Object::test_integrity_level(IntegrityLevel level) const
+ThrowCompletionOr<bool> Object::test_integrity_level(IntegrityLevel level) const
 {
     // 1. Assert: Type(O) is Object.
 
@@ -348,7 +348,7 @@ bool Object::test_integrity_level(IntegrityLevel level) const
     VERIFY(level == IntegrityLevel::Sealed || level == IntegrityLevel::Frozen);
 
     // 3. Let extensible be ? IsExtensible(O).
-    auto extensible = TRY_OR_DISCARD(is_extensible());
+    auto extensible = TRY(is_extensible());
 
     // 4. If extensible is true, return false.
     // 5. NOTE: If the object is extensible, none of its properties are examined.
@@ -356,14 +356,14 @@ bool Object::test_integrity_level(IntegrityLevel level) const
         return false;
 
     // 6. Let keys be ? O.[[OwnPropertyKeys]]().
-    auto keys = TRY_OR_DISCARD(internal_own_property_keys());
+    auto keys = TRY(internal_own_property_keys());
 
     // 7. For each element k of keys, do
     for (auto& key : keys) {
         auto property_name = PropertyName::from_value(global_object(), key);
 
         // a. Let currentDesc be ? O.[[GetOwnProperty]](k).
-        auto current_descriptor = TRY_OR_DISCARD(internal_get_own_property(property_name));
+        auto current_descriptor = TRY(internal_get_own_property(property_name));
 
         // b. If currentDesc is not undefined, then
         if (!current_descriptor.has_value())
