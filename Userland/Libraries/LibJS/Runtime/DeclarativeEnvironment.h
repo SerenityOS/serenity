@@ -31,6 +31,9 @@ public:
 
     void initialize_or_set_mutable_binding(Badge<ScopeNode>, GlobalObject& global_object, FlyString const& name, Value value);
 
+    // This is not a method defined in the spec! Do not use this in any LibJS (or other spec related) code.
+    [[nodiscard]] Vector<String> bindings() const;
+
 protected:
     virtual void visit_edges(Visitor&) override;
 

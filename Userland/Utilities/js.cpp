@@ -1361,6 +1361,12 @@ int main(int argc, char** argv)
             case CompleteVariable: {
                 auto const& variable = interpreter->global_object();
                 list_all_properties(variable.shape(), variable_name);
+
+                for (String& name : global_environment.declarative_record().bindings()) {
+                    if (name.starts_with(variable_name))
+                        results.empend(name);
+                }
+
                 if (results.size())
                     editor.suggest(variable_name.length());
                 break;
