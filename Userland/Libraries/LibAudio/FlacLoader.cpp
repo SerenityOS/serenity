@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/StdLibExtras.h"
 #include <AK/Debug.h>
 #include <AK/FlyString.h>
 #include <AK/Format.h>
@@ -199,15 +200,25 @@ LoaderSamples FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_i
         return Buffer::create_empty();
 
     size_t samples_to_read = min(max_bytes_to_read_from_input, remaining_samples);
+    samples.ensure_capacity(samples_to_read);
     while (samples_to_read > 0) {
         if (!m_current_frame.has_value())
             TRY(next_frame());
 
-        samples.append(m_current_frame_data.take_first());
-        if (m_current_frame_data.is_empty()) {
+        // Do a full vector extend if possible
+        if (m_current_frame_data.size() <= samples_to_read) {
+            samples_to_read -= m_current_frame_data.size();
+            samples.extend(move(m_current_frame_data));
+            m_current_frame_data.clear();
             m_current_frame.clear();
+        } else {
+            samples.unchecked_append(m_current_frame_data.data(), samples_to_read);
+            m_current_frame_data.remove(0, samples_to_read);
+            if (m_current_frame_data.size() == 0) {
+                m_current_frame.clear();
+            }
+            samples_to_read = 0;
         }
-        --samples_to_read;
     }
 
     m_loaded_samples += samples.size();
