@@ -24,7 +24,7 @@ Array* Array::create(GlobalObject& global_object, size_t length, Object* prototy
     if (!prototype)
         prototype = global_object.array_prototype();
     auto* array = global_object.heap().allocate<Array>(global_object, *prototype);
-    (void)array->internal_define_own_property(vm.names.length, { .value = Value(length), .writable = true, .enumerable = false, .configurable = false });
+    MUST(array->internal_define_own_property(vm.names.length, { .value = Value(length), .writable = true, .enumerable = false, .configurable = false }));
     return array;
 }
 
@@ -198,7 +198,8 @@ ThrowCompletionOr<bool> Array::internal_define_own_property(PropertyName const& 
             return false;
 
         // h. Let succeeded be ! OrdinaryDefineOwnProperty(A, P, Desc).
-        auto succeeded = Object::internal_define_own_property(property_name, property_descriptor).release_value();
+        auto succeeded = MUST(Object::internal_define_own_property(property_name, property_descriptor));
+
         // i. If succeeded is false, return false.
         if (!succeeded)
             return false;

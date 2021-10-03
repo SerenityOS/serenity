@@ -112,7 +112,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::year_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -137,7 +137,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::month_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -162,7 +162,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::month_code_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -187,7 +187,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -212,7 +212,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::hour_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -237,7 +237,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::minute_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -262,7 +262,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::second_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -287,7 +287,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::millisecond_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -312,7 +312,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::microsecond_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -337,7 +337,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::nanosecond_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -432,7 +432,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_of_week_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -457,7 +457,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_of_year_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -482,7 +482,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::week_of_year_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -507,7 +507,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_week_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -532,7 +532,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_month_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -557,7 +557,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_year_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -582,7 +582,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::months_in_year_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -607,7 +607,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::in_leap_year_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -632,7 +632,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_nanoseconds_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Return 𝔽(? GetOffsetNanosecondsFor(timeZone, instant)).
     return Value(TRY_OR_DISCARD(get_offset_nanoseconds_for(global_object, &time_zone, *instant)));
@@ -648,7 +648,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_getter)
         return {};
 
     // 3. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 4. Return ? BuiltinTimeZoneGetOffsetStringFor(zonedDateTime.[[TimeZone]], instant).
     auto offset_string = TRY_OR_DISCARD(builtin_time_zone_get_offset_string_for(global_object, &zoned_date_time->time_zone(), *instant));
@@ -668,7 +668,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::era_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -693,7 +693,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::era_year_getter)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -723,7 +723,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_instant)
         return {};
 
     // 3. Return ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    return create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    return MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 }
 
 // 6.3.47 Temporal.ZonedDateTime.prototype.toPlainDate ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplaindate
@@ -739,7 +739,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_date)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -764,7 +764,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_time)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -789,7 +789,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_date_time)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Return ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, zonedDateTime.[[Calendar]]).
     return TRY_OR_DISCARD(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, zoned_date_time->calendar()));
@@ -808,7 +808,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_year_month)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -839,7 +839,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_month_day)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 5. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
@@ -875,7 +875,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::get_iso_fields)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 5. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
-    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds()).release_value();
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
 
     // 6. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
