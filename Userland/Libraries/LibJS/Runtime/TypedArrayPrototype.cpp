@@ -75,15 +75,11 @@ static TypedArrayBase* typed_array_from_this(GlobalObject& global_object)
 
 static TypedArrayBase* validate_typed_array_from_this(GlobalObject& global_object)
 {
-    auto& vm = global_object.vm();
-
     auto* typed_array = typed_array_from_this(global_object);
     if (!typed_array)
         return nullptr;
 
-    validate_typed_array(global_object, *typed_array);
-    if (vm.exception())
-        return nullptr;
+    TRY_OR_DISCARD(validate_typed_array(global_object, *typed_array));
 
     return typed_array;
 }

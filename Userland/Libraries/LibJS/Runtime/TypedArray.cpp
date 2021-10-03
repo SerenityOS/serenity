@@ -8,6 +8,7 @@
 #include <AK/Checked.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/TypedArray.h>
@@ -31,14 +32,24 @@ TypedArrayBase* typed_array_from(GlobalObject& global_object, Value typed_array_
 }
 
 // 23.2.4.3 ValidateTypedArray ( O ), https://tc39.es/ecma262/#sec-validatetypedarray
-void validate_typed_array(GlobalObject& global_object, TypedArrayBase& typed_array)
+ThrowCompletionOr<void> validate_typed_array(GlobalObject& global_object, TypedArrayBase& typed_array)
 {
     auto& vm = global_object.vm();
 
+    // 1. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
     if (!typed_array.is_typed_array())
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "TypedArray");
-    else if (typed_array.viewed_array_buffer()->is_detached())
-        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "TypedArray");
+
+    // 2. Assert: O has a [[ViewedArrayBuffer]] internal slot.
+
+    // 3. Let buffer be O.[[ViewedArrayBuffer]].
+    auto* buffer = typed_array.viewed_array_buffer();
+
+    // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+    if (buffer->is_detached())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+
+    return {};
 }
 
 // 22.2.5.1.3 InitializeTypedArrayFromArrayBuffer, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraybuffer
