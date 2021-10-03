@@ -57,7 +57,7 @@ Value AggregateErrorConstructor::construct(FunctionObject& new_target)
     if (vm.exception())
         return {};
 
-    aggregate_error->define_property_or_throw(vm.names.errors, { .value = Array::create_from(global_object, errors_list), .writable = true, .enumerable = false, .configurable = true });
+    MUST(aggregate_error->define_property_or_throw(vm.names.errors, { .value = Array::create_from(global_object, errors_list), .writable = true, .enumerable = false, .configurable = true }));
 
     return aggregate_error;
 }

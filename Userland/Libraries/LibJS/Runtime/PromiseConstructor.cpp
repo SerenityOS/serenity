@@ -187,7 +187,7 @@ static Value perform_promise_any(GlobalObject& global_object, Object& iterator_r
             auto errors_array = Array::create_from(global_object, errors.values());
 
             auto* error = AggregateError::create(global_object);
-            error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true });
+            MUST(error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true }));
 
             vm.throw_exception(global_object, error);
             return {};

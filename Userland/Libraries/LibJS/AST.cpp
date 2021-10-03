@@ -1260,21 +1260,19 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
 
         switch (method.kind()) {
         case ClassMethod::Kind::Method:
-            target.define_property_or_throw(property_key, { .value = method_value, .writable = true, .enumerable = false, .configurable = true });
+            TRY(target.define_property_or_throw(property_key, { .value = method_value, .writable = true, .enumerable = false, .configurable = true }));
             break;
         case ClassMethod::Kind::Getter:
             update_function_name(method_value, String::formatted("get {}", get_function_name(global_object, key)));
-            target.define_property_or_throw(property_key, { .get = &method_function, .enumerable = true, .configurable = true });
+            TRY(target.define_property_or_throw(property_key, { .get = &method_function, .enumerable = true, .configurable = true }));
             break;
         case ClassMethod::Kind::Setter:
             update_function_name(method_value, String::formatted("set {}", get_function_name(global_object, key)));
-            target.define_property_or_throw(property_key, { .set = &method_function, .enumerable = true, .configurable = true });
+            TRY(target.define_property_or_throw(property_key, { .set = &method_function, .enumerable = true, .configurable = true }));
             break;
         default:
             VERIFY_NOT_REACHED();
         }
-        if (auto* exception = interpreter.exception())
-            return throw_completion(exception->value());
     }
 
     for (auto& field : m_fields) {
