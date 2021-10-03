@@ -90,9 +90,8 @@ void EventLoop::process()
     // 1. Let taskQueue be one of the event loop's task queues, chosen in an implementation-defined manner, with the constraint that the chosen task queue must contain at least one runnable task. If there is no such task queue, then jump to the microtasks step below.
     auto& task_queue = m_task_queue;
 
-    if (!task_queue.is_empty()) {
+    if (auto oldest_task = task_queue.take_first_runnable()) {
         // 2. Let oldestTask be the first runnable task in taskQueue, and remove it from taskQueue.
-        auto oldest_task = task_queue.take_first_runnable();
 
         // 3. Set the event loop's currently running task to oldestTask.
         m_currently_running_task = oldest_task.ptr();

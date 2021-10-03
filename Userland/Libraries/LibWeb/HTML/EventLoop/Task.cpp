@@ -25,4 +25,11 @@ void Task::execute()
     m_steps();
 }
 
+// https://html.spec.whatwg.org/#concept-task-runnable
+bool Task::is_runnable() const
+{
+    // A task is runnable if its document is either null or fully active.
+    return !m_document || m_document->is_fully_active();
+}
+
 }
