@@ -20,7 +20,10 @@ public:
     void ref()
     {
         VERIFY(!m_in_removed_last_ref);
-        VERIFY(m_ref_count);
+        if constexpr (!IsBaseOf<DOM::Node, T>) {
+            // NOTE: DOM::Document is allowed to survive with 0 ref count, if one of its descendant nodes are alive.
+            VERIFY(m_ref_count);
+        }
         ++m_ref_count;
     }
 
