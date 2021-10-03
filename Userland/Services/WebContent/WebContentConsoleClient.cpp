@@ -39,7 +39,16 @@ void WebContentConsoleClient::handle_input(String const& js_source)
             output_html.append(String::formatted("<pre>{}</pre>", escape_html_entities(hint)));
         m_interpreter->vm().throw_exception<JS::SyntaxError>(*m_console_global_object.cell(), error.to_string());
     } else {
+        // FIXME: This is not the correct way to do this, we probably want to have
+        //        multiple execution contexts we switch between.
+        auto& global_object_before = m_interpreter->realm().global_object();
+        VERIFY(is<Web::Bindings::WindowObject>(global_object_before));
+        auto& this_value_before = m_interpreter->realm().global_environment().global_this_value();
+        m_interpreter->realm().set_global_object(*m_console_global_object.cell(), &global_object_before);
+
         m_interpreter->run(*m_console_global_object.cell(), *program);
+
+        m_interpreter->realm().set_global_object(global_object_before, &this_value_before);
     }
 
     if (m_interpreter->exception()) {
