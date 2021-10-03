@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -285,6 +286,49 @@ NonnullRefPtr<CSS::CSSStyleDeclaration> Window::get_computed_style(DOM::Element&
 NonnullRefPtr<CSS::MediaQueryList> Window::match_media(String media)
 {
     return CSS::MediaQueryList::create(associated_document(), parse_media_query_list(CSS::ParsingContext(associated_document()), media));
+}
+
+RefPtr<CSS::StyleValue> Window::query_media_feature(FlyString const& name) const
+{
+    // FIXME: Many of these should be dependent on the hardware
+
+    if (name.equals_ignoring_case("any-hover"sv))
+        return CSS::IdentifierStyleValue::create(CSS::ValueID::Hover);
+    if (name.equals_ignoring_case("any-pointer"sv))
+        return CSS::IdentifierStyleValue::create(CSS::ValueID::Fine);
+    // FIXME: aspect-ratio
+    if (name.equals_ignoring_case("color"sv))
+        return CSS::NumericStyleValue::create(32);
+    if (name.equals_ignoring_case("color-gamut"sv))
+        return CSS::IdentifierStyleValue::create(CSS::ValueID::Srgb);
+    if (name.equals_ignoring_case("color-index"sv))
+        return CSS::NumericStyleValue::create(0);
+    // FIXME: device-aspect-ratio
+    // FIXME: device-height
+    // FIXME: device-width
+    if (name.equals_ignoring_case("grid"sv))
+        return CSS::NumericStyleValue::create(0);
+    if (name.equals_ignoring_case("height"sv))
+        return CSS::LengthStyleValue::create(CSS::Length::make_px(inner_height()));
+    if (name.equals_ignoring_case("hover"sv))
+        return CSS::IdentifierStyleValue::create(CSS::ValueID::Hover);
+    if (name.equals_ignoring_case("monochrome"sv))
+        return CSS::NumericStyleValue::create(0);
+    if (name.equals_ignoring_case("hover"sv))
+        return CSS::IdentifierStyleValue::create(inner_height() >= inner_width() ? CSS::ValueID::Portrait : CSS::ValueID::Landscape);
+    if (name.equals_ignoring_case("overflow-block"sv))
+        return CSS::IdentifierStyleValue::create(CSS::ValueID::Scroll);
+    // FIXME: overflow-inline
+    if (name.equals_ignoring_case("pointer"sv))
+        return CSS::IdentifierStyleValue::create(CSS::ValueID::Fine);
+    // FIXME: resolution
+    if (name.equals_ignoring_case("scan"sv))
+        return CSS::IdentifierStyleValue::create(CSS::ValueID::Progressive);
+    if (name.equals_ignoring_case("update"sv))
+        return CSS::IdentifierStyleValue::create(CSS::ValueID::Fast);
+    if (name.equals_ignoring_case("width"sv))
+        return CSS::LengthStyleValue::create(CSS::Length::make_px(inner_width()));
+    return {};
 }
 
 // https://www.w3.org/TR/cssom-view/#dom-window-scrollx
