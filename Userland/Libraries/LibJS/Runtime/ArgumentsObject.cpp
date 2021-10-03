@@ -95,7 +95,7 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_delete(PropertyName const& pro
     // 4. If result is true and isMapped is true, then
     if (result && is_mapped) {
         // a. Call map.[[Delete]](P).
-        (void)map.internal_delete(property_name);
+        MUST(map.internal_delete(property_name));
     }
 
     // 5. Return result.
@@ -106,7 +106,8 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_delete(PropertyName const& pro
 ThrowCompletionOr<Optional<PropertyDescriptor>> ArgumentsObject::internal_get_own_property(PropertyName const& property_name) const
 {
     // 1. Let desc be OrdinaryGetOwnProperty(args, P).
-    auto desc = Object::internal_get_own_property(property_name).release_value();
+    auto desc = MUST(Object::internal_get_own_property(property_name));
+
     // 2. If desc is undefined, return desc.
     if (!desc.has_value())
         return desc;
@@ -157,7 +158,7 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyNa
         // a. If IsAccessorDescriptor(Desc) is true, then
         if (descriptor.is_accessor_descriptor()) {
             // i. Call map.[[Delete]](P).
-            (void)map.internal_delete(property_name);
+            MUST(map.internal_delete(property_name));
         } else {
             // i. If Desc.[[Value]] is present, then
             if (descriptor.value.has_value()) {
@@ -169,7 +170,7 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyNa
             // ii. If Desc.[[Writable]] is present and its value is false, then
             if (descriptor.writable == false) {
                 // 1. Call map.[[Delete]](P).
-                (void)map.internal_delete(property_name);
+                MUST(map.internal_delete(property_name));
             }
         }
     }

@@ -393,7 +393,7 @@ Object* get_super_constructor(VM& vm)
     auto& active_function = verify_cast<FunctionEnvironment>(env).function_object();
 
     // 5. Let superConstructor be ! activeFunction.[[GetPrototypeOf]]().
-    auto* super_constructor = active_function.internal_get_prototype_of().release_value();
+    auto* super_constructor = MUST(active_function.internal_get_prototype_of());
 
     // 6. Return superConstructor.
     return super_constructor;
