@@ -10,6 +10,7 @@
 #include "FlacTypes.h"
 #include "Loader.h"
 #include <AK/BitStream.h>
+#include <AK/Buffered.h>
 #include <AK/Stream.h>
 #include <AK/Types.h>
 #include <AK/Variant.h>
@@ -17,16 +18,19 @@
 
 namespace Audio {
 
-class FlacInputStream : public Variant<Core::InputFileStream, InputMemoryStream> {
+class FlacInputStream : public Variant<Buffered<Core::InputFileStream>, InputMemoryStream> {
 
 public:
-    using Variant<Core::InputFileStream, InputMemoryStream>::Variant;
+    using Variant<Buffered<Core::InputFileStream>, InputMemoryStream>::Variant;
 
     bool seek(size_t pos)
     {
         return this->visit(
-            [&](Core::InputFileStream& stream) {
-                return stream.seek(pos);
+            [&](Buffered<Core::InputFileStream>& buffered) {
+                // Discard the buffer, then seek normally.
+                if (!buffered.discard_or_error(buffered.buffered()))
+                    return false;
+                return buffered.underlying_stream().seek(pos);
             },
             [&](InputMemoryStream& stream) {
                 if (pos >= stream.bytes().size()) {
