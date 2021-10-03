@@ -140,56 +140,101 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(GlobalOb
 
 // 23.2.5.1.2 InitializeTypedArrayFromTypedArray ( O, srcArray ), https://tc39.es/ecma262/#sec-initializetypedarrayfromtypedarray
 template<typename T>
-static void initialize_typed_array_from_typed_array(GlobalObject& global_object, TypedArray<T>& dest_array, TypedArrayBase& src_array)
+static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(GlobalObject& global_object, TypedArray<T>& dest_array, TypedArrayBase& src_array)
 {
     auto& vm = global_object.vm();
-    if (vm.exception())
-        return;
 
+    // 1. Let srcData be srcArray.[[ViewedArrayBuffer]].
     auto* src_data = src_array.viewed_array_buffer();
     VERIFY(src_data);
-    if (src_data->is_detached()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
-        return;
-    }
 
+    // 2. If IsDetachedBuffer(srcData) is true, throw a TypeError exception.
+    if (src_data->is_detached())
+        return vm.template throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+
+    // 3. Let constructorName be the String value of O.[[TypedArrayName]].
+    // 4. Let elementType be the Element Type value in Table 72 for constructorName.
+
+    // 5. Let elementLength be srcArray.[[ArrayLength]].
     auto element_length = src_array.array_length();
+
+    // 6. Let srcName be the String value of srcArray.[[TypedArrayName]].
+    // 7. Let srcType be the Element Type value in Table 72 for srcName.
+
+    // 8. Let srcElementSize be the Element Size value specified in Table 72 for srcName.
     auto src_element_size = src_array.element_size();
+
+    // 9. Let srcByteOffset be srcArray.[[ByteOffset]].
     auto src_byte_offset = src_array.byte_offset();
+
+    // 10. Let elementSize be the Element Size value specified in Table 72 for constructorName.
     auto element_size = dest_array.element_size();
+
+    // 11. Let byteLength be elementSize × elementLength.
     Checked<size_t> byte_length = element_size;
     byte_length *= element_length;
-    if (byte_length.has_overflow()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
-        return;
-    }
+    if (byte_length.has_overflow())
+        return vm.template throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
 
-    // FIXME: Determine and use bufferConstructor
+    // FIXME:
+    // 12. If IsSharedArrayBuffer(srcData) is false, then
+    //     a. Let bufferConstructor be ? SpeciesConstructor(srcData, %ArrayBuffer%).
+    // 13. Else,
+    //    a. Let bufferConstructor be %ArrayBuffer%.
+    // 14. If elementType is the same as srcType, then
+    //    a. Let data be ? CloneArrayBuffer(srcData, srcByteOffset, byteLength, bufferConstructor).
+    // 15. Else,
+
+    // a. Let data be ? AllocateArrayBuffer(bufferConstructor, byteLength).
     auto data = ArrayBuffer::create(global_object, byte_length.value());
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
-    if (src_data->is_detached()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
-        return;
-    }
+    // b. If IsDetachedBuffer(srcData) is true, throw a TypeError exception.
+    if (src_data->is_detached())
+        return vm.template throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
-    if (src_array.content_type() != dest_array.content_type()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::TypedArrayContentTypeMismatch, dest_array.class_name(), src_array.class_name());
-        return;
-    }
+    // c. If srcArray.[[ContentType]] ≠ O.[[ContentType]], throw a TypeError exception.
+    if (src_array.content_type() != dest_array.content_type())
+        return vm.template throw_completion<TypeError>(global_object, ErrorType::TypedArrayContentTypeMismatch, dest_array.class_name(), src_array.class_name());
 
+    // d. Let srcByteIndex be srcByteOffset.
     u64 src_byte_index = src_byte_offset;
+
+    // e. Let targetByteIndex be 0.
     u64 target_byte_index = 0;
+
+    // f. Let count be elementLength.
+    // g. Repeat, while count > 0,
     for (u32 i = 0; i < element_length; ++i) {
+        // i. Let value be GetValueFromBuffer(srcData, srcByteIndex, srcType, true, Unordered).
         auto value = src_array.get_value_from_buffer(src_byte_index, ArrayBuffer::Order::Unordered);
+
+        // ii. Perform SetValueInBuffer(data, targetByteIndex, elementType, value, true, Unordered).
         data->template set_value<T>(target_byte_index, value, true, ArrayBuffer::Order::Unordered);
+
+        // iii. Set srcByteIndex to srcByteIndex + srcElementSize.
         src_byte_index += src_element_size;
+
+        // iv. Set targetByteIndex to targetByteIndex + elementSize.
         target_byte_index += element_size;
+
+        // v. Set count to count - 1.
     }
 
+    // 16. Set O.[[ViewedArrayBuffer]] to data.
     dest_array.set_viewed_array_buffer(data);
+
+    // 17. Set O.[[ByteLength]] to byteLength.
     dest_array.set_byte_length(byte_length.value());
+
+    // 18. Set O.[[ByteOffset]] to 0.
     dest_array.set_byte_offset(0);
+
+    // 19. Set O.[[ArrayLength]] to elementLength.
     dest_array.set_array_length(element_length);
+
+    return {};
 }
 
 // 23.2.5.1.5 InitializeTypedArrayFromArrayLike, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraylike
@@ -387,9 +432,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
                 return {};                                                                                                             \
             if (first_argument.as_object().is_typed_array()) {                                                                         \
                 auto& arg_typed_array = static_cast<TypedArrayBase&>(first_argument.as_object());                                      \
-                initialize_typed_array_from_typed_array(global_object(), *typed_array, arg_typed_array);                               \
-                if (vm.exception())                                                                                                    \
-                    return {};                                                                                                         \
+                TRY_OR_DISCARD(initialize_typed_array_from_typed_array(global_object(), *typed_array, arg_typed_array));               \
             } else if (is<ArrayBuffer>(first_argument.as_object())) {                                                                  \
                 auto& array_buffer = static_cast<ArrayBuffer&>(first_argument.as_object());                                            \
                 /* NOTE: I added the padding below to not reindent 150+ lines for a single line change. If you edit this, and the   */ \
