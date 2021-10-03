@@ -47,11 +47,7 @@ struct RequestAnimationFrameDriver {
     RequestAnimationFrameDriver()
     {
         m_timer = Core::Timer::create_single_shot(16, [this] {
-            auto taken_callbacks = move(m_callbacks);
-            for (auto& it : taken_callbacks) {
-                if (!it.value->is_cancelled())
-                    it.value->invoke();
-            }
+            HTML::main_thread_event_loop().schedule();
         });
     }
 
@@ -75,6 +71,15 @@ struct RequestAnimationFrameDriver {
         return true;
     }
 
+    void run()
+    {
+        auto taken_callbacks = move(m_callbacks);
+        for (auto& it : taken_callbacks) {
+            if (!it.value->is_cancelled())
+                it.value->invoke();
+        }
+    }
+
 private:
     HashMap<i32, NonnullRefPtr<RequestAnimationFrameCallback>> m_callbacks;
     IDAllocator m_id_allocator;
@@ -85,6 +90,13 @@ static RequestAnimationFrameDriver& request_animation_frame_driver()
 {
     static RequestAnimationFrameDriver driver;
     return driver;
+}
+
+// https://html.spec.whatwg.org/#run-the-animation-frame-callbacks
+void run_animation_frame_callbacks(DOM::Document&, double)
+{
+    // FIXME: Bring this closer to the spec.
+    request_animation_frame_driver().run();
 }
 
 NonnullRefPtr<Window> Window::create_with_document(Document& document)
