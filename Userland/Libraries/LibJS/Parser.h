@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
