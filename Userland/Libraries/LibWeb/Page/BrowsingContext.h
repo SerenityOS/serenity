@@ -102,6 +102,8 @@ public:
     DOM::Document* container_document();
     DOM::Document const* container_document() const;
 
+    bool has_a_rendering_opportunity() const;
+
 private:
     explicit BrowsingContext(Page&, HTML::BrowsingContextContainer*);
 
