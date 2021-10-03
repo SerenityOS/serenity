@@ -39,8 +39,10 @@ ThrowCompletionOr<Value> ArgumentsObject::internal_get(PropertyName const& prope
 {
     // 1. Let map be args.[[ParameterMap]].
     auto& map = *m_parameter_map;
+
     // 2. Let isMapped be ! HasOwnProperty(map, P).
-    bool is_mapped = m_parameter_map->has_own_property(property_name);
+    bool is_mapped = MUST(m_parameter_map->has_own_property(property_name));
+
     // 3. If isMapped is false, then
     if (!is_mapped) {
         // a. Return ? OrdinaryGet(args, P, Receiver).
@@ -65,7 +67,7 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_set(PropertyName const& proper
     } else {
         // a. Let map be args.[[ParameterMap]].
         // b. Let isMapped be ! HasOwnProperty(map, P).
-        is_mapped = parameter_map().has_own_property(property_name);
+        is_mapped = MUST(parameter_map().has_own_property(property_name));
     }
 
     // 3. If isMapped is true, then
@@ -88,7 +90,7 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_delete(PropertyName const& pro
     auto& map = parameter_map();
 
     // 2. Let isMapped be ! HasOwnProperty(map, P).
-    bool is_mapped = map.has_own_property(property_name);
+    bool is_mapped = MUST(map.has_own_property(property_name));
 
     // 3. Let result be ? OrdinaryDelete(args, P).
     bool result = TRY(Object::internal_delete(property_name));
@@ -112,14 +114,17 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ArgumentsObject::internal_get_ow
     // 2. If desc is undefined, return desc.
     if (!desc.has_value())
         return desc;
+
     // 3. Let map be args.[[ParameterMap]].
     // 4. Let isMapped be ! HasOwnProperty(map, P).
-    bool is_mapped = m_parameter_map->has_own_property(property_name);
+    bool is_mapped = MUST(m_parameter_map->has_own_property(property_name));
+
     // 5. If isMapped is true, then
     if (is_mapped) {
         // a. Set desc.[[Value]] to Get(map, P).
         desc->value = TRY(m_parameter_map->get(property_name));
     }
+
     // 6. Return desc.
     return desc;
 }
@@ -131,7 +136,7 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyNa
     auto& map = parameter_map();
 
     // 2. Let isMapped be HasOwnProperty(map, P).
-    bool is_mapped = map.has_own_property(property_name);
+    bool is_mapped = MUST(map.has_own_property(property_name));
 
     // 3. Let newArgDesc be Desc.
     auto new_arg_desc = descriptor;

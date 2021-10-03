@@ -254,7 +254,7 @@ ThrowCompletionOr<bool> Object::has_property(PropertyName const& property_name) 
 }
 
 // 7.3.12 HasOwnProperty ( O, P ), https://tc39.es/ecma262/#sec-hasownproperty
-bool Object::has_own_property(PropertyName const& property_name) const
+ThrowCompletionOr<bool> Object::has_own_property(PropertyName const& property_name) const
 {
     // 1. Assert: Type(O) is Object.
 
@@ -262,7 +262,7 @@ bool Object::has_own_property(PropertyName const& property_name) const
     VERIFY(property_name.is_valid());
 
     // 3. Let desc be ? O.[[GetOwnProperty]](P).
-    auto descriptor = TRY_OR_DISCARD(internal_get_own_property(property_name));
+    auto descriptor = TRY(internal_get_own_property(property_name));
 
     // 4. If desc is undefined, return false.
     if (!descriptor.has_value())

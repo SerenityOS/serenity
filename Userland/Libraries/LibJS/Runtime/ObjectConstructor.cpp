@@ -442,7 +442,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
         return {};
 
     // 3. Return ? HasOwnProperty(obj, key).
-    return Value(object->has_own_property(key));
+    return Value(TRY_OR_DISCARD(object->has_own_property(key)));
 }
 
 // 20.1.2.1 Object.assign ( target, ...sources ), https://tc39.es/ecma262/#sec-object.assign

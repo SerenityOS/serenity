@@ -77,7 +77,7 @@ JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_has_property(JS::Prope
 
 JS::ThrowCompletionOr<JS::Value> ConsoleGlobalObject::internal_get(JS::PropertyName const& property_name, JS::Value receiver) const
 {
-    if (m_window_object->has_own_property(property_name))
+    if (TRY(m_window_object->has_own_property(property_name)))
         return m_window_object->internal_get(property_name, (receiver == this) ? m_window_object : receiver);
 
     return Base::internal_get(property_name, receiver);

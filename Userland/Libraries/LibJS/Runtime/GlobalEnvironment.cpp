@@ -98,7 +98,7 @@ bool GlobalEnvironment::delete_binding(GlobalObject& global_object, FlyString co
     if (m_declarative_record->has_binding(name))
         return m_declarative_record->delete_binding(global_object, name);
 
-    bool existing_prop = m_object_record->binding_object().has_own_property(name);
+    bool existing_prop = TRY_OR_DISCARD(m_object_record->binding_object().has_own_property(name));
     if (existing_prop) {
         bool status = m_object_record->delete_binding(global_object, name);
         if (status) {
@@ -136,11 +136,8 @@ bool GlobalEnvironment::has_restricted_global_property(FlyString const& name) co
 // 9.1.1.4.15 CanDeclareGlobalVar ( N ), https://tc39.es/ecma262/#sec-candeclareglobalvar
 bool GlobalEnvironment::can_declare_global_var(FlyString const& name) const
 {
-    auto& vm = this->vm();
     auto& global_object = m_object_record->binding_object();
-    bool has_property = global_object.has_own_property(name);
-    if (vm.exception())
-        return {};
+    bool has_property = TRY_OR_DISCARD(global_object.has_own_property(name));
     if (has_property)
         return true;
     return TRY_OR_DISCARD(global_object.is_extensible());
@@ -165,9 +162,10 @@ void GlobalEnvironment::create_global_var_binding(FlyString const& name, bool ca
 {
     auto& vm = this->vm();
     auto& global_object = m_object_record->binding_object();
-    bool has_property = global_object.has_own_property(name);
-    if (vm.exception())
+    auto has_property_or_error = global_object.has_own_property(name);
+    if (has_property_or_error.is_error())
         return;
+    auto has_property = has_property_or_error.release_value();
     auto extensible_or_error = global_object.is_extensible();
     if (extensible_or_error.is_error())
         return;
