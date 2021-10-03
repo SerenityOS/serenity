@@ -76,13 +76,13 @@ BINUTILS_VERSION="2.37"
 BINUTILS_MD5SUM="1e55743d73c100b7a0d67ffb32398cdb"
 BINUTILS_NAME="binutils-$BINUTILS_VERSION"
 BINUTILS_PKG="${BINUTILS_NAME}.tar.gz"
-BINUTILS_BASE_URL="http://ftp.gnu.org/gnu/binutils"
+BINUTILS_BASE_URL="https://ftp.gnu.org/gnu/binutils"
 
 GDB_VERSION="10.2"
 GDB_MD5SUM="7aeb896762924ae9a2ec59525088bada"
 GDB_NAME="gdb-$GDB_VERSION"
 GDB_PKG="${GDB_NAME}.tar.gz"
-GDB_BASE_URL="http://ftp.gnu.org/gnu/gdb"
+GDB_BASE_URL="https://ftp.gnu.org/gnu/gdb"
 
 # Note: If you bump the gcc version, you also have to update the matching
 #       GCC_VERSION variable in the project's root CMakeLists.txt
@@ -90,7 +90,7 @@ GCC_VERSION="11.2.0"
 GCC_MD5SUM="dc6886bd44bb49e2d3d662aed9729278"
 GCC_NAME="gcc-$GCC_VERSION"
 GCC_PKG="${GCC_NAME}.tar.gz"
-GCC_BASE_URL="http://ftp.gnu.org/gnu/gcc"
+GCC_BASE_URL="https://ftp.gnu.org/gnu/gcc"
 
 buildstep() {
     NAME=$1
