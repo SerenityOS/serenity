@@ -88,9 +88,9 @@ public:
     public:
         bool is_image;
         NonnullOwnPtr<Node> text;
-        NonnullOwnPtr<Node> href;
+        String href;
 
-        LinkNode(bool is_image, NonnullOwnPtr<Node> text, NonnullOwnPtr<Node> href)
+        LinkNode(bool is_image, NonnullOwnPtr<Node> text, String href)
             : is_image(is_image)
             , text(move(text))
             , href(move(href))

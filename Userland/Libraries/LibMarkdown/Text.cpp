@@ -99,13 +99,13 @@ void Text::LinkNode::render_to_html(StringBuilder& builder) const
 {
     if (is_image) {
         builder.append("<img src=\"");
-        href->render_to_html(builder);
+        builder.append(escape_html_entities(href));
         builder.append("\" alt=\"");
         text->render_to_html(builder);
         builder.append("\" >");
     } else {
         builder.append("<a href=\"");
-        href->render_to_html(builder);
+        builder.append(escape_html_entities(href));
         builder.append("\">");
         text->render_to_html(builder);
         builder.append("</a>");
@@ -114,21 +114,17 @@ void Text::LinkNode::render_to_html(StringBuilder& builder) const
 
 void Text::LinkNode::render_for_terminal(StringBuilder& builder) const
 {
-    StringBuilder href_builder;
-    href->render_for_terminal(href_builder);
-    String href_string = href_builder.build();
-
-    bool is_linked = href_string.contains("://");
+    bool is_linked = href.contains("://");
     if (is_linked) {
         builder.append("\e]8;;");
-        builder.append(href_string);
+        builder.append(href);
         builder.append("\e\\");
     }
 
     text->render_for_terminal(builder);
 
     if (is_linked) {
-        builder.appendff(" <{}>", href_string);
+        builder.appendff(" <{}>", href);
         builder.append("\033]8;;\033\\");
     }
 }
@@ -471,14 +467,14 @@ NonnullOwnPtr<Text::Node> Text::parse_link(Vector<Token>::ConstIterator& tokens)
     auto separator = *tokens;
     VERIFY(separator == "](");
 
-    auto address = make<MultiNode>();
+    StringBuilder address;
     for (auto iterator = tokens + 1; !iterator.is_end(); ++iterator) {
         if (*iterator == ")") {
             tokens = iterator;
-            return make<LinkNode>(is_image, move(link_text), move(address));
+            return make<LinkNode>(is_image, move(link_text), address.build());
         }
 
-        address->children.append(make<TextNode>(iterator->data));
+        address.append(iterator->data);
     }
 
     link_text->children.prepend(make<TextNode>(opening.data));
