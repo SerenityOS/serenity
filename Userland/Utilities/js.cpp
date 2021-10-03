@@ -1174,6 +1174,8 @@ int main(int argc, char** argv)
 #endif
         interpreter->vm().set_underscore_is_last_value(true);
 
+        auto& global_environment = interpreter->realm().global_environment();
+
         s_editor = Line::Editor::construct();
         s_editor->load_history(s_history_path);
 
@@ -1246,7 +1248,7 @@ int main(int argc, char** argv)
             editor.set_prompt(prompt_for_level(open_indents));
         };
 
-        auto complete = [&interpreter](Line::Editor const& editor) -> Vector<Line::CompletionSuggestion> {
+        auto complete = [&interpreter, &global_environment](Line::Editor const& editor) -> Vector<Line::CompletionSuggestion> {
             auto line = editor.line(editor.cursor());
 
             JS::Lexer lexer { line };
@@ -1337,18 +1339,13 @@ int main(int argc, char** argv)
             switch (mode) {
             case CompleteProperty: {
                 Optional<JS::Value> maybe_value;
-                auto maybe_variable = vm->resolve_binding(variable_name);
+                auto maybe_variable = vm->resolve_binding(variable_name, &global_environment);
                 if (vm->exception())
                     break;
-                if (!maybe_variable.is_unresolvable()) {
-                    maybe_value = maybe_variable.get_value(interpreter->global_object());
-                    if (vm->exception())
-                        break;
-                } else {
-                    maybe_value = interpreter->global_object().get(FlyString(variable_name));
-                    if (maybe_value->is_empty())
-                        break;
-                }
+                maybe_value = maybe_variable.get_value(interpreter->global_object());
+                if (vm->exception())
+                    break;
+                VERIFY(!maybe_value->is_empty());
 
                 auto variable = *maybe_value;
                 if (!variable.is_object())
