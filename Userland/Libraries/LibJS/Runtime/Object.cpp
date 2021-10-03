@@ -242,7 +242,7 @@ ThrowCompletionOr<bool> Object::delete_property_or_throw(PropertyName const& pro
 }
 
 // 7.3.11 HasProperty ( O, P ), https://tc39.es/ecma262/#sec-hasproperty
-bool Object::has_property(PropertyName const& property_name) const
+ThrowCompletionOr<bool> Object::has_property(PropertyName const& property_name) const
 {
     // 1. Assert: Type(O) is Object.
 
@@ -250,7 +250,7 @@ bool Object::has_property(PropertyName const& property_name) const
     VERIFY(property_name.is_valid());
 
     // 3. Return ? O.[[HasProperty]](P).
-    return TRY_OR_DISCARD(internal_has_property(property_name));
+    return internal_has_property(property_name);
 }
 
 // 7.3.12 HasOwnProperty ( O, P ), https://tc39.es/ecma262/#sec-hasownproperty

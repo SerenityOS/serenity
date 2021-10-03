@@ -225,9 +225,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_
         auto property_key = PropertyName { k };
 
         // b. Let kPresent be ? HasProperty(O, Pk).
-        auto key_present = object->has_property(property_key);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto key_present = TRY(object->has_property(property_key));
 
         // c. If kPresent is true, then
         if (key_present) {

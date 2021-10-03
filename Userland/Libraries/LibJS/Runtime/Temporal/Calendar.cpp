@@ -325,23 +325,15 @@ ThrowCompletionOr<Object*> to_temporal_calendar(GlobalObject& global_object, Val
             return &static_cast<ZonedDateTime&>(temporal_calendar_like_object).calendar();
 
         // b. If ? HasProperty(temporalCalendarLike, "calendar") is false, return temporalCalendarLike.
-        auto has_property = temporal_calendar_like_object.has_property(vm.names.calendar);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
-        if (!has_property)
+        if (!TRY(temporal_calendar_like_object.has_property(vm.names.calendar)))
             return &temporal_calendar_like_object;
 
         // c. Set temporalCalendarLike to ? Get(temporalCalendarLike, "calendar").
         temporal_calendar_like = TRY(temporal_calendar_like_object.get(vm.names.calendar));
 
         // d. If Type(temporalCalendarLike) is Object and ? HasProperty(temporalCalendarLike, "calendar") is false, return temporalCalendarLike.
-        if (temporal_calendar_like.is_object()) {
-            has_property = temporal_calendar_like.as_object().has_property(vm.names.calendar);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
-            if (!has_property)
-                return &temporal_calendar_like.as_object();
-        }
+        if (temporal_calendar_like.is_object() && !TRY(temporal_calendar_like.as_object().has_property(vm.names.calendar)))
+            return &temporal_calendar_like.as_object();
     }
 
     // 2. Let identifier be ? ToString(temporalCalendarLike).

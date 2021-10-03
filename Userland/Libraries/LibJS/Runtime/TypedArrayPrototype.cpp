@@ -446,7 +446,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
 
     auto search_element = vm.argument(0);
     for (; k < length; ++k) {
-        auto k_present = typed_array->has_property(k);
+        auto k_present = MUST(typed_array->has_property(k));
         if (k_present) {
             auto element_k = MUST(typed_array->get(k));
 
@@ -494,7 +494,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
 
     auto search_element = vm.argument(0);
     for (; k >= 0; --k) {
-        auto k_present = typed_array->has_property(k);
+        auto k_present = MUST(typed_array->has_property(k));
         if (k_present) {
             auto element_k = MUST(typed_array->get(k));
 
@@ -1062,9 +1062,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
 
     MarkedValueList items(vm.heap());
     for (u32 k = 0; k < length; ++k) {
-        auto k_present = typed_array->has_property(k);
-        if (vm.exception())
-            return {};
+        auto k_present = TRY_OR_DISCARD(typed_array->has_property(k));
 
         if (k_present) {
             auto k_value = TRY_OR_DISCARD(typed_array->get(k));

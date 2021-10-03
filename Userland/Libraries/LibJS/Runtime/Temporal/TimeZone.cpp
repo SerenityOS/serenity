@@ -326,23 +326,15 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(GlobalObject& global_object, Va
         }
 
         // b. If ? HasProperty(temporalTimeZoneLike, "timeZone") is false, return temporalTimeZoneLike.
-        auto has_property = temporal_time_zone_like.as_object().has_property(vm.names.timeZone);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
-        if (!has_property)
+        if (!TRY(temporal_time_zone_like.as_object().has_property(vm.names.timeZone)))
             return &temporal_time_zone_like.as_object();
 
         // c. Set temporalTimeZoneLike to ? Get(temporalTimeZoneLike, "timeZone").
         temporal_time_zone_like = TRY(temporal_time_zone_like.as_object().get(vm.names.timeZone));
 
         // d. If Type(temporalTimeZoneLike) is Object and ? HasProperty(temporalTimeZoneLike, "timeZone") is false, return temporalTimeZoneLike.
-        if (temporal_time_zone_like.is_object()) {
-            has_property = temporal_time_zone_like.as_object().has_property(vm.names.timeZone);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
-            if (!has_property)
-                return &temporal_time_zone_like.as_object();
-        }
+        if (temporal_time_zone_like.is_object() && !TRY(temporal_time_zone_like.as_object().has_property(vm.names.timeZone)))
+            return &temporal_time_zone_like.as_object();
     }
 
     // 2. Let identifier be ? ToString(temporalTimeZoneLike).

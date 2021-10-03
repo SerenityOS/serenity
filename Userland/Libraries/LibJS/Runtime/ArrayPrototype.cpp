@@ -190,9 +190,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::filter)
         auto property_name = PropertyName { k };
 
         // b. Let kPresent be ? HasProperty(O, Pk).
-        auto k_present = object->has_property(property_name);
-        if (vm.exception())
-            return {};
+        auto k_present = TRY_OR_DISCARD(object->has_property(property_name));
 
         // c. If kPresent is true, then
         if (k_present) {
@@ -246,9 +244,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::for_each)
         auto property_name = PropertyName { k };
 
         // b. Let kPresent be ? HasProperty(O, Pk).
-        auto k_present = object->has_property(property_name);
-        if (vm.exception())
-            return {};
+        auto k_present = TRY_OR_DISCARD(object->has_property(property_name));
 
         // c. If kPresent is true, then
         if (k_present) {
@@ -300,9 +296,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
         auto property_name = PropertyName { k };
 
         // b. Let kPresent be ? HasProperty(O, Pk).
-        auto k_present = object->has_property(property_name);
-        if (vm.exception())
-            return {};
+        auto k_present = TRY_OR_DISCARD(object->has_property(property_name));
 
         // c. If kPresent is true, then
         if (k_present) {
@@ -362,9 +356,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
             auto from = k - 1;
             auto to = k + arg_count - 1;
 
-            bool from_present = this_object->has_property(from);
-            if (vm.exception())
-                return {};
+            bool from_present = TRY_OR_DISCARD(this_object->has_property(from));
             if (from_present) {
                 auto from_value = TRY_OR_DISCARD(this_object->get(from));
                 TRY_OR_DISCARD(this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes));
@@ -414,9 +406,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
     for (size_t k = 1; k < length; ++k) {
         size_t from = k;
         size_t to = k - 1;
-        bool from_present = this_object->has_property(from);
-        if (vm.exception())
-            return {};
+        bool from_present = TRY_OR_DISCARD(this_object->has_property(from));
         if (from_present) {
             auto from_value = TRY_OR_DISCARD(this_object->get(from));
             TRY_OR_DISCARD(this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes));
@@ -562,9 +552,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
                 return;
             }
             while (k < length) {
-                auto k_exists = obj.has_property(k);
-                if (vm.exception())
+                auto k_exists_or_error = obj.has_property(k);
+                if (k_exists_or_error.is_error())
                     return;
+                auto k_exists = k_exists_or_error.release_value();
                 if (k_exists) {
                     auto k_value_or_error = obj.get(k);
                     if (k_value_or_error.is_error())
@@ -655,10 +646,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
     size_t k = actual_start;
 
     while (k < final) {
-        bool present = this_object->has_property(k);
-        if (vm.exception())
-            return {};
-
+        bool present = TRY_OR_DISCARD(this_object->has_property(k));
         if (present) {
             auto value = TRY_OR_DISCARD(this_object->get(k));
             TRY_OR_DISCARD(new_array->create_data_property_or_throw(index, value));
@@ -726,9 +714,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::index_of)
         auto property_name = PropertyName { k };
 
         // a. Let kPresent be ? HasProperty(O, ! ToString(𝔽(k))).
-        auto k_present = object->has_property(property_name);
-        if (vm.exception())
-            return {};
+        auto k_present = TRY_OR_DISCARD(object->has_property(property_name));
 
         // b. If kPresent is true, then
         if (k_present) {
@@ -798,9 +784,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
             auto property_name = PropertyName { k };
 
             // ii. Set kPresent to ? HasProperty(O, Pk).
-            k_present = object->has_property(property_name);
-            if (vm.exception())
-                return {};
+            k_present = TRY_OR_DISCARD(object->has_property(property_name));
 
             // iii. If kPresent is true, then
             if (k_present) {
@@ -824,7 +808,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
         auto property_name = PropertyName { k };
 
         // b. Let kPresent be ? HasProperty(O, Pk).
-        auto k_present = object->has_property(property_name);
+        auto k_present = TRY_OR_DISCARD(object->has_property(property_name));
 
         // c. If kPresent is true, then
         if (k_present) {
@@ -890,9 +874,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
             auto property_name = PropertyName { k };
 
             // ii. Set kPresent to ? HasProperty(O, Pk).
-            k_present = object->has_property(property_name);
-            if (vm.exception())
-                return {};
+            k_present = TRY_OR_DISCARD(object->has_property(property_name));
 
             // iii. If kPresent is true, then
             if (k_present) {
@@ -916,9 +898,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
         auto property_name = PropertyName { k };
 
         // b. Let kPresent be ? HasProperty(O, Pk).
-        auto k_present = object->has_property(property_name);
-        if (vm.exception())
-            return {};
+        auto k_present = TRY_OR_DISCARD(object->has_property(property_name));
 
         // c. If kPresent is true, then
         if (k_present) {
@@ -948,16 +928,12 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
     for (size_t lower = 0; lower < middle; ++lower) {
         auto upper = length - lower - 1;
 
-        auto lower_exists = this_object->has_property(lower);
-        if (vm.exception())
-            return {};
+        auto lower_exists = TRY_OR_DISCARD(this_object->has_property(lower));
         Value lower_value;
         if (lower_exists)
             lower_value = TRY_OR_DISCARD(this_object->get(lower));
 
-        auto upper_exists = this_object->has_property(upper);
-        if (vm.exception())
-            return {};
+        auto upper_exists = TRY_OR_DISCARD(this_object->has_property(upper));
         Value upper_value;
         if (upper_exists)
             upper_value = TRY_OR_DISCARD(this_object->get(upper));
@@ -1103,9 +1079,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
 
     MarkedValueList items(vm.heap());
     for (size_t k = 0; k < length; ++k) {
-        auto k_present = object->has_property(k);
-        if (vm.exception())
-            return {};
+        auto k_present = TRY_OR_DISCARD(object->has_property(k));
 
         if (k_present) {
             auto k_value = TRY_OR_DISCARD(object->get(k));
@@ -1185,9 +1159,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::last_index_of)
         auto property_name = PropertyName { k };
 
         // a. Let kPresent be ? HasProperty(O, ! ToString(𝔽(k))).
-        auto k_present = object->has_property(property_name);
-        if (vm.exception())
-            return {};
+        auto k_present = TRY_OR_DISCARD(object->has_property(property_name));
 
         // b. If kPresent is true, then
         if (k_present) {
@@ -1442,9 +1414,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::some)
         auto property_name = PropertyName { k };
 
         // b. Let kPresent be ? HasProperty(O, Pk).
-        auto k_present = object->has_property(property_name);
-        if (vm.exception())
-            return {};
+        auto k_present = TRY_OR_DISCARD(object->has_property(property_name));
 
         // c. If kPresent is true, then
         if (k_present) {
@@ -1493,9 +1463,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::every)
         auto property_name = PropertyName { k };
 
         // b. Let kPresent be ? HasProperty(O, Pk).
-        auto k_present = object->has_property(property_name);
-        if (vm.exception())
-            return {};
+        auto k_present = TRY_OR_DISCARD(object->has_property(property_name));
 
         // c. If kPresent is true, then
         if (k_present) {
@@ -1567,9 +1535,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
 
     for (u64 i = 0; i < actual_delete_count; ++i) {
         auto from = actual_start + i;
-        bool from_present = this_object->has_property(from);
-        if (vm.exception())
-            return {};
+        bool from_present = TRY_OR_DISCARD(this_object->has_property(from));
 
         if (from_present) {
             auto from_value = TRY_OR_DISCARD(this_object->get(from));
@@ -1585,9 +1551,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
             auto to = i + insert_count;
             u64 from = i + actual_delete_count;
 
-            auto from_present = this_object->has_property(from);
-            if (vm.exception())
-                return {};
+            auto from_present = TRY_OR_DISCARD(this_object->has_property(from));
 
             if (from_present) {
                 auto from_value = TRY_OR_DISCARD(this_object->get(from));
@@ -1602,9 +1566,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
     } else if (insert_count > actual_delete_count) {
         for (u64 i = initial_length - actual_delete_count; i > actual_start; --i) {
             u64 from_index = i + actual_delete_count - 1;
-            auto from_present = this_object->has_property(from_index);
-            if (vm.exception())
-                return {};
+            auto from_present = TRY_OR_DISCARD(this_object->has_property(from_index));
 
             auto to = i + insert_count - 1;
 
@@ -1645,7 +1607,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::fill)
             relative_start = 0;
     }
 
-    //If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
+    // If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
     if (vm.argument_count() >= 3 && !vm.argument(2).is_undefined()) {
         relative_end = vm.argument(2).to_integer_or_infinity(global_object);
         if (vm.exception())
@@ -1709,9 +1671,7 @@ static size_t flatten_into_array(GlobalObject& global_object, Object& new_array,
     auto& vm = global_object.vm();
 
     for (size_t j = 0; j < array_length; ++j) {
-        auto value_exists = array.has_property(j);
-        if (vm.exception())
-            return {};
+        auto value_exists = TRY_OR_DISCARD(array.has_property(j));
 
         if (!value_exists)
             continue;
@@ -1863,9 +1823,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::copy_within)
     size_t count_i = count;
 
     while (count_i > 0) {
-        auto from_present = this_object->has_property(from_i);
-        if (vm.exception())
-            return {};
+        auto from_present = TRY_OR_DISCARD(this_object->has_property(from_i));
 
         if (from_present) {
             auto from_value = TRY_OR_DISCARD(this_object->get(from_i));

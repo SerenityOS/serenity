@@ -84,37 +84,27 @@ PropertyDescriptor to_property_descriptor(GlobalObject& global_object, Value arg
     }
     auto& object = argument.as_object();
     PropertyDescriptor descriptor;
-    auto has_enumerable = object.has_property(vm.names.enumerable);
-    if (vm.exception())
-        return {};
+    auto has_enumerable = TRY_OR_DISCARD(object.has_property(vm.names.enumerable));
     if (has_enumerable) {
         auto enumerable = TRY_OR_DISCARD(object.get(vm.names.enumerable));
         descriptor.enumerable = enumerable.to_boolean();
     }
-    auto has_configurable = object.has_property(vm.names.configurable);
-    if (vm.exception())
-        return {};
+    auto has_configurable = TRY_OR_DISCARD(object.has_property(vm.names.configurable));
     if (has_configurable) {
         auto configurable = TRY_OR_DISCARD(object.get(vm.names.configurable));
         descriptor.configurable = configurable.to_boolean();
     }
-    auto has_value = object.has_property(vm.names.value);
-    if (vm.exception())
-        return {};
+    auto has_value = TRY_OR_DISCARD(object.has_property(vm.names.value));
     if (has_value) {
         auto value = TRY_OR_DISCARD(object.get(vm.names.value));
         descriptor.value = value;
     }
-    auto has_writable = object.has_property(vm.names.writable);
-    if (vm.exception())
-        return {};
+    auto has_writable = TRY_OR_DISCARD(object.has_property(vm.names.writable));
     if (has_writable) {
         auto writable = TRY_OR_DISCARD(object.get(vm.names.writable));
         descriptor.writable = writable.to_boolean();
     }
-    auto has_get = object.has_property(vm.names.get);
-    if (vm.exception())
-        return {};
+    auto has_get = TRY_OR_DISCARD(object.has_property(vm.names.get));
     if (has_get) {
         auto getter = TRY_OR_DISCARD(object.get(vm.names.get));
         if (!getter.is_function() && !getter.is_undefined()) {
@@ -123,9 +113,7 @@ PropertyDescriptor to_property_descriptor(GlobalObject& global_object, Value arg
         }
         descriptor.get = getter.is_function() ? &getter.as_function() : nullptr;
     }
-    auto has_set = object.has_property(vm.names.set);
-    if (vm.exception())
-        return {};
+    auto has_set = TRY_OR_DISCARD(object.has_property(vm.names.set));
     if (has_set) {
         auto setter = TRY_OR_DISCARD(object.get(vm.names.set));
         if (!setter.is_function() && !setter.is_undefined()) {

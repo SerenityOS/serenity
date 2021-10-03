@@ -28,9 +28,7 @@ void ObjectEnvironment::visit_edges(Cell::Visitor& visitor)
 bool ObjectEnvironment::has_binding(FlyString const& name) const
 {
     auto& vm = this->vm();
-    bool found_binding = m_binding_object.has_property(name);
-    if (vm.exception())
-        return {};
+    bool found_binding = TRY_OR_DISCARD(m_binding_object.has_property(name));
     if (!found_binding)
         return false;
     if (!m_with_environment)
@@ -69,9 +67,10 @@ void ObjectEnvironment::initialize_binding(GlobalObject& global_object, FlyStrin
 void ObjectEnvironment::set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value, bool strict)
 {
     auto& vm = this->vm();
-    bool still_exists = m_binding_object.has_property(name);
-    if (vm.exception())
+    auto still_exists_or_error = m_binding_object.has_property(name);
+    if (still_exists_or_error.is_error())
         return;
+    auto still_exists = still_exists_or_error.release_value();
     if (!still_exists && strict) {
         global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
         return;
@@ -96,14 +95,12 @@ void ObjectEnvironment::set_mutable_binding(GlobalObject& global_object, FlyStri
 Value ObjectEnvironment::get_binding_value(GlobalObject& global_object, FlyString const& name, bool strict)
 {
     auto& vm = this->vm();
-    auto value = m_binding_object.has_property(name);
-    if (vm.exception())
-        return {};
+    auto value = TRY_OR_DISCARD(m_binding_object.has_property(name));
     if (!value) {
         if (!strict)
             return js_undefined();
 
-        global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
+        vm.throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
         return {};
     }
     return TRY_OR_DISCARD(m_binding_object.get(name));

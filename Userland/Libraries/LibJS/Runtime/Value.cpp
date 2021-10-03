@@ -1283,7 +1283,7 @@ Value in(GlobalObject& global_object, Value lhs, Value rhs)
     auto lhs_property_key = lhs.to_property_key(global_object);
     if (global_object.vm().exception())
         return {};
-    return Value(rhs.as_object().has_property(lhs_property_key));
+    return Value(TRY_OR_DISCARD(rhs.as_object().has_property(lhs_property_key)));
 }
 
 // 13.10.2 InstanceofOperator ( V, target ), https://tc39.es/ecma262/#sec-instanceofoperator
