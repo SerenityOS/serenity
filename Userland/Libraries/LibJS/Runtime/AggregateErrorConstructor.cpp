@@ -48,7 +48,7 @@ Value AggregateErrorConstructor::construct(FunctionObject& new_target)
         auto message = vm.argument(1).to_string(global_object);
         if (vm.exception())
             return {};
-        aggregate_error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, message));
+        MUST(aggregate_error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, message)));
     }
 
     TRY_OR_DISCARD(aggregate_error->install_error_cause(vm.argument(2)));
