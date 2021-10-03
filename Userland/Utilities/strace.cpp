@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/ptrace.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -459,6 +460,78 @@ static void format_recvmsg(FormattedSyscallBuilder& builder, int socket, struct 
         builder.add_argument("0");
 }
 
+struct MmapFlags {
+    int value;
+};
+
+struct MemoryProtectionFlags {
+    int value;
+};
+
+namespace AK {
+template<>
+struct Formatter<MmapFlags> : StandardFormatter {
+    void format(FormatBuilder& format_builder, MmapFlags value)
+    {
+        auto& builder = format_builder.builder();
+        auto flags = value.value;
+        Vector<StringView> active_flags;
+        if (flags & MAP_SHARED)
+            active_flags.append("MAP_SHARED");
+        if (flags & MAP_PRIVATE)
+            active_flags.append("MAP_PRIVATE");
+        if (flags & MAP_FIXED)
+            active_flags.append("MAP_FIXED");
+        builder.join(" | ", active_flags);
+    }
+};
+
+template<>
+struct Formatter<MemoryProtectionFlags> : StandardFormatter {
+    void format(FormatBuilder& format_builder, MemoryProtectionFlags value)
+    {
+        auto& builder = format_builder.builder();
+        int prot = value.value;
+        Vector<StringView> active_prot;
+        if (prot == PROT_NONE)
+            active_prot.append("PROT_NONE");
+        else {
+            if (prot & PROT_READ)
+                active_prot.append("PROT_READ");
+            if (prot & PROT_WRITE)
+                active_prot.append("PROT_WRITE");
+            if (prot & PROT_EXEC)
+                active_prot.append("PROT_EXEC");
+        }
+        builder.join(" | ", active_prot);
+    }
+};
+}
+
+static void format_mmap(FormattedSyscallBuilder& builder, Syscall::SC_mmap_params* params_p)
+{
+    auto params = copy_from_process(params_p);
+    builder.add_arguments(params.addr, params.size, MemoryProtectionFlags { params.prot }, MmapFlags { params.flags }, params.fd, params.offset, params.alignment);
+    builder.add_string_argument(params.name);
+}
+
+static void format_munmap(FormattedSyscallBuilder& builder, void* addr, size_t size)
+{
+    builder.add_arguments(addr, size);
+}
+
+static void format_mprotect(FormattedSyscallBuilder& builder, void* addr, size_t size, int prot)
+{
+    builder.add_arguments(addr, size, MemoryProtectionFlags { prot });
+}
+
+static void format_set_mmap_name(FormattedSyscallBuilder& builder, Syscall::SC_set_mmap_name_params* params_p)
+{
+    auto params = copy_from_process(params_p);
+    builder.add_arguments(params.addr, params.size);
+    builder.add_string_argument(params.name);
+}
+
 static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t res)
 {
     enum ResultType {
@@ -505,6 +578,19 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
         break;
     case SC_connect:
         format_connect(builder, (int)arg1, (const struct sockaddr*)arg2, (socklen_t)arg3);
+        break;
+    case SC_mmap:
+        format_mmap(builder, (Syscall::SC_mmap_params*)arg1);
+        result_type = VoidP;
+        break;
+    case SC_munmap:
+        format_munmap(builder, (void*)arg1, (size_t)arg2);
+        break;
+    case SC_mprotect:
+        format_mprotect(builder, (void*)arg1, (size_t)arg2, (int)arg3);
+        break;
+    case SC_set_mmap_name:
+        format_set_mmap_name(builder, (Syscall::SC_set_mmap_name_params*)arg1);
         break;
     default:
         builder.add_arguments((void*)arg1, (void*)arg2, (void*)arg3);
