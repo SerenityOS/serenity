@@ -120,6 +120,7 @@ set(SOURCES
     HTML/HTMLHeadElement.cpp
     HTML/HTMLHeadingElement.cpp
     HTML/HTMLHtmlElement.cpp
+    HTML/HTMLHyperlinkElementUtils.cpp
     HTML/HTMLIFrameElement.cpp
     HTML/HTMLImageElement.cpp
     HTML/HTMLInputElement.cpp
