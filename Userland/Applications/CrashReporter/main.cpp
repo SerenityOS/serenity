@@ -41,19 +41,29 @@ struct TitleAndText {
 static NonnullRefPtr<GUI::Window> create_progress_window()
 {
     auto window = GUI::Window::construct();
+
     window->set_title("CrashReporter");
     window->set_resizable(false);
     window->resize(240, 64);
     window->center_on_screen();
+
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.set_fill_with_background_color(true);
     main_widget.set_layout<GUI::VerticalBoxLayout>();
+
     auto& label = main_widget.add<GUI::Label>("Generating crash report...");
     label.set_fixed_height(30);
+
     auto& progressbar = main_widget.add<GUI::Progressbar>();
     progressbar.set_name("progressbar");
     progressbar.set_fixed_width(150);
     progressbar.set_fixed_height(22);
+
+    window->on_close = [&]() {
+        if (progressbar.value() != progressbar.max())
+            exit(0);
+    };
+
     return window;
 }
 
