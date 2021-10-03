@@ -187,20 +187,16 @@ ThrowCompletionOr<bool> Object::create_non_enumerable_data_property_or_throw(Pro
 {
     VERIFY(!value.is_empty());
     VERIFY(property_name.is_valid());
-    auto& vm = this->vm();
 
     // 1. Let newDesc be the PropertyDescriptor { [[Value]]: V, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }.
     auto new_description = PropertyDescriptor { .value = value, .writable = true, .enumerable = false, .configurable = true };
 
     // 2. Return ? DefinePropertyOrThrow(O, P, newDesc).
-    auto result = define_property_or_throw(property_name, new_description);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return result;
+    return define_property_or_throw(property_name, new_description);
 }
 
 // 7.3.8 DefinePropertyOrThrow ( O, P, desc ), https://tc39.es/ecma262/#sec-definepropertyorthrow
-bool Object::define_property_or_throw(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
+ThrowCompletionOr<bool> Object::define_property_or_throw(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
 {
     auto& vm = this->vm();
 
@@ -210,13 +206,12 @@ bool Object::define_property_or_throw(PropertyName const& property_name, Propert
     VERIFY(property_name.is_valid());
 
     // 3. Let success be ? O.[[DefineOwnProperty]](P, desc).
-    auto success = TRY_OR_DISCARD(internal_define_own_property(property_name, property_descriptor));
+    auto success = TRY(internal_define_own_property(property_name, property_descriptor));
 
     // 4. If success is false, throw a TypeError exception.
     if (!success) {
         // FIXME: Improve/contextualize error message
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ObjectDefineOwnPropertyReturnedFalse);
-        return {};
+        return vm.throw_completion<TypeError>(global_object(), ErrorType::ObjectDefineOwnPropertyReturnedFalse);
     }
 
     // 5. Return success.
@@ -281,7 +276,6 @@ bool Object::has_own_property(PropertyName const& property_name) const
 // 7.3.15 SetIntegrityLevel ( O, level ), https://tc39.es/ecma262/#sec-setintegritylevel
 bool Object::set_integrity_level(IntegrityLevel level)
 {
-    auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     // 1. Assert: Type(O) is Object.
@@ -306,9 +300,7 @@ bool Object::set_integrity_level(IntegrityLevel level)
             auto property_name = PropertyName::from_value(global_object, key);
 
             // i. Perform ? DefinePropertyOrThrow(O, k, PropertyDescriptor { [[Configurable]]: false }).
-            define_property_or_throw(property_name, { .configurable = false });
-            if (vm.exception())
-                return {};
+            TRY_OR_DISCARD(define_property_or_throw(property_name, { .configurable = false }));
         }
     }
     // 7. Else,
@@ -340,9 +332,7 @@ bool Object::set_integrity_level(IntegrityLevel level)
             }
 
             // 3. Perform ? DefinePropertyOrThrow(O, k, desc).
-            define_property_or_throw(property_name, descriptor);
-            if (vm.exception())
-                return {};
+            TRY_OR_DISCARD(define_property_or_throw(property_name, descriptor));
         }
     }
 
@@ -1110,9 +1100,7 @@ Object* Object::define_properties(Value properties)
         // b. Let desc be the second element of pair.
 
         // c. Perform ? DefinePropertyOrThrow(O, P, desc).
-        define_property_or_throw(name, descriptor);
-        if (vm.exception())
-            return {};
+        TRY_OR_DISCARD(define_property_or_throw(name, descriptor));
     }
 
     // 7. Return O.
