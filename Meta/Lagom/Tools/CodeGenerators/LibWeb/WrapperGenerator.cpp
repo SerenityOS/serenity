@@ -1680,10 +1680,7 @@ bool @class_name@::is_named_property_exposed_on_object(JS::PropertyName const& p
     while (prototype) {
         // FIXME: 1. If prototype is not a named properties object, and prototype has an own property named P, then return false.
         //           (It currently does not check for named property objects)
-        bool prototype_has_own_property_named_p = prototype->has_own_property(property_name);
-        if (vm.exception())
-            return {};
-
+        bool prototype_has_own_property_named_p = TRY_OR_DISCARD(prototype->has_own_property(property_name));
         if (prototype_has_own_property_named_p)
             return false;
 
