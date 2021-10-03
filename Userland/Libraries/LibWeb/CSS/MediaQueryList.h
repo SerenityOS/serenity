@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <AK/RefCounted.h>
+#include <AK/Weakable.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/CSS/MediaQuery.h>
 #include <LibWeb/DOM/EventTarget.h>
@@ -18,6 +19,7 @@ namespace Web::CSS {
 // 4.2. The MediaQueryList Interface, https://drafts.csswg.org/cssom-view/#the-mediaquerylist-interface
 class MediaQueryList final
     : public RefCounted<MediaQueryList>
+    , public Weakable<MediaQueryList>
     , public DOM::EventTarget
     , public Bindings::Wrappable {
 
@@ -36,6 +38,7 @@ public:
 
     String media() const;
     bool matches() const;
+    bool evaluate();
 
     // ^EventTarget
     virtual void ref_event_target() override { ref(); }

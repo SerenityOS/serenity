@@ -67,4 +67,21 @@ void MediaList::delete_medium(String medium)
     // FIXME: If nothing was removed, then throw a NotFoundError exception.
 }
 
+bool MediaList::evaluate(DOM::Window const& window)
+{
+    for (auto& media : m_media)
+        media.evaluate(window);
+
+    return matches();
+}
+
+bool MediaList::matches() const
+{
+    for (auto& media : m_media) {
+        if (media.matches())
+            return true;
+    }
+    return false;
+}
+
 }
