@@ -99,17 +99,23 @@ void VM::gather_roots(HashTable<Cell*>& roots)
     if (m_last_value.is_cell())
         roots.set(&m_last_value.as_cell());
 
-    for (auto& execution_context : m_execution_context_stack) {
-        if (execution_context->this_value.is_cell())
-            roots.set(&execution_context->this_value.as_cell());
-        roots.set(execution_context->arguments_object);
-        for (auto& argument : execution_context->arguments) {
-            if (argument.is_cell())
-                roots.set(&argument.as_cell());
+    auto gather_roots_from_execution_context_stack = [&roots](Vector<ExecutionContext*> const& stack) {
+        for (auto& execution_context : stack) {
+            if (execution_context->this_value.is_cell())
+                roots.set(&execution_context->this_value.as_cell());
+            roots.set(execution_context->arguments_object);
+            for (auto& argument : execution_context->arguments) {
+                if (argument.is_cell())
+                    roots.set(&argument.as_cell());
+            }
+            roots.set(execution_context->lexical_environment);
+            roots.set(execution_context->variable_environment);
         }
-        roots.set(execution_context->lexical_environment);
-        roots.set(execution_context->variable_environment);
-    }
+    };
+
+    gather_roots_from_execution_context_stack(m_execution_context_stack);
+    for (auto& saved_stack : m_saved_execution_context_stacks)
+        gather_roots_from_execution_context_stack(saved_stack);
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
     roots.set(well_known_symbol_##snake_name());
@@ -826,6 +832,16 @@ void VM::dump_backtrace() const
 
 VM::CustomData::~CustomData()
 {
+}
+
+void VM::save_execution_context_stack()
+{
+    m_saved_execution_context_stacks.append(move(m_execution_context_stack));
+}
+
+void VM::restore_execution_context_stack()
+{
+    m_execution_context_stack = m_saved_execution_context_stacks.take_last();
 }
 
 }

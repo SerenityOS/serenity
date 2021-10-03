@@ -280,6 +280,9 @@ public:
 
     ThrowCompletionOr<Value> named_evaluation_if_anonymous_function(GlobalObject& global_object, ASTNode const& expression, FlyString const& name);
 
+    void save_execution_context_stack();
+    void restore_execution_context_stack();
+
 private:
     explicit VM(OwnPtr<CustomData>);
 
@@ -301,6 +304,8 @@ private:
     Vector<Interpreter*> m_interpreters;
 
     Vector<ExecutionContext*> m_execution_context_stack;
+
+    Vector<Vector<ExecutionContext*>> m_saved_execution_context_stacks;
 
     Value m_last_value;
     ScopeType m_unwind_until { ScopeType::None };
