@@ -33,6 +33,7 @@ void LocationObject::initialize(JS::GlobalObject& global_object)
     define_native_accessor("port", port_getter, {}, attr);
 
     define_native_function("reload", reload, 0, JS::Attribute::Enumerable);
+    define_native_function("replace", replace, 1, JS::Attribute::Enumerable);
 }
 
 LocationObject::~LocationObject()
@@ -122,6 +123,17 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::reload)
 {
     auto& window = static_cast<WindowObject&>(global_object);
     window.impl().did_call_location_reload({});
+    return JS::js_undefined();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(LocationObject::replace)
+{
+    auto& window = static_cast<WindowObject&>(global_object);
+    auto url = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    // FIXME: This needs spec compliance work.
+    window.impl().did_call_location_replace({}, move(url));
     return JS::js_undefined();
 }
 
