@@ -63,6 +63,10 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     auto value = program.execute(*this, global_object);
     vm.set_last_value(Badge<Interpreter> {}, value.value_or(js_undefined()));
 
+    // FIXME: We unconditionally stop the unwind here this should be done using completions leaving
+    //        the VM in a cleaner state after executing. For example it does still store the exception.
+    vm.stop_unwind();
+
     vm.pop_execution_context();
 
     // At this point we may have already run any queued promise jobs via on_call_stack_emptied,
