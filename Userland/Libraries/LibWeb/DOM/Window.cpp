@@ -146,20 +146,21 @@ i32 Window::set_timeout(JS::FunctionObject& callback, i32 interval)
 
 void Window::timer_did_fire(Badge<Timer>, Timer& timer)
 {
-    // We should not be here if there's no JS wrapper for the Window object.
-    VERIFY(wrapper());
-    auto& vm = wrapper()->vm();
-
-    // NOTE: This protector pointer keeps the timer alive until the end of this function no matter what.
-    NonnullRefPtr protector(timer);
+    NonnullRefPtr<Timer> strong_timer { timer };
 
     if (timer.type() == Timer::Type::Timeout) {
         m_timers.remove(timer.id());
     }
 
-    [[maybe_unused]] auto rc = vm.call(timer.callback(), wrapper());
-    if (vm.exception())
-        vm.clear_exception();
+    HTML::queue_global_task(HTML::Task::Source::TimerTask, associated_document(), [this, strong_this = NonnullRefPtr(*this), strong_timer = NonnullRefPtr(timer)]() mutable {
+        // We should not be here if there's no JS wrapper for the Window object.
+        VERIFY(wrapper());
+        auto& vm = wrapper()->vm();
+
+        [[maybe_unused]] auto rc = vm.call(strong_timer->callback(), wrapper());
+        if (vm.exception())
+            vm.clear_exception();
+    });
 }
 
 i32 Window::allocate_timer_id(Badge<Timer>)

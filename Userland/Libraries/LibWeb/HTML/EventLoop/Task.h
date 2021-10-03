@@ -25,6 +25,7 @@ public:
         IdleTask,
         PostedMessage,
         Microtask,
+        TimerTask,
     };
 
     static NonnullOwnPtr<Task> create(Source source, DOM::Document* document, Function<void()> steps)
