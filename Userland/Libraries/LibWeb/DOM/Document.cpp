@@ -34,6 +34,7 @@
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/AttributeNames.h>
+#include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLAreaElement.h>
@@ -70,6 +71,8 @@ Document::Document(const AK::URL& url)
     , m_implementation(DOMImplementation::create(*this))
     , m_history(HTML::History::create(*this))
 {
+    HTML::main_thread_event_loop().register_document({}, *this);
+
     m_style_update_timer = Core::Timer::create_single_shot(0, [this] {
         update_style();
     });
@@ -131,6 +134,9 @@ void Document::removed_last_ref()
 
     m_in_removed_last_ref = false;
     m_deletion_has_begun = true;
+
+    HTML::main_thread_event_loop().unregister_document({}, *this);
+
     delete this;
 }
 

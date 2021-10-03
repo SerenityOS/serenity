@@ -8,6 +8,7 @@
 #include <LibCore/Timer.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 
 namespace Web::HTML {
@@ -240,6 +241,27 @@ void EventLoop::perform_a_microtask_checkpoint()
 
     // 7. Set the event loop's performing a microtask checkpoint to false.
     m_performing_a_microtask_checkpoint = false;
+}
+
+NonnullRefPtrVector<DOM::Document> EventLoop::documents_in_this_event_loop() const
+{
+    NonnullRefPtrVector<DOM::Document> documents;
+    for (auto& document : m_documents) {
+        VERIFY(document);
+        documents.append(*document);
+    }
+    return documents;
+}
+
+void EventLoop::register_document(Badge<DOM::Document>, DOM::Document& document)
+{
+    m_documents.append(&document);
+}
+
+void EventLoop::unregister_document(Badge<DOM::Document>, DOM::Document& document)
+{
+    bool did_remove = m_documents.remove_first_matching([&](auto& entry) { return entry.ptr() == &document; });
+    VERIFY(did_remove);
 }
 
 }
