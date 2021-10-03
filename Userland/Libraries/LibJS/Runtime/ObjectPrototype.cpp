@@ -67,7 +67,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::has_own_property)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    return Value(this_object->has_own_property(property_key));
+    return Value(TRY_OR_DISCARD(this_object->has_own_property(property_key)));
 }
 
 // 20.1.3.6 Object.prototype.toString ( ), https://tc39.es/ecma262/#sec-object.prototype.tostring
