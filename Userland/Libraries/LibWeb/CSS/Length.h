@@ -141,8 +141,8 @@ public:
     String to_string() const
     {
         if (is_auto())
-            return "[auto]";
-        return String::formatted("[{} {}]", m_value, unit_name());
+            return "auto";
+        return String::formatted("{}{}", m_value, unit_name());
     }
 
     bool operator==(const Length& other) const
