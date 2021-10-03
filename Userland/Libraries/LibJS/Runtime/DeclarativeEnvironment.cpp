@@ -142,4 +142,13 @@ void DeclarativeEnvironment::initialize_or_set_mutable_binding(Badge<ScopeNode>,
         set_mutable_binding(global_object, name, value, false);
 }
 
+Vector<String> DeclarativeEnvironment::bindings() const
+{
+    Vector<String> names;
+    for (auto& binding : m_bindings) {
+        names.empend(binding.key);
+    }
+    return names;
+}
+
 }
