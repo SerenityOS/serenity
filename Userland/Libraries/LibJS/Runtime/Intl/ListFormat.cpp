@@ -248,13 +248,13 @@ Array* format_list_to_parts(GlobalObject& global_object, ListFormat const& list_
         auto* object = Object::create(global_object, global_object.object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
-        object->create_data_property_or_throw(vm.names.type, js_string(vm, part.type));
+        MUST(object->create_data_property_or_throw(vm.names.type, js_string(vm, part.type)));
 
         // c. Perform ! CreateDataPropertyOrThrow(O, "value", part.[[Value]]).
-        object->create_data_property_or_throw(vm.names.value, js_string(vm, part.value));
+        MUST(object->create_data_property_or_throw(vm.names.value, js_string(vm, part.value)));
 
         // d. Perform ! CreateDataPropertyOrThrow(result, ! ToString(n), O).
-        result->create_data_property_or_throw(n, object);
+        MUST(result->create_data_property_or_throw(n, object));
 
         // e. Increment n by 1.
         ++n;

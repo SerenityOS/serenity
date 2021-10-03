@@ -740,13 +740,13 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     auto separator_length = separator.length_in_code_units();
 
     if (separator_argument.is_undefined()) {
-        array->create_data_property_or_throw(0, js_string(vm, move(string)));
+        MUST(array->create_data_property_or_throw(0, js_string(vm, move(string))));
         return array;
     }
 
     if (string_length == 0) {
         if (separator_length > 0)
-            array->create_data_property_or_throw(0, js_string(vm, move(string)));
+            MUST(array->create_data_property_or_throw(0, js_string(vm, move(string))));
         return array;
     }
 
@@ -760,7 +760,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
         }
 
         auto segment = string.substring_view(start, position - start);
-        array->create_data_property_or_throw(array_length, js_string(vm, segment));
+        MUST(array->create_data_property_or_throw(array_length, js_string(vm, segment)));
         ++array_length;
         if (array_length == limit)
             return array;
@@ -769,7 +769,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     }
 
     auto rest = string.substring_view(start);
-    array->create_data_property_or_throw(array_length, js_string(vm, rest));
+    MUST(array->create_data_property_or_throw(array_length, js_string(vm, rest)));
 
     return array;
 }

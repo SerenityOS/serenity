@@ -442,7 +442,7 @@ void ECMAScriptFunctionObject::InstanceField::define_field(VM& vm, Object& recei
             return;
         init_value = init_value_or_error.release_value();
     }
-    receiver.create_data_property_or_throw(name, init_value);
+    (void)receiver.create_data_property_or_throw(name, init_value);
 }
 
 }

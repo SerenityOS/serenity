@@ -957,7 +957,7 @@ ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Obj
             // ii. If propValue is not undefined, then
             if (!prop_value.is_undefined()) {
                 // 1. Perform ! CreateDataPropertyOrThrow(merged, nextKey, propValue).
-                merged->create_data_property_or_throw(property_name, prop_value);
+                MUST(merged->create_data_property_or_throw(property_name, prop_value));
             }
         }
     }
@@ -980,7 +980,7 @@ ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Obj
         // b. If propValue is not undefined, then
         if (!prop_value.is_undefined()) {
             // i. Perform ! CreateDataPropertyOrThrow(merged, nextKey, propValue).
-            merged->create_data_property_or_throw(property_name, prop_value);
+            MUST(merged->create_data_property_or_throw(property_name, prop_value));
         }
 
         // See comment above.
@@ -995,7 +995,7 @@ ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Obj
         // b. If month is not undefined, then
         if (!month.is_undefined()) {
             // i. Perform ! CreateDataPropertyOrThrow(merged, "month", month).
-            merged->create_data_property_or_throw(vm.names.month, month);
+            MUST(merged->create_data_property_or_throw(vm.names.month, month));
         }
 
         // c. Let monthCode be ? Get(fields, "monthCode").
@@ -1004,7 +1004,7 @@ ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Obj
         // d. If monthCode is not undefined, then
         if (!month_code.is_undefined()) {
             // i. Perform ! CreateDataPropertyOrThrow(merged, "monthCode", monthCode).
-            merged->create_data_property_or_throw(vm.names.monthCode, month_code);
+            MUST(merged->create_data_property_or_throw(vm.names.monthCode, month_code));
         }
     }
 

@@ -181,16 +181,16 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::get_iso_fields)
     auto* fields = Object::create(global_object, global_object.object_prototype());
 
     // 4. Perform ! CreateDataPropertyOrThrow(fields, "calendar", monthDay.[[Calendar]]).
-    fields->create_data_property_or_throw(vm.names.calendar, Value(&month_day->calendar()));
+    MUST(fields->create_data_property_or_throw(vm.names.calendar, Value(&month_day->calendar())));
 
     // 5. Perform ! CreateDataPropertyOrThrow(fields, "isoDay", 𝔽(monthDay.[[ISODay]])).
-    fields->create_data_property_or_throw(vm.names.isoDay, Value(month_day->iso_day()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoDay, Value(month_day->iso_day())));
 
     // 6. Perform ! CreateDataPropertyOrThrow(fields, "isoMonth", 𝔽(monthDay.[[ISOMonth]])).
-    fields->create_data_property_or_throw(vm.names.isoMonth, Value(month_day->iso_month()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoMonth, Value(month_day->iso_month())));
 
     // 7. Perform ! CreateDataPropertyOrThrow(fields, "isoYear", 𝔽(monthDay.[[ISOYear]])).
-    fields->create_data_property_or_throw(vm.names.isoYear, Value(month_day->iso_year()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoYear, Value(month_day->iso_year())));
 
     // 8. Return fields.
     return fields;

@@ -89,8 +89,8 @@ Value PromiseAllSettledResolveElementFunction::resolve_element()
     auto& global_object = this->global_object();
 
     auto* object = Object::create(global_object, global_object.object_prototype());
-    object->create_data_property_or_throw(vm.names.status, js_string(vm, "fulfilled"sv));
-    object->create_data_property_or_throw(vm.names.value, vm.argument(0));
+    MUST(object->create_data_property_or_throw(vm.names.status, js_string(vm, "fulfilled"sv)));
+    MUST(object->create_data_property_or_throw(vm.names.value, vm.argument(0)));
 
     m_values.values()[m_index] = object;
 
@@ -118,8 +118,8 @@ Value PromiseAllSettledRejectElementFunction::resolve_element()
     auto& global_object = this->global_object();
 
     auto* object = Object::create(global_object, global_object.object_prototype());
-    object->create_data_property_or_throw(vm.names.status, js_string(vm, "rejected"sv));
-    object->create_data_property_or_throw(vm.names.reason, vm.argument(0));
+    MUST(object->create_data_property_or_throw(vm.names.status, js_string(vm, "rejected"sv)));
+    MUST(object->create_data_property_or_throw(vm.names.reason, vm.argument(0)));
 
     m_values.values()[m_index] = object;
 
