@@ -9,7 +9,9 @@
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
+#include <LibWeb/HighResolutionTime/Performance.h>
 
 namespace Web::HTML {
 
@@ -127,10 +129,21 @@ void EventLoop::process()
     // FIXME:     1. Let docs be all Document objects whose relevant agent's event loop is this event loop, sorted arbitrarily except that the following conditions must be met:
     //               - Any Document B whose browsing context's container document is A must be listed after A in the list.
     //               - If there are two documents A and B whose browsing contexts are both child browsing contexts whose container documents are another Document C, then the order of A and B in the list must match the shadow-including tree order of their respective browsing context containers in C's node tree.
+    // FIXME: NOTE: The sort order specified above is missing here!
+    NonnullRefPtrVector<DOM::Document> docs = documents_in_this_event_loop();
+
+    auto for_each_fully_active_document_in_docs = [&](auto&& callback) {
+        for (auto& document : docs) {
+            if (document.is_fully_active())
+                callback(document);
+        }
+    };
 
     // FIXME:     2. Rendering opportunities: Remove from docs all Document objects whose browsing context do not have a rendering opportunity.
 
-    // FIXME:     3. If docs is not empty, then set hasARenderingOpportunity to true.
+    // 3. If docs is not empty, then set hasARenderingOpportunity to true.
+    if (!docs.is_empty())
+        has_a_rendering_opportunity = true;
 
     // FIXME:     4. Unnecessary rendering: Remove from docs all Document objects which meet both of the following conditions:
     //               - The user agent believes that updating the rendering of the Document's browsing context would have no visible effect, and
@@ -153,6 +166,9 @@ void EventLoop::process()
     // FIXME:     12. For each fully active Document in docs, if the user agent detects that the backing storage associated with a CanvasRenderingContext2D or an OffscreenCanvasRenderingContext2D, context, has been lost, then it must run the context lost steps for each such context:
 
     // FIXME:     13. For each fully active Document in docs, run the animation frame callbacks for that Document, passing in now as the timestamp.
+    for_each_fully_active_document_in_docs([&](DOM::Document& document) {
+        run_animation_frame_callbacks(document, document.window().performance().now());
+    });
 
     // FIXME:     14. For each fully active Document in docs, run the update intersection observations steps for that Document, passing in now as the timestamp. [INTERSECTIONOBSERVER]
 

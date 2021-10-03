@@ -116,4 +116,6 @@ private:
     HashMap<i32, NonnullRefPtr<RequestAnimationFrameCallback>> m_request_animation_frame_callbacks;
 };
 
+void run_animation_frame_callbacks(DOM::Document&, double now);
+
 }
