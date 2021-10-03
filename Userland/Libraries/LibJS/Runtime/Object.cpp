@@ -1038,7 +1038,7 @@ void Object::define_native_function(PropertyName const& property_name, Function<
 }
 
 // 20.1.2.3.1 ObjectDefineProperties ( O, Properties ), https://tc39.es/ecma262/#sec-objectdefineproperties
-Object* Object::define_properties(Value properties)
+ThrowCompletionOr<Object*> Object::define_properties(Value properties)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -1047,11 +1047,11 @@ Object* Object::define_properties(Value properties)
 
     // 2. Let props be ? ToObject(Properties).
     auto* props = properties.to_object(global_object);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 3. Let keys be ? props.[[OwnPropertyKeys]]().
-    auto keys = TRY_OR_DISCARD(props->internal_own_property_keys());
+    auto keys = TRY(props->internal_own_property_keys());
 
     struct NameAndDescriptor {
         PropertyName name;
@@ -1066,17 +1066,17 @@ Object* Object::define_properties(Value properties)
         auto property_name = PropertyName::from_value(global_object, next_key);
 
         // a. Let propDesc be ? props.[[GetOwnProperty]](nextKey).
-        auto property_descriptor = TRY_OR_DISCARD(props->internal_get_own_property(property_name));
+        auto property_descriptor = TRY(props->internal_get_own_property(property_name));
 
         // b. If propDesc is not undefined and propDesc.[[Enumerable]] is true, then
         if (property_descriptor.has_value() && *property_descriptor->enumerable) {
             // i. Let descObj be ? Get(props, nextKey).
-            auto descriptor_object = TRY_OR_DISCARD(props->get(property_name));
+            auto descriptor_object = TRY(props->get(property_name));
 
             // ii. Let desc be ? ToPropertyDescriptor(descObj).
             auto descriptor = to_property_descriptor(global_object, descriptor_object);
-            if (vm.exception())
-                return {};
+            if (auto* exception = vm.exception())
+                return throw_completion(exception->value());
 
             // iii. Append the pair (a two element List) consisting of nextKey and desc to the end of descriptors.
             descriptors.append({ property_name, descriptor });
@@ -1089,7 +1089,7 @@ Object* Object::define_properties(Value properties)
         // b. Let desc be the second element of pair.
 
         // c. Perform ? DefinePropertyOrThrow(O, P, desc).
-        TRY_OR_DISCARD(define_property_or_throw(name, descriptor));
+        TRY(define_property_or_throw(name, descriptor));
     }
 
     // 7. Return O.
