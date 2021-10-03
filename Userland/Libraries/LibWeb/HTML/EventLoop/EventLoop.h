@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/WeakPtr.h>
 #include <LibCore/Forward.h>
 #include <LibJS/Forward.h>
 #include <LibWeb/HTML/EventLoop/TaskQueue.h>
@@ -49,6 +50,11 @@ public:
 
     void perform_a_microtask_checkpoint();
 
+    void register_document(Badge<DOM::Document>, DOM::Document&);
+    void unregister_document(Badge<DOM::Document>, DOM::Document&);
+
+    NonnullRefPtrVector<DOM::Document> documents_in_this_event_loop() const;
+
 private:
     Type m_type { Type::Window };
 
@@ -64,6 +70,8 @@ private:
 
     // https://html.spec.whatwg.org/#performing-a-microtask-checkpoint
     bool m_performing_a_microtask_checkpoint { false };
+
+    Vector<WeakPtr<DOM::Document>> m_documents;
 };
 
 EventLoop& main_thread_event_loop();
