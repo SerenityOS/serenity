@@ -111,7 +111,7 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
     }
 
     auto* wrapper = Object::create(global_object, global_object.object_prototype());
-    wrapper->create_data_property_or_throw(String::empty(), value);
+    MUST(wrapper->create_data_property_or_throw(String::empty(), value));
     auto result = serialize_json_property(global_object, state, String::empty(), wrapper);
     if (vm.exception())
         return {};
@@ -408,7 +408,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
     if (reviver.is_function()) {
         auto* root = Object::create(global_object, global_object.object_prototype());
         auto root_name = String::empty();
-        root->create_data_property_or_throw(root_name, unfiltered);
+        MUST(root->create_data_property_or_throw(root_name, unfiltered));
         auto result = internalize_json_property(global_object, root, root_name, reviver.as_function());
         if (vm.exception())
             return {};

@@ -101,10 +101,10 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::resolved_options)
     //     b. Let v be the value of displayNames's internal slot whose name is the Internal Slot value of the current row.
     //     c. Assert: v is not undefined.
     //     d. Perform ! CreateDataPropertyOrThrow(options, p, v).
-    options->create_data_property_or_throw(vm.names.locale, js_string(vm, display_names->locale()));
-    options->create_data_property_or_throw(vm.names.style, js_string(vm, display_names->style_string()));
-    options->create_data_property_or_throw(vm.names.type, js_string(vm, display_names->type_string()));
-    options->create_data_property_or_throw(vm.names.fallback, js_string(vm, display_names->fallback_string()));
+    MUST(options->create_data_property_or_throw(vm.names.locale, js_string(vm, display_names->locale())));
+    MUST(options->create_data_property_or_throw(vm.names.style, js_string(vm, display_names->style_string())));
+    MUST(options->create_data_property_or_throw(vm.names.type, js_string(vm, display_names->type_string())));
+    MUST(options->create_data_property_or_throw(vm.names.fallback, js_string(vm, display_names->fallback_string())));
 
     // 5. Return options.
     return options;

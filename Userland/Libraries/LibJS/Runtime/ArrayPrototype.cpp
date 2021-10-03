@@ -82,18 +82,18 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     // 23.1.3.34 Array.prototype [ @@unscopables ], https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
     // With proposal, https://tc39.es/proposal-array-find-from-last/index.html#sec-array.prototype-@@unscopables
     auto* unscopable_list = Object::create(global_object, nullptr);
-    unscopable_list->create_data_property_or_throw(vm.names.copyWithin, Value(true));
-    unscopable_list->create_data_property_or_throw(vm.names.entries, Value(true));
-    unscopable_list->create_data_property_or_throw(vm.names.fill, Value(true));
-    unscopable_list->create_data_property_or_throw(vm.names.find, Value(true));
-    unscopable_list->create_data_property_or_throw(vm.names.findIndex, Value(true));
-    unscopable_list->create_data_property_or_throw(vm.names.findLast, Value(true));
-    unscopable_list->create_data_property_or_throw(vm.names.findLastIndex, Value(true));
-    unscopable_list->create_data_property_or_throw(vm.names.flat, Value(true));
-    unscopable_list->create_data_property_or_throw(vm.names.flatMap, Value(true));
-    unscopable_list->create_data_property_or_throw(vm.names.includes, Value(true));
-    unscopable_list->create_data_property_or_throw(vm.names.keys, Value(true));
-    unscopable_list->create_data_property_or_throw(vm.names.values, Value(true));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.copyWithin, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.entries, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.fill, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.find, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.findIndex, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.findLast, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.findLastIndex, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.flat, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.flatMap, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.includes, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.keys, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.values, Value(true)));
 
     define_direct_property(*vm.well_known_symbol_unscopables(), unscopable_list, Attribute::Configurable);
 }
@@ -205,7 +205,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::filter)
             // iii. If selected is true, then
             if (selected) {
                 // 1. Perform ? CreateDataPropertyOrThrow(A, ! ToString(𝔽(to)), kValue).
-                array->create_data_property_or_throw(to, k_value);
+                TRY_OR_DISCARD(array->create_data_property_or_throw(to, k_value));
 
                 // 2. Set to to to + 1.
                 ++to;
@@ -313,9 +313,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
             auto mapped_value = TRY_OR_DISCARD(vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object));
 
             // iii. Perform ? CreateDataPropertyOrThrow(A, Pk, mappedValue).
-            array->create_data_property_or_throw(property_name, mapped_value);
-            if (vm.exception())
-                return {};
+            TRY_OR_DISCARD(array->create_data_property_or_throw(property_name, mapped_value));
         }
 
         // d. Set k to k + 1.
@@ -581,8 +579,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
                     if (k_value_or_error.is_error())
                         return;
                     auto k_value = k_value_or_error.release_value();
-                    new_array->create_data_property_or_throw(n, k_value);
-                    if (vm.exception())
+                    auto result_or_error = new_array->create_data_property_or_throw(n, k_value);
+                    if (result_or_error.is_error())
                         return;
                 }
                 ++n;
@@ -593,8 +591,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
                 vm.throw_exception<TypeError>(global_object, ErrorType::ArrayMaxSize);
                 return;
             }
-            new_array->create_data_property_or_throw(n, arg);
-            if (vm.exception())
+            auto result_or_error = new_array->create_data_property_or_throw(n, arg);
+            if (result_or_error.is_error())
                 return;
             ++n;
         }
@@ -672,9 +670,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
 
         if (present) {
             auto value = TRY_OR_DISCARD(this_object->get(k));
-            new_array->create_data_property_or_throw(index, value);
-            if (vm.exception())
-                return {};
+            TRY_OR_DISCARD(new_array->create_data_property_or_throw(index, value));
         }
 
         ++k;
@@ -1594,9 +1590,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
         if (from_present) {
             auto from_value = TRY_OR_DISCARD(this_object->get(from));
 
-            removed_elements->create_data_property_or_throw(i, from_value);
-            if (vm.exception())
-                return {};
+            TRY_OR_DISCARD(removed_elements->create_data_property_or_throw(i, from_value));
         }
     }
 
@@ -1767,9 +1761,7 @@ static size_t flatten_into_array(GlobalObject& global_object, Object& new_array,
             return {};
         }
 
-        new_array.create_data_property_or_throw(target_index, value);
-        if (vm.exception())
-            return {};
+        TRY_OR_DISCARD(new_array.create_data_property_or_throw(target_index, value));
 
         ++target_index;
     }

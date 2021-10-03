@@ -159,7 +159,7 @@ ThrowCompletionOr<bool> Object::create_method_property(PropertyName const& prope
 }
 
 // 7.3.7 CreateDataPropertyOrThrow ( O, P, V ), https://tc39.es/ecma262/#sec-createdatapropertyorthrow
-bool Object::create_data_property_or_throw(PropertyName const& property_name, Value value)
+ThrowCompletionOr<bool> Object::create_data_property_or_throw(PropertyName const& property_name, Value value)
 {
     VERIFY(!value.is_empty());
     auto& vm = this->vm();
@@ -170,13 +170,12 @@ bool Object::create_data_property_or_throw(PropertyName const& property_name, Va
     VERIFY(property_name.is_valid());
 
     // 3. Let success be ? CreateDataProperty(O, P, V).
-    auto success = TRY_OR_DISCARD(create_data_property(property_name, value));
+    auto success = TRY(create_data_property(property_name, value));
 
     // 4. If success is false, throw a TypeError exception.
     if (!success) {
         // FIXME: Improve/contextualize error message
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ObjectDefineOwnPropertyReturnedFalse);
-        return {};
+        return vm.throw_completion<TypeError>(global_object(), ErrorType::ObjectDefineOwnPropertyReturnedFalse);
     }
 
     // 5. Return success.
@@ -479,9 +478,7 @@ ThrowCompletionOr<Object*> Object::copy_data_properties(Value source, HashTable<
 
         if (desc.has_value() && desc->attributes().is_enumerable()) {
             auto prop_value = TRY(from_object->get(next_key));
-            create_data_property_or_throw(next_key, prop_value);
-            if (auto* thrown_exception = vm().exception())
-                return JS::throw_completion(thrown_exception->value());
+            TRY(create_data_property_or_throw(next_key, prop_value));
         }
     }
     return this;

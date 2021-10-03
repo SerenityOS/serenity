@@ -111,7 +111,7 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(GlobalObject& global_obj
         // i. If calendarAbsent is true, and month is not undefined, and monthCode is undefined and year is undefined, then
         if (calendar_absent && !month.is_undefined() && month_code.is_undefined() && year.is_undefined()) {
             // i. Perform ! CreateDataPropertyOrThrow(fields, "year", 𝔽(referenceISOYear)).
-            fields->create_data_property_or_throw(vm.names.year, Value(reference_iso_year));
+            MUST(fields->create_data_property_or_throw(vm.names.year, Value(reference_iso_year)));
         }
 
         // j. Return ? MonthDayFromFields(calendar, fields, options).

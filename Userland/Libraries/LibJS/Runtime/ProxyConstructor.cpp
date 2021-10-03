@@ -84,8 +84,8 @@ JS_DEFINE_NATIVE_FUNCTION(ProxyConstructor::revocable)
     revoker->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
     auto* result = Object::create(global_object, global_object.object_prototype());
-    result->create_data_property_or_throw(vm.names.proxy, proxy);
-    result->create_data_property_or_throw(vm.names.revoke, revoker);
+    MUST(result->create_data_property_or_throw(vm.names.proxy, proxy));
+    MUST(result->create_data_property_or_throw(vm.names.revoke, revoker));
     return result;
 }
 

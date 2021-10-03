@@ -553,34 +553,34 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::get_iso_fields)
     auto* fields = Object::create(global_object, global_object.object_prototype());
 
     // 4. Perform ! CreateDataPropertyOrThrow(fields, "calendar", dateTime.[[Calendar]]).
-    fields->create_data_property_or_throw(vm.names.calendar, Value(&date_time->calendar()));
+    MUST(fields->create_data_property_or_throw(vm.names.calendar, Value(&date_time->calendar())));
 
     // 5. Perform ! CreateDataPropertyOrThrow(fields, "isoDay", 𝔽(dateTime.[[ISODay]])).
-    fields->create_data_property_or_throw(vm.names.isoDay, Value(date_time->iso_day()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoDay, Value(date_time->iso_day())));
 
     // 6. Perform ! CreateDataPropertyOrThrow(fields, "isoHour", 𝔽(dateTime.[[ISOHour]])).
-    fields->create_data_property_or_throw(vm.names.isoHour, Value(date_time->iso_hour()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoHour, Value(date_time->iso_hour())));
 
     // 7. Perform ! CreateDataPropertyOrThrow(fields, "isoMicrosecond", 𝔽(dateTime.[[ISOMicrosecond]])).
-    fields->create_data_property_or_throw(vm.names.isoMicrosecond, Value(date_time->iso_microsecond()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoMicrosecond, Value(date_time->iso_microsecond())));
 
     // 8. Perform ! CreateDataPropertyOrThrow(fields, "isoMillisecond", 𝔽(dateTime.[[ISOMillisecond]])).
-    fields->create_data_property_or_throw(vm.names.isoMillisecond, Value(date_time->iso_millisecond()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoMillisecond, Value(date_time->iso_millisecond())));
 
     // 9. Perform ! CreateDataPropertyOrThrow(fields, "isoMinute", 𝔽(dateTime.[[ISOMinute]])).
-    fields->create_data_property_or_throw(vm.names.isoMinute, Value(date_time->iso_minute()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoMinute, Value(date_time->iso_minute())));
 
     // 10. Perform ! CreateDataPropertyOrThrow(fields, "isoMonth", 𝔽(dateTime.[[ISOMonth]])).
-    fields->create_data_property_or_throw(vm.names.isoMonth, Value(date_time->iso_month()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoMonth, Value(date_time->iso_month())));
 
     // 11. Perform ! CreateDataPropertyOrThrow(fields, "isoNanosecond", 𝔽(dateTime.[[ISONanosecond]])).
-    fields->create_data_property_or_throw(vm.names.isoNanosecond, Value(date_time->iso_nanosecond()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoNanosecond, Value(date_time->iso_nanosecond())));
 
     // 12. Perform ! CreateDataPropertyOrThrow(fields, "isoSecond", 𝔽(dateTime.[[ISOSecond]])).
-    fields->create_data_property_or_throw(vm.names.isoSecond, Value(date_time->iso_second()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoSecond, Value(date_time->iso_second())));
 
     // 13. Perform ! CreateDataPropertyOrThrow(fields, "isoYear", 𝔽(dateTime.[[ISOYear]])).
-    fields->create_data_property_or_throw(vm.names.isoYear, Value(date_time->iso_year()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoYear, Value(date_time->iso_year())));
 
     // 14. Return fields.
     return fields;

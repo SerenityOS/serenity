@@ -303,25 +303,25 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::get_iso_fields)
     auto* fields = Object::create(global_object, global_object.object_prototype());
 
     // 4. Perform ! CreateDataPropertyOrThrow(fields, "calendar", temporalTime.[[Calendar]]).
-    fields->create_data_property_or_throw(vm.names.calendar, Value(&temporal_time->calendar()));
+    MUST(fields->create_data_property_or_throw(vm.names.calendar, Value(&temporal_time->calendar())));
 
     // 5. Perform ! CreateDataPropertyOrThrow(fields, "isoHour", 𝔽(temporalTime.[[ISOHour]])).
-    fields->create_data_property_or_throw(vm.names.isoHour, Value(temporal_time->iso_hour()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoHour, Value(temporal_time->iso_hour())));
 
     // 6. Perform ! CreateDataPropertyOrThrow(fields, "isoMicrosecond", 𝔽(temporalTime.[[ISOMicrosecond]])).
-    fields->create_data_property_or_throw(vm.names.isoMicrosecond, Value(temporal_time->iso_microsecond()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoMicrosecond, Value(temporal_time->iso_microsecond())));
 
     // 7. Perform ! CreateDataPropertyOrThrow(fields, "isoMillisecond", 𝔽(temporalTime.[[ISOMillisecond]])).
-    fields->create_data_property_or_throw(vm.names.isoMillisecond, Value(temporal_time->iso_millisecond()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoMillisecond, Value(temporal_time->iso_millisecond())));
 
     // 8. Perform ! CreateDataPropertyOrThrow(fields, "isoMinute", 𝔽(temporalTime.[[ISOMinute]])).
-    fields->create_data_property_or_throw(vm.names.isoMinute, Value(temporal_time->iso_minute()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoMinute, Value(temporal_time->iso_minute())));
 
     // 9. Perform ! CreateDataPropertyOrThrow(fields, "isoNanosecond", 𝔽(temporalTime.[[ISONanosecond]])).
-    fields->create_data_property_or_throw(vm.names.isoNanosecond, Value(temporal_time->iso_nanosecond()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoNanosecond, Value(temporal_time->iso_nanosecond())));
 
     // 10. Perform ! CreateDataPropertyOrThrow(fields, "isoSecond", 𝔽(temporalTime.[[ISOSecond]])).
-    fields->create_data_property_or_throw(vm.names.isoSecond, Value(temporal_time->iso_second()));
+    MUST(fields->create_data_property_or_throw(vm.names.isoSecond, Value(temporal_time->iso_second())));
 
     // 11. Return fields.
     return fields;

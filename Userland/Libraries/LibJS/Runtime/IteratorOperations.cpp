@@ -147,8 +147,8 @@ Object* create_iterator_result_object(GlobalObject& global_object, Value value, 
 {
     auto& vm = global_object.vm();
     auto* object = Object::create(global_object, global_object.object_prototype());
-    object->create_data_property_or_throw(vm.names.value, value);
-    object->create_data_property_or_throw(vm.names.done, Value(done));
+    MUST(object->create_data_property_or_throw(vm.names.value, value));
+    MUST(object->create_data_property_or_throw(vm.names.done, Value(done)));
     return object;
 }
 

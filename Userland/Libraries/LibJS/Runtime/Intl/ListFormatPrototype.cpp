@@ -87,9 +87,9 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::resolved_options)
     //     b. Let v be the value of lf's internal slot whose name is the Internal Slot value of the current row.
     //     c. Assert: v is not undefined.
     //     d. Perform ! CreateDataPropertyOrThrow(options, p, v).
-    options->create_data_property_or_throw(vm.names.locale, js_string(vm, list_format->locale()));
-    options->create_data_property_or_throw(vm.names.type, js_string(vm, list_format->type_string()));
-    options->create_data_property_or_throw(vm.names.style, js_string(vm, list_format->style_string()));
+    MUST(options->create_data_property_or_throw(vm.names.locale, js_string(vm, list_format->locale())));
+    MUST(options->create_data_property_or_throw(vm.names.type, js_string(vm, list_format->type_string())));
+    MUST(options->create_data_property_or_throw(vm.names.style, js_string(vm, list_format->style_string())));
 
     // 5. Return options.
     return options;

@@ -65,7 +65,7 @@ Value ArrayConstructor::construct(FunctionObject& new_target)
         auto* array = Array::create(global_object(), 0, proto);
         size_t int_length;
         if (!length.is_number()) {
-            array->create_data_property_or_throw(0, length);
+            MUST(array->create_data_property_or_throw(0, length));
             int_length = 1;
         } else {
             int_length = length.to_u32(global_object());
@@ -83,7 +83,7 @@ Value ArrayConstructor::construct(FunctionObject& new_target)
         return {};
 
     for (size_t k = 0; k < vm.argument_count(); ++k)
-        array->create_data_property_or_throw(k, vm.argument(k));
+        MUST(array->create_data_property_or_throw(k, vm.argument(k)));
 
     return array;
 }
@@ -155,8 +155,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
                 mapped_value = next_value;
             }
 
-            array_object.create_data_property_or_throw(k, mapped_value);
-            if (vm.exception()) {
+            auto result_or_error = array_object.create_data_property_or_throw(k, mapped_value);
+            if (result_or_error.is_error()) {
                 iterator_close(*iterator);
                 return {};
             }
@@ -191,7 +191,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
             mapped_value = TRY_OR_DISCARD(vm.call(*map_fn, this_arg, k_value, Value(k)));
         else
             mapped_value = k_value;
-        array_object.create_data_property_or_throw(k, mapped_value);
+        TRY_OR_DISCARD(array_object.create_data_property_or_throw(k, mapped_value));
     }
 
     TRY_OR_DISCARD(array_object.set(vm.names.length, Value(length), Object::ShouldThrowExceptions::Yes));
@@ -223,11 +223,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
             return {};
     }
     auto& array_object = array.as_object();
-    for (size_t k = 0; k < vm.argument_count(); ++k) {
-        array_object.create_data_property_or_throw(k, vm.argument(k));
-        if (vm.exception())
-            return {};
-    }
+    for (size_t k = 0; k < vm.argument_count(); ++k)
+        TRY_OR_DISCARD(array_object.create_data_property_or_throw(k, vm.argument(k)));
     TRY_OR_DISCARD(array_object.set(vm.names.length, Value(vm.argument_count()), Object::ShouldThrowExceptions::Yes));
     return array;
 }

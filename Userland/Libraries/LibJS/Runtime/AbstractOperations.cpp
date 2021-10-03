@@ -694,8 +694,7 @@ Object* create_unmapped_arguments_object(GlobalObject& global_object, Span<Value
         auto value = arguments[index];
 
         // b. Perform ! CreateDataPropertyOrThrow(obj, ! ToString(𝔽(index)), val).
-        object->create_data_property_or_throw(index, value);
-        VERIFY(!vm.exception());
+        MUST(object->create_data_property_or_throw(index, value));
 
         // c. Set index to index + 1.
     }
@@ -742,8 +741,7 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
         auto value = arguments[index];
 
         // b. Perform ! CreateDataPropertyOrThrow(obj, ! ToString(𝔽(index)), val).
-        object->create_data_property_or_throw(index, value);
-        VERIFY(!vm.exception());
+        MUST(object->create_data_property_or_throw(index, value));
 
         // c. Set index to index + 1.
     }

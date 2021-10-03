@@ -1300,9 +1300,7 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
             if (initializer)
                 field_value = TRY(interpreter.vm().call(*initializer, class_constructor_value));
 
-            class_constructor->create_data_property_or_throw(property_key, field_value);
-            if (auto* exception = interpreter.exception())
-                return throw_completion(exception->value());
+            TRY(class_constructor->create_data_property_or_throw(property_key, field_value));
         } else {
             class_constructor->add_field(property_key, initializer);
         }

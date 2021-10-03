@@ -154,7 +154,7 @@ void IteratorToArray::execute_impl(Bytecode::Interpreter& interpreter) const
         if (vm.exception())
             return;
 
-        array->create_data_property_or_throw(index, value);
+        MUST(array->create_data_property_or_throw(index, value));
         index++;
     }
 }

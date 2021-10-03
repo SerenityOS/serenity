@@ -60,17 +60,17 @@ Value from_property_descriptor(GlobalObject& global_object, Optional<PropertyDes
     auto& vm = global_object.vm();
     auto* object = Object::create(global_object, global_object.object_prototype());
     if (property_descriptor->value.has_value())
-        object->create_data_property_or_throw(vm.names.value, *property_descriptor->value);
+        MUST(object->create_data_property_or_throw(vm.names.value, *property_descriptor->value));
     if (property_descriptor->writable.has_value())
-        object->create_data_property_or_throw(vm.names.writable, Value(*property_descriptor->writable));
+        MUST(object->create_data_property_or_throw(vm.names.writable, Value(*property_descriptor->writable)));
     if (property_descriptor->get.has_value())
-        object->create_data_property_or_throw(vm.names.get, *property_descriptor->get ? Value(*property_descriptor->get) : js_undefined());
+        MUST(object->create_data_property_or_throw(vm.names.get, *property_descriptor->get ? Value(*property_descriptor->get) : js_undefined()));
     if (property_descriptor->set.has_value())
-        object->create_data_property_or_throw(vm.names.set, *property_descriptor->set ? Value(*property_descriptor->set) : js_undefined());
+        MUST(object->create_data_property_or_throw(vm.names.set, *property_descriptor->set ? Value(*property_descriptor->set) : js_undefined()));
     if (property_descriptor->enumerable.has_value())
-        object->create_data_property_or_throw(vm.names.enumerable, Value(*property_descriptor->enumerable));
+        MUST(object->create_data_property_or_throw(vm.names.enumerable, Value(*property_descriptor->enumerable)));
     if (property_descriptor->configurable.has_value())
-        object->create_data_property_or_throw(vm.names.configurable, Value(*property_descriptor->configurable));
+        MUST(object->create_data_property_or_throw(vm.names.configurable, Value(*property_descriptor->configurable)));
     return object;
 }
 

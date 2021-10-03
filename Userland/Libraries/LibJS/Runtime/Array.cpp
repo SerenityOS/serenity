@@ -40,7 +40,8 @@ Array* Array::create_from(GlobalObject& global_object, Vector<Value> const& elem
     // 4. For each element e of elements, do
     for (u32 n = 0; n < elements.size(); ++n) {
         // a. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(n)), e).
-        array->create_data_property_or_throw(n, elements[n]);
+        MUST(array->create_data_property_or_throw(n, elements[n]));
+
         // b. Set n to n + 1.
     }
 

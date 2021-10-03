@@ -256,8 +256,8 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
         auto property_key = key.to_property_key(global_object);
         if (vm.exception())
             return IterationDecision::Break;
-        object->create_data_property_or_throw(property_key, value);
-        if (vm.exception())
+        auto result_or_error = object->create_data_property_or_throw(property_key, value);
+        if (result_or_error.is_error())
             return IterationDecision::Break;
         return IterationDecision::Continue;
     });
@@ -321,7 +321,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
 
         // c. If descriptor is not undefined, perform ! CreateDataPropertyOrThrow(descriptors, key, descriptor).
         if (!descriptor.is_undefined())
-            descriptors->create_data_property_or_throw(property_name, descriptor);
+            MUST(descriptors->create_data_property_or_throw(property_name, descriptor));
     }
 
     // 5. Return descriptors.
