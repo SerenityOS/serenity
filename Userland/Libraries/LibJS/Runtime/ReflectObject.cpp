@@ -117,9 +117,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::define_property)
         return {};
 
     // 3. Let desc be ? ToPropertyDescriptor(attributes).
-    auto descriptor = to_property_descriptor(global_object, attributes);
-    if (vm.exception())
-        return {};
+    auto descriptor = TRY_OR_DISCARD(to_property_descriptor(global_object, attributes));
 
     // 4. Return ? target.[[DefineOwnProperty]](key, desc).
     return Value(TRY_OR_DISCARD(target.as_object().internal_define_own_property(key, descriptor)));

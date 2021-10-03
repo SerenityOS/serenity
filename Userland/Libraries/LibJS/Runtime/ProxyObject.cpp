@@ -284,9 +284,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_pr
     auto extensible_target = TRY(m_target.is_extensible());
 
     // 13. Let resultDesc be ? ToPropertyDescriptor(trapResultObj).
-    auto result_desc = to_property_descriptor(global_object, trap_result);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto result_desc = TRY(to_property_descriptor(global_object, trap_result));
 
     // 14. Call CompletePropertyDescriptor(resultDesc).
     result_desc.complete();
