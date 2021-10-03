@@ -6,7 +6,6 @@
  */
 
 #include <AK/String.h>
-#include <AK/TemporaryChange.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
