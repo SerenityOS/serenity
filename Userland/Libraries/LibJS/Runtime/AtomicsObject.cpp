@@ -15,23 +15,38 @@
 namespace JS {
 
 // 25.4.2.1 ValidateIntegerTypedArray ( typedArray [ , waitable ] ), https://tc39.es/ecma262/#sec-validateintegertypedarray
-static void validate_integer_typed_array(GlobalObject& global_object, TypedArrayBase& typed_array, bool waitable = false)
+static ThrowCompletionOr<ArrayBuffer*> validate_integer_typed_array(GlobalObject& global_object, TypedArrayBase& typed_array, bool waitable = false)
 {
     auto& vm = global_object.vm();
 
-    auto maybe_error = validate_typed_array(global_object, typed_array);
-    if (maybe_error.is_error())
-        return;
+    // 1. If waitable is not present, set waitable to false.
 
+    // 2. Perform ? ValidateTypedArray(typedArray).
+    TRY(validate_typed_array(global_object, typed_array));
+
+    // 3. Let buffer be typedArray.[[ViewedArrayBuffer]].
+    auto* buffer = typed_array.viewed_array_buffer();
+
+    // 4. Let typeName be typedArray.[[TypedArrayName]].
     auto type_name = typed_array.element_name();
 
+    // 5. Let type be the Element Type value in Table 72 for typeName.
+
+    // 6. If waitable is true, then
     if (waitable) {
+        // a. If typeName is not "Int32Array" or "BigInt64Array", throw a TypeError exception.
         if ((type_name != "Int32Array"sv) && (type_name != "BigInt64Array"sv))
-            vm.throw_exception<TypeError>(global_object, ErrorType::TypedArrayTypeIsNot, type_name, "Int32 or BigInt64"sv);
-    } else {
-        if (!typed_array.is_unclamped_integer_element_type() && !typed_array.is_bigint_element_type())
-            vm.throw_exception<TypeError>(global_object, ErrorType::TypedArrayTypeIsNot, type_name, "an unclamped integer or BigInt"sv);
+            return vm.throw_completion<TypeError>(global_object, ErrorType::TypedArrayTypeIsNot, type_name, "Int32 or BigInt64"sv);
     }
+    // 7. Else,
+    else {
+        // a. If ! IsUnclampedIntegerElementType(type) is false and ! IsBigIntElementType(type) is false, throw a TypeError exception.
+        if (!typed_array.is_unclamped_integer_element_type() && !typed_array.is_bigint_element_type())
+            return vm.throw_completion<TypeError>(global_object, ErrorType::TypedArrayTypeIsNot, type_name, "an unclamped integer or BigInt"sv);
+    }
+
+    // 8. Return buffer.
+    return buffer;
 }
 
 // 25.4.2.2 ValidateAtomicAccess ( typedArray, requestIndex ), https://tc39.es/ecma262/#sec-validateatomicaccess
@@ -56,9 +71,7 @@ static Value atomic_read_modify_write(GlobalObject& global_object, TypedArrayBas
 {
     auto& vm = global_object.vm();
 
-    validate_integer_typed_array(global_object, typed_array);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(validate_integer_typed_array(global_object, typed_array));
 
     auto byte_index = validate_atomic_access(global_object, typed_array, index);
     if (!byte_index.has_value())
@@ -174,9 +187,7 @@ static Value atomic_compare_exchange_impl(GlobalObject& global_object, TypedArra
 {
     auto& vm = global_object.vm();
 
-    validate_integer_typed_array(global_object, typed_array);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(validate_integer_typed_array(global_object, typed_array));
 
     auto indexed_position = validate_atomic_access(global_object, typed_array, vm.argument(1));
     if (!indexed_position.has_value())
@@ -288,9 +299,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::load)
     if (!typed_array)
         return {};
 
-    validate_integer_typed_array(global_object, *typed_array);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(validate_integer_typed_array(global_object, *typed_array));
 
     auto indexed_position = validate_atomic_access(global_object, *typed_array, vm.argument(1));
     if (!indexed_position.has_value())
@@ -329,9 +338,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
     if (!typed_array)
         return {};
 
-    validate_integer_typed_array(global_object, *typed_array);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(validate_integer_typed_array(global_object, *typed_array));
 
     auto indexed_position = validate_atomic_access(global_object, *typed_array, vm.argument(1));
     if (!indexed_position.has_value())
