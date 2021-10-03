@@ -302,36 +302,46 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_like(GlobalObje
 
 // 23.2.5.1.4 InitializeTypedArrayFromList, https://tc39.es/ecma262/#sec-initializetypedarrayfromlist
 template<typename T>
-static void initialize_typed_array_from_list(GlobalObject& global_object, TypedArray<T>& typed_array, const MarkedValueList& list)
+static ThrowCompletionOr<void> initialize_typed_array_from_list(GlobalObject& global_object, TypedArray<T>& typed_array, const MarkedValueList& list)
 {
     auto& vm = global_object.vm();
+
+    // 1. Let len be the number of elements in values.
+    auto length = list.size();
+
+    // 2. Perform ? AllocateTypedArrayBuffer(O, len).
+
     // Enforce 2GB "Excessive Length" limit
-    if (list.size() > NumericLimits<i32>::max() / sizeof(T)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
-        return;
-    }
+    if (length > NumericLimits<i32>::max() / sizeof(T))
+        return vm.template throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
 
     auto element_size = typed_array.element_size();
-    if (Checked<size_t>::multiplication_would_overflow(element_size, list.size())) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
-        return;
-    }
-    auto byte_length = element_size * list.size();
+    if (Checked<size_t>::multiplication_would_overflow(element_size, length))
+        return vm.template throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
+    auto byte_length = element_size * length;
     auto array_buffer = ArrayBuffer::create(global_object, byte_length);
-    if (!array_buffer)
-        return;
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     typed_array.set_viewed_array_buffer(array_buffer);
     typed_array.set_byte_length(byte_length);
     typed_array.set_byte_offset(0);
-    typed_array.set_array_length(list.size());
+    typed_array.set_array_length(length);
 
-    for (size_t k = 0; k < list.size(); k++) {
+    // 3. Let k be 0.
+    // 4. Repeat, while k < len,
+    for (size_t k = 0; k < length; k++) {
+        // a. Let Pk be ! ToString(𝔽(k)).
+        // b. Let kValue be the first element of values and remove that element from values.
         auto value = list[k];
-        auto result_or_error = typed_array.set(k, value, Object::ShouldThrowExceptions::Yes);
-        if (result_or_error.is_error())
-            return;
+
+        // c. Perform ? Set(O, Pk, kValue, true).
+        TRY(typed_array.set(k, value, Object::ShouldThrowExceptions::Yes));
+
+        // d. Set k to k + 1.
     }
+
+    return {};
 }
 
 // 23.2.4.2 TypedArrayCreate ( constructor, argumentList ), https://tc39.es/ecma262/#typedarray-create
@@ -466,7 +476,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
                     auto values = iterable_to_list(global_object(), first_argument, iterator);                                         \
                     if (vm.exception())                                                                                                \
                         return {};                                                                                                     \
-                    initialize_typed_array_from_list(global_object(), *typed_array, values);                                           \
+                    TRY_OR_DISCARD(initialize_typed_array_from_list(global_object(), *typed_array, values));                           \
                 } else {                                                                                                               \
                     TRY_OR_DISCARD(initialize_typed_array_from_array_like(global_object(), *typed_array, first_argument.as_object())); \
                 }                                                                                                                      \
