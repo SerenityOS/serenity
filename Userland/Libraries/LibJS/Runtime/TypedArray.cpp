@@ -345,29 +345,32 @@ static ThrowCompletionOr<void> initialize_typed_array_from_list(GlobalObject& gl
 }
 
 // 23.2.4.2 TypedArrayCreate ( constructor, argumentList ), https://tc39.es/ecma262/#typedarray-create
-TypedArrayBase* typed_array_create(GlobalObject& global_object, FunctionObject& constructor, MarkedValueList arguments)
+ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_object, FunctionObject& constructor, MarkedValueList arguments)
 {
     auto& vm = global_object.vm();
 
-    auto argument_count = arguments.size();
-    auto first_argument = argument_count > 0 ? arguments[0] : js_undefined();
-
+    Optional<Value> first_argument;
+    if (!arguments.is_empty())
+        first_argument = arguments[0];
+    // 1. Let newTypedArray be ? Construct(constructor, argumentList).
     auto new_typed_array = vm.construct(constructor, constructor, move(arguments));
-    if (vm.exception())
-        return nullptr;
-    if (!new_typed_array.is_object() || !new_typed_array.as_object().is_typed_array()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "TypedArray");
-        return nullptr;
-    }
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+
+    // 2. Perform ? ValidateTypedArray(newTypedArray).
+    if (!new_typed_array.is_object() || !new_typed_array.as_object().is_typed_array())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "TypedArray");
     auto& typed_array = static_cast<TypedArrayBase&>(new_typed_array.as_object());
-    if (typed_array.viewed_array_buffer()->is_detached()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
-        return nullptr;
+    TRY(validate_typed_array(global_object, typed_array));
+
+    // 3. If argumentList is a List of a single Number, then
+    if (first_argument.has_value() && first_argument->is_number()) {
+        // a. If newTypedArray.[[ArrayLength]] < ℝ(argumentList[0]), throw a TypeError exception.
+        if (typed_array.array_length() < first_argument->as_double())
+            return vm.throw_completion<TypeError>(global_object, ErrorType::InvalidLength, "typed array");
     }
-    if (argument_count == 1 && first_argument.is_number() && typed_array.array_length() < first_argument.as_double()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::InvalidLength, "typed array");
-        return nullptr;
-    }
+
+    // 4. Return newTypedArray.
     return &typed_array;
 }
 

@@ -85,9 +85,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
 
         MarkedValueList arguments(vm.heap());
         arguments.empend(values.size());
-        auto target_object = typed_array_create(global_object, constructor.as_function(), move(arguments));
-        if (vm.exception())
-            return {};
+        auto target_object = TRY_OR_DISCARD(typed_array_create(global_object, constructor.as_function(), move(arguments)));
 
         for (size_t k = 0; k < values.size(); ++k) {
             auto k_value = values[k];
@@ -107,9 +105,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
 
     MarkedValueList arguments(vm.heap());
     arguments.empend(length);
-    auto target_object = typed_array_create(global_object, constructor.as_function(), move(arguments));
-    if (vm.exception())
-        return {};
+    auto target_object = TRY_OR_DISCARD(typed_array_create(global_object, constructor.as_function(), move(arguments)));
 
     for (size_t k = 0; k < length; ++k) {
         auto k_value = TRY_OR_DISCARD(array_like->get(k));
@@ -135,9 +131,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::of)
     }
     MarkedValueList arguments(vm.heap());
     arguments.append(Value(length));
-    auto new_object = typed_array_create(global_object, constructor.as_function(), move(arguments));
-    if (vm.exception())
-        return {};
+    auto new_object = TRY_OR_DISCARD(typed_array_create(global_object, constructor.as_function(), move(arguments)));
     for (size_t k = 0; k < length; ++k) {
         auto success = TRY_OR_DISCARD(new_object->set(k, vm.argument(k), Object::ShouldThrowExceptions::Yes));
         if (!success) {

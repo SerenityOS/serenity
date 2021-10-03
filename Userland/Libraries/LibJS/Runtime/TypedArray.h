@@ -480,7 +480,7 @@ private:
     virtual bool is_typed_array() const final { return true; }
 };
 
-TypedArrayBase* typed_array_create(GlobalObject& global_object, FunctionObject& constructor, MarkedValueList arguments);
+ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_object, FunctionObject& constructor, MarkedValueList arguments);
 
 #define JS_DECLARE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     class ClassName : public TypedArray<Type> {                                             \
