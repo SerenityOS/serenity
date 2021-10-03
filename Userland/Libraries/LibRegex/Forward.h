@@ -9,6 +9,8 @@
 #include <AK/Types.h>
 
 namespace regex {
+struct CompareTypeAndValuePair;
+
 enum class Error : u8;
 class Lexer;
 class PosixExtendedParser;
