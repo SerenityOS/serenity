@@ -6,6 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Format.h>
+#include <AK/IPv4Address.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <LibC/sys/arch/i386/regs.h>
@@ -13,11 +14,13 @@
 #include <LibCore/File.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <netinet/in.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ptrace.h>
+#include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <syscall.h>
@@ -117,6 +120,28 @@ VALUES_TO_NAMES(whence_name)
 HANDLE(SEEK_SET)
 HANDLE(SEEK_CUR)
 HANDLE(SEEK_END)
+END_VALUES_TO_NAMES()
+
+VALUES_TO_NAMES(domain_name)
+HANDLE(AF_UNSPEC)
+HANDLE(AF_UNIX)
+HANDLE(AF_INET)
+HANDLE(AF_INET6)
+END_VALUES_TO_NAMES()
+
+VALUES_TO_NAMES(socket_type_name)
+HANDLE(SOCK_STREAM)
+HANDLE(SOCK_DGRAM)
+HANDLE(SOCK_RAW)
+HANDLE(SOCK_RDM)
+HANDLE(SOCK_SEQPACKET)
+END_VALUES_TO_NAMES()
+
+VALUES_TO_NAMES(protocol_name)
+HANDLE(PF_UNSPEC)
+HANDLE(PF_UNIX)
+HANDLE(PF_INET)
+HANDLE(PF_INET6)
 END_VALUES_TO_NAMES()
 
 static int g_pid = -1;
@@ -384,6 +409,56 @@ static void format_select(FormattedSyscallBuilder& builder, Syscall::SC_select_p
         PointerArgument { params.sigmask });
 }
 
+namespace AK {
+template<>
+struct Formatter<struct sockaddr> : StandardFormatter {
+    void format(FormatBuilder& format_builder, struct sockaddr address)
+    {
+        auto& builder = format_builder.builder();
+        builder.append("{sa_family=");
+        builder.append(domain_name(address.sa_family));
+        if (address.sa_family == AF_INET) {
+            auto* address_in = (const struct sockaddr_in*)&address;
+            builder.appendff(
+                ", sin_port={}, sin_addr={}",
+                address_in->sin_port,
+                IPv4Address(address_in->sin_addr.s_addr).to_string());
+        }
+        builder.append('}');
+    }
+};
+}
+
+static void format_socket(FormattedSyscallBuilder& builder, int domain, int type, int protocol)
+{
+    // TODO: show additional options in type
+    builder.add_arguments(domain_name(domain), socket_type_name(type & SOCK_TYPE_MASK), protocol_name(protocol));
+}
+
+static void format_connect(FormattedSyscallBuilder& builder, int socket, const struct sockaddr* address_p, socklen_t address_len)
+{
+    builder.add_arguments(socket, copy_from_process(address_p), address_len);
+}
+
+static void format_recvmsg(FormattedSyscallBuilder& builder, int socket, struct msghdr* message, int flags)
+{
+    // TODO: format message
+    builder.add_arguments(socket, message);
+
+    Vector<StringView> active_flags;
+    if (flags & MSG_OOB)
+        active_flags.append("MSG_OOB");
+    if (flags & MSG_PEEK)
+        active_flags.append("MSG_PEEK");
+    // TODO: add MSG_WAITALL once its definition is added
+    if (!active_flags.is_empty()) {
+        StringBuilder sbuilder;
+        sbuilder.join(" | ", active_flags);
+        builder.add_argument(sbuilder.to_string());
+    } else
+        builder.add_argument("0");
+}
+
 static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t res)
 {
     enum ResultType {
@@ -420,6 +495,16 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
         break;
     case SC_select:
         format_select(builder, (Syscall::SC_select_params*)arg1);
+        break;
+    case SC_socket:
+        format_socket(builder, (int)arg1, (int)arg2, (int)arg3);
+        break;
+    case SC_recvmsg:
+        format_recvmsg(builder, (int)arg1, (struct msghdr*)arg2, (int)arg3);
+        result_type = Ssize;
+        break;
+    case SC_connect:
+        format_connect(builder, (int)arg1, (const struct sockaddr*)arg2, (socklen_t)arg3);
         break;
     default:
         builder.add_arguments((void*)arg1, (void*)arg2, (void*)arg3);
