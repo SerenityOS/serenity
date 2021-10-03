@@ -145,7 +145,7 @@ void Lexer::consume()
             return false;
         m_eof = true;
         m_current_char = '\0';
-        m_position++;
+        m_position = m_source.length() + 1;
         m_line_column++;
         return true;
     };

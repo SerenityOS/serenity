@@ -528,6 +528,9 @@ if (BUILD_LAGOM)
         )
         set_tests_properties(JS PROPERTIES ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT})
 
+        # test-invalid-unicode-js
+        lagom_test(../../Tests/LibJS/test-invalid-unicode-js.cpp LIBS LagomJS)
+
         # Markdown
         include(commonmark_spec)
         file(GLOB LIBMARKDOWN_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibMarkdown/*.cpp")
