@@ -686,14 +686,11 @@ ThrowCompletionOr<bool> Object::internal_set(PropertyName const& property_name, 
     auto own_descriptor = TRY(internal_get_own_property(property_name));
 
     // 3. Return OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc).
-    auto success = ordinary_set_with_own_descriptor(property_name, value, receiver, own_descriptor);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return success;
+    return ordinary_set_with_own_descriptor(property_name, value, receiver, own_descriptor);
 }
 
 // 10.1.9.2 OrdinarySetWithOwnDescriptor ( O, P, V, Receiver, ownDesc ), https://tc39.es/ecma262/#sec-ordinarysetwithowndescriptor
-bool Object::ordinary_set_with_own_descriptor(PropertyName const& property_name, Value value, Value receiver, Optional<PropertyDescriptor> own_descriptor)
+ThrowCompletionOr<bool> Object::ordinary_set_with_own_descriptor(PropertyName const& property_name, Value value, Value receiver, Optional<PropertyDescriptor> own_descriptor)
 {
     auto& vm = this->vm();
 
@@ -703,12 +700,12 @@ bool Object::ordinary_set_with_own_descriptor(PropertyName const& property_name,
     // 2. If ownDesc is undefined, then
     if (!own_descriptor.has_value()) {
         // a. Let parent be ? O.[[GetPrototypeOf]]().
-        auto* parent = TRY_OR_DISCARD(internal_get_prototype_of());
+        auto* parent = TRY(internal_get_prototype_of());
 
         // b. If parent is not null, then
         if (parent) {
             // i. Return ? parent.[[Set]](P, V, Receiver).
-            return TRY_OR_DISCARD(parent->internal_set(property_name, value, receiver));
+            return TRY(parent->internal_set(property_name, value, receiver));
         }
         // c. Else,
         else {
@@ -733,7 +730,7 @@ bool Object::ordinary_set_with_own_descriptor(PropertyName const& property_name,
             return false;
 
         // c. Let existingDescriptor be ? Receiver.[[GetOwnProperty]](P).
-        auto existing_descriptor = TRY_OR_DISCARD(receiver.as_object().internal_get_own_property(property_name));
+        auto existing_descriptor = TRY(receiver.as_object().internal_get_own_property(property_name));
 
         // d. If existingDescriptor is not undefined, then
         if (existing_descriptor.has_value()) {
@@ -749,7 +746,7 @@ bool Object::ordinary_set_with_own_descriptor(PropertyName const& property_name,
             auto value_descriptor = PropertyDescriptor { .value = value };
 
             // iv. Return ? Receiver.[[DefineOwnProperty]](P, valueDesc).
-            return TRY_OR_DISCARD(receiver.as_object().internal_define_own_property(property_name, value_descriptor));
+            return TRY(receiver.as_object().internal_define_own_property(property_name, value_descriptor));
         }
         // e. Else,
         else {
@@ -757,7 +754,7 @@ bool Object::ordinary_set_with_own_descriptor(PropertyName const& property_name,
             VERIFY(!receiver.as_object().storage_has(property_name));
 
             // ii. Return ? CreateDataProperty(Receiver, P, V).
-            return TRY_OR_DISCARD(receiver.as_object().create_data_property(property_name, value));
+            return TRY(receiver.as_object().create_data_property(property_name, value));
         }
     }
 
@@ -772,9 +769,7 @@ bool Object::ordinary_set_with_own_descriptor(PropertyName const& property_name,
         return false;
 
     // 7. Perform ? Call(setter, Receiver, « V »).
-    (void)vm.call(*setter, receiver, value);
-    if (vm.exception())
-        return {};
+    (void)TRY(vm.call(*setter, receiver, value));
 
     // 8. Return true.
     return true;

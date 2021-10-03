@@ -104,7 +104,7 @@ public:
     virtual ThrowCompletionOr<bool> internal_delete(PropertyName const&);
     virtual ThrowCompletionOr<MarkedValueList> internal_own_property_keys() const;
 
-    bool ordinary_set_with_own_descriptor(PropertyName const&, Value, Value, Optional<PropertyDescriptor>);
+    ThrowCompletionOr<bool> ordinary_set_with_own_descriptor(PropertyName const&, Value, Value, Optional<PropertyDescriptor>);
 
     // 10.4.7 Immutable Prototype Exotic Objects, https://tc39.es/ecma262/#sec-immutable-prototype-exotic-objects
 
