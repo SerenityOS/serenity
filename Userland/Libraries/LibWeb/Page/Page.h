@@ -66,7 +66,8 @@ private:
     RefPtr<BrowsingContext> m_top_level_browsing_context;
     WeakPtr<BrowsingContext> m_focused_context;
 
-    bool m_same_origin_policy_enabled { true };
+    // FIXME: Enable this by default once CORS preflight checks are supported.
+    bool m_same_origin_policy_enabled { false };
 };
 
 class PageClient {
