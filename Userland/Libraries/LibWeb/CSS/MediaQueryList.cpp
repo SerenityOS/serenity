@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,6 +19,7 @@ MediaQueryList::MediaQueryList(DOM::Document& document, NonnullRefPtrVector<Medi
     , m_document(document)
     , m_media(move(media))
 {
+    evaluate();
 }
 
 MediaQueryList::~MediaQueryList()
@@ -35,8 +37,21 @@ String MediaQueryList::media() const
 // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-matches
 bool MediaQueryList::matches() const
 {
-    // TODO: Implement me :^)
+    for (auto& media : m_media) {
+        if (media.matches())
+            return true;
+    }
     return false;
+}
+
+bool MediaQueryList::evaluate()
+{
+    bool now_matches = false;
+    for (auto& media : m_media) {
+        now_matches = now_matches || media.evaluate(m_document.window());
+    }
+
+    return now_matches;
 }
 
 JS::Object* MediaQueryList::create_wrapper(JS::GlobalObject& global_object)
