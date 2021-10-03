@@ -825,7 +825,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
 
     auto last_value = js_undefined();
     while (object) {
-        auto property_names = object->enumerable_own_property_names(Object::PropertyKind::Key);
+        auto property_names = TRY_OR_DISCARD(object->enumerable_own_property_names(Object::PropertyKind::Key));
         for (auto& value : property_names) {
             TRY_OR_DISCARD(for_in_head_state.execute_head(interpreter, global_object, value));
             last_value = m_body->execute(interpreter, global_object).value_or(last_value);
