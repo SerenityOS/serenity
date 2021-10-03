@@ -107,7 +107,8 @@ void LookupServer::load_etc_hosts()
         if (original_line.is_empty())
             break;
         auto trimmed_line = original_line.view().trim_whitespace();
-        auto fields = trimmed_line.split_view('\t', false);
+        auto replaced_line = trimmed_line.replace(" ", "\t", true);
+        auto fields = replaced_line.split_view('\t', false);
 
         if (fields.size() < 2) {
             dbgln("Failed to parse line {} from '/etc/hosts': '{}'", line_number, original_line);
