@@ -112,7 +112,7 @@ public:
 
     // 20.1 Object Objects, https://tc39.es/ecma262/#sec-object-objects
 
-    Object* define_properties(Value properties);
+    ThrowCompletionOr<Object*> define_properties(Value properties);
 
     // Implementation-specific storage abstractions
 
