@@ -49,33 +49,33 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
     //     b. Let v be the value of nf's internal slot whose name is the Internal Slot value of the current row.
     //     c. If v is not undefined, then
     //         i. Perform ! CreateDataPropertyOrThrow(options, p, v).
-    options->create_data_property_or_throw(vm.names.locale, js_string(vm, number_format->locale()));
-    options->create_data_property_or_throw(vm.names.numberingSystem, js_string(vm, number_format->numbering_system()));
-    options->create_data_property_or_throw(vm.names.style, js_string(vm, number_format->style_string()));
+    MUST(options->create_data_property_or_throw(vm.names.locale, js_string(vm, number_format->locale())));
+    MUST(options->create_data_property_or_throw(vm.names.numberingSystem, js_string(vm, number_format->numbering_system())));
+    MUST(options->create_data_property_or_throw(vm.names.style, js_string(vm, number_format->style_string())));
     if (number_format->has_currency())
-        options->create_data_property_or_throw(vm.names.currency, js_string(vm, number_format->currency()));
+        MUST(options->create_data_property_or_throw(vm.names.currency, js_string(vm, number_format->currency())));
     if (number_format->has_currency_display())
-        options->create_data_property_or_throw(vm.names.currencyDisplay, js_string(vm, number_format->currency_display_string()));
+        MUST(options->create_data_property_or_throw(vm.names.currencyDisplay, js_string(vm, number_format->currency_display_string())));
     if (number_format->has_currency_sign())
-        options->create_data_property_or_throw(vm.names.currencySign, js_string(vm, number_format->currency_sign_string()));
+        MUST(options->create_data_property_or_throw(vm.names.currencySign, js_string(vm, number_format->currency_sign_string())));
     if (number_format->has_unit())
-        options->create_data_property_or_throw(vm.names.unit, js_string(vm, number_format->unit()));
+        MUST(options->create_data_property_or_throw(vm.names.unit, js_string(vm, number_format->unit())));
     if (number_format->has_unit_display())
-        options->create_data_property_or_throw(vm.names.unitDisplay, js_string(vm, number_format->unit_display_string()));
-    options->create_data_property_or_throw(vm.names.minimumIntegerDigits, Value(number_format->min_integer_digits()));
+        MUST(options->create_data_property_or_throw(vm.names.unitDisplay, js_string(vm, number_format->unit_display_string())));
+    MUST(options->create_data_property_or_throw(vm.names.minimumIntegerDigits, Value(number_format->min_integer_digits())));
     if (number_format->has_min_fraction_digits())
-        options->create_data_property_or_throw(vm.names.minimumFractionDigits, Value(number_format->min_fraction_digits()));
+        MUST(options->create_data_property_or_throw(vm.names.minimumFractionDigits, Value(number_format->min_fraction_digits())));
     if (number_format->has_max_fraction_digits())
-        options->create_data_property_or_throw(vm.names.maximumFractionDigits, Value(number_format->max_fraction_digits()));
+        MUST(options->create_data_property_or_throw(vm.names.maximumFractionDigits, Value(number_format->max_fraction_digits())));
     if (number_format->has_min_significant_digits())
-        options->create_data_property_or_throw(vm.names.minimumSignificantDigits, Value(number_format->min_significant_digits()));
+        MUST(options->create_data_property_or_throw(vm.names.minimumSignificantDigits, Value(number_format->min_significant_digits())));
     if (number_format->has_max_significant_digits())
-        options->create_data_property_or_throw(vm.names.maximumSignificantDigits, Value(number_format->max_significant_digits()));
-    options->create_data_property_or_throw(vm.names.useGrouping, Value(number_format->use_grouping()));
-    options->create_data_property_or_throw(vm.names.notation, js_string(vm, number_format->notation_string()));
+        MUST(options->create_data_property_or_throw(vm.names.maximumSignificantDigits, Value(number_format->max_significant_digits())));
+    MUST(options->create_data_property_or_throw(vm.names.useGrouping, Value(number_format->use_grouping())));
+    MUST(options->create_data_property_or_throw(vm.names.notation, js_string(vm, number_format->notation_string())));
     if (number_format->has_compact_display())
-        options->create_data_property_or_throw(vm.names.compactDisplay, js_string(vm, number_format->compact_display_string()));
-    options->create_data_property_or_throw(vm.names.signDisplay, js_string(vm, number_format->sign_display_string()));
+        MUST(options->create_data_property_or_throw(vm.names.compactDisplay, js_string(vm, number_format->compact_display_string())));
+    MUST(options->create_data_property_or_throw(vm.names.signDisplay, js_string(vm, number_format->sign_display_string())));
 
     // 5. Return options.
     return options;

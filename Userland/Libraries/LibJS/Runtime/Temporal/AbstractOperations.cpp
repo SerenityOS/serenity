@@ -1082,7 +1082,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, 
         }
 
         // d. Perform ! CreateDataPropertyOrThrow(result, property, value).
-        result->create_data_property_or_throw(property, value);
+        MUST(result->create_data_property_or_throw(property, value));
     }
 
     // 4. Return result.

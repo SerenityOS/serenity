@@ -237,26 +237,26 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
             capture_value = js_string(vm, capture.view.u16_view());
             indices.append(Match::create(capture));
         }
-        array->create_data_property_or_throw(i + 1, capture_value);
+        MUST(array->create_data_property_or_throw(i + 1, capture_value));
 
         if (capture.capture_group_name.has_value()) {
             auto group_name = capture.capture_group_name.release_value();
-            groups_object->create_data_property_or_throw(group_name, js_string(vm, capture.view.u16_view()));
+            MUST(groups_object->create_data_property_or_throw(group_name, js_string(vm, capture.view.u16_view())));
             group_names.set(move(group_name), Match::create(capture));
         }
     }
 
     Value groups = has_groups ? groups_object : js_undefined();
-    array->create_data_property_or_throw(vm.names.groups, groups);
+    MUST(array->create_data_property_or_throw(vm.names.groups, groups));
 
     if (has_indices) {
         auto indices_array = make_indices_array(global_object, string_view, indices, group_names, has_groups);
         TRY_OR_DISCARD(array->create_data_property(vm.names.indices, indices_array));
     }
 
-    array->create_data_property_or_throw(vm.names.index, Value(match_index));
-    array->create_data_property_or_throw(vm.names.input, js_string(vm, move(string)));
-    array->create_data_property_or_throw(0, js_string(vm, match.view.u16_view()));
+    MUST(array->create_data_property_or_throw(vm.names.index, Value(match_index)));
+    MUST(array->create_data_property_or_throw(vm.names.input, js_string(vm, move(string))));
+    MUST(array->create_data_property_or_throw(0, js_string(vm, match.view.u16_view())));
 
     return array;
 }
@@ -448,9 +448,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
         if (vm.exception())
             return {};
 
-        array->create_data_property_or_throw(n, js_string(vm, match_str));
-        if (vm.exception())
-            return {};
+        TRY_OR_DISCARD(array->create_data_property_or_throw(n, js_string(vm, match_str)));
 
         if (match_str.is_empty())
             TRY_OR_DISCARD(increment_last_index(global_object, *regexp_object, string.view(), unicode));
@@ -724,7 +722,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         if (!result.is_null())
             return array;
 
-        array->create_data_property_or_throw(0, js_string(vm, move(string)));
+        MUST(array->create_data_property_or_throw(0, js_string(vm, move(string))));
         return array;
     }
 
@@ -753,7 +751,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         }
 
         auto substring = string_view.substring_view(last_match_end, next_search_from - last_match_end);
-        array->create_data_property_or_throw(array_length, js_string(vm, move(substring)));
+        MUST(array->create_data_property_or_throw(array_length, js_string(vm, move(substring))));
 
         if (++array_length == limit)
             return array;
@@ -769,7 +767,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 
         for (size_t i = 1; i <= number_of_captures; ++i) {
             auto next_capture = TRY_OR_DISCARD(result_object->get(i));
-            array->create_data_property_or_throw(array_length, next_capture);
+            MUST(array->create_data_property_or_throw(array_length, next_capture));
             if (++array_length == limit)
                 return array;
         }
@@ -779,7 +777,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     }
 
     auto substring = string_view.substring_view(last_match_end);
-    array->create_data_property_or_throw(array_length, js_string(vm, move(substring)));
+    MUST(array->create_data_property_or_throw(array_length, js_string(vm, move(substring))));
 
     return array;
 }
