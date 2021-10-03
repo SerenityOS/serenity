@@ -188,7 +188,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_frozen)
     auto argument = vm.argument(0);
     if (!argument.is_object())
         return Value(true);
-    return Value(argument.as_object().test_integrity_level(Object::IntegrityLevel::Frozen));
+    return Value(TRY_OR_DISCARD(argument.as_object().test_integrity_level(Object::IntegrityLevel::Frozen)));
 }
 
 // 20.1.2.16 Object.isSealed ( O ), https://tc39.es/ecma262/#sec-object.issealed
@@ -197,7 +197,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_sealed)
     auto argument = vm.argument(0);
     if (!argument.is_object())
         return Value(true);
-    return Value(argument.as_object().test_integrity_level(Object::IntegrityLevel::Sealed));
+    return Value(TRY_OR_DISCARD(argument.as_object().test_integrity_level(Object::IntegrityLevel::Sealed)));
 }
 
 // 20.1.2.18 Object.preventExtensions ( O ), https://tc39.es/ecma262/#sec-object.preventextensions
