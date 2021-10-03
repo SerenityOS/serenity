@@ -219,7 +219,7 @@ ThrowCompletionOr<bool> Object::define_property_or_throw(PropertyName const& pro
 }
 
 // 7.3.9 DeletePropertyOrThrow ( O, P ), https://tc39.es/ecma262/#sec-deletepropertyorthrow
-bool Object::delete_property_or_throw(PropertyName const& property_name)
+ThrowCompletionOr<bool> Object::delete_property_or_throw(PropertyName const& property_name)
 {
     auto& vm = this->vm();
 
@@ -229,13 +229,12 @@ bool Object::delete_property_or_throw(PropertyName const& property_name)
     VERIFY(property_name.is_valid());
 
     // 3. Let success be ? O.[[Delete]](P).
-    auto success = TRY_OR_DISCARD(internal_delete(property_name));
+    auto success = TRY(internal_delete(property_name));
 
     // 4. If success is false, throw a TypeError exception.
     if (!success) {
         // FIXME: Improve/contextualize error message
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ObjectDeleteReturnedFalse);
-        return {};
+        return vm.throw_completion<TypeError>(global_object(), ErrorType::ObjectDeleteReturnedFalse);
     }
 
     // 5. Return success.

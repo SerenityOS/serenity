@@ -1080,11 +1080,8 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
     for (j = 0; j < items.size(); ++j)
         TRY_OR_DISCARD(typed_array->set(j, items[j], Object::ShouldThrowExceptions::Yes));
 
-    for (; j < length; ++j) {
-        typed_array->delete_property_or_throw(j);
-        if (vm.exception())
-            return {};
-    }
+    for (; j < length; ++j)
+        TRY_OR_DISCARD(typed_array->delete_property_or_throw(j));
 
     return typed_array;
 }

@@ -369,9 +369,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
                 auto from_value = TRY_OR_DISCARD(this_object->get(from));
                 TRY_OR_DISCARD(this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes));
             } else {
-                this_object->delete_property_or_throw(to);
-                if (vm.exception())
-                    return {};
+                TRY_OR_DISCARD(this_object->delete_property_or_throw(to));
             }
         }
 
@@ -396,9 +394,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
     }
     auto index = length - 1;
     auto element = TRY_OR_DISCARD(this_object->get(index));
-    this_object->delete_property_or_throw(index);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(this_object->delete_property_or_throw(index));
     TRY_OR_DISCARD(this_object->set(vm.names.length, Value(index), Object::ShouldThrowExceptions::Yes));
     return element;
 }
@@ -425,16 +421,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
             auto from_value = TRY_OR_DISCARD(this_object->get(from));
             TRY_OR_DISCARD(this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes));
         } else {
-            this_object->delete_property_or_throw(to);
-            if (vm.exception())
-                return {};
+            TRY_OR_DISCARD(this_object->delete_property_or_throw(to));
         }
     }
 
-    this_object->delete_property_or_throw(length - 1);
-    if (vm.exception())
-        return {};
-
+    TRY_OR_DISCARD(this_object->delete_property_or_throw(length - 1));
     TRY_OR_DISCARD(this_object->set(vm.names.length, Value(length - 1), Object::ShouldThrowExceptions::Yes));
     return first;
 }
@@ -976,13 +967,9 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
             TRY_OR_DISCARD(this_object->set(upper, lower_value, Object::ShouldThrowExceptions::Yes));
         } else if (!lower_exists && upper_exists) {
             TRY_OR_DISCARD(this_object->set(lower, upper_value, Object::ShouldThrowExceptions::Yes));
-            this_object->delete_property_or_throw(upper);
-            if (vm.exception())
-                return {};
+            TRY_OR_DISCARD(this_object->delete_property_or_throw(upper));
         } else if (lower_exists && !upper_exists) {
-            this_object->delete_property_or_throw(lower);
-            if (vm.exception())
-                return {};
+            TRY_OR_DISCARD(this_object->delete_property_or_throw(lower));
             TRY_OR_DISCARD(this_object->set(upper, lower_value, Object::ShouldThrowExceptions::Yes));
         }
     }
@@ -1141,11 +1128,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
     // The empty parts of the array are always sorted to the end, regardless of the
     // compare function. FIXME: For performance, a similar process could be used
     // for undefined, which are sorted to right before the empty values.
-    for (size_t j = items.size(); j < length; ++j) {
-        object->delete_property_or_throw(j);
-        if (vm.exception())
-            return {};
-    }
+    for (size_t j = items.size(); j < length; ++j)
+        TRY_OR_DISCARD(object->delete_property_or_throw(j));
 
     return object;
 }
@@ -1609,17 +1593,12 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
                 auto from_value = TRY_OR_DISCARD(this_object->get(from));
                 TRY_OR_DISCARD(this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes));
             } else {
-                this_object->delete_property_or_throw(to);
-                if (vm.exception())
-                    return {};
+                TRY_OR_DISCARD(this_object->delete_property_or_throw(to));
             }
         }
 
-        for (u64 i = initial_length; i > new_length; --i) {
-            this_object->delete_property_or_throw(i - 1);
-            if (vm.exception())
-                return {};
-        }
+        for (u64 i = initial_length; i > new_length; --i)
+            TRY_OR_DISCARD(this_object->delete_property_or_throw(i - 1));
     } else if (insert_count > actual_delete_count) {
         for (u64 i = initial_length - actual_delete_count; i > actual_start; --i) {
             u64 from_index = i + actual_delete_count - 1;
@@ -1633,9 +1612,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
                 auto from_value = TRY_OR_DISCARD(this_object->get(from_index));
                 TRY_OR_DISCARD(this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes));
             } else {
-                this_object->delete_property_or_throw(to);
-                if (vm.exception())
-                    return {};
+                TRY_OR_DISCARD(this_object->delete_property_or_throw(to));
             }
         }
     }
@@ -1894,9 +1871,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::copy_within)
             auto from_value = TRY_OR_DISCARD(this_object->get(from_i));
             TRY_OR_DISCARD(this_object->set(to_i, from_value, Object::ShouldThrowExceptions::Yes));
         } else {
-            this_object->delete_property_or_throw(to_i);
-            if (vm.exception())
-                return {};
+            TRY_OR_DISCARD(this_object->delete_property_or_throw(to_i));
         }
 
         from_i += direction;
