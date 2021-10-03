@@ -108,6 +108,10 @@ public:
         return true;
     }
 
+    size_t buffered() const { return m_buffered; }
+    // Reading from the stream returned here will most definitely brick the buffering behavior of Buffered.
+    StreamType& underlying_stream() { return m_stream; }
+
 private:
     Bytes buffer() const { return { m_buffer, Size }; }
 
