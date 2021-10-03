@@ -57,6 +57,7 @@
 #include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/SVG/TagNames.h>
+#include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/KeyboardEvent.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
@@ -1081,6 +1082,27 @@ bool Document::hidden() const
 String Document::visibility_state() const
 {
     return hidden() ? "hidden" : "visible";
+}
+
+// https://drafts.csswg.org/cssom-view/#run-the-resize-steps
+void Document::run_the_resize_steps()
+{
+    // 1. If doc’s viewport has had its width or height changed
+    //    (e.g. as a result of the user resizing the browser window, or changing the page zoom scale factor,
+    //    or an iframe element’s dimensions are changed) since the last time these steps were run,
+    //    fire an event named resize at the Window object associated with doc.
+
+    if (!browsing_context())
+        return;
+
+    auto viewport_size = browsing_context()->viewport_rect().size();
+    if (m_last_viewport_size == viewport_size)
+        return;
+    m_last_viewport_size = viewport_size;
+
+    dispatch_event(DOM::Event::create(UIEvents::EventNames::resize));
+
+    update_layout();
 }
 
 }

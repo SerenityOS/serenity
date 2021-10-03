@@ -5,16 +5,15 @@
  */
 
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/Page.h>
-#include <LibWeb/UIEvents/EventNames.h>
 
 namespace Web {
 
@@ -83,10 +82,6 @@ void BrowsingContext::set_viewport_rect(Gfx::IntRect const& rect)
 
     if (m_size != rect.size()) {
         m_size = rect.size();
-        if (active_document()) {
-            active_document()->window().dispatch_event(DOM::Event::create(UIEvents::EventNames::resize));
-            active_document()->update_layout();
-        }
         did_change = true;
     }
 
@@ -99,6 +94,9 @@ void BrowsingContext::set_viewport_rect(Gfx::IntRect const& rect)
         for (auto* client : m_viewport_clients)
             client->browsing_context_did_set_viewport_rect(rect);
     }
+
+    // Schedule the HTML event loop to ensure that a `resize` event gets fired.
+    HTML::main_thread_event_loop().schedule();
 }
 
 void BrowsingContext::set_size(Gfx::IntSize const& size)
@@ -106,13 +104,12 @@ void BrowsingContext::set_size(Gfx::IntSize const& size)
     if (m_size == size)
         return;
     m_size = size;
-    if (active_document()) {
-        active_document()->window().dispatch_event(DOM::Event::create(UIEvents::EventNames::resize));
-        active_document()->update_layout();
-    }
 
     for (auto* client : m_viewport_clients)
         client->browsing_context_did_set_viewport_rect(viewport_rect());
+
+    // Schedule the HTML event loop to ensure that a `resize` event gets fired.
+    HTML::main_thread_event_loop().schedule();
 }
 
 void BrowsingContext::set_viewport_scroll_offset(Gfx::IntPoint const& offset)

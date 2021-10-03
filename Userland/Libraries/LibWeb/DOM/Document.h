@@ -301,6 +301,8 @@ public:
     bool hidden() const;
     String visibility_state() const;
 
+    void run_the_resize_steps();
+
 private:
     explicit Document(const AK::URL&);
 
@@ -388,6 +390,9 @@ private:
 
     // https://html.spec.whatwg.org/#page-showing
     bool m_page_showing { false };
+
+    // Used by run_the_resize_steps().
+    Gfx::IntSize m_last_viewport_size;
 };
 
 }
