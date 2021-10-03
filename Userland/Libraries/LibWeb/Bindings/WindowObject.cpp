@@ -37,6 +37,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/EventHandler.h>
+#include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/Page.h>
@@ -259,8 +260,11 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
     return JS::Value(timer_id);
 }
 
+// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-settimeout
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
 {
+    // FIXME: Ideally this would share more code with setInterval() using the "timer initialization steps"
+    // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#timer-initialisation-steps
     auto* impl = impl_from(vm, global_object);
     if (!impl)
         return {};
@@ -268,12 +272,21 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "setTimeout");
         return {};
     }
-    auto* callback_object = vm.argument(0).to_object(global_object);
-    if (!callback_object)
-        return {};
-    if (!callback_object->is_function()) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAFunctionNoParam);
-        return {};
+    JS::FunctionObject* callback;
+    if (vm.argument(0).is_function()) {
+        callback = &vm.argument(0).as_function();
+    } else {
+        auto script_source = vm.argument(0).to_string(global_object);
+        if (vm.exception())
+            return {};
+        // FIXME: This needs more work once we have a environment settings object.
+        // The script wants us to use a task for the "run function or script string" part,
+        // using a NativeFunction for the latter is a workaround so that we can reuse the
+        // DOM::Timer API unaltered (always expects a JS::FunctionObject).
+        callback = JS::NativeFunction::create(global_object, "", [impl, script_source = move(script_source)](auto&, auto&) mutable {
+            auto script = HTML::ClassicScript::create(impl->associated_document().url().to_string(), script_source, impl->associated_document().realm(), AK::URL());
+            return script->run();
+        });
     }
     i32 interval = 0;
     if (vm.argument_count() >= 2) {
@@ -283,8 +296,8 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
         if (interval < 0)
             interval = 0;
     }
-
-    auto timer_id = impl->set_timeout(*static_cast<JS::FunctionObject*>(callback_object), interval);
+    // FIXME: Pass ...arguments to the callback function when it's invoked
+    auto timer_id = impl->set_timeout(*callback, interval);
     return JS::Value(timer_id);
 }
 
