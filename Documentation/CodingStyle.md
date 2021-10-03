@@ -11,7 +11,7 @@ We'll definitely be tweaking and amending this over time, so let's consider it a
 
 ### Names
 
-[](#names-basic) A combination of CamelCase and snake\_case. Use CamelCase (Capitalize the first letter, including all letters in an acronym) in a class, struct, or namespace name. Use snake\_case (all lowercase, with underscores separating words) for variable and function names.
+A combination of CamelCase and snake\_case. Use CamelCase (Capitalize the first letter, including all letters in an acronym) in a class, struct, or namespace name. Use snake\_case (all lowercase, with underscores separating words) for variable and function names.
 
 ###### Right:
 
@@ -31,7 +31,7 @@ class Filedescriptor;
 String MIME_Type();
 ```
 
-[](#names-full-words) Use full words, except in the rare case where an abbreviation would be more canonical and easier to understand.
+Use full words, except in the rare case where an abbreviation would be more canonical and easier to understand.
 
 ###### Right:
 
@@ -49,7 +49,7 @@ size_t len;
 short tabulation_index; // Goofy.
 ```
 
-[](#names-data-members) Data members in C++ classes should be private. Static data members should be prefixed by "s\_". Other data members should be prefixed by "m\_". Global variables should be prefixed by "g\_".
+Data members in C++ classes should be private. Static data members should be prefixed by "s\_". Other data members should be prefixed by "m\_". Global variables should be prefixed by "g\_".
 
 ###### Right:
 
@@ -74,7 +74,7 @@ public:
 };
 ```
 
-[](#names-setter-getter) Precede setters with the word "set". Use bare words for getters. Setter and getter names should match the names of the variables being set/gotten.
+Precede setters with the word "set". Use bare words for getters. Setter and getter names should match the names of the variables being set/gotten.
 
 ###### Right:
 
@@ -90,7 +90,7 @@ void set_count(int); // Sets m_the_count.
 int get_count() const; // Returns m_the_count.
 ```
 
-[](#names-out-argument) Precede getters that return values through out arguments with the word "get".
+Precede getters that return values through out arguments with the word "get".
 
 ###### Right:
 
@@ -104,7 +104,7 @@ void get_filename_and_inode_id(String&, InodeIdentifier&) const;
 void filename_and_inode_id(String&, InodeIdentifier&) const;
 ```
 
-[](#names-verb) Use descriptive verbs in function names.
+Use descriptive verbs in function names.
 
 ###### Right:
 
@@ -118,7 +118,7 @@ bool convert_to_ascii(short*, size_t);
 bool to_ascii(short*, size_t);
 ```
 
-[](#names-if-exists) When there are two getters for a variable, and one of them automatically makes sure the requested object is instantiated, prefix that getter function with `ensure_`. As it ensures that an object is created, it should consequently also return a reference, not a pointer.
+When there are two getters for a variable, and one of them automatically makes sure the requested object is instantiated, prefix that getter function with `ensure_`. As it ensures that an object is created, it should consequently also return a reference, not a pointer.
 
 ###### Right:
 
@@ -134,7 +134,7 @@ Inode& inode();
 Inode* ensure_inode();
 ```
 
-[](#names-variable-name-in-function-decl) Leave meaningless variable names out of function declarations. A good rule of thumb is if the parameter type name contains the parameter name (without trailing numbers or pluralization), then the parameter name isn't needed. Usually, there should be a parameter name for bools, strings, and numerical types.
+Leave meaningless variable names out of function declarations. A good rule of thumb is if the parameter type name contains the parameter name (without trailing numbers or pluralization), then the parameter name isn't needed. Usually, there should be a parameter name for bools, strings, and numerical types.
 
 ###### Right:
 
@@ -152,7 +152,7 @@ void set_count(int count);
 void do_something(Context* context);
 ```
 
-[](#names-enum-to-bool) Prefer enums to bools on function parameters if callers are likely to be passing constants, since named constants are easier to read at the call site. An exception to this rule is a setter function, where the name of the function already makes clear what the boolean is.
+Prefer enums to bools on function parameters if callers are likely to be passing constants, since named constants are easier to read at the call site. An exception to this rule is a setter function, where the name of the function already makes clear what the boolean is.
 
 ###### Right:
 
@@ -169,13 +169,13 @@ do_something(something, false);
 set_resizable(NotResizable);
 ```
 
-[](#names-enum-members) Enum members should use InterCaps with an initial capital letter.
+Enum members should use InterCaps with an initial capital letter.
 
-[](#names-const-to-define) Prefer `const` to `#define`. Prefer inline functions to macros.
+Prefer `const` to `#define`. Prefer inline functions to macros.
 
-[](#names-define-constants) `#defined` constants should use all uppercase names with words separated by underscores.
+`#defined` constants should use all uppercase names with words separated by underscores.
 
-[](#header-guards) Use `#pragma once` instead of `#define` and `#ifdef` for header guards.
+Use `#pragma once` instead of `#define` and `#ifdef` for header guards.
 
 ###### Right:
 
@@ -194,7 +194,7 @@ set_resizable(NotResizable);
 
 ### Other Punctuation
 
-[](#punctuation-member-init) Constructors for C++ classes should initialize their members using C++ initializer syntax. Each member (and superclass) should be indented on a separate line, with the colon or comma preceding the member on that line. Prefer initialization at member definition whenever possible.
+Constructors for C++ classes should initialize their members using C++ initializer syntax. Each member (and superclass) should be indented on a separate line, with the colon or comma preceding the member on that line. Prefer initialization at member definition whenever possible.
 
 ###### Right:
 
@@ -235,7 +235,7 @@ MyClass::MyClass(Document* document) : MySuperClass()
 MyOtherClass::MyOtherClass() : MySuperClass() {}
 ```
 
-[](#punctuation-vector-index) Prefer index or range-for over iterators in Vector iterations for terse, easier-to-read code.
+Prefer index or range-for over iterators in Vector iterations for terse, easier-to-read code.
 
 ###### Right:
 
@@ -261,9 +261,9 @@ for (auto it = children.begin(); it != children.end(); ++it)
 
 ### Pointers and References
 
-[](#pointers-cpp) Both pointer types and reference types should be written with no space between the type name and the `*` or `&`.
+Both pointer types and reference types should be written with no space between the type name and the `*` or `&`.
 
-[](#pointers-out-argument) An out argument of a function should be passed by reference except rare cases where it is optional in which case it should be passed by pointer.
+An out argument of a function should be passed by reference except rare cases where it is optional in which case it should be passed by pointer.
 
 ###### Right:
 
@@ -292,7 +292,7 @@ void MyClass::get_some_value(OutArgumentType* outArgument) const
 
 ### "using" Statements
 
-[](#using-ak) In header files in the AK sub-library, however, it is acceptable to use "using" declarations at the end of the file to import one or more names in the AK namespace into the global scope.
+In header files in the AK sub-library, however, it is acceptable to use "using" declarations at the end of the file to import one or more names in the AK namespace into the global scope.
 
 ###### Right:
 
@@ -330,7 +330,7 @@ namespace AK {
 using AK::SomethingOrOther;
 ```
 
-[](#using-in-cpp) In C++ implementation files, do not use "using" declarations of any kind to import names in the standard template library. Directly qualify the names at the point they're used instead.
+In C++ implementation files, do not use "using" declarations of any kind to import names in the standard template library. Directly qualify the names at the point they're used instead.
 
 ###### Right:
 
@@ -361,7 +361,7 @@ swap(a, b);
 
 ### Types
 
-[](#types-unsigned) Omit "int" when using "unsigned" modifier. Do not use "signed" modifier. Use "int" by itself instead.
+Omit "int" when using "unsigned" modifier. Do not use "signed" modifier. Use "int" by itself instead.
 
 ###### Right:
 
@@ -380,7 +380,7 @@ signed int c; // Doesn't omit "signed".
 
 ### Classes
 
-[](#structs-vs-classes) For types with methods, prefer `class` over `struct`.
+For types with methods, prefer `class` over `struct`.
 
 * For classes, make public getters and setters, keep members private with `m_` prefix.
 * For structs, let everything be public and skip the `m_` prefix.
@@ -429,7 +429,7 @@ public:
 };
 ```
 
-[](#classes-explicit) Use a constructor to do an implicit conversion when the argument is reasonably thought of as a type conversion and the type conversion is fast. Otherwise, use the explicit keyword or a function returning the type. This only applies to single argument constructors.
+Use a constructor to do an implicit conversion when the argument is reasonably thought of as a type conversion and the type conversion is fast. Otherwise, use the explicit keyword or a function returning the type. This only applies to single argument constructors.
 
 ###### Right:
 
@@ -460,7 +460,7 @@ public:
 
 ### Singleton pattern
 
-[](#singleton-static-member) Use a static member function named "the()" to access the instance of the singleton.
+Use a static member function named "the()" to access the instance of the singleton.
 
 ###### Right:
 
@@ -492,9 +492,9 @@ UniqueObject& my_unique_object(); // Free function.
 
 ### Comments
 
-[](#comments-sentences) Make comments look like sentences by starting with a capital letter and ending with a period (punctuation). One exception may be end of line comments like this `if (x == y) // false for NaN`.
+Make comments look like sentences by starting with a capital letter and ending with a period (punctuation). One exception may be end of line comments like this `if (x == y) // false for NaN`.
 
-[](#comments-fixme) Use FIXME: (without attribution) to denote items that need to be addressed in the future.
+Use FIXME: (without attribution) to denote items that need to be addressed in the future.
 
 ###### Right:
 
@@ -514,7 +514,7 @@ draw_jpg(); // TODO: Make this code handle jpg in addition to the png support.
 
 ### Overriding Virtual Methods
 
-[](#override-methods) The declaration of a virtual method inside a class must be declared with the `virtual` keyword. All subclasses of that class must either specify the `override` keyword when overriding the virtual method or the `final` keyword when overriding the virtual method and requiring that no further subclasses can override it.
+The declaration of a virtual method inside a class must be declared with the `virtual` keyword. All subclasses of that class must either specify the `override` keyword when overriding the virtual method or the `final` keyword when overriding the virtual method and requiring that no further subclasses can override it.
 
 ###### Right:
 
@@ -584,7 +584,7 @@ public:
 
 ### Const placement
 
-[](#east-const) Use "east const" style where `const` is written on the right side of the type being qualified. See [this article](https://mariusbancila.ro/blog/2018/11/23/join-the-east-const-revolution/) for more information about east const.
+Use "east const" style where `const` is written on the right side of the type being qualified. See [this article](https://mariusbancila.ro/blog/2018/11/23/join-the-east-const-revolution/) for more information about east const.
 
 ###### Right:
 
