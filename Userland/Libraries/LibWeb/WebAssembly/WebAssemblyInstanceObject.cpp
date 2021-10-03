@@ -54,7 +54,7 @@ void WebAssemblyInstanceObject::initialize(JS::GlobalObject& global_object)
             });
     }
 
-    m_exports_object->set_integrity_level(IntegrityLevel::Frozen);
+    MUST(m_exports_object->set_integrity_level(IntegrityLevel::Frozen));
 }
 
 void WebAssemblyInstanceObject::visit_edges(Visitor& visitor)

@@ -221,9 +221,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::freeze)
     auto argument = vm.argument(0);
     if (!argument.is_object())
         return argument;
-    auto status = argument.as_object().set_integrity_level(Object::IntegrityLevel::Frozen);
-    if (vm.exception())
-        return {};
+    auto status = TRY_OR_DISCARD(argument.as_object().set_integrity_level(Object::IntegrityLevel::Frozen));
     if (!status) {
         vm.throw_exception<TypeError>(global_object, ErrorType::ObjectFreezeFailed);
         return {};
@@ -272,9 +270,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::seal)
     auto argument = vm.argument(0);
     if (!argument.is_object())
         return argument;
-    auto status = argument.as_object().set_integrity_level(Object::IntegrityLevel::Sealed);
-    if (vm.exception())
-        return {};
+    auto status = TRY_OR_DISCARD(argument.as_object().set_integrity_level(Object::IntegrityLevel::Sealed));
     if (!status) {
         vm.throw_exception<TypeError>(global_object, ErrorType::ObjectSealFailed);
         return {};

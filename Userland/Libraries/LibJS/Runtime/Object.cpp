@@ -273,7 +273,7 @@ ThrowCompletionOr<bool> Object::has_own_property(PropertyName const& property_na
 }
 
 // 7.3.15 SetIntegrityLevel ( O, level ), https://tc39.es/ecma262/#sec-setintegritylevel
-bool Object::set_integrity_level(IntegrityLevel level)
+ThrowCompletionOr<bool> Object::set_integrity_level(IntegrityLevel level)
 {
     auto& global_object = this->global_object();
 
@@ -283,14 +283,14 @@ bool Object::set_integrity_level(IntegrityLevel level)
     VERIFY(level == IntegrityLevel::Sealed || level == IntegrityLevel::Frozen);
 
     // 3. Let status be ? O.[[PreventExtensions]]().
-    auto status = TRY_OR_DISCARD(internal_prevent_extensions());
+    auto status = TRY(internal_prevent_extensions());
 
     // 4. If status is false, return false.
     if (!status)
         return false;
 
     // 5. Let keys be ? O.[[OwnPropertyKeys]]().
-    auto keys = TRY_OR_DISCARD(internal_own_property_keys());
+    auto keys = TRY(internal_own_property_keys());
 
     // 6. If level is sealed, then
     if (level == IntegrityLevel::Sealed) {
@@ -299,7 +299,7 @@ bool Object::set_integrity_level(IntegrityLevel level)
             auto property_name = PropertyName::from_value(global_object, key);
 
             // i. Perform ? DefinePropertyOrThrow(O, k, PropertyDescriptor { [[Configurable]]: false }).
-            TRY_OR_DISCARD(define_property_or_throw(property_name, { .configurable = false }));
+            TRY(define_property_or_throw(property_name, { .configurable = false }));
         }
     }
     // 7. Else,
@@ -311,7 +311,7 @@ bool Object::set_integrity_level(IntegrityLevel level)
             auto property_name = PropertyName::from_value(global_object, key);
 
             // i. Let currentDesc be ? O.[[GetOwnProperty]](k).
-            auto current_descriptor = TRY_OR_DISCARD(internal_get_own_property(property_name));
+            auto current_descriptor = TRY(internal_get_own_property(property_name));
 
             // ii. If currentDesc is not undefined, then
             if (!current_descriptor.has_value())
@@ -331,7 +331,7 @@ bool Object::set_integrity_level(IntegrityLevel level)
             }
 
             // 3. Perform ? DefinePropertyOrThrow(O, k, desc).
-            TRY_OR_DISCARD(define_property_or_throw(property_name, descriptor));
+            TRY(define_property_or_throw(property_name, descriptor));
         }
     }
 
