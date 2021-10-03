@@ -53,68 +53,89 @@ ThrowCompletionOr<void> validate_typed_array(GlobalObject& global_object, TypedA
 }
 
 // 22.2.5.1.3 InitializeTypedArrayFromArrayBuffer, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraybuffer
-static void initialize_typed_array_from_array_buffer(GlobalObject& global_object, TypedArrayBase& typed_array, ArrayBuffer& array_buffer, Value byte_offset, Value length)
+static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(GlobalObject& global_object, TypedArrayBase& typed_array, ArrayBuffer& array_buffer, Value byte_offset, Value length)
 {
     auto& vm = global_object.vm();
+
+    // 1. Let constructorName be the String value of O.[[TypedArrayName]].
+
+    // 2. Let elementSize be the Element Size value specified in Table 72 for constructorName.
     auto element_size = typed_array.element_size();
+
+    // 3. Let offset be ? ToIndex(byteOffset).
     auto offset = byte_offset.to_index(global_object);
-    if (vm.exception())
-        return;
-    if (offset % element_size != 0) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TypedArrayInvalidByteOffset, typed_array.class_name(), element_size, offset);
-        return;
-    }
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+
+    // 4. If offset modulo elementSize ≠ 0, throw a RangeError exception.
+    if (offset % element_size != 0)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayInvalidByteOffset, typed_array.class_name(), element_size, offset);
+
     size_t new_length { 0 };
+
+    // 5. If length is not undefined, then
     if (!length.is_undefined()) {
+        // a. Let newLength be ? ToIndex(length).
         new_length = length.to_index(global_object);
-        if (vm.exception())
-            return;
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
     }
 
-    if (array_buffer.is_detached()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
-        return;
-    }
+    // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+    if (array_buffer.is_detached())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
+    // 7. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
     auto buffer_byte_length = array_buffer.byte_length();
+
     Checked<size_t> new_byte_length;
+
+    // 8. If length is undefined, then
     if (length.is_undefined()) {
-        if (buffer_byte_length % element_size != 0) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::TypedArrayInvalidBufferLength, typed_array.class_name(), element_size, buffer_byte_length);
-            return;
-        }
-        if (offset > buffer_byte_length) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::TypedArrayOutOfRangeByteOffset, offset, buffer_byte_length);
-            return;
-        }
+        // a. If bufferByteLength modulo elementSize ≠ 0, throw a RangeError exception.
+        if (buffer_byte_length % element_size != 0)
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayInvalidBufferLength, typed_array.class_name(), element_size, buffer_byte_length);
+
+        // b. Let newByteLength be bufferByteLength - offset.
+        // c. If newByteLength < 0, throw a RangeError exception.
+        if (offset > buffer_byte_length)
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayOutOfRangeByteOffset, offset, buffer_byte_length);
         new_byte_length = buffer_byte_length;
         new_byte_length -= offset;
-    } else {
+    }
+    // 9. Else,
+    else {
+        // a. Let newByteLength be newLength × elementSize.
         new_byte_length = new_length;
         new_byte_length *= element_size;
 
+        // b. If offset + newByteLength > bufferByteLength, throw a RangeError exception.
         Checked<size_t> new_byte_end = new_byte_length;
         new_byte_end += offset;
 
-        if (new_byte_end.has_overflow()) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
-            return;
-        }
+        if (new_byte_end.has_overflow())
+            return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
 
-        if (new_byte_end.value() > buffer_byte_length) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::TypedArrayOutOfRangeByteOffsetOrLength, offset, new_byte_end.value(), buffer_byte_length);
-            return;
-        }
-    }
-    if (new_byte_length.has_overflow()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
-        return;
+        if (new_byte_end.value() > buffer_byte_length)
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayOutOfRangeByteOffsetOrLength, offset, new_byte_end.value(), buffer_byte_length);
     }
 
+    if (new_byte_length.has_overflow())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
+
+    // 10. Set O.[[ViewedArrayBuffer]] to buffer.
     typed_array.set_viewed_array_buffer(&array_buffer);
+
+    // 11. Set O.[[ByteLength]] to newByteLength.
     typed_array.set_byte_length(new_byte_length.value());
+
+    // 12. Set O.[[ByteOffset]] to offset.
     typed_array.set_byte_offset(offset);
+
+    // 13. Set O.[[ArrayLength]] to newByteLength / elementSize.
     typed_array.set_array_length(new_byte_length.value() / element_size);
+
+    return {};
 }
 
 // 23.2.5.1.2 InitializeTypedArrayFromTypedArray ( O, srcArray ), https://tc39.es/ecma262/#sec-initializetypedarrayfromtypedarray
@@ -371,9 +392,10 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
                     return {};                                                                                                         \
             } else if (is<ArrayBuffer>(first_argument.as_object())) {                                                                  \
                 auto& array_buffer = static_cast<ArrayBuffer&>(first_argument.as_object());                                            \
-                initialize_typed_array_from_array_buffer(global_object(), *typed_array, array_buffer, vm.argument(1), vm.argument(2)); \
-                if (vm.exception())                                                                                                    \
-                    return {};                                                                                                         \
+                /* NOTE: I added the padding below to not reindent 150+ lines for a single line change. If you edit this, and the   */ \
+                /*       width happens to change anyway, feel free to remove it.                                                    */ \
+                TRY_OR_DISCARD(initialize_typed_array_from_array_buffer(global_object(), *typed_array, array_buffer, /*             */ \
+                    vm.argument(1), vm.argument(2)));                                                                                  \
             } else {                                                                                                                   \
                 auto iterator = TRY_OR_DISCARD(first_argument.get_method(global_object(), *vm.well_known_symbol_iterator()));          \
                 if (iterator) {                                                                                                        \
