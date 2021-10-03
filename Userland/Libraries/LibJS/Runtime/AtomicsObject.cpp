@@ -120,7 +120,7 @@ static ThrowCompletionOr<Value> atomic_read_modify_write(GlobalObject& global_ob
 }
 
 template<typename T, typename AtomicFunction>
-static Value perform_atomic_operation(GlobalObject& global_object, TypedArrayBase& typed_array, AtomicFunction&& operation)
+static ThrowCompletionOr<Value> perform_atomic_operation(GlobalObject& global_object, TypedArrayBase& typed_array, AtomicFunction&& operation)
 {
     auto& vm = global_object.vm();
     auto index = vm.argument(1);
@@ -140,7 +140,7 @@ static Value perform_atomic_operation(GlobalObject& global_object, TypedArrayBas
         }
     };
 
-    return TRY_OR_DISCARD(atomic_read_modify_write(global_object, typed_array, index, value, move(operation_wrapper)));
+    return atomic_read_modify_write(global_object, typed_array, index, value, move(operation_wrapper));
 }
 
 AtomicsObject::AtomicsObject(GlobalObject& global_object)
@@ -180,7 +180,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::add)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
-        return perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_add));
+        return TRY_OR_DISCARD(perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_add)));
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
@@ -198,7 +198,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::and_)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
-        return perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_and));
+        return TRY_OR_DISCARD(perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_and)));
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
@@ -288,7 +288,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::exchange)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
-        return perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_exchange));
+        return TRY_OR_DISCARD(perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_exchange)));
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
@@ -343,7 +343,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::or_)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
-        return perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_or));
+        return TRY_OR_DISCARD(perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_or)));
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
@@ -393,7 +393,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::sub)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
-        return perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_sub));
+        return TRY_OR_DISCARD(perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_sub)));
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
@@ -411,7 +411,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::xor_)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
-        return perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_xor));
+        return TRY_OR_DISCARD(perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_xor)));
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
