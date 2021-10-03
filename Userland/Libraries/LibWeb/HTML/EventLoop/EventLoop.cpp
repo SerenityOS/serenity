@@ -153,7 +153,10 @@ void EventLoop::process()
 
     // FIXME:     6. For each fully active Document in docs, flush autofocus candidates for that Document if its browsing context is a top-level browsing context.
 
-    // FIXME:     7. For each fully active Document in docs, run the resize steps for that Document, passing in now as the timestamp. [CSSOMVIEW]
+    // 7. For each fully active Document in docs, run the resize steps for that Document, passing in now as the timestamp. [CSSOMVIEW]
+    for_each_fully_active_document_in_docs([&](DOM::Document& document) {
+        document.run_the_resize_steps();
+    });
 
     // FIXME:     8. For each fully active Document in docs, run the scroll steps for that Document, passing in now as the timestamp. [CSSOMVIEW]
 
