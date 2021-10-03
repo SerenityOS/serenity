@@ -129,7 +129,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::reload)
 JS::ThrowCompletionOr<bool> LocationObject::internal_set_prototype_of(Object* prototype)
 {
     // 1. Return ! SetImmutablePrototype(this, V).
-    return set_immutable_prototype(prototype);
+    return MUST(set_immutable_prototype(prototype));
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#location-isextensible
