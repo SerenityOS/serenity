@@ -387,4 +387,13 @@ void ImageStyleValue::resource_did_load()
     if (m_document && m_document->browsing_context())
         m_document->browsing_context()->set_needs_display({});
 }
+
+// https://www.w3.org/TR/css-color-4/#serializing-sRGB-values
+String ColorStyleValue::to_string() const
+{
+    if (m_color.alpha() == 1)
+        return String::formatted("rgb({}, {}, {})", m_color.red(), m_color.green(), m_color.blue());
+    return String::formatted("rgba({}, {}, {}, {})", m_color.red(), m_color.green(), m_color.blue(), (float)(m_color.alpha()) / 255.0f);
+}
+
 }
