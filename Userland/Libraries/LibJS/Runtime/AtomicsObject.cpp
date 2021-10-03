@@ -50,20 +50,33 @@ static ThrowCompletionOr<ArrayBuffer*> validate_integer_typed_array(GlobalObject
 }
 
 // 25.4.2.2 ValidateAtomicAccess ( typedArray, requestIndex ), https://tc39.es/ecma262/#sec-validateatomicaccess
-static Optional<size_t> validate_atomic_access(GlobalObject& global_object, TypedArrayBase& typed_array, Value request_index)
+static ThrowCompletionOr<size_t> validate_atomic_access(GlobalObject& global_object, TypedArrayBase& typed_array, Value request_index)
 {
     auto& vm = global_object.vm();
 
+    // 1. Let length be typedArray.[[ArrayLength]].
+    auto length = typed_array.array_length();
+
+    // 2. Let accessIndex be ? ToIndex(requestIndex).
     auto access_index = request_index.to_index(global_object);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
-    if (access_index >= typed_array.array_length()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::IndexOutOfRange, access_index, typed_array.array_length());
-        return {};
-    }
+    // 3. Assert: accessIndex ≥ 0.
 
-    return access_index * typed_array.element_size() + typed_array.byte_offset();
+    // 4. If accessIndex ≥ length, throw a RangeError exception.
+    if (access_index >= length)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::IndexOutOfRange, access_index, typed_array.array_length());
+
+    // 5. Let arrayTypeName be typedArray.[[TypedArrayName]].
+    // 6. Let elementSize be the Element Size value specified in Table 72 for arrayTypeName.
+    auto element_size = typed_array.element_size();
+
+    // 7. Let offset be typedArray.[[ByteOffset]].
+    auto offset = typed_array.byte_offset();
+
+    // 8. Return (accessIndex × elementSize) + offset.
+    return (access_index * element_size) + offset;
 }
 
 // 25.4.2.11 AtomicReadModifyWrite ( typedArray, index, value, op ), https://tc39.es/ecma262/#sec-atomicreadmodifywrite
@@ -73,9 +86,7 @@ static Value atomic_read_modify_write(GlobalObject& global_object, TypedArrayBas
 
     TRY_OR_DISCARD(validate_integer_typed_array(global_object, typed_array));
 
-    auto byte_index = validate_atomic_access(global_object, typed_array, index);
-    if (!byte_index.has_value())
-        return {};
+    auto byte_index = TRY_OR_DISCARD(validate_atomic_access(global_object, typed_array, index));
 
     Value value_to_set;
     if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt) {
@@ -93,7 +104,7 @@ static Value atomic_read_modify_write(GlobalObject& global_object, TypedArrayBas
         return {};
     }
 
-    return typed_array.get_modify_set_value_in_buffer(*byte_index, value_to_set, move(operation));
+    return typed_array.get_modify_set_value_in_buffer(byte_index, value_to_set, move(operation));
 }
 
 template<typename T, typename AtomicFunction>
@@ -189,9 +200,7 @@ static Value atomic_compare_exchange_impl(GlobalObject& global_object, TypedArra
 
     TRY_OR_DISCARD(validate_integer_typed_array(global_object, typed_array));
 
-    auto indexed_position = validate_atomic_access(global_object, typed_array, vm.argument(1));
-    if (!indexed_position.has_value())
-        return {};
+    auto indexed_position = TRY_OR_DISCARD(validate_atomic_access(global_object, typed_array, vm.argument(1)));
 
     Value expected;
     Value replacement;
@@ -224,14 +233,14 @@ static Value atomic_compare_exchange_impl(GlobalObject& global_object, TypedArra
 
     // FIXME: Implement SharedArrayBuffer case.
 
-    auto raw_bytes_read = block.slice(*indexed_position, sizeof(T));
+    auto raw_bytes_read = block.slice(indexed_position, sizeof(T));
 
     if constexpr (IsFloatingPoint<T>) {
         VERIFY_NOT_REACHED();
     } else {
         using U = Conditional<IsSame<ClampedU8, T>, u8, T>;
 
-        auto* v = reinterpret_cast<U*>(block.span().slice(*indexed_position).data());
+        auto* v = reinterpret_cast<U*>(block.span().slice(indexed_position).data());
         auto* e = reinterpret_cast<U*>(expected_bytes.data());
         auto* r = reinterpret_cast<U*>(replacement_bytes.data());
         (void)AK::atomic_compare_exchange_strong(v, *e, *r);
@@ -301,16 +310,14 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::load)
 
     TRY_OR_DISCARD(validate_integer_typed_array(global_object, *typed_array));
 
-    auto indexed_position = validate_atomic_access(global_object, *typed_array, vm.argument(1));
-    if (!indexed_position.has_value())
-        return {};
+    auto indexed_position = TRY_OR_DISCARD(validate_atomic_access(global_object, *typed_array, vm.argument(1)));
 
     if (typed_array->viewed_array_buffer()->is_detached()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
         return {};
     }
 
-    return typed_array->get_value_from_buffer(*indexed_position, ArrayBuffer::Order::SeqCst, true);
+    return typed_array->get_value_from_buffer(indexed_position, ArrayBuffer::Order::SeqCst, true);
 }
 
 // 25.4.9 Atomics.or ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.or
@@ -340,9 +347,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
 
     TRY_OR_DISCARD(validate_integer_typed_array(global_object, *typed_array));
 
-    auto indexed_position = validate_atomic_access(global_object, *typed_array, vm.argument(1));
-    if (!indexed_position.has_value())
-        return {};
+    auto indexed_position = TRY_OR_DISCARD(validate_atomic_access(global_object, *typed_array, vm.argument(1)));
 
     auto value = vm.argument(2);
     Value value_to_set;
@@ -361,7 +366,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
         return {};
     }
 
-    typed_array->set_value_in_buffer(*indexed_position, value_to_set, ArrayBuffer::Order::SeqCst, true);
+    typed_array->set_value_in_buffer(indexed_position, value_to_set, ArrayBuffer::Order::SeqCst, true);
     return value_to_set;
 }
 
