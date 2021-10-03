@@ -81,7 +81,7 @@ public:
     ThrowCompletionOr<bool> create_method_property(PropertyName const&, Value);
     ThrowCompletionOr<bool> create_data_property_or_throw(PropertyName const&, Value);
     ThrowCompletionOr<bool> create_non_enumerable_data_property_or_throw(PropertyName const&, Value);
-    bool define_property_or_throw(PropertyName const&, PropertyDescriptor const&);
+    ThrowCompletionOr<bool> define_property_or_throw(PropertyName const&, PropertyDescriptor const&);
     bool delete_property_or_throw(PropertyName const&);
     bool has_property(PropertyName const&) const;
     bool has_own_property(PropertyName const&) const;

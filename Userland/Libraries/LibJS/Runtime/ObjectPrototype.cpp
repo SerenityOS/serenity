@@ -211,9 +211,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_getter)
     if (vm.exception())
         return {};
 
-    object->define_property_or_throw(key, descriptor);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(object->define_property_or_throw(key, descriptor));
 
     return js_undefined();
 }
@@ -237,9 +235,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_setter)
     if (vm.exception())
         return {};
 
-    object->define_property_or_throw(key, descriptor);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(object->define_property_or_throw(key, descriptor));
 
     return js_undefined();
 }

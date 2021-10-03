@@ -152,7 +152,7 @@ Value PromiseAnyRejectElementFunction::resolve_element()
         auto errors_array = Array::create_from(global_object, m_values.values());
 
         auto* error = AggregateError::create(global_object);
-        error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true });
+        MUST(error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true }));
 
         return TRY_OR_DISCARD(vm.call(*m_capability.reject, js_undefined(), error));
     }

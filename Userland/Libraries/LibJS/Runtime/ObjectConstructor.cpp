@@ -341,9 +341,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property)
     auto descriptor = to_property_descriptor(global_object, vm.argument(2));
     if (vm.exception())
         return {};
-    vm.argument(0).as_object().define_property_or_throw(key, descriptor);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(vm.argument(0).as_object().define_property_or_throw(key, descriptor));
     return vm.argument(0);
 }
 

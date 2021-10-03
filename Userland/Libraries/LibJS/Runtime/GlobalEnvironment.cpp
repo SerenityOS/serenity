@@ -187,7 +187,6 @@ void GlobalEnvironment::create_global_var_binding(FlyString const& name, bool ca
 // 9.1.1.4.18 CreateGlobalFunctionBinding ( N, V, D ), https://tc39.es/ecma262/#sec-createglobalfunctionbinding
 void GlobalEnvironment::create_global_function_binding(FlyString const& name, Value value, bool can_be_deleted)
 {
-    auto& vm = this->vm();
     auto& global_object = m_object_record->binding_object();
     auto existing_prop_or_error = global_object.internal_get_own_property(name);
     if (existing_prop_or_error.is_error())
@@ -198,10 +197,10 @@ void GlobalEnvironment::create_global_function_binding(FlyString const& name, Va
         desc = { .value = value, .writable = true, .enumerable = true, .configurable = can_be_deleted };
     else
         desc = { .value = value };
-    global_object.define_property_or_throw(name, desc);
-    if (vm.exception())
+    auto result_or_error = global_object.define_property_or_throw(name, desc);
+    if (result_or_error.is_error())
         return;
-    auto result_or_error = global_object.set(name, value, Object::ShouldThrowExceptions::Yes);
+    result_or_error = global_object.set(name, value, Object::ShouldThrowExceptions::Yes);
     if (result_or_error.is_error())
         return;
     if (!m_var_names.contains_slow(name))
