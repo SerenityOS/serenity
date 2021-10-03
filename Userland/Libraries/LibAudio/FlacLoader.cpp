@@ -28,9 +28,14 @@ FlacLoaderPlugin::FlacLoaderPlugin(StringView path)
         return;
     }
 
-    m_stream = make<FlacInputStream>(Core::InputFileStream(*m_file));
+    auto maybe_stream = Core::InputFileStream::open_buffered(path);
+    if (maybe_stream.is_error()) {
+        m_error_string = "Can't open file stream";
+        return;
+    }
+    m_stream = make<FlacInputStream>(maybe_stream.release_value());
     if (!m_stream) {
-        m_error_string = String::formatted("Can't open memory stream");
+        m_error_string = "Can't open file stream";
         return;
     }
 
@@ -69,7 +74,7 @@ bool FlacLoaderPlugin::parse_header()
 
     InputBitStream bit_input = [&]() -> InputBitStream {
         if (m_file) {
-            return InputBitStream(m_stream->get<Core::InputFileStream>());
+            return InputBitStream(m_stream->get<Buffered<Core::InputFileStream>>());
         }
         return InputBitStream(m_stream->get<InputMemoryStream>());
     }();
