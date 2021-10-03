@@ -45,7 +45,6 @@ If the process later attempts to use any system functionality it has previously 
 * `dpath`: Creating new device files
 * `chown`: Changing file owner/group
 * `fattr`: Changing file attributes/permissions
-* `chroot`: The [`chroot`(2)](chroot.md) syscall (\*)
 * `video`: May use [`ioctl`(2)](ioctl.md) and [`mmap`(2)](mmap.md) on framebuffer video devices
 * `settime`: Changing the system time and date
 * `setkeymap`: Changing the system keyboard layout (\*)

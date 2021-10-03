@@ -97,5 +97,4 @@ unveil(nullptr, nullptr);
 ## See also
 
 * [`pledge`(2)](pledge.md)
-* [`chroot`(2)](chroot.md)
 * [`Mitigations`(7)](../man7/Mitigations.md)
