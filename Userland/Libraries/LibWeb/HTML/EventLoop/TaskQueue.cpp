@@ -33,4 +33,13 @@ OwnPtr<Task> TaskQueue::take_first_runnable()
     return nullptr;
 }
 
+bool TaskQueue::has_runnable_tasks() const
+{
+    for (auto& task : m_tasks) {
+        if (task->is_runnable())
+            return true;
+    }
+    return false;
+}
+
 }
