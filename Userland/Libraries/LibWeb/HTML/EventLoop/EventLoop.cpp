@@ -48,38 +48,38 @@ EventLoop& main_thread_event_loop()
 // https://html.spec.whatwg.org/multipage/webappapis.html#spin-the-event-loop
 void EventLoop::spin_until(Function<bool()> goal_condition)
 {
-    // FIXME: This is an ad-hoc hack until we implement the proper mechanism.
-    Core::EventLoop loop;
-    loop.spin_until([&]() -> bool {
-        if (goal_condition())
-            return true;
-        perform_a_microtask_checkpoint();
-        return goal_condition();
-    });
-
-    // Real spec steps:
-
     // FIXME: 1. Let task be the event loop's currently running task.
 
     // FIXME: 2. Let task source be task's source.
 
-    // FIXME: 3. Let old stack be a copy of the JavaScript execution context stack.
+    // 3. Let old stack be a copy of the JavaScript execution context stack.
+    // 4. Empty the JavaScript execution context stack.
+    auto& vm = Bindings::main_thread_vm();
+    vm.save_execution_context_stack();
 
-    // FIXME: 4. Empty the JavaScript execution context stack.
+    // 5. Perform a microtask checkpoint.
+    perform_a_microtask_checkpoint();
 
-    // FIXME: 5. Perform a microtask checkpoint.
+    // 6. In parallel:
+    // NOTE: We do these in reverse order here, but it shouldn't matter.
 
-    // FIXME: 6. In parallel:
+    //    2. Queue a task on task source to:
+    //       1. Replace the JavaScript execution context stack with old stack.
+    vm.restore_execution_context_stack();
+    //       2. Perform any steps that appear after this spin the event loop instance in the original algorithm.
+    //       NOTE: This is achieved by returning from the function.
 
-    // FIXME:    1. Wait until the condition goal is met.
+    //    1. Wait until the condition goal is met.
+    Core::EventLoop loop;
+    loop.spin_until([&]() -> bool {
+        if (goal_condition())
+            return true;
 
-    // FIXME:    2. Queue a task on task source to:
+        return goal_condition();
+    });
 
-    // FIXME:       1. Replace the JavaScript execution context stack with old stack.
-
-    // FIXME:       2. Perform any steps that appear after this spin the event loop instance in the original algorithm.
-
-    // FIXME: 7. Stop task, allowing whatever algorithm that invoked it to resume.
+    // 7. Stop task, allowing whatever algorithm that invoked it to resume.
+    // NOTE: This is achieved by returning from the function.
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#event-loop-processing-model
