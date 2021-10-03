@@ -488,6 +488,152 @@ void Optimizer::append_alternation(ByteCode& target, ByteCode&& left, ByteCode&&
     // LABEL _END = alterantive_bytecode.size
 }
 
+enum class LookupTableInsertionOutcome {
+    Successful,
+    ReplaceWithAnyChar,
+    TemporaryInversionNeeded,
+    PermanentInversionNeeded,
+    CannotPlaceInTable,
+};
+static LookupTableInsertionOutcome insert_into_lookup_table(RedBlackTree<ByteCodeValueType, CharRange>& table, CompareTypeAndValuePair pair)
+{
+    switch (pair.type) {
+    case CharacterCompareType::Inverse:
+        return LookupTableInsertionOutcome::PermanentInversionNeeded;
+    case CharacterCompareType::TemporaryInverse:
+        return LookupTableInsertionOutcome::TemporaryInversionNeeded;
+    case CharacterCompareType::AnyChar:
+        return LookupTableInsertionOutcome::ReplaceWithAnyChar;
+    case CharacterCompareType::CharClass:
+        return LookupTableInsertionOutcome::CannotPlaceInTable;
+    case CharacterCompareType::Char:
+        table.insert(pair.value, { (u32)pair.value, (u32)pair.value });
+        break;
+    case CharacterCompareType::CharRange: {
+        CharRange range { pair.value };
+        table.insert(range.from, range);
+        break;
+    }
+    case CharacterCompareType::Reference:
+    case CharacterCompareType::Property:
+    case CharacterCompareType::GeneralCategory:
+    case CharacterCompareType::Script:
+    case CharacterCompareType::ScriptExtension:
+        return LookupTableInsertionOutcome::CannotPlaceInTable;
+    case CharacterCompareType::Undefined:
+    case CharacterCompareType::RangeExpressionDummy:
+    case CharacterCompareType::String:
+    case CharacterCompareType::LookupTable:
+        VERIFY_NOT_REACHED();
+    }
+
+    return LookupTableInsertionOutcome::Successful;
+}
+
+void Optimizer::append_character_class(ByteCode& target, Vector<CompareTypeAndValuePair>&& pairs)
+{
+    ByteCode arguments;
+    size_t argument_count = 0;
+
+    if (pairs.size() <= 1) {
+        for (auto& pair : pairs) {
+            arguments.append(to_underlying(pair.type));
+            if (pair.type != CharacterCompareType::AnyChar && pair.type != CharacterCompareType::TemporaryInverse && pair.type != CharacterCompareType::Inverse)
+                arguments.append(pair.value);
+            ++argument_count;
+        }
+    } else {
+        RedBlackTree<ByteCodeValueType, CharRange> table;
+        RedBlackTree<ByteCodeValueType, CharRange> inverted_table;
+        auto* current_table = &table;
+        auto* current_inverted_table = &inverted_table;
+        bool invert_for_next_iteration = false;
+        bool is_currently_inverted = false;
+
+        for (auto& value : pairs) {
+            auto should_invert_after_this_iteration = invert_for_next_iteration;
+            invert_for_next_iteration = false;
+
+            auto insertion_result = insert_into_lookup_table(*current_table, value);
+            switch (insertion_result) {
+            case LookupTableInsertionOutcome::Successful:
+                break;
+            case LookupTableInsertionOutcome::ReplaceWithAnyChar: {
+                table.clear();
+                inverted_table.clear();
+                arguments.append(to_underlying(CharacterCompareType::AnyChar));
+                ++argument_count;
+                break;
+            }
+            case LookupTableInsertionOutcome::TemporaryInversionNeeded:
+                swap(current_table, current_inverted_table);
+                invert_for_next_iteration = true;
+                is_currently_inverted = !is_currently_inverted;
+                break;
+            case LookupTableInsertionOutcome::PermanentInversionNeeded:
+                swap(current_table, current_inverted_table);
+                is_currently_inverted = !is_currently_inverted;
+                break;
+            case LookupTableInsertionOutcome::CannotPlaceInTable:
+                if (is_currently_inverted) {
+                    arguments.append(to_underlying(CharacterCompareType::TemporaryInverse));
+                    ++argument_count;
+                }
+                arguments.append(to_underlying(value.type));
+                arguments.append(value.value);
+                ++argument_count;
+                break;
+            }
+
+            if (should_invert_after_this_iteration) {
+                swap(current_table, current_inverted_table);
+                is_currently_inverted = !is_currently_inverted;
+            }
+        }
+        auto append_table = [&](auto& table) {
+            ++argument_count;
+            arguments.append(to_underlying(CharacterCompareType::LookupTable));
+            auto size_index = arguments.size();
+            arguments.append(0);
+            Optional<CharRange> active_range;
+            size_t range_count = 0;
+            for (auto& range : table) {
+                if (!active_range.has_value()) {
+                    active_range = range;
+                    continue;
+                }
+
+                if (range.from <= active_range->to + 1 && range.to + 1 >= active_range->from) {
+                    active_range = CharRange { min(range.from, active_range->from), max(range.to, active_range->to) };
+                } else {
+                    ++range_count;
+                    arguments.append(active_range.release_value());
+                    active_range = range;
+                }
+            }
+            if (active_range.has_value()) {
+                ++range_count;
+                arguments.append(active_range.release_value());
+            }
+            arguments[size_index] = range_count;
+        };
+
+        if (!table.is_empty())
+            append_table(table);
+
+        if (!inverted_table.is_empty()) {
+            ++argument_count;
+            arguments.append(to_underlying(CharacterCompareType::TemporaryInverse));
+            append_table(inverted_table);
+        }
+    }
+
+    target.empend(static_cast<ByteCodeValueType>(OpCodeId::Compare));
+    target.empend(argument_count);   // number of arguments
+    target.empend(arguments.size()); // size of arguments
+    target.extend(move(arguments));
+}
+
 template void Regex<PosixBasicParser>::run_optimization_passes();
 template void Regex<PosixExtendedParser>::run_optimization_passes();
 template void Regex<ECMA262Parser>::run_optimization_passes();
