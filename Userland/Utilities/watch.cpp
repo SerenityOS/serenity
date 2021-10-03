@@ -67,6 +67,8 @@ static void handle_signal(int signal)
 
 static int run_command(Vector<char const*> const& command)
 {
+    VERIFY(command[command.size() - 1] == nullptr);
+
     if ((errno = posix_spawnp(const_cast<pid_t*>(&child_pid), command[0], nullptr, nullptr, const_cast<char**>(command.data()), environ))) {
         exit_code = 1;
         perror("posix_spawn");
