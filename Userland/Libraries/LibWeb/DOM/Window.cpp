@@ -46,7 +46,7 @@ private:
 struct RequestAnimationFrameDriver {
     RequestAnimationFrameDriver()
     {
-        m_timer = Core::Timer::create_single_shot(16, [this] {
+        m_timer = Core::Timer::create_single_shot(16, [] {
             HTML::main_thread_event_loop().schedule();
         });
     }
