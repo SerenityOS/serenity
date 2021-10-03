@@ -9,6 +9,7 @@
 
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PropertyDescriptor.h>
 #include <LibJS/Runtime/PropertyName.h>
@@ -20,7 +21,7 @@ namespace JS {
 class TypedArrayBase;
 
 TypedArrayBase* typed_array_from(GlobalObject&, Value);
-void validate_typed_array(GlobalObject&, TypedArrayBase&);
+ThrowCompletionOr<void> validate_typed_array(GlobalObject&, TypedArrayBase&);
 
 class TypedArrayBase : public Object {
     JS_OBJECT(TypedArrayBase, Object);

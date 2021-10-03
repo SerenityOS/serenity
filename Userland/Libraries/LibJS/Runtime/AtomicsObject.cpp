@@ -19,8 +19,8 @@ static void validate_integer_typed_array(GlobalObject& global_object, TypedArray
 {
     auto& vm = global_object.vm();
 
-    validate_typed_array(global_object, typed_array);
-    if (vm.exception())
+    auto maybe_error = validate_typed_array(global_object, typed_array);
+    if (maybe_error.is_error())
         return;
 
     auto type_name = typed_array.element_name();
