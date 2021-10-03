@@ -20,6 +20,12 @@
 
 static int g_pid = -1;
 
+#if ARCH(I386)
+using syscall_arg_t = u32;
+#else
+using syscall_arg_t = u64;
+#endif
+
 static void handle_sigint(int)
 {
     if (g_pid == -1)
@@ -28,6 +34,26 @@ static void handle_sigint(int)
     if (ptrace(PT_DETACH, g_pid, 0, 0) == -1) {
         perror("detach");
     }
+}
+
+static String format_syscall(syscall_arg_t syscall_index, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t res)
+{
+    auto syscall_function = (Syscall::Function)syscall_index;
+    StringBuilder builder;
+    builder.append(Syscall::to_string(syscall_function));
+    builder.append('(');
+
+    switch (syscall_function) {
+    default:
+        builder.appendff("{:#08x}, {:#08x}, {:#08x})\t={}",
+            arg1,
+            arg2,
+            arg3,
+            res);
+    }
+
+    builder.append('\n');
+    return builder.to_string();
 }
 
 int main(int argc, char** argv)
@@ -129,15 +155,15 @@ int main(int argc, char** argv)
             return 1;
         }
 #if ARCH(I386)
-        u32 syscall_index = regs.eax;
-        u32 arg1 = regs.edx;
-        u32 arg2 = regs.ecx;
-        u32 arg3 = regs.ebx;
+        syscall_arg_t syscall_index = regs.eax;
+        syscall_arg_t arg1 = regs.edx;
+        syscall_arg_t arg2 = regs.ecx;
+        syscall_arg_t arg3 = regs.ebx;
 #else
-        u64 syscall_index = regs.rax;
-        u64 arg1 = regs.rdx;
-        u64 arg2 = regs.rcx;
-        u64 arg3 = regs.rbx;
+        syscall_arg_t syscall_index = regs.rax;
+        syscall_arg_t arg1 = regs.rdx;
+        syscall_arg_t arg2 = regs.rcx;
+        syscall_arg_t arg3 = regs.rbx;
 #endif
 
         if (ptrace(PT_SYSCALL, g_pid, 0, 0) == -1) {
@@ -160,12 +186,7 @@ int main(int argc, char** argv)
         u64 res = regs.rax;
 #endif
 
-        auto string = String::formatted("{}({:#08x}, {:#08x}, {:#08x})\t={}\n",
-            Syscall::to_string((Syscall::Function)syscall_index),
-            arg1,
-            arg2,
-            arg3,
-            res);
+        auto string = format_syscall(syscall_index, arg1, arg2, arg3, res);
 
         if (!trace_file->write(string)) {
             warnln("write: {}", trace_file->error_string());
