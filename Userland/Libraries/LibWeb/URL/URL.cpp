@@ -186,9 +186,13 @@ void URL::set_port(String const& port)
     // 1. If this’s URL cannot have a username/password/port, then return.
     if (m_url.cannot_have_a_username_or_password_or_port())
         return;
+
     // 2. If the given value is the empty string, then set this’s URL’s port to null.
-    if (port.is_empty())
+    if (port.is_empty()) {
         m_url.set_port({});
+        return;
+    }
+
     // 3. Otherwise, basic URL parse the given value with this’s URL as url and port state as state override.
     auto result_url = URLParser::parse(port, nullptr, m_url, URLParser::State::Port);
     if (result_url.is_valid())
