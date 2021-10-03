@@ -354,7 +354,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_properties)
     }
 
     // 2. Return ? ObjectDefineProperties(O, Properties).
-    return object.as_object().define_properties(properties);
+    return TRY_OR_DISCARD(object.as_object().define_properties(properties));
 }
 
 // 20.1.2.13 Object.is ( value1, value2 ), https://tc39.es/ecma262/#sec-object.is
@@ -411,7 +411,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
     // 3. If Properties is not undefined, then
     if (!properties.is_undefined()) {
         // a. Return ? ObjectDefineProperties(obj, Properties).
-        return object->define_properties(properties);
+        return TRY_OR_DISCARD(object->define_properties(properties));
     }
 
     // 4. Return obj.
