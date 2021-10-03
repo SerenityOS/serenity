@@ -29,6 +29,9 @@ public:
     void append_medium(String);
     void delete_medium(String);
 
+    bool evaluate(DOM::Window const&);
+    bool matches() const;
+
 private:
     explicit MediaList(NonnullRefPtrVector<MediaQuery>&&);
 

@@ -53,6 +53,7 @@ public:
         FlyString name;
         RefPtr<StyleValue> value { nullptr };
 
+        bool evaluate(DOM::Window const&) const;
         String to_string() const;
     };
 
@@ -69,12 +70,15 @@ public:
         MediaFeature feature;
         NonnullOwnPtrVector<MediaCondition> conditions;
 
+        bool evaluate(DOM::Window const&) const;
         String to_string() const;
     };
 
     static NonnullRefPtr<MediaQuery> create_not_all();
     static NonnullRefPtr<MediaQuery> create() { return adopt_ref(*new MediaQuery); }
 
+    bool matches() const { return m_matches; }
+    bool evaluate(DOM::Window const&);
     String to_string() const;
 
 private:
@@ -84,6 +88,9 @@ private:
     bool m_negated { false };
     MediaType m_media_type { MediaType::All };
     OwnPtr<MediaCondition> m_media_condition { nullptr };
+
+    // Cached value, updated by evaluate()
+    bool m_matches { false };
 };
 
 }
