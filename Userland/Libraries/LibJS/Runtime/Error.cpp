@@ -36,12 +36,7 @@ ThrowCompletionOr<void> Error::install_error_cause(Value options)
     auto& vm = this->vm();
 
     // 1. If Type(options) is Object and ? HasProperty(options, "cause") is true, then
-    if (!options.is_object())
-        return {};
-    auto has_property = options.as_object().has_property(vm.names.cause);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    if (has_property) {
+    if (options.is_object() && TRY(options.as_object().has_property(vm.names.cause))) {
         // a. Let cause be ? Get(options, "cause").
         auto cause = TRY(options.as_object().get(vm.names.cause));
 

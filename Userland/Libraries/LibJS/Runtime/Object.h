@@ -83,7 +83,7 @@ public:
     ThrowCompletionOr<bool> create_non_enumerable_data_property_or_throw(PropertyName const&, Value);
     ThrowCompletionOr<bool> define_property_or_throw(PropertyName const&, PropertyDescriptor const&);
     ThrowCompletionOr<bool> delete_property_or_throw(PropertyName const&);
-    bool has_property(PropertyName const&) const;
+    ThrowCompletionOr<bool> has_property(PropertyName const&) const;
     bool has_own_property(PropertyName const&) const;
     bool set_integrity_level(IntegrityLevel);
     bool test_integrity_level(IntegrityLevel) const;
