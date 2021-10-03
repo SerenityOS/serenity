@@ -234,6 +234,15 @@ void Window::did_call_location_reload(Badge<Bindings::LocationObject>)
     frame->loader().load(associated_document().url(), FrameLoader::Type::Reload);
 }
 
+void Window::did_call_location_replace(Badge<Bindings::LocationObject>, String url)
+{
+    auto* frame = associated_document().browsing_context();
+    if (!frame)
+        return;
+    auto new_url = associated_document().parse_url(url);
+    frame->loader().load(move(new_url), FrameLoader::Type::Navigation);
+}
+
 bool Window::dispatch_event(NonnullRefPtr<Event> event)
 {
     return EventDispatcher::dispatch(*this, event, true);

@@ -62,6 +62,7 @@ public:
 
     void did_set_location_href(Badge<Bindings::LocationObject>, AK::URL const& new_href);
     void did_call_location_reload(Badge<Bindings::LocationObject>);
+    void did_call_location_replace(Badge<Bindings::LocationObject>, String url);
 
     Bindings::WindowObject* wrapper() { return m_wrapper; }
     Bindings::WindowObject const* wrapper() const { return m_wrapper; }

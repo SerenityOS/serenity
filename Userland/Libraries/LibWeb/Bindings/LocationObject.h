@@ -30,6 +30,7 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(reload);
+    JS_DECLARE_NATIVE_FUNCTION(replace);
 
     JS_DECLARE_NATIVE_FUNCTION(href_getter);
     JS_DECLARE_NATIVE_FUNCTION(href_setter);
