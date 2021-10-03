@@ -239,44 +239,65 @@ static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(GlobalObj
 
 // 23.2.5.1.5 InitializeTypedArrayFromArrayLike, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraylike
 template<typename T>
-static void initialize_typed_array_from_array_like(GlobalObject& global_object, TypedArray<T>& typed_array, const Object& array_like)
+static ThrowCompletionOr<void> initialize_typed_array_from_array_like(GlobalObject& global_object, TypedArray<T>& typed_array, const Object& array_like)
 {
     auto& vm = global_object.vm();
-    auto length_or_error = length_of_array_like(global_object, array_like);
-    if (length_or_error.is_error())
-        return;
-    auto length = length_or_error.release_value();
+
+    // 1. Let len be ? LengthOfArrayLike(arrayLike).
+    auto length = TRY(length_of_array_like(global_object, array_like));
+
+    // 2. Perform ? AllocateTypedArrayBuffer(O, len).
+
+    // 23.2.5.1.6 AllocateTypedArrayBuffer ( O, length )
 
     // Enforce 2GB "Excessive Length" limit
-    if (length > NumericLimits<i32>::max() / sizeof(T)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
-        return;
-    }
+    if (length > NumericLimits<i32>::max() / sizeof(T))
+        return vm.template throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
 
+    // 1. Assert: O.[[ViewedArrayBuffer]] is undefined.
+    // 2. Let constructorName be the String value of O.[[TypedArrayName]].
+
+    // 3. Let elementSize be the Element Size value specified in Table 72 for constructorName.
     auto element_size = typed_array.element_size();
-    if (Checked<size_t>::multiplication_would_overflow(element_size, length)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
-        return;
-    }
-    auto byte_length = element_size * length;
-    auto array_buffer = ArrayBuffer::create(global_object, byte_length);
-    if (!array_buffer)
-        return;
+    if (Checked<size_t>::multiplication_would_overflow(element_size, length))
+        return vm.template throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
 
-    typed_array.set_viewed_array_buffer(array_buffer);
+    // 4. Let byteLength be elementSize × length.
+    auto byte_length = element_size * length;
+
+    // 5. Let data be ? AllocateArrayBuffer(%ArrayBuffer%, byteLength).
+    auto* data = ArrayBuffer::create(global_object, byte_length);
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+
+    // 6. Set O.[[ViewedArrayBuffer]] to data.
+    typed_array.set_viewed_array_buffer(data);
+
+    // 7. Set O.[[ByteLength]] to byteLength.
     typed_array.set_byte_length(byte_length);
+
+    // 8. Set O.[[ByteOffset]] to 0.
     typed_array.set_byte_offset(0);
+
+    // 9. Set O.[[ArrayLength]] to length.
     typed_array.set_array_length(length);
 
+    // 10. Return O.
+    // End of 23.2.5.1.6
+
+    // 4. Repeat, while k < len,
     for (size_t k = 0; k < length; k++) {
-        auto value_or_error = array_like.get(k);
-        if (value_or_error.is_error())
-            return;
-        auto value = value_or_error.release_value();
-        auto result_or_error = typed_array.set(k, value, Object::ShouldThrowExceptions::Yes);
-        if (result_or_error.is_error())
-            return;
+        // a. Let Pk be ! ToString(𝔽(k)).
+        // b. Let kValue be ? Get(arrayLike, Pk).
+        auto k_value = TRY(array_like.get(k));
+
+        // c. Perform ? Set(O, Pk, kValue, true).
+        TRY(typed_array.set(k, k_value, Object::ShouldThrowExceptions::Yes));
+
+        // d. Set k to k + 1.
     }
+
+    return {};
 }
 
 // 23.2.5.1.4 InitializeTypedArrayFromList, https://tc39.es/ecma262/#sec-initializetypedarrayfromlist
@@ -447,7 +468,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
                         return {};                                                                                                     \
                     initialize_typed_array_from_list(global_object(), *typed_array, values);                                           \
                 } else {                                                                                                               \
-                    initialize_typed_array_from_array_like(global_object(), *typed_array, first_argument.as_object());                 \
+                    TRY_OR_DISCARD(initialize_typed_array_from_array_like(global_object(), *typed_array, first_argument.as_object())); \
                 }                                                                                                                      \
                 if (vm.exception())                                                                                                    \
                     return {};                                                                                                         \
