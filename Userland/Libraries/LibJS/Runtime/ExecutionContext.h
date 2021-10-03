@@ -30,7 +30,6 @@ struct ExecutionContext {
     FlyString function_name;
     Value this_value;
     MarkedValueList arguments;
-    Object* arguments_object { nullptr };
     bool is_strict_mode { false };
 };
 
