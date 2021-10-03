@@ -277,8 +277,11 @@ int main(int argc, char** argv)
         GUI::Application::the()->quit();
     };
     window->on_active_window_change = [](bool is_active_window) {
-        if (!is_active_window)
-            GUI::Application::the()->quit();
+        if (!is_active_window) {
+            auto app = GUI::Application::the();
+            app->quit();
+            app->event_loop().pump();
+        }
     };
 
     auto update_ui_timer = Core::Timer::create_single_shot(10, [&] {
