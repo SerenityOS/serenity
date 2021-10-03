@@ -97,6 +97,7 @@ private:
     virtual void add_menu_item(i32, i32, i32, String const&, bool, bool, bool, bool, String const&, Gfx::ShareableBitmap const&, bool) override;
     virtual void add_menu_separator(i32) override;
     virtual void update_menu_item(i32, i32, i32, String const&, bool, bool, bool, bool, String const&) override;
+    virtual void flash_menubar_menu(i32, i32) override;
     virtual void create_window(i32, Gfx::IntRect const&, bool, bool, bool, bool, bool,
         bool, bool, bool, bool, bool, float, float, Gfx::IntSize const&, Gfx::IntSize const&, Gfx::IntSize const&,
         Optional<Gfx::IntSize> const&, i32, String const&, i32, Gfx::IntRect const&) override;
@@ -178,6 +179,7 @@ private:
     HashMap<int, NonnullRefPtr<Window>> m_windows;
     HashMap<int, NonnullRefPtr<Menu>> m_menus;
 
+    RefPtr<Core::Timer> m_flashed_menu_timer;
     RefPtr<Core::Timer> m_ping_timer;
 
     bool m_has_display_link { false };

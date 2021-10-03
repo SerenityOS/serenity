@@ -264,8 +264,15 @@ void WindowFrame::paint_menubar(Gfx::Painter& painter)
     painter.translate(menubar_rect.location());
 
     m_window.menubar().for_each_menu([&](Menu& menu) {
+        bool paint_as_flashed = ((&menu) == m_window.menubar().flashed_menu());
+        if (paint_as_flashed) {
+            auto flashed_rect = menu.rect_in_window_menubar();
+            flashed_rect.shrink(2, 2);
+            painter.fill_rect(flashed_rect, palette.selection());
+        }
+
         auto text_rect = menu.rect_in_window_menubar();
-        Color text_color = palette.window_text();
+        Color text_color = (paint_as_flashed ? palette.selection_text() : palette.window_text());
         auto is_open = menu.is_open();
         if (is_open)
             text_rect.translate_by(1, 1);

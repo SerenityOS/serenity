@@ -48,6 +48,7 @@ public:
     bool is_default() const { return m_default; }
     void set_default(bool);
 
+    int menu_id() const { return m_menu_id; }
     void set_menu_id(Badge<Menu>, unsigned menu_id);
     void set_identifier(Badge<Menu>, unsigned identifier);
 

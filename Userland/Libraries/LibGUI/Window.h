@@ -211,6 +211,7 @@ public:
 
     Menu& add_menu(String name);
     ErrorOr<NonnullRefPtr<Menu>> try_add_menu(String name);
+    void flash_menubar_menu_for(const MenuItem&);
 
     void flush_pending_paints_immediately();
 
