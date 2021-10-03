@@ -2064,10 +2064,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_set(JS::PropertyName const& p
     // 3. Perform ? OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc).
     // NOTE: The spec says "perform" instead of "return", meaning nothing will be returned on this path according to the spec, which isn't possible to do.
     //       Let's treat it as though it says "return" instead of "perform".
-    auto result = ordinary_set_with_own_descriptor(property_name, value, receiver, own_descriptor);
-    if (auto* exception = vm.exception())
-        return JS::throw_completion(exception->value());
-    return result;
+    return ordinary_set_with_own_descriptor(property_name, value, receiver, own_descriptor);
 }
 )~~~");
 
