@@ -683,7 +683,7 @@ public:
     virtual ~ColorStyleValue() override { }
 
     Color color() const { return m_color; }
-    virtual String to_string() const override { return m_color.to_string(); }
+    virtual String to_string() const override;
     virtual bool has_color() const override { return true; }
     virtual Color to_color(Layout::NodeWithStyle const&) const override { return m_color; }
 
