@@ -205,48 +205,79 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::and_)
     VERIFY_NOT_REACHED();
 }
 
+// Implementation of 25.4.5 Atomics.compareExchange ( typedArray, index, expectedValue, replacementValue ), https://tc39.es/ecma262/#sec-atomics.compareexchange
 template<typename T>
-static Value atomic_compare_exchange_impl(GlobalObject& global_object, TypedArrayBase& typed_array)
+static ThrowCompletionOr<Value> atomic_compare_exchange_impl(GlobalObject& global_object, TypedArrayBase& typed_array)
 {
     auto& vm = global_object.vm();
 
-    TRY_OR_DISCARD(validate_integer_typed_array(global_object, typed_array));
+    // 1. Let buffer be ? ValidateIntegerTypedArray(typedArray).
+    auto* buffer = TRY(validate_integer_typed_array(global_object, typed_array));
 
-    auto indexed_position = TRY_OR_DISCARD(validate_atomic_access(global_object, typed_array, vm.argument(1)));
+    // 2. Let block be buffer.[[ArrayBufferData]].
+    auto& block = buffer->buffer();
+
+    // 3. Let indexedPosition be ? ValidateAtomicAccess(typedArray, index).
+    auto indexed_position = TRY(validate_atomic_access(global_object, typed_array, vm.argument(1)));
+
+    // 4. Let arrayTypeName be typedArray.[[TypedArrayName]].
 
     Value expected;
     Value replacement;
+
+    // 5. If typedArray.[[ContentType]] is BigInt, then
     if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt) {
+        // a. Let expected be ? ToBigInt(expectedValue).
         expected = vm.argument(2).to_bigint(global_object);
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
+
+        // b. Let replacement be ? ToBigInt(replacementValue).
         replacement = vm.argument(3).to_bigint(global_object);
-        if (vm.exception())
-            return {};
-    } else {
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
+    }
+    // 6. Else,
+    else {
+        // a. Let expected be 𝔽(? ToIntegerOrInfinity(expectedValue)).
         expected = Value(vm.argument(2).to_integer_or_infinity(global_object));
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
+
+        // b. Let replacement be 𝔽(? ToIntegerOrInfinity(replacementValue)).
         replacement = Value(vm.argument(3).to_integer_or_infinity(global_object));
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
     }
 
-    if (typed_array.viewed_array_buffer()->is_detached()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
-        return {};
-    }
+    // 7. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+    if (buffer->is_detached())
+        return vm.template throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
+    // 8. NOTE: The above check is not redundant with the check in ValidateIntegerTypedArray because the call to ToBigInt or ToIntegerOrInfinity on the preceding lines can have arbitrary side effects, which could cause the buffer to become detached.
+
+    // 9. Let elementType be the Element Type value in Table 72 for arrayTypeName.
+    // 10. Let elementSize be the Element Size value specified in Table 72 for Element Type elementType.
+
+    // 11. Let isLittleEndian be the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
     constexpr bool is_little_endian = __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__;
 
-    auto& block = typed_array.viewed_array_buffer()->buffer();
+    // 12. Let expectedBytes be NumericToRawBytes(elementType, expected, isLittleEndian).
     auto expected_bytes = numeric_to_raw_bytes<T>(global_object, expected, is_little_endian);
+
+    // 13. Let replacementBytes be NumericToRawBytes(elementType, replacement, isLittleEndian).
     auto replacement_bytes = numeric_to_raw_bytes<T>(global_object, replacement, is_little_endian);
 
     // FIXME: Implement SharedArrayBuffer case.
+    // 14. If IsSharedArrayBuffer(buffer) is true, then
+    //     a-i.
+    // 15. Else,
 
+    // a. Let rawBytesRead be a List of length elementSize whose elements are the sequence of elementSize bytes starting with block[indexedPosition].
     auto raw_bytes_read = block.slice(indexed_position, sizeof(T));
 
+    // b. If ByteListEqual(rawBytesRead, expectedBytes) is true, then
+    //    i. Store the individual bytes of replacementBytes into block, starting at block[indexedPosition].
     if constexpr (IsFloatingPoint<T>) {
         VERIFY_NOT_REACHED();
     } else {
@@ -258,6 +289,7 @@ static Value atomic_compare_exchange_impl(GlobalObject& global_object, TypedArra
         (void)AK::atomic_compare_exchange_strong(v, *e, *r);
     }
 
+    // 16. Return RawBytesToNumeric(elementType, rawBytesRead, isLittleEndian).
     return raw_bytes_to_numeric<T>(global_object, raw_bytes_read, is_little_endian);
 }
 
@@ -270,7 +302,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::compare_exchange)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
-        return atomic_compare_exchange_impl<Type>(global_object, *typed_array);
+        return TRY_OR_DISCARD(atomic_compare_exchange_impl<Type>(global_object, *typed_array));
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
