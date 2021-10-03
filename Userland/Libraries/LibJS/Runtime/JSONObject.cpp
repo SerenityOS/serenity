@@ -238,9 +238,7 @@ String JSONObject::serialize_json_object(GlobalObject& global_object, StringifyS
                 return {};
         }
     } else {
-        auto property_list = object.enumerable_own_property_names(PropertyKind::Key);
-        if (vm.exception())
-            return {};
+        auto property_list = TRY_OR_DISCARD(object.enumerable_own_property_names(PropertyKind::Key));
         for (auto& property : property_list) {
             process_property(property.as_string().string());
             if (vm.exception())
@@ -480,9 +478,7 @@ Value JSONObject::internalize_json_property(GlobalObject& global_object, Object*
             for (size_t i = 0; i < length; ++i)
                 TRY_OR_DISCARD(process_property(i));
         } else {
-            auto property_list = value_object.enumerable_own_property_names(Object::PropertyKind::Key);
-            if (vm.exception())
-                return {};
+            auto property_list = TRY_OR_DISCARD(value_object.enumerable_own_property_names(Object::PropertyKind::Key));
             for (auto& property_name : property_list)
                 TRY_OR_DISCARD(process_property(property_name.as_string().string()));
         }

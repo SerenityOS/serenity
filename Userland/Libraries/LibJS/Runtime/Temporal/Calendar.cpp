@@ -933,9 +933,7 @@ ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Obj
     auto* merged = Object::create(global_object, global_object.object_prototype());
 
     // 2. Let originalKeys be ? EnumerableOwnPropertyNames(fields, key).
-    auto original_keys = fields.enumerable_own_property_names(Object::PropertyKind::Key);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto original_keys = TRY(fields.enumerable_own_property_names(Object::PropertyKind::Key));
 
     // 3. For each element nextKey of originalKeys, do
     for (auto& next_key : original_keys) {
@@ -955,9 +953,7 @@ ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Obj
     }
 
     // 4. Let newKeys be ? EnumerableOwnPropertyNames(additionalFields, key).
-    auto new_keys = additional_fields.enumerable_own_property_names(Object::PropertyKind::Key);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto new_keys = TRY(additional_fields.enumerable_own_property_names(Object::PropertyKind::Key));
 
     // IMPLEMENTATION DEFINED: This is an optimization, so we don't have to iterate new_keys three times (worst case), but only once.
     bool new_keys_contains_month_or_month_code_property = false;
