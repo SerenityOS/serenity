@@ -7,12 +7,14 @@
 #pragma once
 
 #include "Forward.h"
+#include <AK/Vector.h>
 
 namespace regex {
 
 class Optimizer {
 public:
     static void append_alternation(ByteCode& target, ByteCode&& left, ByteCode&& right);
+    static void append_character_class(ByteCode& target, Vector<CompareTypeAndValuePair>&& pairs);
 };
 
 }

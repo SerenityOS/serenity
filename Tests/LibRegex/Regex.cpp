@@ -910,3 +910,21 @@ TEST_CASE(optimizer_atomic_groups)
         EXPECT_EQ(result.success, test.get<2>());
     }
 }
+
+TEST_CASE(optimizer_char_class_lut)
+{
+    Regex<ECMA262> re(R"([\f\n\r\t\v\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+$)");
+
+    if constexpr (REGEX_DEBUG) {
+        dbgln("\n");
+        RegexDebug regex_dbg(stderr);
+        regex_dbg.print_raw_bytecode(re);
+        regex_dbg.print_header();
+        regex_dbg.print_bytecode(re);
+        dbgln("\n");
+    }
+
+    // This will go through _all_ alternatives in the character class, and then fail.
+    for (size_t i = 0; i < 1'000'000; ++i)
+        EXPECT_EQ(re.match("1635488940000"sv).success, false);
+}

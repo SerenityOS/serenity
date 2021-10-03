@@ -7,6 +7,7 @@
 #include "RegexByteCode.h"
 #include "AK/StringBuilder.h"
 #include "RegexDebug.h"
+#include <AK/BinarySearch.h>
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <LibUnicode/CharacterTypes.h>
@@ -491,6 +492,38 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
 
             compare_character_class(input, state, character_class, ch, current_inversion_state(), inverse_matched);
 
+        } else if (compare_type == CharacterCompareType::LookupTable) {
+            if (input.view.length() <= state.string_position)
+                return ExecutionResult::Failed_ExecuteLowPrioForks;
+
+            auto count = m_bytecode->at(offset++);
+            auto range_data = m_bytecode->spans().slice(offset, count);
+            offset += count;
+
+            auto ch = input.view.substring_view(state.string_position, 1)[0];
+
+            auto matching_range = binary_search(range_data, ch, nullptr, [insensitive = input.regex_options & AllFlags::Insensitive](auto needle, CharRange range) {
+                auto from = range.from;
+                auto to = range.to;
+                if (insensitive) {
+                    from = to_ascii_lowercase(from);
+                    to = to_ascii_lowercase(to);
+                    needle = to_ascii_lowercase(needle);
+                }
+                if (needle > range.to)
+                    return 1;
+                if (needle < range.from)
+                    return -1;
+                return 0;
+            });
+
+            if (matching_range) {
+                if (current_inversion_state())
+                    inverse_matched = true;
+                else
+                    advance_string_position(state, input.view, ch);
+            }
+
         } else if (compare_type == CharacterCompareType::CharRange) {
             if (input.view.length() <= state.string_position)
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
@@ -816,6 +849,10 @@ Vector<CompareTypeAndValuePair> OpCode_Compare::flat_compares() const
         } else if (compare_type == CharacterCompareType::CharRange) {
             auto value = m_bytecode->at(offset++);
             result.append({ compare_type, value });
+        } else if (compare_type == CharacterCompareType::LookupTable) {
+            auto count = m_bytecode->at(offset++);
+            for (size_t i = 0; i < count; ++i)
+                result.append({ CharacterCompareType::CharRange, m_bytecode->at(offset++) });
         } else {
             result.append({ compare_type, 0 });
         }
@@ -880,6 +917,16 @@ Vector<String> const OpCode_Compare::variable_arguments_to_string(Optional<Match
         } else if (compare_type == CharacterCompareType::CharRange) {
             auto value = (CharRange)m_bytecode->at(offset++);
             result.empend(String::formatted("ch_range={:x}-{:x}", value.from, value.to));
+            if (!view.is_null() && view.length() > state().string_position)
+                result.empend(String::formatted(
+                    "compare against: '{}'",
+                    input.value().view.substring_view(string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
+        } else if (compare_type == CharacterCompareType::LookupTable) {
+            auto count = m_bytecode->at(offset++);
+            for (size_t j = 0; j < count; ++j) {
+                auto range = (CharRange)m_bytecode->at(offset++);
+                result.append(String::formatted("{:x}-{:x}", range.from, range.to));
+            }
             if (!view.is_null() && view.length() > state().string_position)
                 result.empend(String::formatted(
                     "compare against: '{}'",

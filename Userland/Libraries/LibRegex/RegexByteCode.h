@@ -61,21 +61,22 @@ enum class OpCodeId : ByteCodeValueType {
 };
 // clang-format on
 
-#define ENUMERATE_CHARACTER_COMPARE_TYPES                \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(Undefined)        \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(Inverse)          \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(TemporaryInverse) \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(AnyChar)          \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(Char)             \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(String)           \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(CharClass)        \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(CharRange)        \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(Reference)        \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(Property)         \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(GeneralCategory)  \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(Script)           \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(ScriptExtension)  \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(RangeExpressionDummy)
+#define ENUMERATE_CHARACTER_COMPARE_TYPES                    \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(Undefined)            \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(Inverse)              \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(TemporaryInverse)     \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(AnyChar)              \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(Char)                 \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(String)               \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(CharClass)            \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(CharRange)            \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(Reference)            \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(Property)             \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(GeneralCategory)      \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(Script)               \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(ScriptExtension)      \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(RangeExpressionDummy) \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(LookupTable)
 
 enum class CharacterCompareType : ByteCodeValueType {
 #define __ENUMERATE_CHARACTER_COMPARE_TYPE(x) x,
@@ -186,26 +187,7 @@ public:
 
     void insert_bytecode_compare_values(Vector<CompareTypeAndValuePair>&& pairs)
     {
-        ByteCode bytecode;
-
-        bytecode.empend(static_cast<ByteCodeValueType>(OpCodeId::Compare));
-        bytecode.empend(pairs.size()); // number of arguments
-
-        ByteCode arguments;
-        for (auto& value : pairs) {
-            VERIFY(value.type != CharacterCompareType::RangeExpressionDummy);
-            VERIFY(value.type != CharacterCompareType::Undefined);
-            VERIFY(value.type != CharacterCompareType::String);
-
-            arguments.append((ByteCodeValueType)value.type);
-            if (value.type != CharacterCompareType::Inverse && value.type != CharacterCompareType::AnyChar && value.type != CharacterCompareType::TemporaryInverse)
-                arguments.append(move(value.value));
-        }
-
-        bytecode.empend(arguments.size()); // size of arguments
-        bytecode.extend(move(arguments));
-
-        extend(move(bytecode));
+        Optimizer::append_character_class(*this, move(pairs));
     }
 
     void insert_bytecode_check_boundary(BoundaryCheckType type)
