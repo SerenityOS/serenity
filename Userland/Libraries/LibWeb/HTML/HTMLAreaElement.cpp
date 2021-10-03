@@ -17,7 +17,6 @@ HTMLAreaElement::~HTMLAreaElement()
 {
 }
 
-
 void HTMLAreaElement::parse_attribute(FlyString const& name, String const& value)
 {
     HTMLElement::parse_attribute(name, value);
