@@ -146,7 +146,7 @@ public:
     template<typename CallableType>
     IteratorOrVoidFunction(CallableType&& callable) requires(VoidFunction<CallableType, Args...>)
         : Function<IterationDecision(Args...)>([callable = forward<CallableType>(callable)](Args... args) {
-            callable(forward<Args>(args)...);
+            callable(args...);
             return IterationDecision::Continue;
         })
     {
