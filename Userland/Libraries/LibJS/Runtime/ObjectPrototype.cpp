@@ -55,6 +55,7 @@ ObjectPrototype::~ObjectPrototype()
 // 10.4.7.1 [[SetPrototypeOf]] ( V ), https://tc39.es/ecma262/#sec-immutable-prototype-exotic-objects-setprototypeof-v
 ThrowCompletionOr<bool> ObjectPrototype::internal_set_prototype_of(Object* prototype)
 {
+    // 1. Return ? SetImmutablePrototype(O, V).
     return set_immutable_prototype(prototype);
 }
 
