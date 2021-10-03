@@ -15,7 +15,7 @@ $ more [file]
 
 `less` is a terminal pager that allows backwards movement. It is inspired by,
 but largely incompatible with
-[GNU less](http://www.greenwoodsoftware.com/less/index.html).
+[GNU less](https://www.greenwoodsoftware.com/less/index.html).
 
 ## Options
 
