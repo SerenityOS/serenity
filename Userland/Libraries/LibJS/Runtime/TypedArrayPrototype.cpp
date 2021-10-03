@@ -177,9 +177,7 @@ static TypedArrayBase* typed_array_species_create(GlobalObject& global_object, T
 
     auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, exemplar, *typed_array_default_constructor));
 
-    auto* result = typed_array_create(global_object, *constructor, move(arguments));
-    if (vm.exception())
-        return nullptr;
+    auto* result = TRY_OR_DISCARD(typed_array_create(global_object, *constructor, move(arguments)));
 
     if (result->content_type() != exemplar.content_type()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::TypedArrayContentTypeMismatch, result->class_name(), exemplar.class_name());
