@@ -183,16 +183,20 @@ ThrowCompletionOr<bool> Object::create_data_property_or_throw(PropertyName const
 }
 
 // 7.3.6 CreateNonEnumerableDataPropertyOrThrow ( O, P, V ), https://tc39.es/proposal-error-cause/#sec-createnonenumerabledatapropertyorthrow
-bool Object::create_non_enumerable_data_property_or_throw(PropertyName const& property_name, Value value)
+ThrowCompletionOr<bool> Object::create_non_enumerable_data_property_or_throw(PropertyName const& property_name, Value value)
 {
     VERIFY(!value.is_empty());
     VERIFY(property_name.is_valid());
+    auto& vm = this->vm();
 
     // 1. Let newDesc be the PropertyDescriptor { [[Value]]: V, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }.
     auto new_description = PropertyDescriptor { .value = value, .writable = true, .enumerable = false, .configurable = true };
 
     // 2. Return ? DefinePropertyOrThrow(O, P, newDesc).
-    return define_property_or_throw(property_name, new_description);
+    auto result = define_property_or_throw(property_name, new_description);
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+    return result;
 }
 
 // 7.3.8 DefinePropertyOrThrow ( O, P, desc ), https://tc39.es/ecma262/#sec-definepropertyorthrow
