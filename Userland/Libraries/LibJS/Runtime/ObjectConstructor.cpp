@@ -369,9 +369,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
     auto* object = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
-    auto name_list = object->enumerable_own_property_names(PropertyKind::Key);
-    if (vm.exception())
-        return {};
+    auto name_list = TRY_OR_DISCARD(object->enumerable_own_property_names(PropertyKind::Key));
     return Array::create_from(global_object, name_list);
 }
 
@@ -381,9 +379,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
     auto* object = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
-    auto name_list = object->enumerable_own_property_names(PropertyKind::Value);
-    if (vm.exception())
-        return {};
+    auto name_list = TRY_OR_DISCARD(object->enumerable_own_property_names(PropertyKind::Value));
     return Array::create_from(global_object, name_list);
 }
 
@@ -393,9 +389,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
     auto* object = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
-    auto name_list = object->enumerable_own_property_names(PropertyKind::KeyAndValue);
-    if (vm.exception())
-        return {};
+    auto name_list = TRY_OR_DISCARD(object->enumerable_own_property_names(PropertyKind::KeyAndValue));
     return Array::create_from(global_object, name_list);
 }
 

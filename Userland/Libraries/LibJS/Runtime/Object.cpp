@@ -385,7 +385,7 @@ ThrowCompletionOr<bool> Object::test_integrity_level(IntegrityLevel level) const
 }
 
 // 7.3.23 EnumerableOwnPropertyNames ( O, kind ), https://tc39.es/ecma262/#sec-enumerableownpropertynames
-MarkedValueList Object::enumerable_own_property_names(PropertyKind kind) const
+ThrowCompletionOr<MarkedValueList> Object::enumerable_own_property_names(PropertyKind kind) const
 {
     // NOTE: This has been flattened for readability, so some `else` branches in the
     //       spec text have been replaced with `continue`s in the loop below.
@@ -395,10 +395,7 @@ MarkedValueList Object::enumerable_own_property_names(PropertyKind kind) const
     // 1. Assert: Type(O) is Object.
 
     // 2. Let ownKeys be ? O.[[OwnPropertyKeys]]().
-    auto own_keys_or_error = internal_own_property_keys();
-    if (own_keys_or_error.is_error())
-        return MarkedValueList { heap() };
-    auto own_keys = own_keys_or_error.release_value();
+    auto own_keys = TRY(internal_own_property_keys());
 
     // 3. Let properties be a new empty List.
     auto properties = MarkedValueList { heap() };
@@ -411,10 +408,7 @@ MarkedValueList Object::enumerable_own_property_names(PropertyKind kind) const
         auto property_name = PropertyName::from_value(global_object, key);
 
         // i. Let desc be ? O.[[GetOwnProperty]](key).
-        auto descriptor_or_error = internal_get_own_property(property_name);
-        if (descriptor_or_error.is_error())
-            return MarkedValueList { heap() };
-        auto descriptor = descriptor_or_error.release_value();
+        auto descriptor = TRY(internal_get_own_property(property_name));
 
         // ii. If desc is not undefined and desc.[[Enumerable]] is true, then
         if (descriptor.has_value() && *descriptor->enumerable) {
@@ -426,10 +420,7 @@ MarkedValueList Object::enumerable_own_property_names(PropertyKind kind) const
             // 2. Else,
 
             // a. Let value be ? Get(O, key).
-            auto value_or_error = get(property_name);
-            if (value_or_error.is_error())
-                return MarkedValueList { heap() };
-            auto value = value_or_error.release_value();
+            auto value = TRY(get(property_name));
 
             // b. If kind is value, append value to properties.
             if (kind == PropertyKind::Value) {
@@ -450,7 +441,7 @@ MarkedValueList Object::enumerable_own_property_names(PropertyKind kind) const
     }
 
     // 5. Return properties.
-    return properties;
+    return { move(properties) };
 }
 
 // 7.3.25 CopyDataProperties ( target, source, excludedItems ), https://tc39.es/ecma262/#sec-copydataproperties
