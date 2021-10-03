@@ -15,7 +15,7 @@ namespace JS {
 // 6.2.5 The Property Descriptor Specification Type, https://tc39.es/ecma262/#sec-property-descriptor-specification-type
 
 Value from_property_descriptor(GlobalObject&, Optional<PropertyDescriptor> const&);
-PropertyDescriptor to_property_descriptor(GlobalObject&, Value);
+ThrowCompletionOr<PropertyDescriptor> to_property_descriptor(GlobalObject&, Value);
 
 class PropertyDescriptor {
 public:

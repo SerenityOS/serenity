@@ -677,7 +677,6 @@ ThrowCompletionOr<bool> Object::internal_set(PropertyName const& property_name, 
 {
     VERIFY(!value.is_empty());
     VERIFY(!receiver.is_empty());
-    auto& vm = this->vm();
 
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
@@ -1069,9 +1068,7 @@ ThrowCompletionOr<Object*> Object::define_properties(Value properties)
             auto descriptor_object = TRY(props->get(property_name));
 
             // ii. Let desc be ? ToPropertyDescriptor(descObj).
-            auto descriptor = to_property_descriptor(global_object, descriptor_object);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
+            auto descriptor = TRY(to_property_descriptor(global_object, descriptor_object));
 
             // iii. Append the pair (a two element List) consisting of nextKey and desc to the end of descriptors.
             descriptors.append({ property_name, descriptor });
