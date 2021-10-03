@@ -20,8 +20,17 @@ TaskQueue::~TaskQueue()
 
 void TaskQueue::add(NonnullOwnPtr<Task> task)
 {
-    m_tasks.enqueue(move(task));
+    m_tasks.append(move(task));
     m_event_loop.schedule();
+}
+
+OwnPtr<Task> TaskQueue::take_first_runnable()
+{
+    for (size_t i = 0; i < m_tasks.size(); ++i) {
+        if (m_tasks[i]->is_runnable())
+            return m_tasks.take(i);
+    }
+    return nullptr;
 }
 
 }

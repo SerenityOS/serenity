@@ -40,6 +40,8 @@ public:
     DOM::Document* document() { return m_document; }
     DOM::Document const* document() const { return m_document; }
 
+    bool is_runnable() const;
+
 private:
     Task(Source, DOM::Document*, Function<void()> steps);
 

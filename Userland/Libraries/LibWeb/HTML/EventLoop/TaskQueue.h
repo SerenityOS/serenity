@@ -19,20 +19,20 @@ public:
     bool is_empty() const { return m_tasks.is_empty(); }
 
     void add(NonnullOwnPtr<HTML::Task>);
-    OwnPtr<HTML::Task> take_first_runnable() { return m_tasks.dequeue(); }
+    OwnPtr<HTML::Task> take_first_runnable();
 
     void enqueue(NonnullOwnPtr<HTML::Task> task) { add(move(task)); }
     OwnPtr<HTML::Task> dequeue()
     {
         if (m_tasks.is_empty())
             return {};
-        return m_tasks.dequeue();
+        return m_tasks.take_first();
     }
 
 private:
     HTML::EventLoop& m_event_loop;
 
-    Queue<NonnullOwnPtr<HTML::Task>> m_tasks;
+    Vector<NonnullOwnPtr<HTML::Task>> m_tasks;
 };
 
 }
