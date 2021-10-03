@@ -841,12 +841,12 @@ ThrowCompletionOr<MarkedValueList> Object::internal_own_property_keys() const
 }
 
 // 10.4.7.2 SetImmutablePrototype ( O, V ), https://tc39.es/ecma262/#sec-set-immutable-prototype
-bool Object::set_immutable_prototype(Object* prototype)
+ThrowCompletionOr<bool> Object::set_immutable_prototype(Object* prototype)
 {
     // 1. Assert: Either Type(V) is Object or Type(V) is Null.
 
     // 2. Let current be ? O.[[GetPrototypeOf]]().
-    auto* current = TRY_OR_DISCARD(internal_get_prototype_of());
+    auto* current = TRY(internal_get_prototype_of());
 
     // 3. If SameValue(V, current) is true, return true.
     if (prototype == current)

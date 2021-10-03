@@ -108,7 +108,7 @@ public:
 
     // 10.4.7 Immutable Prototype Exotic Objects, https://tc39.es/ecma262/#sec-immutable-prototype-exotic-objects
 
-    bool set_immutable_prototype(Object* prototype);
+    ThrowCompletionOr<bool> set_immutable_prototype(Object* prototype);
 
     // 20.1 Object Objects, https://tc39.es/ecma262/#sec-object-objects
 
