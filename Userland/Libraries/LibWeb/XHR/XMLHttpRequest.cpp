@@ -161,7 +161,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(const String& method, const String& 
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-send
-DOM::ExceptionOr<void> XMLHttpRequest::send(String const& body)
+DOM::ExceptionOr<void> XMLHttpRequest::send(String body)
 {
     if (m_ready_state != ReadyState::Opened)
         return DOM::InvalidStateError::create("XHR readyState is not OPENED");
@@ -169,9 +169,9 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(String const& body)
     if (m_send)
         return DOM::InvalidStateError::create("XHR send() flag is already set");
 
-    // FIXME: If this’s request method is `GET` or `HEAD`, then set body to null.
-
-    // FIXME: If body is not null, then:
+    // If this’s request method is `GET` or `HEAD`, then set body to null.
+    if (m_method.is_one_of("GET"sv, "HEAD"sv))
+        body = {};
 
     AK::URL request_url = m_window->associated_document().parse_url(m_url.to_string());
     dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);
