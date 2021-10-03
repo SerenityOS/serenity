@@ -67,8 +67,8 @@ private:
 // A buffer of audio samples.
 class Buffer : public RefCounted<Buffer> {
 public:
-    static RefPtr<Buffer> from_pcm_data(ReadonlyBytes data, int num_channels, PcmSampleFormat sample_format);
-    static RefPtr<Buffer> from_pcm_stream(InputMemoryStream& stream, int num_channels, PcmSampleFormat sample_format, int num_samples);
+    static NonnullRefPtr<Buffer> from_pcm_data(ReadonlyBytes data, int num_channels, PcmSampleFormat sample_format);
+    static NonnullRefPtr<Buffer> from_pcm_stream(InputMemoryStream& stream, int num_channels, PcmSampleFormat sample_format, int num_samples);
     static NonnullRefPtr<Buffer> create_with_samples(Vector<Sample>&& samples)
     {
         return adopt_ref(*new Buffer(move(samples)));
@@ -76,6 +76,10 @@ public:
     static NonnullRefPtr<Buffer> create_with_anonymous_buffer(Core::AnonymousBuffer buffer, i32 buffer_id, int sample_count)
     {
         return adopt_ref(*new Buffer(move(buffer), buffer_id, sample_count));
+    }
+    static NonnullRefPtr<Buffer> create_empty()
+    {
+        return adopt_ref(*new Buffer({}));
     }
 
     const Sample* samples() const { return (const Sample*)data(); }
@@ -87,7 +91,9 @@ public:
 
 private:
     explicit Buffer(const Vector<Sample> samples)
-        : m_buffer(Core::AnonymousBuffer::create_with_size(samples.size() * sizeof(Sample)).release_value())
+        // FIXME: AnonymousBuffers can't be empty, so even for empty buffers we create a buffer of size 1 here,
+        //        although the sample count is set to 0 to mark this.
+        : m_buffer(Core::AnonymousBuffer::create_with_size(max(samples.size(), 1) * sizeof(Sample)).release_value())
         , m_id(allocate_id())
         , m_sample_count(samples.size())
     {
