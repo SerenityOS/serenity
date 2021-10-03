@@ -75,59 +75,107 @@ Value from_property_descriptor(GlobalObject& global_object, Optional<PropertyDes
 }
 
 // 6.2.5.5 ToPropertyDescriptor ( Obj ), https://tc39.es/ecma262/#sec-topropertydescriptor
-PropertyDescriptor to_property_descriptor(GlobalObject& global_object, Value argument)
+ThrowCompletionOr<PropertyDescriptor> to_property_descriptor(GlobalObject& global_object, Value argument)
 {
     auto& vm = global_object.vm();
-    if (!argument.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, argument.to_string_without_side_effects());
-        return {};
-    }
+
+    // 1. If Type(Obj) is not Object, throw a TypeError exception.
+    if (!argument.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, argument.to_string_without_side_effects());
+
     auto& object = argument.as_object();
+
+    // 2. Let desc be a new Property Descriptor that initially has no fields.
     PropertyDescriptor descriptor;
-    auto has_enumerable = TRY_OR_DISCARD(object.has_property(vm.names.enumerable));
+
+    // 3. Let hasEnumerable be ? HasProperty(Obj, "enumerable").
+    auto has_enumerable = TRY(object.has_property(vm.names.enumerable));
+
+    // 4. If hasEnumerable is true, then
     if (has_enumerable) {
-        auto enumerable = TRY_OR_DISCARD(object.get(vm.names.enumerable));
-        descriptor.enumerable = enumerable.to_boolean();
+        // a. Let enumerable be ! ToBoolean(? Get(Obj, "enumerable")).
+        auto enumerable = TRY(object.get(vm.names.enumerable)).to_boolean();
+
+        // b. Set desc.[[Enumerable]] to enumerable.
+        descriptor.enumerable = enumerable;
     }
-    auto has_configurable = TRY_OR_DISCARD(object.has_property(vm.names.configurable));
+
+    // 5. Let hasConfigurable be ? HasProperty(Obj, "configurable").
+    auto has_configurable = TRY(object.has_property(vm.names.configurable));
+
+    // 6. If hasConfigurable is true, then
     if (has_configurable) {
-        auto configurable = TRY_OR_DISCARD(object.get(vm.names.configurable));
-        descriptor.configurable = configurable.to_boolean();
+        // a. Let configurable be ! ToBoolean(? Get(Obj, "configurable")).
+        auto configurable = TRY(object.get(vm.names.configurable)).to_boolean();
+
+        // b. Set desc.[[Configurable]] to configurable.
+        descriptor.configurable = configurable;
     }
-    auto has_value = TRY_OR_DISCARD(object.has_property(vm.names.value));
+
+    // 7. Let hasValue be ? HasProperty(Obj, "value").
+    auto has_value = TRY(object.has_property(vm.names.value));
+
+    // 8. If hasValue is true, then
     if (has_value) {
-        auto value = TRY_OR_DISCARD(object.get(vm.names.value));
+        // a. Let value be ? Get(Obj, "value").
+        auto value = TRY(object.get(vm.names.value));
+
+        // b. Set desc.[[Value]] to value.
         descriptor.value = value;
     }
-    auto has_writable = TRY_OR_DISCARD(object.has_property(vm.names.writable));
+
+    // 9. Let hasWritable be ? HasProperty(Obj, "writable").
+    auto has_writable = TRY(object.has_property(vm.names.writable));
+
+    // 10. If hasWritable is true, then
     if (has_writable) {
-        auto writable = TRY_OR_DISCARD(object.get(vm.names.writable));
-        descriptor.writable = writable.to_boolean();
+        // a. Let writable be ! ToBoolean(? Get(Obj, "writable")).
+        auto writable = TRY(object.get(vm.names.writable)).to_boolean();
+
+        // b. Set desc.[[Writable]] to writable.
+        descriptor.writable = writable;
     }
-    auto has_get = TRY_OR_DISCARD(object.has_property(vm.names.get));
+
+    // 11. Let hasGet be ? HasProperty(Obj, "get").
+    auto has_get = TRY(object.has_property(vm.names.get));
+
+    // 12. If hasGet is true, then
     if (has_get) {
-        auto getter = TRY_OR_DISCARD(object.get(vm.names.get));
-        if (!getter.is_function() && !getter.is_undefined()) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::AccessorBadField, "get");
-            return {};
-        }
+        // a. Let getter be ? Get(Obj, "get").
+        auto getter = TRY(object.get(vm.names.get));
+
+        // b. If IsCallable(getter) is false and getter is not undefined, throw a TypeError exception.
+        if (!getter.is_function() && !getter.is_undefined())
+            return vm.throw_completion<TypeError>(global_object, ErrorType::AccessorBadField, "get");
+
+        // c. Set desc.[[Get]] to getter.
         descriptor.get = getter.is_function() ? &getter.as_function() : nullptr;
     }
-    auto has_set = TRY_OR_DISCARD(object.has_property(vm.names.set));
+
+    // 13. Let hasSet be ? HasProperty(Obj, "set").
+    auto has_set = TRY(object.has_property(vm.names.set));
+
+    // 14. If hasSet is true, then
     if (has_set) {
-        auto setter = TRY_OR_DISCARD(object.get(vm.names.set));
-        if (!setter.is_function() && !setter.is_undefined()) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::AccessorBadField, "set");
-            return {};
-        }
+        // a. Let setter be ? Get(Obj, "set").
+        auto setter = TRY(object.get(vm.names.set));
+
+        // b. If IsCallable(setter) is false and setter is not undefined, throw a TypeError exception.
+        if (!setter.is_function() && !setter.is_undefined())
+            return vm.throw_completion<TypeError>(global_object, ErrorType::AccessorBadField, "set");
+
+        // c. Set desc.[[Set]] to setter.
         descriptor.set = setter.is_function() ? &setter.as_function() : nullptr;
     }
+
+    // 15. If desc.[[Get]] is present or desc.[[Set]] is present, then
     if (descriptor.get.has_value() || descriptor.set.has_value()) {
-        if (descriptor.value.has_value() || descriptor.writable.has_value()) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::AccessorValueOrWritable);
-            return {};
-        }
+        //     a. If desc.[[Value]] is present or desc.[[Writable]] is present, throw a TypeError exception.
+        if (descriptor.value.has_value() || descriptor.writable.has_value())
+            return vm.throw_completion<TypeError>(global_object, ErrorType::AccessorValueOrWritable);
     }
+
+    // 16. Return desc.
     return descriptor;
 }
 
