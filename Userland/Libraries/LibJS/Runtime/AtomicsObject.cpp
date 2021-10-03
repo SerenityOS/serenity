@@ -80,31 +80,43 @@ static ThrowCompletionOr<size_t> validate_atomic_access(GlobalObject& global_obj
 }
 
 // 25.4.2.11 AtomicReadModifyWrite ( typedArray, index, value, op ), https://tc39.es/ecma262/#sec-atomicreadmodifywrite
-static Value atomic_read_modify_write(GlobalObject& global_object, TypedArrayBase& typed_array, Value index, Value value, ReadWriteModifyFunction operation)
+static ThrowCompletionOr<Value> atomic_read_modify_write(GlobalObject& global_object, TypedArrayBase& typed_array, Value index, Value value, ReadWriteModifyFunction operation)
 {
     auto& vm = global_object.vm();
 
-    TRY_OR_DISCARD(validate_integer_typed_array(global_object, typed_array));
+    // 1. Let buffer be ? ValidateIntegerTypedArray(typedArray).
+    auto* buffer = TRY(validate_integer_typed_array(global_object, typed_array));
 
-    auto byte_index = TRY_OR_DISCARD(validate_atomic_access(global_object, typed_array, index));
+    // 2. Let indexedPosition be ? ValidateAtomicAccess(typedArray, index).
+    auto indexed_position = TRY(validate_atomic_access(global_object, typed_array, index));
+
+    // 3. Let arrayTypeName be typedArray.[[TypedArrayName]].
 
     Value value_to_set;
+
+    // 4. If typedArray.[[ContentType]] is BigInt, let v be ? ToBigInt(value).
     if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt) {
         value_to_set = value.to_bigint(global_object);
-        if (vm.exception())
-            return {};
-    } else {
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
+    }
+    // 5. Otherwise, let v be 𝔽(? ToIntegerOrInfinity(value)).
+    else {
         value_to_set = Value(value.to_integer_or_infinity(global_object));
-        if (vm.exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
     }
 
-    if (typed_array.viewed_array_buffer()->is_detached()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
-        return {};
-    }
+    // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+    if (buffer->is_detached())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
-    return typed_array.get_modify_set_value_in_buffer(byte_index, value_to_set, move(operation));
+    // 7. NOTE: The above check is not redundant with the check in ValidateIntegerTypedArray because the call to ToBigInt or ToIntegerOrInfinity on the preceding lines can have arbitrary side effects, which could cause the buffer to become detached.
+
+    // 8. Let elementType be the Element Type value in Table 72 for arrayTypeName.
+
+    // 9. Return GetModifySetValueInBuffer(buffer, indexedPosition, elementType, v, op).
+    return typed_array.get_modify_set_value_in_buffer(indexed_position, value_to_set, move(operation));
 }
 
 template<typename T, typename AtomicFunction>
@@ -128,7 +140,7 @@ static Value perform_atomic_operation(GlobalObject& global_object, TypedArrayBas
         }
     };
 
-    return atomic_read_modify_write(global_object, typed_array, index, value, move(operation_wrapper));
+    return TRY_OR_DISCARD(atomic_read_modify_write(global_object, typed_array, index, value, move(operation_wrapper)));
 }
 
 AtomicsObject::AtomicsObject(GlobalObject& global_object)
