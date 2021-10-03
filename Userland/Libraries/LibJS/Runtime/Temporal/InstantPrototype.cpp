@@ -145,7 +145,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::add)
         return {};
 
     // 5. Return ! CreateTemporalInstant(ns).
-    return create_temporal_instant(global_object, *ns).release_value();
+    return MUST(create_temporal_instant(global_object, *ns));
 }
 
 // 8.3.8 Temporal.Instant.prototype.subtract ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.subtract
@@ -166,7 +166,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::subtract)
     auto* ns = TRY_OR_DISCARD(add_instant(global_object, instant->nanoseconds(), -duration.hours, -duration.minutes, -duration.seconds, -duration.milliseconds, -duration.microseconds, -duration.nanoseconds));
 
     // 5. Return ! CreateTemporalInstant(ns).
-    return create_temporal_instant(global_object, *ns).release_value();
+    return MUST(create_temporal_instant(global_object, *ns));
 }
 
 // 8.3.9 Temporal.Instant.prototype.until ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.until
@@ -209,7 +209,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
     auto rounded_ns = difference_instant(global_object, instant->nanoseconds(), other->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
 
     // 13. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
-    auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, largest_unit).release_value();
+    auto result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, largest_unit));
 
     // 14. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
     return TRY_OR_DISCARD(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
@@ -255,7 +255,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
     auto rounded_ns = difference_instant(global_object, other->nanoseconds(), instant->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
 
     // 13. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
-    auto result = balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, largest_unit).release_value();
+    auto result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, largest_unit));
 
     // 14. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
     return TRY_OR_DISCARD(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
@@ -337,7 +337,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
         return {};
 
     // 16. Return ! CreateTemporalInstant(roundedNs).
-    return create_temporal_instant(global_object, *rounded_ns).release_value();
+    return MUST(create_temporal_instant(global_object, *rounded_ns));
 }
 
 // 8.3.12 Temporal.Instant.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.equals
@@ -395,7 +395,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
         return {};
 
     // 9. Let roundedInstant be ! CreateTemporalInstant(roundedNs).
-    auto* rounded_instant = create_temporal_instant(global_object, *rounded_ns).release_value();
+    auto* rounded_instant = MUST(create_temporal_instant(global_object, *rounded_ns));
 
     // 10. Return ? TemporalInstantToString(roundedInstant, timeZone, precision.[[Precision]]).
     return js_string(vm, TRY_OR_DISCARD(temporal_instant_to_string(global_object, *rounded_instant, time_zone, precision.precision)));

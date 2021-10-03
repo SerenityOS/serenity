@@ -203,7 +203,7 @@ void GlobalObject::initialize_global_object()
     });
     m_throw_type_error_function->define_direct_property(vm.names.length, Value(0), 0);
     m_throw_type_error_function->define_direct_property(vm.names.name, js_string(vm, ""), 0);
-    (void)m_throw_type_error_function->internal_prevent_extensions();
+    MUST(m_throw_type_error_function->internal_prevent_extensions());
 
     // 10.2.4 AddRestrictedFunctionProperties ( F, realm ), https://tc39.es/ecma262/#sec-addrestrictedfunctionproperties
     m_function_prototype->define_direct_accessor(vm.names.caller, m_throw_type_error_function, m_throw_type_error_function, Attribute::Configurable);

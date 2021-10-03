@@ -78,7 +78,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from)
     // 1. If Type(item) is Object and item has an [[InitializedTemporalInstant]] internal slot, then
     if (item.is_object() && is<Instant>(item.as_object())) {
         // a. Return ! CreateTemporalInstant(item.[[Nanoseconds]]).
-        return create_temporal_instant(global_object, *js_bigint(vm, static_cast<Instant&>(item.as_object()).nanoseconds().big_integer())).release_value();
+        return MUST(create_temporal_instant(global_object, *js_bigint(vm, static_cast<Instant&>(item.as_object()).nanoseconds().big_integer())));
     }
 
     // 2. Return ? ToTemporalInstant(item).
@@ -108,7 +108,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_seconds)
     }
 
     // 5. Return ! CreateTemporalInstant(epochNanoseconds).
-    return create_temporal_instant(global_object, *epoch_nanoseconds).release_value();
+    return MUST(create_temporal_instant(global_object, *epoch_nanoseconds));
 }
 
 // 8.2.4 Temporal.Instant.fromEpochMilliseconds ( epochMilliseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochmilliseconds
@@ -134,7 +134,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_milliseconds)
     }
 
     // 5. Return ! CreateTemporalInstant(epochNanoseconds).
-    return create_temporal_instant(global_object, *epoch_nanoseconds).release_value();
+    return MUST(create_temporal_instant(global_object, *epoch_nanoseconds));
 }
 
 // 8.2.5 Temporal.Instant.fromEpochMicroseconds ( epochMicroseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochmicroseconds
@@ -155,7 +155,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_microseconds)
     }
 
     // 4. Return ! CreateTemporalInstant(epochNanoseconds).
-    return create_temporal_instant(global_object, *epoch_nanoseconds).release_value();
+    return MUST(create_temporal_instant(global_object, *epoch_nanoseconds));
 }
 
 // 8.2.6 Temporal.Instant.fromEpochNanoseconds ( epochNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochnanoseconds
@@ -173,7 +173,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_nanoseconds)
     }
 
     // 3. Return ! CreateTemporalInstant(epochNanoseconds).
-    return create_temporal_instant(global_object, *epoch_nanoseconds).release_value();
+    return MUST(create_temporal_instant(global_object, *epoch_nanoseconds));
 }
 
 // 8.2.7 Temporal.Instant.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.instant.compare

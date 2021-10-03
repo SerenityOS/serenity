@@ -81,7 +81,7 @@ ThrowCompletionOr<Calendar*> get_builtin_calendar(GlobalObject& global_object, S
 Calendar* get_iso8601_calendar(GlobalObject& global_object)
 {
     // 1. Return ! GetBuiltinCalendar("iso8601").
-    return get_builtin_calendar(global_object, "iso8601").release_value();
+    return MUST(get_builtin_calendar(global_object, "iso8601"));
 }
 
 // 12.1.5 CalendarFields ( calendar, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-calendarfields
@@ -358,7 +358,7 @@ ThrowCompletionOr<Object*> to_temporal_calendar(GlobalObject& global_object, Val
     }
 
     // 4. Return ! CreateTemporalCalendar(identifier).
-    return create_temporal_calendar(global_object, identifier).release_value();
+    return MUST(create_temporal_calendar(global_object, identifier));
 }
 
 // 12.1.22 ToTemporalCalendarWithISODefault ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendarwithisodefault

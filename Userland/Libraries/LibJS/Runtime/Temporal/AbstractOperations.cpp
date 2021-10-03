@@ -805,7 +805,7 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& g
     // TODO
 
     // 3. Let result be ! ParseISODateTime(isoString).
-    auto result = parse_iso_date_time(global_object, iso_string).release_value();
+    auto result = MUST(parse_iso_date_time(global_object, iso_string));
 
     // 4. Let timeZoneResult be ? ParseTemporalTimeZoneString(isoString).
     auto time_zone_result = TRY(parse_temporal_time_zone_string(global_object, iso_string));

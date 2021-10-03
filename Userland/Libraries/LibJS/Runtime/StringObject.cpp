@@ -97,7 +97,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> StringObject::internal_get_own_p
     // Assert: IsPropertyKey(P) is true.
 
     // 2. Let desc be OrdinaryGetOwnProperty(S, P).
-    auto descriptor = Object::internal_get_own_property(property_name).release_value();
+    auto descriptor = MUST(Object::internal_get_own_property(property_name));
 
     // 3. If desc is not undefined, return desc.
     if (descriptor.has_value())
