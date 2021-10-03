@@ -103,7 +103,6 @@ void VM::gather_roots(HashTable<Cell*>& roots)
         for (auto& execution_context : stack) {
             if (execution_context->this_value.is_cell())
                 roots.set(&execution_context->this_value.as_cell());
-            roots.set(execution_context->arguments_object);
             for (auto& argument : execution_context->arguments) {
                 if (argument.is_cell())
                     roots.set(&argument.as_cell());
