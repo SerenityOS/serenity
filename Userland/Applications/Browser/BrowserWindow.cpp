@@ -381,7 +381,7 @@ void BrowserWindow::build_menus()
             active_tab().m_web_content_view->debug_request("same-origin-policy", action.is_checked() ? "on" : "off");
         },
         this);
-    same_origin_policy_action->set_checked(true);
+    same_origin_policy_action->set_checked(false);
     debug_menu.add_action(same_origin_policy_action);
 
     auto& help_menu = add_menu("&Help");
