@@ -1,4 +1,5 @@
 set(SOURCES
+    BlockQuote.cpp
     CodeBlock.cpp
     ContainerBlock.cpp
     Document.cpp
