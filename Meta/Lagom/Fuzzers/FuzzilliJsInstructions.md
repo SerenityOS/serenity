@@ -2,7 +2,7 @@
 
 1. Download a copy of the Fuzzilli repo from https://github.com/googleprojectzero/fuzzilli
 2. Install Swift and make sure it's in your path environment variable.
-3. Build FuzzilliJs as you would the other fuzzers. [See README.md in the parent folder.](https://github.com/SerenityOS/serenity/blob/master/Meta/Lagom/README.md)
+3. Build FuzzilliJs as you would the other fuzzers. [See ReadMe.md in the parent folder.](https://github.com/SerenityOS/serenity/blob/master/Meta/Lagom/ReadMe.md)
 4. Apply the add-serenity-support-to-fuzzilli.patch patch file to the Fuzzilli root directory. ```patch -p1 < /path/to/add-serenity-support-to-fuzzilli.patch```
 5. Build Fuzzilli with ```swift build -c release```
 6. Run Fuzzilli with ```swift run -c release FuzzilliCli --profile=serenity /path/to/FuzzilliJs```. See ```swift run FuzzilliCli --help``` for options.
