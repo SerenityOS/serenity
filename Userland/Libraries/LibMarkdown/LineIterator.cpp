@@ -4,38 +4,62 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <LibMarkdown/LineIterator.h>
 
 namespace Markdown {
 
-bool LineIterator::is_indented(StringView const& line) const
+void LineIterator::reset_ignore_prefix()
 {
-    if (line.is_whitespace())
-        return true;
-
-    if (line.length() < m_indent)
-        return false;
-
-    for (size_t i = 0; i < m_indent; ++i) {
-        if (line[i] != ' ')
-            return false;
+    for (auto& context : m_context_stack) {
+        context.ignore_prefix = false;
     }
+}
 
-    return true;
+Optional<StringView> LineIterator::match_context(StringView const& line) const
+{
+    bool is_ws = line.is_whitespace();
+    size_t offset = 0;
+    for (auto& context : m_context_stack) {
+        switch (context.type) {
+        case Context::Type::ListItem:
+            if (is_ws)
+                break;
+
+            if (offset + context.indent > line.length())
+                return {};
+
+            if (!context.ignore_prefix && !line.substring_view(offset, context.indent).is_whitespace())
+                return {};
+
+            offset += context.indent;
+
+            break;
+        case Context::Type::BlockQuote:
+            for (; offset < line.length() && line[offset] == ' '; ++offset) { }
+            if (offset >= line.length() || line[offset] != '>') {
+                return {};
+            }
+            ++offset;
+            break;
+        }
+
+        if (offset > line.length())
+            return {};
+    }
+    return line.substring_view(offset);
 }
 
 bool LineIterator::is_end() const
 {
-    return m_iterator.is_end() || (!m_ignore_prefix_mode && !is_indented(*m_iterator));
+    return m_iterator.is_end() || !match_context(*m_iterator).has_value();
 }
 
 StringView LineIterator::operator*() const
 {
-    VERIFY(m_ignore_prefix_mode || is_indented(*m_iterator));
-    if (m_iterator->is_whitespace())
-        return *m_iterator;
-
-    return m_iterator->substring_view(m_indent);
+    auto line = match_context(*m_iterator);
+    VERIFY(line.has_value());
+    return line.value();
 }
 
 }
