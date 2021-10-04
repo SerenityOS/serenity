@@ -312,7 +312,7 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
     box.for_each_child_of_type<Box>([&](Box& child_box) {
         layout_inside(child_box, LayoutMode::Default);
         // Skip anonymous text runs that are only whitespace.
-        if (child_box.is_anonymous()) {
+        if (child_box.is_anonymous() && !child_box.first_child_of_type<BlockBox>()) {
             bool contains_only_white_space = true;
             child_box.for_each_in_inclusive_subtree_of_type<TextNode>([&contains_only_white_space](auto& text_node) {
                 if (!text_node.text_for_rendering().is_whitespace()) {
