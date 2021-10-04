@@ -8,6 +8,7 @@ jobs:
   - template: Meta/Azure/Lagom.yml
     parameters:
       os: 'Linux'
+      lagom_lints: true
 
   - template: Meta/Azure/Lagom.yml
     parameters:
