@@ -21,6 +21,8 @@ LocationObject::LocationObject(JS::GlobalObject& global_object)
 
 void LocationObject::initialize(JS::GlobalObject& global_object)
 {
+    auto& vm = global_object.vm();
+
     Object::initialize(global_object);
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable;
     define_native_accessor("href", href_getter, href_setter, attr);
@@ -34,6 +36,8 @@ void LocationObject::initialize(JS::GlobalObject& global_object)
 
     define_native_function("reload", reload, 0, JS::Attribute::Enumerable);
     define_native_function("replace", replace, 1, JS::Attribute::Enumerable);
+
+    define_native_function(vm.names.toString, href_getter, 0, JS::Attribute::Enumerable);
 }
 
 LocationObject::~LocationObject()
