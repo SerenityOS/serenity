@@ -163,7 +163,8 @@ void Job::on_socket_connected()
         if (m_state == State::InHeaders || m_state == State::Trailers) {
             if (!can_read_line())
                 return;
-            auto line = read_line(PAGE_SIZE);
+            // There's no max limit defined on headers, but for our sanity, let's limit it to 32K.
+            auto line = read_line(32 * KiB);
             if (line.is_null()) {
                 if (m_state == State::Trailers) {
                     // Some servers like to send two ending chunks
