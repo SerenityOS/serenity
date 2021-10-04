@@ -6,6 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Format.h>
+#include <AK/UnicodeUtils.h>
 #include <errno.h>
 #include <wchar.h>
 
@@ -292,10 +293,22 @@ size_t mbrlen(const char*, size_t, mbstate_t*)
     TODO();
 }
 
-size_t wcrtomb(char*, wchar_t, mbstate_t*)
+size_t wcrtomb(char* s, wchar_t wc, mbstate_t*)
 {
-    dbgln("FIXME: Implement wcrtomb()");
-    TODO();
+    if (s == nullptr)
+        wc = L'\0';
+
+    auto nwritten = AK::UnicodeUtils::code_point_to_utf8(wc, [&s](char byte) {
+        if (s != nullptr)
+            *s++ = byte;
+    });
+
+    if (nwritten < 0) {
+        errno = EILSEQ;
+        return (size_t)-1;
+    } else {
+        return nwritten;
+    }
 }
 
 int wcscoll(const wchar_t* ws1, const wchar_t* ws2)
