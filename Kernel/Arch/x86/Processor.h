@@ -129,6 +129,7 @@ class Processor {
     CPUFeature m_features;
     static Atomic<u32> g_total_processors;
     u8 m_physical_address_bit_width;
+    u8 m_virtual_address_bit_width;
 
     ProcessorInfo* m_info;
     Thread* m_current_thread;
@@ -253,6 +254,7 @@ public:
     }
 
     ALWAYS_INLINE u8 physical_address_bit_width() const { return m_physical_address_bit_width; }
+    ALWAYS_INLINE u8 virtual_address_bit_width() const { return m_virtual_address_bit_width; }
 
     ALWAYS_INLINE ProcessorInfo& info() { return *m_info; }
 
