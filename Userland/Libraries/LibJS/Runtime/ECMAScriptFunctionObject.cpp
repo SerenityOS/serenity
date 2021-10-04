@@ -179,8 +179,10 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
         if (!has_parameter_expressions && arguments_object_needed) {
             scope_body->for_each_lexically_declared_name([&](auto const& name) {
-                if (name == arguments_name)
+                if (name == arguments_name) {
                     arguments_object_needed = false;
+                    return IterationDecision::Break;
+                }
                 return IterationDecision::Continue;
             });
         }
