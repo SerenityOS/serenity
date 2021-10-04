@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2020, Hüseyin ASLITÜRK <asliturk@hotmail.com>, the SerenityOS developers
+ * Copyright (c) 2020, Hüseyin ASLITÜRK <asliturk@hotmail.com>
+ * Copyright (c) 2020, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
