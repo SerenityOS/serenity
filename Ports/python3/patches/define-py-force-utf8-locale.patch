@@ -1,5 +1,5 @@
---- Python-3.10.0rc2/Include/pyport.h	2021-08-03 18:40:05.313000000 +0100
-+++ Python-3.10.0rc2/Include/pyport.h	2021-08-03 18:40:28.722351782 +0100
+--- Python-3.10.0/Include/pyport.h	2021-08-03 18:40:05.313000000 +0100
++++ Python-3.10.0/Include/pyport.h	2021-08-03 18:40:28.722351782 +0100
 @@ -843,7 +843,7 @@
  #  error "Py_TRACE_REFS ABI is not compatible with release and debug ABI"
  #endif
