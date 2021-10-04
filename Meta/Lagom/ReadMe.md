@@ -49,7 +49,7 @@ We have a [bmp suite and a jpg suite and several others](https://github.com/Sere
 They are GPL'ed, and therefore not quite as compatible with the rest of Serenity.
 That's probably not a problem, but keeping "our" testcases separate from those GPL'ed suits sounds like a good idea.
 
-We could keep those testcases somewhere else in the repository, like [a `fuzz` directory](https://github.com/SerenityOS/serenity/tree/master/Base/res/html/misc/jpgsuite_files/fuzz).
+We could keep those testcases somewhere else in the repository, like a `fuzz` directory.
 But fuzzing tends to generate more and more and more files, and they will blow up in size.
 Especially if we keep all interesting testcases, which is exactly what I intend to do.
 
