@@ -2442,7 +2442,11 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/@constructor_class@.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
+#include <LibWeb/Bindings/CSSRuleWrapperFactory.h>
+#include <LibWeb/Bindings/EventTargetWrapperFactory.h>
+#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #if __has_include(<LibWeb/Crypto/@name@.h>)
 #    include <LibWeb/Crypto/@name@.h>
@@ -2538,7 +2542,7 @@ JS::Value @constructor_class@::construct(FunctionObject&)
         generator.append(R"~~~(
     if (should_return_empty(impl))
         return JS::Value();
-    return @wrapper_class@::create(global_object, impl.release_value());
+    return wrap(global_object, *impl.release_value());
 )~~~");
     } else {
         // Multiple constructor overloads - can't do that yet.
