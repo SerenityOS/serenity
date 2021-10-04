@@ -43,6 +43,7 @@ void HttpsJob::start(NonnullRefPtr<Core::Socket> socket)
         if (on_certificate_requested)
             on_certificate_requested(*this);
     };
+    m_socket->set_idle(false);
     if (m_socket->is_established()) {
         dbgln("Reusing previous connection for {}", url());
         deferred_invoke([this] { on_socket_connected(); });
@@ -72,6 +73,7 @@ void HttpsJob::shutdown(ShutdownMode mode)
         m_socket->on_tls_ready_to_read = nullptr;
         m_socket->on_tls_connected = nullptr;
         m_socket->set_on_tls_ready_to_write(nullptr);
+        m_socket->set_idle(true);
         m_socket = nullptr;
     }
 }
