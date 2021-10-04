@@ -77,7 +77,7 @@ ThrowCompletionOr<MarkedValueList> create_list_from_array_like(GlobalObject& glo
     // 6. Repeat, while index < len,
     for (size_t i = 0; i < length; ++i) {
         // a. Let indexName be ! ToString(𝔽(index)).
-        auto index_name = String::number(i);
+        auto index_name = PropertyName { i };
 
         // b. Let next be ? Get(obj, indexName).
         auto next = TRY(array_like.get(index_name));
