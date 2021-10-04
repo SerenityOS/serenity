@@ -132,6 +132,9 @@ void Job::on_socket_connected()
             return;
         }
 
+        if (eof())
+            return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
+
         if (m_state == State::InStatus) {
             if (!can_read_line()) {
                 dbgln_if(JOB_DEBUG, "Job {} cannot read line", m_request.url());
