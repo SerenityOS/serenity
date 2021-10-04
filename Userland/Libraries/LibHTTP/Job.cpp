@@ -16,7 +16,7 @@
 
 namespace HTTP {
 
-static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& content_encoding)
+static Optional<ByteBuffer> handle_content_encoding(const ByteBuffer& buf, const String& content_encoding)
 {
     dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: buf has content_encoding={}", content_encoding);
 
@@ -29,8 +29,8 @@ static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& c
 
         auto uncompressed = Compress::GzipDecompressor::decompress_all(buf);
         if (!uncompressed.has_value()) {
-            dbgln("Job::handle_content_encoding: Gzip::decompress() failed. Returning original buffer.");
-            return buf;
+            dbgln("Job::handle_content_encoding: Gzip::decompress() failed.");
+            return {};
         }
 
         if constexpr (JOB_DEBUG) {
@@ -54,8 +54,8 @@ static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& c
             uncompressed = Compress::DeflateDecompressor::decompress_all(buf);
 
             if (!uncompressed.has_value()) {
-                dbgln("Job::handle_content_encoding: DeflateDecompressor::decompress_all() failed, returning original buffer.");
-                return buf;
+                dbgln("Job::handle_content_encoding: DeflateDecompressor::decompress_all() failed.");
+                return {};
             }
         }
 
@@ -389,7 +389,10 @@ void Job::finish_up()
         // FIXME: LibCompress exposes a streaming interface, so this can be resolved
         auto content_encoding = m_headers.get("Content-Encoding");
         if (content_encoding.has_value()) {
-            flattened_buffer = handle_content_encoding(flattened_buffer, content_encoding.value());
+            if (auto result = handle_content_encoding(flattened_buffer, content_encoding.value()); result.has_value())
+                flattened_buffer = result.release_value();
+            else
+                return did_fail(Core::NetworkJob::Error::TransmissionFailed);
         }
 
         m_buffered_size = flattened_buffer.size();
