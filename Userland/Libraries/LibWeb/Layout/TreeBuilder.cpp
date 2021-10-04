@@ -97,7 +97,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
     if (!dom_node.parent_or_shadow_host()) {
         m_layout_root = layout_node;
     } else {
-        if (layout_node->is_inline()) {
+        if (layout_node->is_inline() && !(layout_node->is_inline_block() && m_parent_stack.last()->computed_values().display() == CSS::Display::Flex)) {
             // Inlines can be inserted into the nearest ancestor.
             auto& insertion_point = insertion_parent_for_inline_node(*m_parent_stack.last());
             insertion_point.append_child(*layout_node);
