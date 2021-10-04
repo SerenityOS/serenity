@@ -364,6 +364,10 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         if (!main_is_constrained) {
             auto available_main_size = containing_block_effective_main_size(box);
             main_available_size = available_main_size - sum_of_margin_padding_border_in_main_axis(box);
+            if (box.computed_values().flex_wrap() == CSS::FlexWrap::Wrap || box.computed_values().flex_wrap() == CSS::FlexWrap::WrapReverse) {
+                main_available_size = specified_main_size(*box.containing_block());
+                main_is_constrained = true;
+            }
         }
     }
 
