@@ -26,11 +26,19 @@ FlexFormattingContext::~FlexFormattingContext()
 {
 }
 
+struct DirectionAgnosticMargins {
+    float main_before { 0 };
+    float main_after { 0 };
+    float cross_before { 0 };
+    float cross_after { 0 };
+};
+
 struct FlexItem {
     Box& box;
     float flex_base_size { 0 };
     float hypothetical_main_size { 0 };
     float hypothetical_cross_size { 0 };
+    float hypothetical_cross_size_with_margins() { return hypothetical_cross_size + margins.cross_before + margins.cross_after; }
     float target_main_size { 0 };
     bool frozen { false };
     Optional<float> flex_factor {};
@@ -40,6 +48,7 @@ struct FlexItem {
     float cross_size { 0 };
     float main_offset { 0 };
     float cross_offset { 0 };
+    DirectionAgnosticMargins margins {};
     bool is_min_violation { false };
     bool is_max_violation { false };
 };
@@ -274,6 +283,20 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         else
             box.box_model().margin.bottom = margin;
     };
+    auto populate_specified_margins = [&is_row](FlexItem& item) {
+        auto width_of_containing_block = item.box.width_of_logical_containing_block();
+        if (is_row) {
+            item.margins.main_before = item.box.computed_values().margin().left.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+            item.margins.main_after = item.box.computed_values().margin().right.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+            item.margins.cross_before = item.box.computed_values().margin().top.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+            item.margins.cross_after = item.box.computed_values().margin().bottom.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+        } else {
+            item.margins.main_before = item.box.computed_values().margin().left.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+            item.margins.main_after = item.box.computed_values().margin().right.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+            item.margins.cross_before = item.box.computed_values().margin().top.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+            item.margins.cross_after = item.box.computed_values().margin().bottom.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+        }
+    };
 
     // 1. Generate anonymous flex items
     // More like, sift through the already generated items.
@@ -307,7 +330,9 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
             return IterationDecision::Continue;
 
         child_box.set_flex_item(true);
-        flex_items.append({ child_box });
+        FlexItem flex_item = { child_box };
+        populate_specified_margins(flex_item);
+        flex_items.append(move(flex_item));
         return IterationDecision::Continue;
     });
 
@@ -660,8 +685,8 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
             // 8.2
             float largest_hypothetical_cross_size = 0;
             for (auto& flex_item : flex_line.items) {
-                if (largest_hypothetical_cross_size < flex_item->hypothetical_cross_size)
-                    largest_hypothetical_cross_size = flex_item->hypothetical_cross_size;
+                if (largest_hypothetical_cross_size < flex_item->hypothetical_cross_size_with_margins())
+                    largest_hypothetical_cross_size = flex_item->hypothetical_cross_size_with_margins();
             }
 
             // 8.3
@@ -684,7 +709,6 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
     for (auto& flex_line : flex_lines) {
         for (auto& flex_item : flex_line.items) {
             if (is_cross_auto(flex_item->box) && box.computed_values().align_items() == CSS::AlignItems::Stretch) {
-                // FIXME: Take margins into account
                 flex_item->cross_size = flex_line.cross_size;
             } else {
                 flex_item->cross_size = flex_item->hypothetical_cross_size;
@@ -758,7 +782,7 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
 
     // 14. Align all flex items along the cross-axis
     // FIXME: Get the alignment via "align-self" of the item (which accesses "align-items" of the parent if unset)
-    // FIXME: Take margins into account
+    // FIXME: Take better care of margins
     float line_cross_offset = 0;
     for (auto& flex_line : flex_lines) {
         for (auto* flex_item : flex_line.items) {
@@ -768,7 +792,7 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
                 // Fallthrough
             case CSS::AlignItems::FlexStart:
             case CSS::AlignItems::Stretch:
-                flex_item->cross_offset = line_cross_offset;
+                flex_item->cross_offset = line_cross_offset + flex_item->margins.cross_before;
                 break;
             case CSS::AlignItems::FlexEnd:
                 flex_item->cross_offset = line_cross_offset + flex_line.cross_size - flex_item->cross_size;
