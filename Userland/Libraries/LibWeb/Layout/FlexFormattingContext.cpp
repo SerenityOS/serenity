@@ -410,7 +410,7 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
     }
 
     // 4. Determine the main size of the flex container
-    if (!main_is_constrained || main_available_size == 0) {
+    if ((!main_is_constrained && main_size_is_infinite) || main_available_size == 0) {
         // Uses https://www.w3.org/TR/css-flexbox-1/#intrinsic-main-sizes
         // 9.9.1
         // 1.
