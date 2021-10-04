@@ -1,5 +1,5 @@
---- Python-3.10.0rc2/config.sub	2021-08-03 19:03:07.361000000 +0100
-+++ Python-3.10.0rc2/config.sub	2021-08-03 19:04:06.425786525 +0100
+--- Python-3.10.0/config.sub	2021-08-03 19:03:07.361000000 +0100
++++ Python-3.10.0/config.sub	2021-08-03 19:04:06.425786525 +0100
 @@ -1485,6 +1485,8 @@
  	-oss*)
  		os=-sysv3
@@ -9,8 +9,8 @@
  	-svr4*)
  		os=-sysv4
  		;;
---- Python-3.10.0rc2/configure.ac	2021-08-03 19:04:59.784000000 +0100
-+++ Python-3.10.0rc2/configure.ac	2021-08-03 19:08:42.069896469 +0100
+--- Python-3.10.0/configure.ac	2021-08-03 19:04:59.784000000 +0100
++++ Python-3.10.0/configure.ac	2021-08-03 19:08:42.069896469 +0100
 @@ -391,6 +391,9 @@
         # a lot of different things including 'define_xopen_source'
         # in the case statement below.
@@ -48,8 +48,8 @@
  	# -u libsys_s pulls in all symbols in libsys
  	Darwin/*)
  		LINKFORSHARED="$extra_undefs -framework CoreFoundation"
---- Python-3.10.0rc2/configure	2021-09-07 15:18:28.000000000 +0200
-+++ Python-3.10.0rc2/configure	2021-09-18 17:01:57.104963183 +0200
+--- Python-3.10.0/configure	2021-09-07 15:18:28.000000000 +0200
++++ Python-3.10.0/configure	2021-09-18 17:01:57.104963183 +0200
 @@ -3325,6 +3325,9 @@
         # a lot of different things including 'define_xopen_source'
         # in the case statement below.
