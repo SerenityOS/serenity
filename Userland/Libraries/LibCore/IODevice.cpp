@@ -47,15 +47,6 @@ ByteBuffer IODevice::read(size_t max_size)
     if (m_buffered_data.size() < max_size)
         populate_read_buffer(max(max_size - m_buffered_data.size(), 1024));
 
-    if (m_buffered_data.size() > max_size) {
-        if (m_error)
-            return {};
-        if (m_eof) {
-            dbgln("IODevice::read: At EOF but there's more than max_size({}) buffered", max_size);
-            return {};
-        }
-    }
-
     auto size = min(max_size, m_buffered_data.size());
     auto buffer_result = ByteBuffer::create_uninitialized(size);
     if (!buffer_result.has_value()) {
