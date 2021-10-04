@@ -232,7 +232,7 @@ Game::MoveOutcome Game::attempt_move(Direction direction)
         add_tile();
     }
 
-    if (is_complete(m_board, m_target_tile))
+    if (is_complete(m_board, m_target_tile) && !m_want_to_continue)
         return MoveOutcome::Won;
     if (m_board.is_stalled())
         return MoveOutcome::GameOver;

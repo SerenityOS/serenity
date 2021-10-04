@@ -151,14 +151,23 @@ int main(int argc, char** argv)
         case Game::MoveOutcome::InvalidMove:
             undo_stack.take_last();
             break;
-        case Game::MoveOutcome::Won:
+        case Game::MoveOutcome::Won: {
             update();
-            GUI::MessageBox::show(window,
-                String::formatted("You reached {} in {} turns with a score of {}", game.target_tile(), game.turns(), game.score()),
-                "You won!",
-                GUI::MessageBox::Type::Information);
-            start_a_new_game();
+            auto message_box = GUI::MessageBox::construct(window, "Congratulations! You won the game, Do you still want to continue?",
+                "Want to continue?",
+                GUI::MessageBox::Type::Question,
+                GUI::MessageBox::InputType::YesNo);
+            if (message_box->exec() == GUI::MessageBox::ExecYes)
+                game.set_want_to_continue();
+            else {
+                GUI::MessageBox::show(window,
+                    String::formatted("You reached {} in {} turns with a score of {}", game.largest_tile(), game.turns(), game.score()),
+                    "You won!",
+                    GUI::MessageBox::Type::Information);
+                start_a_new_game();
+            }
             break;
+        }
         case Game::MoveOutcome::GameOver:
             update();
             GUI::MessageBox::show(window,
