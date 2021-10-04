@@ -29,9 +29,22 @@ private:
 
 class LineIterator {
 public:
-    LineIterator(Vector<StringView>::ConstIterator const& lines, size_t indent = 0)
+    struct Context {
+        enum class Type {
+            ListItem,
+            BlockQuote,
+        };
+
+        Type type;
+        size_t indent;
+        bool ignore_prefix;
+
+        static Context list_item(size_t indent) { return { Type::ListItem, indent, true }; }
+        static Context block_quote() { return { Type::BlockQuote, 0, false }; }
+    };
+
+    LineIterator(Vector<StringView>::ConstIterator const& lines)
         : m_iterator(lines)
-        , m_indent(indent)
     {
     }
 
@@ -53,23 +66,35 @@ public:
         return tmp;
     }
 
-    LineIterator operator+(ptrdiff_t delta) const { return LineIterator { m_iterator + delta, m_indent }; }
-    LineIterator operator-(ptrdiff_t delta) const { return LineIterator { m_iterator - delta, m_indent }; }
+    LineIterator operator+(ptrdiff_t delta) const
+    {
+        LineIterator copy = *this;
+        copy.reset_ignore_prefix();
+        copy.m_iterator = copy.m_iterator + delta;
+        return copy;
+    }
+
+    LineIterator operator-(ptrdiff_t delta) const
+    {
+        LineIterator copy = *this;
+        copy.reset_ignore_prefix();
+        copy.m_iterator = copy.m_iterator - delta;
+        return copy;
+    }
+
     ptrdiff_t operator-(LineIterator other) const { return m_iterator - other.m_iterator; }
 
     FakePtr<StringView> operator->() const { return FakePtr<StringView>(operator*()); }
 
-    size_t indent() const { return m_indent; }
-    void set_indent(size_t indent) { m_indent = indent; }
-    void ignore_next_prefix() { m_ignore_prefix_mode = true; }
+    void push_context(Context context) { m_context_stack.append(move(context)); }
+    void pop_context() { m_context_stack.take_last(); }
 
 private:
-    void reset_ignore_prefix() { m_ignore_prefix_mode = false; }
-    bool is_indented(StringView const& line) const;
+    void reset_ignore_prefix();
+    Optional<StringView> match_context(StringView const& line) const;
 
     Vector<StringView>::ConstIterator m_iterator;
-    size_t m_indent;
-    bool m_ignore_prefix_mode { false };
+    Vector<Context> m_context_stack;
 };
 
 }

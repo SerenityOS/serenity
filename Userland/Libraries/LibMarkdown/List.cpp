@@ -121,16 +121,14 @@ OwnPtr<List> List::parse(LineIterator& lines)
 
         is_tight = is_tight && !has_trailing_blank_lines;
 
-        size_t saved_indent = lines.indent();
-        lines.set_indent(saved_indent + offset);
-        lines.ignore_next_prefix();
+        lines.push_context(LineIterator::Context::list_item(offset));
 
         auto list_item = ContainerBlock::parse(lines);
         is_tight = is_tight && !list_item->has_blank_lines();
         has_trailing_blank_lines = has_trailing_blank_lines || list_item->has_trailing_blank_lines();
         items.append(move(list_item));
 
-        lines.set_indent(saved_indent);
+        lines.pop_context();
 
         first = false;
     }
