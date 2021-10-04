@@ -303,6 +303,9 @@ public:
 
     void run_the_resize_steps();
 
+    void evaluate_media_queries_and_report_changes();
+    void add_media_query_list(NonnullRefPtr<CSS::MediaQueryList>&);
+
 private:
     explicit Document(const AK::URL&);
 
@@ -393,6 +396,9 @@ private:
 
     // Used by run_the_resize_steps().
     Gfx::IntSize m_last_viewport_size;
+
+    // Used by evaluate_media_queries_and_report_changes().
+    Vector<WeakPtr<CSS::MediaQueryList>> m_media_query_lists;
 };
 
 }
