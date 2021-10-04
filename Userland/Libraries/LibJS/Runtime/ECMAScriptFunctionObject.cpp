@@ -186,6 +186,8 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 return IterationDecision::Continue;
             });
         }
+    } else {
+        arguments_object_needed = false;
     }
 
     Environment* environment;
