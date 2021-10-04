@@ -1,7 +1,8 @@
 parameters:
   os: 'Linux'
   fuzzer: 'NoFuzz'
-  allow_test_failures: 'NoFuzz'
+  lagom_lints: false
+  allow_test_failures: false
 
 jobs:
   - job: 'Lagom_${{ parameters.os }}_${{ parameters.fuzzer }}'
@@ -97,6 +98,17 @@ jobs:
         env:
           SERENITY_SOURCE_DIR: '$(Build.SourcesDirectory)'
           CTEST_OUTPUT_ON_FAILURE: 1
+          # FIXME: enable detect_stack_use_after_return=1 #7420
+          ASAN_OPTIONS: 'strict_string_checks=1:check_initialization_order=1:strict_init_order=1'
+          UBSAN_OPTIONS: 'print_stacktrace=1:print_summary=1:halt_on_error=1'
+
+    - ${{ if eq(parameters.lagom_lints, true) }}:
+      - script: |
+          ./Meta/check-markdown.sh
+        displayName: 'Check Markdown'
+        workingDirectory: $(Build.SourcesDirectory)/
+        env:
+          MARKDOWN_CHECK_BINARY: ./Meta/Lagom/Build/markdown-check
           # FIXME: enable detect_stack_use_after_return=1 #7420
           ASAN_OPTIONS: 'strict_string_checks=1:check_initialization_order=1:strict_init_order=1'
           UBSAN_OPTIONS: 'print_stacktrace=1:print_summary=1:halt_on_error=1'
