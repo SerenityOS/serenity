@@ -34,7 +34,7 @@ public:
     size_t turns() const { return m_turns; }
     u32 target_tile() const { return m_target_tile; }
     u32 largest_tile() const;
-
+    void set_want_to_continue() { m_want_to_continue = true; }
     class Board {
     public:
         using Row = Vector<u32>;
@@ -119,6 +119,7 @@ private:
     u32 m_target_tile { 0 };
 
     bool m_evil_ai { false };
+    bool m_want_to_continue { false };
 
     Board m_board;
     size_t m_score { 0 };
