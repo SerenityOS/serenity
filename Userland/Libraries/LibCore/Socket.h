@@ -43,6 +43,7 @@ public:
     int destination_port() const { return m_destination_port; }
 
     virtual bool close() override;
+    virtual void set_idle(bool);
 
     Function<void()> on_connected;
     Function<void()> on_error;
