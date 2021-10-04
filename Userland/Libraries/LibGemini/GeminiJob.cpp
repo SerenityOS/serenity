@@ -42,6 +42,7 @@ void GeminiJob::start(NonnullRefPtr<Core::Socket> socket)
             on_certificate_requested(*this);
     };
 
+    m_socket->set_idle(false);
     if (m_socket->is_established()) {
         deferred_invoke([this] { on_socket_connected(); });
     } else {
@@ -67,6 +68,7 @@ void GeminiJob::shutdown(ShutdownMode mode)
     } else {
         m_socket->on_tls_ready_to_read = nullptr;
         m_socket->on_tls_connected = nullptr;
+        m_socket->set_idle(true);
         m_socket = nullptr;
     }
 }
