@@ -51,3 +51,8 @@ following command in an elevated PowerShell session: \
 You may have to reboot after enabling the WHPX feature.
 
 Afterwards you can start the VM with `Meta/serenity.sh run` as usual.
+
+#### Runtime issues
+
+1. When running `Meta/serenity.sh run` on Windows you're receiving error `qemu-system-i386.exe: -s: Failed to bind socket: Input/output error`. The `-s` does not work, and causes QEMU to crash. To mitigate you can use the environment variable to disable that option globally: add `SERENITY_DISABLE_GDB_SOCKET=1` in `/etc/environment`
+
