@@ -10,6 +10,7 @@
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/KeyboardEventWrapper.h>
+#include <LibWeb/Bindings/MediaQueryListEventWrapper.h>
 #include <LibWeb/Bindings/MessageEventWrapper.h>
 #include <LibWeb/Bindings/MouseEventWrapper.h>
 #include <LibWeb/Bindings/PageTransitionEventWrapper.h>
@@ -22,6 +23,8 @@ EventWrapper* wrap(JS::GlobalObject& global_object, DOM::Event& event)
 {
     if (is<DOM::CustomEvent>(event))
         return static_cast<CustomEventWrapper*>(wrap_impl(global_object, static_cast<DOM::CustomEvent&>(event)));
+    if (is<CSS::MediaQueryListEvent>(event))
+        return static_cast<MediaQueryListEventWrapper*>(wrap_impl(global_object, static_cast<CSS::MediaQueryListEvent&>(event)));
     if (is<HTML::CloseEvent>(event))
         return static_cast<CloseEventWrapper*>(wrap_impl(global_object, static_cast<HTML::CloseEvent&>(event)));
     if (is<HTML::MessageEvent>(event))

@@ -164,7 +164,10 @@ void EventLoop::process()
 
     // FIXME:     8. For each fully active Document in docs, run the scroll steps for that Document, passing in now as the timestamp. [CSSOMVIEW]
 
-    // FIXME:     9. For each fully active Document in docs, evaluate media queries and report changes for that Document, passing in now as the timestamp. [CSSOMVIEW]
+    // 9. For each fully active Document in docs, evaluate media queries and report changes for that Document, passing in now as the timestamp. [CSSOMVIEW]
+    for_each_fully_active_document_in_docs([&](DOM::Document& document) {
+        document.evaluate_media_queries_and_report_changes();
+    });
 
     // FIXME:     10. For each fully active Document in docs, update animations and send events for that Document, passing in now as the timestamp. [WEBANIMATIONS]
 

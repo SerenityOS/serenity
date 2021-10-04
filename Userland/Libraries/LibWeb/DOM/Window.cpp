@@ -285,7 +285,9 @@ NonnullRefPtr<CSS::CSSStyleDeclaration> Window::get_computed_style(DOM::Element&
 
 NonnullRefPtr<CSS::MediaQueryList> Window::match_media(String media)
 {
-    return CSS::MediaQueryList::create(associated_document(), parse_media_query_list(CSS::ParsingContext(associated_document()), media));
+    auto media_query_list = CSS::MediaQueryList::create(associated_document(), parse_media_query_list(CSS::ParsingContext(associated_document()), media));
+    associated_document().add_media_query_list(media_query_list);
+    return media_query_list;
 }
 
 RefPtr<CSS::StyleValue> Window::query_media_feature(FlyString const& name) const

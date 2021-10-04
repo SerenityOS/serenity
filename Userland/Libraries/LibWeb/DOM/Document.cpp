@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,6 +16,7 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/CSS/MediaQueryListEvent.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Comment.h>
@@ -1103,6 +1105,44 @@ void Document::run_the_resize_steps()
     dispatch_event(DOM::Event::create(UIEvents::EventNames::resize));
 
     update_layout();
+}
+
+void Document::add_media_query_list(NonnullRefPtr<CSS::MediaQueryList>& media_query_list)
+{
+    m_media_query_lists.append(media_query_list);
+}
+
+// https://drafts.csswg.org/cssom-view/#evaluate-media-queries-and-report-changes
+void Document::evaluate_media_queries_and_report_changes()
+{
+    // NOTE: Not in the spec, but we take this opportunity to prune null WeakPtrs.
+    m_media_query_lists.remove_all_matching([](auto& it) {
+        return it.is_null();
+    });
+
+    // 1. For each MediaQueryList object target that has doc as its document,
+    //    in the order they were created, oldest first, run these substeps:
+    for (auto& media_query_list_ptr : m_media_query_lists) {
+        // 1.1. If target’s matches state has changed since the last time these steps
+        //      were run, fire an event at target using the MediaQueryListEvent constructor,
+        //      with its type attribute initialized to change, its isTrusted attribute
+        //      initialized to true, its media attribute initialized to target’s media,
+        //      and its matches attribute initialized to target’s matches state.
+        if (media_query_list_ptr.is_null())
+            continue;
+        auto media_query_list = media_query_list_ptr.strong_ref();
+        bool did_match = media_query_list->matches();
+        bool now_matches = media_query_list->evaluate();
+
+        if (did_match != now_matches) {
+            CSS::MediaQueryListEventInit init;
+            init.media = media_query_list->media();
+            init.matches = now_matches;
+            auto event = CSS::MediaQueryListEvent::create(HTML::EventNames::change, init);
+            event->set_is_trusted(true);
+            media_query_list->dispatch_event(event);
+        }
+    }
 }
 
 }
