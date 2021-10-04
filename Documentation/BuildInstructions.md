@@ -43,7 +43,7 @@ for details.
 ### Arch Linux / Manjaro
 
 ```console
-sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qemu qemu-arch-extra ccache rsync
+sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qemu qemu-arch-extra ccache rsync unzip
 ```
 
 ### Other systems
