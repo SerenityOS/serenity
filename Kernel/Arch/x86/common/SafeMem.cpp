@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/Arch/x86/RegisterState.h>
 #include <Kernel/Arch/x86/SafeMem.h>
 
@@ -39,12 +40,32 @@ extern "C" u8 safe_atomic_compare_exchange_relaxed_faulted[];
 
 namespace Kernel {
 
+ALWAYS_INLINE bool validate_canonical_address(size_t address)
+{
+#if ARCH(X86_64)
+    auto most_significant_bits = Processor::current().virtual_address_bit_width() - 1;
+    auto insignificant_bits = address >> most_significant_bits;
+    return insignificant_bits == 0 || insignificant_bits == (0xffffffffffffffffull >> most_significant_bits);
+#else
+    (void)address;
+    return true;
+#endif
+}
+
 CODE_SECTION(".text.safemem")
 NEVER_INLINE bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at)
 {
     fault_at = nullptr;
     size_t dest = (size_t)dest_ptr;
+    if (!validate_canonical_address(dest)) {
+        fault_at = dest_ptr;
+        return false;
+    }
     size_t src = (size_t)src_ptr;
+    if (!validate_canonical_address(src)) {
+        fault_at = const_cast<void*>(src_ptr);
+        return false;
+    }
     size_t remainder;
     // FIXME: Support starting at an unaligned address.
     if (!(dest & 0x3) && !(src & 0x3) && n >= 12) {
@@ -96,6 +117,10 @@ NEVER_INLINE bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, voi
 CODE_SECTION(".text.safemem")
 NEVER_INLINE ssize_t safe_strnlen(const char* str, size_t max_n, void*& fault_at)
 {
+    if (!validate_canonical_address((size_t)str)) {
+        fault_at = const_cast<char*>(str);
+        return false;
+    }
     ssize_t count = 0;
     fault_at = nullptr;
     asm volatile(
@@ -129,6 +154,10 @@ NEVER_INLINE bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
 {
     fault_at = nullptr;
     size_t dest = (size_t)dest_ptr;
+    if (!validate_canonical_address(dest)) {
+        fault_at = dest_ptr;
+        return false;
+    }
     size_t remainder;
     // FIXME: Support starting at an unaligned address.
     if (!(dest & 0x3) && n >= 12) {
