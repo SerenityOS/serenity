@@ -218,6 +218,14 @@ bool Socket::close()
     return IODevice::close();
 }
 
+void Socket::set_idle(bool idle)
+{
+    if (m_read_notifier)
+        m_read_notifier->set_enabled(!idle);
+    if (m_notifier)
+        m_notifier->set_enabled(!idle);
+}
+
 void Socket::ensure_read_notifier()
 {
     VERIFY(m_connected);
