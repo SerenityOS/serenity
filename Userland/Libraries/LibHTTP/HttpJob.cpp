@@ -22,6 +22,7 @@ void HttpJob::start(NonnullRefPtr<Core::Socket> socket)
             did_fail(Core::NetworkJob::Error::ConnectionFailed);
         });
     };
+    m_socket->set_idle(false);
     if (m_socket->is_connected()) {
         dbgln("Reusing previous connection for {}", url());
         deferred_invoke([this] {
@@ -52,6 +53,7 @@ void HttpJob::shutdown(ShutdownMode mode)
     } else {
         m_socket->on_ready_to_read = nullptr;
         m_socket->on_connected = nullptr;
+        m_socket->set_idle(true);
         m_socket = nullptr;
     }
 }
