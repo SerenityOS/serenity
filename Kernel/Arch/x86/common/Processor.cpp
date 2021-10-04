@@ -138,9 +138,13 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
         // CPUID.80000008H:EAX[7:0] reports the physical-address width supported by the processor.
         CPUID cpuid(0x80000008);
         m_physical_address_bit_width = cpuid.eax() & 0xff;
+        // CPUID.80000008H:EAX[15:8] reports the linear-address width supported by the processor.
+        m_virtual_address_bit_width = (cpuid.eax() >> 8) & 0xff;
     } else {
         // For processors that do not support CPUID function 80000008H, the width is generally 36 if CPUID.01H:EDX.PAE [bit 6] = 1 and 32 otherwise.
         m_physical_address_bit_width = has_feature(CPUFeature::PAE) ? 36 : 32;
+        // Processors that do not support CPUID function 80000008H, support a linear-address width of 32.
+        m_virtual_address_bit_width = 32;
     }
 
     CPUID extended_features(0x7);
@@ -335,6 +339,7 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
     if (!has_feature(CPUFeature::RDRAND))
         dmesgln("CPU[{}]: No RDRAND support detected, randomness will be poor", current_id());
     dmesgln("CPU[{}]: Physical address bit width: {}", current_id(), m_physical_address_bit_width);
+    dmesgln("CPU[{}]: Virtual address bit width: {}", current_id(), m_virtual_address_bit_width);
 
     if (cpu == 0)
         idt_init();
