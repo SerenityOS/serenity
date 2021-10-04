@@ -341,7 +341,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::clear_interval)
     i32 timer_id = vm.argument(0).to_i32(global_object);
     if (vm.exception())
         return {};
-    impl->clear_timeout(timer_id);
+    impl->clear_interval(timer_id);
     return JS::js_undefined();
 }
 
