@@ -285,3 +285,34 @@ TEST_CASE(mbrtowc)
     EXPECT_EQ(ret, -1ul);
     EXPECT_EQ(errno, EILSEQ);
 }
+
+TEST_CASE(wcrtomb)
+{
+    char buf[MB_LEN_MAX];
+    size_t ret = 0;
+
+    // Ensure that `wc` is ignored when buf is a nullptr.
+    ret = wcrtomb(nullptr, L'a', nullptr);
+    EXPECT_EQ(ret, 1ul);
+
+    ret = wcrtomb(nullptr, L'\U0001F41E', nullptr);
+    EXPECT_EQ(ret, 1ul);
+
+    // When the buffer is non-null, the multibyte representation is written into it.
+    ret = wcrtomb(buf, L'a', nullptr);
+    EXPECT_EQ(ret, 1ul);
+    EXPECT_EQ(memcmp(buf, "a", ret), 0);
+
+    ret = wcrtomb(buf, L'\U0001F41E', nullptr);
+    EXPECT_EQ(ret, 4ul);
+    EXPECT_EQ(memcmp(buf, "\xf0\x9f\x90\x9e", ret), 0);
+
+    // When the wide character is invalid, -1 is returned and errno is set to EILSEQ.
+    ret = wcrtomb(buf, 0x110000, nullptr);
+    EXPECT_EQ(ret, (size_t)-1);
+    EXPECT_EQ(errno, EILSEQ);
+
+    // Replacement characters and conversion errors are not confused.
+    ret = wcrtomb(buf, L'\uFFFD', nullptr);
+    EXPECT_NE(ret, (size_t)-1);
+}
