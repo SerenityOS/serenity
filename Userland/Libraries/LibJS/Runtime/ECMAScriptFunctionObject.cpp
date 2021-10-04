@@ -159,9 +159,9 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             });
     }
 
-    auto needs_argument_object = this_mode() != ThisMode::Lexical;
+    auto arguments_object_needed = this_mode() != ThisMode::Lexical;
     if (parameter_names.contains(vm.names.arguments.as_string()))
-        needs_argument_object = false;
+        arguments_object_needed = false;
 
     HashTable<FlyString> function_names;
     Vector<FunctionDeclaration const&> functions_to_initialize;
@@ -175,12 +175,12 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         auto arguments_name = vm.names.arguments.as_string();
 
         if (!has_parameter_expressions && function_names.contains(arguments_name))
-            needs_argument_object = false;
+            arguments_object_needed = false;
 
-        if (!has_parameter_expressions && needs_argument_object) {
+        if (!has_parameter_expressions && arguments_object_needed) {
             scope_body->for_each_lexically_declared_name([&](auto const& name) {
                 if (name == arguments_name)
-                    needs_argument_object = false;
+                    arguments_object_needed = false;
                 return IterationDecision::Continue;
             });
         }
@@ -206,7 +206,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         VERIFY(!vm.exception());
     }
 
-    if (needs_argument_object) {
+    if (arguments_object_needed) {
         Object* arguments_object;
         if (is_strict_mode() || !has_simple_parameter_list())
             arguments_object = create_unmapped_arguments_object(global_object(), vm.running_execution_context().arguments);
