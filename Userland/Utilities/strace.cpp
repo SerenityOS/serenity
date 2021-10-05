@@ -275,6 +275,11 @@ public:
         m_builder.appendff(") = {}\n", res);
     }
 
+    void format_result()
+    {
+        m_builder.append(")\n");
+    }
+
     StringView string_view()
     {
         return m_builder.string_view();
@@ -292,6 +297,28 @@ private:
     StringBuilder m_builder;
     bool m_first_arg { true };
 };
+
+static void format_getrandom(FormattedSyscallBuilder& builder, void* buffer, size_t size, unsigned flags)
+{
+    builder.add_arguments(buffer, size, flags);
+}
+
+static void format_realpath(FormattedSyscallBuilder& builder, Syscall::SC_realpath_params* params_p)
+{
+    auto params = copy_from_process(params_p);
+    builder.add_string_argument(params.path);
+    if (params.buffer.size == 0)
+        builder.add_argument("null");
+    else {
+        auto buffer = copy_from_process(params.buffer.data, params.buffer.size);
+        builder.add_argument("\"{}\"", StringView { (const char*)buffer.data() });
+    }
+}
+
+static void format_exit(FormattedSyscallBuilder& builder, int status)
+{
+    builder.add_argument(status);
+}
 
 static void format_open(FormattedSyscallBuilder& builder, Syscall::SC_open_params* params_p)
 {
@@ -537,11 +564,22 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
     enum ResultType {
         Int,
         Ssize,
-        VoidP
+        VoidP,
+        Void
     };
 
     ResultType result_type { Int };
     switch (syscall_function) {
+    case SC_getrandom:
+        format_getrandom(builder, (void*)arg1, (size_t)arg2, (unsigned)arg3);
+        break;
+    case SC_realpath:
+        format_realpath(builder, (Syscall::SC_realpath_params*)arg1);
+        break;
+    case SC_exit:
+        format_exit(builder, (int)arg1);
+        result_type = Void;
+        break;
     case SC_open:
         format_open(builder, (Syscall::SC_open_params*)arg1);
         break;
@@ -606,6 +644,9 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
         break;
     case VoidP:
         builder.format_result((void*)res);
+        break;
+    case Void:
+        builder.format_result();
         break;
     }
 }
