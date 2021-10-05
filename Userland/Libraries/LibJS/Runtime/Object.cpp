@@ -546,14 +546,15 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> Object::internal_get_own_propert
     VERIFY(property_name.is_valid());
 
     // 2. If O does not have an own property with key P, return undefined.
-    if (!storage_has(property_name))
+    auto maybe_storage_entry = storage_get(property_name);
+    if (!maybe_storage_entry.has_value())
         return Optional<PropertyDescriptor> {};
 
     // 3. Let D be a newly created Property Descriptor with no fields.
     PropertyDescriptor descriptor;
 
     // 4. Let X be O's own property whose key is P.
-    auto [value, attributes] = *storage_get(property_name);
+    auto [value, attributes] = *maybe_storage_entry;
 
     // 5. If X is a data property, then
     if (!value.is_accessor()) {
