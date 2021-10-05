@@ -23,9 +23,15 @@ WeakMap::~WeakMap()
 {
 }
 
-void WeakMap::remove_swept_cells(Badge<Heap>, Span<Cell*> cells)
+void WeakMap::remove_dead_cells(Badge<Heap>)
 {
-    for (auto* cell : cells)
+    // FIXME: Do this in a single pass.
+    Vector<Cell*> to_remove;
+    for (auto& it : m_values) {
+        if (it.key->state() != Cell::State::Live)
+            to_remove.append(it.key);
+    }
+    for (auto* cell : to_remove)
         m_values.remove(cell);
 }
 

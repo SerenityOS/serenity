@@ -25,18 +25,16 @@ WeakRef::~WeakRef()
 {
 }
 
-void WeakRef::remove_swept_cells(Badge<Heap>, Span<Cell*> cells)
+void WeakRef::remove_dead_cells(Badge<Heap>)
 {
     VERIFY(m_value);
-    for (auto* cell : cells) {
-        if (m_value != cell)
-            continue;
-        m_value = nullptr;
-        // This is an optimization, we deregister from the garbage collector early (even if we were not garbage collected ourself yet)
-        // to reduce the garbage collection overhead, which we can do because a cleared weak ref cannot be reused.
-        WeakContainer::deregister();
-        break;
-    }
+    if (m_value->state() == Cell::State::Live)
+        return;
+
+    m_value = nullptr;
+    // This is an optimization, we deregister from the garbage collector early (even if we were not garbage collected ourself yet)
+    // to reduce the garbage collection overhead, which we can do because a cleared weak ref cannot be reused.
+    WeakContainer::deregister();
 }
 
 void WeakRef::visit_edges(Visitor& visitor)
