@@ -627,7 +627,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
         return throw_completion(exception->value());
 
     for (auto& declaration : functions_to_initialize) {
-        auto* function = ECMAScriptFunctionObject::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), lexical_environment, declaration.kind(), declaration.is_strict_mode());
+        auto* function = ECMAScriptFunctionObject::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), lexical_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object());
         if (global_var_environment) {
             global_var_environment->create_global_function_binding(declaration.name(), function, true);
             if (auto* exception = vm.exception())

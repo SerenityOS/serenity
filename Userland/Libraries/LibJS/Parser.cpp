@@ -657,7 +657,8 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
 
     return create_ast_node<FunctionExpression>(
         { m_state.current_token.filename(), rule_start.position(), position() }, "", move(body),
-        move(parameters), function_length, FunctionKind::Regular, body->in_strict_mode(), true);
+        move(parameters), function_length, FunctionKind::Regular, body->in_strict_mode(),
+        /* might_need_arguments_object */ false, /* is_arrow_function */ true);
 }
 
 RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction allow_function)
@@ -878,7 +879,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                     break;
                 }
 
-                //https://tc39.es/ecma262/#sec-class-definitions-static-semantics-early-errors
+                // https://tc39.es/ecma262/#sec-class-definitions-static-semantics-early-errors
                 // ClassElement : static MethodDefinition
                 //   It is a Syntax Error if PropName of MethodDefinition is "prototype".
                 if (is_static && name == "prototype"sv)
@@ -975,11 +976,13 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
 
             constructor = create_ast_node<FunctionExpression>(
                 { m_state.current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body),
-                Vector { FunctionNode::Parameter { FlyString { "args" }, nullptr, true } }, 0, FunctionKind::Regular, true);
+                Vector { FunctionNode::Parameter { FlyString { "args" }, nullptr, true } }, 0, FunctionKind::Regular,
+                /* is_strict_mode */ true, /* might_need_arguments_object */ false);
         } else {
             constructor = create_ast_node<FunctionExpression>(
                 { m_state.current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body),
-                Vector<FunctionNode::Parameter> {}, 0, FunctionKind::Regular, true);
+                Vector<FunctionNode::Parameter> {}, 0, FunctionKind::Regular,
+                /* is_strict_mode */ true, /* might_need_arguments_object */ false);
         }
     }
 
@@ -1958,6 +1961,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     TemporaryChange break_context_rollback(m_state.in_break_context, false);
     TemporaryChange continue_context_rollback(m_state.in_continue_context, false);
     TemporaryChange class_field_initializer_rollback(m_state.in_class_field_initializer, false);
+    TemporaryChange might_need_arguments_object_rollback(m_state.function_might_need_arguments_object, false);
 
     constexpr auto is_function_expression = IsSame<FunctionNodeType, FunctionExpression>;
     auto function_kind = (parse_options & FunctionNodeParseOptions::IsGeneratorFunction) != 0 ? FunctionKind::Generator : FunctionKind::Regular;
@@ -1989,7 +1993,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     if (function_length == -1)
         function_length = parameters.size();
 
-    TemporaryChange change(m_state.in_function_context, true);
+    TemporaryChange function_context_rollback(m_state.in_function_context, true);
 
     auto old_labels_in_scope = move(m_state.labels_in_scope);
     ScopeGuard guard([&]() {
@@ -2006,7 +2010,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     return create_ast_node<FunctionNodeType>(
         { m_state.current_token.filename(), rule_start.position(), position() },
         name, move(body), move(parameters), function_length,
-        function_kind, has_strict_directive);
+        function_kind, has_strict_directive, m_state.function_might_need_arguments_object);
 }
 
 Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_length, u8 parse_options)
@@ -3129,6 +3133,11 @@ Token Parser::consume()
 {
     auto old_token = m_state.current_token;
     m_state.current_token = m_state.lexer.next();
+    // NOTE: This is the bare minimum needed to decide whether we might need an arguments object
+    // in a function expression or declaration. ("might" because the AST implements some further
+    // conditions from the spec that rule out the need for allocating one)
+    if (old_token.type() == TokenType::Identifier && old_token.value().is_one_of("arguments"sv, "eval"sv))
+        m_state.function_might_need_arguments_object = true;
     return old_token;
 }
 

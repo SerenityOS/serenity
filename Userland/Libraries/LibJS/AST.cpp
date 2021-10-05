@@ -187,7 +187,7 @@ Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& 
         scope->create_immutable_binding(global_object, name(), false);
     }
 
-    auto closure = ECMAScriptFunctionObject::create(global_object, used_name, body(), parameters(), function_length(), scope, kind(), is_strict_mode(), is_arrow_function());
+    auto closure = ECMAScriptFunctionObject::create(global_object, used_name, body(), parameters(), function_length(), scope, kind(), is_strict_mode(), might_need_arguments_object(), is_arrow_function());
 
     // FIXME: 6. Perform SetFunctionName(closure, name).
     // FIXME: 7. Perform MakeConstructor(closure).
@@ -1289,7 +1289,7 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
             auto copy_initializer = field.initializer();
             auto body = create_ast_node<ExpressionStatement>(field.initializer()->source_range(), copy_initializer.release_nonnull());
             // FIXME: A potential optimization is not creating the functions here since these are never directly accessible.
-            initializer = ECMAScriptFunctionObject::create(interpreter.global_object(), property_key.to_display_string(), *body, {}, 0, interpreter.lexical_environment(), FunctionKind::Regular, false);
+            initializer = ECMAScriptFunctionObject::create(interpreter.global_object(), property_key.to_display_string(), *body, {}, 0, interpreter.lexical_environment(), FunctionKind::Regular, false, false);
             initializer->set_home_object(field.is_static() ? class_constructor : &class_prototype.as_object());
         }
 
@@ -3169,7 +3169,7 @@ void ScopeNode::block_declaration_instantiation(GlobalObject& global_object, Env
 
         if (is<FunctionDeclaration>(declaration)) {
             auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
-            auto* function = ECMAScriptFunctionObject::create(global_object, function_declaration.name(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), environment, function_declaration.kind(), function_declaration.is_strict_mode());
+            auto* function = ECMAScriptFunctionObject::create(global_object, function_declaration.name(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object());
             VERIFY(is<DeclarativeEnvironment>(*environment));
             static_cast<DeclarativeEnvironment&>(*environment).initialize_or_set_mutable_binding({}, global_object, function_declaration.name(), function);
         }
@@ -3313,7 +3313,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
     });
 
     for (auto& declaration : functions_to_initialize) {
-        auto* function = ECMAScriptFunctionObject::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), &global_environment, declaration.kind(), declaration.is_strict_mode());
+        auto* function = ECMAScriptFunctionObject::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), &global_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object());
         global_environment.create_global_function_binding(declaration.name(), function, false);
         if (auto* exception = interpreter.exception())
             return throw_completion(exception->value());
