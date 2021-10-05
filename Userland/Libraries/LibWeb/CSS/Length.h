@@ -109,13 +109,18 @@ public:
 
     ALWAYS_INLINE float to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float root_font_size) const
     {
+        if (is_auto())
+            return 0;
         if (is_relative())
             return relative_length_to_px(viewport_rect, font_metrics, root_font_size);
+        return absolute_length_to_px();
+    }
+
+    ALWAYS_INLINE float absolute_length_to_px() const
+    {
         constexpr float inch_pixels = 96.0f;
         constexpr float centimeter_pixels = (inch_pixels / 2.54f);
         switch (m_type) {
-        case Type::Auto:
-            return 0;
         case Type::Cm:
             return m_value * centimeter_pixels; // 1cm = 96px/2.54
         case Type::In:
@@ -130,9 +135,6 @@ public:
             return m_value * ((1.0f / 10.0f) * centimeter_pixels); // 1mm = 1/10th of 1cm
         case Type::Q:
             return m_value * ((1.0f / 40.0f) * centimeter_pixels); // 1Q = 1/40th of 1cm
-        case Type::Undefined:
-        case Type::Percentage:
-        case Type::Calculated:
         default:
             VERIFY_NOT_REACHED();
         }
