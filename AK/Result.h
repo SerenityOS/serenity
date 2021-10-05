@@ -93,6 +93,10 @@ public:
     Result(const Result& other) = default;
     ~Result() = default;
 
+    // For compatibility with TRY().
+    void value() {};
+    void release_value() {};
+
     ErrorType& error()
     {
         return m_error.value();
