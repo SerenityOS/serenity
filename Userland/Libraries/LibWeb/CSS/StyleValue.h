@@ -39,6 +39,11 @@ enum class AlignItems {
     Stretch,
 };
 
+enum class BoxSizing {
+    BorderBox,
+    ContentBox,
+};
+
 enum class Clear {
     None,
     Left,
