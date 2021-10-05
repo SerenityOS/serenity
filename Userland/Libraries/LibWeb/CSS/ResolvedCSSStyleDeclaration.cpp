@@ -480,6 +480,15 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         if (layout_node.computed_values().max_height().is_undefined())
             return IdentifierStyleValue::create(CSS::ValueID::None);
         return LengthStyleValue::create(layout_node.computed_values().max_height());
+    case CSS::PropertyID::Margin: {
+        auto margin = layout_node.computed_values().margin();
+        auto values = NonnullRefPtrVector<StyleValue> {};
+        values.append(LengthStyleValue::create(margin.top));
+        values.append(LengthStyleValue::create(margin.right));
+        values.append(LengthStyleValue::create(margin.bottom));
+        values.append(LengthStyleValue::create(margin.left));
+        return StyleValueList::create(move(values));
+    }
     case CSS::PropertyID::MarginTop:
         return LengthStyleValue::create(layout_node.computed_values().margin().top);
     case CSS::PropertyID::MarginRight:
@@ -488,6 +497,15 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return LengthStyleValue::create(layout_node.computed_values().margin().bottom);
     case CSS::PropertyID::MarginLeft:
         return LengthStyleValue::create(layout_node.computed_values().margin().left);
+    case CSS::PropertyID::Padding: {
+        auto padding = layout_node.computed_values().padding();
+        auto values = NonnullRefPtrVector<StyleValue> {};
+        values.append(LengthStyleValue::create(padding.top));
+        values.append(LengthStyleValue::create(padding.right));
+        values.append(LengthStyleValue::create(padding.bottom));
+        values.append(LengthStyleValue::create(padding.left));
+        return StyleValueList::create(move(values));
+    }
     case CSS::PropertyID::PaddingTop:
         return LengthStyleValue::create(layout_node.computed_values().padding().top);
     case CSS::PropertyID::PaddingRight:
