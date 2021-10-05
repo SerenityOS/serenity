@@ -122,13 +122,21 @@ Value BlockStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     InterpreterNodeScope node_scope { interpreter, *this };
 
     auto& vm = interpreter.vm();
-    Environment* old_environment = vm.running_execution_context().lexical_environment;
-    ScopeGuard restore_environment = [&] {
+
+    Environment* old_environment { nullptr };
+    ArmedScopeGuard restore_environment = [&] {
         vm.running_execution_context().lexical_environment = old_environment;
     };
-    auto* block_environment = new_declarative_environment(*old_environment);
-    block_declaration_instantiation(global_object, block_environment);
-    vm.running_execution_context().lexical_environment = block_environment;
+
+    // Optimization: We only need a new lexical environment if there are any lexical declarations. :^)
+    if (has_lexical_declarations()) {
+        old_environment = vm.running_execution_context().lexical_environment;
+        auto* block_environment = new_declarative_environment(*old_environment);
+        block_declaration_instantiation(global_object, block_environment);
+        vm.running_execution_context().lexical_environment = block_environment;
+    } else {
+        restore_environment.disarm();
+    }
 
     auto block_value = evaluate_statements(interpreter, global_object);
     if (!labels().is_empty() && vm.should_unwind_until(ScopeType::Breakable, labels()))

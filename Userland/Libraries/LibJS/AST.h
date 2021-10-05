@@ -183,6 +183,9 @@ public:
     void add_lexical_declaration(NonnullRefPtr<Declaration> variables);
     void add_hoisted_function(NonnullRefPtr<FunctionDeclaration> declaration);
 
+    [[nodiscard]] bool has_lexical_declarations() const { return !m_lexical_declarations.is_empty(); }
+    [[nodiscard]] bool has_var_declarations() const { return !m_var_declarations.is_empty(); }
+
     void for_each_lexically_scoped_declaration(IteratorOrVoidFunction<Declaration const&>&& callback) const;
     void for_each_lexically_declared_name(IteratorOrVoidFunction<FlyString const&>&& callback) const;
 
