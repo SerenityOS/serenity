@@ -144,11 +144,12 @@ public:
     void set_visited_link_color(Color);
 
     void force_layout();
-    void invalidate_layout();
     void ensure_layout();
 
     void update_style();
     void update_layout();
+
+    void set_needs_layout();
 
     virtual bool is_child_allowed(const Node&) const override;
 
@@ -156,7 +157,7 @@ public:
     Layout::InitialContainingBlock* layout_node();
 
     void schedule_style_update();
-    void schedule_forced_layout();
+    void schedule_layout_update();
 
     NonnullRefPtr<HTMLCollection> get_elements_by_name(String const&);
     NonnullRefPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
@@ -352,7 +353,7 @@ private:
     Optional<Color> m_visited_link_color;
 
     RefPtr<Core::Timer> m_style_update_timer;
-    RefPtr<Core::Timer> m_forced_layout_timer;
+    RefPtr<Core::Timer> m_layout_update_timer;
 
     String m_source;
 
@@ -399,6 +400,8 @@ private:
 
     // Used by evaluate_media_queries_and_report_changes().
     Vector<WeakPtr<CSS::MediaQueryList>> m_media_query_lists;
+
+    bool m_needs_layout { false };
 };
 
 }

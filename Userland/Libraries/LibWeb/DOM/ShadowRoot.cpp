@@ -49,7 +49,6 @@ ExceptionOr<void> ShadowRoot::set_inner_html(String const& markup)
         return result.exception();
 
     set_needs_style_update(true);
-    document().invalidate_layout();
     return {};
 }
 
