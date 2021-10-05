@@ -287,10 +287,8 @@ static void print_error(JS::Object const& object, HashTable<JS::Object*>& seen_o
 static void print_regexp_object(JS::Object const& object, HashTable<JS::Object*>&)
 {
     auto& regexp_object = static_cast<JS::RegExpObject const&>(object);
-    // Use RegExp.prototype.source rather than RegExpObject::pattern() so we get proper escaping
-    auto source = regexp_object.get_without_side_effects("source").to_primitive_string(object.global_object())->string();
     print_type("RegExp");
-    out(" \033[34;1m/{}/{}\033[0m", source, regexp_object.flags());
+    out(" \033[34;1m/{}/{}\033[0m", regexp_object.escape_regexp_pattern(), regexp_object.flags());
 }
 
 static void print_proxy_object(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
