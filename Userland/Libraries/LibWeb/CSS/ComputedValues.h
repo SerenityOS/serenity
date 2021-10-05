@@ -33,6 +33,7 @@ public:
     static CSS::AlignItems align_items() { return CSS::AlignItems::FlexStart; }
     static CSS::Overflow overflow() { return CSS::Overflow::Visible; }
     static CSS::BoxSizing box_sizing() { return CSS::BoxSizing::ContentBox; }
+    static CSS::PointerEvents pointer_events() { return CSS::PointerEvents::Auto; }
 };
 
 struct BorderData {
@@ -64,6 +65,7 @@ public:
     CSS::Float float_() const { return m_noninherited.float_; }
     CSS::Clear clear() const { return m_noninherited.clear; }
     CSS::Cursor cursor() const { return m_inherited.cursor; }
+    CSS::PointerEvents pointer_events() const { return m_inherited.pointer_events; }
     CSS::Display display() const { return m_noninherited.display; }
     Optional<int> const& z_index() const { return m_noninherited.z_index; }
     CSS::TextAlign text_align() const { return m_inherited.text_align; }
@@ -129,6 +131,7 @@ protected:
     struct {
         Color color { InitialValues::color() };
         CSS::Cursor cursor { InitialValues::cursor() };
+        CSS::PointerEvents pointer_events { InitialValues::pointer_events() };
         CSS::TextAlign text_align { InitialValues::text_align() };
         CSS::TextTransform text_transform { InitialValues::text_transform() };
         CSS::WhiteSpace white_space { InitialValues::white_space() };
@@ -189,6 +192,7 @@ class MutableComputedValues final : public ComputedValues {
 public:
     void set_color(const Color& color) { m_inherited.color = color; }
     void set_cursor(CSS::Cursor cursor) { m_inherited.cursor = cursor; }
+    void set_pointer_events(CSS::PointerEvents value) { m_inherited.pointer_events = value; }
     void set_background_color(const Color& color) { m_noninherited.background_color = color; }
     void set_background_repeat_x(CSS::Repeat repeat) { m_noninherited.background_repeat_x = repeat; }
     void set_background_repeat_y(CSS::Repeat repeat) { m_noninherited.background_repeat_y = repeat; }

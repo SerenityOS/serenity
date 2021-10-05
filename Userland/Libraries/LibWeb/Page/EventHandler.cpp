@@ -184,10 +184,16 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     }
 
     NonnullRefPtr document = *m_frame.active_document();
+
+    // TODO: Allow selecting element behind if one on top has pointer-events set to none.
+    auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
+    auto pointer_events = result.layout_node->computed_values().pointer_events();
+    if (pointer_events == CSS::PointerEvents::None)
+        return false;
+
     RefPtr<DOM::Node> node;
 
     {
-        auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
         if (!result.layout_node)
             return false;
 
@@ -306,6 +312,10 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
             return false;
         }
 
+        auto pointer_events = result.layout_node->computed_values().pointer_events();
+        if (pointer_events == CSS::PointerEvents::None)
+            return false;
+
         hovered_node_changed = node != document.hovered_node();
         document.set_hovered_node(node);
         if (node) {
@@ -313,11 +323,13 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
             if (hovered_link_element)
                 is_hovering_link = true;
 
-            auto cursor = result.layout_node->computed_values().cursor();
-            if (node->is_text() && cursor == CSS::Cursor::Auto)
-                hovered_node_cursor = Gfx::StandardCursor::IBeam;
-            else
-                hovered_node_cursor = cursor_css_to_gfx(cursor);
+            if (node->is_text()) {
+                auto cursor = result.layout_node->computed_values().cursor();
+                if (cursor == CSS::Cursor::Auto)
+                    hovered_node_cursor = Gfx::StandardCursor::IBeam;
+                else
+                    hovered_node_cursor = cursor_css_to_gfx(cursor);
+            }
 
             auto offset = compute_mouse_event_offset(position, *result.layout_node);
             node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mousemove, offset.x(), offset.y(), position.x(), position.y()));

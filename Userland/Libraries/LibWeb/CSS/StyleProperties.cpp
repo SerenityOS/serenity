@@ -355,6 +355,22 @@ Optional<CSS::TextAlign> StyleProperties::text_align() const
     }
 }
 
+Optional<CSS::PointerEvents> StyleProperties::pointer_events() const
+{
+    auto value = property(CSS::PropertyID::PointerEvents);
+    if (!value.has_value())
+        return {};
+
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::Auto:
+        return CSS::PointerEvents::Auto;
+    case CSS::ValueID::None:
+        return CSS::PointerEvents::None;
+    default:
+        return {};
+    }
+}
+
 Optional<CSS::WhiteSpace> StyleProperties::white_space() const
 {
     auto value = property(CSS::PropertyID::WhiteSpace);
