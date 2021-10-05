@@ -32,6 +32,7 @@ public:
     static CSS::JustifyContent justify_content() { return CSS::JustifyContent::FlexStart; }
     static CSS::AlignItems align_items() { return CSS::AlignItems::FlexStart; }
     static CSS::Overflow overflow() { return CSS::Overflow::Visible; }
+    static CSS::BoxSizing box_sizing() { return CSS::BoxSizing::ContentBox; }
 };
 
 struct BorderData {
@@ -79,6 +80,7 @@ public:
     Optional<float> const& opacity() const { return m_noninherited.opacity; }
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
     Optional<BoxShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
+    CSS::BoxSizing box_sizing() const { return m_noninherited.box_sizing; }
     const CSS::Length& width() const { return m_noninherited.width; }
     const CSS::Length& min_width() const { return m_noninherited.min_width; }
     const CSS::Length& max_width() const { return m_noninherited.max_width; }
@@ -176,6 +178,7 @@ protected:
         Optional<float> opacity;
         Optional<BoxShadowData> box_shadow {};
         Vector<CSS::Transformation> transformations {};
+        CSS::BoxSizing box_sizing { InitialValues::box_sizing() };
     } m_noninherited;
 };
 
@@ -228,6 +231,7 @@ public:
     void set_justify_content(CSS::JustifyContent value) { m_noninherited.justify_content = value; }
     void set_box_shadow(Optional<BoxShadowData> value) { m_noninherited.box_shadow = move(value); }
     void set_transformations(Vector<CSS::Transformation> value) { m_noninherited.transformations = move(value); }
+    void set_box_sizing(CSS::BoxSizing value) { m_noninherited.box_sizing = value; }
 
     void set_fill(Color value) { m_inherited.fill = value; }
     void set_stroke(Color value) { m_inherited.stroke = value; }
