@@ -383,6 +383,33 @@ static CSS::ValueID to_css_value_id(CSS::ListStyleType value)
     VERIFY_NOT_REACHED();
 }
 
+static CSS::ValueID to_css_value_id(CSS::LineStyle value)
+{
+    switch (value) {
+    case CSS::LineStyle::None:
+        return CSS::ValueID::None;
+    case CSS::LineStyle::Hidden:
+        return CSS::ValueID::Hidden;
+    case CSS::LineStyle::Dotted:
+        return CSS::ValueID::Dotted;
+    case CSS::LineStyle::Dashed:
+        return CSS::ValueID::Dashed;
+    case CSS::LineStyle::Solid:
+        return CSS::ValueID::Solid;
+    case CSS::LineStyle::Double:
+        return CSS::ValueID::Double;
+    case CSS::LineStyle::Groove:
+        return CSS::ValueID::Groove;
+    case CSS::LineStyle::Ridge:
+        return CSS::ValueID::Ridge;
+    case CSS::LineStyle::Inset:
+        return CSS::ValueID::Inset;
+    case CSS::LineStyle::Outset:
+        return CSS::ValueID::Outset;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 static NonnullRefPtr<StyleValue> value_or_default(Optional<StyleProperty> property, NonnullRefPtr<StyleValue> default_style)
 {
     if (property.has_value())
@@ -548,6 +575,58 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return BorderRadiusStyleValue::create(layout_node.computed_values().border_top_left_radius(), layout_node.computed_values().border_top_left_radius());
     case CSS::PropertyID::BorderTopRightRadius:
         return BorderRadiusStyleValue::create(layout_node.computed_values().border_top_right_radius(), layout_node.computed_values().border_top_right_radius());
+    case CSS::PropertyID::BorderTopWidth:
+        return LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_top().width));
+    case CSS::PropertyID::BorderRightWidth:
+        return LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_right().width));
+    case CSS::PropertyID::BorderBottomWidth:
+        return LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_bottom().width));
+    case CSS::PropertyID::BorderLeftWidth:
+        return LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_left().width));
+    case CSS::PropertyID::BorderTopColor:
+        return ColorStyleValue::create(layout_node.computed_values().border_top().color);
+    case CSS::PropertyID::BorderRightColor:
+        return ColorStyleValue::create(layout_node.computed_values().border_right().color);
+    case CSS::PropertyID::BorderBottomColor:
+        return ColorStyleValue::create(layout_node.computed_values().border_bottom().color);
+    case CSS::PropertyID::BorderLeftColor:
+        return ColorStyleValue::create(layout_node.computed_values().border_left().color);
+    case CSS::PropertyID::BorderTopStyle:
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().border_top().line_style));
+    case CSS::PropertyID::BorderRightStyle:
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().border_right().line_style));
+    case CSS::PropertyID::BorderBottomStyle:
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().border_bottom().line_style));
+    case CSS::PropertyID::BorderLeftStyle:
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().border_left().line_style));
+    case CSS::PropertyID::BorderTop: {
+        auto border = layout_node.computed_values().border_top();
+        auto width = LengthStyleValue::create(Length::make_px(border.width));
+        auto style = IdentifierStyleValue::create(to_css_value_id(border.line_style));
+        auto color = ColorStyleValue::create(border.color);
+        return BorderStyleValue::create(width, style, color);
+    }
+    case CSS::PropertyID::BorderRight: {
+        auto border = layout_node.computed_values().border_right();
+        auto width = LengthStyleValue::create(Length::make_px(border.width));
+        auto style = IdentifierStyleValue::create(to_css_value_id(border.line_style));
+        auto color = ColorStyleValue::create(border.color);
+        return BorderStyleValue::create(width, style, color);
+    }
+    case CSS::PropertyID::BorderBottom: {
+        auto border = layout_node.computed_values().border_bottom();
+        auto width = LengthStyleValue::create(Length::make_px(border.width));
+        auto style = IdentifierStyleValue::create(to_css_value_id(border.line_style));
+        auto color = ColorStyleValue::create(border.color);
+        return BorderStyleValue::create(width, style, color);
+    }
+    case CSS::PropertyID::BorderLeft: {
+        auto border = layout_node.computed_values().border_left();
+        auto width = LengthStyleValue::create(Length::make_px(border.width));
+        auto style = IdentifierStyleValue::create(to_css_value_id(border.line_style));
+        auto color = ColorStyleValue::create(border.color);
+        return BorderStyleValue::create(width, style, color);
+    }
     case CSS::PropertyID::OverflowX:
         return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().overflow_x()));
     case CSS::PropertyID::OverflowY:
