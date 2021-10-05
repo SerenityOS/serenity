@@ -312,6 +312,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (cursor.has_value())
         computed_values.set_cursor(cursor.value());
 
+    auto pointer_events = specified_style.pointer_events();
+    if (pointer_events.has_value())
+        computed_values.set_pointer_events(pointer_events.value());
+
     auto text_decoration_line = specified_style.text_decoration_line();
     if (text_decoration_line.has_value())
         computed_values.set_text_decoration_line(text_decoration_line.value());
