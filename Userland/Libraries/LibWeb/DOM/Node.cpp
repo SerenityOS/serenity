@@ -142,7 +142,6 @@ void Node::set_text_content(String const& content)
     }
 
     set_needs_style_update(true);
-    document().invalidate_layout();
 }
 
 RefPtr<Layout::Node> Node::create_layout_node()

@@ -97,7 +97,6 @@ void HTMLElement::set_inner_text(StringView text)
     append_child(document().create_text_node(text));
 
     set_needs_style_update(true);
-    document().invalidate_layout();
 }
 
 String HTMLElement::inner_text()

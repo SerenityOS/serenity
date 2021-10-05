@@ -144,8 +144,6 @@ void EvaluateExpressionDialog::set_output(const StringView& html)
     paragraph->set_inner_html(html);
 
     m_output_container->append_child(paragraph);
-    m_output_container->document().invalidate_layout();
-    m_output_container->document().update_layout();
 }
 
 }

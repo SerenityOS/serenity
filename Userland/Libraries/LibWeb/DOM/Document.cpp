@@ -80,7 +80,7 @@ Document::Document(const AK::URL& url)
         update_style();
     });
 
-    m_forced_layout_timer = Core::Timer::create_single_shot(0, [this] {
+    m_layout_update_timer = Core::Timer::create_single_shot(0, [this] {
         force_layout();
     });
 }
@@ -164,11 +164,11 @@ void Document::schedule_style_update()
     m_style_update_timer->start();
 }
 
-void Document::schedule_forced_layout()
+void Document::schedule_layout_update()
 {
-    if (m_forced_layout_timer->is_active())
+    if (m_layout_update_timer->is_active())
         return;
-    m_forced_layout_timer->start();
+    m_layout_update_timer->start();
 }
 
 bool Document::is_child_allowed(const Node& node) const
@@ -402,25 +402,31 @@ AK::URL Document::parse_url(String const& url) const
     return m_url.complete_url(url);
 }
 
-void Document::invalidate_layout()
+void Document::set_needs_layout()
 {
-    tear_down_layout_tree();
+    if (m_needs_layout)
+        return;
+    m_needs_layout = true;
+    schedule_layout_update();
 }
 
 void Document::force_layout()
 {
-    invalidate_layout();
+    tear_down_layout_tree();
     update_layout();
 }
 
 void Document::ensure_layout()
 {
-    if (!m_layout_root)
+    if (m_needs_layout || !m_layout_root)
         update_layout();
 }
 
 void Document::update_layout()
 {
+    if (!m_needs_layout && m_layout_root)
+        return;
+
     if (!browsing_context())
         return;
 
@@ -438,6 +444,8 @@ void Document::update_layout()
         if (auto* page = this->page())
             page->client().page_did_layout();
     }
+
+    m_needs_layout = false;
 }
 
 static void update_style_recursively(DOM::Node& node)
@@ -461,7 +469,7 @@ void Document::update_style()
     if (!browsing_context())
         return;
     update_style_recursively(*this);
-    update_layout();
+    set_needs_layout();
 }
 
 RefPtr<Layout::Node> Document::create_layout_node()

@@ -224,7 +224,7 @@ void Element::recompute_style()
         return;
     layout_node()->apply_style(*new_specified_css_values);
     if (diff == StyleDifference::NeedsRelayout) {
-        document().schedule_forced_layout();
+        document().set_needs_layout();
         return;
     }
     if (diff == StyleDifference::NeedsRepaint) {
@@ -270,7 +270,6 @@ ExceptionOr<void> Element::set_inner_html(String const& markup)
         return result.exception();
 
     set_needs_style_update(true);
-    document().invalidate_layout();
     return {};
 }
 

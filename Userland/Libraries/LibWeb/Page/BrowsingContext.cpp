@@ -82,6 +82,8 @@ void BrowsingContext::set_viewport_rect(Gfx::IntRect const& rect)
 
     if (m_size != rect.size()) {
         m_size = rect.size();
+        if (auto* document = active_document())
+            document->set_needs_layout();
         did_change = true;
     }
 
@@ -104,6 +106,9 @@ void BrowsingContext::set_size(Gfx::IntSize const& size)
     if (m_size == size)
         return;
     m_size = size;
+
+    if (auto* document = active_document())
+        document->set_needs_layout();
 
     for (auto* client : m_viewport_clients)
         client->browsing_context_did_set_viewport_rect(viewport_rect());
