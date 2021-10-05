@@ -66,6 +66,7 @@ public:
     Optional<CSS::Repeat> background_repeat_x() const;
     Optional<CSS::Repeat> background_repeat_y() const;
     Optional<CSS::BoxShadowData> box_shadow() const;
+    CSS::BoxSizing box_sizing() const;
 
     Vector<CSS::Transformation> transformations() const;
 

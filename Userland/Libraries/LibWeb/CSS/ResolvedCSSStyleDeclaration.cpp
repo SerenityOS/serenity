@@ -33,6 +33,17 @@ String ResolvedCSSStyleDeclaration::item(size_t index) const
     return {};
 }
 
+static CSS::ValueID to_css_value_id(CSS::BoxSizing value)
+{
+    switch (value) {
+    case CSS::BoxSizing::BorderBox:
+        return CSS::ValueID::BorderBox;
+    case CSS::BoxSizing::ContentBox:
+        return CSS::ValueID::ContentBox;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 static CSS::ValueID to_css_value_id(CSS::Display value)
 {
     switch (value) {
@@ -546,6 +557,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
     }
     case CSS::PropertyID::ListStyleType:
         return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().list_style_type()));
+    case CSS::PropertyID::BoxSizing:
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().box_sizing()));
     case CSS::PropertyID::Invalid:
         return IdentifierStyleValue::create(CSS::ValueID::Invalid);
     case CSS::PropertyID::Custom:

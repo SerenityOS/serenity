@@ -728,4 +728,20 @@ Optional<CSS::BoxShadowData> StyleProperties::box_shadow() const
     auto& box = value->as_box_shadow();
     return { { box.offset_x(), box.offset_y(), box.blur_radius(), box.color() } };
 }
+
+CSS::BoxSizing StyleProperties::box_sizing() const
+{
+    auto value = property(CSS::PropertyID::BoxSizing);
+    if (!value.has_value())
+        return {};
+
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::BorderBox:
+        return CSS::BoxSizing::BorderBox;
+    case CSS::ValueID::ContentBox:
+        return CSS::BoxSizing::ContentBox;
+    default:
+        return {};
+    }
+}
 }
