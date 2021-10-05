@@ -18,7 +18,6 @@
 #include <LibJS/Runtime/RegExpPrototype.h>
 #include <LibJS/Runtime/RegExpStringIterator.h>
 #include <LibJS/Runtime/StringPrototype.h>
-#include <LibJS/Token.h>
 
 namespace JS {
 
@@ -54,15 +53,6 @@ void RegExpPrototype::initialize(GlobalObject& global_object)
 
 RegExpPrototype::~RegExpPrototype()
 {
-}
-
-static String escape_regexp_pattern(const RegExpObject& regexp_object)
-{
-    auto pattern = regexp_object.pattern();
-    if (pattern.is_empty())
-        return "(?:)";
-    // FIXME: Check u flag and escape accordingly
-    return pattern.replace("\n", "\\n", true).replace("\r", "\\r", true).replace(LINE_SEPARATOR_STRING, "\\u2028", true).replace(PARAGRAPH_SEPARATOR_STRING, "\\u2029", true).replace("/", "\\/", true);
 }
 
 // 22.2.5.2.3 AdvanceStringIndex ( S, index, unicode ), https://tc39.es/ecma262/#sec-advancestringindex
@@ -344,7 +334,7 @@ JS_DEFINE_NATIVE_GETTER(RegExpPrototype::source)
         return {};
     }
 
-    return js_string(vm, escape_regexp_pattern(static_cast<RegExpObject&>(*regexp_object)));
+    return js_string(vm, static_cast<RegExpObject&>(*regexp_object).escape_regexp_pattern());
 }
 
 // 22.2.5.2 RegExp.prototype.exec ( string ), https://tc39.es/ecma262/#sec-regexp.prototype.exec
