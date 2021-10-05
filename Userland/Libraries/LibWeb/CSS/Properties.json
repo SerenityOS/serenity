@@ -1073,7 +1073,11 @@
   },
   "pointer-events": {
     "inherited": true,
-    "initial": "auto"
+    "initial": "auto",
+    "valid-identifiers": [
+      "auto",
+      "none"
+    ]
   },
   "position": {
     "inherited": false,

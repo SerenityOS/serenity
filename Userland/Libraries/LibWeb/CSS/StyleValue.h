@@ -229,6 +229,11 @@ enum class WhiteSpace {
     PreWrap,
 };
 
+enum class PointerEvents {
+    Auto,
+    None
+};
+
 class StyleValue : public RefCounted<StyleValue> {
 public:
     virtual ~StyleValue();
