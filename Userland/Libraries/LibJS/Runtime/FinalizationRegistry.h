@@ -30,7 +30,7 @@ public:
     bool remove_by_token(Object& unregister_token);
     void cleanup(FunctionObject* callback = nullptr);
 
-    virtual void remove_swept_cells(Badge<Heap>, Span<Cell*>) override;
+    virtual void remove_dead_cells(Badge<Heap>) override;
 
 private:
     virtual void visit_edges(Visitor& visitor) override;

@@ -23,9 +23,15 @@ WeakSet::~WeakSet()
 {
 }
 
-void WeakSet::remove_swept_cells(Badge<Heap>, Span<Cell*> cells)
+void WeakSet::remove_dead_cells(Badge<Heap>)
 {
-    for (auto* cell : cells)
+    // FIXME: Do this in a single pass.
+    Vector<Cell*> to_remove;
+    for (auto* cell : m_values) {
+        if (cell->state() != Cell::State::Live)
+            to_remove.append(cell);
+    }
+    for (auto* cell : to_remove)
         m_values.remove(cell);
 }
 

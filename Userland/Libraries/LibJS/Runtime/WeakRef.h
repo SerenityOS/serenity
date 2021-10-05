@@ -27,7 +27,7 @@ public:
 
     void update_execution_generation() { m_last_execution_generation = vm().execution_generation(); };
 
-    virtual void remove_swept_cells(Badge<Heap>, Span<Cell*>) override;
+    virtual void remove_dead_cells(Badge<Heap>) override;
 
 private:
     virtual void visit_edges(Visitor&) override;

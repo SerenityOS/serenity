@@ -27,7 +27,7 @@ public:
     HashMap<Cell*, Value> const& values() const { return m_values; };
     HashMap<Cell*, Value>& values() { return m_values; };
 
-    virtual void remove_swept_cells(Badge<Heap>, Span<Cell*>) override;
+    virtual void remove_dead_cells(Badge<Heap>) override;
 
 private:
 #ifdef JS_TRACK_ZOMBIE_CELLS

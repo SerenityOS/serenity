@@ -42,19 +42,17 @@ bool FinalizationRegistry::remove_by_token(Object& unregister_token)
     return removed;
 }
 
-void FinalizationRegistry::remove_swept_cells(Badge<Heap>, Span<Cell*> cells)
+void FinalizationRegistry::remove_dead_cells(Badge<Heap>)
 {
-    auto any_cells_were_swept = false;
-    for (auto* cell : cells) {
-        for (auto& record : m_records) {
-            if (record.target != cell)
-                continue;
-            record.target = nullptr;
-            any_cells_were_swept = true;
-            break;
-        }
+    auto any_cells_were_removed = false;
+    for (auto& record : m_records) {
+        if (!record.target || record.target->state() == Cell::State::Live)
+            continue;
+        record.target = nullptr;
+        any_cells_were_removed = true;
+        break;
     }
-    if (any_cells_were_swept)
+    if (any_cells_were_removed)
         vm().enqueue_finalization_registry_cleanup_job(*this);
 }
 
