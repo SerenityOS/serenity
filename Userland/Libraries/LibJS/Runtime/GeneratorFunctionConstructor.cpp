@@ -62,7 +62,7 @@ Value GeneratorFunctionConstructor::construct(FunctionObject& new_target)
             block.dump(executable);
     }
 
-    return ECMAScriptFunctionObject::create(global_object(), function->name(), function->body(), function->parameters(), function->function_length(), vm().lexical_environment(), FunctionKind::Generator, function->is_strict_mode(), false);
+    return ECMAScriptFunctionObject::create(global_object(), function->name(), function->body(), function->parameters(), function->function_length(), vm().lexical_environment(), FunctionKind::Generator, function->is_strict_mode(), function->might_need_arguments_object());
 }
 
 }

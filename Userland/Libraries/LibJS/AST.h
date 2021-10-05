@@ -432,19 +432,23 @@ public:
     Vector<Parameter> const& parameters() const { return m_parameters; };
     i32 function_length() const { return m_function_length; }
     bool is_strict_mode() const { return m_is_strict_mode; }
+    bool might_need_arguments_object() const { return m_might_need_arguments_object; }
     bool is_arrow_function() const { return m_is_arrow_function; }
     FunctionKind kind() const { return m_kind; }
 
 protected:
-    FunctionNode(FlyString name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool is_arrow_function)
+    FunctionNode(FlyString name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool is_arrow_function)
         : m_name(move(name))
         , m_body(move(body))
         , m_parameters(move(parameters))
         , m_function_length(function_length)
         , m_kind(kind)
         , m_is_strict_mode(is_strict_mode)
+        , m_might_need_arguments_object(might_need_arguments_object)
         , m_is_arrow_function(is_arrow_function)
     {
+        if (m_is_arrow_function)
+            VERIFY(!m_might_need_arguments_object);
     }
 
     void dump(int indent, String const& class_name) const;
@@ -462,7 +466,8 @@ private:
     Vector<Parameter> const m_parameters;
     const i32 m_function_length;
     FunctionKind m_kind;
-    bool m_is_strict_mode;
+    bool m_is_strict_mode { false };
+    bool m_might_need_arguments_object { false };
     bool m_is_arrow_function { false };
 };
 
@@ -472,9 +477,9 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(SourceRange source_range, FlyString const& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode = false)
+    FunctionDeclaration(SourceRange source_range, FlyString const& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object)
         : Declaration(source_range)
-        , FunctionNode(name, move(body), move(parameters), function_length, kind, is_strict_mode, false)
+        , FunctionNode(name, move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, false)
     {
     }
 
@@ -498,9 +503,9 @@ class FunctionExpression final
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(SourceRange source_range, FlyString const& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool is_arrow_function = false)
+    FunctionExpression(SourceRange source_range, FlyString const& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool is_arrow_function = false)
         : Expression(source_range)
-        , FunctionNode(name, move(body), move(parameters), function_length, kind, is_strict_mode, is_arrow_function)
+        , FunctionNode(name, move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, is_arrow_function)
     {
     }
 

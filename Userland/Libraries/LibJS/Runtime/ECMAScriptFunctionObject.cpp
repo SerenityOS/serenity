@@ -24,7 +24,7 @@
 
 namespace JS {
 
-ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_object, FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind kind, bool is_strict, bool is_arrow_function)
+ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_object, FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind kind, bool is_strict, bool might_need_arguments_object, bool is_arrow_function)
 {
     Object* prototype = nullptr;
     switch (kind) {
@@ -35,10 +35,10 @@ ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_
         prototype = global_object.generator_function_prototype();
         break;
     }
-    return global_object.heap().allocate<ECMAScriptFunctionObject>(global_object, move(name), ecmascript_code, move(parameters), m_function_length, parent_scope, *prototype, kind, is_strict, is_arrow_function);
+    return global_object.heap().allocate<ECMAScriptFunctionObject>(global_object, move(name), ecmascript_code, move(parameters), m_function_length, parent_scope, *prototype, kind, is_strict, might_need_arguments_object, is_arrow_function);
 }
 
-ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> formal_parameters, i32 function_length, Environment* parent_scope, Object& prototype, FunctionKind kind, bool strict, bool is_arrow_function)
+ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> formal_parameters, i32 function_length, Environment* parent_scope, Object& prototype, FunctionKind kind, bool strict, bool might_need_arguments_object, bool is_arrow_function)
     : FunctionObject(prototype)
     , m_environment(parent_scope)
     , m_formal_parameters(move(formal_parameters))
@@ -48,6 +48,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, Statement con
     , m_name(move(name))
     , m_function_length(function_length)
     , m_kind(kind)
+    , m_might_need_arguments_object(might_need_arguments_object)
     , m_is_arrow_function(is_arrow_function)
 {
     // NOTE: This logic is from OrdinaryFunctionCreate, https://tc39.es/ecma262/#sec-ordinaryfunctioncreate
@@ -159,7 +160,11 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             });
     }
 
-    auto arguments_object_needed = this_mode() != ThisMode::Lexical;
+    auto arguments_object_needed = m_might_need_arguments_object;
+
+    if (this_mode() == ThisMode::Lexical)
+        arguments_object_needed = false;
+
     if (parameter_names.contains(vm.names.arguments.as_string()))
         arguments_object_needed = false;
 
@@ -360,7 +365,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     VERIFY(!vm.exception());
 
     for (auto& declaration : functions_to_initialize) {
-        auto* function = ECMAScriptFunctionObject::create(global_object(), declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), lex_environment, declaration.kind(), declaration.is_strict_mode());
+        auto* function = ECMAScriptFunctionObject::create(global_object(), declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), lex_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object());
         var_environment->set_mutable_binding(global_object(), declaration.name(), function, false);
     }
 
