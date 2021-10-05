@@ -78,6 +78,9 @@
     </style>
 </head>
 <body>
+    <p id="interactive">
+        I don't know how wide the page is. <code>window.matchMedia("(min-width: 800px)")</code> is not working. :^(
+    </p>
     <p class="negative">
         This should be green, with a black border and black text, if we are correctly ignoring <code>@media</code> rules that do not apply.
     </p>
@@ -102,5 +105,18 @@
     <p class="color-2">
         This should be green, with a black border and black text, if we detected the <code>color</code> feature and a deeply nested query: <code>(color) or ((color) and ((color) or (color) or (not (color))))</code>.
     </p>
+
+    <script>
+        let mql = window.matchMedia("(min-width: 800px)");
+        function update_match_text(input) {
+            if (input.matches) {
+                document.getElementById("interactive").innerHTML = "<code>window.matchMedia(\"(min-width: 800px)\")</code> matches!";
+            } else {
+                document.getElementById("interactive").innerHTML = "<code>window.matchMedia(\"(min-width: 800px)\")</code> doesn't match!";
+            }
+        }
+        mql.addEventListener("change", update_match_text);
+        update_match_text(mql);
+    </script>
 </body>
 </html>
