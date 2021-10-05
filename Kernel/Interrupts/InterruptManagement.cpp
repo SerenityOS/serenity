@@ -114,7 +114,10 @@ UNMAP_AFTER_INIT PhysicalAddress InterruptManagement::search_for_madt()
     auto rsdp = ACPI::StaticParsing::find_rsdp();
     if (!rsdp.has_value())
         return {};
-    return ACPI::StaticParsing::find_table(rsdp.value(), "APIC").value();
+    auto apic = ACPI::StaticParsing::find_table(rsdp.value(), "APIC");
+    if (!apic.has_value())
+        return {};
+    return apic.value();
 }
 
 UNMAP_AFTER_INIT InterruptManagement::InterruptManagement()
