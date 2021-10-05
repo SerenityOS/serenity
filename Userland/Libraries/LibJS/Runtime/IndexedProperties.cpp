@@ -26,7 +26,7 @@ bool SimpleIndexedPropertyStorage::has_index(u32 index) const
 
 Optional<ValueAndAttributes> SimpleIndexedPropertyStorage::get(u32 index) const
 {
-    if (index >= m_array_size)
+    if (!has_index(index))
         return {};
     return ValueAndAttributes { m_packed_elements[index], default_attributes };
 }
