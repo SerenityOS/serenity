@@ -21,7 +21,13 @@ public:
         Invalid,
         HEAD,
         GET,
-        POST
+        POST,
+        PUT,
+        PATCH,
+        OPTIONS,
+        TRACE,
+        DELETE,
+        CONNECT
     };
 
     struct Header {
@@ -36,6 +42,8 @@ public:
 
     HttpRequest();
     ~HttpRequest();
+
+    static Optional<Method> parse_request_method(String const&);
 
     String const& resource() const { return m_resource; }
     Vector<Header> const& headers() const { return m_headers; }

@@ -67,10 +67,12 @@ OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ClientConnection& clie
     }
 
     HTTP::HttpRequest request;
-    if (method.equals_ignoring_case("post"))
-        request.set_method(HTTP::HttpRequest::Method::POST);
+    auto http_method = HTTP::HttpRequest::parse_request_method(method);
+    if (http_method.has_value())
+        request.set_method(http_method.value());
     else
-        request.set_method(HTTP::HttpRequest::Method::GET);
+        TODO();
+
     request.set_url(url);
     request.set_headers(headers);
 

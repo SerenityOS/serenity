@@ -24,13 +24,49 @@ String HttpRequest::method_name() const
     switch (m_method) {
     case Method::GET:
         return "GET";
-    case Method::HEAD:
-        return "HEAD";
     case Method::POST:
         return "POST";
+    case Method::HEAD:
+        return "HEAD";
+    case Method::PUT:
+        return "PUT";
+    case Method::PATCH:
+        return "PATCH";
+    case Method::OPTIONS:
+        return "OPTIONS";
+    case Method::TRACE:
+        return "TRACE";
+    case Method::DELETE:
+        return "DELETE";
+    case Method::CONNECT:
+        return "CONNECT";
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+Optional<HttpRequest::Method> HttpRequest::parse_request_method(String const& method)
+{
+    if (method.equals_ignoring_case("GET"))
+        return HTTP::HttpRequest::Method::GET;
+    else if (method.equals_ignoring_case("POST"))
+        return HTTP::HttpRequest::Method::POST;
+    else if (method.equals_ignoring_case("HEAD"))
+        return HTTP::HttpRequest::Method::HEAD;
+    else if (method.equals_ignoring_case("PUT"))
+        return HTTP::HttpRequest::Method::PUT;
+    else if (method.equals_ignoring_case("PATCH"))
+        return HTTP::HttpRequest::Method::PATCH;
+    else if (method.equals_ignoring_case("OPTIONS"))
+        return HTTP::HttpRequest::Method::OPTIONS;
+    else if (method.equals_ignoring_case("TRACE"))
+        return HTTP::HttpRequest::Method::TRACE;
+    else if (method.equals_ignoring_case("DELETE"))
+        return HTTP::HttpRequest::Method::DELETE;
+    else if (method.equals_ignoring_case("CONNECT"))
+        return HTTP::HttpRequest::Method::CONNECT;
+    else
+        return {};
 }
 
 ByteBuffer HttpRequest::to_raw_request() const
@@ -153,19 +189,13 @@ Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
         }
     }
 
-    HttpRequest request;
-    if (method == "GET")
-        request.m_method = Method::GET;
-    else if (method == "HEAD")
-        request.m_method = Method::HEAD;
-    else if (method == "POST")
-        request.m_method = Method::POST;
-    else
+    auto http_method = parse_request_method(method);
+    if (!http_method.has_value())
         return {};
-
+    HttpRequest request;
+    request.m_method = http_method.value();
     request.m_resource = URL::percent_decode(resource);
     request.m_headers = move(headers);
-
     return request;
 }
 
