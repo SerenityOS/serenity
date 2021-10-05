@@ -10,6 +10,7 @@
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Token.h>
 
 namespace JS {
 
@@ -186,6 +187,15 @@ RegExpObject* RegExpObject::regexp_initialize(GlobalObject& global_object, Value
     TRY_OR_DISCARD(set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
     return this;
+}
+
+// 22.2.3.2.5 EscapeRegExpPattern ( P, F ), https://tc39.es/ecma262/#sec-escaperegexppattern
+String RegExpObject::escape_regexp_pattern() const
+{
+    if (m_pattern.is_empty())
+        return "(?:)";
+    // FIXME: Check u flag and escape accordingly
+    return m_pattern.replace("\n", "\\n", true).replace("\r", "\\r", true).replace(LINE_SEPARATOR_STRING, "\\u2028", true).replace(PARAGRAPH_SEPARATOR_STRING, "\\u2029", true).replace("/", "\\/", true);
 }
 
 // 22.2.3.2.4 RegExpCreate ( P, F ), https://tc39.es/ecma262/#sec-regexpcreate
