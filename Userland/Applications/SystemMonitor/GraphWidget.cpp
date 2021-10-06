@@ -20,7 +20,7 @@ GraphWidget::~GraphWidget()
 {
 }
 
-void GraphWidget::add_value(Vector<size_t, 1>&& value)
+void GraphWidget::add_value(Vector<u64, 1>&& value)
 {
     m_values.enqueue(move(value));
     update();
