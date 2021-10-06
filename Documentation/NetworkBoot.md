@@ -110,16 +110,16 @@ Warning: PXELINUX cannot set up a framebuffer for Multiboot targets, so you will
     - Make sure `/srv/tftp/` is owned by the user `tftp`, otherwise the TFTP server won't serve files
 2. Configure the DHCP server with the following options:
     - Next server IP: `<static IP address of TFTP server>`
-    - Boot filename (for BIOS): `boot/pxelinux/lpxelinux.0`
-3. Place all the required bootloader modules (located inside `/usr/lib/PXELINUX/` and `/usr/lib/syslinux/modules/bios/` on Debian) inside `/srv/tftp/boot/pxelinux/`, which for the sample configuration file includes:
+    - Boot filename (for BIOS): `lpxelinux.0`
+3. Place all the required bootloader modules (located inside `/usr/lib/PXELINUX/` and `/usr/lib/syslinux/modules/bios/` on Debian) inside `/srv/tftp/`, which for the sample configuration file includes:
     - lpxelinux.0
     - ldlinux.c32
     - vesamenu.c32
     - libcom32.c32
     - libutil.c32
     - mboot.c32
-4. Put your `default` configuration file inside `/srv/tftp/boot/pxelinux/pxelinux.cfg/`
-5. Place the SerenityOS prekernel, kernel and ramdisk inside `/srv/tftp/boot/grub/serenity/`
+4. Put your `default` configuration file inside `/srv/tftp/pxelinux.cfg/`
+5. Place the SerenityOS prekernel, kernel and ramdisk inside `/srv/tftp/serenity/`
 
 Sample PXELINUX `default` configuration file:
 
@@ -128,7 +128,7 @@ UI vesamenu.c32
 
 LABEL SerenityOS
         KERNEL mboot.c32
-        APPEND ../../serenity/prekernel root=/dev/ramdisk0 --- ../../serenity/kernel --- ../../serenity/ramdisk
+        APPEND serenity/prekernel root=/dev/ramdisk0 --- serenity/kernel --- serenity/ramdisk
 ```
 
 ### Troubleshooting
