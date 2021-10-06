@@ -1,4 +1,5 @@
 set(SOURCES
+    Bindings/CSSNamespace.cpp
     Bindings/CSSRuleWrapperFactory.cpp
     Bindings/CSSStyleDeclarationWrapperCustom.cpp
     Bindings/EventListenerWrapper.cpp
@@ -14,6 +15,7 @@ set(SOURCES
     Bindings/WindowObject.cpp
     Bindings/Wrappable.cpp
     Crypto/Crypto.cpp
+    CSS/Serialize.cpp
     CSS/CSSConditionRule.cpp
     CSS/CSSGroupingRule.cpp
     CSS/CSSImportRule.cpp
