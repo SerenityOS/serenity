@@ -63,8 +63,8 @@ void Track::fill_sample(Sample& sample)
     sample.right += new_sample.right;
 
     // TODO: Use the master processor
-    sample.left *= m_volume / static_cast<double>(volume_max) * volume_factor;
-    sample.right *= m_volume / static_cast<double>(volume_max) * volume_factor;
+    sample.left *= m_volume / static_cast<double>(volume_max);
+    sample.right *= m_volume / static_cast<double>(volume_max);
 }
 
 void Track::reset()
