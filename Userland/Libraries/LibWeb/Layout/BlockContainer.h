@@ -39,7 +39,7 @@ public:
     void set_scroll_offset(const Gfx::FloatPoint&);
 
 private:
-    virtual bool is_block_box() const final { return true; }
+    virtual bool is_block_container() const final { return true; }
     virtual bool wants_mouse_events() const override { return false; }
     virtual bool handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers, int wheel_delta) override;
 
@@ -49,7 +49,7 @@ private:
 };
 
 template<>
-inline bool Node::fast_is<BlockContainer>() const { return is_block_box(); }
+inline bool Node::fast_is<BlockContainer>() const { return is_block_container(); }
 
 template<typename Callback>
 void BlockContainer::for_each_fragment(Callback callback)
