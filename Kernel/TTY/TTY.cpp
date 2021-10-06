@@ -280,14 +280,32 @@ bool TTY::can_do_backspace() const
     return false;
 }
 
+static size_t length_with_tabs(CircularDeque<u8, TTY_BUFFER_SIZE> const& line)
+{
+    size_t length = 0;
+    for (auto& ch : line) {
+        length += (ch == '\t') ? 8 - (length % 8) : 1;
+    }
+    return length;
+}
+
 void TTY::do_backspace()
 {
     if (can_do_backspace()) {
-        m_input_buffer.dequeue_end();
-        // We deliberately don't process the output here.
-        echo(8);
-        echo(' ');
-        echo(8);
+        auto ch = m_input_buffer.dequeue_end();
+        size_t to_delete = 1;
+
+        if (ch == '\t') {
+            auto length = length_with_tabs(m_input_buffer);
+            to_delete = 8 - (length % 8);
+        }
+
+        for (size_t i = 0; i < to_delete; ++i) {
+            // We deliberately don't process the output here.
+            echo('\b');
+            echo(' ');
+            echo('\b');
+        }
 
         evaluate_block_conditions();
     }
