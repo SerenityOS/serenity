@@ -9,6 +9,7 @@
 #include "HackStudioWidget.h"
 #include "Project.h"
 #include <AK/StringBuilder.h>
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
@@ -38,6 +39,7 @@ int main(int argc, char** argv)
     }
 
     auto app = GUI::Application::construct(argc, argv);
+    Config::pledge_domains({ "HackStudio", "Terminal" });
 
     auto window = GUI::Window::construct();
     window->resize(840, 600);
