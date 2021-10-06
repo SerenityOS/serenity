@@ -530,40 +530,40 @@ CSS::Display StyleProperties::display() const
 {
     auto value = property(CSS::PropertyID::Display);
     if (!value.has_value() || !value.value()->is_identifier())
-        return CSS::Display::Inline;
+        return CSS::Display::from_short(CSS::Display::Short::Inline);
     switch (value.value()->to_identifier()) {
     case CSS::ValueID::None:
-        return CSS::Display::None;
+        return CSS::Display::from_short(CSS::Display::Short::None);
     case CSS::ValueID::Block:
-        return CSS::Display::Block;
+        return CSS::Display::from_short(CSS::Display::Short::Block);
     case CSS::ValueID::Inline:
-        return CSS::Display::Inline;
+        return CSS::Display::from_short(CSS::Display::Short::Inline);
     case CSS::ValueID::InlineBlock:
-        return CSS::Display::InlineBlock;
+        return CSS::Display::from_short(CSS::Display::Short::InlineBlock);
     case CSS::ValueID::ListItem:
-        return CSS::Display::ListItem;
+        return CSS::Display::from_short(CSS::Display::Short::ListItem);
     case CSS::ValueID::Table:
-        return CSS::Display::Table;
+        return CSS::Display::from_short(CSS::Display::Short::Table);
     case CSS::ValueID::TableRow:
-        return CSS::Display::TableRow;
+        return CSS::Display { CSS::Display::Internal::TableRow };
     case CSS::ValueID::TableCell:
-        return CSS::Display::TableCell;
+        return CSS::Display { CSS::Display::Internal::TableCell };
     case CSS::ValueID::TableColumn:
-        return CSS::Display::TableColumn;
+        return CSS::Display { CSS::Display::Internal::TableColumn };
     case CSS::ValueID::TableColumnGroup:
-        return CSS::Display::TableColumnGroup;
+        return CSS::Display { CSS::Display::Internal::TableColumnGroup };
     case CSS::ValueID::TableCaption:
-        return CSS::Display::TableCaption;
+        return CSS::Display { CSS::Display::Internal::TableCaption };
     case CSS::ValueID::TableRowGroup:
-        return CSS::Display::TableRowGroup;
+        return CSS::Display { CSS::Display::Internal::TableRowGroup };
     case CSS::ValueID::TableHeaderGroup:
-        return CSS::Display::TableHeaderGroup;
+        return CSS::Display { CSS::Display::Internal::TableHeaderGroup };
     case CSS::ValueID::TableFooterGroup:
-        return CSS::Display::TableFooterGroup;
+        return CSS::Display { CSS::Display::Internal::TableFooterGroup };
     case CSS::ValueID::Flex:
-        return CSS::Display::Flex;
+        return CSS::Display::from_short(CSS::Display::Short::Flex);
     default:
-        return CSS::Display::Block;
+        return CSS::Display::from_short(CSS::Display::Short::Block);
     }
 }
 

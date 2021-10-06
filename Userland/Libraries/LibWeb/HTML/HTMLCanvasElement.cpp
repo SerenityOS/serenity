@@ -40,7 +40,7 @@ unsigned HTMLCanvasElement::height() const
 RefPtr<Layout::Node> HTMLCanvasElement::create_layout_node()
 {
     auto style = document().style_computer().compute_style(*this);
-    if (style->display() == CSS::Display::None)
+    if (style->display().is_none())
         return nullptr;
     return adopt_ref(*new Layout::CanvasBox(document(), *this, move(style)));
 }

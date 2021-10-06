@@ -28,8 +28,11 @@ private:
     void push_parent(Layout::NodeWithStyle& node) { m_parent_stack.append(&node); }
     void pop_parent() { m_parent_stack.take_last(); }
 
-    template<CSS::Display, typename Callback>
-    void for_each_in_tree_with_display(NodeWithStyle& root, Callback);
+    template<CSS::Display::Internal, typename Callback>
+    void for_each_in_tree_with_internal_display(NodeWithStyle& root, Callback);
+
+    template<CSS::Display::Inside, typename Callback>
+    void for_each_in_tree_with_inside_display(NodeWithStyle& root, Callback);
 
     void fixup_tables(NodeWithStyle& root);
     void remove_irrelevant_boxes(NodeWithStyle& root);

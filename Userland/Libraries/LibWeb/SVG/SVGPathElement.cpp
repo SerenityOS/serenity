@@ -446,7 +446,7 @@ SVGPathElement::SVGPathElement(DOM::Document& document, QualifiedName qualified_
 RefPtr<Layout::Node> SVGPathElement::create_layout_node()
 {
     auto style = document().style_computer().compute_style(*this);
-    if (style->display() == CSS::Display::None)
+    if (style->display().is_none())
         return nullptr;
     return adopt_ref(*new Layout::SVGPathBox(document(), *this, move(style)));
 }

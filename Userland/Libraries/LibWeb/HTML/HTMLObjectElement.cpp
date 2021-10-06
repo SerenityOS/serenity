@@ -47,7 +47,7 @@ RefPtr<Layout::Node> HTMLObjectElement::create_layout_node()
         return HTMLElement::create_layout_node();
 
     auto style = document().style_computer().compute_style(*this);
-    if (style->display() == CSS::Display::None)
+    if (style->display().is_none())
         return nullptr;
     if (m_image_loader.has_image())
         return adopt_ref(*new Layout::ImageBox(document(), *this, move(style), m_image_loader));

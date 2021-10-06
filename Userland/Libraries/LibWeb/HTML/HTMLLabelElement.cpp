@@ -22,7 +22,7 @@ HTMLLabelElement::~HTMLLabelElement()
 RefPtr<Layout::Node> HTMLLabelElement::create_layout_node()
 {
     auto style = document().style_computer().compute_style(*this);
-    if (style->display() == CSS::Display::None)
+    if (style->display().is_none())
         return nullptr;
 
     auto layout_node = adopt_ref(*new Layout::Label(document(), this, move(style)));

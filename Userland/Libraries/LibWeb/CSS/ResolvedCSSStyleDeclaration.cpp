@@ -44,41 +44,78 @@ static CSS::ValueID to_css_value_id(CSS::BoxSizing value)
     VERIFY_NOT_REACHED();
 }
 
-static CSS::ValueID to_css_value_id(CSS::Display value)
+static RefPtr<StyleValue> style_value_for_display(CSS::Display display)
 {
-    switch (value) {
-    case CSS::Display::None:
-        return CSS::ValueID::None;
-    case CSS::Display::Block:
-        return CSS::ValueID::Block;
-    case CSS::Display::Inline:
-        return CSS::ValueID::Inline;
-    case CSS::Display::InlineBlock:
-        return CSS::ValueID::InlineBlock;
-    case CSS::Display::ListItem:
-        return CSS::ValueID::ListItem;
-    case CSS::Display::Table:
-        return CSS::ValueID::Table;
-    case CSS::Display::TableRow:
-        return CSS::ValueID::TableRow;
-    case CSS::Display::TableCell:
-        return CSS::ValueID::TableCell;
-    case CSS::Display::TableHeaderGroup:
-        return CSS::ValueID::TableHeaderGroup;
-    case CSS::Display::TableRowGroup:
-        return CSS::ValueID::TableRowGroup;
-    case CSS::Display::TableFooterGroup:
-        return CSS::ValueID::TableFooterGroup;
-    case CSS::Display::TableColumn:
-        return CSS::ValueID::TableColumn;
-    case CSS::Display::TableColumnGroup:
-        return CSS::ValueID::TableColumnGroup;
-    case CSS::Display::TableCaption:
-        return CSS::ValueID::TableCaption;
-    case CSS::Display::Flex:
-        return CSS::ValueID::Flex;
+    if (display.is_none())
+        return IdentifierStyleValue::create(CSS::ValueID::None);
+
+    if (display.it_outside_and_inside()) {
+        NonnullRefPtrVector<StyleValue> values;
+        switch (display.outside()) {
+        case CSS::Display::Outside::Inline:
+            values.append(IdentifierStyleValue::create(CSS::ValueID::Inline));
+            break;
+        case CSS::Display::Outside::Block:
+            values.append(IdentifierStyleValue::create(CSS::ValueID::Block));
+            break;
+        case CSS::Display::Outside::RunIn:
+            values.append(IdentifierStyleValue::create(CSS::ValueID::RunIn));
+            break;
+        }
+        switch (display.inside()) {
+        case CSS::Display::Inside::Flow:
+            values.append(IdentifierStyleValue::create(CSS::ValueID::Flow));
+            break;
+        case CSS::Display::Inside::FlowRoot:
+            values.append(IdentifierStyleValue::create(CSS::ValueID::FlowRoot));
+            break;
+        case CSS::Display::Inside::Table:
+            values.append(IdentifierStyleValue::create(CSS::ValueID::Table));
+            break;
+        case CSS::Display::Inside::Flex:
+            values.append(IdentifierStyleValue::create(CSS::ValueID::Flex));
+            break;
+        case CSS::Display::Inside::Grid:
+            values.append(IdentifierStyleValue::create(CSS::ValueID::Grid));
+            break;
+        case CSS::Display::Inside::Ruby:
+            values.append(IdentifierStyleValue::create(CSS::ValueID::Ruby));
+            break;
+        }
+
+        return StyleValueList::create(move(values));
     }
-    VERIFY_NOT_REACHED();
+
+    if (display.is_internal()) {
+        switch (display.internal()) {
+        case CSS::Display::Internal::TableRowGroup:
+            return IdentifierStyleValue::create(CSS::ValueID::TableRowGroup);
+        case CSS::Display::Internal::TableHeaderGroup:
+            return IdentifierStyleValue::create(CSS::ValueID::TableHeaderGroup);
+        case CSS::Display::Internal::TableFooterGroup:
+            return IdentifierStyleValue::create(CSS::ValueID::TableFooterGroup);
+        case CSS::Display::Internal::TableRow:
+            return IdentifierStyleValue::create(CSS::ValueID::TableRow);
+        case CSS::Display::Internal::TableCell:
+            return IdentifierStyleValue::create(CSS::ValueID::TableCell);
+        case CSS::Display::Internal::TableColumnGroup:
+            return IdentifierStyleValue::create(CSS::ValueID::TableColumnGroup);
+        case CSS::Display::Internal::TableColumn:
+            return IdentifierStyleValue::create(CSS::ValueID::TableColumn);
+        case CSS::Display::Internal::TableCaption:
+            return IdentifierStyleValue::create(CSS::ValueID::TableCaption);
+        case CSS::Display::Internal::RubyBase:
+            return IdentifierStyleValue::create(CSS::ValueID::RubyBase);
+        case CSS::Display::Internal::RubyText:
+            return IdentifierStyleValue::create(CSS::ValueID::RubyText);
+        case CSS::Display::Internal::RubyBaseContainer:
+            return IdentifierStyleValue::create(CSS::ValueID::RubyBaseContainer);
+        case CSS::Display::Internal::RubyTextContainer:
+            return IdentifierStyleValue::create(CSS::ValueID::RubyTextContainer);
+        }
+    }
+
+    TODO();
 }
 
 static CSS::ValueID to_css_value_id(CSS::Float value)
@@ -427,7 +464,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
     case CSS::PropertyID::Cursor:
         return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().cursor()));
     case CSS::PropertyID::Display:
-        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().display()));
+        return style_value_for_display(layout_node.computed_values().display());
     case CSS::PropertyID::ZIndex: {
         auto maybe_z_index = layout_node.computed_values().z_index();
         if (!maybe_z_index.has_value())
