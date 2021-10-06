@@ -238,19 +238,6 @@ StackingContext* Box::enclosing_stacking_context()
     VERIFY_NOT_REACHED();
 }
 
-LineBox& Box::ensure_last_line_box()
-{
-    if (m_line_boxes.is_empty())
-        return add_line_box();
-    return m_line_boxes.last();
-}
-
-LineBox& Box::add_line_box()
-{
-    m_line_boxes.append(LineBox());
-    return m_line_boxes.last();
-}
-
 float Box::width_of_logical_containing_block() const
 {
     auto* containing_block = this->containing_block();

@@ -8,7 +8,6 @@
 
 #include <AK/OwnPtr.h>
 #include <LibGfx/Rect.h>
-#include <LibWeb/Layout/LineBox.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Painting/BorderPainting.h>
 #include <LibWeb/Painting/StackingContext.h>
@@ -118,12 +117,6 @@ public:
     virtual void paint_box_shadow(PaintContext& context);
     virtual void paint_background(PaintContext& context);
 
-    Vector<LineBox>& line_boxes() { return m_line_boxes; }
-    const Vector<LineBox>& line_boxes() const { return m_line_boxes; }
-
-    LineBox& ensure_last_line_box();
-    LineBox& add_line_box();
-
     virtual float width_of_logical_containing_block() const;
 
     Painting::BorderRadiusData normalized_border_radius_data();
@@ -140,8 +133,6 @@ protected:
     }
 
     virtual void did_set_rect() { }
-
-    Vector<LineBox> m_line_boxes;
 
 private:
     virtual bool is_box() const final { return true; }

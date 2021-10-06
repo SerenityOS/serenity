@@ -94,13 +94,13 @@ void FormattingContext::layout_inside(Box& child_box, LayoutMode layout_mode)
     }
 
     if (creates_block_formatting_context(child_box)) {
-        BlockFormattingContext context(child_box, this);
+        BlockFormattingContext context(verify_cast<BlockContainer>(child_box), this);
         context.run(child_box, layout_mode);
         return;
     }
 
     if (child_display.is_table_inside()) {
-        TableFormattingContext context(child_box, this);
+        TableFormattingContext context(verify_cast<TableBox>(child_box), this);
         context.run(child_box, layout_mode);
         return;
     }
@@ -108,7 +108,7 @@ void FormattingContext::layout_inside(Box& child_box, LayoutMode layout_mode)
     VERIFY(is_block_formatting_context());
 
     if (child_box.children_are_inline()) {
-        InlineFormattingContext context(child_box, this);
+        InlineFormattingContext context(verify_cast<BlockContainer>(child_box), this);
         context.run(child_box, layout_mode);
         return;
     }
@@ -117,11 +117,11 @@ void FormattingContext::layout_inside(Box& child_box, LayoutMode layout_mode)
     run(child_box, layout_mode);
 }
 
-static float greatest_child_width(const Box& box)
+static float greatest_child_width(Box const& box)
 {
     float max_width = 0;
     if (box.children_are_inline()) {
-        for (auto& child : box.line_boxes()) {
+        for (auto& child : verify_cast<BlockContainer>(box).line_boxes()) {
             max_width = max(max_width, child.width());
         }
     } else {
@@ -186,7 +186,7 @@ static Gfx::FloatSize solve_replaced_size_constraint(float w, float h, const Rep
     return { w, h };
 }
 
-static float compute_auto_height_for_block_level_element(const Box& box)
+static float compute_auto_height_for_block_level_element(Box const& box)
 {
     Optional<float> top;
     Optional<float> bottom;
@@ -194,12 +194,13 @@ static float compute_auto_height_for_block_level_element(const Box& box)
     if (box.children_are_inline()) {
         // If it only has inline-level children, the height is the distance between
         // the top of the topmost line box and the bottom of the bottommost line box.
-        if (!box.line_boxes().is_empty()) {
-            for (auto& fragment : box.line_boxes().first().fragments()) {
+        auto& block_container = verify_cast<BlockContainer>(box);
+        if (!block_container.line_boxes().is_empty()) {
+            for (auto& fragment : block_container.line_boxes().first().fragments()) {
                 if (!top.has_value() || fragment.offset().y() < top.value())
                     top = fragment.offset().y();
             }
-            for (auto& fragment : box.line_boxes().last().fragments()) {
+            for (auto& fragment : block_container.line_boxes().last().fragments()) {
                 if (!bottom.has_value() || (fragment.offset().y() + fragment.height()) > bottom.value())
                     bottom = fragment.offset().y() + fragment.height();
             }

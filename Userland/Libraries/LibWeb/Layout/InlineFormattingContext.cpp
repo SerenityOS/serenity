@@ -15,7 +15,7 @@
 
 namespace Web::Layout {
 
-InlineFormattingContext::InlineFormattingContext(Box& containing_block, FormattingContext* parent)
+InlineFormattingContext::InlineFormattingContext(BlockContainer& containing_block, FormattingContext* parent)
     : FormattingContext(containing_block, parent)
 {
 }

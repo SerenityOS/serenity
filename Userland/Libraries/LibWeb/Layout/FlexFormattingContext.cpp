@@ -84,9 +84,10 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         }
 
         if (!main_constrained && box.children_are_inline()) {
-            BlockFormattingContext bfc(box, this);
+            auto& block_container = verify_cast<BlockContainer>(box);
+            BlockFormattingContext bfc(block_container, this);
             bfc.run(box, LayoutMode::Default);
-            InlineFormattingContext ifc(box, &bfc);
+            InlineFormattingContext ifc(block_container, &bfc);
 
             if (is_row) {
                 ifc.run(box, LayoutMode::OnlyRequiredLineBreaks);
@@ -236,9 +237,10 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         }
 
         if (!cross_constrained && box.children_are_inline()) {
-            BlockFormattingContext bfc(box, this);
+            auto& block_container = verify_cast<BlockContainer>(box);
+            BlockFormattingContext bfc(block_container, this);
             bfc.run(box, LayoutMode::Default);
-            InlineFormattingContext ifc(box, &bfc);
+            InlineFormattingContext ifc(block_container, &bfc);
             ifc.run(box, LayoutMode::OnlyRequiredLineBreaks);
 
             if (is_row)
@@ -248,7 +250,7 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         if (is_row) {
             return BlockFormattingContext::compute_theoretical_height(box);
         } else {
-            BlockFormattingContext context(box, this);
+            BlockFormattingContext context(verify_cast<BlockContainer>(box), this);
             context.compute_width(box);
             return box.width();
         }
