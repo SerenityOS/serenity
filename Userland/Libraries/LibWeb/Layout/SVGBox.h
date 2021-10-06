@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/SVG/SVGElement.h>
 #include <LibWeb/SVG/SVGGraphicsElement.h>
 
 namespace Web::Layout {
 
-class SVGBox : public BlockBox {
+class SVGBox : public BlockContainer {
 public:
     SVGBox(DOM::Document&, SVG::SVGElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~SVGBox() override = default;

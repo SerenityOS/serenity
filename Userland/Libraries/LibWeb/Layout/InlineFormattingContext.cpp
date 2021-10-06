@@ -7,7 +7,7 @@
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/Dump.h>
-#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
@@ -191,7 +191,7 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
     }
 
     if (box.is_inline_block()) {
-        auto& inline_block = const_cast<BlockBox&>(verify_cast<BlockBox>(box));
+        auto& inline_block = const_cast<BlockContainer&>(verify_cast<BlockContainer>(box));
 
         if (inline_block.computed_values().width().is_undefined_or_auto()) {
             auto result = calculate_shrink_to_fit_widths(inline_block);

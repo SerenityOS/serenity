@@ -6,7 +6,7 @@
 
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/DOM/Node.h>
-#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
@@ -444,7 +444,7 @@ void BlockFormattingContext::layout_block_level_children(Box& box, LayoutMode la
 
         if (is<ReplacedBox>(child_box))
             place_block_level_replaced_element_in_normal_flow(child_box, box);
-        else if (is<BlockBox>(child_box))
+        else if (is<BlockContainer>(child_box))
             place_block_level_non_replaced_element_in_normal_flow(child_box, box);
 
         // FIXME: This should be factored differently. It's uncool that we mutate the tree *during* layout!
@@ -512,7 +512,7 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
     // NOTE: Empty (0-height) preceding siblings have their margins collapsed with *their* preceding sibling, etc.
     float collapsed_bottom_margin_of_preceding_siblings = 0;
 
-    auto* relevant_sibling = child_box.previous_sibling_of_type<Layout::BlockBox>();
+    auto* relevant_sibling = child_box.previous_sibling_of_type<Layout::BlockContainer>();
     while (relevant_sibling != nullptr) {
         if (!relevant_sibling->is_absolutely_positioned() && !relevant_sibling->is_floating()) {
             collapsed_bottom_margin_of_preceding_siblings = max(collapsed_bottom_margin_of_preceding_siblings, relevant_sibling->box_model().margin.bottom);

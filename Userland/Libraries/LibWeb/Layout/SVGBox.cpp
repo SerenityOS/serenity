@@ -10,7 +10,7 @@
 namespace Web::Layout {
 
 SVGBox::SVGBox(DOM::Document& document, SVG::SVGElement& element, NonnullRefPtr<CSS::StyleProperties> style)
-    : BlockBox(document, &element, move(style))
+    : BlockContainer(document, &element, move(style))
 {
     set_inline(true);
 }

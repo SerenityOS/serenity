@@ -12,7 +12,7 @@
 namespace Web::Layout {
 
 TableRowGroupBox::TableRowGroupBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style)
-    : Layout::BlockBox(document, &element, move(style))
+    : Layout::BlockContainer(document, &element, move(style))
 {
 }
 

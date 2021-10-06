@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/BlockContainer.h>
 
 namespace Web::Layout {
 
-class TableCellBox final : public BlockBox {
+class TableCellBox final : public BlockContainer {
 public:
     TableCellBox(DOM::Document&, DOM::Element*, NonnullRefPtr<CSS::StyleProperties>);
     TableCellBox(DOM::Document&, DOM::Element*, CSS::ComputedValues);

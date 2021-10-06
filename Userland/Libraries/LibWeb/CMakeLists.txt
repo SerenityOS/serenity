@@ -183,7 +183,7 @@ set(SOURCES
     HTML/WebSocket.cpp
     HighResolutionTime/Performance.cpp
     InProcessWebView.cpp
-    Layout/BlockBox.cpp
+        Layout/BlockContainer.cpp
     Layout/BlockFormattingContext.cpp
     Layout/Box.cpp
     Layout/BoxModelMetrics.cpp

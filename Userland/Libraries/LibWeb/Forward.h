@@ -219,7 +219,7 @@ class SVGSVGElement;
 namespace Web::Layout {
 enum class LayoutMode;
 enum class PaintPhase;
-class BlockBox;
+class BlockContainer;
 class BlockFormattingContext;
 class Box;
 class ButtonBox;

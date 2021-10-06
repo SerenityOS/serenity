@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,20 +11,21 @@
 
 namespace Web::Layout {
 
-class BlockBox : public Box {
+// https://drafts.csswg.org/css-display/#block-container
+class BlockContainer : public Box {
 public:
-    BlockBox(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
-    BlockBox(DOM::Document&, DOM::Node*, CSS::ComputedValues);
-    virtual ~BlockBox() override;
+    BlockContainer(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
+    BlockContainer(DOM::Document&, DOM::Node*, CSS::ComputedValues);
+    virtual ~BlockContainer() override;
 
     virtual void paint(PaintContext&, PaintPhase) override;
 
     virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const override;
 
-    BlockBox* previous_sibling() { return verify_cast<BlockBox>(Node::previous_sibling()); }
-    const BlockBox* previous_sibling() const { return verify_cast<BlockBox>(Node::previous_sibling()); }
-    BlockBox* next_sibling() { return verify_cast<BlockBox>(Node::next_sibling()); }
-    const BlockBox* next_sibling() const { return verify_cast<BlockBox>(Node::next_sibling()); }
+    BlockContainer* previous_sibling() { return verify_cast<BlockContainer>(Node::previous_sibling()); }
+    const BlockContainer* previous_sibling() const { return verify_cast<BlockContainer>(Node::previous_sibling()); }
+    BlockContainer* next_sibling() { return verify_cast<BlockContainer>(Node::next_sibling()); }
+    const BlockContainer* next_sibling() const { return verify_cast<BlockContainer>(Node::next_sibling()); }
 
     template<typename Callback>
     void for_each_fragment(Callback);
@@ -48,10 +49,10 @@ private:
 };
 
 template<>
-inline bool Node::fast_is<BlockBox>() const { return is_block_box(); }
+inline bool Node::fast_is<BlockContainer>() const { return is_block_box(); }
 
 template<typename Callback>
-void BlockBox::for_each_fragment(Callback callback)
+void BlockContainer::for_each_fragment(Callback callback)
 {
     for (auto& line_box : line_boxes()) {
         for (auto& fragment : line_box.fragments()) {
@@ -62,7 +63,7 @@ void BlockBox::for_each_fragment(Callback callback)
 }
 
 template<typename Callback>
-void BlockBox::for_each_fragment(Callback callback) const
+void BlockContainer::for_each_fragment(Callback callback) const
 {
     for (auto& line_box : line_boxes()) {
         for (auto& fragment : line_box.fragments()) {

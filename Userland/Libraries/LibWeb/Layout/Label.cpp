@@ -18,7 +18,7 @@
 namespace Web::Layout {
 
 Label::Label(DOM::Document& document, HTML::HTMLLabelElement* element, NonnullRefPtr<CSS::StyleProperties> style)
-    : BlockBox(document, element, move(style))
+    : BlockContainer(document, element, move(style))
 {
 }
 

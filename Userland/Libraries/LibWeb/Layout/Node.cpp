@@ -10,7 +10,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
-#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Node.h>
@@ -39,13 +39,13 @@ bool Node::can_contain_boxes_with_position_absolute() const
     return computed_values().position() != CSS::Position::Static || is<InitialContainingBlock>(*this);
 }
 
-const BlockBox* Node::containing_block() const
+const BlockContainer* Node::containing_block() const
 {
     auto nearest_block_ancestor = [this] {
         auto* ancestor = parent();
-        while (ancestor && !is<BlockBox>(*ancestor))
+        while (ancestor && !is<BlockContainer>(*ancestor))
             ancestor = ancestor->parent();
-        return static_cast<const BlockBox*>(ancestor);
+        return static_cast<const BlockContainer*>(ancestor);
     };
 
     if (is<TextNode>(*this))
@@ -57,9 +57,9 @@ const BlockBox* Node::containing_block() const
         auto* ancestor = parent();
         while (ancestor && !ancestor->can_contain_boxes_with_position_absolute())
             ancestor = ancestor->parent();
-        while (ancestor && (!is<BlockBox>(*ancestor) || ancestor->is_anonymous()))
+        while (ancestor && (!is<BlockContainer>(*ancestor) || ancestor->is_anonymous()))
             ancestor = ancestor->containing_block();
-        return static_cast<const BlockBox*>(ancestor);
+        return static_cast<const BlockContainer*>(ancestor);
     }
 
     if (position == CSS::Position::Fixed)
@@ -422,12 +422,12 @@ String Node::class_name() const
 
 bool Node::is_inline_block() const
 {
-    return is_inline() && is<BlockBox>(*this);
+    return is_inline() && is<BlockContainer>(*this);
 }
 
 NonnullRefPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
 {
-    auto wrapper = adopt_ref(*new BlockBox(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values()));
+    auto wrapper = adopt_ref(*new BlockContainer(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values()));
     wrapper->m_font = m_font;
     wrapper->m_font_size = m_font_size;
     wrapper->m_line_height = m_line_height;

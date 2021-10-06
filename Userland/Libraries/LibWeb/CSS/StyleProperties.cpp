@@ -10,7 +10,7 @@
 #include <LibGfx/FontDatabase.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/FontCache.h>
-#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/Node.h>
 
 namespace Web::CSS {

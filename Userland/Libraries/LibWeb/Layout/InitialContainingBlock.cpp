@@ -13,7 +13,7 @@
 namespace Web::Layout {
 
 InitialContainingBlock::InitialContainingBlock(DOM::Document& document, NonnullRefPtr<CSS::StyleProperties> style)
-    : BlockBox(document, &document, move(style))
+    : BlockContainer(document, &document, move(style))
 {
 }
 

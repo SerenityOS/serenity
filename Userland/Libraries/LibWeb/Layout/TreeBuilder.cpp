@@ -66,7 +66,7 @@ static Layout::Node& insertion_parent_for_block_node(Layout::Node& layout_parent
         layout_parent.remove_child(*child);
         children.append(child.release_nonnull());
     }
-    layout_parent.append_child(adopt_ref(*new BlockBox(layout_node.document(), nullptr, layout_parent.computed_values().clone_inherited_values())));
+    layout_parent.append_child(adopt_ref(*new BlockContainer(layout_node.document(), nullptr, layout_parent.computed_values().clone_inherited_values())));
     layout_parent.set_children_are_inline(false);
     for (auto& child : children) {
         layout_parent.last_child()->append_child(child);
