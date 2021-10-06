@@ -13,14 +13,14 @@ describe("duplicated variable declarations should throw", () => {
         expect("const b, a; var c, a;").not.toEval();
     });
 
-    test.skip("should fail to parse even if variable first declared with var", () => {
-        expect.skip("var a; let a;").toEval();
-        expect.skip("var a; let b, a;").toEval();
-        expect.skip("var a; const a;").toEval();
-        expect.skip("var a; const b, a;").toEval();
+    test("should fail to parse even if variable first declared with var", () => {
+        expect("var a; let a;").not.toEval();
+        expect("var a; let b, a;").not.toEval();
+        expect("var a; const a;").not.toEval();
+        expect("var a; const b, a;").not.toEval();
     });
 
-    test.skip("special cases with for loops", () => {
+    test("special cases with for loops", () => {
         expect("for (var a;;) { let a; }").toEval();
         expect("for (let a;;) { let a; }").toEval();
         expect("for (var a;;) { var a; }").toEval();
