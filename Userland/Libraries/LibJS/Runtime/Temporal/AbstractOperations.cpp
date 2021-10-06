@@ -632,6 +632,48 @@ double constrain_to_range(double x, double minimum, double maximum)
     return min(max(x, minimum), maximum);
 }
 
+// NOTE: We have two variants of this function, one using doubles and one using BigInts - most of the time
+// doubles will be fine, but take care to choose the right one. The spec is not very clear about this, as
+// it uses mathematical values which can be arbitrarily (but not infinitely) large.
+// Incidentally V8's Temporal implementation does the same :^)
+
+// 13.32 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
+i64 round_number_to_increment(double x, u64 increment, StringView rounding_mode)
+{
+    // 1. Assert: x and increment are mathematical values.
+    // 2. Assert: roundingMode is "ceil", "floor", "trunc", or "halfExpand".
+    VERIFY(rounding_mode == "ceil"sv || rounding_mode == "floor"sv || rounding_mode == "trunc"sv || rounding_mode == "halfExpand"sv);
+
+    // 3. Let quotient be x / increment.
+    auto quotient = x / (double)increment;
+
+    double rounded;
+
+    // 4. If roundingMode is "ceil", then
+    if (rounding_mode == "ceil"sv) {
+        // a. Let rounded be −floor(−quotient).
+        rounded = -floor(-quotient);
+    }
+    // 5. Else if roundingMode is "floor", then
+    else if (rounding_mode == "floor"sv) {
+        // a. Let rounded be floor(quotient).
+        rounded = floor(quotient);
+    }
+    // 6. Else if roundingMode is "trunc", then
+    else if (rounding_mode == "trunc"sv) {
+        // a. Let rounded be the integral part of quotient, removing any fractional digits.
+        rounded = trunc(quotient);
+    }
+    // 7. Else,
+    else {
+        // a. Let rounded be ! RoundHalfAwayFromZero(quotient).
+        rounded = round(quotient);
+    }
+
+    // 8. Return rounded × increment.
+    return (i64)rounded * (i64)increment;
+}
+
 // 13.32 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
 BigInt* round_number_to_increment(GlobalObject& global_object, BigInt const& x, u64 increment, StringView rounding_mode)
 {
