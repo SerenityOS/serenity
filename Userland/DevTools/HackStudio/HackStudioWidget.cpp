@@ -41,6 +41,7 @@
 #include <LibGUI/Dialog.h>
 #include <LibGUI/EditingEngine.h>
 #include <LibGUI/FilePicker.h>
+#include <LibGUI/FontPicker.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
@@ -78,6 +79,7 @@
 namespace HackStudio {
 
 HackStudioWidget::HackStudioWidget(const String& path_to_project)
+    : m_editor_font(read_editor_font_from_config())
 {
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>();
@@ -588,6 +590,7 @@ void HackStudioWidget::add_new_editor(GUI::Widget& parent)
     m_current_editor_wrapper = wrapper;
     m_all_editor_wrappers.append(wrapper);
     wrapper->editor().set_focus(true);
+    wrapper->editor().set_font(*m_editor_font);
     wrapper->set_project_root(LexicalPath(m_project->root_path()));
     wrapper->editor().on_cursor_change = [this] { on_cursor_change(); };
     wrapper->on_change = [this] { update_gml_preview(); };
@@ -1189,6 +1192,15 @@ void HackStudioWidget::create_view_menu(GUI::Window& window)
 
     m_no_wrapping_action->set_checked(true);
 
+    m_editor_font_action = GUI::Action::create("Editor &Font...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png"),
+        [&](auto&) {
+            auto picker = GUI::FontPicker::construct(&window, m_editor_font, false);
+            if (picker->exec() == GUI::Dialog::ExecOK) {
+                change_editor_font(picker->font());
+            }
+        });
+    view_menu.add_action(*m_editor_font_action);
+
     view_menu.add_separator();
     view_menu.add_action(*m_add_editor_action);
     view_menu.add_action(*m_remove_current_editor_action);
@@ -1411,4 +1423,21 @@ void HackStudioWidget::update_history_actions()
     else
         m_locations_history_forward_action->set_enabled(true);
 }
+
+RefPtr<Gfx::Font> HackStudioWidget::read_editor_font_from_config()
+{
+    // FIXME: Actually read the font from config
+    return Gfx::FontDatabase::the().get("Csilla", "Regular", 10);
+}
+
+void HackStudioWidget::change_editor_font(RefPtr<Gfx::Font> font)
+{
+    m_editor_font = move(font);
+    for (auto& editor_wrapper : m_all_editor_wrappers) {
+        editor_wrapper.editor().set_font(*m_editor_font);
+    }
+
+    // TODO: Save into config
+}
+
 }

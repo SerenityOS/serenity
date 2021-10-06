@@ -25,6 +25,7 @@
 #include <LibGUI/Scrollbar.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Widget.h>
+#include <LibGfx/Font.h>
 #include <LibThreading/Thread.h>
 
 namespace HackStudio {
@@ -204,6 +205,11 @@ private:
     RefPtr<GUI::Action> m_run_action;
     RefPtr<GUI::Action> m_locations_history_back_action;
     RefPtr<GUI::Action> m_locations_history_forward_action;
+
+    RefPtr<Gfx::Font> read_editor_font_from_config();
+    void change_editor_font(RefPtr<Gfx::Font>);
+    RefPtr<Gfx::Font> m_editor_font;
+    RefPtr<GUI::Action> m_editor_font_action;
 
     GUI::ActionGroup m_wrapping_mode_actions;
     RefPtr<GUI::Action> m_no_wrapping_action;
