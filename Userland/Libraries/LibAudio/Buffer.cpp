@@ -47,14 +47,14 @@ i32 Buffer::allocate_id()
 template<typename SampleReader>
 static void read_samples_from_stream(InputMemoryStream& stream, SampleReader read_sample, Vector<Sample>& samples, int num_channels)
 {
-    double norm_l = 0;
-    double norm_r = 0;
+    double left_channel_sample = 0;
+    double right_channel_sample = 0;
 
     switch (num_channels) {
     case 1:
         for (;;) {
-            norm_l = read_sample(stream);
-            samples.append(Sample(norm_l));
+            left_channel_sample = read_sample(stream);
+            samples.append(Sample(left_channel_sample));
 
             if (stream.handle_any_error()) {
                 break;
@@ -63,9 +63,9 @@ static void read_samples_from_stream(InputMemoryStream& stream, SampleReader rea
         break;
     case 2:
         for (;;) {
-            norm_l = read_sample(stream);
-            norm_r = read_sample(stream);
-            samples.append(Sample(norm_l, norm_r));
+            left_channel_sample = read_sample(stream);
+            right_channel_sample = read_sample(stream);
+            samples.append(Sample(left_channel_sample, right_channel_sample));
 
             if (stream.handle_any_error()) {
                 break;
