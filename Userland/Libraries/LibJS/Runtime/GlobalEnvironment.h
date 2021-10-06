@@ -19,7 +19,7 @@ public:
     virtual bool has_this_binding() const final { return true; }
     virtual Value get_this_binding(GlobalObject&) const final;
 
-    virtual bool has_binding(FlyString const& name) const override;
+    virtual bool has_binding(FlyString const& name, Optional<size_t>* = nullptr) const override;
     virtual void create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted) override;
     virtual void create_immutable_binding(GlobalObject&, FlyString const& name, bool strict) override;
     virtual void initialize_binding(GlobalObject&, FlyString const& name, Value) override;
