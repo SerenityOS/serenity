@@ -62,7 +62,7 @@ MemoryStatsWidget::~MemoryStatsWidget()
 {
 }
 
-static inline u64 page_count_to_bytes(u64 count)
+static inline u64 page_count_to_bytes(size_t count)
 {
     return count * 4096;
 }
@@ -88,25 +88,25 @@ void MemoryStatsWidget::refresh()
     VERIFY(json_result.has_value());
     auto json = json_result.value().as_object();
 
-    [[maybe_unused]] unsigned kmalloc_eternal_allocated = json.get("kmalloc_eternal_allocated").to_u32();
-    unsigned kmalloc_allocated = json.get("kmalloc_allocated").to_u32();
-    unsigned kmalloc_available = json.get("kmalloc_available").to_u32();
-    unsigned user_physical_allocated = json.get("user_physical_allocated").to_u64();
-    unsigned user_physical_available = json.get("user_physical_available").to_u64();
-    unsigned user_physical_committed = json.get("user_physical_committed").to_u64();
-    unsigned user_physical_uncommitted = json.get("user_physical_uncommitted").to_u64();
-    unsigned super_physical_alloc = json.get("super_physical_allocated").to_u64();
-    unsigned super_physical_free = json.get("super_physical_available").to_u64();
-    unsigned kmalloc_call_count = json.get("kmalloc_call_count").to_u32();
-    unsigned kfree_call_count = json.get("kfree_call_count").to_u32();
+    [[maybe_unused]] u32 kmalloc_eternal_allocated = json.get("kmalloc_eternal_allocated").to_u32();
+    u32 kmalloc_allocated = json.get("kmalloc_allocated").to_u32();
+    u32 kmalloc_available = json.get("kmalloc_available").to_u32();
+    u64 user_physical_allocated = json.get("user_physical_allocated").to_u64();
+    u64 user_physical_available = json.get("user_physical_available").to_u64();
+    u64 user_physical_committed = json.get("user_physical_committed").to_u64();
+    u64 user_physical_uncommitted = json.get("user_physical_uncommitted").to_u64();
+    u64 super_physical_alloc = json.get("super_physical_allocated").to_u64();
+    u64 super_physical_free = json.get("super_physical_available").to_u64();
+    u32 kmalloc_call_count = json.get("kmalloc_call_count").to_u32();
+    u32 kfree_call_count = json.get("kfree_call_count").to_u32();
 
-    size_t kmalloc_bytes_total = kmalloc_allocated + kmalloc_available;
-    size_t user_physical_pages_total = user_physical_allocated + user_physical_available;
-    size_t supervisor_pages_total = super_physical_alloc + super_physical_free;
+    u64 kmalloc_bytes_total = kmalloc_allocated + kmalloc_available;
+    u64 user_physical_pages_total = user_physical_allocated + user_physical_available;
+    u64 supervisor_pages_total = super_physical_alloc + super_physical_free;
 
-    size_t physical_pages_total = user_physical_pages_total + supervisor_pages_total;
-    size_t physical_pages_in_use = user_physical_allocated + super_physical_alloc;
-    size_t total_userphysical_and_swappable_pages = user_physical_allocated + user_physical_committed + user_physical_uncommitted;
+    u64 physical_pages_total = user_physical_pages_total + supervisor_pages_total;
+    u64 physical_pages_in_use = user_physical_allocated + super_physical_alloc;
+    u64 total_userphysical_and_swappable_pages = user_physical_allocated + user_physical_committed + user_physical_uncommitted;
 
     m_kmalloc_space_label->set_text(String::formatted("{}/{}", human_readable_size(kmalloc_allocated), human_readable_size(kmalloc_bytes_total)));
     m_user_physical_pages_label->set_text(String::formatted("{}/{}", human_readable_size(page_count_to_bytes(physical_pages_in_use)), human_readable_size(page_count_to_bytes(physical_pages_total))));
