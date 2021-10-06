@@ -11,6 +11,8 @@ This guide assumes several things:
 - The TFTP server root is `/srv/tftp/`
 - Bootloaders are located inside `/srv/tftp/boot/`
 - SerenityOS artefacts are located inside `/srv/tftp/serenity/`:
+    - The prekernel is located at `/srv/tftp/serenity/prekernel`
+        - You can find it at `Build/i686/Kernel/Prekernel/Prekernel`
     - The kernel is located at `/srv/tftp/serenity/kernel`
         - You can find it at `Build/i686/Kernel/Kernel`
     - The ramdisk is located at `/srv/tftp/serenity/ramdisk`
@@ -72,8 +74,10 @@ insmod gfxterm
 terminal_output gfxterm
 
 menuentry 'SerenityOS - netboot diskless graphical mode' {
+        echo 'Loading prekernel...'
+        multiboot (tftp)/serenity/prekernel root=/dev/ramdisk0
         echo 'Loading kernel...'
-        multiboot (tftp)/serenity/kernel root=/dev/ramdisk0
+        module (tftp)/serenity/kernel
         echo 'Loading ramdisk...'
         module (tftp)/serenity/ramdisk
         echo 'Starting SerenityOS.'
@@ -82,14 +86,16 @@ menuentry 'SerenityOS - netboot diskless graphical mode' {
 menuentry 'SerenityOS - netboot diskless text mode' {
         set gfxkeep=text
         terminal_output console
+        echo 'Loading prekernel...'
+        multiboot (tftp)/serenity/prekernel root=/dev/ramdisk0 boot_mode=text
         echo 'Loading kernel...'
-        multiboot (tftp)/serenity/kernel root=/dev/ramdisk0 boot_mode=text
+        module (tftp)/serenity/kernel
         echo 'Loading ramdisk...'
         module (tftp)/serenity/ramdisk
         echo 'Starting SerenityOS.'
 }
 ```
-5. Place the SerenityOS kernel and ramdisk inside `/srv/tftp/boot/grub/serenity/`
+5. Place the SerenityOS prekernel, kernel and ramdisk inside `/srv/tftp/boot/grub/serenity/`
 
 You should now be able to PXE boot into Serenity if enough of your hardware is supported by the Serenity kernel.
 
@@ -113,7 +119,7 @@ Warning: PXELINUX cannot set up a framebuffer for Multiboot targets, so you will
     - libutil.c32
     - mboot.c32
 4. Put your `default` configuration file inside `/srv/tftp/boot/pxelinux/pxelinux.cfg/`
-5. Place the SerenityOS kernel and ramdisk inside `/srv/tftp/boot/grub/serenity/`
+5. Place the SerenityOS prekernel, kernel and ramdisk inside `/srv/tftp/boot/grub/serenity/`
 
 Sample PXELINUX `default` configuration file:
 
@@ -122,7 +128,7 @@ UI vesamenu.c32
 
 LABEL SerenityOS
         KERNEL mboot.c32
-        APPEND ../../serenity/kernel root=/dev/ramdisk0 --- ../../serenity/ramdisk
+        APPEND ../../serenity/prekernel root=/dev/ramdisk0 --- ../../serenity/kernel --- ../../serenity/ramdisk
 ```
 
 ### Troubleshooting
