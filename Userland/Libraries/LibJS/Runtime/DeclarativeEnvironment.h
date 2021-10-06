@@ -34,10 +34,15 @@ public:
     // This is not a method defined in the spec! Do not use this in any LibJS (or other spec related) code.
     [[nodiscard]] Vector<String> bindings() const;
 
+    Value get_binding_value_direct(GlobalObject&, size_t index, bool strict);
+    void set_mutable_binding_direct(GlobalObject&, size_t index, Value, bool strict);
+
 protected:
     virtual void visit_edges(Visitor&) override;
 
 private:
+    FlyString const& name_from_index(size_t) const;
+
     virtual bool is_declarative_environment() const override { return true; }
 
     struct Binding {
