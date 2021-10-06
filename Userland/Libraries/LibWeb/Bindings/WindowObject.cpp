@@ -13,6 +13,7 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibTextCodec/Decoder.h>
+#include <LibWeb/Bindings/CSSNamespace.h>
 #include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
 #include <LibWeb/Bindings/CryptoWrapper.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
@@ -103,6 +104,8 @@ void WindowObject::initialize_global_object()
     define_native_accessor("screenY", screen_y_getter, {}, attr);
     define_native_accessor("screenLeft", screen_left_getter, {}, attr);
     define_native_accessor("screenTop", screen_top_getter, {}, attr);
+
+    define_direct_property("CSS", heap().allocate<CSSNamespace>(*this, *this), 0);
 
     // Legacy
     define_native_accessor("event", event_getter, event_setter, JS::Attribute::Enumerable);
