@@ -98,12 +98,17 @@ void DeclarativeEnvironment::set_mutable_binding(GlobalObject& global_object, Fl
         return;
     }
 
-    auto& binding = m_bindings[it->value];
+    set_mutable_binding_direct(global_object, it->value, value, strict);
+}
+
+void DeclarativeEnvironment::set_mutable_binding_direct(GlobalObject& global_object, size_t index, Value value, bool strict)
+{
+    auto& binding = m_bindings[index];
     if (binding.strict)
         strict = true;
 
     if (!binding.initialized) {
-        global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::BindingNotInitialized, name);
+        global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::BindingNotInitialized, name_from_index(index));
         return;
     }
 
@@ -117,13 +122,18 @@ void DeclarativeEnvironment::set_mutable_binding(GlobalObject& global_object, Fl
 }
 
 // 9.1.1.1.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-declarative-environment-records-getbindingvalue-n-s
-Value DeclarativeEnvironment::get_binding_value(GlobalObject& global_object, FlyString const& name, bool)
+Value DeclarativeEnvironment::get_binding_value(GlobalObject& global_object, FlyString const& name, bool strict)
 {
     auto it = m_names.find(name);
     VERIFY(it != m_names.end());
-    auto& binding = m_bindings[it->value];
+    return get_binding_value_direct(global_object, it->value, strict);
+}
+
+Value DeclarativeEnvironment::get_binding_value_direct(GlobalObject& global_object, size_t index, bool)
+{
+    auto& binding = m_bindings[index];
     if (!binding.initialized) {
-        global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::BindingNotInitialized, name);
+        global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::BindingNotInitialized, name_from_index(index));
         return {};
     }
     return binding.value;
@@ -161,6 +171,15 @@ Vector<String> DeclarativeEnvironment::bindings() const
         names.append(it.key);
     }
     return names;
+}
+
+FlyString const& DeclarativeEnvironment::name_from_index(size_t index) const
+{
+    for (auto& it : m_names) {
+        if (it.value == index)
+            return it.key;
+    }
+    VERIFY_NOT_REACHED();
 }
 
 }
