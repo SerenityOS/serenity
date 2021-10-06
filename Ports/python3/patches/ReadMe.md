@@ -27,3 +27,7 @@ Make some tweaks to Python's `setup.py` files:
 - Add `/usr/local/lib` / `/usr/local/include` to the system lib / include dirs, relative to the sysroot when crosscompiling. These are by default only included when not crosscompiling for some reason.
 - Add `/usr/local/include/ncurses` to the curses include paths so it can build the `_curses` module. This is by default included for a bunch of extensions, but not `_curses`.
 - Add `/usr/local/includes/uuid` to the uuid include paths so it can build the `_uuid` module. This is by default included for a bunch of extensions, but not `_uuid`.
+
+## `xmlrcp_client.patch`
+
+Fix xmlrpc.client module so it can be imported. It otherwise a call to strftime raises a ValueError that the code is not prepared to handle.
