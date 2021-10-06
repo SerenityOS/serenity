@@ -275,7 +275,9 @@ void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
     visitor.visit(m_home_object);
 
     for (auto& field : m_fields) {
-        field.name.visit_edges(visitor);
+        if (field.name.is_symbol())
+            visitor.visit(field.name.as_symbol());
+
         visitor.visit(field.initializer);
     }
 }

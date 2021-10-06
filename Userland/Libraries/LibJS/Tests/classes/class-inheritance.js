@@ -170,3 +170,32 @@ test("issue #7045, super constructor call from child class in catch {}", () => {
     const c = new Child();
     expect(c.x).toBe("Error in Child constructor");
 });
+
+test("Issue #7044, super property access before super() call", () => {
+    class Foo {
+        constructor() {
+            super.bar;
+        }
+    }
+
+    new Foo();
+});
+
+test("Issue #8574, super property access before super() call", () => {
+    var hit = false;
+
+    class Foo extends Object {
+        constructor() {
+            expect(() => {
+                const foo = super.bar();
+            }).toThrowWithMessage(ReferenceError, "|this| has not been initialized");
+            hit = true;
+        }
+    }
+
+    // Note: We catch two exceptions here.
+    expect(() => {
+        new Foo();
+    }).toThrowWithMessage(ReferenceError, "|this| has not been initialized");
+    expect(hit).toBeTrue();
+});

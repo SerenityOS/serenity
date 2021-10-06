@@ -59,14 +59,14 @@ public:
     void set_home_object(Object* home_object) { m_home_object = home_object; }
 
     struct InstanceField {
-        StringOrSymbol name;
+        PropertyName name;
         ECMAScriptFunctionObject* initializer { nullptr };
 
         void define_field(VM& vm, Object& receiver) const;
     };
 
     Vector<InstanceField> const& fields() const { return m_fields; }
-    void add_field(StringOrSymbol property_key, ECMAScriptFunctionObject* initializer) { m_fields.empend(property_key, initializer); }
+    void add_field(PropertyName property_key, ECMAScriptFunctionObject* initializer) { m_fields.empend(property_key, initializer); }
 
     // This is for IsSimpleParameterList (static semantics)
     bool has_simple_parameter_list() const { return m_has_simple_parameter_list; }
