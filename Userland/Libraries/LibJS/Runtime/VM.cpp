@@ -435,7 +435,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
 }
 
 // 9.1.2.1 GetIdentifierReference ( env, name, strict ), https://tc39.es/ecma262/#sec-getidentifierreference
-Reference VM::get_identifier_reference(Environment* environment, FlyString name, bool strict)
+Reference VM::get_identifier_reference(Environment* environment, FlyString name, bool strict, size_t hops)
 {
     // 1. If env is the value null, then
     if (!environment) {
@@ -448,10 +448,14 @@ Reference VM::get_identifier_reference(Environment* environment, FlyString name,
     if (exception())
         return {};
 
+    Optional<EnvironmentCoordinate> environment_coordinate;
+    if (index.has_value())
+        environment_coordinate = EnvironmentCoordinate { .hops = hops, .index = index.value() };
+
     if (exists)
-        return Reference { *environment, move(name), strict, index };
+        return Reference { *environment, move(name), strict, environment_coordinate };
     else
-        return get_identifier_reference(environment->outer_environment(), move(name), strict);
+        return get_identifier_reference(environment->outer_environment(), move(name), strict, hops + 1);
 }
 
 // 9.4.2 ResolveBinding ( name [ , env ] ), https://tc39.es/ecma262/#sec-resolvebinding

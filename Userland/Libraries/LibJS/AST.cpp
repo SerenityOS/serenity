@@ -1005,7 +1005,20 @@ Reference Expression::to_reference(Interpreter&, GlobalObject&) const
 
 Reference Identifier::to_reference(Interpreter& interpreter, GlobalObject&) const
 {
-    return interpreter.vm().resolve_binding(string());
+    if (m_cached_environment_coordinate.has_value()) {
+        auto* environment = interpreter.vm().running_execution_context().lexical_environment;
+        for (size_t i = 0; i < m_cached_environment_coordinate->hops; ++i)
+            environment = environment->outer_environment();
+        VERIFY(environment);
+        VERIFY(environment->is_declarative_environment());
+        if (!environment->is_permanently_screwed_by_eval())
+            return Reference { *environment, string(), interpreter.vm().in_strict_mode(), m_cached_environment_coordinate };
+        m_cached_environment_coordinate = {};
+    }
+    auto reference = interpreter.vm().resolve_binding(string());
+    if (reference.environment_coordinate().has_value())
+        const_cast<Identifier&>(*this).m_cached_environment_coordinate = reference.environment_coordinate();
+    return reference;
 }
 
 Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject& global_object) const

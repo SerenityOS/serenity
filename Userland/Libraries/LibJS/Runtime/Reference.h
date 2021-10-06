@@ -8,6 +8,7 @@
 
 #include <AK/String.h>
 #include <LibJS/Runtime/Environment.h>
+#include <LibJS/Runtime/EnvironmentCoordinate.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -44,12 +45,12 @@ public:
         }
     }
 
-    Reference(Environment& base, FlyString referenced_name, bool strict = false, Optional<size_t> index_in_declarative_environment = {})
+    Reference(Environment& base, FlyString referenced_name, bool strict = false, Optional<EnvironmentCoordinate> environment_coordinate = {})
         : m_base_type(BaseType::Environment)
         , m_base_environment(&base)
         , m_name(move(referenced_name))
         , m_strict(strict)
-        , m_index_in_declarative_environment(move(index_in_declarative_environment))
+        , m_environment_coordinate(move(environment_coordinate))
     {
     }
 
@@ -119,6 +120,8 @@ public:
 
     bool is_valid_reference() const { return m_name.is_valid(); }
 
+    Optional<EnvironmentCoordinate> environment_coordinate() const { return m_environment_coordinate; }
+
 private:
     void throw_reference_error(GlobalObject&) const;
 
@@ -130,7 +133,7 @@ private:
     PropertyName m_name;
     Value m_this_value;
     bool m_strict { false };
-    Optional<size_t> m_index_in_declarative_environment;
+    Optional<EnvironmentCoordinate> m_environment_coordinate;
 };
 
 }
