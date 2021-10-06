@@ -36,7 +36,7 @@ Value GlobalEnvironment::get_this_binding(GlobalObject&) const
 }
 
 // 9.1.1.4.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-global-environment-records-hasbinding-n
-bool GlobalEnvironment::has_binding(FlyString const& name) const
+bool GlobalEnvironment::has_binding(FlyString const& name, Optional<size_t>*) const
 {
     if (m_declarative_record->has_binding(name))
         return true;

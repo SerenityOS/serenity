@@ -25,7 +25,7 @@ void ObjectEnvironment::visit_edges(Cell::Visitor& visitor)
 }
 
 // 9.1.1.2.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n
-bool ObjectEnvironment::has_binding(FlyString const& name) const
+bool ObjectEnvironment::has_binding(FlyString const& name, Optional<size_t>*) const
 {
     auto& vm = this->vm();
     bool found_binding = TRY_OR_DISCARD(m_binding_object.has_property(name));
