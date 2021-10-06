@@ -29,7 +29,7 @@ InlineNode::~InlineNode()
 
 void InlineNode::split_into_lines(InlineFormattingContext& context, LayoutMode layout_mode)
 {
-    auto& containing_block = context.context_box();
+    auto& containing_block = context.containing_block();
 
     if (!computed_values().padding().left.is_undefined_or_auto()) {
         float padding_left = computed_values().padding().left.resolved(CSS::Length::make_px(0), *this, containing_block.width()).to_px(*this);

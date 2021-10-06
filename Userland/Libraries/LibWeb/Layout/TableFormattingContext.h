@@ -13,7 +13,7 @@ namespace Web::Layout {
 
 class TableFormattingContext final : public BlockFormattingContext {
 public:
-    explicit TableFormattingContext(Box&, FormattingContext* parent);
+    explicit TableFormattingContext(BlockContainer&, FormattingContext* parent);
     ~TableFormattingContext();
 
     virtual void run(Box&, LayoutMode) override;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +17,7 @@
 
 namespace Web::Layout {
 
-BlockFormattingContext::BlockFormattingContext(Box& root, FormattingContext* parent)
+BlockFormattingContext::BlockFormattingContext(BlockContainer& root, FormattingContext* parent)
     : FormattingContext(root, parent)
 {
 }
@@ -46,9 +46,9 @@ void BlockFormattingContext::run(Box& box, LayoutMode layout_mode)
         compute_width(box);
 
     if (box.children_are_inline()) {
-        layout_inline_children(box, layout_mode);
+        layout_inline_children(verify_cast<BlockContainer>(box), layout_mode);
     } else {
-        layout_block_level_children(box, layout_mode);
+        layout_block_level_children(verify_cast<BlockContainer>(box), layout_mode);
     }
 
     if (layout_mode == LayoutMode::Default) {
@@ -289,7 +289,7 @@ void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_n
     box.set_width(compute_width_for_replaced_element(box));
 }
 
-static float compute_auto_height_for_block_level_element(const Box& box)
+static float compute_auto_height_for_block_level_element(Box const& box)
 {
     Optional<float> top;
     Optional<float> bottom;
@@ -297,12 +297,13 @@ static float compute_auto_height_for_block_level_element(const Box& box)
     if (box.children_are_inline()) {
         // If it only has inline-level children, the height is the distance between
         // the top of the topmost line box and the bottom of the bottommost line box.
-        if (!box.line_boxes().is_empty()) {
-            for (auto& fragment : box.line_boxes().first().fragments()) {
+        auto& block_container = verify_cast<Layout::BlockContainer>(box);
+        if (!block_container.line_boxes().is_empty()) {
+            for (auto& fragment : block_container.line_boxes().first().fragments()) {
                 if (!top.has_value() || fragment.offset().y() < top.value())
                     top = fragment.offset().y();
             }
-            for (auto& fragment : box.line_boxes().last().fragments()) {
+            for (auto& fragment : block_container.line_boxes().last().fragments()) {
                 if (!bottom.has_value() || (fragment.offset().y() + fragment.height()) > bottom.value())
                     bottom = fragment.offset().y() + fragment.height();
             }
@@ -415,23 +416,23 @@ void BlockFormattingContext::compute_position(Box& box)
     }
 }
 
-void BlockFormattingContext::layout_inline_children(Box& box, LayoutMode layout_mode)
+void BlockFormattingContext::layout_inline_children(BlockContainer& block_container, LayoutMode layout_mode)
 {
-    InlineFormattingContext context(box, this);
-    context.run(box, layout_mode);
+    InlineFormattingContext context(block_container, this);
+    context.run(block_container, layout_mode);
 }
 
-void BlockFormattingContext::layout_block_level_children(Box& box, LayoutMode layout_mode)
+void BlockFormattingContext::layout_block_level_children(BlockContainer& block_container, LayoutMode layout_mode)
 {
     float content_height = 0;
     float content_width = 0;
 
-    box.for_each_child_of_type<Box>([&](auto& child_box) {
+    block_container.for_each_child_of_type<Box>([&](Box& child_box) {
         if (child_box.is_absolutely_positioned())
             return IterationDecision::Continue;
 
         if (child_box.is_floating()) {
-            layout_floating_child(child_box, box);
+            layout_floating_child(child_box, block_container);
             return IterationDecision::Continue;
         }
 
@@ -443,9 +444,9 @@ void BlockFormattingContext::layout_block_level_children(Box& box, LayoutMode la
             compute_position(child_box);
 
         if (is<ReplacedBox>(child_box))
-            place_block_level_replaced_element_in_normal_flow(child_box, box);
+            place_block_level_replaced_element_in_normal_flow(child_box, block_container);
         else if (is<BlockContainer>(child_box))
-            place_block_level_non_replaced_element_in_normal_flow(child_box, box);
+            place_block_level_non_replaced_element_in_normal_flow(child_box, block_container);
 
         // FIXME: This should be factored differently. It's uncool that we mutate the tree *during* layout!
         //        Instead, we should generate the marker box during the tree build.
@@ -458,12 +459,12 @@ void BlockFormattingContext::layout_block_level_children(Box& box, LayoutMode la
     });
 
     if (layout_mode != LayoutMode::Default) {
-        if (box.computed_values().width().is_undefined() || box.computed_values().width().is_auto())
-            box.set_width(content_width);
+        if (block_container.computed_values().width().is_undefined() || block_container.computed_values().width().is_auto())
+            block_container.set_width(content_width);
     }
 }
 
-void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(Box& child_box, Box& containing_block)
+void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(Box& child_box, BlockContainer const& containing_block)
 {
     VERIFY(!containing_block.is_absolutely_positioned());
     auto& replaced_element_box_model = child_box.box_model();
@@ -485,7 +486,7 @@ void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(B
     child_box.set_offset(x, y);
 }
 
-void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_flow(Box& child_box, Box& containing_block)
+void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_flow(Box& child_box, BlockContainer const& containing_block)
 {
     auto& box_model = child_box.box_model();
     auto& computed_values = child_box.computed_values();
@@ -600,7 +601,7 @@ static Gfx::FloatRect rect_in_coordinate_space(const Box& box, const Box& contex
     return rect;
 }
 
-void BlockFormattingContext::layout_floating_child(Box& box, Box& containing_block)
+void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer const& containing_block)
 {
     VERIFY(box.is_floating());
 
