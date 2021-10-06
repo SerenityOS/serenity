@@ -49,8 +49,8 @@ void Reference::put_value(GlobalObject& global_object, Value value)
 
     VERIFY(m_base_type == BaseType::Environment);
     VERIFY(m_base_environment);
-    if (m_index_in_declarative_environment.has_value())
-        static_cast<DeclarativeEnvironment*>(m_base_environment)->set_mutable_binding_direct(global_object, m_index_in_declarative_environment.value(), value, m_strict);
+    if (m_environment_coordinate.has_value())
+        static_cast<DeclarativeEnvironment*>(m_base_environment)->set_mutable_binding_direct(global_object, m_environment_coordinate->index, value, m_strict);
     else
         m_base_environment->set_mutable_binding(global_object, m_name.as_string(), value, m_strict);
 }
@@ -81,8 +81,8 @@ Value Reference::get_value(GlobalObject& global_object) const
 
     VERIFY(m_base_type == BaseType::Environment);
     VERIFY(m_base_environment);
-    if (m_index_in_declarative_environment.has_value())
-        return static_cast<DeclarativeEnvironment*>(m_base_environment)->get_binding_value_direct(global_object, m_index_in_declarative_environment.value(), m_strict);
+    if (m_environment_coordinate.has_value())
+        return static_cast<DeclarativeEnvironment*>(m_base_environment)->get_binding_value_direct(global_object, m_environment_coordinate->index, m_strict);
     return m_base_environment->get_binding_value(global_object, m_name.as_string(), m_strict);
 }
 

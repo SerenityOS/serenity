@@ -17,6 +17,7 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/EnvironmentCoordinate.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/Value.h>
@@ -984,6 +985,7 @@ private:
     virtual bool is_identifier() const override { return true; }
 
     FlyString m_string;
+    mutable Optional<EnvironmentCoordinate> m_cached_environment_coordinate;
 };
 
 class ClassMethod final : public ASTNode {

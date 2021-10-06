@@ -202,7 +202,7 @@ public:
     FlyString unwind_until_label() const { return m_unwind_until_label; }
 
     Reference resolve_binding(FlyString const&, Environment* = nullptr);
-    Reference get_identifier_reference(Environment*, FlyString, bool strict);
+    Reference get_identifier_reference(Environment*, FlyString, bool strict, size_t hops = 0);
 
     template<typename T, typename... Args>
     void throw_exception(GlobalObject& global_object, Args&&... args)
