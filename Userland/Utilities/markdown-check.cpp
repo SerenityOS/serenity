@@ -22,6 +22,31 @@
 #include <LibMarkdown/Document.h>
 #include <LibMarkdown/Visitor.h>
 
+static bool is_missing_file_acceptable(String const& filename)
+{
+    const StringView acceptable_missing_files[] = {
+        // FIXME: Please write these manpages!
+        "/usr/share/man/man2/accept.md",
+        "/usr/share/man/man2/exec.md",
+        "/usr/share/man/man2/fcntl.md",
+        "/usr/share/man/man2/fork.md",
+        "/usr/share/man/man2/ioctl.md",
+        "/usr/share/man/man2/listen.md",
+        "/usr/share/man/man2/mmap.md",
+        "/usr/share/man/man2/mprotect.md",
+        "/usr/share/man/man2/open.md",
+        "/usr/share/man/man2/ptrace.md",
+        "/usr/share/man/man5/perfcore.md",
+        // This one is okay:
+        "/home/anon/js-tests/test-common.js",
+    };
+    for (auto const& suffix : acceptable_missing_files) {
+        if (filename.ends_with(suffix))
+            return true;
+    }
+    return false;
+}
+
 struct FileLink {
     String file_path; // May be empty, but not null
     String anchor;    // May be null ("foo.md", "bar.png"), may be empty ("baz.md#")
@@ -195,7 +220,7 @@ int main(int argc, char** argv)
             } else {
                 pointee_file = LexicalPath::absolute_path(file_dir, file_link.file_path);
             }
-            if (!Core::File::exists(pointee_file)) {
+            if (!Core::File::exists(pointee_file) && !is_missing_file_acceptable(pointee_file)) {
                 outln("File '{}' points to '{}' (label '{}'), but '{}' does not exist!",
                     file_item.key, file_link.file_path, file_link.label, pointee_file);
                 any_problems = true;
