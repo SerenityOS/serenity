@@ -19,6 +19,8 @@ public:
     virtual void paint(PaintContext&, PaintPhase) override;
 
 private:
+    virtual bool can_have_children() const override { return false; }
+
     CSS::ListStyleType m_list_style_type { CSS::ListStyleType::None };
     size_t m_index;
 
