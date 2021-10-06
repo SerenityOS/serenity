@@ -246,7 +246,7 @@ String BrowsingContext::selected_text() const
     while (layout_node && layout_node != selection.end().layout_node) {
         if (is<Layout::TextNode>(*layout_node))
             builder.append(verify_cast<Layout::TextNode>(*layout_node).text_for_rendering());
-        else if (is<Layout::BreakNode>(*layout_node) || is<Layout::BlockBox>(*layout_node))
+        else if (is<Layout::BreakNode>(*layout_node) || is<Layout::BlockContainer>(*layout_node))
             builder.append('\n');
 
         layout_node = layout_node->next_in_pre_order();

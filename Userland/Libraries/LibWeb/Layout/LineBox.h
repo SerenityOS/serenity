@@ -28,7 +28,7 @@ public:
     bool is_empty_or_ends_in_whitespace() const;
 
 private:
-    friend class BlockBox;
+    friend class BlockContainer;
     friend class InlineFormattingContext;
     NonnullOwnPtrVector<LineBoxFragment> m_fragments;
     float m_width { 0 };

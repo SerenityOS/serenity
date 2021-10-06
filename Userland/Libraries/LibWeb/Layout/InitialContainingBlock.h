@@ -7,11 +7,11 @@
 #pragma once
 
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/BlockContainer.h>
 
 namespace Web::Layout {
 
-class InitialContainingBlock final : public BlockBox {
+class InitialContainingBlock final : public BlockContainer {
 public:
     explicit InitialContainingBlock(DOM::Document&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~InitialContainingBlock() override;

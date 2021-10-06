@@ -22,7 +22,7 @@
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
-#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/ListItemBox.h>
 #include <LibWeb/Layout/TableBox.h>
@@ -133,12 +133,12 @@ RefPtr<Layout::Node> Element::create_layout_node()
 
     if (display.is_table_column() || display.is_table_column_group() || display.is_table_caption()) {
         // FIXME: This is just an incorrect placeholder until we improve table layout support.
-        return adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
+        return adopt_ref(*new Layout::BlockContainer(document(), this, move(style)));
     }
 
     if (display.is_inline_outside()) {
         if (display.is_flow_root_inside()) {
-            auto block = adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
+            auto block = adopt_ref(*new Layout::BlockContainer(document(), this, move(style)));
             block->set_inline(true);
             return block;
         }
@@ -149,7 +149,7 @@ RefPtr<Layout::Node> Element::create_layout_node()
     }
 
     if (display.is_flow_inside() || display.is_flow_root_inside() || display.is_flex_inside())
-        return adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
+        return adopt_ref(*new Layout::BlockContainer(document(), this, move(style)));
 
     TODO();
 }

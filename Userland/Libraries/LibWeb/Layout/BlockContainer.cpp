@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGfx/Painter.h>
 #include <LibWeb/Dump.h>
-#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/ReplacedBox.h>
@@ -14,26 +14,26 @@
 
 namespace Web::Layout {
 
-BlockBox::BlockBox(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
+BlockContainer::BlockContainer(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
     : Box(document, node, move(style))
 {
 }
 
-BlockBox::BlockBox(DOM::Document& document, DOM::Node* node, CSS::ComputedValues computed_values)
+BlockContainer::BlockContainer(DOM::Document& document, DOM::Node* node, CSS::ComputedValues computed_values)
     : Box(document, node, move(computed_values))
 {
 }
 
-BlockBox::~BlockBox()
+BlockContainer::~BlockContainer()
 {
 }
 
-bool BlockBox::should_clip_overflow() const
+bool BlockContainer::should_clip_overflow() const
 {
     return computed_values().overflow_x() != CSS::Overflow::Visible && computed_values().overflow_y() != CSS::Overflow::Visible;
 }
 
-void BlockBox::paint(PaintContext& context, PaintPhase phase)
+void BlockContainer::paint(PaintContext& context, PaintPhase phase)
 {
     if (!is_visible())
         return;
@@ -79,7 +79,7 @@ void BlockBox::paint(PaintContext& context, PaintPhase phase)
     }
 }
 
-HitTestResult BlockBox::hit_test(const Gfx::IntPoint& position, HitTestType type) const
+HitTestResult BlockContainer::hit_test(const Gfx::IntPoint& position, HitTestType type) const
 {
     if (!children_are_inline())
         return Box::hit_test(position, type);
@@ -90,8 +90,8 @@ HitTestResult BlockBox::hit_test(const Gfx::IntPoint& position, HitTestType type
             if (is<Box>(fragment.layout_node()) && verify_cast<Box>(fragment.layout_node()).stacking_context())
                 continue;
             if (enclosing_int_rect(fragment.absolute_rect()).contains(position)) {
-                if (is<BlockBox>(fragment.layout_node()))
-                    return verify_cast<BlockBox>(fragment.layout_node()).hit_test(position, type);
+                if (is<BlockContainer>(fragment.layout_node()))
+                    return verify_cast<BlockContainer>(fragment.layout_node()).hit_test(position, type);
                 return { fragment.layout_node(), fragment.text_index_at(position.x()) };
             }
             if (fragment.absolute_rect().top() <= position.y())
@@ -104,7 +104,7 @@ HitTestResult BlockBox::hit_test(const Gfx::IntPoint& position, HitTestType type
     return { absolute_rect().contains(position.x(), position.y()) ? this : nullptr };
 }
 
-void BlockBox::split_into_lines(InlineFormattingContext& context, LayoutMode layout_mode)
+void BlockContainer::split_into_lines(InlineFormattingContext& context, LayoutMode layout_mode)
 {
     auto& containing_block = context.containing_block();
     auto* line_box = &containing_block.ensure_last_line_box();
@@ -121,13 +121,13 @@ void BlockBox::split_into_lines(InlineFormattingContext& context, LayoutMode lay
     line_box->add_fragment(*this, 0, 0, border_box_width(), height());
 }
 
-bool BlockBox::is_scrollable() const
+bool BlockContainer::is_scrollable() const
 {
     // FIXME: Support horizontal scroll as well (overflow-x)
     return computed_values().overflow_y() == CSS::Overflow::Scroll;
 }
 
-void BlockBox::set_scroll_offset(const Gfx::FloatPoint& offset)
+void BlockContainer::set_scroll_offset(const Gfx::FloatPoint& offset)
 {
     // FIXME: If there is horizontal and vertical scroll ignore only part of the new offset
     if (offset.y() < 0 || m_scroll_offset == offset)
@@ -136,7 +136,7 @@ void BlockBox::set_scroll_offset(const Gfx::FloatPoint& offset)
     set_needs_display();
 }
 
-bool BlockBox::handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned int, unsigned int, int wheel_delta)
+bool BlockContainer::handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned int, unsigned int, int wheel_delta)
 {
     if (!is_scrollable())
         return false;

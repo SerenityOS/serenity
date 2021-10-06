@@ -11,12 +11,12 @@
 namespace Web::Layout {
 
 TableCellBox::TableCellBox(DOM::Document& document, DOM::Element* element, NonnullRefPtr<CSS::StyleProperties> style)
-    : Layout::BlockBox(document, element, move(style))
+    : Layout::BlockContainer(document, element, move(style))
 {
 }
 
 TableCellBox::TableCellBox(DOM::Document& document, DOM::Element* element, CSS::ComputedValues computed_values)
-    : Layout::BlockBox(document, element, move(computed_values))
+    : Layout::BlockContainer(document, element, move(computed_values))
 {
 }
 

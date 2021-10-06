@@ -21,7 +21,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/HTMLTemplateElement.h>
-#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/SVGBox.h>
 #include <LibWeb/Layout/TextNode.h>
@@ -206,8 +206,8 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         builder.append("\n");
     }
 
-    if (is<Layout::BlockBox>(layout_node) && static_cast<Layout::BlockBox const&>(layout_node).children_are_inline()) {
-        auto& block = static_cast<Layout::BlockBox const&>(layout_node);
+    if (is<Layout::BlockContainer>(layout_node) && static_cast<Layout::BlockContainer const&>(layout_node).children_are_inline()) {
+        auto& block = static_cast<Layout::BlockContainer const&>(layout_node);
         for (size_t line_box_index = 0; line_box_index < block.line_boxes().size(); ++line_box_index) {
             auto& line_box = block.line_boxes()[line_box_index];
             for (size_t i = 0; i < indent; ++i)

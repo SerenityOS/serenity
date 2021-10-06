@@ -11,7 +11,7 @@
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
-#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/ButtonBox.h>
 #include <LibWeb/Layout/CheckBox.h>
 #include <LibWeb/Layout/RadioButton.h>
@@ -60,7 +60,7 @@ RefPtr<Layout::Node> HTMLInputElement::create_layout_node()
         return adopt_ref(*new Layout::RadioButton(document(), *this, move(style)));
 
     create_shadow_tree_if_needed();
-    auto layout_node = adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
+    auto layout_node = adopt_ref(*new Layout::BlockContainer(document(), this, move(style)));
     layout_node->set_inline(true);
     return layout_node;
 }

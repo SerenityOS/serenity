@@ -8,7 +8,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOMParsing/InnerHTML.h>
-#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/BlockContainer.h>
 
 namespace Web::DOM {
 
@@ -32,7 +32,7 @@ EventTarget* ShadowRoot::get_parent(const Event& event)
 
 RefPtr<Layout::Node> ShadowRoot::create_layout_node()
 {
-    return adopt_ref(*new Layout::BlockBox(document(), this, CSS::ComputedValues {}));
+    return adopt_ref(*new Layout::BlockContainer(document(), this, CSS::ComputedValues {}));
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
