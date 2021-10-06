@@ -33,7 +33,7 @@ struct TreeNode : public SpaceAnalyzer::TreeMapNode {
         : m_name(move(name)) {};
 
     virtual String name() const { return m_name; }
-    virtual int64_t area() const { return m_area; }
+    virtual i64 area() const { return m_area; }
     virtual size_t num_children() const
     {
         if (m_children) {
@@ -51,7 +51,7 @@ struct TreeNode : public SpaceAnalyzer::TreeMapNode {
     }
 
     String m_name;
-    int64_t m_area { 0 };
+    i64 m_area { 0 };
     OwnPtr<Vector<TreeNode>> m_children;
 };
 
