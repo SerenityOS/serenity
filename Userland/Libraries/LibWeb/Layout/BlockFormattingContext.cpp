@@ -17,8 +17,8 @@
 
 namespace Web::Layout {
 
-BlockFormattingContext::BlockFormattingContext(Box& context_box, FormattingContext* parent)
-    : FormattingContext(context_box, parent)
+BlockFormattingContext::BlockFormattingContext(Box& root, FormattingContext* parent)
+    : FormattingContext(root, parent)
 {
 }
 
@@ -28,7 +28,7 @@ BlockFormattingContext::~BlockFormattingContext()
 
 bool BlockFormattingContext::is_initial() const
 {
-    return is<InitialContainingBlock>(context_box());
+    return is<InitialContainingBlock>(root());
 }
 
 void BlockFormattingContext::run(Box& box, LayoutMode layout_mode)
@@ -564,14 +564,14 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
 
 void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_mode)
 {
-    auto viewport_rect = context_box().browsing_context().viewport_rect();
+    auto viewport_rect = root().browsing_context().viewport_rect();
 
-    auto& icb = verify_cast<Layout::InitialContainingBlock>(context_box());
+    auto& icb = verify_cast<Layout::InitialContainingBlock>(root());
     icb.build_stacking_context_tree();
 
     icb.set_width(viewport_rect.width());
 
-    layout_block_level_children(context_box(), layout_mode);
+    layout_block_level_children(root(), layout_mode);
 
     VERIFY(!icb.children_are_inline());
 
@@ -614,15 +614,15 @@ void BlockFormattingContext::layout_floating_child(Box& box, Box& containing_blo
     // Then we float it to the left or right.
     float x = box.effective_offset().x();
 
-    auto box_in_context_rect = rect_in_coordinate_space(box, context_box());
-    float y_in_context_box = box_in_context_rect.y();
+    auto box_in_root_rect = rect_in_coordinate_space(box, root());
+    float y_in_root = box_in_root_rect.y();
 
     // Next, float to the left and/or right
     if (box.computed_values().float_() == CSS::Float::Left) {
         if (!m_left_floating_boxes.is_empty()) {
             auto& previous_floating_box = *m_left_floating_boxes.last();
-            auto previous_rect = rect_in_coordinate_space(previous_floating_box, context_box());
-            if (previous_rect.contains_vertically(y_in_context_box)) {
+            auto previous_rect = rect_in_coordinate_space(previous_floating_box, root());
+            if (previous_rect.contains_vertically(y_in_root)) {
                 // This box touches another already floating box. Stack to the right.
                 x = previous_floating_box.margin_box_as_relative_rect().x() + previous_floating_box.margin_box_as_relative_rect().width() + box.box_model().margin_box().left;
             } else {
@@ -639,8 +639,8 @@ void BlockFormattingContext::layout_floating_child(Box& box, Box& containing_blo
     } else if (box.computed_values().float_() == CSS::Float::Right) {
         if (!m_right_floating_boxes.is_empty()) {
             auto& previous_floating_box = *m_right_floating_boxes.last();
-            auto previous_rect = rect_in_coordinate_space(previous_floating_box, context_box());
-            if (previous_rect.contains_vertically(y_in_context_box)) {
+            auto previous_rect = rect_in_coordinate_space(previous_floating_box, root());
+            if (previous_rect.contains_vertically(y_in_root)) {
                 // This box touches another already floating box. Stack to the left.
                 x = previous_floating_box.margin_box_as_relative_rect().x() - box.box_model().margin_box().right - box.width();
             } else {
