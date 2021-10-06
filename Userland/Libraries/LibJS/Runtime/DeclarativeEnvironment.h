@@ -48,7 +48,8 @@ private:
         bool initialized { false };
     };
 
-    HashMap<FlyString, Binding> m_bindings;
+    HashMap<FlyString, size_t> m_names;
+    Vector<Binding> m_bindings;
 };
 
 template<>
