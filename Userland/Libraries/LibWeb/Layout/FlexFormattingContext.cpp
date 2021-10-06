@@ -310,6 +310,10 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         box.set_width(box.width_of_logical_containing_block());
 
     box.for_each_child_of_type<Box>([&](Box& child_box) {
+        if (child_box.has_definite_width())
+            child_box.set_width(child_box.computed_values().width().resolved_or_zero(child_box, box.width()).to_px(child_box));
+        if (child_box.has_definite_height())
+            child_box.set_height(child_box.computed_values().height().resolved_or_zero(child_box, box.height()).to_px(child_box));
         layout_inside(child_box, LayoutMode::Default);
         // Skip anonymous text runs that are only whitespace.
         if (child_box.is_anonymous() && !child_box.first_child_of_type<BlockBox>()) {
