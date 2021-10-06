@@ -13,7 +13,7 @@ namespace SpaceAnalyzer {
 
 struct TreeMapNode {
     virtual String name() const = 0;
-    virtual int64_t area() const = 0;
+    virtual i64 area() const = 0;
     virtual size_t num_children() const = 0;
     virtual const TreeMapNode& child_at(size_t i) const = 0;
     virtual void sort_children_by_area() const = 0;
