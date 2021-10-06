@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/CSSNamespace.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 
 namespace Web::Bindings {
 
@@ -54,11 +55,27 @@ JS_DEFINE_NATIVE_FUNCTION(CSSNamespace::supports)
 
     if (vm.argument_count() >= 2) {
         // When the supports(property, value) method is invoked with two arguments property and value:
-        //     If property is an ASCII case-insensitive match for any defined CSS property that the UA supports, and value successfully parses according to that property’s grammar, return true.
-        //
-        //     Otherwise, if property is a custom property name string, return true.
-        //
-        //     Otherwise, return false.
+        String property_name = vm.argument(0).to_string(global_object);
+        if (vm.exception())
+            return {};
+
+        // If property is an ASCII case-insensitive match for any defined CSS property that the UA supports,
+        // and value successfully parses according to that property’s grammar, return true.
+        auto property = CSS::property_id_from_string(property_name);
+        if (property != CSS::PropertyID::Invalid) {
+            auto value_string = vm.argument(1).to_string(global_object);
+            if (vm.exception())
+                return {};
+            if (parse_css_value({}, value_string, property))
+                return JS::Value(true);
+        }
+        // Otherwise, if property is a custom property name string, return true.
+        // FIXME: This check is not enough to make sure this is a valid custom property name, but it's close enough.
+        else if (property_name.starts_with("--") && property_name.length() >= 3) {
+            return JS::Value(true);
+        }
+
+        // Otherwise, return false.
         return JS::Value(false);
     } else {
         // When the supports(conditionText) method is invoked with a single conditionText argument:
