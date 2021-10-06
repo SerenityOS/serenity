@@ -44,11 +44,12 @@ public:
         }
     }
 
-    Reference(Environment& base, FlyString referenced_name, bool strict = false)
+    Reference(Environment& base, FlyString referenced_name, bool strict = false, Optional<size_t> index_in_declarative_environment = {})
         : m_base_type(BaseType::Environment)
         , m_base_environment(&base)
         , m_name(move(referenced_name))
         , m_strict(strict)
+        , m_index_in_declarative_environment(move(index_in_declarative_environment))
     {
     }
 
@@ -129,6 +130,7 @@ private:
     PropertyName m_name;
     Value m_this_value;
     bool m_strict { false };
+    Optional<size_t> m_index_in_declarative_environment;
 };
 
 }

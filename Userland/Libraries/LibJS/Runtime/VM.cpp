@@ -442,12 +442,14 @@ Reference VM::get_identifier_reference(Environment* environment, FlyString name,
         // a. Return the Reference Record { [[Base]]: unresolvable, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
         return Reference { Reference::BaseType::Unresolvable, move(name), strict };
     }
-    auto exists = environment->has_binding(name);
+
+    Optional<size_t> index;
+    auto exists = environment->has_binding(name, &index);
     if (exception())
         return {};
 
     if (exists)
-        return Reference { *environment, move(name), strict };
+        return Reference { *environment, move(name), strict, index };
     else
         return get_identifier_reference(environment->outer_environment(), move(name), strict);
 }
