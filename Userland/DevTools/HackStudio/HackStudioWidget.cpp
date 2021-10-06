@@ -26,6 +26,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/API/InodeWatcherEvent.h>
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
@@ -1426,8 +1427,15 @@ void HackStudioWidget::update_history_actions()
 
 RefPtr<Gfx::Font> HackStudioWidget::read_editor_font_from_config()
 {
-    // FIXME: Actually read the font from config
-    return Gfx::FontDatabase::the().get("Csilla", "Regular", 10);
+    auto font_family = Config::read_string("HackStudio", "EditorFont", "Family", "Csilla");
+    auto font_variant = Config::read_string("HackStudio", "EditorFont", "Variant", "Regular");
+    auto font_size = Config::read_i32("HackStudio", "EditorFont", "Size", 10);
+
+    auto font = Gfx::FontDatabase::the().get(font_family, font_variant, font_size);
+    if (font.is_null())
+        return Gfx::FontDatabase::the().default_fixed_width_font();
+
+    return font;
 }
 
 void HackStudioWidget::change_editor_font(RefPtr<Gfx::Font> font)
@@ -1437,7 +1445,9 @@ void HackStudioWidget::change_editor_font(RefPtr<Gfx::Font> font)
         editor_wrapper.editor().set_font(*m_editor_font);
     }
 
-    // TODO: Save into config
+    Config::write_string("HackStudio", "EditorFont", "Family", m_editor_font->family());
+    Config::write_string("HackStudio", "EditorFont", "Variant", m_editor_font->variant());
+    Config::write_i32("HackStudio", "EditorFont", "Size", m_editor_font->presentation_size());
 }
 
 }
