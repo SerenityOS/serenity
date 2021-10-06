@@ -19,7 +19,7 @@ SVGGElement::SVGGElement(DOM::Document& document, QualifiedName qualified_name)
 RefPtr<Layout::Node> SVGGElement::create_layout_node()
 {
     auto style = document().style_computer().compute_style(*this);
-    if (style->display() == CSS::Display::None)
+    if (style->display().is_none())
         return nullptr;
     return adopt_ref(*new Layout::SVGGraphicsBox(document(), *this, move(style)));
 }

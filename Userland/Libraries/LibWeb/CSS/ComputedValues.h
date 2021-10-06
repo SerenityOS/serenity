@@ -22,7 +22,7 @@ public:
     static CSS::Position position() { return CSS::Position::Static; }
     static CSS::TextDecorationLine text_decoration_line() { return CSS::TextDecorationLine::None; }
     static CSS::TextTransform text_transform() { return CSS::TextTransform::None; }
-    static CSS::Display display() { return CSS::Display::Inline; }
+    static CSS::Display display() { return CSS::Display { CSS::Display::Outside::Inline, CSS::Display::Inside::Flow }; }
     static Color color() { return Color::Black; }
     static Color background_color() { return Color::Transparent; }
     static CSS::Repeat background_repeat() { return CSS::Repeat::Repeat; }

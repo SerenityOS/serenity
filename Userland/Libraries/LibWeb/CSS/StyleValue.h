@@ -22,6 +22,7 @@
 #include <AK/WeakPtr.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Color.h>
+#include <LibWeb/CSS/Display.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/PropertyID.h>
@@ -88,24 +89,6 @@ enum class Cursor {
     AllScroll,
     ZoomIn,
     ZoomOut,
-};
-
-enum class Display {
-    None,
-    Block,
-    Inline,
-    InlineBlock,
-    ListItem,
-    Table,
-    TableRow,
-    TableCell,
-    TableHeaderGroup,
-    TableRowGroup,
-    TableFooterGroup,
-    TableColumn,
-    TableColumnGroup,
-    TableCaption,
-    Flex,
 };
 
 enum class FlexBasis {

@@ -47,7 +47,7 @@ RefPtr<Layout::Node> HTMLInputElement::create_layout_node()
         return nullptr;
 
     auto style = document().style_computer().compute_style(*this);
-    if (style->display() == CSS::Display::None)
+    if (style->display().is_none())
         return nullptr;
 
     if (type().equals_ignoring_case("submit") || type().equals_ignoring_case("button"))

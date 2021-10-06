@@ -176,7 +176,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
             builder.appendff(" {}floating{}", floating_color_on, color_off);
         if (box.is_inline_block())
             builder.appendff(" {}inline-block{}", inline_block_color_on, color_off);
-        if (box.computed_values().display() == CSS::Display::Flex)
+        if (box.computed_values().display().is_flex_inside())
             builder.appendff(" {}flex-container{}", flex_color_on, color_off);
         if (box.is_flex_item())
             builder.appendff(" {}flex-item{}", flex_color_on, color_off);

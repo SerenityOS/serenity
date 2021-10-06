@@ -26,6 +26,7 @@ class CSSRuleList;
 class CSSStyleDeclaration;
 class CSSStyleRule;
 class CSSStyleSheet;
+class Display;
 class ElementInlineCSSStyleDeclaration;
 class Length;
 class MediaList;
@@ -38,7 +39,6 @@ class Selector;
 class StyleProperties;
 class StyleComputer;
 class StyleSheet;
-enum class Display;
 
 class StyleValue;
 class BackgroundRepeatStyleValue;

@@ -110,48 +110,48 @@ RefPtr<Layout::Node> Element::create_layout_node()
     const_cast<Element&>(*this).m_specified_css_values = style;
     auto display = style->display();
 
-    if (display == CSS::Display::None)
+    if (display.is_none())
         return nullptr;
 
     if (local_name() == "noscript" && document().is_scripting_enabled())
         return nullptr;
 
-    switch (display) {
-    case CSS::Display::None:
-        VERIFY_NOT_REACHED();
-        break;
-    case CSS::Display::Block:
-        return adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
-    case CSS::Display::Inline:
-        if (style->float_().value_or(CSS::Float::None) != CSS::Float::None)
-            return adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
-        return adopt_ref(*new Layout::InlineNode(document(), *this, move(style)));
-    case CSS::Display::ListItem:
-        return adopt_ref(*new Layout::ListItemBox(document(), *this, move(style)));
-    case CSS::Display::Table:
+    if (display.is_table_inside())
         return adopt_ref(*new Layout::TableBox(document(), this, move(style)));
-    case CSS::Display::TableRow:
+
+    if (display.is_list_item())
+        return adopt_ref(*new Layout::ListItemBox(document(), *this, move(style)));
+
+    if (display.is_table_row())
         return adopt_ref(*new Layout::TableRowBox(document(), this, move(style)));
-    case CSS::Display::TableCell:
+
+    if (display.is_table_cell())
         return adopt_ref(*new Layout::TableCellBox(document(), this, move(style)));
-    case CSS::Display::TableRowGroup:
-    case CSS::Display::TableHeaderGroup:
-    case CSS::Display::TableFooterGroup:
+
+    if (display.is_table_row_group() || display.is_table_header_group() || display.is_table_footer_group())
         return adopt_ref(*new Layout::TableRowGroupBox(document(), *this, move(style)));
-    case CSS::Display::InlineBlock: {
-        auto inline_block = adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
-        inline_block->set_inline(true);
-        return inline_block;
-    }
-    case CSS::Display::Flex:
-        return adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
-    case CSS::Display::TableColumn:
-    case CSS::Display::TableColumnGroup:
-    case CSS::Display::TableCaption:
+
+    if (display.is_table_column() || display.is_table_column_group() || display.is_table_caption()) {
         // FIXME: This is just an incorrect placeholder until we improve table layout support.
         return adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
     }
-    VERIFY_NOT_REACHED();
+
+    if (display.is_inline_outside()) {
+        if (display.is_flow_root_inside()) {
+            auto block = adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
+            block->set_inline(true);
+            return block;
+        }
+        if (display.is_flow_inside())
+            return adopt_ref(*new Layout::InlineNode(document(), *this, move(style)));
+
+        TODO();
+    }
+
+    if (display.is_flow_inside() || display.is_flow_root_inside() || display.is_flex_inside())
+        return adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
+
+    TODO();
 }
 
 void Element::parse_attribute(const FlyString& name, const String& value)
@@ -209,7 +209,7 @@ void Element::recompute_style()
     auto new_specified_css_values = document().style_computer().compute_style(*this);
     m_specified_css_values = new_specified_css_values;
     if (!layout_node()) {
-        if (new_specified_css_values->display() == CSS::Display::None)
+        if (new_specified_css_values->display().is_none())
             return;
         // We need a new layout tree here!
         Layout::TreeBuilder tree_builder;

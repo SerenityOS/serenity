@@ -33,7 +33,7 @@ static Layout::Node& insertion_parent_for_inline_node(Layout::NodeWithStyle& lay
     if (layout_parent.is_inline() && !layout_parent.is_inline_block())
         return layout_parent;
 
-    if (layout_parent.computed_values().display() == CSS::Display::Flex) {
+    if (layout_parent.computed_values().display().is_flex_inside()) {
         layout_parent.append_child(layout_parent.create_anonymous_wrapper());
     }
 
@@ -97,7 +97,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
     if (!dom_node.parent_or_shadow_host()) {
         m_layout_root = layout_node;
     } else {
-        if (layout_node->is_inline() && !(layout_node->is_inline_block() && m_parent_stack.last()->computed_values().display() == CSS::Display::Flex)) {
+        if (layout_node->is_inline() && !(layout_node->is_inline_block() && m_parent_stack.last()->computed_values().display().is_flex_inside())) {
             // Inlines can be inserted into the nearest ancestor.
             auto& insertion_point = insertion_parent_for_inline_node(*m_parent_stack.last());
             insertion_point.append_child(*layout_node);
@@ -147,11 +147,23 @@ RefPtr<Node> TreeBuilder::build(DOM::Node& dom_node)
     return move(m_layout_root);
 }
 
-template<CSS::Display display, typename Callback>
-void TreeBuilder::for_each_in_tree_with_display(NodeWithStyle& root, Callback callback)
+template<CSS::Display::Internal internal, typename Callback>
+void TreeBuilder::for_each_in_tree_with_internal_display(NodeWithStyle& root, Callback callback)
 {
     root.for_each_in_inclusive_subtree_of_type<Box>([&](auto& box) {
-        if (box.computed_values().display() == display)
+        auto const& display = box.computed_values().display();
+        if (display.is_internal() && display.internal() == internal)
+            callback(box);
+        return IterationDecision::Continue;
+    });
+}
+
+template<CSS::Display::Inside inside, typename Callback>
+void TreeBuilder::for_each_in_tree_with_inside_display(NodeWithStyle& root, Callback callback)
+{
+    root.for_each_in_inclusive_subtree_of_type<Box>([&](auto& box) {
+        auto const& display = box.computed_values().display();
+        if (display.it_outside_and_inside() && display.inside() == inside)
             callback(box);
         return IterationDecision::Continue;
     });
@@ -173,16 +185,16 @@ void TreeBuilder::remove_irrelevant_boxes(NodeWithStyle& root)
     NonnullRefPtrVector<Node> to_remove;
 
     // Children of a table-column.
-    for_each_in_tree_with_display<CSS::Display::TableColumn>(root, [&](Box& table_column) {
+    for_each_in_tree_with_internal_display<CSS::Display::Internal::TableColumn>(root, [&](Box& table_column) {
         table_column.for_each_child([&](auto& child) {
             to_remove.append(child);
         });
     });
 
     // Children of a table-column-group which are not a table-column.
-    for_each_in_tree_with_display<CSS::Display::TableColumnGroup>(root, [&](Box& table_column_group) {
+    for_each_in_tree_with_internal_display<CSS::Display::Internal::TableColumnGroup>(root, [&](Box& table_column_group) {
         table_column_group.for_each_child([&](auto& child) {
-            if (child.computed_values().display() != CSS::Display::TableColumn)
+            if (child.computed_values().display().is_table_column())
                 to_remove.append(child);
         });
     });
@@ -200,15 +212,17 @@ void TreeBuilder::remove_irrelevant_boxes(NodeWithStyle& root)
 
 static bool is_table_track(CSS::Display display)
 {
-    return display == CSS::Display::TableRow || display == CSS::Display::TableColumn;
+    return display.is_table_row() || display.is_table_column();
 }
 
 static bool is_table_track_group(CSS::Display display)
 {
     // Unless explicitly mentioned otherwise, mentions of table-row-groups in this spec also encompass the specialized
     // table-header-groups and table-footer-groups.
-    return display == CSS::Display::TableRowGroup || display == CSS::Display::TableHeaderGroup || display == CSS::Display::TableFooterGroup
-        || display == CSS::Display::TableColumnGroup;
+    return display.is_table_row_group()
+        || display.is_table_header_group()
+        || display.is_table_footer_group()
+        || display.is_table_column_group();
 }
 
 static bool is_not_proper_table_child(const Node& node)
@@ -216,7 +230,7 @@ static bool is_not_proper_table_child(const Node& node)
     if (!node.has_style())
         return true;
     auto display = node.computed_values().display();
-    return !is_table_track_group(display) && !is_table_track(display) && display != CSS::Display::TableCaption;
+    return !is_table_track_group(display) && !is_table_track(display) && !display.is_table_caption();
 }
 
 static bool is_not_table_row(const Node& node)
@@ -224,7 +238,7 @@ static bool is_not_table_row(const Node& node)
     if (!node.has_style())
         return true;
     auto display = node.computed_values().display();
-    return display != CSS::Display::TableRow;
+    return !display.is_table_row();
 }
 
 static bool is_not_table_cell(const Node& node)
@@ -232,7 +246,7 @@ static bool is_not_table_cell(const Node& node)
     if (!node.has_style())
         return true;
     auto display = node.computed_values().display();
-    return display != CSS::Display::TableCell;
+    return !display.is_table_cell();
 }
 
 template<typename Matcher, typename Callback>
@@ -276,33 +290,33 @@ static void wrap_in_anonymous(NonnullRefPtrVector<Node>& sequence, Node* nearest
 void TreeBuilder::generate_missing_child_wrappers(NodeWithStyle& root)
 {
     // An anonymous table-row box must be generated around each sequence of consecutive children of a table-root box which are not proper table child boxes.
-    for_each_in_tree_with_display<CSS::Display::Table>(root, [&](auto& parent) {
+    for_each_in_tree_with_inside_display<CSS::Display::Inside::Table>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_proper_table_child, [&](auto sequence, auto nearest_sibling) {
             wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
         });
     });
 
     // An anonymous table-row box must be generated around each sequence of consecutive children of a table-row-group box which are not table-row boxes.
-    for_each_in_tree_with_display<CSS::Display::TableRowGroup>(root, [&](auto& parent) {
+    for_each_in_tree_with_internal_display<CSS::Display::Internal::TableRowGroup>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
             wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
         });
     });
     // Unless explicitly mentioned otherwise, mentions of table-row-groups in this spec also encompass the specialized
     // table-header-groups and table-footer-groups.
-    for_each_in_tree_with_display<CSS::Display::TableHeaderGroup>(root, [&](auto& parent) {
+    for_each_in_tree_with_internal_display<CSS::Display::Internal::TableHeaderGroup>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
             wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
         });
     });
-    for_each_in_tree_with_display<CSS::Display::TableFooterGroup>(root, [&](auto& parent) {
+    for_each_in_tree_with_internal_display<CSS::Display::Internal::TableFooterGroup>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
             wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
         });
     });
 
     // An anonymous table-cell box must be generated around each sequence of consecutive children of a table-row box which are not table-cell boxes. !Testcase
-    for_each_in_tree_with_display<CSS::Display::TableRow>(root, [&](auto& parent) {
+    for_each_in_tree_with_internal_display<CSS::Display::Internal::TableRow>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_cell, [&](auto& sequence, auto nearest_sibling) {
             wrap_in_anonymous<TableCellBox>(sequence, nearest_sibling);
         });

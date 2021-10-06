@@ -50,16 +50,23 @@ bool FormattingContext::creates_block_formatting_context(const Box& box)
     if ((overflow_y != CSS::Overflow::Visible) && (overflow_y != CSS::Overflow::Clip))
         return true;
 
+    auto display = box.computed_values().display();
+
+    if (display.is_flow_root_inside())
+        return true;
+
     // FIXME: inline-flex as well
-    if (box.parent() && box.parent()->computed_values().display() == CSS::Display::Flex) {
-        // FIXME: Flex items (direct children of the element with display: flex or inline-flex) if they are neither flex nor grid nor table containers themselves.
-        if (box.computed_values().display() != CSS::Display::Flex)
-            return true;
+    if (box.parent()) {
+        auto parent_display = box.parent()->computed_values().display();
+        if (parent_display.is_flex_inside()) {
+            // FIXME: Flex items (direct children of the element with display: flex or inline-flex) if they are neither flex nor grid nor table containers themselves.
+            if (!display.is_flex_inside())
+                return true;
+        }
     }
 
     // FIXME: table-caption
     // FIXME: anonymous table cells
-    // FIXME: display: flow-root
     // FIXME: Elements with contain: layout, content, or paint.
     // FIXME: grid
     // FIXME: multicol
@@ -67,37 +74,46 @@ bool FormattingContext::creates_block_formatting_context(const Box& box)
     return false;
 }
 
-void FormattingContext::layout_inside(Box& box, LayoutMode layout_mode)
+void FormattingContext::layout_inside(Box& child_box, LayoutMode layout_mode)
 {
-    if (is<SVGSVGBox>(box)) {
-        SVGFormattingContext context(box, this);
-        context.run(box, layout_mode);
+    auto context_display = context_box().computed_values().display();
+
+    if (is<SVGSVGBox>(child_box)) {
+        SVGFormattingContext context(child_box, this);
+        context.run(child_box, layout_mode);
         return;
     }
 
-    if (box.computed_values().display() == CSS::Display::Flex) {
-        FlexFormattingContext context(box, this);
-        context.run(box, layout_mode);
+    auto child_display = child_box.computed_values().display();
+
+    if (child_display.is_flex_inside()) {
+        FlexFormattingContext context(child_box, this);
+        context.run(child_box, layout_mode);
         return;
     }
 
-    if (creates_block_formatting_context(box)) {
-        BlockFormattingContext context(box, this);
-        context.run(box, layout_mode);
+    if (creates_block_formatting_context(child_box)) {
+        BlockFormattingContext context(child_box, this);
+        context.run(child_box, layout_mode);
         return;
     }
 
-    if (is<TableBox>(box)) {
-        TableFormattingContext context(box, this);
-        context.run(box, layout_mode);
-    } else if (box.children_are_inline()) {
-        InlineFormattingContext context(box, this);
-        context.run(box, layout_mode);
-    } else {
-        // FIXME: This needs refactoring!
-        VERIFY(is_block_formatting_context());
-        run(box, layout_mode);
+    if (child_display.is_table_inside()) {
+        TableFormattingContext context(child_box, this);
+        context.run(child_box, layout_mode);
+        return;
     }
+
+    VERIFY(is_block_formatting_context());
+
+    if (child_box.children_are_inline()) {
+        InlineFormattingContext context(child_box, this);
+        context.run(child_box, layout_mode);
+        return;
+    }
+
+    VERIFY(child_display.is_flow_inside());
+    run(child_box, layout_mode);
 }
 
 static float greatest_child_width(const Box& box)
