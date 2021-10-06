@@ -93,7 +93,7 @@ public:
     };
 
     ConstIterator begin() const { return ConstIterator(*this, m_head); }
-    ConstIterator end() const { return ConstIterator(*this, size()); }
+    ConstIterator end() const { return ConstIterator(*this, (m_head + size()) % Capacity); }
 
     size_t head_index() const { return m_head; }
 
