@@ -15,3 +15,21 @@ test("basic functionality", () => {
     }
     expect(caught_exception).not.toBeUndefined();
 });
+
+test("Issue #8198 arrow function escapes function scope", () => {
+    const b = 3;
+
+    function f() {
+        expect(b).toBe(3);
+        (() => {
+            expect(b).toBe(3);
+            var a = "wat";
+            eval("var b=a;");
+            expect(b).toBe("wat");
+        })();
+        expect(b).toBe(3);
+    }
+
+    f();
+    expect(b).toBe(3);
+});
