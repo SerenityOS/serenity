@@ -39,6 +39,4 @@ $ tar -x -f archive.tar
 
 ## See also
 
-* [`gunzip`(1)](gunzip.md)
 * [`unzip`(1)](unzip.md)
-
