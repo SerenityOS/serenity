@@ -76,6 +76,9 @@ bool FormattingContext::creates_block_formatting_context(const Box& box)
 
 void FormattingContext::layout_inside(Box& child_box, LayoutMode layout_mode)
 {
+    if (!child_box.can_have_children())
+        return;
+
     if (is<SVGSVGBox>(child_box)) {
         SVGFormattingContext context(child_box, this);
         context.run(child_box, layout_mode);
