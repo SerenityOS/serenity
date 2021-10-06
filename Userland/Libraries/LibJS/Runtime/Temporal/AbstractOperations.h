@@ -102,6 +102,7 @@ Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit);
 ThrowCompletionOr<void> reject_temporal_calendar_type(GlobalObject&, Object&);
 String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision);
 double constrain_to_range(double x, double minimum, double maximum);
+i64 round_number_to_increment(double, u64 increment, StringView rounding_mode);
 BigInt* round_number_to_increment(GlobalObject&, BigInt const&, u64 increment, StringView rounding_mode);
 ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject&, String const& iso_string);
