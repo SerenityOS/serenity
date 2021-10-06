@@ -1000,7 +1000,37 @@ private:
     mutable Optional<EnvironmentCoordinate> m_cached_environment_coordinate;
 };
 
-class ClassMethod final : public ASTNode {
+class ClassElement : public ASTNode {
+public:
+    ClassElement(SourceRange source_range, bool is_static)
+        : ASTNode(source_range)
+        , m_is_static(is_static)
+    {
+    }
+
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+
+    enum class ElementKind {
+        Method,
+        Field,
+    };
+
+    virtual ElementKind class_element_kind() const = 0;
+    bool is_static() const { return m_is_static; }
+
+    struct ClassFieldDefinition {
+        PropertyName name;
+        ECMAScriptFunctionObject* initializer { nullptr };
+    };
+
+    using ClassValue = Variant<ClassFieldDefinition, Completion>;
+    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(Interpreter&, GlobalObject&, Object& home_object) const = 0;
+
+private:
+    bool m_is_static { false };
+};
+
+class ClassMethod final : public ClassElement {
 public:
     enum class Kind {
         Method,
@@ -1009,50 +1039,47 @@ public:
     };
 
     ClassMethod(SourceRange source_range, NonnullRefPtr<Expression> key, NonnullRefPtr<FunctionExpression> function, Kind kind, bool is_static)
-        : ASTNode(source_range)
+        : ClassElement(source_range, is_static)
         , m_key(move(key))
         , m_function(move(function))
         , m_kind(kind)
-        , m_is_static(is_static)
     {
     }
 
     Expression const& key() const { return *m_key; }
     Kind kind() const { return m_kind; }
-    bool is_static() const { return m_is_static; }
+    virtual ElementKind class_element_kind() const override { return ElementKind::Method; }
 
-    virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
+    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(Interpreter&, GlobalObject&, Object& home_object) const override;
 
 private:
     NonnullRefPtr<Expression> m_key;
     NonnullRefPtr<FunctionExpression> m_function;
     Kind m_kind;
-    bool m_is_static;
 };
 
-class ClassField final : public ASTNode {
+class ClassField final : public ClassElement {
 public:
     ClassField(SourceRange source_range, NonnullRefPtr<Expression> key, RefPtr<Expression> init, bool is_static)
-        : ASTNode(source_range)
+        : ClassElement(source_range, is_static)
         , m_key(move(key))
         , m_initializer(move(init))
-        , m_is_static(is_static)
     {
     }
 
     Expression const& key() const { return *m_key; }
-    bool is_static() const { return m_is_static; }
     RefPtr<Expression> const& initializer() const { return m_initializer; }
     RefPtr<Expression>& initializer() { return m_initializer; }
 
-    virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual ElementKind class_element_kind() const override { return ElementKind::Field; }
+
     virtual void dump(int indent) const override;
+    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(Interpreter& interpreter, GlobalObject& object, Object& home_object) const override;
 
 private:
     NonnullRefPtr<Expression> m_key;
     RefPtr<Expression> m_initializer;
-    bool m_is_static;
 };
 
 class SuperExpression final : public Expression {
@@ -1070,13 +1097,12 @@ public:
 
 class ClassExpression final : public Expression {
 public:
-    ClassExpression(SourceRange source_range, String name, RefPtr<FunctionExpression> constructor, RefPtr<Expression> super_class, NonnullRefPtrVector<ClassMethod> methods, NonnullRefPtrVector<ClassField> fields)
+    ClassExpression(SourceRange source_range, String name, RefPtr<FunctionExpression> constructor, RefPtr<Expression> super_class, NonnullRefPtrVector<ClassElement> elements)
         : Expression(source_range)
         , m_name(move(name))
         , m_constructor(move(constructor))
         , m_super_class(move(super_class))
-        , m_methods(move(methods))
-        , m_fields(move(fields))
+        , m_elements(move(elements))
     {
     }
 
@@ -1096,8 +1122,7 @@ private:
     String m_name;
     RefPtr<FunctionExpression> m_constructor;
     RefPtr<Expression> m_super_class;
-    NonnullRefPtrVector<ClassMethod> m_methods;
-    NonnullRefPtrVector<ClassField> m_fields;
+    NonnullRefPtrVector<ClassElement> m_elements;
 };
 
 class ClassDeclaration final : public Declaration {
