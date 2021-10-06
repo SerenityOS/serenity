@@ -21,8 +21,16 @@ ProcessorParameterSlider::ProcessorParameterSlider(Orientation orientation, LibD
         LibDSP::ParameterFixedPoint real_value;
         real_value.raw() = value;
         m_parameter.set_value_sneaky(real_value, LibDSP::Detail::ProcessorParameterSetValueTag {});
-        if (m_value_label)
-            m_value_label->set_text(String::formatted("{:.2f}", static_cast<double>(m_parameter)));
+        if (m_value_label) {
+            double value = static_cast<double>(m_parameter);
+            String label_text = String::formatted("{:.2f}", value);
+            // FIXME: This is a magic value; we know that with normal font sizes, the label will disappear starting from approximately this length.
+            //        Can we do this dynamically?
+            if (label_text.length() > 7)
+                m_value_label->set_text(String::formatted("{:.0f}", value));
+            else
+                m_value_label->set_text(label_text);
+        }
     };
     m_parameter.did_change_value = [this](auto value) {
         set_value(value.raw());
