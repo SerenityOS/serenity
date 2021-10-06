@@ -842,8 +842,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
 
     consume(TokenType::Class);
 
-    NonnullRefPtrVector<ClassMethod> methods;
-    NonnullRefPtrVector<ClassField> fields;
+    NonnullRefPtrVector<ClassElement> elements;
     RefPtr<Expression> super_class;
     RefPtr<FunctionExpression> constructor;
 
@@ -989,7 +988,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
             if (is_constructor) {
                 constructor = move(function);
             } else if (!property_key.is_null()) {
-                methods.append(create_ast_node<ClassMethod>({ m_state.current_token.filename(), rule_start.position(), position() }, property_key.release_nonnull(), move(function), method_kind, is_static));
+                elements.append(create_ast_node<ClassMethod>({ m_state.current_token.filename(), rule_start.position(), position() }, property_key.release_nonnull(), move(function), method_kind, is_static));
             } else {
                 syntax_error("No key for class method");
             }
@@ -1013,8 +1012,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 initializer = parse_expression(2);
             }
 
-            fields.append(create_ast_node<ClassField>({ m_state.current_token.filename(), rule_start.position(), position() }, property_key.release_nonnull(), move(initializer), is_static));
-
+            elements.append(create_ast_node<ClassField>({ m_state.current_token.filename(), rule_start.position(), position() }, property_key.release_nonnull(), move(initializer), is_static));
             consume_or_insert_semicolon();
         }
     }
@@ -1043,7 +1041,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
         }
     }
 
-    return create_ast_node<ClassExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(class_name), move(constructor), move(super_class), move(methods), move(fields));
+    return create_ast_node<ClassExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(class_name), move(constructor), move(super_class), move(elements));
 }
 
 Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()

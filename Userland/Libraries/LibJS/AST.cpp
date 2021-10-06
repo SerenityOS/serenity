@@ -1158,16 +1158,90 @@ Value SuperExpression::execute(Interpreter&, GlobalObject&) const
     VERIFY_NOT_REACHED();
 }
 
-Value ClassMethod::execute(Interpreter& interpreter, GlobalObject& global_object) const
+Value ClassElement::execute(Interpreter&, GlobalObject&) const
 {
-    InterpreterNodeScope node_scope { interpreter, *this };
-    return m_function->execute(interpreter, global_object);
+    // Note: The semantics of class element are handled in class_element_evaluation
+    VERIFY_NOT_REACHED();
 }
 
-Value ClassField::execute(Interpreter& interpreter, GlobalObject&) const
+static ThrowCompletionOr<PropertyName> class_key_to_property_name(Interpreter& interpreter, GlobalObject& global_object, Expression const& key)
 {
-    InterpreterNodeScope node_scope { interpreter, *this };
-    return {};
+
+    auto prop_key = key.execute(interpreter, global_object);
+    if (auto* exception = interpreter.exception())
+        return throw_completion(exception->value());
+
+    if (prop_key.is_object())
+        prop_key = TRY(prop_key.to_primitive(global_object, Value::PreferredType::String));
+
+    auto property_key = PropertyName::from_value(global_object, prop_key);
+    if (auto* exception = interpreter.exception())
+        return throw_completion(exception->value());
+    return property_key;
+}
+
+// 15.4.5 Runtime Semantics: MethodDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-methoddefinitionevaluation
+ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluation(Interpreter& interpreter, GlobalObject& global_object, Object& target) const
+{
+    auto property_key = TRY(class_key_to_property_name(interpreter, global_object, *m_key));
+
+    auto method_value = m_function->execute(interpreter, global_object);
+    if (auto* exception = interpreter.exception())
+        return throw_completion(exception->value());
+
+    auto& method_function = static_cast<ECMAScriptFunctionObject&>(method_value.as_function());
+    method_function.set_home_object(&target);
+
+    auto set_function_name = [&](String prefix) {
+        String property_name;
+        // FIXME: Handle PrivateNames as well.
+        if (property_key.is_symbol())
+            property_name = String::formatted("[{}]", property_key.as_symbol()->description());
+        else
+            property_name = property_key.to_string();
+        update_function_name(method_value, String::formatted("{} {}", prefix, property_name));
+    };
+
+    switch (kind()) {
+    case ClassMethod::Kind::Method:
+        TRY(target.define_property_or_throw(property_key, { .value = method_value, .writable = true, .enumerable = false, .configurable = true }));
+        break;
+    case ClassMethod::Kind::Getter:
+        set_function_name("get");
+        TRY(target.define_property_or_throw(property_key, { .get = &method_function, .enumerable = true, .configurable = true }));
+        break;
+    case ClassMethod::Kind::Setter:
+        set_function_name("set");
+        TRY(target.define_property_or_throw(property_key, { .set = &method_function, .enumerable = true, .configurable = true }));
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+    // FIXME: Return PrivateElement for private methods
+
+    return ClassValue { normal_completion({}) };
+}
+
+// 15.7.10 Runtime Semantics: ClassFieldDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classfielddefinitionevaluation
+ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation(Interpreter& interpreter, GlobalObject& global_object, Object& target) const
+{
+    auto property_key = TRY(class_key_to_property_name(interpreter, global_object, *m_key));
+    ECMAScriptFunctionObject* initializer = nullptr;
+    if (m_initializer) {
+        auto copy_initializer = m_initializer;
+        auto body = create_ast_node<ExpressionStatement>(m_initializer->source_range(), copy_initializer.release_nonnull());
+        // FIXME: A potential optimization is not creating the functions here since these are never directly accessible.
+        auto name = property_key.is_number() ? property_key.to_string() : property_key.to_string_or_symbol().to_display_string();
+        initializer = ECMAScriptFunctionObject::create(interpreter.global_object(), name, *body, {}, 0, interpreter.lexical_environment(), FunctionKind::Regular, false, false);
+        initializer->set_home_object(&target);
+    }
+
+    return ClassValue {
+        ClassFieldDefinition {
+            property_key,
+            initializer,
+        }
+    };
 }
 
 Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -1208,14 +1282,70 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
     auto* environment = vm.lexical_environment();
     VERIFY(environment);
     auto* class_scope = new_declarative_environment(*environment);
-    if (!binding_name.is_null())
-        MUST(class_scope->create_immutable_binding(global_object, binding_name, true));
 
+    // We might not set the lexical environment but we always want to restore it eventually.
     ArmedScopeGuard restore_environment = [&] {
         vm.running_execution_context().lexical_environment = environment;
     };
-    vm.running_execution_context().lexical_environment = class_scope;
 
+    if (!binding_name.is_null())
+        MUST(class_scope->create_immutable_binding(global_object, binding_name, true));
+
+    // FIXME: Add classPrivateEnvironment
+
+    // FIXME: Append names to private environment
+
+    auto* proto_parent = vm.current_realm()->global_object().object_prototype();
+
+    auto* constructor_parent = vm.current_realm()->global_object().function_prototype();
+
+    if (!m_super_class.is_null()) {
+        vm.running_execution_context().lexical_environment = class_scope;
+
+        // Note: Since our execute does evaluation and GetValue in once we must check for a valid reference first
+
+        Value super_class;
+
+        auto reference = m_super_class->to_reference(interpreter, global_object);
+        if (auto* exception = interpreter.exception())
+            return throw_completion(exception->value());
+
+        if (reference.is_valid_reference()) {
+            super_class = reference.get_value(global_object);
+            if (auto* exception = interpreter.exception())
+                return throw_completion(exception->value());
+        } else {
+            super_class = m_super_class->execute(interpreter, global_object);
+            if (auto* exception = interpreter.exception())
+                return throw_completion(exception->value());
+        }
+        vm.running_execution_context().lexical_environment = environment;
+
+        if (super_class.is_null()) {
+            proto_parent = nullptr;
+        } else if (!super_class.is_constructor()) {
+            return vm.throw_completion<TypeError>(global_object, ErrorType::ClassExtendsValueNotAConstructorOrNull, super_class.to_string_without_side_effects());
+        } else {
+            auto super_class_prototype = TRY(super_class.get(global_object, vm.names.prototype));
+            if (!super_class_prototype.is_null() && !super_class_prototype.is_object())
+                return vm.throw_completion<TypeError>(global_object, ErrorType::ClassExtendsValueInvalidPrototype, super_class_prototype.to_string_without_side_effects());
+
+            if (super_class_prototype.is_null())
+                proto_parent = nullptr;
+            else
+                proto_parent = &super_class_prototype.as_object();
+
+            constructor_parent = &super_class.as_object();
+        }
+    }
+
+    auto* prototype = Object::create(global_object, proto_parent);
+    VERIFY(prototype);
+
+    vm.running_execution_context().lexical_environment = class_scope;
+    // FIXME: Activate the class private environment
+
+    // FIXME: Step 14.a is done in the parser. But maybe it shouldn't?
     Value class_constructor_value = m_constructor->execute(interpreter, global_object);
     if (auto* exception = interpreter.exception())
         return throw_completion(exception->value());
@@ -1224,108 +1354,56 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
 
     VERIFY(class_constructor_value.is_function() && is<ECMAScriptFunctionObject>(class_constructor_value.as_function()));
     auto* class_constructor = static_cast<ECMAScriptFunctionObject*>(&class_constructor_value.as_function());
+    class_constructor->set_home_object(prototype);
     class_constructor->set_is_class_constructor();
-    Value super_constructor = js_undefined();
-    if (!m_super_class.is_null()) {
-        super_constructor = m_super_class->execute(interpreter, global_object);
-        if (auto* exception = interpreter.exception())
-            return throw_completion(exception->value());
+    class_constructor->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
+    TRY(class_constructor->internal_set_prototype_of(constructor_parent));
 
-        if (!super_constructor.is_function() && !super_constructor.is_null())
-            return interpreter.vm().throw_completion<TypeError>(global_object, ErrorType::ClassExtendsValueNotAConstructorOrNull, super_constructor.to_string_without_side_effects());
-
+    if (!m_super_class.is_null())
         class_constructor->set_constructor_kind(ECMAScriptFunctionObject::ConstructorKind::Derived);
 
-        Object* super_constructor_prototype = nullptr;
-        if (!super_constructor.is_null()) {
-            auto super_constructor_prototype_value = TRY(super_constructor.as_object().get(vm.names.prototype));
+    prototype->define_direct_property(vm.names.constructor, class_constructor, Attribute::Writable | Attribute::Configurable);
 
-            if (!super_constructor_prototype_value.is_object() && !super_constructor_prototype_value.is_null())
-                return interpreter.vm().throw_completion<TypeError>(global_object, ErrorType::ClassExtendsValueInvalidPrototype, super_constructor_prototype_value.to_string_without_side_effects());
+    Vector<ClassElement::ClassFieldDefinition> instance_fields;
+    Vector<ClassElement::ClassFieldDefinition> static_fields;
 
-            if (super_constructor_prototype_value.is_object())
-                super_constructor_prototype = &super_constructor_prototype_value.as_object();
-        }
-        auto* prototype = Object::create(global_object, super_constructor_prototype);
+    // FIXME: Do things with private methods, and fields here
+    for (auto const& element : m_elements) {
+        // Note: All ClassElementEvaluation start with evaluating the name (or we fake it).
+        auto element_value = TRY(element.class_element_evaluation(interpreter, global_object, element.is_static() ? *class_constructor : *prototype));
+        // FIXME: If element is a private element
 
-        prototype->define_direct_property(vm.names.constructor, class_constructor, 0);
-        if (auto* exception = interpreter.exception())
-            return throw_completion(exception->value());
-        class_constructor->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
-        if (auto* exception = interpreter.exception())
-            return throw_completion(exception->value());
-        TRY(class_constructor->internal_set_prototype_of(super_constructor.is_null() ? global_object.function_prototype() : &super_constructor.as_object()));
-    }
-
-    auto class_prototype = TRY(class_constructor->get(vm.names.prototype));
-
-    if (!class_prototype.is_object())
-        return interpreter.vm().throw_completion<TypeError>(global_object, ErrorType::NotAnObject, "Class prototype");
-
-    for (auto const& method : m_methods) {
-        auto method_value = method.execute(interpreter, global_object);
-        if (auto* exception = interpreter.exception())
-            return throw_completion(exception->value());
-
-        auto& method_function = static_cast<ECMAScriptFunctionObject&>(method_value.as_function());
-
-        auto key = method.key().execute(interpreter, global_object);
-        if (auto* exception = interpreter.exception())
-            return throw_completion(exception->value());
-
-        auto property_key = TRY(key.to_property_key(global_object));
-
-        auto& target = method.is_static() ? *class_constructor : class_prototype.as_object();
-        method_function.set_home_object(&target);
-
-        switch (method.kind()) {
-        case ClassMethod::Kind::Method:
-            TRY(target.define_property_or_throw(property_key, { .value = method_value, .writable = true, .enumerable = false, .configurable = true }));
-            break;
-        case ClassMethod::Kind::Getter:
-            update_function_name(method_value, String::formatted("get {}", TRY(get_function_name(global_object, key))));
-            TRY(target.define_property_or_throw(property_key, { .get = &method_function, .enumerable = true, .configurable = true }));
-            break;
-        case ClassMethod::Kind::Setter:
-            update_function_name(method_value, String::formatted("set {}", TRY(get_function_name(global_object, key))));
-            TRY(target.define_property_or_throw(property_key, { .set = &method_function, .enumerable = true, .configurable = true }));
-            break;
-        default:
-            VERIFY_NOT_REACHED();
-        }
-    }
-
-    for (auto& field : m_fields) {
-        auto key = field.key().execute(interpreter, global_object);
-        if (auto* exception = interpreter.exception())
-            return throw_completion(exception->value());
-
-        auto property_key = TRY(key.to_property_key(global_object));
-
-        ECMAScriptFunctionObject* initializer = nullptr;
-        if (field.initializer()) {
-            auto copy_initializer = field.initializer();
-            auto body = create_ast_node<ExpressionStatement>(field.initializer()->source_range(), copy_initializer.release_nonnull());
-            // FIXME: A potential optimization is not creating the functions here since these are never directly accessible.
-            initializer = ECMAScriptFunctionObject::create(interpreter.global_object(), property_key.to_display_string(), *body, {}, 0, interpreter.lexical_environment(), FunctionKind::Regular, false, false);
-            initializer->set_home_object(field.is_static() ? class_constructor : &class_prototype.as_object());
+        if (auto* class_field_definition_ptr = element_value.get_pointer<ClassElement::ClassFieldDefinition>()) {
+            if (element.is_static())
+                static_fields.append(move(*class_field_definition_ptr));
+            else
+                instance_fields.append(move(*class_field_definition_ptr));
         }
 
-        if (field.is_static()) {
-            Value field_value = js_undefined();
-            if (initializer)
-                field_value = TRY(interpreter.vm().call(*initializer, class_constructor_value));
-
-            TRY(class_constructor->create_data_property_or_throw(property_key, field_value));
-        } else {
-            class_constructor->add_field(property_key, initializer);
-        }
+        // FIXME: Else if element is class static block
     }
 
     vm.running_execution_context().lexical_environment = environment;
     restore_environment.disarm();
+
     if (!binding_name.is_null())
         MUST(class_scope->initialize_binding(global_object, binding_name, class_constructor));
+
+    // FIXME: Set the [[PrivateMethods]]
+    for (auto& field : instance_fields)
+        class_constructor->add_field(field.name, field.initializer);
+
+    for (auto& field : static_fields) {
+        Value field_value = js_undefined();
+        if (field.initializer)
+            field_value = TRY(interpreter.vm().call(*field.initializer, class_constructor_value));
+
+        // FIXME: Handle private static fields
+
+        TRY(class_constructor->create_data_property_or_throw(field.name, field_value));
+    }
+
+    // FIXME: Run static initializers
 
     return Value(class_constructor);
 }
@@ -1558,14 +1636,9 @@ void ClassExpression::dump(int indent) const
     }
 
     print_indent(indent);
-    outln("(Methods)");
-    for (auto& method : m_methods)
+    outln("(Elements)");
+    for (auto& method : m_elements)
         method.dump(indent + 1);
-
-    print_indent(indent);
-    outln("(Fields)");
-    for (auto& field : m_fields)
-        field.dump(indent + 1);
 }
 
 void ClassMethod::dump(int indent) const
@@ -1592,7 +1665,7 @@ void ClassMethod::dump(int indent) const
     outln("Kind: {}", kind_string);
 
     print_indent(indent);
-    outln("Static: {}", m_is_static);
+    outln("Static: {}", is_static());
 
     print_indent(indent);
     outln("(Function)");
@@ -1607,7 +1680,7 @@ void ClassField::dump(int indent) const
     m_key->dump(indent + 1);
 
     print_indent(indent);
-    outln("Static: {}", m_is_static);
+    outln("Static: {}", is_static());
 
     if (m_initializer) {
         print_indent(indent);
