@@ -44,12 +44,13 @@ private:
     {
         switch (m_graph_type) {
         case GraphType::CPU: {
-            u64 busy, idle, scheduled_diff;
-            if (get_cpu_usage(busy, idle, scheduled_diff)) {
-                auto busy_diff = busy - m_last_cpu_busy;
-                m_last_cpu_busy = busy;
-                m_last_cpu_idle = idle;
-                float cpu = scheduled_diff > 0 ? (float)busy_diff / (float)scheduled_diff : 0;
+            u64 total, idle;
+            if (get_cpu_usage(total, idle)) {
+                auto total_diff = total - m_last_total;
+                m_last_total = total;
+                auto idle_diff = idle - m_last_idle;
+                m_last_idle = idle;
+                float cpu = total_diff > 0 ? (float)(total_diff - idle_diff) / (float)total_diff : 0;
                 m_history.enqueue(cpu);
                 m_tooltip = String::formatted("CPU usage: {:.1}%", 100 * cpu);
             } else {
@@ -117,28 +118,28 @@ private:
         }
     }
 
-    bool get_cpu_usage(u64& busy, u64& idle, u64& scheduled_diff)
+    bool get_cpu_usage(u64& total, u64& idle)
     {
-        busy = 0;
+        total = 0;
         idle = 0;
-        scheduled_diff = 0;
 
-        auto all_processes = Core::ProcessStatisticsReader::get_all(m_proc_all);
-        if (!all_processes.has_value() || all_processes.value().processes.is_empty())
-            return false;
-
-        if (m_last_total_sum.has_value())
-            scheduled_diff = all_processes->total_time_scheduled - m_last_total_sum.value();
-        m_last_total_sum = all_processes->total_time_scheduled;
-
-        for (auto& it : all_processes.value().processes) {
-            for (auto& jt : it.threads) {
-                if (it.pid == 0)
-                    idle += jt.time_user + jt.time_kernel;
-                else
-                    busy += jt.time_user + jt.time_kernel;
-            }
+        if (m_proc_stat) {
+            // Seeking to the beginning causes a data refresh!
+            if (!m_proc_stat->seek(0, Core::SeekMode::SetPosition))
+                return false;
+        } else {
+            auto proc_stat = Core::File::construct("/proc/stat");
+            if (!proc_stat->open(Core::OpenMode::ReadOnly))
+                return false;
+            m_proc_stat = move(proc_stat);
         }
+
+        auto file_contents = m_proc_stat->read_all();
+        auto json = JsonValue::from_string(file_contents);
+        VERIFY(json.has_value());
+        auto& obj = json.value().as_object();
+        total = obj.get("total_time").to_u64();
+        idle = obj.get("idle_time").to_u64();
         return true;
     }
 
@@ -176,11 +177,10 @@ private:
     Gfx::Color m_graph_color;
     Gfx::Color m_graph_error_color;
     CircularQueue<float, history_size> m_history;
-    u64 m_last_cpu_busy { 0 };
-    u64 m_last_cpu_idle { 0 };
-    Optional<u64> m_last_total_sum;
+    u64 m_last_idle { 0 };
+    u64 m_last_total { 0 };
     String m_tooltip;
-    RefPtr<Core::File> m_proc_all;
+    RefPtr<Core::File> m_proc_stat;
     RefPtr<Core::File> m_proc_mem;
 };
 
@@ -250,7 +250,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/proc/all", "r") < 0) {
+    if (unveil("/proc/stat", "r") < 0) {
         perror("unveil");
         return 1;
     }
