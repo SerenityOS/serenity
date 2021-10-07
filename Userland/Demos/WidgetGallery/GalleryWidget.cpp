@@ -34,6 +34,7 @@ GalleryWidget::GalleryWidget()
     load_from_gml(window_gml);
 
     auto& tab_widget = *find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
+    tab_widget.set_reorder_allowed(true);
 
     auto& basics_tab = tab_widget.add_tab<GUI::Widget>("Basics");
     basics_tab.load_from_gml(basics_tab_gml);

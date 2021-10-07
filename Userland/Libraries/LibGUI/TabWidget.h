@@ -68,6 +68,9 @@ public:
 
     void set_close_button_enabled(bool close_button_enabled) { m_close_button_enabled = close_button_enabled; };
 
+    void set_reorder_allowed(bool reorder_allowed) { m_reorder_allowed = reorder_allowed; }
+    bool reorder_allowed() const { return m_reorder_allowed; }
+
     Function<void(size_t)> on_tab_count_change;
     Function<void(Widget&)> on_change;
     Function<void(Widget&)> on_middle_click;
@@ -115,6 +118,14 @@ private:
     bool m_uniform_tabs { false };
     bool m_bar_visible { true };
     bool m_close_button_enabled { false };
+
+    bool m_reorder_allowed { false };
+    bool m_dragging_active_tab { false };
+    int m_grab_offset { 0 };
+    int m_mouse_x { 0 };
+
+    void drag_tab(size_t index);
+    void recalculate_tab_order();
 };
 
 }
