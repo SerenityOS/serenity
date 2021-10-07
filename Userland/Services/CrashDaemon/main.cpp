@@ -7,12 +7,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
 #include <Kernel/API/InodeWatcherEvent.h>
-#include <LibCompress/Gzip.h>
-#include <LibCore/ElapsedTimer.h>
-#include <LibCore/File.h>
 #include <LibCore/FileWatcher.h>
-#include <LibCoredump/Backtrace.h>
-#include <LibCoredump/Reader.h>
 #include <serenity.h>
 #include <spawn.h>
 #include <sys/stat.h>
@@ -32,27 +27,6 @@ static void wait_until_coredump_is_ready(const String& coredump_path)
 
         usleep(10000); // sleep for 10ms
     }
-}
-
-static bool compress_coredump(String const& coredump_path, NonnullRefPtr<MappedFile> coredump_file)
-{
-    auto compressed_coredump = Compress::GzipCompressor::compress_all(coredump_file->bytes());
-    if (!compressed_coredump.has_value()) {
-        dbgln("Could not compress coredump '{}'", coredump_path);
-        return false;
-    }
-    auto output_path = String::formatted("{}.gz", coredump_path);
-    auto output_file_or_error = Core::File::open(output_path, Core::OpenMode::WriteOnly);
-    if (output_file_or_error.is_error()) {
-        dbgln("Could not open '{}' for writing: {}", output_path, output_file_or_error.error());
-        return false;
-    }
-    auto output_file = output_file_or_error.value();
-    if (!output_file->write(compressed_coredump.value().data(), compressed_coredump.value().size())) {
-        dbgln("Could not write compressed coredump '{}'", output_path);
-        return false;
-    }
-    return true;
 }
 
 static void launch_crash_reporter(const String& coredump_path, bool unlink_after_use)
@@ -95,8 +69,6 @@ int main()
         if (event.value().type != Core::FileWatcherEvent::Type::ChildCreated)
             continue;
         auto& coredump_path = event.value().event_path;
-        if (coredump_path.ends_with(".gz"))
-            continue; // stops compress_coredump from accidentally triggering us
         dbgln("New coredump file: {}", coredump_path);
         wait_until_coredump_is_ready(coredump_path);
 
@@ -107,15 +79,5 @@ int main()
         }
 
         launch_crash_reporter(coredump_path, true);
-
-        // FIXME: This is a hack to give CrashReporter time to parse the coredump
-        //        before we start compressing it.
-        //        I'm sure there's a much smarter approach to this whole thing,
-        //        and we should find it. :^)
-        sleep(3);
-
-        auto compress_timer = Core::ElapsedTimer::start_new();
-        if (compress_coredump(coredump_path, file_or_error.release_value()))
-            dbgln("Compressing coredump took {} ms", compress_timer.elapsed());
     }
 }
