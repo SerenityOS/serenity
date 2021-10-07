@@ -111,10 +111,8 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksym
     } while (0)
 
     SmapDisabler disabler;
-    if (use_ksyms && !g_kernel_symbols_available) {
+    if (use_ksyms && !g_kernel_symbols_available)
         Processor::halt();
-        return;
-    }
 
     struct RecognizedSymbol {
         FlatPtr address;
