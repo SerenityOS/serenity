@@ -61,6 +61,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     auto& top_line = *widget.find_descendant_of_type_named<GUI::HorizontalSeparator>("top_line");
 
     m_tab_widget = *widget.find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
+    m_tab_widget->set_reorder_allowed(true);
     m_tab_widget->set_close_button_enabled(true);
 
     m_tab_widget->on_tab_count_change = [&top_line](size_t tab_count) {
