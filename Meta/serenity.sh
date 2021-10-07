@@ -93,6 +93,10 @@ case "$1" in
         TOOLCHAIN_TYPE="$1"; shift
         ;;
     *)
+        if [ -n "$1" ]; then
+            echo "WARNING: unknown toolchain '$1'. Defaulting to GNU."
+            echo "         Valid values are 'Clang', 'GNU' (default)"
+        fi
         TOOLCHAIN_TYPE="GNU"
         ;;
 esac
