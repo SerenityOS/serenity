@@ -615,8 +615,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         //       The logic is duplicated below in the "real" !expect_parens branch.
         if (!match_identifier() && !match(TokenType::Yield) && !match(TokenType::Await))
             return nullptr;
-        auto forked_lexer = m_state.lexer;
-        auto token = forked_lexer.next();
+        auto token = next_token();
         if (token.trivia_contains_line_terminator())
             return nullptr;
         if (token.type() != TokenType::Arrow)
@@ -725,9 +724,7 @@ RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction all
 {
     {
         // NOTE: This is a fast path where we try to fail early to avoid the expensive save_state+load_state.
-        auto forked_lexer = m_state.lexer;
-        auto token = forked_lexer.next();
-        if (token.type() != TokenType::Colon)
+        if (next_token().type() != TokenType::Colon)
             return {};
     }
 
@@ -3138,7 +3135,7 @@ bool Parser::match_export_or_import() const
         || type == TokenType::Import;
 }
 
-bool Parser::match_declaration()
+bool Parser::match_declaration() const
 {
     auto type = m_state.current_token.type();
 
@@ -3152,18 +3149,16 @@ bool Parser::match_declaration()
         || type == TokenType::Let;
 }
 
-Token Parser::next_token()
+Token Parser::next_token() const
 {
-    save_state();
+    Lexer lookahead_lexer = m_state.lexer;
 
-    consume();
-    auto token_after = m_state.current_token;
+    auto token_after = lookahead_lexer.next();
 
-    load_state();
     return token_after;
 }
 
-bool Parser::try_match_let_declaration()
+bool Parser::try_match_let_declaration() const
 {
     VERIFY(m_state.current_token.type() == TokenType::Let);
     auto token_after = next_token();
@@ -3177,7 +3172,7 @@ bool Parser::try_match_let_declaration()
     return false;
 }
 
-bool Parser::match_variable_declaration()
+bool Parser::match_variable_declaration() const
 {
     auto type = m_state.current_token.type();
 
