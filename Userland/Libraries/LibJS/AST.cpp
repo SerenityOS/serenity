@@ -1017,7 +1017,7 @@ Reference Identifier::to_reference(Interpreter& interpreter, GlobalObject&) cons
     }
     auto reference = interpreter.vm().resolve_binding(string());
     if (reference.environment_coordinate().has_value())
-        const_cast<Identifier&>(*this).m_cached_environment_coordinate = reference.environment_coordinate();
+        m_cached_environment_coordinate = reference.environment_coordinate();
     return reference;
 }
 
