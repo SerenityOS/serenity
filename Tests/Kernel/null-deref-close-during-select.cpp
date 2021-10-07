@@ -22,7 +22,6 @@ int main(int, char**)
             printf("ST: close()\n");
             close(pipefds[1]);
             pthread_exit(nullptr);
-            return nullptr;
         },
         nullptr);
 

@@ -23,7 +23,6 @@ int main(int, char**)
             close(pipefds[0]);
             close(pipefds[1]);
             pthread_exit(nullptr);
-            return nullptr;
         },
         nullptr);
 

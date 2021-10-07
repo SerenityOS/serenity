@@ -55,7 +55,6 @@ static void* yanker_fn(void* shared_)
     if (child_pid < 0) {
         printf("Yanker: Fork failed: %d\n", child_pid);
         pthread_exit(nullptr); // See below
-        return nullptr;
     }
 
     if (child_pid > 0) {
@@ -63,7 +62,6 @@ static void* yanker_fn(void* shared_)
         // FIXME: LibPthread bug: returning during normal operation causes nullptr deref.
         // Workaround: Exit manually.
         pthread_exit(nullptr);
-        return nullptr;
     }
 
     // Give parent *thread* a moment to die.
