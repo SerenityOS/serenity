@@ -69,6 +69,7 @@ public:
     virtual bool is_identifier() const { return false; }
     virtual bool is_scope_node() const { return false; }
     virtual bool is_program() const { return false; }
+    virtual bool is_function_declaration() const { return false; }
 
 protected:
     explicit ASTNode(SourceRange source_range)
@@ -377,8 +378,6 @@ public:
 
     // 8.1.3 Static Semantics: IsConstantDeclaration, https://tc39.es/ecma262/#sec-static-semantics-isconstantdeclaration
     virtual bool is_constant_declaration() const { return false; }
-
-    virtual bool is_function_declaration() const { return false; }
 
     virtual bool is_lexical_declaration() const { return false; }
 };
@@ -1786,5 +1785,8 @@ inline bool ASTNode::fast_is<ScopeNode>() const { return is_scope_node(); }
 
 template<>
 inline bool ASTNode::fast_is<Program>() const { return is_program(); }
+
+template<>
+inline bool ASTNode::fast_is<FunctionDeclaration>() const { return is_function_declaration(); }
 
 }
