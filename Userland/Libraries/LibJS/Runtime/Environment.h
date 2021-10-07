@@ -53,6 +53,11 @@ public:
 
     virtual char const* class_name() const override { return "Environment"; }
 
+    // This flag is set on the entire variable environment chain when direct eval() is performed.
+    // It is used to disable non-local variable access caching.
+    bool is_permanently_screwed_by_eval() const { return m_permanently_screwed_by_eval; }
+    void set_permanently_screwed_by_eval();
+
 protected:
     explicit Environment(Environment* parent);
 
@@ -63,6 +68,8 @@ private:
 
     GlobalObject* m_global_object { nullptr };
     Environment* m_outer_environment { nullptr };
+
+    bool m_permanently_screwed_by_eval { false };
 };
 
 }
