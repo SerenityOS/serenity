@@ -316,3 +316,50 @@ TEST_CASE(wcrtomb)
     ret = wcrtomb(buf, L'\uFFFD', nullptr);
     EXPECT_NE(ret, (size_t)-1);
 }
+
+TEST_CASE(wcsrtombs)
+{
+    mbstate_t state = {};
+    char buf[MB_LEN_MAX * 4];
+    const wchar_t good_chars[] = { L'\U0001F41E', L'\U0001F41E', L'\0' };
+    const wchar_t bad_chars[] = { L'\U0001F41E', static_cast<wchar_t>(0x1111F41E), L'\0' };
+    const wchar_t* src;
+    size_t ret = 0;
+
+    // Convert normal and valid wchar_t values.
+    src = good_chars;
+    ret = wcsrtombs(buf, &src, 9, &state);
+    EXPECT_EQ(ret, 8ul);
+    EXPECT_EQ(memcmp(buf, "\xf0\x9f\x90\x9e\xf0\x9f\x90\x9e", 9), 0);
+    EXPECT_EQ(src, nullptr);
+    EXPECT_NE(mbsinit(&state), 0);
+
+    // Stop on invalid wchar values.
+    src = bad_chars;
+    ret = wcsrtombs(buf, &src, 9, &state);
+    EXPECT_EQ(ret, -1ul);
+    EXPECT_EQ(memcmp(buf, "\xf0\x9f\x90\x9e", 4), 0);
+    EXPECT_EQ(errno, EILSEQ);
+    EXPECT_EQ(src, bad_chars + 1);
+
+    // Valid characters but not enough space.
+    src = good_chars;
+    ret = wcsrtombs(buf, &src, 7, &state);
+    EXPECT_EQ(ret, 4ul);
+    EXPECT_EQ(memcmp(buf, "\xf0\x9f\x90\x9e", 4), 0);
+    EXPECT_EQ(src, good_chars + 1);
+
+    // Try a conversion with no destination and too short length.
+    src = good_chars;
+    ret = wcsrtombs(nullptr, &src, 2, &state);
+    EXPECT_EQ(ret, 8ul);
+    EXPECT_EQ(src, nullptr);
+    EXPECT_NE(mbsinit(&state), 0);
+
+    // Try a conversion using the internal anonymous state.
+    src = good_chars;
+    ret = wcsrtombs(buf, &src, 9, nullptr);
+    EXPECT_EQ(ret, 8ul);
+    EXPECT_EQ(memcmp(buf, "\xf0\x9f\x90\x9e\xf0\x9f\x90\x9e", 9), 0);
+    EXPECT_EQ(src, nullptr);
+}

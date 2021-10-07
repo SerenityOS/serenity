@@ -8,6 +8,7 @@
 #include <AK/Format.h>
 #include <AK/UnicodeUtils.h>
 #include <errno.h>
+#include <string.h>
 #include <wchar.h>
 
 static unsigned int mbstate_expected_bytes(mbstate_t* state)
@@ -461,5 +462,47 @@ int wcwidth(wchar_t wc)
 
     // TODO: Implement wcwidth for non-ASCII characters.
     return 1;
+}
+
+size_t wcsrtombs(char* dest, const wchar_t** src, size_t len, mbstate_t* ps)
+{
+    static mbstate_t _anonymous_state = {};
+
+    if (ps == nullptr)
+        ps = &_anonymous_state;
+
+    size_t written = 0;
+    while (true) {
+        size_t ret = 0;
+        char buf[MB_LEN_MAX];
+
+        // Convert next wchar to multibyte.
+        ret = wcrtomb(buf, **src, ps);
+
+        // wchar can't be represented as multibyte.
+        if (ret == (size_t)-1) {
+            errno = EILSEQ;
+            return (size_t)-1;
+        }
+
+        // New bytes don't fit the buffer.
+        if (dest && len < written + ret) {
+            return written;
+        }
+
+        if (dest) {
+            memcpy(dest, buf, ret);
+            dest += ret;
+        }
+
+        // Null character has been reached
+        if (**src == L'\0') {
+            *src = nullptr;
+            return written;
+        }
+
+        *src += 1;
+        written += ret;
+    }
 }
 }
