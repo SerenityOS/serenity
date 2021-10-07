@@ -1560,14 +1560,12 @@
                         time = performance.now() - start;
                         celltime.innerText = time;
 
-                        // FIXME: Use RAF when OOPWV supports it.
-                        // requestAnimationFrame(renderLoop);
-                        setTimeout(renderLoop, 16);
+                        requestAnimationFrame(renderLoop);
                     };
 
                     drawGrid();
                     drawCells();
-                    setTimeout(renderLoop, 16);
+                    requestAnimationFrame(renderLoop);
                 })
                 .catch(err => console.log(err.message, err));
         </script>
