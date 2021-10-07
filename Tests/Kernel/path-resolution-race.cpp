@@ -18,5 +18,4 @@ int main()
     for (;;) {
         chdir("/tmp/x");
     }
-    return 0;
 }
