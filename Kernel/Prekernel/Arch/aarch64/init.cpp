@@ -1,10 +1,12 @@
 /*
  * Copyright (c) 2021, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2021, Marcin Undak <mcinek@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Types.h>
+#include <Kernel/Prekernel/Arch/aarch64/Aarch64_asm_utils.h>
 #include <Kernel/Prekernel/Arch/aarch64/Mailbox.h>
 #include <Kernel/Prekernel/Arch/aarch64/Timer.h>
 #include <Kernel/Prekernel/Arch/aarch64/UART.h>
@@ -23,6 +25,11 @@ extern "C" [[noreturn]] void init()
     u32 firmware_version = Prekernel::Mailbox::query_firmware_version();
     uart.print_str("Firmware version: ");
     uart.print_num(firmware_version);
+    uart.print_str("\r\n");
+
+    auto exception_level = get_current_exception_level();
+    uart.print_str("Current CPU exception level: EL");
+    uart.print_num(exception_level);
     uart.print_str("\r\n");
 
     auto& timer = Prekernel::Timer::the();
