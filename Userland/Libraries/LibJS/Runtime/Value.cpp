@@ -580,18 +580,6 @@ u64 Value::to_bigint_uint64(GlobalObject& global_object) const
     return bigint->big_integer().to_u64();
 }
 
-// FIXME: These two conversions are wrong for JS, and seem likely to be footguns
-i32 Value::as_i32() const
-{
-    return static_cast<i32>(as_double());
-}
-
-u32 Value::as_u32() const
-{
-    VERIFY(as_double() >= 0);
-    return (u32)min(as_double(), (double)NumericLimits<u32>::max());
-}
-
 double Value::to_double(GlobalObject& global_object) const
 {
     auto number = to_number(global_object);
