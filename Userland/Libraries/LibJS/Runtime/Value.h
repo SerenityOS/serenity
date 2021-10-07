@@ -67,15 +67,59 @@ public:
     bool is_constructor() const;
     ThrowCompletionOr<bool> is_regexp(GlobalObject&) const;
 
-    bool is_nan() const { return is_number() && __builtin_isnan(as_double()); }
-    bool is_infinity() const { return is_number() && __builtin_isinf(as_double()); }
-    bool is_positive_infinity() const { return is_number() && __builtin_isinf_sign(as_double()) > 0; }
-    bool is_negative_infinity() const { return is_number() && __builtin_isinf_sign(as_double()) < 0; }
-    bool is_positive_zero() const { return is_number() && bit_cast<u64>(as_double()) == 0; }
-    bool is_negative_zero() const { return is_number() && bit_cast<u64>(as_double()) == NEGATIVE_ZERO_BITS; }
-    bool is_integral_number() const { return is_finite_number() && trunc(as_double()) == as_double(); }
+    bool is_nan() const
+    {
+        if (type() == Type::Int32)
+            return false;
+        return is_number() && __builtin_isnan(as_double());
+    }
+
+    bool is_infinity() const
+    {
+        if (type() == Type::Int32)
+            return false;
+        return is_number() && __builtin_isinf(as_double());
+    }
+
+    bool is_positive_infinity() const
+    {
+        if (type() == Type::Int32)
+            return false;
+        return is_number() && __builtin_isinf_sign(as_double()) > 0;
+    }
+
+    bool is_negative_infinity() const
+    {
+        if (type() == Type::Int32)
+            return false;
+        return is_number() && __builtin_isinf_sign(as_double()) < 0;
+    }
+
+    bool is_positive_zero() const
+    {
+        if (type() == Type::Int32)
+            return as_i32() == 0;
+        return is_number() && bit_cast<u64>(as_double()) == 0;
+    }
+
+    bool is_negative_zero() const
+    {
+        if (type() == Type::Int32)
+            return false;
+        return is_number() && bit_cast<u64>(as_double()) == NEGATIVE_ZERO_BITS;
+    }
+
+    bool is_integral_number() const
+    {
+        if (type() == Type::Int32)
+            return true;
+        return is_finite_number() && trunc(as_double()) == as_double();
+    }
+
     bool is_finite_number() const
     {
+        if (type() == Type::Int32)
+            return true;
         if (!is_number())
             return false;
         auto number = as_double();
@@ -242,8 +286,20 @@ public:
     FunctionObject& as_function();
     FunctionObject const& as_function() const;
 
-    i32 as_i32() const;
-    u32 as_u32() const;
+    // FIXME: These two conversions are wrong for JS, and seem likely to be footguns
+    i32 as_i32() const
+    {
+        if (m_type == Type::Int32)
+            return m_value.as_i32;
+        return static_cast<i32>(as_double());
+    }
+    u32 as_u32() const
+    {
+        if (m_type == Type::Int32 && m_value.as_i32 >= 0)
+            return m_value.as_i32;
+        VERIFY(as_double() >= 0);
+        return (u32)min(as_double(), (double)NumericLimits<u32>::max());
+    }
 
     u64 encoded() const { return m_value.encoded; }
 
