@@ -239,7 +239,7 @@ private:
         Lexer lexer;
         Token current_token;
         Vector<Error> errors;
-        ScopePusher* current_scope_pusher;
+        ScopePusher* current_scope_pusher { nullptr };
 
         HashMap<StringView, Optional<Position>> labels_in_scope;
         bool strict_mode { false };
