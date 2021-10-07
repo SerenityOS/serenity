@@ -258,6 +258,8 @@ public:
 
     ALWAYS_INLINE ProcessorInfo& info() { return *m_info; }
 
+    u64 time_spent_idle() const;
+
     static bool is_smp_enabled();
 
     ALWAYS_INLINE static Processor& current()
