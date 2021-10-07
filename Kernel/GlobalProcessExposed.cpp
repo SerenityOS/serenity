@@ -411,6 +411,29 @@ private:
     }
 };
 
+class ProcFSSystemStatistics final : public ProcFSGlobalInformation {
+public:
+    static NonnullRefPtr<ProcFSSystemStatistics> must_create();
+
+private:
+    ProcFSSystemStatistics();
+    virtual KResult try_generate(KBufferBuilder& builder) override
+    {
+        JsonObjectSerializer<KBufferBuilder> json { builder };
+        auto total_time_scheduled = Scheduler::get_total_time_scheduled();
+        json.add("total_time", total_time_scheduled.total);
+        json.add("kernel_time", total_time_scheduled.total_kernel);
+        json.add("user_time", total_time_scheduled.total - total_time_scheduled.total_kernel);
+        u64 idle_time = 0;
+        Processor::for_each([&](Processor& processor) {
+            idle_time += processor.time_spent_idle();
+        });
+        json.add("idle_time", idle_time);
+        json.finish();
+        return KSuccess;
+    }
+};
+
 class ProcFSOverallProcesses final : public ProcFSGlobalInformation {
 public:
     static NonnullRefPtr<ProcFSOverallProcesses> must_create();
@@ -730,6 +753,10 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSMemoryStatus> ProcFSMemoryStatus::must_crea
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSMemoryStatus).release_nonnull();
 }
+UNMAP_AFTER_INIT NonnullRefPtr<ProcFSSystemStatistics> ProcFSSystemStatistics::must_create()
+{
+    return adopt_ref_if_nonnull(new (nothrow) ProcFSSystemStatistics).release_nonnull();
+}
 UNMAP_AFTER_INIT NonnullRefPtr<ProcFSOverallProcesses> ProcFSOverallProcesses::must_create()
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSOverallProcesses).release_nonnull();
@@ -786,6 +813,10 @@ UNMAP_AFTER_INIT ProcFSDiskUsage::ProcFSDiskUsage()
 }
 UNMAP_AFTER_INIT ProcFSMemoryStatus::ProcFSMemoryStatus()
     : ProcFSGlobalInformation("memstat"sv)
+{
+}
+UNMAP_AFTER_INIT ProcFSSystemStatistics::ProcFSSystemStatistics()
+    : ProcFSGlobalInformation("stat"sv)
 {
 }
 UNMAP_AFTER_INIT ProcFSOverallProcesses::ProcFSOverallProcesses()
@@ -854,6 +885,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSRootDirectory> ProcFSRootDirectory::must_cr
     directory->m_components.append(ProcFSSelfProcessDirectory::must_create());
     directory->m_components.append(ProcFSDiskUsage::must_create());
     directory->m_components.append(ProcFSMemoryStatus::must_create());
+    directory->m_components.append(ProcFSSystemStatistics::must_create());
     directory->m_components.append(ProcFSOverallProcesses::must_create());
     directory->m_components.append(ProcFSCPUInformation::must_create());
     directory->m_components.append(ProcFSDmesg::must_create());
