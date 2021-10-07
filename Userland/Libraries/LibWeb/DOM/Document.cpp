@@ -430,6 +430,8 @@ void Document::update_layout()
     if (!browsing_context())
         return;
 
+    update_style();
+
     if (!m_layout_root) {
         Layout::TreeBuilder tree_builder;
         m_layout_root = static_ptr_cast<Layout::InitialContainingBlock>(tree_builder.build(*this));
@@ -467,6 +469,8 @@ static void update_style_recursively(DOM::Node& node)
 void Document::update_style()
 {
     if (!browsing_context())
+        return;
+    if (!needs_style_update() && !child_needs_style_update())
         return;
     update_style_recursively(*this);
     set_needs_layout();
