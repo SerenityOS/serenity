@@ -56,12 +56,12 @@ public:
     RecursiveSpinlock& get_lock() const { return m_lock; }
 
     size_t amount_clean_inode() const;
-    size_t amount_dirty_private() const;
-    size_t amount_virtual() const;
-    size_t amount_resident() const;
-    size_t amount_shared() const;
-    size_t amount_purgeable_volatile() const;
-    size_t amount_purgeable_nonvolatile() const;
+    size_t amount_dirty_private() const { return m_amount_dirty_private; }
+    size_t amount_virtual() const { return m_amount_virtual; }
+    size_t amount_resident() const { return m_amount_resident; }
+    size_t amount_shared() const { return m_amount_shared; }
+    size_t amount_purgeable_volatile() const { return m_amount_purgeable_volatile; }
+    size_t amount_purgeable_nonvolatile() const { return m_amount_purgeable_volatile; }
 
 private:
     explicit AddressSpace(NonnullRefPtr<PageDirectory>);
@@ -71,6 +71,12 @@ private:
     RefPtr<PageDirectory> m_page_directory;
 
     RedBlackTree<FlatPtr, NonnullOwnPtr<Region>> m_regions;
+    size_t m_amount_dirty_private { 0 };
+    size_t m_amount_virtual { 0 };
+    size_t m_amount_resident { 0 };
+    size_t m_amount_shared { 0 };
+    size_t m_amount_purgeable_volatile { 0 };
+    size_t m_amount_purgeable_nonvolatile { 0 };
 
     struct RegionLookupCache {
         Optional<VirtualRange> range;

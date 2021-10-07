@@ -210,6 +210,22 @@ NonnullOwnPtr<Region> AddressSpace::take_region(Region& region)
 
     auto found_region = m_regions.unsafe_remove(region.vaddr().get());
     VERIFY(found_region.ptr() == &region);
+
+    if (!found_region->is_shared())
+        m_amount_dirty_private -= found_region->amount_dirty();
+    m_amount_virtual -= found_region->size();
+    m_amount_resident -= found_region->amount_resident();
+    m_amount_shared -= found_region->amount_shared();
+    if (found_region->vmobject().is_anonymous()) {
+        auto const& vmobject = static_cast<AnonymousVMObject const&>(found_region->vmobject());
+        if (vmobject.is_purgeable()) {
+            if (vmobject.is_volatile())
+                m_amount_purgeable_volatile -= found_region->amount_resident();
+            else
+                m_amount_purgeable_nonvolatile -= found_region->amount_resident();
+        }
+    }
+
     return found_region;
 }
 
@@ -270,6 +286,22 @@ KResultOr<Region*> AddressSpace::add_region(NonnullOwnPtr<Region> region)
     SpinlockLocker lock(m_lock);
     if (!m_regions.try_insert(region->vaddr().get(), move(region)))
         return ENOMEM;
+
+    if (!ptr->is_shared())
+        m_amount_dirty_private += ptr->amount_dirty();
+    m_amount_virtual += ptr->size();
+    m_amount_resident += ptr->amount_resident();
+    m_amount_shared += ptr->amount_shared();
+    if (ptr->vmobject().is_anonymous()) {
+        auto const& vmobject = static_cast<AnonymousVMObject const&>(ptr->vmobject());
+        if (vmobject.is_purgeable()) {
+            if (vmobject.is_volatile())
+                m_amount_purgeable_volatile += ptr->amount_resident();
+            else
+                m_amount_purgeable_nonvolatile += ptr->amount_resident();
+        }
+    }
+
     return ptr;
 }
 
@@ -324,20 +356,12 @@ void AddressSpace::remove_all_regions(Badge<Process>)
 {
     SpinlockLocker lock(m_lock);
     m_regions.clear();
-}
-
-size_t AddressSpace::amount_dirty_private() const
-{
-    SpinlockLocker lock(m_lock);
-    // FIXME: This gets a bit more complicated for Regions sharing the same underlying VMObject.
-    //        The main issue I'm thinking of is when the VMObject has physical pages that none of the Regions are mapping.
-    //        That's probably a situation that needs to be looked at in general.
-    size_t amount = 0;
-    for (auto& region : m_regions) {
-        if (!region->is_shared())
-            amount += region->amount_dirty();
-    }
-    return amount;
+    m_amount_dirty_private = 0;
+    m_amount_virtual = 0;
+    m_amount_resident = 0;
+    m_amount_shared = 0;
+    m_amount_purgeable_volatile = 0;
+    m_amount_purgeable_nonvolatile = 0;
 }
 
 size_t AddressSpace::amount_clean_inode() const
@@ -351,69 +375,6 @@ size_t AddressSpace::amount_clean_inode() const
     size_t amount = 0;
     for (auto& vmobject : vmobjects)
         amount += vmobject->amount_clean();
-    return amount;
-}
-
-size_t AddressSpace::amount_virtual() const
-{
-    SpinlockLocker lock(m_lock);
-    size_t amount = 0;
-    for (auto& region : m_regions) {
-        amount += region->size();
-    }
-    return amount;
-}
-
-size_t AddressSpace::amount_resident() const
-{
-    SpinlockLocker lock(m_lock);
-    // FIXME: This will double count if multiple regions use the same physical page.
-    size_t amount = 0;
-    for (auto& region : m_regions) {
-        amount += region->amount_resident();
-    }
-    return amount;
-}
-
-size_t AddressSpace::amount_shared() const
-{
-    SpinlockLocker lock(m_lock);
-    // FIXME: This will double count if multiple regions use the same physical page.
-    // FIXME: It doesn't work at the moment, since it relies on PhysicalPage ref counts,
-    //        and each PhysicalPage is only reffed by its VMObject. This needs to be refactored
-    //        so that every Region contributes +1 ref to each of its PhysicalPages.
-    size_t amount = 0;
-    for (auto& region : m_regions) {
-        amount += region->amount_shared();
-    }
-    return amount;
-}
-
-size_t AddressSpace::amount_purgeable_volatile() const
-{
-    SpinlockLocker lock(m_lock);
-    size_t amount = 0;
-    for (auto& region : m_regions) {
-        if (!region->vmobject().is_anonymous())
-            continue;
-        auto const& vmobject = static_cast<AnonymousVMObject const&>(region->vmobject());
-        if (vmobject.is_purgeable() && vmobject.is_volatile())
-            amount += region->amount_resident();
-    }
-    return amount;
-}
-
-size_t AddressSpace::amount_purgeable_nonvolatile() const
-{
-    SpinlockLocker lock(m_lock);
-    size_t amount = 0;
-    for (auto& region : m_regions) {
-        if (!region->vmobject().is_anonymous())
-            continue;
-        auto const& vmobject = static_cast<AnonymousVMObject const&>(region->vmobject());
-        if (vmobject.is_purgeable() && !vmobject.is_volatile())
-            amount += region->amount_resident();
-    }
     return amount;
 }
 
