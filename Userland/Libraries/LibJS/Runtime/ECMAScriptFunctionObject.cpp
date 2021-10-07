@@ -287,6 +287,8 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     Environment* var_environment;
 
     HashTable<FlyString> instantiated_var_names;
+    if (scope_body)
+        instantiated_var_names.ensure_capacity(scope_body->var_declaration_count());
 
     if (!has_parameter_expressions) {
         if (scope_body) {
