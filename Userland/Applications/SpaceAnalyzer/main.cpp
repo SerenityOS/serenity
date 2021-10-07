@@ -231,7 +231,7 @@ static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidg
 static bool is_removable(const String& absolute_path)
 {
     VERIFY(!absolute_path.is_empty());
-    int access_result = access(absolute_path.characters(), W_OK);
+    int access_result = access(LexicalPath::dirname(absolute_path).characters(), W_OK);
     if (access_result != 0 && errno != EACCES)
         perror("access");
     return access_result == 0;
