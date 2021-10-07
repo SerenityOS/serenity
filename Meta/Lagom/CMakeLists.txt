@@ -66,6 +66,7 @@ add_compile_options(-Wno-unknown-warning-option -Wno-literal-suffix -Wno-depreca
 add_compile_options(-O2)
 add_compile_options(-Wall -Wextra -Werror)
 add_compile_options(-fPIC -g)
+add_compile_options(-Wno-maybe-uninitialized)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
