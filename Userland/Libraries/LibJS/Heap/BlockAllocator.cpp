@@ -5,6 +5,7 @@
  */
 
 #include <AK/Platform.h>
+#include <AK/Random.h>
 #include <AK/Vector.h>
 #include <LibJS/Heap/BlockAllocator.h>
 #include <LibJS/Heap/HeapBlock.h>
@@ -38,7 +39,9 @@ BlockAllocator::~BlockAllocator()
 void* BlockAllocator::allocate_block([[maybe_unused]] char const* name)
 {
     if (!m_blocks.is_empty()) {
-        auto* block = m_blocks.take_last();
+        // To reduce predictability, take a random block from the cache.
+        size_t random_index = get_random_uniform(m_blocks.size());
+        auto* block = m_blocks.unstable_take(random_index);
         ASAN_UNPOISON_MEMORY_REGION(block, HeapBlock::block_size);
 #ifdef __serenity__
         if (set_mmap_name(block, HeapBlock::block_size, name) < 0) {
