@@ -117,6 +117,7 @@ constexpr const u32 ZERO_WIDTH_JOINER { 0x200D };
     __ENUMERATE_JS_TOKEN(PlusEquals, Operator)                  \
     __ENUMERATE_JS_TOKEN(PlusPlus, Operator)                    \
     __ENUMERATE_JS_TOKEN(Private, Keyword)                      \
+    __ENUMERATE_JS_TOKEN(PrivateIdentifier, Identifier)         \
     __ENUMERATE_JS_TOKEN(Protected, Keyword)                    \
     __ENUMERATE_JS_TOKEN(Public, Keyword)                       \
     __ENUMERATE_JS_TOKEN(QuestionMark, Operator)                \
