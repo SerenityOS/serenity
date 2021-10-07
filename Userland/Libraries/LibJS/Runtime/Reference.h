@@ -9,6 +9,7 @@
 #include <AK/String.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
+#include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -51,6 +52,28 @@ public:
         , m_name(move(referenced_name))
         , m_strict(strict)
         , m_environment_coordinate(move(environment_coordinate))
+    {
+    }
+
+    Reference(FlyString referenced_name, size_t function_argument_index, bool strict = false, ExecutionContext* function_context = nullptr)
+        : m_base_type(BaseType::Environment)
+        , m_base_environment(nullptr)
+        , m_name(move(referenced_name))
+        , m_strict(strict)
+        , m_environment_coordinate({})
+        , m_function_argument_index(function_argument_index)
+        , m_referenced_function_context(function_context)
+    {
+    }
+
+    Reference(Environment& base, FlyString referenced_name, size_t function_argument_index, bool strict = false, Optional<EnvironmentCoordinate> environment_coordinate = {}, ExecutionContext* function_context = nullptr)
+        : m_base_type(BaseType::Environment)
+        , m_base_environment(&base)
+        , m_name(move(referenced_name))
+        , m_strict(strict)
+        , m_environment_coordinate(move(environment_coordinate))
+        , m_function_argument_index(function_argument_index)
+        , m_referenced_function_context(function_context)
     {
     }
 
@@ -128,12 +151,14 @@ private:
     BaseType m_base_type { BaseType::Unresolvable };
     union {
         Value m_base_value {};
-        Environment* m_base_environment;
+        mutable Environment* m_base_environment;
     };
     PropertyName m_name;
     Value m_this_value;
     bool m_strict { false };
     Optional<EnvironmentCoordinate> m_environment_coordinate;
+    Optional<size_t> m_function_argument_index;
+    ExecutionContext* m_referenced_function_context { nullptr };
 };
 
 }
