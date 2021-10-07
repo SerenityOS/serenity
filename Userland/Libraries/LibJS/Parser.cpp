@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@serenityos.org>
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
+ * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -43,6 +44,7 @@ public:
     static ScopePusher function_scope(Parser& parser, FunctionBody& function_body, Vector<FunctionDeclaration::Parameter> const& parameters)
     {
         ScopePusher scope_pusher(parser, &function_body, true);
+        scope_pusher.m_function_parameters = parameters;
         for (auto& parameter : parameters) {
             parameter.binding.visit(
                 [&](FlyString const& name) {
@@ -160,9 +162,45 @@ public:
         }
     }
 
+    ScopePusher const* last_function_scope() const
+    {
+        for (auto scope_ptr = this; scope_ptr; scope_ptr = scope_ptr->m_parent_scope) {
+            if (scope_ptr->m_function_parameters.has_value())
+                return scope_ptr;
+        }
+        return nullptr;
+    }
+
+    Vector<FunctionDeclaration::Parameter> const& function_parameters() const
+    {
+        return *m_function_parameters;
+    }
+
+    ScopePusher* parent_scope() { return m_parent_scope; }
+    ScopePusher const* parent_scope() const { return m_parent_scope; }
+
+    [[nodiscard]] bool has_declaration(StringView name) const
+    {
+        return m_lexical_names.contains(name) || m_var_names.contains(name) || !m_functions_to_hoist.find_if([&name](auto& function) { return function->name() == name; }).is_end();
+    }
+
+    bool contains_direct_call_to_eval() const { return m_contains_direct_call_to_eval; }
+    bool contains_access_to_arguments_object() const { return m_contains_access_to_arguments_object; }
+    void set_contains_direct_call_to_eval() { m_contains_direct_call_to_eval = true; }
+    void set_contains_access_to_arguments_object() { m_contains_access_to_arguments_object = true; }
+
     ~ScopePusher()
     {
         VERIFY(m_is_top_level || m_parent_scope);
+
+        if (!m_contains_access_to_arguments_object) {
+            for (auto& it : m_identifier_and_argument_index_associations) {
+                for (auto& identifier : it.value) {
+                    if (!has_declaration(identifier.string()))
+                        identifier.set_lexically_bound_function_argument_index(it.key);
+                }
+            }
+        }
 
         for (size_t i = 0; i < m_functions_to_hoist.size(); i++) {
             auto const& function_declaration = m_functions_to_hoist[i];
@@ -174,8 +212,18 @@ public:
                 m_parent_scope->m_functions_to_hoist.append(move(m_functions_to_hoist[i]));
         }
 
+        if (m_parent_scope && !m_function_parameters.has_value()) {
+            m_parent_scope->m_contains_access_to_arguments_object |= m_contains_access_to_arguments_object;
+            m_parent_scope->m_contains_direct_call_to_eval |= m_contains_direct_call_to_eval;
+        }
+
         VERIFY(m_parser.m_state.current_scope_pusher == this);
         m_parser.m_state.current_scope_pusher = m_parent_scope;
+    }
+
+    void associate_identifier_with_argument_index(NonnullRefPtr<Identifier> identifier, size_t index)
+    {
+        m_identifier_and_argument_index_associations.ensure(index).append(move(identifier));
     }
 
 private:
@@ -198,6 +246,12 @@ private:
     HashTable<FlyString> m_forbidden_lexical_names;
     HashTable<FlyString> m_forbidden_var_names;
     NonnullRefPtrVector<FunctionDeclaration> m_functions_to_hoist;
+
+    Optional<Vector<FunctionDeclaration::Parameter>> m_function_parameters;
+    HashMap<size_t, NonnullRefPtrVector<Identifier>> m_identifier_and_argument_index_associations;
+
+    bool m_contains_access_to_arguments_object { false };
+    bool m_contains_direct_call_to_eval { false };
 };
 
 class OperatorPrecedenceTable {
@@ -629,8 +683,9 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
             // for arrow function bodies which are a single expression.
             // Esprima generates a single "ArrowFunctionExpression"
             // with a "body" property.
-            auto return_expression = parse_expression(2);
             auto return_block = create_ast_node<FunctionBody>({ m_state.current_token.filename(), rule_start.position(), position() });
+            ScopePusher function_scope = ScopePusher::function_scope(*this, return_block, parameters);
+            auto return_expression = parse_expression(2);
             return_block->append<ReturnStatement>({ m_filename, rule_start.position(), position() }, move(return_expression));
             if (m_state.strict_mode)
                 return_block->set_strict_mode();
@@ -1460,6 +1515,48 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
                 syntax_error("Invalid property in object literal", range->start);
         }
     };
+    if (is<Identifier>(*expression) && m_state.current_scope_pusher) {
+        auto identifier_instance = static_ptr_cast<Identifier>(expression);
+        auto function_scope = m_state.current_scope_pusher->last_function_scope();
+        auto function_parent_scope = function_scope ? function_scope->parent_scope() : nullptr;
+        bool has_not_been_declared_as_variable = true;
+        for (auto scope = m_state.current_scope_pusher; scope != function_parent_scope; scope = scope->parent_scope()) {
+            if (scope->has_declaration(identifier_instance->string())) {
+                has_not_been_declared_as_variable = false;
+                break;
+            }
+        }
+
+        if (has_not_been_declared_as_variable) {
+            if (identifier_instance->string() == "arguments"sv)
+                m_state.current_scope_pusher->set_contains_access_to_arguments_object();
+        }
+
+        if (function_scope && has_not_been_declared_as_variable) {
+
+            auto& parameters = function_scope->function_parameters();
+            Optional<size_t> argument_index;
+            size_t index = 0;
+            for (auto& parameter : parameters) {
+                auto current_index = index++;
+                if (parameter.is_rest)
+                    break;
+                if (auto name_ptr = parameter.binding.get_pointer<FlyString>()) {
+                    // Need VM assistance for this, so let's just pretend it's not there.
+                    if (parameter.default_value)
+                        break;
+                    if (identifier_instance->string() == *name_ptr) {
+                        argument_index = current_index;
+                        if (m_state.strict_mode)
+                            break;
+                    }
+                }
+            }
+            if (argument_index.has_value())
+                m_state.current_scope_pusher->associate_identifier_with_argument_index(identifier_instance, *argument_index);
+        }
+    }
+
     while (match(TokenType::TemplateLiteralStart)) {
         auto template_literal = parse_template_literal(true);
         expression = create_ast_node<TaggedTemplateLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }, move(expression), move(template_literal));
@@ -1486,6 +1583,24 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
         syntax_error("'super' keyword unexpected here");
 
     check_for_invalid_object_property(expression);
+
+    if (is<CallExpression>(*expression) && m_state.current_scope_pusher) {
+        auto& callee = static_ptr_cast<CallExpression>(expression)->callee();
+        if (is<Identifier>(callee)) {
+            auto& identifier_instance = static_cast<Identifier const&>(callee);
+            if (identifier_instance.string() == "eval"sv) {
+                bool has_not_been_declared_as_variable = true;
+                for (auto scope = m_state.current_scope_pusher; scope; scope = scope->parent_scope()) {
+                    if (scope->has_declaration(identifier_instance.string())) {
+                        has_not_been_declared_as_variable = false;
+                        break;
+                    }
+                }
+                if (has_not_been_declared_as_variable)
+                    m_state.current_scope_pusher->set_contains_direct_call_to_eval();
+            }
+        }
+    }
 
     if (match(TokenType::Comma) && min_precedence <= 1) {
         NonnullRefPtrVector<Expression> expressions;
@@ -3646,5 +3761,4 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
 
     return create_ast_node<ExportStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(expression), move(entries));
 }
-
 }

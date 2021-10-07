@@ -48,6 +48,31 @@ void Reference::put_value(GlobalObject& global_object, Value value)
     }
 
     VERIFY(m_base_type == BaseType::Environment);
+
+    // Note: Optimisation, not from the spec.
+    if (m_function_argument_index.has_value()) {
+        // Note: Modifying this binding requires us to sync with the environment.
+        if (!m_base_environment) {
+            auto real_reference = global_object.vm().resolve_binding(m_name.as_string(), m_referenced_function_context->lexical_environment);
+            m_base_environment = real_reference.m_base_environment;
+        }
+
+        if (!global_object.vm().execution_context_stack().is_empty() && m_referenced_function_context == &global_object.vm().running_execution_context()) {
+            auto& arguments = m_referenced_function_context->arguments;
+            auto index = m_function_argument_index.value();
+            if (arguments.size() > index) {
+                arguments[index] = value;
+            } else {
+                arguments.ensure_capacity(index + 1);
+                for (size_t i = arguments.size(); i < index; ++i)
+                    arguments.append(js_undefined());
+                arguments.append(value);
+            }
+            m_base_environment->set_mutable_binding(global_object, name().as_string(), value, is_strict());
+            return;
+        }
+    }
+
     VERIFY(m_base_environment);
     if (m_environment_coordinate.has_value())
         static_cast<DeclarativeEnvironment*>(m_base_environment)->set_mutable_binding_direct(global_object, m_environment_coordinate->index, value, m_strict);
@@ -80,6 +105,17 @@ Value Reference::get_value(GlobalObject& global_object) const
     }
 
     VERIFY(m_base_type == BaseType::Environment);
+
+    // Note: Optimisation, not from the spec.
+    if (m_function_argument_index.has_value()) {
+        if (!global_object.vm().execution_context_stack().is_empty() && m_referenced_function_context == &global_object.vm().running_execution_context())
+            return global_object.vm().argument(m_function_argument_index.value());
+        if (!m_base_environment) {
+            auto real_reference = global_object.vm().resolve_binding(m_name.as_string(), m_referenced_function_context->lexical_environment);
+            m_base_environment = real_reference.m_base_environment;
+        }
+    }
+
     VERIFY(m_base_environment);
     if (m_environment_coordinate.has_value())
         return static_cast<DeclarativeEnvironment*>(m_base_environment)->get_binding_value_direct(global_object, m_environment_coordinate->index, m_strict);
@@ -140,6 +176,12 @@ bool Reference::delete_(GlobalObject& global_object)
     //    b. Assert: base is an Environment Record.
 
     VERIFY(m_base_type == BaseType::Environment);
+
+    // Note: Optimisation, not from the spec.
+    if (m_function_argument_index.has_value()) {
+        // This is a direct reference to a function argument.
+        return false;
+    }
 
     //    c. Return ? base.DeleteBinding(ref.[[ReferencedName]]).
     return m_base_environment->delete_binding(global_object, m_name.as_string());
