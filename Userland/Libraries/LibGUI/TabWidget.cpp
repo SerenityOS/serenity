@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Peter Elliott <pelliott@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -198,7 +199,6 @@ void TabWidget::paint_event(PaintEvent& event)
 
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
-
     painter.fill_rect(event.rect(), palette().button());
 
     if (!m_container_margins.is_null()) {
@@ -250,11 +250,34 @@ void TabWidget::paint_event(PaintEvent& event)
         painter.draw_text(tab_button_content_rect, m_tabs[i].title, m_text_alignment, palette().button_text(), Gfx::TextElision::Right);
     }
 
+    if (m_close_button_enabled) {
+        for (size_t i = 0; i < m_tabs.size(); ++i) {
+            if (m_tabs[i].widget == m_active_widget)
+                continue;
+
+            bool hovered_close_button = i == m_hovered_close_button_index;
+            bool pressed_close_button = i == m_pressed_close_button_index;
+            auto close_button_rect = this->close_button_rect(i);
+
+            if (hovered_close_button)
+                Gfx::StylePainter::paint_frame(painter, close_button_rect, palette(), Gfx::FrameShape::Box, pressed_close_button ? Gfx::FrameShadow::Sunken : Gfx::FrameShadow::Raised, 1);
+
+            Gfx::IntRect icon_rect { close_button_rect.x() + 3, close_button_rect.y() + 3, 6, 6 };
+            painter.draw_line(icon_rect.top_left(), icon_rect.bottom_right(), palette().button_text());
+            painter.draw_line(icon_rect.top_right(), icon_rect.bottom_left(), palette().button_text());
+        }
+    }
+
     for (size_t i = 0; i < m_tabs.size(); ++i) {
         if (m_tabs[i].widget != m_active_widget)
             continue;
+
         bool hovered = i == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
+
+        if (m_dragging_active_tab)
+            button_rect.set_x(m_mouse_x - m_grab_offset);
+
         Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), true, hovered, m_tabs[i].widget->is_enabled(), m_tab_position == TabPosition::Top, window()->is_active());
 
         // First we get rid of the 1px sheen on the left, then the 2px shadow
@@ -295,9 +318,15 @@ void TabWidget::paint_event(PaintEvent& event)
         return;
 
     for (size_t i = 0; i < m_tabs.size(); ++i) {
+        if (m_tabs[i].widget != m_active_widget)
+            continue;
+
         bool hovered_close_button = i == m_hovered_close_button_index;
         bool pressed_close_button = i == m_pressed_close_button_index;
         auto close_button_rect = this->close_button_rect(i);
+
+        if (m_dragging_active_tab)
+            close_button_rect.set_x((m_mouse_x - m_grab_offset) + (close_button_rect.x() - button_rect(i).x()));
 
         if (hovered_close_button)
             Gfx::StylePainter::paint_frame(painter, close_button_rect, palette(), Gfx::FrameShape::Box, pressed_close_button ? Gfx::FrameShadow::Sunken : Gfx::FrameShadow::Raised, 1);
@@ -394,6 +423,7 @@ void TabWidget::mousedown_event(MouseEvent& event)
                 return;
             }
             set_active_widget(m_tabs[i].widget);
+            drag_tab(i);
         } else if (event.button() == MouseButton::Middle) {
             auto* widget = m_tabs[i].widget;
             deferred_invoke([this, widget] {
@@ -410,10 +440,16 @@ void TabWidget::mouseup_event(MouseEvent& event)
     if (event.button() != MouseButton::Left)
         return;
 
+    if (m_dragging_active_tab) {
+        m_dragging_active_tab = false;
+        update_bar();
+    }
+
     if (!m_close_button_enabled || !m_pressed_close_button_index.has_value())
         return;
 
     auto close_button_rect = this->close_button_rect(m_pressed_close_button_index.value());
+    update_bar();
 
     if (close_button_rect.contains(event.position())) {
         auto* widget = m_tabs[m_pressed_close_button_index.value()].widget;
@@ -422,7 +458,6 @@ void TabWidget::mouseup_event(MouseEvent& event)
                 on_tab_close_click(*widget);
         });
     }
-
     m_pressed_close_button_index = {};
 }
 
@@ -430,6 +465,13 @@ void TabWidget::mousemove_event(MouseEvent& event)
 {
     Optional<size_t> hovered_tab = {};
     Optional<size_t> hovered_close_button = {};
+
+    m_mouse_x = event.position().x();
+    if (m_dragging_active_tab) {
+        recalculate_tab_order();
+        update_bar();
+        return;
+    }
 
     for (size_t i = 0; i < m_tabs.size(); ++i) {
         auto button_rect = this->button_rect(i);
@@ -466,7 +508,6 @@ void TabWidget::update_bar()
         return;
     auto invalidation_rect = bar_rect();
     invalidation_rect.set_height(invalidation_rect.height() + 1);
-    invalidation_rect.set_right(button_rect(m_tabs.size() - 1).right());
     update(invalidation_rect);
 }
 
@@ -587,4 +628,47 @@ void TabWidget::set_container_margins(GUI::Margins const& margins)
     update();
 }
 
+void TabWidget::drag_tab(size_t index)
+{
+    m_dragging_active_tab = m_reorder_allowed;
+    m_grab_offset = m_mouse_x - button_rect(index).x();
+    m_hovered_tab_index = {};
+    m_hovered_close_button_index = {};
+}
+
+void TabWidget::recalculate_tab_order()
+{
+    if (!m_dragging_active_tab)
+        return;
+
+    size_t active;
+    for (active = 0; active < m_tabs.size(); ++active) {
+        if (m_tabs[active].widget == m_active_widget)
+            break;
+    }
+
+    size_t target;
+    for (target = 0; target < active; ++target) {
+        auto button_rect = this->button_rect(target);
+        if ((m_mouse_x - m_grab_offset) < button_rect.x()) {
+            break;
+        }
+    }
+
+    if (target == active) {
+        for (target = m_tabs.size() - 1; target > active; --target) {
+            auto button_rect = this->button_rect(target);
+            if ((m_mouse_x - m_grab_offset) > button_rect.x()) {
+                break;
+            }
+        }
+    }
+
+    if (active == target)
+        return;
+
+    auto tab = m_tabs.take(active);
+    m_tabs.insert(target, tab);
+    update_bar();
+}
 }
