@@ -1,15 +1,3 @@
-diff -ruN llvm-orig/llvm-project-llvmorg-12.0.0/llvm/lib/Support/SmallVector.cpp llvm-project-llvmorg-12.0.0/llvm/lib/Support/SmallVector.cpp
---- llvm-orig/llvm-project-llvmorg-12.0.0/llvm/lib/Support/SmallVector.cpp	2021-04-06 19:38:18.000000000 +0300
-+++ llvm-project-llvmorg-12.0.0/llvm/lib/Support/SmallVector.cpp	2021-06-09 16:18:35.039546181 +0300
-@@ -132,7 +132,7 @@
- // Both uint32_t and uint64_t instantiations are needed for 64-bit builds.
- // This instantiation will never be used in 32-bit builds, and will cause
- // warnings when sizeof(Size_T) > sizeof(size_t).
--#if SIZE_MAX > UINT32_MAX
-+#if SIZE_MAX > UINT32_MAX && !defined(__serenity__)
- template class llvm::SmallVectorBase<uint64_t>;
- 
- // Assertions to ensure this #if stays in sync with SmallVectorSizeType.
 diff -ruN llvm-orig/llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Path.inc llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Path.inc
 --- llvm-orig/llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Path.inc	2021-04-06 19:38:18.000000000 +0300
 +++ llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Path.inc	2021-06-09 16:24:37.446095863 +0300
