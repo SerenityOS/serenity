@@ -177,7 +177,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 functions_to_initialize.append(function);
         });
 
-        auto arguments_name = vm.names.arguments.as_string();
+        auto const& arguments_name = vm.names.arguments.as_string();
 
         if (!has_parameter_expressions && function_names.contains(arguments_name))
             arguments_object_needed = false;
