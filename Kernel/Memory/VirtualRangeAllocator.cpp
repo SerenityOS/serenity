@@ -42,13 +42,13 @@ void VirtualRangeAllocator::dump() const
     }
 }
 
-void VirtualRangeAllocator::carve_at_iterator(auto& it, VirtualRange const& range)
+void VirtualRangeAllocator::carve_from_region(VirtualRange const& from, VirtualRange const& range)
 {
     VERIFY(m_lock.is_locked());
-    auto remaining_parts = (*it).carve(range);
+    auto remaining_parts = from.carve(range);
     VERIFY(remaining_parts.size() >= 1);
     VERIFY(m_total_range.contains(remaining_parts[0]));
-    m_available_ranges.remove(it.key());
+    m_available_ranges.remove(from.base().get());
     m_available_ranges.insert(remaining_parts[0].base().get(), remaining_parts[0]);
     if (remaining_parts.size() == 2) {
         VERIFY(m_total_range.contains(remaining_parts[1]));
@@ -122,7 +122,7 @@ KResultOr<VirtualRange> VirtualRangeAllocator::try_allocate_anywhere(size_t size
             m_available_ranges.remove(it.key());
             return allocated_range;
         }
-        carve_at_iterator(it, allocated_range);
+        carve_from_region(*it, allocated_range);
         return allocated_range;
     }
     dmesgln("VirtualRangeAllocator: Failed to allocate anywhere: size={}, alignment={}", size, alignment);
@@ -142,18 +142,17 @@ KResultOr<VirtualRange> VirtualRangeAllocator::try_allocate_specific(VirtualAddr
         return ENOMEM;
 
     SpinlockLocker lock(m_lock);
-    for (auto it = m_available_ranges.begin(); !it.is_end(); ++it) {
-        auto& available_range = *it;
-        if (!available_range.contains(base, size))
-            continue;
-        if (available_range == allocated_range) {
-            m_available_ranges.remove(it.key());
-            return allocated_range;
-        }
-        carve_at_iterator(it, allocated_range);
+    auto available_range = m_available_ranges.find_largest_not_above(base.get());
+    if (!available_range)
+        return ENOMEM;
+    if (!available_range->contains(allocated_range))
+        return ENOMEM;
+    if (*available_range == allocated_range) {
+        m_available_ranges.remove(available_range->base().get());
         return allocated_range;
     }
-    return ENOMEM;
+    carve_from_region(*available_range, allocated_range);
+    return allocated_range;
 }
 
 void VirtualRangeAllocator::deallocate(VirtualRange const& range)
