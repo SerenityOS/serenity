@@ -12,6 +12,8 @@
 #    include <Kernel/API/KResult.h>
 #endif
 
+#define OWNPTR_SCRUB_BYTE 0xf0
+
 namespace AK {
 
 template<typename T>
@@ -43,7 +45,7 @@ public:
     {
         clear();
 #ifdef SANITIZE_PTRS
-        m_ptr = (T*)(explode_byte(0xe1));
+        m_ptr = (T*)(explode_byte(OWNPTR_SCRUB_BYTE));
 #endif
     }
 

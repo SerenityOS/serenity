@@ -19,6 +19,8 @@
 #    include <Kernel/Arch/x86/ScopedCritical.h>
 #endif
 
+#define THREADSAFEREFPTR_SCRUB_BYTE 0xa0
+
 namespace AK {
 
 template<typename T>
@@ -182,7 +184,7 @@ public:
     {
         clear();
 #ifdef SANITIZE_PTRS
-        m_bits.store(explode_byte(0xe0), AK::MemoryOrder::memory_order_relaxed);
+        m_bits.store(explode_byte(THREADSAFEREFPTR_SCRUB_BYTE), AK::MemoryOrder::memory_order_relaxed);
 #endif
     }
 

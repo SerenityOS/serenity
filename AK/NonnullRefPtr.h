@@ -6,6 +6,8 @@
 
 #pragma once
 
+#define NONNULLREFPTR_SCRUB_BYTE 0xe1
+
 #ifdef KERNEL
 #    include <Kernel/Library/ThreadSafeNonnullRefPtr.h>
 #else
@@ -97,7 +99,7 @@ public:
         unref_if_not_null(m_ptr);
         m_ptr = nullptr;
 #    ifdef SANITIZE_PTRS
-        m_ptr = reinterpret_cast<T*>(explode_byte(0xb0));
+        m_ptr = reinterpret_cast<T*>(explode_byte(NONNULLREFPTR_SCRUB_BYTE));
 #    endif
     }
 
