@@ -36,6 +36,7 @@ MainWidget::MainWidget()
 
     m_tab_widget = find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
     m_tab_widget->set_container_margins({ 4, 5, 5, 4 });
+    m_tab_widget->set_reorder_allowed(true);
     m_tab_widget->set_close_button_enabled(true);
 
     m_palette_widget = *find_descendant_of_type_named<PixelPaint::PaletteWidget>("palette_widget");
