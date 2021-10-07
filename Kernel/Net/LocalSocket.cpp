@@ -413,7 +413,7 @@ KResult LocalSocket::getsockopt(OpenFileDescription& description, int level, int
         default:
             return EINVAL;
         }
-        break;
+        VERIFY_NOT_REACHED();
     }
     default:
         return Socket::getsockopt(description, level, option, value, value_size);
