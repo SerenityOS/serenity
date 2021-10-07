@@ -63,6 +63,8 @@ public:
     virtual bool is_new_expression() const { return false; }
     virtual bool is_member_expression() const { return false; }
     virtual bool is_super_expression() const { return false; }
+    virtual bool is_function_expression() const { return false; }
+    virtual bool is_class_expression() const { return false; }
     virtual bool is_expression_statement() const { return false; }
     virtual bool is_identifier() const { return false; }
     virtual bool is_scope_node() const { return false; }
@@ -521,6 +523,9 @@ public:
     bool has_name() const { return !name().is_empty(); }
 
     Value instantiate_ordinary_function_expression(Interpreter& interpreter, GlobalObject& global_object, FlyString given_name) const;
+
+private:
+    virtual bool is_function_expression() const override { return true; }
 };
 
 class ErrorExpression final : public Expression {
@@ -1079,6 +1084,8 @@ public:
     ThrowCompletionOr<Value> class_definition_evaluation(Interpreter& interpreter, GlobalObject& global_object, FlyString const& binding_name = {}, FlyString const& class_name = {}) const;
 
 private:
+    virtual bool is_class_expression() const override { return true; }
+
     String m_name;
     RefPtr<FunctionExpression> m_constructor;
     RefPtr<Expression> m_super_class;
@@ -1761,6 +1768,12 @@ inline bool ASTNode::fast_is<MemberExpression>() const { return is_member_expres
 
 template<>
 inline bool ASTNode::fast_is<SuperExpression>() const { return is_super_expression(); }
+
+template<>
+inline bool ASTNode::fast_is<FunctionExpression>() const { return is_function_expression(); }
+
+template<>
+inline bool ASTNode::fast_is<ClassExpression>() const { return is_class_expression(); }
 
 template<>
 inline bool ASTNode::fast_is<Identifier>() const { return is_identifier(); }
