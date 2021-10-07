@@ -6,11 +6,7 @@
 
 #pragma once
 
-#ifdef KERNEL
-#    include <Kernel/Library/ThreadSafeWeakPtr.h>
-#else
-
-#    include <AK/Weakable.h>
+#include <AK/Weakable.h>
 
 namespace AK {
 
@@ -69,16 +65,21 @@ public:
     }
 
     template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
-    WeakPtr(RefPtr<U> const& object)
+    WeakPtr(const RefPtr<U>& object)
     {
-        if (object)
-            m_link = object->template make_weak_ptr<U>().take_link();
+        object.do_while_locked([&](U* obj) {
+            if (obj)
+                m_link = obj->template make_weak_ptr<U>().take_link();
+        });
     }
 
     template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
-    WeakPtr(NonnullRefPtr<U> const& object)
+    WeakPtr(const NonnullRefPtr<U>& object)
     {
-        m_link = object->template make_weak_ptr<U>().take_link();
+        object.do_while_locked([&](U* obj) {
+            if (obj)
+                m_link = obj->template make_weak_ptr<U>().take_link();
+        });
     }
 
     template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
@@ -101,36 +102,61 @@ public:
     template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr& operator=(const RefPtr<U>& object)
     {
-        if (object)
-            m_link = object->template make_weak_ptr<U>().take_link();
-        else
-            m_link = nullptr;
+        object.do_while_locked([&](U* obj) {
+            if (obj)
+                m_link = obj->template make_weak_ptr<U>().take_link();
+            else
+                m_link = nullptr;
+        });
         return *this;
     }
 
     template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr& operator=(const NonnullRefPtr<U>& object)
     {
-        m_link = object->template make_weak_ptr<U>().take_link();
+        object.do_while_locked([&](U* obj) {
+            if (obj)
+                m_link = obj->template make_weak_ptr<U>().take_link();
+            else
+                m_link = nullptr;
+        });
         return *this;
     }
 
     [[nodiscard]] RefPtr<T> strong_ref() const
     {
-        return RefPtr<T> { ptr() };
+        // This only works with RefCounted objects, but it is the only
+        // safe way to get a strong reference from a WeakPtr. Any code
+        // that uses objects not derived from RefCounted will have to
+        // use unsafe_ptr(), but as the name suggests, it is not safe...
+        RefPtr<T> ref;
+        // Using do_while_locked protects against a race with clear()!
+        m_link.do_while_locked([&](WeakLink* link) {
+            if (link)
+                ref = link->template strong_ref<T>();
+        });
+        return ref;
     }
 
+#ifndef KERNEL
+    // A lot of user mode code is single-threaded. But for kernel mode code
+    // this is generally not true as everything is multi-threaded. So make
+    // these shortcuts and aliases only available to non-kernel code.
     T* ptr() const { return unsafe_ptr(); }
     T* operator->() { return unsafe_ptr(); }
     const T* operator->() const { return unsafe_ptr(); }
     operator const T*() const { return unsafe_ptr(); }
     operator T*() { return unsafe_ptr(); }
+#endif
 
     [[nodiscard]] T* unsafe_ptr() const
     {
-        if (m_link)
-            return m_link->template unsafe_ptr<T>();
-        return nullptr;
+        T* ptr = nullptr;
+        m_link.do_while_locked([&](WeakLink* link) {
+            if (link)
+                ptr = link->unsafe_ptr<T>();
+        });
+        return ptr;
     }
 
     operator bool() const { return m_link ? !m_link->is_null() : false; }
@@ -193,7 +219,12 @@ template<typename T>
 struct Formatter<WeakPtr<T>> : Formatter<const T*> {
     void format(FormatBuilder& builder, const WeakPtr<T>& value)
     {
+#ifdef KERNEL
+        auto ref = value.strong_ref();
+        Formatter<const T*>::format(builder, ref.ptr());
+#else
         Formatter<const T*>::format(builder, value.ptr());
+#endif
     }
 };
 
@@ -209,4 +240,3 @@ WeakPtr<T> try_make_weak_ptr(const T* ptr)
 }
 
 using AK::WeakPtr;
-#endif
