@@ -46,7 +46,7 @@ UNMAP_AFTER_INIT void CommandLine::build_commandline(const String& cmdline_from_
 {
     StringBuilder builder;
     builder.append(cmdline_from_bootloader);
-    if (!s_embedded_cmd_line.is_empty()) {
+    if constexpr (!s_embedded_cmd_line.is_empty()) {
         builder.append(" ");
         builder.append(s_embedded_cmd_line);
     }

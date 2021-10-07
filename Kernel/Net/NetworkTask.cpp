@@ -531,8 +531,8 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
                 socket->set_state(TCPSocket::State::Closed);
                 return;
             }
+            VERIFY_NOT_REACHED();
 
-            return;
         case TCPFlags::SYN:
             dbgln("handle_tcp: ignoring SYN for partially established connection");
             return;
