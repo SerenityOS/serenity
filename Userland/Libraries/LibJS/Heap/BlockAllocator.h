@@ -20,7 +20,7 @@ public:
     void deallocate_block(void*);
 
 private:
-    static constexpr size_t max_cached_blocks = 64;
+    static constexpr size_t max_cached_blocks = 512;
 
     Vector<void*, max_cached_blocks> m_blocks;
 };
