@@ -452,18 +452,19 @@ void Document::update_layout()
 
 static void update_style_recursively(DOM::Node& node)
 {
-    node.for_each_child([&](auto& child) {
-        if (child.needs_style_update()) {
-            if (is<Element>(child))
-                verify_cast<Element>(child).recompute_style();
-            child.set_needs_style_update(false);
-        }
-        if (child.child_needs_style_update()) {
-            update_style_recursively(child);
-            child.set_child_needs_style_update(false);
-        }
-        return IterationDecision::Continue;
-    });
+    if (is<Element>(node))
+        static_cast<Element&>(node).recompute_style();
+    node.set_needs_style_update(false);
+
+    if (node.child_needs_style_update()) {
+        node.for_each_child([&](auto& child) {
+            if (child.needs_style_update())
+                update_style_recursively(child);
+            return IterationDecision::Continue;
+        });
+    }
+
+    node.set_child_needs_style_update(false);
 }
 
 void Document::update_style()
