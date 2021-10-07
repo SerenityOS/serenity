@@ -1323,4 +1323,9 @@ void Processor::assume_context(Thread& thread, FlatPtr flags)
     VERIFY_NOT_REACHED();
 }
 
+u64 Processor::time_spent_idle() const
+{
+    return m_idle_thread->time_in_user() + m_idle_thread->time_in_kernel();
+}
+
 }
