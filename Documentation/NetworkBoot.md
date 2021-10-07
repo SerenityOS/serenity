@@ -95,7 +95,7 @@ menuentry 'SerenityOS - netboot diskless text mode' {
         echo 'Starting SerenityOS.'
 }
 ```
-5. Place the SerenityOS prekernel, kernel and ramdisk inside `/srv/tftp/boot/grub/serenity/`
+5. Place the SerenityOS prekernel, kernel and ramdisk inside `/srv/tftp/serenity/`
 
 You should now be able to PXE boot into Serenity if enough of your hardware is supported by the Serenity kernel.
 
