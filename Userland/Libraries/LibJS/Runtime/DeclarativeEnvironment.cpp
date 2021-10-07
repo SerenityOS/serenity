@@ -40,7 +40,7 @@ bool DeclarativeEnvironment::has_binding(FlyString const& name, Optional<size_t>
     auto it = m_names.find(name);
     if (it == m_names.end())
         return false;
-    if (out_index)
+    if (!is_permanently_screwed_by_eval() && out_index)
         *out_index = it->value;
     return true;
 }

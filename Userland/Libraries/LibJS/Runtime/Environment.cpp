@@ -28,4 +28,13 @@ void Environment::visit_edges(Visitor& visitor)
     visitor.visit(m_outer_environment);
 }
 
+void Environment::set_permanently_screwed_by_eval()
+{
+    if (m_permanently_screwed_by_eval)
+        return;
+    m_permanently_screwed_by_eval = true;
+    if (outer_environment())
+        outer_environment()->set_permanently_screwed_by_eval();
+}
+
 }

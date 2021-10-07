@@ -444,6 +444,13 @@ ThrowCompletionOr<Value> perform_eval(Value x, GlobalObject& caller_realm, Calle
     if (strict_eval)
         variable_environment = lexical_environment;
 
+    if (direct == EvalMode::Direct && !strict_eval) {
+        // NOTE: Non-strict direct eval() forces us to deoptimize variable accesses.
+        //       Mark the variable environment chain as screwed since we will not be able
+        //       to rely on cached environment coordinates from this point on.
+        variable_environment->set_permanently_screwed_by_eval();
+    }
+
     // 18. If runningContext is not already suspended, suspend runningContext.
     // FIXME: We don't have this concept yet.
 
