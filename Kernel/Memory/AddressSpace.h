@@ -26,8 +26,6 @@ public:
 
     KResultOr<Region*> add_region(NonnullOwnPtr<Region>);
 
-    size_t region_count() const { return m_regions.size(); }
-
     RedBlackTree<FlatPtr, NonnullOwnPtr<Region>>& regions() { return m_regions; }
     const RedBlackTree<FlatPtr, NonnullOwnPtr<Region>>& regions() const { return m_regions; }
 
