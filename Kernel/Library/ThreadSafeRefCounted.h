@@ -6,15 +6,12 @@
 
 #pragma once
 
-#ifdef KERNEL
-#    include <Kernel/Library/ThreadSafeRefCounted.h>
-#else
-
-#    include <AK/Assertions.h>
-#    include <AK/Checked.h>
-#    include <AK/Noncopyable.h>
-#    include <AK/Platform.h>
-#    include <AK/StdLibExtras.h>
+#include <AK/Assertions.h>
+#include <AK/Atomic.h>
+#include <AK/Checked.h>
+#include <AK/Noncopyable.h>
+#include <AK/Platform.h>
+#include <AK/StdLibExtras.h>
 
 namespace AK {
 
@@ -52,32 +49,43 @@ public:
 
     void ref() const
     {
-        VERIFY(m_ref_count > 0);
-        VERIFY(!Checked<RefCountType>::addition_would_overflow(m_ref_count, 1));
-        ++m_ref_count;
+        auto old_ref_count = m_ref_count.fetch_add(1, AK::MemoryOrder::memory_order_relaxed);
+        VERIFY(old_ref_count > 0);
+        VERIFY(!Checked<RefCountType>::addition_would_overflow(old_ref_count, 1));
     }
 
     [[nodiscard]] bool try_ref() const
     {
-        if (m_ref_count == 0)
-            return false;
-        ref();
-        return true;
+        RefCountType expected = m_ref_count.load(AK::MemoryOrder::memory_order_relaxed);
+        for (;;) {
+            if (expected == 0)
+                return false;
+            VERIFY(!Checked<RefCountType>::addition_would_overflow(expected, 1));
+            if (m_ref_count.compare_exchange_strong(expected, expected + 1, AK::MemoryOrder::memory_order_acquire))
+                return true;
+        }
     }
 
-    [[nodiscard]] RefCountType ref_count() const { return m_ref_count; }
+    [[nodiscard]] RefCountType ref_count() const
+    {
+        return m_ref_count.load(AK::MemoryOrder::memory_order_relaxed);
+    }
 
 protected:
     RefCountedBase() = default;
-    ~RefCountedBase() { VERIFY(!m_ref_count); }
+    ~RefCountedBase()
+    {
+        VERIFY(m_ref_count.load(AK::MemoryOrder::memory_order_relaxed) == 0);
+    }
 
     RefCountType deref_base() const
     {
-        VERIFY(m_ref_count);
-        return --m_ref_count;
+        auto old_ref_count = m_ref_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
+        VERIFY(old_ref_count > 0);
+        return old_ref_count - 1;
     }
 
-    RefCountType mutable m_ref_count { 1 };
+    mutable Atomic<RefCountType> m_ref_count { 1 };
 };
 
 template<typename T>
@@ -101,5 +109,3 @@ public:
 
 using AK::RefCounted;
 using AK::RefCountedBase;
-
-#endif

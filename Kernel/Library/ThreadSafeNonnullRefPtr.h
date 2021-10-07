@@ -6,14 +6,15 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
+#include <AK/Atomic.h>
+#include <AK/Format.h>
+#include <AK/Traits.h>
+#include <AK/Types.h>
 #ifdef KERNEL
-#    include <Kernel/Library/ThreadSafeNonnullRefPtr.h>
-#else
-#    include <AK/Assertions.h>
-#    include <AK/Atomic.h>
-#    include <AK/Format.h>
-#    include <AK/Traits.h>
-#    include <AK/Types.h>
+#    include <Kernel/Arch/x86/Processor.h>
+#    include <Kernel/Arch/x86/ScopedCritical.h>
+#endif
 
 namespace AK {
 
@@ -50,55 +51,52 @@ public:
 
     enum AdoptTag { Adopt };
 
-    ALWAYS_INLINE NonnullRefPtr(T const& object)
-        : m_ptr(const_cast<T*>(&object))
+    ALWAYS_INLINE NonnullRefPtr(const T& object)
+        : m_bits((FlatPtr)&object)
     {
-        m_ptr->ref();
+        VERIFY(!(m_bits & 1));
+        const_cast<T&>(object).ref();
     }
-
     template<typename U>
-    ALWAYS_INLINE NonnullRefPtr(U const& object) requires(IsConvertible<U*, T*>)
-        : m_ptr(const_cast<T*>(static_cast<T const*>(&object)))
+    ALWAYS_INLINE NonnullRefPtr(const U& object) requires(IsConvertible<U*, T*>)
+        : m_bits((FlatPtr) static_cast<const T*>(&object))
     {
-        m_ptr->ref();
+        VERIFY(!(m_bits & 1));
+        const_cast<T&>(static_cast<const T&>(object)).ref();
     }
-
     ALWAYS_INLINE NonnullRefPtr(AdoptTag, T& object)
-        : m_ptr(&object)
+        : m_bits((FlatPtr)&object)
     {
+        VERIFY(!(m_bits & 1));
     }
-
     ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr&& other)
-        : m_ptr(&other.leak_ref())
+        : m_bits((FlatPtr)&other.leak_ref())
     {
+        VERIFY(!(m_bits & 1));
     }
-
     template<typename U>
     ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
-        : m_ptr(static_cast<T*>(&other.leak_ref()))
+        : m_bits((FlatPtr)&other.leak_ref())
     {
+        VERIFY(!(m_bits & 1));
     }
-
-    ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr const& other)
-        : m_ptr(const_cast<T*>(other.ptr()))
+    ALWAYS_INLINE NonnullRefPtr(const NonnullRefPtr& other)
+        : m_bits((FlatPtr)other.add_ref())
     {
-        m_ptr->ref();
+        VERIFY(!(m_bits & 1));
     }
-
     template<typename U>
-    ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
-        : m_ptr(const_cast<T*>(static_cast<T const*>(other.ptr())))
+    ALWAYS_INLINE NonnullRefPtr(const NonnullRefPtr<U>& other) requires(IsConvertible<U*, T*>)
+        : m_bits((FlatPtr)other.add_ref())
     {
-        m_ptr->ref();
+        VERIFY(!(m_bits & 1));
     }
-
     ALWAYS_INLINE ~NonnullRefPtr()
     {
-        unref_if_not_null(m_ptr);
-        m_ptr = nullptr;
-#    ifdef SANITIZE_PTRS
-        m_ptr = reinterpret_cast<T*>(explode_byte(0xb0));
-#    endif
+        assign(nullptr);
+#ifdef SANITIZE_PTRS
+        m_bits.store(explode_byte(0xb0), AK::MemoryOrder::memory_order_relaxed);
+#endif
     }
 
     template<typename U>
@@ -113,46 +111,44 @@ public:
     NonnullRefPtr(const RefPtr<T>&) = delete;
     NonnullRefPtr& operator=(const RefPtr<T>&) = delete;
 
-    NonnullRefPtr& operator=(NonnullRefPtr const& other)
+    NonnullRefPtr& operator=(const NonnullRefPtr& other)
     {
-        NonnullRefPtr tmp { other };
-        swap(tmp);
+        if (this != &other)
+            assign(other.add_ref());
         return *this;
     }
 
     template<typename U>
-    NonnullRefPtr& operator=(NonnullRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
+    NonnullRefPtr& operator=(const NonnullRefPtr<U>& other) requires(IsConvertible<U*, T*>)
     {
-        NonnullRefPtr tmp { other };
-        swap(tmp);
+        assign(other.add_ref());
         return *this;
     }
 
     ALWAYS_INLINE NonnullRefPtr& operator=(NonnullRefPtr&& other)
     {
-        NonnullRefPtr tmp { move(other) };
-        swap(tmp);
+        if (this != &other)
+            assign(&other.leak_ref());
         return *this;
     }
 
     template<typename U>
     NonnullRefPtr& operator=(NonnullRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
     {
-        NonnullRefPtr tmp { move(other) };
-        swap(tmp);
+        assign(&other.leak_ref());
         return *this;
     }
 
-    NonnullRefPtr& operator=(T const& object)
+    NonnullRefPtr& operator=(const T& object)
     {
-        NonnullRefPtr tmp { object };
-        swap(tmp);
+        const_cast<T&>(object).ref();
+        assign(const_cast<T*>(&object));
         return *this;
     }
 
     [[nodiscard]] ALWAYS_INLINE T& leak_ref()
     {
-        T* ptr = exchange(m_ptr, nullptr);
+        T* ptr = exchange(nullptr);
         VERIFY(ptr);
         return *ptr;
     }
@@ -207,24 +203,113 @@ public:
 
     void swap(NonnullRefPtr& other)
     {
-        AK::swap(m_ptr, other.m_ptr);
+        if (this == &other)
+            return;
+
+        // NOTE: swap is not atomic!
+        T* other_ptr = other.exchange(nullptr);
+        T* ptr = exchange(other_ptr);
+        other.exchange(ptr);
     }
 
     template<typename U>
     void swap(NonnullRefPtr<U>& other) requires(IsConvertible<U*, T*>)
     {
-        AK::swap(m_ptr, other.m_ptr);
+        // NOTE: swap is not atomic!
+        U* other_ptr = other.exchange(nullptr);
+        T* ptr = exchange(other_ptr);
+        other.exchange(ptr);
     }
 
 private:
     NonnullRefPtr() = delete;
-    ALWAYS_INLINE RETURNS_NONNULL T* as_nonnull_ptr() const
+
+    ALWAYS_INLINE T* as_ptr() const
     {
-        VERIFY(m_ptr);
-        return m_ptr;
+        return (T*)(m_bits.load(AK::MemoryOrder::memory_order_relaxed) & ~(FlatPtr)1);
     }
 
-    T* m_ptr { nullptr };
+    ALWAYS_INLINE RETURNS_NONNULL T* as_nonnull_ptr() const
+    {
+        T* ptr = (T*)(m_bits.load(AK::MemoryOrder::memory_order_relaxed) & ~(FlatPtr)1);
+        VERIFY(ptr);
+        return ptr;
+    }
+
+    template<typename F>
+    void do_while_locked(F f) const
+    {
+#ifdef KERNEL
+        // We don't want to be pre-empted while we have the lock bit set
+        Kernel::ScopedCritical critical;
+#endif
+        FlatPtr bits;
+        for (;;) {
+            bits = m_bits.fetch_or(1, AK::MemoryOrder::memory_order_acq_rel);
+            if (!(bits & 1))
+                break;
+#ifdef KERNEL
+            Kernel::Processor::wait_check();
+#endif
+        }
+        VERIFY(!(bits & 1));
+        f((T*)bits);
+        m_bits.store(bits, AK::MemoryOrder::memory_order_release);
+    }
+
+    ALWAYS_INLINE void assign(T* new_ptr)
+    {
+        T* prev_ptr = exchange(new_ptr);
+        unref_if_not_null(prev_ptr);
+    }
+
+    ALWAYS_INLINE T* exchange(T* new_ptr)
+    {
+        VERIFY(!((FlatPtr)new_ptr & 1));
+#ifdef KERNEL
+        // We don't want to be pre-empted while we have the lock bit set
+        Kernel::ScopedCritical critical;
+#endif
+        // Only exchange while not locked
+        FlatPtr expected = m_bits.load(AK::MemoryOrder::memory_order_relaxed);
+        for (;;) {
+            expected &= ~(FlatPtr)1; // only if lock bit is not set
+            if (m_bits.compare_exchange_strong(expected, (FlatPtr)new_ptr, AK::MemoryOrder::memory_order_acq_rel))
+                break;
+#ifdef KERNEL
+            Kernel::Processor::wait_check();
+#endif
+        }
+        VERIFY(!(expected & 1));
+        return (T*)expected;
+    }
+
+    T* add_ref() const
+    {
+#ifdef KERNEL
+        // We don't want to be pre-empted while we have the lock bit set
+        Kernel::ScopedCritical critical;
+#endif
+        // Lock the pointer
+        FlatPtr expected = m_bits.load(AK::MemoryOrder::memory_order_relaxed);
+        for (;;) {
+            expected &= ~(FlatPtr)1; // only if lock bit is not set
+            if (m_bits.compare_exchange_strong(expected, expected | 1, AK::MemoryOrder::memory_order_acq_rel))
+                break;
+#ifdef KERNEL
+            Kernel::Processor::wait_check();
+#endif
+        }
+
+        // Add a reference now that we locked the pointer
+        ref_if_not_null((T*)expected);
+
+        // Unlock the pointer again
+        m_bits.store(expected, AK::MemoryOrder::memory_order_release);
+        return (T*)expected;
+    }
+
+    mutable Atomic<FlatPtr> m_bits { 0 };
 };
 
 template<typename T>
@@ -272,5 +357,3 @@ struct Traits<NonnullRefPtr<T>> : public GenericTraits<NonnullRefPtr<T>> {
 using AK::adopt_ref;
 using AK::make_ref_counted;
 using AK::NonnullRefPtr;
-
-#endif
