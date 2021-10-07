@@ -600,6 +600,29 @@ Token Lexer::next()
             else
                 token_type = TokenType::TemplateLiteralString;
         }
+    } else if (m_current_char == '#') {
+        // Note: This has some duplicated code with the identifier lexing below
+        consume();
+        auto code_point = is_identifier_start(identifier_length);
+        if (code_point.has_value()) {
+            StringBuilder builder;
+            builder.append_code_point('#');
+            do {
+                builder.append_code_point(*code_point);
+                for (size_t i = 0; i < identifier_length; ++i)
+                    consume();
+
+                code_point = is_identifier_middle(identifier_length);
+            } while (code_point.has_value());
+
+            identifier = builder.string_view();
+            token_type = TokenType::PrivateIdentifier;
+
+            m_parsed_identifiers->identifiers.set(*identifier);
+        } else {
+            token_type = TokenType::Invalid;
+            token_message = "Start of private name '#' but not followed by valid identifier";
+        }
     } else if (auto code_point = is_identifier_start(identifier_length); code_point.has_value()) {
         bool has_escaped_character = false;
         // identifier or keyword
