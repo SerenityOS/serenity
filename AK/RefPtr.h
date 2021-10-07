@@ -6,6 +6,8 @@
 
 #pragma once
 
+#define REFPTR_SCRUB_BYTE 0xe0
+
 #ifdef KERNEL
 #    include <Kernel/Library/ThreadSafeRefPtr.h>
 #else
@@ -100,7 +102,7 @@ public:
     {
         clear();
 #    ifdef SANITIZE_PTRS
-        m_ptr = reinterpret_cast<T*>(explode_byte(0xe0));
+        m_ptr = reinterpret_cast<T*>(explode_byte(REFPTR_SCRUB_BYTE));
 #    endif
     }
 

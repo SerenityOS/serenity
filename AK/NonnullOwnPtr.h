@@ -13,6 +13,8 @@
 #include <AK/Traits.h>
 #include <AK/Types.h>
 
+#define NONNULLOWNPTR_SCRUB_BYTE 0xf1
+
 namespace AK {
 
 template<typename T, typename PtrTraits>
@@ -51,7 +53,7 @@ public:
     {
         clear();
 #ifdef SANITIZE_PTRS
-        m_ptr = (T*)(explode_byte(0xe3));
+        m_ptr = (T*)(explode_byte(NONNULLOWNPTR_SCRUB_BYTE));
 #endif
     }
 

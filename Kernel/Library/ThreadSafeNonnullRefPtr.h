@@ -16,6 +16,8 @@
 #    include <Kernel/Arch/x86/ScopedCritical.h>
 #endif
 
+#define THREADSAFENONNULLREFPTR_SCRUB_BYTE 0xa1
+
 namespace AK {
 
 template<typename T>
@@ -95,7 +97,7 @@ public:
     {
         assign(nullptr);
 #ifdef SANITIZE_PTRS
-        m_bits.store(explode_byte(0xb0), AK::MemoryOrder::memory_order_relaxed);
+        m_bits.store(explode_byte(THREADSAFENONNULLREFPTR_SCRUB_BYTE), AK::MemoryOrder::memory_order_relaxed);
 #endif
     }
 

@@ -357,12 +357,12 @@ void page_fault_handler(TrapFrame* trap)
             regs.exception_code & PageFaultFlags::InstructionFetch ? "instruction fetch / " : "",
             regs.exception_code & PageFaultFlags::Write ? "write to" : "read from",
             VirtualAddress(fault_address));
-        FlatPtr malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
-        FlatPtr free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
-        FlatPtr kmalloc_scrub_pattern = explode_byte(KMALLOC_SCRUB_BYTE);
-        FlatPtr kfree_scrub_pattern = explode_byte(KFREE_SCRUB_BYTE);
-        FlatPtr slab_alloc_scrub_pattern = explode_byte(SLAB_ALLOC_SCRUB_BYTE);
-        FlatPtr slab_dealloc_scrub_pattern = explode_byte(SLAB_DEALLOC_SCRUB_BYTE);
+        constexpr FlatPtr malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
+        constexpr FlatPtr free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
+        constexpr FlatPtr kmalloc_scrub_pattern = explode_byte(KMALLOC_SCRUB_BYTE);
+        constexpr FlatPtr kfree_scrub_pattern = explode_byte(KFREE_SCRUB_BYTE);
+        constexpr FlatPtr slab_alloc_scrub_pattern = explode_byte(SLAB_ALLOC_SCRUB_BYTE);
+        constexpr FlatPtr slab_dealloc_scrub_pattern = explode_byte(SLAB_DEALLOC_SCRUB_BYTE);
         if ((fault_address & 0xffff0000) == (malloc_scrub_pattern & 0xffff0000)) {
             dbgln("Note: Address {} looks like it may be uninitialized malloc() memory", VirtualAddress(fault_address));
         } else if ((fault_address & 0xffff0000) == (free_scrub_pattern & 0xffff0000)) {
@@ -377,6 +377,27 @@ void page_fault_handler(TrapFrame* trap)
             dbgln("Note: Address {} looks like it may be recently slab_dealloc()'d memory", VirtualAddress(fault_address));
         } else if (fault_address < 4096) {
             dbgln("Note: Address {} looks like a possible nullptr dereference", VirtualAddress(fault_address));
+        } else if constexpr (SANITIZE_PTRS) {
+            constexpr FlatPtr refptr_scrub_pattern = explode_byte(REFPTR_SCRUB_BYTE);
+            constexpr FlatPtr nonnullrefptr_scrub_pattern = explode_byte(NONNULLREFPTR_SCRUB_BYTE);
+            constexpr FlatPtr ownptr_scrub_pattern = explode_byte(OWNPTR_SCRUB_BYTE);
+            constexpr FlatPtr nonnullownptr_scrub_pattern = explode_byte(NONNULLOWNPTR_SCRUB_BYTE);
+            constexpr FlatPtr threadsaferefptr_scrub_pattern = explode_byte(THREADSAFEREFPTR_SCRUB_BYTE);
+            constexpr FlatPtr threadsafenonnullrefptr_scrub_pattern = explode_byte(THREADSAFENONNULLREFPTR_SCRUB_BYTE);
+
+            if ((fault_address & 0xffff0000) == (refptr_scrub_pattern & 0xffff0000)) {
+                dbgln("Note: Address {} looks like it may be a recently destroyed RefPtr", VirtualAddress(fault_address));
+            } else if ((fault_address & 0xffff0000) == (nonnullrefptr_scrub_pattern & 0xffff0000)) {
+                dbgln("Note: Address {} looks like it may be a recently destroyed NonnullRefPtr", VirtualAddress(fault_address));
+            } else if ((fault_address & 0xffff0000) == (ownptr_scrub_pattern & 0xffff0000)) {
+                dbgln("Note: Address {} looks like it may be a recently destroyed OwnPtr", VirtualAddress(fault_address));
+            } else if ((fault_address & 0xffff0000) == (nonnullownptr_scrub_pattern & 0xffff0000)) {
+                dbgln("Note: Address {} looks like it may be a recently destroyed NonnullOwnPtr", VirtualAddress(fault_address));
+            } else if ((fault_address & 0xffff0000) == (threadsaferefptr_scrub_pattern & 0xffff0000)) {
+                dbgln("Note: Address {} looks like it may be a recently destroyed ThreadSafeRefPtr", VirtualAddress(fault_address));
+            } else if ((fault_address & 0xffff0000) == (threadsafenonnullrefptr_scrub_pattern & 0xffff0000)) {
+                dbgln("Note: Address {} looks like it may be a recently destroyed ThreadSafeNonnullRefPtr", VirtualAddress(fault_address));
+            }
         }
 
         if (current_thread) {
