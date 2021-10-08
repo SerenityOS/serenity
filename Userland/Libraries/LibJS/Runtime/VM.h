@@ -275,7 +275,6 @@ public:
     void restore_execution_context_stack();
 
     // TODO: Move these elsewhere once only used for ECMAScriptFunctionObject.
-    void prepare_for_ordinary_call(FunctionObject&, ExecutionContext& callee_context, Object* new_target);
     void ordinary_call_bind_this(FunctionObject&, ExecutionContext&, Value this_argument);
 
 private:
