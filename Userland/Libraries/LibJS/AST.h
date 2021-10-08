@@ -190,6 +190,9 @@ public:
     [[nodiscard]] bool has_lexical_declarations() const { return !m_lexical_declarations.is_empty(); }
     [[nodiscard]] bool has_var_declarations() const { return !m_var_declarations.is_empty(); }
 
+    [[nodiscard]] size_t var_declaration_count() const { return m_var_declarations.size(); }
+    [[nodiscard]] size_t lexical_declaration_count() const { return m_lexical_declarations.size(); }
+
     void for_each_lexically_scoped_declaration(IteratorOrVoidFunction<Declaration const&>&& callback) const;
     void for_each_lexically_declared_name(IteratorOrVoidFunction<FlyString const&>&& callback) const;
 
