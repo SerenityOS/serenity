@@ -46,6 +46,7 @@ public:
 
     void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const;
     bool for_first_not_loaded_import_rule(Function<void(CSSImportRule&)> const& callback);
+    void evaluate_media_queries(DOM::Window const&);
 
 private:
     explicit CSSStyleSheet(NonnullRefPtrVector<CSSRule>);
