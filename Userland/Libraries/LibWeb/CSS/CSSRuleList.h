@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/Iterator.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
@@ -49,6 +50,9 @@ public:
 
     DOM::ExceptionOr<void> remove_a_css_rule(u32 index);
     DOM::ExceptionOr<unsigned> insert_a_css_rule(NonnullRefPtr<CSSRule>, u32 index);
+
+    void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const;
+    bool for_first_not_loaded_import_rule(Function<void(CSSImportRule&)> const& callback);
 
 private:
     explicit CSSRuleList(NonnullRefPtrVector<CSSRule>&&);

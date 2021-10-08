@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/TypeCasts.h>
+#include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSRuleList.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 
@@ -72,6 +74,38 @@ DOM::ExceptionOr<void> CSSRuleList::remove_a_css_rule(u32 index)
     // FIXME: 6. Set old rule’s parent CSS rule and parent CSS style sheet to null.
 
     return {};
+}
+
+void CSSRuleList::for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const
+{
+    for (auto& rule : m_rules) {
+        if (rule.type() == CSSRule::Type::Style) {
+            callback(verify_cast<CSSStyleRule>(rule));
+        } else if (rule.type() == CSSRule::Type::Import) {
+            const auto& import_rule = verify_cast<CSSImportRule>(rule);
+            if (import_rule.has_import_result())
+                import_rule.loaded_style_sheet()->for_each_effective_style_rule(callback);
+        }
+    }
+}
+
+bool CSSRuleList::for_first_not_loaded_import_rule(Function<void(CSSImportRule&)> const& callback)
+{
+    for (auto& rule : m_rules) {
+        if (rule.type() == CSSRule::Type::Import) {
+            auto& import_rule = verify_cast<CSSImportRule>(rule);
+            if (!import_rule.has_import_result()) {
+                callback(import_rule);
+                return true;
+            }
+
+            if (import_rule.loaded_style_sheet()->for_first_not_loaded_import_rule(callback)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 }
