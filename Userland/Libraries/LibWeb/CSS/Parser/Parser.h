@@ -106,6 +106,9 @@ public:
 
     RefPtr<StyleValue> parse_as_css_value(PropertyID);
 
+    // FIXME: This is a hack, while CSS::Supports is using a StyleDeclarationRule
+    [[nodiscard]] Optional<StyleProperty> convert_to_style_property(StyleDeclarationRule const&);
+
 private:
     enum class ParsingResult {
         Done,
@@ -176,7 +179,6 @@ private:
 
     [[nodiscard]] RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
     [[nodiscard]] RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_declaration(NonnullRefPtr<StyleBlockRule>);
-    [[nodiscard]] Optional<StyleProperty> convert_to_style_property(StyleDeclarationRule&);
 
     static Optional<float> try_parse_float(StringView string);
     static Optional<Color> parse_color(ParsingContext const&, StyleComponentValueRule const&);
