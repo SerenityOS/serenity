@@ -105,6 +105,7 @@ class ExceptionOr;
 
 namespace Web::Geometry {
 class DOMRect;
+class DOMRectReadOnly;
 }
 
 namespace Web::HTML {
@@ -293,6 +294,7 @@ class DOMExceptionWrapper;
 class DOMImplementationWrapper;
 class DOMParserWrapper;
 class DOMRectWrapper;
+class DOMRectReadOnlyWrapper;
 class DOMStringMapWrapper;
 class ElementWrapper;
 class EventListenerWrapper;

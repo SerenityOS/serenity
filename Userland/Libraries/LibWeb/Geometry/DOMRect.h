@@ -6,18 +6,13 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
-#include <LibGfx/Rect.h>
-#include <LibWeb/Bindings/Wrappable.h>
-#include <LibWeb/Forward.h>
+#include <LibWeb/Geometry/DOMRectReadOnly.h>
 
 namespace Web::Geometry {
 
-// FIXME: Split this into DOMRectReadOnly and DOMRect
 // https://drafts.fxtf.org/geometry/#DOMRect
 class DOMRect final
-    : public RefCounted<DOMRect>
-    , public Bindings::Wrappable {
+    : public DOMRectReadOnly {
 public:
     using WrapperType = Bindings::DOMRectWrapper;
 
@@ -41,17 +36,15 @@ public:
     double width() const { return m_rect.width(); }
     double height() const { return m_rect.height(); }
 
-    double top() const { return min(y(), y() + height()); }
-    double right() const { return max(x(), x() + width()); }
-    double bottom() const { return max(y(), y() + height()); }
-    double left() const { return min(x(), x() + width()); }
+    void set_x(double x) { m_rect.set_x(x); }
+    void set_y(double y) { m_rect.set_y(y); }
+    void set_width(double width) { m_rect.set_width(width); }
+    void set_height(double height) { m_rect.set_height(height); }
 
 private:
     DOMRect(float x, float y, float width, float height)
-        : m_rect(x, y, width, height)
+        : DOMRectReadOnly(x, y, width, height)
     {
     }
-
-    Gfx::FloatRect m_rect;
 };
 }
