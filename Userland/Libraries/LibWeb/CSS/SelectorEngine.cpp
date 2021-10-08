@@ -30,27 +30,20 @@ static bool matches_attribute(CSS::Selector::SimpleSelector::Attribute const& at
     switch (attribute.match_type) {
     case CSS::Selector::SimpleSelector::Attribute::MatchType::HasAttribute:
         return element.has_attribute(attribute.name);
-        break;
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch:
         return element.attribute(attribute.name) == attribute.value;
-        break;
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsWord:
         return element.attribute(attribute.name).split_view(' ').contains_slow(attribute.value);
-        break;
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsString:
         return element.attribute(attribute.name).contains(attribute.value);
-        break;
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment: {
         auto segments = element.attribute(attribute.name).split_view('-');
         return !segments.is_empty() && segments.first() == attribute.value;
-        break;
     }
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithString:
         return element.attribute(attribute.name).starts_with(attribute.value);
-        break;
     case CSS::Selector::SimpleSelector::Attribute::MatchType::EndsWithString:
         return element.attribute(attribute.name).ends_with(attribute.value);
-        break;
     case CSS::Selector::SimpleSelector::Attribute::MatchType::None:
         VERIFY_NOT_REACHED();
         break;

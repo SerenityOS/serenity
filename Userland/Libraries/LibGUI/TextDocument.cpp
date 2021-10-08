@@ -865,8 +865,6 @@ bool RemoveTextCommand::merge_with(GUI::Command const& other)
     m_text = builder.to_string();
     m_range.set_start(typed_other.m_range.start());
     return true;
-
-    return false;
 }
 
 void RemoveTextCommand::redo()
