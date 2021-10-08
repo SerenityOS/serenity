@@ -79,12 +79,19 @@ JS_DEFINE_NATIVE_FUNCTION(CSSNamespace::supports)
         return JS::Value(false);
     } else {
         // When the supports(conditionText) method is invoked with a single conditionText argument:
-        //
-        //    If conditionText, parsed and evaluated as a <supports-condition>, would return true, return true.
-        //
-        //    Otherwise, If conditionText, wrapped in parentheses and then parsed and evaluated as a <supports-condition>, would return true, return true.
-        //
-        //    Otherwise, return false.
+        String supports_text = vm.argument(0).to_string(global_object);
+        if (vm.exception())
+            return {};
+
+        // If conditionText, parsed and evaluated as a <supports-condition>, would return true, return true.
+        if (auto supports = parse_css_supports({}, supports_text); supports && supports->matches())
+            return JS::Value(true);
+
+        // Otherwise, If conditionText, wrapped in parentheses and then parsed and evaluated as a <supports-condition>, would return true, return true.
+        if (auto supports = parse_css_supports({}, String::formatted("({})", supports_text)); supports && supports->matches())
+            return JS::Value(true);
+
+        // Otherwise, return false.
         return JS::Value(false);
     }
 }
