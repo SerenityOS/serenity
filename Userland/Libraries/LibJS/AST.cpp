@@ -2856,14 +2856,15 @@ Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
     if (interpreter.exception())
         return {};
 
-    auto* old_environment = interpreter.lexical_environment();
-    ScopeGuard restore_environment = [&] {
-        interpreter.vm().running_execution_context().lexical_environment = old_environment;
-    };
-    auto* block_environment = new_declarative_environment(*old_environment);
-    block_declaration_instantiation(global_object, block_environment);
+    // Optimization: Avoid creating a lexical environment if there are no lexical declarations.
+    Optional<TemporaryChange<Environment*>> lexical_environment_changer;
+    if (has_lexical_declarations()) {
+        auto* old_environment = interpreter.lexical_environment();
+        auto* block_environment = new_declarative_environment(*old_environment);
+        block_declaration_instantiation(global_object, block_environment);
+        lexical_environment_changer.emplace(interpreter.vm().running_execution_context().lexical_environment, block_environment);
+    }
 
-    interpreter.vm().running_execution_context().lexical_environment = block_environment;
     Optional<size_t> first_passing_case;
     for (size_t i = 0; i < m_cases.size(); ++i) {
         auto& switch_case = m_cases[i];
