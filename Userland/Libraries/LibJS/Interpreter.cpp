@@ -67,13 +67,13 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     //        the VM in a cleaner state after executing. For example it does still store the exception.
     vm.stop_unwind();
 
-    vm.pop_execution_context();
-
     // At this point we may have already run any queued promise jobs via on_call_stack_emptied,
     // in which case this is a no-op.
     vm.run_queued_promise_jobs();
 
     vm.run_queued_finalization_registry_cleanup_jobs();
+
+    vm.pop_execution_context();
 
     vm.finish_execution_generation();
 }
