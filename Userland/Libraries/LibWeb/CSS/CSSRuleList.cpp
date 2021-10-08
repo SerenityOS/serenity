@@ -126,4 +126,34 @@ bool CSSRuleList::for_first_not_loaded_import_rule(Function<void(CSSImportRule&)
     return false;
 }
 
+void CSSRuleList::evaluate_media_queries(DOM::Window const& window)
+{
+    for (auto& rule : m_rules) {
+        switch (rule.type()) {
+        case CSSRule::Type::Style:
+            break;
+        case CSSRule::Type::Import: {
+            auto& import_rule = verify_cast<CSSImportRule>(rule);
+            if (import_rule.has_import_result())
+                import_rule.loaded_style_sheet()->evaluate_media_queries(window);
+            break;
+        }
+        case CSSRule::Type::Media: {
+            auto& media_rule = verify_cast<CSSMediaRule>(rule);
+            if (media_rule.evaluate(window))
+                media_rule.css_rules().evaluate_media_queries(window);
+            break;
+        }
+        case CSSRule::Type::Supports: {
+            auto& supports_rule = verify_cast<CSSSupportsRule>(rule);
+            if (supports_rule.condition_matches())
+                supports_rule.css_rules().evaluate_media_queries(window);
+            break;
+        }
+        case CSSRule::Type::__Count:
+            VERIFY_NOT_REACHED();
+        }
+    }
+}
+
 }
