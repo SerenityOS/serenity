@@ -22,3 +22,19 @@ Lstart:
   subs x0, x0, #1
   bne Lstart
   ret
+
+.global return_from_el3
+.type return_from_el3, @function
+return_from_el3:
+  adr x0, start_in_el1
+  msr elr_el3, x0
+  eret
+
+start_in_el1:
+  // Let stack start before .text for now.
+  // 512 kiB (0x80000) of stack are probably not sufficient, especially once we give the other cores some stack too,
+  // but for now it's ok.
+  ldr x14, =start
+  mov sp, x14
+
+  b os_start
