@@ -73,13 +73,11 @@ public:
         bool operator!=(const ConstIterator& other) { return m_index != other.m_index; }
         ConstIterator& operator++()
         {
-            m_index = (m_index + 1) % Capacity;
-            if (m_index == m_queue.m_head)
-                m_index = m_queue.m_size;
+            ++m_index;
             return *this;
         }
 
-        const T& operator*() const { return m_queue.elements()[m_index]; }
+        const T& operator*() const { return m_queue.at(m_index); }
 
     private:
         friend class CircularQueue;
@@ -92,8 +90,8 @@ public:
         size_t m_index { 0 };
     };
 
-    ConstIterator begin() const { return ConstIterator(*this, m_head); }
-    ConstIterator end() const { return ConstIterator(*this, (m_head + size()) % Capacity); }
+    ConstIterator begin() const { return ConstIterator(*this, 0); }
+    ConstIterator end() const { return ConstIterator(*this, size()); }
 
     size_t head_index() const { return m_head; }
 
