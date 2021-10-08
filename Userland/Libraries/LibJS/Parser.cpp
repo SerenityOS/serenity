@@ -1534,30 +1534,6 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
             if (identifier_instance->string() == "arguments"sv)
                 m_state.current_scope_pusher->set_contains_access_to_arguments_object();
         }
-
-        if (function_scope && has_not_been_declared_as_variable) {
-
-            auto& parameters = function_scope->function_parameters();
-            Optional<size_t> argument_index;
-            size_t index = 0;
-            for (auto& parameter : parameters) {
-                auto current_index = index++;
-                if (parameter.is_rest)
-                    break;
-                if (auto name_ptr = parameter.binding.get_pointer<FlyString>()) {
-                    // Need VM assistance for this, so let's just pretend it's not there.
-                    if (parameter.default_value)
-                        break;
-                    if (identifier_instance->string() == *name_ptr) {
-                        argument_index = current_index;
-                        if (m_state.strict_mode)
-                            break;
-                    }
-                }
-            }
-            if (argument_index.has_value())
-                m_state.current_scope_pusher->associate_identifier_with_argument_index(identifier_instance, *argument_index);
-        }
     }
 
     while (match(TokenType::TemplateLiteralStart)) {
