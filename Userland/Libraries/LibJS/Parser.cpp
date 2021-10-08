@@ -670,11 +670,13 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         m_state.labels_in_scope = move(old_labels_in_scope);
     });
 
+    bool contains_direct_call_to_eval = false;
+
     auto function_body_result = [&]() -> RefPtr<FunctionBody> {
         TemporaryChange change(m_state.in_arrow_function_context, true);
         if (match(TokenType::CurlyOpen)) {
             // Parse a function body with statements
-            return parse_function_body(parameters, FunctionKind::Regular);
+            return parse_function_body(parameters, FunctionKind::Regular, contains_direct_call_to_eval);
         }
         if (match_expression()) {
             // Parse a function body which returns a single expression
@@ -689,6 +691,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
             return_block->append<ReturnStatement>({ m_filename, rule_start.position(), position() }, move(return_expression));
             if (m_state.strict_mode)
                 return_block->set_strict_mode();
+            contains_direct_call_to_eval = function_scope.contains_direct_call_to_eval();
             return return_block;
         }
         // Invalid arrow function body
@@ -715,7 +718,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     return create_ast_node<FunctionExpression>(
         { m_state.current_token.filename(), rule_start.position(), position() }, "", move(body),
         move(parameters), function_length, FunctionKind::Regular, body->in_strict_mode(),
-        /* might_need_arguments_object */ false, /* is_arrow_function */ true);
+        /* might_need_arguments_object */ false, contains_direct_call_to_eval, /* is_arrow_function */ true);
 }
 
 RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction allow_function)
@@ -1034,12 +1037,12 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
             constructor = create_ast_node<FunctionExpression>(
                 { m_state.current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body),
                 Vector { FunctionNode::Parameter { FlyString { "args" }, nullptr, true } }, 0, FunctionKind::Regular,
-                /* is_strict_mode */ true, /* might_need_arguments_object */ false);
+                /* is_strict_mode */ true, /* might_need_arguments_object */ false, /* contains_direct_call_to_eval */ false);
         } else {
             constructor = create_ast_node<FunctionExpression>(
                 { m_state.current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body),
                 Vector<FunctionNode::Parameter> {}, 0, FunctionKind::Regular,
-                /* is_strict_mode */ true, /* might_need_arguments_object */ false);
+                /* is_strict_mode */ true, /* might_need_arguments_object */ false, /* contains_direct_call_to_eval */ false);
         }
     }
 
@@ -1996,7 +1999,7 @@ void Parser::parse_statement_list(ScopeNode& output_node, AllowLabelledFunction 
 }
 
 // FunctionBody, https://tc39.es/ecma262/#prod-FunctionBody
-NonnullRefPtr<FunctionBody> Parser::parse_function_body(Vector<FunctionDeclaration::Parameter> const& parameters, FunctionKind function_kind)
+NonnullRefPtr<FunctionBody> Parser::parse_function_body(Vector<FunctionDeclaration::Parameter> const& parameters, FunctionKind function_kind, bool& contains_direct_call_to_eval)
 {
     auto rule_start = push_start();
     auto function_body = create_ast_node<FunctionBody>({ m_state.current_token.filename(), rule_start.position(), position() });
@@ -2052,6 +2055,7 @@ NonnullRefPtr<FunctionBody> Parser::parse_function_body(Vector<FunctionDeclarati
 
     consume(TokenType::CurlyClose);
     m_state.strict_mode = previous_strict_mode;
+    contains_direct_call_to_eval = function_scope.contains_direct_call_to_eval();
     return function_body;
 }
 
@@ -2117,7 +2121,8 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
         m_state.labels_in_scope = move(old_labels_in_scope);
     });
 
-    auto body = parse_function_body(parameters, function_kind);
+    bool contains_direct_call_to_eval = false;
+    auto body = parse_function_body(parameters, function_kind, contains_direct_call_to_eval);
 
     auto has_strict_directive = body->in_strict_mode();
 
@@ -2127,7 +2132,8 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     return create_ast_node<FunctionNodeType>(
         { m_state.current_token.filename(), rule_start.position(), position() },
         name, move(body), move(parameters), function_length,
-        function_kind, has_strict_directive, m_state.function_might_need_arguments_object);
+        function_kind, has_strict_directive, m_state.function_might_need_arguments_object,
+        contains_direct_call_to_eval);
 }
 
 Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_length, u8 parse_options)

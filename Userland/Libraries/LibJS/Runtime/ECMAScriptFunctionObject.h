@@ -28,9 +28,9 @@ public:
         Global,
     };
 
-    static ECMAScriptFunctionObject* create(GlobalObject&, FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool is_arrow_function = false);
+    static ECMAScriptFunctionObject* create(GlobalObject&, FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false);
 
-    ECMAScriptFunctionObject(FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, Object& prototype, FunctionKind, bool is_strict, bool might_need_arguments_object, bool is_arrow_function);
+    ECMAScriptFunctionObject(FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, Object& prototype, FunctionKind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function);
     virtual void initialize(GlobalObject&) override;
     virtual ~ECMAScriptFunctionObject();
 
@@ -101,6 +101,7 @@ private:
     i32 m_function_length { 0 };
     FunctionKind m_kind { FunctionKind::Regular };
     bool m_might_need_arguments_object { true };
+    bool m_contains_direct_call_to_eval { true };
     bool m_is_arrow_function { false };
     bool m_has_simple_parameter_list { false };
 };

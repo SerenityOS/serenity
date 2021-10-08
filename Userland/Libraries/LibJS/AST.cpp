@@ -195,7 +195,7 @@ Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& 
         scope->create_immutable_binding(global_object, name(), false);
     }
 
-    auto closure = ECMAScriptFunctionObject::create(global_object, used_name, body(), parameters(), function_length(), scope, kind(), is_strict_mode(), might_need_arguments_object(), is_arrow_function());
+    auto closure = ECMAScriptFunctionObject::create(global_object, used_name, body(), parameters(), function_length(), scope, kind(), is_strict_mode(), might_need_arguments_object(), contains_direct_call_to_eval(), is_arrow_function());
 
     // FIXME: 6. Perform SetFunctionName(closure, name).
     // FIXME: 7. Perform MakeConstructor(closure).
@@ -1734,6 +1734,10 @@ void FunctionNode::dump(int indent, String const& class_name) const
 {
     print_indent(indent);
     outln("{}{} '{}'", class_name, m_kind == FunctionKind::Generator ? "*" : "", name());
+    if (m_contains_direct_call_to_eval) {
+        print_indent(indent + 1);
+        outln("\033[31;1m(direct eval)\033[0m");
+    }
     if (!m_parameters.is_empty()) {
         print_indent(indent + 1);
         outln("(Parameters)");
@@ -3210,7 +3214,7 @@ void ScopeNode::block_declaration_instantiation(GlobalObject& global_object, Env
 
         if (is<FunctionDeclaration>(declaration)) {
             auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
-            auto* function = ECMAScriptFunctionObject::create(global_object, function_declaration.name(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object());
+            auto* function = ECMAScriptFunctionObject::create(global_object, function_declaration.name(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
             VERIFY(is<DeclarativeEnvironment>(*environment));
             static_cast<DeclarativeEnvironment&>(*environment).initialize_or_set_mutable_binding({}, global_object, function_declaration.name(), function);
         }
@@ -3354,7 +3358,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
     });
 
     for (auto& declaration : functions_to_initialize) {
-        auto* function = ECMAScriptFunctionObject::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), &global_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object());
+        auto* function = ECMAScriptFunctionObject::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), &global_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
         global_environment.create_global_function_binding(declaration.name(), function, false);
         if (auto* exception = interpreter.exception())
             return throw_completion(exception->value());

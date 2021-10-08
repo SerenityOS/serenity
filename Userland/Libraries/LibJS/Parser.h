@@ -72,7 +72,7 @@ public:
 
     NonnullRefPtr<Statement> parse_statement(AllowLabelledFunction allow_labelled_function = AllowLabelledFunction::No);
     NonnullRefPtr<BlockStatement> parse_block_statement();
-    NonnullRefPtr<FunctionBody> parse_function_body(Vector<FunctionDeclaration::Parameter> const& parameters, FunctionKind function_kind);
+    NonnullRefPtr<FunctionBody> parse_function_body(Vector<FunctionDeclaration::Parameter> const& parameters, FunctionKind function_kind, bool& contains_direct_call_to_eval);
     NonnullRefPtr<ReturnStatement> parse_return_statement();
     NonnullRefPtr<VariableDeclaration> parse_variable_declaration(bool for_loop_variable_declaration = false);
     NonnullRefPtr<Statement> parse_for_statement();
