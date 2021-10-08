@@ -952,6 +952,176 @@ Optional<MediaQuery::MediaType> Parser::consume_media_type(TokenStream<StyleComp
     return {};
 }
 
+RefPtr<Supports> Parser::parse_as_supports()
+{
+    return parse_a_supports(m_token_stream);
+}
+
+template<typename T>
+RefPtr<Supports> Parser::parse_a_supports(TokenStream<T>& tokens)
+{
+    auto component_values = parse_a_list_of_component_values(tokens);
+    TokenStream<StyleComponentValueRule> token_stream { component_values };
+    auto maybe_condition = parse_supports_condition(token_stream);
+    token_stream.skip_whitespace();
+    if (maybe_condition && !token_stream.has_next_token())
+        return Supports::create(maybe_condition.release_nonnull());
+
+    return {};
+}
+
+OwnPtr<Supports::Condition> Parser::parse_supports_condition(TokenStream<StyleComponentValueRule>& tokens)
+{
+    tokens.skip_whitespace();
+    auto start_position = tokens.position();
+
+    auto& peeked_token = tokens.peek_token();
+    // `not <supports-in-parens>`
+    if (peeked_token.is(Token::Type::Ident) && peeked_token.token().ident().equals_ignoring_case("not")) {
+        tokens.next_token();
+        tokens.skip_whitespace();
+        auto child = parse_supports_in_parens(tokens);
+        if (child.has_value()) {
+            auto* condition = new Supports::Condition;
+            condition->type = Supports::Condition::Type::Not;
+            condition->children.append(child.release_value());
+            return adopt_own(*condition);
+        }
+
+        tokens.rewind_to_position(start_position);
+        return {};
+    }
+
+    // `  <supports-in-parens> [ and <supports-in-parens> ]*
+    //  | <supports-in-parens> [ or <supports-in-parens> ]*`
+    Vector<Supports::InParens> children;
+    Optional<Supports::Condition::Type> condition_type {};
+    auto as_condition_type = [](auto& token) -> Optional<Supports::Condition::Type> {
+        if (!token.is(Token::Type::Ident))
+            return {};
+        auto ident = token.token().ident();
+        if (ident.equals_ignoring_case("and"))
+            return Supports::Condition::Type::And;
+        if (ident.equals_ignoring_case("or"))
+            return Supports::Condition::Type::Or;
+        return {};
+    };
+
+    bool is_invalid = false;
+    while (tokens.has_next_token()) {
+        if (!children.is_empty()) {
+            // Expect `and` or `or` here
+            auto maybe_combination = as_condition_type(tokens.next_token());
+            if (!maybe_combination.has_value()) {
+                is_invalid = true;
+                break;
+            }
+            if (!condition_type.has_value()) {
+                condition_type = maybe_combination.value();
+            } else if (maybe_combination != condition_type) {
+                is_invalid = true;
+                break;
+            }
+        }
+
+        tokens.skip_whitespace();
+
+        if (auto in_parens = parse_supports_in_parens(tokens); in_parens.has_value()) {
+            children.append(in_parens.release_value());
+        } else {
+            is_invalid = true;
+            break;
+        }
+
+        tokens.skip_whitespace();
+    }
+
+    if (!is_invalid && !children.is_empty()) {
+        auto* condition = new Supports::Condition;
+        condition->type = condition_type.value_or(Supports::Condition::Type::Or);
+        condition->children = move(children);
+        return adopt_own(*condition);
+    }
+
+    tokens.rewind_to_position(start_position);
+    return {};
+}
+
+Optional<Supports::InParens> Parser::parse_supports_in_parens(TokenStream<StyleComponentValueRule>& tokens)
+{
+    tokens.skip_whitespace();
+    auto start_position = tokens.position();
+
+    auto& first_token = tokens.peek_token();
+    // `( <supports-condition> )`
+    if (first_token.is_block() && first_token.block().is_paren()) {
+        tokens.next_token();
+        tokens.skip_whitespace();
+
+        TokenStream child_tokens { first_token.block().values() };
+        if (auto condition = parse_supports_condition(child_tokens)) {
+            if (child_tokens.has_next_token()) {
+                tokens.rewind_to_position(start_position);
+                return {};
+            }
+            return Supports::InParens {
+                .value = { condition.release_nonnull() }
+            };
+        }
+
+        tokens.rewind_to_position(start_position);
+    }
+
+    // `<supports-feature>`
+    if (auto feature = parse_supports_feature(tokens); feature.has_value()) {
+        return Supports::InParens {
+            .value = { feature.release_value() }
+        };
+    }
+
+    // `<general-enclosed>`
+    if (auto general_enclosed = parse_general_enclosed(tokens); general_enclosed.has_value()) {
+        return Supports::InParens {
+            .value = Supports::GeneralEnclosed {}
+        };
+    }
+
+    tokens.rewind_to_position(start_position);
+    return {};
+}
+
+Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<StyleComponentValueRule>& tokens)
+{
+    tokens.skip_whitespace();
+    auto start_position = tokens.position();
+
+    auto& first_token = tokens.next_token();
+    // `<supports-decl>`
+    if (first_token.is_block() && first_token.block().is_paren()) {
+        TokenStream block_tokens { first_token.block().values() };
+        if (auto declaration = consume_a_declaration(block_tokens); declaration.has_value()) {
+            return Supports::Feature {
+                .declaration = declaration.release_value()
+            };
+        }
+    }
+
+    tokens.rewind_to_position(start_position);
+    return {};
+}
+
+Optional<Parser::GeneralEnclosed> Parser::parse_general_enclosed()
+{
+    return parse_general_enclosed(m_token_stream);
+}
+
+template<typename T>
+Optional<Parser::GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<T>&)
+{
+    // FIXME: Actually parse this! https://www.w3.org/TR/mediaqueries-5/#typedef-general-enclosed
+    return {};
+}
+
 NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(bool top_level)
 {
     return consume_a_list_of_rules(m_token_stream, top_level);
@@ -1175,10 +1345,16 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration()
 template<typename T>
 Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tokens)
 {
+    tokens.skip_whitespace();
+    auto start_position = tokens.position();
     auto& token = tokens.next_token();
 
+    if (!token.is(Token::Type::Ident)) {
+        tokens.rewind_to_position(start_position);
+        return {};
+    }
+
     StyleDeclarationRule declaration;
-    VERIFY(token.is(Token::Type::Ident));
     declaration.m_name = ((Token)token).ident();
 
     tokens.skip_whitespace();
@@ -1186,6 +1362,7 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tok
     auto& maybe_colon = tokens.next_token();
     if (!maybe_colon.is(Token::Type::Colon)) {
         log_parse_error();
+        tokens.rewind_to_position(start_position);
         return {};
     }
 
@@ -3661,6 +3838,14 @@ NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::ParsingContext 
 {
     CSS::Parser parser(context, string);
     return parser.parse_as_media_query_list();
+}
+
+RefPtr<CSS::Supports> parse_css_supports(CSS::ParsingContext const& context, StringView const& string)
+{
+    if (string.is_empty())
+        return {};
+    CSS::Parser parser(context, string);
+    return parser.parse_as_supports();
 }
 
 RefPtr<CSS::StyleValue> parse_html_length(DOM::Document const& document, StringView const& string)
