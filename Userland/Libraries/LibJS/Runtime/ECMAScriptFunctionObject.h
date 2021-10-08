@@ -79,7 +79,6 @@ protected:
 
 private:
     virtual bool is_ecmascript_function_object() const override { return true; }
-    virtual FunctionEnvironment* new_function_environment(Object* new_target) override;
     virtual void visit_edges(Visitor&) override;
 
     void prepare_for_ordinary_call(ExecutionContext& callee_context, Object* new_target);

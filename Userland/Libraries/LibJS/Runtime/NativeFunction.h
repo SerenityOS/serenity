@@ -39,7 +39,6 @@ protected:
     explicit NativeFunction(Object& prototype);
 
 private:
-    virtual FunctionEnvironment* new_function_environment(Object* new_target) override final;
     virtual bool is_native_function() const final { return true; }
 
     FlyString m_name;

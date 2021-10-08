@@ -393,6 +393,34 @@ ObjectEnvironment* new_object_environment(Object& object, bool is_with_environme
     return global_object.heap().allocate<ObjectEnvironment>(global_object, object, is_with_environment ? ObjectEnvironment::IsWithEnvironment::Yes : ObjectEnvironment::IsWithEnvironment::No, environment);
 }
 
+// 9.1.2.4 NewFunctionEnvironment ( F, newTarget ), https://tc39.es/ecma262/#sec-newfunctionenvironment
+FunctionEnvironment* new_function_environment(ECMAScriptFunctionObject& function, Object* new_target)
+{
+    auto& global_object = function.global_object();
+
+    // 1. Let env be a new function Environment Record containing no bindings.
+    auto* env = global_object.heap().allocate<FunctionEnvironment>(global_object, function.environment());
+
+    // 2. Set env.[[FunctionObject]] to F.
+    env->set_function_object(function);
+
+    // 3. If F.[[ThisMode]] is lexical, set env.[[ThisBindingStatus]] to lexical.
+    if (function.this_mode() == ECMAScriptFunctionObject::ThisMode::Lexical)
+        env->set_this_binding_status(FunctionEnvironment::ThisBindingStatus::Lexical);
+    // 4. Else, set env.[[ThisBindingStatus]] to uninitialized.
+    else
+        env->set_this_binding_status(FunctionEnvironment::ThisBindingStatus::Uninitialized);
+
+    // 5. Set env.[[NewTarget]] to newTarget.
+    env->set_new_target(new_target ?: js_undefined());
+
+    // 6. Set env.[[OuterEnv]] to F.[[Environment]].
+    // NOTE: Done in step 1 via the FunctionEnvironment constructor.
+
+    // 7. Return env.
+    return env;
+}
+
 // 9.4.3 GetThisEnvironment ( ), https://tc39.es/ecma262/#sec-getthisenvironment
 Environment& get_this_environment(VM& vm)
 {

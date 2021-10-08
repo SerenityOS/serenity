@@ -22,7 +22,6 @@ public:
     virtual ~ProxyObject() override;
 
     virtual const FlyString& name() const override;
-    virtual FunctionEnvironment* new_function_environment(Object* new_target) override;
     virtual bool has_constructor() const override { return true; }
 
     const Object& target() const { return m_target; }
