@@ -525,34 +525,6 @@ Value VM::get_new_target()
     return verify_cast<FunctionEnvironment>(env).new_target();
 }
 
-// 10.2.1.2 OrdinaryCallBindThis ( F, calleeContext, thisArgument ), https://tc39.es/ecma262/#sec-ordinarycallbindthis
-void VM::ordinary_call_bind_this(FunctionObject& function, ExecutionContext& callee_context, Value this_argument)
-{
-    auto* callee_realm = function.realm();
-
-    auto* local_environment = callee_context.lexical_environment;
-    auto& function_environment = verify_cast<FunctionEnvironment>(*local_environment);
-
-    // This almost as the spec describes it however we sometimes don't have callee_realm when dealing
-    // with proxies and arrow functions however this does seemingly achieve spec like behavior.
-    if (!callee_realm || (is<ECMAScriptFunctionObject>(function) && static_cast<ECMAScriptFunctionObject&>(function).this_mode() == ECMAScriptFunctionObject::ThisMode::Lexical)) {
-        return;
-    }
-
-    Value this_value;
-    if (function.is_strict_mode()) {
-        this_value = this_argument;
-    } else if (this_argument.is_nullish()) {
-        auto& global_environment = callee_realm->global_environment();
-        this_value = &global_environment.global_this_value();
-    } else {
-        this_value = this_argument.to_object(function.global_object());
-    }
-
-    function_environment.bind_this_value(function.global_object(), this_value);
-    callee_context.this_value = this_value;
-}
-
 // NOTE: This is only here because there's a million invocations of vm.call() - it used to be tied to the VM in weird ways.
 // We should update all of those and then remove this, along with the call() template functions in VM.h, and use the standalone call() AO.
 ThrowCompletionOr<Value> VM::call_internal(FunctionObject& function, Value this_value, Optional<MarkedValueList> arguments)

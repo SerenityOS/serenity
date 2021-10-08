@@ -136,7 +136,7 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
     }
 
     // 5. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
-    vm.ordinary_call_bind_this(*this, callee_context, this_argument);
+    ordinary_call_bind_this(callee_context, this_argument);
 
     // 6. Let result be OrdinaryCallEvaluateBody(F, argumentsList).
     auto result = ordinary_call_evaluate_body();
@@ -200,7 +200,7 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVa
     // 6. If kind is base, then
     if (kind == ConstructorKind::Base) {
         // a. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
-        vm.ordinary_call_bind_this(*this, callee_context, this_argument);
+        ordinary_call_bind_this(callee_context, this_argument);
 
         // b. Let initializeResult be InitializeInstanceElements(thisArgument, F).
         auto initialize_result = vm.initialize_instance_elements(*this_argument, *this);
@@ -613,6 +613,55 @@ void ECMAScriptFunctionObject::prepare_for_ordinary_call(ExecutionContext& calle
 
     // 13. NOTE: Any exception objects produced after this point are associated with calleeRealm.
     // 14. Return calleeContext. (See NOTE above about how contexts are allocated on the C++ stack.)
+}
+
+// 10.2.1.2 OrdinaryCallBindThis ( F, calleeContext, thisArgument ), https://tc39.es/ecma262/#sec-ordinarycallbindthis
+void ECMAScriptFunctionObject::ordinary_call_bind_this(ExecutionContext& callee_context, Value this_argument)
+{
+    // 1. Let thisMode be F.[[ThisMode]].
+    auto this_mode = m_this_mode;
+
+    // If thisMode is lexical, return NormalCompletion(undefined).
+    if (this_mode == ThisMode::Lexical)
+        return;
+
+    // 3. Let calleeRealm be F.[[Realm]].
+    auto* callee_realm = m_realm;
+
+    // 4. Let localEnv be the LexicalEnvironment of calleeContext.
+    auto* local_env = callee_context.lexical_environment;
+
+    Value this_value;
+
+    // 5. If thisMode is strict, let thisValue be thisArgument.
+    if (this_mode == ThisMode::Strict) {
+        this_value = this_argument;
+    }
+    // 6. Else,
+    else {
+        // a. If thisArgument is undefined or null, then
+        if (this_argument.is_nullish()) {
+            // i. Let globalEnv be calleeRealm.[[GlobalEnv]].
+            // ii. Assert: globalEnv is a global Environment Record.
+            auto& global_env = callee_realm->global_environment();
+
+            // iii. Let thisValue be globalEnv.[[GlobalThisValue]].
+            this_value = &global_env.global_this_value();
+        }
+        // b. Else,
+        else {
+            // i. Let thisValue be ! ToObject(thisArgument).
+            this_value = this_argument.to_object(global_object());
+
+            // ii. NOTE: ToObject produces wrapper objects using calleeRealm.
+            // FIXME: It currently doesn't, as we pass the function's global object.
+        }
+    }
+
+    // 7. Assert: localEnv is a function Environment Record.
+    // 8. Assert: The next step never returns an abrupt completion because localEnv.[[ThisBindingStatus]] is not initialized.
+    // 9. Return localEnv.BindThisValue(thisValue).
+    verify_cast<FunctionEnvironment>(local_env)->bind_this_value(global_object(), this_value);
 }
 
 // 10.2.1.4 OrdinaryCallEvaluateBody ( F, argumentsList ), https://tc39.es/ecma262/#sec-ordinarycallevaluatebody
