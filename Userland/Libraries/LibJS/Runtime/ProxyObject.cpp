@@ -857,10 +857,4 @@ const FlyString& ProxyObject::name() const
     return static_cast<FunctionObject&>(m_target).name();
 }
 
-FunctionEnvironment* ProxyObject::new_function_environment(Object* new_target)
-{
-    VERIFY(is_function());
-    return static_cast<FunctionObject&>(m_target).new_function_environment(new_target);
-}
-
 }

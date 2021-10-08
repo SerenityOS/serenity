@@ -275,19 +275,6 @@ void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
     }
 }
 
-// 9.1.2.4 NewFunctionEnvironment ( F, newTarget ), https://tc39.es/ecma262/#sec-newfunctionenvironment
-FunctionEnvironment* ECMAScriptFunctionObject::new_function_environment(Object* new_target)
-{
-    auto* environment = heap().allocate<FunctionEnvironment>(global_object(), m_environment);
-    environment->set_function_object(*this);
-    if (this_mode() == ThisMode::Lexical) {
-        environment->set_this_binding_status(FunctionEnvironment::ThisBindingStatus::Lexical);
-    }
-
-    environment->set_new_target(new_target ? new_target : js_undefined());
-    return environment;
-}
-
 // 10.2.11 FunctionDeclarationInstantiation ( func, argumentsList ), https://tc39.es/ecma262/#sec-functiondeclarationinstantiation
 ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantiation(Interpreter* interpreter)
 {
@@ -594,7 +581,7 @@ void ECMAScriptFunctionObject::prepare_for_ordinary_call(ExecutionContext& calle
     // FIXME: Our execution context struct currently does not track this item.
 
     // 7. Let localEnv be NewFunctionEnvironment(F, newTarget).
-    auto* local_environment = new_function_environment(new_target);
+    auto* local_environment = new_function_environment(*this, new_target);
 
     // 8. Set the LexicalEnvironment of calleeContext to localEnv.
     callee_context.lexical_environment = local_environment;
