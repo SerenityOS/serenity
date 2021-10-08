@@ -297,5 +297,4 @@ int main(int argc, char** argv)
         prev = move(current);
         sleep(top_option.delay_time);
     }
-    return 0;
 }
