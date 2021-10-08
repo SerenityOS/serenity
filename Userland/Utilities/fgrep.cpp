@@ -25,5 +25,4 @@ int main(int argc, char** argv)
             return 0;
         VERIFY(str);
     }
-    return 0;
 }

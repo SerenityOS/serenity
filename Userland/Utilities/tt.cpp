@@ -58,7 +58,6 @@ int main(int argc, char** argv)
         &thread_id, nullptr, [](void*) -> void* {
             outln("Hi there, from the second thread!");
             pthread_exit((void*)0xDEADBEEF);
-            return nullptr;
         },
         nullptr);
     if (rc < 0) {
@@ -96,8 +95,6 @@ int mutex_test()
                 pthread_mutex_unlock(&mutex);
                 sleep(1);
             }
-            pthread_exit((void*)0xDEADBEEF);
-            return nullptr;
         },
         nullptr);
     if (rc < 0) {
@@ -110,7 +107,6 @@ int mutex_test()
         pthread_mutex_unlock(&mutex);
         usleep(10000);
     }
-    return 0;
 }
 
 int detached_test()
@@ -144,7 +140,6 @@ int detached_test()
             outln("I'm the secondary thread :^)");
             sleep(1);
             pthread_exit((void*)0xDEADBEEF);
-            return nullptr;
         },
         nullptr);
     if (rc != 0) {
@@ -206,7 +201,6 @@ int priority_test()
             outln("I'm the secondary thread :^)");
             sleep(1);
             pthread_exit((void*)0xDEADBEEF);
-            return nullptr;
         },
         nullptr);
     if (rc < 0) {
@@ -260,7 +254,6 @@ int stack_size_test()
             outln("I'm the secondary thread :^)");
             sleep(1);
             pthread_exit((void*)0xDEADBEEF);
-            return nullptr;
         },
         nullptr);
     if (rc < 0) {
@@ -294,7 +287,6 @@ int staying_alive_test()
             sleep(3520);
             outln("Secondary thread exiting");
             pthread_exit((void*)0xDEADBEEF);
-            return nullptr;
         },
         nullptr);
     if (rc < 0) {
@@ -354,7 +346,6 @@ int set_stack_test()
             outln("I'm the secondary thread :^)");
             sleep(1);
             pthread_exit((void*)0xDEADBEEF);
-            return nullptr;
         },
         nullptr);
     if (rc < 0) {
@@ -386,7 +377,6 @@ int kill_test()
             sleep(100);
             outln("Secondary thread is still alive :^(");
             pthread_exit((void*)0xDEADBEEF);
-            return nullptr;
         },
         nullptr);
     if (rc < 0) {

@@ -23,5 +23,4 @@ int main(int argc, char** argv)
 
     for (;;)
         puts(string);
-    return 0;
 }
