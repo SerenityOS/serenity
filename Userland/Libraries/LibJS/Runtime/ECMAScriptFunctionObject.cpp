@@ -345,11 +345,28 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
     Environment* lex_environment;
 
-    if (!is_strict_mode())
-        lex_environment = new_declarative_environment(*var_environment);
-    else
+    // 30. If strict is false, then
+    if (!is_strict_mode()) {
+        // Optimization: We avoid creating empty top-level declarative environments in non-strict mode, if both of these conditions are true:
+        //               1. there is no direct call to eval() within this function
+        //               2. there are no lexical declarations that would go into the environment
+        bool can_elide_declarative_environment = !m_contains_direct_call_to_eval && (!scope_body || !scope_body->has_lexical_declarations());
+        if (can_elide_declarative_environment) {
+            lex_environment = var_environment;
+        } else {
+            // a. Let lexEnv be NewDeclarativeEnvironment(varEnv).
+            // b. NOTE: Non-strict functions use a separate Environment Record for top-level lexical declarations so that a direct eval
+            //          can determine whether any var scoped declarations introduced by the eval code conflict with pre-existing top-level
+            //          lexically scoped declarations. This is not needed for strict functions because a strict direct eval always places
+            //          all declarations into a new Environment Record.
+            lex_environment = new_declarative_environment(*var_environment);
+        }
+    } else {
+        // 31. Else, let lexEnv be varEnv.
         lex_environment = var_environment;
+    }
 
+    // 32. Set the LexicalEnvironment of calleeContext to lexEnv.
     callee_context.lexical_environment = lex_environment;
 
     if (!scope_body)
