@@ -30,13 +30,3 @@ Lbss_clear_loop:
   bne Lbss_clear_loop
 
   b init
-
-.globl wait_cycles
-.type wait_cycles, @function
-wait_cycles:
-Lstart:
-  // This is probably too fast when caching and branch prediction is turned on.
-  // FIXME: Make timer-based.
-  subs x0, x0, #1
-  bne Lstart
-  ret
