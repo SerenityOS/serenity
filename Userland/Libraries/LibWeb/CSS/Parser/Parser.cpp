@@ -16,6 +16,7 @@
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
+#include <LibWeb/CSS/CSSSupportsRule.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
@@ -1735,6 +1736,29 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
                 return CSSImportRule::create(url.value());
             else
                 dbgln("Unable to parse url from @import rule");
+
+        } else if (rule->m_name.equals_ignoring_case("supports"sv)) {
+
+            auto supports_tokens = TokenStream { rule->prelude() };
+            auto supports = parse_a_supports(supports_tokens);
+            if (!supports) {
+                if constexpr (CSS_PARSER_DEBUG) {
+                    dbgln("CSSParser: @supports rule invalid; discarding.");
+                    supports_tokens.dump_all_tokens();
+                }
+                return {};
+            }
+
+            auto child_tokens = TokenStream { rule->block().values() };
+            auto parser_rules = consume_a_list_of_rules(child_tokens, false);
+            NonnullRefPtrVector<CSSRule> child_rules;
+            for (auto& raw_rule : parser_rules) {
+                if (auto child_rule = convert_to_rule(raw_rule))
+                    child_rules.append(*child_rule);
+            }
+
+            return CSSSupportsRule::create(supports.release_nonnull(), move(child_rules));
+
         } else {
             dbgln("Unrecognized CSS at-rule: @{}", rule->m_name);
         }

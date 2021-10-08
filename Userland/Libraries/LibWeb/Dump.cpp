@@ -13,6 +13,7 @@
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
+#include <LibWeb/CSS/CSSSupportsRule.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
@@ -500,6 +501,9 @@ void dump_rule(StringBuilder& builder, CSS::CSSRule const& rule, int indent_leve
     case CSS::CSSRule::Type::Media:
         dump_media_rule(builder, verify_cast<CSS::CSSMediaRule const>(rule), indent_levels);
         break;
+    case CSS::CSSRule::Type::Supports:
+        dump_supports_rule(builder, verify_cast<CSS::CSSSupportsRule const>(rule), indent_levels);
+        break;
     case CSS::CSSRule::Type::__Count:
         VERIFY_NOT_REACHED();
     }
@@ -517,6 +521,16 @@ void dump_media_rule(StringBuilder& builder, CSS::CSSMediaRule const& media, int
     builder.appendff("  Media: {}\n  Rules ({}):\n", media.condition_text(), media.css_rules().length());
 
     for (auto& rule : media.css_rules()) {
+        dump_rule(builder, rule, indent_levels + 1);
+    }
+}
+
+void dump_supports_rule(StringBuilder& builder, CSS::CSSSupportsRule const& supports, int indent_levels)
+{
+    indent(builder, indent_levels);
+    builder.appendff("  Supports: {}\n  Rules ({}):\n", supports.condition_text(), supports.css_rules().length());
+
+    for (auto& rule : supports.css_rules()) {
         dump_rule(builder, rule, indent_levels + 1);
     }
 }

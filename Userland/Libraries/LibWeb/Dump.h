@@ -23,6 +23,7 @@ void dump_rule(CSS::CSSRule const&);
 void dump_style_rule(StringBuilder&, CSS::CSSStyleRule const&, int indent_levels = 0);
 void dump_import_rule(StringBuilder&, CSS::CSSImportRule const&, int indent_levels = 0);
 void dump_media_rule(StringBuilder&, CSS::CSSMediaRule const&, int indent_levels = 0);
+void dump_supports_rule(StringBuilder&, CSS::CSSSupportsRule const&, int indent_levels = 0);
 void dump_selector(StringBuilder&, CSS::Selector const&);
 void dump_selector(CSS::Selector const&);
 

@@ -26,6 +26,7 @@ public:
         Style,
         Import,
         Media,
+        Supports,
         __Count,
     };
 

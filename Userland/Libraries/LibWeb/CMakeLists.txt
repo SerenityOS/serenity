@@ -25,6 +25,7 @@ set(SOURCES
     CSS/CSSStyleDeclaration.cpp
     CSS/CSSStyleRule.cpp
     CSS/CSSStyleSheet.cpp
+    CSS/CSSSupportsRule.cpp
     CSS/ResolvedCSSStyleDeclaration.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Length.cpp
