@@ -146,7 +146,10 @@ test("cannot be constructed", () => {
     let foo = () => {};
     expect(() => {
         new foo();
-    }).toThrowWithMessage(TypeError, "foo is not a constructor");
+    }).toThrowWithMessage(
+        TypeError,
+        "[object ECMAScriptFunctionObject] is not a constructor (evaluated from 'foo')"
+    );
 });
 
 test("syntax errors", () => {

@@ -18,8 +18,9 @@ public:
     virtual void initialize(GlobalObject&) override;
     virtual ~BoundFunction();
 
-    virtual Value call() override;
-    virtual Value construct(FunctionObject& new_target) override;
+    virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedValueList arguments_list) override;
+    virtual ThrowCompletionOr<Object*> internal_construct(MarkedValueList arguments_list, FunctionObject& new_target) override;
+
     virtual FunctionEnvironment* new_function_environment(Object* new_target) override;
     virtual const FlyString& name() const override { return m_name; }
     virtual bool is_strict_mode() const override { return m_bound_target_function->is_strict_mode(); }

@@ -20,6 +20,8 @@ Environment& get_this_environment(VM&);
 Object* get_super_constructor(VM&);
 ThrowCompletionOr<Reference> make_super_property_reference(GlobalObject&, Value actual_this, StringOrSymbol const& property_key, bool strict);
 ThrowCompletionOr<Value> require_object_coercible(GlobalObject&, Value);
+ThrowCompletionOr<Value> call_impl(GlobalObject&, Value function, Value this_value, Optional<MarkedValueList> = {});
+ThrowCompletionOr<Object*> construct(GlobalObject&, FunctionObject&, Optional<MarkedValueList> = {}, FunctionObject* new_target = nullptr);
 ThrowCompletionOr<size_t> length_of_array_like(GlobalObject&, Object const&);
 ThrowCompletionOr<MarkedValueList> create_list_from_array_like(GlobalObject&, Value, Function<ThrowCompletionOr<void>(Value)> = {});
 ThrowCompletionOr<FunctionObject*> species_constructor(GlobalObject&, Object const&, FunctionObject& default_constructor);
@@ -43,6 +45,25 @@ enum class EvalMode {
 ThrowCompletionOr<Value> perform_eval(Value, GlobalObject&, CallerMode, EvalMode);
 
 ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& global_object, Program const& program, Environment* variable_environment, Environment* lexical_environment, bool strict);
+
+// 7.3.13 Call ( F, V [ , argumentsList ] ), https://tc39.es/ecma262/#sec-call
+template<typename... Args>
+ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value function, Value this_value, MarkedValueList arguments_list)
+{
+    return call_impl(global_object, function, this_value, move(arguments_list));
+}
+
+template<typename... Args>
+ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value function, Value this_value, Args... args)
+{
+    if constexpr (sizeof...(Args) > 0) {
+        MarkedValueList arguments_list { global_object.heap() };
+        (..., arguments_list.append(move(args)));
+        return call_impl(global_object, function, this_value, move(arguments_list));
+    }
+
+    return call_impl(global_object, function, this_value);
+}
 
 // 10.1.13 OrdinaryCreateFromConstructor ( constructor, intrinsicDefaultProto [ , internalSlotsList ] ), https://tc39.es/ecma262/#sec-ordinarycreatefromconstructor
 template<typename T, typename... Args>
