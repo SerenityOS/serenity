@@ -16,6 +16,7 @@ namespace JS {
 
 DeclarativeEnvironment* new_declarative_environment(Environment&);
 ObjectEnvironment* new_object_environment(Object&, bool is_with_environment, Environment*);
+FunctionEnvironment* new_function_environment(ECMAScriptFunctionObject&, Object* new_target);
 Environment& get_this_environment(VM&);
 Object* get_super_constructor(VM&);
 ThrowCompletionOr<Reference> make_super_property_reference(GlobalObject&, Value actual_this, StringOrSymbol const& property_key, bool strict);

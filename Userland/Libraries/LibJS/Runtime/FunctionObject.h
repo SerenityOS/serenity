@@ -24,7 +24,6 @@ public:
     virtual ThrowCompletionOr<Object*> internal_construct([[maybe_unused]] MarkedValueList arguments_list, [[maybe_unused]] FunctionObject& new_target) { VERIFY_NOT_REACHED(); }
 
     virtual const FlyString& name() const = 0;
-    virtual FunctionEnvironment* new_function_environment(Object* new_target) = 0;
 
     BoundFunction* bind(Value bound_this_value, Vector<Value> arguments);
 
