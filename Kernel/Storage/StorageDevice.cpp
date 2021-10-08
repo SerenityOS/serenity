@@ -10,6 +10,7 @@
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Storage/StorageDevice.h>
 #include <Kernel/Storage/StorageManagement.h>
+#include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 
@@ -185,6 +186,19 @@ StringView StorageDevice::early_storage_name() const
 bool StorageDevice::can_write(const OpenFileDescription&, size_t offset) const
 {
     return offset < (max_addressable_block() * block_size());
+}
+
+KResult StorageDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
+{
+    switch (request) {
+    case STORAGE_DEVICE_GET_SIZE: {
+        size_t disk_size = m_max_addressable_block * block_size();
+        return copy_to_user(Userspace<size_t*>(arg), &disk_size);
+        break;
+    }
+    default:
+        return EINVAL;
+    }
 }
 
 }

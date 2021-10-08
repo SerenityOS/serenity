@@ -50,6 +50,9 @@ public:
 
     virtual CommandSet command_set() const = 0;
 
+    // ^File
+    virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) final;
+
 protected:
     StorageDevice(int, int, size_t, u64, NonnullOwnPtr<KString>);
     // ^DiskDevice
