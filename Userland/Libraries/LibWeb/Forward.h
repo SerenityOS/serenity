@@ -39,6 +39,7 @@ class Selector;
 class StyleProperties;
 class StyleComputer;
 class StyleSheet;
+class Supports;
 
 class StyleValue;
 class BackgroundRepeatStyleValue;

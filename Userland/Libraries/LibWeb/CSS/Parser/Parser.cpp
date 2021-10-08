@@ -1604,7 +1604,7 @@ RefPtr<PropertyOwningCSSStyleDeclaration> Parser::convert_to_declaration(Nonnull
     return parse_a_list_of_declarations(stream);
 }
 
-Optional<StyleProperty> Parser::convert_to_style_property(StyleDeclarationRule& declaration)
+Optional<StyleProperty> Parser::convert_to_style_property(StyleDeclarationRule const& declaration)
 {
     auto& property_name = declaration.m_name;
     auto property_id = property_id_from_string(property_name);
