@@ -17,4 +17,18 @@ CSSConditionRule::~CSSConditionRule()
 {
 }
 
+void CSSConditionRule::for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const
+{
+    if (condition_matches())
+        CSSGroupingRule::for_each_effective_style_rule(callback);
+}
+
+bool CSSConditionRule::for_first_not_loaded_import_rule(Function<void(CSSImportRule&)> const& callback)
+{
+    if (condition_matches())
+        return CSSGroupingRule::for_first_not_loaded_import_rule(callback);
+
+    return false;
+}
+
 }
