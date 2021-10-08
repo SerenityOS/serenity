@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/ExceptionOr.h>
@@ -60,32 +59,12 @@ DOM::ExceptionOr<void> CSSStyleSheet::remove_rule(unsigned index)
 
 void CSSStyleSheet::for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const
 {
-    for (auto& rule : *m_rules)
-        if (rule.type() == CSSRule::Type::Style) {
-            callback(verify_cast<CSSStyleRule>(rule));
-        } else if (rule.type() == CSSRule::Type::Import) {
-            const auto& import_rule = verify_cast<CSSImportRule>(rule);
-            if (import_rule.has_import_result())
-                import_rule.loaded_style_sheet()->for_each_effective_style_rule(callback);
-        }
+    m_rules->for_each_effective_style_rule(callback);
 }
 
 bool CSSStyleSheet::for_first_not_loaded_import_rule(Function<void(CSSImportRule&)> const& callback)
 {
-    for (auto& rule : *m_rules)
-        if (rule.type() == CSSRule::Type::Import) {
-            auto& import_rule = verify_cast<CSSImportRule>(rule);
-            if (!import_rule.has_import_result()) {
-                callback(import_rule);
-                return true;
-            }
-
-            if (import_rule.loaded_style_sheet()->for_first_not_loaded_import_rule(callback)) {
-                return true;
-            }
-        }
-
-    return false;
+    return m_rules->for_first_not_loaded_import_rule(callback);
 }
 
 }

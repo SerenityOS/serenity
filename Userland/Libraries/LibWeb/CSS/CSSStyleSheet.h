@@ -8,7 +8,6 @@
 
 #include <AK/Function.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <AK/TypeCasts.h>
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/CSSRuleList.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
