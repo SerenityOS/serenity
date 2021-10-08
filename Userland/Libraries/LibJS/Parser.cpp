@@ -82,13 +82,15 @@ public:
         return scope_pusher;
     }
 
-    static ScopePusher catch_scope(Parser& parser, RefPtr<BindingPattern> const& pattern)
+    static ScopePusher catch_scope(Parser& parser, RefPtr<BindingPattern> const& pattern, FlyString const& parameter)
     {
         ScopePusher scope_pusher(parser, nullptr, false);
         if (pattern) {
             pattern->for_each_bound_name([&](auto const& name) {
                 scope_pusher.m_forbidden_var_names.set(name);
             });
+        } else if (!parameter.is_empty()) {
+            scope_pusher.m_var_names.set(parameter);
         }
         return scope_pusher;
     }
@@ -2709,7 +2711,7 @@ NonnullRefPtr<CatchClause> Parser::parse_catch_clause()
         bound_names.set(parameter);
     }
 
-    ScopePusher catch_scope = ScopePusher::catch_scope(*this, pattern_parameter);
+    ScopePusher catch_scope = ScopePusher::catch_scope(*this, pattern_parameter, parameter);
     auto body = parse_block_statement();
 
     body->for_each_lexically_declared_name([&](auto const& name) {
