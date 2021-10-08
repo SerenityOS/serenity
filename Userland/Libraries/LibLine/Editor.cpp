@@ -986,7 +986,7 @@ void Editor::handle_read_event()
                 dbgln("LibLine: Unhandled final: {:02x} ({:c})", code_point, code_point);
                 continue;
             }
-            break;
+            VERIFY_NOT_REACHED();
         }
         case InputState::Verbatim:
             m_state = InputState::Free;

@@ -61,7 +61,7 @@ void TextNode::paint_text_decoration(Gfx::Painter& painter, LineBoxFragment cons
         line_start_point = fragment_box.top_left().translated(0, baseline - x_height / 2);
         line_end_point = fragment_box.top_right().translated(0, baseline - x_height / 2);
         break;
-    } break;
+    }
     case CSS::TextDecorationLine::Blink:
         // Conforming user agents may simply not blink the text
         return;

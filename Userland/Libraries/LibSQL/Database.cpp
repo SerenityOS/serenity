@@ -163,7 +163,6 @@ bool Database::update(Row& tuple)
     return m_serializer.serialize_and_write<Tuple>(tuple, tuple.pointer());
 
     // TODO update indexes defined on table.
-    return true;
 }
 
 }

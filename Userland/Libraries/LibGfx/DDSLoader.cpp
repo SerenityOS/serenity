@@ -784,7 +784,8 @@ static bool decode_dds(DDSLoadingContext& context)
         return false;
     }
 
-    for (size_t mipmap_level = 0; mipmap_level < max(context.header.mip_map_count, 1u); mipmap_level++) {
+    // We support parsing mipmaps, but we only care about the largest one :^) (At least for now)
+    if (size_t mipmap_level = 0; mipmap_level < max(context.header.mip_map_count, 1u)) {
         u64 width = get_width(context.header, mipmap_level);
         u64 height = get_height(context.header, mipmap_level);
 
@@ -795,9 +796,6 @@ static bool decode_dds(DDSLoadingContext& context)
         context.bitmap = Bitmap::try_create(BitmapFormat::BGRA8888, { width, height });
 
         decode_bitmap(stream, context, format, width, height);
-
-        // We support parsing mipmaps, but we only care about the largest one :^) (At least for now)
-        break;
     }
 
     context.state = DDSLoadingContext::State::BitmapDecoded;
