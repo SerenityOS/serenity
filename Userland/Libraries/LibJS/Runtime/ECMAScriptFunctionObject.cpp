@@ -113,7 +113,7 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
         callee_context.current_node = interpreter->current_node();
 
     // 2. Let calleeContext be PrepareForOrdinaryCall(F, undefined).
-    vm.prepare_for_ordinary_call(*this, callee_context, nullptr);
+    prepare_for_ordinary_call(callee_context, nullptr);
 
     // NOTE: We throw if the end of the native stack is reached, so unlike in the spec this _does_ need an exception check.
     if (auto* exception = vm.exception())
@@ -188,7 +188,7 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVa
         callee_context.current_node = interpreter->current_node();
 
     // 4. Let calleeContext be PrepareForOrdinaryCall(F, newTarget).
-    vm.prepare_for_ordinary_call(*this, callee_context, &new_target);
+    prepare_for_ordinary_call(callee_context, &new_target);
 
     // NOTE: We throw if the end of the native stack is reached, so unlike in the spec this _does_ need an exception check.
     if (auto* exception = vm.exception())
@@ -555,6 +555,64 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     }
 
     return {};
+}
+
+// 10.2.1.1 PrepareForOrdinaryCall ( F, newTarget ), https://tc39.es/ecma262/#sec-prepareforordinarycall
+void ECMAScriptFunctionObject::prepare_for_ordinary_call(ExecutionContext& callee_context, Object* new_target)
+{
+    auto& vm = this->vm();
+
+    // Non-standard
+    callee_context.is_strict_mode = m_strict;
+
+    // 1. Let callerContext be the running execution context.
+    // 2. Let calleeContext be a new ECMAScript code execution context.
+
+    // NOTE: In the specification, PrepareForOrdinaryCall "returns" a new callee execution context.
+    // To avoid heap allocations, we put our ExecutionContext objects on the C++ stack instead.
+    // Whoever calls us should put an ExecutionContext on their stack and pass that as the `callee_context`.
+
+    // 3. Set the Function of calleeContext to F.
+    callee_context.function = this;
+    callee_context.function_name = m_name;
+
+    // 4. Let calleeRealm be F.[[Realm]].
+    auto* callee_realm = m_realm;
+    // NOTE: This non-standard fallback is needed until we can guarantee that literally
+    // every function has a realm - especially in LibWeb that's sometimes not the case
+    // when a function is created while no JS is running, as we currently need to rely on
+    // that (:acid2:, I know - see set_event_handler_attribute() for an example).
+    // If there's no 'current realm' either, we can't continue and crash.
+    if (!callee_realm)
+        callee_realm = vm.current_realm();
+    VERIFY(callee_realm);
+
+    // 5. Set the Realm of calleeContext to calleeRealm.
+    callee_context.realm = callee_realm;
+
+    // 6. Set the ScriptOrModule of calleeContext to F.[[ScriptOrModule]].
+    // FIXME: Our execution context struct currently does not track this item.
+
+    // 7. Let localEnv be NewFunctionEnvironment(F, newTarget).
+    auto* local_environment = new_function_environment(new_target);
+
+    // 8. Set the LexicalEnvironment of calleeContext to localEnv.
+    callee_context.lexical_environment = local_environment;
+
+    // 9. Set the VariableEnvironment of calleeContext to localEnv.
+    callee_context.variable_environment = local_environment;
+
+    // 10. Set the PrivateEnvironment of calleeContext to F.[[PrivateEnvironment]].
+    // FIXME: We currently don't support private environments.
+
+    // 11. If callerContext is not already suspended, suspend callerContext.
+    // FIXME: We don't have this concept yet.
+
+    // 12. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
+    vm.push_execution_context(callee_context, global_object());
+
+    // 13. NOTE: Any exception objects produced after this point are associated with calleeRealm.
+    // 14. Return calleeContext. (See NOTE above about how contexts are allocated on the C++ stack.)
 }
 
 // 10.2.1.4 OrdinaryCallEvaluateBody ( F, argumentsList ), https://tc39.es/ecma262/#sec-ordinarycallevaluatebody
