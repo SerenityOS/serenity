@@ -254,6 +254,9 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
         return IterationDecision::Continue;
     });
 
+    for (auto& weak_container : m_weak_containers)
+        weak_container.remove_dead_cells({});
+
     for (auto* block : empty_blocks) {
         dbgln_if(HEAP_DEBUG, " - HeapBlock empty @ {}: cell_size={}", block, block->cell_size());
         allocator_for_size(block->cell_size()).block_did_become_empty({}, *block);
@@ -263,9 +266,6 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
         dbgln_if(HEAP_DEBUG, " - HeapBlock usable again @ {}: cell_size={}", block, block->cell_size());
         allocator_for_size(block->cell_size()).block_did_become_usable({}, *block);
     }
-
-    for (auto& weak_container : m_weak_containers)
-        weak_container.remove_dead_cells({});
 
     if constexpr (HEAP_DEBUG) {
         for_each_block([&](auto& block) {
