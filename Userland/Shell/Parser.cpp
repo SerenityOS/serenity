@@ -161,7 +161,6 @@ NonnullRefPtrVector<AST::Node> Parser::parse_as_multiple_expressions()
             return nodes;
         nodes.append(node.release_nonnull());
     }
-    return nodes;
 }
 
 RefPtr<AST::Node> Parser::parse_toplevel()

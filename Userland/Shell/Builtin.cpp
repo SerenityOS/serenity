@@ -416,7 +416,6 @@ int Shell::builtin_exit(int argc, const char** argv)
         printf("Good-bye!\n");
     }
     exit(exit_code);
-    return 0;
 }
 
 int Shell::builtin_export(int argc, const char** argv)
