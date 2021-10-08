@@ -78,6 +78,9 @@ public:
     [[nodiscard]] bool has_target() const { return m_target.has_value(); }
     [[nodiscard]] FlyString const& target() const { return *m_target; }
 
+    // "abrupt completion refers to any completion with a [[Type]] value other than normal"
+    [[nodiscard]] bool is_abrupt() const { return m_type != Type::Normal; }
+
     // These are for compatibility with the TRY() macro in AK.
     [[nodiscard]] bool is_error() const { return m_type == Type::Throw; }
     [[nodiscard]] Value release_value() { return m_value.release_value(); }
