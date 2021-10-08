@@ -1012,27 +1012,9 @@ Reference Identifier::to_reference(Interpreter& interpreter, GlobalObject&) cons
         VERIFY(environment);
         VERIFY(environment->is_declarative_environment());
         if (!environment->is_permanently_screwed_by_eval()) {
-            if (m_lexically_bound_function_argument.has_value()) {
-                return Reference {
-                    *environment,
-                    string(),
-                    *m_lexically_bound_function_argument,
-                    interpreter.vm().in_strict_mode(),
-                    m_cached_environment_coordinate,
-                    &interpreter.vm().running_execution_context(),
-                };
-            }
             return Reference { *environment, string(), interpreter.vm().in_strict_mode(), m_cached_environment_coordinate };
         }
         m_cached_environment_coordinate = {};
-    }
-    if (m_lexically_bound_function_argument.has_value()) {
-        return Reference {
-            string(),
-            *m_lexically_bound_function_argument,
-            interpreter.vm().in_strict_mode(),
-            &interpreter.vm().running_execution_context(),
-        };
     }
 
     auto reference = interpreter.vm().resolve_binding(string());
