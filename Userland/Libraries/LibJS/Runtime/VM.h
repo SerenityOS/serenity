@@ -133,15 +133,6 @@ public:
 
     bool in_strict_mode() const;
 
-    template<typename Callback>
-    void for_each_argument(Callback callback)
-    {
-        if (m_execution_context_stack.is_empty())
-            return;
-        for (auto& value : running_execution_context().arguments)
-            callback(value);
-    }
-
     size_t argument_count() const
     {
         if (m_execution_context_stack.is_empty())
@@ -248,9 +239,9 @@ public:
     [[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> call(FunctionObject& function, Value this_value, Args... args)
     {
         if constexpr (sizeof...(Args) > 0) {
-            MarkedValueList arglist { heap() };
-            (..., arglist.append(move(args)));
-            return call(function, this_value, move(arglist));
+            MarkedValueList arguments_list { heap() };
+            (..., arguments_list.append(move(args)));
+            return call(function, this_value, move(arguments_list));
         }
 
         return call(function, this_value);
@@ -270,7 +261,7 @@ public:
     Function<void(const Promise&)> on_promise_unhandled_rejection;
     Function<void(const Promise&)> on_promise_rejection_handled;
 
-    void initialize_instance_elements(Object& object, ECMAScriptFunctionObject& constructor);
+    ThrowCompletionOr<void> initialize_instance_elements(Object& object, ECMAScriptFunctionObject& constructor);
 
     CustomData* custom_data() { return m_custom_data; }
 
@@ -283,13 +274,14 @@ public:
     void save_execution_context_stack();
     void restore_execution_context_stack();
 
+    // TODO: Move these elsewhere once only used for ECMAScriptFunctionObject.
+    void prepare_for_ordinary_call(FunctionObject&, ExecutionContext& callee_context, Object* new_target);
+    void ordinary_call_bind_this(FunctionObject&, ExecutionContext&, Value this_argument);
+
 private:
     explicit VM(OwnPtr<CustomData>);
 
-    void ordinary_call_bind_this(FunctionObject&, ExecutionContext&, Value this_argument);
-
     [[nodiscard]] ThrowCompletionOr<Value> call_internal(FunctionObject&, Value this_value, Optional<MarkedValueList> arguments);
-    void prepare_for_ordinary_call(FunctionObject&, ExecutionContext& callee_context, Object* new_target);
 
     ThrowCompletionOr<Object*> copy_data_properties(Object& rest_object, Object const& source, HashTable<PropertyName, PropertyNameTraits> const& seen_names, GlobalObject& global_object);
 

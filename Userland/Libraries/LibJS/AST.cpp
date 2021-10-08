@@ -388,7 +388,7 @@ Value SuperCall::execute(Interpreter& interpreter, GlobalObject& global_object) 
 
     // 11. Perform ? InitializeInstanceElements(result, F).
     VERIFY(result.is_object());
-    vm.initialize_instance_elements(result.as_object(), f);
+    TRY_OR_DISCARD(vm.initialize_instance_elements(result.as_object(), f));
 
     // 12. Return result.
     return result;
@@ -1205,6 +1205,8 @@ Value ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& global_o
 // 15.7.14 Runtime Semantics: ClassDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
 ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interpreter& interpreter, GlobalObject& global_object, FlyString const& binding_name, FlyString const& class_name) const
 {
+    // FIXME: Clean up this mix of "spec", "somewhat spec", and "not spec at all".
+
     auto& vm = interpreter.vm();
     auto* environment = vm.lexical_environment();
     VERIFY(environment);

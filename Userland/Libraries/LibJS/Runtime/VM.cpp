@@ -13,6 +13,7 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BoundFunction.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FinalizationRegistry.h>
@@ -477,116 +478,21 @@ Reference VM::resolve_binding(FlyString const& name, Environment* environment)
     return get_identifier_reference(environment, name, strict);
 }
 
-static void append_bound_and_passed_arguments(MarkedValueList& arguments, Vector<Value> bound_arguments, Optional<MarkedValueList> passed_arguments)
-{
-    arguments.ensure_capacity(bound_arguments.size());
-    arguments.extend(move(bound_arguments));
-
-    if (passed_arguments.has_value()) {
-        auto arguments_list = move(passed_arguments.release_value().values());
-        arguments.grow_capacity(arguments_list.size());
-        arguments.extend(move(arguments_list));
-    }
-}
-
 // 7.3.32 InitializeInstanceElements ( O, constructor ), https://tc39.es/ecma262/#sec-initializeinstanceelements
-void VM::initialize_instance_elements(Object& object, ECMAScriptFunctionObject& constructor)
+ThrowCompletionOr<void> VM::initialize_instance_elements(Object& object, ECMAScriptFunctionObject& constructor)
 {
     for (auto& field : constructor.fields()) {
         field.define_field(*this, object);
-        if (exception())
-            return;
+        if (auto* exception = this->exception())
+            return JS::throw_completion(exception->value());
     }
+    return {};
 }
 
-// FIXME: This function should not exist as-is, most of it should be moved to the individual
-//        [[Construct]] implementations so that this becomes the Construct() AO (3 steps).
+// NOTE: This is a leftover from the old world of vm.call() and vm.construct(). Replace all uses with plain construct() and remove this.
 Value VM::construct(FunctionObject& function, FunctionObject& new_target, Optional<MarkedValueList> arguments)
 {
-    auto& global_object = function.global_object();
-
-    Value this_argument;
-    if (!is<ECMAScriptFunctionObject>(function) || static_cast<ECMAScriptFunctionObject&>(function).constructor_kind() == ECMAScriptFunctionObject::ConstructorKind::Base)
-        this_argument = TRY_OR_DISCARD(ordinary_create_from_constructor<Object>(global_object, new_target, &GlobalObject::object_prototype));
-
-    // FIXME: prepare_for_ordinary_call() is not supposed to receive a BoundFunction, ProxyObject, etc. - ever.
-    //        This needs to be moved to NativeFunction/ECMAScriptFunctionObject's construct() (10.2.2 [[Construct]])
-    ExecutionContext callee_context(heap());
-    prepare_for_ordinary_call(function, callee_context, &new_target);
-    if (exception())
-        return {};
-
-    ArmedScopeGuard pop_guard = [&] {
-        pop_execution_context();
-    };
-
-    if (auto* interpreter = interpreter_if_exists())
-        callee_context.current_node = interpreter->current_node();
-
-    if (is<BoundFunction>(function)) {
-        auto& bound_function = static_cast<BoundFunction&>(function);
-        append_bound_and_passed_arguments(callee_context.arguments, bound_function.bound_arguments(), move(arguments));
-    } else {
-        append_bound_and_passed_arguments(callee_context.arguments, {}, move(arguments));
-    }
-
-    if (auto* environment = callee_context.lexical_environment) {
-        auto& function_environment = verify_cast<FunctionEnvironment>(*environment);
-        function_environment.set_new_target(&new_target);
-        if (!this_argument.is_empty() && function_environment.this_binding_status() != FunctionEnvironment::ThisBindingStatus::Lexical) {
-            function_environment.bind_this_value(global_object, this_argument);
-            if (exception())
-                return {};
-        }
-    }
-
-    // If we are a Derived constructor, |this| has not been constructed before super is called.
-    callee_context.this_value = this_argument;
-
-    if (is<ECMAScriptFunctionObject>(function) && static_cast<ECMAScriptFunctionObject&>(function).constructor_kind() == ECMAScriptFunctionObject::ConstructorKind::Base) {
-        VERIFY(this_argument.is_object());
-        initialize_instance_elements(this_argument.as_object(), static_cast<ECMAScriptFunctionObject&>(function));
-        if (exception())
-            return {};
-    }
-
-    auto* constructor_environment = callee_context.lexical_environment;
-    auto result = function.construct(new_target);
-    VERIFY(constructor_environment);
-
-    pop_execution_context();
-    pop_guard.disarm();
-
-    // If we are constructing an instance of a derived class,
-    // set the prototype on objects created by constructors that return an object (i.e. NativeFunction subclasses).
-
-    if ((!is<ECMAScriptFunctionObject>(function) || static_cast<ECMAScriptFunctionObject&>(function).constructor_kind() == ECMAScriptFunctionObject::ConstructorKind::Base)
-        && is<ECMAScriptFunctionObject>(new_target) && static_cast<ECMAScriptFunctionObject&>(new_target).constructor_kind() == ECMAScriptFunctionObject::ConstructorKind::Derived
-        && result.is_object()) {
-        verify_cast<FunctionEnvironment>(constructor_environment)->replace_this_binding(result);
-
-        auto prototype = TRY_OR_DISCARD(new_target.get(names.prototype));
-        if (prototype.is_object())
-            TRY_OR_DISCARD(result.as_object().internal_set_prototype_of(&prototype.as_object()));
-        return result;
-    }
-
-    if (exception())
-        return {};
-
-    if (result.is_object())
-        return result;
-
-    if (is<ECMAScriptFunctionObject>(function) && static_cast<ECMAScriptFunctionObject&>(function).constructor_kind() == ECMAScriptFunctionObject::ConstructorKind::Base)
-        return this_argument;
-
-    if (!result.is_empty() && !result.is_undefined()) {
-        throw_exception<TypeError>(global_object, ErrorType::DerivedConstructorReturningInvalidValue);
-        return {};
-    }
-
-    VERIFY(constructor_environment);
-    return constructor_environment->get_this_binding(global_object);
+    return TRY_OR_DISCARD(JS::construct(function.global_object(), function, move(arguments), &new_target));
 }
 
 void VM::throw_exception(Exception& exception)
@@ -622,12 +528,8 @@ Value VM::get_new_target()
 // 10.2.1.1 PrepareForOrdinaryCall ( F, newTarget ), https://tc39.es/ecma262/#sec-prepareforordinarycall
 void VM::prepare_for_ordinary_call(FunctionObject& function, ExecutionContext& callee_context, Object* new_target)
 {
-    // NOTE: This is a LibJS specific hack for NativeFunction to inherit the strictness of its caller.
-    // FIXME: I feel like we should be able to get rid of this.
-    if (is<NativeFunction>(function))
-        callee_context.is_strict_mode = in_strict_mode();
-    else
-        callee_context.is_strict_mode = function.is_strict_mode();
+    // Non-standard
+    callee_context.is_strict_mode = function.is_strict_mode();
 
     // 1. Let callerContext be the running execution context.
     // 2. Let calleeContext be a new ECMAScript code execution context.
@@ -642,9 +544,13 @@ void VM::prepare_for_ordinary_call(FunctionObject& function, ExecutionContext& c
 
     // 4. Let calleeRealm be F.[[Realm]].
     auto* callee_realm = function.realm();
-    // FIXME: See FIXME in VM::call_internal() / VM::construct().
+    // NOTE: This non-standard fallback is needed until we can guarantee that literally
+    // every function has a realm - especially in LibWeb that's sometimes not the case
+    // when a function is created while no JS is running, as we currently need to rely on
+    // that (:acid2:, I know - see set_event_handler_attribute() for an example).
+    // If there's no 'current realm' either, we can't continue and crash.
     if (!callee_realm)
-        callee_realm = current_realm();
+        callee_realm = vm.current_realm();
     VERIFY(callee_realm);
 
     // 5. Set the Realm of calleeContext to calleeRealm.
@@ -703,46 +609,14 @@ void VM::ordinary_call_bind_this(FunctionObject& function, ExecutionContext& cal
     callee_context.this_value = this_value;
 }
 
+// NOTE: This is only here because there's a million invocations of vm.call() - it used to be tied to the VM in weird ways.
+// We should update all of those and then remove this, along with the call() template functions in VM.h, and use the standalone call() AO.
 ThrowCompletionOr<Value> VM::call_internal(FunctionObject& function, Value this_value, Optional<MarkedValueList> arguments)
 {
     VERIFY(!exception());
     VERIFY(!this_value.is_empty());
 
-    if (is<BoundFunction>(function)) {
-        auto& bound_function = static_cast<BoundFunction&>(function);
-
-        MarkedValueList with_bound_arguments { heap() };
-        append_bound_and_passed_arguments(with_bound_arguments, bound_function.bound_arguments(), move(arguments));
-
-        return call_internal(bound_function.bound_target_function(), bound_function.bound_this(), move(with_bound_arguments));
-    }
-
-    // FIXME: prepare_for_ordinary_call() is not supposed to receive a BoundFunction, ProxyObject, etc. - ever.
-    //        This needs to be moved to NativeFunction/ECMAScriptFunctionObject's construct() (10.2.2 [[Construct]])
-    ExecutionContext callee_context(heap());
-    prepare_for_ordinary_call(function, callee_context, nullptr);
-    if (auto* exception = this->exception())
-        return JS::throw_completion(exception->value());
-
-    ScopeGuard pop_guard = [&] {
-        pop_execution_context();
-    };
-
-    if (auto* interpreter = interpreter_if_exists())
-        callee_context.current_node = interpreter->current_node();
-
-    callee_context.this_value = this_value;
-    append_bound_and_passed_arguments(callee_context.arguments, {}, move(arguments));
-
-    ordinary_call_bind_this(function, callee_context, this_value);
-
-    if (auto* exception = this->exception())
-        return JS::throw_completion(exception->value());
-
-    auto result = function.call();
-    if (auto* exception = this->exception())
-        return JS::throw_completion(exception->value());
-    return result;
+    return JS::call_impl(function.global_object(), &function, this_value, move(arguments));
 }
 
 bool VM::in_strict_mode() const

@@ -42,6 +42,38 @@ ThrowCompletionOr<Value> require_object_coercible(GlobalObject& global_object, V
     return value;
 }
 
+// 7.3.13 Call ( F, V [ , argumentsList ] ), https://tc39.es/ecma262/#sec-call
+ThrowCompletionOr<Value> call_impl(GlobalObject& global_object, Value function, Value this_value, Optional<MarkedValueList> arguments_list)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If argumentsList is not present, set argumentsList to a new empty List.
+    if (!arguments_list.has_value())
+        arguments_list = MarkedValueList { global_object.heap() };
+
+    // 2. If IsCallable(F) is false, throw a TypeError exception.
+    if (!function.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, function.to_string_without_side_effects());
+
+    // 3. Return ? F.[[Call]](V, argumentsList).
+    return function.as_function().internal_call(this_value, move(*arguments_list));
+}
+
+// 7.3.14 Construct ( F [ , argumentsList [ , newTarget ] ] ), https://tc39.es/ecma262/#sec-construct
+ThrowCompletionOr<Object*> construct(GlobalObject& global_object, FunctionObject& function, Optional<MarkedValueList> arguments_list, FunctionObject* new_target)
+{
+    // 1. If newTarget is not present, set newTarget to F.
+    if (!new_target)
+        new_target = &function;
+
+    // 2. If argumentsList is not present, set argumentsList to a new empty List.
+    if (!arguments_list.has_value())
+        arguments_list = MarkedValueList { global_object.heap() };
+
+    // 3. Return ? F.[[Construct]](argumentsList, newTarget).
+    return function.internal_construct(move(*arguments_list), *new_target);
+}
+
 // 7.3.18 LengthOfArrayLike ( obj ), https://tc39.es/ecma262/#sec-lengthofarraylike
 ThrowCompletionOr<size_t> length_of_array_like(GlobalObject& global_object, Object const& object)
 {

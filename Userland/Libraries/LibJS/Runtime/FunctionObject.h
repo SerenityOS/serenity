@@ -18,8 +18,11 @@ public:
     virtual ~FunctionObject();
     virtual void initialize(GlobalObject&) override { }
 
-    virtual Value call() = 0;
-    virtual Value construct(FunctionObject& new_target) = 0;
+    // Table 7: Additional Essential Internal Methods of Function Objects, https://tc39.es/ecma262/#table-additional-essential-internal-methods-of-function-objects
+
+    virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedValueList arguments_list) = 0;
+    virtual ThrowCompletionOr<Object*> internal_construct([[maybe_unused]] MarkedValueList arguments_list, [[maybe_unused]] FunctionObject& new_target) { VERIFY_NOT_REACHED(); }
+
     virtual const FlyString& name() const = 0;
     virtual FunctionEnvironment* new_function_environment(Object* new_target) = 0;
 

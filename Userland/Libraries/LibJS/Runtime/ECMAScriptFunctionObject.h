@@ -34,11 +34,11 @@ public:
     virtual void initialize(GlobalObject&) override;
     virtual ~ECMAScriptFunctionObject();
 
+    virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedValueList arguments_list) override;
+    virtual ThrowCompletionOr<Object*> internal_construct(MarkedValueList arguments_list, FunctionObject& new_target) override;
+
     Statement const& ecmascript_code() const { return m_ecmascript_code; }
     Vector<FunctionNode::Parameter> const& formal_parameters() const { return m_formal_parameters; };
-
-    virtual Value call() override;
-    virtual Value construct(FunctionObject& new_target) override;
 
     virtual const FlyString& name() const override { return m_name; };
     void set_name(const FlyString& name);
@@ -71,7 +71,8 @@ public:
     // This is for IsSimpleParameterList (static semantics)
     bool has_simple_parameter_list() const { return m_has_simple_parameter_list; }
 
-    virtual bool has_constructor() const override { return true; }
+    // Equivalent to absence of [[Construct]]
+    virtual bool has_constructor() const override { return !(m_is_arrow_function || m_kind == FunctionKind::Generator); }
 
 protected:
     virtual bool is_strict_mode() const final { return m_strict; }
@@ -82,7 +83,7 @@ private:
     virtual void visit_edges(Visitor&) override;
 
     ThrowCompletionOr<void> function_declaration_instantiation(Interpreter*);
-    Value execute_function_body();
+    Completion ordinary_call_evaluate_body();
 
     // Internal Slots of ECMAScript Function Objects, https://tc39.es/ecma262/#table-internal-slots-of-ecmascript-function-objects
     Environment* m_environment { nullptr };                       // [[Environment]]

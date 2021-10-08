@@ -97,6 +97,171 @@ ECMAScriptFunctionObject::~ECMAScriptFunctionObject()
 {
 }
 
+// 10.2.1 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-ecmascript-function-objects-call-thisargument-argumentslist
+ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argument, MarkedValueList arguments_list)
+{
+    auto& vm = this->vm();
+
+    // 1. Let callerContext be the running execution context.
+    // NOTE: No-op, kept by the VM in its execution context stack.
+
+    ExecutionContext callee_context(heap());
+
+    // Non-standard
+    callee_context.arguments.extend(move(arguments_list));
+    if (auto* interpreter = vm.interpreter_if_exists())
+        callee_context.current_node = interpreter->current_node();
+
+    // 2. Let calleeContext be PrepareForOrdinaryCall(F, undefined).
+    vm.prepare_for_ordinary_call(*this, callee_context, nullptr);
+
+    // NOTE: We throw if the end of the native stack is reached, so unlike in the spec this _does_ need an exception check.
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+
+    // 3. Assert: calleeContext is now the running execution context.
+    VERIFY(&vm.running_execution_context() == &callee_context);
+
+    // 4. If F.[[IsClassConstructor]] is true, then
+    if (m_is_class_constructor) {
+        // a. Let error be a newly created TypeError object.
+        // b. NOTE: error is created in calleeContext with F's associated Realm Record.
+        auto throw_completion = vm.throw_completion<TypeError>(global_object(), ErrorType::ClassConstructorWithoutNew, m_name);
+
+        // c. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
+        vm.pop_execution_context();
+
+        // d. Return ThrowCompletion(error).
+        return throw_completion;
+    }
+
+    // 5. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
+    vm.ordinary_call_bind_this(*this, callee_context, this_argument);
+
+    // 6. Let result be OrdinaryCallEvaluateBody(F, argumentsList).
+    auto result = ordinary_call_evaluate_body();
+
+    // 7. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
+    vm.pop_execution_context();
+
+    // 8. If result.[[Type]] is return, return NormalCompletion(result.[[Value]]).
+    if (result.type() == Completion::Type::Return)
+        return result.value();
+
+    // 9. ReturnIfAbrupt(result).
+    if (result.is_abrupt()) {
+        // NOTE: I'm not sure if EvaluateBody can return a completion other than Normal, Return, or Throw.
+        // We're far from using completions in the AST anyway; in the meantime assume Throw.
+        VERIFY(result.is_error());
+        return result;
+    }
+
+    // 10. Return NormalCompletion(undefined).
+    return js_undefined();
+}
+
+// 10.2.2 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-ecmascript-function-objects-construct-argumentslist-newtarget
+ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedValueList arguments_list, FunctionObject& new_target)
+{
+    auto& vm = this->vm();
+    auto& global_object = this->global_object();
+
+    // 1. Let callerContext be the running execution context.
+    // NOTE: No-op, kept by the VM in its execution context stack.
+
+    // 2. Let kind be F.[[ConstructorKind]].
+    auto kind = m_constructor_kind;
+
+    Object* this_argument = nullptr;
+
+    // 3. If kind is base, then
+    if (kind == ConstructorKind::Base) {
+        // a. Let thisArgument be ? OrdinaryCreateFromConstructor(newTarget, "%Object.prototype%").
+        this_argument = TRY(ordinary_create_from_constructor<Object>(global_object, new_target, &GlobalObject::object_prototype));
+    }
+
+    ExecutionContext callee_context(heap());
+
+    // Non-standard
+    callee_context.arguments.extend(move(arguments_list));
+    if (auto* interpreter = vm.interpreter_if_exists())
+        callee_context.current_node = interpreter->current_node();
+
+    // 4. Let calleeContext be PrepareForOrdinaryCall(F, newTarget).
+    vm.prepare_for_ordinary_call(*this, callee_context, &new_target);
+
+    // NOTE: We throw if the end of the native stack is reached, so unlike in the spec this _does_ need an exception check.
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+
+    // 5. Assert: calleeContext is now the running execution context.
+    VERIFY(&vm.running_execution_context() == &callee_context);
+
+    // 6. If kind is base, then
+    if (kind == ConstructorKind::Base) {
+        // a. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
+        vm.ordinary_call_bind_this(*this, callee_context, this_argument);
+
+        // b. Let initializeResult be InitializeInstanceElements(thisArgument, F).
+        auto initialize_result = vm.initialize_instance_elements(*this_argument, *this);
+
+        // c. If initializeResult is an abrupt completion, then
+        if (initialize_result.is_throw_completion()) {
+            // i. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
+            vm.pop_execution_context();
+
+            // ii. Return Completion(initializeResult).
+            return initialize_result.throw_completion();
+        }
+    }
+
+    // 7. Let constructorEnv be the LexicalEnvironment of calleeContext.
+    auto* constructor_env = callee_context.lexical_environment;
+
+    // 8. Let result be OrdinaryCallEvaluateBody(F, argumentsList).
+    auto result = ordinary_call_evaluate_body();
+
+    // 9. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
+    vm.pop_execution_context();
+
+    // 10. If result.[[Type]] is return, then
+    if (result.type() == Completion::Type::Return) {
+        // FIXME: This is leftover from untangling the call/construct mess - doesn't belong here in any way, but removing it breaks derived classes.
+        // Likely fixed by making ClassDefinitionEvaluation fully spec compliant.
+        if (kind == ConstructorKind::Derived && result.value().is_object()) {
+            auto prototype = TRY(new_target.get(vm.names.prototype));
+            if (prototype.is_object())
+                TRY(result.value().as_object().internal_set_prototype_of(&prototype.as_object()));
+        }
+        // EOF (End of FIXME)
+
+        // a. If Type(result.[[Value]]) is Object, return NormalCompletion(result.[[Value]]).
+        if (result.value().is_object())
+            return &result.value().as_object();
+
+        // b. If kind is base, return NormalCompletion(thisArgument).
+        if (kind == ConstructorKind::Base)
+            return this_argument;
+
+        // c. If result.[[Value]] is not undefined, throw a TypeError exception.
+        if (!result.value().is_undefined())
+            return vm.throw_completion<TypeError>(global_object, ErrorType::DerivedConstructorReturningInvalidValue);
+    }
+    // 11. Else, ReturnIfAbrupt(result).
+    else {
+        // NOTE: I'm not sure if EvaluateBody can return a completion other than Normal, Return, or Throw.
+        // We're far from using completions in the AST anyway; in the meantime assume Throw.
+        VERIFY(result.is_error());
+        return result;
+    }
+
+    // 12. Return ? constructorEnv.GetThisBinding().
+    auto this_binding = constructor_env->get_this_binding(global_object);
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+    return &this_binding.as_object();
+}
+
 void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
@@ -392,14 +557,15 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     return {};
 }
 
-Value ECMAScriptFunctionObject::execute_function_body()
+// 10.2.1.4 OrdinaryCallEvaluateBody ( F, argumentsList ), https://tc39.es/ecma262/#sec-ordinarycallevaluatebody
+Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 {
     auto& vm = this->vm();
     auto* bytecode_interpreter = Bytecode::Interpreter::current();
 
     if (bytecode_interpreter) {
         // FIXME: pass something to evaluate default arguments with
-        TRY_OR_DISCARD(function_declaration_instantiation(nullptr));
+        TRY(function_declaration_instantiation(nullptr));
         if (!m_bytecode_executable.has_value()) {
             m_bytecode_executable = Bytecode::Generator::generate(m_ecmascript_code, m_kind == FunctionKind::Generator);
             auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
@@ -412,10 +578,14 @@ Value ECMAScriptFunctionObject::execute_function_body()
             }
         }
         auto result = bytecode_interpreter->run(*m_bytecode_executable);
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
+        // NOTE: Running the bytecode should eventually return a completion.
+        // Until it does, we assume "return" and include the undefined fallback from the call site.
         if (m_kind != FunctionKind::Generator)
-            return result;
+            return { Completion::Type::Return, result.value_or(js_undefined()), {} };
 
-        return GeneratorObject::create(global_object(), result, this, vm.running_execution_context().lexical_environment, bytecode_interpreter->snapshot_frame());
+        return normal_completion(GeneratorObject::create(global_object(), result, this, vm.running_execution_context().lexical_environment, bytecode_interpreter->snapshot_frame()));
     } else {
         VERIFY(m_kind != FunctionKind::Generator);
         OwnPtr<Interpreter> local_interpreter;
@@ -428,28 +598,16 @@ Value ECMAScriptFunctionObject::execute_function_body()
 
         VM::InterpreterExecutionScope scope(*ast_interpreter);
 
-        TRY_OR_DISCARD(function_declaration_instantiation(ast_interpreter));
+        TRY(function_declaration_instantiation(ast_interpreter));
 
-        return m_ecmascript_code->execute(*ast_interpreter, global_object());
+        auto result = m_ecmascript_code->execute(*ast_interpreter, global_object());
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
+        // NOTE: Running the AST node should eventually return a completion.
+        // Until it does, we assume "return" and include the undefined fallback from the call site.
+        return { Completion::Type::Return, result.value_or(js_undefined()), {} };
     }
-}
-
-Value ECMAScriptFunctionObject::call()
-{
-    if (m_is_class_constructor) {
-        vm().throw_exception<TypeError>(global_object(), ErrorType::ClassConstructorWithoutNew, m_name);
-        return {};
-    }
-    return execute_function_body();
-}
-
-Value ECMAScriptFunctionObject::construct(FunctionObject&)
-{
-    if (m_is_arrow_function || m_kind == FunctionKind::Generator) {
-        vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, m_name);
-        return {};
-    }
-    return execute_function_body();
+    VERIFY_NOT_REACHED();
 }
 
 void ECMAScriptFunctionObject::set_name(const FlyString& name)

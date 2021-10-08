@@ -762,98 +762,86 @@ ThrowCompletionOr<MarkedValueList> ProxyObject::internal_own_property_keys() con
 }
 
 // 10.5.12 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist
-Value ProxyObject::call()
+ThrowCompletionOr<Value> ProxyObject::internal_call(Value this_argument, MarkedValueList arguments_list)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
-    auto this_argument = vm.this_value(global_object);
 
     // A Proxy exotic object only has a [[Call]] internal method if the initial value of its [[ProxyTarget]] internal slot is an object that has a [[Call]] internal method.
-    if (!is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, Value(this).to_string_without_side_effects());
-        return {};
-    }
+    // TODO: We should be able to turn this into a VERIFY(), this must be checked at the call site.
+    //       According to the spec, the Call() AO may be called with a non-function argument, but
+    //       throws before calling [[Call]]() if that's the case.
+    if (!is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, Value(this).to_string_without_side_effects());
 
     // 1. Let handler be O.[[ProxyHandler]].
 
     // 2. If handler is null, throw a TypeError exception.
-    if (m_is_revoked) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyRevoked);
-        return {};
-    }
+    if (m_is_revoked)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "apply").
-    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.apply));
+    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.apply));
 
     // 6. If trap is undefined, then
     if (!trap) {
         // a. Return ? Call(target, thisArgument, argumentsList).
-        return static_cast<FunctionObject&>(m_target).call();
+        return call(global_object, &m_target, this_argument, move(arguments_list));
     }
 
     // 7. Let argArray be ! CreateArrayFromList(argumentsList).
-    auto arguments_array = Array::create(global_object, 0);
-    vm.for_each_argument([&](auto& argument) {
-        arguments_array->indexed_properties().append(argument);
-    });
+    auto* arguments_array = Array::create_from(global_object, arguments_list);
 
     // 8. Return ? Call(trap, handler, « target, thisArgument, argArray »).
-    return TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, this_argument, arguments_array));
+    return call(global_object, trap, &m_handler, &m_target, this_argument, arguments_array);
 }
 
 // 10.5.13 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget
-Value ProxyObject::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> ProxyObject::internal_construct(MarkedValueList arguments_list, FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     // A Proxy exotic object only has a [[Construct]] internal method if the initial value of its [[ProxyTarget]] internal slot is an object that has a [[Construct]] internal method.
-    if (!is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, Value(this).to_string_without_side_effects());
-        return {};
-    }
+    // TODO: We should be able to turn this into a VERIFY(), this must be checked at the call site.
+    //       According to the spec, the Construct() AO is only ever called with a constructor argument.
+    if (!is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAConstructor, Value(this).to_string_without_side_effects());
 
     // 1. Let handler be O.[[ProxyHandler]].
 
     // 2. If handler is null, throw a TypeError exception.
-    if (m_is_revoked) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyRevoked);
-        return {};
-    }
+    if (m_is_revoked)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
     // 5. Assert: IsConstructor(target) is true.
 
     // 6. Let trap be ? GetMethod(handler, "construct").
-    auto trap = TRY_OR_DISCARD(Value(&m_handler).get_method(global_object, vm.names.construct));
+    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.construct));
 
     // 7. If trap is undefined, then
     if (!trap) {
         // a. Return ? Construct(target, argumentsList, newTarget).
-        return static_cast<FunctionObject&>(m_target).construct(new_target);
+        return construct(global_object, static_cast<FunctionObject&>(m_target), move(arguments_list), &new_target);
     }
 
     // 8. Let argArray be ! CreateArrayFromList(argumentsList).
-    auto arguments_array = Array::create(global_object, 0);
-    vm.for_each_argument([&](auto& argument) {
-        arguments_array->indexed_properties().append(argument);
-    });
+    auto* arguments_array = Array::create_from(global_object, arguments_list);
 
     // 9. Let newObj be ? Call(trap, handler, « target, argArray, newTarget »).
-    auto result = TRY_OR_DISCARD(vm.call(*trap, &m_handler, &m_target, arguments_array, &new_target));
+    auto new_object = TRY(call(global_object, trap, &m_handler, &m_target, arguments_array, &new_target));
 
     // 10. If Type(newObj) is not Object, throw a TypeError exception.
-    if (!result.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyConstructBadReturnType);
-        return {};
-    }
+    if (!new_object.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyConstructBadReturnType);
 
     // 11. Return newObj.
-    return result;
+    return &new_object.as_object();
 }
 
 void ProxyObject::visit_edges(Cell::Visitor& visitor)

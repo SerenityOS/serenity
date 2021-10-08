@@ -21,8 +21,6 @@ public:
     ProxyObject(Object& target, Object& handler, Object& prototype);
     virtual ~ProxyObject() override;
 
-    virtual Value call() override;
-    virtual Value construct(FunctionObject& new_target) override;
     virtual const FlyString& name() const override;
     virtual FunctionEnvironment* new_function_environment(Object* new_target) override;
     virtual bool has_constructor() const override { return true; }
@@ -46,6 +44,8 @@ public:
     virtual ThrowCompletionOr<bool> internal_set(PropertyName const&, Value value, Value receiver) override;
     virtual ThrowCompletionOr<bool> internal_delete(PropertyName const&) override;
     virtual ThrowCompletionOr<MarkedValueList> internal_own_property_keys() const override;
+    virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedValueList arguments_list) override;
+    virtual ThrowCompletionOr<Object*> internal_construct(MarkedValueList arguments_list, FunctionObject& new_target) override;
 
 private:
     virtual void visit_edges(Visitor&) override;
