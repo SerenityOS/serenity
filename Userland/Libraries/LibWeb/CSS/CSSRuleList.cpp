@@ -8,6 +8,7 @@
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSMediaRule.h>
 #include <LibWeb/CSS/CSSRuleList.h>
+#include <LibWeb/CSS/CSSSupportsRule.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 
 namespace Web::CSS {
@@ -93,6 +94,9 @@ void CSSRuleList::for_each_effective_style_rule(Function<void(CSSStyleRule const
         case CSSRule::Type::Media:
             verify_cast<CSSMediaRule>(rule).for_each_effective_style_rule(callback);
             break;
+        case CSSRule::Type::Supports:
+            verify_cast<CSSSupportsRule>(rule).for_each_effective_style_rule(callback);
+            break;
         case CSSRule::Type::__Count:
             VERIFY_NOT_REACHED();
         }
@@ -114,6 +118,8 @@ bool CSSRuleList::for_first_not_loaded_import_rule(Function<void(CSSImportRule&)
             }
         } else if (rule.type() == CSSRule::Type::Media) {
             return verify_cast<CSSMediaRule>(rule).for_first_not_loaded_import_rule(callback);
+        } else if (rule.type() == CSSRule::Type::Supports) {
+            return verify_cast<CSSSupportsRule>(rule).for_first_not_loaded_import_rule(callback);
         }
     }
 
