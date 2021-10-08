@@ -52,7 +52,7 @@ sanitizer errors.
 * **`perf_events`** - this node exports information being gathered during a profile on a process.
 * **`pledge`** - this node exports information on all the pledge requests and promises of a process.
 * **`stacks`** - this directory lists all stack traces of process threads.
-* **`pledge`** - this node exports information on all the unveil requests of a process.
+* **`unveil`** - this node exports information on all the unveil requests of a process.
 * **`vm`** - this node exports information on virtual memory mappings of a process.
 
 ### Consistency and stability of data across multiple read operations
