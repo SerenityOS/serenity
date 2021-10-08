@@ -14,7 +14,7 @@ describe("errors", () => {
     test("arguments list must be an object", () => {
         [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
             expect(() => {
-                Reflect.construct(() => {}, value);
+                Reflect.construct(function () {}, value);
             }).toThrowWithMessage(TypeError, `${value} is not an object`);
         });
     });
@@ -22,7 +22,7 @@ describe("errors", () => {
     test("new target must be a constructor", () => {
         [null, undefined, "foo", 123, NaN, Infinity, {}].forEach(value => {
             expect(() => {
-                Reflect.construct(() => {}, [], value);
+                Reflect.construct(function () {}, [], value);
             }).toThrowWithMessage(TypeError, `${value} is not a constructor`);
         });
     });
