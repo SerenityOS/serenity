@@ -22,6 +22,7 @@ public:
     ~CSSGroupingRule();
 
     CSSRuleList const& css_rules() const { return m_rules; }
+    CSSRuleList& css_rules() { return m_rules; }
     size_t insert_rule(StringView const& rule, size_t index = 0);
     void delete_rule(size_t index);
 

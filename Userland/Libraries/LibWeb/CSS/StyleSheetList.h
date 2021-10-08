@@ -28,7 +28,8 @@ public:
     void add_sheet(NonnullRefPtr<CSSStyleSheet>);
     void remove_sheet(CSSStyleSheet&);
 
-    const NonnullRefPtrVector<CSSStyleSheet>& sheets() const { return m_sheets; }
+    NonnullRefPtrVector<CSSStyleSheet> const& sheets() const { return m_sheets; }
+    NonnullRefPtrVector<CSSStyleSheet>& sheets() { return m_sheets; }
 
     RefPtr<CSSStyleSheet> item(size_t index) const
     {

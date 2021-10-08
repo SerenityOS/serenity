@@ -67,4 +67,9 @@ bool CSSStyleSheet::for_first_not_loaded_import_rule(Function<void(CSSImportRule
     return m_rules->for_first_not_loaded_import_rule(callback);
 }
 
+void CSSStyleSheet::evaluate_media_queries(DOM::Window const& window)
+{
+    m_rules->evaluate_media_queries(window);
+}
+
 }

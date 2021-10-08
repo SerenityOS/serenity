@@ -30,10 +30,11 @@ public:
 
     virtual String condition_text() const override;
     virtual void set_condition_text(String) override;
-    // FIXME: We need to evaluate() the query before matches() will work!
     virtual bool condition_matches() const override { return m_media->matches(); }
 
     NonnullRefPtr<MediaList> const& media() const { return m_media; }
+
+    bool evaluate(DOM::Window const& window) { return m_media->evaluate(window); }
 
 private:
     explicit CSSMediaRule(NonnullRefPtr<MediaList>&&, NonnullRefPtrVector<CSSRule>&&);

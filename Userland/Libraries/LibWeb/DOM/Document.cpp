@@ -1156,6 +1156,11 @@ void Document::evaluate_media_queries_and_report_changes()
             media_query_list->dispatch_event(event);
         }
     }
+
+    // Also not in the spec, but this is as good a place as any to evaluate @media rules!
+    for (auto& style_sheet : style_sheets().sheets()) {
+        style_sheet.evaluate_media_queries(window());
+    }
 }
 
 }
