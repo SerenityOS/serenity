@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Peter Elliott <pelliott@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,7 @@
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Event.h>
@@ -456,18 +458,27 @@ static void create_tmp_coredump_directory()
     umask(old_umask);
 }
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
-    mount_all_filesystems();
-    prepare_synthetic_filesystems();
+    bool user = false;
+    Core::ArgsParser args_parser;
+    args_parser.add_option(user, "Run in user-mode", "user", 'u');
+    args_parser.parse(argc, argv);
+
+    if (!user) {
+        mount_all_filesystems();
+        prepare_synthetic_filesystems();
+    }
 
     if (pledge("stdio proc exec tty accept unix rpath wpath cpath chown fattr id sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
-    create_tmp_coredump_directory();
-    parse_boot_mode();
+    if (!user) {
+        create_tmp_coredump_directory();
+        parse_boot_mode();
+    }
 
     Core::EventLoop event_loop;
 
@@ -476,7 +487,9 @@ int main(int, char**)
     // Read our config and instantiate services.
     // This takes care of setting up sockets.
     NonnullRefPtrVector<Service> services;
-    auto config = Core::ConfigFile::open_for_system("SystemServer");
+    auto config = (user)
+        ? Core::ConfigFile::open_for_app("SystemServer")
+        : Core::ConfigFile::open_for_system("SystemServer");
     for (auto name : config->groups()) {
         auto service = Service::construct(*config, name);
         if (service->is_enabled())
