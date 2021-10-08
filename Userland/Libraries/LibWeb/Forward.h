@@ -26,6 +26,7 @@ class CSSRuleList;
 class CSSStyleDeclaration;
 class CSSStyleRule;
 class CSSStyleSheet;
+class CSSSupportsRule;
 class Display;
 class ElementInlineCSSStyleDeclaration;
 class Length;
