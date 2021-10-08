@@ -12,6 +12,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Result.h>
 #include <AK/Vector.h>
+#include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/MediaQuery.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
@@ -22,6 +23,7 @@
 #include <LibWeb/CSS/Parser/Tokenizer.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/Supports.h>
 
 namespace Web::CSS {
 
@@ -104,6 +106,8 @@ public:
     NonnullRefPtrVector<MediaQuery> parse_as_media_query_list();
     RefPtr<MediaQuery> parse_as_media_query();
 
+    RefPtr<Supports> parse_as_supports();
+
     RefPtr<StyleValue> parse_as_css_value(PropertyID);
 
     // FIXME: This is a hack, while CSS::Supports is using a StyleDeclarationRule
@@ -142,6 +146,8 @@ private:
     Result<SelectorList, ParsingResult> parse_a_relative_selector_list(TokenStream<T>&);
     template<typename T>
     NonnullRefPtrVector<MediaQuery> parse_a_media_query_list(TokenStream<T>&);
+    template<typename T>
+    RefPtr<Supports> parse_a_supports(TokenStream<T>&);
 
     Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>&);
 
@@ -176,6 +182,12 @@ private:
     [[nodiscard]] NonnullRefPtr<StyleFunctionRule> consume_a_function();
     template<typename T>
     [[nodiscard]] NonnullRefPtr<StyleFunctionRule> consume_a_function(TokenStream<T>&);
+
+    struct GeneralEnclosed {
+    };
+    [[nodiscard]] Optional<GeneralEnclosed> parse_general_enclosed();
+    template<typename T>
+    [[nodiscard]] Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<T>&);
 
     [[nodiscard]] RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
     [[nodiscard]] RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_declaration(NonnullRefPtr<StyleBlockRule>);
@@ -234,6 +246,10 @@ private:
     Optional<MediaQuery::MediaFeature> consume_media_feature(TokenStream<StyleComponentValueRule>&);
     Optional<MediaQuery::MediaType> consume_media_type(TokenStream<StyleComponentValueRule>&);
 
+    OwnPtr<Supports::Condition> parse_supports_condition(TokenStream<StyleComponentValueRule>&);
+    Optional<Supports::InParens> parse_supports_in_parens(TokenStream<StyleComponentValueRule>&);
+    Optional<Supports::Feature> parse_supports_feature(TokenStream<StyleComponentValueRule>&);
+
     static bool has_ignored_vendor_prefix(StringView const&);
 
     ParsingContext m_context;
@@ -254,6 +270,7 @@ Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const&, StringVie
 RefPtr<CSS::CSSRule> parse_css_rule(CSS::ParsingContext const&, StringView);
 RefPtr<CSS::MediaQuery> parse_media_query(CSS::ParsingContext const&, StringView const&);
 NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::ParsingContext const&, StringView const&);
+RefPtr<CSS::Supports> parse_css_supports(CSS::ParsingContext const&, StringView const&);
 
 RefPtr<CSS::StyleValue> parse_html_length(DOM::Document const&, StringView const&);
 
