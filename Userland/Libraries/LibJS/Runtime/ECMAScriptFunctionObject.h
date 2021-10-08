@@ -82,8 +82,9 @@ private:
     virtual FunctionEnvironment* new_function_environment(Object* new_target) override;
     virtual void visit_edges(Visitor&) override;
 
-    ThrowCompletionOr<void> function_declaration_instantiation(Interpreter*);
+    void prepare_for_ordinary_call(ExecutionContext& callee_context, Object* new_target);
     Completion ordinary_call_evaluate_body();
+    ThrowCompletionOr<void> function_declaration_instantiation(Interpreter*);
 
     // Internal Slots of ECMAScript Function Objects, https://tc39.es/ecma262/#table-internal-slots-of-ecmascript-function-objects
     Environment* m_environment { nullptr };                       // [[Environment]]
