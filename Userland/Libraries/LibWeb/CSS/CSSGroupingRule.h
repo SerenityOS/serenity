@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/NonnullRefPtr.h>
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/CSSRuleList.h>
@@ -23,6 +24,9 @@ public:
     CSSRuleList const& css_rules() const { return m_rules; }
     size_t insert_rule(StringView const& rule, size_t index = 0);
     void delete_rule(size_t index);
+
+    virtual void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const;
+    virtual bool for_first_not_loaded_import_rule(Function<void(CSSImportRule&)> const& callback);
 
     virtual String serialized() const;
 
