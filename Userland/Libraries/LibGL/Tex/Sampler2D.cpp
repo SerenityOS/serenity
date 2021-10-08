@@ -43,7 +43,6 @@ static constexpr float wrap(float value, GLint mode)
 
     case GL_MIRRORED_REPEAT:
         return wrap_mirrored_repeat(value);
-        break;
 
     default:
         VERIFY_NOT_REACHED();

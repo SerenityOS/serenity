@@ -1680,10 +1680,8 @@ Optional<float> Parser::try_parse_float(StringView string)
             continue;
         }
 
-        if (str[i] < '0' || str[i] > '9' || exp_val != 0) {
+        if (str[i] < '0' || str[i] > '9' || exp_val != 0)
             return {};
-            continue;
-        }
 
         if (is_fractional) {
             fraction *= 10;

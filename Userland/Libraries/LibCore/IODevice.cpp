@@ -111,8 +111,6 @@ bool IODevice::can_read_line() const
         if (m_buffered_data.contains_in_range('\n', previous_buffer_size, new_buffer_size - 1))
             return true;
     }
-
-    return true;
 }
 
 bool IODevice::can_read() const

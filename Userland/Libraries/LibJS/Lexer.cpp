@@ -847,8 +847,6 @@ Token Lexer::force_slash_as_regex()
 
 TokenType Lexer::consume_regex_literal()
 {
-    TokenType token_type = TokenType::RegexLiteral;
-
     while (!is_eof()) {
         if (is_line_terminator() || (!m_regex_is_in_character_class && m_current_char == '/')) {
             break;
@@ -868,10 +866,9 @@ TokenType Lexer::consume_regex_literal()
     if (m_current_char == '/') {
         consume();
         return TokenType::RegexLiteral;
-    } else {
-        return TokenType::UnterminatedRegexLiteral;
     }
-    return token_type;
+
+    return TokenType::UnterminatedRegexLiteral;
 }
 
 }
