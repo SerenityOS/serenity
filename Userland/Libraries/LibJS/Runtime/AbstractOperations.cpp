@@ -630,8 +630,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
                 } else {
                     if (!MUST(variable_environment->has_binding(function_name))) {
                         MUST(variable_environment->create_mutable_binding(global_object, function_name, true));
-                        variable_environment->initialize_binding(global_object, function_name, js_undefined());
-                        VERIFY(!vm.exception());
+                        MUST(variable_environment->initialize_binding(global_object, function_name, js_undefined()));
                     }
                 }
 
@@ -704,12 +703,12 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
 
             if (!binding_exists) {
                 TRY(variable_environment->create_mutable_binding(global_object, declaration.name(), true));
-                variable_environment->initialize_binding(global_object, declaration.name(), function);
+                TRY(variable_environment->initialize_binding(global_object, declaration.name(), function));
             } else {
                 variable_environment->set_mutable_binding(global_object, declaration.name(), function, false);
+                if (auto* exception = vm.exception())
+                    return throw_completion(exception->value());
             }
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
         }
     }
 
@@ -723,9 +722,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
 
             if (!binding_exists) {
                 TRY(variable_environment->create_mutable_binding(global_object, var_name, true));
-                variable_environment->initialize_binding(global_object, var_name, js_undefined());
-                if (auto* exception = vm.exception())
-                    return throw_completion(exception->value());
+                TRY(variable_environment->initialize_binding(global_object, var_name, js_undefined()));
             }
         }
     }

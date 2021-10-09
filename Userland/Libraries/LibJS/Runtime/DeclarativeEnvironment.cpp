@@ -86,14 +86,23 @@ ThrowCompletionOr<void> DeclarativeEnvironment::create_immutable_binding(GlobalO
 }
 
 // 9.1.1.1.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v
-void DeclarativeEnvironment::initialize_binding(GlobalObject&, FlyString const& name, Value value)
+ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding(GlobalObject&, FlyString const& name, Value value)
 {
     auto it = m_names.find(name);
     VERIFY(it != m_names.end());
     auto& binding = m_bindings[it->value];
+
+    // 1. Assert: envRec must have an uninitialized binding for N.
     VERIFY(binding.initialized == false);
+
+    // 2. Set the bound value for N in envRec to V.
     binding.value = value;
+
+    // 3. Record that the binding for N in envRec has been initialized.
     binding.initialized = true;
+
+    // 4. Return NormalCompletion(empty).
+    return {};
 }
 
 // 9.1.1.1.5 SetMutableBinding ( N, V, S ), https://tc39.es/ecma262/#sec-declarative-environment-records-setmutablebinding-n-v-s
@@ -106,7 +115,7 @@ void DeclarativeEnvironment::set_mutable_binding(GlobalObject& global_object, Fl
             return;
         }
         (void)create_mutable_binding(global_object, name, true);
-        initialize_binding(global_object, name, value);
+        (void)initialize_binding(global_object, name, value);
         return;
     }
 
@@ -171,7 +180,7 @@ void DeclarativeEnvironment::initialize_or_set_mutable_binding(Badge<ScopeNode>,
     VERIFY(it != m_names.end());
     auto& binding = m_bindings[it->value];
     if (!binding.initialized)
-        initialize_binding(global_object, name, value);
+        MUST(initialize_binding(global_object, name, value));
     else
         set_mutable_binding(global_object, name, value, false);
 }
