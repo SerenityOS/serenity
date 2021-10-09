@@ -357,7 +357,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     }
 
     for (auto const& parameter_name : parameter_names) {
-        if (environment->has_binding(parameter_name))
+        if (MUST(environment->has_binding(parameter_name)))
             continue;
 
         environment->create_mutable_binding(global_object(), parameter_name, false);

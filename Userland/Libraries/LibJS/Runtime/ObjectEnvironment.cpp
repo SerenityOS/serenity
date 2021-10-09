@@ -25,20 +25,37 @@ void ObjectEnvironment::visit_edges(Cell::Visitor& visitor)
 }
 
 // 9.1.1.2.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n
-bool ObjectEnvironment::has_binding(FlyString const& name, Optional<size_t>*) const
+ThrowCompletionOr<bool> ObjectEnvironment::has_binding(FlyString const& name, Optional<size_t>*) const
 {
     auto& vm = this->vm();
-    bool found_binding = TRY_OR_DISCARD(m_binding_object.has_property(name));
+
+    // 1. Let bindingObject be envRec.[[BindingObject]].
+
+    // 2. Let foundBinding be ? HasProperty(bindingObject, N).
+    bool found_binding = TRY(m_binding_object.has_property(name));
+
+    // 3. If foundBinding is false, return false.
     if (!found_binding)
         return false;
+
+    // 4. If envRec.[[IsWithEnvironment]] is false, return true.
     if (!m_with_environment)
         return true;
-    auto unscopables = TRY_OR_DISCARD(m_binding_object.get(*vm.well_known_symbol_unscopables()));
+
+    // 5. Let unscopables be ? Get(bindingObject, @@unscopables).
+    auto unscopables = TRY(m_binding_object.get(*vm.well_known_symbol_unscopables()));
+
+    // 6. If Type(unscopables) is Object, then
     if (unscopables.is_object()) {
-        auto blocked = TRY_OR_DISCARD(unscopables.as_object().get(name));
-        if (blocked.to_boolean())
+        // a. Let blocked be ! ToBoolean(? Get(unscopables, N)).
+        auto blocked = TRY(unscopables.as_object().get(name)).to_boolean();
+
+        // b. If blocked is true, return false.
+        if (blocked)
             return false;
     }
+
+    // 7. Return true.
     return true;
 }
 

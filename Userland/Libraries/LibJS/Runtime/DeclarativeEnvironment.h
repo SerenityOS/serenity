@@ -8,6 +8,7 @@
 
 #include <AK/FlyString.h>
 #include <AK/HashMap.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -21,7 +22,7 @@ public:
     explicit DeclarativeEnvironment(Environment* parent_scope);
     virtual ~DeclarativeEnvironment() override;
 
-    virtual bool has_binding(FlyString const& name, Optional<size_t>* = nullptr) const override;
+    virtual ThrowCompletionOr<bool> has_binding(FlyString const& name, Optional<size_t>* = nullptr) const override;
     virtual void create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted) override;
     virtual void create_immutable_binding(GlobalObject&, FlyString const& name, bool strict) override;
     virtual void initialize_binding(GlobalObject&, FlyString const& name, Value) override;

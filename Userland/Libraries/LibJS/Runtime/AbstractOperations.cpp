@@ -558,7 +558,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
         while (this_environment != variable_environment) {
             if (!is<ObjectEnvironment>(*this_environment)) {
                 program.for_each_var_declared_name([&](auto const& name) {
-                    if (this_environment->has_binding(name)) {
+                    if (MUST(this_environment->has_binding(name))) {
                         vm.throw_exception<SyntaxError>(global_object, ErrorType::FixmeAddAnErrorStringWithMessage, "Var already declared lexically");
                         return IterationDecision::Break;
                     }
@@ -605,7 +605,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             auto* this_environment = lexical_environment;
 
             while (this_environment != variable_environment) {
-                if (!is<ObjectEnvironment>(*this_environment) && this_environment->has_binding(function_name))
+                if (!is<ObjectEnvironment>(*this_environment) && MUST(this_environment->has_binding(function_name)))
                     return IterationDecision::Continue;
 
                 this_environment = this_environment->outer_environment();
@@ -628,7 +628,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
                     if (vm.exception())
                         return IterationDecision::Break;
                 } else {
-                    if (!variable_environment->has_binding(function_name)) {
+                    if (!MUST(variable_environment->has_binding(function_name))) {
                         variable_environment->create_mutable_binding(global_object, function_name, true);
                         variable_environment->initialize_binding(global_object, function_name, js_undefined());
                         VERIFY(!vm.exception());
@@ -700,7 +700,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             if (auto* exception = vm.exception())
                 return throw_completion(exception->value());
         } else {
-            auto binding_exists = variable_environment->has_binding(declaration.name());
+            auto binding_exists = MUST(variable_environment->has_binding(declaration.name()));
 
             if (!binding_exists) {
                 variable_environment->create_mutable_binding(global_object, declaration.name(), true);
@@ -721,7 +721,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             if (auto* exception = vm.exception())
                 return throw_completion(exception->value());
         } else {
-            auto binding_exists = variable_environment->has_binding(var_name);
+            auto binding_exists = MUST(variable_environment->has_binding(var_name));
 
             if (!binding_exists) {
                 variable_environment->create_mutable_binding(global_object, var_name, true);

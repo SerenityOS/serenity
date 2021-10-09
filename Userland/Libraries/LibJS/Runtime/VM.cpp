@@ -445,9 +445,7 @@ Reference VM::get_identifier_reference(Environment* environment, FlyString name,
     }
 
     Optional<size_t> index;
-    auto exists = environment->has_binding(name, &index);
-    if (exception())
-        return {};
+    auto exists = TRY_OR_DISCARD(environment->has_binding(name, &index));
 
     Optional<EnvironmentCoordinate> environment_coordinate;
     if (index.has_value())

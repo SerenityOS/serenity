@@ -3190,7 +3190,7 @@ void ScopeNode::block_declaration_instantiation(GlobalObject& global_object, Env
             if (is_constant_declaration) {
                 environment->create_immutable_binding(global_object, name, true);
             } else {
-                if (!environment->has_binding(name))
+                if (!MUST(environment->has_binding(name)))
                     environment->create_mutable_binding(global_object, name, false);
             }
         });
