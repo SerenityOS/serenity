@@ -705,9 +705,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
                 TRY(variable_environment->create_mutable_binding(global_object, declaration.name(), true));
                 TRY(variable_environment->initialize_binding(global_object, declaration.name(), function));
             } else {
-                variable_environment->set_mutable_binding(global_object, declaration.name(), function, false);
-                if (auto* exception = vm.exception())
-                    return throw_completion(exception->value());
+                TRY(variable_environment->set_mutable_binding(global_object, declaration.name(), function, false));
             }
         }
     }
@@ -834,7 +832,7 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
                     return environment.get_binding_value(global_object_getter, name, false);
                 },
                 [&environment, name](VM& vm, GlobalObject& global_object_setter) {
-                    environment.set_mutable_binding(global_object_setter, name, vm.argument(0), false);
+                    MUST(environment.set_mutable_binding(global_object_setter, name, vm.argument(0), false));
                     return js_undefined();
                 },
                 Attribute::Configurable);

@@ -26,7 +26,7 @@ public:
     virtual ThrowCompletionOr<void> create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted) override;
     virtual ThrowCompletionOr<void> create_immutable_binding(GlobalObject&, FlyString const& name, bool strict) override;
     virtual ThrowCompletionOr<void> initialize_binding(GlobalObject&, FlyString const& name, Value) override;
-    virtual void set_mutable_binding(GlobalObject&, FlyString const& name, Value, bool strict) override;
+    virtual ThrowCompletionOr<void> set_mutable_binding(GlobalObject&, FlyString const& name, Value, bool strict) override;
     virtual Value get_binding_value(GlobalObject&, FlyString const& name, bool strict) override;
     virtual bool delete_binding(GlobalObject&, FlyString const& name) override;
 
@@ -36,7 +36,7 @@ public:
     [[nodiscard]] Vector<String> bindings() const;
 
     Value get_binding_value_direct(GlobalObject&, size_t index, bool strict);
-    void set_mutable_binding_direct(GlobalObject&, size_t index, Value, bool strict);
+    ThrowCompletionOr<void> set_mutable_binding_direct(GlobalObject&, size_t index, Value, bool strict);
 
 protected:
     virtual void visit_edges(Visitor&) override;

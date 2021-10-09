@@ -166,9 +166,10 @@ Value FunctionDeclaration::execute(Interpreter& interpreter, GlobalObject& globa
 
     if (m_is_hoisted) {
         // Perform special annexB steps see step 3 of: https://tc39.es/ecma262/#sec-web-compat-functiondeclarationinstantiation
-        auto function_object = interpreter.vm().running_execution_context().lexical_environment->get_binding_value(global_object, name(), false);
-        interpreter.vm().running_execution_context().variable_environment->set_mutable_binding(global_object, name(), function_object, false);
-        VERIFY(!interpreter.exception());
+        auto* variable_environment = interpreter.vm().running_execution_context().variable_environment;
+        auto* lexical_environment = interpreter.vm().running_execution_context().lexical_environment;
+        auto function_object = lexical_environment->get_binding_value(global_object, name(), false);
+        MUST(variable_environment->set_mutable_binding(global_object, name(), function_object, false));
     }
 
     return {};
