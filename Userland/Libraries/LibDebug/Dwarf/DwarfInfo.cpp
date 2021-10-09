@@ -153,6 +153,12 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         value.m_data.as_unsigned = data;
         break;
     }
+    case AttributeDataForm::Data16: {
+        value.m_type = AttributeValue::Type::RawBytes;
+        assign_raw_bytes_value(16);
+        VERIFY(!debug_info_stream.has_any_error());
+        break;
+    }
     case AttributeDataForm::Ref4: {
         u32 data;
         debug_info_stream >> data;
