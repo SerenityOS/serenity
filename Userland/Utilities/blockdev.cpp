@@ -40,10 +40,12 @@ int main(int argc, char** argv)
     const char* device = nullptr;
 
     bool flag_get_disk_size = false;
+    bool flag_get_block_size = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Call block device ioctls");
     args_parser.add_option(flag_get_disk_size, "Get size in bytes", "size", 's');
+    args_parser.add_option(flag_get_block_size, "Get block size in bytes", "block-size", 'b');
     args_parser.add_positional_argument(device, "Device to query", "device");
     args_parser.parse(argc, argv);
 
@@ -55,6 +57,9 @@ int main(int argc, char** argv)
 
     if (flag_get_disk_size) {
         fetch_ioctl(fd, STORAGE_DEVICE_GET_SIZE);
+    }
+    if (flag_get_block_size) {
+        fetch_ioctl(fd, STORAGE_DEVICE_GET_BLOCK_SIZE);
     }
 
     return 0;
