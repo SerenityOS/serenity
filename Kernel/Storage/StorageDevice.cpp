@@ -196,6 +196,11 @@ KResult StorageDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<v
         return copy_to_user(Userspace<size_t*>(arg), &disk_size);
         break;
     }
+    case STORAGE_DEVICE_GET_BLOCK_SIZE: {
+        size_t size = block_size();
+        return copy_to_user(Userspace<size_t*>(arg), &size);
+        break;
+    }
     default:
         return EINVAL;
     }
