@@ -106,40 +106,49 @@ ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding(GlobalObject&
 }
 
 // 9.1.1.1.5 SetMutableBinding ( N, V, S ), https://tc39.es/ecma262/#sec-declarative-environment-records-setmutablebinding-n-v-s
-void DeclarativeEnvironment::set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value, bool strict)
+ThrowCompletionOr<void> DeclarativeEnvironment::set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value, bool strict)
 {
+    // 1. If envRec does not have a binding for N, then
     auto it = m_names.find(name);
     if (it == m_names.end()) {
-        if (strict) {
-            global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
-            return;
-        }
-        (void)create_mutable_binding(global_object, name, true);
-        (void)initialize_binding(global_object, name, value);
-        return;
+        // a. If S is true, throw a ReferenceError exception.
+        if (strict)
+            return vm().throw_completion<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
+
+        // b. Perform envRec.CreateMutableBinding(N, true).
+        MUST(create_mutable_binding(global_object, name, true));
+
+        // c. Perform envRec.InitializeBinding(N, V).
+        MUST(initialize_binding(global_object, name, value));
+
+        // d. Return NormalCompletion(empty).
+        return {};
     }
 
-    set_mutable_binding_direct(global_object, it->value, value, strict);
+    // 2-5. (extracted into a non-standard function below)
+    TRY(set_mutable_binding_direct(global_object, it->value, value, strict));
+
+    // 6. Return NormalCompletion(empty).
+    return {};
 }
 
-void DeclarativeEnvironment::set_mutable_binding_direct(GlobalObject& global_object, size_t index, Value value, bool strict)
+ThrowCompletionOr<void> DeclarativeEnvironment::set_mutable_binding_direct(GlobalObject& global_object, size_t index, Value value, bool strict)
 {
     auto& binding = m_bindings[index];
     if (binding.strict)
         strict = true;
 
-    if (!binding.initialized) {
-        global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::BindingNotInitialized, name_from_index(index));
-        return;
-    }
+    if (!binding.initialized)
+        return vm().throw_completion<ReferenceError>(global_object, ErrorType::BindingNotInitialized, name_from_index(index));
 
     if (binding.mutable_) {
         binding.value = value;
     } else {
-        if (strict) {
-            global_object.vm().throw_exception<TypeError>(global_object, ErrorType::InvalidAssignToConst);
-        }
+        if (strict)
+            return vm().throw_completion<TypeError>(global_object, ErrorType::InvalidAssignToConst);
     }
+
+    return {};
 }
 
 // 9.1.1.1.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-declarative-environment-records-getbindingvalue-n-s
@@ -182,7 +191,7 @@ void DeclarativeEnvironment::initialize_or_set_mutable_binding(Badge<ScopeNode>,
     if (!binding.initialized)
         MUST(initialize_binding(global_object, name, value));
     else
-        set_mutable_binding(global_object, name, value, false);
+        MUST(set_mutable_binding(global_object, name, value, false));
 }
 
 Vector<String> DeclarativeEnvironment::bindings() const

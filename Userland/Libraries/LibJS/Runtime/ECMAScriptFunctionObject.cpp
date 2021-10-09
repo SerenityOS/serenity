@@ -534,7 +534,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
     for (auto& declaration : functions_to_initialize) {
         auto* function = ECMAScriptFunctionObject::create(global_object(), declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), lex_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
-        var_environment->set_mutable_binding(global_object(), declaration.name(), function, false);
+        MUST(var_environment->set_mutable_binding(global_object(), declaration.name(), function, false));
     }
 
     return {};

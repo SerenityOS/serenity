@@ -92,14 +92,18 @@ ThrowCompletionOr<void> GlobalEnvironment::initialize_binding(GlobalObject& glob
 }
 
 // 9.1.1.4.5 SetMutableBinding ( N, V, S ), https://tc39.es/ecma262/#sec-global-environment-records-setmutablebinding-n-v-s
-void GlobalEnvironment::set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value, bool strict)
+ThrowCompletionOr<void> GlobalEnvironment::set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value, bool strict)
 {
+    // 1. Let DclRec be envRec.[[DeclarativeRecord]].
+    // 2. If DclRec.HasBinding(N) is true, then
     if (MUST(m_declarative_record->has_binding(name))) {
-        m_declarative_record->set_mutable_binding(global_object, name, value, strict);
-        return;
+        // a. Return DclRec.SetMutableBinding(N, V, S).
+        return m_declarative_record->set_mutable_binding(global_object, name, value, strict);
     }
 
-    m_object_record->set_mutable_binding(global_object, name, value, strict);
+    // 3. Let ObjRec be envRec.[[ObjectRecord]].
+    // 4. Return ? ObjRec.SetMutableBinding(N, V, S).
+    return m_object_record->set_mutable_binding(global_object, name, value, strict);
 }
 
 // 9.1.1.4.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-global-environment-records-getbindingvalue-n-s
