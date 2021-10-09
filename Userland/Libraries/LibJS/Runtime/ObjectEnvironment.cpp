@@ -76,9 +76,13 @@ ThrowCompletionOr<void> ObjectEnvironment::create_immutable_binding(GlobalObject
 }
 
 // 9.1.1.2.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-object-environment-records-initializebinding-n-v
-void ObjectEnvironment::initialize_binding(GlobalObject& global_object, FlyString const& name, Value value)
+ThrowCompletionOr<void> ObjectEnvironment::initialize_binding(GlobalObject& global_object, FlyString const& name, Value value)
 {
+    // 1. Return ? envRec.SetMutableBinding(N, V, false).
     set_mutable_binding(global_object, name, value, false);
+    if (auto* exception = vm().exception())
+        return throw_completion(exception->value());
+    return {};
 }
 
 // 9.1.1.2.5 SetMutableBinding ( N, V, S ), https://tc39.es/ecma262/#sec-object-environment-records-setmutablebinding-n-v-s

@@ -178,7 +178,7 @@ ThrowCompletionOr<void> VM::destructuring_assignment_evaluation(NonnullRefPtr<Bi
 ThrowCompletionOr<void> VM::binding_initialization(FlyString const& target, Value value, Environment* environment, GlobalObject& global_object)
 {
     if (environment) {
-        environment->initialize_binding(global_object, target, value);
+        MUST(environment->initialize_binding(global_object, target, value));
         return {};
     }
     auto reference = resolve_binding(target);
