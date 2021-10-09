@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +9,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Function.h>
 #include <AK/Variant.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -34,6 +35,9 @@ public:
     size_t byte_length() const { return buffer_impl().size(); }
     ByteBuffer& buffer() { return buffer_impl(); }
     const ByteBuffer& buffer() const { return buffer_impl(); }
+
+    // Used by allocate_array_buffer() to attach the data block after construction
+    void set_buffer(ByteBuffer buffer) { m_buffer = move(buffer); }
 
     Value detach_key() const { return m_detach_key; }
     void set_detach_key(Value detach_key) { m_detach_key = detach_key; }
@@ -69,6 +73,8 @@ private:
     // but are required to be available for the use of various harnesses like the Test262 test runner.
     Value m_detach_key;
 };
+
+ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject&, FunctionObject& constructor, size_t byte_length);
 
 // 25.1.2.9 RawBytesToNumeric ( type, rawBytes, isLittleEndian ), https://tc39.es/ecma262/#sec-rawbytestonumeric
 template<typename T>
