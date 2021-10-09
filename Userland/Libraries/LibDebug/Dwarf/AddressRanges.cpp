@@ -31,6 +31,12 @@ void AddressRanges::for_each_range(Function<void(Range)> callback)
             current_base_address = base;
             break;
         }
+        case RangeListEntryType::BaseAddressX: {
+            FlatPtr index;
+            m_range_lists_stream.read_LEB128_unsigned(index);
+            current_base_address = m_compilation_unit.get_address(index);
+            break;
+        }
         case RangeListEntryType::OffsetPair: {
             Optional<FlatPtr> base_address = current_base_address;
             if (!base_address.has_value()) {
@@ -54,6 +60,21 @@ void AddressRanges::for_each_range(Function<void(Range)> callback)
             size_t length;
             m_range_lists_stream.read_LEB128_unsigned(length);
             callback(Range { start, start + length });
+            break;
+        }
+        case RangeListEntryType::StartXEndX: {
+            size_t start, end;
+            m_range_lists_stream.read_LEB128_unsigned(start);
+            m_range_lists_stream.read_LEB128_unsigned(end);
+            callback(Range { m_compilation_unit.get_address(start), m_compilation_unit.get_address(end) });
+            break;
+        }
+        case RangeListEntryType::StartXLength: {
+            size_t start, length;
+            m_range_lists_stream.read_LEB128_unsigned(start);
+            m_range_lists_stream.read_LEB128_unsigned(length);
+            auto start_addr = m_compilation_unit.get_address(start);
+            callback(Range { start_addr, start_addr + length });
             break;
         }
         case RangeListEntryType::EndOfList:
