@@ -49,10 +49,11 @@ void Reference::put_value(GlobalObject& global_object, Value value)
 
     VERIFY(m_base_type == BaseType::Environment);
     VERIFY(m_base_environment);
+    // These can throw, TRY() when converting put_value() to ThrowCompletionOr
     if (m_environment_coordinate.has_value())
-        static_cast<DeclarativeEnvironment*>(m_base_environment)->set_mutable_binding_direct(global_object, m_environment_coordinate->index, value, m_strict);
+        (void)static_cast<DeclarativeEnvironment*>(m_base_environment)->set_mutable_binding_direct(global_object, m_environment_coordinate->index, value, m_strict);
     else
-        m_base_environment->set_mutable_binding(global_object, m_name.as_string(), value, m_strict);
+        (void)m_base_environment->set_mutable_binding(global_object, m_name.as_string(), value, m_strict);
 }
 
 void Reference::throw_reference_error(GlobalObject& global_object) const
