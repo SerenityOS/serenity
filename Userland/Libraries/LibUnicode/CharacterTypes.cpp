@@ -213,10 +213,7 @@ static SpecialCasing const* find_matching_special_case(Utf8View const& string, O
 u32 to_unicode_lowercase(u32 code_point)
 {
 #if ENABLE_UNICODE_DATA
-    auto unicode_data = Detail::unicode_data_for_code_point(code_point);
-    if (unicode_data.has_value())
-        return unicode_data->simple_lowercase_mapping;
-    return code_point;
+    return Detail::simple_lowercase_mapping(code_point);
 #else
     return AK::to_ascii_lowercase(code_point);
 #endif
@@ -225,10 +222,7 @@ u32 to_unicode_lowercase(u32 code_point)
 u32 to_unicode_uppercase(u32 code_point)
 {
 #if ENABLE_UNICODE_DATA
-    auto unicode_data = Detail::unicode_data_for_code_point(code_point);
-    if (unicode_data.has_value())
-        return unicode_data->simple_uppercase_mapping;
-    return code_point;
+    return Detail::simple_uppercase_mapping(code_point);
 #else
     return AK::to_ascii_uppercase(code_point);
 #endif
@@ -255,7 +249,7 @@ String to_unicode_lowercase_full(StringView const& string, [[maybe_unused]] Opti
 
         auto const* special_casing = find_matching_special_case(view, locale, index, byte_length, *unicode_data);
         if (!special_casing) {
-            builder.append_code_point(unicode_data->simple_lowercase_mapping);
+            builder.append_code_point(to_unicode_lowercase(code_point));
             continue;
         }
 
@@ -290,7 +284,7 @@ String to_unicode_uppercase_full(StringView const& string, [[maybe_unused]] Opti
 
         auto const* special_casing = find_matching_special_case(view, locale, index, byte_length, *unicode_data);
         if (!special_casing) {
-            builder.append_code_point(unicode_data->simple_uppercase_mapping);
+            builder.append_code_point(to_unicode_uppercase(code_point));
             continue;
         }
 
