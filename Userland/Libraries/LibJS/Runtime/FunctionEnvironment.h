@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 
@@ -42,7 +43,7 @@ public:
     void set_new_target(Value new_target) { m_new_target = new_target; }
 
     // Abstract operations
-    Value get_super_base() const;
+    ThrowCompletionOr<Value> get_super_base() const;
     bool has_super_binding() const;
     virtual bool has_this_binding() const override;
     virtual Value get_this_binding(GlobalObject&) const override;

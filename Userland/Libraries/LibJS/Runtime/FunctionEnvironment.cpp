@@ -5,8 +5,8 @@
  */
 
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
-#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
@@ -29,13 +29,21 @@ void FunctionEnvironment::visit_edges(Visitor& visitor)
 }
 
 // 9.1.1.3.5 GetSuperBase ( ), https://tc39.es/ecma262/#sec-getsuperbase
-Value FunctionEnvironment::get_super_base() const
+ThrowCompletionOr<Value> FunctionEnvironment::get_super_base() const
 {
     VERIFY(m_function_object);
+
+    // 1. Let home be envRec.[[FunctionObject]].[[HomeObject]].
     auto home_object = m_function_object->home_object();
+
+    // 2. If home has the value undefined, return undefined.
     if (!home_object)
         return js_undefined();
-    return TRY_OR_DISCARD(home_object->internal_get_prototype_of());
+
+    // 3. Assert: Type(home) is Object.
+
+    // 4. Return ? home.[[GetPrototypeOf]]().
+    return { TRY(home_object->internal_get_prototype_of()) };
 }
 
 // 9.1.1.3.2 HasThisBinding ( ), https://tc39.es/ecma262/#sec-function-environment-records-hasthisbinding
