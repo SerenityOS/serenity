@@ -31,7 +31,6 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
-#include <unistd.h>
 
 static constexpr auto APP_NAME = "Space Analyzer"sv;
 
@@ -135,15 +134,6 @@ static ErrorOr<void> analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& tr
     treemapwidget.set_tree(tree);
 
     return {};
-}
-
-static bool is_removable(DeprecatedString const& absolute_path)
-{
-    VERIFY(!absolute_path.is_empty());
-    int access_result = access(LexicalPath::dirname(absolute_path).characters(), W_OK);
-    if (access_result != 0 && errno != EACCES)
-        perror("access");
-    return access_result == 0;
 }
 
 static DeprecatedString get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMapWidget const& treemapwidget, bool include_last_node = true)
@@ -288,7 +278,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         DeprecatedString selected_node_path = get_absolute_path_to_selected_node(treemapwidget);
         if (selected_node_path.is_empty())
             return;
-        delete_action->set_enabled(is_removable(selected_node_path));
+        delete_action->set_enabled(Core::File::can_delete_or_move(selected_node_path));
         if (Core::File::is_directory(selected_node_path)) {
             open_folder_action->set_visible(true);
             open_containing_folder_action->set_visible(false);

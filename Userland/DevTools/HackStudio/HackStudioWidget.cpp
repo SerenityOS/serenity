@@ -1245,7 +1245,7 @@ void HackStudioWidget::configure_project_tree_view()
 
         auto selections = m_project_tree_view->selection().indices();
         auto it = selections.find_if([&](auto selected_file) {
-            return access(m_project->model().full_path(selected_file.parent()).characters(), W_OK) == 0;
+            return Core::File::can_delete_or_move(m_project->model().full_path(selected_file));
         });
         bool has_permissions = it != selections.end();
         m_tree_view_rename_action->set_enabled(has_permissions);
