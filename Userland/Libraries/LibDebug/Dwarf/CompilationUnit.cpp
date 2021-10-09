@@ -44,4 +44,70 @@ Optional<FlatPtr> CompilationUnit::base_address() const
     return m_cached_base_address;
 }
 
+u64 CompilationUnit::address_table_base() const
+{
+    if (m_has_cached_address_table_base)
+        return m_cached_address_table_base;
+
+    auto die = root_die();
+    auto res = die.get_attribute(Attribute::AddrBase);
+    if (res.has_value()) {
+        VERIFY(res->form() == AttributeDataForm::SecOffset);
+        m_cached_address_table_base = res->as_unsigned();
+    }
+    m_has_cached_address_table_base = true;
+    return m_cached_address_table_base;
+}
+
+u64 CompilationUnit::string_offsets_base() const
+{
+    if (m_has_cached_string_offsets_base)
+        return m_cached_string_offsets_base;
+
+    auto die = root_die();
+    auto res = die.get_attribute(Attribute::StrOffsetsBase);
+    if (res.has_value()) {
+        VERIFY(res->form() == AttributeDataForm::SecOffset);
+        m_cached_string_offsets_base = res->as_unsigned();
+    }
+    m_has_cached_string_offsets_base = true;
+    return m_cached_string_offsets_base;
+}
+
+u64 CompilationUnit::range_lists_base() const
+{
+    if (m_has_cached_range_lists_base)
+        return m_cached_range_lists_base;
+
+    auto die = root_die();
+    auto res = die.get_attribute(Attribute::RngListsBase);
+    if (res.has_value()) {
+        VERIFY(res->form() == AttributeDataForm::SecOffset);
+        m_cached_range_lists_base = res->as_unsigned();
+    }
+    m_has_cached_range_lists_base = true;
+    return m_cached_range_lists_base;
+}
+
+FlatPtr CompilationUnit::get_address(size_t index) const
+{
+    auto base = address_table_base();
+    auto debug_addr_data = dwarf_info().debug_addr_data();
+    VERIFY(base < debug_addr_data.size());
+    auto addresses = reinterpret_cast<FlatPtr const*>(debug_addr_data.offset(base));
+    VERIFY(base + index * sizeof(FlatPtr) < debug_addr_data.size());
+    return addresses[index];
+}
+
+char const* CompilationUnit::get_string(size_t index) const
+{
+    auto base = string_offsets_base();
+    auto debug_str_offsets_data = dwarf_info().debug_str_offsets_data();
+    VERIFY(base < debug_str_offsets_data.size());
+    // FIXME: This assumes DWARF32
+    auto offsets = reinterpret_cast<u32 const*>(debug_str_offsets_data.offset(base));
+    VERIFY(base + index * sizeof(u32) < debug_str_offsets_data.size());
+    auto offset = offsets[index];
+    return reinterpret_cast<char const*>(dwarf_info().debug_strings_data().offset(offset));
+}
 }

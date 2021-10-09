@@ -23,6 +23,8 @@ DwarfInfo::DwarfInfo(ELF::Image const& elf)
     m_debug_line_data = section_data(".debug_line"sv);
     m_debug_line_strings_data = section_data(".debug_line_str"sv);
     m_debug_range_lists_data = section_data(".debug_rnglists"sv);
+    m_debug_str_offsets_data = section_data(".debug_str_offsets"sv);
+    m_debug_addr_data = section_data(".debug_addr"sv);
 
     populate_compilation_units();
 }
@@ -228,6 +230,78 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         /* Value is part of the abbreviation record. */
         value.m_type = AttributeValue::Type::SignedNumber;
         value.m_data.as_signed = implicit_const_value;
+        break;
+    }
+    case AttributeDataForm::StrX1: {
+        u8 index;
+        debug_info_stream >> index;
+        VERIFY(!debug_info_stream.has_any_error());
+        value.m_type = AttributeValue::Type::String;
+        value.m_data.as_unsigned = index;
+        break;
+    }
+    case AttributeDataForm::StrX2: {
+        u16 index;
+        debug_info_stream >> index;
+        VERIFY(!debug_info_stream.has_any_error());
+        value.m_type = AttributeValue::Type::String;
+        value.m_data.as_unsigned = index;
+        break;
+    }
+    case AttributeDataForm::StrX4: {
+        u32 index;
+        debug_info_stream >> index;
+        VERIFY(!debug_info_stream.has_any_error());
+        value.m_type = AttributeValue::Type::String;
+        value.m_data.as_unsigned = index;
+        break;
+    }
+    case AttributeDataForm::StrX: {
+        size_t index;
+        debug_info_stream.read_LEB128_unsigned(index);
+        VERIFY(!debug_info_stream.has_any_error());
+        value.m_type = AttributeValue::Type::String;
+        value.m_data.as_unsigned = index;
+        break;
+    }
+    case AttributeDataForm::AddrX1: {
+        u8 index;
+        debug_info_stream >> index;
+        VERIFY(!debug_info_stream.has_any_error());
+        value.m_type = AttributeValue::Type::Address;
+        value.m_data.as_unsigned = index;
+        break;
+    }
+    case AttributeDataForm::AddrX2: {
+        u16 index;
+        debug_info_stream >> index;
+        VERIFY(!debug_info_stream.has_any_error());
+        value.m_type = AttributeValue::Type::Address;
+        value.m_data.as_unsigned = index;
+        break;
+    }
+    case AttributeDataForm::AddrX4: {
+        u32 index;
+        debug_info_stream >> index;
+        VERIFY(!debug_info_stream.has_any_error());
+        value.m_type = AttributeValue::Type::Address;
+        value.m_data.as_unsigned = index;
+        break;
+    }
+    case AttributeDataForm::AddrX: {
+        size_t index;
+        debug_info_stream.read_LEB128_unsigned(index);
+        VERIFY(!debug_info_stream.has_any_error());
+        value.m_type = AttributeValue::Type::Address;
+        value.m_data.as_unsigned = index;
+        break;
+    }
+    case AttributeDataForm::RngListX: {
+        size_t index;
+        debug_info_stream.read_LEB128_unsigned(index);
+        VERIFY(!debug_info_stream.has_any_error());
+        value.m_type = AttributeValue::Type::UnsignedNumber;
+        value.m_data.as_unsigned = index;
         break;
     }
     default:
