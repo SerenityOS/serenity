@@ -38,7 +38,7 @@ Optional<FlatPtr> CompilationUnit::base_address() const
     auto die = root_die();
     auto res = die.get_attribute(Attribute::LowPc);
     if (res.has_value()) {
-        m_cached_base_address = res->data.as_addr;
+        m_cached_base_address = res->as_addr();
     }
     m_has_cached_base_address = true;
     return m_cached_base_address;

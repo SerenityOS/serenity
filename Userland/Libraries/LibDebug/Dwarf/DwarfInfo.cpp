@@ -66,14 +66,14 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
     InputMemoryStream& debug_info_stream, const CompilationUnit* unit) const
 {
     AttributeValue value;
-    value.form = form;
+    value.m_form = form;
+    value.m_compilation_unit = unit;
 
     auto assign_raw_bytes_value = [&](size_t length) {
-        value.data.as_raw_bytes.length = length;
-        value.data.as_raw_bytes.bytes = reinterpret_cast<const u8*>(debug_info_data().data()
-            + debug_info_stream.offset());
+        value.m_data.as_raw_bytes = { reinterpret_cast<const u8*>(debug_info_data().data() + debug_info_stream.offset()), length };
 
         debug_info_stream.discard_or_error(length);
+        VERIFY(!debug_info_stream.has_any_error());
     };
 
     switch (form) {
@@ -81,95 +81,95 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         u32 offset;
         debug_info_stream >> offset;
         VERIFY(!debug_info_stream.has_any_error());
-        value.type = AttributeValue::Type::String;
+        value.m_type = AttributeValue::Type::String;
 
         auto strings_data = debug_strings_data();
-        value.data.as_string = reinterpret_cast<const char*>(strings_data.data() + offset);
+        value.m_data.as_string = reinterpret_cast<const char*>(strings_data.data() + offset);
         break;
     }
     case AttributeDataForm::Data1: {
         u8 data;
         debug_info_stream >> data;
         VERIFY(!debug_info_stream.has_any_error());
-        value.type = AttributeValue::Type::UnsignedNumber;
-        value.data.as_unsigned = data;
+        value.m_type = AttributeValue::Type::UnsignedNumber;
+        value.m_data.as_unsigned = data;
         break;
     }
     case AttributeDataForm::Data2: {
         u16 data;
         debug_info_stream >> data;
         VERIFY(!debug_info_stream.has_any_error());
-        value.type = AttributeValue::Type::UnsignedNumber;
-        value.data.as_signed = data;
+        value.m_type = AttributeValue::Type::UnsignedNumber;
+        value.m_data.as_signed = data;
         break;
     }
     case AttributeDataForm::Addr: {
         FlatPtr address;
         debug_info_stream >> address;
         VERIFY(!debug_info_stream.has_any_error());
-        value.type = AttributeValue::Type::UnsignedNumber;
-        value.data.as_addr = address;
+        value.m_type = AttributeValue::Type::Address;
+        value.m_data.as_addr = address;
         break;
     }
     case AttributeDataForm::SData: {
         i64 data;
         debug_info_stream.read_LEB128_signed(data);
         VERIFY(!debug_info_stream.has_any_error());
-        value.type = AttributeValue::Type::SignedNumber;
-        value.data.as_signed = data;
+        value.m_type = AttributeValue::Type::SignedNumber;
+        value.m_data.as_signed = data;
         break;
     }
     case AttributeDataForm::UData: {
         u64 data;
         debug_info_stream.read_LEB128_unsigned(data);
         VERIFY(!debug_info_stream.has_any_error());
-        value.type = AttributeValue::Type::UnsignedNumber;
-        value.data.as_unsigned = data;
+        value.m_type = AttributeValue::Type::UnsignedNumber;
+        value.m_data.as_unsigned = data;
         break;
     }
     case AttributeDataForm::SecOffset: {
         u32 data;
         debug_info_stream >> data;
         VERIFY(!debug_info_stream.has_any_error());
-        value.type = AttributeValue::Type::SecOffset;
-        value.data.as_unsigned = data;
+        value.m_type = AttributeValue::Type::SecOffset;
+        value.m_data.as_unsigned = data;
         break;
     }
     case AttributeDataForm::Data4: {
         u32 data;
         debug_info_stream >> data;
         VERIFY(!debug_info_stream.has_any_error());
-        value.type = AttributeValue::Type::UnsignedNumber;
-        value.data.as_unsigned = data;
+        value.m_type = AttributeValue::Type::UnsignedNumber;
+        value.m_data.as_unsigned = data;
         break;
     }
     case AttributeDataForm::Data8: {
         u64 data;
         debug_info_stream >> data;
         VERIFY(!debug_info_stream.has_any_error());
-        value.type = AttributeValue::Type::UnsignedNumber;
-        value.data.as_unsigned = data;
+        value.m_type = AttributeValue::Type::UnsignedNumber;
+        value.m_data.as_unsigned = data;
         break;
     }
     case AttributeDataForm::Ref4: {
         u32 data;
         debug_info_stream >> data;
         VERIFY(!debug_info_stream.has_any_error());
-        value.type = AttributeValue::Type::DieReference;
+        value.m_type = AttributeValue::Type::DieReference;
         VERIFY(unit);
-        value.data.as_unsigned = data + unit->offset();
+        value.m_data.as_unsigned = data + unit->offset();
         break;
     }
     case AttributeDataForm::FlagPresent: {
-        value.type = AttributeValue::Type::Boolean;
-        value.data.as_bool = true;
+        value.m_type = AttributeValue::Type::Boolean;
+        value.m_data.as_bool = true;
         break;
     }
     case AttributeDataForm::ExprLoc: {
         size_t length;
         debug_info_stream.read_LEB128_unsigned(length);
         VERIFY(!debug_info_stream.has_any_error());
-        value.type = AttributeValue::Type::DwarfExpression;
+        value.m_type = AttributeValue::Type::DwarfExpression;
         assign_raw_bytes_value(length);
         break;
     }
@@ -178,12 +178,12 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         u32 str_offset = debug_info_stream.offset();
         debug_info_stream >> str;
         VERIFY(!debug_info_stream.has_any_error());
-        value.type = AttributeValue::Type::String;
-        value.data.as_string = reinterpret_cast<const char*>(str_offset + debug_info_data().data());
+        value.m_type = AttributeValue::Type::String;
+        value.m_data.as_string = reinterpret_cast<const char*>(str_offset + debug_info_data().data());
         break;
     }
     case AttributeDataForm::Block1: {
-        value.type = AttributeValue::Type::RawBytes;
+        value.m_type = AttributeValue::Type::RawBytes;
         u8 length;
         debug_info_stream >> length;
         VERIFY(!debug_info_stream.has_any_error());
@@ -191,7 +191,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         break;
     }
     case AttributeDataForm::Block2: {
-        value.type = AttributeValue::Type::RawBytes;
+        value.m_type = AttributeValue::Type::RawBytes;
         u16 length;
         debug_info_stream >> length;
         VERIFY(!debug_info_stream.has_any_error());
@@ -199,7 +199,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         break;
     }
     case AttributeDataForm::Block4: {
-        value.type = AttributeValue::Type::RawBytes;
+        value.m_type = AttributeValue::Type::RawBytes;
         u32 length;
         debug_info_stream >> length;
         VERIFY(!debug_info_stream.has_any_error());
@@ -207,7 +207,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         break;
     }
     case AttributeDataForm::Block: {
-        value.type = AttributeValue::Type::RawBytes;
+        value.m_type = AttributeValue::Type::RawBytes;
         size_t length;
         debug_info_stream.read_LEB128_unsigned(length);
         VERIFY(!debug_info_stream.has_any_error());
@@ -218,16 +218,16 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         u32 offset;
         debug_info_stream >> offset;
         VERIFY(!debug_info_stream.has_any_error());
-        value.type = AttributeValue::Type::String;
+        value.m_type = AttributeValue::Type::String;
 
         auto strings_data = debug_line_strings_data();
-        value.data.as_string = reinterpret_cast<const char*>(strings_data.data() + offset);
+        value.m_data.as_string = reinterpret_cast<const char*>(strings_data.data() + offset);
         break;
     }
     case AttributeDataForm::ImplicitConst: {
         /* Value is part of the abbreviation record. */
-        value.type = AttributeValue::Type::SignedNumber;
-        value.data.as_signed = implicit_const_value;
+        value.m_type = AttributeValue::Type::SignedNumber;
+        value.m_data.as_signed = implicit_const_value;
         break;
     }
     default:
@@ -247,9 +247,9 @@ void DwarfInfo::build_cached_dies() const
         auto ranges = die.get_attribute(Attribute::Ranges);
         if (ranges.has_value()) {
             // TODO Support DW_FORM_rnglistx
-            if (ranges->form != AttributeDataForm::SecOffset)
+            if (ranges->form() != AttributeDataForm::SecOffset)
                 return {};
-            auto offset = ranges->data.as_addr;
+            auto offset = ranges->as_unsigned();
             AddressRanges address_ranges(debug_range_lists_data(), offset, die.compilation_unit());
             Vector<DIERange> entries;
             address_ranges.for_each_range([&entries](auto range) {
@@ -264,18 +264,18 @@ void DwarfInfo::build_cached_dies() const
         if (!start.has_value() || !end.has_value())
             return {};
 
-        VERIFY(start->form == Dwarf::AttributeDataForm::Addr);
+        VERIFY(start->type() == Dwarf::AttributeValue::Type::Address);
 
         // DW_AT_high_pc attribute can have different meanings depending on the attribute form.
         // (Dwarf version 5, section 2.17.2).
 
         uint32_t range_end = 0;
-        if (end->form == Dwarf::AttributeDataForm::Addr)
-            range_end = end->data.as_addr;
+        if (end->form() == Dwarf::AttributeDataForm::Addr)
+            range_end = end->as_addr();
         else
-            range_end = start->data.as_unsigned + end->data.as_unsigned;
+            range_end = start->as_addr() + end->as_unsigned();
 
-        return { DIERange { (FlatPtr)start.value().data.as_addr, range_end } };
+        return { DIERange { start.value().as_addr(), range_end } };
     };
 
     // If we simply use a lambda, type deduction fails because it's used recursively.

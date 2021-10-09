@@ -60,10 +60,10 @@ void LineProgram::parse_path_entries(Function<void(PathEntry& entry)> callback, 
                 auto value = m_dwarf_info.get_attribute_value(format_description.form, 0, m_stream);
                 switch (format_description.type) {
                 case ContentType::Path:
-                    entry.path = value.data.as_string;
+                    entry.path = value.as_string();
                     break;
                 case ContentType::DirectoryIndex:
-                    entry.directory_index = value.data.as_unsigned;
+                    entry.directory_index = value.as_unsigned();
                     break;
                 default:
                     dbgln_if(DWARF_DEBUG, "Unhandled path list attribute: {}", (int)format_description.type);

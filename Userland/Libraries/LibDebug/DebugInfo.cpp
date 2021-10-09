@@ -54,15 +54,18 @@ void DebugInfo::parse_scopes_impl(Dwarf::DIE const& die)
         VariablesScope scope {};
         scope.is_function = (child.tag() == Dwarf::EntryTag::SubProgram);
         if (name.has_value())
-            scope.name = name.value().data.as_string;
+            scope.name = name.value().as_string();
 
         if (!child.get_attribute(Dwarf::Attribute::LowPc).has_value()) {
             dbgln_if(SPAM_DEBUG, "DWARF: Couldn't find attribute LowPc for scope");
             return;
         }
-        scope.address_low = child.get_attribute(Dwarf::Attribute::LowPc).value().data.as_addr;
-        // The attribute name HighPc is confusing. In this context, it seems to actually be a positive offset from LowPc
-        scope.address_high = scope.address_low + child.get_attribute(Dwarf::Attribute::HighPc).value().data.as_addr;
+        scope.address_low = child.get_attribute(Dwarf::Attribute::LowPc).value().as_addr();
+        auto high_pc = child.get_attribute(Dwarf::Attribute::HighPc);
+        if (high_pc->type() == Dwarf::AttributeValue::Type::Address)
+            scope.address_high = high_pc->as_addr();
+        else
+            scope.address_high = scope.address_low + high_pc->as_unsigned();
 
         child.for_each_child([&](Dwarf::DIE const& variable_entry) {
             if (!(variable_entry.tag() == Dwarf::EntryTag::Variable
@@ -187,12 +190,12 @@ static Optional<Dwarf::DIE> parse_variable_type_die(Dwarf::DIE const& variable_d
     if (!type_die_offset.has_value())
         return {};
 
-    VERIFY(type_die_offset.value().type == Dwarf::AttributeValue::Type::DieReference);
+    VERIFY(type_die_offset.value().type() == Dwarf::AttributeValue::Type::DieReference);
 
-    auto type_die = variable_die.compilation_unit().get_die_at_offset(type_die_offset.value().data.as_unsigned);
+    auto type_die = variable_die.compilation_unit().get_die_at_offset(type_die_offset.value().as_unsigned());
     auto type_name = type_die.get_attribute(Dwarf::Attribute::Name);
     if (type_name.has_value()) {
-        variable_info.type_name = type_name.value().data.as_string;
+        variable_info.type_name = type_name.value().as_string();
     } else {
         dbgln("Unnamed DWARF type at offset: {}", type_die.offset());
         variable_info.type_name = "[Unnamed Type]";
@@ -211,13 +214,13 @@ static void parse_variable_location(Dwarf::DIE const& variable_die, DebugInfo::V
     if (!location_info.has_value())
         return;
 
-    switch (location_info.value().type) {
+    switch (location_info.value().type()) {
     case Dwarf::AttributeValue::Type::UnsignedNumber:
         variable_info.location_type = DebugInfo::VariableInfo::LocationType::Address;
-        variable_info.location_data.address = location_info.value().data.as_addr;
+        variable_info.location_data.address = location_info.value().as_unsigned();
         break;
     case Dwarf::AttributeValue::Type::DwarfExpression: {
-        auto expression_bytes = ReadonlyBytes { location_info.value().data.as_raw_bytes.bytes, location_info.value().data.as_raw_bytes.length };
+        auto expression_bytes = location_info.value().as_raw_bytes();
         auto value = Dwarf::Expression::evaluate(expression_bytes, regs);
 
         if (value.type != Dwarf::Expression::Type::None) {
@@ -228,7 +231,7 @@ static void parse_variable_location(Dwarf::DIE const& variable_die, DebugInfo::V
         break;
     }
     default:
-        dbgln("Warning: unhandled Dwarf location type: {}", (int)location_info.value().type);
+        dbgln("Warning: unhandled Dwarf location type: {}", (int)location_info.value().type());
     }
 }
 
@@ -245,22 +248,22 @@ OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(Dwarf::DIE const
     NonnullOwnPtr<VariableInfo> variable_info = make<VariableInfo>();
     auto name_attribute = variable_die.get_attribute(Dwarf::Attribute::Name);
     if (name_attribute.has_value())
-        variable_info->name = name_attribute.value().data.as_string;
+        variable_info->name = name_attribute.value().as_string();
 
     auto type_die = parse_variable_type_die(variable_die, *variable_info);
 
     if (variable_die.tag() == Dwarf::EntryTag::Enumerator) {
         auto constant = variable_die.get_attribute(Dwarf::Attribute::ConstValue);
         VERIFY(constant.has_value());
-        switch (constant.value().type) {
+        switch (constant.value().type()) {
         case Dwarf::AttributeValue::Type::UnsignedNumber:
-            variable_info->constant_data.as_u32 = constant.value().data.as_unsigned;
+            variable_info->constant_data.as_u32 = constant.value().as_unsigned();
             break;
         case Dwarf::AttributeValue::Type::SignedNumber:
-            variable_info->constant_data.as_i32 = constant.value().data.as_signed;
+            variable_info->constant_data.as_i32 = constant.value().as_signed();
             break;
         case Dwarf::AttributeValue::Type::String:
-            variable_info->constant_data.as_string = constant.value().data.as_string;
+            variable_info->constant_data.as_string = constant.value().as_string();
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -294,7 +297,7 @@ void DebugInfo::add_type_info_to_variable(Dwarf::DIE const& type_die, PtraceRegi
         if (is_array_type && member.tag() == Dwarf::EntryTag::SubRangeType) {
             auto upper_bound = member.get_attribute(Dwarf::Attribute::UpperBound);
             VERIFY(upper_bound.has_value());
-            auto size = upper_bound.value().data.as_unsigned + 1;
+            auto size = upper_bound.value().as_unsigned() + 1;
             type_info->dimension_sizes.append(size);
             return;
         }
@@ -428,12 +431,12 @@ Optional<Dwarf::LineProgram::DirectoryAndFile> DebugInfo::get_source_path_of_inl
     if (caller_file.has_value()) {
         u32 file_index = 0;
 
-        if (caller_file->type == Dwarf::AttributeValue::Type::UnsignedNumber) {
-            file_index = caller_file->data.as_unsigned;
-        } else if (caller_file->type == Dwarf::AttributeValue::Type::SignedNumber) {
+        if (caller_file->type() == Dwarf::AttributeValue::Type::UnsignedNumber) {
+            file_index = caller_file->as_unsigned();
+        } else if (caller_file->type() == Dwarf::AttributeValue::Type::SignedNumber) {
             // For some reason, the file_index is sometimes stored as a signed number.
-            VERIFY(caller_file->data.as_signed >= 0);
-            file_index = (u32)caller_file->data.as_signed;
+            VERIFY(caller_file->as_signed() >= 0);
+            file_index = (u32)caller_file->as_signed();
         } else {
             return {};
         }
@@ -449,9 +452,9 @@ Optional<uint32_t> DebugInfo::get_line_of_inline(Dwarf::DIE const& die) const
     if (!caller_line.has_value())
         return {};
 
-    if (caller_line->type != Dwarf::AttributeValue::Type::UnsignedNumber)
+    if (caller_line->type() != Dwarf::AttributeValue::Type::UnsignedNumber)
         return {};
-    return caller_line.value().data.as_unsigned;
+    return caller_line.value().as_unsigned();
 }
 
 }
