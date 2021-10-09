@@ -28,9 +28,6 @@ public:
     Value this_value() const { return m_this_value; }
     void set_this_value(Value value) { m_this_value = value; }
 
-    // Not a standard operation.
-    void replace_this_binding(Value this_value) { m_this_value = this_value; }
-
     // [[ThisBindingStatus]]
     ThisBindingStatus this_binding_status() const { return m_this_binding_status; }
     void set_this_binding_status(ThisBindingStatus status) { m_this_binding_status = status; }
