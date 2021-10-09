@@ -92,6 +92,7 @@ struct UnicodeData {
     u32 simple_lowercase_mapping_size { 0 };
 
     Vector<SpecialCasing> special_casing;
+    u32 code_points_with_special_casing { 0 };
     u32 largest_casing_transform_size { 0 };
     u32 largest_special_casing_size { 0 };
     Vector<String> conditions;
@@ -428,14 +429,19 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
             assigned_code_point_range_start = data.code_point;
         }
 
+        bool has_special_casing { false };
+
         for (auto const& casing : unicode_data.special_casing) {
-            if (casing.code_point == data.code_point)
+            if (casing.code_point == data.code_point) {
                 data.special_casing_indices.append(casing.index);
+                has_special_casing = true;
+            }
         }
 
         unicode_data.simple_uppercase_mapping_size += data.simple_uppercase_mapping.has_value();
         unicode_data.simple_lowercase_mapping_size += data.simple_lowercase_mapping.has_value();
 
+        unicode_data.code_points_with_special_casing += has_special_casing;
         unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.special_casing_indices.size());
         previous_code_point = data.code_point;
 
@@ -490,6 +496,7 @@ enum class @name@ : @underlying@ {)~~~");
 #pragma once
 
 #include <AK/Optional.h>
+#include <AK/Span.h>
 #include <AK/Types.h>
 #include <LibUnicode/Forward.h>
 #include <LibUnicode/UnicodeLocale.h>
@@ -559,6 +566,7 @@ Optional<UnicodeData> unicode_data_for_code_point(u32 code_point);
 
 u32 simple_uppercase_mapping(u32 code_point);
 u32 simple_lowercase_mapping(u32 code_point);
+Span<SpecialCasing const* const> special_case_mapping(u32 code_point);
 
 bool code_point_has_general_category(u32 code_point, GeneralCategory general_category);
 Optional<GeneralCategory> general_category_from_string(StringView const& general_category);
@@ -583,6 +591,7 @@ static void generate_unicode_data_implementation(Core::File& file, UnicodeData c
     StringBuilder builder;
     SourceGenerator generator { builder };
 
+    generator.set("largest_special_casing_size", String::number(unicode_data.largest_special_casing_size));
     generator.set("special_casing_size", String::number(unicode_data.special_casing.size()));
     generator.set("code_point_data_size", String::number(unicode_data.code_point_data.size()));
 
@@ -679,20 +688,28 @@ struct CodePointMapping {
     u32 mapping { 0 };
 };
 
+struct SpecialCaseMapping {
+    u32 code_point { 0 };
+    Array<SpecialCasing const*, @largest_special_casing_size@> special_casing {};
+    u32 special_casing_size { 0 };
+};
+
+template<typename MappingType>
 struct CodePointComparator {
-    constexpr int operator()(u32 code_point, CodePointMapping const& mapping)
+    constexpr int operator()(u32 code_point, MappingType const& mapping)
     {
         return code_point - mapping.code_point;
     }
 };
 )~~~");
 
-    auto append_code_point_mappings = [&](StringView name, u32 size, auto mapping_getter) {
+    auto append_code_point_mappings = [&](StringView name, StringView mapping_type, u32 size, auto mapping_getter) {
         generator.set("name", name);
+        generator.set("mapping_type", mapping_type);
         generator.set("size", String::number(size));
 
         generator.append(R"~~~(
-static constexpr Array<CodePointMapping, @size@> s_@name@_mappings { {
+static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
     )~~~");
 
         constexpr size_t max_mappings_per_row = 20;
@@ -700,15 +717,28 @@ static constexpr Array<CodePointMapping, @size@> s_@name@_mappings { {
 
         for (auto const& data : unicode_data.code_point_data) {
             auto mapping = mapping_getter(data);
-            if (!mapping.has_value())
-                continue;
+
+            if constexpr (IsSame<decltype(mapping), Optional<u32>>) {
+                if (!mapping.has_value())
+                    continue;
+            } else {
+                if (mapping.is_empty())
+                    continue;
+            }
 
             if (mappings_in_current_row++ > 0)
                 generator.append(" ");
 
             generator.set("code_point", String::formatted("{:#x}", data.code_point));
-            generator.set("mapping", String::formatted("{:#x}", *mapping));
-            generator.append("{ @code_point@, @mapping@ },");
+            generator.append("{ @code_point@");
+
+            if constexpr (IsSame<decltype(mapping), Optional<u32>>) {
+                generator.set("mapping", String::formatted("{:#x}", *mapping));
+                generator.append(", @mapping@ },");
+            } else {
+                append_list_and_size(data.special_casing_indices, "&s_special_casing[{}]"sv);
+                generator.append(" },");
+            }
 
             if (mappings_in_current_row == max_mappings_per_row) {
                 mappings_in_current_row = 0;
@@ -720,8 +750,9 @@ static constexpr Array<CodePointMapping, @size@> s_@name@_mappings { {
 )~~~");
     };
 
-    append_code_point_mappings("uppercase"sv, unicode_data.simple_uppercase_mapping_size, [](auto const& data) { return data.simple_uppercase_mapping; });
-    append_code_point_mappings("lowercase"sv, unicode_data.simple_lowercase_mapping_size, [](auto const& data) { return data.simple_lowercase_mapping; });
+    append_code_point_mappings("uppercase"sv, "CodePointMapping"sv, unicode_data.simple_uppercase_mapping_size, [](auto const& data) { return data.simple_uppercase_mapping; });
+    append_code_point_mappings("lowercase"sv, "CodePointMapping"sv, unicode_data.simple_lowercase_mapping_size, [](auto const& data) { return data.simple_lowercase_mapping; });
+    append_code_point_mappings("special_case"sv, "SpecialCaseMapping"sv, unicode_data.code_points_with_special_casing, [](auto const& data) { return data.special_casing_indices; });
 
     generator.append(R"~~~(
 struct CodePointRange {
@@ -852,7 +883,7 @@ Optional<UnicodeData> unicode_data_for_code_point(u32 code_point)
         generator.append(R"~~~(
 u32 @method@(u32 code_point)
 {
-    auto const* mapping = binary_search(@mappings@, code_point, nullptr, CodePointComparator {});
+    auto const* mapping = binary_search(@mappings@, code_point, nullptr, CodePointComparator<CodePointMapping> {});
     return mapping ? mapping->mapping : code_point;
 }
 )~~~");
@@ -860,6 +891,17 @@ u32 @method@(u32 code_point)
 
     append_code_point_mapping_search("simple_uppercase_mapping"sv, "s_uppercase_mappings"sv);
     append_code_point_mapping_search("simple_lowercase_mapping"sv, "s_lowercase_mappings"sv);
+
+    generator.append(R"~~~(
+Span<SpecialCasing const* const> special_case_mapping(u32 code_point)
+{
+    auto const* mapping = binary_search(s_special_case_mappings, code_point, nullptr, CodePointComparator<SpecialCaseMapping> {});
+    if (mapping == nullptr)
+        return {};
+
+    return mapping->special_casing.span().slice(0, mapping->special_casing_size);
+}
+)~~~");
 
     auto append_prop_search = [&](StringView enum_title, StringView enum_snake, StringView collection_name) {
         generator.set("enum_title", enum_title);
