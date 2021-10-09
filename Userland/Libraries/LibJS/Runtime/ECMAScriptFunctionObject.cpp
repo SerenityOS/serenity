@@ -256,9 +256,7 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVa
     }
 
     // 12. Return ? constructorEnv.GetThisBinding().
-    auto this_binding = constructor_env->get_this_binding(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto this_binding = TRY(constructor_env->get_this_binding(global_object));
     return &this_binding.as_object();
 }
 

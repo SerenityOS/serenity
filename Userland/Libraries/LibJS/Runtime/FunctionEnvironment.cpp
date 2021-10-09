@@ -65,13 +65,16 @@ bool FunctionEnvironment::has_super_binding() const
 }
 
 // 9.1.1.3.4 GetThisBinding ( ), https://tc39.es/ecma262/#sec-function-environment-records-getthisbinding
-Value FunctionEnvironment::get_this_binding(GlobalObject& global_object) const
+ThrowCompletionOr<Value> FunctionEnvironment::get_this_binding(GlobalObject& global_object) const
 {
-    VERIFY(has_this_binding());
-    if (this_binding_status() == ThisBindingStatus::Uninitialized) {
-        vm().throw_exception<ReferenceError>(global_object, ErrorType::ThisHasNotBeenInitialized);
-        return {};
-    }
+    // 1. Assert: envRec.[[ThisBindingStatus]] is not lexical.
+    VERIFY(m_this_binding_status != ThisBindingStatus::Lexical);
+
+    // 2. If envRec.[[ThisBindingStatus]] is uninitialized, throw a ReferenceError exception.
+    if (m_this_binding_status == ThisBindingStatus::Uninitialized)
+        return vm().throw_completion<ReferenceError>(global_object, ErrorType::ThisHasNotBeenInitialized);
+
+    // 3. Return envRec.[[ThisValue]].
     return m_this_value;
 }
 

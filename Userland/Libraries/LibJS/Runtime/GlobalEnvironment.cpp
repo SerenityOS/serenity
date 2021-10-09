@@ -6,6 +6,7 @@
  */
 
 #include <LibJS/AST.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -30,9 +31,11 @@ void GlobalEnvironment::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_declarative_record);
 }
 
-Value GlobalEnvironment::get_this_binding(GlobalObject&) const
+// 9.1.1.4.11 GetThisBinding ( ), https://tc39.es/ecma262/#sec-global-environment-records-getthisbinding
+ThrowCompletionOr<Value> GlobalEnvironment::get_this_binding(GlobalObject&) const
 {
-    return m_global_this_value;
+    // 1. Return envRec.[[GlobalThisValue]].
+    return { m_global_this_value };
 }
 
 // 9.1.1.4.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-global-environment-records-hasbinding-n
