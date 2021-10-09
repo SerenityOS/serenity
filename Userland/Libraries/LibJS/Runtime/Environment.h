@@ -36,7 +36,7 @@ public:
     virtual ThrowCompletionOr<bool> has_binding([[maybe_unused]] FlyString const& name, [[maybe_unused]] Optional<size_t>* out_index = nullptr) const { return false; }
     virtual ThrowCompletionOr<void> create_mutable_binding(GlobalObject&, [[maybe_unused]] FlyString const& name, [[maybe_unused]] bool can_be_deleted) { return {}; }
     virtual ThrowCompletionOr<void> create_immutable_binding(GlobalObject&, [[maybe_unused]] FlyString const& name, [[maybe_unused]] bool strict) { return {}; }
-    virtual void initialize_binding(GlobalObject&, [[maybe_unused]] FlyString const& name, Value) { }
+    virtual ThrowCompletionOr<void> initialize_binding(GlobalObject&, [[maybe_unused]] FlyString const& name, Value) { return {}; }
     virtual void set_mutable_binding(GlobalObject&, [[maybe_unused]] FlyString const& name, Value, [[maybe_unused]] bool strict) { }
     virtual Value get_binding_value(GlobalObject&, [[maybe_unused]] FlyString const& name, [[maybe_unused]] bool strict) { return {}; }
     virtual bool delete_binding(GlobalObject&, [[maybe_unused]] FlyString const& name) { return false; }

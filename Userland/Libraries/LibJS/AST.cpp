@@ -201,7 +201,7 @@ Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& 
     // FIXME: 7. Perform MakeConstructor(closure).
 
     if (has_own_name)
-        scope->initialize_binding(global_object, name(), closure);
+        MUST(scope->initialize_binding(global_object, name(), closure));
 
     return closure;
 }
@@ -576,7 +576,7 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
             if (auto* exception = interpreter.exception())
                 return throw_completion(exception->value());
             VERIFY(!last_value.is_empty());
-            this_iteration_env->initialize_binding(global_object, name, last_value);
+            MUST(this_iteration_env->initialize_binding(global_object, name, last_value));
         }
         interpreter.vm().running_execution_context().lexical_environment = this_iteration_env;
 
@@ -1188,7 +1188,7 @@ Value ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& global_o
     auto class_constructor = TRY_OR_DISCARD(m_class_expression->class_definition_evaluation(interpreter, global_object, name, name));
 
     if (interpreter.lexical_environment()) {
-        interpreter.lexical_environment()->initialize_binding(global_object, name, class_constructor);
+        MUST(interpreter.lexical_environment()->initialize_binding(global_object, name, class_constructor));
     } else {
         auto reference = interpreter.vm().resolve_binding(name);
 
@@ -1330,7 +1330,7 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
     vm.running_execution_context().lexical_environment = environment;
     restore_environment.disarm();
     if (!binding_name.is_null())
-        class_scope->initialize_binding(global_object, binding_name, class_constructor);
+        MUST(class_scope->initialize_binding(global_object, binding_name, class_constructor));
 
     return Value(class_constructor);
 }
@@ -2782,7 +2782,7 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
 
             m_handler->parameter().visit(
                 [&](FlyString const& parameter) {
-                    catch_scope->initialize_binding(global_object, parameter, exception->value());
+                    (void)catch_scope->initialize_binding(global_object, parameter, exception->value());
                 },
                 [&](NonnullRefPtr<BindingPattern> const& pattern) {
                     (void)interpreter.vm().binding_initialization(pattern, exception->value(), catch_scope, global_object);

@@ -110,7 +110,7 @@ public:
     {
         VERIFY(!is_unresolvable());
         VERIFY(m_base_type == BaseType::Environment);
-        m_base_environment->initialize_binding(global_object, m_name.as_string(), value);
+        (void)m_base_environment->initialize_binding(global_object, m_name.as_string(), value);
     }
 
     void put_value(GlobalObject&, Value);

@@ -76,13 +76,19 @@ ThrowCompletionOr<void> GlobalEnvironment::create_immutable_binding(GlobalObject
 }
 
 // 9.1.1.4.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-global-environment-records-initializebinding-n-v
-void GlobalEnvironment::initialize_binding(GlobalObject& global_object, FlyString const& name, Value value)
+ThrowCompletionOr<void> GlobalEnvironment::initialize_binding(GlobalObject& global_object, FlyString const& name, Value value)
 {
+    // 1. Let DclRec be envRec.[[DeclarativeRecord]].
+    // 2. If DclRec.HasBinding(N) is true, then
     if (MUST(m_declarative_record->has_binding(name))) {
-        m_declarative_record->initialize_binding(global_object, name, value);
-        return;
+        // a. Return DclRec.InitializeBinding(N, V).
+        return m_declarative_record->initialize_binding(global_object, name, value);
     }
-    m_object_record->initialize_binding(global_object, name, value);
+
+    // 3. Assert: If the binding exists, it must be in the object Environment Record.
+    // 4. Let ObjRec be envRec.[[ObjectRecord]].
+    // 5. Return ? ObjRec.InitializeBinding(N, V).
+    return m_object_record->initialize_binding(global_object, name, value);
 }
 
 // 9.1.1.4.5 SetMutableBinding ( N, V, S ), https://tc39.es/ecma262/#sec-global-environment-records-setmutablebinding-n-v-s
@@ -172,7 +178,6 @@ bool GlobalEnvironment::can_declare_global_function(FlyString const& name) const
 // 9.1.1.4.17 CreateGlobalVarBinding ( N, D ), https://tc39.es/ecma262/#sec-createglobalvarbinding
 void GlobalEnvironment::create_global_var_binding(FlyString const& name, bool can_be_deleted)
 {
-    auto& vm = this->vm();
     auto& global_object = m_object_record->binding_object();
     auto has_property_or_error = global_object.has_own_property(name);
     if (has_property_or_error.is_error())
@@ -186,8 +191,8 @@ void GlobalEnvironment::create_global_var_binding(FlyString const& name, bool ca
         auto result = m_object_record->create_mutable_binding(m_object_record->global_object(), name, can_be_deleted);
         if (result.is_error())
             return;
-        m_object_record->initialize_binding(m_object_record->global_object(), name, js_undefined());
-        if (vm.exception())
+        result = m_object_record->initialize_binding(m_object_record->global_object(), name, js_undefined());
+        if (result.is_error())
             return;
     }
     if (!m_var_names.contains_slow(name))
