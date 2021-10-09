@@ -46,7 +46,7 @@ public:
     ThrowCompletionOr<Value> get_super_base() const;
     bool has_super_binding() const;
     virtual bool has_this_binding() const override;
-    virtual Value get_this_binding(GlobalObject&) const override;
+    virtual ThrowCompletionOr<Value> get_this_binding(GlobalObject&) const override;
     Value bind_this_value(GlobalObject&, Value);
 
 private:
