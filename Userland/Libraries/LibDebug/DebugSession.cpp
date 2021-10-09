@@ -436,10 +436,6 @@ void DebugSession::update_loaded_libs()
         if (lib_name.ends_with(".so"))
             lib_name = LexicalPath::basename(object_path.value());
 
-        // FIXME: DebugInfo currently cannot parse the debug information of libgcc_s.so
-        if (lib_name == "libgcc_s.so")
-            return IterationDecision::Continue;
-
         FlatPtr base_address = entry.as_object().get("address").to_addr();
         if (auto it = m_loaded_libraries.find(lib_name); it != m_loaded_libraries.end()) {
             // We expect the VM regions to be sorted by address.
