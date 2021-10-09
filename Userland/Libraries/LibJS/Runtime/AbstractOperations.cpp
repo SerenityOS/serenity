@@ -458,7 +458,7 @@ ThrowCompletionOr<Reference> make_super_property_reference(GlobalObject& global_
     // 2. Assert: env.HasSuperBinding() is true.
     VERIFY(env.has_super_binding());
     // 3. Let baseValue be ? env.GetSuperBase().
-    auto base_value = env.get_super_base();
+    auto base_value = TRY(env.get_super_base());
     // 4. Let bv be ? RequireObjectCoercible(baseValue).
     auto bv = TRY(require_object_coercible(global_object, base_value));
     // 5. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
