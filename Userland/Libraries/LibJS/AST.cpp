@@ -192,7 +192,7 @@ Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& 
     if (has_own_name) {
         VERIFY(scope);
         scope = new_declarative_environment(*scope);
-        scope->create_immutable_binding(global_object, name(), false);
+        MUST(scope->create_immutable_binding(global_object, name(), false));
     }
 
     auto closure = ECMAScriptFunctionObject::create(global_object, used_name, body(), parameters(), function_length(), scope, kind(), is_strict_mode(), might_need_arguments_object(), contains_direct_call_to_eval(), is_arrow_function());
@@ -543,7 +543,7 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
             auto& declaration = static_cast<VariableDeclaration const&>(*m_init);
             declaration.for_each_bound_name([&](auto const& name) {
                 if (declaration.declaration_kind() == DeclarationKind::Const) {
-                    loop_environment->create_immutable_binding(global_object, name, true);
+                    MUST(loop_environment->create_immutable_binding(global_object, name, true));
                 } else {
                     MUST(loop_environment->create_mutable_binding(global_object, name, false));
                     let_declarations.append(name);
@@ -683,7 +683,7 @@ struct ForInOfHeadState {
             auto& for_declaration = static_cast<VariableDeclaration const&>(*expression_lhs);
             for_declaration.for_each_bound_name([&](auto const& name) {
                 if (for_declaration.declaration_kind() == DeclarationKind::Const)
-                    iteration_environment->create_immutable_binding(global_object, name, false);
+                    MUST(iteration_environment->create_immutable_binding(global_object, name, false));
                 else
                     MUST(iteration_environment->create_mutable_binding(global_object, name, true));
             });
@@ -1210,7 +1210,7 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
     VERIFY(environment);
     auto* class_scope = new_declarative_environment(*environment);
     if (!binding_name.is_null())
-        class_scope->create_immutable_binding(global_object, binding_name, true);
+        MUST(class_scope->create_immutable_binding(global_object, binding_name, true));
 
     ArmedScopeGuard restore_environment = [&] {
         vm.running_execution_context().lexical_environment = environment;
@@ -3188,7 +3188,7 @@ void ScopeNode::block_declaration_instantiation(GlobalObject& global_object, Env
         auto is_constant_declaration = declaration.is_constant_declaration();
         declaration.for_each_bound_name([&](auto const& name) {
             if (is_constant_declaration) {
-                environment->create_immutable_binding(global_object, name, true);
+                MUST(environment->create_immutable_binding(global_object, name, true));
             } else {
                 if (!MUST(environment->has_binding(name)))
                     MUST(environment->create_mutable_binding(global_object, name, false));
@@ -3327,10 +3327,9 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
     for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
         declaration.for_each_bound_name([&](auto const& name) {
             if (declaration.is_constant_declaration())
-                global_environment.create_immutable_binding(global_object, name, true);
+                (void)global_environment.create_immutable_binding(global_object, name, true);
             else
                 (void)global_environment.create_mutable_binding(global_object, name, false);
-
             if (interpreter.exception())
                 return IterationDecision::Break;
             return IterationDecision::Continue;

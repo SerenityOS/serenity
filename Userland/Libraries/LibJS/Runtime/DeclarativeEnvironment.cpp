@@ -66,8 +66,9 @@ ThrowCompletionOr<void> DeclarativeEnvironment::create_mutable_binding(GlobalObj
 }
 
 // 9.1.1.1.3 CreateImmutableBinding ( N, S ), https://tc39.es/ecma262/#sec-declarative-environment-records-createimmutablebinding-n-s
-void DeclarativeEnvironment::create_immutable_binding(GlobalObject&, FlyString const& name, bool strict)
+ThrowCompletionOr<void> DeclarativeEnvironment::create_immutable_binding(GlobalObject&, FlyString const& name, bool strict)
 {
+    // 2. Create an immutable binding in envRec for N and record that it is uninitialized. If S is true, record that the newly created binding is a strict binding.
     m_bindings.append(Binding {
         .value = {},
         .strict = strict,
@@ -76,7 +77,12 @@ void DeclarativeEnvironment::create_immutable_binding(GlobalObject&, FlyString c
         .initialized = false,
     });
     auto result = m_names.set(name, m_bindings.size() - 1);
+
+    // 1. Assert: envRec does not already have a binding for N.
     VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+
+    // 3. Return NormalCompletion(empty).
+    return {};
 }
 
 // 9.1.1.1.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v
