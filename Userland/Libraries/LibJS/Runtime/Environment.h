@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS {
@@ -28,7 +29,7 @@ public:
     virtual void initialize(GlobalObject&) override;
 
     virtual bool has_this_binding() const { return false; }
-    virtual Value get_this_binding(GlobalObject&) const { return {}; }
+    virtual ThrowCompletionOr<Value> get_this_binding(GlobalObject&) const { return Value {}; }
 
     virtual Object* with_base_object() const { return nullptr; }
 

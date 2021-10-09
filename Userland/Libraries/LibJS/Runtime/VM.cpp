@@ -505,7 +505,7 @@ void VM::throw_exception(Exception& exception)
 Value VM::resolve_this_binding(GlobalObject& global_object)
 {
     auto& environment = get_this_environment(*this);
-    return environment.get_this_binding(global_object);
+    return TRY_OR_DISCARD(environment.get_this_binding(global_object));
 }
 
 String VM::join_arguments(size_t start_index) const
