@@ -125,12 +125,6 @@ struct UnicodeData {
     NormalizationProps normalization_props;
 };
 
-static constexpr auto s_desired_fields = Array {
-    "canonical_combining_class"sv,
-    "simple_uppercase_mapping"sv,
-    "simple_lowercase_mapping"sv,
-};
-
 static Vector<u32> parse_code_point_list(StringView const& list)
 {
     Vector<u32> code_points;
@@ -457,7 +451,6 @@ static void generate_unicode_data_header(Core::File& file, UnicodeData& unicode_
     StringBuilder builder;
     SourceGenerator generator { builder };
     generator.set("casing_transform_size", String::number(unicode_data.largest_casing_transform_size));
-    generator.set("special_casing_size", String::number(unicode_data.largest_special_casing_size));
 
     auto generate_enum = [&](StringView name, StringView default_, Vector<String> values, Vector<Alias> aliases = {}) {
         quick_sort(values);
@@ -529,43 +522,7 @@ struct SpecialCasing {
     Condition condition { Condition::None };
 };
 
-struct UnicodeData {
-    u32 code_point;)~~~");
-
-    auto append_field = [&](StringView type, StringView name) {
-        if (!s_desired_fields.span().contains_slow(name))
-            return;
-
-        generator.set("type", type);
-        generator.set("name", name);
-        generator.append(R"~~~(
-    @type@ @name@;)~~~");
-    };
-
-    // Note: For compile-time performance, only primitive types are used.
-    append_field("char const*"sv, "name"sv);
-    append_field("u8"sv, "canonical_combining_class"sv);
-    append_field("char const*"sv, "bidi_class"sv);
-    append_field("char const*"sv, "decomposition_type"sv);
-    append_field("i8"sv, "numeric_value_decimal"sv);
-    append_field("i8"sv, "numeric_value_digit"sv);
-    append_field("i8"sv, "numeric_value_numeric"sv);
-    append_field("bool"sv, "bidi_mirrored"sv);
-    append_field("char const*"sv, "unicode_1_name"sv);
-    append_field("char const*"sv, "iso_comment"sv);
-    append_field("u32"sv, "simple_uppercase_mapping"sv);
-    append_field("u32"sv, "simple_lowercase_mapping"sv);
-    append_field("u32"sv, "simple_titlecase_mapping"sv);
-
-    generator.append(R"~~~(
-
-    SpecialCasing const* special_casing[@special_casing_size@] {};
-    u32 special_casing_size { 0 };
-};
-
 namespace Detail {
-
-Optional<UnicodeData> unicode_data_for_code_point(u32 code_point);
 
 u32 canonical_combining_class(u32 code_point);
 
@@ -598,7 +555,6 @@ static void generate_unicode_data_implementation(Core::File& file, UnicodeData c
 
     generator.set("largest_special_casing_size", String::number(unicode_data.largest_special_casing_size));
     generator.set("special_casing_size", String::number(unicode_data.special_casing.size()));
-    generator.set("code_point_data_size", String::number(unicode_data.code_point_data.size()));
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -647,41 +603,6 @@ static constexpr Array<SpecialCasing, @special_casing_size@> s_special_casing { 
         generator.set("condition", casing.condition.is_empty() ? "None" : casing.condition);
         generator.append(", Condition::@condition@");
 
-        generator.append(" },");
-    }
-
-    generator.append(R"~~~(
-} };
-
-static constexpr Array<UnicodeData, @code_point_data_size@> s_unicode_data { {)~~~");
-
-    auto append_field = [&](StringView name, String value) {
-        if (!s_desired_fields.span().contains_slow(name))
-            return;
-
-        generator.set("value", move(value));
-        generator.append(", @value@");
-    };
-
-    for (auto const& data : unicode_data.code_point_data) {
-        generator.set("code_point", String::formatted("{:#x}", data.code_point));
-        generator.append(R"~~~(
-    { @code_point@)~~~");
-
-        append_field("name", String::formatted("\"{}\"", data.name));
-        append_field("canonical_combining_class", String::number(data.canonical_combining_class));
-        append_field("bidi_class", String::formatted("\"{}\"", data.bidi_class));
-        append_field("decomposition_type", String::formatted("\"{}\"", data.decomposition_type));
-        append_field("numeric_value_decimal", String::number(data.numeric_value_decimal.value_or(-1)));
-        append_field("numeric_value_digit", String::number(data.numeric_value_digit.value_or(-1)));
-        append_field("numeric_value_numeric", String::number(data.numeric_value_numeric.value_or(-1)));
-        append_field("bidi_mirrored", String::formatted("{}", data.bidi_mirrored));
-        append_field("unicode_1_name", String::formatted("\"{}\"", data.unicode_1_name));
-        append_field("iso_comment", String::formatted("\"{}\"", data.iso_comment));
-        append_field("simple_uppercase_mapping", String::formatted("{:#x}", data.simple_uppercase_mapping.value_or(data.code_point)));
-        append_field("simple_lowercase_mapping", String::formatted("{:#x}", data.simple_lowercase_mapping.value_or(data.code_point)));
-        append_field("simple_titlecase_mapping", String::formatted("{:#x}", data.simple_titlecase_mapping.value_or(data.code_point)));
-        append_list_and_size(data.special_casing_indices, "&s_special_casing[{}]"sv);
         generator.append(" },");
     }
 
@@ -840,52 +761,8 @@ static constexpr Array<Span<CodePointRange const>, @size@> @name@ { {)~~~");
     append_prop_list("s_script_extensions"sv, "s_script_extension_{}"sv, unicode_data.script_extensions);
 
     generator.append(R"~~~(
-static HashMap<u32, UnicodeData const*> const& ensure_code_point_map()
-{
-    static HashMap<u32, UnicodeData const*> code_point_to_data_map;
-    code_point_to_data_map.ensure_capacity(s_unicode_data.size());
-
-    for (auto const& unicode_data : s_unicode_data)
-        code_point_to_data_map.set(unicode_data.code_point, &unicode_data);
-
-    return code_point_to_data_map;
-}
-
-static Optional<u32> index_of_code_point_in_range(u32 code_point)
-{)~~~");
-
-    for (auto const& range : unicode_data.code_point_ranges) {
-        generator.set("first", String::formatted("{:#x}", range.first));
-        generator.set("last", String::formatted("{:#x}", range.last));
-
-        generator.append(R"~~~(
-    if ((code_point > @first@) && (code_point < @last@))
-        return @first@;)~~~");
-    }
-
-    generator.append(R"~~~(
-    return {};
-}
-
 namespace Detail {
 
-Optional<UnicodeData> unicode_data_for_code_point(u32 code_point)
-{
-    static auto const& code_point_to_data_map = ensure_code_point_map();
-    VERIFY(is_unicode(code_point));
-
-    if (auto data = code_point_to_data_map.get(code_point); data.has_value())
-        return *(data.value());
-
-    if (auto index = index_of_code_point_in_range(code_point); index.has_value()) {
-        auto data_for_range = *(code_point_to_data_map.get(*index).value());
-        data_for_range.simple_uppercase_mapping = code_point;
-        data_for_range.simple_lowercase_mapping = code_point;
-        return data_for_range;
-    }
-
-    return {};
-}
 )~~~");
 
     auto append_code_point_mapping_search = [&](StringView method, StringView mappings, StringView fallback) {
