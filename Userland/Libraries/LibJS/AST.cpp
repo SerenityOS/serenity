@@ -2,6 +2,7 @@
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
+ * Copyright (c) 2021, 
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -452,15 +453,12 @@ Value WithStatement::execute(Interpreter& interpreter, GlobalObject& global_obje
         return {};
 
     // 5. Set the running execution context's LexicalEnvironment to newEnv.
-    {
-        TemporaryChange<Environment*> scope_change(interpreter.vm().running_execution_context().lexical_environment, new_environment);
+    TemporaryChange<Environment*> scope_change(interpreter.vm().running_execution_context().lexical_environment, new_environment);
 
-        // 6. Let C be the result of evaluating Statement.
-        auto result = m_body->execute(interpreter, global_object).value_or(js_undefined());
+    // 6. Let C be the result of evaluating Statement.
+    auto result = m_body->execute(interpreter, global_object).value_or(js_undefined());
 
-        // 7. Set the running execution context's LexicalEnvironment to oldEnv.
-    }
-    
+    // 7. Set the running execution context's LexicalEnvironment to oldEnv.
     if (interpreter.exception())
         return {};
     // 8. Return Completion(UpdateEmpty(C, undefined)).
