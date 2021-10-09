@@ -117,18 +117,24 @@ ThrowCompletionOr<void> ObjectEnvironment::set_mutable_binding(GlobalObject& glo
 }
 
 // 9.1.1.2.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-object-environment-records-getbindingvalue-n-s
-Value ObjectEnvironment::get_binding_value(GlobalObject& global_object, FlyString const& name, bool strict)
+ThrowCompletionOr<Value> ObjectEnvironment::get_binding_value(GlobalObject& global_object, FlyString const& name, bool strict)
 {
     auto& vm = this->vm();
-    auto value = TRY_OR_DISCARD(m_binding_object.has_property(name));
+
+    // 1. Let bindingObject be envRec.[[BindingObject]].
+    // 2. Let value be ? HasProperty(bindingObject, N).
+    auto value = TRY(m_binding_object.has_property(name));
+
+    // 3. If value is false, then
     if (!value) {
+        // a. If S is false, return the value undefined; otherwise throw a ReferenceError exception.
         if (!strict)
             return js_undefined();
-
-        vm.throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
-        return {};
+        return vm.throw_completion<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
     }
-    return TRY_OR_DISCARD(m_binding_object.get(name));
+
+    // 4. Return ? Get(bindingObject, N).
+    return m_binding_object.get(name);
 }
 
 // 9.1.1.2.7 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-object-environment-records-deletebinding-n

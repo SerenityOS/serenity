@@ -464,7 +464,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 if (!parameter_names.contains(name) || function_names.contains(name))
                     initial_value = js_undefined();
                 else
-                    initial_value = environment->get_binding_value(global_object(), name, false);
+                    initial_value = MUST(environment->get_binding_value(global_object(), name, false));
 
                 MUST(var_environment->initialize_binding(global_object(), name, initial_value));
 
