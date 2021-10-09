@@ -48,7 +48,7 @@ Value ArrayBufferConstructor::call()
 }
 
 // 25.1.3.1 ArrayBuffer ( length ), https://tc39.es/ecma262/#sec-arraybuffer-length
-Value ArrayBufferConstructor::construct(FunctionObject&)
+Value ArrayBufferConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto byte_length = vm.argument(0).to_index(global_object());
@@ -60,11 +60,7 @@ Value ArrayBufferConstructor::construct(FunctionObject&)
         }
         return {};
     }
-    auto array_buffer = ArrayBuffer::create(global_object(), byte_length);
-    if (!array_buffer)
-        return {};
-
-    return array_buffer;
+    return TRY_OR_DISCARD(allocate_array_buffer(global_object(), new_target, byte_length));
 }
 
 // 25.1.4.1 ArrayBuffer.isView ( arg ), https://tc39.es/ecma262/#sec-arraybuffer.isview

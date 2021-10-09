@@ -8,6 +8,7 @@
 #include <AK/Checked.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibJS/Runtime/ArrayBufferConstructor.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
@@ -186,9 +187,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(GlobalObj
     // 15. Else,
 
     // a. Let data be ? AllocateArrayBuffer(bufferConstructor, byteLength).
-    auto data = ArrayBuffer::create(global_object, byte_length.value());
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto* data = TRY(allocate_array_buffer(global_object, *global_object.array_buffer_constructor(), byte_length.value()));
 
     // b. If IsDetachedBuffer(srcData) is true, throw a TypeError exception.
     if (src_data->is_detached())
@@ -266,9 +265,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_like(GlobalObje
     auto byte_length = element_size * length;
 
     // 5. Let data be ? AllocateArrayBuffer(%ArrayBuffer%, byteLength).
-    auto* data = ArrayBuffer::create(global_object, byte_length);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto* data = TRY(allocate_array_buffer(global_object, *global_object.array_buffer_constructor(), byte_length));
 
     // 6. Set O.[[ViewedArrayBuffer]] to data.
     typed_array.set_viewed_array_buffer(data);
@@ -319,9 +316,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_list(GlobalObject& gl
     if (Checked<size_t>::multiplication_would_overflow(element_size, length))
         return vm.template throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
     auto byte_length = element_size * length;
-    auto array_buffer = ArrayBuffer::create(global_object, byte_length);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto array_buffer = TRY(allocate_array_buffer(global_object, *global_object.array_buffer_constructor(), byte_length));
 
     typed_array.set_viewed_array_buffer(array_buffer);
     typed_array.set_byte_length(byte_length);
