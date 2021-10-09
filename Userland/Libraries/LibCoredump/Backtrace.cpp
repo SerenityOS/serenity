@@ -20,7 +20,7 @@ namespace Coredump {
 ELFObjectInfo const* Backtrace::object_info_for_region(ELF::Core::MemoryRegionInfo const& region)
 {
     auto path = region.object_name();
-    if (!path.starts_with('/') && path.ends_with(".so"sv))
+    if (!path.starts_with('/') && (path.ends_with(".so"sv) || path.contains(".so."sv)))
         path = LexicalPath::join("/usr/lib", path).string();
 
     auto maybe_ptr = m_debug_info_cache.get(path);
