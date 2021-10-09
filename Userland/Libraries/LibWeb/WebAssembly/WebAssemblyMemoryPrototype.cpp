@@ -55,7 +55,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::buffer_getter)
     if (!memory)
         return JS::js_undefined();
 
-    auto array_buffer = JS::ArrayBuffer::create(global_object, &memory->data());
+    auto array_buffer = TRY_OR_DISCARD(JS::ArrayBuffer::create(global_object, &memory->data()));
     array_buffer->set_detach_key(JS::js_string(vm, "WebAssembly.Memory"));
     return array_buffer;
 }
