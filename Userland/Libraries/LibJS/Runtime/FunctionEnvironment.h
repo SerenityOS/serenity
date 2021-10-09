@@ -47,7 +47,7 @@ public:
     bool has_super_binding() const;
     virtual bool has_this_binding() const override;
     virtual ThrowCompletionOr<Value> get_this_binding(GlobalObject&) const override;
-    Value bind_this_value(GlobalObject&, Value);
+    ThrowCompletionOr<Value> bind_this_value(GlobalObject&, Value);
 
 private:
     virtual bool is_function_environment() const override { return true; }
