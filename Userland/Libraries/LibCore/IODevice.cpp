@@ -50,7 +50,7 @@ ByteBuffer IODevice::read(size_t max_size)
     auto size = min(max_size, m_buffered_data.size());
     auto buffer_result = ByteBuffer::create_uninitialized(size);
     if (!buffer_result.has_value()) {
-        dbgln("IODevice::read: Not enough memory to allocate a buffer of {} bytes", max_size);
+        dbgln("IODevice::read: Not enough memory to allocate a buffer of {} bytes", size);
         return {};
     }
     auto buffer = buffer_result.release_value();
