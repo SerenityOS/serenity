@@ -326,10 +326,16 @@ void DwarfInfo::build_cached_dies() const
     auto get_ranges_of_die = [this](DIE const& die) -> Vector<DIERange> {
         auto ranges = die.get_attribute(Attribute::Ranges);
         if (ranges.has_value()) {
-            // TODO Support DW_FORM_rnglistx
-            if (ranges->form() != AttributeDataForm::SecOffset)
-                return {};
-            auto offset = ranges->as_unsigned();
+            size_t offset;
+            if (ranges->form() == AttributeDataForm::SecOffset) {
+                offset = ranges->as_unsigned();
+            } else {
+                auto index = ranges->as_unsigned();
+                auto base = die.compilation_unit().range_lists_base();
+                // FIXME: This assumes that the format is DWARf32
+                auto offsets = reinterpret_cast<u32 const*>(debug_range_lists_data().offset(base));
+                offset = offsets[index] + base;
+            }
             AddressRanges address_ranges(debug_range_lists_data(), offset, die.compilation_unit());
             Vector<DIERange> entries;
             address_ranges.for_each_range([&entries](auto range) {
