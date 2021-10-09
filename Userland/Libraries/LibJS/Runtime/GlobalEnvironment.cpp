@@ -122,19 +122,38 @@ ThrowCompletionOr<Value> GlobalEnvironment::get_binding_value(GlobalObject& glob
 }
 
 // 9.1.1.4.7 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-global-environment-records-deletebinding-n
-bool GlobalEnvironment::delete_binding(GlobalObject& global_object, FlyString const& name)
+ThrowCompletionOr<bool> GlobalEnvironment::delete_binding(GlobalObject& global_object, FlyString const& name)
 {
-    if (MUST(m_declarative_record->has_binding(name)))
+    // 1. Let DclRec be envRec.[[DeclarativeRecord]].
+    // 2. If DclRec.HasBinding(N) is true, then
+    if (MUST(m_declarative_record->has_binding(name))) {
+        // a. Return DclRec.DeleteBinding(N).
         return m_declarative_record->delete_binding(global_object, name);
+    }
 
-    bool existing_prop = TRY_OR_DISCARD(m_object_record->binding_object().has_own_property(name));
+    // 3. Let ObjRec be envRec.[[ObjectRecord]].
+    // 4. Let globalObject be ObjRec.[[BindingObject]].
+
+    // 5. Let existingProp be ? HasOwnProperty(globalObject, N).
+    bool existing_prop = TRY(m_object_record->binding_object().has_own_property(name));
+
+    // 6. If existingProp is true, then
     if (existing_prop) {
-        bool status = m_object_record->delete_binding(global_object, name);
+        // a. Let status be ? ObjRec.DeleteBinding(N).
+        bool status = TRY(m_object_record->delete_binding(global_object, name));
+
+        // b. If status is true, then
         if (status) {
+            // i. Let varNames be envRec.[[VarNames]].
+            // ii. If N is an element of varNames, remove that element from the varNames.
             m_var_names.remove_all_matching([&](auto& entry) { return entry == name; });
         }
+
+        // c. Return status.
         return status;
     }
+
+    // 7. Return true.
     return true;
 }
 

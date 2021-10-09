@@ -25,7 +25,7 @@ public:
     virtual ThrowCompletionOr<void> initialize_binding(GlobalObject&, FlyString const& name, Value) override;
     virtual ThrowCompletionOr<void> set_mutable_binding(GlobalObject&, FlyString const& name, Value, bool strict) override;
     virtual ThrowCompletionOr<Value> get_binding_value(GlobalObject&, FlyString const& name, bool strict) override;
-    virtual bool delete_binding(GlobalObject&, FlyString const& name) override;
+    virtual ThrowCompletionOr<bool> delete_binding(GlobalObject&, FlyString const& name) override;
 
     ObjectEnvironment& object_record() { return *m_object_record; }
     Object& global_this_value() { return *m_global_this_value; }
