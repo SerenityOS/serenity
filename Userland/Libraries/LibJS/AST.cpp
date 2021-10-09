@@ -378,9 +378,7 @@ Value SuperCall::execute(Interpreter& interpreter, GlobalObject& global_object) 
     auto& this_er = verify_cast<FunctionEnvironment>(get_this_environment(interpreter.vm()));
 
     // 8. Perform ? thisER.BindThisValue(result).
-    this_er.bind_this_value(global_object, result);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(this_er.bind_this_value(global_object, result));
 
     // 9. Let F be thisER.[[FunctionObject]].
     // 10. Assert: F is an ECMAScript function object. (NOTE: This is implied by the strong C++ type.)

@@ -656,7 +656,7 @@ void ECMAScriptFunctionObject::ordinary_call_bind_this(ExecutionContext& callee_
     // 7. Assert: localEnv is a function Environment Record.
     // 8. Assert: The next step never returns an abrupt completion because localEnv.[[ThisBindingStatus]] is not initialized.
     // 9. Return localEnv.BindThisValue(thisValue).
-    verify_cast<FunctionEnvironment>(local_env)->bind_this_value(global_object(), this_value);
+    MUST(verify_cast<FunctionEnvironment>(local_env)->bind_this_value(global_object(), this_value));
 }
 
 // 10.2.1.4 OrdinaryCallEvaluateBody ( F, argumentsList ), https://tc39.es/ecma262/#sec-ordinarycallevaluatebody
