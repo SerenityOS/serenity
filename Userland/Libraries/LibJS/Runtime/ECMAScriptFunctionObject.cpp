@@ -605,6 +605,8 @@ void ECMAScriptFunctionObject::prepare_for_ordinary_call(ExecutionContext& calle
 // 10.2.1.2 OrdinaryCallBindThis ( F, calleeContext, thisArgument ), https://tc39.es/ecma262/#sec-ordinarycallbindthis
 void ECMAScriptFunctionObject::ordinary_call_bind_this(ExecutionContext& callee_context, Value this_argument)
 {
+    auto& vm = this->vm();
+
     // 1. Let thisMode be F.[[ThisMode]].
     auto this_mode = m_this_mode;
 
@@ -614,6 +616,14 @@ void ECMAScriptFunctionObject::ordinary_call_bind_this(ExecutionContext& callee_
 
     // 3. Let calleeRealm be F.[[Realm]].
     auto* callee_realm = m_realm;
+    // NOTE: This non-standard fallback is needed until we can guarantee that literally
+    // every function has a realm - especially in LibWeb that's sometimes not the case
+    // when a function is created while no JS is running, as we currently need to rely on
+    // that (:acid2:, I know - see set_event_handler_attribute() for an example).
+    // If there's no 'current realm' either, we can't continue and crash.
+    if (!callee_realm)
+        callee_realm = vm.current_realm();
+    VERIFY(callee_realm);
 
     // 4. Let localEnv be the LexicalEnvironment of calleeContext.
     auto* local_env = callee_context.lexical_environment;
