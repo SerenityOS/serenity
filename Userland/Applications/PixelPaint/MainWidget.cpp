@@ -11,6 +11,7 @@
 #include "CreateNewLayerDialog.h"
 #include "EditGuideDialog.h"
 #include "FilterParams.h"
+#include <AK/String.h>
 #include <Applications/PixelPaint/PixelPaintWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/File.h>
@@ -120,7 +121,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         auto* editor = current_image_editor();
         if (!editor)
             return;
-        auto save_result = FileSystemAccessClient::Client::the().save_file(window.window_id(), "untitled", "pp");
+        auto save_result = FileSystemAccessClient::Client::the().save_file(window.window_id(), editor->name(), "pp");
         if (save_result.error != 0)
             return;
         auto result = editor->save_project_to_fd_and_close(*save_result.fd);
@@ -755,7 +756,7 @@ bool MainWidget::request_close()
     if (m_tab_widget->children().is_empty())
         return true;
 
-    auto result = GUI::MessageBox::show(window(), "Save before closing?", "Save changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+    auto result = GUI::MessageBox::show(window(), String::formatted("Save \"{}\" before closing?", current_image_editor()->name()), "Save changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
 
     if (result == GUI::MessageBox::ExecYes) {
         m_save_image_as_action->activate();
@@ -768,6 +769,35 @@ bool MainWidget::request_close()
     return false;
 }
 
+bool MainWidget::request_close_all()
+{
+    if (m_tab_widget->children().is_empty())
+        return true;
+
+    auto result = GUI::MessageBox::show(window(), "Save all open tabs before closing?", "Save changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+    if (result == GUI::MessageBox::ExecCancel)
+        return false;
+
+    if (result == GUI::MessageBox::ExecYes) {
+        m_tab_widget->set_tab_index(0);
+        m_tab_widget->for_each_child_of_type<PixelPaint::ImageEditor>([&](auto& editor) {
+            auto save_result = FileSystemAccessClient::Client::the().save_file(window()->window_id(), editor.name(), "pp");
+            if (save_result.error != 0)
+                return IterationDecision::Continue;
+            auto result = editor.save_project_to_fd_and_close(*save_result.fd);
+            if (result.is_error()) {
+                GUI::MessageBox::show_error(window(), String::formatted("Could not save {}: {}", *save_result.chosen_file, result.error()));
+                return IterationDecision::Continue;
+            }
+            editor.image().set_path(*save_result.chosen_file);
+            m_tab_widget->activate_next_tab();
+            return IterationDecision::Continue;
+        });
+    }
+
+    return true;
+}
+
 ImageEditor* MainWidget::current_image_editor()
 {
     if (!m_tab_widget->active_widget())
@@ -778,6 +808,7 @@ ImageEditor* MainWidget::current_image_editor()
 ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
 {
     auto& image_editor = m_tab_widget->add_tab<PixelPaint::ImageEditor>("Untitled", image);
+    image_editor.set_name("Untitled");
 
     image_editor.on_active_layer_change = [&](auto* layer) {
         if (current_image_editor() != &image_editor)
@@ -788,6 +819,7 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
 
     image_editor.on_image_title_change = [&](auto const& title) {
         m_tab_widget->set_tab_title(image_editor, title);
+        image_editor.set_name(title);
     };
 
     image_editor.on_image_mouse_position_change = [&](auto const& mouse_position) {

@@ -72,7 +72,7 @@ int main(int argc, char** argv)
     main_widget.initialize_menubar(*window);
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
-        if (main_widget.request_close())
+        if (main_widget.request_close_all())
             return GUI::Window::CloseRequestDecision::Close;
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
