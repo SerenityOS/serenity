@@ -138,9 +138,11 @@ ThrowCompletionOr<Value> ObjectEnvironment::get_binding_value(GlobalObject& glob
 }
 
 // 9.1.1.2.7 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-object-environment-records-deletebinding-n
-bool ObjectEnvironment::delete_binding(GlobalObject&, FlyString const& name)
+ThrowCompletionOr<bool> ObjectEnvironment::delete_binding(GlobalObject&, FlyString const& name)
 {
-    return TRY_OR_DISCARD(m_binding_object.internal_delete(name));
+    // 1. Let bindingObject be envRec.[[BindingObject]].
+    // 2. Return ? bindingObject.[[Delete]](N).
+    return m_binding_object.internal_delete(name);
 }
 
 }

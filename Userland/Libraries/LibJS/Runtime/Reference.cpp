@@ -144,7 +144,7 @@ bool Reference::delete_(GlobalObject& global_object)
     VERIFY(m_base_type == BaseType::Environment);
 
     //    c. Return ? base.DeleteBinding(ref.[[ReferencedName]]).
-    return m_base_environment->delete_binding(global_object, m_name.as_string());
+    return TRY_OR_DISCARD(m_base_environment->delete_binding(global_object, m_name.as_string()));
 }
 
 String Reference::to_string() const

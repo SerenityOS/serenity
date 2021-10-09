@@ -175,16 +175,24 @@ ThrowCompletionOr<Value> DeclarativeEnvironment::get_binding_value_direct(Global
 }
 
 // 9.1.1.1.7 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-declarative-environment-records-deletebinding-n
-bool DeclarativeEnvironment::delete_binding(GlobalObject&, FlyString const& name)
+ThrowCompletionOr<bool> DeclarativeEnvironment::delete_binding(GlobalObject&, FlyString const& name)
 {
+    // 1. Assert: envRec has a binding for the name that is the value of N.
     auto it = m_names.find(name);
     VERIFY(it != m_names.end());
+
     auto& binding = m_bindings[it->value];
+
+    // 2. If the binding for N in envRec cannot be deleted, return false.
     if (!binding.can_be_deleted)
         return false;
+
+    // 3. Remove the binding for N from envRec.
     // NOTE: We keep the entry in m_bindings to avoid disturbing indices.
     binding = {};
     m_names.remove(it);
+
+    // 4. Return true.
     return true;
 }
 
