@@ -88,6 +88,9 @@ struct CodePointData {
 };
 
 struct UnicodeData {
+    u32 simple_uppercase_mapping_size { 0 };
+    u32 simple_lowercase_mapping_size { 0 };
+
     Vector<SpecialCasing> special_casing;
     u32 largest_casing_transform_size { 0 };
     u32 largest_special_casing_size { 0 };
@@ -430,6 +433,9 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
                 data.special_casing_indices.append(casing.index);
         }
 
+        unicode_data.simple_uppercase_mapping_size += data.simple_uppercase_mapping.has_value();
+        unicode_data.simple_lowercase_mapping_size += data.simple_lowercase_mapping.has_value();
+
         unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.special_casing_indices.size());
         previous_code_point = data.code_point;
 
@@ -551,6 +557,9 @@ namespace Detail {
 
 Optional<UnicodeData> unicode_data_for_code_point(u32 code_point);
 
+u32 simple_uppercase_mapping(u32 code_point);
+u32 simple_lowercase_mapping(u32 code_point);
+
 bool code_point_has_general_category(u32 code_point, GeneralCategory general_category);
 Optional<GeneralCategory> general_category_from_string(StringView const& general_category);
 
@@ -665,6 +674,56 @@ static constexpr Array<UnicodeData, @code_point_data_size@> s_unicode_data { {)~
     generator.append(R"~~~(
 } };
 
+struct CodePointMapping {
+    u32 code_point { 0 };
+    u32 mapping { 0 };
+};
+
+struct CodePointComparator {
+    constexpr int operator()(u32 code_point, CodePointMapping const& mapping)
+    {
+        return code_point - mapping.code_point;
+    }
+};
+)~~~");
+
+    auto append_code_point_mappings = [&](StringView name, u32 size, auto mapping_getter) {
+        generator.set("name", name);
+        generator.set("size", String::number(size));
+
+        generator.append(R"~~~(
+static constexpr Array<CodePointMapping, @size@> s_@name@_mappings { {
+    )~~~");
+
+        constexpr size_t max_mappings_per_row = 20;
+        size_t mappings_in_current_row = 0;
+
+        for (auto const& data : unicode_data.code_point_data) {
+            auto mapping = mapping_getter(data);
+            if (!mapping.has_value())
+                continue;
+
+            if (mappings_in_current_row++ > 0)
+                generator.append(" ");
+
+            generator.set("code_point", String::formatted("{:#x}", data.code_point));
+            generator.set("mapping", String::formatted("{:#x}", *mapping));
+            generator.append("{ @code_point@, @mapping@ },");
+
+            if (mappings_in_current_row == max_mappings_per_row) {
+                mappings_in_current_row = 0;
+                generator.append("\n    ");
+            }
+        }
+        generator.append(R"~~~(
+} };
+)~~~");
+    };
+
+    append_code_point_mappings("uppercase"sv, unicode_data.simple_uppercase_mapping_size, [](auto const& data) { return data.simple_uppercase_mapping; });
+    append_code_point_mappings("lowercase"sv, unicode_data.simple_lowercase_mapping_size, [](auto const& data) { return data.simple_lowercase_mapping; });
+
+    generator.append(R"~~~(
 struct CodePointRange {
     u32 first { 0 };
     u32 last { 0 };
@@ -786,6 +845,21 @@ Optional<UnicodeData> unicode_data_for_code_point(u32 code_point)
     return {};
 }
 )~~~");
+
+    auto append_code_point_mapping_search = [&](StringView method, StringView mappings) {
+        generator.set("method", method);
+        generator.set("mappings", mappings);
+        generator.append(R"~~~(
+u32 @method@(u32 code_point)
+{
+    auto const* mapping = binary_search(@mappings@, code_point, nullptr, CodePointComparator {});
+    return mapping ? mapping->mapping : code_point;
+}
+)~~~");
+    };
+
+    append_code_point_mapping_search("simple_uppercase_mapping"sv, "s_uppercase_mappings"sv);
+    append_code_point_mapping_search("simple_lowercase_mapping"sv, "s_lowercase_mappings"sv);
 
     auto append_prop_search = [&](StringView enum_title, StringView enum_snake, StringView collection_name) {
         generator.set("enum_title", enum_title);
