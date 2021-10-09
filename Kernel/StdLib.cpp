@@ -207,6 +207,18 @@ KResult memset_user(void* dest_ptr, int c, size_t n)
     return KSuccess;
 }
 
+#if defined(__clang__) && defined(ENABLE_KERNEL_LTO)
+// Due to a chicken-and-egg situation, certain linker-defined symbols that are added on-demand (like the GOT)
+// need to be present before LTO bitcode files are compiled. And since we don't link to any native object files,
+// the linker does not know that _GLOBAL_OFFSET_TABLE_ is needed, so it doesn't define it, so linking as a PIE fails.
+// See https://bugs.llvm.org/show_bug.cgi?id=39634
+FlatPtr missing_got_workaround()
+{
+    extern volatile FlatPtr _GLOBAL_OFFSET_TABLE_;
+    return _GLOBAL_OFFSET_TABLE_;
+}
+#endif
+
 extern "C" {
 
 const void* memmem(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
