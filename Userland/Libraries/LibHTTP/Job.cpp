@@ -245,7 +245,7 @@ void Job::on_socket_connected()
                     dbgln_if(JOB_DEBUG, "Job: Received a chunk with size '{}'", size_data);
                     if (size_lines.size() == 0) {
                         if (!eof())
-                            return AK::IterationDecision::Continue;
+                            return AK::IterationDecision::Break;
                         dbgln("Job: Reached end of stream");
                         finish_up();
                         return IterationDecision::Break;
