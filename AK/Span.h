@@ -94,11 +94,6 @@ public:
 
     constexpr Span() = default;
 
-    ALWAYS_INLINE constexpr Span(Span const& other)
-        : Span(other.m_values, other.m_size)
-    {
-    }
-
     [[nodiscard]] ALWAYS_INLINE constexpr T const* data() const { return this->m_values; }
     [[nodiscard]] ALWAYS_INLINE constexpr T* data() { return this->m_values; }
 
@@ -209,13 +204,6 @@ public:
     [[nodiscard]] ALWAYS_INLINE constexpr T& operator[](size_t index)
     {
         return at(index);
-    }
-
-    ALWAYS_INLINE constexpr Span& operator=(Span<T> const& other)
-    {
-        this->m_size = other.m_size;
-        this->m_values = other.m_values;
-        return *this;
     }
 
     constexpr bool operator==(Span const& other) const
