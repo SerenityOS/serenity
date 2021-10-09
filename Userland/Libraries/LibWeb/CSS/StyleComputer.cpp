@@ -708,7 +708,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         float root_font_size = 10;
 
         Gfx::FontMetrics font_metrics;
-        if (element && element->parent_element())
+        if (element && element->parent_element() && element->parent_element()->specified_css_values())
             font_metrics = element->parent_element()->specified_css_values()->computed_font().metrics('M');
         else
             font_metrics = Gfx::FontDatabase::default_font().metrics('M');
