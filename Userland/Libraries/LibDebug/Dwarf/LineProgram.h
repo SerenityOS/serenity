@@ -122,6 +122,12 @@ public:
     };
     DirectoryAndFile get_directory_and_file(size_t file_index) const;
 
+    struct FileEntry {
+        FlyString name;
+        size_t directory_index { 0 };
+    };
+    Vector<FileEntry> const& source_files() const { return m_source_files; }
+
 private:
     void parse_unit_header();
     void parse_source_directories();
@@ -157,11 +163,6 @@ private:
         SetAddress,
         DefineFile,
         SetDiscriminator,
-    };
-
-    struct FileEntry {
-        FlyString name;
-        size_t directory_index { 0 };
     };
 
     static constexpr u16 MIN_DWARF_VERSION = 3;
