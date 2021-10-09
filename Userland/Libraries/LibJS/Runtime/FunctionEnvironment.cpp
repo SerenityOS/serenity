@@ -79,15 +79,22 @@ ThrowCompletionOr<Value> FunctionEnvironment::get_this_binding(GlobalObject& glo
 }
 
 // 9.1.1.3.1 BindThisValue ( V ), https://tc39.es/ecma262/#sec-bindthisvalue
-Value FunctionEnvironment::bind_this_value(GlobalObject& global_object, Value this_value)
+ThrowCompletionOr<Value> FunctionEnvironment::bind_this_value(GlobalObject& global_object, Value this_value)
 {
-    VERIFY(this_binding_status() != ThisBindingStatus::Lexical);
-    if (this_binding_status() == ThisBindingStatus::Initialized) {
-        vm().throw_exception<ReferenceError>(global_object, ErrorType::ThisIsAlreadyInitialized);
-        return {};
-    }
+    // 1. Assert: envRec.[[ThisBindingStatus]] is not lexical.
+    VERIFY(m_this_binding_status != ThisBindingStatus::Lexical);
+
+    // 2. If envRec.[[ThisBindingStatus]] is initialized, throw a ReferenceError exception.
+    if (m_this_binding_status == ThisBindingStatus::Initialized)
+        return vm().throw_completion<ReferenceError>(global_object, ErrorType::ThisIsAlreadyInitialized);
+
+    // 3. Set envRec.[[ThisValue]] to V.
     m_this_value = this_value;
+
+    // 4. Set envRec.[[ThisBindingStatus]] to initialized.
     m_this_binding_status = ThisBindingStatus::Initialized;
+
+    // 5. Return V.
     return this_value;
 }
 
