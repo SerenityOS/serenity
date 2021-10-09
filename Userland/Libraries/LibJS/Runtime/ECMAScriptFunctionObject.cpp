@@ -374,7 +374,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             arguments_object = create_mapped_arguments_object(global_object(), *this, formal_parameters(), vm.running_execution_context().arguments, *environment);
 
         if (is_strict_mode())
-            environment->create_immutable_binding(global_object(), vm.names.arguments.as_string(), false);
+            MUST(environment->create_immutable_binding(global_object(), vm.names.arguments.as_string(), false));
         else
             MUST(environment->create_mutable_binding(global_object(), vm.names.arguments.as_string(), false));
 
@@ -524,7 +524,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     scope_body->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
         declaration.for_each_bound_name([&](auto const& name) {
             if (declaration.is_constant_declaration())
-                lex_environment->create_immutable_binding(global_object(), name, true);
+                MUST(lex_environment->create_immutable_binding(global_object(), name, true));
             else
                 MUST(lex_environment->create_mutable_binding(global_object(), name, false));
             return IterationDecision::Continue;

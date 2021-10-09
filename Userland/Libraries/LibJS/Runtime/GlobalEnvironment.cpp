@@ -64,13 +64,15 @@ ThrowCompletionOr<void> GlobalEnvironment::create_mutable_binding(GlobalObject& 
 }
 
 // 9.1.1.4.3 CreateImmutableBinding ( N, S ), https://tc39.es/ecma262/#sec-global-environment-records-createimmutablebinding-n-s
-void GlobalEnvironment::create_immutable_binding(GlobalObject& global_object, FlyString const& name, bool strict)
+ThrowCompletionOr<void> GlobalEnvironment::create_immutable_binding(GlobalObject& global_object, FlyString const& name, bool strict)
 {
-    if (MUST(m_declarative_record->has_binding(name))) {
-        global_object.vm().throw_exception<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
-        return;
-    }
-    m_declarative_record->create_immutable_binding(global_object, name, strict);
+    // 1. Let DclRec be envRec.[[DeclarativeRecord]].
+    // 2. If DclRec.HasBinding(N) is true, throw a TypeError exception.
+    if (MUST(m_declarative_record->has_binding(name)))
+        return vm().throw_completion<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
+
+    // 3. Return DclRec.CreateImmutableBinding(N, S).
+    return m_declarative_record->create_immutable_binding(global_object, name, strict);
 }
 
 // 9.1.1.4.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-global-environment-records-initializebinding-n-v
