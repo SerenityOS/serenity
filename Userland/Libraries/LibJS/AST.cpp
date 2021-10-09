@@ -545,7 +545,7 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
                 if (declaration.declaration_kind() == DeclarationKind::Const) {
                     loop_environment->create_immutable_binding(global_object, name, true);
                 } else {
-                    loop_environment->create_mutable_binding(global_object, name, false);
+                    MUST(loop_environment->create_mutable_binding(global_object, name, false));
                     let_declarations.append(name);
                 }
                 return IterationDecision::Continue;
@@ -571,7 +571,7 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
         VERIFY(outer);
         auto* this_iteration_env = new_declarative_environment(*outer);
         for (auto& name : let_declarations) {
-            this_iteration_env->create_mutable_binding(global_object, name, false);
+            MUST(this_iteration_env->create_mutable_binding(global_object, name, false));
             auto last_value = last_iteration_env->get_binding_value(global_object, name, true);
             if (auto* exception = interpreter.exception())
                 return throw_completion(exception->value());
@@ -685,7 +685,7 @@ struct ForInOfHeadState {
                 if (for_declaration.declaration_kind() == DeclarationKind::Const)
                     iteration_environment->create_immutable_binding(global_object, name, false);
                 else
-                    iteration_environment->create_mutable_binding(global_object, name, true);
+                    MUST(iteration_environment->create_mutable_binding(global_object, name, true));
             });
             interpreter.vm().running_execution_context().lexical_environment = iteration_environment;
 
@@ -766,7 +766,7 @@ static ThrowCompletionOr<ForInOfHeadState> for_in_of_head_execute(Interpreter& i
             state.lhs_kind = ForInOfHeadState::LexicalBinding;
             new_environment = new_declarative_environment(*interpreter.lexical_environment());
             variable_declaration.for_each_bound_name([&](auto const& name) {
-                new_environment->create_mutable_binding(global_object, name, false);
+                MUST(new_environment->create_mutable_binding(global_object, name, false));
             });
         }
 
@@ -2770,11 +2770,11 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
 
             m_handler->parameter().visit(
                 [&](FlyString const& parameter) {
-                    catch_scope->create_mutable_binding(global_object, parameter, false);
+                    MUST(catch_scope->create_mutable_binding(global_object, parameter, false));
                 },
                 [&](NonnullRefPtr<BindingPattern> const& pattern) {
                     pattern->for_each_bound_name([&](auto& name) {
-                        catch_scope->create_mutable_binding(global_object, name, false);
+                        MUST(catch_scope->create_mutable_binding(global_object, name, false));
                     });
                 });
 
@@ -3191,7 +3191,7 @@ void ScopeNode::block_declaration_instantiation(GlobalObject& global_object, Env
                 environment->create_immutable_binding(global_object, name, true);
             } else {
                 if (!MUST(environment->has_binding(name)))
-                    environment->create_mutable_binding(global_object, name, false);
+                    MUST(environment->create_mutable_binding(global_object, name, false));
             }
         });
 
@@ -3329,7 +3329,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
             if (declaration.is_constant_declaration())
                 global_environment.create_immutable_binding(global_object, name, true);
             else
-                global_environment.create_mutable_binding(global_object, name, false);
+                (void)global_environment.create_mutable_binding(global_object, name, false);
 
             if (interpreter.exception())
                 return IterationDecision::Break;

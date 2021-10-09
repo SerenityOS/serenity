@@ -629,7 +629,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
                         return IterationDecision::Break;
                 } else {
                     if (!MUST(variable_environment->has_binding(function_name))) {
-                        variable_environment->create_mutable_binding(global_object, function_name, true);
+                        MUST(variable_environment->create_mutable_binding(global_object, function_name, true));
                         variable_environment->initialize_binding(global_object, function_name, js_undefined());
                         VERIFY(!vm.exception());
                     }
@@ -680,7 +680,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             if (declaration.is_constant_declaration())
                 lexical_environment->create_immutable_binding(global_object, name, true);
             else
-                lexical_environment->create_mutable_binding(global_object, name, false);
+                (void)lexical_environment->create_mutable_binding(global_object, name, false);
             if (vm.exception())
                 return IterationDecision::Break;
             return IterationDecision::Continue;
@@ -703,9 +703,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             auto binding_exists = MUST(variable_environment->has_binding(declaration.name()));
 
             if (!binding_exists) {
-                variable_environment->create_mutable_binding(global_object, declaration.name(), true);
-                if (auto* exception = vm.exception())
-                    return throw_completion(exception->value());
+                TRY(variable_environment->create_mutable_binding(global_object, declaration.name(), true));
                 variable_environment->initialize_binding(global_object, declaration.name(), function);
             } else {
                 variable_environment->set_mutable_binding(global_object, declaration.name(), function, false);
@@ -724,9 +722,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             auto binding_exists = MUST(variable_environment->has_binding(var_name));
 
             if (!binding_exists) {
-                variable_environment->create_mutable_binding(global_object, var_name, true);
-                if (auto* exception = vm.exception())
-                    return throw_completion(exception->value());
+                TRY(variable_environment->create_mutable_binding(global_object, var_name, true));
                 variable_environment->initialize_binding(global_object, var_name, js_undefined());
                 if (auto* exception = vm.exception())
                     return throw_completion(exception->value());

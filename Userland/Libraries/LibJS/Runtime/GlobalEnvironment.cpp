@@ -52,13 +52,15 @@ ThrowCompletionOr<bool> GlobalEnvironment::has_binding(FlyString const& name, Op
 }
 
 // 9.1.1.4.2 CreateMutableBinding ( N, D ), https://tc39.es/ecma262/#sec-global-environment-records-createmutablebinding-n-d
-void GlobalEnvironment::create_mutable_binding(GlobalObject& global_object, FlyString const& name, bool can_be_deleted)
+ThrowCompletionOr<void> GlobalEnvironment::create_mutable_binding(GlobalObject& global_object, FlyString const& name, bool can_be_deleted)
 {
-    if (MUST(m_declarative_record->has_binding(name))) {
-        global_object.vm().throw_exception<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
-        return;
-    }
-    m_declarative_record->create_mutable_binding(global_object, name, can_be_deleted);
+    // 1. Let DclRec be envRec.[[DeclarativeRecord]].
+    // 2. If DclRec.HasBinding(N) is true, throw a TypeError exception.
+    if (MUST(m_declarative_record->has_binding(name)))
+        return vm().throw_completion<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
+
+    // 3. Return DclRec.CreateMutableBinding(N, D).
+    return m_declarative_record->create_mutable_binding(global_object, name, can_be_deleted);
 }
 
 // 9.1.1.4.3 CreateImmutableBinding ( N, S ), https://tc39.es/ecma262/#sec-global-environment-records-createimmutablebinding-n-s
@@ -179,8 +181,8 @@ void GlobalEnvironment::create_global_var_binding(FlyString const& name, bool ca
         return;
     auto extensible = extensible_or_error.release_value();
     if (!has_property && extensible) {
-        m_object_record->create_mutable_binding(m_object_record->global_object(), name, can_be_deleted);
-        if (vm.exception())
+        auto result = m_object_record->create_mutable_binding(m_object_record->global_object(), name, can_be_deleted);
+        if (result.is_error())
             return;
         m_object_record->initialize_binding(m_object_record->global_object(), name, js_undefined());
         if (vm.exception())

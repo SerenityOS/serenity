@@ -20,7 +20,7 @@ public:
     virtual ThrowCompletionOr<Value> get_this_binding(GlobalObject&) const final;
 
     virtual ThrowCompletionOr<bool> has_binding(FlyString const& name, Optional<size_t>* = nullptr) const override;
-    virtual void create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted) override;
+    virtual ThrowCompletionOr<void> create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted) override;
     virtual void create_immutable_binding(GlobalObject&, FlyString const& name, bool strict) override;
     virtual void initialize_binding(GlobalObject&, FlyString const& name, Value) override;
     virtual void set_mutable_binding(GlobalObject&, FlyString const& name, Value, bool strict) override;
