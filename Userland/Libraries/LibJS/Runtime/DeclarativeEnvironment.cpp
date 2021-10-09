@@ -46,8 +46,9 @@ ThrowCompletionOr<bool> DeclarativeEnvironment::has_binding(FlyString const& nam
 }
 
 // 9.1.1.1.2 CreateMutableBinding ( N, D ), https://tc39.es/ecma262/#sec-declarative-environment-records-createmutablebinding-n-d
-void DeclarativeEnvironment::create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted)
+ThrowCompletionOr<void> DeclarativeEnvironment::create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted)
 {
+    // 2. Create a mutable binding in envRec for N and record that it is uninitialized. If D is true, record that the newly created binding may be deleted by a subsequent DeleteBinding call.
     m_bindings.append(Binding {
         .value = {},
         .strict = false,
@@ -56,7 +57,12 @@ void DeclarativeEnvironment::create_mutable_binding(GlobalObject&, FlyString con
         .initialized = false,
     });
     auto result = m_names.set(name, m_bindings.size() - 1);
+
+    // 1. Assert: envRec does not already have a binding for N.
     VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+
+    // 3. Return NormalCompletion(empty).
+    return {};
 }
 
 // 9.1.1.1.3 CreateImmutableBinding ( N, S ), https://tc39.es/ecma262/#sec-declarative-environment-records-createimmutablebinding-n-s
@@ -93,7 +99,7 @@ void DeclarativeEnvironment::set_mutable_binding(GlobalObject& global_object, Fl
             global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
             return;
         }
-        create_mutable_binding(global_object, name, true);
+        (void)create_mutable_binding(global_object, name, true);
         initialize_binding(global_object, name, value);
         return;
     }
