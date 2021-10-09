@@ -360,7 +360,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         if (MUST(environment->has_binding(parameter_name)))
             continue;
 
-        environment->create_mutable_binding(global_object(), parameter_name, false);
+        MUST(environment->create_mutable_binding(global_object(), parameter_name, false));
         if (has_duplicates)
             environment->initialize_binding(global_object(), parameter_name, js_undefined());
         VERIFY(!vm.exception());
@@ -376,7 +376,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         if (is_strict_mode())
             environment->create_immutable_binding(global_object(), vm.names.arguments.as_string(), false);
         else
-            environment->create_mutable_binding(global_object(), vm.names.arguments.as_string(), false);
+            MUST(environment->create_mutable_binding(global_object(), vm.names.arguments.as_string(), false));
 
         environment->initialize_binding(global_object(), vm.names.arguments.as_string(), arguments_object);
         parameter_names.set(vm.names.arguments.as_string());
@@ -445,7 +445,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         if (scope_body) {
             scope_body->for_each_var_declared_name([&](auto const& name) {
                 if (!parameter_names.contains(name) && instantiated_var_names.set(name) == AK::HashSetResult::InsertedNewEntry) {
-                    environment->create_mutable_binding(global_object(), name, false);
+                    MUST(environment->create_mutable_binding(global_object(), name, false));
                     environment->initialize_binding(global_object(), name, js_undefined());
                 }
             });
@@ -459,7 +459,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             scope_body->for_each_var_declared_name([&](auto const& name) {
                 if (instantiated_var_names.set(name) != AK::HashSetResult::InsertedNewEntry)
                     return IterationDecision::Continue;
-                var_environment->create_mutable_binding(global_object(), name, false);
+                MUST(var_environment->create_mutable_binding(global_object(), name, false));
 
                 Value initial_value;
                 if (!parameter_names.contains(name) || function_names.contains(name))
@@ -482,8 +482,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 return IterationDecision::Continue;
             // The spec says 'initializedBindings' here but that does not exist and it then adds it to 'instantiatedVarNames' so it probably means 'instantiatedVarNames'.
             if (!instantiated_var_names.contains(function_name) && function_name != vm.names.arguments.as_string()) {
-                var_environment->create_mutable_binding(global_object(), function_name, false);
-                VERIFY(!vm.exception());
+                MUST(var_environment->create_mutable_binding(global_object(), function_name, false));
                 var_environment->initialize_binding(global_object(), function_name, js_undefined());
                 instantiated_var_names.set(function_name);
             }
@@ -527,7 +526,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             if (declaration.is_constant_declaration())
                 lex_environment->create_immutable_binding(global_object(), name, true);
             else
-                lex_environment->create_mutable_binding(global_object(), name, false);
+                MUST(lex_environment->create_mutable_binding(global_object(), name, false));
             return IterationDecision::Continue;
         });
     });
