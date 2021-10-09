@@ -547,7 +547,7 @@ bool DirectoryView::can_modify_current_selection()
 {
     auto selections = current_view().selection().indices();
     auto first_modifiable = selections.first_matching([&](auto& index) {
-        return !Core::System::access(node(index.parent()).full_path(), W_OK).is_error();
+        return Core::File::is_removable(node(index).full_path());
     });
     return first_modifiable.has_value();
 }

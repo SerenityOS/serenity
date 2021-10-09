@@ -28,7 +28,6 @@
 #include <LibMain/Main.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 static constexpr auto APP_NAME = "Space Analyzer"sv;
 static constexpr size_t FILES_ENCOUNTERED_UPDATE_STEP_SIZE = 25;
@@ -279,15 +278,6 @@ static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidg
     treemapwidget.set_tree(tree);
 }
 
-static bool is_removable(String const& absolute_path)
-{
-    VERIFY(!absolute_path.is_empty());
-    int access_result = access(LexicalPath::dirname(absolute_path).characters(), W_OK);
-    if (access_result != 0 && errno != EACCES)
-        perror("access");
-    return access_result == 0;
-}
-
 static String get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMapWidget const& treemapwidget, bool include_last_node = true)
 {
     StringBuilder path_builder;
@@ -415,7 +405,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         String selected_node_path = get_absolute_path_to_selected_node(treemapwidget);
         if (selected_node_path.is_empty())
             return;
-        delete_action->set_enabled(is_removable(selected_node_path));
+        delete_action->set_enabled(Core::File::is_removable(selected_node_path));
         if (Core::File::is_directory(selected_node_path)) {
             folder_node_context_menu->popup(event.screen_position());
         } else {
