@@ -81,7 +81,7 @@ void DIE::for_each_child(Function<void(DIE const& child)> callback) const
         auto sibling = current_child.get_attribute(Attribute::Sibling);
         u32 sibling_offset = 0;
         if (sibling.has_value()) {
-            sibling_offset = sibling.value().data.as_unsigned;
+            sibling_offset = sibling.value().as_unsigned();
         } else {
             // NOTE: According to the spec, the compiler doesn't have to supply the sibling information.
             // When it doesn't, we have to recursively iterate the current child's children to find where they end

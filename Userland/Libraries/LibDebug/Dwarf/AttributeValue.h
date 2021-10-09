@@ -6,12 +6,18 @@
 
 #pragma once
 
+#include <AK/Span.h>
 #include <AK/Types.h>
 #include <LibDebug/Dwarf/DwarfTypes.h>
 
 namespace Debug::Dwarf {
 
-struct AttributeValue {
+class CompilationUnit;
+
+class AttributeValue {
+    friend class DwarfInfo;
+
+public:
     enum class Type : u8 {
         UnsignedNumber,
         SignedNumber,
@@ -21,21 +27,33 @@ struct AttributeValue {
         DwarfExpression,
         SecOffset,
         RawBytes,
-    } type;
+        Address
+    };
 
+    Type type() const { return m_type; }
+    AttributeDataForm form() const { return m_form; }
+
+    FlatPtr as_addr() const { return m_data.as_addr; }
+    u64 as_unsigned() const { return m_data.as_unsigned; }
+    i64 as_signed() const { return m_data.as_signed; }
+    const char* as_string() const { return m_data.as_string; }
+    bool as_bool() const { return m_data.as_bool; }
+    ReadonlyBytes as_raw_bytes() const { return m_data.as_raw_bytes; }
+
+private:
+    Type m_type;
     union {
         FlatPtr as_addr;
         u64 as_unsigned;
         i64 as_signed;
         const char* as_string; // points to bytes in the memory mapped elf image
         bool as_bool;
-        struct {
-            u32 length;
-            const u8* bytes; // points to bytes in the memory mapped elf image
-        } as_raw_bytes;
-    } data {};
+        ReadonlyBytes as_raw_bytes;
+    } m_data {};
 
-    AttributeDataForm form {};
+    AttributeDataForm m_form {};
+
+    CompilationUnit const* m_compilation_unit { nullptr };
 };
 
 }
