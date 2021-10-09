@@ -35,7 +35,7 @@ void DeclarativeEnvironment::visit_edges(Visitor& visitor)
 }
 
 // 9.1.1.1.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-declarative-environment-records-hasbinding-n
-bool DeclarativeEnvironment::has_binding(FlyString const& name, Optional<size_t>* out_index) const
+ThrowCompletionOr<bool> DeclarativeEnvironment::has_binding(FlyString const& name, Optional<size_t>* out_index) const
 {
     auto it = m_names.find(name);
     if (it == m_names.end())

@@ -39,17 +39,22 @@ ThrowCompletionOr<Value> GlobalEnvironment::get_this_binding(GlobalObject&) cons
 }
 
 // 9.1.1.4.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-global-environment-records-hasbinding-n
-bool GlobalEnvironment::has_binding(FlyString const& name, Optional<size_t>*) const
+ThrowCompletionOr<bool> GlobalEnvironment::has_binding(FlyString const& name, Optional<size_t>*) const
 {
-    if (m_declarative_record->has_binding(name))
+    // 1. Let DclRec be envRec.[[DeclarativeRecord]].
+    // 2. If DclRec.HasBinding(N) is true, return true.
+    if (MUST(m_declarative_record->has_binding(name)))
         return true;
+
+    // 3. Let ObjRec be envRec.[[ObjectRecord]].
+    // 4. Return ? ObjRec.HasBinding(N).
     return m_object_record->has_binding(name);
 }
 
 // 9.1.1.4.2 CreateMutableBinding ( N, D ), https://tc39.es/ecma262/#sec-global-environment-records-createmutablebinding-n-d
 void GlobalEnvironment::create_mutable_binding(GlobalObject& global_object, FlyString const& name, bool can_be_deleted)
 {
-    if (m_declarative_record->has_binding(name)) {
+    if (MUST(m_declarative_record->has_binding(name))) {
         global_object.vm().throw_exception<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
         return;
     }
@@ -59,7 +64,7 @@ void GlobalEnvironment::create_mutable_binding(GlobalObject& global_object, FlyS
 // 9.1.1.4.3 CreateImmutableBinding ( N, S ), https://tc39.es/ecma262/#sec-global-environment-records-createimmutablebinding-n-s
 void GlobalEnvironment::create_immutable_binding(GlobalObject& global_object, FlyString const& name, bool strict)
 {
-    if (m_declarative_record->has_binding(name)) {
+    if (MUST(m_declarative_record->has_binding(name))) {
         global_object.vm().throw_exception<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
         return;
     }
@@ -69,7 +74,7 @@ void GlobalEnvironment::create_immutable_binding(GlobalObject& global_object, Fl
 // 9.1.1.4.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-global-environment-records-initializebinding-n-v
 void GlobalEnvironment::initialize_binding(GlobalObject& global_object, FlyString const& name, Value value)
 {
-    if (m_declarative_record->has_binding(name)) {
+    if (MUST(m_declarative_record->has_binding(name))) {
         m_declarative_record->initialize_binding(global_object, name, value);
         return;
     }
@@ -79,7 +84,7 @@ void GlobalEnvironment::initialize_binding(GlobalObject& global_object, FlyStrin
 // 9.1.1.4.5 SetMutableBinding ( N, V, S ), https://tc39.es/ecma262/#sec-global-environment-records-setmutablebinding-n-v-s
 void GlobalEnvironment::set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value, bool strict)
 {
-    if (m_declarative_record->has_binding(name)) {
+    if (MUST(m_declarative_record->has_binding(name))) {
         m_declarative_record->set_mutable_binding(global_object, name, value, strict);
         return;
     }
@@ -90,7 +95,7 @@ void GlobalEnvironment::set_mutable_binding(GlobalObject& global_object, FlyStri
 // 9.1.1.4.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-global-environment-records-getbindingvalue-n-s
 Value GlobalEnvironment::get_binding_value(GlobalObject& global_object, FlyString const& name, bool strict)
 {
-    if (m_declarative_record->has_binding(name))
+    if (MUST(m_declarative_record->has_binding(name)))
         return m_declarative_record->get_binding_value(global_object, name, strict);
     return m_object_record->get_binding_value(global_object, name, strict);
 }
@@ -98,7 +103,7 @@ Value GlobalEnvironment::get_binding_value(GlobalObject& global_object, FlyStrin
 // 9.1.1.4.7 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-global-environment-records-deletebinding-n
 bool GlobalEnvironment::delete_binding(GlobalObject& global_object, FlyString const& name)
 {
-    if (m_declarative_record->has_binding(name))
+    if (MUST(m_declarative_record->has_binding(name)))
         return m_declarative_record->delete_binding(global_object, name);
 
     bool existing_prop = TRY_OR_DISCARD(m_object_record->binding_object().has_own_property(name));
@@ -121,7 +126,7 @@ bool GlobalEnvironment::has_var_declaration(FlyString const& name) const
 // 9.1.1.4.13 HasLexicalDeclaration ( N ), https://tc39.es/ecma262/#sec-haslexicaldeclaration
 bool GlobalEnvironment::has_lexical_declaration(FlyString const& name) const
 {
-    return m_declarative_record->has_binding(name);
+    return MUST(m_declarative_record->has_binding(name));
 }
 
 // 9.1.1.4.14 HasRestrictedGlobalProperty ( N ), https://tc39.es/ecma262/#sec-hasrestrictedglobalproperty
