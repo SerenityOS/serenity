@@ -159,7 +159,7 @@ static bool is_followed_by_combining_dot_above(Utf8View const& string, size_t in
     return false;
 }
 
-static SpecialCasing const* find_matching_special_case(Utf8View const& string, Optional<StringView> locale, size_t index, size_t byte_length, UnicodeData const& unicode_data)
+static SpecialCasing const* find_matching_special_case(u32 code_point, Utf8View const& string, Optional<StringView> locale, size_t index, size_t byte_length)
 {
     auto requested_locale = Locale::None;
 
@@ -168,9 +168,9 @@ static SpecialCasing const* find_matching_special_case(Utf8View const& string, O
             requested_locale = *maybe_locale;
     }
 
-    for (size_t i = 0; i < unicode_data.special_casing_size; ++i) {
-        auto const* special_casing = unicode_data.special_casing[i];
+    auto special_casings = Detail::special_case_mapping(code_point);
 
+    for (auto const* special_casing : special_casings) {
         if (special_casing->locale != Locale::None && special_casing->locale != requested_locale)
             continue;
 
@@ -241,13 +241,7 @@ String to_unicode_lowercase_full(StringView const& string, [[maybe_unused]] Opti
         u32 code_point = *it;
         byte_length = it.underlying_code_point_length_in_bytes();
 
-        auto unicode_data = Detail::unicode_data_for_code_point(code_point);
-        if (!unicode_data.has_value()) {
-            builder.append_code_point(code_point);
-            continue;
-        }
-
-        auto const* special_casing = find_matching_special_case(view, locale, index, byte_length, *unicode_data);
+        auto const* special_casing = find_matching_special_case(code_point, view, locale, index, byte_length);
         if (!special_casing) {
             builder.append_code_point(to_unicode_lowercase(code_point));
             continue;
@@ -276,13 +270,7 @@ String to_unicode_uppercase_full(StringView const& string, [[maybe_unused]] Opti
         u32 code_point = *it;
         byte_length = it.underlying_code_point_length_in_bytes();
 
-        auto unicode_data = Detail::unicode_data_for_code_point(code_point);
-        if (!unicode_data.has_value()) {
-            builder.append_code_point(code_point);
-            continue;
-        }
-
-        auto const* special_casing = find_matching_special_case(view, locale, index, byte_length, *unicode_data);
+        auto const* special_casing = find_matching_special_case(code_point, view, locale, index, byte_length);
         if (!special_casing) {
             builder.append_code_point(to_unicode_uppercase(code_point));
             continue;
