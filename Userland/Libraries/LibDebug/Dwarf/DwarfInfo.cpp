@@ -57,8 +57,18 @@ void DwarfInfo::populate_compilation_units()
 
         auto line_program = make<LineProgram>(*this, line_info_stream);
 
-        m_compilation_units.append(make<CompilationUnit>(*this, unit_offset, compilation_unit_header, move(line_program)));
-        debug_info_stream.discard_or_error(length_after_header);
+        // HACK: Clang generates line programs for embedded resource assembly files, but not compile units.
+        // Meaning that for graphical applications, some line info data would be unread, triggering the assertion below.
+        // As a fix, we don't create compilation units for line programs that come from resource files.
+#ifdef __clang__
+        if (line_program->source_files().size() == 1 && line_program->source_files()[0].name.view().contains("serenity_icon_"sv)) {
+            debug_info_stream.seek(unit_offset);
+        } else
+#endif
+        {
+            m_compilation_units.append(make<CompilationUnit>(*this, unit_offset, compilation_unit_header, move(line_program)));
+            debug_info_stream.discard_or_error(length_after_header);
+        }
     }
 
     VERIFY(line_info_stream.eof());
