@@ -84,8 +84,8 @@ Value Reference::get_value(GlobalObject& global_object) const
 
     VERIFY(m_base_environment);
     if (m_environment_coordinate.has_value())
-        return static_cast<DeclarativeEnvironment*>(m_base_environment)->get_binding_value_direct(global_object, m_environment_coordinate->index, m_strict);
-    return m_base_environment->get_binding_value(global_object, m_name.as_string(), m_strict);
+        return TRY_OR_DISCARD(static_cast<DeclarativeEnvironment*>(m_base_environment)->get_binding_value_direct(global_object, m_environment_coordinate->index, m_strict));
+    return TRY_OR_DISCARD(m_base_environment->get_binding_value(global_object, m_name.as_string(), m_strict));
 }
 
 // 13.5.1.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation

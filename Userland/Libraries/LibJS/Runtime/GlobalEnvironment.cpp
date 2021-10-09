@@ -107,10 +107,17 @@ ThrowCompletionOr<void> GlobalEnvironment::set_mutable_binding(GlobalObject& glo
 }
 
 // 9.1.1.4.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-global-environment-records-getbindingvalue-n-s
-Value GlobalEnvironment::get_binding_value(GlobalObject& global_object, FlyString const& name, bool strict)
+ThrowCompletionOr<Value> GlobalEnvironment::get_binding_value(GlobalObject& global_object, FlyString const& name, bool strict)
 {
-    if (MUST(m_declarative_record->has_binding(name)))
+    // 1. Let DclRec be envRec.[[DeclarativeRecord]].
+    // 2. If DclRec.HasBinding(N) is true, then
+    if (MUST(m_declarative_record->has_binding(name))) {
+        // a. Return DclRec.GetBindingValue(N, S).
         return m_declarative_record->get_binding_value(global_object, name, strict);
+    }
+
+    // 3. Let ObjRec be envRec.[[ObjectRecord]].
+    // 4. Return ? ObjRec.GetBindingValue(N, S).
     return m_object_record->get_binding_value(global_object, name, strict);
 }
 

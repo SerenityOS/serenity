@@ -152,20 +152,25 @@ ThrowCompletionOr<void> DeclarativeEnvironment::set_mutable_binding_direct(Globa
 }
 
 // 9.1.1.1.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-declarative-environment-records-getbindingvalue-n-s
-Value DeclarativeEnvironment::get_binding_value(GlobalObject& global_object, FlyString const& name, bool strict)
+ThrowCompletionOr<Value> DeclarativeEnvironment::get_binding_value(GlobalObject& global_object, FlyString const& name, bool strict)
 {
+    // 1. Assert: envRec has a binding for N.
     auto it = m_names.find(name);
     VERIFY(it != m_names.end());
+
+    // 2-3. (extracted into a non-standard function below)
     return get_binding_value_direct(global_object, it->value, strict);
 }
 
-Value DeclarativeEnvironment::get_binding_value_direct(GlobalObject& global_object, size_t index, bool)
+ThrowCompletionOr<Value> DeclarativeEnvironment::get_binding_value_direct(GlobalObject& global_object, size_t index, bool)
 {
     auto& binding = m_bindings[index];
-    if (!binding.initialized) {
-        global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::BindingNotInitialized, name_from_index(index));
-        return {};
-    }
+
+    // 2. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
+    if (!binding.initialized)
+        return vm().throw_completion<ReferenceError>(global_object, ErrorType::BindingNotInitialized, name_from_index(index));
+
+    // 3. Return the value currently bound to N in envRec.
     return binding.value;
 }
 
