@@ -36,13 +36,11 @@ static bool is_after_uppercase_i(Utf8View const& string, size_t index)
             continue;
         }
 
-        auto unicode_data = Detail::unicode_data_for_code_point(code_point);
-        if (!unicode_data.has_value())
-            return false;
+        u32 canonical_combining_class = Detail::canonical_combining_class(code_point);
 
-        if (unicode_data->canonical_combining_class == 0)
+        if (canonical_combining_class == 0)
             found_uppercase_i = false;
-        else if (unicode_data->canonical_combining_class == 230)
+        else if (canonical_combining_class == 230)
             found_uppercase_i = false;
     }
 
@@ -62,13 +60,11 @@ static bool is_after_soft_dotted_code_point(Utf8View const& string, size_t index
             continue;
         }
 
-        auto unicode_data = Detail::unicode_data_for_code_point(code_point);
-        if (!unicode_data.has_value())
-            return false;
+        u32 canonical_combining_class = Detail::canonical_combining_class(code_point);
 
-        if (unicode_data->canonical_combining_class == 0)
+        if (canonical_combining_class == 0)
             found_soft_dotted_code_point = false;
-        else if (unicode_data->canonical_combining_class == 230)
+        else if (canonical_combining_class == 230)
             found_soft_dotted_code_point = false;
     }
 
@@ -123,12 +119,11 @@ static bool is_followed_by_combining_class_above(Utf8View const& string, size_t 
         : Utf8View {};
 
     for (auto code_point : following_view) {
-        auto unicode_data = Detail::unicode_data_for_code_point(code_point);
-        if (!unicode_data.has_value())
+        u32 canonical_combining_class = Detail::canonical_combining_class(code_point);
+
+        if (canonical_combining_class == 0)
             return false;
-        if (unicode_data->canonical_combining_class == 0)
-            return false;
-        if (unicode_data->canonical_combining_class == 230)
+        if (canonical_combining_class == 230)
             return true;
     }
 
@@ -147,12 +142,11 @@ static bool is_followed_by_combining_dot_above(Utf8View const& string, size_t in
         if (code_point == 0x307)
             return true;
 
-        auto unicode_data = Detail::unicode_data_for_code_point(code_point);
-        if (!unicode_data.has_value())
+        u32 canonical_combining_class = Detail::canonical_combining_class(code_point);
+
+        if (canonical_combining_class == 0)
             return false;
-        if (unicode_data->canonical_combining_class == 0)
-            return false;
-        if (unicode_data->canonical_combining_class == 230)
+        if (canonical_combining_class == 230)
             return false;
     }
 
