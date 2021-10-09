@@ -2,7 +2,7 @@
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
- * Copyright (c) 2021, 
+ * Copyright (c) 2021, mjz19910 <matthias291999@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
