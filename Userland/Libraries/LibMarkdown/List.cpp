@@ -48,7 +48,6 @@ String List::render_for_terminal(size_t) const
         else
             builder.append("* ");
         builder.append(item->render_for_terminal());
-        builder.append("\n");
     }
     builder.append("\n");
 
