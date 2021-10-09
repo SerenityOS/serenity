@@ -545,7 +545,11 @@ void DirectoryView::do_delete(bool should_confirm)
 
 bool DirectoryView::can_modify_current_selection()
 {
-    return !current_view().selection().is_empty() && access(path().characters(), W_OK) == 0;
+    auto selections = current_view().selection().indices();
+    auto first_modifiable = selections.first_matching([&](auto& index) {
+        return !Core::System::access(node(index.parent()).full_path(), W_OK).is_error();
+    });
+    return first_modifiable.has_value();
 }
 
 void DirectoryView::handle_selection_change()
