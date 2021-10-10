@@ -74,8 +74,8 @@ public:
     }
 
     PropertyName(FlyString string, StringMayBeNumber string_may_be_number = StringMayBeNumber::Yes)
-        : m_type(Type::String)
-        , m_string_may_be_number(string_may_be_number == StringMayBeNumber::Yes)
+        : m_string_may_be_number(string_may_be_number == StringMayBeNumber::Yes)
+        , m_type(Type::String)
         , m_string(move(string))
     {
         VERIFY(!m_string.is_null());
@@ -184,11 +184,11 @@ public:
     }
 
 private:
-    Type m_type { Type::Invalid };
     bool m_string_may_be_number { true };
+    Type m_type { Type::Invalid };
+    u32 m_number { 0 };
     FlyString m_string;
     Symbol* m_symbol { nullptr };
-    u32 m_number { 0 };
 };
 
 struct PropertyNameTraits : public Traits<PropertyName> {
