@@ -154,7 +154,7 @@ endif()
 # The following warnings are sorted by the "base" name (the part excluding the initial Wno or W).
 add_compile_options(-Wno-address-of-packed-member)
 add_compile_options(-Wcast-qual)
-add_compile_options(-Wno-deprecated-copy)
+add_compile_options(-Wdeprecated-copy)
 add_compile_options(-Wduplicated-cond)
 add_compile_options(-Wno-expansion-to-defined)
 add_compile_options(-Wformat=2)
