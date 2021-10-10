@@ -26,7 +26,7 @@ struct Option {
 static const Vector<Option> options = {
     { "Power off computer", { "/bin/shutdown", "--now", nullptr }, true, true },
     { "Reboot", { "/bin/reboot", nullptr }, true, false },
-    { "Log out", {}, false, false },
+    { "Log out", { "/bin/logout", nullptr }, true, false },
 };
 
 Vector<char const*> ShutdownDialog::show()
