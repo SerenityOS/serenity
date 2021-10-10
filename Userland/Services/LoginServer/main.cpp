@@ -5,6 +5,7 @@
  */
 
 #include <LibCore/Account.h>
+#include <LibCore/ArgsParser.h>
 #include <LibGUI/Application.h>
 #include <Services/LoginServer/LoginWindow.h>
 #include <errno.h>
@@ -113,7 +114,23 @@ int main(int argc, char** argv)
         login(account.value(), *window);
     };
 
-    window->show();
+    char const* auto_login = nullptr;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_option(auto_login, "automatically log in with no prompt", "auto-login", 'a', "userame");
+    args_parser.parse(argc, argv);
+
+    if (!auto_login) {
+        window->show();
+    } else {
+        auto account = Core::Account::from_name(auto_login);
+        if (account.is_error()) {
+            dbgln("failed auto-login for user {}: {}", auto_login, account.error());
+            return 1;
+        }
+
+        login(account.value(), *window);
+    }
 
     return app->exec();
 }
