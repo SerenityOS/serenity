@@ -227,7 +227,7 @@ static void parse_identity(String locale_path, UnicodeLocaleData& locale_data, L
     }
 }
 
-static void parse_locale_languages(String locale_path, Locale& locale)
+static void parse_locale_languages(String locale_path, UnicodeLocaleData& locale_data, Locale& locale)
 {
     LexicalPath languages_path(move(locale_path));
     languages_path = languages_path.append("languages.json"sv);
@@ -245,11 +245,14 @@ static void parse_locale_languages(String locale_path, Locale& locale)
     auto const& languages_object = locale_display_names_object.as_object().get("languages"sv);
 
     languages_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
+        if (!locale_data.languages.contains_slow(key))
+            return;
+
         locale.languages.set(key, value.as_string());
     });
 }
 
-static void parse_locale_territories(String locale_path, Locale& locale)
+static void parse_locale_territories(String locale_path, UnicodeLocaleData& locale_data, Locale& locale)
 {
     LexicalPath territories_path(move(locale_path));
     territories_path = territories_path.append("territories.json"sv);
@@ -267,6 +270,9 @@ static void parse_locale_territories(String locale_path, Locale& locale)
     auto const& territories_object = locale_display_names_object.as_object().get("territories"sv);
 
     territories_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
+        if (!locale_data.territories.contains_slow(key))
+            return;
+
         locale.territories.set(key, value.as_string());
     });
 }
@@ -426,6 +432,7 @@ static Core::DirIterator path_to_dir_iterator(String path)
 
 static void parse_all_locales(String core_path, String locale_names_path, String misc_path, String numbers_path, UnicodeLocaleData& locale_data)
 {
+    auto identity_iterator = path_to_dir_iterator(locale_names_path);
     auto locale_names_iterator = path_to_dir_iterator(move(locale_names_path));
     auto misc_iterator = path_to_dir_iterator(move(misc_path));
     auto numbers_iterator = path_to_dir_iterator(move(numbers_path));
@@ -452,6 +459,18 @@ static void parse_all_locales(String core_path, String locale_names_path, String
         return builder.build();
     };
 
+    while (identity_iterator.has_next()) {
+        auto locale_path = identity_iterator.next_full_path();
+        VERIFY(Core::File::is_directory(locale_path));
+
+        auto language = remove_variants_from_path(locale_path);
+        if (!language.has_value())
+            continue;
+
+        auto& locale = locale_data.locales.ensure(*language);
+        parse_identity(locale_path, locale_data, locale);
+    }
+
     while (locale_names_iterator.has_next()) {
         auto locale_path = locale_names_iterator.next_full_path();
         VERIFY(Core::File::is_directory(locale_path));
@@ -461,9 +480,8 @@ static void parse_all_locales(String core_path, String locale_names_path, String
             continue;
 
         auto& locale = locale_data.locales.ensure(*language);
-        parse_identity(locale_path, locale_data, locale);
-        parse_locale_languages(locale_path, locale);
-        parse_locale_territories(locale_path, locale);
+        parse_locale_languages(locale_path, locale_data, locale);
+        parse_locale_territories(locale_path, locale_data, locale);
         parse_locale_scripts(locale_path, locale_data, locale);
     }
 
