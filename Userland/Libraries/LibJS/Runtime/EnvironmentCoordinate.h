@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Types.h>
 #include <LibJS/Forward.h>
 
 namespace JS {
