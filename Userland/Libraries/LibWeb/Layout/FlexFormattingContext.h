@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/FormattingContext.h>
 
 namespace Web::Layout {

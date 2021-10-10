@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
+
 namespace Web::CSS {
 
 class Display {
