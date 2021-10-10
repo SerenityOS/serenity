@@ -15,8 +15,8 @@
 #include <AK/Types.h>
 #ifdef KERNEL
 #    include <Kernel/API/KResult.h>
-#    include <Kernel/Arch/x86/Processor.h>
-#    include <Kernel/Arch/x86/ScopedCritical.h>
+#    include <Kernel/Arch/Processor.h>
+#    include <Kernel/Arch/ScopedCritical.h>
 #endif
 
 #define THREADSAFEREFPTR_SCRUB_BYTE 0xa0

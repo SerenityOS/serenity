@@ -12,8 +12,8 @@
 #include <AK/Traits.h>
 #include <AK/Types.h>
 #ifdef KERNEL
-#    include <Kernel/Arch/x86/Processor.h>
-#    include <Kernel/Arch/x86/ScopedCritical.h>
+#    include <Kernel/Arch/Processor.h>
+#    include <Kernel/Arch/ScopedCritical.h>
 #endif
 
 #define THREADSAFENONNULLREFPTR_SCRUB_BYTE 0xa1
