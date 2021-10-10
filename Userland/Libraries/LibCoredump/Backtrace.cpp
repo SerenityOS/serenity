@@ -105,8 +105,13 @@ void Backtrace::add_entry(const Reader& coredump, FlatPtr ip)
         return;
     }
     auto object_name = ip_region->object_name();
-    if (object_name == "Loader.so")
-        return;
+    // Only skip addresses coming from Loader.so if the faulting instruction is not in Loader.so
+    if (object_name == "Loader.so") {
+        if (m_skip_loader_so)
+            return;
+    } else {
+        m_skip_loader_so = true;
+    }
     // We need to find the first region for the object, just in case
     // the PT_LOAD header for the .text segment isn't the first one
     // in the object file.
