@@ -363,3 +363,54 @@ TEST_CASE(wcsrtombs)
     EXPECT_EQ(memcmp(buf, "\xf0\x9f\x90\x9e\xf0\x9f\x90\x9e", 9), 0);
     EXPECT_EQ(src, nullptr);
 }
+
+TEST_CASE(mbsrtowcs)
+{
+    mbstate_t state = {};
+    wchar_t buf[4];
+    const char good_chars[] = "\xf0\x9f\x90\x9e\xf0\x9f\x90\x9e";
+    const char bad_chars[] = "\xf0\x9f\x90\x9e\xf0\xff\x90\x9e";
+    const char* src;
+    size_t ret = 0;
+
+    // Convert normal and valid multibyte sequences.
+    src = good_chars;
+    ret = mbsrtowcs(buf, &src, 3, &state);
+    EXPECT_EQ(ret, 2ul);
+    EXPECT_EQ(buf[0], L'\U0001F41E');
+    EXPECT_EQ(buf[1], L'\U0001F41E');
+    EXPECT_EQ(buf[2], L'\0');
+    EXPECT_EQ(src, nullptr);
+    EXPECT_NE(mbsinit(&state), 0);
+
+    // Stop on invalid multibyte sequences.
+    src = bad_chars;
+    ret = mbsrtowcs(buf, &src, 3, &state);
+    EXPECT_EQ(ret, -1ul);
+    EXPECT_EQ(buf[0], L'\U0001F41E');
+    EXPECT_EQ(errno, EILSEQ);
+    EXPECT_EQ(src, bad_chars + 4);
+
+    // Valid sequence but not enough space.
+    src = good_chars;
+    ret = mbsrtowcs(buf, &src, 1, &state);
+    EXPECT_EQ(ret, 1ul);
+    EXPECT_EQ(buf[0], L'\U0001F41E');
+    EXPECT_EQ(src, good_chars + 4);
+
+    // Try a conversion with no destination and too short length.
+    src = good_chars;
+    ret = mbsrtowcs(nullptr, &src, 1, &state);
+    EXPECT_EQ(ret, 2ul);
+    EXPECT_EQ(src, nullptr);
+    EXPECT_NE(mbsinit(&state), 0);
+
+    // Try a conversion using the internal anonymous state.
+    src = good_chars;
+    ret = mbsrtowcs(buf, &src, 3, nullptr);
+    EXPECT_EQ(ret, 2ul);
+    EXPECT_EQ(buf[0], L'\U0001F41E');
+    EXPECT_EQ(buf[1], L'\U0001F41E');
+    EXPECT_EQ(buf[2], L'\0');
+    EXPECT_EQ(src, nullptr);
+}
