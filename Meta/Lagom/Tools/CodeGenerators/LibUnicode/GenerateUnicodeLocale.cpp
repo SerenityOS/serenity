@@ -66,11 +66,11 @@ struct UnicodeLocaleData {
     Vector<String> keywords;
     Vector<String> list_pattern_types;
     Vector<String> list_pattern_styles;
-    HashMap<String, String> language_aliases;
-    HashMap<String, String> territory_aliases;
-    HashMap<String, String> script_aliases;
-    HashMap<String, String> variant_aliases;
-    HashMap<String, String> subdivision_aliases;
+    HashMap<String, size_t> language_aliases;
+    HashMap<String, size_t> territory_aliases;
+    HashMap<String, size_t> script_aliases;
+    HashMap<String, size_t> variant_aliases;
+    HashMap<String, size_t> subdivision_aliases;
     Vector<LanguageMapping> complex_mappings;
     Vector<LanguageMapping> likely_subtags;
     size_t max_variant_size { 0 };
@@ -183,7 +183,7 @@ static void parse_core_aliases(String core_supplemental_path, UnicodeLocaleData&
                 locale_data.max_variant_size = max(mapping->alias.variants.size(), locale_data.max_variant_size);
                 locale_data.complex_mappings.append(mapping.release_value());
             } else {
-                alias_map.set(key, move(alias));
+                alias_map.set(key, ensure_unique_string(locale_data, alias));
             }
         });
     };
@@ -1070,13 +1070,13 @@ Optional<@enum_title@> @enum_snake@_from_string(StringView const& @enum_snake@)
 )~~~");
     };
 
-    auto append_alias_search = [&](StringView enum_snake, HashMap<String, String> const& aliases) {
+    auto append_alias_search = [&](StringView enum_snake, auto const& aliases) {
         generator.set("enum_snake", enum_snake);
 
         generator.append(R"~~~(
 Optional<StringView> resolve_@enum_snake@_alias(StringView const& @enum_snake@)
 {
-    static HashMap<StringView, StringView> @enum_snake@_aliases { {
+    static HashMap<StringView, size_t> @enum_snake@_aliases { {
         )~~~");
 
         constexpr size_t max_values_per_row = 10;
@@ -1087,8 +1087,8 @@ Optional<StringView> resolve_@enum_snake@_alias(StringView const& @enum_snake@)
                 generator.append(" ");
 
             generator.set("key"sv, alias.key);
-            generator.set("alias"sv, alias.value);
-            generator.append("{ \"@key@\"sv, \"@alias@\"sv },");
+            generator.set("alias"sv, String::number(alias.value));
+            generator.append("{ \"@key@\"sv, @alias@ },");
 
             if (values_in_current_row == max_values_per_row) {
                 generator.append("\n        ");
@@ -1100,7 +1100,7 @@ Optional<StringView> resolve_@enum_snake@_alias(StringView const& @enum_snake@)
     } };
 
     if (auto alias = @enum_snake@_aliases.get(@enum_snake@); alias.has_value())
-        return alias.value();
+        return s_string_list[alias.value()];
     return {};
 }
 )~~~");
