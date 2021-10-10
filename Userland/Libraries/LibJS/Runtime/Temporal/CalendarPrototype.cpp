@@ -41,6 +41,7 @@ void CalendarPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.yearMonthFromFields, year_month_from_fields, 1, attr);
     define_native_function(vm.names.monthDayFromFields, month_day_from_fields, 1, attr);
     define_native_function(vm.names.dateAdd, date_add, 2, attr);
+    define_native_function(vm.names.dateUntil, date_until, 2, attr);
     define_native_function(vm.names.year, year, 1, attr);
     define_native_function(vm.names.month, month, 1, attr);
     define_native_function(vm.names.monthCode, month_code, 1, attr);
@@ -197,6 +198,38 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_add)
 
     // 10. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
     return TRY_OR_DISCARD(create_temporal_date(global_object, result.year, result.month, result.day, *calendar));
+}
+
+// 12.4.8 Temporal.Calendar.prototype.dateUntil ( one, two [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dateuntil
+// NOTE: This is the minimum dateUntil implementation for engines without ECMA-402.
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_until)
+{
+    // 1. Let calendar be the this value.
+    // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
+    auto* calendar = typed_this_object(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Assert: calendar.[[Identifier]] is "iso8601".
+    VERIFY(calendar->identifier() == "iso8601"sv);
+
+    // 4. Set one to ? ToTemporalDate(one).
+    auto* one = TRY_OR_DISCARD(to_temporal_date(global_object, vm.argument(0)));
+
+    // 5. Set two to ? ToTemporalDate(two).
+    auto* two = TRY_OR_DISCARD(to_temporal_date(global_object, vm.argument(1)));
+
+    // 6. Set options to ? GetOptionsObject(options).
+    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(2)));
+
+    // 7. Let largestUnit be ? ToLargestTemporalUnit(options, « "hour", "minute", "second", "millisecond", "microsecond", "nanosecond" », "auto", "day").
+    auto largest_unit = TRY_OR_DISCARD(to_largest_temporal_unit(global_object, *options, { "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv }, "auto"sv, "day"sv));
+
+    // 8. Let result be ! DifferenceISODate(one.[[ISOYear]], one.[[ISOMonth]], one.[[ISODay]], two.[[ISOYear]], two.[[ISOMonth]], two.[[ISODay]], largestUnit).
+    auto result = difference_iso_date(global_object, one->iso_year(), one->iso_month(), one->iso_day(), two->iso_year(), two->iso_month(), two->iso_day(), largest_unit);
+
+    // 9. Return ? CreateTemporalDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0).
+    return TRY_OR_DISCARD(create_temporal_duration(global_object, result.years, result.months, result.weeks, result.days, 0, 0, 0, 0, 0, 0));
 }
 
 // 12.4.9 Temporal.Calendar.prototype.year ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.year
