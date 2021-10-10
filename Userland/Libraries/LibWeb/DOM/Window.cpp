@@ -31,7 +31,7 @@ public:
         , m_handler(move(handler))
     {
     }
-    ~RequestAnimationFrameCallback() { }
+    ~RequestAnimationFrameCallback() = default;
 
     i32 id() const { return m_id; }
     bool is_cancelled() const { return !m_handler; }
