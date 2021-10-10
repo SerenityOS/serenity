@@ -47,6 +47,7 @@ private:
     void add_entry(const Reader&, FlatPtr ip);
     ELFObjectInfo const* object_info_for_region(ELF::Core::MemoryRegionInfo const&);
 
+    bool m_skip_loader_so { false };
     ELF::Core::ThreadInfo m_thread_info;
     Vector<Entry> m_entries;
     HashMap<String, NonnullOwnPtr<ELFObjectInfo>> m_debug_info_cache;
