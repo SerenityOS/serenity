@@ -38,11 +38,11 @@ JS_DEFINE_NATIVE_FUNCTION(CSSNamespace::escape)
         return {};
     }
 
-    String result = Web::CSS::serialize_an_identifier(vm.argument(0).to_string(global_object));
+    auto identifier = vm.argument(0).to_string(global_object);
     if (vm.exception())
         return {};
 
-    return JS::Value(JS::js_string(vm, result));
+    return JS::js_string(vm, Web::CSS::serialize_an_identifier(identifier));
 }
 
 // https://www.w3.org/TR/css-conditional-3/#dom-css-supports
