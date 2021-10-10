@@ -90,10 +90,10 @@ struct AuxiliaryValue {
         auxv.a_un.a_ptr = (void*)ptr;
     }
     AuxiliaryValue(Type type, StringView string)
+        : optional_string(string)
     {
         auxv.a_type = type;
         auxv.a_un.a_ptr = nullptr;
-        optional_string = string;
     }
 
     auxv_t auxv {};
