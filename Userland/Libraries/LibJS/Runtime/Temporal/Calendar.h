@@ -35,6 +35,7 @@ bool is_builtin_calendar(String const& identifier);
 ThrowCompletionOr<Calendar*> get_builtin_calendar(GlobalObject&, String const& identifier);
 Calendar* get_iso8601_calendar(GlobalObject&);
 ThrowCompletionOr<Vector<String>> calendar_fields(GlobalObject&, Object& calendar, Vector<StringView> const& field_names);
+ThrowCompletionOr<Object*> calendar_merge_fields(GlobalObject&, Object& calendar, Object& fields, Object& additional_fields);
 ThrowCompletionOr<double> calendar_year(GlobalObject&, Object& calendar, Object& date_like);
 ThrowCompletionOr<double> calendar_month(GlobalObject&, Object& calendar, Object& date_like);
 ThrowCompletionOr<String> calendar_month_code(GlobalObject&, Object& calendar, Object& date_like);
