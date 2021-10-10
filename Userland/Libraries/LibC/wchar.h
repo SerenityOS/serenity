@@ -57,5 +57,6 @@ long double wcstold(const wchar_t*, wchar_t**);
 int swprintf(wchar_t*, size_t, const wchar_t*, ...);
 int wcwidth(wchar_t);
 size_t wcsrtombs(char*, const wchar_t**, size_t, mbstate_t*);
+size_t mbsrtowcs(wchar_t*, const char**, size_t, mbstate_t*);
 
 __END_DECLS
