@@ -21,6 +21,7 @@
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/Selection/Selection.h>
 
 namespace Web::DOM {
 
@@ -402,6 +403,13 @@ int Window::screen_y() const
     // The screenY and screenTop attributes must return the y-coordinate, relative to the origin of the screen of the Web-exposed screen area,
     // of the top of the client window as number of CSS pixels, or zero if there is no such thing.
     return 0;
+}
+
+// https://w3c.github.io/selection-api/#dom-window-getselection
+Selection::Selection* Window::get_selection()
+{
+    // FIXME: Implement.
+    return nullptr;
 }
 
 }

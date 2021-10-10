@@ -740,7 +740,7 @@ int main(int argc, char** argv)
 
     auto interface = IDL::parse_interface(path, data, import_base_path);
 
-    if (namespace_.is_one_of("Crypto", "CSS", "DOM", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "NavigationTiming", "RequestIdleCallback", "SVG", "XHR", "URL")) {
+    if (namespace_.is_one_of("Crypto", "CSS", "DOM", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "NavigationTiming", "RequestIdleCallback", "SVG", "Selection", "XHR", "URL")) {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::");
@@ -861,6 +861,10 @@ static bool is_wrappable_type(IDL::Type const& type)
     if (type.name == "ImageData")
         return true;
     if (type.name == "Window")
+        return true;
+    if (type.name == "Range")
+        return true;
+    if (type.name == "Selection")
         return true;
     return false;
 }
@@ -1387,6 +1391,8 @@ static void generate_header(IDL::Interface const& interface)
 #    include <LibWeb/RequestIdleCallback/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
+#elif __has_include(<LibWeb/Selection/@name@.h>)
+#    include <LibWeb/Selection/@name@.h>
 #elif __has_include(<LibWeb/XHR/@name@.h>)
 #    include <LibWeb/XHR/@name@.h>
 #elif __has_include(<LibWeb/URL/@name@.h>)
@@ -1553,6 +1559,7 @@ using namespace Web::DOM;
 using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::RequestIdleCallback;
+using namespace Web::Selection;
 
 namespace Web::Bindings {
 
@@ -2468,6 +2475,8 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #    include <LibWeb/RequestIdleCallback/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
+#elif __has_include(<LibWeb/Selection/@name@.h>)
+#    include <LibWeb/Selection/@name@.h>
 #elif __has_include(<LibWeb/XHR/@name@.h>)
 #    include <LibWeb/XHR/@name@.h>
 #elif __has_include(<LibWeb/URL/@name@.h>)
@@ -2480,6 +2489,7 @@ using namespace Web::DOM;
 using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::RequestIdleCallback;
+using namespace Web::Selection;
 using namespace Web::UIEvents;
 using namespace Web::XHR;
 
@@ -2775,6 +2785,8 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #    include <LibWeb/RequestIdleCallback/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
+#elif __has_include(<LibWeb/Selection/@name@.h>)
+#    include <LibWeb/Selection/@name@.h>
 #elif __has_include(<LibWeb/XHR/@name@.h>)
 #    include <LibWeb/XHR/@name@.h>
 #elif __has_include(<LibWeb/URL/@name@.h>)
@@ -2803,6 +2815,8 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #    include <LibWeb/RequestIdleCallback/@iterator_name@.h>
 #elif __has_include(<LibWeb/SVG/@iterator_name@.h>)
 #    include <LibWeb/SVG/@iterator_name@.h>
+#elif __has_include(<LibWeb/Selection/@name@.h>)
+#    include <LibWeb/Selection/@name@.h>
 #elif __has_include(<LibWeb/XHR/@iterator_name@.h>)
 #    include <LibWeb/XHR/@iterator_name@.h>
 #elif __has_include(<LibWeb/URL/@iterator_name@.h>)
@@ -2820,6 +2834,7 @@ using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::NavigationTiming;
 using namespace Web::RequestIdleCallback;
+using namespace Web::Selection;
 using namespace Web::XHR;
 using namespace Web::URL;
 
@@ -3243,6 +3258,8 @@ static void generate_iterator_header(IDL::Interface const& interface)
 #    include <LibWeb/RequestIdleCallback/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
+#elif __has_include(<LibWeb/Selection/@name@.h>)
+#    include <LibWeb/Selection/@name@.h>
 #elif __has_include(<LibWeb/XHR/@name@.h>)
 #    include <LibWeb/XHR/@name@.h>
 #elif __has_include(<LibWeb/URL/@name@.h>)
@@ -3307,6 +3324,7 @@ using namespace Web::DOM;
 using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::RequestIdleCallback;
+using namespace Web::Selection;
 
 namespace Web::Bindings {
 
@@ -3422,6 +3440,8 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface)
 #    include <LibWeb/RequestIdleCallback/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
+#elif __has_include(<LibWeb/Selection/@name@.h>)
+#    include <LibWeb/Selection/@name@.h>
 #elif __has_include(<LibWeb/XHR/@name@.h>)
 #    include <LibWeb/XHR/@name@.h>
 #elif __has_include(<LibWeb/URL/@name@.h>)
@@ -3435,6 +3455,7 @@ using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::NavigationTiming;
 using namespace Web::RequestIdleCallback;
+using namespace Web::Selection;
 using namespace Web::XHR;
 using namespace Web::URL;
 

@@ -108,6 +108,7 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(get_computed_style);
     JS_DECLARE_NATIVE_FUNCTION(match_media);
+    JS_DECLARE_NATIVE_FUNCTION(get_selection);
 
     JS_DECLARE_NATIVE_FUNCTION(queue_microtask);
 
