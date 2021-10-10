@@ -63,18 +63,18 @@ CodePoint code_point_at(Utf16View const& string, size_t position)
     auto code_point = static_cast<u32>(first);
 
     if (!Utf16View::is_high_surrogate(first) && !Utf16View::is_low_surrogate(first))
-        return { code_point, 1, false };
+        return { false, code_point, 1 };
 
     if (Utf16View::is_low_surrogate(first) || (position + 1 == string.length_in_code_units()))
-        return { code_point, 1, true };
+        return { true, code_point, 1 };
 
     auto second = string.code_unit_at(position + 1);
 
     if (!Utf16View::is_low_surrogate(second))
-        return { code_point, 1, true };
+        return { true, code_point, 1 };
 
     code_point = Utf16View::decode_surrogate_pair(first, second);
-    return { code_point, 2, false };
+    return { false, code_point, 2 };
 }
 
 // 6.1.4.1 StringIndexOf ( string, searchValue, fromIndex ), https://tc39.es/ecma262/#sec-stringindexof
