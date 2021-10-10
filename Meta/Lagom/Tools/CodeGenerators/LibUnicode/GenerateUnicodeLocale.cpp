@@ -24,10 +24,10 @@
 struct ListPatterns {
     String type;
     String style;
-    String start;
-    String middle;
-    String end;
-    String pair;
+    size_t start { 0 };
+    size_t middle { 0 };
+    size_t end { 0 };
+    size_t pair { 0 };
 };
 
 struct Locale {
@@ -364,10 +364,10 @@ static void parse_locale_list_patterns(String misc_path, UnicodeLocaleData& loca
         auto type = list_pattern_type(key);
         auto style = list_pattern_style(key);
 
-        auto start = value.as_object().get("start"sv).as_string();
-        auto middle = value.as_object().get("middle"sv).as_string();
-        auto end = value.as_object().get("end"sv).as_string();
-        auto pair = value.as_object().get("2"sv).as_string();
+        auto start = ensure_unique_string(locale_data, value.as_object().get("start"sv).as_string());
+        auto middle = ensure_unique_string(locale_data, value.as_object().get("middle"sv).as_string());
+        auto end = ensure_unique_string(locale_data, value.as_object().get("end"sv).as_string());
+        auto pair = ensure_unique_string(locale_data, value.as_object().get("2"sv).as_string());
 
         if (!locale_data.list_pattern_types.contains_slow(type))
             locale_data.list_pattern_types.append(type);
@@ -667,10 +667,10 @@ namespace Unicode {
 struct Patterns {
     ListPatternType type;
     ListPatternStyle style;
-    StringView start;
-    StringView middle;
-    StringView end;
-    StringView pair;
+    size_t start { 0 };
+    size_t middle { 0 };
+    size_t end { 0 };
+    size_t pair { 0 };
 };
 )~~~");
 
@@ -767,10 +767,10 @@ static constexpr Array<Patterns, @size@> @name@ { {)~~~");
         for (auto const& list_pattern : list_patterns) {
             generator.set("type"sv, String::formatted("ListPatternType::{}", format_identifier({}, list_pattern.type)));
             generator.set("style"sv, String::formatted("ListPatternStyle::{}", format_identifier({}, list_pattern.style)));
-            generator.set("start"sv, String::formatted("\"{}\"sv", list_pattern.start));
-            generator.set("middle"sv, String::formatted("\"{}\"sv", list_pattern.middle));
-            generator.set("end"sv, String::formatted("\"{}\"sv", list_pattern.end));
-            generator.set("pair"sv, String::formatted("\"{}\"sv", list_pattern.pair));
+            generator.set("start"sv, String::number(list_pattern.start));
+            generator.set("middle"sv, String::number(list_pattern.middle));
+            generator.set("end"sv, String::number(list_pattern.end));
+            generator.set("pair"sv, String::number(list_pattern.pair));
 
             generator.append(R"~~~(
     { @type@, @style@, @start@, @middle@, @end@, @pair@ },)~~~");
@@ -1137,8 +1137,14 @@ Optional<ListPatterns> get_locale_list_pattern_mapping(StringView locale, String
     auto const& locale_list_patterns = s_list_patterns.at(locale_index);
 
     for (auto const& list_patterns : locale_list_patterns) {
-        if ((list_patterns.type == type_value) && (list_patterns.style == style_value))
-            return ListPatterns { list_patterns.start, list_patterns.middle, list_patterns.end, list_patterns.pair };
+        if ((list_patterns.type == type_value) && (list_patterns.style == style_value)) {
+            auto const& start = s_string_list[list_patterns.start];
+            auto const& middle = s_string_list[list_patterns.middle];
+            auto const& end = s_string_list[list_patterns.end];
+            auto const& pair = s_string_list[list_patterns.pair];
+
+            return ListPatterns { start, middle, end, pair };
+        }
     }
 
     return {};
