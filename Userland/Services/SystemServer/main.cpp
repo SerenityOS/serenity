@@ -131,7 +131,6 @@ static void create_devfs_block_device(String name, mode_t mode, unsigned major, 
 
 static void populate_devfs_block_devices()
 {
-    struct stat cur_file_stat;
     Core::DirIterator di("/sys/dev/block/", Core::DirIterator::SkipParentAndBaseDir);
     if (di.has_error()) {
         warnln("Failed to open /sys/dev/block - {}", di.error());
@@ -152,7 +151,7 @@ static void populate_devfs_block_devices()
             break;
         }
         default:
-            warnln("Unknown block device {}:{}", major(cur_file_stat.st_rdev), minor(cur_file_stat.st_rdev));
+            warnln("Unknown block device {}:{}", major_number, minor_number);
             break;
         }
     }
