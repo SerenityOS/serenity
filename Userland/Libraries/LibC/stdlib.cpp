@@ -878,10 +878,10 @@ int mblen(char const* s, size_t n)
     return (MB_CUR_MAX > n) ? n : MB_CUR_MAX;
 }
 
-size_t mbstowcs(wchar_t*, const char*, size_t)
+size_t mbstowcs(wchar_t* pwcs, const char* s, size_t n)
 {
-    dbgln("FIXME: Implement mbstowcs()");
-    TODO();
+    static mbstate_t state = {};
+    return mbsrtowcs(pwcs, &s, n, &state);
 }
 
 int mbtowc(wchar_t* wch, const char* data, [[maybe_unused]] size_t data_size)
