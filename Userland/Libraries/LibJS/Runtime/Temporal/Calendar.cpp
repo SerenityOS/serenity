@@ -113,6 +113,31 @@ ThrowCompletionOr<Vector<String>> calendar_fields(GlobalObject& global_object, O
     return result;
 }
 
+// 12.1.6 CalendarMergeFields ( calendar, fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmergefields
+ThrowCompletionOr<Object*> calendar_merge_fields(GlobalObject& global_object, Object& calendar, Object& fields, Object& additional_fields)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let mergeFields be ? GetMethod(calendar, "mergeFields").
+    auto* merge_fields = TRY(Value(&calendar).get_method(global_object, vm.names.mergeFields));
+
+    // 2. If mergeFields is undefined, then
+    if (!merge_fields) {
+        // a. Return ? DefaultMergeFields(fields, additionalFields).
+        return TRY(default_merge_fields(global_object, fields, additional_fields));
+    }
+
+    // 3. Let result be ? Call(mergeFields, calendar, « fields, additionalFields »).
+    auto result = TRY(call(global_object, merge_fields, &calendar, &fields, &additional_fields));
+
+    // 4. If Type(result) is not Object, throw a TypeError exception.
+    if (!result.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, result.to_string_without_side_effects());
+
+    // 5. Return result.
+    return &result.as_object();
+}
+
 // 12.1.9 CalendarYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryear
 ThrowCompletionOr<double> calendar_year(GlobalObject& global_object, Object& calendar, Object& date_like)
 {
