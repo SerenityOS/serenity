@@ -30,7 +30,6 @@ int main(int argc, char** argv)
     }
 
     char const* groupname = nullptr;
-    gid_t gid = 0;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(groupname, "Group name", "group");
@@ -38,14 +37,14 @@ int main(int argc, char** argv)
 
     setgrent();
     auto* g = getgrnam(groupname);
-    gid = g->gr_gid;
-    endgrent();
 
     // Check if the group exists
     if (!g) {
         warnln("group {} does not exist", groupname);
         return 6;
     }
+    auto gid = g->gr_gid;
+    endgrent();
 
     // Search if the group is the primary group of an user
     setpwent();
