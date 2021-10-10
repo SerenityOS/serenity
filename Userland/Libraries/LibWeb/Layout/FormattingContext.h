@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/OwnPtr.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::Layout {
