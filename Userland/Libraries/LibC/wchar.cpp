@@ -319,10 +319,12 @@ int wcscoll(const wchar_t* ws1, const wchar_t* ws2)
     return wcscmp(ws1, ws2);
 }
 
-int wctob(wint_t)
+int wctob(wint_t c)
 {
-    dbgln("FIXME: Implement wctob()");
-    TODO();
+    if (c > 0x7f)
+        return EOF;
+
+    return static_cast<unsigned char>(c);
 }
 
 int mbsinit(const mbstate_t* state)
