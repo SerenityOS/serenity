@@ -14,10 +14,10 @@
 namespace Web::CSS {
 
 struct StyleProperty {
+    bool important { false };
     CSS::PropertyID property_id;
     NonnullRefPtr<StyleValue> value;
     String custom_name {};
-    bool important { false };
 };
 
 class CSSStyleDeclaration

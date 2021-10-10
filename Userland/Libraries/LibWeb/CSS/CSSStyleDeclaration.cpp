@@ -87,9 +87,9 @@ bool PropertyOwningCSSStyleDeclaration::set_property(PropertyID property_id, Str
     }
 
     m_properties.append(CSS::StyleProperty {
+        .important = false,
         .property_id = property_id,
         .value = new_value.release_nonnull(),
-        .important = false,
     });
     return true;
 }
