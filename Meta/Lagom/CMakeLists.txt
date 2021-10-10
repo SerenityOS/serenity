@@ -62,7 +62,7 @@ endif()
 
 include(wasm_spec_tests)
 
-add_compile_options(-Wno-unknown-warning-option -Wno-literal-suffix -Wno-deprecated-copy)
+add_compile_options(-Wno-unknown-warning-option -Wno-literal-suffix)
 add_compile_options(-O2)
 add_compile_options(-Wall -Wextra -Werror)
 add_compile_options(-fPIC -g)
