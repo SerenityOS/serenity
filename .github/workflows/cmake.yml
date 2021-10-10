@@ -152,6 +152,7 @@ jobs:
         # We build and run the Lagom tests in a separate job, and sanitizer builds take a good while longer than non-sanitized.
         run:  |
           cmake -S Meta/CMake/Superbuild -B Build/superbuild -GNinja \
+            -DENABLE_COMPILETIME_HEADER_CHECK=ON \
             -DSERENITY_ARCH=${{ matrix.arch }} \
             -DSERENITY_TOOLCHAIN=GNU \
             -DCMAKE_C_COMPILER=gcc-10 \
