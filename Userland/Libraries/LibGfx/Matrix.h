@@ -38,6 +38,12 @@ public:
         __builtin_memcpy(m_elements, other.elements(), sizeof(T) * N * N);
     }
 
+    Matrix& operator=(const Matrix& other)
+    {
+        __builtin_memcpy(m_elements, other.elements(), sizeof(T) * N * N);
+        return *this;
+    }
+
     constexpr auto elements() const { return m_elements; }
     constexpr auto elements() { return m_elements; }
 
