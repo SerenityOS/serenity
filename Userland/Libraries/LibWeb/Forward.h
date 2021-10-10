@@ -211,6 +211,10 @@ namespace Web::RequestIdleCallback {
 class IdleDeadline;
 }
 
+namespace Web::ResizeObserver {
+class ResizeObserver;
+}
+
 namespace Web::SVG {
 class SVGElement;
 class SVGGeometryElement;
@@ -396,6 +400,7 @@ class PerformanceTimingWrapper;
 class PerformanceWrapper;
 class ProcessingInstructionWrapper;
 class ProgressEventWrapper;
+class ResizeObserverWrapper;
 class ScreenWrapper;
 class ScriptExecutionContext;
 class SubmitEventWrapper;

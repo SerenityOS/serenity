@@ -740,7 +740,7 @@ int main(int argc, char** argv)
 
     auto interface = IDL::parse_interface(path, data, import_base_path);
 
-    if (namespace_.is_one_of("Crypto", "CSS", "DOM", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "NavigationTiming", "RequestIdleCallback", "SVG", "Selection", "XHR", "URL")) {
+    if (namespace_.is_one_of("Crypto", "CSS", "DOM", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "NavigationTiming", "RequestIdleCallback", "ResizeObserver", "SVG", "Selection", "XHR", "URL")) {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::");
@@ -1389,6 +1389,8 @@ static void generate_header(IDL::Interface const& interface)
 #    include <LibWeb/NavigationTiming/@name@.h>
 #elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
 #    include <LibWeb/RequestIdleCallback/@name@.h>
+#elif __has_include(<LibWeb/ResizeObserver/@name@.h>)
+#    include <LibWeb/ResizeObserver/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
 #elif __has_include(<LibWeb/Selection/@name@.h>)
@@ -1552,6 +1554,7 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/Origin.h>
+#include <LibWeb/ResizeObserver/ResizeObserver.h>
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
@@ -1559,6 +1562,7 @@ using namespace Web::DOM;
 using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::RequestIdleCallback;
+using namespace Web::ResizeObserver;
 using namespace Web::Selection;
 
 namespace Web::Bindings {
@@ -2473,6 +2477,8 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #    include <LibWeb/NavigationTiming/@name@.h>
 #elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
 #    include <LibWeb/RequestIdleCallback/@name@.h>
+#elif __has_include(<LibWeb/ResizeObserver/@name@.h>)
+#    include <LibWeb/ResizeObserver/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
 #elif __has_include(<LibWeb/Selection/@name@.h>)
@@ -2489,6 +2495,7 @@ using namespace Web::DOM;
 using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::RequestIdleCallback;
+using namespace Web::ResizeObserver;
 using namespace Web::Selection;
 using namespace Web::UIEvents;
 using namespace Web::XHR;
@@ -2783,6 +2790,8 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #    include <LibWeb/NavigationTiming/@name@.h>
 #elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
 #    include <LibWeb/RequestIdleCallback/@name@.h>
+#elif __has_include(<LibWeb/ResizeObserver/@name@.h>)
+#    include <LibWeb/ResizeObserver/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
 #elif __has_include(<LibWeb/Selection/@name@.h>)
@@ -2813,6 +2822,8 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #    include <LibWeb/NavigationTiming/@iterator_name@.h>
 #elif __has_include(<LibWeb/RequestIdleCallback/@iterator_name@.h>)
 #    include <LibWeb/RequestIdleCallback/@iterator_name@.h>
+#elif __has_include(<LibWeb/ResizeObserver/@name@.h>)
+#    include <LibWeb/ResizeObserver/@name@.h>
 #elif __has_include(<LibWeb/SVG/@iterator_name@.h>)
 #    include <LibWeb/SVG/@iterator_name@.h>
 #elif __has_include(<LibWeb/Selection/@name@.h>)
@@ -2834,6 +2845,7 @@ using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::NavigationTiming;
 using namespace Web::RequestIdleCallback;
+using namespace Web::ResizeObserver;
 using namespace Web::Selection;
 using namespace Web::XHR;
 using namespace Web::URL;
@@ -3256,6 +3268,8 @@ static void generate_iterator_header(IDL::Interface const& interface)
 #    include <LibWeb/NavigationTiming/@name@.h>
 #elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
 #    include <LibWeb/RequestIdleCallback/@name@.h>
+#elif __has_include(<LibWeb/ResizeObserver/@name@.h>)
+#    include <LibWeb/ResizeObserver/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
 #elif __has_include(<LibWeb/Selection/@name@.h>)
@@ -3324,6 +3338,7 @@ using namespace Web::DOM;
 using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::RequestIdleCallback;
+using namespace Web::ResizeObserver;
 using namespace Web::Selection;
 
 namespace Web::Bindings {
@@ -3438,6 +3453,8 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface)
 #    include <LibWeb/NavigationTiming/@name@.h>
 #elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
 #    include <LibWeb/RequestIdleCallback/@name@.h>
+#elif __has_include(<LibWeb/ResizeObserver/@name@.h>)
+#    include <LibWeb/ResizeObserver/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
 #elif __has_include(<LibWeb/Selection/@name@.h>)
@@ -3455,6 +3472,7 @@ using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::NavigationTiming;
 using namespace Web::RequestIdleCallback;
+using namespace Web::ResizeObserver;
 using namespace Web::Selection;
 using namespace Web::XHR;
 using namespace Web::URL;

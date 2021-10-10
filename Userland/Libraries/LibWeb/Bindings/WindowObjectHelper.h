@@ -233,6 +233,8 @@
 #include <LibWeb/Bindings/ProgressEventPrototype.h>
 #include <LibWeb/Bindings/RangeConstructor.h>
 #include <LibWeb/Bindings/RangePrototype.h>
+#include <LibWeb/Bindings/ResizeObserverConstructor.h>
+#include <LibWeb/Bindings/ResizeObserverPrototype.h>
 #include <LibWeb/Bindings/SVGElementConstructor.h>
 #include <LibWeb/Bindings/SVGElementPrototype.h>
 #include <LibWeb/Bindings/SVGGeometryElementConstructor.h>
@@ -395,6 +397,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(ProcessingInstruction)     \
     ADD_WINDOW_OBJECT_INTERFACE(ProgressEvent)             \
     ADD_WINDOW_OBJECT_INTERFACE(Range)                     \
+    ADD_WINDOW_OBJECT_INTERFACE(ResizeObserver)            \
     ADD_WINDOW_OBJECT_INTERFACE(Screen)                    \
     ADD_WINDOW_OBJECT_INTERFACE(Selection)                 \
     ADD_WINDOW_OBJECT_INTERFACE(ShadowRoot)                \
