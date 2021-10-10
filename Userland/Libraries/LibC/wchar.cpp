@@ -505,4 +505,38 @@ size_t wcsrtombs(char* dest, const wchar_t** src, size_t len, mbstate_t* ps)
         written += ret;
     }
 }
+
+size_t mbsrtowcs(wchar_t* dst, const char** src, size_t len, mbstate_t* ps)
+{
+    static mbstate_t _anonymous_state = {};
+
+    if (ps == nullptr)
+        ps = &_anonymous_state;
+
+    size_t written = 0;
+    while (written < len || !dst) {
+        // Convert next multibyte to wchar.
+        size_t ret = mbrtowc(dst, *src, MB_LEN_MAX, ps);
+
+        // Multibyte sequence is invalid.
+        if (ret == -1ul) {
+            errno = EILSEQ;
+            return (size_t)-1;
+        }
+
+        // Null byte has been reached.
+        if (**src == '\0') {
+            *src = nullptr;
+            return written;
+        }
+
+        *src += ret;
+        written += 1;
+        if (dst)
+            dst += 1;
+    }
+
+    // If we are here, we have written `len` wchars, but not reached the null byte.
+    return written;
+}
 }
