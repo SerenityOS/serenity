@@ -156,11 +156,14 @@ int main(int argc, char** argv)
 
         *(MACAddress*)&arp_req.arp_ha.sa_data[0] = hw_address.value();
 
-        int rc;
+        int rc = 0;
         if (flag_set)
             rc = ioctl(fd, SIOCSARP, &arp_req);
-        if (flag_delete)
-            rc = ioctl(fd, SIOCDARP, &arp_req);
+        if (flag_delete) {
+            int rc2 = ioctl(fd, SIOCDARP, &arp_req);
+            if (!rc2)
+                rc = rc2;
+        }
 
         if (rc < 0) {
             perror("ioctl");
