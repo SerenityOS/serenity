@@ -1060,14 +1060,6 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
         return AdoptionAgencyAlgorithmOutcome::DoNothing;
     }
 
-    size_t outer_loop_counter = 0;
-
-    //OuterLoop:
-    if (outer_loop_counter >= 8)
-        return AdoptionAgencyAlgorithmOutcome::DoNothing;
-
-    ++outer_loop_counter;
-
     auto formatting_element = m_list_of_active_formatting_elements.last_element_with_tag_name_before_marker(subject);
     if (!formatting_element)
         return AdoptionAgencyAlgorithmOutcome::RunAnyOtherEndTagSteps;
