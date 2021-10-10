@@ -1834,9 +1834,9 @@ Optional<StyleProperty> Parser::convert_to_style_property(StyleDeclarationRule c
     }
 
     if (property_id == PropertyID::Custom) {
-        return StyleProperty { property_id, value.release_value(), declaration.m_name, declaration.m_important };
+        return StyleProperty { declaration.m_important, property_id, value.release_value(), declaration.m_name };
     } else {
-        return StyleProperty { property_id, value.release_value(), {}, declaration.m_important };
+        return StyleProperty { declaration.m_important, property_id, value.release_value(), {} };
     }
 }
 
