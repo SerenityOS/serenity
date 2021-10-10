@@ -29,6 +29,7 @@
 #include <sys/wait.h>
 #include <syscall.h>
 #include <unistd.h>
+#include <wchar.h>
 
 static void strtons(const char* str, char** endptr)
 {
@@ -898,10 +899,15 @@ int mbtowc(wchar_t* wch, const char* data, [[maybe_unused]] size_t data_size)
     return 0;
 }
 
-int wctomb(char*, wchar_t)
+int wctomb(char* s, wchar_t wc)
 {
-    dbgln("FIXME: Implement wctomb()");
-    TODO();
+    static mbstate_t _internal_state = {};
+
+    // nullptr asks whether we have state-dependent encodings, but we don't have any.
+    if (s == nullptr)
+        return 0;
+
+    return static_cast<int>(wcrtomb(s, wc, &_internal_state));
 }
 
 size_t wcstombs(char* dest, const wchar_t* src, size_t max)
