@@ -63,6 +63,8 @@ int main(int argc, char** argv)
     int uid_column = -1;
     int pid_column = -1;
     int ppid_column = -1;
+    int pgid_column = -1;
+    int sid_column = -1;
     int state_column = -1;
     int tty_column = -1;
     int cmd_column = -1;
@@ -76,6 +78,8 @@ int main(int argc, char** argv)
         uid_column = add_column("UID", Alignment::Left);
         pid_column = add_column("PID", Alignment::Right);
         ppid_column = add_column("PPID", Alignment::Right);
+        pgid_column = add_column("PGID", Alignment::Right);
+        sid_column = add_column("SID", Alignment::Right);
         state_column = add_column("STATE", Alignment::Left);
         tty_column = add_column("TTY", Alignment::Left);
         cmd_column = add_column("CMD", Alignment::Left);
@@ -150,6 +154,10 @@ int main(int argc, char** argv)
             row[pid_column] = String::number(process.pid);
         if (ppid_column != -1)
             row[ppid_column] = String::number(process.ppid);
+        if (pgid_column != -1)
+            row[pgid_column] = String::number(process.pgid);
+        if (sid_column != -1)
+            row[sid_column] = String::number(process.sid);
         if (tty_column != -1)
             row[tty_column] = tty;
         if (state_column != -1)
