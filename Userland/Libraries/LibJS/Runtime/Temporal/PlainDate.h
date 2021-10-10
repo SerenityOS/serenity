@@ -41,8 +41,16 @@ struct ISODate {
     u8 day;
 };
 
+struct DifferenceISODateResult {
+    double years;
+    double months;
+    double weeks;
+    double days;
+};
+
 ThrowCompletionOr<PlainDate*> create_temporal_date(GlobalObject&, i32 iso_year, u8 iso_month, u8 iso_day, Object& calendar, FunctionObject const* new_target = nullptr);
 ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject&, Value item, Object* options = nullptr);
+DifferenceISODateResult difference_iso_date(GlobalObject&, i32 year1, u8 month1, u8 day1, i32 year2, u8 month2, u8 day2, StringView largest_unit);
 ThrowCompletionOr<ISODate> regulate_iso_date(GlobalObject&, double year, double month, double day, StringView overflow);
 bool is_valid_iso_date(i32 year, u8 month, u8 day);
 ISODate balance_iso_date(double year, double month, double day);

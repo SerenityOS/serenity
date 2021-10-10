@@ -142,6 +142,191 @@ ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Valu
     return create_temporal_date(global_object, result.year, result.month, result.day, *calendar);
 }
 
+// 3.5.3 DifferenceISODate ( y1, m1, d1, y2, m2, d2, largestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-differenceisodate
+DifferenceISODateResult difference_iso_date(GlobalObject& global_object, i32 year1, u8 month1, u8 day1, i32 year2, u8 month2, u8 day2, StringView largest_unit)
+{
+    // 1. Assert: largestUnit is one of "year", "month", "week", or "day".
+    VERIFY(largest_unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv));
+
+    // 2. If largestUnit is "year" or "month", then
+    if (largest_unit.is_one_of("year"sv, "month"sv)) {
+        // a. Let sign be -(! CompareISODate(y1, m1, d1, y2, m2, d2)).
+        auto sign = -compare_iso_date(year1, month1, day1, year2, month2, day2);
+
+        // b. If sign is 0, return the Record { [[Years]]: 0, [[Months]]: 0, [[Weeks]]: 0, [[Days]]: 0 }.
+        if (sign == 0)
+            return { .years = 0, .months = 0, .weeks = 0, .days = 0 };
+
+        // c. Let start be the Record { [[Year]]: y1, [[Month]]: m1, [[Day]]: d1 }.
+        auto start = ISODate { .year = year1, .month = month1, .day = day1 };
+
+        // d. Let end be the Record { [[Year]]: y2, [[Month]]: m2, [[Day]]: d2 }.
+        auto end = ISODate { .year = year2, .month = month2, .day = day2 };
+
+        // e. Let years be end.[[Year]] − start.[[Year]].
+        double years = end.year - start.year;
+
+        // f. Let mid be ! AddISODate(y1, m1, d1, years, 0, 0, 0, "constrain").
+        auto mid = MUST(add_iso_date(global_object, year1, month1, day1, years, 0, 0, 0, "constrain"sv));
+
+        // g. Let midSign be -(! CompareISODate(mid.[[Year]], mid.[[Month]], mid.[[Day]], y2, m2, d2)).
+        auto mid_sign = -compare_iso_date(mid.year, mid.month, mid.day, year2, month2, day2);
+
+        // h. If midSign is 0, then
+        if (mid_sign == 0) {
+            // i. If largestUnit is "year", return the Record { [[Years]]: years, [[Months]]: 0, [[Weeks]]: 0, [[Days]]: 0 }.
+            if (largest_unit == "year"sv)
+                return { .years = years, .months = 0, .weeks = 0, .days = 0 };
+
+            // ii. Return the Record { [[Years]]: 0, [[Months]]: years × 12, [[Weeks]]: 0, [[Days]]: 0 }.
+            return { .years = 0, .months = years * 12, .weeks = 0, .days = 0 };
+        }
+
+        // i. Let months be end.[[Month]] − start.[[Month]].
+        double months = end.month - start.month;
+
+        // j. If midSign is not equal to sign, then
+        if (mid_sign != sign) {
+            // i. Set years to years - sign.
+            years -= sign;
+
+            // ii. Set months to months + sign × 12.
+            months += sign * 12;
+        }
+
+        // k. Set mid to ! AddISODate(y1, m1, d1, years, months, 0, 0, "constrain").
+        mid = MUST(add_iso_date(global_object, year1, month1, day1, years, months, 0, 0, "constrain"sv));
+
+        // l. Set midSign to -(! CompareISODate(mid.[[Year]], mid.[[Month]], mid.[[Day]], y2, m2, d2)).
+        mid_sign = -compare_iso_date(mid.year, mid.month, mid.day, year2, month2, day2);
+
+        // m. If midSign is 0, then
+        if (mid_sign == 0) {
+            // i. If largestUnit is "year", return the Record { [[Years]]: years, [[Months]]: months, [[Weeks]]: 0, [[Days]]: 0 }.
+            if (largest_unit == "year"sv)
+                return { .years = years, .months = months, .weeks = 0, .days = 0 };
+
+            // ii. Return the Record { [[Years]]: 0, [[Months]]: months + years × 12, [[Weeks]]: 0, [[Days]]: 0 }.
+            return { .years = 0, .months = months + years * 12, .weeks = 0, .days = 0 };
+        }
+
+        // n. If midSign is not equal to sign, then
+        if (mid_sign != sign) {
+            // i. Set months to months - sign.
+            months -= sign;
+
+            // ii. If months is equal to -sign, then
+            if (months == -sign) {
+                // 1. Set years to years - sign.
+                years -= sign;
+
+                // 2. Set months to 11 × sign.
+                months = 11 * sign;
+            }
+
+            // iii. Set mid to ! AddISODate(y1, m1, d1, years, months, 0, 0, "constrain").
+            mid = MUST(add_iso_date(global_object, year1, month1, day1, years, months, 0, 0, "constrain"sv));
+
+            // FIXME: This is not used (spec issue, see https://github.com/tc39/proposal-temporal/issues/1483).
+            // iv. Set midSign to -(! CompareISODate(mid.[[Year]], mid.[[Month]], mid.[[Day]], y2, m2, d2)).
+            mid_sign = -compare_iso_date(mid.year, mid.month, mid.day, year2, month2, day2);
+        }
+
+        // o. Let days be 0.
+        double days = 0;
+
+        // p. If mid.[[Month]] = end.[[Month]], then
+        if (mid.month == end.month) {
+            // i. Assert: mid.[[Year]] = end.[[Year]].
+            VERIFY(mid.year == end.year);
+
+            // ii. Set days to end.[[Day]] - mid.[[Day]].
+            days = end.day - mid.day;
+        }
+        // q. Else if sign < 0, set days to -mid.[[Day]] - (! ISODaysInMonth(end.[[Year]], end.[[Month]]) - end.[[Day]]).
+        else if (sign < 0) {
+            days = -mid.day - (iso_days_in_month(end.year, end.month) - end.day);
+        }
+        // r. Else, set days to end.[[Day]] + (! ISODaysInMonth(mid.[[Year]], mid.[[Month]]) - mid.[[Day]]).
+        else {
+            days = end.day + (iso_days_in_month(mid.year, mid.month) - mid.day);
+        }
+
+        // s. If largestUnit is "month", then
+        if (largest_unit == "month"sv) {
+            // i. Set months to months + years × 12.
+            months += years * 12;
+
+            // ii. Set years to 0.
+            years = 0;
+        }
+
+        // t. Return the Record { [[Years]]: years, [[Months]]: months, [[Weeks]]: 0, [[Days]]: days }.
+        return { .years = years, .months = months, .weeks = 0, .days = days };
+    }
+    // 3. If largestUnit is "day" or "week", then
+    else {
+        ISODate smaller;
+        ISODate greater;
+        i8 sign;
+
+        // a. If ! CompareISODate(y1, m1, d1, y2, m2, d2) < 0, then
+        if (compare_iso_date(year1, month1, day1, year2, month2, day2) < 0) {
+            // i. Let smaller be the Record { [[Year]]: y1, [[Month]]: m1, [[Day]]: d1 }.
+            smaller = { .year = year1, .month = month1, .day = day1 };
+
+            // ii. Let greater be the Record { [[Year]]: y2, [[Month]]: m2, [[Day]]: d2 }.
+            greater = { .year = year2, .month = month2, .day = day2 };
+
+            // iii. Let sign be 1.
+            sign = 1;
+        }
+        // b. Else,
+        else {
+            // i. Let smaller be the Record { [[Year]]: y2, [[Month]]: m2, [[Day]]: d2 }.
+            smaller = { .year = year2, .month = month2, .day = day2 };
+
+            // ii. Let greater be the Record { [[Year]]: y1, [[Month]]: m1, [[Day]]: d1 }.
+            greater = { .year = year1, .month = month1, .day = day1 };
+
+            // iii. Let sign be −1.
+            sign = -1;
+        }
+
+        // c. Let days be ! ToISODayOfYear(greater.[[Year]], greater.[[Month]], greater.[[Day]]) − ! ToISODayOfYear(smaller.[[Year]], smaller.[[Month]], smaller.[[Day]]).
+        double days = to_iso_day_of_year(greater.year, greater.month, greater.day) - to_iso_day_of_year(smaller.year, smaller.month, smaller.day);
+
+        // d. Let year be smaller.[[Year]].
+        auto year = smaller.year;
+
+        // e. Repeat, while year < greater.[[Year]],
+        while (year < greater.year) {
+            // i. Set days to days + ! ISODaysInYear(year).
+            days += iso_days_in_year(year);
+
+            // ii. Set year to year + 1.
+            year++;
+        }
+
+        // f. Let weeks be 0.
+        double weeks = 0;
+
+        // g. If largestUnit is "week", then
+        if (largest_unit == "week"sv) {
+            // i. Set weeks to floor(days / 7).
+            weeks = floor(days / 7);
+
+            // ii. Set days to days modulo 7.
+            days = fmod(days, 7);
+        }
+
+        // h. Return the Record { [[Years]]: 0, [[Months]]: 0, [[Weeks]]: weeks × sign, [[Days]]: days × sign }.
+        // NOTE: We set weeks and days conditionally to avoid negative zero for 0 * -1.
+        return { .years = 0, .months = 0, .weeks = (weeks != 0) ? weeks * sign : 0, .days = (days != 0) ? days * sign : 0 };
+    }
+    VERIFY_NOT_REACHED();
+}
+
 // 3.5.4 RegulateISODate ( year, month, day, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulateisodate
 ThrowCompletionOr<ISODate> regulate_iso_date(GlobalObject& global_object, double year, double month, double day, StringView overflow)
 {

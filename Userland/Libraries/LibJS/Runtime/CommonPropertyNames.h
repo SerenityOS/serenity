@@ -117,6 +117,7 @@ namespace JS {
     P(currencySign)                          \
     P(dateAdd)                               \
     P(dateFromFields)                        \
+    P(dateUntil)                             \
     P(day)                                   \
     P(dayOfWeek)                             \
     P(dayOfYear)                             \
