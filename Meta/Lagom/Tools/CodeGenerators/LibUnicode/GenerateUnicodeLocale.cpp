@@ -43,10 +43,10 @@ struct Locale {
 };
 
 struct CanonicalLanguageID {
-    String language {};
-    String script {};
-    String region {};
-    Vector<String> variants {};
+    size_t language { 0 };
+    size_t script { 0 };
+    size_t region { 0 };
+    Vector<size_t> variants {};
 };
 
 struct LanguageMapping {
@@ -95,7 +95,16 @@ static size_t ensure_unique_string(UnicodeLocaleData& locale_data, String string
     return index;
 }
 
-static Optional<CanonicalLanguageID> parse_language(StringView language)
+static StringView get_unique_string(UnicodeLocaleData& locale_data, size_t index)
+{
+    if (index == 0)
+        return {};
+
+    VERIFY(index <= locale_data.unique_strings.size());
+    return locale_data.unique_strings.at(index - 1);
+}
+
+static Optional<CanonicalLanguageID> parse_language(UnicodeLocaleData& locale_data, StringView language)
 {
     CanonicalLanguageID language_id {};
 
@@ -104,7 +113,7 @@ static Optional<CanonicalLanguageID> parse_language(StringView language)
     size_t index = 0;
 
     if (Unicode::is_unicode_language_subtag(segments[index])) {
-        language_id.language = segments[index];
+        language_id.language = ensure_unique_string(locale_data, segments[index]);
         if (segments.size() == ++index)
             return language_id;
     } else {
@@ -112,13 +121,13 @@ static Optional<CanonicalLanguageID> parse_language(StringView language)
     }
 
     if (Unicode::is_unicode_script_subtag(segments[index])) {
-        language_id.script = segments[index];
+        language_id.script = ensure_unique_string(locale_data, segments[index]);
         if (segments.size() == ++index)
             return language_id;
     }
 
     if (Unicode::is_unicode_region_subtag(segments[index])) {
-        language_id.region = segments[index];
+        language_id.region = ensure_unique_string(locale_data, segments[index]);
         if (segments.size() == ++index)
             return language_id;
     }
@@ -126,19 +135,19 @@ static Optional<CanonicalLanguageID> parse_language(StringView language)
     while (index < segments.size()) {
         if (!Unicode::is_unicode_variant_subtag(segments[index]))
             return {};
-        language_id.variants.append(segments[index++]);
+        language_id.variants.append(ensure_unique_string(locale_data, segments[index++]));
     }
 
     return language_id;
 }
 
-static Optional<LanguageMapping> parse_language_mapping(StringView key, StringView alias)
+static Optional<LanguageMapping> parse_language_mapping(UnicodeLocaleData& locale_data, StringView key, StringView alias)
 {
-    auto parsed_key = parse_language(key);
+    auto parsed_key = parse_language(locale_data, key);
     if (!parsed_key.has_value())
         return {};
 
-    auto parsed_alias = parse_language(alias);
+    auto parsed_alias = parse_language(locale_data, alias);
     if (!parsed_alias.has_value())
         return {};
 
@@ -166,7 +175,7 @@ static void parse_core_aliases(String core_supplemental_path, UnicodeLocaleData&
             auto alias = value.as_object().get("_replacement"sv).as_string();
 
             if (key.contains('-')) {
-                auto mapping = parse_language_mapping(key, alias);
+                auto mapping = parse_language_mapping(locale_data, key, alias);
                 if (!mapping.has_value())
                     return;
 
@@ -202,7 +211,7 @@ static void parse_likely_subtags(String core_supplemental_path, UnicodeLocaleDat
     auto const& likely_subtags_object = supplemental_object.as_object().get("likelySubtags"sv);
 
     likely_subtags_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
-        auto mapping = parse_language_mapping(key, value.as_string());
+        auto mapping = parse_language_mapping(locale_data, key, value.as_string());
         if (!mapping.has_value())
             return;
 
@@ -474,17 +483,17 @@ static void parse_all_locales(String core_path, String locale_names_path, String
     parse_core_aliases(core_supplemental_path.string(), locale_data);
     parse_likely_subtags(core_supplemental_path.string(), locale_data);
 
-    auto remove_variants_from_path = [](String path) -> Optional<String> {
-        auto parsed_locale = parse_language(LexicalPath::basename(path));
+    auto remove_variants_from_path = [&](String path) -> Optional<String> {
+        auto parsed_locale = parse_language(locale_data, LexicalPath::basename(path));
         if (!parsed_locale.has_value())
             return {};
 
         StringBuilder builder;
-        builder.append(parsed_locale->language);
-        if (!parsed_locale->script.is_empty())
-            builder.appendff("-{}", parsed_locale->script);
-        if (!parsed_locale->region.is_empty())
-            builder.appendff("-{}", parsed_locale->region);
+        builder.append(get_unique_string(locale_data, parsed_locale->language));
+        if (auto script = get_unique_string(locale_data, parsed_locale->script); !script.is_empty())
+            builder.appendff("-{}", script);
+        if (auto region = get_unique_string(locale_data, parsed_locale->region); !region.is_empty())
+            builder.appendff("-{}", region);
 
         return builder.build();
     };
@@ -702,11 +711,8 @@ static constexpr Array<StringView, @strings_size@ + 1> s_string_list { {
         return String::formatted(format, mapping_name);
     };
 
-    auto append_string = [&](StringView value) {
-        if (value.is_empty())
-            generator.append(", {}"sv);
-        else
-            generator.append(String::formatted(", \"{}\"sv", value));
+    auto append_index = [&](size_t index) {
+        generator.append(String::formatted(", {}", index));
     };
 
     auto append_list_and_size = [&](auto const& list) {
@@ -719,7 +725,7 @@ static constexpr Array<StringView, @strings_size@ + 1> s_string_list { {
         generator.append(", {");
         for (auto const& item : list) {
             generator.append(first ? " " : ", ");
-            generator.append(String::formatted("\"{}\"sv", item));
+            generator.append(String::number(item));
             first = false;
         }
         generator.append(String::formatted(" }}, {}", list.size()));
@@ -834,13 +840,13 @@ struct CanonicalLanguageID {
         Unicode::LanguageID language_id {};
         language_id.variants.ensure_capacity(variants_size);
 
-        language_id.language = language.to_string();
-        if (!script.is_empty())
-            language_id.script = script.to_string();
-        if (!region.is_empty())
-            language_id.region = region.to_string();
+        language_id.language = s_string_list[language];
+        if (script != 0)
+            language_id.script = s_string_list[script];
+        if (region != 0)
+            language_id.region = s_string_list[region];
         for (size_t i = 0; i < variants_size; ++i)
-            language_id.variants.append(variants[i].to_string());
+            language_id.variants.append(s_string_list[variants[i]]);
 
         return language_id;
     }
@@ -852,17 +858,17 @@ struct CanonicalLanguageID {
             return false;
 
         for (size_t i = 0; i < variants_size; ++i) {
-            if (variants[i] != other_variants[i])
+            if (s_string_list[variants[i]] != other_variants[i])
                 return false;
         }
 
         return true;
     };
 
-    StringView language {};
-    StringView script {};
-    StringView region {};
-    Array<StringView, @variants_size@> variants {};
+    size_t language { 0 };
+    size_t script { 0 };
+    size_t region { 0 };
+    Array<size_t, @variants_size@> variants {};
     size_t variants_size { 0 };
 
 };
@@ -881,9 +887,9 @@ struct LanguageMapping {
 static constexpr Array<LanguageMapping, @size@> s_@name@ { {
 )~~~");
 
-        quick_sort(mappings, [](auto const& lhs, auto const& rhs) {
-            auto const& lhs_language = lhs.key.language;
-            auto const& rhs_language = rhs.key.language;
+        quick_sort(mappings, [&](auto const& lhs, auto const& rhs) {
+            auto const& lhs_language = get_unique_string(locale_data, lhs.key.language);
+            auto const& rhs_language = get_unique_string(locale_data, rhs.key.language);
 
             // Sort the keys such that "und" language tags are at the end, as those are less specific.
             if (lhs_language.starts_with("und"sv) && !rhs_language.starts_with("und"sv))
@@ -894,18 +900,18 @@ static constexpr Array<LanguageMapping, @size@> s_@name@ { {
         });
 
         for (auto const& mapping : mappings) {
-            generator.set("language"sv, mapping.key.language);
-            generator.append("    { { \"@language@\"sv");
+            generator.set("language"sv, String::number(mapping.key.language));
+            generator.append("    { { @language@");
 
-            append_string(mapping.key.script);
-            append_string(mapping.key.region);
+            append_index(mapping.key.script);
+            append_index(mapping.key.region);
             append_list_and_size(mapping.key.variants);
 
-            generator.set("language"sv, mapping.alias.language);
-            generator.append(" }, { \"@language@\"sv");
+            generator.set("language"sv, String::number(mapping.alias.language));
+            generator.append(" }, { @language@");
 
-            append_string(mapping.alias.script);
-            append_string(mapping.alias.region);
+            append_index(mapping.alias.script);
+            append_index(mapping.alias.region);
             append_list_and_size(mapping.alias.variants);
 
             generator.append(" } },\n");
@@ -933,7 +939,7 @@ static LanguageMapping const* resolve_likely_subtag(Unicode::LanguageID const& l
     auto state = State::LanguageScriptRegion;
 
     while (state != State::Done) {
-        CanonicalLanguageID search_key;
+        Unicode::LanguageID search_key;
 
         switch (state) {
         case State::LanguageScriptRegion:
@@ -983,12 +989,20 @@ static LanguageMapping const* resolve_likely_subtag(Unicode::LanguageID const& l
         }
 
         for (auto const& map : s_likely_subtags) {
-            if (map.key.language != search_key.language)
+            auto const& key_language = s_string_list[map.key.language];
+            auto const& key_script = s_string_list[map.key.script];
+            auto const& key_region  = s_string_list[map.key.region];
+
+            if (key_language != search_key.language)
                 continue;
-            if (map.key.script != search_key.script)
-                continue;
-            if (map.key.region != search_key.region)
-                continue;
+            if (!key_script.is_empty() || search_key.script.has_value()) {
+                if (key_script != search_key.script)
+                    continue;
+            }
+            if (!key_region.is_empty() || search_key.region.has_value()) {
+                if (key_region != search_key.region)
+                    continue;
+            }
 
             return &map;
         }
@@ -1153,11 +1167,15 @@ Optional<ListPatterns> get_locale_list_pattern_mapping(StringView locale, String
 void resolve_complex_language_aliases(Unicode::LanguageID& language_id)
 {
     for (auto const& map : s_complex_alias) {
-        if ((map.key.language != language_id.language) && (map.key.language != "und"sv))
+        auto const& key_language = s_string_list[map.key.language];
+        auto const& key_script = s_string_list[map.key.script];
+        auto const& key_region  = s_string_list[map.key.region];
+
+        if ((key_language != language_id.language) && (key_language != "und"sv))
             continue;
-        if (!map.key.script.is_empty() && (map.key.script != language_id.script))
+        if (!key_script.is_empty() && (key_script != language_id.script))
             continue;
-        if (!map.key.region.is_empty() && (map.key.region != language_id.region))
+        if (!key_region.is_empty() && (key_region != language_id.region))
             continue;
         if (!map.key.matches_variants(language_id.variants))
             continue;
@@ -1166,9 +1184,9 @@ void resolve_complex_language_aliases(Unicode::LanguageID& language_id)
 
         if (alias.language == "und"sv)
             alias.language = move(language_id.language);
-        if (map.key.script.is_empty() && !alias.script.has_value())
+        if (key_script.is_empty() && !alias.script.has_value())
             alias.script = move(language_id.script);
-        if (map.key.region.is_empty() && !alias.region.has_value())
+        if (key_region.is_empty() && !alias.region.has_value())
             alias.region = move(language_id.region);
         if (map.key.variants_size == 0 && alias.variants.is_empty())
             alias.variants = move(language_id.variants);
@@ -1186,15 +1204,20 @@ Optional<Unicode::LanguageID> add_likely_subtags(Unicode::LanguageID const& lang
         return {};
 
     auto maximized = language_id;
-    auto const& key = likely_subtag->key;
-    auto const& alias = likely_subtag->alias;
+
+    auto const& key_script = s_string_list[likely_subtag->key.script];
+    auto const& key_region = s_string_list[likely_subtag->key.region];
+
+    auto const& alias_language = s_string_list[likely_subtag->alias.language];
+    auto const& alias_script = s_string_list[likely_subtag->alias.script];
+    auto const& alias_region = s_string_list[likely_subtag->alias.region];
 
     if (maximized.language == "und"sv)
-        maximized.language = alias.language;
-    if (!maximized.script.has_value() || (!key.script.is_empty() && !alias.script.is_empty()))
-        maximized.script = alias.script;
-    if (!maximized.region.has_value() || (!key.region.is_empty() && !alias.region.is_empty()))
-        maximized.region = alias.region;
+        maximized.language = alias_language;
+    if (!maximized.script.has_value() || (!key_script.is_empty() && !alias_script.is_empty()))
+        maximized.script = alias_script;
+    if (!maximized.region.has_value() || (!key_region.is_empty() && !alias_region.is_empty()))
+        maximized.region = alias_region;
 
     return maximized;
 }
@@ -1202,7 +1225,7 @@ Optional<Unicode::LanguageID> add_likely_subtags(Unicode::LanguageID const& lang
 Optional<String> resolve_most_likely_territory(Unicode::LanguageID const& language_id)
 {
     if (auto const* likely_subtag = resolve_likely_subtag(language_id); likely_subtag != nullptr)
-        return likely_subtag->alias.region;
+        return s_string_list[likely_subtag->alias.region];
     return {};
 }
 
