@@ -20,7 +20,7 @@ class MediaQuery : public RefCounted<MediaQuery> {
     friend class Parser;
 
 public:
-    ~MediaQuery() { }
+    ~MediaQuery() = default;
 
     // https://www.w3.org/TR/mediaqueries-4/#media-types
     enum class MediaType {
@@ -82,7 +82,7 @@ public:
     String to_string() const;
 
 private:
-    MediaQuery() { }
+    MediaQuery() = default;
 
     // https://www.w3.org/TR/mediaqueries-4/#mq-not
     bool m_negated { false };
