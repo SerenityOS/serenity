@@ -96,6 +96,8 @@ public:
     int screen_x() const;
     int screen_y() const;
 
+    Selection::Selection* get_selection();
+
 private:
     explicit Window(Document&);
 

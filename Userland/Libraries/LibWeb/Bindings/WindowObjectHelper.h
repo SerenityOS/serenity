@@ -231,6 +231,8 @@
 #include <LibWeb/Bindings/ProcessingInstructionPrototype.h>
 #include <LibWeb/Bindings/ProgressEventConstructor.h>
 #include <LibWeb/Bindings/ProgressEventPrototype.h>
+#include <LibWeb/Bindings/RangeConstructor.h>
+#include <LibWeb/Bindings/RangePrototype.h>
 #include <LibWeb/Bindings/SVGElementConstructor.h>
 #include <LibWeb/Bindings/SVGElementPrototype.h>
 #include <LibWeb/Bindings/SVGGeometryElementConstructor.h>
@@ -243,6 +245,8 @@
 #include <LibWeb/Bindings/SVGSVGElementPrototype.h>
 #include <LibWeb/Bindings/ScreenConstructor.h>
 #include <LibWeb/Bindings/ScreenPrototype.h>
+#include <LibWeb/Bindings/SelectionConstructor.h>
+#include <LibWeb/Bindings/SelectionPrototype.h>
 #include <LibWeb/Bindings/ShadowRootConstructor.h>
 #include <LibWeb/Bindings/ShadowRootPrototype.h>
 #include <LibWeb/Bindings/StyleSheetConstructor.h>
@@ -390,7 +394,9 @@
     ADD_WINDOW_OBJECT_INTERFACE(PerformanceTiming)         \
     ADD_WINDOW_OBJECT_INTERFACE(ProcessingInstruction)     \
     ADD_WINDOW_OBJECT_INTERFACE(ProgressEvent)             \
+    ADD_WINDOW_OBJECT_INTERFACE(Range)                     \
     ADD_WINDOW_OBJECT_INTERFACE(Screen)                    \
+    ADD_WINDOW_OBJECT_INTERFACE(Selection)                 \
     ADD_WINDOW_OBJECT_INTERFACE(ShadowRoot)                \
     ADD_WINDOW_OBJECT_INTERFACE(StyleSheet)                \
     ADD_WINDOW_OBJECT_INTERFACE(StyleSheetList)            \

@@ -253,6 +253,7 @@ set(SOURCES
     SVG/SVGSVGElement.cpp
     SVG/TagNames.cpp
     SVG/ViewBox.cpp
+    Selection/Selection.cpp
     StylePropertiesModel.cpp
     UIEvents/EventNames.cpp
     UIEvents/KeyboardEvent.cpp
@@ -476,6 +477,7 @@ libweb_js_wrapper(SVG/SVGGeometryElement)
 libweb_js_wrapper(SVG/SVGGraphicsElement)
 libweb_js_wrapper(SVG/SVGPathElement)
 libweb_js_wrapper(SVG/SVGSVGElement)
+libweb_js_wrapper(Selection/Selection)
 libweb_js_wrapper(UIEvents/KeyboardEvent)
 libweb_js_wrapper(UIEvents/MouseEvent)
 libweb_js_wrapper(UIEvents/UIEvent)

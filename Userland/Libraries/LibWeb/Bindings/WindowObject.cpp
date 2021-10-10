@@ -31,6 +31,7 @@
 #include <LibWeb/Bindings/PerformanceWrapper.h>
 #include <LibWeb/Bindings/Replaceable.h>
 #include <LibWeb/Bindings/ScreenWrapper.h>
+#include <LibWeb/Bindings/SelectionWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/WindowObjectHelper.h>
 #include <LibWeb/Crypto/Crypto.h>
@@ -89,6 +90,7 @@ void WindowObject::initialize_global_object()
 
     define_native_function("getComputedStyle", get_computed_style, 1, attr);
     define_native_function("matchMedia", match_media, 1, attr);
+    define_native_function("getSelection", get_selection, 0, attr);
 
     // FIXME: These properties should be [Replaceable] according to the spec, but [Writable+Configurable] is the closest we have.
     define_native_accessor("scrollX", scroll_x_getter, {}, attr);
@@ -573,6 +575,17 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_computed_style)
     }
 
     return wrap(global_object, impl->get_computed_style(static_cast<ElementWrapper*>(object)->impl()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_selection)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    auto* selection = impl->get_selection();
+    if (!selection)
+        return JS::js_null();
+    return wrap(global_object, *selection);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::match_media)

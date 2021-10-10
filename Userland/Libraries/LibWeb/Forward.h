@@ -219,6 +219,10 @@ class SVGPathElement;
 class SVGSVGElement;
 }
 
+namespace Web::Selection {
+class Selection;
+}
+
 namespace Web::Layout {
 enum class LayoutMode;
 enum class PaintPhase;
@@ -400,6 +404,7 @@ class SVGGeometryElementWrapper;
 class SVGGraphicsElementWrapper;
 class SVGPathElementWrapper;
 class SVGSVGElementWrapper;
+class SelectionWrapper;
 class StyleSheetWrapper;
 class StyleSheetListWrapper;
 class TextWrapper;
