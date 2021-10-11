@@ -21,6 +21,7 @@ interface Event {
     readonly attribute boolean composed;
 
     readonly attribute boolean isTrusted;
+    readonly attribute double timeStamp;
 
     undefined initEvent(DOMString type, optional boolean bubbles = false, optional boolean cancelable = false);
 

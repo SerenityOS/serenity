@@ -58,4 +58,10 @@ void Event::init_event(const String& type, bool bubbles, bool cancelable)
     initialize(type, bubbles, cancelable);
 }
 
+// https://dom.spec.whatwg.org/#dom-event-timestamp
+double Event::time_stamp() const
+{
+    return m_time_stamp;
+}
+
 }
