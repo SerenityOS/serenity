@@ -171,7 +171,17 @@ void ClockWidget::paint_event(GUI::PaintEvent& event)
     auto time_text = Core::DateTime::now().to_string("%T");
     GUI::Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
-    painter.draw_text(frame_inner_rect().translated(0, 1), time_text, Gfx::FontDatabase::default_font(), Gfx::TextAlignment::Center, palette().window_text());
+
+    // Render string center-left aligned, but attempt to center the string based on a constant
+    // "ideal" time string (i.e., the same one used to size this widget in the initializer).
+    // This prevents the rest of the string from shifting around while seconds tick.
+    const Gfx::Font& font = Gfx::FontDatabase::default_font();
+    const int frame_width = frame_thickness();
+    const int ideal_width = m_time_width;
+    const int widget_width = max_width();
+    const int translation_x = (widget_width - ideal_width) / 2 - frame_width;
+
+    painter.draw_text(frame_inner_rect().translated(translation_x, frame_width), time_text, font, Gfx::TextAlignment::CenterLeft, palette().window_text());
 }
 
 void ClockWidget::mousedown_event(GUI::MouseEvent& event)
