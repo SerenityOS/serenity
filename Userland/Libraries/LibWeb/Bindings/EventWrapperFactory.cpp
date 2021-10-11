@@ -15,6 +15,7 @@
 #include <LibWeb/Bindings/MouseEventWrapper.h>
 #include <LibWeb/Bindings/PageTransitionEventWrapper.h>
 #include <LibWeb/Bindings/ProgressEventWrapper.h>
+#include <LibWeb/Bindings/PromiseRejectionEventWrapper.h>
 #include <LibWeb/Bindings/SubmitEventWrapper.h>
 
 namespace Web::Bindings {
@@ -31,6 +32,8 @@ EventWrapper* wrap(JS::GlobalObject& global_object, DOM::Event& event)
         return static_cast<MessageEventWrapper*>(wrap_impl(global_object, static_cast<HTML::MessageEvent&>(event)));
     if (is<HTML::PageTransitionEvent>(event))
         return static_cast<PageTransitionEventWrapper*>(wrap_impl(global_object, static_cast<HTML::PageTransitionEvent&>(event)));
+    if (is<HTML::PromiseRejectionEvent>(event))
+        return static_cast<PromiseRejectionEventWrapper*>(wrap_impl(global_object, static_cast<HTML::PromiseRejectionEvent&>(event)));
     if (is<HTML::SubmitEvent>(event))
         return static_cast<SubmitEventWrapper*>(wrap_impl(global_object, static_cast<HTML::SubmitEvent&>(event)));
     if (is<UIEvents::KeyboardEvent>(event))

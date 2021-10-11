@@ -231,6 +231,8 @@
 #include <LibWeb/Bindings/ProcessingInstructionPrototype.h>
 #include <LibWeb/Bindings/ProgressEventConstructor.h>
 #include <LibWeb/Bindings/ProgressEventPrototype.h>
+#include <LibWeb/Bindings/PromiseRejectionEventConstructor.h>
+#include <LibWeb/Bindings/PromiseRejectionEventPrototype.h>
 #include <LibWeb/Bindings/RangeConstructor.h>
 #include <LibWeb/Bindings/RangePrototype.h>
 #include <LibWeb/Bindings/ResizeObserverConstructor.h>
@@ -396,6 +398,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(PerformanceTiming)         \
     ADD_WINDOW_OBJECT_INTERFACE(ProcessingInstruction)     \
     ADD_WINDOW_OBJECT_INTERFACE(ProgressEvent)             \
+    ADD_WINDOW_OBJECT_INTERFACE(PromiseRejectionEvent)     \
     ADD_WINDOW_OBJECT_INTERFACE(Range)                     \
     ADD_WINDOW_OBJECT_INTERFACE(ResizeObserver)            \
     ADD_WINDOW_OBJECT_INTERFACE(Screen)                    \
