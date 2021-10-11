@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/ptrace.h>
 #include <sys/socket.h>
@@ -121,6 +122,55 @@ VALUES_TO_NAMES(whence_name)
 HANDLE(SEEK_SET)
 HANDLE(SEEK_CUR)
 HANDLE(SEEK_END)
+END_VALUES_TO_NAMES()
+
+VALUES_TO_NAMES(ioctl_request_name)
+HANDLE(TIOCGPGRP)
+HANDLE(TIOCSPGRP)
+HANDLE(TCGETS)
+HANDLE(TCSETS)
+HANDLE(TCSETSW)
+HANDLE(TCSETSF)
+HANDLE(TCFLSH)
+HANDLE(TIOCGWINSZ)
+HANDLE(TIOCSCTTY)
+HANDLE(TIOCSTI)
+HANDLE(TIOCNOTTY)
+HANDLE(TIOCSWINSZ)
+HANDLE(FB_IOCTL_GET_SIZE_IN_BYTES)
+HANDLE(FB_IOCTL_GET_RESOLUTION)
+HANDLE(FB_IOCTL_SET_RESOLUTION)
+HANDLE(FB_IOCTL_GET_BUFFER)
+HANDLE(FB_IOCTL_GET_BUFFER_OFFSET)
+HANDLE(FB_IOCTL_SET_BUFFER)
+HANDLE(FB_IOCTL_FLUSH_BUFFERS)
+HANDLE(KEYBOARD_IOCTL_GET_NUM_LOCK)
+HANDLE(KEYBOARD_IOCTL_SET_NUM_LOCK)
+HANDLE(KEYBOARD_IOCTL_GET_CAPS_LOCK)
+HANDLE(KEYBOARD_IOCTL_SET_CAPS_LOCK)
+HANDLE(SIOCSIFADDR)
+HANDLE(SIOCGIFADDR)
+HANDLE(SIOCGIFHWADDR)
+HANDLE(SIOCGIFNETMASK)
+HANDLE(SIOCSIFNETMASK)
+HANDLE(SIOCGIFBRDADDR)
+HANDLE(SIOCGIFMTU)
+HANDLE(SIOCGIFFLAGS)
+HANDLE(SIOCGIFCONF)
+HANDLE(SIOCADDRT)
+HANDLE(SIOCDELRT)
+HANDLE(SIOCSARP)
+HANDLE(SIOCDARP)
+HANDLE(FIBMAP)
+HANDLE(FIONBIO)
+HANDLE(FIONREAD)
+HANDLE(KCOV_SETBUFSIZE)
+HANDLE(KCOV_ENABLE)
+HANDLE(KCOV_DISABLE)
+HANDLE(SOUNDCARD_IOCTL_SET_SAMPLE_RATE)
+HANDLE(SOUNDCARD_IOCTL_GET_SAMPLE_RATE)
+HANDLE(STORAGE_DEVICE_GET_SIZE)
+HANDLE(STORAGE_DEVICE_GET_BLOCK_SIZE)
 END_VALUES_TO_NAMES()
 
 VALUES_TO_NAMES(domain_name)
@@ -354,6 +404,16 @@ static void format_open(FormattedSyscallBuilder& builder, Syscall::SC_open_param
         builder.add_argument("{:04o}", params.mode);
 }
 
+static void format_ioctl(FormattedSyscallBuilder& builder, int fd, unsigned request, void* arg)
+{
+    builder.add_arguments(fd, ioctl_request_name(request));
+    if (request == FIONBIO) {
+        auto value = copy_from_process(reinterpret_cast<int*>(arg));
+        builder.add_argument(value);
+    } else
+        builder.add_argument(PointerArgument { arg });
+}
+
 namespace AK {
 template<>
 struct Formatter<struct timespec> : StandardFormatter {
@@ -582,6 +642,9 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
         break;
     case SC_open:
         format_open(builder, (Syscall::SC_open_params*)arg1);
+        break;
+    case SC_ioctl:
+        format_ioctl(builder, (int)arg1, (unsigned)arg2, (void*)arg3);
         break;
     case SC_fstat:
         format_fstat(builder, (int)arg1, (struct stat*)arg2);
