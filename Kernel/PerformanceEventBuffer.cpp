@@ -8,6 +8,7 @@
 #include <AK/JsonObjectSerializer.h>
 #include <AK/ScopeGuard.h>
 #include <Kernel/Arch/x86/SmapDisabler.h>
+#include <Kernel/Arch/x86/RegisterState.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/PerformanceEventBuffer.h>
@@ -52,6 +53,12 @@ static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(Fl
         stack_ptr = stack_ptr_copy;
     }
     return backtrace;
+}
+
+KResult PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID tid, const RegisterState& regs,
+    int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, const StringView& arg3)
+{
+    return append_with_ip_and_bp(pid, tid, regs.ip(), regs.bp(), type, lost_samples, arg1, arg2, arg3);
 }
 
 KResult PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID tid,
