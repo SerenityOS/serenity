@@ -6,21 +6,36 @@
 
 #include "Slider.h"
 #include "WidgetWithLabel.h"
+#include <AK/FixedPoint.h>
+#include <AK/Math.h>
 
 ProcessorParameterSlider::ProcessorParameterSlider(Orientation orientation, LibDSP::ProcessorRangeParameter& parameter, RefPtr<GUI::Label> value_label)
     : Slider(orientation)
     , WidgetWithLabel(move(value_label))
     , m_parameter(parameter)
 {
-    set_range(m_parameter.min_value().raw(), m_parameter.max_value().raw());
-    set_value(m_parameter.value().raw());
-    set_step((m_parameter.min_value() - m_parameter.max_value()).raw() / 128);
+    if (!is_logarithmic()) {
+        set_range(m_parameter.min_value().raw(), m_parameter.max_value().raw());
+        set_value(m_parameter.value().raw());
+        set_step((m_parameter.min_value() - m_parameter.max_value()).raw() / slider_steps);
+    } else {
+        auto min_log = m_parameter.min_value().log2().raw();
+        auto max_log = m_parameter.max_value().log2().raw();
+        auto value_log = m_parameter.value().log2().raw();
+        set_range(min_log, max_log);
+        set_value(value_log);
+        set_step((min_log - max_log) / slider_steps);
+    }
     set_tooltip(m_parameter.name());
     m_value_label->set_text(String::formatted("{:.2f}", static_cast<double>(m_parameter)));
 
     on_change = [this](auto value) {
         LibDSP::ParameterFixedPoint real_value;
         real_value.raw() = value;
+        if (is_logarithmic())
+            // FIXME: Implement exponential for fixed point
+            real_value = exp(static_cast<double>(real_value));
+
         m_parameter.set_value_sneaky(real_value, LibDSP::Detail::ProcessorParameterSetValueTag {});
         if (m_value_label) {
             double value = static_cast<double>(m_parameter);
@@ -34,6 +49,9 @@ ProcessorParameterSlider::ProcessorParameterSlider(Orientation orientation, LibD
         }
     };
     m_parameter.did_change_value = [this](auto value) {
-        set_value(value.raw());
+        if (!is_logarithmic())
+            set_value(value.raw());
+        else
+            set_value(value.log2().raw());
     };
 }
