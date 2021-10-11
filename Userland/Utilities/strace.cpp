@@ -708,6 +708,13 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
     case SC_clock_gettime:
         format_clock_gettime(builder, (clockid_t)arg1, (struct timespec*)arg2);
         break;
+    case SC_getuid:
+    case SC_geteuid:
+    case SC_getgid:
+    case SC_getegid:
+    case SC_getpid:
+    case SC_getppid:
+        break;
     default:
         builder.add_arguments((void*)arg1, (void*)arg2, (void*)arg3);
         result_type = VoidP;
