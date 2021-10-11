@@ -1550,6 +1550,19 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
     auto commands = shell->expand_aliases(m_command->run(shell)->resolve_as_commands(shell));
 
     if (m_capture_stdout) {
+        // Make sure that we're going to be running _something_.
+        auto has_one_command = false;
+        for (auto& command : commands) {
+            if (command.argv.is_empty() && !command.pipeline && command.next_chain.is_empty())
+                continue;
+            has_one_command = true;
+            break;
+        }
+
+        if (!has_one_command) {
+            shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "Cannot capture standard output when no command is being executed", m_position);
+            return;
+        }
         int pipefd[2];
         int rc = pipe(pipefd);
         if (rc < 0) {
