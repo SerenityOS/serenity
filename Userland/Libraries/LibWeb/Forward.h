@@ -195,6 +195,7 @@ class MessageChannel;
 class MessageEvent;
 class MessagePort;
 class PageTransitionEvent;
+class PromiseRejectionEvent;
 class SubmitEvent;
 class WebSocket;
 }
@@ -400,6 +401,7 @@ class PerformanceTimingWrapper;
 class PerformanceWrapper;
 class ProcessingInstructionWrapper;
 class ProgressEventWrapper;
+class PromiseRejectionEventWrapper;
 class ResizeObserverWrapper;
 class ScreenWrapper;
 class ScriptExecutionContext;
