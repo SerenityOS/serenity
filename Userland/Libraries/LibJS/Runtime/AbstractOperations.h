@@ -10,6 +10,7 @@
 #include <LibJS/AST.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/PrivateEnvironment.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -17,6 +18,7 @@ namespace JS {
 DeclarativeEnvironment* new_declarative_environment(Environment&);
 ObjectEnvironment* new_object_environment(Object&, bool is_with_environment, Environment*);
 FunctionEnvironment* new_function_environment(ECMAScriptFunctionObject&, Object* new_target);
+PrivateEnvironment* new_private_environment(VM& vm, PrivateEnvironment* outer);
 Environment& get_this_environment(VM&);
 Object* get_super_constructor(VM&);
 ThrowCompletionOr<Reference> make_super_property_reference(GlobalObject&, Value actual_this, StringOrSymbol const& property_key, bool strict);
@@ -45,7 +47,7 @@ enum class EvalMode {
 };
 ThrowCompletionOr<Value> perform_eval(Value, GlobalObject&, CallerMode, EvalMode);
 
-ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& global_object, Program const& program, Environment* variable_environment, Environment* lexical_environment, bool strict);
+ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& global_object, Program const& program, Environment* variable_environment, Environment* lexical_environment, PrivateEnvironment* private_environment, bool strict);
 
 // 7.3.13 Call ( F, V [ , argumentsList ] ), https://tc39.es/ecma262/#sec-call
 template<typename... Args>

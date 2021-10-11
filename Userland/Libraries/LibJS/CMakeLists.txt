@@ -107,6 +107,7 @@ set(SOURCES
     Runtime/ObjectEnvironment.cpp
     Runtime/ObjectPrototype.cpp
     Runtime/PrimitiveString.cpp
+    Runtime/PrivateEnvironment.cpp
     Runtime/Promise.cpp
     Runtime/PromiseConstructor.cpp
     Runtime/PromiseJobs.cpp

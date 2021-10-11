@@ -199,7 +199,9 @@ Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& 
         MUST(scope->create_immutable_binding(global_object, name(), false));
     }
 
-    auto closure = ECMAScriptFunctionObject::create(global_object, used_name, body(), parameters(), function_length(), scope, kind(), is_strict_mode(), might_need_arguments_object(), contains_direct_call_to_eval(), is_arrow_function());
+    auto* private_scope = interpreter.vm().running_execution_context().private_environment;
+
+    auto closure = ECMAScriptFunctionObject::create(global_object, used_name, body(), parameters(), function_length(), scope, private_scope, kind(), is_strict_mode(), might_need_arguments_object(), contains_direct_call_to_eval(), is_arrow_function());
 
     // FIXME: 6. Perform SetFunctionName(closure, name).
     // FIXME: 7. Perform MakeConstructor(closure).
@@ -1232,7 +1234,7 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
         auto body = create_ast_node<ExpressionStatement>(m_initializer->source_range(), copy_initializer.release_nonnull());
         // FIXME: A potential optimization is not creating the functions here since these are never directly accessible.
         auto name = property_key.is_number() ? property_key.to_string() : property_key.to_string_or_symbol().to_display_string();
-        initializer = ECMAScriptFunctionObject::create(interpreter.global_object(), name, *body, {}, 0, interpreter.lexical_environment(), FunctionKind::Regular, false, false);
+        initializer = ECMAScriptFunctionObject::create(interpreter.global_object(), name, *body, {}, 0, interpreter.lexical_environment(), interpreter.vm().running_execution_context().private_environment, FunctionKind::Regular, false, false);
         initializer->set_home_object(&target);
     }
 
@@ -1248,9 +1250,10 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
 ThrowCompletionOr<ClassElement::ClassValue> StaticInitializer::class_element_evaluation(Interpreter& interpreter, GlobalObject& global_object, Object& home_object) const
 {
     auto* lexical_environment = interpreter.vm().running_execution_context().lexical_environment;
+    auto* private_scope = interpreter.vm().running_execution_context().private_environment;
 
     // Note: The function bodyFunction is never directly accessible to ECMAScript code.
-    auto* body_function = ECMAScriptFunctionObject::create(global_object, "", *m_function_body, {}, 0, lexical_environment, FunctionKind::Regular, true, false, m_contains_direct_call_to_eval, false);
+    auto* body_function = ECMAScriptFunctionObject::create(global_object, "", *m_function_body, {}, 0, lexical_environment, private_scope, FunctionKind::Regular, true, false, m_contains_direct_call_to_eval, false);
     body_function->set_home_object(&home_object);
 
     return ClassValue { normal_completion(body_function) };
@@ -1303,7 +1306,8 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
     if (!binding_name.is_null())
         MUST(class_scope->create_immutable_binding(global_object, binding_name, true));
 
-    // FIXME: Add classPrivateEnvironment
+    auto* outer_private_environment = vm.running_execution_context().private_environment;
+    auto* class_private_environment = new_private_environment(vm, outer_private_environment);
 
     // FIXME: Append names to private environment
 
@@ -1355,7 +1359,10 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
     VERIFY(prototype);
 
     vm.running_execution_context().lexical_environment = class_scope;
-    // FIXME: Activate the class private environment
+    vm.running_execution_context().private_environment = class_private_environment;
+    ScopeGuard restore_private_environment = [&] {
+        vm.running_execution_context().private_environment = outer_private_environment;
+    };
 
     // FIXME: Step 14.a is done in the parser. But maybe it shouldn't?
     Value class_constructor_value = m_constructor->execute(interpreter, global_object);
@@ -3284,6 +3291,7 @@ void ScopeNode::block_declaration_instantiation(GlobalObject& global_object, Env
 {
     // See also B.3.2.6 Changes to BlockDeclarationInstantiation, https://tc39.es/ecma262/#sec-web-compat-blockdeclarationinstantiation
     VERIFY(environment);
+    auto* private_environment = global_object.vm().running_execution_context().private_environment;
     for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
         auto is_constant_declaration = declaration.is_constant_declaration();
         declaration.for_each_bound_name([&](auto const& name) {
@@ -3297,7 +3305,7 @@ void ScopeNode::block_declaration_instantiation(GlobalObject& global_object, Env
 
         if (is<FunctionDeclaration>(declaration)) {
             auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
-            auto* function = ECMAScriptFunctionObject::create(global_object, function_declaration.name(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
+            auto* function = ECMAScriptFunctionObject::create(global_object, function_declaration.name(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), environment, private_environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
             VERIFY(is<DeclarativeEnvironment>(*environment));
             static_cast<DeclarativeEnvironment&>(*environment).initialize_or_set_mutable_binding({}, global_object, function_declaration.name(), function);
         }
@@ -3424,6 +3432,8 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
         declared_function_names.clear();
     }
 
+    PrivateEnvironment* private_environment = nullptr;
+
     for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
         declaration.for_each_bound_name([&](auto const& name) {
             if (declaration.is_constant_declaration())
@@ -3440,7 +3450,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
     });
 
     for (auto& declaration : functions_to_initialize) {
-        auto* function = ECMAScriptFunctionObject::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), &global_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
+        auto* function = ECMAScriptFunctionObject::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), &global_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
         global_environment.create_global_function_binding(declaration.name(), function, false);
         if (auto* exception = interpreter.exception())
             return throw_completion(exception->value());
