@@ -146,7 +146,7 @@ void StringBuilder::append_as_lowercase(char ch)
 
 void StringBuilder::append_escaped_for_json(StringView const& string)
 {
-    for (auto ch : string) {
+    for (signed char ch : string) {
         switch (ch) {
         case '\b':
             append("\\b");
