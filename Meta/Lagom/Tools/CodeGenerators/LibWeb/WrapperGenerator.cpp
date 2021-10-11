@@ -906,7 +906,9 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (!optional) {
             if (!parameter.type.nullable) {
                 scoped_generator.append(R"~~~(
-    auto @cpp_name@ = @js_name@@js_suffix@.to_string(global_object, @legacy_null_to_empty_string@);
+    auto @cpp_name@ = @js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@
+        ? String::empty()
+        : @js_name@@js_suffix@.to_string(global_object);
     if (vm.exception())
         @return_statement@
 )~~~");
@@ -914,7 +916,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
                 scoped_generator.append(R"~~~(
     String @cpp_name@;
     if (!@js_name@@js_suffix@.is_nullish()) {
-        @cpp_name@ = @js_name@@js_suffix@.to_string(global_object, @legacy_null_to_empty_string@);
+        @cpp_name@ = @js_name@@js_suffix@.to_string(global_object);
         if (vm.exception())
             @return_statement@
     }
@@ -924,7 +926,9 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             scoped_generator.append(R"~~~(
     String @cpp_name@;
     if (!@js_name@@js_suffix@.is_undefined()) {
-        @cpp_name@ = @js_name@@js_suffix@.to_string(global_object, @legacy_null_to_empty_string@);
+        @cpp_name@ = @js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@
+            ? String::empty()
+            : @js_name@@js_suffix@.to_string(global_object);
         if (vm.exception())
             @return_statement@
     })~~~");
