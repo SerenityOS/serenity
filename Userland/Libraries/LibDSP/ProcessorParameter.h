@@ -26,6 +26,11 @@ enum class ParameterType : u8 {
     Boolean,
 };
 
+enum class Logarithmic : bool {
+    No,
+    Yes
+};
+
 // Processors have modifiable parameters that should be presented to the UI in a uniform way without requiring the processor itself to implement custom interfaces.
 class ProcessorParameter {
 public:
@@ -101,22 +106,25 @@ public:
 
 class ProcessorRangeParameter final : public Detail::ProcessorParameterSingleValue<ParameterFixedPoint> {
 public:
-    ProcessorRangeParameter(String name, ParameterFixedPoint min_value, ParameterFixedPoint max_value, ParameterFixedPoint initial_value)
+    ProcessorRangeParameter(String name, ParameterFixedPoint min_value, ParameterFixedPoint max_value, ParameterFixedPoint initial_value, Logarithmic logarithmic)
         : Detail::ProcessorParameterSingleValue<ParameterFixedPoint>(move(name), ParameterType::Range, move(initial_value))
         , m_min_value(move(min_value))
         , m_max_value(move(max_value))
         , m_default_value(move(initial_value))
+        , m_logarithmic(logarithmic)
     {
         VERIFY(initial_value <= max_value && initial_value >= min_value);
     }
 
     ProcessorRangeParameter(ProcessorRangeParameter const& to_copy)
-        : ProcessorRangeParameter(to_copy.name(), to_copy.min_value(), to_copy.max_value(), to_copy.value())
+        : ProcessorRangeParameter(to_copy.name(), to_copy.min_value(), to_copy.max_value(), to_copy.value(), to_copy.is_logarithmic())
     {
     }
 
     ParameterFixedPoint min_value() const { return m_min_value; }
     ParameterFixedPoint max_value() const { return m_max_value; }
+    ParameterFixedPoint range() const { return m_max_value - m_min_value; }
+    constexpr Logarithmic is_logarithmic() const { return m_logarithmic; }
     ParameterFixedPoint default_value() const { return m_default_value; }
     void set_value(ParameterFixedPoint value)
     {
@@ -128,6 +136,7 @@ private:
     double const m_min_value;
     double const m_max_value;
     double const m_default_value;
+    Logarithmic const m_logarithmic;
 };
 
 template<typename EnumT>
