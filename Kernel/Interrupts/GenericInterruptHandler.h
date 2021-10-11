@@ -8,9 +8,10 @@
 
 #include <AK/IntrusiveList.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/x86/RegisterState.h>
 
 namespace Kernel {
+
+struct RegisterState;
 
 enum class HandlerType : u8 {
     IRQHandler = 1,

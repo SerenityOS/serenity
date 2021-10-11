@@ -10,6 +10,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Arch/x86/CPU.h>
 
 namespace Kernel {
 

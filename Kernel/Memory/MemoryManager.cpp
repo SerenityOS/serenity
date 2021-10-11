@@ -21,6 +21,7 @@
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
+#include <Kernel/Arch/x86/RegisterState.h>
 
 extern u8 start_of_kernel_image[];
 extern u8 end_of_kernel_image[];

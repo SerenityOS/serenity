@@ -7,6 +7,7 @@
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Arch/x86/Interrupts.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Firmware/ACPI/MultiProcessorParser.h>
 #include <Kernel/Interrupts/APIC.h>

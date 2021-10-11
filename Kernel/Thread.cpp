@@ -52,6 +52,7 @@ KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> proce
 
 Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> kernel_stack_region, NonnullRefPtr<Timer> block_timer, NonnullOwnPtr<KString> name)
     : m_process(move(process))
+    , m_debug_register_state(nullptr)
     , m_kernel_stack_region(move(kernel_stack_region))
     , m_name(move(name))
     , m_block_timer(move(block_timer))
@@ -70,6 +71,10 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> ker
         // FIXME: Handle KString allocation failure.
         m_kernel_stack_region->set_name(KString::try_create(string).release_value());
     }
+
+    //NOTE: This should eventually become some sort of arch dependent private struct
+    //FIXME: What happens if this alloc fails?
+    m_debug_register_state = new DebugRegisterState();
 
     Thread::all_instances().with([&](auto& list) {
         list.append(*this);
@@ -146,6 +151,8 @@ Thread::~Thread()
 
         // We shouldn't be queued
         VERIFY(m_runnable_priority < 0);
+
+        delete m_debug_register_state;
     }
 }
 

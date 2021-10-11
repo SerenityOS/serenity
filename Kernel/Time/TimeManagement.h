@@ -13,7 +13,6 @@
 #include <AK/Types.h>
 #include <Kernel/API/KResult.h>
 #include <Kernel/API/TimePage.h>
-#include <Kernel/Arch/x86/RegisterState.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -22,6 +21,7 @@ namespace Kernel {
 #define OPTIMAL_PROFILE_TICKS_PER_SECOND_RATE 1000
 
 class HardwareTimerBase;
+struct RegisterState;
 
 enum class TimePrecision {
     Coarse = 0,

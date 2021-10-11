@@ -20,8 +20,6 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/API/KResult.h>
-#include <Kernel/Arch/x86/RegisterState.h>
-#include <Kernel/Arch/x86/SafeMem.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/Forward.h>
@@ -50,6 +48,8 @@ enum class DispatchSignalResult {
     Terminate,
     Continue
 };
+
+struct DebugRegisterState;
 
 struct SignalActionData {
     VirtualAddress handler_or_sigaction;
@@ -802,8 +802,8 @@ public:
     RegisterState& get_register_dump_from_stack();
     const RegisterState& get_register_dump_from_stack() const { return const_cast<Thread*>(this)->get_register_dump_from_stack(); }
 
-    DebugRegisterState& debug_register_state() { return m_debug_register_state; }
-    const DebugRegisterState& debug_register_state() const { return m_debug_register_state; }
+    DebugRegisterState& debug_register_state() { return *m_debug_register_state; }
+    const DebugRegisterState& debug_register_state() const { return *m_debug_register_state; }
 
     ThreadRegisters& regs() { return m_regs; }
     ThreadRegisters const& regs() const { return m_regs; }
@@ -1281,7 +1281,7 @@ private:
     NonnullRefPtr<Process> m_process;
     ThreadID m_tid { -1 };
     ThreadRegisters m_regs {};
-    DebugRegisterState m_debug_register_state {};
+    DebugRegisterState* m_debug_register_state;
     TrapFrame* m_current_trap { nullptr };
     u32 m_saved_critical { 1 };
     IntrusiveListNode<Thread> m_ready_queue_node;

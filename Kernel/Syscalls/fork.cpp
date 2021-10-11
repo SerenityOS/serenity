@@ -10,6 +10,7 @@
 #include <Kernel/Memory/Region.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
+#include <Kernel/Arch/x86/RegisterState.h>
 
 namespace Kernel {
 

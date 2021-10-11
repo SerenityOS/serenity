@@ -5,7 +5,7 @@
  */
 
 #include <AK/StdLibExtras.h>
-#include <Kernel/Arch/x86/Processor.h>
+#include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>

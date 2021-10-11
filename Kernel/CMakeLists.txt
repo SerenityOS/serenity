@@ -359,6 +359,7 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
 else()
     set(SOURCES
         Arch/aarch64/dummy.cpp
+        ${AK_SOURCES}
     )
 endif()
 
@@ -488,7 +489,7 @@ add_custom_command(
     COMMAND ${CMAKE_OBJCOPY} --only-keep-debug Kernel Kernel.debug
     COMMAND ${CMAKE_OBJCOPY} --strip-debug Kernel
     COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=Kernel.debug Kernel
-    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/kernel.map
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/Kernel.map
 )
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel" DESTINATION boot)

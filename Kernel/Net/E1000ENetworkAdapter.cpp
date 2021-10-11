@@ -9,6 +9,7 @@
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Net/E1000ENetworkAdapter.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Arch/x86/CPU.h>
 
 namespace Kernel {
 

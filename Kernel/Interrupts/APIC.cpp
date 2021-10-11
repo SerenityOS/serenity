@@ -10,6 +10,7 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Arch/x86/MSR.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Parser.h>

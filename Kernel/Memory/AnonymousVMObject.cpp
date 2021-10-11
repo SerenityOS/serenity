@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Arch/x86/SmapDisabler.h>
+#include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>

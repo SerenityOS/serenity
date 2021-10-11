@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Scheduler.h>

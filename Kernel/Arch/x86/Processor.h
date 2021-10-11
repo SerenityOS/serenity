@@ -23,11 +23,6 @@ namespace Kernel {
 class ProcessorInfo;
 struct ProcessorMessageEntry;
 
-enum class ProcessorSpecificDataID {
-    MemoryManager,
-    __Count,
-};
-
 #if ARCH(X86_64)
 #    define MSR_FS_BASE 0xc0000100
 #    define MSR_GS_BASE 0xc0000101
@@ -44,63 +39,7 @@ struct [[gnu::aligned(16)]] FPUState
     u8 buffer[512];
 };
 
-struct ProcessorMessage {
-    using CallbackFunction = Function<void()>;
 
-    enum Type {
-        FlushTlb,
-        Callback,
-    };
-    Type type;
-    Atomic<u32> refs;
-    union {
-        ProcessorMessage* next; // only valid while in the pool
-        alignas(CallbackFunction) u8 callback_storage[sizeof(CallbackFunction)];
-        struct {
-            Memory::PageDirectory const* page_directory;
-            u8* ptr;
-            size_t page_count;
-        } flush_tlb;
-    };
-
-    volatile bool async;
-
-    ProcessorMessageEntry* per_proc_entries;
-
-    CallbackFunction& callback_value()
-    {
-        return *bit_cast<CallbackFunction*>(&callback_storage);
-    }
-
-    void invoke_callback()
-    {
-        VERIFY(type == Type::Callback);
-        callback_value()();
-    }
-};
-
-struct ProcessorMessageEntry {
-    ProcessorMessageEntry* next;
-    ProcessorMessage* msg;
-};
-
-struct DeferredCallEntry {
-    using HandlerFunction = Function<void()>;
-
-    DeferredCallEntry* next;
-    alignas(HandlerFunction) u8 handler_storage[sizeof(HandlerFunction)];
-    bool was_allocated;
-
-    HandlerFunction& handler_value()
-    {
-        return *bit_cast<HandlerFunction*>(&handler_storage);
-    }
-
-    void invoke_handler()
-    {
-        handler_value()();
-    }
-};
 
 class Processor;
 // Note: We only support 64 processors at most at the moment,
@@ -439,19 +378,6 @@ public:
     static Vector<FlatPtr> capture_stack_trace(Thread& thread, size_t max_frames = 0);
 
     static StringView platform_string();
-};
-
-template<typename T>
-class ProcessorSpecific {
-public:
-    static void initialize()
-    {
-        Processor::current().set_specific(T::processor_specific_data_id(), new T);
-    }
-    static T& get()
-    {
-        return *Processor::current().get_specific<T>();
-    }
 };
 
 }

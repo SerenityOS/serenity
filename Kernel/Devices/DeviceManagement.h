@@ -14,7 +14,6 @@
 #include <AK/Types.h>
 #include <Kernel/API/KResult.h>
 #include <Kernel/API/TimePage.h>
-#include <Kernel/Arch/x86/RegisterState.h>
 #include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/NullDevice.h>

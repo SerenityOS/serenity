@@ -6,6 +6,7 @@
 
 #include <AK/Optional.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/IOAPIC.h>

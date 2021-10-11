@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Devices/PCSpeaker.h>
 #include <Kernel/Time/PIT.h>
 

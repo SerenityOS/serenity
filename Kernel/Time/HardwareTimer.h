@@ -21,6 +21,8 @@ enum class HardwareTimerType {
     LocalAPICTimer = 0x4           /* Local APIC */
 };
 
+struct RegisterState;
+
 template<typename InterruptHandlerType>
 class HardwareTimer;
 

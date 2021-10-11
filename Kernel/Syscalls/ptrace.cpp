@@ -13,6 +13,7 @@
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Process.h>
 #include <Kernel/ThreadTracer.h>
+#include <Kernel/Arch/x86/RegisterState.h>
 
 namespace Kernel {
 
@@ -209,22 +210,22 @@ KResultOr<u32> Thread::peek_debug_register(u32 register_index)
     u32 data;
     switch (register_index) {
     case 0:
-        data = m_debug_register_state.dr0;
+        data = m_debug_register_state->dr0;
         break;
     case 1:
-        data = m_debug_register_state.dr1;
+        data = m_debug_register_state->dr1;
         break;
     case 2:
-        data = m_debug_register_state.dr2;
+        data = m_debug_register_state->dr2;
         break;
     case 3:
-        data = m_debug_register_state.dr3;
+        data = m_debug_register_state->dr3;
         break;
     case 6:
-        data = m_debug_register_state.dr6;
+        data = m_debug_register_state->dr6;
         break;
     case 7:
-        data = m_debug_register_state.dr7;
+        data = m_debug_register_state->dr7;
         break;
     default:
         return EINVAL;
@@ -236,19 +237,19 @@ KResult Thread::poke_debug_register(u32 register_index, u32 data)
 {
     switch (register_index) {
     case 0:
-        m_debug_register_state.dr0 = data;
+        m_debug_register_state->dr0 = data;
         break;
     case 1:
-        m_debug_register_state.dr1 = data;
+        m_debug_register_state->dr1 = data;
         break;
     case 2:
-        m_debug_register_state.dr2 = data;
+        m_debug_register_state->dr2 = data;
         break;
     case 3:
-        m_debug_register_state.dr3 = data;
+        m_debug_register_state->dr3 = data;
         break;
     case 7:
-        m_debug_register_state.dr7 = data;
+        m_debug_register_state->dr7 = data;
         break;
     default:
         return EINVAL;

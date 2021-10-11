@@ -9,6 +9,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/JsonObjectSerializer.h>
+#include <Kernel/Arch/x86/RegisterState.h>
 #include <Kernel/Coredump.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>

@@ -12,6 +12,8 @@
 
 namespace Kernel {
 
+class GenericInterruptHandler;
+
 enum class IRQControllerType {
     i8259 = 1,   /* Intel 8259 Dual PIC */
     i82093AA = 2 /* Intel 82093AA I/O ADVANCED PROGRAMMABLE INTERRUPT CONTROLLER (IOAPIC) */
