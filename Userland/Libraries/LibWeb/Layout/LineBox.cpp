@@ -61,6 +61,8 @@ bool LineBox::is_empty_or_ends_in_whitespace() const
 {
     if (m_fragments.is_empty())
         return true;
+    if (m_fragments.last().length() == 0)
+        return true;
     return m_fragments.last().ends_in_whitespace();
 }
 
