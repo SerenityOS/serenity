@@ -12,6 +12,7 @@
 namespace Kernel {
 
 class KBufferBuilder;
+struct RegisterState;
 
 struct [[gnu::packed]] MallocPerformanceEvent {
     size_t size;
@@ -102,6 +103,8 @@ public:
 
     KResult append(int type, FlatPtr arg1, FlatPtr arg2, const StringView& arg3, Thread* current_thread = Thread::current());
     KResult append_with_ip_and_bp(ProcessID pid, ThreadID tid, FlatPtr eip, FlatPtr ebp,
+        int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, const StringView& arg3);
+    KResult append_with_ip_and_bp(ProcessID pid, ThreadID tid, const RegisterState& regs,
         int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, const StringView& arg3);
 
     void clear()
