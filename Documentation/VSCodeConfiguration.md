@@ -28,7 +28,7 @@ Run cmake at least once for this to work. clangd has difficulty finding specific
 These extensions can be used as-is, but you need to point them to the custom Serenity compilers. Use the following cpp-preferences to circumvent some errors:
 
 <details>
-<summary>.vscode/c_cpp_propperties.json</summary>
+<summary>.vscode/c_cpp_properties.json</summary>
 
 ```json
 {
