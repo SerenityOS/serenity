@@ -12,6 +12,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
+#include <AK/UnicodeUtils.h>
 #include <AK/Utf16View.h>
 #include <AK/Utf32View.h>
 
@@ -97,21 +98,8 @@ void StringBuilder::clear()
 
 void StringBuilder::append_code_point(u32 code_point)
 {
-    if (code_point <= 0x7f) {
-        append((char)code_point);
-    } else if (code_point <= 0x07ff) {
-        append((char)(((code_point >> 6) & 0x1f) | 0xc0));
-        append((char)(((code_point >> 0) & 0x3f) | 0x80));
-    } else if (code_point <= 0xffff) {
-        append((char)(((code_point >> 12) & 0x0f) | 0xe0));
-        append((char)(((code_point >> 6) & 0x3f) | 0x80));
-        append((char)(((code_point >> 0) & 0x3f) | 0x80));
-    } else if (code_point <= 0x10ffff) {
-        append((char)(((code_point >> 18) & 0x07) | 0xf0));
-        append((char)(((code_point >> 12) & 0x3f) | 0x80));
-        append((char)(((code_point >> 6) & 0x3f) | 0x80));
-        append((char)(((code_point >> 0) & 0x3f) | 0x80));
-    } else {
+    auto nwritten = AK::UnicodeUtils::code_point_to_utf8(code_point, [this](char c) { append(c); });
+    if (nwritten < 0) {
         append(0xef);
         append(0xbf);
         append(0xbd);
