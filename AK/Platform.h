@@ -14,6 +14,10 @@
 #    define AK_ARCH_X86_64 1
 #endif
 
+#ifdef __aarch64__
+#    define AK_ARCH_AARCH64 1
+#endif
+
 #if defined(__APPLE__) && defined(__MACH__)
 #    define AK_OS_MACOS
 #    define AK_OS_BSD_GENERIC
