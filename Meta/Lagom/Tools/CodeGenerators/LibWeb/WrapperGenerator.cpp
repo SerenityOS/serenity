@@ -83,6 +83,7 @@ static size_t get_function_length(FunctionType& function)
 
 struct Type {
     String name;
+    Vector<String> parameters;
     bool nullable { false };
     bool is_string() const { return name.is_one_of("ByteString", "CSSOMString", "DOMString", "USVString"); }
 };
@@ -259,16 +260,25 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
         interface->extended_attributes = parse_extended_attributes();
 
     auto parse_type = [&] {
+        auto consume_name = [&] {
+            return lexer.consume_until([](auto ch) { return !isalnum(ch) && ch != '_'; });
+        };
         bool unsigned_ = lexer.consume_specific("unsigned");
         if (unsigned_)
             consume_whitespace();
-        auto name = lexer.consume_until([](auto ch) { return !isalnum(ch) && ch != '_'; });
+        auto name = consume_name();
+        Vector<String> parameters;
+        if (lexer.consume_specific('<')) {
+            // TODO: Parse multiple parameters if necessary
+            parameters.append(consume_name());
+            lexer.consume_specific('>');
+        }
         auto nullable = lexer.consume_specific('?');
         StringBuilder builder;
         if (unsigned_)
             builder.append("unsigned ");
         builder.append(name);
-        return Type { builder.to_string(), nullable };
+        return Type { builder.to_string(), parameters, nullable };
     };
 
     auto parse_attribute = [&](HashMap<String, String>& extended_attributes) {
@@ -1072,6 +1082,18 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         return JS::js_undefined();
     }
 )~~~");
+    } else if (parameter.type.name == "Promise") {
+        // NOTE: It's not clear to me where the implicit wrapping of non-Promise values in a resolved
+        // Promise is defined in the spec; https://webidl.spec.whatwg.org/#idl-promise doesn't say
+        // anything of this sort. Both Gecko and Blink do it, however, so I'm sure it's correct.
+        scoped_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_object() || !is<JS::Promise>(@js_name@@js_suffix@.as_object())) {
+        auto* new_promise = JS::Promise::create(global_object);
+        new_promise->fulfill(@js_name@@js_suffix@);
+        @js_name@@js_suffix@ = new_promise;
+    }
+    auto @cpp_name@ = JS::make_handle(&static_cast<JS::Promise&>(@js_name@@js_suffix@.as_object()));
+)~~~");
     } else if (parameter.type.name == "any") {
         if (!optional) {
             scoped_generator.append(R"~~~(
@@ -1247,7 +1269,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         scoped_generator.append(R"~~~(
     @result_expression@ JS::Value((i32)@value@);
 )~~~");
-    } else if (type.name == "Uint8ClampedArray" || type.name == "any") {
+    } else if (type.name == "Location" || type.name == "Promise" || type.name == "Uint8ClampedArray" || type.name == "any") {
         scoped_generator.append(R"~~~(
     @result_expression@ @value@;
 )~~~");
@@ -1257,11 +1279,6 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         @result_expression@ JS::js_null();
     else
         @result_expression@ @value@.callback.cell();
-)~~~");
-    } else if (type.name == "Location") {
-        // Location is special cased as it is already a JS::Object.
-        scoped_generator.append(R"~~~(
-    @result_expression@ JS::Value(@value@);
 )~~~");
     } else {
         scoped_generator.append(R"~~~(
