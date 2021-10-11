@@ -1079,7 +1079,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
-    JS::Value @cpp_name@;
+    JS::Value @cpp_name@ = JS::js_undefined();
     if (!@js_name@@js_suffix@.is_undefined())
         @cpp_name@ = @js_name@@js_suffix@;
 )~~~");
