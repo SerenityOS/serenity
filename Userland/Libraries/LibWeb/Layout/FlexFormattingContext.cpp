@@ -287,16 +287,17 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
     };
     auto populate_specified_margins = [&is_row](FlexItem& item) {
         auto width_of_containing_block = item.box.width_of_logical_containing_block();
+        // FIXME: This should also take reverse-ness into account
         if (is_row) {
             item.margins.main_before = item.box.computed_values().margin().left.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
             item.margins.main_after = item.box.computed_values().margin().right.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
             item.margins.cross_before = item.box.computed_values().margin().top.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
             item.margins.cross_after = item.box.computed_values().margin().bottom.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
         } else {
-            item.margins.main_before = item.box.computed_values().margin().left.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
-            item.margins.main_after = item.box.computed_values().margin().right.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
-            item.margins.cross_before = item.box.computed_values().margin().top.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
-            item.margins.cross_after = item.box.computed_values().margin().bottom.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+            item.margins.main_before = item.box.computed_values().margin().top.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+            item.margins.main_after = item.box.computed_values().margin().bottom.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+            item.margins.cross_before = item.box.computed_values().margin().left.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+            item.margins.cross_after = item.box.computed_values().margin().right.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
         }
     };
 
