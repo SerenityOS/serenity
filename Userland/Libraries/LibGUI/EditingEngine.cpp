@@ -40,9 +40,9 @@ void EditingEngine::detach()
 bool EditingEngine::on_key(const KeyEvent& event)
 {
     if (event.key() == KeyCode::Key_Left) {
-        if (!event.shift() && m_editor->selection()->is_valid()) {
-            m_editor->set_cursor(m_editor->selection()->normalized().start());
-            m_editor->selection()->clear();
+        if (!event.shift() && m_editor->selection().is_valid()) {
+            m_editor->set_cursor(m_editor->selection().normalized().start());
+            m_editor->selection().clear();
             m_editor->did_update_selection();
             if (!event.ctrl()) {
                 m_editor->update();
@@ -52,25 +52,25 @@ bool EditingEngine::on_key(const KeyEvent& event)
         if (event.ctrl()) {
             m_editor->update_selection(event.shift());
             move_to_previous_span();
-            if (event.shift() && m_editor->selection()->start().is_valid()) {
-                m_editor->selection()->set_end(m_editor->cursor());
+            if (event.shift() && m_editor->selection().start().is_valid()) {
+                m_editor->selection().set_end(m_editor->cursor());
                 m_editor->did_update_selection();
             }
             return true;
         }
         m_editor->update_selection(event.shift());
         move_one_left();
-        if (event.shift() && m_editor->selection()->start().is_valid()) {
-            m_editor->selection()->set_end(m_editor->cursor());
+        if (event.shift() && m_editor->selection().start().is_valid()) {
+            m_editor->selection().set_end(m_editor->cursor());
             m_editor->did_update_selection();
         }
         return true;
     }
 
     if (event.key() == KeyCode::Key_Right) {
-        if (!event.shift() && m_editor->selection()->is_valid()) {
-            m_editor->set_cursor(m_editor->selection()->normalized().end());
-            m_editor->selection()->clear();
+        if (!event.shift() && m_editor->selection().is_valid()) {
+            m_editor->set_cursor(m_editor->selection().normalized().end());
+            m_editor->selection().clear();
             m_editor->did_update_selection();
             if (!event.ctrl()) {
                 m_editor->update();
@@ -80,16 +80,16 @@ bool EditingEngine::on_key(const KeyEvent& event)
         if (event.ctrl()) {
             m_editor->update_selection(event.shift());
             move_to_next_span(event);
-            if (event.shift() && m_editor->selection()->start().is_valid()) {
-                m_editor->selection()->set_end(m_editor->cursor());
+            if (event.shift() && m_editor->selection().start().is_valid()) {
+                m_editor->selection().set_end(m_editor->cursor());
                 m_editor->did_update_selection();
             }
             return true;
         }
         m_editor->update_selection(event.shift());
         move_one_right();
-        if (event.shift() && m_editor->selection()->start().is_valid()) {
-            m_editor->selection()->set_end(m_editor->cursor());
+        if (event.shift() && m_editor->selection().start().is_valid()) {
+            m_editor->selection().set_end(m_editor->cursor());
             m_editor->did_update_selection();
         }
         return true;
@@ -100,8 +100,8 @@ bool EditingEngine::on_key(const KeyEvent& event)
             m_editor->update_selection(event.shift());
         }
         move_one_up(event);
-        if (event.shift() && m_editor->selection()->start().is_valid()) {
-            m_editor->selection()->set_end(m_editor->cursor());
+        if (event.shift() && m_editor->selection().start().is_valid()) {
+            m_editor->selection().set_end(m_editor->cursor());
             m_editor->did_update_selection();
         }
         return true;
@@ -112,8 +112,8 @@ bool EditingEngine::on_key(const KeyEvent& event)
             m_editor->update_selection(event.shift());
         }
         move_one_down(event);
-        if (event.shift() && m_editor->selection()->start().is_valid()) {
-            m_editor->selection()->set_end(m_editor->cursor());
+        if (event.shift() && m_editor->selection().start().is_valid()) {
+            m_editor->selection().set_end(m_editor->cursor());
             m_editor->did_update_selection();
         }
         return true;
@@ -122,15 +122,15 @@ bool EditingEngine::on_key(const KeyEvent& event)
     if (event.key() == KeyCode::Key_Home) {
         if (event.ctrl()) {
             move_to_first_line();
-            if (event.shift() && m_editor->selection()->start().is_valid()) {
-                m_editor->selection()->set_end(m_editor->cursor());
+            if (event.shift() && m_editor->selection().start().is_valid()) {
+                m_editor->selection().set_end(m_editor->cursor());
                 m_editor->did_update_selection();
             }
         } else {
             m_editor->update_selection(event.shift());
             move_to_line_beginning();
-            if (event.shift() && m_editor->selection()->start().is_valid()) {
-                m_editor->selection()->set_end(m_editor->cursor());
+            if (event.shift() && m_editor->selection().start().is_valid()) {
+                m_editor->selection().set_end(m_editor->cursor());
                 m_editor->did_update_selection();
             }
         }
@@ -140,15 +140,15 @@ bool EditingEngine::on_key(const KeyEvent& event)
     if (event.key() == KeyCode::Key_End) {
         if (event.ctrl()) {
             move_to_last_line();
-            if (event.shift() && m_editor->selection()->start().is_valid()) {
-                m_editor->selection()->set_end(m_editor->cursor());
+            if (event.shift() && m_editor->selection().start().is_valid()) {
+                m_editor->selection().set_end(m_editor->cursor());
                 m_editor->did_update_selection();
             }
         } else {
             m_editor->update_selection(event.shift());
             move_to_line_end();
-            if (event.shift() && m_editor->selection()->start().is_valid()) {
-                m_editor->selection()->set_end(m_editor->cursor());
+            if (event.shift() && m_editor->selection().start().is_valid()) {
+                m_editor->selection().set_end(m_editor->cursor());
                 m_editor->did_update_selection();
             }
         }
@@ -160,8 +160,8 @@ bool EditingEngine::on_key(const KeyEvent& event)
             m_editor->update_selection(event.shift());
         }
         move_page_up();
-        if (event.shift() && m_editor->selection()->start().is_valid()) {
-            m_editor->selection()->set_end(m_editor->cursor());
+        if (event.shift() && m_editor->selection().start().is_valid()) {
+            m_editor->selection().set_end(m_editor->cursor());
             m_editor->did_update_selection();
         }
         return true;
@@ -172,8 +172,8 @@ bool EditingEngine::on_key(const KeyEvent& event)
             m_editor->update_selection(event.shift());
         }
         move_page_down();
-        if (event.shift() && m_editor->selection()->start().is_valid()) {
-            m_editor->selection()->set_end(m_editor->cursor());
+        if (event.shift() && m_editor->selection().start().is_valid()) {
+            m_editor->selection().set_end(m_editor->cursor());
             m_editor->did_update_selection();
         }
         return true;
@@ -240,8 +240,8 @@ void EditingEngine::move_to_next_span(const KeyEvent& event)
         new_cursor = m_editor->document().first_word_break_after(m_editor->cursor());
     }
     m_editor->set_cursor(new_cursor);
-    if (event.shift() && m_editor->selection()->start().is_valid()) {
-        m_editor->selection()->set_end(m_editor->cursor());
+    if (event.shift() && m_editor->selection().start().is_valid()) {
+        m_editor->selection().set_end(m_editor->cursor());
         m_editor->did_update_selection();
     }
 }
@@ -654,8 +654,8 @@ void EditingEngine::move_selected_lines_up()
     m_editor->set_cursor({ first_line - 1, 0 });
 
     if (m_editor->has_selection()) {
-        m_editor->selection()->set_start({ first_line - 1, 0 });
-        m_editor->selection()->set_end({ last_line - 1, m_editor->line(last_line - 1).length() });
+        m_editor->selection().set_start({ first_line - 1, 0 });
+        m_editor->selection().set_end({ last_line - 1, m_editor->line(last_line - 1).length() });
     }
 
     m_editor->did_change();
@@ -679,8 +679,8 @@ void EditingEngine::move_selected_lines_down()
     m_editor->set_cursor({ first_line + 1, 0 });
 
     if (m_editor->has_selection()) {
-        m_editor->selection()->set_start({ first_line + 1, 0 });
-        m_editor->selection()->set_end({ last_line + 1, m_editor->line(last_line + 1).length() });
+        m_editor->selection().set_start({ first_line + 1, 0 });
+        m_editor->selection().set_end({ last_line + 1, m_editor->line(last_line + 1).length() });
     }
 
     m_editor->did_change();
