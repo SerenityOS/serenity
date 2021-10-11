@@ -58,6 +58,8 @@ public:
 
     virtual ~Event() { }
 
+    double time_stamp() const;
+
     const FlyString& type() const { return m_type; }
     void set_type(const StringView& type) { m_type = type; }
 
@@ -142,6 +144,8 @@ public:
 
     void init_event(const String&, bool, bool);
 
+    void set_time_stamp(double time_stamp) { m_time_stamp = time_stamp; }
+
 protected:
     explicit Event(FlyString const& type)
         : m_type(type)
@@ -182,6 +186,8 @@ private:
 
     Path m_path;
     TouchTargetList m_touch_target_list;
+
+    double m_time_stamp { 0 };
 
     void set_cancelled_flag();
 };
