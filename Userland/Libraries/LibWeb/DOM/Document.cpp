@@ -448,6 +448,7 @@ void Document::update_layout()
     }
 
     m_needs_layout = false;
+    m_layout_update_timer->stop();
 }
 
 static void update_style_recursively(DOM::Node& node)
@@ -474,6 +475,7 @@ void Document::update_style()
     if (!needs_style_update() && !child_needs_style_update())
         return;
     update_style_recursively(*this);
+    m_style_update_timer->stop();
     set_needs_layout();
 }
 
