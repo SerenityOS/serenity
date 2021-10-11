@@ -17,3 +17,9 @@ auth_type="sha256"
 pre_configure() {
     export CPPFLAGS="-P"
 }
+
+post_install() {
+    ln -sv libncurses.so "${SERENITY_INSTALL_ROOT}/usr/local/lib/libcurses.so"
+    ln -sv libncurses.so "${SERENITY_INSTALL_ROOT}/usr/local/lib/libtic.so"
+    ln -sv libncurses.so "${SERENITY_INSTALL_ROOT}/usr/local/lib/libtinfo.so"
+}
