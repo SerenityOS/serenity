@@ -62,8 +62,7 @@ public:
             return;
         if (auto* event_buffer = current_thread.process().current_perf_events_buffer()) {
             [[maybe_unused]] auto rc = event_buffer->append_with_ip_and_bp(
-                current_thread.pid(), current_thread.tid(),
-                regs.ip(), regs.bp(), PERF_EVENT_SAMPLE, lost_time, 0, 0, nullptr);
+                current_thread.pid(), current_thread.tid(), regs, PERF_EVENT_SAMPLE, lost_time, 0, 0, nullptr);
         }
     }
 
@@ -114,8 +113,7 @@ public:
             return;
         if (auto* event_buffer = thread.process().current_perf_events_buffer()) {
             [[maybe_unused]] auto rc = event_buffer->append_with_ip_and_bp(
-                thread.pid(), thread.tid(),
-                regs.ip(), regs.bp(), PERF_EVENT_PAGE_FAULT, 0, 0, 0, nullptr);
+                thread.pid(), thread.tid(), regs, PERF_EVENT_PAGE_FAULT, 0, 0, 0, nullptr);
         }
     }
 
@@ -125,8 +123,7 @@ public:
             return;
         if (auto* event_buffer = thread.process().current_perf_events_buffer()) {
             [[maybe_unused]] auto rc = event_buffer->append_with_ip_and_bp(
-                thread.pid(), thread.tid(),
-                regs.ip(), regs.bp(), PERF_EVENT_SYSCALL, 0, 0, 0, nullptr);
+                thread.pid(), thread.tid(), regs, PERF_EVENT_SYSCALL, 0, 0, 0, nullptr);
         }
     }
 
