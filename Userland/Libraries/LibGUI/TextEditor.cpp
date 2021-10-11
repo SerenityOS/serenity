@@ -990,20 +990,20 @@ void TextEditor::reset_cursor_blink()
 
 void TextEditor::update_selection(bool is_selecting)
 {
-    if (is_selecting && !selection()->is_valid()) {
-        selection()->set(cursor(), {});
+    if (is_selecting && !selection().is_valid()) {
+        selection().set(cursor(), {});
         did_update_selection();
         update();
         return;
     }
-    if (!is_selecting && selection()->is_valid()) {
-        selection()->clear();
+    if (!is_selecting && selection().is_valid()) {
+        selection().clear();
         did_update_selection();
         update();
         return;
     }
-    if (is_selecting && selection()->start().is_valid()) {
-        selection()->set_end(cursor());
+    if (is_selecting && selection().start().is_valid()) {
+        selection().set_end(cursor());
         did_update_selection();
         update();
         return;
