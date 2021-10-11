@@ -2272,8 +2272,15 @@ void VariableDeclarator::dump(int indent) const
 void ObjectProperty::dump(int indent) const
 {
     ASTNode::dump(indent);
-    m_key->dump(indent + 1);
-    m_value->dump(indent + 1);
+
+    if (m_property_type == Type::Spread) {
+        print_indent(indent + 1);
+        outln("...Spreading");
+        m_key->dump(indent + 1);
+    } else {
+        m_key->dump(indent + 1);
+        m_value->dump(indent + 1);
+    }
 }
 
 void ObjectExpression::dump(int indent) const
