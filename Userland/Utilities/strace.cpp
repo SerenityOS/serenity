@@ -195,6 +195,13 @@ HANDLE(PF_INET)
 HANDLE(PF_INET6)
 END_VALUES_TO_NAMES()
 
+VALUES_TO_NAMES(clockid_name)
+HANDLE(CLOCK_REALTIME)
+HANDLE(CLOCK_MONOTONIC)
+HANDLE(CLOCK_REALTIME_COARSE)
+HANDLE(CLOCK_MONOTONIC_COARSE)
+END_VALUES_TO_NAMES()
+
 static int g_pid = -1;
 
 #if ARCH(I386)
@@ -619,6 +626,11 @@ static void format_set_mmap_name(FormattedSyscallBuilder& builder, Syscall::SC_s
     builder.add_string_argument(params.name);
 }
 
+static void format_clock_gettime(FormattedSyscallBuilder& builder, clockid_t clockid, struct timespec* time)
+{
+    builder.add_arguments(clockid_name(clockid), copy_from_process(time));
+}
+
 static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t res)
 {
     enum ResultType {
@@ -692,6 +704,9 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
         break;
     case SC_set_mmap_name:
         format_set_mmap_name(builder, (Syscall::SC_set_mmap_name_params*)arg1);
+        break;
+    case SC_clock_gettime:
+        format_clock_gettime(builder, (clockid_t)arg1, (struct timespec*)arg2);
         break;
     default:
         builder.add_arguments((void*)arg1, (void*)arg2, (void*)arg3);
