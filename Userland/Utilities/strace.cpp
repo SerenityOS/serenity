@@ -276,9 +276,9 @@ struct Formatter<PointerArgument> : StandardFormatter {
 class FormattedSyscallBuilder {
 
 public:
-    FormattedSyscallBuilder(Syscall::Function syscall_function)
+    FormattedSyscallBuilder(StringView syscall_name)
     {
-        m_builder.append(Syscall::to_string(syscall_function));
+        m_builder.append(syscall_name);
         m_builder.append('(');
     }
 
@@ -751,6 +751,10 @@ int main(int argc, char** argv)
     Vector<const char*> child_argv;
 
     const char* output_filename = nullptr;
+    const char* exclude_syscalls_option = nullptr;
+    const char* include_syscalls_option = nullptr;
+    HashTable<StringView> exclude_syscalls;
+    HashTable<StringView> include_syscalls;
     auto trace_file = Core::File::standard_error();
 
     Core::ArgsParser parser;
@@ -759,6 +763,8 @@ int main(int argc, char** argv)
         "Trace all syscalls and their result.");
     parser.add_option(g_pid, "Trace the given PID", "pid", 'p', "pid");
     parser.add_option(output_filename, "Filename to write output to", "output", 'o', "output");
+    parser.add_option(exclude_syscalls_option, "Comma-delimited syscalls to exclude", "exclude", 'e', "exclude");
+    parser.add_option(include_syscalls_option, "Comma-delimited syscalls to include", "include", 'i', "include");
     parser.add_positional_argument(child_argv, "Arguments to exec", "argument", Core::ArgsParser::Required::No);
 
     parser.parse(argc, argv);
@@ -771,6 +777,14 @@ int main(int argc, char** argv)
         }
         trace_file = open_result.value();
     }
+    auto parse_syscalls = [](const char* option, auto& hash_table) {
+        if (option != nullptr) {
+            for (auto syscall : StringView(option).split_view(','))
+                hash_table.set(syscall);
+        }
+    };
+    parse_syscalls(exclude_syscalls_option, exclude_syscalls);
+    parse_syscalls(include_syscalls_option, include_syscalls);
 
     if (pledge("stdio proc exec ptrace sigaction", nullptr) < 0) {
         perror("pledge");
@@ -872,7 +886,13 @@ int main(int argc, char** argv)
 #endif
 
         auto syscall_function = (Syscall::Function)syscall_index;
-        FormattedSyscallBuilder builder(syscall_function);
+        auto syscall_name = to_string(syscall_function);
+        if (exclude_syscalls.contains(syscall_name))
+            continue;
+        if (!include_syscalls.is_empty() && !include_syscalls.contains(syscall_name))
+            continue;
+
+        FormattedSyscallBuilder builder(syscall_name);
         format_syscall(builder, syscall_function, arg1, arg2, arg3, res);
 
         if (!trace_file->write(builder.string_view())) {
