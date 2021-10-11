@@ -11,7 +11,7 @@
 
 namespace Web::Bindings::IDL {
 
-// https://heycam.github.io/webidl/#is-an-array-index
+// https://webidl.spec.whatwg.org/#is-an-array-index
 bool is_an_array_index(JS::GlobalObject& global_object, JS::PropertyName const& property_name)
 {
     // 1. If Type(P) is not String, then return false.

@@ -42,7 +42,7 @@ namespace Web::DOM {
     __ENUMERATE(InvalidNodeTypeError, 24)      \
     __ENUMERATE(DataCloneError, 25)
 
-// https://heycam.github.io/webidl/#idl-DOMException-error-names
+// https://webidl.spec.whatwg.org/#idl-DOMException-error-names
 // Same order as in the spec document, also matches the legacy codes order above.
 #define ENUMERATE_DOM_EXCEPTION_ERROR_NAMES          \
     __ENUMERATE(IndexSizeError) /* Deprecated */     \
@@ -88,7 +88,7 @@ static u16 get_legacy_code_for_name(const FlyString& name)
     return 0;
 }
 
-// https://heycam.github.io/webidl/#idl-DOMException
+// https://webidl.spec.whatwg.org/#idl-DOMException
 class DOMException final
     : public RefCounted<DOMException>
     , public Bindings::Wrappable {
