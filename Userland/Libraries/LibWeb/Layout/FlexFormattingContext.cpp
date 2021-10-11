@@ -309,8 +309,17 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
     // This is particularly important since we take references to the items stored in flex_items
     // later, whose addresses won't be stable if we added or removed any items.
     Vector<FlexItem> flex_items;
-    if (!box.has_definite_width())
-        box.set_width(box.width_of_logical_containing_block());
+    if (!box.has_definite_width()) {
+        box.set_width(box.containing_block()->width());
+    } else {
+        box.set_width(box.computed_values().width().resolved_or_zero(box, box.containing_block()->width()).to_px(box));
+    }
+
+    if (!box.has_definite_height()) {
+        box.set_height(box.containing_block()->height());
+    } else {
+        box.set_height(box.computed_values().height().resolved_or_zero(box, box.containing_block()->height()).to_px(box));
+    }
 
     box.for_each_child_of_type<Box>([&](Box& child_box) {
         layout_inside(child_box, LayoutMode::Default);
