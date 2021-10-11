@@ -38,6 +38,7 @@ void PlainMonthDayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_native_function(vm.names.toPlainDate, to_plain_date, 1, attr);
     define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
 }
 
@@ -166,6 +167,68 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::value_of)
     // 1. Throw a TypeError exception.
     vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "Temporal.PlainMonthDay", "a primitive value");
     return {};
+}
+
+// 10.3.12 Temporal.PlainMonthDay.prototype.toPlainDate ( item ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.toplaindate
+JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_plain_date)
+{
+    auto item = vm.argument(0);
+
+    // 1. Let monthDay be the this value.
+    // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
+    auto* month_day = typed_this_object(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. If Type(item) is not Object, then
+    if (!item.is_object()) {
+        // a. Throw a TypeError exception.
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, item);
+        return {};
+    }
+
+    // 4. Let calendar be monthDay.[[Calendar]].
+    auto& calendar = month_day->calendar();
+
+    // 5. Let receiverFieldNames be ? CalendarFields(calendar, « "day", "monthCode" »).
+    auto receiver_field_names = TRY_OR_DISCARD(calendar_fields(global_object, calendar, { "day"sv, "monthCode"sv }));
+    if (vm.exception())
+        return {};
+
+    // 6. Let fields be ? PrepareTemporalFields(monthDay, receiverFieldNames, «»).
+    auto* fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, *month_day, receiver_field_names, {}));
+
+    // 7. Let inputFieldNames be ? CalendarFields(calendar, « "year" »).
+    auto input_field_names = TRY_OR_DISCARD(calendar_fields(global_object, calendar, { "year"sv }));
+
+    // 8. Let inputFields be ? PrepareTemporalFields(item, inputFieldNames, «»).
+    auto* input_fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, item.as_object(), input_field_names, {}));
+
+    // 9. Let mergedFields be ? CalendarMergeFields(calendar, fields, inputFields).
+    auto* merged_fields = TRY_OR_DISCARD(calendar_merge_fields(global_object, calendar, *fields, *input_fields));
+
+    // 10. Let mergedFieldNames be the List containing all the elements of receiverFieldNames followed by all the elements of inputFieldNames, with duplicate elements removed.
+    Vector<String> merged_field_names;
+    for (auto& field_name : receiver_field_names) {
+        if (!merged_field_names.contains_slow(field_name))
+            merged_field_names.append(move(field_name));
+    }
+    for (auto& field_name : input_field_names) {
+        if (!merged_field_names.contains_slow(field_name))
+            merged_field_names.append(move(field_name));
+    }
+
+    // 11. Set mergedFields to ? PrepareTemporalFields(mergedFields, mergedFieldNames, «»).
+    merged_fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, *merged_fields, merged_field_names, {}));
+
+    // 12. Let options be ! OrdinaryObjectCreate(null).
+    auto* options = Object::create(global_object, nullptr);
+
+    // 13. Perform ! CreateDataPropertyOrThrow(options, "overflow", "reject").
+    MUST(options->create_data_property_or_throw(vm.names.overflow, js_string(vm, vm.names.reject.as_string())));
+
+    // 14. Return ? DateFromFields(calendar, mergedFields, options).
+    return TRY_OR_DISCARD(date_from_fields(global_object, calendar, *merged_fields, *options));
 }
 
 // 10.3.13 Temporal.PlainMonthDay.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.getisofields
