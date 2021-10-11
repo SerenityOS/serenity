@@ -193,7 +193,7 @@ public:
 
     bool is_in_drag_select() const { return m_in_drag_select; }
 
-    TextRange* selection() { return &m_selection; };
+    TextRange& selection() { return m_selection; };
     void did_update_selection();
     void did_change(AllowCallback = AllowCallback::Yes);
     void update_cursor();
