@@ -118,11 +118,13 @@ void HTMLInputElement::create_shadow_tree_if_needed()
 
 void HTMLInputElement::inserted()
 {
+    HTMLElement::inserted();
     set_form(first_ancestor_of_type<HTMLFormElement>());
 }
 
-void HTMLInputElement::removed_from(DOM::Node*)
+void HTMLInputElement::removed_from(DOM::Node* old_parent)
 {
+    HTMLElement::removed_from(old_parent);
     set_form(nullptr);
 }
 
