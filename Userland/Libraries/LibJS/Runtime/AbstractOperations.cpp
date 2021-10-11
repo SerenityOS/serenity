@@ -418,6 +418,11 @@ FunctionEnvironment* new_function_environment(ECMAScriptFunctionObject& function
     return env;
 }
 
+PrivateEnvironment* new_private_environment(VM& vm, PrivateEnvironment* outer)
+{
+    return vm.heap().allocate<PrivateEnvironment>(vm.current_realm()->global_object(), outer);
+}
+
 // 9.4.3 GetThisEnvironment ( ), https://tc39.es/ecma262/#sec-getthisenvironment
 Environment& get_this_environment(VM& vm)
 {
@@ -490,12 +495,15 @@ ThrowCompletionOr<Value> perform_eval(Value x, GlobalObject& caller_realm, Calle
 
     Environment* lexical_environment;
     Environment* variable_environment;
+    PrivateEnvironment* private_environment;
     if (direct == EvalMode::Direct) {
         lexical_environment = new_declarative_environment(*running_context.lexical_environment);
         variable_environment = running_context.variable_environment;
+        private_environment = running_context.private_environment;
     } else {
         lexical_environment = new_declarative_environment(eval_realm->global_environment());
         variable_environment = &eval_realm->global_environment();
+        private_environment = nullptr;
     }
 
     if (strict_eval)
@@ -515,13 +523,14 @@ ThrowCompletionOr<Value> perform_eval(Value x, GlobalObject& caller_realm, Calle
     eval_context.realm = eval_realm;
     eval_context.variable_environment = variable_environment;
     eval_context.lexical_environment = lexical_environment;
+    eval_context.private_environment = private_environment;
     vm.push_execution_context(eval_context, eval_realm->global_object());
 
     ScopeGuard pop_guard = [&] {
         vm.pop_execution_context();
     };
 
-    TRY(eval_declaration_instantiation(vm, eval_realm->global_object(), program, variable_environment, lexical_environment, strict_eval));
+    TRY(eval_declaration_instantiation(vm, eval_realm->global_object(), program, variable_environment, lexical_environment, private_environment, strict_eval));
 
     auto& interpreter = vm.interpreter();
     TemporaryChange scope_change_strict(vm.running_execution_context().is_strict_mode, strict_eval);
@@ -535,7 +544,7 @@ ThrowCompletionOr<Value> perform_eval(Value x, GlobalObject& caller_realm, Calle
 }
 
 // 19.2.1.3 EvalDeclarationInstantiation ( body, varEnv, lexEnv, privateEnv, strict ), https://tc39.es/ecma262/#sec-evaldeclarationinstantiation
-ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& global_object, Program const& program, Environment* variable_environment, Environment* lexical_environment, bool strict)
+ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& global_object, Program const& program, Environment* variable_environment, Environment* lexical_environment, PrivateEnvironment* private_environment, bool strict)
 {
     // FIXME: I'm not sure if the global object is correct here. And this is quite a crucial spot!
     GlobalEnvironment* global_var_environment = variable_environment->is_global_environment() ? static_cast<GlobalEnvironment*>(variable_environment) : nullptr;
@@ -571,6 +580,8 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             VERIFY(this_environment);
         }
     }
+
+    // FIXME: Add Private identifiers check here.
 
     HashTable<FlyString> declared_function_names;
     Vector<FunctionDeclaration const&> functions_to_initialize;
@@ -690,7 +701,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
         return throw_completion(exception->value());
 
     for (auto& declaration : functions_to_initialize) {
-        auto* function = ECMAScriptFunctionObject::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), lexical_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object());
+        auto* function = ECMAScriptFunctionObject::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), lexical_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object());
         if (global_var_environment) {
             global_var_environment->create_global_function_binding(declaration.name(), function, true);
             if (auto* exception = vm.exception())
