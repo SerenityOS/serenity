@@ -303,7 +303,7 @@ public:
 
     u64 encoded() const { return m_value.encoded; }
 
-    String to_string(GlobalObject&, bool legacy_null_to_empty_string = false) const;
+    String to_string(GlobalObject&) const;
     Utf16String to_utf16_string(GlobalObject&) const;
     PrimitiveString* to_primitive_string(GlobalObject&);
     Value to_primitive(GlobalObject&, PreferredType preferred_type = PreferredType::Default) const;

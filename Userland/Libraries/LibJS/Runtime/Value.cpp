@@ -333,13 +333,13 @@ PrimitiveString* Value::to_primitive_string(GlobalObject& global_object)
 }
 
 // 7.1.17 ToString ( argument ), https://tc39.es/ecma262/#sec-tostring
-String Value::to_string(GlobalObject& global_object, bool legacy_null_to_empty_string) const
+String Value::to_string(GlobalObject& global_object) const
 {
     switch (m_type) {
     case Type::Undefined:
         return "undefined";
     case Type::Null:
-        return !legacy_null_to_empty_string ? "null" : String::empty();
+        return "null";
     case Type::Boolean:
         return m_value.as_bool ? "true" : "false";
     case Type::Int32:
