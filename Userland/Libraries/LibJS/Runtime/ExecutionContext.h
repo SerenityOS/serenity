@@ -10,6 +10,7 @@
 #include <AK/FlyString.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/MarkedValueList.h>
+#include <LibJS/Runtime/PrivateEnvironment.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -21,10 +22,11 @@ struct ExecutionContext {
     {
     }
 
-    FunctionObject* function { nullptr };          // [[Function]]
-    Realm* realm { nullptr };                      // [[Realm]]
-    Environment* lexical_environment { nullptr };  // [[LexicalEnvironment]]
-    Environment* variable_environment { nullptr }; // [[VariableEnvironment]]
+    FunctionObject* function { nullptr };                // [[Function]]
+    Realm* realm { nullptr };                            // [[Realm]]
+    Environment* lexical_environment { nullptr };        // [[LexicalEnvironment]]
+    Environment* variable_environment { nullptr };       // [[VariableEnvironment]]
+    PrivateEnvironment* private_environment { nullptr }; // [[PrivateEnvironment]]
 
     ASTNode const* current_node { nullptr };
     FlyString function_name;

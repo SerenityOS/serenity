@@ -24,7 +24,7 @@
 
 namespace JS {
 
-ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_object, FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind kind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
+ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_object, FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, FunctionKind kind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
 {
     Object* prototype = nullptr;
     switch (kind) {
@@ -35,12 +35,13 @@ ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_
         prototype = global_object.generator_function_prototype();
         break;
     }
-    return global_object.heap().allocate<ECMAScriptFunctionObject>(global_object, move(name), ecmascript_code, move(parameters), m_function_length, parent_scope, *prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function);
+    return global_object.heap().allocate<ECMAScriptFunctionObject>(global_object, move(name), ecmascript_code, move(parameters), m_function_length, parent_scope, private_scope, *prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function);
 }
 
-ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> formal_parameters, i32 function_length, Environment* parent_scope, Object& prototype, FunctionKind kind, bool strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
+ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> formal_parameters, i32 function_length, Environment* parent_scope, PrivateEnvironment* private_scope, Object& prototype, FunctionKind kind, bool strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
     : FunctionObject(prototype)
     , m_environment(parent_scope)
+    , m_private_environment(private_scope)
     , m_formal_parameters(move(formal_parameters))
     , m_ecmascript_code(ecmascript_code)
     , m_realm(global_object().associated_realm())
@@ -540,9 +541,9 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     });
 
     VERIFY(!vm.exception());
-
+    auto* private_environment = callee_context.private_environment;
     for (auto& declaration : functions_to_initialize) {
-        auto* function = ECMAScriptFunctionObject::create(global_object(), declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), lex_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
+        auto* function = ECMAScriptFunctionObject::create(global_object(), declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), lex_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
         MUST(var_environment->set_mutable_binding(global_object(), declaration.name(), function, false));
     }
 
@@ -595,7 +596,7 @@ void ECMAScriptFunctionObject::prepare_for_ordinary_call(ExecutionContext& calle
     callee_context.variable_environment = local_environment;
 
     // 10. Set the PrivateEnvironment of calleeContext to F.[[PrivateEnvironment]].
-    // FIXME: We currently don't support private environments.
+    callee_context.private_environment = m_private_environment;
 
     // 11. If callerContext is not already suspended, suspend callerContext.
     // FIXME: We don't have this concept yet.
