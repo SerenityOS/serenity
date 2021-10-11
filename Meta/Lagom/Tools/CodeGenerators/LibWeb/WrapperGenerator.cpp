@@ -177,13 +177,13 @@ struct Interface {
     String prototype_class;
     String prototype_base_class;
 
-    // https://heycam.github.io/webidl/#dfn-support-indexed-properties
+    // https://webidl.spec.whatwg.org/#dfn-support-indexed-properties
     bool supports_indexed_properties() const { return indexed_property_getter.has_value(); }
 
-    // https://heycam.github.io/webidl/#dfn-support-named-properties
+    // https://webidl.spec.whatwg.org/#dfn-support-named-properties
     bool supports_named_properties() const { return named_property_getter.has_value(); }
 
-    // https://heycam.github.io/webidl/#dfn-legacy-platform-object
+    // https://webidl.spec.whatwg.org/#dfn-legacy-platform-object
     bool is_legacy_platform_object() const { return !extended_attributes.contains("Global") && (supports_indexed_properties() || supports_named_properties()); }
 };
 
@@ -349,7 +349,7 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
         return parameters;
     };
 
-    // https://heycam.github.io/webidl/#dfn-special-operation
+    // https://webidl.spec.whatwg.org/#dfn-special-operation
     // A special operation is a getter, setter or deleter.
     enum class IsSpecialOperation {
         No,
@@ -1646,7 +1646,7 @@ static JS::Value wrap_for_legacy_platform_object_get_own_property(JS::GlobalObje
 )~~~");
 
         if (interface.supports_named_properties()) {
-            // https://heycam.github.io/webidl/#dfn-named-property-visibility
+            // https://webidl.spec.whatwg.org/#dfn-named-property-visibility
 
             scoped_generator.append(R"~~~(
 bool @class_name@::is_named_property_exposed_on_object(JS::PropertyName const& property_name) const
@@ -1712,7 +1712,7 @@ bool @class_name@::is_named_property_exposed_on_object(JS::PropertyName const& p
         };
 
         auto generate_legacy_platform_object_get_own_property_function = [&](IgnoreNamedProps ignore_named_props, String const& for_which_internal_method) {
-            // https://heycam.github.io/webidl/#LegacyPlatformObjectGetOwnProperty
+            // https://webidl.spec.whatwg.org/#LegacyPlatformObjectGetOwnProperty
 
             auto get_own_property_generator = scoped_generator.fork();
 
@@ -1890,7 +1890,7 @@ Optional<JS::PropertyDescriptor> @class_name@::legacy_platform_object_get_own_pr
         generate_legacy_platform_object_get_own_property_function(IgnoreNamedProps::Yes, "set");
 
         if (interface.named_property_setter.has_value()) {
-            // https://heycam.github.io/webidl/#invoke-named-setter
+            // https://webidl.spec.whatwg.org/#invoke-named-setter
             // NOTE: All users of invoke_named_property_setter check that JS::PropertyName is a String before calling it.
             // FIXME: It's not necessary to determine "creating" if the named property setter specifies an identifier.
             //        Try avoiding it somehow, e.g. by enforcing supported_property_names doesn't have side effects so it can be skipped.
@@ -1946,7 +1946,7 @@ static void invoke_named_property_setter(JS::GlobalObject& global_object, @fully
         }
 
         if (interface.indexed_property_setter.has_value()) {
-            // https://heycam.github.io/webidl/#invoke-indexed-setter
+            // https://webidl.spec.whatwg.org/#invoke-indexed-setter
             // NOTE: All users of invoke_indexed_property_setter check if property name is an IDL array index before calling it.
             // FIXME: It's not necessary to determine "creating" if the indexed property setter specifies an identifier.
             //        Try avoiding it somehow, e.g. by enforcing supported_property_indices doesn't have side effects so it can be skipped.
@@ -2005,7 +2005,7 @@ static void invoke_indexed_property_setter(JS::GlobalObject& global_object, @ful
 
         // == Internal Slot Generation ==
 
-        // 3.9.1. [[GetOwnProperty]], https://heycam.github.io/webidl/#legacy-platform-object-getownproperty
+        // 3.9.1. [[GetOwnProperty]], https://webidl.spec.whatwg.org/#legacy-platform-object-getownproperty
         scoped_generator.append(R"~~~(
 JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::internal_get_own_property(JS::PropertyName const& property_name) const
 {
@@ -2014,7 +2014,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::internal_g
 }
 )~~~");
 
-        // 3.9.2. [[Set]], https://heycam.github.io/webidl/#legacy-platform-object-set
+        // 3.9.2. [[Set]], https://webidl.spec.whatwg.org/#legacy-platform-object-set
         scoped_generator.append(R"~~~(
 JS::ThrowCompletionOr<bool> @class_name@::internal_set(JS::PropertyName const& property_name, JS::Value value, JS::Value receiver)
 {
@@ -2079,7 +2079,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_set(JS::PropertyName const& p
 }
 )~~~");
 
-        // 3.9.3. [[DefineOwnProperty]], https://heycam.github.io/webidl/#legacy-platform-object-defineownproperty
+        // 3.9.3. [[DefineOwnProperty]], https://webidl.spec.whatwg.org/#legacy-platform-object-defineownproperty
         scoped_generator.append(R"~~~(
 JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::PropertyName const& property_name, JS::PropertyDescriptor const& property_descriptor)
 {
@@ -2203,7 +2203,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::Prope
 }
 )~~~");
 
-        // 3.9.4. [[Delete]], https://heycam.github.io/webidl/#legacy-platform-object-delete
+        // 3.9.4. [[Delete]], https://webidl.spec.whatwg.org/#legacy-platform-object-delete
         scoped_generator.append(R"~~~(
 JS::ThrowCompletionOr<bool> @class_name@::internal_delete(JS::PropertyName const& property_name)
 {
@@ -2317,7 +2317,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_delete(JS::PropertyName const
 }
 )~~~");
 
-        // 3.9.5. [[PreventExtensions]], https://heycam.github.io/webidl/#legacy-platform-object-preventextensions
+        // 3.9.5. [[PreventExtensions]], https://webidl.spec.whatwg.org/#legacy-platform-object-preventextensions
         scoped_generator.append(R"~~~(
 JS::ThrowCompletionOr<bool> @class_name@::internal_prevent_extensions()
 {
@@ -2326,7 +2326,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_prevent_extensions()
 }
 )~~~");
 
-        // 3.9.6. [[OwnPropertyKeys]], https://heycam.github.io/webidl/#legacy-platform-object-ownpropertykeys
+        // 3.9.6. [[OwnPropertyKeys]], https://webidl.spec.whatwg.org/#legacy-platform-object-ownpropertykeys
         scoped_generator.append(R"~~~(
 JS::ThrowCompletionOr<JS::MarkedValueList> @class_name@::internal_own_property_keys() const
 {
@@ -2591,7 +2591,7 @@ define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::
 )~~~");
     }
 
-    // https://heycam.github.io/webidl/#es-operations
+    // https://webidl.spec.whatwg.org/#es-operations
     for (auto& function : interface.static_functions) {
         auto function_generator = generator.fork();
         function_generator.set("function.name", function.name);
@@ -2854,7 +2854,7 @@ namespace Web::Bindings {
 
 @prototype_class@::@prototype_class@([[maybe_unused]] JS::GlobalObject& global_object))~~~");
     if (interface.name == "DOMException") {
-        // https://heycam.github.io/webidl/#es-DOMException-specialness
+        // https://webidl.spec.whatwg.org/#es-DOMException-specialness
         // Object.getPrototypeOf(DOMException.prototype) === Error.prototype
         generator.append(R"~~~(
     : Object(*global_object.error_prototype())
@@ -2892,7 +2892,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 )~~~");
     }
 
-    // https://heycam.github.io/webidl/#es-attributes
+    // https://webidl.spec.whatwg.org/#es-attributes
     for (auto& attribute : interface.attributes) {
         auto attribute_generator = generator.fork();
         attribute_generator.set("attribute.name", attribute.name);
@@ -2914,7 +2914,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 )~~~");
     }
 
-    // https://heycam.github.io/webidl/#es-constants
+    // https://webidl.spec.whatwg.org/#es-constants
     for (auto& constant : interface.constants) {
         // FIXME: Do constants need to be added to the unscopable list?
 
@@ -2927,7 +2927,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 )~~~");
     }
 
-    // https://heycam.github.io/webidl/#es-operations
+    // https://webidl.spec.whatwg.org/#es-operations
     for (auto& function : interface.functions) {
         auto function_generator = generator.fork();
         function_generator.set("function.name", function.name);
@@ -2954,7 +2954,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 )~~~");
     }
 
-    // https://heycam.github.io/webidl/#define-the-iteration-methods
+    // https://webidl.spec.whatwg.org/#define-the-iteration-methods
     // This applies to this if block and the following if block.
     if (interface.indexed_property_getter.has_value()) {
         auto iterator_generator = generator.fork();

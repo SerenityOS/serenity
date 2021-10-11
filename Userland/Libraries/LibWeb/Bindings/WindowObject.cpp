@@ -150,7 +150,7 @@ Origin WindowObject::origin() const
     return impl().associated_document().origin();
 }
 
-// https://heycam.github.io/webidl/#platform-object-setprototypeof
+// https://webidl.spec.whatwg.org/#platform-object-setprototypeof
 JS::ThrowCompletionOr<bool> WindowObject::internal_set_prototype_of(JS::Object* prototype)
 {
     // 1. Return ? SetImmutablePrototype(O, V).
