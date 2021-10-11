@@ -11,9 +11,9 @@ namespace LibDSP::Effects {
 
 Delay::Delay(NonnullRefPtr<Transport> transport)
     : EffectProcessor(move(transport))
-    , m_delay_decay("Decay"sv, 0.01, 0.99, 0.33)
-    , m_delay_time("Delay Time"sv, 3, 2000, 900)
-    , m_dry_gain("Dry"sv, 0, 1, 0.9)
+    , m_delay_decay("Decay"sv, 0.01, 0.99, 0.33, Logarithmic::No)
+    , m_delay_time("Delay Time"sv, 3, 2000, 900, Logarithmic::Yes)
+    , m_dry_gain("Dry"sv, 0, 1, 0.9, Logarithmic::No)
 {
 
     m_parameters.append(m_delay_decay);
