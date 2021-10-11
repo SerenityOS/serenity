@@ -549,7 +549,21 @@ void VM::run_queued_promise_jobs()
     while (!m_promise_jobs.is_empty()) {
         auto* job = m_promise_jobs.take_first();
         dbgln_if(PROMISE_DEBUG, "Calling promise job function @ {}", job);
+
+        // NOTE: If the execution context stack is empty, we make and push a temporary context.
+        ExecutionContext execution_context(heap());
+        bool pushed_execution_context = false;
+        if (m_execution_context_stack.is_empty()) {
+            static FlyString promise_execution_context_name = "(promise execution context)";
+            execution_context.function_name = promise_execution_context_name;
+            push_execution_context(execution_context, job->global_object());
+            pushed_execution_context = true;
+        }
+
         [[maybe_unused]] auto result = call(*job, js_undefined());
+
+        if (pushed_execution_context)
+            pop_execution_context();
     }
     // Ensure no job has created a new exception, they must clean up after themselves.
     VERIFY(!m_exception);
