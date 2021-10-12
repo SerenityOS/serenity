@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "GeneratorUtil.h"
 #include <AK/AllOf.h>
 #include <AK/Array.h>
 #include <AK/CharacterTypes.h>
@@ -560,7 +561,6 @@ static void generate_unicode_data_implementation(Core::File& file, UnicodeData c
 #include <AK/Array.h>
 #include <AK/BinarySearch.h>
 #include <AK/CharacterTypes.h>
-#include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibUnicode/UnicodeData.h>
@@ -810,33 +810,15 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
     };
 
     auto append_from_string = [&](StringView enum_title, StringView enum_snake, PropList const& prop_list, Vector<Alias> const& aliases) {
-        generator.set("enum_title", enum_title);
-        generator.set("enum_snake", enum_snake);
+        HashValueMap<StringView> hashes;
+        hashes.ensure_capacity(prop_list.size() + aliases.size());
 
-        auto properties = prop_list.keys();
+        for (auto const& prop : prop_list)
+            hashes.set(prop.key.hash(), prop.key);
         for (auto const& alias : aliases)
-            properties.append(alias.alias);
-        quick_sort(properties);
+            hashes.set(alias.alias.hash(), alias.alias);
 
-        generator.append(R"~~~(
-Optional<@enum_title@> @enum_snake@_from_string(StringView const& @enum_snake@)
-{
-    static HashMap<String, @enum_title@> @enum_snake@_values { {)~~~");
-
-        for (auto const& property : properties) {
-            generator.set("property", property);
-            generator.append(R"~~~(
-        { "@property@"sv, @enum_title@::@property@ },)~~~");
-        }
-
-        generator.append(R"~~~(
-    } };
-
-    if (auto value = @enum_snake@_values.get(@enum_snake@); value.has_value())
-        return value.value();
-    return {};
-}
-)~~~");
+        generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
     };
 
     append_prop_search("GeneralCategory"sv, "general_category"sv, "s_general_categories"sv);
