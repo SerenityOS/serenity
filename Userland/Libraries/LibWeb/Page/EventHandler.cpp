@@ -413,8 +413,7 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
     if (key == KeyCode::Key_Tab) {
         if (modifiers & KeyModifier::Mod_Shift)
             return focus_previous_element();
-        else
-            return focus_next_element();
+        return focus_next_element();
     }
 
     if (layout_root->selection().is_valid()) {
@@ -428,7 +427,8 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             if (key == KeyCode::Key_Backspace || key == KeyCode::Key_Delete) {
                 m_edit_event_handler->handle_delete(range);
                 return true;
-            } else if (!should_ignore_keydown_event(code_point)) {
+            }
+            if (!should_ignore_keydown_event(code_point)) {
                 m_edit_event_handler->handle_delete(range);
                 m_edit_event_handler->handle_insert(m_frame.cursor_position(), code_point);
                 m_frame.increment_cursor_position_offset();
@@ -446,31 +446,35 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
 
             m_edit_event_handler->handle_delete_character_after(m_frame.cursor_position());
             return true;
-        } else if (key == KeyCode::Key_Delete) {
+        }
+        if (key == KeyCode::Key_Delete) {
             if (m_frame.cursor_position().offset_is_at_end_of_node()) {
                 // FIXME: Move to the next node and delete the first character there.
                 return true;
             }
             m_edit_event_handler->handle_delete_character_after(m_frame.cursor_position());
             return true;
-        } else if (key == KeyCode::Key_Right) {
+        }
+        if (key == KeyCode::Key_Right) {
             if (!m_frame.increment_cursor_position_offset()) {
                 // FIXME: Move to the next node.
             }
             return true;
-        } else if (key == KeyCode::Key_Left) {
+        }
+        if (key == KeyCode::Key_Left) {
             if (!m_frame.decrement_cursor_position_offset()) {
                 // FIXME: Move to the previous node.
             }
             return true;
-        } else if (!should_ignore_keydown_event(code_point)) {
+        }
+        if (!should_ignore_keydown_event(code_point)) {
             m_edit_event_handler->handle_insert(m_frame.cursor_position(), code_point);
             m_frame.increment_cursor_position_offset();
             return true;
-        } else {
-            // NOTE: Because modifier keys should be ignored, we need to return true.
-            return true;
         }
+
+        // NOTE: Because modifier keys should be ignored, we need to return true.
+        return true;
     }
 
     auto event = UIEvents::KeyboardEvent::create_from_platform_event(UIEvents::EventNames::keydown, key, modifiers, code_point);
