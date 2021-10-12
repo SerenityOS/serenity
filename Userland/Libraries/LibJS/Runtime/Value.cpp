@@ -363,12 +363,12 @@ ThrowCompletionOr<String> Value::to_string(GlobalObject& global_object) const
     }
 }
 
-Utf16String Value::to_utf16_string(GlobalObject& global_object) const
+ThrowCompletionOr<Utf16String> Value::to_utf16_string(GlobalObject& global_object) const
 {
     if (m_type == Type::String)
         return m_value.as_string->utf16_string();
 
-    auto utf8_string = TRY_OR_DISCARD(to_string(global_object));
+    auto utf8_string = TRY(to_string(global_object));
     return Utf16String(utf8_string);
 }
 

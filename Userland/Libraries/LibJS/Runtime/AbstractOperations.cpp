@@ -883,11 +883,7 @@ Value canonical_numeric_index_string(GlobalObject& global_object, PropertyName c
 // 22.1.3.17.1 GetSubstitution ( matched, str, position, captures, namedCaptures, replacement ), https://tc39.es/ecma262/#sec-getsubstitution
 ThrowCompletionOr<String> get_substitution(GlobalObject& global_object, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement)
 {
-    auto& vm = global_object.vm();
-
-    auto replace_string = replacement.to_utf16_string(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto replace_string = TRY(replacement.to_utf16_string(global_object));
     auto replace_view = replace_string.view();
 
     StringBuilder result;

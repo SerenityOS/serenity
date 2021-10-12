@@ -37,7 +37,7 @@ static Optional<String> ak_string_from(VM& vm, GlobalObject& global_object)
 static Utf16String utf16_string_from(VM& vm, GlobalObject& global_object)
 {
     auto this_value = TRY_OR_DISCARD(require_object_coercible(global_object, vm.this_value(global_object)));
-    return this_value.to_utf16_string(global_object);
+    return TRY_OR_DISCARD(this_value.to_utf16_string(global_object));
 }
 
 // 22.1.3.21.1 SplitMatch ( S, q, R ), https://tc39.es/ecma262/#sec-splitmatch
@@ -273,10 +273,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
         return {};
     }
 
-    auto search_string = search_string_value.to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
-
+    auto search_string = TRY_OR_DISCARD(search_string_value.to_utf16_string(global_object));
     auto string_length = string.length_in_code_units();
     auto search_length = search_string.length_in_code_units();
 
@@ -314,10 +311,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::ends_with)
         return {};
     }
 
-    auto search_string = search_string_value.to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
-
+    auto search_string = TRY_OR_DISCARD(search_string_value.to_utf16_string(global_object));
     auto string_length = string.length_in_code_units();
     auto search_length = search_string.length_in_code_units();
 
@@ -347,10 +341,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
     if (vm.exception())
         return {};
 
-    auto search_string = vm.argument(0).to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
-
+    auto search_string = TRY_OR_DISCARD(vm.argument(0).to_utf16_string(global_object));
     auto utf16_string_view = string.view();
     auto utf16_search_view = search_string.view();
 
@@ -485,9 +476,7 @@ static Value pad_string(GlobalObject& global_object, Utf16String string, PadPlac
 
     Utf16String fill_string(Vector<u16, 1> { 0x20 });
     if (!vm.argument(1).is_undefined()) {
-        fill_string = vm.argument(1).to_utf16_string(global_object);
-        if (vm.exception())
-            return {};
+        fill_string = TRY_OR_DISCARD(vm.argument(1).to_utf16_string(global_object));
         if (fill_string.is_empty())
             return js_string(vm, move(string));
     }
@@ -646,9 +635,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::includes)
         return {};
     }
 
-    auto search_string = search_string_value.to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
+    auto search_string = TRY_OR_DISCARD(search_string_value.to_utf16_string(global_object));
 
     size_t start = 0;
     if (!vm.argument(1).is_undefined()) {
@@ -713,9 +700,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
             return TRY_OR_DISCARD(vm.call(*splitter, separator_argument, object, limit_argument));
     }
 
-    auto string = object.to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(object.to_utf16_string(global_object));
 
     auto* array = Array::create(global_object, 0);
     size_t array_length = 0;
@@ -727,9 +712,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
             return {};
     }
 
-    auto separator = separator_argument.to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
+    auto separator = TRY_OR_DISCARD(separator_argument.to_utf16_string(global_object));
 
     if (limit == 0)
         return array;
@@ -779,10 +762,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
     if (vm.exception())
         return {};
 
-    auto search_string = vm.argument(0).to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
-
+    auto search_string = TRY_OR_DISCARD(vm.argument(0).to_utf16_string(global_object));
     auto string_length = string.length_in_code_units();
     auto search_length = search_string.length_in_code_units();
 
@@ -858,9 +838,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
             return TRY_OR_DISCARD(vm.call(*matcher, regexp, this_object));
     }
 
-    auto string = this_object.to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(this_object.to_utf16_string(global_object));
 
     auto rx = regexp_create(global_object, regexp, js_undefined());
     if (!rx)
@@ -888,9 +866,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
             return TRY_OR_DISCARD(vm.call(*matcher, regexp, this_object));
     }
 
-    auto string = this_object.to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(this_object.to_utf16_string(global_object));
 
     auto rx = regexp_create(global_object, regexp, js_string(vm, "g"));
     if (!rx)
@@ -910,20 +886,12 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
             return TRY_OR_DISCARD(vm.call(*replacer, search_value, this_object, replace_value));
     }
 
-    auto string = this_object.to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
-    auto search_string = search_value.to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(this_object.to_utf16_string(global_object));
+    auto search_string = TRY_OR_DISCARD(search_value.to_utf16_string(global_object));
 
     if (!replace_value.is_function()) {
-        auto replace_string = replace_value.to_utf16_string(global_object);
-        if (vm.exception())
-            return {};
+        auto replace_string = TRY_OR_DISCARD(replace_value.to_utf16_string(global_object));
         replace_value = js_string(vm, move(replace_string));
-        if (vm.exception())
-            return {};
     }
 
     Optional<size_t> position = string_index_of(string.view(), search_string.view(), 0);
@@ -973,17 +941,11 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
             return TRY_OR_DISCARD(vm.call(*replacer, search_value, this_object, replace_value));
     }
 
-    auto string = this_object.to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
-    auto search_string = search_value.to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(this_object.to_utf16_string(global_object));
+    auto search_string = TRY_OR_DISCARD(search_value.to_utf16_string(global_object));
 
     if (!replace_value.is_function()) {
-        auto replace_string = replace_value.to_utf16_string(global_object);
-        if (vm.exception())
-            return {};
+        auto replace_string = TRY_OR_DISCARD(replace_value.to_utf16_string(global_object));
         replace_value = js_string(vm, move(replace_string));
         if (vm.exception())
             return {};
@@ -1037,9 +999,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::search)
             return TRY_OR_DISCARD(vm.call(*searcher, regexp, this_object));
     }
 
-    auto string = this_object.to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(this_object.to_utf16_string(global_object));
 
     auto rx = regexp_create(global_object, regexp, js_undefined());
     if (!rx)

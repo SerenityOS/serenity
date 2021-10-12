@@ -344,9 +344,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
     if (!regexp_object)
         return {};
 
-    auto string = vm.argument(0).to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(vm.argument(0).to_utf16_string(global_object));
 
     return regexp_builtin_exec(global_object, *regexp_object, move(string));
 }
@@ -358,9 +356,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
     if (!regexp_object)
         return {};
 
-    auto string = vm.argument(0).to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(vm.argument(0).to_utf16_string(global_object));
 
     auto match = regexp_exec(global_object, *regexp_object, move(string));
     if (vm.exception())
@@ -392,9 +388,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     if (!regexp_object)
         return {};
 
-    auto string = vm.argument(0).to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(vm.argument(0).to_utf16_string(global_object));
 
     bool global = TRY_OR_DISCARD(regexp_object->get(vm.names.global)).to_boolean();
 
@@ -448,9 +442,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     if (!regexp_object)
         return {};
 
-    auto string = vm.argument(0).to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(vm.argument(0).to_utf16_string(global_object));
 
     auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, *regexp_object, *global_object.regexp_constructor()));
 
@@ -488,9 +480,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     auto* regexp_object = this_object(global_object);
     if (!regexp_object)
         return {};
-    auto string = string_value.to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(string_value.to_utf16_string(global_object));
     auto string_view = string.view();
 
     if (!replace_value.is_function()) {
@@ -540,9 +530,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         size_t n_captures = result_length == 0 ? 0 : result_length - 1;
 
         auto matched_value = TRY_OR_DISCARD(result.get(0));
-        auto matched = matched_value.to_utf16_string(global_object);
-        if (vm.exception())
-            return {};
+        auto matched = TRY_OR_DISCARD(matched_value.to_utf16_string(global_object));
         auto matched_length = matched.length_in_code_units();
 
         auto position_value = TRY_OR_DISCARD(result.get(vm.names.index));
@@ -613,9 +601,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
     if (!regexp_object)
         return {};
 
-    auto string = vm.argument(0).to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(vm.argument(0).to_utf16_string(global_object));
 
     auto previous_last_index = TRY_OR_DISCARD(regexp_object->get(vm.names.lastIndex));
     if (!same_value(previous_last_index, Value(0)))
@@ -646,9 +632,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     if (!regexp_object)
         return {};
 
-    auto string = vm.argument(0).to_utf16_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(vm.argument(0).to_utf16_string(global_object));
     auto string_view = string.view();
 
     auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, *regexp_object, *global_object.regexp_constructor()));
