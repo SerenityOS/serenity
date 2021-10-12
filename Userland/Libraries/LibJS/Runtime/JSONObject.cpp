@@ -137,9 +137,7 @@ String JSONObject::serialize_json_property(GlobalObject& global_object, Stringif
     auto& vm = global_object.vm();
     auto value = TRY_OR_DISCARD(holder->get(key));
     if (value.is_object() || value.is_bigint()) {
-        auto* value_object = value.to_object(global_object);
-        if (vm.exception())
-            return {};
+        auto* value_object = TRY_OR_DISCARD(value.to_object(global_object));
         auto to_json = TRY_OR_DISCARD(value_object->get(vm.names.toJSON));
         if (to_json.is_function())
             value = TRY_OR_DISCARD(vm.call(to_json.as_function(), value, js_string(vm, key.to_string())));

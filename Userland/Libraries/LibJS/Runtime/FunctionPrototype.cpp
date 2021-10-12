@@ -45,9 +45,7 @@ FunctionPrototype::~FunctionPrototype()
 // 20.2.3.1 Function.prototype.apply ( thisArg, argArray ), https://tc39.es/ecma262/#sec-function.prototype.apply
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     if (!this_object->is_function()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
         return {};
@@ -64,9 +62,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
 // 20.2.3.2 Function.prototype.bind ( thisArg, ...args ), https://tc39.es/ecma262/#sec-function.prototype.bind
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     if (!this_object->is_function()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
         return {};
@@ -86,9 +82,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
 // 20.2.3.3 Function.prototype.call ( thisArg, ...args ), https://tc39.es/ecma262/#sec-function.prototype.call
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     if (!this_object->is_function()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
         return {};
@@ -106,9 +100,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
 // 20.2.3.5 Function.prototype.toString ( ), https://tc39.es/ecma262/#sec-function.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     if (!this_object->is_function()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
         return {};

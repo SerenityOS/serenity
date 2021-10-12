@@ -604,14 +604,10 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::merge_fields)
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     // 4. Set fields to ? ToObject(fields).
-    auto* fields = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* fields = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
 
     // 5. Set additionalFields to ? ToObject(additionalFields).
-    auto* additional_fields = vm.argument(1).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* additional_fields = TRY_OR_DISCARD(vm.argument(1).to_object(global_object));
 
     // 6. Return ? DefaultMergeFields(fields, additionalFields).
     return TRY_OR_DISCARD(default_merge_fields(global_object, *fields, *additional_fields));

@@ -18,9 +18,7 @@ Object* get_iterator(GlobalObject& global_object, Value value, IteratorHint hint
     if (method.is_empty()) {
         if (hint == IteratorHint::Async)
             TODO();
-        auto object = value.to_object(global_object);
-        if (!object)
-            return {};
+        auto object = TRY_OR_DISCARD(value.to_object(global_object));
         method = TRY_OR_DISCARD(object->get(*vm.well_known_symbol_iterator()));
     }
     if (!method.is_function()) {

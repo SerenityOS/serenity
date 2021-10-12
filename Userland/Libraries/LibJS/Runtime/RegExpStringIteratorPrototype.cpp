@@ -54,9 +54,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpStringIteratorPrototype::next)
         return create_iterator_result_object(global_object, match, false);
     }
 
-    auto* match_object = match.to_object(global_object);
-    if (!match_object)
-        return {};
+    auto* match_object = TRY_OR_DISCARD(match.to_object(global_object));
     auto match_string_value = TRY_OR_DISCARD(match_object->get(0));
     auto match_string = TRY_OR_DISCARD(match_string_value.to_string(global_object));
     if (match_string.is_empty()) {

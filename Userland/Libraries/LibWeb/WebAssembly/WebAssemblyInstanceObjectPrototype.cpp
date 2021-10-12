@@ -19,9 +19,7 @@ void WebAssemblyInstancePrototype::initialize(JS::GlobalObject& global_object)
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyInstancePrototype::exports_getter)
 {
     auto this_value = vm.this_value(global_object);
-    auto this_object = this_value.to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* this_object = TRY_OR_DISCARD(this_value.to_object(global_object));
     if (!is<WebAssemblyInstanceObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Instance");
         return {};

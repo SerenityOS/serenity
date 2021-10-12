@@ -78,7 +78,7 @@ Value ObjectConstructor::construct(FunctionObject& new_target)
     auto value = vm.argument(0);
     if (value.is_nullish())
         return Object::create(global_object, global_object.object_prototype());
-    return value.to_object(global_object);
+    return TRY_OR_DISCARD(value.to_object(global_object));
 }
 
 enum class GetOwnPropertyKeysType {
@@ -92,9 +92,7 @@ static Array* get_own_property_keys(GlobalObject& global_object, Value value, Ge
     auto& vm = global_object.vm();
 
     // 1. Let obj be ? ToObject(O).
-    auto* object = value.to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(value.to_object(global_object));
 
     // 2. Let keys be ? obj.[[OwnPropertyKeys]]().
     auto keys = TRY_OR_DISCARD(object->internal_own_property_keys());
@@ -133,9 +131,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_symbols)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
 {
     // 1. Let obj be ? ToObject(O).
-    auto* object = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
 
     // 2. Return ? obj.[[GetPrototypeOf]]().
     return TRY_OR_DISCARD(object->internal_get_prototype_of());
@@ -281,9 +277,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::seal)
 // 20.1.2.8 Object.getOwnPropertyDescriptor ( O, P ), https://tc39.es/ecma262/#sec-object.getownpropertydescriptor
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
 {
-    auto* object = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     auto key = vm.argument(1).to_property_key(global_object);
     if (vm.exception())
         return {};
@@ -295,9 +289,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
 {
     // 1. Let obj be ? ToObject(O).
-    auto* object = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
 
     // 2. Let ownKeys be ? obj.[[OwnPropertyKeys]]().
     auto own_keys = TRY_OR_DISCARD(object->internal_own_property_keys());
@@ -364,9 +356,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is)
 // 20.1.2.17 Object.keys ( O ), https://tc39.es/ecma262/#sec-object.keys
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
 {
-    auto* object = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     auto name_list = TRY_OR_DISCARD(object->enumerable_own_property_names(PropertyKind::Key));
     return Array::create_from(global_object, name_list);
 }
@@ -374,9 +364,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
 // 20.1.2.22 Object.values ( O ), https://tc39.es/ecma262/#sec-object.values
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
 {
-    auto* object = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     auto name_list = TRY_OR_DISCARD(object->enumerable_own_property_names(PropertyKind::Value));
     return Array::create_from(global_object, name_list);
 }
@@ -384,9 +372,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
 // 20.1.2.5 Object.entries ( O ), https://tc39.es/ecma262/#sec-object.entries
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
 {
-    auto* object = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     auto name_list = TRY_OR_DISCARD(object->enumerable_own_property_names(PropertyKind::KeyAndValue));
     return Array::create_from(global_object, name_list);
 }
@@ -420,9 +406,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
 {
     // 1. Let obj be ? ToObject(O).
-    auto* object = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
 
     // 2. Let key be ? ToPropertyKey(P).
     auto key = vm.argument(1).to_property_key(global_object);
@@ -437,9 +421,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
 {
     // 1. Let to be ? ToObject(target).
-    auto* to = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* to = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
 
     // 2. If only one argument was passed, return to.
     if (vm.argument_count() == 1)
@@ -454,8 +436,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
             continue;
 
         // i. Let from be ! ToObject(nextSource).
-        auto from = next_source.to_object(global_object);
-        VERIFY(!vm.exception());
+        auto* from = MUST(next_source.to_object(global_object));
 
         // ii. Let keys be ? from.[[OwnPropertyKeys]]().
         auto keys = TRY_OR_DISCARD(from->internal_own_property_keys());

@@ -32,9 +32,7 @@ TESTJS_GLOBAL_FUNCTION(run_queued_promise_jobs, runQueuedPromiseJobs)
 
 TESTJS_GLOBAL_FUNCTION(get_weak_set_size, getWeakSetSize)
 {
-    auto* object = vm.argument(0).to_object(global_object);
-    if (!object)
-        return {};
+    auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     if (!is<JS::WeakSet>(object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WeakSet");
         return {};
@@ -45,9 +43,7 @@ TESTJS_GLOBAL_FUNCTION(get_weak_set_size, getWeakSetSize)
 
 TESTJS_GLOBAL_FUNCTION(get_weak_map_size, getWeakMapSize)
 {
-    auto* object = vm.argument(0).to_object(global_object);
-    if (!object)
-        return {};
+    auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     if (!is<JS::WeakMap>(object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WeakMap");
         return {};

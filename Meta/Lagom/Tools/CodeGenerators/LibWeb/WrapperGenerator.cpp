@@ -974,9 +974,10 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     } else if (is_wrappable_type(parameter.type)) {
         if (!parameter.type.nullable) {
             scoped_generator.append(R"~~~(
-    auto @cpp_name@_object = @js_name@@js_suffix@.to_object(global_object);
-    if (vm.exception())
+    auto @cpp_name@_object_or_error = @js_name@@js_suffix@.to_object(global_object);
+    if (@cpp_name@_object_or_error.is_error())
         @return_statement@
+    auto @cpp_name@_object = @cpp_name@_object_or_error.release_value();
 
     if (!is<@wrapper_name@>(@cpp_name@_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
@@ -989,9 +990,10 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             scoped_generator.append(R"~~~(
     @parameter.type.name@* @cpp_name@ = nullptr;
     if (!@js_name@@js_suffix@.is_nullish()) {
-        auto @cpp_name@_object = @js_name@@js_suffix@.to_object(global_object);
-        if (vm.exception())
+        auto @cpp_name@_object_or_error = @js_name@@js_suffix@.to_object(global_object);
+        if (@cpp_name@_object_or_error.is_error())
             @return_statement@
+        auto @cpp_name@_object = @cpp_name@_object_or_error.release_value();
 
         if (!is<@wrapper_name@>(@cpp_name@_object)) {
             vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
@@ -3030,9 +3032,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
         generator.append(R"~~~(
 static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 )~~~");
 
         if (interface.name == "EventTarget") {
@@ -3528,9 +3528,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 
 static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     if (!is<@wrapper_class@>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@fully_qualified_name@");
         return nullptr;

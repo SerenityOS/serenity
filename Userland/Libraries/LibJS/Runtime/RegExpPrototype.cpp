@@ -420,9 +420,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
             return array;
         }
 
-        auto* result_object = result.to_object(global_object);
-        if (!result_object)
-            return {};
+        auto* result_object = TRY_OR_DISCARD(result.to_object(global_object));
         auto match_object = TRY_OR_DISCARD(result_object->get(0));
         auto match_str = TRY_OR_DISCARD(match_object.to_string(global_object));
 
@@ -458,10 +456,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     auto matcher_value = vm.construct(*constructor, *constructor, move(arguments));
     if (vm.exception())
         return {};
-    auto* matcher = matcher_value.to_object(global_object);
-    if (!matcher)
-        return {};
-
+    auto* matcher = TRY_OR_DISCARD(matcher_value.to_object(global_object));
     auto last_index = TRY_OR_DISCARD(regexp_object->get(vm.names.lastIndex)).to_length(global_object);
     if (vm.exception())
         return {};
@@ -506,10 +501,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         if (result.is_null())
             break;
 
-        auto* result_object = result.to_object(global_object);
-        if (!result_object)
-            return {};
-
+        auto* result_object = TRY_OR_DISCARD(result.to_object(global_object));
         results.append(result_object);
         if (!global)
             break;
@@ -566,14 +558,10 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             auto replace_result = TRY_OR_DISCARD(vm.call(replace_value.as_function(), js_undefined(), move(replacer_args)));
             replacement = TRY_OR_DISCARD(replace_result.to_string(global_object));
         } else {
-            auto named_captures_object = js_undefined();
-            if (!named_captures.is_undefined()) {
-                named_captures_object = named_captures.to_object(global_object);
-                if (vm.exception())
-                    return {};
-            }
+            if (!named_captures.is_undefined())
+                named_captures = TRY_OR_DISCARD(named_captures.to_object(global_object));
 
-            replacement = TRY_OR_DISCARD(get_substitution(global_object, matched.view(), string_view, position, captures, named_captures_object, replace_value));
+            replacement = TRY_OR_DISCARD(get_substitution(global_object, matched.view(), string_view, position, captures, named_captures, replace_value));
         }
 
         if (position >= next_source_position) {
@@ -618,10 +606,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
     if (result.is_null())
         return Value(-1);
 
-    auto* result_object = result.to_object(global_object);
-    if (!result_object)
-        return {};
-
+    auto* result_object = TRY_OR_DISCARD(result.to_object(global_object));
     return TRY_OR_DISCARD(result_object->get(vm.names.index));
 }
 
@@ -649,10 +634,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto splitter_value = vm.construct(*constructor, *constructor, move(arguments));
     if (vm.exception())
         return {};
-    auto* splitter = splitter_value.to_object(global_object);
-    if (!splitter)
-        return {};
-
+    auto* splitter = TRY_OR_DISCARD(splitter_value.to_object(global_object));
     auto* array = Array::create(global_object, 0);
     size_t array_length = 0;
 
@@ -705,12 +687,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         if (++array_length == limit)
             return array;
 
-        auto* result_object = result.to_object(global_object);
-        if (!result_object)
-            return {};
+        auto* result_object = TRY_OR_DISCARD(result.to_object(global_object));
         auto number_of_captures = TRY_OR_DISCARD(length_of_array_like(global_object, *result_object));
-        if (vm.exception())
-            return {};
         if (number_of_captures > 0)
             --number_of_captures;
 

@@ -171,9 +171,7 @@ void SheetGlobalObject::visit_edges(Visitor& visitor)
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return JS::js_null();
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
     if (!is<SheetGlobalObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "SheetGlobalObject");
@@ -210,9 +208,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return JS::js_null();
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
     if (!is<SheetGlobalObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "SheetGlobalObject");
@@ -251,9 +247,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return JS::js_null();
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
     if (!is<SheetGlobalObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "SheetGlobalObject");
@@ -289,9 +283,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::current_cell_position)
         return {};
     }
 
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return JS::js_null();
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
     if (!is<SheetGlobalObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "SheetGlobalObject");
@@ -327,9 +319,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_index)
 
     auto& column_name_str = column_name.as_string().string();
 
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return JS::js_null();
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
     if (!is<SheetGlobalObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "SheetGlobalObject");
@@ -368,9 +358,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_arithmetic)
 
     auto offset_number = offset.as_i32();
 
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return JS::js_null();
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
     if (!is<SheetGlobalObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "SheetGlobalObject");
@@ -423,9 +411,7 @@ JS_DEFINE_NATIVE_FUNCTION(WorkbookObject::sheet)
         return {};
     }
 
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
     if (!is<WorkbookObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WorkbookObject");

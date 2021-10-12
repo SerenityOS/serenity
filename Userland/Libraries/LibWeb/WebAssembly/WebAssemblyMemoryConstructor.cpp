@@ -32,10 +32,7 @@ JS::Value WebAssemblyMemoryConstructor::construct(FunctionObject&)
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto descriptor = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
-
+    auto descriptor = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     auto initial_value = TRY_OR_DISCARD(descriptor->get("initial"));
     auto maximum_value = TRY_OR_DISCARD(descriptor->get("maximum"));
 

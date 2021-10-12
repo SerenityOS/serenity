@@ -130,17 +130,19 @@ Result<size_t, JS::Value> parse_module(JS::GlobalObject& global_object, JS::Obje
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
 {
     // FIXME: This shouldn't block!
-    auto buffer = vm.argument(0).to_object(global_object);
+    auto buffer_or_error = vm.argument(0).to_object(global_object);
     JS::Value rejection_value;
-    if (vm.exception()) {
-        rejection_value = vm.exception()->value();
+    if (buffer_or_error.is_error()) {
+        rejection_value = buffer_or_error.throw_completion().value();
         vm.clear_exception();
+        vm.stop_unwind();
     }
     auto promise = JS::Promise::create(global_object);
     if (!rejection_value.is_empty()) {
         promise->reject(rejection_value);
         return promise;
     }
+    auto* buffer = buffer_or_error.release_value();
     auto result = parse_module(global_object, buffer);
     if (result.is_error())
         promise->reject(result.error());
@@ -155,11 +157,13 @@ Result<size_t, JS::Value> WebAssemblyObject::instantiate_module(Wasm::Module con
     HashMap<Wasm::Linker::Name, Wasm::ExternValue> resolved_imports;
     auto import_argument = vm.argument(1);
     if (!import_argument.is_undefined()) {
-        [[maybe_unused]] auto import_object = import_argument.to_object(global_object);
-        if (auto exception = vm.exception()) {
+        auto import_object_or_error = import_argument.to_object(global_object);
+        if (import_object_or_error.is_error()) {
             vm.clear_exception();
-            return exception->value();
+            vm.stop_unwind();
+            return import_object_or_error.throw_completion().value();
         }
+        [[maybe_unused]] auto* import_object = import_object_or_error.release_value();
 
         dbgln("Trying to resolve stuff because import object was specified");
         for (const Wasm::Linker::Name& import_name : linker.unresolved_imports()) {
@@ -168,10 +172,10 @@ Result<size_t, JS::Value> WebAssemblyObject::instantiate_module(Wasm::Module con
             if (value_or_error.is_error())
                 break;
             auto value = value_or_error.release_value();
-            auto object = value.to_object(global_object);
-            if (vm.exception())
+            auto object_or_error = value.to_object(global_object);
+            if (object_or_error.is_error())
                 break;
-
+            auto* object = object_or_error.release_value();
             auto import_or_error = object->get(import_name.name);
             if (import_or_error.is_error())
                 break;
@@ -307,22 +311,17 @@ Result<size_t, JS::Value> WebAssemblyObject::instantiate_module(Wasm::Module con
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
 {
     // FIXME: This shouldn't block!
-    auto buffer = vm.argument(0).to_object(global_object);
+    auto buffer_or_error = vm.argument(0).to_object(global_object);
     auto promise = JS::Promise::create(global_object);
     bool should_return_module = false;
-    auto take_exception_and_reject_if_needed = [&] {
-        if (vm.exception()) {
-            auto rejection_value = vm.exception()->value();
-            vm.clear_exception();
-            promise->reject(rejection_value);
-            return true;
-        }
-
-        return false;
-    };
-
-    if (take_exception_and_reject_if_needed())
+    if (buffer_or_error.is_error()) {
+        auto rejection_value = buffer_or_error.throw_completion().value();
+        vm.clear_exception();
+        vm.stop_unwind();
+        promise->reject(rejection_value);
         return promise;
+    }
+    auto* buffer = buffer_or_error.release_value();
 
     const Wasm::Module* module { nullptr };
     if (is<JS::ArrayBuffer>(buffer) || is<JS::TypedArrayBase>(buffer)) {

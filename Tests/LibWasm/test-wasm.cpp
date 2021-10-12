@@ -93,9 +93,7 @@ HashMap<Wasm::Linker::Name, Wasm::ExternValue> WebAssemblyModule::s_spec_test_na
 
 TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
 {
-    auto object = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     if (!is<JS::Uint8Array>(object)) {
         vm.throw_exception<JS::TypeError>(global_object, "Expected a Uint8Array argument to parse_webassembly_module");
         return {};
@@ -139,17 +137,13 @@ TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
 
 TESTJS_GLOBAL_FUNCTION(compare_typed_arrays, compareTypedArrays)
 {
-    auto lhs = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* lhs = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     if (!is<JS::TypedArrayBase>(lhs)) {
         vm.throw_exception<JS::TypeError>(global_object, "Expected a TypedArray");
         return {};
     }
     auto& lhs_array = static_cast<JS::TypedArrayBase&>(*lhs);
-    auto rhs = vm.argument(1).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* rhs = TRY_OR_DISCARD(vm.argument(1).to_object(global_object));
     if (!is<JS::TypedArrayBase>(rhs)) {
         vm.throw_exception<JS::TypeError>(global_object, "Expected a TypedArray");
         return {};
@@ -169,10 +163,8 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
 {
     auto name = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto this_value = vm.this_value(global_object);
-    auto object = this_value.to_object(global_object);
-    if (vm.exception())
-        return {};
-    if (!object || !is<WebAssemblyModule>(object)) {
+    auto* object = TRY_OR_DISCARD(this_value.to_object(global_object));
+    if (!is<WebAssemblyModule>(object)) {
         vm.throw_exception<JS::TypeError>(global_object, "Not a WebAssemblyModule");
         return {};
     }
