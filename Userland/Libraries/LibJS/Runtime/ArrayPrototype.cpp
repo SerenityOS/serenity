@@ -1009,12 +1009,15 @@ static void array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject
             // the Abstract Relational Comparison in line once iterating over code points, rather
             // than calling it twice after creating two primitive strings.
 
-            auto x_string = x.to_primitive_string(global_object);
-            if (vm.exception())
+            auto x_string_or_error = x.to_primitive_string(global_object);
+            if (x_string_or_error.is_error())
                 return;
-            auto y_string = y.to_primitive_string(global_object);
-            if (vm.exception())
+            auto x_string = x_string_or_error.release_value();
+
+            auto y_string_or_error = y.to_primitive_string(global_object);
+            if (y_string_or_error.is_error())
                 return;
+            auto y_string = y_string_or_error.release_value();
 
             auto x_string_value = Value(x_string);
             auto y_string_value = Value(y_string);

@@ -323,11 +323,11 @@ String Value::to_string_without_side_effects() const
     }
 }
 
-PrimitiveString* Value::to_primitive_string(GlobalObject& global_object)
+ThrowCompletionOr<PrimitiveString*> Value::to_primitive_string(GlobalObject& global_object)
 {
     if (is_string())
         return &as_string();
-    auto string = TRY_OR_DISCARD(to_string(global_object));
+    auto string = TRY(to_string(global_object));
     return js_string(global_object.heap(), string);
 }
 
