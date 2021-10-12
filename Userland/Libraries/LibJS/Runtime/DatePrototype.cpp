@@ -835,9 +835,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_json)
 {
     auto this_value = vm.this_value(global_object);
 
-    auto time_value = this_value.to_primitive(global_object, Value::PreferredType::Number);
-    if (vm.exception())
-        return {};
+    auto time_value = TRY_OR_DISCARD(this_value.to_primitive(global_object, Value::PreferredType::Number));
 
     if (time_value.is_number() && !time_value.is_finite_number())
         return js_null();
