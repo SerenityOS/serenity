@@ -178,6 +178,7 @@ private:
     bool match_identifier() const;
     bool match_identifier_name() const;
     bool match_property_key() const;
+    bool is_private_identifier_valid() const;
     bool match(TokenType type) const;
     bool done() const;
     void expected(const char* what);
@@ -242,6 +243,8 @@ private:
         ScopePusher* current_scope_pusher { nullptr };
 
         HashMap<StringView, Optional<Position>> labels_in_scope;
+        HashTable<StringView>* referenced_private_names { nullptr };
+
         bool strict_mode { false };
         bool allow_super_property_lookup { false };
         bool allow_super_constructor_call { false };

@@ -34,8 +34,9 @@ PrivateName PrivateEnvironment::resolve_private_identifier(FlyString const& iden
 
 void PrivateEnvironment::add_private_name(Badge<ClassExpression>, FlyString description)
 {
-    // FIXME: there is a exception for getter setter pairs.
-    VERIFY(find_private_name(description).is_end());
+    if (!find_private_name(description).is_end())
+        return;
+
     m_private_names.empend(m_unique_id, move(description));
 }
 

@@ -276,8 +276,8 @@ void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
     visitor.visit(m_home_object);
 
     for (auto& field : m_fields) {
-        if (field.name.is_symbol())
-            visitor.visit(field.name.as_symbol());
+        if (auto* property_name_ptr = field.name.get_pointer<PropertyName>(); property_name_ptr && property_name_ptr->is_symbol())
+            visitor.visit(property_name_ptr->as_symbol());
 
         visitor.visit(field.initializer);
     }
@@ -729,17 +729,9 @@ void ECMAScriptFunctionObject::set_name(const FlyString& name)
     VERIFY(success);
 }
 
-// 7.3.31 DefineField ( receiver, fieldRecord ), https://tc39.es/ecma262/#sec-definefield
-void ECMAScriptFunctionObject::InstanceField::define_field(VM& vm, Object& receiver) const
+void ECMAScriptFunctionObject::add_field(ClassElement::ClassElementName property_key, ECMAScriptFunctionObject* initializer)
 {
-    Value init_value = js_undefined();
-    if (initializer) {
-        auto init_value_or_error = vm.call(*initializer, receiver.value_of());
-        if (init_value_or_error.is_error())
-            return;
-        init_value = init_value_or_error.release_value();
-    }
-    (void)receiver.create_data_property_or_throw(name, init_value);
+    m_fields.empend(property_key, initializer);
 }
 
 }
