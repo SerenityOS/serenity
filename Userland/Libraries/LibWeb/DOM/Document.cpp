@@ -459,7 +459,7 @@ static void update_style_recursively(DOM::Node& node)
 
     if (node.child_needs_style_update()) {
         node.for_each_child([&](auto& child) {
-            if (child.needs_style_update())
+            if (child.needs_style_update() || child.child_needs_style_update())
                 update_style_recursively(child);
             return IterationDecision::Continue;
         });
