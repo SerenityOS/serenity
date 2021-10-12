@@ -353,9 +353,7 @@ ThrowCompletionOr<String> Value::to_string(GlobalObject& global_object) const
     case Type::BigInt:
         return m_value.as_bigint->big_integer().to_base(10);
     case Type::Object: {
-        auto primitive_value = to_primitive(global_object, PreferredType::String);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto primitive_value = TRY(to_primitive(global_object, PreferredType::String));
         return primitive_value.to_string(global_object);
     }
     default:
@@ -404,7 +402,7 @@ bool Value::to_boolean() const
 }
 
 // 7.1.1 ToPrimitive ( input [ , preferredType ] ), https://tc39.es/ecma262/#sec-toprimitive
-Value Value::to_primitive(GlobalObject& global_object, PreferredType preferred_type) const
+ThrowCompletionOr<Value> Value::to_primitive(GlobalObject& global_object, PreferredType preferred_type) const
 {
     auto get_hint_for_preferred_type = [&]() -> String {
         switch (preferred_type) {
@@ -420,18 +418,17 @@ Value Value::to_primitive(GlobalObject& global_object, PreferredType preferred_t
     };
     if (is_object()) {
         auto& vm = global_object.vm();
-        auto to_primitive_method = TRY_OR_DISCARD(get_method(global_object, *vm.well_known_symbol_to_primitive()));
+        auto to_primitive_method = TRY(get_method(global_object, *vm.well_known_symbol_to_primitive()));
         if (to_primitive_method) {
             auto hint = get_hint_for_preferred_type();
-            auto result = TRY_OR_DISCARD(vm.call(*to_primitive_method, *this, js_string(vm, hint)));
+            auto result = TRY(vm.call(*to_primitive_method, *this, js_string(vm, hint)));
             if (!result.is_object())
                 return result;
-            vm.throw_exception<TypeError>(global_object, ErrorType::ToPrimitiveReturnedObject, to_string_without_side_effects(), hint);
-            return {};
+            return vm.throw_completion<TypeError>(global_object, ErrorType::ToPrimitiveReturnedObject, to_string_without_side_effects(), hint);
         }
         if (preferred_type == PreferredType::Default)
             preferred_type = PreferredType::Number;
-        return TRY_OR_DISCARD(as_object().ordinary_to_primitive(preferred_type));
+        return as_object().ordinary_to_primitive(preferred_type);
     }
     return *this;
 }
@@ -466,9 +463,7 @@ Object* Value::to_object(GlobalObject& global_object) const
 // 7.1.3 ToNumeric ( value ), https://tc39.es/ecma262/#sec-tonumeric
 FLATTEN Value Value::to_numeric(GlobalObject& global_object) const
 {
-    auto primitive = to_primitive(global_object, Value::PreferredType::Number);
-    if (global_object.vm().exception())
-        return {};
+    auto primitive = TRY_OR_DISCARD(to_primitive(global_object, Value::PreferredType::Number));
     if (primitive.is_bigint())
         return primitive;
     return primitive.to_number(global_object);
@@ -508,9 +503,7 @@ Value Value::to_number(GlobalObject& global_object) const
         global_object.vm().throw_exception<TypeError>(global_object, ErrorType::Convert, "BigInt", "number");
         return {};
     case Type::Object: {
-        auto primitive = to_primitive(global_object, PreferredType::Number);
-        if (global_object.vm().exception())
-            return {};
+        auto primitive = TRY_OR_DISCARD(to_primitive(global_object, PreferredType::Number));
         return primitive.to_number(global_object);
     }
     default:
@@ -522,9 +515,7 @@ Value Value::to_number(GlobalObject& global_object) const
 BigInt* Value::to_bigint(GlobalObject& global_object) const
 {
     auto& vm = global_object.vm();
-    auto primitive = to_primitive(global_object, PreferredType::Number);
-    if (vm.exception())
-        return nullptr;
+    auto primitive = TRY_OR_DISCARD(to_primitive(global_object, PreferredType::Number));
     switch (primitive.type()) {
     case Type::Undefined:
         vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "undefined", "BigInt");
@@ -587,9 +578,7 @@ double Value::to_double(GlobalObject& global_object) const
 // 7.1.19 ToPropertyKey ( argument ), https://tc39.es/ecma262/#sec-topropertykey
 StringOrSymbol Value::to_property_key(GlobalObject& global_object) const
 {
-    auto key = to_primitive(global_object, PreferredType::String);
-    if (global_object.vm().exception())
-        return {};
+    auto key = TRY_OR_DISCARD(to_primitive(global_object, PreferredType::String));
     if (key.is_symbol())
         return &key.as_symbol();
     return TRY_OR_DISCARD(key.to_string(global_object));
@@ -1073,12 +1062,8 @@ Value add(GlobalObject& global_object, Value lhs, Value rhs)
         return Value(lhs.as_double() + rhs.as_double());
     }
     auto& vm = global_object.vm();
-    auto lhs_primitive = lhs.to_primitive(global_object);
-    if (vm.exception())
-        return {};
-    auto rhs_primitive = rhs.to_primitive(global_object);
-    if (vm.exception())
-        return {};
+    auto lhs_primitive = TRY_OR_DISCARD(lhs.to_primitive(global_object));
+    auto rhs_primitive = TRY_OR_DISCARD(rhs.to_primitive(global_object));
 
     if (lhs_primitive.is_string() && rhs_primitive.is_string()) {
         auto const& lhs_string = lhs_primitive.as_string();
@@ -1445,16 +1430,12 @@ bool is_loosely_equal(GlobalObject& global_object, Value lhs, Value rhs)
         return is_loosely_equal(global_object, lhs, rhs.to_number(global_object));
 
     if ((lhs.is_string() || lhs.is_number() || lhs.is_bigint() || lhs.is_symbol()) && rhs.is_object()) {
-        auto rhs_primitive = rhs.to_primitive(global_object);
-        if (vm.exception())
-            return false;
+        auto rhs_primitive = TRY_OR_DISCARD(rhs.to_primitive(global_object));
         return is_loosely_equal(global_object, lhs, rhs_primitive);
     }
 
     if (lhs.is_object() && (rhs.is_string() || rhs.is_number() || lhs.is_bigint() || rhs.is_symbol())) {
-        auto lhs_primitive = lhs.to_primitive(global_object);
-        if (vm.exception())
-            return false;
+        auto lhs_primitive = TRY_OR_DISCARD(lhs.to_primitive(global_object));
         return is_loosely_equal(global_object, lhs_primitive, rhs);
     }
 
@@ -1479,19 +1460,11 @@ TriState is_less_than(GlobalObject& global_object, bool left_first, Value lhs, V
     Value y_primitive;
 
     if (left_first) {
-        x_primitive = lhs.to_primitive(global_object, Value::PreferredType::Number);
-        if (global_object.vm().exception())
-            return {};
-        y_primitive = rhs.to_primitive(global_object, Value::PreferredType::Number);
-        if (global_object.vm().exception())
-            return {};
+        x_primitive = TRY_OR_DISCARD(lhs.to_primitive(global_object, Value::PreferredType::Number));
+        y_primitive = TRY_OR_DISCARD(rhs.to_primitive(global_object, Value::PreferredType::Number));
     } else {
-        y_primitive = lhs.to_primitive(global_object, Value::PreferredType::Number);
-        if (global_object.vm().exception())
-            return {};
-        x_primitive = rhs.to_primitive(global_object, Value::PreferredType::Number);
-        if (global_object.vm().exception())
-            return {};
+        y_primitive = TRY_OR_DISCARD(lhs.to_primitive(global_object, Value::PreferredType::Number));
+        x_primitive = TRY_OR_DISCARD(rhs.to_primitive(global_object, Value::PreferredType::Number));
     }
 
     if (x_primitive.is_string() && y_primitive.is_string()) {

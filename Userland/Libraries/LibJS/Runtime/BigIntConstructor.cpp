@@ -48,9 +48,7 @@ Value BigIntConstructor::call()
     auto value = vm.argument(0);
 
     // 2. Let prim be ? ToPrimitive(value, number).
-    auto primitive = value.to_primitive(global_object, Value::PreferredType::Number);
-    if (vm.exception())
-        return {};
+    auto primitive = TRY_OR_DISCARD(value.to_primitive(global_object, Value::PreferredType::Number));
 
     // 3. If Type(prim) is Number, return ? NumberToBigInt(prim).
     if (primitive.is_number())
