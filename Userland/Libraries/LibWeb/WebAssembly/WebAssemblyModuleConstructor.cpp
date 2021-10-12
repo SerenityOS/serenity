@@ -34,10 +34,7 @@ JS::Value WebAssemblyModuleConstructor::construct(FunctionObject&)
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto buffer_object = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
-
+    auto* buffer_object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     auto result = parse_module(global_object, buffer_object);
     if (result.is_error()) {
         vm.throw_exception(global_object, result.error());

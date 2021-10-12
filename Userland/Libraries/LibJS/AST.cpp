@@ -438,9 +438,7 @@ Value WithStatement::execute(Interpreter& interpreter, GlobalObject& global_obje
         return {};
 
     // 2. Let obj be ? ToObject(? GetValue(value)).
-    auto* object = value.to_object(global_object);
-    if (interpreter.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(value.to_object(global_object));
 
     // 3. Let oldEnv be the running execution context's LexicalEnvironment.
     auto* old_environment = interpreter.vm().running_execution_context().lexical_environment;
@@ -819,8 +817,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     if (rhs_result.is_nullish())
         return js_undefined();
 
-    auto* object = rhs_result.to_object(global_object);
-    VERIFY(object);
+    auto* object = MUST(rhs_result.to_object(global_object));
 
     // 14.7.5.7 ForIn/OfBodyEvaluation ( lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet [ , iteratorKind ] ), https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset
     Environment* old_environment = interpreter.lexical_environment();

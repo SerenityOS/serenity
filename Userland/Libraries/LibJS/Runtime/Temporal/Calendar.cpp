@@ -421,9 +421,7 @@ ThrowCompletionOr<PlainDate*> date_from_fields(GlobalObject& global_object, Obje
     auto date = TRY(Value(&calendar).invoke(global_object, vm.names.dateFromFields, &fields, &options));
 
     // 4. Perform ? RequireInternalSlot(date, [[InitializedTemporalDate]]).
-    auto* date_object = date.to_object(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto* date_object = TRY(date.to_object(global_object));
     if (!is<PlainDate>(date_object))
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainDate");
 
@@ -447,9 +445,7 @@ ThrowCompletionOr<PlainYearMonth*> year_month_from_fields(GlobalObject& global_o
     auto year_month = TRY(Value(&calendar).invoke(global_object, vm.names.yearMonthFromFields, &fields, options ?: js_undefined()));
 
     // 6. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
-    auto* year_month_object = year_month.to_object(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto* year_month_object = TRY(year_month.to_object(global_object));
     if (!is<PlainYearMonth>(year_month_object))
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainYearMonth");
 
@@ -473,9 +469,7 @@ ThrowCompletionOr<PlainMonthDay*> month_day_from_fields(GlobalObject& global_obj
     auto month_day = TRY(Value(&calendar).invoke(global_object, vm.names.monthDayFromFields, &fields, options ?: js_undefined()));
 
     // 6. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day_object = month_day.to_object(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto* month_day_object = TRY(month_day.to_object(global_object));
     if (!is<PlainMonthDay>(month_day_object))
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainMonthDay");
 

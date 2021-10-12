@@ -165,7 +165,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
         }
     }
 
-    auto* array_like = items.to_object(global_object);
+    auto* array_like = MUST(items.to_object(global_object));
 
     auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *array_like));
 

@@ -434,13 +434,12 @@ ThrowCompletionOr<Value> Value::to_primitive(GlobalObject& global_object, Prefer
 }
 
 // 7.1.18 ToObject ( argument ), https://tc39.es/ecma262/#sec-toobject
-Object* Value::to_object(GlobalObject& global_object) const
+ThrowCompletionOr<Object*> Value::to_object(GlobalObject& global_object) const
 {
     switch (m_type) {
     case Type::Undefined:
     case Type::Null:
-        global_object.vm().throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndefined);
-        return nullptr;
+        return global_object.vm().throw_completion<TypeError>(global_object, ErrorType::ToObjectNullOrUndefined);
     case Type::Boolean:
         return BooleanObject::create(global_object, m_value.as_bool);
     case Type::Int32:
@@ -455,7 +454,6 @@ Object* Value::to_object(GlobalObject& global_object) const
     case Type::Object:
         return &const_cast<Object&>(as_object());
     default:
-        dbgln("Dying because I can't to_object() on {}", *this);
         VERIFY_NOT_REACHED();
     }
 }
@@ -780,15 +778,11 @@ double Value::to_integer_or_infinity(GlobalObject& global_object) const
 // 7.3.3 GetV ( V, P ), https://tc39.es/ecma262/#sec-getv
 Value Value::get(GlobalObject& global_object, PropertyName const& property_name) const
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
 
     // 2. Let O be ? ToObject(V).
-    auto* object = to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(to_object(global_object));
 
     // 3. Return ? O.[[Get]](P, V).
     return TRY_OR_DISCARD(object->internal_get(property_name, *this));

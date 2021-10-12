@@ -61,9 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::catch_)
 // 27.2.5.3 Promise.prototype.finally ( onFinally ), https://tc39.es/ecma262/#sec-promise.prototype.finally
 JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
 {
-    auto* promise = vm.this_value(global_object).to_object(global_object);
-    if (!promise)
-        return {};
+    auto* promise = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, *promise, *global_object.promise_constructor()));
     Value then_finally;
     Value catch_finally;

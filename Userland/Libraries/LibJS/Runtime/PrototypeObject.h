@@ -44,9 +44,7 @@ public:
     {
         auto& vm = global_object.vm();
 
-        auto* this_object = vm.this_value(global_object).to_object(global_object);
-        if (!this_object)
-            return nullptr;
+        auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
         if (!is<ObjectType>(this_object)) {
             vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, PrototypeType::display_name());

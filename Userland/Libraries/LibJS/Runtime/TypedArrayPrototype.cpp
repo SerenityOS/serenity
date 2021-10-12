@@ -790,10 +790,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
         auto target_length = typed_array->array_length();
         auto target_byte_offset = typed_array->byte_offset();
 
-        auto src = source.to_object(global_object);
-        if (vm.exception())
-            return {};
-
+        auto src = TRY_OR_DISCARD(source.to_object(global_object));
         auto source_length = TRY_OR_DISCARD(length_of_array_like(global_object, *src));
 
         if (isinf(target_offset)) {

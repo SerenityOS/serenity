@@ -100,9 +100,7 @@ JS::ThrowCompletionOr<JS::MarkedValueList> ConsoleGlobalObject::internal_own_pro
 
 JS_DEFINE_NATIVE_GETTER(ConsoleGlobalObject::inspected_node_getter)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return JS::js_null();
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
     if (!is<ConsoleGlobalObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "ConsoleGlobalObject");

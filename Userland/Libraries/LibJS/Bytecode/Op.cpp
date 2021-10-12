@@ -129,9 +129,10 @@ void IteratorToArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
-    auto iterator = interpreter.accumulator().to_object(global_object);
-    if (vm.exception())
+    auto iterator_or_error = interpreter.accumulator().to_object(global_object);
+    if (iterator_or_error.is_error())
         return;
+    auto* iterator = iterator_or_error.release_value();
 
     auto array = Array::create(global_object, 0);
     size_t index = 0;
@@ -179,9 +180,10 @@ void NewRegExp::execute_impl(Bytecode::Interpreter& interpreter) const
 
 void CopyObjectExcludingProperties::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto* from_object = interpreter.reg(m_from_object).to_object(interpreter.global_object());
-    if (interpreter.vm().exception())
+    auto from_object_or_error = interpreter.reg(m_from_object).to_object(interpreter.global_object());
+    if (from_object_or_error.is_error())
         return;
+    auto* from_object = from_object_or_error.release_value();
 
     auto* to_object = Object::create(interpreter.global_object(), interpreter.global_object().object_prototype());
 
@@ -238,18 +240,23 @@ void SetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 
 void GetById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    if (auto* object = interpreter.accumulator().to_object(interpreter.global_object())) {
-        auto value_or_error = object->get(interpreter.current_executable().get_string(m_property));
-        if (value_or_error.is_error())
-            return;
-        interpreter.accumulator() = value_or_error.release_value();
-    }
+    auto object_or_error = interpreter.accumulator().to_object(interpreter.global_object());
+    if (object_or_error.is_error())
+        return;
+    auto* object = object_or_error.release_value();
+    auto value_or_error = object->get(interpreter.current_executable().get_string(m_property));
+    if (value_or_error.is_error())
+        return;
+    interpreter.accumulator() = value_or_error.release_value();
 }
 
 void PutById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    if (auto* object = interpreter.reg(m_base).to_object(interpreter.global_object()))
-        MUST(object->set(interpreter.current_executable().get_string(m_property), interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
+    auto object_or_error = interpreter.reg(m_base).to_object(interpreter.global_object());
+    if (object_or_error.is_error())
+        return;
+    auto* object = object_or_error.release_value();
+    MUST(object->set(interpreter.current_executable().get_string(m_property), interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
 }
 
 void Jump::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -430,25 +437,29 @@ void Yield::replace_references_impl(BasicBlock const& from, BasicBlock const& to
 
 void GetByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    if (auto* object = interpreter.reg(m_base).to_object(interpreter.global_object())) {
-        auto property_key = interpreter.accumulator().to_property_key(interpreter.global_object());
-        if (interpreter.vm().exception())
-            return;
-        auto value_or_error = object->get(property_key);
-        if (value_or_error.is_error())
-            return;
-        interpreter.accumulator() = value_or_error.release_value();
-    }
+    auto object_or_error = interpreter.reg(m_base).to_object(interpreter.global_object());
+    if (object_or_error.is_error())
+        return;
+    auto* object = object_or_error.release_value();
+    auto property_key = interpreter.accumulator().to_property_key(interpreter.global_object());
+    if (interpreter.vm().exception())
+        return;
+    auto value_or_error = object->get(property_key);
+    if (value_or_error.is_error())
+        return;
+    interpreter.accumulator() = value_or_error.release_value();
 }
 
 void PutByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    if (auto* object = interpreter.reg(m_base).to_object(interpreter.global_object())) {
-        auto property_key = interpreter.reg(m_property).to_property_key(interpreter.global_object());
-        if (interpreter.vm().exception())
-            return;
-        MUST(object->set(property_key, interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
-    }
+    auto object_or_error = interpreter.reg(m_base).to_object(interpreter.global_object());
+    if (object_or_error.is_error())
+        return;
+    auto* object = object_or_error.release_value();
+    auto property_key = interpreter.reg(m_property).to_property_key(interpreter.global_object());
+    if (interpreter.vm().exception())
+        return;
+    MUST(object->set(property_key, interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
 }
 
 void GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -458,20 +469,29 @@ void GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
 
 void IteratorNext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    if (auto* object = interpreter.accumulator().to_object(interpreter.global_object()))
-        interpreter.accumulator() = iterator_next(*object);
+    auto object_or_error = interpreter.accumulator().to_object(interpreter.global_object());
+    if (object_or_error.is_error())
+        return;
+    auto* object = object_or_error.release_value();
+    interpreter.accumulator() = iterator_next(*object);
 }
 
 void IteratorResultDone::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    if (auto* iterator_result = interpreter.accumulator().to_object(interpreter.global_object()))
-        interpreter.accumulator() = Value(iterator_complete(interpreter.global_object(), *iterator_result));
+    auto iterator_result_or_error = interpreter.accumulator().to_object(interpreter.global_object());
+    if (iterator_result_or_error.is_error())
+        return;
+    auto* iterator_result = iterator_result_or_error.release_value();
+    interpreter.accumulator() = Value(iterator_complete(interpreter.global_object(), *iterator_result));
 }
 
 void IteratorResultValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    if (auto* iterator_result = interpreter.accumulator().to_object(interpreter.global_object()))
-        interpreter.accumulator() = iterator_value(interpreter.global_object(), *iterator_result);
+    auto iterator_result_or_error = interpreter.accumulator().to_object(interpreter.global_object());
+    if (iterator_result_or_error.is_error())
+        return;
+    auto* iterator_result = iterator_result_or_error.release_value();
+    interpreter.accumulator() = iterator_value(interpreter.global_object(), *iterator_result);
 }
 
 void NewClass::execute_impl(Bytecode::Interpreter&) const

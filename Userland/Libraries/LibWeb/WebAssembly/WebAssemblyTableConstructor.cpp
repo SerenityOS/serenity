@@ -34,10 +34,7 @@ JS::Value WebAssemblyTableConstructor::construct(FunctionObject&)
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto descriptor = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
-
+    auto descriptor = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     auto element_value = TRY_OR_DISCARD(descriptor->get("element"));
     if (!element_value.is_string()) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::InvalidHint, element_value.to_string_without_side_effects());
