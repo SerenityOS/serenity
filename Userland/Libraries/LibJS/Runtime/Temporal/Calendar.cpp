@@ -297,12 +297,8 @@ ThrowCompletionOr<Value> calendar_era(GlobalObject& global_object, Object& calen
     auto result = TRY(Value(&calendar).invoke(global_object, vm.names.era, &date_like));
 
     // 3. If result is not undefined, set result to ? ToString(result).
-    if (!result.is_undefined()) {
-        auto result_string = result.to_string(global_object);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
-        result = js_string(vm, move(result_string));
-    }
+    if (!result.is_undefined())
+        result = js_string(vm, TRY(result.to_string(global_object)));
 
     // 4. Return result.
     return result;
@@ -362,9 +358,7 @@ ThrowCompletionOr<Object*> to_temporal_calendar(GlobalObject& global_object, Val
     }
 
     // 2. Let identifier be ? ToString(temporalCalendarLike).
-    auto identifier = temporal_calendar_like.to_string(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto identifier = TRY(temporal_calendar_like.to_string(global_object));
 
     // 3. If ! IsBuiltinCalendar(identifier) is false, then
     if (!is_builtin_calendar(identifier)) {
@@ -510,21 +504,15 @@ String format_calendar_annotation(StringView id, StringView show_calendar)
 // 12.1.28 CalendarEquals ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-calendarequals
 ThrowCompletionOr<bool> calendar_equals(GlobalObject& global_object, Object& one, Object& two)
 {
-    auto& vm = global_object.vm();
-
     // 1. If one and two are the same Object value, return true.
     if (&one == &two)
         return true;
 
     // 2. Let calendarOne be ? ToString(one).
-    auto calendar_one = Value(&one).to_string(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto calendar_one = TRY(Value(&one).to_string(global_object));
 
     // 3. Let calendarTwo be ? ToString(two).
-    auto calendar_two = Value(&two).to_string(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto calendar_two = TRY(Value(&two).to_string(global_object));
 
     // 4. If calendarOne is calendarTwo, return true.
     if (calendar_one == calendar_two)
@@ -543,14 +531,10 @@ ThrowCompletionOr<Object*> consolidate_calendars(GlobalObject& global_object, Ob
         return &two;
 
     // 2. Let calendarOne be ? ToString(one).
-    auto calendar_one = Value(&one).to_string(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto calendar_one = TRY(Value(&one).to_string(global_object));
 
     // 3. Let calendarTwo be ? ToString(two).
-    auto calendar_two = Value(&two).to_string(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto calendar_two = TRY(Value(&two).to_string(global_object));
 
     // 4. If calendarOne is calendarTwo, return two.
     if (calendar_one == calendar_two)

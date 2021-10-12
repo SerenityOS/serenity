@@ -125,9 +125,7 @@ ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Valu
     (void)TRY(to_temporal_overflow(global_object, *options));
 
     // 5. Let string be ? ToString(item).
-    auto string = item.to_string(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto string = TRY(item.to_string(global_object));
 
     // 6. Let result be ? ParseTemporalDateString(string).
     auto result = TRY(parse_temporal_date_string(global_object, string));
@@ -516,8 +514,6 @@ String pad_iso_year(i32 y)
 // 3.5.8 TemporalDateToString ( temporalDate, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporaldatetostring
 ThrowCompletionOr<String> temporal_date_to_string(GlobalObject& global_object, PlainDate& temporal_date, StringView show_calendar)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: Type(temporalDate) is Object.
     // 2. Assert: temporalDate has an [[InitializedTemporalDate]] internal slot.
 
@@ -531,9 +527,7 @@ ThrowCompletionOr<String> temporal_date_to_string(GlobalObject& global_object, P
     auto day = String::formatted("{:02}", temporal_date.iso_day());
 
     // 6. Let calendarID be ? ToString(temporalDate.[[Calendar]]).
-    auto calendar_id = Value(&temporal_date.calendar()).to_string(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto calendar_id = TRY(Value(&temporal_date.calendar()).to_string(global_object));
 
     // 7. Let calendar be ! FormatCalendarAnnotation(calendarID, showCalendar).
     auto calendar = format_calendar_annotation(calendar_id, show_calendar);

@@ -31,7 +31,7 @@ namespace JS {
 static Optional<String> ak_string_from(VM& vm, GlobalObject& global_object)
 {
     auto this_value = TRY_OR_DISCARD(require_object_coercible(global_object, vm.this_value(global_object)));
-    return this_value.to_string(global_object);
+    return TRY_OR_DISCARD(this_value.to_string(global_object));
 }
 
 static Utf16String utf16_string_from(VM& vm, GlobalObject& global_object)
@@ -564,9 +564,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::concat)
     StringBuilder builder;
     builder.append(*string);
     for (size_t i = 0; i < vm.argument_count(); ++i) {
-        auto string_argument = vm.argument(i).to_string(global_object);
-        if (vm.exception())
-            return {};
+        auto string_argument = TRY_OR_DISCARD(vm.argument(i).to_string(global_object));
         builder.append(string_argument);
     }
     return js_string(vm, builder.to_string());
@@ -846,9 +844,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::at)
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
 {
     auto this_object = TRY_OR_DISCARD(require_object_coercible(global_object, vm.this_value(global_object)));
-    auto string = this_object.to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(this_object.to_string(global_object));
     return StringIterator::create(global_object, string);
 }
 
@@ -882,9 +878,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
         if (is_regexp) {
             auto flags = TRY_OR_DISCARD(regexp.as_object().get("flags"));
             auto flags_object = TRY_OR_DISCARD(require_object_coercible(global_object, flags));
-            auto flags_string = flags_object.to_string(global_object);
-            if (vm.exception())
-                return {};
+            auto flags_string = TRY_OR_DISCARD(flags_object.to_string(global_object));
             if (!flags_string.contains("g")) {
                 vm.throw_exception<TypeError>(global_object, ErrorType::StringNonGlobalRegExp);
                 return {};
@@ -941,10 +935,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
 
     if (replace_value.is_function()) {
         auto result = TRY_OR_DISCARD(vm.call(replace_value.as_function(), js_undefined(), js_string(vm, search_string), Value(position.value()), js_string(vm, string)));
-
-        replacement = result.to_string(global_object);
-        if (vm.exception())
-            return {};
+        replacement = TRY_OR_DISCARD(result.to_string(global_object));
     } else {
         replacement = TRY_OR_DISCARD(get_substitution(global_object, search_string.view(), string.view(), *position, {}, js_undefined(), replace_value));
     }
@@ -970,9 +961,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
         if (is_regexp) {
             auto flags = TRY_OR_DISCARD(search_value.as_object().get(vm.names.flags));
             auto flags_object = TRY_OR_DISCARD(require_object_coercible(global_object, flags));
-            auto flags_string = flags_object.to_string(global_object);
-            if (vm.exception())
-                return {};
+            auto flags_string = TRY_OR_DISCARD(flags_object.to_string(global_object));
             if (!flags_string.contains("g")) {
                 vm.throw_exception<TypeError>(global_object, ErrorType::StringNonGlobalRegExp);
                 return {};
@@ -1021,10 +1010,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
 
         if (replace_value.is_function()) {
             auto result = TRY_OR_DISCARD(vm.call(replace_value.as_function(), js_undefined(), js_string(vm, search_string), Value(position), js_string(vm, string)));
-
-            replacement = result.to_string(global_object);
-            if (vm.exception())
-                return {};
+            replacement = TRY_OR_DISCARD(result.to_string(global_object));
         } else {
             replacement = TRY_OR_DISCARD(get_substitution(global_object, search_string.view(), string.view(), position, {}, js_undefined(), replace_value));
         }
@@ -1066,16 +1052,12 @@ static Value create_html(GlobalObject& global_object, Value string, const String
 {
     auto& vm = global_object.vm();
     TRY_OR_DISCARD(require_object_coercible(global_object, string));
-    auto str = string.to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto str = TRY_OR_DISCARD(string.to_string(global_object));
     StringBuilder builder;
     builder.append('<');
     builder.append(tag);
     if (!attribute.is_empty()) {
-        auto value_string = value.to_string(global_object);
-        if (vm.exception())
-            return {};
+        auto value_string = TRY_OR_DISCARD(value.to_string(global_object));
         builder.append(' ');
         builder.append(attribute);
         builder.append("=\"");
@@ -1176,9 +1158,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::locale_compare)
     if (!string.has_value())
         return {};
 
-    auto that_string = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto that_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
 
     // FIXME: Actually compare the string not just according to their bits.
     if (string == that_string)

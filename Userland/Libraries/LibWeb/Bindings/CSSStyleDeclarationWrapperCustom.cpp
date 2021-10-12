@@ -48,9 +48,7 @@ JS::ThrowCompletionOr<bool> CSSStyleDeclarationWrapper::internal_set(JS::Propert
     if (property_id == CSS::PropertyID::Invalid)
         return Base::internal_set(name, value, receiver);
 
-    auto css_text = value.to_string(global_object());
-    if (auto* exception = vm().exception())
-        return JS::throw_completion(exception->value());
+    auto css_text = TRY(value.to_string(global_object()));
 
     impl().set_property(property_id, css_text);
     return true;

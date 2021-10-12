@@ -18,9 +18,7 @@ TESTJS_GLOBAL_FUNCTION(is_strict_mode, isStrictMode, 0)
 
 TESTJS_GLOBAL_FUNCTION(can_parse_source, canParseSource)
 {
-    auto source = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto source = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto parser = JS::Parser(JS::Lexer(source));
     parser.parse_program();
     return JS::Value(!parser.has_errors());

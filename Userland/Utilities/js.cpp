@@ -890,9 +890,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView const& source
 
 static JS::Value load_file_impl(JS::VM& vm, JS::GlobalObject& global_object)
 {
-    auto filename = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto filename = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto file = Core::File::construct(filename);
     if (!file->open(Core::OpenMode::ReadOnly)) {
         vm.throw_exception<JS::Error>(global_object, String::formatted("Failed to open '{}': {}", filename, file->error_string()));
@@ -914,9 +912,7 @@ static JS::Value load_file_impl(JS::VM& vm, JS::GlobalObject& global_object)
 
 static JS::Value load_json_impl(JS::VM& vm, JS::GlobalObject& global_object)
 {
-    auto filename = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto filename = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto file = Core::File::construct(filename);
     if (!file->open(Core::OpenMode::ReadOnly)) {
         vm.throw_exception<JS::Error>(global_object, String::formatted("Failed to open '{}': {}", filename, file->error_string()));

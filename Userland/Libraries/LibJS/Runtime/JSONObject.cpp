@@ -65,14 +65,11 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
                     if (replacer_value.is_string()) {
                         item = replacer_value.as_string().string();
                     } else if (replacer_value.is_number()) {
-                        item = replacer_value.to_string(global_object);
+                        item = MUST(replacer_value.to_string(global_object));
                     } else if (replacer_value.is_object()) {
                         auto& value_object = replacer_value.as_object();
-                        if (is<StringObject>(value_object) || is<NumberObject>(value_object)) {
-                            item = replacer_value.to_string(global_object);
-                            if (vm.exception())
-                                return {};
-                        }
+                        if (is<StringObject>(value_object) || is<NumberObject>(value_object))
+                            item = TRY_OR_DISCARD(replacer_value.to_string(global_object));
                     }
                     if (!item.is_null() && !list.contains_slow(item)) {
                         list.append(item);
@@ -178,7 +175,7 @@ String JSONObject::serialize_json_property(GlobalObject& global_object, Stringif
         return quote_json_string(value.as_string().string());
     if (value.is_number()) {
         if (value.is_finite_number())
-            return value.to_string(global_object);
+            return MUST(value.to_string(global_object));
         return "null";
     }
     if (value.is_bigint()) {
@@ -392,9 +389,7 @@ String JSONObject::quote_json_string(String string)
 // 25.5.1 JSON.parse ( text [ , reviver ] ), https://tc39.es/ecma262/#sec-json.parse
 JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
 {
-    auto string = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto reviver = vm.argument(1);
 
     auto json = JsonValue::from_string(string);

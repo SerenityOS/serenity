@@ -42,9 +42,7 @@ Value ErrorConstructor::construct(FunctionObject& new_target)
     auto* error = TRY_OR_DISCARD(ordinary_create_from_constructor<Error>(global_object, new_target, &GlobalObject::error_prototype));
 
     if (!vm.argument(0).is_undefined()) {
-        auto message = vm.argument(0).to_string(global_object);
-        if (vm.exception())
-            return {};
+        auto message = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
         MUST(error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, message)));
     }
 
@@ -89,9 +87,7 @@ Value ErrorConstructor::construct(FunctionObject& new_target)
             global_object, new_target, &GlobalObject::snake_name##_prototype));                                  \
                                                                                                                  \
         if (!vm.argument(0).is_undefined()) {                                                                    \
-            auto message = vm.argument(0).to_string(global_object);                                              \
-            if (vm.exception())                                                                                  \
-                return {};                                                                                       \
+            auto message = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));                              \
             MUST(error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, message))); \
         }                                                                                                        \
                                                                                                                  \

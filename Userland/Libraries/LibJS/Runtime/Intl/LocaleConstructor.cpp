@@ -292,9 +292,7 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
     // 9. Else,
     else {
         // a. Let tag be ? ToString(tag).
-        tag = tag_value.to_string(global_object);
-        if (vm.exception())
-            return {};
+        tag = TRY_OR_DISCARD(tag_value.to_string(global_object));
     }
 
     // 10. Set options to ? CoerceOptionsToObject(options).
@@ -343,7 +341,7 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
     // 24. If kn is not undefined, set kn to ! ToString(kn).
     // 25. Set opt.[[kn]] to kn.
     if (!kn.is_undefined())
-        opt.kn = kn.to_string(global_object);
+        opt.kn = TRY_OR_DISCARD(kn.to_string(global_object));
 
     // 26. Let numberingSystem be ? GetOption(options, "numberingSystem", "string", undefined, undefined).
     // 27. If numberingSystem is not undefined, then
