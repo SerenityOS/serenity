@@ -37,6 +37,11 @@ void Reference::put_value(GlobalObject& global_object, Value value)
             return;
         auto* base_obj = base_obj_or_error.release_value();
 
+        if (is_private_reference()) {
+            base_obj->private_set(m_private_name, value);
+            return;
+        }
+
         auto succeeded_or_error = base_obj->internal_set(m_name, value, get_this_value());
         if (succeeded_or_error.is_error())
             return;
@@ -76,6 +81,10 @@ Value Reference::get_value(GlobalObject& global_object) const
 
     if (is_property_reference()) {
         auto* base_obj = TRY_OR_DISCARD(m_base_value.to_object(global_object));
+
+        if (is_private_reference())
+            return TRY_OR_DISCARD(base_obj->private_get(m_private_name));
+
         return TRY_OR_DISCARD(base_obj->get(m_name));
     }
 
@@ -111,7 +120,7 @@ bool Reference::delete_(GlobalObject& global_object)
     // 5. If IsPropertyReference(ref) is true, then
     if (is_property_reference()) {
         // a. Assert: ! IsPrivateReference(ref) is false.
-        // FIXME: We don't have private references yet.
+        VERIFY(!is_private_reference());
 
         // b. If IsSuperReference(ref) is true, throw a ReferenceError exception.
         if (is_super_reference()) {
@@ -179,6 +188,14 @@ String Reference::to_string() const
 
     builder.append(" }");
     return builder.to_string();
+}
+
+// 6.2.4.9 MakePrivateReference ( baseValue, privateIdentifier ), https://tc39.es/ecma262/#sec-makeprivatereference
+Reference make_private_reference(VM& vm, Value base_value, FlyString const& private_identifier)
+{
+    auto* private_environment = vm.running_execution_context().private_environment;
+    VERIFY(private_environment);
+    return Reference { base_value, private_environment->resolve_private_identifier(private_identifier) };
 }
 
 }
