@@ -633,9 +633,7 @@ ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& o
     // 6. If type is "string", then
     else {
         // a. Let value be ? ToString(value).
-        value = value.to_primitive_string(global_object);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        value = TRY(value.to_primitive_string(global_object));
     }
 
     // 7. If values is not undefined and values does not contain an element equal to value, throw a RangeError exception.
