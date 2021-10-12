@@ -10,6 +10,7 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
@@ -464,6 +465,100 @@ ThrowCompletionOr<Object*> Object::copy_data_properties(Value source, HashTable<
         }
     }
     return this;
+}
+
+// 7.3.26 PrivateElementFind ( O, P ), https://tc39.es/ecma262/#sec-privateelementfind
+PrivateElement* Object::private_element_find(PrivateName const& name)
+{
+    auto element = m_private_elements.find_if([&](auto const& element) {
+        return element.key == name;
+    });
+
+    if (element.is_end())
+        return nullptr;
+
+    return &(*element);
+}
+
+// 7.3.27 PrivateFieldAdd ( O, P, value ), https://tc39.es/ecma262/#sec-privatefieldadd
+ThrowCompletionOr<void> Object::private_field_add(PrivateName const& name, Value value)
+{
+    if (auto* entry = private_element_find(name); entry)
+        return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldAlreadyDeclared, name.description);
+    m_private_elements.empend(name, PrivateElement::Kind::Field, value);
+    return {};
+}
+
+// 7.3.28 PrivateMethodOrAccessorAdd ( O, method ), https://tc39.es/ecma262/#sec-privatemethodoraccessoradd
+ThrowCompletionOr<void> Object::private_method_or_accessor_add(PrivateElement element)
+{
+    VERIFY(element.kind == PrivateElement::Kind::Method || element.kind == PrivateElement::Kind::Accessor);
+    if (auto* entry = private_element_find(element.key); entry)
+        return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldAlreadyDeclared, element.key.description);
+    m_private_elements.append(move(element));
+    return {};
+}
+
+// 7.3.29 PrivateGet ( O, P ), https://tc39.es/ecma262/#sec-privateget
+ThrowCompletionOr<Value> Object::private_get(PrivateName const& name)
+{
+    auto* entry = private_element_find(name);
+    if (!entry)
+        return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldDoesNotExistOnObject, name.description);
+
+    auto& value = entry->value;
+
+    if (entry->kind != PrivateElement::Kind::Accessor)
+        return value;
+
+    VERIFY(value.is_accessor());
+    auto* getter = value.as_accessor().getter();
+    if (!getter)
+        return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldGetAccessorWithoutGetter, name.description);
+
+    // 8. Return ? Call(getter, Receiver).
+    return TRY(vm().call(*getter, this));
+}
+
+// 7.3.30 PrivateSet ( O, P, value ), https://tc39.es/ecma262/#sec-privateset
+ThrowCompletionOr<void> Object::private_set(PrivateName const& name, Value value)
+{
+    auto* entry = private_element_find(name);
+    if (!entry)
+        return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldDoesNotExistOnObject, name.description);
+
+    if (entry->kind == PrivateElement::Kind::Field) {
+        entry->value = value;
+        return {};
+    } else if (entry->kind == PrivateElement::Kind::Method) {
+        return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldSetMethod, name.description);
+    }
+
+    VERIFY(entry->kind == PrivateElement::Kind::Accessor);
+
+    auto& accessor = entry->value;
+    VERIFY(accessor.is_accessor());
+    auto* setter = accessor.as_accessor().setter();
+    if (!setter)
+        return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldSetAccessorWithoutSetter, name.description);
+
+    TRY(vm().call(*setter, this, value));
+    return {};
+}
+
+// 7.3.31 DefineField ( receiver, fieldRecord ), https://tc39.es/ecma262/#sec-definefield
+ThrowCompletionOr<void> Object::define_field(Variant<PropertyName, PrivateName> name, ECMAScriptFunctionObject* initializer)
+{
+    Value init_value = js_undefined();
+    if (initializer)
+        init_value = TRY(vm().call(*initializer, this));
+
+    if (auto* property_name_ptr = name.get_pointer<PropertyName>())
+        TRY(create_data_property_or_throw(*property_name_ptr, init_value));
+    else
+        TRY(private_field_add(name.get<PrivateName>(), init_value));
+
+    return {};
 }
 
 // 10.1 Ordinary Object Internal Methods and Internal Slots, https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots
@@ -1130,6 +1225,9 @@ void Object::visit_edges(Cell::Visitor& visitor)
     m_indexed_properties.for_each_value([&visitor](auto& value) {
         visitor.visit(value);
     });
+
+    for (auto& private_element : m_private_elements)
+        visitor.visit(private_element.value);
 }
 
 // 7.1.1.1 OrdinaryToPrimitive ( O, hint ), https://tc39.es/ecma262/#sec-ordinarytoprimitive
