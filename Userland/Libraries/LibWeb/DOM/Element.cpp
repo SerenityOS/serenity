@@ -389,4 +389,10 @@ int Element::client_height() const
     return box.absolute_rect().height();
 }
 
+void Element::children_changed()
+{
+    Node::children_changed();
+    set_needs_style_update(true);
+}
+
 }
