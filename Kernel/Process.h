@@ -294,6 +294,7 @@ public:
     KResultOr<FlatPtr> sys$open(Userspace<const Syscall::SC_open_params*>);
     KResultOr<FlatPtr> sys$close(int fd);
     KResultOr<FlatPtr> sys$read(int fd, Userspace<u8*>, size_t);
+    KResultOr<FlatPtr> sys$pread(int fd, Userspace<u8*>, size_t, off_t);
     KResultOr<FlatPtr> sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count);
     KResultOr<FlatPtr> sys$write(int fd, Userspace<const u8*>, size_t);
     KResultOr<FlatPtr> sys$writev(int fd, Userspace<const struct iovec*> iov, int iov_count);
