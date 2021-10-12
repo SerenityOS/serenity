@@ -1091,6 +1091,9 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
         property_name = PropertyName::from_value(global_object, value);
         if (interpreter.exception())
             return Reference {};
+    } else if (is<PrivateIdentifier>(*m_property)) {
+        auto& private_identifier = static_cast<PrivateIdentifier const&>(*m_property);
+        return make_private_reference(interpreter.vm(), base_value, private_identifier.string());
     } else {
         property_name = verify_cast<Identifier>(*m_property).string();
         TRY_OR_DISCARD(require_object_coercible(global_object, base_value));
@@ -1166,8 +1169,14 @@ Value ClassElement::execute(Interpreter&, GlobalObject&) const
     VERIFY_NOT_REACHED();
 }
 
-static ThrowCompletionOr<PropertyName> class_key_to_property_name(Interpreter& interpreter, GlobalObject& global_object, Expression const& key)
+static ThrowCompletionOr<ClassElement::ClassElementName> class_key_to_property_name(Interpreter& interpreter, GlobalObject& global_object, Expression const& key)
 {
+    if (is<PrivateIdentifier>(key)) {
+        auto& private_identifier = static_cast<PrivateIdentifier const&>(key);
+        auto* private_environment = interpreter.vm().running_execution_context().private_environment;
+        VERIFY(private_environment);
+        return ClassElement::ClassElementName { private_environment->resolve_private_identifier(private_identifier.string()) };
+    }
 
     auto prop_key = key.execute(interpreter, global_object);
     if (auto* exception = interpreter.exception())
@@ -1179,7 +1188,7 @@ static ThrowCompletionOr<PropertyName> class_key_to_property_name(Interpreter& i
     auto property_key = PropertyName::from_value(global_object, prop_key);
     if (auto* exception = interpreter.exception())
         return throw_completion(exception->value());
-    return property_key;
+    return ClassElement::ClassElementName { property_key };
 }
 
 // 15.4.5 Runtime Semantics: MethodDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-methoddefinitionevaluation
@@ -1194,34 +1203,61 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
     auto& method_function = static_cast<ECMAScriptFunctionObject&>(method_value.as_function());
     method_function.set_home_object(&target);
 
-    auto set_function_name = [&](String prefix) {
-        String property_name;
-        // FIXME: Handle PrivateNames as well.
-        if (property_key.is_symbol())
-            property_name = String::formatted("[{}]", property_key.as_symbol()->description());
-        else
-            property_name = property_key.to_string();
-        update_function_name(method_value, String::formatted("{} {}", prefix, property_name));
+    auto set_function_name = [&](String prefix = "") {
+        auto property_name = property_key.visit(
+            [&](PropertyName const& property_name) -> String {
+                if (property_name.is_symbol()) {
+                    auto description = property_name.as_symbol()->description();
+                    if (description.is_empty())
+                        return "";
+                    return String::formatted("[{}]", description);
+                } else {
+                    return property_name.to_string();
+                }
+            },
+            [&](PrivateName const& private_name) -> String {
+                return private_name.description;
+            });
+
+        update_function_name(method_value, String::formatted("{}{}{}", prefix, prefix.is_empty() ? "" : " ", property_name));
     };
 
-    switch (kind()) {
-    case ClassMethod::Kind::Method:
-        TRY(target.define_property_or_throw(property_key, { .value = method_value, .writable = true, .enumerable = false, .configurable = true }));
-        break;
-    case ClassMethod::Kind::Getter:
-        set_function_name("get");
-        TRY(target.define_property_or_throw(property_key, { .get = &method_function, .enumerable = true, .configurable = true }));
-        break;
-    case ClassMethod::Kind::Setter:
-        set_function_name("set");
-        TRY(target.define_property_or_throw(property_key, { .set = &method_function, .enumerable = true, .configurable = true }));
-        break;
-    default:
-        VERIFY_NOT_REACHED();
-    }
-    // FIXME: Return PrivateElement for private methods
+    if (property_key.has<PropertyName>()) {
+        auto& property_name = property_key.get<PropertyName>();
+        switch (kind()) {
+        case ClassMethod::Kind::Method:
+            set_function_name();
+            TRY(target.define_property_or_throw(property_name, { .value = method_value, .writable = true, .enumerable = false, .configurable = true }));
+            break;
+        case ClassMethod::Kind::Getter:
+            set_function_name("get");
+            TRY(target.define_property_or_throw(property_name, { .get = &method_function, .enumerable = true, .configurable = true }));
+            break;
+        case ClassMethod::Kind::Setter:
+            set_function_name("set");
+            TRY(target.define_property_or_throw(property_name, { .set = &method_function, .enumerable = true, .configurable = true }));
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
 
-    return ClassValue { normal_completion({}) };
+        return ClassValue { normal_completion({}) };
+    } else {
+        auto& private_name = property_key.get<PrivateName>();
+        switch (kind()) {
+        case Kind::Method:
+            set_function_name();
+            return ClassValue { PrivateElement { private_name, PrivateElement::Kind::Method, method_value } };
+        case Kind::Getter:
+            set_function_name("get");
+            return ClassValue { PrivateElement { private_name, PrivateElement::Kind::Accessor, Accessor::create(interpreter.vm(), &method_function, nullptr) } };
+        case Kind::Setter:
+            set_function_name("set");
+            return ClassValue { PrivateElement { private_name, PrivateElement::Kind::Accessor, Accessor::create(interpreter.vm(), nullptr, &method_function) } };
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
 }
 
 // 15.7.10 Runtime Semantics: ClassFieldDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classfielddefinitionevaluation
@@ -1232,8 +1268,14 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
     if (m_initializer) {
         auto copy_initializer = m_initializer;
         auto body = create_ast_node<ExpressionStatement>(m_initializer->source_range(), copy_initializer.release_nonnull());
+        auto name = property_key.visit(
+            [&](PropertyName const& property_name) -> String {
+                return property_name.is_number() ? property_name.to_string() : property_name.to_string_or_symbol().to_display_string();
+            },
+            [&](PrivateName const& private_name) -> String {
+                return private_name.description;
+            });
         // FIXME: A potential optimization is not creating the functions here since these are never directly accessible.
-        auto name = property_key.is_number() ? property_key.to_string() : property_key.to_string_or_symbol().to_display_string();
         initializer = ECMAScriptFunctionObject::create(interpreter.global_object(), name, *body, {}, 0, interpreter.lexical_environment(), interpreter.vm().running_execution_context().private_environment, FunctionKind::Regular, false, false);
         initializer->set_home_object(&target);
     }
@@ -1244,6 +1286,23 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
             initializer,
         }
     };
+}
+
+static Optional<FlyString> nullopt_or_private_identifier_description(Expression const& expression)
+{
+    if (is<PrivateIdentifier>(expression))
+        return static_cast<PrivateIdentifier const&>(expression).string();
+    return {};
+}
+
+Optional<FlyString> ClassField::private_bound_identifier() const
+{
+    return nullopt_or_private_identifier_description(*m_key);
+}
+
+Optional<FlyString> ClassMethod::private_bound_identifier() const
+{
+    return nullopt_or_private_identifier_description(*m_key);
 }
 
 // 15.7.11 Runtime Semantics: ClassStaticBlockDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classstaticblockdefinitionevaluation
@@ -1291,8 +1350,6 @@ Value ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& global_o
 // 15.7.14 Runtime Semantics: ClassDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
 ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interpreter& interpreter, GlobalObject& global_object, FlyString const& binding_name, FlyString const& class_name) const
 {
-    // FIXME: Clean up this mix of "spec", "somewhat spec", and "not spec at all".
-
     auto& vm = interpreter.vm();
     auto* environment = vm.lexical_environment();
     VERIFY(environment);
@@ -1309,7 +1366,11 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
     auto* outer_private_environment = vm.running_execution_context().private_environment;
     auto* class_private_environment = new_private_environment(vm, outer_private_environment);
 
-    // FIXME: Append names to private environment
+    for (auto const& element : m_elements) {
+        auto opt_private_name = element.private_bound_identifier();
+        if (opt_private_name.has_value())
+            class_private_environment->add_private_name({}, opt_private_name.release_value());
+    }
 
     auto* proto_parent = vm.current_realm()->global_object().object_prototype();
 
@@ -1385,16 +1446,38 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
 
     using StaticElement = Variant<ClassElement::ClassFieldDefinition, ECMAScriptFunctionObject*>;
 
+    Vector<PrivateElement> static_private_methods;
+    Vector<PrivateElement> instance_private_methods;
     Vector<ClassElement::ClassFieldDefinition> instance_fields;
     Vector<StaticElement> static_elements;
 
-    // FIXME: Do things with private methods, and fields here
     for (auto const& element : m_elements) {
         // Note: All ClassElementEvaluation start with evaluating the name (or we fake it).
         auto element_value = TRY(element.class_element_evaluation(interpreter, global_object, element.is_static() ? *class_constructor : *prototype));
-        // FIXME: If element is a private element
 
-        if (auto* class_field_definition_ptr = element_value.get_pointer<ClassElement::ClassFieldDefinition>()) {
+        if (element_value.has<PrivateElement>()) {
+            auto& container = element.is_static() ? static_private_methods : instance_private_methods;
+
+            auto& private_element = element_value.get<PrivateElement>();
+
+            auto added_to_existing = false;
+            // FIXME: We can skip this loop in most cases.
+            for (auto& existing : container) {
+                if (existing.key == private_element.key) {
+                    VERIFY(existing.kind == PrivateElement::Kind::Accessor);
+                    VERIFY(private_element.kind == PrivateElement::Kind::Accessor);
+                    auto& accessor = private_element.value.as_accessor();
+                    if (!accessor.getter())
+                        existing.value.as_accessor().set_setter(accessor.setter());
+                    else
+                        existing.value.as_accessor().set_getter(accessor.getter());
+                    added_to_existing = true;
+                }
+            }
+
+            if (!added_to_existing)
+                container.append(move(element_value.get<PrivateElement>()));
+        } else if (auto* class_field_definition_ptr = element_value.get_pointer<ClassElement::ClassFieldDefinition>()) {
             if (element.is_static())
                 static_elements.append(move(*class_field_definition_ptr));
             else
@@ -1414,19 +1497,19 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
     if (!binding_name.is_null())
         MUST(class_scope->initialize_binding(global_object, binding_name, class_constructor));
 
-    // FIXME: Set the [[PrivateMethods]]
     for (auto& field : instance_fields)
         class_constructor->add_field(field.name, field.initializer);
+
+    for (auto& private_method : instance_private_methods)
+        class_constructor->add_private_method(private_method);
+
+    for (auto& method : static_private_methods)
+        class_constructor->private_method_or_accessor_add(move(method));
 
     for (auto& element : static_elements) {
         TRY(element.visit(
             [&](ClassElement::ClassFieldDefinition const& field) -> ThrowCompletionOr<void> {
-                Value field_value = js_undefined();
-                if (field.initializer)
-                    field_value = TRY(call(global_object, field.initializer, class_constructor_value));
-
-                TRY(class_constructor->create_data_property_or_throw(field.name, field_value));
-                return {};
+                return TRY(class_constructor->define_field(field.name, field.initializer));
             },
             [&](ECMAScriptFunctionObject* static_block_function) -> ThrowCompletionOr<void> {
                 // We discard any value returned here.
@@ -1979,6 +2062,19 @@ void Identifier::dump(int indent) const
     outln("Identifier \"{}\"", m_string);
 }
 
+Value PrivateIdentifier::execute(Interpreter&, GlobalObject&) const
+{
+    // Note: This should be handled by either the member expression this is part of
+    //       or the binary expression in the case of `#foo in bar`.
+    VERIFY_NOT_REACHED();
+}
+
+void PrivateIdentifier::dump(int indent) const
+{
+    print_indent(indent);
+    outln("PrivateIdentifier \"{}\"", m_string);
+}
+
 void SpreadExpression::dump(int indent) const
 {
     ASTNode::dump(indent);
@@ -2525,6 +2621,17 @@ Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     if (interpreter.exception())
         return {};
     return reference.get_value(global_object);
+}
+
+bool MemberExpression::ends_in_private_name() const
+{
+    if (is_computed())
+        return false;
+    if (is<PrivateIdentifier>(*m_property))
+        return true;
+    if (is<MemberExpression>(*m_property))
+        return static_cast<MemberExpression const&>(*m_property).ends_in_private_name();
+    return false;
 }
 
 void OptionalChain::dump(int indent) const

@@ -478,11 +478,11 @@ Reference VM::resolve_binding(FlyString const& name, Environment* environment)
 // 7.3.32 InitializeInstanceElements ( O, constructor ), https://tc39.es/ecma262/#sec-initializeinstanceelements
 ThrowCompletionOr<void> VM::initialize_instance_elements(Object& object, ECMAScriptFunctionObject& constructor)
 {
-    for (auto& field : constructor.fields()) {
-        field.define_field(*this, object);
-        if (auto* exception = this->exception())
-            return JS::throw_completion(exception->value());
-    }
+    for (auto& method : constructor.private_methods())
+        TRY(object.private_method_or_accessor_add(method));
+
+    for (auto& field : constructor.fields())
+        TRY(object.define_field(field.name, field.initializer));
     return {};
 }
 

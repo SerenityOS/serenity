@@ -59,14 +59,15 @@ public:
     void set_home_object(Object* home_object) { m_home_object = home_object; }
 
     struct InstanceField {
-        PropertyName name;
+        Variant<PropertyName, PrivateName> name;
         ECMAScriptFunctionObject* initializer { nullptr };
-
-        void define_field(VM& vm, Object& receiver) const;
     };
 
     Vector<InstanceField> const& fields() const { return m_fields; }
-    void add_field(PropertyName property_key, ECMAScriptFunctionObject* initializer) { m_fields.empend(property_key, initializer); }
+    void add_field(Variant<PropertyName, PrivateName> property_key, ECMAScriptFunctionObject* initializer);
+
+    Vector<PrivateElement> const& private_methods() const { return m_private_methods; }
+    void add_private_method(PrivateElement method) { m_private_methods.append(move(method)); };
 
     // This is for IsSimpleParameterList (static semantics)
     bool has_simple_parameter_list() const { return m_has_simple_parameter_list; }
@@ -97,6 +98,7 @@ private:
     bool m_strict { false };                                      // [[Strict]]
     Object* m_home_object { nullptr };                            // [[HomeObject]]
     Vector<InstanceField> m_fields;                               // [[Fields]]
+    Vector<PrivateElement> m_private_methods;                     // [[PrivateMethods]]
     bool m_is_class_constructor { false };                        // [[IsClassConstructor]]
 
     FlyString m_name;
