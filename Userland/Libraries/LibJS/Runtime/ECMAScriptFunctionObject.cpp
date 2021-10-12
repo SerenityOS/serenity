@@ -644,7 +644,7 @@ void ECMAScriptFunctionObject::ordinary_call_bind_this(ExecutionContext& callee_
         // b. Else,
         else {
             // i. Let thisValue be ! ToObject(thisArgument).
-            this_value = this_argument.to_object(global_object());
+            this_value = MUST(this_argument.to_object(global_object()));
 
             // ii. NOTE: ToObject produces wrapper objects using calleeRealm.
             // FIXME: It currently doesn't, as we pass the function's global object.

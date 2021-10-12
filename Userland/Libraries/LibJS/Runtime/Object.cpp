@@ -449,8 +449,7 @@ ThrowCompletionOr<Object*> Object::copy_data_properties(Value source, HashTable<
     if (source.is_nullish())
         return this;
 
-    auto* from_object = source.to_object(global_object);
-    VERIFY(from_object);
+    auto* from_object = MUST(source.to_object(global_object));
 
     for (auto& next_key_value : TRY(from_object->internal_own_property_keys())) {
         auto next_key = PropertyName::from_value(global_object, next_key_value);
@@ -1035,15 +1034,12 @@ void Object::define_native_function(PropertyName const& property_name, Function<
 // 20.1.2.3.1 ObjectDefineProperties ( O, Properties ), https://tc39.es/ecma262/#sec-objectdefineproperties
 ThrowCompletionOr<Object*> Object::define_properties(Value properties)
 {
-    auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     // 1. Assert: Type(O) is Object.
 
     // 2. Let props be ? ToObject(Properties).
-    auto* props = properties.to_object(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto* props = TRY(properties.to_object(global_object));
 
     // 3. Let keys be ? props.[[OwnPropertyKeys]]().
     auto keys = TRY(props->internal_own_property_keys());

@@ -69,17 +69,10 @@ Value StringConstructor::construct(FunctionObject& new_target)
 // 22.1.2.4 String.raw ( template, ...substitutions ), https://tc39.es/ecma262/#sec-string.raw
 JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
 {
-    auto* cooked = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
-
-    auto* raw = TRY_OR_DISCARD(cooked->get(vm.names.raw)).to_object(global_object);
-    if (vm.exception())
-        return {};
-
+    auto* cooked = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
+    auto raw_value = TRY_OR_DISCARD(cooked->get(vm.names.raw));
+    auto* raw = TRY_OR_DISCARD(raw_value.to_object(global_object));
     auto literal_segments = TRY_OR_DISCARD(length_of_array_like(global_object, *raw));
-    if (vm.exception())
-        return {};
 
     if (literal_segments == 0)
         return js_string(vm, "");

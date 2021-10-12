@@ -17,10 +17,7 @@ GeneratorObject* GeneratorObject::create(GlobalObject& global_object, Value init
 {
     // This is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
     auto generating_function_prototype = TRY_OR_DISCARD(generating_function->get(global_object.vm().names.prototype));
-    auto* generating_function_prototype_object = generating_function_prototype.to_object(global_object);
-    if (!generating_function_prototype_object)
-        return {};
-
+    auto* generating_function_prototype_object = TRY_OR_DISCARD(generating_function_prototype.to_object(global_object));
     auto object = global_object.heap().allocate<GeneratorObject>(global_object, global_object, *generating_function_prototype_object);
     object->m_generating_function = generating_function;
     object->m_environment = generating_scope;

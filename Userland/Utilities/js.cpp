@@ -1347,7 +1347,7 @@ int main(int argc, char** argv)
                 if (!variable.is_object())
                     break;
 
-                auto const* object = variable.to_object(interpreter->global_object());
+                auto const* object = MUST(variable.to_object(interpreter->global_object()));
                 auto const& shape = object->shape();
                 list_all_properties(shape, property_name);
                 if (results.size())

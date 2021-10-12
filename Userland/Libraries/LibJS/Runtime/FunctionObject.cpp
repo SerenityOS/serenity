@@ -25,7 +25,7 @@ BoundFunction* FunctionObject::bind(Value bound_this_value, Vector<Value> argume
     auto& vm = this->vm();
     FunctionObject& target_function = is<BoundFunction>(*this) ? static_cast<BoundFunction&>(*this).bound_target_function() : *this;
 
-    auto bound_this_object = [&vm, bound_this_value, this]() -> Value {
+    auto get_bound_this_object = [&vm, bound_this_value, this]() -> ThrowCompletionOr<Value> {
         if (is<BoundFunction>(*this) && !static_cast<BoundFunction&>(*this).bound_this().is_empty())
             return static_cast<BoundFunction&>(*this).bound_this();
         switch (bound_this_value.type()) {
@@ -33,11 +33,12 @@ BoundFunction* FunctionObject::bind(Value bound_this_value, Vector<Value> argume
         case Value::Type::Null:
             if (vm.in_strict_mode())
                 return bound_this_value;
-            return &global_object();
+            return { &global_object() };
         default:
-            return bound_this_value.to_object(global_object());
+            return { TRY(bound_this_value.to_object(global_object())) };
         }
-    }();
+    };
+    auto bound_this_object = TRY_OR_DISCARD(get_bound_this_object());
 
     i32 computed_length = 0;
     auto length_property = TRY_OR_DISCARD(get(vm.names.length));

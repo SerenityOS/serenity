@@ -220,11 +220,7 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern>
 // 14.3.3.1 Runtime Semantics: PropertyBindingInitialization, https://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization
 ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment, GlobalObject& global_object)
 {
-    auto* object = value.to_object(global_object);
-    if (!object) {
-        VERIFY(exception());
-        return JS::throw_completion(exception()->value());
-    }
+    auto* object = TRY(value.to_object(global_object));
 
     HashTable<PropertyName, PropertyNameTraits> seen_names;
     for (auto& property : binding.entries) {

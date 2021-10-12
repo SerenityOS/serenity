@@ -24,8 +24,8 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::grow)
     auto delta = vm.argument(0).to_u32(global_object);
     if (vm.exception())
         return {};
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object || !is<WebAssemblyTableObject>(this_object)) {
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    if (!is<WebAssemblyTableObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
         return {};
     }
@@ -63,8 +63,8 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::get)
     if (vm.exception())
         return {};
 
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object || !is<WebAssemblyTableObject>(this_object)) {
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    if (!is<WebAssemblyTableObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
         return {};
     }
@@ -93,8 +93,8 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::set)
     if (vm.exception())
         return {};
 
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object || !is<WebAssemblyTableObject>(this_object)) {
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    if (!is<WebAssemblyTableObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
         return {};
     }
@@ -128,8 +128,8 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::set)
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::length_getter)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object || !is<WebAssemblyTableObject>(this_object)) {
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    if (!is<WebAssemblyTableObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
         return {};
     }

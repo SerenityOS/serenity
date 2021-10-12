@@ -65,9 +65,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::has_own_property)
     auto property_key = vm.argument(0).to_property_key(global_object);
     if (vm.exception())
         return {};
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     return Value(TRY_OR_DISCARD(this_object->has_own_property(property_key)));
 }
 
@@ -85,8 +83,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
         return js_string(vm, "[object Null]");
 
     // 3. Let O be ! ToObject(this value).
-    auto* object = this_value.to_object(global_object);
-    VERIFY(object);
+    auto* object = MUST(this_value.to_object(global_object));
 
     // 4. Let isArray be ? IsArray(O).
     auto is_array = TRY_OR_DISCARD(Value(object).is_array(global_object));
@@ -150,7 +147,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_locale_string)
 // 20.1.3.7 Object.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-object.prototype.valueof
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::value_of)
 {
-    return vm.this_value(global_object).to_object(global_object);
+    return TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 }
 
 // 20.1.3.4 Object.prototype.propertyIsEnumerable ( V ), https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable
@@ -161,9 +158,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::property_is_enumerable)
     if (vm.exception())
         return {};
     // 2. Let O be ? ToObject(this value).
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     // 3. Let desc be ? O.[[GetOwnProperty]](P).
     auto property_descriptor = TRY_OR_DISCARD(this_object->internal_get_own_property(property_key));
     // 4. If desc is undefined, return false.
@@ -180,9 +175,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::is_prototype_of)
     if (!object_argument.is_object())
         return Value(false);
     auto* object = &object_argument.as_object();
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
     for (;;) {
         object = TRY_OR_DISCARD(object->internal_get_prototype_of());
@@ -196,9 +189,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::is_prototype_of)
 // B.2.2.2 Object.prototype.__defineGetter__ ( P, getter ), https://tc39.es/ecma262/#sec-object.prototype.__defineGetter__
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_getter)
 {
-    auto object = vm.this_value(global_object).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
     auto getter = vm.argument(1);
     if (!getter.is_function()) {
@@ -220,9 +211,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_getter)
 // B.2.2.3 Object.prototype.__defineSetter__ ( P, getter ), https://tc39.es/ecma262/#sec-object.prototype.__defineSetter__
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_setter)
 {
-    auto object = vm.this_value(global_object).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
     auto setter = vm.argument(1);
     if (!setter.is_function()) {
@@ -244,9 +233,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_setter)
 // B.2.2.4 Object.prototype.__lookupGetter__ ( P ), https://tc39.es/ecma262/#sec-object.prototype.__lookupGetter__
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_getter)
 {
-    auto object = vm.this_value(global_object).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
     auto key = vm.argument(0).to_property_key(global_object);
     if (vm.exception())
@@ -268,9 +255,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_getter)
 // B.2.2.5 Object.prototype.__lookupSetter__ ( P ), https://tc39.es/ecma262/#sec-object.prototype.__lookupSetter__
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_setter)
 {
-    auto* object = vm.this_value(global_object).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
     auto key = vm.argument(0).to_property_key(global_object);
     if (vm.exception())
@@ -292,9 +277,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_setter)
 // B.2.2.1.1 get Object.prototype.__proto__, https://tc39.es/ecma262/#sec-get-object.prototype.__proto__
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::proto_getter)
 {
-    auto object = vm.this_value(global_object).to_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     return TRY_OR_DISCARD(object->internal_get_prototype_of());
 }
 

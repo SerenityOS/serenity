@@ -208,9 +208,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_
     // 4. Else,
     else {
         // a. Let O be ? ToObject(locales).
-        object = locales.to_object(global_object);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        object = TRY(locales.to_object(global_object));
     }
 
     // 5. Let len be ? ToLength(? Get(O, "length")).
@@ -589,8 +587,6 @@ ThrowCompletionOr<Array*> supported_locales(GlobalObject& global_object, Vector<
 // 9.2.12 CoerceOptionsToObject ( options ), https://tc39.es/ecma402/#sec-coerceoptionstoobject
 ThrowCompletionOr<Object*> coerce_options_to_object(GlobalObject& global_object, Value options)
 {
-    auto& vm = global_object.vm();
-
     // 1. If options is undefined, then
     if (options.is_undefined()) {
         // a. Return ! OrdinaryObjectCreate(null).
@@ -598,10 +594,7 @@ ThrowCompletionOr<Object*> coerce_options_to_object(GlobalObject& global_object,
     }
 
     // 2. Return ? ToObject(options).
-    auto result = options.to_object(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return result;
+    return TRY(options.to_object(global_object));
 }
 
 // 9.2.13 GetOption ( options, property, type, values, fallback ), https://tc39.es/ecma402/#sec-getoption

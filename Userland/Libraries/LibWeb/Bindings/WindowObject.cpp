@@ -170,8 +170,7 @@ static DOM::Window* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
         this_value = global_object.value_of();
     }
 
-    auto* this_object = this_value.to_object(global_object);
-    VERIFY(this_object);
+    auto* this_object = MUST(this_value.to_object(global_object));
 
     if (StringView("WindowObject") != this_object->class_name()) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WindowObject");
@@ -343,9 +342,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::request_animation_frame)
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountOne, "requestAnimationFrame");
         return {};
     }
-    auto* callback_object = vm.argument(0).to_object(global_object);
-    if (!callback_object)
-        return {};
+    auto* callback_object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     if (!callback_object->is_function()) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAFunctionNoParam);
         return {};
@@ -378,9 +375,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::queue_microtask)
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "queueMicrotask");
         return {};
     }
-    auto* callback_object = vm.argument(0).to_object(global_object);
-    if (!callback_object)
-        return {};
+    auto* callback_object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     if (!callback_object->is_function()) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAFunctionNoParam);
         return {};
@@ -545,10 +540,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_computed_style)
     auto* impl = impl_from(vm, global_object);
     if (!impl)
         return {};
-    auto* object = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
-
+    auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     if (!is<ElementWrapper>(object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "DOM element");
         return {};
@@ -624,10 +616,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll)
     String behavior_string = "auto";
 
     if (vm.argument_count() == 1) {
-        auto* options = vm.argument(0).to_object(global_object);
-        if (vm.exception())
-            return {};
-
+        auto* options = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
         auto left = TRY_OR_DISCARD(options->get("left"));
         if (!left.is_undefined())
             x_value = left;
@@ -684,9 +673,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_by)
     if (vm.argument_count() == 0) {
         options = JS::Object::create(global_object, nullptr);
     } else if (vm.argument_count() == 1) {
-        options = vm.argument(0).to_object(global_object);
-        if (vm.exception())
-            return {};
+        options = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     } else if (vm.argument_count() >= 2) {
         // We ignore arguments 2+ in line with behavior of Chrome and Firefox
         options = JS::Object::create(global_object, nullptr);

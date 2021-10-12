@@ -32,9 +32,10 @@ void Reference::put_value(GlobalObject& global_object, Value value)
     }
 
     if (is_property_reference()) {
-        auto* base_obj = m_base_value.to_object(global_object);
-        if (!base_obj)
+        auto base_obj_or_error = m_base_value.to_object(global_object);
+        if (base_obj_or_error.is_error())
             return;
+        auto* base_obj = base_obj_or_error.release_value();
 
         auto succeeded_or_error = base_obj->internal_set(m_name, value, get_this_value());
         if (succeeded_or_error.is_error())
@@ -74,9 +75,7 @@ Value Reference::get_value(GlobalObject& global_object) const
     }
 
     if (is_property_reference()) {
-        auto* base_obj = m_base_value.to_object(global_object);
-        if (!base_obj)
-            return {};
+        auto* base_obj = TRY_OR_DISCARD(m_base_value.to_object(global_object));
         return TRY_OR_DISCARD(base_obj->get(m_name));
     }
 
@@ -121,8 +120,7 @@ bool Reference::delete_(GlobalObject& global_object)
         }
 
         // c. Let baseObj be ! ToObject(ref.[[Base]]).
-        auto* base_obj = m_base_value.to_object(global_object);
-        VERIFY(base_obj);
+        auto* base_obj = MUST(m_base_value.to_object(global_object));
 
         // d. Let deleteStatus be ? baseObj.[[Delete]](ref.[[ReferencedName]]).
         bool delete_status = TRY_OR_DISCARD(base_obj->internal_delete(m_name));
