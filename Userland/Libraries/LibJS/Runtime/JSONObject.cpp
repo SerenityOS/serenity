@@ -87,9 +87,7 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
             if (vm.exception())
                 return {};
         } else if (is<StringObject>(space_object)) {
-            space = space.to_primitive_string(global_object);
-            if (vm.exception())
-                return {};
+            space = TRY_OR_DISCARD(space.to_primitive_string(global_object));
         }
     }
 
@@ -157,9 +155,7 @@ String JSONObject::serialize_json_property(GlobalObject& global_object, Stringif
             if (vm.exception())
                 return {};
         } else if (is<StringObject>(value_object)) {
-            value = value.to_primitive_string(global_object);
-            if (vm.exception())
-                return {};
+            value = TRY_OR_DISCARD(value.to_primitive_string(global_object));
         } else if (is<BooleanObject>(value_object)) {
             value = static_cast<BooleanObject&>(value_object).value_of();
         } else if (is<BigIntObject>(value_object)) {

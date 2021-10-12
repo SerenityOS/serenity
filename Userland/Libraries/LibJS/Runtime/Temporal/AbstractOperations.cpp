@@ -150,9 +150,7 @@ ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& o
     // 9. Else,
     else {
         // a. Set value to ? ToString(value).
-        value = value.to_primitive_string(global_object);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        value = TRY(value.to_primitive_string(global_object));
     }
 
     // 10. If values is not empty, then
@@ -1117,9 +1115,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, 
             } else if (property.is_one_of("month", "day")) {
                 value = Value(TRY(to_positive_integer(global_object, value)));
             } else if (property.is_one_of("monthCode", "offset", "era")) {
-                value = value.to_primitive_string(global_object);
-                if (auto* exception = vm.exception())
-                    return throw_completion(exception->value());
+                value = TRY(value.to_primitive_string(global_object));
             }
         }
 
