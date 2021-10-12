@@ -529,6 +529,14 @@ void Node::set_document(Badge<Document>, Document& document)
     document.ref_from_node({});
     m_document->unref_from_node({});
     m_document = &document;
+
+    if (needs_style_update() || child_needs_style_update()) {
+        // NOTE: We unset and reset the "needs style update" flag here.
+        //       This ensures that there's a pending style update in the new document
+        //       that will eventually assign some style to this node if needed.
+        set_needs_style_update(false);
+        set_needs_style_update(true);
+    }
 }
 
 bool Node::is_editable() const
