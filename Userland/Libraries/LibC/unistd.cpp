@@ -296,12 +296,8 @@ ssize_t read(int fd, void* buf, size_t count)
 
 ssize_t pread(int fd, void* buf, size_t count, off_t offset)
 {
-    // FIXME: This is not thread safe and should be implemented in the kernel instead.
-    off_t old_offset = lseek(fd, 0, SEEK_CUR);
-    lseek(fd, offset, SEEK_SET);
-    ssize_t nread = read(fd, buf, count);
-    lseek(fd, old_offset, SEEK_SET);
-    return nread;
+    int rc = syscall(SC_pread, fd, buf, count, offset);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 ssize_t write(int fd, const void* buf, size_t count)
