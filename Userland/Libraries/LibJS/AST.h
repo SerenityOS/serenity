@@ -1000,6 +1000,23 @@ private:
     mutable Optional<EnvironmentCoordinate> m_cached_environment_coordinate;
 };
 
+class PrivateIdentifier final : public Expression {
+public:
+    explicit PrivateIdentifier(SourceRange source_range, FlyString string)
+        : Expression(source_range)
+        , m_string(move(string))
+    {
+    }
+
+    FlyString const& string() const { return m_string; }
+
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    FlyString m_string;
+};
+
 class ClassElement : public ASTNode {
 public:
     ClassElement(SourceRange source_range, bool is_static)
@@ -1019,14 +1036,18 @@ public:
     virtual ElementKind class_element_kind() const = 0;
     bool is_static() const { return m_is_static; }
 
+    using ClassElementName = Variant<PropertyName, PrivateName>;
+
     struct ClassFieldDefinition {
-        PropertyName name;
+        ClassElementName name;
         ECMAScriptFunctionObject* initializer { nullptr };
     };
 
     // We use the Completion also as a ClassStaticBlockDefinition Record.
-    using ClassValue = Variant<ClassFieldDefinition, Completion>;
+    using ClassValue = Variant<ClassFieldDefinition, Completion, PrivateElement>;
     virtual ThrowCompletionOr<ClassValue> class_element_evaluation(Interpreter&, GlobalObject&, Object& home_object) const = 0;
+
+    virtual Optional<FlyString> private_bound_identifier() const { return {}; };
 
 private:
     bool m_is_static { false };
@@ -1054,6 +1075,7 @@ public:
 
     virtual void dump(int indent) const override;
     virtual ThrowCompletionOr<ClassValue> class_element_evaluation(Interpreter&, GlobalObject&, Object& home_object) const override;
+    virtual Optional<FlyString> private_bound_identifier() const override;
 
 private:
     NonnullRefPtr<Expression> m_key;
@@ -1078,6 +1100,7 @@ public:
 
     virtual void dump(int indent) const override;
     virtual ThrowCompletionOr<ClassValue> class_element_evaluation(Interpreter& interpreter, GlobalObject& object, Object& home_object) const override;
+    virtual Optional<FlyString> private_bound_identifier() const override;
 
 private:
     NonnullRefPtr<Expression> m_key;
@@ -1535,6 +1558,8 @@ public:
     PropertyName computed_property_name(Interpreter&, GlobalObject&) const;
 
     String to_string_approximation() const;
+
+    bool ends_in_private_name() const;
 
 private:
     virtual bool is_member_expression() const override { return true; }

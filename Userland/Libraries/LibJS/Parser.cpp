@@ -850,6 +850,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
     NonnullRefPtrVector<ClassElement> elements;
     RefPtr<Expression> super_class;
     RefPtr<FunctionExpression> constructor;
+    HashTable<FlyString> found_private_names;
 
     String class_name = expect_class_name || match_identifier() || match(TokenType::Yield) || match(TokenType::Await)
         ? consume_identifier_reference().value().to_string()
@@ -881,6 +882,13 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
 
     consume(TokenType::CurlyOpen);
 
+    HashTable<StringView> referenced_private_names;
+    HashTable<StringView>* outer_referenced_private_names = m_state.referenced_private_names;
+    m_state.referenced_private_names = &referenced_private_names;
+    ScopeGuard restore_private_name_table = [&] {
+        m_state.referenced_private_names = outer_referenced_private_names;
+    };
+
     while (!done() && !match(TokenType::CurlyClose)) {
         RefPtr<Expression> property_key;
         bool is_static = false;
@@ -899,7 +907,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
         }
 
         StringView name;
-        if (match_property_key()) {
+        if (match_property_key() || match(TokenType::PrivateIdentifier)) {
             if (!is_generator && m_state.current_token.original_value() == "static"sv) {
                 if (match(TokenType::Identifier)) {
                     consume();
@@ -923,11 +931,48 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 }
             }
 
-            if (match_property_key()) {
+            if (match_property_key() || match(TokenType::PrivateIdentifier)) {
                 switch (m_state.current_token.type()) {
                 case TokenType::Identifier:
                     name = consume().value();
                     property_key = create_ast_node<StringLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }, name);
+                    break;
+                case TokenType::PrivateIdentifier:
+                    name = consume().value();
+                    if (name == "#constructor")
+                        syntax_error("Private property with name '#constructor' is not allowed");
+
+                    if (method_kind != ClassMethod::Kind::Method) {
+                        // It is a Syntax Error if PrivateBoundIdentifiers of ClassElementList contains any duplicate entries,
+                        //   unless the name is used once for a getter and once for a setter and in no other entries,
+                        //   and the getter and setter are either both static or both non-static.
+
+                        for (auto& element : elements) {
+                            auto private_name = element.private_bound_identifier();
+                            if (!private_name.has_value() || private_name.value() != name)
+                                continue;
+
+                            if (element.class_element_kind() != ClassElement::ElementKind::Method
+                                || element.is_static() != is_static) {
+                                syntax_error(String::formatted("Duplicate private field or method named '{}'", name));
+                                break;
+                            }
+
+                            VERIFY(is<ClassMethod>(element));
+                            auto& class_method_element = static_cast<ClassMethod const&>(element);
+
+                            if (class_method_element.kind() == ClassMethod::Kind::Method || class_method_element.kind() == method_kind) {
+                                syntax_error(String::formatted("Duplicate private field or method named '{}'", name));
+                                break;
+                            }
+                        }
+
+                        found_private_names.set(name);
+                    } else if (found_private_names.set(name) != AK::HashSetResult::InsertedNewEntry) {
+                        syntax_error(String::formatted("Duplicate private field or method named '{}'", name));
+                    }
+
+                    property_key = create_ast_node<PrivateIdentifier>({ m_state.current_token.filename(), rule_start.position(), position() }, name);
                     break;
                 case TokenType::StringLiteral: {
                     auto string_literal = parse_string_literal(consume());
@@ -1062,6 +1107,16 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 Vector<FunctionNode::Parameter> {}, 0, FunctionKind::Regular,
                 /* is_strict_mode */ true, /* might_need_arguments_object */ false, /* contains_direct_call_to_eval */ false);
         }
+    }
+
+    // We could be in a subclass defined within the main class so must move all non declared private names to outer.
+    for (auto& private_name : referenced_private_names) {
+        if (found_private_names.contains(private_name))
+            continue;
+        if (outer_referenced_private_names)
+            outer_referenced_private_names->set(private_name);
+        else // FIXME: Make these error appear in the appropriate places.
+            syntax_error(String::formatted("Reference to undeclared private field or method '{}'", private_name));
     }
 
     return create_ast_node<ClassExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(class_name), move(constructor), move(super_class), move(elements));
@@ -1263,6 +1318,11 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
         auto rhs = parse_expression(precedence, associativity);
         if (is<Identifier>(*rhs) && m_state.strict_mode) {
             syntax_error("Delete of an unqualified identifier in strict mode.", rhs_start);
+        }
+        if (is<MemberExpression>(*rhs)) {
+            auto& member_expression = static_cast<MemberExpression const&>(*rhs);
+            if (member_expression.ends_in_private_name())
+                syntax_error("Private fields cannot be deleted");
         }
         return create_ast_node<UnaryExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, UnaryOp::Delete, move(rhs));
     }
@@ -1711,8 +1771,17 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
         return parse_assignment_expression(AssignmentOp::Assignment, move(lhs), min_precedence, associativity);
     case TokenType::Period:
         consume();
-        if (!match_identifier_name())
+        if (match(TokenType::PrivateIdentifier)) {
+            if (!is_private_identifier_valid())
+                syntax_error(String::formatted("Reference to undeclared private field or method '{}'", m_state.current_token.value()));
+            else if (is<SuperExpression>(*lhs))
+                syntax_error(String::formatted("Cannot access private field or method '{}' on super", m_state.current_token.value()));
+
+            return create_ast_node<MemberExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(lhs), create_ast_node<PrivateIdentifier>({ m_state.current_token.filename(), rule_start.position(), position() }, consume().value()));
+        } else if (!match_identifier_name()) {
             expected("IdentifierName");
+        }
+
         return create_ast_node<MemberExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(lhs), create_ast_node<Identifier>({ m_state.current_token.filename(), rule_start.position(), position() }, consume().value()));
     case TokenType::BracketOpen: {
         consume(TokenType::BracketOpen);
@@ -1778,6 +1847,17 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
         consume();
         return create_ast_node<ErrorExpression>({ m_state.current_token.filename(), rule_start.position(), position() });
     }
+}
+
+bool Parser::is_private_identifier_valid() const
+{
+    VERIFY(match(TokenType::PrivateIdentifier));
+    if (!m_state.referenced_private_names)
+        return false;
+
+    // We might not have hit the declaration yet so class will check this in the end
+    m_state.referenced_private_names->set(m_state.current_token.value());
+    return true;
 }
 
 RefPtr<BindingPattern> Parser::synthesize_binding_pattern(Expression const& expression)
@@ -3042,6 +3122,7 @@ bool Parser::match_expression() const
         || type == TokenType::TemplateLiteralStart
         || type == TokenType::NullLiteral
         || match_identifier()
+        || (type == TokenType::PrivateIdentifier && next_token().type() == TokenType::In)
         || type == TokenType::Await
         || type == TokenType::New
         || type == TokenType::Class
