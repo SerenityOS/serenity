@@ -10,7 +10,6 @@
 #include <AK/Types.h>
 
 #include <Kernel/Interrupts/APIC.h>
-#include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>

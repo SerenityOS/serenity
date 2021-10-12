@@ -20,7 +20,6 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/API/KResult.h>
-#include <Kernel/Arch/x86/RegisterState.h>
 #include <Kernel/Arch/x86/SafeMem.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
