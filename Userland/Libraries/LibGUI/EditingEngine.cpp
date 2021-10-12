@@ -79,7 +79,7 @@ bool EditingEngine::on_key(const KeyEvent& event)
         }
         if (event.ctrl()) {
             m_editor->update_selection(event.shift());
-            move_to_next_span(event);
+            move_to_next_span();
             if (event.shift() && m_editor->selection().start().is_valid()) {
                 m_editor->selection().set_end(m_editor->cursor());
                 m_editor->did_update_selection();
@@ -217,7 +217,7 @@ void EditingEngine::move_to_previous_span()
     m_editor->set_cursor(new_cursor);
 }
 
-void EditingEngine::move_to_next_span(const KeyEvent& event)
+void EditingEngine::move_to_next_span()
 {
     TextPosition new_cursor;
     if (m_editor->document().has_spans()) {
@@ -232,10 +232,6 @@ void EditingEngine::move_to_next_span(const KeyEvent& event)
         new_cursor = m_editor->document().first_word_break_after(m_editor->cursor());
     }
     m_editor->set_cursor(new_cursor);
-    if (event.shift() && m_editor->selection().start().is_valid()) {
-        m_editor->selection().set_end(m_editor->cursor());
-        m_editor->did_update_selection();
-    }
 }
 
 void EditingEngine::move_to_logical_line_beginning()
