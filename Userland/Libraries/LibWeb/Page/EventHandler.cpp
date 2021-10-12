@@ -401,6 +401,15 @@ constexpr bool should_ignore_keydown_event(u32 code_point)
 
 bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
 {
+    if (!m_frame.active_document())
+        return false;
+
+    NonnullRefPtr<DOM::Document> document = *m_frame.active_document();
+    if (!document->layout_node())
+        return false;
+
+    NonnullRefPtr<Layout::InitialContainingBlock> layout_root = *document->layout_node();
+
     if (key == KeyCode::Key_Tab) {
         if (modifiers & KeyModifier::Mod_Shift)
             return focus_previous_element();
@@ -408,13 +417,10 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             return focus_next_element();
     }
 
-    if (!layout_root())
-        return false;
-
-    if (layout_root()->selection().is_valid()) {
-        auto range = layout_root()->selection().to_dom_range()->normalized();
+    if (layout_root->selection().is_valid()) {
+        auto range = layout_root->selection().to_dom_range()->normalized();
         if (range->start_container()->is_editable()) {
-            m_frame.active_document()->layout_node()->set_selection({});
+            layout_root->set_selection({});
 
             // FIXME: This doesn't work for some reason?
             m_frame.set_cursor_position({ *range->start_container(), range->start_offset() });
@@ -468,12 +474,14 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
     }
 
     auto event = UIEvents::KeyboardEvent::create_from_platform_event(UIEvents::EventNames::keydown, key, modifiers, code_point);
-    if (m_frame.active_document()->focused_element())
-        return m_frame.active_document()->focused_element()->dispatch_event(move(event));
-    else if (m_frame.active_document()->body())
-        return m_frame.active_document()->body()->dispatch_event(move(event));
-    else
-        return m_frame.active_document()->root().dispatch_event(move(event));
+
+    if (RefPtr<DOM::Element> focused_element = document->focused_element())
+        return focused_element->dispatch_event(move(event));
+
+    if (RefPtr<HTML::HTMLElement> body = m_frame.active_document()->body())
+        return body->dispatch_event(move(event));
+
+    return document->root().dispatch_event(move(event));
 }
 
 bool EventHandler::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
