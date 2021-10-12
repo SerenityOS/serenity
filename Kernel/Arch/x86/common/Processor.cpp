@@ -24,6 +24,10 @@
 #include <Kernel/Arch/x86/SafeMem.h>
 #include <Kernel/Arch/x86/ScopedCritical.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
+#include <Kernel/Arch/x86/InterruptDisabler.h>
+
+#include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
+#include <Kernel/Memory/PageDirectory.h>
 
 namespace Kernel {
 

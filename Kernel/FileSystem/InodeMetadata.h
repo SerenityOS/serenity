@@ -10,6 +10,7 @@
 #include <Kernel/API/KResult.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/UnixTypes.h>
+#include <Kernel/Forward.h>
 
 namespace Kernel {
 

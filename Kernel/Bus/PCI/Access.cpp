@@ -14,6 +14,7 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Arch/x86/InterruptDisabler.h>
 
 namespace Kernel::PCI {
 

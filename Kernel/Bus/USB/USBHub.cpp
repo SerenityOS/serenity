@@ -10,6 +10,7 @@
 #include <Kernel/Bus/USB/USBHub.h>
 #include <Kernel/Bus/USB/USBRequest.h>
 #include <Kernel/StdLib.h>
+#include <Kernel/Arch/x86/IO.h>
 
 namespace Kernel::USB {
 
