@@ -120,37 +120,29 @@ bool EditingEngine::on_key(const KeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Home) {
+        m_editor->update_selection(event.shift());
         if (event.ctrl()) {
             move_to_first_line();
-            if (event.shift() && m_editor->selection().start().is_valid()) {
-                m_editor->selection().set_end(m_editor->cursor());
-                m_editor->did_update_selection();
-            }
         } else {
-            m_editor->update_selection(event.shift());
             move_to_line_beginning();
-            if (event.shift() && m_editor->selection().start().is_valid()) {
-                m_editor->selection().set_end(m_editor->cursor());
-                m_editor->did_update_selection();
-            }
+        }
+        if (event.shift() && m_editor->selection().start().is_valid()) {
+            m_editor->selection().set_end(m_editor->cursor());
+            m_editor->did_update_selection();
         }
         return true;
     }
 
     if (event.key() == KeyCode::Key_End) {
+        m_editor->update_selection(event.shift());
         if (event.ctrl()) {
             move_to_last_line();
-            if (event.shift() && m_editor->selection().start().is_valid()) {
-                m_editor->selection().set_end(m_editor->cursor());
-                m_editor->did_update_selection();
-            }
         } else {
-            m_editor->update_selection(event.shift());
             move_to_line_end();
-            if (event.shift() && m_editor->selection().start().is_valid()) {
-                m_editor->selection().set_end(m_editor->cursor());
-                m_editor->did_update_selection();
-            }
+        }
+        if (event.shift() && m_editor->selection().start().is_valid()) {
+            m_editor->selection().set_end(m_editor->cursor());
+            m_editor->did_update_selection();
         }
         return true;
     }
