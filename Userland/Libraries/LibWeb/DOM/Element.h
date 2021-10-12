@@ -122,6 +122,7 @@ public:
 
 protected:
     RefPtr<Layout::Node> create_layout_node() override;
+    virtual void children_changed() override;
 
 private:
     Attribute* find_attribute(const FlyString& name);
