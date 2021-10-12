@@ -91,4 +91,25 @@ KResultOr<FlatPtr> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
     return TRY(description->read(user_buffer.value(), size));
 }
 
+KResultOr<FlatPtr> Process::sys$pread(int fd, Userspace<u8*> buffer, size_t size, off_t offset)
+{
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    REQUIRE_PROMISE(stdio);
+    if (size == 0)
+        return 0;
+    if (size > NumericLimits<ssize_t>::max())
+        return EINVAL;
+    if (offset < 0)
+        return EINVAL;
+    dbgln_if(IO_DEBUG, "sys$pread({}, {}, {}, {})", fd, buffer.ptr(), size, offset);
+    auto description = TRY(open_readable_file_description(fds(), fd));
+    if (!description->file().is_seekable())
+        return EINVAL;
+    TRY(check_blocked_read(description));
+    auto user_buffer = UserOrKernelBuffer::for_user_buffer(buffer, size);
+    if (!user_buffer.has_value())
+        return EFAULT;
+    return TRY(description->read(user_buffer.value(), offset, size));
+}
+
 }

@@ -140,6 +140,7 @@ enum class NeedsBigProcessLock {
     S(ptsname, NeedsBigProcessLock::Yes)                    \
     S(purge, NeedsBigProcessLock::Yes)                      \
     S(read, NeedsBigProcessLock::Yes)                       \
+    S(pread, NeedsBigProcessLock::Yes)                      \
     S(readlink, NeedsBigProcessLock::Yes)                   \
     S(readv, NeedsBigProcessLock::Yes)                      \
     S(realpath, NeedsBigProcessLock::Yes)                   \
