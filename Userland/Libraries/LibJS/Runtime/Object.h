@@ -16,6 +16,7 @@
 #include <LibJS/Runtime/IndexedProperties.h>
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/PrivateEnvironment.h>
 #include <LibJS/Runtime/PropertyDescriptor.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Shape.h>
@@ -27,6 +28,18 @@ namespace JS {
 public:                               \
     using Base = base_class;          \
     virtual const char* class_name() const override { return #class_; }
+
+struct PrivateElement {
+    enum class Kind {
+        Field,
+        Method,
+        Accessor
+    };
+
+    PrivateName key;
+    Kind kind { Kind::Field };
+    Value value;
+};
 
 class Object : public Cell {
 public:
@@ -89,6 +102,13 @@ public:
     ThrowCompletionOr<bool> test_integrity_level(IntegrityLevel) const;
     ThrowCompletionOr<MarkedValueList> enumerable_own_property_names(PropertyKind kind) const;
     ThrowCompletionOr<Object*> copy_data_properties(Value source, HashTable<PropertyName, PropertyNameTraits> const& seen_names, GlobalObject& global_object);
+
+    PrivateElement* private_element_find(PrivateName const& name);
+    ThrowCompletionOr<void> private_field_add(PrivateName const& name, Value value);
+    ThrowCompletionOr<void> private_method_or_accessor_add(PrivateElement element);
+    ThrowCompletionOr<Value> private_get(PrivateName const& name);
+    ThrowCompletionOr<void> private_set(PrivateName const& name, Value value);
+    ThrowCompletionOr<void> define_field(Variant<PropertyName, PrivateName> name, ECMAScriptFunctionObject* initializer);
 
     // 10.1 Ordinary Object Internal Methods and Internal Slots, https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots
 
@@ -192,6 +212,7 @@ private:
     Shape* m_shape { nullptr };
     Vector<Value> m_storage;
     IndexedProperties m_indexed_properties;
+    Vector<PrivateElement> m_private_elements; // [[PrivateElements]]
 };
 
 }
