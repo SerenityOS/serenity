@@ -53,9 +53,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_getter)
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_setter)
 {
     auto& window = static_cast<WindowObject&>(global_object);
-    auto new_href = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto new_href = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto href_url = window.impl().associated_document().parse_url(new_href);
     if (!href_url.is_valid()) {
         vm.throw_exception<JS::URIError>(global_object, String::formatted("Invalid URL '{}'", new_href));
@@ -133,9 +131,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::reload)
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::replace)
 {
     auto& window = static_cast<WindowObject&>(global_object);
-    auto url = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto url = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     // FIXME: This needs spec compliance work.
     window.impl().did_call_location_replace({}, move(url));
     return JS::js_undefined();

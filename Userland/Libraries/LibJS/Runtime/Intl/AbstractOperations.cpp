@@ -246,9 +246,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_
             // iv. Else,
             else {
                 // 1. Let tag be ? ToString(kValue).
-                tag = key_value.to_string(global_object);
-                if (auto* exception = vm.exception())
-                    return throw_completion(exception->value());
+                tag = TRY(key_value.to_string(global_object));
             }
 
             // v. If IsStructurallyValidLanguageTag(tag) is false, throw a RangeError exception.

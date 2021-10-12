@@ -41,24 +41,16 @@ RefPtr<FunctionExpression> FunctionConstructor::create_dynamic_function_node(Glo
     auto& vm = global_object.vm();
     String parameters_source = "";
     String body_source = "";
-    if (vm.argument_count() == 1) {
-        body_source = vm.argument(0).to_string(global_object);
-        if (vm.exception())
-            return {};
-    }
+    if (vm.argument_count() == 1)
+        body_source = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     if (vm.argument_count() > 1) {
         Vector<String> parameters;
-        for (size_t i = 0; i < vm.argument_count() - 1; ++i) {
-            parameters.append(vm.argument(i).to_string(global_object));
-            if (vm.exception())
-                return {};
-        }
+        for (size_t i = 0; i < vm.argument_count() - 1; ++i)
+            parameters.append(TRY_OR_DISCARD(vm.argument(i).to_string(global_object)));
         StringBuilder parameters_builder;
         parameters_builder.join(',', parameters);
         parameters_source = parameters_builder.build();
-        body_source = vm.argument(vm.argument_count() - 1).to_string(global_object);
-        if (vm.exception())
-            return {};
+        body_source = TRY_OR_DISCARD(vm.argument(vm.argument_count() - 1).to_string(global_object));
     }
     auto is_generator = kind == FunctionKind::Generator;
     auto source = String::formatted("function{} anonymous({}\n) {{\n{}\n}}", is_generator ? "*" : "", parameters_source, body_source);

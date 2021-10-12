@@ -34,8 +34,6 @@ Duration::Duration(double years, double months, double weeks, double days, doubl
 // 7.5.1 ToTemporalDuration ( item ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalduration
 ThrowCompletionOr<Duration*> to_temporal_duration(GlobalObject& global_object, Value item)
 {
-    auto& vm = global_object.vm();
-
     TemporalDuration result;
 
     // 1. If Type(item) is Object, then
@@ -51,9 +49,7 @@ ThrowCompletionOr<Duration*> to_temporal_duration(GlobalObject& global_object, V
     // 2. Else,
     else {
         // a. Let string be ? ToString(item).
-        auto string = item.to_string(global_object);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto string = TRY(item.to_string(global_object));
 
         // b. Let result be ? ParseTemporalDurationString(string).
         result = TRY(parse_temporal_duration_string(global_object, string));
@@ -451,9 +447,7 @@ ThrowCompletionOr<TemporalDuration> to_limited_temporal_duration(GlobalObject& g
     // 1. If Type(temporalDurationLike) is not Object, then
     if (!temporal_duration_like.is_object()) {
         // a. Let str be ? ToString(temporalDurationLike).
-        auto str = temporal_duration_like.to_string(global_object);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto str = TRY(temporal_duration_like.to_string(global_object));
 
         // b. Let duration be ? ParseTemporalDurationString(str).
         duration = TRY(parse_temporal_duration_string(global_object, str));

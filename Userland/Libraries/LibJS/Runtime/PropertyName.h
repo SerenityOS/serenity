@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/StringOrSymbol.h>
 
 namespace JS {
@@ -33,10 +34,7 @@ public:
             return value.as_symbol();
         if (value.is_integral_number() && value.as_double() >= 0 && value.as_double() < NumericLimits<u32>::max())
             return value.as_u32();
-        auto string = value.to_string(global_object);
-        if (string.is_null())
-            return {};
-        return string;
+        return TRY_OR_DISCARD(value.to_string(global_object));
     }
 
     PropertyName() { }

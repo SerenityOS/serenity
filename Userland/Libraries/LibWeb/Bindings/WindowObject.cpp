@@ -190,11 +190,8 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::alert)
     if (!impl)
         return {};
     String message = "";
-    if (vm.argument_count()) {
-        message = vm.argument(0).to_string(global_object);
-        if (vm.exception())
-            return {};
-    }
+    if (vm.argument_count())
+        message = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     impl->alert(message);
     return JS::js_undefined();
 }
@@ -205,11 +202,8 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::confirm)
     if (!impl)
         return {};
     String message = "";
-    if (!vm.argument(0).is_undefined()) {
-        message = vm.argument(0).to_string(global_object);
-        if (vm.exception())
-            return {};
-    }
+    if (!vm.argument(0).is_undefined())
+        message = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     return JS::Value(impl->confirm(message));
 }
 
@@ -220,16 +214,10 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::prompt)
         return {};
     String message = "";
     String default_ = "";
-    if (!vm.argument(0).is_undefined()) {
-        message = vm.argument(0).to_string(global_object);
-        if (vm.exception())
-            return {};
-    }
-    if (!vm.argument(1).is_undefined()) {
-        default_ = vm.argument(1).to_string(global_object);
-        if (vm.exception())
-            return {};
-    }
+    if (!vm.argument(0).is_undefined())
+        message = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
+    if (!vm.argument(1).is_undefined())
+        default_ = TRY_OR_DISCARD(vm.argument(1).to_string(global_object));
     auto response = impl->prompt(message, default_);
     if (response.is_null())
         return JS::js_null();
@@ -252,9 +240,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
     if (vm.argument(0).is_function()) {
         callback = &vm.argument(0).as_function();
     } else {
-        auto script_source = vm.argument(0).to_string(global_object);
-        if (vm.exception())
-            return {};
+        auto script_source = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
         // FIXME: This needs more work once we have a environment settings object.
         // The spec wants us to use a task for the "run function or script string" part,
         // using a NativeFunction for the latter is a workaround so that we can reuse the
@@ -293,9 +279,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
     if (vm.argument(0).is_function()) {
         callback = &vm.argument(0).as_function();
     } else {
-        auto script_source = vm.argument(0).to_string(global_object);
-        if (vm.exception())
-            return {};
+        auto script_source = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
         // FIXME: This needs more work once we have a environment settings object.
         // The spec wants us to use a task for the "run function or script string" part,
         // using a NativeFunction for the latter is a workaround so that we can reuse the
@@ -415,9 +399,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::atob)
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountOne, "atob");
         return {};
     }
-    auto string = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto decoded = decode_base64(StringView(string));
 
     // decode_base64() returns a byte string. LibJS uses UTF-8 for strings. Use Latin1Decoder to convert bytes 128-255 to UTF-8.
@@ -435,9 +417,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountOne, "btoa");
         return {};
     }
-    auto string = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
 
     Vector<u8> byte_string;
     byte_string.ensure_capacity(string.length());
@@ -593,9 +573,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::match_media)
     auto* impl = impl_from(vm, global_object);
     if (!impl)
         return {};
-    auto media = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto media = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     return wrap(global_object, impl->match_media(move(media)));
 }
 
@@ -660,9 +638,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll)
 
         auto behavior_string_value = TRY_OR_DISCARD(options->get("behavior"));
         if (!behavior_string_value.is_undefined())
-            behavior_string = behavior_string_value.to_string(global_object);
-        if (vm.exception())
-            return {};
+            behavior_string = TRY_OR_DISCARD(behavior_string_value.to_string(global_object));
         if (behavior_string != "smooth" && behavior_string != "auto") {
             vm.throw_exception<JS::TypeError>(global_object, "Behavior is not one of 'smooth' or 'auto'");
             return {};
@@ -737,9 +713,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_by)
     top = top + current_scroll_position.y();
 
     auto behavior_string_value = TRY_OR_DISCARD(options->get("behavior"));
-    auto behavior_string = behavior_string_value.is_undefined() ? "auto" : behavior_string_value.to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto behavior_string = behavior_string_value.is_undefined() ? "auto" : TRY_OR_DISCARD(behavior_string_value.to_string(global_object));
     if (behavior_string != "smooth" && behavior_string != "auto") {
         vm.throw_exception<JS::TypeError>(global_object, "Behavior is not one of 'smooth' or 'auto'");
         return {};

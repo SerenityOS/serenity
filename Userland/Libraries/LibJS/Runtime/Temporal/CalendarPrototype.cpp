@@ -69,7 +69,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::id_getter)
     auto calendar = vm.this_value(global_object);
 
     // 2. Return ? ToString(calendar).
-    return js_string(vm, calendar.to_string(global_object));
+    return js_string(vm, TRY_OR_DISCARD(calendar.to_string(global_object)));
 }
 
 // 12.4.4 Temporal.Calendar.prototype.dateFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.datefromfields
@@ -637,7 +637,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_json)
     auto calendar = vm.this_value(global_object);
 
     // 2. Return ? ToString(calendar).
-    return js_string(vm, calendar.to_string(global_object));
+    return js_string(vm, TRY_OR_DISCARD(calendar.to_string(global_object)));
 }
 
 // 15.6.2.6 Temporal.Calendar.prototype.era ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.era

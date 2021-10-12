@@ -929,10 +929,7 @@ ThrowCompletionOr<String> get_substitution(GlobalObject& global_object, Utf16Vie
                 auto& value = captures[*capture_position - 1];
 
                 if (!value.is_undefined()) {
-                    auto value_string = value.to_string(global_object);
-                    if (auto* exception = vm.exception())
-                        return throw_completion(exception->value());
-
+                    auto value_string = TRY(value.to_string(global_object));
                     result.append(value_string);
                 }
 
@@ -960,10 +957,7 @@ ThrowCompletionOr<String> get_substitution(GlobalObject& global_object, Utf16Vie
                 auto capture = TRY(named_captures.as_object().get(group_name));
 
                 if (!capture.is_undefined()) {
-                    auto capture_string = capture.to_string(global_object);
-                    if (auto* exception = vm.exception())
-                        return throw_completion(exception->value());
-
+                    auto capture_string = TRY(capture.to_string(global_object));
                     result.append(capture_string);
                 }
 

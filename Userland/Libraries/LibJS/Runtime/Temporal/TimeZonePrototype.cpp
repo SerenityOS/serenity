@@ -45,7 +45,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::id_getter)
     auto time_zone = vm.this_value(global_object);
 
     // 2. Return ? ToString(timeZone).
-    return js_string(vm, time_zone.to_string(global_object));
+    return js_string(vm, TRY_OR_DISCARD(time_zone.to_string(global_object)));
 }
 
 // 11.4.4 Temporal.TimeZone.prototype.getOffsetNanosecondsFor ( instant ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getoffsetnanosecondsfor
@@ -121,7 +121,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::to_json)
     auto time_zone = vm.this_value(global_object);
 
     // 2. Return ? ToString(timeZone).
-    return js_string(vm, time_zone.to_string(global_object));
+    return js_string(vm, TRY_OR_DISCARD(time_zone.to_string(global_object)));
 }
 
 }

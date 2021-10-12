@@ -906,19 +906,24 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (!optional) {
             if (!parameter.type.nullable) {
                 scoped_generator.append(R"~~~(
-    auto @cpp_name@ = @js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@
-        ? String::empty()
-        : @js_name@@js_suffix@.to_string(global_object);
-    if (vm.exception())
-        @return_statement@
+    String @cpp_name@;
+    if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@) {
+        @cpp_name@ = String::empty();
+    } else {
+        auto to_string_result = @js_name@@js_suffix@.to_string(global_object);
+        if (to_string_result.is_error())
+            @return_statement@
+        @cpp_name@ = to_string_result.release_value();
+    }
 )~~~");
             } else {
                 scoped_generator.append(R"~~~(
     String @cpp_name@;
     if (!@js_name@@js_suffix@.is_nullish()) {
-        @cpp_name@ = @js_name@@js_suffix@.to_string(global_object);
-        if (vm.exception())
+        auto to_string_result = @js_name@@js_suffix@.to_string(global_object);
+        if (to_string_result.is_error())
             @return_statement@
+        @cpp_name@ = to_string_result.release_value();
     }
 )~~~");
             }
@@ -926,11 +931,14 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             scoped_generator.append(R"~~~(
     String @cpp_name@;
     if (!@js_name@@js_suffix@.is_undefined()) {
-        @cpp_name@ = @js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@
-            ? String::empty()
-            : @js_name@@js_suffix@.to_string(global_object);
-        if (vm.exception())
-            @return_statement@
+        if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@) {
+            @cpp_name@ = String::empty();
+        } else {
+            auto to_string_result = @js_name@@js_suffix@.to_string(global_object);
+            if (to_string_result.is_error())
+                @return_statement@
+            @cpp_name@ = to_string_result.release_value();
+        }
     })~~~");
             if (optional_default_value.has_value() && (!parameter.type.nullable || optional_default_value.value() != "null")) {
                 scoped_generator.append(R"~~~( else {
