@@ -19,7 +19,7 @@ pre_configure() {
 }
 
 post_install() {
-    ln -sv libncurses.so "${SERENITY_INSTALL_ROOT}/usr/local/lib/libcurses.so"
-    ln -sv libncurses.so "${SERENITY_INSTALL_ROOT}/usr/local/lib/libtic.so"
-    ln -sv libncurses.so "${SERENITY_INSTALL_ROOT}/usr/local/lib/libtinfo.so"
+    ln -svf libncurses.so "${SERENITY_INSTALL_ROOT}/usr/local/lib/libcurses.so"
+    ln -svf libncurses.so "${SERENITY_INSTALL_ROOT}/usr/local/lib/libtic.so"
+    ln -svf libncurses.so "${SERENITY_INSTALL_ROOT}/usr/local/lib/libtinfo.so"
 }
