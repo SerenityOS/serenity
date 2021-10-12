@@ -12,6 +12,31 @@ namespace Kernel {
 
 using BlockFlags = Thread::FileBlocker::BlockFlags;
 
+static KResultOr<OpenFileDescription*> open_readable_file_description(Process::OpenFileDescriptions const& fds, int fd)
+{
+    auto description = TRY(fds.open_file_description(fd));
+    if (!description->is_readable())
+        return EBADF;
+    if (description->is_directory())
+        return EISDIR;
+    return description;
+}
+
+static KResult check_blocked_read(OpenFileDescription* description)
+{
+    if (description->is_blocking()) {
+        if (!description->can_read()) {
+            auto unblock_flags = BlockFlags::None;
+            if (Thread::current()->block<Thread::ReadBlocker>({}, *description, unblock_flags).was_interrupted())
+                return EINTR;
+            if (!has_flag(unblock_flags, BlockFlags::Read))
+                return EAGAIN;
+            // TODO: handle exceptions in unblock_flags
+        }
+    }
+    return KSuccess;
+}
+
 KResultOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
@@ -34,24 +59,11 @@ KResultOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov
             return EINVAL;
     }
 
-    auto description = TRY(fds().open_file_description(fd));
-    if (!description->is_readable())
-        return EBADF;
-    if (description->is_directory())
-        return EISDIR;
+    auto description = TRY(open_readable_file_description(fds(), fd));
 
     int nread = 0;
     for (auto& vec : vecs) {
-        if (description->is_blocking()) {
-            if (!description->can_read()) {
-                auto unblock_flags = BlockFlags::None;
-                if (Thread::current()->block<Thread::ReadBlocker>({}, *description, unblock_flags).was_interrupted())
-                    return EINTR;
-                if (!has_flag(unblock_flags, BlockFlags::Read))
-                    return EAGAIN;
-                // TODO: handle exceptions in unblock_flags
-            }
-        }
+        TRY(check_blocked_read(description));
         auto buffer = UserOrKernelBuffer::for_user_buffer((u8*)vec.iov_base, vec.iov_len);
         if (!buffer.has_value())
             return EFAULT;
@@ -71,21 +83,8 @@ KResultOr<FlatPtr> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
     dbgln_if(IO_DEBUG, "sys$read({}, {}, {})", fd, buffer.ptr(), size);
-    auto description = TRY(fds().open_file_description(fd));
-    if (!description->is_readable())
-        return EBADF;
-    if (description->is_directory())
-        return EISDIR;
-    if (description->is_blocking()) {
-        if (!description->can_read()) {
-            auto unblock_flags = BlockFlags::None;
-            if (Thread::current()->block<Thread::ReadBlocker>({}, *description, unblock_flags).was_interrupted())
-                return EINTR;
-            if (!has_flag(unblock_flags, BlockFlags::Read))
-                return EAGAIN;
-            // TODO: handle exceptions in unblock_flags
-        }
-    }
+    auto description = TRY(open_readable_file_description(fds(), fd));
+    TRY(check_blocked_read(description));
     auto user_buffer = UserOrKernelBuffer::for_user_buffer(buffer, size);
     if (!user_buffer.has_value())
         return EFAULT;
