@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "GeneratorUtil.h"
 #include <AK/AllOf.h>
 #include <AK/CharacterTypes.h>
 #include <AK/Format.h>
@@ -666,7 +667,7 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
 
     generator.append(R"~~~(
 #include <AK/Array.h>
-#include <AK/HashMap.h>
+#include <AK/BinarySearch.h>
 #include <AK/Span.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/UnicodeLocale.h>
@@ -1043,67 +1044,24 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
 )~~~");
     };
 
-    auto append_from_string = [&](StringView enum_title, StringView enum_snake, Vector<String> const& values) {
-        generator.set("enum_title", enum_title);
-        generator.set("enum_snake", enum_snake);
+    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values) {
+        HashValueMap<String> hashes;
+        hashes.ensure_capacity(values.size());
 
-        generator.append(R"~~~(
-Optional<@enum_title@> @enum_snake@_from_string(StringView const& @enum_snake@)
-{
-    static HashMap<StringView, @enum_title@> @enum_snake@_values { {)~~~");
+        for (auto const& value : values)
+            hashes.set(value.hash(), format_identifier(enum_title, value));
 
-        for (auto const& value : values) {
-            generator.set("key"sv, value);
-            generator.set("value"sv, format_identifier(enum_title, value));
-
-            generator.append(R"~~~(
-        { "@key@"sv, @enum_title@::@value@ },)~~~");
-        }
-
-        generator.append(R"~~~(
-    } };
-
-    if (auto value = @enum_snake@_values.get(@enum_snake@); value.has_value())
-        return value.value();
-    return {};
-}
-)~~~");
+        generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
     };
 
     auto append_alias_search = [&](StringView enum_snake, auto const& aliases) {
-        generator.set("enum_snake", enum_snake);
+        HashValueMap<size_t> hashes;
+        hashes.ensure_capacity(aliases.size());
 
-        generator.append(R"~~~(
-Optional<StringView> resolve_@enum_snake@_alias(StringView const& @enum_snake@)
-{
-    static HashMap<StringView, size_t> @enum_snake@_aliases { {
-        )~~~");
+        for (auto const& alias : aliases)
+            hashes.set(alias.key.hash(), alias.value);
 
-        constexpr size_t max_values_per_row = 10;
-        size_t values_in_current_row = 0;
-
-        for (auto const& alias : aliases) {
-            if (values_in_current_row++ > 0)
-                generator.append(" ");
-
-            generator.set("key"sv, alias.key);
-            generator.set("alias"sv, String::number(alias.value));
-            generator.append("{ \"@key@\"sv, @alias@ },");
-
-            if (values_in_current_row == max_values_per_row) {
-                generator.append("\n        ");
-                values_in_current_row = 0;
-            }
-        }
-
-        generator.append(R"~~~(
-    } };
-
-    if (auto alias = @enum_snake@_aliases.get(@enum_snake@); alias.has_value())
-        return s_string_list[alias.value()];
-    return {};
-}
-)~~~");
+        generate_value_from_string(generator, "resolve_{}_alias"sv, "size_t"sv, enum_snake, move(hashes), "StringView"sv, "s_string_list[{}]"sv);
     };
 
     append_from_string("Locale"sv, "locale"sv, locale_data.locales.keys());
