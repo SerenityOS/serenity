@@ -40,9 +40,7 @@ TESTJS_MAIN_HOOK()
 
 TESTJS_GLOBAL_FUNCTION(load_local_page, loadLocalPage)
 {
-    auto name = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto name = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
 
     // Clear the hooks
     before_initial_load_hooks.clear();

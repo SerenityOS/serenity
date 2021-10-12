@@ -84,9 +84,7 @@ ThrowCompletionOr<PlainTime*> to_temporal_time(GlobalObject& global_object, Valu
         auto* calendar = TRY(get_temporal_calendar_with_iso_default(global_object, item_object));
 
         // e. If ? ToString(calendar) is not "iso8601", then
-        auto calendar_identifier = Value(calendar).to_string(global_object);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto calendar_identifier = TRY(Value(calendar).to_string(global_object));
         if (calendar_identifier != "iso8601"sv) {
             // i. Throw a RangeError exception.
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, calendar_identifier);
@@ -101,9 +99,7 @@ ThrowCompletionOr<PlainTime*> to_temporal_time(GlobalObject& global_object, Valu
     // 4. Else,
     else {
         // a. Let string be ? ToString(item).
-        auto string = item.to_string(global_object);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto string = TRY(item.to_string(global_object));
 
         // b. Let result be ? ParseTemporalTimeString(string).
         result = TRY(parse_temporal_time_string(global_object, string));

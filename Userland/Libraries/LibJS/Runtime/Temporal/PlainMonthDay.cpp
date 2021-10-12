@@ -154,8 +154,6 @@ ThrowCompletionOr<PlainMonthDay*> create_temporal_month_day(GlobalObject& global
 // 10.5.3 TemporalMonthDayToString ( monthDay, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporalmonthdaytostring
 ThrowCompletionOr<String> temporal_month_day_to_string(GlobalObject& global_object, PlainMonthDay& month_day, StringView show_calendar)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: Type(monthDay) is Object.
     // 2. Assert: monthDay has an [[InitializedTemporalMonthDay]] internal slot.
 
@@ -165,9 +163,7 @@ ThrowCompletionOr<String> temporal_month_day_to_string(GlobalObject& global_obje
     auto result = String::formatted("{:02}-{:02}", month_day.iso_month(), month_day.iso_day());
 
     // 6. Let calendarID be ? ToString(monthDay.[[Calendar]]).
-    auto calendar_id = Value(&month_day.calendar()).to_string(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto calendar_id = TRY(Value(&month_day.calendar()).to_string(global_object));
 
     // 7. If calendarID is not "iso8601", then
     if (calendar_id != "iso8601"sv) {

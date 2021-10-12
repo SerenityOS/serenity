@@ -377,14 +377,10 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
         return {};
 
     auto source_attr = TRY_OR_DISCARD(regexp_object->get(vm.names.source));
-    auto pattern = source_attr.to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto pattern = TRY_OR_DISCARD(source_attr.to_string(global_object));
 
     auto flags_attr = TRY_OR_DISCARD(regexp_object->get(vm.names.flags));
-    auto flags = flags_attr.to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto flags = TRY_OR_DISCARD(flags_attr.to_string(global_object));
 
     return js_string(vm, String::formatted("/{}/{}", pattern, flags));
 }
@@ -434,9 +430,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
         if (!result_object)
             return {};
         auto match_object = TRY_OR_DISCARD(result_object->get(0));
-        auto match_str = match_object.to_string(global_object);
-        if (vm.exception())
-            return {};
+        auto match_str = TRY_OR_DISCARD(match_object.to_string(global_object));
 
         TRY_OR_DISCARD(array->create_data_property_or_throw(n, js_string(vm, match_str)));
 
@@ -460,9 +454,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 
     auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, *regexp_object, *global_object.regexp_constructor()));
 
-    auto flags = TRY_OR_DISCARD(regexp_object->get(vm.names.flags)).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto flags_value = TRY_OR_DISCARD(regexp_object->get(vm.names.flags));
+    auto flags = TRY_OR_DISCARD(flags_value.to_string(global_object));
 
     bool global = flags.find('g').has_value();
     bool unicode = flags.find('u').has_value();
@@ -501,13 +494,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     auto string_view = string.view();
 
     if (!replace_value.is_function()) {
-        auto replace_string = replace_value.to_string(global_object);
-        if (vm.exception())
-            return {};
-
+        auto replace_string = TRY_OR_DISCARD(replace_value.to_string(global_object));
         replace_value = js_string(vm, move(replace_string));
-        if (vm.exception())
-            return {};
     }
 
     bool global = TRY_OR_DISCARD(regexp_object->get(vm.names.global)).to_boolean();
@@ -537,9 +525,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             break;
 
         auto match_object = TRY_OR_DISCARD(result_object->get(0));
-        String match_str = match_object.to_string(global_object);
-        if (vm.exception())
-            return {};
+        auto match_str = TRY_OR_DISCARD(match_object.to_string(global_object));
 
         if (match_str.is_empty())
             TRY_OR_DISCARD(increment_last_index(global_object, *regexp_object, string_view, unicode));
@@ -569,15 +555,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         MarkedValueList captures(vm.heap());
         for (size_t n = 1; n <= n_captures; ++n) {
             auto capture = TRY_OR_DISCARD(result.get(n));
-            if (!capture.is_undefined()) {
-                auto capture_string = capture.to_string(global_object);
-                if (vm.exception())
-                    return {};
-
-                capture = Value(js_string(vm, capture_string));
-                if (vm.exception())
-                    return {};
-            }
+            if (!capture.is_undefined())
+                capture = js_string(vm, TRY_OR_DISCARD(capture.to_string(global_object)));
 
             captures.append(move(capture));
         }
@@ -597,10 +576,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             }
 
             auto replace_result = TRY_OR_DISCARD(vm.call(replace_value.as_function(), js_undefined(), move(replacer_args)));
-
-            replacement = replace_result.to_string(global_object);
-            if (vm.exception())
-                return {};
+            replacement = TRY_OR_DISCARD(replace_result.to_string(global_object));
         } else {
             auto named_captures_object = js_undefined();
             if (!named_captures.is_undefined()) {
@@ -677,9 +653,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 
     auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, *regexp_object, *global_object.regexp_constructor()));
 
-    auto flags = TRY_OR_DISCARD(regexp_object->get(vm.names.flags)).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto flags_value = TRY_OR_DISCARD(regexp_object->get(vm.names.flags));
+    auto flags = TRY_OR_DISCARD(flags_value.to_string(global_object));
 
     bool unicode = flags.find('u').has_value();
     auto new_flags = flags.find('y').has_value() ? move(flags) : String::formatted("{}y", flags);

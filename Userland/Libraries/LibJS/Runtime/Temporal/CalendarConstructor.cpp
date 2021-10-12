@@ -49,9 +49,7 @@ Value CalendarConstructor::construct(FunctionObject& new_target)
     auto& global_object = this->global_object();
 
     // 2. Set id to ? ToString(id).
-    auto identifier = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto identifier = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
 
     // 3. If ! IsBuiltinCalendar(id) is false, then
     if (!is_builtin_calendar(identifier)) {

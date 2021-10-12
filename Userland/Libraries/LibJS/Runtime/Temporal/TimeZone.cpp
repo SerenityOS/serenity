@@ -338,9 +338,7 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(GlobalObject& global_object, Va
     }
 
     // 2. Let identifier be ? ToString(temporalTimeZoneLike).
-    auto identifier = temporal_time_zone_like.to_string(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto identifier = TRY(temporal_time_zone_like.to_string(global_object));
 
     // 3. Let result be ? ParseTemporalTimeZone(identifier).
     auto result = TRY(parse_temporal_time_zone(global_object, identifier));

@@ -13,9 +13,7 @@ TEST_ROOT("Userland/Libraries/LibWasm/Tests");
 
 TESTJS_GLOBAL_FUNCTION(read_binary_wasm_file, readBinaryWasmFile)
 {
-    auto filename = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto filename = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto file = Core::File::open(filename, Core::OpenMode::ReadOnly);
     if (file.is_error()) {
         vm.throw_exception<JS::TypeError>(global_object, file.error().string());
@@ -169,9 +167,7 @@ void WebAssemblyModule::initialize(JS::GlobalObject& global_object)
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
 {
-    auto name = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto name = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto this_value = vm.this_value(global_object);
     auto object = this_value.to_object(global_object);
     if (vm.exception())

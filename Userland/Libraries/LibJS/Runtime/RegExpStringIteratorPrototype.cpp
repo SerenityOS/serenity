@@ -58,10 +58,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpStringIteratorPrototype::next)
     if (!match_object)
         return {};
     auto match_string_value = TRY_OR_DISCARD(match_object->get(0));
-    auto match_string = match_string_value.to_string(global_object);
-    if (vm.exception())
-        return {};
-
+    auto match_string = TRY_OR_DISCARD(match_string_value.to_string(global_object));
     if (match_string.is_empty()) {
         auto last_index = TRY_OR_DISCARD(iterator->regexp_object().get(vm.names.lastIndex)).to_length(global_object);
         if (vm.exception())

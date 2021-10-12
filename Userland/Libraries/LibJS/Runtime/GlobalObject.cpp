@@ -347,9 +347,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
 {
     if (vm.argument(0).is_number())
         return vm.argument(0);
-    auto input_string = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto input_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto trimmed_string = input_string.trim_whitespace(TrimMode::Left);
     for (size_t length = trimmed_string.length(); length > 0; --length) {
         // This can't throw, so no exception check is fine.
@@ -363,9 +361,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
 // 19.2.5 parseInt ( string, radix ), https://tc39.es/ecma262/#sec-parseint-string-radix
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
 {
-    auto input_string = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto input_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
 
     // FIXME: There's a bunch of unnecessary string copying here.
     double sign = 1;
@@ -500,9 +496,7 @@ static String decode(JS::GlobalObject& global_object, const String& string, Stri
 // 19.2.6.4 encodeURI ( uri ), https://tc39.es/ecma262/#sec-encodeuri-uri
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri)
 {
-    auto uri_string = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto uri_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto encoded = encode(global_object, uri_string, ";/?:@&=+$,abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()#"sv);
     if (vm.exception())
         return {};
@@ -512,9 +506,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri)
 // 19.2.6.2 decodeURI ( encodedURI ), https://tc39.es/ecma262/#sec-decodeuri-encodeduri
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri)
 {
-    auto uri_string = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto uri_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto decoded = decode(global_object, uri_string, ";/?:@&=+$,#"sv);
     if (vm.exception())
         return {};
@@ -524,9 +516,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri)
 // 19.2.6.5 encodeURIComponent ( uriComponent ), https://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
 {
-    auto uri_string = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto uri_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto encoded = encode(global_object, uri_string, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()"sv);
     if (vm.exception())
         return {};
@@ -536,9 +526,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
 // 19.2.6.3 decodeURIComponent ( encodedURIComponent ), https://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri_component)
 {
-    auto uri_string = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto uri_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto decoded = decode(global_object, uri_string, ""sv);
     if (vm.exception())
         return {};
@@ -548,9 +536,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri_component)
 // B.2.1.1 escape ( string ), https://tc39.es/ecma262/#sec-escape-string
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
 {
-    auto string = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     StringBuilder escaped;
     for (auto code_point : Utf8View(string)) {
         if (code_point < 256) {
@@ -568,9 +554,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
 // B.2.1.2 unescape ( string ), https://tc39.es/ecma262/#sec-unescape-string
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::unescape)
 {
-    auto string = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     ssize_t length = string.length();
     StringBuilder unescaped(length);
     for (auto k = 0; k < length; ++k) {

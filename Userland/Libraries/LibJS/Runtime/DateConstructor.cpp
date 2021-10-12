@@ -319,9 +319,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
     if (!vm.argument_count())
         return js_nan();
 
-    auto date_string = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto date_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
 
     return parse_date_string(date_string);
 }

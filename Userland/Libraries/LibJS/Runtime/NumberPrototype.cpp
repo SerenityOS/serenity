@@ -78,11 +78,11 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
     }
 
     if (!number_value.is_finite_number())
-        return js_string(vm, number_value.to_string(global_object));
+        return js_string(vm, TRY_OR_DISCARD(number_value.to_string(global_object)));
 
     auto number = number_value.as_double();
     if (fabs(number) >= 1e+21)
-        return js_string(vm, number_value.to_string(global_object));
+        return js_string(vm, MUST(number_value.to_string(global_object)));
 
     return js_string(vm, String::formatted("{:0.{1}}", number, static_cast<size_t>(fraction_digits)));
 }

@@ -141,10 +141,7 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::fuzzilli)
     if (!vm.argument_count())
         return JS::js_undefined();
 
-    auto operation = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
-
+    auto operation = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     if (operation == "FUZZILLI_CRASH") {
         auto type = vm.argument(1).to_i32(global_object);
         if (vm.exception())
@@ -164,9 +161,7 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::fuzzilli)
             fzliout = stdout;
         }
 
-        auto string = vm.argument(1).to_string(global_object);
-        if (vm.exception())
-            return {};
+        auto string = TRY_OR_DISCARD(vm.argument(1).to_string(global_object));
         fprintf(fzliout, "%s\n", string.characters());
         fflush(fzliout);
     }

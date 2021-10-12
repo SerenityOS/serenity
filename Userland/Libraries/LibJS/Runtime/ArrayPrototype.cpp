@@ -457,9 +457,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
         if (value.is_nullish())
             continue;
         auto locale_string_result = TRY_OR_DISCARD(value.invoke(global_object, vm.names.toLocaleString));
-        auto string = locale_string_result.to_string(global_object);
-        if (vm.exception())
-            return {};
+        auto string = TRY_OR_DISCARD(locale_string_result.to_string(global_object));
         builder.append(string);
     }
     return js_string(vm, builder.to_string());
@@ -484,11 +482,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
 
     auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
     String separator = ",";
-    if (!vm.argument(0).is_undefined()) {
-        separator = vm.argument(0).to_string(global_object);
-        if (vm.exception())
-            return {};
-    }
+    if (!vm.argument(0).is_undefined())
+        separator = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     StringBuilder builder;
     for (size_t i = 0; i < length; ++i) {
         if (i > 0)
@@ -496,9 +491,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
         auto value = TRY_OR_DISCARD(this_object->get(i));
         if (value.is_nullish())
             continue;
-        auto string = value.to_string(global_object);
-        if (vm.exception())
-            return {};
+        auto string = TRY_OR_DISCARD(value.to_string(global_object));
         builder.append(string);
     }
 

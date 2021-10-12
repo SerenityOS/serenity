@@ -94,9 +94,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     StringBuilder builder;
     for (size_t i = 0; i < literal_segments; ++i) {
         auto next_key = String::number(i);
-        auto next_segment = TRY_OR_DISCARD(raw->get(next_key)).to_string(global_object);
-        if (vm.exception())
-            return {};
+        auto next_segment_value = TRY_OR_DISCARD(raw->get(next_key));
+        auto next_segment = TRY_OR_DISCARD(next_segment_value.to_string(global_object));
 
         builder.append(next_segment);
 
@@ -105,9 +104,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
 
         if (i < number_of_substituions) {
             auto next = vm.argument(i + 1);
-            auto next_sub = next.to_string(global_object);
-            if (vm.exception())
-                return {};
+            auto next_sub = TRY_OR_DISCARD(next.to_string(global_object));
             builder.append(next_sub);
         }
     }

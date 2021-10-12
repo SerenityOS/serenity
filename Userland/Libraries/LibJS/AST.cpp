@@ -73,7 +73,7 @@ static void update_function_name(Value value, FlyString const& name)
         static_cast<ECMAScriptFunctionObject&>(function).set_name(name);
 }
 
-static String get_function_name(GlobalObject& global_object, Value value)
+static ThrowCompletionOr<String> get_function_name(GlobalObject& global_object, Value value)
 {
     if (value.is_symbol())
         return String::formatted("[{}]", value.as_symbol().description());
@@ -1285,11 +1285,11 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
             TRY(target.define_property_or_throw(property_key, { .value = method_value, .writable = true, .enumerable = false, .configurable = true }));
             break;
         case ClassMethod::Kind::Getter:
-            update_function_name(method_value, String::formatted("get {}", get_function_name(global_object, key)));
+            update_function_name(method_value, String::formatted("get {}", TRY(get_function_name(global_object, key))));
             TRY(target.define_property_or_throw(property_key, { .get = &method_function, .enumerable = true, .configurable = true }));
             break;
         case ClassMethod::Kind::Setter:
-            update_function_name(method_value, String::formatted("set {}", get_function_name(global_object, key)));
+            update_function_name(method_value, String::formatted("set {}", TRY(get_function_name(global_object, key))));
             TRY(target.define_property_or_throw(property_key, { .set = &method_function, .enumerable = true, .configurable = true }));
             break;
         default:
@@ -2346,7 +2346,7 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
         if (value.is_function() && property.is_method())
             static_cast<ECMAScriptFunctionObject&>(value.as_function()).set_home_object(object);
 
-        String name = get_function_name(global_object, key);
+        auto name = TRY_OR_DISCARD(get_function_name(global_object, key));
         if (property.type() == ObjectProperty::Type::Getter) {
             name = String::formatted("get {}", name);
         } else if (property.type() == ObjectProperty::Type::Setter) {
@@ -2640,9 +2640,7 @@ Value TemplateLiteral::execute(Interpreter& interpreter, GlobalObject& global_ob
         auto expr = expression.execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        auto string = expr.to_string(global_object);
-        if (interpreter.exception())
-            return {};
+        auto string = TRY_OR_DISCARD(expr.to_string(global_object));
         string_builder.append(string);
     }
 

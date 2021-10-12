@@ -41,19 +41,13 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
 
     String name = "Error";
     auto name_property = TRY_OR_DISCARD(this_object.get(vm.names.name));
-    if (!name_property.is_undefined()) {
-        name = name_property.to_string(global_object);
-        if (vm.exception())
-            return {};
-    }
+    if (!name_property.is_undefined())
+        name = TRY_OR_DISCARD(name_property.to_string(global_object));
 
     String message = "";
     auto message_property = TRY_OR_DISCARD(this_object.get(vm.names.message));
-    if (!message_property.is_undefined()) {
-        message = message_property.to_string(global_object);
-        if (vm.exception())
-            return {};
-    }
+    if (!message_property.is_undefined())
+        message = TRY_OR_DISCARD(message_property.to_string(global_object));
 
     if (name.is_empty())
         return js_string(vm, message);

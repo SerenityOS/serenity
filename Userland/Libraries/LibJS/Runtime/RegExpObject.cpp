@@ -148,9 +148,7 @@ RegExpObject* RegExpObject::regexp_initialize(GlobalObject& global_object, Value
     if (flags.is_undefined()) {
         f = String::empty();
     } else {
-        f = flags.to_string(global_object);
-        if (vm.exception())
-            return {};
+        f = TRY_OR_DISCARD(flags.to_string(global_object));
     }
 
     String original_pattern;
@@ -160,10 +158,7 @@ RegExpObject* RegExpObject::regexp_initialize(GlobalObject& global_object, Value
         original_pattern = String::empty();
         parsed_pattern = String::empty();
     } else {
-        original_pattern = pattern.to_string(global_object);
-        if (vm.exception())
-            return {};
-
+        original_pattern = TRY_OR_DISCARD(pattern.to_string(global_object));
         bool unicode = f.find('u').has_value();
         parsed_pattern = parse_regex_pattern(original_pattern, unicode);
     }

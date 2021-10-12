@@ -40,7 +40,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
                         return builder.to_string();
                     }
                 }
-                auto error = value.to_string(cell->sheet().global_object());
+                auto error = value.to_string_without_side_effects();
                 // This is annoying, but whatever.
                 cell->sheet().interpreter().vm().clear_exception();
 

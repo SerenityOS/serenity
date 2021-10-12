@@ -68,9 +68,7 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
     (void)TRY(to_temporal_overflow(global_object, *options));
 
     // 5. Let string be ? ToString(item).
-    auto string = item.to_string(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto string = TRY(item.to_string(global_object));
 
     // 6. Let result be ? ParseTemporalYearMonthString(string).
     auto result = TRY(parse_temporal_year_month_string(global_object, string));
@@ -236,8 +234,6 @@ ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(GlobalObject& glob
 // 9.5.8 TemporalYearMonthToString ( yearMonth, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporalyearmonthtostring
 ThrowCompletionOr<String> temporal_year_month_to_string(GlobalObject& global_object, PlainYearMonth& year_month, StringView show_calendar)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: Type(yearMonth) is Object.
     // 2. Assert: yearMonth has an [[InitializedTemporalYearMonth]] internal slot.
 
@@ -247,9 +243,7 @@ ThrowCompletionOr<String> temporal_year_month_to_string(GlobalObject& global_obj
     auto result = String::formatted("{}-{:02}", pad_iso_year(year_month.iso_year()), year_month.iso_month());
 
     // 6. Let calendarID be ? ToString(yearMonth.[[Calendar]]).
-    auto calendar_id = Value(&year_month.calendar()).to_string(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto calendar_id = TRY(Value(&year_month.calendar()).to_string(global_object));
 
     // 7. If calendarID is not "iso8601", then
     if (calendar_id != "iso8601") {

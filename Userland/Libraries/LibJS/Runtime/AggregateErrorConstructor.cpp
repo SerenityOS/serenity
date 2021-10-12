@@ -45,9 +45,7 @@ Value AggregateErrorConstructor::construct(FunctionObject& new_target)
     auto* aggregate_error = TRY_OR_DISCARD(ordinary_create_from_constructor<AggregateError>(global_object, new_target, &GlobalObject::aggregate_error_prototype));
 
     if (!vm.argument(1).is_undefined()) {
-        auto message = vm.argument(1).to_string(global_object);
-        if (vm.exception())
-            return {};
+        auto message = TRY_OR_DISCARD(vm.argument(1).to_string(global_object));
         MUST(aggregate_error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, message)));
     }
 

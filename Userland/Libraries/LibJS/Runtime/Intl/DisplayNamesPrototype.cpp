@@ -44,9 +44,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
         return {};
 
     // 3. Let code be ? ToString(code).
-    auto code_string = code.to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto code_string = TRY_OR_DISCARD(code.to_string(global_object));
     code = js_string(vm, move(code_string));
 
     // 4. Let code be ? CanonicalCodeForDisplayNames(displayNames.[[Type]], code).

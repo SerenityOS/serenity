@@ -49,9 +49,7 @@ Value TimeZoneConstructor::construct(FunctionObject& new_target)
     auto& global_object = this->global_object();
 
     // 2. Set identifier to ? ToString(identifier).
-    auto identifier = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
+    auto identifier = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
 
     String canonical;
 

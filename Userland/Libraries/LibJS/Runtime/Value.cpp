@@ -17,6 +17,7 @@
 #include <LibJS/Runtime/BigIntObject.h>
 #include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/BoundFunction.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -326,22 +327,21 @@ PrimitiveString* Value::to_primitive_string(GlobalObject& global_object)
 {
     if (is_string())
         return &as_string();
-    auto string = to_string(global_object);
-    if (global_object.vm().exception())
-        return nullptr;
+    auto string = TRY_OR_DISCARD(to_string(global_object));
     return js_string(global_object.heap(), string);
 }
 
 // 7.1.17 ToString ( argument ), https://tc39.es/ecma262/#sec-tostring
-String Value::to_string(GlobalObject& global_object) const
+ThrowCompletionOr<String> Value::to_string(GlobalObject& global_object) const
 {
+    auto& vm = global_object.vm();
     switch (m_type) {
     case Type::Undefined:
-        return "undefined";
+        return { "undefined"sv };
     case Type::Null:
-        return "null";
+        return { "null"sv };
     case Type::Boolean:
-        return m_value.as_bool ? "true" : "false";
+        return { m_value.as_bool ? "true"sv : "false"sv };
     case Type::Int32:
         return String::number(m_value.as_i32);
     case Type::Double:
@@ -349,14 +349,13 @@ String Value::to_string(GlobalObject& global_object) const
     case Type::String:
         return m_value.as_string->string();
     case Type::Symbol:
-        global_object.vm().throw_exception<TypeError>(global_object, ErrorType::Convert, "symbol", "string");
-        return {};
+        return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "symbol", "string");
     case Type::BigInt:
         return m_value.as_bigint->big_integer().to_base(10);
     case Type::Object: {
         auto primitive_value = to_primitive(global_object, PreferredType::String);
-        if (global_object.vm().exception())
-            return {};
+        if (auto* exception = vm.exception())
+            return throw_completion(exception->value());
         return primitive_value.to_string(global_object);
     }
     default:
@@ -369,10 +368,7 @@ Utf16String Value::to_utf16_string(GlobalObject& global_object) const
     if (m_type == Type::String)
         return m_value.as_string->utf16_string();
 
-    auto utf8_string = to_string(global_object);
-    if (global_object.vm().exception())
-        return {};
-
+    auto utf8_string = TRY_OR_DISCARD(to_string(global_object));
     return Utf16String(utf8_string);
 }
 
@@ -596,7 +592,7 @@ StringOrSymbol Value::to_property_key(GlobalObject& global_object) const
         return {};
     if (key.is_symbol())
         return &key.as_symbol();
-    return key.to_string(global_object);
+    return TRY_OR_DISCARD(key.to_string(global_object));
 }
 
 i32 Value::to_i32_slow_case(GlobalObject& global_object) const
@@ -1100,12 +1096,8 @@ Value add(GlobalObject& global_object, Value lhs, Value rhs)
         }
     }
     if (lhs_primitive.is_string() || rhs_primitive.is_string()) {
-        auto lhs_string = lhs_primitive.to_string(global_object);
-        if (vm.exception())
-            return {};
-        auto rhs_string = rhs_primitive.to_string(global_object);
-        if (vm.exception())
-            return {};
+        auto lhs_string = TRY_OR_DISCARD(lhs_primitive.to_string(global_object));
+        auto rhs_string = TRY_OR_DISCARD(rhs_primitive.to_string(global_object));
         StringBuilder builder(lhs_string.length() + rhs_string.length());
         builder.append(lhs_string);
         builder.append(rhs_string);
