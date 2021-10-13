@@ -362,7 +362,12 @@ FlexFormattingContext::AvailableSpace FlexFormattingContext::determine_available
     };
 
     float main_available_space = 0;
-    float cross_available_space = 0;
+    main_is_constrained = false;
+
+    // For each dimension,
+    //     if that dimension of the flex container’s content box is a definite size, use that;
+    //     if that dimension of the flex container is being sized under a min or max-content constraint, the available space in that dimension is that constraint;
+    //     otherwise, subtract the flex container’s margin, border, and padding from the space available to the flex container in that dimension and use that value. (This might result in an infinite value.)
 
     if (has_definite_main_size(flex_container())) {
         main_is_constrained = true;
@@ -387,6 +392,9 @@ FlexFormattingContext::AvailableSpace FlexFormattingContext::determine_available
             }
         }
     }
+
+    float cross_available_space = 0;
+    cross_is_constrained = false;
 
     if (has_definite_cross_size(flex_container())) {
         cross_available_space = specified_cross_size(flex_container());
