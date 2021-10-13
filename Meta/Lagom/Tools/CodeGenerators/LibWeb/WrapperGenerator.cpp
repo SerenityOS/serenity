@@ -1125,6 +1125,11 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     else
         @cpp_name@ = JS::js_null();
 )~~~");
+                } else if (optional_default_value->to_int().has_value() || optional_default_value->to_uint().has_value()) {
+                    scoped_generator.append(R"~~~(
+    else
+        @cpp_name@ = JS::Value(@parameter.optional_default_value@);
+)~~~");
                 } else {
                     TODO();
                 }
