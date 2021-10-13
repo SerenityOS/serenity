@@ -8,11 +8,9 @@
 
 #include <AK/Types.h>
 
-#include <Kernel/Arch/x86/InterruptDisabler.h>
-#include <Kernel/Arch/x86/Processor.h>
-#include <Kernel/Arch/x86/RegisterState.h>
-
 namespace Kernel {
+
+struct RegisterState;
 
 struct TrapFrame {
     FlatPtr prev_irq_level;
