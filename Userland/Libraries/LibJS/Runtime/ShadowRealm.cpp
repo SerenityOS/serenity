@@ -9,6 +9,20 @@
 
 namespace JS {
 
+ShadowRealm::ShadowRealm(Realm& shadow_realm, ExecutionContext execution_context, Object& prototype)
+    : Object(prototype)
+    , m_shadow_realm(shadow_realm)
+    , m_execution_context(move(execution_context))
+{
+}
+
+void ShadowRealm::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+
+    visitor.visit(&m_shadow_realm);
+}
+
 // 3.1.3 GetWrappedValue ( callerRealm, value ), https://tc39.es/proposal-shadowrealm/#sec-getwrappedvalue
 ThrowCompletionOr<Value> get_wrapped_value(GlobalObject& global_object, Realm& caller_realm, Value value)
 {
