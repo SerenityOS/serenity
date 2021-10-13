@@ -11,6 +11,7 @@
 namespace Web::Layout {
 
 struct FlexItem;
+struct FlexLine;
 
 class FlexFormattingContext final : public FormattingContext {
 public:
@@ -60,6 +61,8 @@ private:
     void determine_flex_base_size_and_hypothetical_main_size(Box const& flex_container, FlexItem&);
 
     void determine_main_size_of_flex_container(Box& flex_container, Vector<FlexItem>&, bool main_is_constrained, bool main_size_is_infinite, float& main_available_size, float main_min_size, float main_max_size);
+
+    Vector<FlexLine> collect_flex_items_into_flex_lines(Box const& flex_container, Vector<FlexItem>&, float main_available_size);
 
     bool is_row_layout() const { return m_flex_direction == CSS::FlexDirection::Row || m_flex_direction == CSS::FlexDirection::RowReverse; }
 

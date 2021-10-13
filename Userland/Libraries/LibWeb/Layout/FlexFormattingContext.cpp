@@ -131,28 +131,7 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
 
     // 5. Collect flex items into flex lines:
     // After this step no additional items are to be added to flex_lines or any of its items!
-    Vector<FlexLine> flex_lines;
-    // FIXME: Also support wrap-reverse
-    if (flex_container.computed_values().flex_wrap() == CSS::FlexWrap::Nowrap) {
-        FlexLine line;
-        for (auto& flex_item : flex_items) {
-            line.items.append(&flex_item);
-        }
-        flex_lines.append(line);
-    } else {
-        FlexLine line;
-        float line_main_size = 0;
-        for (auto& flex_item : flex_items) {
-            if ((line_main_size + flex_item.hypothetical_main_size) > main_available_size) {
-                flex_lines.append(line);
-                line = {};
-                line_main_size = 0;
-            }
-            line.items.append(&flex_item);
-            line_main_size += flex_item.hypothetical_main_size;
-        }
-        flex_lines.append(line);
-    }
+    auto flex_lines = collect_flex_items_into_flex_lines(flex_container, flex_items, main_available_size);
 
     // 6. Resolve the flexible lengths https://www.w3.org/TR/css-flexbox-1/#resolve-flexible-lengths
     enum FlexFactor {
@@ -919,6 +898,36 @@ void FlexFormattingContext::determine_main_size_of_flex_container(Box& flex_cont
         main_available_size = clamp(result, main_min_size, main_max_size);
     }
     set_main_size(flex_container, main_available_size);
+}
+
+// https://www.w3.org/TR/css-flexbox-1/#algo-line-break
+Vector<FlexLine> FlexFormattingContext::collect_flex_items_into_flex_lines(Box const& flex_container, Vector<FlexItem>& flex_items, float main_available_size)
+{
+    Vector<FlexLine> flex_lines;
+
+    // FIXME: Also support wrap-reverse
+    if (flex_container.computed_values().flex_wrap() == CSS::FlexWrap::Nowrap) {
+        FlexLine line;
+        for (auto& flex_item : flex_items) {
+            line.items.append(&flex_item);
+        }
+        flex_lines.append(line);
+    } else {
+        FlexLine line;
+        float line_main_size = 0;
+        for (auto& flex_item : flex_items) {
+            if ((line_main_size + flex_item.hypothetical_main_size) > main_available_size) {
+                flex_lines.append(line);
+                line = {};
+                line_main_size = 0;
+            }
+            line.items.append(&flex_item);
+            line_main_size += flex_item.hypothetical_main_size;
+        }
+        flex_lines.append(line);
+    }
+
+    return flex_lines;
 }
 
 }
