@@ -102,6 +102,11 @@ public:
         return ScopePusher(parser, &node, true);
     }
 
+    static ScopePusher class_field_scope(Parser& parser)
+    {
+        return ScopePusher(parser, nullptr, false);
+    }
+
     void add_declaration(NonnullRefPtr<Declaration> declaration)
     {
         if (declaration->is_lexical_declaration()) {
@@ -1071,16 +1076,20 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 syntax_error("Class cannot have field named 'constructor'");
 
             RefPtr<Expression> initializer;
+            bool contains_direct_call_to_eval = false;
 
             if (match(TokenType::Equals)) {
                 consume();
 
                 TemporaryChange super_property_access_rollback(m_state.allow_super_property_lookup, true);
                 TemporaryChange field_initializer_rollback(m_state.in_class_field_initializer, true);
+
+                auto class_field_scope = ScopePusher::class_field_scope(*this);
                 initializer = parse_expression(2);
+                contains_direct_call_to_eval = class_field_scope.contains_direct_call_to_eval();
             }
 
-            elements.append(create_ast_node<ClassField>({ m_state.current_token.filename(), rule_start.position(), position() }, property_key.release_nonnull(), move(initializer), is_static));
+            elements.append(create_ast_node<ClassField>({ m_state.current_token.filename(), rule_start.position(), position() }, property_key.release_nonnull(), move(initializer), contains_direct_call_to_eval, is_static));
             consume_or_insert_semicolon();
         }
     }

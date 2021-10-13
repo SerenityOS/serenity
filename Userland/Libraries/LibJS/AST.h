@@ -1085,10 +1085,11 @@ private:
 
 class ClassField final : public ClassElement {
 public:
-    ClassField(SourceRange source_range, NonnullRefPtr<Expression> key, RefPtr<Expression> init, bool is_static)
+    ClassField(SourceRange source_range, NonnullRefPtr<Expression> key, RefPtr<Expression> init, bool contains_direct_call_to_eval, bool is_static)
         : ClassElement(source_range, is_static)
         , m_key(move(key))
         , m_initializer(move(init))
+        , m_contains_direct_call_to_eval(contains_direct_call_to_eval)
     {
     }
 
@@ -1105,6 +1106,7 @@ public:
 private:
     NonnullRefPtr<Expression> m_key;
     RefPtr<Expression> m_initializer;
+    bool m_contains_direct_call_to_eval { false };
 };
 
 class StaticInitializer final : public ClassElement {
