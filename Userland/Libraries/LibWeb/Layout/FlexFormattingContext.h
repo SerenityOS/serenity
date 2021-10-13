@@ -68,6 +68,8 @@ private:
 
     float determine_hypothetical_cross_size_of_item(Box&);
 
+    void calculate_cross_size_of_each_flex_line(Box const& flex_container, Vector<FlexLine>&, float cross_min_size, float cross_max_size);
+
     bool is_row_layout() const { return m_flex_direction == CSS::FlexDirection::Row || m_flex_direction == CSS::FlexDirection::RowReverse; }
 
     CSS::FlexDirection m_flex_direction {};

@@ -109,33 +109,7 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
     }
 
     // 8. Calculate the cross size of each flex line.
-    if (flex_lines.size() == 1 && has_definite_cross_size(flex_container)) {
-        flex_lines[0].cross_size = specified_cross_size(flex_container);
-    } else {
-        for (auto& flex_line : flex_lines) {
-            // FIXME: Implement 8.1
-
-            // FIXME: This isn't spec but makes sense here
-            if (has_definite_cross_size(flex_container) && flex_container.computed_values().align_items() == CSS::AlignItems::Stretch) {
-                flex_line.cross_size = specified_cross_size(flex_container) / flex_lines.size();
-                continue;
-            }
-
-            // 8.2
-            float largest_hypothetical_cross_size = 0;
-            for (auto& flex_item : flex_line.items) {
-                if (largest_hypothetical_cross_size < flex_item->hypothetical_cross_size_with_margins())
-                    largest_hypothetical_cross_size = flex_item->hypothetical_cross_size_with_margins();
-            }
-
-            // 8.3
-            flex_line.cross_size = max(0.0f, largest_hypothetical_cross_size);
-        }
-
-        if (flex_lines.size() == 1) {
-            clamp(flex_lines[0].cross_size, cross_min_size, cross_max_size);
-        }
-    }
+    calculate_cross_size_of_each_flex_line(flex_container, flex_lines, cross_min_size, cross_max_size);
 
     // 9. Handle 'align-content: stretch'.
     // FIXME: This
@@ -930,6 +904,38 @@ float FlexFormattingContext::determine_hypothetical_cross_size_of_item(Box& box)
     BlockFormattingContext context(verify_cast<BlockContainer>(box), this);
     context.compute_width(box);
     return box.width();
-};
+}
+
+// https://www.w3.org/TR/css-flexbox-1/#algo-cross-line
+void FlexFormattingContext::calculate_cross_size_of_each_flex_line(const Box& flex_container, Vector<FlexLine>& flex_lines, float cross_min_size, float cross_max_size)
+{
+    if (flex_lines.size() == 1 && has_definite_cross_size(flex_container)) {
+        flex_lines[0].cross_size = specified_cross_size(flex_container);
+    } else {
+        for (auto& flex_line : flex_lines) {
+            // FIXME: Implement 8.1
+
+            // FIXME: This isn't spec but makes sense here
+            if (has_definite_cross_size(flex_container) && flex_container.computed_values().align_items() == CSS::AlignItems::Stretch) {
+                flex_line.cross_size = specified_cross_size(flex_container) / flex_lines.size();
+                continue;
+            }
+
+            // 8.2
+            float largest_hypothetical_cross_size = 0;
+            for (auto& flex_item : flex_line.items) {
+                if (largest_hypothetical_cross_size < flex_item->hypothetical_cross_size_with_margins())
+                    largest_hypothetical_cross_size = flex_item->hypothetical_cross_size_with_margins();
+            }
+
+            // 8.3
+            flex_line.cross_size = max(0.0f, largest_hypothetical_cross_size);
+        }
+
+        if (flex_lines.size() == 1) {
+            clamp(flex_lines[0].cross_size, cross_min_size, cross_max_size);
+        }
+    }
+}
 
 }
