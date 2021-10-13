@@ -7,7 +7,7 @@ Make sure you have all the dependencies installed:
 ### Debian / Ubuntu
 
 ```console
-sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs ninja-build qemu-system-i386 qemu-utils ccache rsync genext2fs unzip texinfo
+sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs ninja-build qemu-system-i386 qemu-utils ccache rsync genext2fs unzip xz-utils texinfo
 ```
 
 #### GCC 10
@@ -43,7 +43,7 @@ for details.
 ### Arch Linux / Manjaro
 
 ```console
-sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qemu qemu-arch-extra ccache rsync unzip
+sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qemu qemu-arch-extra ccache rsync unzip xz
 ```
 
 ### Other systems

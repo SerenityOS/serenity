@@ -75,22 +75,22 @@ mkdir -p "$DIR/Tarballs"
 BINUTILS_VERSION="2.37"
 BINUTILS_SHA256SUM="820d9724f020a3e69cb337893a0b63c2db161dadcb0e06fc11dc29eb1e84a32c"
 BINUTILS_NAME="binutils-$BINUTILS_VERSION"
-BINUTILS_PKG="${BINUTILS_NAME}.tar.gz"
-BINUTILS_BASE_URL="https://ftp.gnu.org/gnu/binutils"
+BINUTILS_PKG="${BINUTILS_NAME}.tar.xz"
+BINUTILS_BASE_URL="https://ftp.gnu.org/gnu/binutils" # option if that is slow: https://fossies.org/linux/misc/
 
 GDB_VERSION="10.2"
 GDB_SHA256SUM="aaa1223d534c9b700a8bec952d9748ee1977513f178727e1bee520ee000b4f29"
 GDB_NAME="gdb-$GDB_VERSION"
-GDB_PKG="${GDB_NAME}.tar.gz"
-GDB_BASE_URL="https://ftp.gnu.org/gnu/gdb"
+GDB_PKG="${GDB_NAME}.tar.xz"
+GDB_BASE_URL="https://ftp.gnu.org/gnu/gdb" # option if that is slow: https://fossies.org/linux/misc/legacy/
 
 # Note: If you bump the gcc version, you also have to update the matching
 #       GCC_VERSION variable in the project's root CMakeLists.txt
 GCC_VERSION="11.2.0"
 GCC_SHA256SUM="d08edc536b54c372a1010ff6619dd274c0f1603aa49212ba20f7aa2cda36fa8b"
 GCC_NAME="gcc-$GCC_VERSION"
-GCC_PKG="${GCC_NAME}.tar.gz"
-GCC_BASE_URL="https://ftp.gnu.org/gnu/gcc"
+GCC_PKG="${GCC_NAME}.tar.xz"
+GCC_BASE_URL="https://ftp.gnu.org/gnu/gcc" # option if that is slow: https://fossies.org/linux/misc/
 
 buildstep() {
     NAME=$1
@@ -179,6 +179,11 @@ popd
 
 # === DOWNLOAD AND PATCH ===
 
+buildstep toolchain_dl printf "\tChecking if we must download toolchain tarballs (gdb, binutils, gcc) ...\n"
+buildstep toolchain_dl printf "\tSometimes the GNU servers we pull these from are particularly slow.\n"
+buildstep toolchain_dl printf "\tIf this is taking a very long time, you may want to manually download\n"
+buildstep toolchain_dl printf "\tthe right tarballs here from another source.\n"
+buildstep toolchain_dl printf "\t(this script is: $DIR/${BASH_SOURCE[0]} )\n"
 pushd "$DIR/Tarballs"
     # Build aarch64-gdb for cross-debugging support on x86 systems
     if [ "$ARCH" = "aarch64" ]; then
@@ -225,7 +230,7 @@ pushd "$DIR/Tarballs"
             rm -rf "$DIR/Build/$ARCH/$GDB_NAME"
         fi
         echo "Extracting GDB..."
-        tar -xzf ${GDB_PKG}
+        tar -xJf ${GDB_PKG}
 
         pushd ${GDB_NAME}
             if [ "$git_patch" = "1" ]; then
@@ -245,7 +250,7 @@ pushd "$DIR/Tarballs"
         rm -rf "$DIR/Build/$ARCH/$BINUTILS_NAME"
     fi
     echo "Extracting binutils..."
-    tar -xzf ${BINUTILS_PKG}
+    tar -xJf ${BINUTILS_PKG}
 
     pushd ${BINUTILS_NAME}
         if [ "$git_patch" = "1" ]; then
@@ -266,7 +271,7 @@ pushd "$DIR/Tarballs"
         rm -rf "$DIR/Build/$ARCH/$GCC_NAME"
     fi
     echo "Extracting gcc..."
-    tar -xzf $GCC_PKG
+    tar -xJf $GCC_PKG
     pushd $GCC_NAME
         if [ "$git_patch" = "1" ]; then
             git init > /dev/null

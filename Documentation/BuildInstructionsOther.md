@@ -3,25 +3,25 @@
 ### Fedora
 
 ```console
-sudo dnf install binutils-devel curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja-build patch ccache rsync @"C Development Tools and Libraries" @Virtualization
+sudo dnf install binutils-devel curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja-build patch ccache rsync xz @"C Development Tools and Libraries" @Virtualization
 ```
 
 ## openSUSE
 
 ```console
-sudo zypper install curl cmake mpfr-devel mpc-devel ninja gmp-devel e2fsprogs patch qemu-x86 qemu-audio-pa gcc gcc-c++ ccache rsync patterns-devel-C-C++-devel_C_C++
+sudo zypper install curl cmake mpfr-devel mpc-devel ninja gmp-devel e2fsprogs patch qemu-x86 qemu-audio-pa gcc gcc-c++ ccache rsync xz patterns-devel-C-C++-devel_C_C++
 ```
 
 ## Void Linux
 
 ```console
-sudo xbps-install -S base-devel cmake curl mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja qemu ccache rsync
+sudo xbps-install -S base-devel cmake curl mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja qemu ccache rsync xz
 ```
 
 ## ALT Linux
 
 ```console
-apt-get install curl cmake libmpc-devel gmp-devel e2fsprogs libmpfr-devel ninja-build patch gcc ccache rsync
+apt-get install curl cmake libmpc-devel gmp-devel e2fsprogs libmpfr-devel ninja-build patch gcc ccache rsync xz
 ```
 
 ## NixOS
@@ -48,6 +48,7 @@ stdenv.mkDerivation {
     ccache
     rsync
     unzip
+    xz
 
     # Example Build-time Additional Dependencies
     pkgconfig
@@ -73,7 +74,7 @@ First, make sure you have enabled the `community` repository in `/etc/apk/reposi
 
 ```console
 # the basics, if you have not already done so
-apk add bash curl git util-linux sudo
+apk add bash curl git util-linux sudo xz
 
 # rough equivalent of build-essential
 apk add build-base
@@ -88,7 +89,7 @@ apk add cmake e2fsprogs grub-bios samurai mpc1-dev mpfr-dev gmp-dev ccache rsync
 ## OpenBSD prerequisites
 
 ```console
-doas pkg_add bash cmake g++ gcc git gmake gmp ninja ccache rsync coreutils qemu sudo
+doas pkg_add bash cmake g++ gcc git gmake gmp ninja ccache rsync coreutils qemu sudo xz
 ```
 
 ## FreeBSD prerequisites
