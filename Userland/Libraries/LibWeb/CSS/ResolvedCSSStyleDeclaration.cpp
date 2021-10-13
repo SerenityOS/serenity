@@ -527,8 +527,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
     case CSS::PropertyID::Width:
         return LengthStyleValue::create(layout_node.computed_values().width());
     case CSS::PropertyID::MinWidth:
-        if (layout_node.computed_values().min_width().is_undefined())
-            return IdentifierStyleValue::create(CSS::ValueID::None);
+        if (layout_node.computed_values().min_width().is_undefined_or_auto())
+            return IdentifierStyleValue::create(CSS::ValueID::Auto);
         return LengthStyleValue::create(layout_node.computed_values().min_width());
     case CSS::PropertyID::MaxWidth:
         if (layout_node.computed_values().max_width().is_undefined())
@@ -537,8 +537,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
     case CSS::PropertyID::Height:
         return LengthStyleValue::create(layout_node.computed_values().height());
     case CSS::PropertyID::MinHeight:
-        if (layout_node.computed_values().min_height().is_undefined())
-            return IdentifierStyleValue::create(CSS::ValueID::None);
+        if (layout_node.computed_values().min_height().is_undefined_or_auto())
+            return IdentifierStyleValue::create(CSS::ValueID::Auto);
         return LengthStyleValue::create(layout_node.computed_values().min_height());
     case CSS::PropertyID::MaxHeight:
         if (layout_node.computed_values().max_height().is_undefined())
