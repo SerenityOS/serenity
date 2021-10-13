@@ -19,6 +19,7 @@ namespace Web::Layout {
 
 FlexFormattingContext::FlexFormattingContext(Box& context_box, FormattingContext* parent)
     : FormattingContext(context_box, parent)
+    , m_flex_direction(context_box.computed_values().flex_direction())
 {
 }
 
@@ -64,9 +65,9 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
 
     // FIXME: Implement reverse and ordering.
 
+    bool is_row = is_row_layout();
+
     // Determine main/cross direction
-    auto flex_direction = box.computed_values().flex_direction();
-    auto is_row = (flex_direction == CSS::FlexDirection::Row || flex_direction == CSS::FlexDirection::RowReverse);
     auto main_size_is_infinite = false;
     auto get_pixel_size = [](Box& box, const CSS::Length& length) {
         return length.resolved(CSS::Length::make_px(0), box, box.containing_block()->width()).to_px(box);
@@ -285,68 +286,11 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         else
             box.box_model().margin.bottom = margin;
     };
-    auto populate_specified_margins = [&is_row](FlexItem& item) {
-        auto width_of_containing_block = item.box.width_of_logical_containing_block();
-        // FIXME: This should also take reverse-ness into account
-        if (is_row) {
-            item.margins.main_before = item.box.computed_values().margin().left.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
-            item.margins.main_after = item.box.computed_values().margin().right.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
-            item.margins.cross_before = item.box.computed_values().margin().top.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
-            item.margins.cross_after = item.box.computed_values().margin().bottom.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
-        } else {
-            item.margins.main_before = item.box.computed_values().margin().top.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
-            item.margins.main_after = item.box.computed_values().margin().bottom.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
-            item.margins.cross_before = item.box.computed_values().margin().left.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
-            item.margins.cross_after = item.box.computed_values().margin().right.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
-        }
-    };
+
+    Vector<FlexItem> flex_items;
 
     // 1. Generate anonymous flex items
-    // More like, sift through the already generated items.
-    // After this step no items are to be added or removed from flex_items!
-    // It holds every item we need to consider and there should be nothing in the following
-    // calculations that could change that.
-    // This is particularly important since we take references to the items stored in flex_items
-    // later, whose addresses won't be stable if we added or removed any items.
-    Vector<FlexItem> flex_items;
-    if (!box.has_definite_width()) {
-        box.set_width(box.containing_block()->width());
-    } else {
-        box.set_width(box.computed_values().width().resolved_or_zero(box, box.containing_block()->width()).to_px(box));
-    }
-
-    if (!box.has_definite_height()) {
-        box.set_height(box.containing_block()->height());
-    } else {
-        box.set_height(box.computed_values().height().resolved_or_zero(box, box.containing_block()->height()).to_px(box));
-    }
-
-    box.for_each_child_of_type<Box>([&](Box& child_box) {
-        layout_inside(child_box, LayoutMode::Default);
-        // Skip anonymous text runs that are only whitespace.
-        if (child_box.is_anonymous() && !child_box.first_child_of_type<BlockContainer>()) {
-            bool contains_only_white_space = true;
-            child_box.for_each_in_inclusive_subtree_of_type<TextNode>([&contains_only_white_space](auto& text_node) {
-                if (!text_node.text_for_rendering().is_whitespace()) {
-                    contains_only_white_space = false;
-                    return IterationDecision::Break;
-                }
-                return IterationDecision::Continue;
-            });
-            if (contains_only_white_space)
-                return IterationDecision::Continue;
-        }
-
-        // Skip any "out-of-flow" children
-        if (child_box.is_out_of_flow(*this))
-            return IterationDecision::Continue;
-
-        child_box.set_flex_item(true);
-        FlexItem flex_item = { child_box };
-        populate_specified_margins(flex_item);
-        flex_items.append(move(flex_item));
-        return IterationDecision::Continue;
-    });
+    generate_anonymous_flex_items(box, flex_items);
 
     // 2. Determine the available main and cross space for the flex items
     float main_available_size = 0;
@@ -848,4 +792,71 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         }
     }
 }
+
+static void populate_specified_margins(FlexItem& item, CSS::FlexDirection flex_direction)
+{
+    auto width_of_containing_block = item.box.width_of_logical_containing_block();
+    // FIXME: This should also take reverse-ness into account
+    if (flex_direction == CSS::FlexDirection::Row || flex_direction == CSS::FlexDirection::RowReverse) {
+        item.margins.main_before = item.box.computed_values().margin().left.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+        item.margins.main_after = item.box.computed_values().margin().right.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+        item.margins.cross_before = item.box.computed_values().margin().top.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+        item.margins.cross_after = item.box.computed_values().margin().bottom.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+    } else {
+        item.margins.main_before = item.box.computed_values().margin().top.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+        item.margins.main_after = item.box.computed_values().margin().bottom.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+        item.margins.cross_before = item.box.computed_values().margin().left.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+        item.margins.cross_after = item.box.computed_values().margin().right.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);
+    }
+};
+
+// https://www.w3.org/TR/css-flexbox-1/#flex-items
+void FlexFormattingContext::generate_anonymous_flex_items(Box& flex_container, Vector<FlexItem>& flex_items)
+{
+    // More like, sift through the already generated items.
+    // After this step no items are to be added or removed from flex_items!
+    // It holds every item we need to consider and there should be nothing in the following
+    // calculations that could change that.
+    // This is particularly important since we take references to the items stored in flex_items
+    // later, whose addresses won't be stable if we added or removed any items.
+    if (!flex_container.has_definite_width()) {
+        flex_container.set_width(flex_container.containing_block()->width());
+    } else {
+        flex_container.set_width(flex_container.computed_values().width().resolved_or_zero(flex_container, flex_container.containing_block()->width()).to_px(flex_container));
+    }
+
+    if (!flex_container.has_definite_height()) {
+        flex_container.set_height(flex_container.containing_block()->height());
+    } else {
+        flex_container.set_height(flex_container.computed_values().height().resolved_or_zero(flex_container, flex_container.containing_block()->height()).to_px(flex_container));
+    }
+
+    flex_container.for_each_child_of_type<Box>([&](Box& child_box) {
+        layout_inside(child_box, LayoutMode::Default);
+        // Skip anonymous text runs that are only whitespace.
+        if (child_box.is_anonymous() && !child_box.first_child_of_type<BlockContainer>()) {
+            bool contains_only_white_space = true;
+            child_box.for_each_in_inclusive_subtree_of_type<TextNode>([&contains_only_white_space](auto& text_node) {
+                if (!text_node.text_for_rendering().is_whitespace()) {
+                    contains_only_white_space = false;
+                    return IterationDecision::Break;
+                }
+                return IterationDecision::Continue;
+            });
+            if (contains_only_white_space)
+                return IterationDecision::Continue;
+        }
+
+        // Skip any "out-of-flow" children
+        if (child_box.is_out_of_flow(*this))
+            return IterationDecision::Continue;
+
+        child_box.set_flex_item(true);
+        FlexItem flex_item = { child_box };
+        populate_specified_margins(flex_item, m_flex_direction);
+        flex_items.append(move(flex_item));
+        return IterationDecision::Continue;
+    });
+}
+
 }
