@@ -36,6 +36,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     }
     free(buffer);
 
+    if (lines.is_empty())
+        return 0;
+
     // Fisher-Yates shuffle
     String tmp;
     for (size_t i = lines.size() - 1; i >= 1; --i) {
