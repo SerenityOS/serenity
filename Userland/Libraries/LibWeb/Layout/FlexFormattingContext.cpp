@@ -447,50 +447,67 @@ float FlexFormattingContext::layout_for_maximum_main_size(Box& box)
 void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(FlexItem& flex_item)
 {
     auto& child_box = flex_item.box;
-    auto const& flex_basis = child_box.computed_values().flex_basis();
-    if (flex_basis.type == CSS::FlexBasis::Length) {
-        // A
-        auto specified_base_size = get_pixel_size(child_box, flex_basis.length);
-        if (specified_base_size == 0)
-            flex_item.flex_base_size = calculated_main_size(flex_item.box);
-        else
-            flex_item.flex_base_size = specified_base_size;
-    } else if (flex_basis.type == CSS::FlexBasis::Content
-        && has_definite_cross_size(child_box)
-        // FIXME: && has intrinsic aspect ratio.
-        && false) {
-        // B
-        TODO();
-        // flex_base_size is calculated from definite cross size and intrinsic aspect ratio
-    } else if (flex_basis.type == CSS::FlexBasis::Content
-        // FIXME: && sized under min-content or max-content contstraints
-        && false) {
-        // C
-        TODO();
-        // Size child_box under the constraints, flex_base_size is then the resulting main_size.
-    } else if (flex_basis.type == CSS::FlexBasis::Content
-        // FIXME: && main_size is infinite && inline axis is parallel to the main axis
-        && false && false) {
-        // D
-        TODO();
-        // Use rules for a flex_container in orthogonal flow
-    } else {
-        // E
+
+    flex_item.flex_base_size = [&] {
+        auto const& used_flex_basis = child_box.computed_values().flex_basis();
+
+        // A. If the item has a definite used flex basis, that’s the flex base size.
+        if (used_flex_basis.is_definite()) {
+            auto specified_base_size = get_pixel_size(child_box, used_flex_basis.length);
+            if (specified_base_size == 0)
+                return calculated_main_size(flex_item.box);
+            return specified_base_size;
+        }
+
+        // B. If the flex item has ...
+        //    - an intrinsic aspect ratio,
+        //    - a used flex basis of content, and
+        //    - a definite cross size,
+        bool has_intrinsic_aspect_ratio = false; // FIXME: Populate this.
+        if (has_intrinsic_aspect_ratio
+            && used_flex_basis.type == CSS::FlexBasis::Content
+            && has_definite_cross_size(child_box)) {
+            TODO();
+            // flex_base_size is calculated from definite cross size and intrinsic aspect ratio
+        }
+
+        // C. If the used flex basis is content or depends on its available space,
+        //    and the flex container is being sized under a min-content or max-content constraint
+        //    (e.g. when performing automatic table layout [CSS21]), size the item under that constraint.
+        //    The flex base size is the item’s resulting main size.
+        if (used_flex_basis.type == CSS::FlexBasis::Content
+            // FIXME: && sized under min-content or max-content constraints
+            && false) {
+            TODO();
+            // Size child_box under the constraints, flex_base_size is then the resulting main_size.
+        }
+
+        // D. Otherwise, if the used flex basis is content or depends on its available space,
+        //    the available main size is infinite, and the flex item’s inline axis is parallel to the main axis,
+        //    lay the item out using the rules for a box in an orthogonal flow [CSS3-WRITING-MODES].
+        //    The flex base size is the item’s max-content main size.
+        if (used_flex_basis.type == CSS::FlexBasis::Content
+            // FIXME: && main_size is infinite && inline axis is parallel to the main axis
+            && false && false) {
+            TODO();
+            // Use rules for a flex_container in orthogonal flow
+        }
+
+        // E. Otherwise, size the item into the available space using its used flex basis in place of its main size,
+        //    treating a value of content as max-content. If a cross size is needed to determine the main size
+        //    (e.g. when the flex item’s main size is in its block axis) and the flex item’s cross size is auto and not definite,
+        //    in this calculation use fit-content as the flex item’s cross size.
+        //    The flex base size is the item’s resulting main size.
         // FIXME: This is probably too naive.
         // FIXME: Care about FlexBasis::Auto
-        if (has_definite_main_size(child_box)) {
-            flex_item.flex_base_size = specified_main_size_of_child_box(child_box);
-        } else {
-            flex_item.flex_base_size = layout_for_maximum_main_size(child_box);
-        }
-    }
-    auto clamp_min = has_main_min_size(child_box)
-        ? specified_main_min_size(child_box)
-        : 0;
-    auto clamp_max = has_main_max_size(child_box)
-        ? specified_main_max_size(child_box)
-        : NumericLimits<float>::max();
+        if (has_definite_main_size(child_box))
+            return specified_main_size_of_child_box(child_box);
+        return layout_for_maximum_main_size(child_box);
+    }();
 
+    // The hypothetical main size is the item’s flex base size clamped according to its used min and max main sizes (and flooring the content box size at zero).
+    auto clamp_min = has_main_min_size(child_box) ? specified_main_min_size(child_box) : 0;
+    auto clamp_max = has_main_max_size(child_box) ? specified_main_max_size(child_box) : NumericLimits<float>::max();
     flex_item.hypothetical_main_size = clamp(flex_item.flex_base_size, clamp_min, clamp_max);
 }
 
