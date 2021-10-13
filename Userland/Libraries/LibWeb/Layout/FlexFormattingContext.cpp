@@ -70,40 +70,6 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
 
     // FIXME: Implement reverse and ordering.
 
-    bool is_row = is_row_layout();
-
-    auto calculate_hypothetical_cross_size = [&is_row, this](Box& box) {
-        bool cross_constrained = false;
-        if (is_row) {
-            if (!box.computed_values().height().is_undefined_or_auto() || !box.computed_values().min_height().is_undefined_or_auto()) {
-                cross_constrained = true;
-            }
-        } else {
-            if (!box.computed_values().width().is_undefined_or_auto() || !box.computed_values().min_width().is_undefined_or_auto()) {
-                cross_constrained = true;
-            }
-        }
-
-        if (!cross_constrained && box.children_are_inline()) {
-            auto& block_container = verify_cast<BlockContainer>(box);
-            BlockFormattingContext bfc(block_container, this);
-            bfc.run(box, LayoutMode::Default);
-            InlineFormattingContext ifc(block_container, &bfc);
-            ifc.run(box, LayoutMode::OnlyRequiredLineBreaks);
-
-            if (is_row)
-                return box.height();
-            return box.width();
-        }
-        if (is_row) {
-            return BlockFormattingContext::compute_theoretical_height(box);
-        } else {
-            BlockFormattingContext context(verify_cast<BlockContainer>(box), this);
-            context.compute_width(box);
-            return box.width();
-        }
-    };
-
     Vector<FlexItem> flex_items;
 
     // 1. Generate anonymous flex items
@@ -139,7 +105,7 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
     // Cross Size Determination
     // 7. Determine the hypothetical cross size of each item
     for (auto& flex_item : flex_items) {
-        flex_item.hypothetical_cross_size = calculate_hypothetical_cross_size(flex_item.box);
+        flex_item.hypothetical_cross_size = determine_hypothetical_cross_size_of_item(flex_item.box);
     }
 
     // 8. Calculate the cross size of each flex line.
@@ -934,5 +900,36 @@ void FlexFormattingContext::resolve_flexible_lengths(Vector<FlexLine>& flex_line
         }
     }
 }
+
+// https://www.w3.org/TR/css-flexbox-1/#algo-cross-item
+float FlexFormattingContext::determine_hypothetical_cross_size_of_item(Box& box)
+{
+    bool cross_constrained = false;
+    if (is_row_layout()) {
+        if (!box.computed_values().height().is_undefined_or_auto() || !box.computed_values().min_height().is_undefined_or_auto()) {
+            cross_constrained = true;
+        }
+    } else {
+        if (!box.computed_values().width().is_undefined_or_auto() || !box.computed_values().min_width().is_undefined_or_auto()) {
+            cross_constrained = true;
+        }
+    }
+
+    if (!cross_constrained && box.children_are_inline()) {
+        auto& block_container = verify_cast<BlockContainer>(box);
+        BlockFormattingContext bfc(block_container, this);
+        bfc.run(box, LayoutMode::Default);
+        InlineFormattingContext ifc(block_container, &bfc);
+        ifc.run(box, LayoutMode::OnlyRequiredLineBreaks);
+
+        return is_row_layout() ? box.height() : box.width();
+    }
+    if (is_row_layout())
+        return BlockFormattingContext::compute_theoretical_height(box);
+
+    BlockFormattingContext context(verify_cast<BlockContainer>(box), this);
+    context.compute_width(box);
+    return box.width();
+};
 
 }
