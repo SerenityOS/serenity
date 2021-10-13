@@ -2,12 +2,18 @@
 set -eo pipefail
 # This file will need to be run in bash, for now.
 
+# Helper function to prefix our script output
+buildstep() {
+    NAME=$1
+    shift
+    "$@" 2>&1 | sed $'s|^|\x1b[34m['"${NAME}"$']\x1b[39m |'
+}
 
 # === CONFIGURATION AND SETUP ===
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-echo "$DIR"
+buildstep BuildIt_start printf "\n\n\t\tRunning %s from %s/ ...\n\n\n" "${BASH_SOURCE[0]}" "$DIR"
 
 ARCH=${ARCH:-"i686"}
 TARGET="$ARCH-pc-serenity"
@@ -66,8 +72,8 @@ while [ "$1" != "" ]; do
     shift
 done
 
-echo PREFIX is "$PREFIX"
-echo SYSROOT is "$SYSROOT"
+buildstep BuildIt_start printf "PREFIX is '%s'\n" "$PREFIX"
+buildstep BuildIt_start printf "SYSROOT is '%s'\n" "$SYSROOT"
 
 mkdir -p "$DIR/Tarballs"
 
@@ -92,43 +98,38 @@ GCC_NAME="gcc-$GCC_VERSION"
 GCC_PKG="${GCC_NAME}.tar.xz"
 GCC_BASE_URL="https://ftp.gnu.org/gnu/gcc" # option if that is slow: https://fossies.org/linux/misc/
 
-buildstep() {
-    NAME=$1
-    shift
-    "$@" 2>&1 | sed $'s|^|\x1b[34m['"${NAME}"$']\x1b[39m |'
-}
 
 # === DEPENDENCIES ===
-buildstep dependencies echo "Checking whether 'make' is available..."
+buildstep dependencies printf "Checking whether 'make' is available...\n"
 if ! command -v ${MAKE:-make} >/dev/null; then
-    buildstep dependencies echo "Please make sure to install GNU Make (for the '${MAKE:-make}' tool)."
+    buildstep dependencies printf "Please make sure to install GNU Make (for the '%s' tool).\n" "${MAKE:-make}"
     exit 1
 fi
 
-buildstep dependencies echo "Checking whether 'patch' is available..."
+buildstep dependencies printf "Checking whether 'patch' is available...\n"
 if ! command -v patch >/dev/null; then
-    buildstep dependencies echo "Please make sure to install GNU patch (for the 'patch' tool)."
+    buildstep dependencies printf "Please make sure to install GNU patch (for the 'patch' tool).\n"
     exit 1
 fi
 
-buildstep dependencies echo "Checking whether your C compiler works..."
+buildstep dependencies printf "Checking whether your C compiler works...\n"
 if ! ${CC:-cc} -o /dev/null -xc - >/dev/null <<'PROGRAM'
 int main() {}
 PROGRAM
 then
-    buildstep dependencies echo "Please make sure to install a working C compiler."
+    buildstep dependencies printf "Please make sure to install a working C compiler.\n"
     exit 1
 fi
 
 if [ "$SYSTEM_NAME" != "Darwin" ]; then
     for lib in gmp mpc mpfr; do
-        buildstep dependencies echo "Checking whether the $lib library and headers are available..."
+        buildstep dependencies printf "Checking whether the %s library and headers are available...\n" "$lib"
         if ! ${CC:-cc} -I /usr/local/include -L /usr/local/lib -l$lib -o /dev/null -xc - >/dev/null <<PROGRAM
 #include <$lib.h>
 int main() {}
 PROGRAM
         then
-            echo "Please make sure to install the $lib library and headers."
+            buildstep dependencies printf "Please make sure to install the %s library and headers.\n" "$lib"
             exit 1
         fi
     done
@@ -144,35 +145,31 @@ pushd "$DIR"
         # The following logic is correct *only* because of that.
 
         mkdir -p Cache
-        echo "Cache (before):"
+        buildstep cachecheck printf "Cache (before):\n"
         ls -l Cache
         CACHED_TOOLCHAIN_ARCHIVE="Cache/ToolchainBinariesGithubActions.tar.gz"
         if [ -r "${CACHED_TOOLCHAIN_ARCHIVE}" ] ; then
-            echo "Cache at ${CACHED_TOOLCHAIN_ARCHIVE} exists!"
-            echo "Extracting toolchain from cache:"
+            buildstep cacheuse printf "Cache at %s exists!\n" "${CACHED_TOOLCHAIN_ARCHIVE}"
+            buildstep cacheuse printf "Extracting toolchain from cache:\n"
             if tar xzf "${CACHED_TOOLCHAIN_ARCHIVE}" ; then
-                echo "Done 'building' the toolchain."
-                echo "Cache unchanged."
+                buildstep cacheuse printf "Done 'building' the toolchain.\n"
+                buildstep cacheuse printf "Cache unchanged.\n"
                 exit 0
             else
-                echo
-                echo
-                echo
-                echo "Could not extract cached toolchain archive."
-                echo "This means the cache is broken and *should be removed*!"
-                echo "As Github Actions cannot update a cache, this will unnecessarily"
-                echo "slow down all future builds for this hash, until someone"
-                echo "resets the cache."
-                echo
-                echo
-                echo
+                printf "\n\n\n\n"
+                printf "Could not extract cached toolchain archive.\n"
+                printf "This means the cache is broken and *should be removed*!\n"
+                printf "As Github Actions cannot update a cache, this will unnecessarily\n"
+                printf "slow down all future builds for this hash, until someone\n"
+                printf "resets the cache.\n"
+                printf "\n\n\n"
                 rm -f "${CACHED_TOOLCHAIN_ARCHIVE}"
             fi
         else
-            echo "Cache at ${CACHED_TOOLCHAIN_ARCHIVE} does not exist."
-            echo "Will rebuild toolchain from scratch, and save the result."
+            buildstep cachemissing printf "Cache at %s does not exist.\n" "${CACHED_TOOLCHAIN_ARCHIVE}"
+            buildstep cachemissing printf "Will rebuild toolchain from scratch, and save the result.\n"
         fi
-        echo "::group::Actually building Toolchain"
+        buildstep cachemissing printf "::group::Actually building Toolchain\n"
     fi
 popd
 
@@ -183,45 +180,45 @@ buildstep toolchain_dl printf "\tChecking if we must download toolchain tarballs
 buildstep toolchain_dl printf "\tSometimes the GNU servers we pull these from are particularly slow.\n"
 buildstep toolchain_dl printf "\tIf this is taking a very long time, you may want to manually download\n"
 buildstep toolchain_dl printf "\tthe right tarballs here from another source.\n"
-buildstep toolchain_dl printf "\t(this script is: $DIR/${BASH_SOURCE[0]} )\n"
+buildstep toolchain_dl printf "\t(this script is: %s/%s )\n" "$DIR" "${BASH_SOURCE[0]}"
 pushd "$DIR/Tarballs"
     # Build aarch64-gdb for cross-debugging support on x86 systems
     if [ "$ARCH" = "aarch64" ]; then
         SHA256=""
         if [ -e "$GDB_PKG" ]; then
             SHA256="$($SHA256SUM $GDB_PKG | cut -f1 -d' ')"
-            buildstep toolchain_dl printf "bu SHA256='$SHA256'\n"
+            buildstep toolchain_dl printf "bu SHA256='%s'\n" "$SHA256"
         fi
         if [ "$SHA256" != ${GDB_SHA256SUM} ] ; then
             rm -f $GDB_PKG
             curl -LO "$GDB_BASE_URL/$GDB_PKG"
         else
-            echo "Skipped downloading gdb"
+            buildstep toolchain_dl printf "Skipped downloading gdb, it is already present and intact.\n"
         fi
     fi
 
     SHA256=""
     if [ -e "$BINUTILS_PKG" ]; then
         SHA256="$($SHA256SUM $BINUTILS_PKG | cut -f1 -d' ')"
-        buildstep toolchain_dl printf "bu SHA256='$SHA256'\n"
+        buildstep toolchain_dl printf "bu SHA256='%s'\n" "$SHA256"
     fi
     if [ "$SHA256" != ${BINUTILS_SHA256SUM} ] ; then
         rm -f $BINUTILS_PKG
         curl -LO "$BINUTILS_BASE_URL/$BINUTILS_PKG"
     else
-        echo "Skipped downloading binutils"
+        buildstep toolchain_dl printf "Skipped downloading binutils, it is already present and intact.\n"
     fi
 
     SHA256=""
     if [ -e "$GCC_PKG" ]; then
         SHA256="$($SHA256SUM ${GCC_PKG} | cut -f1 -d' ')"
-        buildstep toolchain_dl printf "gc SHA256='$SHA256'\n"
+        buildstep toolchain_dl printf "gc SHA256='%s'\n" "$SHA256"
     fi
     if [ "$SHA256" != ${GCC_SHA256SUM} ] ; then
         rm -f $GCC_PKG
         curl -LO "$GCC_BASE_URL/$GCC_NAME/$GCC_PKG"
     else
-        echo "Skipped downloading gcc"
+        buildstep toolchain_dl printf "Skipped downloading gcc, it is already present and intact.\n"
     fi
 
     if [ "$ARCH" = "aarch64" ]; then
@@ -229,7 +226,7 @@ pushd "$DIR/Tarballs"
             rm -rf "${GDB_NAME}"
             rm -rf "$DIR/Build/$ARCH/$GDB_NAME"
         fi
-        echo "Extracting GDB..."
+        buildstep toolchain_dl printf "\n\tExtracting GDB...\n\n"
         tar -xJf ${GDB_PKG}
 
         pushd ${GDB_NAME}
@@ -249,7 +246,7 @@ pushd "$DIR/Tarballs"
         rm -rf "${BINUTILS_NAME}"
         rm -rf "$DIR/Build/$ARCH/$BINUTILS_NAME"
     fi
-    echo "Extracting binutils..."
+    buildstep toolchain_dl printf "\n\tExtracting binutils...\n\n"
     tar -xJf ${BINUTILS_PKG}
 
     pushd ${BINUTILS_NAME}
@@ -270,7 +267,7 @@ pushd "$DIR/Tarballs"
         # Also drop the build dir
         rm -rf "$DIR/Build/$ARCH/$GCC_NAME"
     fi
-    echo "Extracting gcc..."
+    buildstep toolchain_dl printf "\n\tExtracting gcc...\n\n"
     tar -xJf $GCC_PKG
     pushd $GCC_NAME
         if [ "$git_patch" = "1" ]; then
@@ -311,15 +308,16 @@ pushd "$DIR/Build/$ARCH"
         mkdir -p gdb
 
         pushd gdb
-            echo "XXX configure gdb"
+            buildstep "gdb/configure" printf "\n\n\tXXX configure gdb\n\n"
             buildstep "gdb/configure" "$DIR"/Tarballs/$GDB_NAME/configure --prefix="$PREFIX" \
                                                      --target="$TARGET" \
                                                      --with-sysroot="$SYSROOT" \
                                                      --enable-shared \
                                                      --disable-nls \
                                                      ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
-            echo "XXX build gdb"
+            buildstep "gdb/build" printf "\n\n\tXXX build gdb\n\n"
             buildstep "gdb/build" "$MAKE" -j "$MAKEJOBS" || exit 1
+            buildstep "gdb/install" printf "\n\n\tXXX install gdb\n\n"
             buildstep "gdb/install" "$MAKE" install || exit 1
         popd
     fi
@@ -328,7 +326,7 @@ pushd "$DIR/Build/$ARCH"
     mkdir -p binutils
 
     pushd binutils
-        echo "XXX configure binutils"
+        buildstep "binutils/configure" printf "\n\n\tXXX configure binutils\n\n"
         buildstep "binutils/configure" "$DIR"/Tarballs/$BINUTILS_NAME/configure --prefix="$PREFIX" \
                                                  --target="$TARGET" \
                                                  --with-sysroot="$SYSROOT" \
@@ -344,12 +342,12 @@ pushd "$DIR/Build/$ARCH"
             buildstep "binutils/build" "$MAKE" all-yes
             popd
         fi
-        echo "XXX build binutils"
+        buildstep "binutils/build" printf "\n\n\tXXX build binutils\n\n"
         buildstep "binutils/build" "$MAKE" -j "$MAKEJOBS" || exit 1
         buildstep "binutils/install" "$MAKE" install || exit 1
     popd
 
-    echo "XXX serenity libc, libm and libpthread headers"
+    buildstep install_headers printf "\n\n\t\tXXX serenity libc, libm and libpthread headers\n"
     mkdir -p "$BUILD"
     pushd "$BUILD"
         mkdir -p Root/usr/include/
@@ -374,7 +372,7 @@ pushd "$DIR/Build/$ARCH"
     mkdir -p gcc
 
     pushd gcc
-        echo "XXX configure gcc and libgcc"
+        buildstep config_gcc_libgcc printf "\n\n\t\tXXX configure gcc and libgcc\n\n"
         buildstep "gcc/configure" "$DIR/Tarballs/gcc-$GCC_VERSION/configure" --prefix="$PREFIX" \
                                             --target="$TARGET" \
                                             --with-sysroot="$SYSROOT" \
@@ -387,18 +385,18 @@ pushd "$DIR/Build/$ARCH"
                                             --enable-threads=posix \
                                             ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
 
-        echo "XXX build gcc and libgcc"
+        buildstep build_gcc_libgcc printf "\n\n\tXXX build gcc and libgcc\n\n"
         buildstep "gcc/build" "$MAKE" -j "$MAKEJOBS" all-gcc || exit 1
         if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
             ln -sf liblto_plugin.so.0.0 gcc/liblto_plugin.so
         fi
         buildstep "libgcc/build" "$MAKE" -j "$MAKEJOBS" all-target-libgcc || exit 1
-        echo "XXX install gcc and libgcc"
+        buildstep "gcc+libgcc/install" printf "\n\n\tXXX install gcc and libgcc\n\n"
         buildstep "gcc+libgcc/install" "$MAKE" install-gcc install-target-libgcc || exit 1
 
-        echo "XXX build libstdc++"
+        buildstep "libstdc++/build" printf "\n\n\tXXX build libstdc++\n\n"
         buildstep "libstdc++/build" "$MAKE" -j "$MAKEJOBS" all-target-libstdc++-v3 || exit 1
-        echo "XXX install libstdc++"
+        buildstep "libstdc++/install" printf "\n\n\tXXX install libstdc++\n"
         buildstep "libstdc++/install" "$MAKE" install-target-libstdc++-v3 || exit 1
     popd
 
@@ -412,14 +410,15 @@ popd
 
 pushd "$DIR"
     if [ "${TRY_USE_LOCAL_TOOLCHAIN}" = "y" ] ; then
-        echo "::endgroup::"
-        echo "Building cache tar:"
+        buildstep save_cache printf "::endgroup::\n"
+        buildstep save_cache printf "Building cache tar:\n"
 
         rm -f "${CACHED_TOOLCHAIN_ARCHIVE}"  # Just in case
 
         tar czf "${CACHED_TOOLCHAIN_ARCHIVE}" Local/
 
-        echo "Cache (after):"
+        buildstep save_cache printf "Cache (after):\n"
         ls -l Cache
     fi
 popd
+buildstep BuildIt_end printf "\n\n\t\t... Finished running %s from %s/ !\n\n\n" "${BASH_SOURCE[0]}" "$DIR"
