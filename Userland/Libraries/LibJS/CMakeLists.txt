@@ -131,6 +131,8 @@ set(SOURCES
     Runtime/SetIteratorPrototype.cpp
     Runtime/SetPrototype.cpp
     Runtime/ShadowRealm.cpp
+    Runtime/ShadowRealmConstructor.cpp
+    Runtime/ShadowRealmPrototype.cpp
     Runtime/Shape.cpp
     Runtime/StringConstructor.cpp
     Runtime/StringIterator.cpp
