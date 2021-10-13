@@ -3213,7 +3213,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
 {
     for_each_lexically_declared_name([&](FlyString const& name) {
         if (global_environment.has_var_declaration(name) || global_environment.has_lexical_declaration(name)) {
-            interpreter.vm().throw_exception<SyntaxError>(global_object, ErrorType::FixmeAddAnErrorStringWithMessage, "Lexical variable top level already declared");
+            interpreter.vm().throw_exception<SyntaxError>(global_object, ErrorType::TopLevelVariableAlreadyDeclared, name);
             return IterationDecision::Break;
         }
 
@@ -3222,7 +3222,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
             return IterationDecision::Break;
 
         if (restricted_global)
-            interpreter.vm().throw_exception<SyntaxError>(global_object, ErrorType::FixmeAddAnErrorStringWithMessage, "Restricted global property");
+            interpreter.vm().throw_exception<SyntaxError>(global_object, ErrorType::RestrictedGlobalProperty, name);
 
         return IterationDecision::Continue;
     });
@@ -3232,7 +3232,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
 
     for_each_var_declared_name([&](auto const& name) {
         if (global_environment.has_lexical_declaration(name)) {
-            interpreter.vm().throw_exception<SyntaxError>(global_object, ErrorType::FixmeAddAnErrorStringWithMessage, "Var declared variable top level also lexically declared");
+            interpreter.vm().throw_exception<SyntaxError>(global_object, ErrorType::TopLevelVariableAlreadyDeclared, name);
             return IterationDecision::Break;
         }
 
@@ -3255,7 +3255,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
             return IterationDecision::Break;
 
         if (!function_definable) {
-            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::FixmeAddAnErrorStringWithMessage, "Global function not definable");
+            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::CannotDeclareGlobalFunction, function.name());
             return IterationDecision::Break;
         }
 
@@ -3278,7 +3278,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
                 return IterationDecision::Break;
 
             if (!var_definable) {
-                interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::FixmeAddAnErrorStringWithMessage, "Global variable not definable");
+                interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::CannotDeclareGlobalVariable, name);
                 return IterationDecision::Break;
             }
 
@@ -3305,7 +3305,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
                 return IterationDecision::Break;
 
             if (!function_definable) {
-                interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::FixmeAddAnErrorStringWithMessage, "Global function not definable");
+                interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::CannotDeclareGlobalFunction, function_name);
                 return IterationDecision::Break;
             }
 
