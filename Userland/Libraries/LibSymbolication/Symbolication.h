@@ -17,6 +17,7 @@ struct Symbol {
     String object {};
     u32 offset { 0 };
     Vector<Debug::DebugInfo::SourcePosition> source_positions;
+    bool operator==(Symbol const&) const = default;
 };
 
 Optional<FlatPtr> kernel_base();
