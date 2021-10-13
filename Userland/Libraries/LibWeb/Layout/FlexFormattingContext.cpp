@@ -130,17 +130,7 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
     align_all_flex_items_along_the_cross_axis(flex_container, flex_lines);
 
     // 15. Determine the flex container’s used cross size:
-    if (has_definite_cross_size(flex_container)) {
-        float clamped_cross_size = clamp(specified_cross_size(flex_container), cross_min_size, cross_max_size);
-        set_cross_size(flex_container, clamped_cross_size);
-    } else {
-        float sum_of_flex_lines_cross_sizes = 0;
-        for (auto& flex_line : flex_lines) {
-            sum_of_flex_lines_cross_sizes += flex_line.cross_size;
-        }
-        float clamped_cross_size = clamp(sum_of_flex_lines_cross_sizes, cross_min_size, cross_max_size);
-        set_cross_size(flex_container, clamped_cross_size);
-    }
+    determine_flex_container_used_cross_size(flex_container, flex_lines, cross_min_size, cross_max_size);
 
     // 16. Align all flex lines
     // FIXME: Support align-content
@@ -952,6 +942,22 @@ void FlexFormattingContext::align_all_flex_items_along_the_cross_axis(Box const&
         }
 
         line_cross_offset += flex_line.cross_size;
+    }
+}
+
+// https://www.w3.org/TR/css-flexbox-1/#algo-cross-container
+void FlexFormattingContext::determine_flex_container_used_cross_size(Box& flex_container, Vector<FlexLine> const& flex_lines, float cross_min_size, float cross_max_size)
+{
+    if (has_definite_cross_size(flex_container)) {
+        float clamped_cross_size = clamp(specified_cross_size(flex_container), cross_min_size, cross_max_size);
+        set_cross_size(flex_container, clamped_cross_size);
+    } else {
+        float sum_of_flex_lines_cross_sizes = 0;
+        for (auto& flex_line : flex_lines) {
+            sum_of_flex_lines_cross_sizes += flex_line.cross_size;
+        }
+        float clamped_cross_size = clamp(sum_of_flex_lines_cross_sizes, cross_min_size, cross_max_size);
+        set_cross_size(flex_container, clamped_cross_size);
     }
 }
 
