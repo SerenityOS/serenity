@@ -16,7 +16,7 @@ BUILD="$DIR/../Build/$ARCH"
 SYSROOT="$BUILD/Root"
 
 MAKE="make"
-MD5SUM="md5sum"
+SHA256SUM="sha256sum"
 NPROC="nproc"
 REALPATH="realpath"
 
@@ -36,7 +36,7 @@ export CXXFLAGS="-g0 -O2 -mtune=native"
 
 if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
     MAKE=gmake
-    MD5SUM="md5 -q"
+    SHA256SUM="sha256 -q"
     NPROC="sysctl -n hw.ncpuonline"
     REALPATH="readlink -f"
     export CC=egcc
@@ -45,7 +45,7 @@ if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
     export LDFLAGS=-Wl,-z,notext
 elif [ "$SYSTEM_NAME" = "FreeBSD" ]; then
     MAKE=gmake
-    MD5SUM="md5 -q"
+    SHA256SUM="sha256 -q"
     NPROC="sysctl -n hw.ncpu"
     export with_gmp=/usr/local
     export with_mpfr=/usr/local
@@ -73,13 +73,13 @@ mkdir -p "$DIR/Tarballs"
 
 # Note: The version number and hash in BuildClang.sh needs to be kept in sync with this.
 BINUTILS_VERSION="2.37"
-BINUTILS_MD5SUM="1e55743d73c100b7a0d67ffb32398cdb"
+BINUTILS_SHA256SUM="820d9724f020a3e69cb337893a0b63c2db161dadcb0e06fc11dc29eb1e84a32c"
 BINUTILS_NAME="binutils-$BINUTILS_VERSION"
 BINUTILS_PKG="${BINUTILS_NAME}.tar.gz"
 BINUTILS_BASE_URL="https://ftp.gnu.org/gnu/binutils"
 
 GDB_VERSION="10.2"
-GDB_MD5SUM="7aeb896762924ae9a2ec59525088bada"
+GDB_SHA256SUM="aaa1223d534c9b700a8bec952d9748ee1977513f178727e1bee520ee000b4f29"
 GDB_NAME="gdb-$GDB_VERSION"
 GDB_PKG="${GDB_NAME}.tar.gz"
 GDB_BASE_URL="https://ftp.gnu.org/gnu/gdb"
@@ -87,7 +87,7 @@ GDB_BASE_URL="https://ftp.gnu.org/gnu/gdb"
 # Note: If you bump the gcc version, you also have to update the matching
 #       GCC_VERSION variable in the project's root CMakeLists.txt
 GCC_VERSION="11.2.0"
-GCC_MD5SUM="dc6886bd44bb49e2d3d662aed9729278"
+GCC_SHA256SUM="d08edc536b54c372a1010ff6619dd274c0f1603aa49212ba20f7aa2cda36fa8b"
 GCC_NAME="gcc-$GCC_VERSION"
 GCC_PKG="${GCC_NAME}.tar.gz"
 GCC_BASE_URL="https://ftp.gnu.org/gnu/gcc"
@@ -182,12 +182,12 @@ popd
 pushd "$DIR/Tarballs"
     # Build aarch64-gdb for cross-debugging support on x86 systems
     if [ "$ARCH" = "aarch64" ]; then
-        md5=""
+        SHA256=""
         if [ -e "$GDB_PKG" ]; then
-            md5="$($MD5SUM $GDB_PKG | cut -f1 -d' ')"
-            echo "bu md5='$md5'"
+            SHA256="$($SHA256SUM $GDB_PKG | cut -f1 -d' ')"
+            buildstep toolchain_dl printf "bu SHA256='$SHA256'\n"
         fi
-        if [ "$md5" != ${GDB_MD5SUM} ] ; then
+        if [ "$SHA256" != ${GDB_SHA256SUM} ] ; then
             rm -f $GDB_PKG
             curl -LO "$GDB_BASE_URL/$GDB_PKG"
         else
@@ -195,24 +195,24 @@ pushd "$DIR/Tarballs"
         fi
     fi
 
-    md5=""
+    SHA256=""
     if [ -e "$BINUTILS_PKG" ]; then
-        md5="$($MD5SUM $BINUTILS_PKG | cut -f1 -d' ')"
-        echo "bu md5='$md5'"
+        SHA256="$($SHA256SUM $BINUTILS_PKG | cut -f1 -d' ')"
+        buildstep toolchain_dl printf "bu SHA256='$SHA256'\n"
     fi
-    if [ "$md5" != ${BINUTILS_MD5SUM} ] ; then
+    if [ "$SHA256" != ${BINUTILS_SHA256SUM} ] ; then
         rm -f $BINUTILS_PKG
         curl -LO "$BINUTILS_BASE_URL/$BINUTILS_PKG"
     else
         echo "Skipped downloading binutils"
     fi
 
-    md5=""
+    SHA256=""
     if [ -e "$GCC_PKG" ]; then
-        md5="$($MD5SUM ${GCC_PKG} | cut -f1 -d' ')"
-        echo "gc md5='$md5'"
+        SHA256="$($SHA256SUM ${GCC_PKG} | cut -f1 -d' ')"
+        buildstep toolchain_dl printf "gc SHA256='$SHA256'\n"
     fi
-    if [ "$md5" != ${GCC_MD5SUM} ] ; then
+    if [ "$SHA256" != ${GCC_SHA256SUM} ] ; then
         rm -f $GCC_PKG
         curl -LO "$GCC_BASE_URL/$GCC_NAME/$GCC_PKG"
     else
@@ -236,7 +236,7 @@ pushd "$DIR/Tarballs"
             else
                 patch -p1 < "$DIR"/Patches/gdb.patch > /dev/null
             fi
-            $MD5SUM "$DIR"/Patches/gdb.patch > .patch.applied
+            $SHA256SUM "$DIR"/Patches/gdb.patch > .patch.applied
         popd
     fi
 
@@ -256,7 +256,7 @@ pushd "$DIR/Tarballs"
         else
             patch -p1 < "$DIR"/Patches/binutils.patch > /dev/null
         fi
-        $MD5SUM "$DIR"/Patches/binutils.patch > .patch.applied
+        $SHA256SUM "$DIR"/Patches/binutils.patch > .patch.applied
     popd
 
     if [ -d ${GCC_NAME} ]; then
@@ -276,7 +276,7 @@ pushd "$DIR/Tarballs"
         else
             patch -p1 < "$DIR/Patches/gcc.patch" > /dev/null
         fi
-        $MD5SUM "$DIR/Patches/gcc.patch" > .patch.applied
+        $SHA256SUM "$DIR/Patches/gcc.patch" > .patch.applied
     popd
 
     if [ "$SYSTEM_NAME" = "Darwin" ]; then

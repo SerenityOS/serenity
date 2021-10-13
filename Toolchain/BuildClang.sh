@@ -15,7 +15,7 @@ PREFIX="$DIR/Local/clang/$ARCH"
 BUILD="$DIR/../Build/clang/$ARCH"
 SYSROOT="$BUILD/Root"
 
-MD5SUM="md5sum"
+SHA256SUM="sha256sum"
 REALPATH="realpath"
 MAKE="make"
 NPROC="nproc"
@@ -23,7 +23,7 @@ NPROC="nproc"
 SYSTEM_NAME="$(uname -s)"
 
 if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
-    MD5SUM="md5 -q"
+    SHA256SUM="sha256 -q"
     REALPATH="readlink -f"
     MAKE="gmake"
     NPROC="sysctl -n hw.ncpuonline"
@@ -31,7 +31,7 @@ if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
     export CXX=eg++
     export LDFLAGS=-Wl,-z,notext
 elif [ "$SYSTEM_NAME" = "FreeBSD" ]; then
-    MD5SUM="md5 -q"
+    SHA256SUM="sha256 -q"
     MAKE="gmake"
     NPROC="sysctl -n hw.ncpu"
 fi
@@ -70,17 +70,17 @@ echo SYSROOT is "$SYSROOT"
 mkdir -p "$DIR/Tarballs"
 
 LLVM_VERSION="12.0.1"
-LLVM_MD5SUM="c28061313a4f1b7d74cd491a19f569b4"
+LLVM_SHA256SUM="129cb25cd13677aad951ce5c2deb0fe4afc1e9d98950f53b51bdcfb5a73afa0e"
 LLVM_NAME="llvm-project-$LLVM_VERSION.src"
 LLVM_PKG="$LLVM_NAME.tar.xz"
 LLVM_URL="https://github.com/llvm/llvm-project/releases/download/llvmorg-$LLVM_VERSION/$LLVM_PKG"
 
 # We need GNU binutils because we use a feature that llvm-objdump doesn't support yet.
 BINUTILS_VERSION="2.37"
-BINUTILS_MD5SUM="1e55743d73c100b7a0d67ffb32398cdb"
+BINUTILS_SHA256SUM="820d9724f020a3e69cb337893a0b63c2db161dadcb0e06fc11dc29eb1e84a32c"
 BINUTILS_NAME="binutils-$BINUTILS_VERSION"
-BINUTILS_PKG="${BINUTILS_NAME}.tar.gz"
-BINUTILS_BASE_URL="https://ftp.gnu.org/gnu/binutils"
+BINUTILS_PKG="${BINUTILS_NAME}.tar.xz"
+BINUTILS_BASE_URL="https://ftp.gnu.org/gnu/binutils"  # option if that is slow: https://fossies.org/linux/misc/
 
 buildstep() {
     NAME=$1
@@ -175,13 +175,13 @@ popd
 # === DOWNLOAD AND PATCH ===
 
 pushd "$DIR/Tarballs"
-    md5=""
+    sha256=""
     if [ -e "$LLVM_PKG" ]; then
-        md5="$($MD5SUM ${LLVM_PKG} | cut -f1 -d' ')"
-        echo "llvm md5='$md5'"
+        sha256="$($SHA256SUM ${LLVM_PKG} | cut -f1 -d' ')"
+        echo "llvm sha256='$sha256'"
     fi
 
-    if [ "$md5" != "$LLVM_MD5SUM" ] ; then
+    if [ "$sha256" != "$LLVM_SHA256SUM" ] ; then
         rm -f "$LLVM_PKG"
         curl -LO "$LLVM_URL"
     else
@@ -206,16 +206,16 @@ pushd "$DIR/Tarballs"
         else
             patch -p1 < "$DIR/Patches/llvm.patch" > /dev/null
         fi
-        $MD5SUM "$DIR/Patches/llvm.patch" > .patch.applied
+        $SHA256SUM "$DIR/Patches/llvm.patch" > .patch.applied
     popd
 
-    md5=""
+    sha256=""
     if [ -e "$BINUTILS_PKG" ]; then
-        md5="$($MD5SUM $BINUTILS_PKG | cut -f1 -d' ')"
-        echo "bu md5='$md5'"
+        sha256="$($SHA256SUM $BINUTILS_PKG | cut -f1 -d' ')"
+        echo "bu sha256='$sha256'"
     fi
 
-    if [ "$md5" != "$BINUTILS_MD5SUM" ]; then
+    if [ "$sha256" != "$BINUTILS_SHA256SUM" ]; then
         rm -f "$BINUTILS_PKG"
         curl -LO "$BINUTILS_BASE_URL/$BINUTILS_PKG"
     else
@@ -229,7 +229,7 @@ pushd "$DIR/Tarballs"
     echo "Extracting GNU binutils"
 
 
-    tar -xzf "$BINUTILS_PKG"
+    tar -xJf "$BINUTILS_PKG"
     pushd "$BINUTILS_NAME"
         if [ "$dev" = "1" ]; then
             git init > /dev/null
@@ -239,7 +239,7 @@ pushd "$DIR/Tarballs"
         else
             patch -p1 < "$DIR/Patches/binutils.patch" > /dev/null
         fi
-         $MD5SUM "$DIR/Patches/binutils.patch" > .patch.applied
+         $SHA256SUM "$DIR/Patches/binutils.patch" > .patch.applied
     popd
 popd
 
