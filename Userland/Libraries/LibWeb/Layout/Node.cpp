@@ -276,13 +276,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
         computed_values.set_align_items(align_items.value());
 
     auto position = specified_style.position();
-    if (position.has_value()) {
+    if (position.has_value())
         computed_values.set_position(position.value());
-        if (position.value() == CSS::Position::Absolute) {
-            m_has_definite_width = true;
-            m_has_definite_height = true;
-        }
-    }
 
     auto text_align = specified_style.text_align();
     if (text_align.has_value())
