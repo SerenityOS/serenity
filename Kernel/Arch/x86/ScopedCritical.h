@@ -8,7 +8,7 @@
 
 #include <AK/Types.h>
 
-#include <Kernel/Arch/x86/Processor.h>
+#include <Kernel/Arch/Processor.h>
 
 namespace Kernel {
 
