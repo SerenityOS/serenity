@@ -24,6 +24,7 @@ if ("${SERENITY_ARCH}" STREQUAL "aarch64")
         # Assembly
         Arch/aarch64/boot.S
         Arch/aarch64/Aarch64_asm_utils.S
+        Arch/aarch64/vector_table.S
     )
 else()
     set(SOURCES

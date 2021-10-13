@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Nico Weber <thakis@chromium.org>
  * Copyright (c) 2021, Marcin Undak <mcinek@gmail.com>
+ * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -32,3 +33,16 @@ enter_el1_from_el2:
   eret
 entered_el1:
   ret
+
+//
+// Installs the EL1 vector table
+// Args:
+//      x0 - Address of vector table
+//
+// This function doesn't return a value
+//
+.global el1_vector_table_install
+.type el1_vector_table_install, @function
+el1_vector_table_install:
+    msr VBAR_EL1, x0
+    ret
