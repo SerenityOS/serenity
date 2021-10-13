@@ -181,6 +181,7 @@ class Utf16String;
 class VM;
 class Value;
 class WeakContainer;
+class WrappedFunction;
 enum class DeclarationKind;
 struct AlreadyResolved;
 struct JobCallback;
