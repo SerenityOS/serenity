@@ -72,8 +72,6 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
 
     bool is_row = is_row_layout();
 
-    // Determine main/cross direction
-    auto main_size_is_infinite = false;
     auto layout_for_maximum_main_size = [&](Box& box) {
         bool main_constrained = false;
         if (is_row) {
@@ -107,19 +105,7 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
             return BlockFormattingContext::compute_theoretical_height(box);
         }
     };
-    auto containing_block_effective_main_size = [&is_row, &main_size_is_infinite](Box& box) {
-        if (is_row) {
-            if (box.containing_block()->has_definite_width())
-                return box.containing_block()->width();
-            main_size_is_infinite = true;
-            return NumericLimits<float>::max();
-        } else {
-            if (box.containing_block()->has_definite_height())
-                return box.containing_block()->height();
-            main_size_is_infinite = true;
-            return NumericLimits<float>::max();
-        }
-    };
+
     auto calculate_hypothetical_cross_size = [&is_row, this](Box& box) {
         bool cross_constrained = false;
         if (is_row) {
@@ -158,56 +144,16 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
     generate_anonymous_flex_items(flex_container, flex_items);
 
     // 2. Determine the available main and cross space for the flex items
-    float main_available_size = 0;
-    [[maybe_unused]] float cross_available_size = 0;
-    [[maybe_unused]] float main_max_size = NumericLimits<float>::max();
-    [[maybe_unused]] float main_min_size = 0;
+    float main_max_size = NumericLimits<float>::max();
+    float main_min_size = 0;
     float cross_max_size = NumericLimits<float>::max();
     float cross_min_size = 0;
-
     bool main_is_constrained = false;
     bool cross_is_constrained = false;
-
-    if (has_definite_main_size(flex_container)) {
-        main_is_constrained = true;
-        main_available_size = specified_main_size(flex_container);
-    } else {
-        if (has_main_max_size(flex_container)) {
-            main_max_size = specified_main_max_size(flex_container);
-            main_available_size = main_max_size;
-            main_is_constrained = true;
-        }
-        if (has_main_min_size(flex_container)) {
-            main_min_size = specified_main_min_size(flex_container);
-            main_is_constrained = true;
-        }
-
-        if (!main_is_constrained) {
-            auto available_main_size = containing_block_effective_main_size(flex_container);
-            main_available_size = available_main_size - sum_of_margin_padding_border_in_main_axis(flex_container);
-            if (flex_container.computed_values().flex_wrap() == CSS::FlexWrap::Wrap || flex_container.computed_values().flex_wrap() == CSS::FlexWrap::WrapReverse) {
-                main_available_size = specified_main_size(*flex_container.containing_block());
-                main_is_constrained = true;
-            }
-        }
-    }
-
-    if (has_definite_cross_size(flex_container)) {
-        cross_available_size = specified_cross_size(flex_container);
-    } else {
-        if (has_cross_max_size(flex_container)) {
-            cross_max_size = specified_cross_max_size(flex_container);
-            cross_is_constrained = true;
-        }
-        if (has_cross_min_size(flex_container)) {
-            cross_min_size = specified_cross_min_size(flex_container);
-            cross_is_constrained = true;
-        }
-
-        // FIXME: Is this right? Probably not.
-        if (!cross_is_constrained)
-            cross_available_size = cross_max_size;
-    }
+    bool main_size_is_infinite = false;
+    auto available_space = determine_available_main_and_cross_space(flex_container, main_size_is_infinite, main_is_constrained, cross_is_constrained, main_min_size, main_max_size, cross_min_size, cross_max_size);
+    auto main_available_size = available_space.main;
+    [[maybe_unused]] auto cross_available_size = available_space.cross;
 
     // 3. Determine the flex base size and hypothetical main size of each item
     for (auto& flex_item : flex_items) {
@@ -896,6 +842,70 @@ float FlexFormattingContext::sum_of_margin_padding_border_in_main_axis(Box const
             + padding.top + padding.bottom
             + border.top + border.bottom;
     }
+}
+
+// https://www.w3.org/TR/css-flexbox-1/#algo-available
+FlexFormattingContext::AvailableSpace FlexFormattingContext::determine_available_main_and_cross_space(const Box& flex_container, bool& main_size_is_infinite, bool& main_is_constrained, bool& cross_is_constrained, float& main_min_size, float& main_max_size, float& cross_min_size, float& cross_max_size) const
+{
+    auto containing_block_effective_main_size = [&](Box const& box) {
+        if (is_row_layout()) {
+            if (box.containing_block()->has_definite_width())
+                return box.containing_block()->width();
+            main_size_is_infinite = true;
+            return NumericLimits<float>::max();
+        } else {
+            if (box.containing_block()->has_definite_height())
+                return box.containing_block()->height();
+            main_size_is_infinite = true;
+            return NumericLimits<float>::max();
+        }
+    };
+
+    float main_available_space = 0;
+    float cross_available_space = 0;
+
+    if (has_definite_main_size(flex_container)) {
+        main_is_constrained = true;
+        main_available_space = specified_main_size(flex_container);
+    } else {
+        if (has_main_max_size(flex_container)) {
+            main_max_size = specified_main_max_size(flex_container);
+            main_available_space = main_max_size;
+            main_is_constrained = true;
+        }
+        if (has_main_min_size(flex_container)) {
+            main_min_size = specified_main_min_size(flex_container);
+            main_is_constrained = true;
+        }
+
+        if (!main_is_constrained) {
+            auto available_main_size = containing_block_effective_main_size(flex_container);
+            main_available_space = available_main_size - sum_of_margin_padding_border_in_main_axis(flex_container);
+            if (flex_container.computed_values().flex_wrap() == CSS::FlexWrap::Wrap || flex_container.computed_values().flex_wrap() == CSS::FlexWrap::WrapReverse) {
+                main_available_space = specified_main_size(*flex_container.containing_block());
+                main_is_constrained = true;
+            }
+        }
+    }
+
+    if (has_definite_cross_size(flex_container)) {
+        cross_available_space = specified_cross_size(flex_container);
+    } else {
+        if (has_cross_max_size(flex_container)) {
+            cross_max_size = specified_cross_max_size(flex_container);
+            cross_is_constrained = true;
+        }
+        if (has_cross_min_size(flex_container)) {
+            cross_min_size = specified_cross_min_size(flex_container);
+            cross_is_constrained = true;
+        }
+
+        // FIXME: Is this right? Probably not.
+        if (!cross_is_constrained)
+            cross_available_space = cross_max_size;
+    }
+
+    return AvailableSpace { .main = main_available_space, .cross = cross_available_space };
 }
 
 }

@@ -50,6 +50,12 @@ private:
 
     void generate_anonymous_flex_items(Box& flex_container, Vector<FlexItem>&);
 
+    struct AvailableSpace {
+        float main { 0 };
+        float cross { 0 };
+    };
+    AvailableSpace determine_available_main_and_cross_space(Box const& flex_container, bool& main_size_is_infinite, bool& main_is_constrained, bool& cross_is_constrained, float& main_min_size, float& main_max_size, float& cross_min_size, float& cross_max_size) const;
+
     bool is_row_layout() const { return m_flex_direction == CSS::FlexDirection::Row || m_flex_direction == CSS::FlexDirection::RowReverse; }
 
     CSS::FlexDirection m_flex_direction {};
