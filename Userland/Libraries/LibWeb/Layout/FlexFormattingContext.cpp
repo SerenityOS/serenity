@@ -555,26 +555,38 @@ void FlexFormattingContext::determine_main_size_of_flex_container(bool const mai
 void FlexFormattingContext::collect_flex_items_into_flex_lines(float const main_available_size)
 {
     // FIXME: Also support wrap-reverse
-    if (flex_container().computed_values().flex_wrap() == CSS::FlexWrap::Nowrap) {
+
+    // If the flex container is single-line, collect all the flex items into a single flex line.
+    if (is_single_line()) {
         FlexLine line;
         for (auto& flex_item : m_flex_items) {
             line.items.append(&flex_item);
         }
-        m_flex_lines.append(line);
-    } else {
-        FlexLine line;
-        float line_main_size = 0;
-        for (auto& flex_item : m_flex_items) {
-            if ((line_main_size + flex_item.hypothetical_main_size) > main_available_size) {
-                m_flex_lines.append(line);
-                line = {};
-                line_main_size = 0;
-            }
-            line.items.append(&flex_item);
-            line_main_size += flex_item.hypothetical_main_size;
-        }
-        m_flex_lines.append(line);
+        m_flex_lines.append(move(line));
+        return;
     }
+
+    // Otherwise, starting from the first uncollected item, collect consecutive items one by one
+    // until the first time that the next collected item would not fit into the flex container’s inner main size
+    // (or until a forced break is encountered, see §10 Fragmenting Flex Layout).
+    // If the very first uncollected item wouldn't fit, collect just it into the line.
+
+    // For this step, the size of a flex item is its outer hypothetical main size. (Note: This can be negative.)
+
+    // Repeat until all flex items have been collected into flex lines.
+
+    FlexLine line;
+    float line_main_size = 0;
+    for (auto& flex_item : m_flex_items) {
+        if ((line_main_size + flex_item.hypothetical_main_size) > main_available_size) {
+            m_flex_lines.append(move(line));
+            line = {};
+            line_main_size = 0;
+        }
+        line.items.append(&flex_item);
+        line_main_size += flex_item.hypothetical_main_size;
+    }
+    m_flex_lines.append(move(line));
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#resolve-flexible-lengths
