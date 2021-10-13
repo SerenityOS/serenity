@@ -37,6 +37,7 @@ public:
 private:
     FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&);
 
+    void open_file(String const&);
     void undo();
     void redo();
     void did_modify_font();
