@@ -362,6 +362,7 @@ else()
     )
 endif()
 
+add_compile_options(-fsigned-char)
 add_compile_options(-Wno-unknown-warning-option -Wvla -Wnull-dereference)
 add_compile_options(-fno-rtti -ffreestanding -fbuiltin)
 if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
