@@ -76,6 +76,9 @@ void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     Base::initialize(global_object);
+    MUST(define_property_or_throw(vm.names.length, { .value = Value(m_function_length), .writable = false, .enumerable = false, .configurable = true }));
+    MUST(define_property_or_throw(vm.names.name, { .value = js_string(vm, m_name.is_null() ? "" : m_name), .writable = false, .enumerable = false, .configurable = true }));
+
     if (!m_is_arrow_function) {
         auto* prototype = vm.heap().allocate<Object>(global_object, *global_object.new_ordinary_function_prototype_object_shape());
         switch (m_kind) {
@@ -89,8 +92,6 @@ void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
         }
         define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
     }
-    MUST(define_property_or_throw(vm.names.length, { .value = Value(m_function_length), .writable = false, .enumerable = false, .configurable = true }));
-    MUST(define_property_or_throw(vm.names.name, { .value = js_string(vm, m_name.is_null() ? "" : m_name), .writable = false, .enumerable = false, .configurable = true }));
 }
 
 ECMAScriptFunctionObject::~ECMAScriptFunctionObject()
