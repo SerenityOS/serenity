@@ -72,6 +72,8 @@
 #include <LibJS/Runtime/SetConstructor.h>
 #include <LibJS/Runtime/SetIteratorPrototype.h>
 #include <LibJS/Runtime/SetPrototype.h>
+#include <LibJS/Runtime/ShadowRealmConstructor.h>
+#include <LibJS/Runtime/ShadowRealmPrototype.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/StringIteratorPrototype.h>
@@ -249,6 +251,7 @@ void GlobalObject::initialize_global_object()
     add_constructor(vm.names.Proxy, m_proxy_constructor, nullptr);
     add_constructor(vm.names.RegExp, m_regexp_constructor, m_regexp_prototype);
     add_constructor(vm.names.Set, m_set_constructor, m_set_prototype);
+    add_constructor(vm.names.ShadowRealm, m_shadow_realm_constructor, m_shadow_realm_prototype);
     add_constructor(vm.names.String, m_string_constructor, m_string_prototype);
     add_constructor(vm.names.Symbol, m_symbol_constructor, m_symbol_prototype);
     add_constructor(vm.names.WeakMap, m_weak_map_constructor, m_weak_map_prototype);
