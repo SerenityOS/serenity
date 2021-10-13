@@ -130,6 +130,7 @@ set(SOURCES
     Runtime/SetIterator.cpp
     Runtime/SetIteratorPrototype.cpp
     Runtime/SetPrototype.cpp
+    Runtime/ShadowRealm.cpp
     Runtime/Shape.cpp
     Runtime/StringConstructor.cpp
     Runtime/StringIterator.cpp
@@ -189,6 +190,7 @@ set(SOURCES
     Runtime/WeakSet.cpp
     Runtime/WeakSetConstructor.cpp
     Runtime/WeakSetPrototype.cpp
+    Runtime/WrappedFunction.cpp
     Script.cpp
     SourceTextModule.cpp
     SyntaxHighlighter.cpp
