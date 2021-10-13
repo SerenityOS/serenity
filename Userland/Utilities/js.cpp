@@ -44,6 +44,7 @@
 #include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/Set.h>
+#include <LibJS/Runtime/ShadowRealm.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
@@ -385,6 +386,12 @@ static void print_array_buffer(JS::Object const& object, HashTable<JS::Object*>&
     }
 }
 
+static void print_shadow_realm(JS::Object const&, HashTable<JS::Object*>&)
+{
+    // Not much we can show here that would be useful. Realm pointer address?!
+    print_type("ShadowRealm");
+}
+
 template<typename T>
 static void print_number(T number) requires IsArithmetic<T>
 {
@@ -707,6 +714,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_promise(object, seen_objects);
         if (is<JS::ArrayBuffer>(object))
             return print_array_buffer(object, seen_objects);
+        if (is<JS::ShadowRealm>(object))
+            return print_shadow_realm(object, seen_objects);
         if (object.is_typed_array())
             return print_typed_array(object, seen_objects);
         if (is<JS::StringObject>(object))
