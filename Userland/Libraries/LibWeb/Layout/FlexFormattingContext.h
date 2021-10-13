@@ -76,6 +76,8 @@ private:
 
     void align_all_flex_items_along_the_cross_axis(Box const& flex_container, Vector<FlexLine>&);
 
+    void determine_flex_container_used_cross_size(Box& flex_container, Vector<FlexLine> const&, float cross_min_size, float cross_max_size);
+
     bool is_row_layout() const { return m_flex_direction == CSS::FlexDirection::Row || m_flex_direction == CSS::FlexDirection::RowReverse; }
 
     CSS::FlexDirection m_flex_direction {};
