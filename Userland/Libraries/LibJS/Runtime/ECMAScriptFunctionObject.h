@@ -78,13 +78,15 @@ public:
 protected:
     virtual bool is_strict_mode() const final { return m_strict; }
 
+    virtual Completion ordinary_call_evaluate_body();
+
 private:
     virtual bool is_ecmascript_function_object() const override { return true; }
     virtual void visit_edges(Visitor&) override;
 
     void prepare_for_ordinary_call(ExecutionContext& callee_context, Object* new_target);
     void ordinary_call_bind_this(ExecutionContext&, Value this_argument);
-    Completion ordinary_call_evaluate_body();
+
     ThrowCompletionOr<void> function_declaration_instantiation(Interpreter*);
 
     // Internal Slots of ECMAScript Function Objects, https://tc39.es/ecma262/#table-internal-slots-of-ecmascript-function-objects

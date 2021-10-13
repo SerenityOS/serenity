@@ -1278,6 +1278,35 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
     }
 }
 
+// We use this class to mimic  Initializer : = AssignmentExpression of
+// 10.2.1.3 Runtime Semantics: EvaluateBody, https://tc39.es/ecma262/#sec-runtime-semantics-evaluatebody
+class ClassFieldInitializerStatement : public Statement {
+public:
+    ClassFieldInitializerStatement(SourceRange source_range, NonnullRefPtr<Expression> expression, FlyString field_name)
+        : Statement(source_range)
+        , m_expression(move(expression))
+        , m_class_field_identifier_name(move(field_name))
+    {
+    }
+
+    Value execute(Interpreter& interpreter, GlobalObject& global_object) const override
+    {
+        VERIFY(interpreter.vm().argument_count() == 0);
+        VERIFY(!m_class_field_identifier_name.is_empty());
+        return TRY_OR_DISCARD(interpreter.vm().named_evaluation_if_anonymous_function(global_object, m_expression, m_class_field_identifier_name));
+    }
+
+    void dump(int) const override
+    {
+        // This should not be dumped as it is never part of an actual AST.
+        VERIFY_NOT_REACHED();
+    }
+
+private:
+    NonnullRefPtr<Expression> m_expression;
+    FlyString m_class_field_identifier_name; // [[ClassFieldIdentifierName]]
+};
+
 // 15.7.10 Runtime Semantics: ClassFieldDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classfielddefinitionevaluation
 ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation(Interpreter& interpreter, GlobalObject& global_object, Object& target) const
 {
@@ -1285,7 +1314,6 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
     ECMAScriptFunctionObject* initializer = nullptr;
     if (m_initializer) {
         auto copy_initializer = m_initializer;
-        auto body = create_ast_node<ExpressionStatement>(m_initializer->source_range(), copy_initializer.release_nonnull());
         auto name = property_key.visit(
             [&](PropertyName const& property_name) -> String {
                 return property_name.is_number() ? property_name.to_string() : property_name.to_string_or_symbol().to_display_string();
@@ -1293,8 +1321,10 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
             [&](PrivateName const& private_name) -> String {
                 return private_name.description;
             });
+
         // FIXME: A potential optimization is not creating the functions here since these are never directly accessible.
-        initializer = ECMAScriptFunctionObject::create(interpreter.global_object(), name, *body, {}, 0, interpreter.lexical_environment(), interpreter.vm().running_execution_context().private_environment, FunctionKind::Regular, false, false);
+        auto function_code = create_ast_node<ClassFieldInitializerStatement>(m_initializer->source_range(), copy_initializer.release_nonnull(), name);
+        initializer = ECMAScriptFunctionObject::create(interpreter.global_object(), String::empty(), *function_code, {}, 0, interpreter.lexical_environment(), interpreter.vm().running_execution_context().private_environment, FunctionKind::Regular, true, false, m_contains_direct_call_to_eval, false);
         initializer->set_home_object(&target);
     }
 
