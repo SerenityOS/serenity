@@ -361,6 +361,9 @@ else()
         Arch/aarch64/dummy.cpp
         ${AK_SOURCES}
     )
+
+    # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
+    add_compile_options(-mno-outline-atomics)
 endif()
 
 add_compile_options(-fsigned-char)
