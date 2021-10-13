@@ -9,8 +9,8 @@
 #include <AK/Span.h>
 #include <Kernel/API/KResult.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
-#include <Kernel/UnixTypes.h>
 #include <Kernel/Forward.h>
+#include <Kernel/UnixTypes.h>
 
 namespace Kernel {
 

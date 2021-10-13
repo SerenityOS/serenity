@@ -10,7 +10,7 @@
 #include <AK/Atomic.h>
 #include <AK/Noncopyable.h>
 #ifdef KERNEL
-#    include <Kernel/Arch/x86/Processor.h>
+#    include <Kernel/Arch/Processor.h>
 #    include <Kernel/Arch/x86/ScopedCritical.h>
 #endif
 

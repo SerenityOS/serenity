@@ -8,13 +8,13 @@
 #include <AK/HashTable.h>
 #include <Kernel/API/KResult.h>
 #include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Definitions.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Arch/x86/InterruptDisabler.h>
 
 namespace Kernel::PCI {
 
