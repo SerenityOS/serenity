@@ -172,20 +172,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         if (!open_path.has_value())
             return;
 
-        auto bitmap_font = Gfx::BitmapFont::load_from_file(open_path.value());
-        if (!bitmap_font) {
-            String message = String::formatted("Couldn't load font: {}\n", open_path.value());
-            GUI::MessageBox::show(window(), message, "Font Editor", GUI::MessageBox::Type::Error);
-            return;
-        }
-        RefPtr<Gfx::BitmapFont> new_font = static_ptr_cast<Gfx::BitmapFont>(bitmap_font->unmasked_character_set());
-        if (!new_font) {
-            String message = String::formatted("Couldn't load font: {}\n", open_path.value());
-            GUI::MessageBox::show(window(), message, "Font Editor", GUI::MessageBox::Type::Error);
-            return;
-        }
-        window()->set_modified(false);
-        initialize(open_path.value(), move(new_font));
+        open_file(open_path.value());
     });
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (m_path.is_empty())
@@ -604,6 +591,24 @@ void FontEditorWidget::set_show_font_metadata(bool show)
         return;
     m_font_metadata = show;
     m_font_metadata_groupbox->set_visible(m_font_metadata);
+}
+
+void FontEditorWidget::open_file(String const& path)
+{
+    auto bitmap_font = Gfx::BitmapFont::load_from_file(path);
+    if (!bitmap_font) {
+        String message = String::formatted("Couldn't load font: {}\n", path);
+        GUI::MessageBox::show(window(), message, "Font Editor", GUI::MessageBox::Type::Error);
+        return;
+    }
+    RefPtr<Gfx::BitmapFont> new_font = static_ptr_cast<Gfx::BitmapFont>(bitmap_font->unmasked_character_set());
+    if (!new_font) {
+        String message = String::formatted("Couldn't load font: {}\n", path);
+        GUI::MessageBox::show(window(), message, "Font Editor", GUI::MessageBox::Type::Error);
+        return;
+    }
+    window()->set_modified(false);
+    initialize(path, move(new_font));
 }
 
 void FontEditorWidget::undo()
