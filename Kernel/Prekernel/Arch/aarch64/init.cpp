@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Nico Weber <thakis@chromium.org>
  * Copyright (c) 2021, Marcin Undak <mcinek@gmail.com>
+ * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -44,6 +45,13 @@ extern "C" [[noreturn]] void init()
 
     uart.print_str("Drop CPU to EL1\r\n");
     Prekernel::drop_to_exception_level_1();
+
+    // Load EL1 vector table
+    extern uintptr_t vector_table_el1;
+    el1_vector_table_install(&vector_table_el1);
+
+    // Set the register
+    asm("msr sctlr_el1, %[value]" ::[value] "r"(system_control_register_el1));
 
     uart.print_str("Initialize MMU\r\n");
     Prekernel::init_prekernel_page_tables();
