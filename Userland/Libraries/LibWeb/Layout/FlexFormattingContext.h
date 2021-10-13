@@ -59,6 +59,8 @@ private:
     float layout_for_maximum_main_size(Box&);
     void determine_flex_base_size_and_hypothetical_main_size(Box const& flex_container, FlexItem&);
 
+    void determine_main_size_of_flex_container(Box& flex_container, Vector<FlexItem>&, bool main_is_constrained, bool main_size_is_infinite, float& main_available_size, float main_min_size, float main_max_size);
+
     bool is_row_layout() const { return m_flex_direction == CSS::FlexDirection::Row || m_flex_direction == CSS::FlexDirection::RowReverse; }
 
     CSS::FlexDirection m_flex_direction {};
