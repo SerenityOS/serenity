@@ -5,7 +5,7 @@
  */
 
 #include <AK/Types.h>
-#include <Kernel/Arch/x86/Processor.h>
+#include <Kernel/Arch/Processor.h>
 #include <Kernel/BootInfo.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
