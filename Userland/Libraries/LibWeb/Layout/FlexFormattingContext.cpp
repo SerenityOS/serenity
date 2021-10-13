@@ -118,16 +118,7 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
     // FIXME: This
 
     // 11. Determine the used cross size of each flex item.
-    // FIXME: Get the alignment via "align-self" of the item (which accesses "align-items" of the parent if unset)
-    for (auto& flex_line : flex_lines) {
-        for (auto& flex_item : flex_line.items) {
-            if (is_cross_auto(flex_item->box) && flex_container.computed_values().align_items() == CSS::AlignItems::Stretch) {
-                flex_item->cross_size = flex_line.cross_size;
-            } else {
-                flex_item->cross_size = flex_item->hypothetical_cross_size;
-            }
-        }
-    }
+    determine_used_cross_size_of_each_flex_item(flex_container, flex_lines);
 
     // 12. Distribute any remaining free space.
     for (auto& flex_line : flex_lines) {
@@ -934,6 +925,21 @@ void FlexFormattingContext::calculate_cross_size_of_each_flex_line(const Box& fl
 
         if (flex_lines.size() == 1) {
             clamp(flex_lines[0].cross_size, cross_min_size, cross_max_size);
+        }
+    }
+}
+
+// https://www.w3.org/TR/css-flexbox-1/#algo-stretch
+void FlexFormattingContext::determine_used_cross_size_of_each_flex_item(Box const& flex_container, Vector<FlexLine>& flex_lines)
+{
+    // FIXME: Get the alignment via "align-self" of the item (which accesses "align-items" of the parent if unset)
+    for (auto& flex_line : flex_lines) {
+        for (auto& flex_item : flex_line.items) {
+            if (is_cross_auto(flex_item->box) && flex_container.computed_values().align_items() == CSS::AlignItems::Stretch) {
+                flex_item->cross_size = flex_line.cross_size;
+            } else {
+                flex_item->cross_size = flex_item->hypothetical_cross_size;
+            }
         }
     }
 }
