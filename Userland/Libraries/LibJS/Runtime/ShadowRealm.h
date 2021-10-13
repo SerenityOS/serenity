@@ -32,6 +32,7 @@ private:
     ExecutionContext m_execution_context; // [[ExecutionContext]]
 };
 
+ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject&, StringView source_text, Realm& caller_realm, Realm& eval_realm);
 ThrowCompletionOr<Value> get_wrapped_value(GlobalObject&, Realm& caller_realm, Value);
 
 }

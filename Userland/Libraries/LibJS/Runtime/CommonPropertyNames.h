@@ -151,6 +151,7 @@ namespace JS {
     P(errors)                                \
     P(escape)                                \
     P(eval)                                  \
+    P(evaluate)                              \
     P(every)                                 \
     P(exchange)                              \
     P(exec)                                  \

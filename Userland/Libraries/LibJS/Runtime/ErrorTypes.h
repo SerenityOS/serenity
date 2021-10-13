@@ -171,6 +171,7 @@
     M(RegExpObjectRepeatedFlag, "Repeated RegExp flag '{}'")                                                                            \
     M(RestrictedFunctionPropertiesAccess, "Restricted function properties like 'callee', 'caller' and 'arguments' may "                 \
                                           "not be accessed in strict mode")                                                             \
+    M(ShadowRealmEvaluateAbruptCompletion, "The evaluated script did not complete normally")                                            \
     M(ShadowRealmWrappedValueNonFunctionObject, "Wrapped value must be primitive or a function object, got {}")                         \
     M(SpeciesConstructorDidNotCreate, "Species constructor did not create {}")                                                          \
     M(SpeciesConstructorReturned, "Species constructor returned {}")                                                                    \
