@@ -567,7 +567,7 @@ void FlexFormattingContext::determine_main_size_of_flex_container(Box& flex_cont
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-line-break
-Vector<FlexLine> FlexFormattingContext::collect_flex_items_into_flex_lines(Box const& flex_container, Vector<FlexItem>& flex_items, float main_available_size)
+Vector<FlexLine> FlexFormattingContext::collect_flex_items_into_flex_lines(Box const& flex_container, Vector<FlexItem>& flex_items, float const main_available_size)
 {
     Vector<FlexLine> flex_lines;
 
@@ -597,7 +597,7 @@ Vector<FlexLine> FlexFormattingContext::collect_flex_items_into_flex_lines(Box c
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#resolve-flexible-lengths
-void FlexFormattingContext::resolve_flexible_lengths(Vector<FlexLine>& flex_lines, float main_available_size)
+void FlexFormattingContext::resolve_flexible_lengths(Vector<FlexLine>& flex_lines, float const main_available_size)
 {
     enum FlexFactor {
         FlexGrowFactor,
@@ -797,7 +797,7 @@ float FlexFormattingContext::determine_hypothetical_cross_size_of_item(Box& box)
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-cross-line
-void FlexFormattingContext::calculate_cross_size_of_each_flex_line(const Box& flex_container, Vector<FlexLine>& flex_lines, float cross_min_size, float cross_max_size)
+void FlexFormattingContext::calculate_cross_size_of_each_flex_line(const Box& flex_container, Vector<FlexLine>& flex_lines, float const cross_min_size, float const cross_max_size)
 {
     if (flex_lines.size() == 1 && has_definite_cross_size(flex_container)) {
         flex_lines[0].cross_size = specified_cross_size(flex_container);
@@ -844,7 +844,7 @@ void FlexFormattingContext::determine_used_cross_size_of_each_flex_item(Box cons
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-main-align
-void FlexFormattingContext::distribute_any_remaining_free_space(Box const& flex_container, Vector<FlexLine>& flex_lines, float main_available_size)
+void FlexFormattingContext::distribute_any_remaining_free_space(Box const& flex_container, Vector<FlexLine>& flex_lines, float const main_available_size)
 {
     for (auto& flex_line : flex_lines) {
         // 12.1.
@@ -938,7 +938,7 @@ void FlexFormattingContext::align_all_flex_items_along_the_cross_axis(Box const&
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-cross-container
-void FlexFormattingContext::determine_flex_container_used_cross_size(Box& flex_container, Vector<FlexLine> const& flex_lines, float cross_min_size, float cross_max_size)
+void FlexFormattingContext::determine_flex_container_used_cross_size(Box& flex_container, Vector<FlexLine> const& flex_lines, float const cross_min_size, float const cross_max_size)
 {
     if (has_definite_cross_size(flex_container)) {
         float clamped_cross_size = clamp(specified_cross_size(flex_container), cross_min_size, cross_max_size);
