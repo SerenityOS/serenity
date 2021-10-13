@@ -10,6 +10,7 @@
 
 extern "C" uint8_t get_current_exception_level();
 extern "C" void wait_cycles(int n);
+extern "C" void el1_vector_table_install(void* vector_table);
 
 // CPU initialization functions
 extern "C" [[noreturn]] void return_from_el2();
