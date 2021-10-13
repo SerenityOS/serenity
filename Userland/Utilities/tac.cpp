@@ -4,10 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <errno.h>
+#include <string.h>
 #include <unistd.h>
+
 int main(int argc, char** argv)
 {
     if (pledge("stdio rpath", nullptr) < 0) {
@@ -22,33 +23,59 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(paths, "File path(s)", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    auto read_lines = [&](RefPtr<Core::File> file) {
-        Vector<String> lines;
-        while (file->can_read_line()) {
-            lines.append(file->read_line());
-        }
-        file->close();
-        for (int i = lines.size() - 1; i >= 0; --i)
-            outln("{}", lines[i]);
-    };
+    Vector<FILE*> streams;
+    auto num_paths = paths.size();
+    streams.ensure_capacity(num_paths ? num_paths : 1);
 
     if (!paths.is_empty()) {
         for (auto const& path : paths) {
-            RefPtr<Core::File> file;
-            if (path == "-") {
-                file = Core::File::standard_input();
+            FILE* stream = nullptr;
+            if (path == "-"sv) {
+                stream = stdin;
             } else {
-                auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
-                if (file_or_error.is_error()) {
+                stream = fopen(path.characters(), "r");
+                if (!stream) {
                     warnln("Failed to open {}: {}", path, strerror(errno));
                     continue;
                 }
-                file = file_or_error.release_value();
             }
-            read_lines(file);
+            streams.append(stream);
         }
     } else {
-        read_lines(Core::File::standard_input());
+        streams.append(stdin);
+    }
+
+    char* buffer = nullptr;
+    ScopeGuard guard = [&] {
+        free(buffer);
+        for (auto* stream : streams) {
+            if (fclose(stream))
+                perror("fclose");
+        }
+    };
+
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    for (auto* stream : streams) {
+        Vector<String> lines;
+        for (;;) {
+            size_t n = 0;
+            errno = 0;
+            ssize_t buflen = getline(&buffer, &n, stream);
+            if (buflen == -1) {
+                if (errno != 0) {
+                    perror("getline");
+                    return 1;
+                }
+                break;
+            }
+            lines.append({ buffer, Chomp });
+        }
+        for (int i = lines.size() - 1; i >= 0; --i)
+            outln("{}", lines[i]);
     }
 
     return 0;
