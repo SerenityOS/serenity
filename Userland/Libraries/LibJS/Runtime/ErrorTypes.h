@@ -16,6 +16,8 @@
     M(BigIntInvalidValue, "Invalid value for BigInt: {}")                                                                               \
     M(BindingNotInitialized, "Binding {} is not initialized")                                                                           \
     M(CallStackSizeExceeded, "Call stack size limit exceeded")                                                                          \
+    M(CannotDeclareGlobalFunction, "Cannot declare global function of name '{}'")                                                       \
+    M(CannotDeclareGlobalVariable, "Cannot declare global variable of name '{}'")                                                       \
     M(ClassConstructorWithoutNew, "Class constructor {} must be called with 'new'")                                                     \
     M(ClassExtendsValueNotAConstructorOrNull, "Class extends value {} is not a constructor or null")                                    \
     M(ClassExtendsValueInvalidPrototype, "Class extends value has an invalid prototype {}")                                             \
@@ -171,6 +173,7 @@
     M(RegExpObjectRepeatedFlag, "Repeated RegExp flag '{}'")                                                                            \
     M(RestrictedFunctionPropertiesAccess, "Restricted function properties like 'callee', 'caller' and 'arguments' may "                 \
                                           "not be accessed in strict mode")                                                             \
+    M(RestrictedGlobalProperty, "Cannot declare global property '{}'")                                                                  \
     M(ShadowRealmEvaluateAbruptCompletion, "The evaluated script did not complete normally")                                            \
     M(ShadowRealmWrappedValueNonFunctionObject, "Wrapped value must be primitive or a function object, got {}")                         \
     M(SpeciesConstructorDidNotCreate, "Species constructor did not create {}")                                                          \
@@ -209,6 +212,7 @@
     M(ThisHasNotBeenInitialized, "|this| has not been initialized")                                                                     \
     M(ThisIsAlreadyInitialized, "|this| is already initialized")                                                                        \
     M(ToObjectNullOrUndefined, "ToObject on null or undefined")                                                                         \
+    M(TopLevelVariableAlreadyDeclared, "Redeclaration of top level variable '{}'")                                                      \
     M(ToPrimitiveReturnedObject, "Can't convert {} to primitive with hint \"{}\", its @@toPrimitive method returned an object")         \
     M(TypedArrayContentTypeMismatch, "Can't create {} from {}")                                                                         \
     M(TypedArrayInvalidBufferLength, "Invalid buffer length for {}: must be a multiple of {}, got {}")                                  \
@@ -227,7 +231,6 @@
     M(BadArgCountAtLeastOne, "{}() needs at least one argument")                                                                        \
     M(BadArgCountMany, "{}() needs {} arguments")                                                                                       \
     M(FixmeAddAnErrorString, "FIXME: Add a string for this error.")                                                                     \
-    M(FixmeAddAnErrorStringWithMessage, "FIXME: Add a real string for this error '{}'")                                                 \
     M(NotEnoughMemoryToAllocate, "Not enough memory to allocate {} bytes")
 
 namespace JS {

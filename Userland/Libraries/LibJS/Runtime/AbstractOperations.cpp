@@ -547,7 +547,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
         if (global_var_environment) {
             program.for_each_var_declared_name([&](auto const& name) {
                 if (global_var_environment->has_lexical_declaration(name)) {
-                    vm.throw_exception<SyntaxError>(global_object, ErrorType::FixmeAddAnErrorStringWithMessage, "Var already declared lexically");
+                    vm.throw_exception<SyntaxError>(global_object, ErrorType::TopLevelVariableAlreadyDeclared, name);
                     return IterationDecision::Break;
                 }
                 return IterationDecision::Continue;
@@ -559,7 +559,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             if (!is<ObjectEnvironment>(*this_environment)) {
                 program.for_each_var_declared_name([&](auto const& name) {
                     if (MUST(this_environment->has_binding(name))) {
-                        vm.throw_exception<SyntaxError>(global_object, ErrorType::FixmeAddAnErrorStringWithMessage, "Var already declared lexically");
+                        vm.throw_exception<SyntaxError>(global_object, ErrorType::TopLevelVariableAlreadyDeclared, name);
                         return IterationDecision::Break;
                     }
                     // FIXME: NOTE: Annex B.3.4 defines alternate semantics for the above step.
@@ -586,7 +586,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             if (vm.exception())
                 return IterationDecision::Break;
             if (!function_definable) {
-                vm.throw_exception<TypeError>(global_object, ErrorType::FixmeAddAnErrorStringWithMessage, "Cannot define global function");
+                vm.throw_exception<TypeError>(global_object, ErrorType::CannotDeclareGlobalFunction, function.name());
                 return IterationDecision::Break;
             }
         }
@@ -656,7 +656,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
                     if (vm.exception())
                         return IterationDecision::Break;
                     if (!variable_definable) {
-                        vm.throw_exception<TypeError>(global_object, ErrorType::FixmeAddAnErrorStringWithMessage, "Cannot define global var");
+                        vm.throw_exception<TypeError>(global_object, ErrorType::CannotDeclareGlobalVariable, name);
                         return IterationDecision::Break;
                     }
                 }
