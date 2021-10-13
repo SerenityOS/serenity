@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibGUI/TextEditor.h>
+#include <LibGUI/TableView.h>
 #include <LibGUI/Widget.h>
 
 class ThreadStackWidget final : public GUI::Widget {
@@ -26,6 +26,6 @@ private:
 
     pid_t m_pid { -1 };
     pid_t m_tid { -1 };
-    RefPtr<GUI::TextEditor> m_stack_editor;
+    RefPtr<GUI::TableView> m_stack_table;
     RefPtr<Core::Timer> m_timer;
 };
