@@ -132,16 +132,8 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
     // 15. Determine the flex container’s used cross size:
     determine_flex_container_used_cross_size(flex_container, flex_lines, cross_min_size, cross_max_size);
 
-    // 16. Align all flex lines
-    // FIXME: Support align-content
-    // FIXME: Support reverse
-    for (auto& flex_line : flex_lines) {
-        for (auto* flex_item : flex_line.items) {
-            set_main_size(flex_item->box, flex_item->main_size);
-            set_cross_size(flex_item->box, flex_item->cross_size);
-            set_offset(flex_item->box, flex_item->main_offset, flex_item->cross_offset);
-        }
-    }
+    // 16. Align all flex lines (per align-content)
+    align_all_flex_lines(flex_lines);
 }
 
 static void populate_specified_margins(FlexItem& item, CSS::FlexDirection flex_direction)
@@ -958,6 +950,20 @@ void FlexFormattingContext::determine_flex_container_used_cross_size(Box& flex_c
         }
         float clamped_cross_size = clamp(sum_of_flex_lines_cross_sizes, cross_min_size, cross_max_size);
         set_cross_size(flex_container, clamped_cross_size);
+    }
+}
+
+// https://www.w3.org/TR/css-flexbox-1/#algo-line-align
+void FlexFormattingContext::align_all_flex_lines(Vector<FlexLine>& flex_lines)
+{
+    // FIXME: Support align-content
+    // FIXME: Support reverse
+    for (auto& flex_line : flex_lines) {
+        for (auto* flex_item : flex_line.items) {
+            set_main_size(flex_item->box, flex_item->main_size);
+            set_cross_size(flex_item->box, flex_item->cross_size);
+            set_offset(flex_item->box, flex_item->main_offset, flex_item->cross_offset);
+        }
     }
 }
 
