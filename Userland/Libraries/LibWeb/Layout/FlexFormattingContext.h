@@ -64,6 +64,8 @@ private:
 
     Vector<FlexLine> collect_flex_items_into_flex_lines(Box const& flex_container, Vector<FlexItem>&, float main_available_size);
 
+    void resolve_flexible_lengths(Vector<FlexLine>&, float main_available_size);
+
     bool is_row_layout() const { return m_flex_direction == CSS::FlexDirection::Row || m_flex_direction == CSS::FlexDirection::RowReverse; }
 
     CSS::FlexDirection m_flex_direction {};
