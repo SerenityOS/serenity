@@ -127,32 +127,7 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
     // FIXME: This
 
     // 14. Align all flex items along the cross-axis
-    // FIXME: Get the alignment via "align-self" of the item (which accesses "align-items" of the parent if unset)
-    // FIXME: Take better care of margins
-    float line_cross_offset = 0;
-    for (auto& flex_line : flex_lines) {
-        for (auto* flex_item : flex_line.items) {
-            switch (flex_container.computed_values().align_items()) {
-            case CSS::AlignItems::Baseline:
-                // FIXME: Implement this
-                //  Fallthrough
-            case CSS::AlignItems::FlexStart:
-            case CSS::AlignItems::Stretch:
-                flex_item->cross_offset = line_cross_offset + flex_item->margins.cross_before;
-                break;
-            case CSS::AlignItems::FlexEnd:
-                flex_item->cross_offset = line_cross_offset + flex_line.cross_size - flex_item->cross_size;
-                break;
-            case CSS::AlignItems::Center:
-                flex_item->cross_offset = line_cross_offset + (flex_line.cross_size / 2.0f) - (flex_item->cross_size / 2.0f);
-                break;
-            default:
-                break;
-            }
-        }
-
-        line_cross_offset += flex_line.cross_size;
-    }
+    align_all_flex_items_along_the_cross_axis(flex_container, flex_lines);
 
     // 15. Determine the flex container’s used cross size:
     if (has_definite_cross_size(flex_container)) {
@@ -947,6 +922,36 @@ void FlexFormattingContext::distribute_any_remaining_free_space(Box const& flex_
             flex_item->main_offset = main_offset;
             main_offset += flex_item->main_size + space_between_items;
         }
+    }
+}
+
+void FlexFormattingContext::align_all_flex_items_along_the_cross_axis(Box const& flex_container, Vector<FlexLine>& flex_lines)
+{
+    // FIXME: Get the alignment via "align-self" of the item (which accesses "align-items" of the parent if unset)
+    // FIXME: Take better care of margins
+    float line_cross_offset = 0;
+    for (auto& flex_line : flex_lines) {
+        for (auto* flex_item : flex_line.items) {
+            switch (flex_container.computed_values().align_items()) {
+            case CSS::AlignItems::Baseline:
+                // FIXME: Implement this
+                //  Fallthrough
+            case CSS::AlignItems::FlexStart:
+            case CSS::AlignItems::Stretch:
+                flex_item->cross_offset = line_cross_offset + flex_item->margins.cross_before;
+                break;
+            case CSS::AlignItems::FlexEnd:
+                flex_item->cross_offset = line_cross_offset + flex_line.cross_size - flex_item->cross_size;
+                break;
+            case CSS::AlignItems::Center:
+                flex_item->cross_offset = line_cross_offset + (flex_line.cross_size / 2.0f) - (flex_item->cross_size / 2.0f);
+                break;
+            default:
+                break;
+            }
+        }
+
+        line_cross_offset += flex_line.cross_size;
     }
 }
 
