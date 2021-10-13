@@ -72,40 +72,6 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
 
     bool is_row = is_row_layout();
 
-    auto layout_for_maximum_main_size = [&](Box& box) {
-        bool main_constrained = false;
-        if (is_row) {
-            if (!box.computed_values().width().is_undefined_or_auto() || !box.computed_values().min_width().is_undefined_or_auto()) {
-                main_constrained = true;
-            }
-        } else {
-            if (!box.computed_values().height().is_undefined_or_auto() || !box.computed_values().min_height().is_undefined_or_auto()) {
-                main_constrained = true;
-            }
-        }
-
-        if (!main_constrained && box.children_are_inline()) {
-            auto& block_container = verify_cast<BlockContainer>(box);
-            BlockFormattingContext bfc(block_container, this);
-            bfc.run(box, LayoutMode::Default);
-            InlineFormattingContext ifc(block_container, &bfc);
-
-            if (is_row) {
-                ifc.run(box, LayoutMode::OnlyRequiredLineBreaks);
-                return box.width();
-            } else {
-                ifc.run(box, LayoutMode::AllPossibleLineBreaks);
-                return box.height();
-            }
-        }
-        if (is_row) {
-            layout_inside(box, LayoutMode::OnlyRequiredLineBreaks);
-            return box.width();
-        } else {
-            return BlockFormattingContext::compute_theoretical_height(box);
-        }
-    };
-
     auto calculate_hypothetical_cross_size = [&is_row, this](Box& box) {
         bool cross_constrained = false;
         if (is_row) {
@@ -157,52 +123,7 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
 
     // 3. Determine the flex base size and hypothetical main size of each item
     for (auto& flex_item : flex_items) {
-        auto& child_box = flex_item.box;
-        auto flex_basis = child_box.computed_values().flex_basis();
-        if (flex_basis.type == CSS::FlexBasis::Length) {
-            // A
-            auto specified_base_size = get_pixel_size(child_box, flex_basis.length);
-            if (specified_base_size == 0)
-                flex_item.flex_base_size = calculated_main_size(flex_item.box);
-            else
-                flex_item.flex_base_size = specified_base_size;
-        } else if (flex_basis.type == CSS::FlexBasis::Content
-            && has_definite_cross_size(child_box)
-            // FIXME: && has intrinsic aspect ratio.
-            && false) {
-            // B
-            TODO();
-            // flex_base_size is calculated from definite cross size and intrinsic aspect ratio
-        } else if (flex_basis.type == CSS::FlexBasis::Content
-            // FIXME: && sized under min-content or max-content contstraints
-            && false) {
-            // C
-            TODO();
-            // Size child_box under the constraints, flex_base_size is then the resulting main_size.
-        } else if (flex_basis.type == CSS::FlexBasis::Content
-            // FIXME: && main_size is infinite && inline axis is parallel to the main axis
-            && false && false) {
-            // D
-            TODO();
-            // Use rules for a flex_container in orthogonal flow
-        } else {
-            // E
-            // FIXME: This is probably too naive.
-            // FIXME: Care about FlexBasis::Auto
-            if (has_definite_main_size(child_box)) {
-                flex_item.flex_base_size = specified_main_size_of_child_box(flex_container, child_box);
-            } else {
-                flex_item.flex_base_size = layout_for_maximum_main_size(child_box);
-            }
-        }
-        auto clamp_min = has_main_min_size(child_box)
-            ? specified_main_min_size(child_box)
-            : 0;
-        auto clamp_max = has_main_max_size(child_box)
-            ? specified_main_max_size(child_box)
-            : NumericLimits<float>::max();
-
-        flex_item.hypothetical_main_size = clamp(flex_item.flex_base_size, clamp_min, clamp_max);
+        determine_flex_base_size_and_hypothetical_main_size(flex_container, flex_item);
     }
 
     // 4. Determine the main size of the flex container
@@ -906,6 +827,92 @@ FlexFormattingContext::AvailableSpace FlexFormattingContext::determine_available
     }
 
     return AvailableSpace { .main = main_available_space, .cross = cross_available_space };
+}
+
+float FlexFormattingContext::layout_for_maximum_main_size(Box& box)
+{
+    bool main_constrained = false;
+    if (is_row_layout()) {
+        if (!box.computed_values().width().is_undefined_or_auto() || !box.computed_values().min_width().is_undefined_or_auto()) {
+            main_constrained = true;
+        }
+    } else {
+        if (!box.computed_values().height().is_undefined_or_auto() || !box.computed_values().min_height().is_undefined_or_auto()) {
+            main_constrained = true;
+        }
+    }
+
+    if (!main_constrained && box.children_are_inline()) {
+        auto& block_container = verify_cast<BlockContainer>(box);
+        BlockFormattingContext bfc(block_container, this);
+        bfc.run(box, LayoutMode::Default);
+        InlineFormattingContext ifc(block_container, &bfc);
+
+        if (is_row_layout()) {
+            ifc.run(box, LayoutMode::OnlyRequiredLineBreaks);
+            return box.width();
+        } else {
+            ifc.run(box, LayoutMode::AllPossibleLineBreaks);
+            return box.height();
+        }
+    }
+    if (is_row_layout()) {
+        layout_inside(box, LayoutMode::OnlyRequiredLineBreaks);
+        return box.width();
+    } else {
+        return BlockFormattingContext::compute_theoretical_height(box);
+    }
+}
+
+// https://www.w3.org/TR/css-flexbox-1/#algo-main-item
+void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(Box const& flex_container, FlexItem& flex_item)
+{
+    auto& child_box = flex_item.box;
+    auto const& flex_basis = child_box.computed_values().flex_basis();
+    if (flex_basis.type == CSS::FlexBasis::Length) {
+        // A
+        auto specified_base_size = get_pixel_size(child_box, flex_basis.length);
+        if (specified_base_size == 0)
+            flex_item.flex_base_size = calculated_main_size(flex_item.box);
+        else
+            flex_item.flex_base_size = specified_base_size;
+    } else if (flex_basis.type == CSS::FlexBasis::Content
+        && has_definite_cross_size(child_box)
+        // FIXME: && has intrinsic aspect ratio.
+        && false) {
+        // B
+        TODO();
+        // flex_base_size is calculated from definite cross size and intrinsic aspect ratio
+    } else if (flex_basis.type == CSS::FlexBasis::Content
+        // FIXME: && sized under min-content or max-content contstraints
+        && false) {
+        // C
+        TODO();
+        // Size child_box under the constraints, flex_base_size is then the resulting main_size.
+    } else if (flex_basis.type == CSS::FlexBasis::Content
+        // FIXME: && main_size is infinite && inline axis is parallel to the main axis
+        && false && false) {
+        // D
+        TODO();
+        // Use rules for a flex_container in orthogonal flow
+    } else {
+        // E
+        // FIXME: This is probably too naive.
+        // FIXME: Care about FlexBasis::Auto
+        if (has_definite_main_size(child_box)) {
+            flex_item.flex_base_size = specified_main_size_of_child_box(flex_container, child_box);
+        } else {
+            flex_item.flex_base_size = layout_for_maximum_main_size(child_box);
+        }
+    }
+    auto clamp_min = has_main_min_size(child_box)
+        ? specified_main_min_size(child_box)
+        : 0;
+    auto clamp_max = has_main_max_size(child_box)
+        ? specified_main_max_size(child_box)
+        : NumericLimits<float>::max();
+
+    flex_item.hypothetical_main_size = clamp(flex_item.flex_base_size, clamp_min, clamp_max);
 }
 
 }

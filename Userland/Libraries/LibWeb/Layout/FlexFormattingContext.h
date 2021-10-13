@@ -56,6 +56,9 @@ private:
     };
     AvailableSpace determine_available_main_and_cross_space(Box const& flex_container, bool& main_size_is_infinite, bool& main_is_constrained, bool& cross_is_constrained, float& main_min_size, float& main_max_size, float& cross_min_size, float& cross_max_size) const;
 
+    float layout_for_maximum_main_size(Box&);
+    void determine_flex_base_size_and_hypothetical_main_size(Box const& flex_container, FlexItem&);
+
     bool is_row_layout() const { return m_flex_direction == CSS::FlexDirection::Row || m_flex_direction == CSS::FlexDirection::RowReverse; }
 
     CSS::FlexDirection m_flex_direction {};
