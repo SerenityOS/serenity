@@ -17,7 +17,3 @@ Provides TextMate Grammar-based syntax highlighting for the IPC and GML language
 ## Known Issues
 
 GML uses the .gml extension, which is also used for the GameMaker language. You may have to set the language for each file manually.
-
-## Release Notes
-
-### 0.1
