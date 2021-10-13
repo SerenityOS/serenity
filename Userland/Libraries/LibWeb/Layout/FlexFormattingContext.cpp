@@ -17,6 +17,11 @@
 
 namespace Web::Layout {
 
+static float get_pixel_size(Box const& box, CSS::Length const& length)
+{
+    return length.resolved(CSS::Length::make_px(0), box, box.containing_block()->width()).to_px(box);
+}
+
 FlexFormattingContext::FlexFormattingContext(Box& flex_container, FormattingContext* parent)
     : FormattingContext(flex_container, parent)
     , m_flex_direction(flex_container.computed_values().flex_direction())
@@ -69,9 +74,6 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
 
     // Determine main/cross direction
     auto main_size_is_infinite = false;
-    auto get_pixel_size = [](Box& box, const CSS::Length& length) {
-        return length.resolved(CSS::Length::make_px(0), box, box.containing_block()->width()).to_px(box);
-    };
     auto layout_for_maximum_main_size = [&](Box& box) {
         bool main_constrained = false;
         if (is_row) {
@@ -118,113 +120,6 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
             return NumericLimits<float>::max();
         }
     };
-    auto has_definite_main_size = [&is_row](Box& box) {
-        return is_row ? box.has_definite_width() : box.has_definite_height();
-    };
-    Function<bool(NodeWithStyle&)> cross_size_is_absolute_or_resolved_nicely = [&](NodeWithStyle& box) {
-        auto length = is_row ? box.computed_values().height() : box.computed_values().width();
-
-        if (length.is_absolute() || length.is_relative())
-            return true;
-        if (length.is_undefined_or_auto())
-            return false;
-
-        if (!box.parent())
-            return false;
-        if (length.is_percentage() && cross_size_is_absolute_or_resolved_nicely(*box.parent()))
-            return true;
-        return false;
-    };
-    auto has_definite_cross_size = [&is_row, &cross_size_is_absolute_or_resolved_nicely](Box& box) {
-        return (is_row ? box.has_definite_height() : box.has_definite_width()) && cross_size_is_absolute_or_resolved_nicely(box);
-    };
-    auto specified_main_size = [&is_row](Box& box) {
-        return is_row
-            ? box.width()
-            : box.height();
-    };
-    auto specified_main_size_of_child_box = [&is_row, &specified_main_size](Box& box, Box& child_box) {
-        auto main_size_of_parent = specified_main_size(box);
-        if (is_row) {
-            return child_box.computed_values().width().resolved_or_zero(child_box, main_size_of_parent).to_px(child_box);
-        } else {
-            return child_box.computed_values().height().resolved_or_zero(child_box, main_size_of_parent).to_px(child_box);
-        }
-    };
-    auto specified_cross_size = [&is_row](Box& box) {
-        return is_row
-            ? box.height()
-            : box.width();
-    };
-    auto has_main_min_size = [&is_row](Box& box) {
-        return is_row
-            ? !box.computed_values().min_width().is_undefined_or_auto()
-            : !box.computed_values().min_height().is_undefined_or_auto();
-    };
-    auto has_cross_min_size = [&is_row](Box& box) {
-        return is_row
-            ? !box.computed_values().min_height().is_undefined_or_auto()
-            : !box.computed_values().min_width().is_undefined_or_auto();
-    };
-    auto specified_main_min_size = [&is_row, &get_pixel_size](Box& box) {
-        return is_row
-            ? get_pixel_size(box, box.computed_values().min_width())
-            : get_pixel_size(box, box.computed_values().min_height());
-    };
-    auto specified_cross_min_size = [&is_row, &get_pixel_size](Box& box) {
-        return is_row
-            ? get_pixel_size(box, box.computed_values().min_height())
-            : get_pixel_size(box, box.computed_values().min_width());
-    };
-    auto has_main_max_size = [&is_row](Box& box) {
-        return is_row
-            ? !box.computed_values().max_width().is_undefined_or_auto()
-            : !box.computed_values().max_height().is_undefined_or_auto();
-    };
-    auto has_cross_max_size = [&is_row](Box& box) {
-        return is_row
-            ? !box.computed_values().max_height().is_undefined_or_auto()
-            : !box.computed_values().max_width().is_undefined_or_auto();
-    };
-    auto specified_main_max_size = [&is_row, &get_pixel_size](Box& box) {
-        return is_row
-            ? get_pixel_size(box, box.computed_values().max_width())
-            : get_pixel_size(box, box.computed_values().max_height());
-    };
-    auto specified_cross_max_size = [&is_row, &get_pixel_size](Box& box) {
-        return is_row
-            ? get_pixel_size(box, box.computed_values().max_height())
-            : get_pixel_size(box, box.computed_values().max_width());
-    };
-    auto calculated_main_size = [&is_row](Box& box) {
-        return is_row ? box.width() : box.height();
-    };
-    auto is_cross_auto = [&is_row](Box& box) {
-        return is_row ? box.computed_values().height().is_auto() : box.computed_values().width().is_auto();
-    };
-    auto is_main_axis_margin_first_auto = [&is_row](Box& box) {
-        return is_row ? box.computed_values().margin().left.is_auto() : box.computed_values().margin().top.is_auto();
-    };
-    auto is_main_axis_margin_second_auto = [&is_row](Box& box) {
-        return is_row ? box.computed_values().margin().right.is_auto() : box.computed_values().margin().bottom.is_auto();
-    };
-    auto sum_of_margin_padding_border_in_main_axis = [&is_row](Box& box) {
-        if (is_row) {
-            return box.box_model().margin.left
-                + box.box_model().margin.right
-                + box.box_model().padding.left
-                + box.box_model().padding.right
-                + box.box_model().border.left
-                + box.box_model().border.right;
-        } else {
-            return box.box_model().margin.top
-                + box.box_model().margin.bottom
-                + box.box_model().padding.top
-                + box.box_model().padding.bottom
-                + box.box_model().border.top
-                + box.box_model().border.bottom;
-        }
-    };
     auto calculate_hypothetical_cross_size = [&is_row, this](Box& box) {
         bool cross_constrained = false;
         if (is_row) {
@@ -255,36 +150,6 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
             context.compute_width(box);
             return box.width();
         }
-    };
-    auto set_main_size = [&is_row](Box& box, float size) {
-        if (is_row)
-            box.set_width(size);
-        else
-            box.set_height(size);
-    };
-    auto set_cross_size = [&is_row](Box& box, float size) {
-        if (is_row)
-            box.set_height(size);
-        else
-            box.set_width(size);
-    };
-    auto set_offset = [&is_row](Box& box, float main_offset, float cross_offset) {
-        if (is_row)
-            box.set_offset(main_offset, cross_offset);
-        else
-            box.set_offset(cross_offset, main_offset);
-    };
-    auto set_main_axis_first_margin = [&is_row](Box& box, float margin) {
-        if (is_row)
-            box.box_model().margin.left = margin;
-        else
-            box.box_model().margin.top = margin;
-    };
-    auto set_main_axis_second_margin = [&is_row](Box& box, float margin) {
-        if (is_row)
-            box.box_model().margin.right = margin;
-        else
-            box.box_model().margin.bottom = margin;
     };
 
     Vector<FlexItem> flex_items;
@@ -857,6 +722,180 @@ void FlexFormattingContext::generate_anonymous_flex_items(Box& flex_container, V
         flex_items.append(move(flex_item));
         return IterationDecision::Continue;
     });
+}
+
+bool FlexFormattingContext::has_definite_main_size(Box const& box) const
+{
+    return is_row_layout() ? box.has_definite_width() : box.has_definite_height();
+}
+
+float FlexFormattingContext::specified_main_size(Box const& box) const
+{
+    return is_row_layout() ? box.width() : box.height();
+}
+
+float FlexFormattingContext::specified_cross_size(Box const& box) const
+{
+    return is_row_layout() ? box.height() : box.width();
+}
+
+bool FlexFormattingContext::has_main_min_size(Box const& box) const
+{
+    auto value = is_row_layout() ? box.computed_values().min_width() : box.computed_values().min_height();
+    return !value.is_undefined_or_auto();
+}
+
+bool FlexFormattingContext::has_cross_min_size(Box const& box) const
+{
+    auto value = is_row_layout() ? box.computed_values().min_height() : box.computed_values().min_width();
+    return !value.is_undefined_or_auto();
+}
+
+bool FlexFormattingContext::has_definite_cross_size(Box const& box) const
+{
+    return (is_row_layout() ? box.has_definite_height() : box.has_definite_width()) && cross_size_is_absolute_or_resolved_nicely(box);
+}
+
+bool FlexFormattingContext::cross_size_is_absolute_or_resolved_nicely(NodeWithStyle const& box) const
+{
+    auto length = is_row_layout() ? box.computed_values().height() : box.computed_values().width();
+
+    if (length.is_absolute() || length.is_relative())
+        return true;
+    if (length.is_undefined_or_auto())
+        return false;
+
+    if (!box.parent())
+        return false;
+    if (length.is_percentage() && cross_size_is_absolute_or_resolved_nicely(*box.parent()))
+        return true;
+    return false;
+}
+
+float FlexFormattingContext::specified_main_size_of_child_box(Box const& flex_container, Box const& child_box) const
+{
+    auto main_size_of_parent = specified_main_size(flex_container);
+    auto value = is_row_layout() ? child_box.computed_values().width() : child_box.computed_values().height();
+    return value.resolved_or_zero(child_box, main_size_of_parent).to_px(child_box);
+}
+
+float FlexFormattingContext::specified_main_min_size(Box const& box) const
+{
+    return is_row_layout()
+        ? get_pixel_size(box, box.computed_values().min_width())
+        : get_pixel_size(box, box.computed_values().min_height());
+}
+
+float FlexFormattingContext::specified_cross_min_size(Box const& box) const
+{
+    return is_row_layout()
+        ? get_pixel_size(box, box.computed_values().min_height())
+        : get_pixel_size(box, box.computed_values().min_width());
+}
+
+bool FlexFormattingContext::has_main_max_size(Box const& box) const
+{
+    return is_row_layout()
+        ? !box.computed_values().max_width().is_undefined_or_auto()
+        : !box.computed_values().max_height().is_undefined_or_auto();
+}
+
+bool FlexFormattingContext::has_cross_max_size(Box const& box) const
+{
+    return is_row_layout()
+        ? !box.computed_values().max_height().is_undefined_or_auto()
+        : !box.computed_values().max_width().is_undefined_or_auto();
+}
+
+float FlexFormattingContext::specified_main_max_size(Box const& box) const
+{
+    return is_row_layout()
+        ? get_pixel_size(box, box.computed_values().max_width())
+        : get_pixel_size(box, box.computed_values().max_height());
+}
+
+float FlexFormattingContext::specified_cross_max_size(Box const& box) const
+{
+    return is_row_layout()
+        ? get_pixel_size(box, box.computed_values().max_height())
+        : get_pixel_size(box, box.computed_values().max_width());
+}
+
+float FlexFormattingContext::calculated_main_size(Box const& box) const
+{
+    return is_row_layout() ? box.width() : box.height();
+}
+
+bool FlexFormattingContext::is_cross_auto(Box const& box) const
+{
+    return is_row_layout() ? box.computed_values().height().is_auto() : box.computed_values().width().is_auto();
+}
+
+bool FlexFormattingContext::is_main_axis_margin_first_auto(Box const& box) const
+{
+    return is_row_layout() ? box.computed_values().margin().left.is_auto() : box.computed_values().margin().top.is_auto();
+}
+
+bool FlexFormattingContext::is_main_axis_margin_second_auto(Box const& box) const
+{
+    return is_row_layout() ? box.computed_values().margin().right.is_auto() : box.computed_values().margin().bottom.is_auto();
+}
+
+void FlexFormattingContext::set_main_size(Box& box, float size)
+{
+    if (is_row_layout())
+        box.set_width(size);
+    else
+        box.set_height(size);
+}
+
+void FlexFormattingContext::set_cross_size(Box& box, float size)
+{
+    if (is_row_layout())
+        box.set_height(size);
+    else
+        box.set_width(size);
+}
+
+void FlexFormattingContext::set_offset(Box& box, float main_offset, float cross_offset)
+{
+    if (is_row_layout())
+        box.set_offset(main_offset, cross_offset);
+    else
+        box.set_offset(cross_offset, main_offset);
+}
+
+void FlexFormattingContext::set_main_axis_first_margin(Box& box, float margin)
+{
+    if (is_row_layout())
+        box.box_model().margin.left = margin;
+    else
+        box.box_model().margin.top = margin;
+}
+
+void FlexFormattingContext::set_main_axis_second_margin(Box& box, float margin)
+{
+    if (is_row_layout())
+        box.box_model().margin.right = margin;
+    else
+        box.box_model().margin.bottom = margin;
+}
+
+float FlexFormattingContext::sum_of_margin_padding_border_in_main_axis(Box const& box) const
+{
+    auto& margin = box.box_model().margin;
+    auto& padding = box.box_model().padding;
+    auto& border = box.box_model().border;
+
+    if (is_row_layout()) {
+        return margin.left + margin.right
+            + padding.left + padding.right
+            + border.left + border.right;
+    } else {
+        return margin.top + margin.bottom
+            + padding.top + padding.bottom
+            + border.top + border.bottom;
+    }
 }
 
 }
