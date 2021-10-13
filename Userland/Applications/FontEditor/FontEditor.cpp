@@ -714,3 +714,20 @@ void FontEditorWidget::update_preview()
     if (m_font_preview_window)
         m_font_preview_window->update();
 }
+
+void FontEditorWidget::drop_event(GUI::DropEvent& event)
+{
+    event.accept();
+
+    if (event.mime_data().has_urls()) {
+        auto urls = event.mime_data().urls();
+        if (urls.is_empty())
+            return;
+
+        window()->move_to_front();
+        if (!request_close())
+            return;
+
+        open_file(urls.first().path());
+    }
+}
