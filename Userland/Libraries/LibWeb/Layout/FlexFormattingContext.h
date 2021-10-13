@@ -19,6 +19,9 @@ public:
 
     virtual void run(Box&, LayoutMode) override;
 
+    Box& flex_container() { return context_box(); }
+    Box const& flex_container() const { return context_box(); }
+
 private:
     struct DirectionAgnosticMargins {
         float main_before { 0 };
@@ -65,7 +68,7 @@ private:
     bool is_cross_auto(Box const&) const;
     bool is_main_axis_margin_first_auto(Box const&) const;
     bool is_main_axis_margin_second_auto(Box const&) const;
-    float specified_main_size_of_child_box(Box const& flex_container, Box const& child_box) const;
+    float specified_main_size_of_child_box(Box const& child_box) const;
     float specified_main_min_size(Box const&) const;
     float specified_cross_min_size(Box const&) const;
     bool has_main_max_size(Box const&) const;
@@ -78,34 +81,34 @@ private:
     void set_main_axis_first_margin(Box&, float margin);
     void set_main_axis_second_margin(Box&, float margin);
 
-    void generate_anonymous_flex_items(Box& flex_container);
+    void generate_anonymous_flex_items();
 
     struct AvailableSpace {
         float main { 0 };
         float cross { 0 };
     };
-    AvailableSpace determine_available_main_and_cross_space(Box const& flex_container, bool& main_size_is_infinite, bool& main_is_constrained, bool& cross_is_constrained, float& main_min_size, float& main_max_size, float& cross_min_size, float& cross_max_size) const;
+    AvailableSpace determine_available_main_and_cross_space(bool& main_size_is_infinite, bool& main_is_constrained, bool& cross_is_constrained, float& main_min_size, float& main_max_size, float& cross_min_size, float& cross_max_size) const;
 
     float layout_for_maximum_main_size(Box&);
-    void determine_flex_base_size_and_hypothetical_main_size(Box const& flex_container, FlexItem&);
+    void determine_flex_base_size_and_hypothetical_main_size(FlexItem&);
 
-    void determine_main_size_of_flex_container(Box& flex_container, bool main_is_constrained, bool main_size_is_infinite, float& main_available_size, float main_min_size, float main_max_size);
+    void determine_main_size_of_flex_container(bool main_is_constrained, bool main_size_is_infinite, float& main_available_size, float main_min_size, float main_max_size);
 
-    void collect_flex_items_into_flex_lines(Box const& flex_container, float main_available_size);
+    void collect_flex_items_into_flex_lines(float main_available_size);
 
     void resolve_flexible_lengths(float main_available_size);
 
     float determine_hypothetical_cross_size_of_item(Box&);
 
-    void calculate_cross_size_of_each_flex_line(Box const& flex_container, float cross_min_size, float cross_max_size);
+    void calculate_cross_size_of_each_flex_line(float cross_min_size, float cross_max_size);
 
-    void determine_used_cross_size_of_each_flex_item(Box const& flex_container);
+    void determine_used_cross_size_of_each_flex_item();
 
-    void distribute_any_remaining_free_space(Box const& flex_container, float main_available_size);
+    void distribute_any_remaining_free_space(float main_available_size);
 
-    void align_all_flex_items_along_the_cross_axis(Box const& flex_container);
+    void align_all_flex_items_along_the_cross_axis();
 
-    void determine_flex_container_used_cross_size(Box& flex_container, float cross_min_size, float cross_max_size);
+    void determine_flex_container_used_cross_size(float cross_min_size, float cross_max_size);
 
     void align_all_flex_lines();
 
