@@ -165,16 +165,9 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     });
     m_new_action->set_status_tip("Create a new font");
     m_open_action = GUI::CommonActions::make_open_action([&](auto&) {
-        if (window()->is_modified()) {
-            auto result = GUI::MessageBox::show(window(), "Save changes to the current font?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
-            if (result == GUI::Dialog::ExecResult::ExecYes) {
-                m_save_action->activate();
-                if (window()->is_modified())
-                    return;
-            }
-            if (result == GUI::Dialog::ExecResult::ExecCancel)
-                return;
-        }
+        if (!request_close())
+            return;
+
         Optional<String> open_path = GUI::FilePicker::get_open_filepath(window(), {}, "/res/fonts/");
         if (!open_path.has_value())
             return;
