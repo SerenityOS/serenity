@@ -10,6 +10,8 @@
 
 namespace Web::Layout {
 
+struct FlexItem;
+
 class FlexFormattingContext final : public FormattingContext {
 public:
     FlexFormattingContext(Box& containing_block, FormattingContext* parent);
@@ -18,6 +20,13 @@ public:
     virtual bool inhibits_floating() const override { return true; }
 
     virtual void run(Box&, LayoutMode) override;
+
+private:
+    void generate_anonymous_flex_items(Box& flex_container, Vector<FlexItem>&);
+
+    bool is_row_layout() const { return m_flex_direction == CSS::FlexDirection::Row || m_flex_direction == CSS::FlexDirection::RowReverse; }
+
+    CSS::FlexDirection m_flex_direction {};
 };
 
 }
