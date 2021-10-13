@@ -61,6 +61,11 @@ public:
     ALWAYS_INLINE static Processor& current() { return *((Processor*)0); }
 
     static void deferred_call_queue(Function<void()> /* callback */) { }
+
+    [[noreturn]] static void halt()
+    {
+        for (;;) { }
+    }
 };
 
 }
