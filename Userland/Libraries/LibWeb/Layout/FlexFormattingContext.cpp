@@ -127,41 +127,7 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
     }
 
     // 4. Determine the main size of the flex container
-    if ((!main_is_constrained && main_size_is_infinite) || main_available_size == 0) {
-        // Uses https://www.w3.org/TR/css-flexbox-1/#intrinsic-main-sizes
-        // 9.9.1
-        // 1.
-        float largest_max_content_flex_fraction = 0;
-        for (auto& flex_item : flex_items) {
-            // FIXME: This needs some serious work.
-            float max_content_contribution = calculated_main_size(flex_item.box);
-            float max_content_flex_fraction = max_content_contribution - flex_item.flex_base_size;
-            if (max_content_flex_fraction > 0) {
-                max_content_flex_fraction /= max(flex_item.box.computed_values().flex_grow_factor().value_or(1), 1.0f);
-            } else {
-                max_content_flex_fraction /= max(flex_item.box.computed_values().flex_shrink_factor().value_or(1), 1.0f) * flex_item.flex_base_size;
-            }
-            flex_item.max_content_flex_fraction = max_content_flex_fraction;
-
-            if (max_content_flex_fraction > largest_max_content_flex_fraction)
-                largest_max_content_flex_fraction = max_content_flex_fraction;
-        }
-
-        // 2. Omitted
-        // 3.
-        float result = 0;
-        for (auto& flex_item : flex_items) {
-            auto product = 0;
-            if (flex_item.max_content_flex_fraction > 0) {
-                product = largest_max_content_flex_fraction * flex_item.box.computed_values().flex_grow_factor().value_or(1);
-            } else {
-                product = largest_max_content_flex_fraction * max(flex_item.box.computed_values().flex_shrink_factor().value_or(1), 1.0f) * flex_item.flex_base_size;
-            }
-            result += flex_item.flex_base_size + product;
-        }
-        main_available_size = clamp(result, main_min_size, main_max_size);
-    }
-    set_main_size(flex_container, main_available_size);
+    determine_main_size_of_flex_container(flex_container, flex_items, main_is_constrained, main_size_is_infinite, main_available_size, main_min_size, main_max_size);
 
     // 5. Collect flex items into flex lines:
     // After this step no additional items are to be added to flex_lines or any of its items!
@@ -913,6 +879,46 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
         : NumericLimits<float>::max();
 
     flex_item.hypothetical_main_size = clamp(flex_item.flex_base_size, clamp_min, clamp_max);
+}
+
+// https://www.w3.org/TR/css-flexbox-1/#algo-main-container
+void FlexFormattingContext::determine_main_size_of_flex_container(Box& flex_container, Vector<FlexItem>& flex_items, bool const main_is_constrained, bool const main_size_is_infinite, float& main_available_size, float const main_min_size, float const main_max_size)
+{
+    if ((!main_is_constrained && main_size_is_infinite) || main_available_size == 0) {
+        // Uses https://www.w3.org/TR/css-flexbox-1/#intrinsic-main-sizes
+        // 9.9.1
+        // 1.
+        float largest_max_content_flex_fraction = 0;
+        for (auto& flex_item : flex_items) {
+            // FIXME: This needs some serious work.
+            float max_content_contribution = calculated_main_size(flex_item.box);
+            float max_content_flex_fraction = max_content_contribution - flex_item.flex_base_size;
+            if (max_content_flex_fraction > 0) {
+                max_content_flex_fraction /= max(flex_item.box.computed_values().flex_grow_factor().value_or(1), 1.0f);
+            } else {
+                max_content_flex_fraction /= max(flex_item.box.computed_values().flex_shrink_factor().value_or(1), 1.0f) * flex_item.flex_base_size;
+            }
+            flex_item.max_content_flex_fraction = max_content_flex_fraction;
+
+            if (max_content_flex_fraction > largest_max_content_flex_fraction)
+                largest_max_content_flex_fraction = max_content_flex_fraction;
+        }
+
+        // 2. Omitted
+        // 3.
+        float result = 0;
+        for (auto& flex_item : flex_items) {
+            auto product = 0;
+            if (flex_item.max_content_flex_fraction > 0) {
+                product = largest_max_content_flex_fraction * flex_item.box.computed_values().flex_grow_factor().value_or(1);
+            } else {
+                product = largest_max_content_flex_fraction * max(flex_item.box.computed_values().flex_shrink_factor().value_or(1), 1.0f) * flex_item.flex_base_size;
+            }
+            result += flex_item.flex_base_size + product;
+        }
+        main_available_size = clamp(result, main_min_size, main_max_size);
+    }
+    set_main_size(flex_container, main_available_size);
 }
 
 }
