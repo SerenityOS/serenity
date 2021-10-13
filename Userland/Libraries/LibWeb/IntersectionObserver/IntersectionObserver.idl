@@ -1,0 +1,22 @@
+[Exposed=(Window)]
+interface IntersectionObserver {
+    // FIXME: Should be: IntersectionObserverCallback
+    constructor(any callback, optional IntersectionObserverInit options = {});
+
+    undefined observe(Element target);
+    undefined unobserve(Element target);
+    undefined disconnect();
+
+    // FIXME:
+    // sequence<IntersectionObserverEntry> takeRecords();
+};
+
+dictionary IntersectionObserverInit {
+    // FIXME: Should be: (Element or Document)?
+    Node? root = null;
+
+    DOMString rootMargin = "0px";
+
+    // FIXME: Should be: (double or sequence<double>)
+    any threshold = 0;
+};

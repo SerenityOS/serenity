@@ -188,7 +188,8 @@ set(SOURCES
     HTML/WebSocket.cpp
     HighResolutionTime/Performance.cpp
     InProcessWebView.cpp
-        Layout/BlockContainer.cpp
+    IntersectionObserver/IntersectionObserver.cpp
+    Layout/BlockContainer.cpp
     Layout/BlockFormattingContext.cpp
     Layout/Box.cpp
     Layout/BoxModelMetrics.cpp
@@ -472,6 +473,7 @@ libweb_js_wrapper(HTML/PromiseRejectionEvent)
 libweb_js_wrapper(HTML/SubmitEvent)
 libweb_js_wrapper(HTML/WebSocket)
 libweb_js_wrapper(HighResolutionTime/Performance)
+libweb_js_wrapper(IntersectionObserver/IntersectionObserver)
 libweb_js_wrapper(NavigationTiming/PerformanceTiming)
 libweb_js_wrapper(RequestIdleCallback/IdleDeadline)
 libweb_js_wrapper(ResizeObserver/ResizeObserver)

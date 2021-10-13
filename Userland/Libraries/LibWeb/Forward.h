@@ -204,6 +204,10 @@ namespace Web::HighResolutionTime {
 class Performance;
 }
 
+namespace Web::IntersectionObserver {
+class IntersectionObserver;
+}
+
 namespace Web::NavigationTiming {
 class PerformanceTiming;
 }
@@ -386,6 +390,7 @@ class HTMLUnknownElementWrapper;
 class HTMLVideoElementWrapper;
 class IdleDeadlineWrapper;
 class ImageDataWrapper;
+class IntersectionObserverWrapper;
 class KeyboardEventWrapper;
 class LocationObject;
 class MediaQueryListWrapper;
