@@ -121,65 +121,7 @@ void FlexFormattingContext::run(Box& flex_container, LayoutMode)
     determine_used_cross_size_of_each_flex_item(flex_container, flex_lines);
 
     // 12. Distribute any remaining free space.
-    for (auto& flex_line : flex_lines) {
-        // 12.1.
-        float used_main_space = 0;
-        size_t auto_margins = 0;
-        for (auto& flex_item : flex_line.items) {
-            used_main_space += flex_item->main_size;
-            if (is_main_axis_margin_first_auto(flex_item->box))
-                ++auto_margins;
-            if (is_main_axis_margin_second_auto(flex_item->box))
-                ++auto_margins;
-        }
-        float remaining_free_space = main_available_size - used_main_space;
-        if (remaining_free_space > 0) {
-            float size_per_auto_margin = remaining_free_space / (float)auto_margins;
-            for (auto& flex_item : flex_line.items) {
-                if (is_main_axis_margin_first_auto(flex_item->box))
-                    set_main_axis_first_margin(flex_item->box, size_per_auto_margin);
-                if (is_main_axis_margin_second_auto(flex_item->box))
-                    set_main_axis_second_margin(flex_item->box, size_per_auto_margin);
-            }
-        } else {
-            for (auto& flex_item : flex_line.items) {
-                if (is_main_axis_margin_first_auto(flex_item->box))
-                    set_main_axis_first_margin(flex_item->box, 0);
-                if (is_main_axis_margin_second_auto(flex_item->box))
-                    set_main_axis_second_margin(flex_item->box, 0);
-            }
-        }
-
-        // 12.2.
-        float space_between_items = 0;
-        float space_before_first_item = 0;
-        auto number_of_items = flex_line.items.size();
-
-        switch (flex_container.computed_values().justify_content()) {
-        case CSS::JustifyContent::FlexStart:
-            break;
-        case CSS::JustifyContent::FlexEnd:
-            space_before_first_item = main_available_size - used_main_space;
-            break;
-        case CSS::JustifyContent::Center:
-            space_before_first_item = (main_available_size - used_main_space) / 2.0f;
-            break;
-        case CSS::JustifyContent::SpaceBetween:
-            space_between_items = remaining_free_space / (number_of_items - 1);
-            break;
-        case CSS::JustifyContent::SpaceAround:
-            space_between_items = remaining_free_space / number_of_items;
-            space_before_first_item = space_between_items / 2.0f;
-            break;
-        }
-
-        // FIXME: Support reverse
-        float main_offset = space_before_first_item;
-        for (auto& flex_item : flex_line.items) {
-            flex_item->main_offset = main_offset;
-            main_offset += flex_item->main_size + space_between_items;
-        }
-    }
+    distribute_any_remaining_free_space(flex_container, flex_lines, main_available_size);
 
     // 13. Resolve cross-axis auto margins.
     // FIXME: This
@@ -940,6 +882,70 @@ void FlexFormattingContext::determine_used_cross_size_of_each_flex_item(Box cons
             } else {
                 flex_item->cross_size = flex_item->hypothetical_cross_size;
             }
+        }
+    }
+}
+
+// https://www.w3.org/TR/css-flexbox-1/#algo-main-align
+void FlexFormattingContext::distribute_any_remaining_free_space(Box const& flex_container, Vector<FlexLine>& flex_lines, float main_available_size)
+{
+    for (auto& flex_line : flex_lines) {
+        // 12.1.
+        float used_main_space = 0;
+        size_t auto_margins = 0;
+        for (auto& flex_item : flex_line.items) {
+            used_main_space += flex_item->main_size;
+            if (is_main_axis_margin_first_auto(flex_item->box))
+                ++auto_margins;
+            if (is_main_axis_margin_second_auto(flex_item->box))
+                ++auto_margins;
+        }
+        float remaining_free_space = main_available_size - used_main_space;
+        if (remaining_free_space > 0) {
+            float size_per_auto_margin = remaining_free_space / (float)auto_margins;
+            for (auto& flex_item : flex_line.items) {
+                if (is_main_axis_margin_first_auto(flex_item->box))
+                    set_main_axis_first_margin(flex_item->box, size_per_auto_margin);
+                if (is_main_axis_margin_second_auto(flex_item->box))
+                    set_main_axis_second_margin(flex_item->box, size_per_auto_margin);
+            }
+        } else {
+            for (auto& flex_item : flex_line.items) {
+                if (is_main_axis_margin_first_auto(flex_item->box))
+                    set_main_axis_first_margin(flex_item->box, 0);
+                if (is_main_axis_margin_second_auto(flex_item->box))
+                    set_main_axis_second_margin(flex_item->box, 0);
+            }
+        }
+
+        // 12.2.
+        float space_between_items = 0;
+        float space_before_first_item = 0;
+        auto number_of_items = flex_line.items.size();
+
+        switch (flex_container.computed_values().justify_content()) {
+        case CSS::JustifyContent::FlexStart:
+            break;
+        case CSS::JustifyContent::FlexEnd:
+            space_before_first_item = main_available_size - used_main_space;
+            break;
+        case CSS::JustifyContent::Center:
+            space_before_first_item = (main_available_size - used_main_space) / 2.0f;
+            break;
+        case CSS::JustifyContent::SpaceBetween:
+            space_between_items = remaining_free_space / (number_of_items - 1);
+            break;
+        case CSS::JustifyContent::SpaceAround:
+            space_between_items = remaining_free_space / number_of_items;
+            space_before_first_item = space_between_items / 2.0f;
+            break;
+        }
+
+        // FIXME: Support reverse
+        float main_offset = space_before_first_item;
+        for (auto& flex_item : flex_line.items) {
+            flex_item->main_offset = main_offset;
+            main_offset += flex_item->main_size + space_between_items;
         }
     }
 }
