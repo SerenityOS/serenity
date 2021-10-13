@@ -171,6 +171,7 @@
     M(RegExpObjectRepeatedFlag, "Repeated RegExp flag '{}'")                                                                            \
     M(RestrictedFunctionPropertiesAccess, "Restricted function properties like 'callee', 'caller' and 'arguments' may "                 \
                                           "not be accessed in strict mode")                                                             \
+    M(ShadowRealmWrappedValueNonFunctionObject, "Wrapped value must be primitive or a function object, got {}")                         \
     M(SpeciesConstructorDidNotCreate, "Species constructor did not create {}")                                                          \
     M(SpeciesConstructorReturned, "Species constructor returned {}")                                                                    \
     M(StringNonGlobalRegExp, "RegExp argument is non-global")                                                                           \
@@ -218,6 +219,7 @@
     M(TypedArrayTypeIsNot, "Typed array {} element type is not {}")                                                                     \
     M(UnknownIdentifier, "'{}' is not defined")                                                                                         \
     M(UnsupportedDeleteSuperProperty, "Can't delete a property on 'super'")                                                             \
+    M(WrappedFunctionCallThrowCompletion, "Call of wrapped target function did not complete normally")                                  \
     M(URIMalformed, "URI malformed") /* LibWeb bindings */                                                                              \
     M(NotAByteString, "Argument to {}() must be a byte string")                                                                         \
     M(BadArgCountOne, "{}() needs one argument")                                                                                        \
