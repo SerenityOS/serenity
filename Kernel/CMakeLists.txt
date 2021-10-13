@@ -359,6 +359,7 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
 else()
     set(SOURCES
         Arch/aarch64/dummy.cpp
+        ${AK_SOURCES}
     )
 endif()
 
