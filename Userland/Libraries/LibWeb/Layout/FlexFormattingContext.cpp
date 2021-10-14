@@ -471,8 +471,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
         //    - an intrinsic aspect ratio,
         //    - a used flex basis of content, and
         //    - a definite cross size,
-        bool has_intrinsic_aspect_ratio = false; // FIXME: Populate this.
-        if (has_intrinsic_aspect_ratio
+        if (flex_item.box.has_intrinsic_aspect_ratio()
             && used_flex_basis.type == CSS::FlexBasis::Content
             && has_definite_cross_size(child_box)) {
             TODO();
