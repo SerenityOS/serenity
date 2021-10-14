@@ -371,12 +371,12 @@ else()
         Arch/aarch64/dummy.cpp
         Arch/aarch64/SmapDisabler.cpp
         Arch/aarch64/ScopedCritical.cpp
-        
+        StdLib.cpp
         UBSanitizer.cpp
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
-    add_compile_options(-mno-outline-atomics)
+    add_compile_options(-mno-outline-atomics -latomic)
 endif()
 
 add_compile_options(-fsigned-char)
