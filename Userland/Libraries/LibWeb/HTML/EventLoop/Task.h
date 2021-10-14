@@ -26,6 +26,7 @@ public:
         PostedMessage,
         Microtask,
         TimerTask,
+        JavaScriptEngine,
     };
 
     static NonnullOwnPtr<Task> create(Source source, DOM::Document* document, Function<void()> steps)

@@ -284,7 +284,8 @@ void EventLoop::perform_a_microtask_checkpoint()
 
     // FIXME: 5. Cleanup Indexed Database transactions.
 
-    // FIXME: 6. Perform ClearKeptObjects().
+    // 6. Perform ClearKeptObjects().
+    vm().finish_execution_generation();
 
     // 7. Set the event loop's performing a microtask checkpoint to false.
     m_performing_a_microtask_checkpoint = false;

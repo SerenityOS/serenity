@@ -13,7 +13,7 @@
 namespace JS {
 
 // 16.1.5 ParseScript ( sourceText, realm, hostDefined ), https://tc39.es/ecma262/#sec-parse-script
-Result<NonnullRefPtr<Script>, Vector<Parser::Error>> Script::parse(StringView source_text, Realm& realm, StringView filename)
+Result<NonnullRefPtr<Script>, Vector<Parser::Error>> Script::parse(StringView source_text, Realm& realm, StringView filename, CustomData* custom_data)
 {
     // 1. Let body be ParseText(sourceText, Script).
     auto parser = Parser(Lexer(source_text, filename));
@@ -24,13 +24,14 @@ Result<NonnullRefPtr<Script>, Vector<Parser::Error>> Script::parse(StringView so
         return parser.errors();
 
     // 3. Return Script Record { [[Realm]]: realm, [[ECMAScriptCode]]: body, [[HostDefined]]: hostDefined }.
-    return adopt_ref(*new Script(realm, move(body)));
+    return adopt_ref(*new Script(realm, move(body), custom_data));
 }
 
-Script::Script(Realm& realm, NonnullRefPtr<Program> parse_node)
+Script::Script(Realm& realm, NonnullRefPtr<Program> parse_node, CustomData* custom_data)
     : m_vm(realm.vm())
     , m_realm(make_handle(&realm))
     , m_parse_node(move(parse_node))
+    , m_custom_data(custom_data)
 {
 }
 

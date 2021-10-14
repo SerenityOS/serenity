@@ -17,6 +17,10 @@ class Module
     : public RefCounted<Module>
     , public Weakable<Module> {
 public:
+    struct CustomData {
+        virtual ~CustomData() = default;
+    };
+
     virtual ~Module();
 
     Realm& realm() { return *m_realm.cell(); }
@@ -25,6 +29,9 @@ public:
     Environment* environment() { return m_environment.cell(); }
     Object* namespace_() { return m_namespace.cell(); }
 
+    CustomData* custom_data() { return m_custom_data; }
+    void set_custom_data(CustomData* custom_data) { m_custom_data = custom_data; }
+
 protected:
     explicit Module(Realm&);
 
@@ -32,9 +39,10 @@ private:
     // Handles are not safe unless we keep the VM alive.
     NonnullRefPtr<VM> m_vm;
 
-    Handle<Realm> m_realm;             // [[Realm]]
-    Handle<Environment> m_environment; // [[Environment]]
-    Handle<Object> m_namespace;        // [[Namespace]]
+    Handle<Realm> m_realm;                 // [[Realm]]
+    Handle<Environment> m_environment;     // [[Environment]]
+    Handle<Object> m_namespace;            // [[Namespace]]
+    CustomData* m_custom_data { nullptr }; // [[HostDefined]]
 };
 
 }
