@@ -8,15 +8,11 @@
 
 namespace JS {
 
-FinalizationRegistry* FinalizationRegistry::create(GlobalObject& global_object, FunctionObject& cleanup_callback)
-{
-    return global_object.heap().allocate<FinalizationRegistry>(global_object, cleanup_callback, *global_object.finalization_registry_prototype());
-}
-
-FinalizationRegistry::FinalizationRegistry(FunctionObject& cleanup_callback, Object& prototype)
+FinalizationRegistry::FinalizationRegistry(Realm* realm, JS::JobCallback cleanup_callback, Object& prototype)
     : Object(prototype)
     , WeakContainer(heap())
-    , m_cleanup_callback(&cleanup_callback)
+    , m_realm(realm)
+    , m_cleanup_callback(move(cleanup_callback))
 {
 }
 
@@ -53,18 +49,20 @@ void FinalizationRegistry::remove_dead_cells(Badge<Heap>)
         break;
     }
     if (any_cells_were_removed)
-        vm().enqueue_finalization_registry_cleanup_job(*this);
+        vm().host_enqueue_finalization_registry_cleanup_job(*this);
 }
 
 // 9.13 CleanupFinalizationRegistry ( finalizationRegistry ), https://tc39.es/ecma262/#sec-cleanup-finalization-registry
-void FinalizationRegistry::cleanup(FunctionObject* callback)
+void FinalizationRegistry::cleanup(Optional<JobCallback> callback)
 {
     auto& vm = this->vm();
-    auto cleanup_callback = callback ?: m_cleanup_callback;
+    auto& cleanup_callback = callback.has_value() ? callback.value() : m_cleanup_callback;
     for (auto it = m_records.begin(); it != m_records.end(); ++it) {
         if (it->target != nullptr)
             continue;
-        (void)vm.call(*cleanup_callback, js_undefined(), it->held_value);
+        MarkedValueList arguments(vm.heap());
+        arguments.append(it->held_value);
+        (void)vm.host_call_job_callback(cleanup_callback, js_undefined(), move(arguments));
         it.remove(m_records);
         if (vm.exception())
             return;
@@ -74,7 +72,6 @@ void FinalizationRegistry::cleanup(FunctionObject* callback)
 void FinalizationRegistry::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_cleanup_callback);
     for (auto& record : m_records) {
         visitor.visit(record.held_value);
         visitor.visit(record.unregister_token);

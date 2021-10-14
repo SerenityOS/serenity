@@ -251,16 +251,16 @@ public:
     CommonPropertyNames names;
 
     void run_queued_promise_jobs();
-    void enqueue_promise_job(NativeFunction&);
+    void enqueue_promise_job(Function<Value()> job, Realm*);
 
     void run_queued_finalization_registry_cleanup_jobs();
     void enqueue_finalization_registry_cleanup_job(FinalizationRegistry&);
 
-    void promise_rejection_tracker(const Promise&, Promise::RejectionOperation) const;
+    void promise_rejection_tracker(Promise&, Promise::RejectionOperation) const;
 
     Function<void()> on_call_stack_emptied;
-    Function<void(const Promise&)> on_promise_unhandled_rejection;
-    Function<void(const Promise&)> on_promise_rejection_handled;
+    Function<void(Promise&)> on_promise_unhandled_rejection;
+    Function<void(Promise&)> on_promise_rejection_handled;
 
     ThrowCompletionOr<void> initialize_instance_elements(Object& object, ECMAScriptFunctionObject& constructor);
 
@@ -274,6 +274,12 @@ public:
 
     void save_execution_context_stack();
     void restore_execution_context_stack();
+
+    Function<void(Promise&, Promise::RejectionOperation)> host_promise_rejection_tracker;
+    Function<Value(JobCallback&, Value, MarkedValueList)> host_call_job_callback;
+    Function<void(FinalizationRegistry&)> host_enqueue_finalization_registry_cleanup_job;
+    Function<void(Function<Value()>, Realm*)> host_enqueue_promise_job;
+    Function<JobCallback(FunctionObject&)> host_make_job_callback;
 
 private:
     explicit VM(OwnPtr<CustomData>);
@@ -304,7 +310,7 @@ private:
 
     HashMap<String, Symbol*> m_global_symbol_map;
 
-    Vector<NativeFunction*> m_promise_jobs;
+    Vector<Function<Value()>> m_promise_jobs;
 
     Vector<FinalizationRegistry*> m_finalization_registry_cleanup_jobs;
 

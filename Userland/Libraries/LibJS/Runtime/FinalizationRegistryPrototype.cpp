@@ -45,7 +45,9 @@ JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::cleanup_some)
         return {};
     }
 
-    finalization_registry->cleanup(callback.is_undefined() ? nullptr : &callback.as_function());
+    // IMPLEMENTATION DEFINED: The specification for this function hasn't been updated to accomodate for JobCallback records.
+    //                         This just follows how the constructor immediately converts the callback to a JobCallback using HostMakeJobCallback.
+    finalization_registry->cleanup(callback.is_undefined() ? Optional<JobCallback> {} : vm.host_make_job_callback(callback.as_function()));
 
     return js_undefined();
 }
