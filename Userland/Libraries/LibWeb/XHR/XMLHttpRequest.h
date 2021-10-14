@@ -59,8 +59,8 @@ public:
     String get_response_header(const String& name) { return m_response_headers.get(name).value_or({}); }
     String get_all_response_headers() const;
 
-    HTML::EventHandler onreadystatechange();
-    void set_onreadystatechange(HTML::EventHandler);
+    Bindings::CallbackType* onreadystatechange();
+    void set_onreadystatechange(Optional<Bindings::CallbackType>);
 
 private:
     virtual void ref_event_target() override { ref(); }

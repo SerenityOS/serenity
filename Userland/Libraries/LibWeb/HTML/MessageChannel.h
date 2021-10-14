@@ -24,9 +24,9 @@ public:
     using RefCounted::ref;
     using RefCounted::unref;
 
-    static NonnullRefPtr<MessageChannel> create_with_global_object(Bindings::WindowObject& global_object)
+    static NonnullRefPtr<MessageChannel> create_with_global_object(Bindings::WindowObject&)
     {
-        return adopt_ref(*new MessageChannel(global_object));
+        return adopt_ref(*new MessageChannel());
     }
 
     virtual ~MessageChannel() override;
@@ -38,7 +38,7 @@ public:
     MessagePort const* port2() const { return m_port2; }
 
 private:
-    explicit MessageChannel(Bindings::WindowObject&);
+    MessageChannel();
 
     RefPtr<MessagePort> m_port1;
     RefPtr<MessagePort> m_port2;

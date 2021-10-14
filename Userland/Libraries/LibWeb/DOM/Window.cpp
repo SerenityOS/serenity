@@ -7,6 +7,7 @@
 
 #include <LibGUI/DisplayLink.h>
 #include <LibJS/Runtime/FunctionObject.h>
+#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
 #include <LibWeb/Crypto/Crypto.h>
@@ -107,7 +108,7 @@ NonnullRefPtr<Window> Window::create_with_document(Document& document)
 }
 
 Window::Window(Document& document)
-    : EventTarget(static_cast<Bindings::ScriptExecutionContext&>(document))
+    : EventTarget()
     , m_associated_document(document)
     , m_performance(make<HighResolutionTime::Performance>(*this))
     , m_crypto(Crypto::Crypto::create())
@@ -144,16 +145,16 @@ String Window::prompt(String const& message, String const& default_)
     return {};
 }
 
-i32 Window::set_interval(JS::FunctionObject& callback, i32 interval)
+i32 Window::set_interval(NonnullOwnPtr<Bindings::CallbackType> callback, i32 interval)
 {
-    auto timer = Timer::create_interval(*this, interval, callback);
+    auto timer = Timer::create_interval(*this, interval, move(callback));
     m_timers.set(timer->id(), timer);
     return timer->id();
 }
 
-i32 Window::set_timeout(JS::FunctionObject& callback, i32 interval)
+i32 Window::set_timeout(NonnullOwnPtr<Bindings::CallbackType> callback, i32 interval)
 {
-    auto timer = Timer::create_timeout(*this, interval, callback);
+    auto timer = Timer::create_timeout(*this, interval, move(callback));
     m_timers.set(timer->id(), timer);
     return timer->id();
 }
@@ -172,7 +173,7 @@ void Window::timer_did_fire(Badge<Timer>, Timer& timer)
     HTML::queue_global_task(HTML::Task::Source::TimerTask, *wrapper(), [this, strong_this = NonnullRefPtr(*this), strong_timer = NonnullRefPtr(timer)]() mutable {
         auto& vm = wrapper()->vm();
 
-        [[maybe_unused]] auto rc = vm.call(strong_timer->callback(), wrapper());
+        [[maybe_unused]] auto rc = Bindings::IDL::invoke_callback(strong_timer->callback(), wrapper());
         if (vm.exception())
             vm.clear_exception();
     });
@@ -198,12 +199,11 @@ void Window::clear_interval(i32 timer_id)
     m_timers.remove(timer_id);
 }
 
-i32 Window::request_animation_frame(JS::FunctionObject& js_callback)
+i32 Window::request_animation_frame(NonnullOwnPtr<Bindings::CallbackType> js_callback)
 {
-    auto callback = request_animation_frame_driver().add([this, handle = JS::make_handle(&js_callback)](i32 id) mutable {
-        auto& function = *handle.cell();
-        auto& vm = function.vm();
-        (void)vm.call(function, JS::js_undefined(), JS::Value(performance().now()));
+    auto callback = request_animation_frame_driver().add([this, js_callback = move(js_callback)](i32 id) mutable {
+        auto& vm = js_callback->callback.cell()->vm();
+        (void)Bindings::IDL::invoke_callback(*js_callback, {}, JS::Value(performance().now()));
         if (vm.exception())
             vm.clear_exception();
         m_request_animation_frame_callbacks.remove(id);
@@ -372,12 +372,12 @@ void Window::fire_a_page_transition_event(FlyString const& event_name, bool pers
 }
 
 // https://html.spec.whatwg.org/#dom-queuemicrotask
-void Window::queue_microtask(JS::FunctionObject& callback)
+void Window::queue_microtask(NonnullOwnPtr<Bindings::CallbackType> callback)
 {
     // The queueMicrotask(callback) method must queue a microtask to invoke callback,
-    HTML::queue_a_microtask(&associated_document(), [&callback, handle = JS::make_handle(&callback)]() {
-        auto& vm = callback.vm();
-        [[maybe_unused]] auto rc = vm.call(callback, JS::js_null());
+    HTML::queue_a_microtask(&associated_document(), [callback = move(callback)]() mutable {
+        auto& vm = callback->callback.cell()->vm();
+        [[maybe_unused]] auto rc = Bindings::IDL::invoke_callback(*callback, {});
         // FIXME: ...and if callback throws an exception, report the exception.
         if (vm.exception())
             vm.clear_exception();

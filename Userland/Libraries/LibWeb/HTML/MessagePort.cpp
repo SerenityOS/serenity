@@ -5,7 +5,6 @@
  */
 
 #include <LibWeb/Bindings/MessagePortWrapper.h>
-#include <LibWeb/Bindings/ScriptExecutionContext.h>
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
@@ -15,8 +14,8 @@
 
 namespace Web::HTML {
 
-MessagePort::MessagePort(Bindings::ScriptExecutionContext& context)
-    : DOM::EventTarget(context)
+MessagePort::MessagePort()
+    : DOM::EventTarget()
 {
 }
 
@@ -109,14 +108,14 @@ void MessagePort::close()
 }
 
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)                      \
-    void MessagePort::set_##attribute_name(HTML::EventHandler value) \
-    {                                                                \
-        set_event_handler_attribute(event_name, move(value));        \
-    }                                                                \
-    HTML::EventHandler MessagePort::attribute_name()                 \
-    {                                                                \
-        return event_handler_attribute(event_name);                  \
+#define __ENUMERATE(attribute_name, event_name)                                    \
+    void MessagePort::set_##attribute_name(Optional<Bindings::CallbackType> value) \
+    {                                                                              \
+        set_event_handler_attribute(event_name, move(value));                      \
+    }                                                                              \
+    Bindings::CallbackType* MessagePort::attribute_name()                          \
+    {                                                                              \
+        return event_handler_attribute(event_name);                                \
     }
 ENUMERATE_MESSAGE_PORT_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE

@@ -11,20 +11,20 @@
 
 namespace Web::DOM {
 
-NonnullRefPtr<Timer> Timer::create_interval(Window& window, int milliseconds, JS::FunctionObject& callback)
+NonnullRefPtr<Timer> Timer::create_interval(Window& window, int milliseconds, NonnullOwnPtr<Bindings::CallbackType> callback)
 {
-    return adopt_ref(*new Timer(window, Type::Interval, milliseconds, callback));
+    return adopt_ref(*new Timer(window, Type::Interval, milliseconds, move(callback)));
 }
 
-NonnullRefPtr<Timer> Timer::create_timeout(Window& window, int milliseconds, JS::FunctionObject& callback)
+NonnullRefPtr<Timer> Timer::create_timeout(Window& window, int milliseconds, NonnullOwnPtr<Bindings::CallbackType> callback)
 {
-    return adopt_ref(*new Timer(window, Type::Timeout, milliseconds, callback));
+    return adopt_ref(*new Timer(window, Type::Timeout, milliseconds, move(callback)));
 }
 
-Timer::Timer(Window& window, Type type, int milliseconds, JS::FunctionObject& callback)
+Timer::Timer(Window& window, Type type, int milliseconds, NonnullOwnPtr<Bindings::CallbackType> callback)
     : m_window(window)
     , m_type(type)
-    , m_callback(JS::make_handle(&callback))
+    , m_callback(move(callback))
 {
     m_id = window.allocate_timer_id({});
     m_timer = Core::Timer::construct(milliseconds, [this] { m_window.timer_did_fire({}, *this); });

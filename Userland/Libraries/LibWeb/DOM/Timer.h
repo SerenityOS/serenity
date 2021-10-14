@@ -21,24 +21,24 @@ public:
         Timeout,
     };
 
-    static NonnullRefPtr<Timer> create_interval(Window&, int milliseconds, JS::FunctionObject&);
-    static NonnullRefPtr<Timer> create_timeout(Window&, int milliseconds, JS::FunctionObject&);
+    static NonnullRefPtr<Timer> create_interval(Window&, int milliseconds, NonnullOwnPtr<Bindings::CallbackType> callback);
+    static NonnullRefPtr<Timer> create_timeout(Window&, int milliseconds, NonnullOwnPtr<Bindings::CallbackType> callback);
 
     ~Timer();
 
     i32 id() const { return m_id; }
     Type type() const { return m_type; }
 
-    JS::FunctionObject& callback() { return *m_callback.cell(); }
+    Bindings::CallbackType& callback() { return *m_callback; }
 
 private:
-    Timer(Window&, Type, int ms, JS::FunctionObject&);
+    Timer(Window&, Type, int ms, NonnullOwnPtr<Bindings::CallbackType> callback);
 
     Window& m_window;
     RefPtr<Core::Timer> m_timer;
     Type m_type;
     int m_id { 0 };
-    JS::Handle<JS::FunctionObject> m_callback;
+    NonnullOwnPtr<Bindings::CallbackType> m_callback;
 };
 
 }
