@@ -11,9 +11,7 @@
 
 namespace Web::HTML {
 
-class HTMLInputElement final
-    : public HTMLElement
-    , public FormAssociatedElement {
+class HTMLInputElement final : public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLInputElementWrapper;
 
@@ -42,9 +40,6 @@ private:
     // ^DOM::Node
     virtual void inserted() override;
     virtual void removed_from(Node*) override;
-
-    // ^HTML::FormAssociatedElement
-    virtual HTMLElement& form_associated_element_to_html_element() override { return *this; }
 
     // ^DOM::EventTarget
     virtual void did_receive_focus() override;
