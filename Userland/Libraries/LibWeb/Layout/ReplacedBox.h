@@ -23,9 +23,9 @@ public:
     virtual Optional<float> intrinsic_height() const final { return m_intrinsic_height; }
     virtual Optional<float> intrinsic_aspect_ratio() const final { return m_intrinsic_aspect_ratio; }
 
-    void set_intrinsic_width(float width) { m_intrinsic_width = width; }
-    void set_intrinsic_height(float height) { m_intrinsic_height = height; }
-    void set_intrinsic_aspect_ratio(float ratio) { m_intrinsic_aspect_ratio = ratio; }
+    void set_intrinsic_width(Optional<float> width) { m_intrinsic_width = width; }
+    void set_intrinsic_height(Optional<float> height) { m_intrinsic_height = height; }
+    void set_intrinsic_aspect_ratio(Optional<float> ratio) { m_intrinsic_aspect_ratio = ratio; }
 
     virtual void prepare_for_replaced_layout() { }
 
