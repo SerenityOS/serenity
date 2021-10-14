@@ -22,6 +22,44 @@ static constexpr const int LEADING_LETTER_PENALTY = -5;      // penalty applied 
 static constexpr const int MAX_LEADING_LETTER_PENALTY = -15; // maximum penalty for leading letters
 static constexpr const int UNMATCHED_LETTER_PENALTY = -1;    // penalty for every letter that doesn't matter
 
+static int calculate_score(String const& string, u8* index_points, size_t index_points_size)
+{
+    int out_score = 100;
+
+    int penalty = LEADING_LETTER_PENALTY * index_points[0];
+    if (penalty < MAX_LEADING_LETTER_PENALTY)
+        penalty = MAX_LEADING_LETTER_PENALTY;
+    out_score += penalty;
+
+    int unmatched = string.length() - index_points_size;
+    out_score += UNMATCHED_LETTER_PENALTY * unmatched;
+
+    for (size_t i = 0; i < index_points_size; i++) {
+        u8 current_idx = index_points[i];
+
+        if (i > 0) {
+            u8 previous_idx = index_points[i - 1];
+            if (current_idx == previous_idx)
+                out_score += SEQUENTIAL_BONUS;
+        }
+
+        if (current_idx > 0) {
+            u32 current_character = string[current_idx];
+            u32 neighbor_character = string[current_idx - 1];
+
+            if (neighbor_character != to_ascii_uppercase(neighbor_character) && current_character != to_ascii_lowercase(current_character))
+                out_score += CAMEL_BONUS;
+
+            if (neighbor_character == '_' || neighbor_character == ' ')
+                out_score += SEPARATOR_BONUS;
+        } else {
+            out_score += FIRST_LETTER_BONUS;
+        }
+    }
+
+    return out_score;
+}
+
 static FuzzyMatchResult fuzzy_match_recursive(String const& needle, String const& haystack, size_t needle_idx, size_t haystack_idx,
     u8 const* src_matches, u8* matches, int next_match, int& recursion_count)
 {
@@ -67,50 +105,17 @@ static FuzzyMatchResult fuzzy_match_recursive(String const& needle, String const
     }
 
     bool matched = needle_idx == needle.length();
-    if (matched) {
-        out_score = 100;
+    if (!matched)
+        return { false, out_score };
 
-        int penalty = LEADING_LETTER_PENALTY * matches[0];
-        if (penalty < MAX_LEADING_LETTER_PENALTY)
-            penalty = MAX_LEADING_LETTER_PENALTY;
-        out_score += penalty;
+    out_score = calculate_score(haystack, matches, next_match);
 
-        int unmatched = haystack.length() - next_match;
-        out_score += UNMATCHED_LETTER_PENALTY * unmatched;
-
-        for (int i = 0; i < next_match; i++) {
-            u8 current_idx = matches[i];
-
-            if (i > 0) {
-                u8 previous_idx = matches[i - 1];
-                if (current_idx == previous_idx)
-                    out_score += SEQUENTIAL_BONUS;
-            }
-
-            if (current_idx > 0) {
-                u32 current_character = haystack[current_idx];
-                u32 neighbor_character = haystack[current_idx - 1];
-
-                if (neighbor_character != to_ascii_uppercase(neighbor_character) && current_character != to_ascii_lowercase(current_character))
-                    out_score += CAMEL_BONUS;
-
-                if (neighbor_character == '_' || neighbor_character == ' ')
-                    out_score += SEPARATOR_BONUS;
-            } else {
-                out_score += FIRST_LETTER_BONUS;
-            }
-        }
-
-        if (had_recursive_match && (!matched || best_recursive_score > out_score)) {
-            memcpy(matches, best_recursive_matches, MAX_MATCHES);
-            out_score = best_recursive_score;
-            return { true, out_score };
-        } else if (matched) {
-            return { true, out_score };
-        }
+    if (had_recursive_match && (best_recursive_score > out_score)) {
+        memcpy(matches, best_recursive_matches, MAX_MATCHES);
+        out_score = best_recursive_score;
     }
 
-    return { false, out_score };
+    return { true, out_score };
 }
 
 FuzzyMatchResult fuzzy_match(String const& needle, String const& haystack)
