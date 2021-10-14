@@ -35,11 +35,16 @@ private:
     virtual void write_bool_value([[maybe_unused]] String const& domain, [[maybe_unused]] String const& group, [[maybe_unused]] String const& key, [[maybe_unused]] bool value) override;
 
     bool validate_access(String const& domain, String const& group, String const& key);
+    void sync_dirty_domains_to_disk();
+    void start_or_restart_sync_timer();
 
     bool m_has_pledged { false };
     HashTable<String> m_pledged_domains;
 
     HashTable<String> m_monitored_domains;
+
+    NonnullRefPtr<Core::Timer> m_sync_timer;
+    HashTable<String> m_dirty_domains;
 };
 
 }
