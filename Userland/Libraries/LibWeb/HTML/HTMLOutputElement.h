@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/FormAssociatedElement.h>
 
 namespace Web::HTML {
 
-class HTMLOutputElement final : public HTMLElement {
+class HTMLOutputElement final : public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLOutputElementWrapper;
 

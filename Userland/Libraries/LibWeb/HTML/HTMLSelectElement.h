@@ -12,9 +12,7 @@
 
 namespace Web::HTML {
 
-class HTMLSelectElement final
-    : public HTMLElement
-    , public FormAssociatedElement {
+class HTMLSelectElement final : public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLSelectElementWrapper;
 
@@ -25,9 +23,6 @@ private:
     // ^DOM::Node
     virtual void inserted() override;
     virtual void removed_from(DOM::Node*) override;
-
-    // ^HTML::FormAssociatedElement
-    virtual HTMLElement& form_associated_element_to_html_element() override { return *this; }
 };
 
 }
