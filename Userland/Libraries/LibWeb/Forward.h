@@ -125,9 +125,12 @@ namespace Web::HTML {
 class BrowsingContext;
 class BrowsingContextContainer;
 class CanvasRenderingContext2D;
+class ClassicScript;
 class CloseEvent;
 class DOMParser;
 class DOMStringMap;
+struct Environment;
+struct EnvironmentSettingsObject;
 class ErrorEvent;
 struct EventHandler;
 class EventLoop;
@@ -213,6 +216,7 @@ class PromiseRejectionEvent;
 class SubmitEvent;
 class TextMetrics;
 class WebSocket;
+class WindowEnvironmentSettingsObject;
 }
 
 namespace Web::HighResolutionTime {

@@ -147,6 +147,7 @@ class ECMAScriptFunctionObject;
 class Environment;
 class Error;
 class ErrorType;
+struct ExecutionContext;
 class Expression;
 class FunctionEnvironment;
 class FunctionNode;

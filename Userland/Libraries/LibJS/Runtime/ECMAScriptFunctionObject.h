@@ -9,6 +9,7 @@
 
 #include <LibJS/AST.h>
 #include <LibJS/Bytecode/Generator.h>
+#include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/FunctionObject.h>
 
 namespace JS {
@@ -85,6 +86,10 @@ public:
     virtual bool has_constructor() const override { return m_kind == FunctionKind::Normal && !m_is_arrow_function; }
 
     FunctionKind kind() const { return m_kind; }
+
+    // This is used by LibWeb to disassociate event handler attribute callback functions from the nearest script on the call stack.
+    // https://html.spec.whatwg.org/multipage/webappapis.html#getting-the-current-value-of-the-event-handler Step 3.11
+    void set_script_or_module(ScriptOrModule script_or_module) { m_script_or_module = move(script_or_module); }
 
 protected:
     virtual bool is_strict_mode() const final { return m_strict; }

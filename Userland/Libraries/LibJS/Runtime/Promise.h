@@ -45,6 +45,8 @@ public:
     Value reject(Value reason);
     Value perform_then(Value on_fulfilled, Value on_rejected, Optional<PromiseCapability> result_capability);
 
+    bool is_handled() const { return m_is_handled; }
+
 protected:
     virtual void visit_edges(Visitor&) override;
 
