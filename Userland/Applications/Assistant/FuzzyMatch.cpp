@@ -44,7 +44,7 @@ static int calculate_score(String const& string, u8* index_points, size_t index_
             continue;
 
         u8 previous_idx = index_points[i - 1];
-        if (current_idx == previous_idx)
+        if (current_idx - 1 == previous_idx)
             out_score += SEQUENTIAL_BONUS;
 
         u32 current_character = string[current_idx];
