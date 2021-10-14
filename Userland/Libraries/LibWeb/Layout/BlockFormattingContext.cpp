@@ -571,20 +571,24 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     icb.build_stacking_context_tree();
 
     icb.set_width(viewport_rect.width());
-
-    layout_block_level_children(root(), layout_mode);
+    icb.set_height(viewport_rect.height());
 
     VERIFY(!icb.children_are_inline());
+    layout_block_level_children(root(), layout_mode);
 
-    // FIXME: The ICB should have the height of the viewport.
-    //        Instead of auto-sizing the ICB, we should spill into overflow.
+    // Compute scrollable overflow.
     float lowest_bottom = 0;
     icb.for_each_child_of_type<Box>([&](auto& child) {
         lowest_bottom = max(lowest_bottom, child.absolute_rect().bottom());
     });
 
-    // FIXME: This is a hack and should be managed by an overflow mechanism.
-    icb.set_height(max(static_cast<float>(viewport_rect.height()), lowest_bottom));
+    if (lowest_bottom >= viewport_rect.height()) {
+        auto& overflow_data = icb.ensure_overflow_data();
+        overflow_data.scrollable_overflow_rect = viewport_rect.to_type<float>();
+        overflow_data.scrollable_overflow_rect.set_height(lowest_bottom);
+    } else {
+        icb.clear_overflow_data();
+    }
 }
 
 static Gfx::FloatRect rect_in_coordinate_space(const Box& box, const Box& context_box)

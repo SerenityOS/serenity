@@ -102,7 +102,11 @@ void PageHost::page_did_layout()
 {
     auto* layout_root = this->layout_root();
     VERIFY(layout_root);
-    auto content_size = enclosing_int_rect(layout_root->absolute_rect()).size();
+    Gfx::IntSize content_size;
+    if (layout_root->has_overflow())
+        content_size = enclosing_int_rect(layout_root->scrollable_overflow_rect().value()).size();
+    else
+        content_size = enclosing_int_rect(layout_root->absolute_rect()).size();
     m_client.async_did_layout(content_size);
 }
 
