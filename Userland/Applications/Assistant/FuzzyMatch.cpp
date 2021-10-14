@@ -97,8 +97,8 @@ static FuzzyMatchResult fuzzy_match_recursive(String const& needle, String const
                     best_recursive_score = result.score;
                 }
                 had_recursive_match = true;
-                matches[next_match++] = haystack_idx;
             }
+            matches[next_match++] = haystack_idx;
             needle_idx++;
         }
         haystack_idx++;
