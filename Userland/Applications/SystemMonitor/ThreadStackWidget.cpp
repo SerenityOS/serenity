@@ -115,7 +115,7 @@ void ThreadStackWidget::refresh()
 {
     Threading::BackgroundAction<Vector<Symbolication::Symbol>>::create(
         [pid = m_pid, tid = m_tid](auto&) {
-            return Symbolication::symbolicate_thread(pid, tid);
+            return Symbolication::symbolicate_thread(pid, tid, Symbolication::IncludeSourcePosition::No);
         },
 
         [weak_this = make_weak_ptr()](auto result) {
