@@ -902,6 +902,24 @@ Value BinaryExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
+    // Special case in which we cannot execute the lhs.  RelationalExpression : PrivateIdentifier in ShiftExpression
+    //  RelationalExpression : PrivateIdentifier in ShiftExpression, https://tc39.es/ecma262/#sec-relational-operators-runtime-semantics-evaluation
+    if (m_op == BinaryOp::In && is<PrivateIdentifier>(*m_lhs)) {
+        auto& private_identifier = static_cast<PrivateIdentifier const&>(*m_lhs).string();
+
+        auto rhs_result = m_rhs->execute(interpreter, global_object);
+        if (interpreter.exception())
+            return {};
+        if (!rhs_result.is_object()) {
+            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::InOperatorWithObject);
+            return {};
+        }
+        auto* private_environment = interpreter.vm().running_execution_context().private_environment;
+        VERIFY(private_environment);
+        auto private_name = private_environment->resolve_private_identifier(private_identifier);
+        return Value(rhs_result.as_object().private_element_find(private_name) != nullptr);
+    }
+
     auto lhs_result = m_lhs->execute(interpreter, global_object);
     if (interpreter.exception())
         return {};

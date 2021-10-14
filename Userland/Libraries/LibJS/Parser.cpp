@@ -1214,6 +1214,11 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
         if (!m_state.in_generator_function_context)
             goto read_as_identifier;
         return { parse_yield_expression(), false };
+    case TokenType::PrivateIdentifier:
+        VERIFY(next_token().type() == TokenType::In);
+        if (!is_private_identifier_valid())
+            syntax_error(String::formatted("Reference to undeclared private field or method '{}'", m_state.current_token.value()));
+        return { create_ast_node<PrivateIdentifier>({ m_state.current_token.filename(), rule_start.position(), position() }, consume().value()) };
     default:
         if (match_identifier_name())
             goto read_as_identifier;
