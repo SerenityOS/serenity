@@ -123,10 +123,11 @@ void WindowObject::initialize_global_object()
     // WebAssembly "namespace"
     define_direct_property("WebAssembly", heap().allocate<WebAssemblyObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
-    // HTML::GlobalEventHandlers
+    // HTML::GlobalEventHandlers and WindowEventHandlers
 #define __ENUMERATE(attribute, event_name) \
     define_native_accessor(#attribute, attribute##_getter, attribute##_setter, attr);
     ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE);
+    ENUMERATE_WINDOW_EVENT_HANDLERS(__ENUMERATE);
 #undef __ENUMERATE
 
     ADD_WINDOW_OBJECT_INTERFACES;
@@ -784,6 +785,7 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::screen_y_getter)
         return JS::js_undefined();                                                                                         \
     }
 ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
+ENUMERATE_WINDOW_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
 
 }

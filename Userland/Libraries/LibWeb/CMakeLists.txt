@@ -189,6 +189,7 @@ set(SOURCES
     HTML/SyntaxHighlighter/SyntaxHighlighter.cpp
     HTML/TagNames.cpp
     HTML/WebSocket.cpp
+    HTML/WindowEventHandlers.cpp
     HighResolutionTime/Performance.cpp
     InProcessWebView.cpp
     IntersectionObserver/IntersectionObserver.cpp
