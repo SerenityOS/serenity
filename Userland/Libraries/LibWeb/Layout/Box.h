@@ -16,6 +16,11 @@ namespace Web::Layout {
 
 class Box : public NodeWithStyleAndBoxModelMetrics {
 public:
+    struct OverflowData {
+        Gfx::FloatRect scrollable_overflow_rect;
+        Gfx::FloatPoint scroll_offset;
+    };
+
     const Gfx::FloatRect absolute_rect() const;
 
     Gfx::FloatPoint effective_offset() const;
@@ -129,6 +134,24 @@ public:
     bool has_intrinsic_height() const { return intrinsic_height().has_value(); }
     bool has_intrinsic_aspect_ratio() const { return intrinsic_aspect_ratio().has_value(); }
 
+    bool has_overflow() const { return m_overflow_data; }
+
+    Optional<Gfx::FloatRect> scrollable_overflow_rect() const
+    {
+        if (!m_overflow_data)
+            return {};
+        return m_overflow_data->scrollable_overflow_rect;
+    }
+
+    OverflowData& ensure_overflow_data()
+    {
+        if (!m_overflow_data)
+            m_overflow_data = make<OverflowData>();
+        return *m_overflow_data;
+    }
+
+    void clear_overflow_data() { m_overflow_data = nullptr; }
+
 protected:
     Box(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
         : NodeWithStyleAndBoxModelMetrics(document, node, move(style))
@@ -152,6 +175,8 @@ private:
     WeakPtr<LineBoxFragment> m_containing_line_box_fragment;
 
     OwnPtr<StackingContext> m_stacking_context;
+
+    OwnPtr<OverflowData> m_overflow_data;
 };
 
 template<>
