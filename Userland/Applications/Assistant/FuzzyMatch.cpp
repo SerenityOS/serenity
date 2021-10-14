@@ -113,7 +113,7 @@ static FuzzyMatchResult fuzzy_match_recursive(String const& needle, String const
     return { false, out_score };
 }
 
-FuzzyMatchResult fuzzy_match(String needle, String haystack)
+FuzzyMatchResult fuzzy_match(String const& needle, String const& haystack)
 {
     int recursion_count = 0;
     u8 matches[MAX_MATCHES] {};

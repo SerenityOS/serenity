@@ -24,6 +24,6 @@ struct FuzzyMatchResult {
 // Scores are not normalized between any values and have no particular meaning. The starting value is 100 and when we
 // detect good indicators of a match we add to the score. When we detect bad indicators, we penalize the match and subtract
 // from its score. Therefore, the longer the needle/haystack the greater the range of scores could be.
-FuzzyMatchResult fuzzy_match(String needle, String haystack);
+FuzzyMatchResult fuzzy_match(String const& needle, String const& haystack);
 
 }
