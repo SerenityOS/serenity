@@ -26,6 +26,19 @@ JS::Object* AbortSignal::create_wrapper(JS::GlobalObject& global_object)
     return wrap(global_object, *this);
 }
 
+// https://dom.spec.whatwg.org/#dom-abortsignal-abort
+NonnullRefPtr<AbortSignal> AbortSignal::abort()
+{
+    // 1. Let signal be a new AbortSignal object.
+    auto signal = AbortSignal::create();
+
+    // 2. Set signal’s aborted flag.
+    signal->m_aborted = true;
+
+    // 3. Return signal.
+    return signal;
+}
+
 // https://dom.spec.whatwg.org/#abortsignal-add
 void AbortSignal::add_abort_algorithm(Function<void()> abort_algorithm)
 {

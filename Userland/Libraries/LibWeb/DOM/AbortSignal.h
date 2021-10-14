@@ -37,6 +37,8 @@ public:
         return AbortSignal::create();
     }
 
+    static NonnullRefPtr<AbortSignal> abort();
+
     virtual ~AbortSignal() override;
 
     void add_abort_algorithm(Function<void()>);
