@@ -147,6 +147,40 @@ struct Aarch64_SCR_EL3 {
 };
 static_assert(sizeof(Aarch64_SCR_EL3) == 8);
 
+struct Aarch64_SPSR_EL2 {
+    enum Mode : uint16_t {
+        EL0t = 0b0000,
+        EL1t = 0b0100,
+        EL1h = 0b0101,
+        EL2t = 0b1000,
+        EL2h = 0b1001
+    };
+
+    Mode M : 4;
+    int M_4 : 1 = 0;
+    int _reserved5 : 1 = 0;
+    int F : 1;
+    int I : 1;
+    int A : 1;
+    int D : 1;
+    int BTYPE : 2;
+    int SSBS : 1;
+    int _reserved13 : 7 = 0;
+    int IL : 1;
+    int SS : 1;
+    int PAN : 1;
+    int UA0 : 1;
+    int DIT : 1;
+    int TCO : 1;
+    int _reserved26 : 2 = 0;
+    int V : 1;
+    int C : 1;
+    int Z : 1;
+    int N : 1;
+    int _reserved32 : 32 = 0;
+};
+static_assert(sizeof(Aarch64_SPSR_EL2) == 8);
+
 struct Aarch64_SPSR_EL3 {
     enum Mode : uint16_t {
         EL0t = 0b0000,
