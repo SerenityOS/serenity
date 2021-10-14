@@ -61,7 +61,7 @@ Optional<FlatPtr> kernel_base()
     return s_kernel_base;
 }
 
-Optional<Symbol> symbolicate(String const& path, FlatPtr address)
+Optional<Symbol> symbolicate(String const& path, FlatPtr address, IncludeSourcePosition include_source_positions)
 {
     String full_path = path;
     if (!path.starts_with('/')) {
@@ -106,16 +106,19 @@ Optional<Symbol> symbolicate(String const& path, FlatPtr address)
 
     u32 offset = 0;
     auto symbol = cached_elf->debug_info->elf().symbolicate(address, &offset);
-    auto source_position_with_inlines = cached_elf->debug_info->get_source_position_with_inlines(address);
 
     Vector<Debug::DebugInfo::SourcePosition> positions;
-    for (auto& position : source_position_with_inlines.inline_chain) {
-        if (!positions.contains_slow(position))
-            positions.append(position);
-    }
+    if (include_source_positions == IncludeSourcePosition::Yes) {
+        auto source_position_with_inlines = cached_elf->debug_info->get_source_position_with_inlines(address);
 
-    if (source_position_with_inlines.source_position.has_value() && !positions.contains_slow(source_position_with_inlines.source_position.value())) {
-        positions.insert(0, source_position_with_inlines.source_position.value());
+        for (auto& position : source_position_with_inlines.inline_chain) {
+            if (!positions.contains_slow(position))
+                positions.append(position);
+        }
+
+        if (source_position_with_inlines.source_position.has_value() && !positions.contains_slow(source_position_with_inlines.source_position.value())) {
+            positions.insert(0, source_position_with_inlines.source_position.value());
+        }
     }
 
     return Symbol {
@@ -127,7 +130,7 @@ Optional<Symbol> symbolicate(String const& path, FlatPtr address)
     };
 }
 
-Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
+Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition include_source_positions)
 {
     struct RegionWithSymbols {
         FlatPtr base { 0 };
@@ -245,7 +248,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
         // However, because the first frame represents the current
         // instruction pointer rather than the return address we don't
         // subtract 1 for that.
-        auto result = symbolicate(found_region->path, adjusted_address - (first_frame ? 0 : 1));
+        auto result = symbolicate(found_region->path, adjusted_address - (first_frame ? 0 : 1), include_source_positions);
         first_frame = false;
         if (!result.has_value()) {
             symbols.append(Symbol {
