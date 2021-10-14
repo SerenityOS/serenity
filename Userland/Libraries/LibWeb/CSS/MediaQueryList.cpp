@@ -15,7 +15,7 @@
 namespace Web::CSS {
 
 MediaQueryList::MediaQueryList(DOM::Document& document, NonnullRefPtrVector<MediaQuery>&& media)
-    : DOM::EventTarget(static_cast<Bindings::ScriptExecutionContext&>(document))
+    : DOM::EventTarget()
     , m_document(document)
     , m_media(move(media))
 {
@@ -83,12 +83,12 @@ void MediaQueryList::remove_listener(RefPtr<DOM::EventListener> listener)
     remove_event_listener(HTML::EventNames::change, listener);
 }
 
-void MediaQueryList::set_onchange(HTML::EventHandler event_handler)
+void MediaQueryList::set_onchange(Optional<Bindings::CallbackType> event_handler)
 {
     set_event_handler_attribute(HTML::EventNames::change, event_handler);
 }
 
-HTML::EventHandler MediaQueryList::onchange()
+Bindings::CallbackType* MediaQueryList::onchange()
 {
     return event_handler_attribute(HTML::EventNames::change);
 }

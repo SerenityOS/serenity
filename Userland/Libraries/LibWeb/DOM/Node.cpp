@@ -57,7 +57,7 @@ Node* Node::from_id(i32 node_id)
 }
 
 Node::Node(Document& document, NodeType type)
-    : EventTarget(static_cast<Bindings::ScriptExecutionContext&>(document))
+    : EventTarget()
     , m_document(&document)
     , m_type(type)
     , m_id(allocate_node_id(this))

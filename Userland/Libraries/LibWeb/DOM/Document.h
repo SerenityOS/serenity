@@ -16,7 +16,6 @@
 #include <AK/WeakPtr.h>
 #include <LibCore/Forward.h>
 #include <LibJS/Forward.h>
-#include <LibWeb/Bindings/ScriptExecutionContext.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/StyleComputer.h>
@@ -41,8 +40,7 @@ enum class QuirksMode {
 class Document
     : public ParentNode
     , public NonElementParentNode<Document>
-    , public HTML::GlobalEventHandlers
-    , public Bindings::ScriptExecutionContext {
+    , public HTML::GlobalEventHandlers {
 public:
     using WrapperType = Bindings::DocumentWrapper;
 

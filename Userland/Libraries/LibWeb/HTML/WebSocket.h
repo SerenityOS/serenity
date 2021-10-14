@@ -74,9 +74,9 @@ public:
     String url() const { return m_url.to_string(); }
 
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)    \
-    void set_##attribute_name(HTML::EventHandler); \
-    HTML::EventHandler attribute_name();
+#define __ENUMERATE(attribute_name, event_name)                  \
+    void set_##attribute_name(Optional<Bindings::CallbackType>); \
+    Bindings::CallbackType* attribute_name();
     ENUMERATE_WEBSOCKET_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
 
