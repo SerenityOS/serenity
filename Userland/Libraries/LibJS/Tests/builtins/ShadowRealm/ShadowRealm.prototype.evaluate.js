@@ -56,6 +56,12 @@ describe("normal behavior", () => {
 });
 
 describe("errors", () => {
+    test("this value must be a ShadowRealm object", () => {
+        expect(() => {
+            ShadowRealm.prototype.evaluate.call("foo");
+        }).toThrowWithMessage(TypeError, "Not an object of type ShadowRealm");
+    });
+
     test("throws for non-string input", () => {
         const shadowRealm = new ShadowRealm();
         const values = [
