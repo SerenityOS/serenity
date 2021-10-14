@@ -207,6 +207,10 @@ void PageHost::page_did_request_image_context_menu(const Gfx::IntPoint& content_
 
 String PageHost::page_did_request_cookie(const URL& url, Web::Cookie::Source source)
 {
+    if (!m_client.is_open()) {
+        return {};
+    }
+
     return m_client.did_request_cookie(url, static_cast<u8>(source));
 }
 
