@@ -43,7 +43,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, Statement con
     , m_environment(parent_scope)
     , m_formal_parameters(move(formal_parameters))
     , m_ecmascript_code(ecmascript_code)
-    , m_realm(vm().interpreter_if_exists() ? &vm().interpreter().realm() : nullptr)
+    , m_realm(global_object().associated_realm())
     , m_strict(strict)
     , m_name(move(name))
     , m_function_length(function_length)
