@@ -799,6 +799,16 @@ ThrowCompletionOr<Value> ProxyObject::internal_call(Value this_argument, MarkedV
     return call(global_object, trap, &m_handler, &m_target, this_argument, arguments_array);
 }
 
+bool ProxyObject::has_constructor() const
+{
+    // Note: A Proxy exotic object only has a [[Construct]] internal method if the initial value of
+    //       its [[ProxyTarget]] internal slot is an object that has a [[Construct]] internal method.
+    if (!is_function())
+        return false;
+
+    return static_cast<FunctionObject&>(m_target).has_constructor();
+}
+
 // 10.5.13 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget
 ThrowCompletionOr<Object*> ProxyObject::internal_construct(MarkedValueList arguments_list, FunctionObject& new_target)
 {
