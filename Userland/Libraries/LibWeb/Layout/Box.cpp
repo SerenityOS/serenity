@@ -24,10 +24,6 @@ void Box::paint(PaintContext& context, PaintPhase phase)
     if (!is_visible())
         return;
 
-    Gfx::PainterStateSaver saver(context.painter());
-    if (is_fixed_position())
-        context.painter().translate(context.scroll_offset());
-
     if (phase == PaintPhase::Background) {
         paint_background(context);
         paint_box_shadow(context);
