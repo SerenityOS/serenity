@@ -263,8 +263,8 @@ float FormattingContext::tentative_width_for_replaced_element(const ReplacedBox&
     // 'height' has some other computed value, and the element does have an intrinsic ratio; then the used value of 'width' is:
     //
     //     (used height) * (intrinsic ratio)
-    else if ((specified_height.is_auto() && width.is_auto() && !box.has_intrinsic_width() && box.has_intrinsic_height() && box.has_intrinsic_ratio()) || (width.is_auto() && box.has_intrinsic_ratio())) {
-        used_width = compute_height_for_replaced_element(box) * box.intrinsic_ratio().value();
+    else if ((specified_height.is_auto() && width.is_auto() && !box.has_intrinsic_width() && box.has_intrinsic_height() && box.has_intrinsic_aspect_ratio()) || (width.is_auto() && box.has_intrinsic_aspect_ratio())) {
+        used_width = compute_height_for_replaced_element(box) * box.intrinsic_aspect_ratio().value();
     }
 
     else if (width.is_auto() && box.has_intrinsic_width()) {
@@ -348,8 +348,8 @@ float FormattingContext::tentative_height_for_replaced_element(const ReplacedBox
     // an intrinsic height, then that intrinsic height is the used value of 'height'.
     if (specified_width.is_auto() && height.is_auto() && box.has_intrinsic_height())
         used_height = box.intrinsic_height().value();
-    else if (height.is_auto() && box.has_intrinsic_ratio())
-        used_height = compute_width_for_replaced_element(box) / box.intrinsic_ratio().value();
+    else if (height.is_auto() && box.has_intrinsic_aspect_ratio())
+        used_height = compute_width_for_replaced_element(box) / box.intrinsic_aspect_ratio().value();
     else if (height.is_auto() && box.has_intrinsic_height())
         used_height = box.intrinsic_height().value();
     else if (height.is_auto())
@@ -369,7 +369,7 @@ float FormattingContext::compute_height_for_replaced_element(const ReplacedBox& 
 
     float used_height = tentative_height_for_replaced_element(box, specified_height);
 
-    if (specified_width.is_auto() && specified_height.is_auto() && box.has_intrinsic_ratio()) {
+    if (specified_width.is_auto() && specified_height.is_auto() && box.has_intrinsic_aspect_ratio()) {
         float w = tentative_width_for_replaced_element(box, specified_width);
         float h = used_height;
         used_height = solve_replaced_size_constraint(w, h, box).height();

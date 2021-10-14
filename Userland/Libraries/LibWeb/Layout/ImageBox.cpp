@@ -48,9 +48,9 @@ void ImageBox::prepare_for_replaced_layout()
         }
 
         if (m_image_loader.width() && m_image_loader.height()) {
-            set_intrinsic_ratio((float)m_image_loader.width() / (float)m_image_loader.height());
+            set_intrinsic_aspect_ratio((float)m_image_loader.width() / (float)m_image_loader.height());
         } else {
-            set_intrinsic_ratio({});
+            set_intrinsic_aspect_ratio({});
         }
     }
 
