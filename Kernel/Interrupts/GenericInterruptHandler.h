@@ -8,7 +8,7 @@
 
 #include <AK/IntrusiveList.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/x86/RegisterState.h>
+#include <Kernel/Arch/RegisterState.h>
 
 namespace Kernel {
 

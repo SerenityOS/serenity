@@ -13,7 +13,7 @@
 #include <AK/Types.h>
 #include <Kernel/API/KResult.h>
 #include <Kernel/API/TimePage.h>
-#include <Kernel/Arch/x86/RegisterState.h>
+#include <Kernel/Arch/RegisterState.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
