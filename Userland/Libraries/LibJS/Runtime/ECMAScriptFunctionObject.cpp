@@ -44,6 +44,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, Statement con
     , m_formal_parameters(move(formal_parameters))
     , m_ecmascript_code(ecmascript_code)
     , m_realm(global_object().associated_realm())
+    , m_script_or_module(vm().get_active_script_or_module())
     , m_strict(strict)
     , m_name(move(name))
     , m_function_length(function_length)
@@ -581,7 +582,7 @@ void ECMAScriptFunctionObject::prepare_for_ordinary_call(ExecutionContext& calle
     callee_context.realm = callee_realm;
 
     // 6. Set the ScriptOrModule of calleeContext to F.[[ScriptOrModule]].
-    // FIXME: Our execution context struct currently does not track this item.
+    callee_context.script_or_module = m_script_or_module;
 
     // 7. Let localEnv be NewFunctionEnvironment(F, newTarget).
     auto* local_environment = new_function_environment(*this, new_target);

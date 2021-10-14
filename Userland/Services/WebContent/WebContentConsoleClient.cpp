@@ -9,8 +9,11 @@
 #include "WebContentConsoleClient.h"
 #include <LibJS/Interpreter.h>
 #include <LibJS/MarkupGenerator.h>
+#include <LibJS/Parser.h>
 #include <LibJS/Script.h>
 #include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/HTML/Scripting/ClassicScript.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 #include <WebContent/ConsoleGlobalObject.h>
 
 namespace WebContent {
@@ -28,30 +31,20 @@ WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, WeakPtr<J
 
 void WebContentConsoleClient::handle_input(String const& js_source)
 {
-    auto script_or_error = JS::Script::parse(js_source, m_interpreter->realm(), "");
+    auto& settings = verify_cast<Web::HTML::EnvironmentSettingsObject>(*m_interpreter->realm().custom_data());
+    auto script = Web::HTML::ClassicScript::create("(console)", js_source, settings, settings.api_base_url());
+
+    // FIXME: Add parse error printouts back once ClassicScript can report parse errors.
+
+    script->run();
+
+    auto& vm = m_interpreter->global_object().vm();
     StringBuilder output_html;
-    if (script_or_error.is_error()) {
-        auto error = script_or_error.error()[0];
-        auto hint = error.source_location_hint(js_source);
-        if (!hint.is_empty())
-            output_html.append(String::formatted("<pre>{}</pre>", escape_html_entities(hint)));
-        m_interpreter->vm().throw_exception<JS::SyntaxError>(*m_console_global_object.cell(), error.to_string());
-    } else {
-        // FIXME: This is not the correct way to do this, we probably want to have
-        //        multiple execution contexts we switch between.
-        auto& global_object_before = m_interpreter->realm().global_object();
-        VERIFY(is<Web::Bindings::WindowObject>(global_object_before));
-        auto& this_value_before = m_interpreter->realm().global_environment().global_this_value();
-        m_interpreter->realm().set_global_object(*m_console_global_object.cell(), &global_object_before);
 
-        m_interpreter->run(script_or_error.value());
-
-        m_interpreter->realm().set_global_object(global_object_before, &this_value_before);
-    }
-
-    if (m_interpreter->exception()) {
-        auto* exception = m_interpreter->exception();
-        m_interpreter->vm().clear_exception();
+    // FIXME: ClassicScript::run clears exceptions, meaning this is never true currently.
+    if (vm.exception()) {
+        auto* exception = vm.exception();
+        vm.clear_exception();
         output_html.append("Uncaught exception: ");
         auto error = exception->value();
         if (error.is_object())

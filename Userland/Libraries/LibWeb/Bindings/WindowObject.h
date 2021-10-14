@@ -17,7 +17,7 @@
 namespace Web {
 namespace Bindings {
 
-class WindowObject final
+class WindowObject
     : public JS::GlobalObject
     , public Weakable<WindowObject> {
     JS_OBJECT(WindowObject, JS::GlobalObject);

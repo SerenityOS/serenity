@@ -7,7 +7,9 @@
 #pragma once
 
 #include <AK/String.h>
+#include <LibJS/Module.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Script.h>
 
 namespace JS {
 
@@ -33,6 +35,9 @@ public:
 
     // [[Realm]]
     virtual Realm* realm() const { return nullptr; }
+
+    // [[ScriptOrModule]]
+    virtual Variant<WeakPtr<Script>, WeakPtr<Module>, Empty> script_or_module() const { return {}; }
 
 protected:
     explicit FunctionObject(Object& prototype);

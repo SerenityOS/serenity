@@ -56,7 +56,7 @@ Value ShadowRealmConstructor::construct(FunctionObject& new_target)
     context.realm = realm;
 
     // 8. Set the ScriptOrModule of context to null.
-    // FIXME: Our execution context struct currently does not track this item.
+    context.script_or_module = Empty {};
 
     // 2. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%ShadowRealm.prototype%", « [[ShadowRealm]], [[ExecutionContext]] »).
     // 4. Set O.[[ShadowRealm]] to realmRec.

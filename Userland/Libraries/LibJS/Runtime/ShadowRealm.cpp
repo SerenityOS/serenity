@@ -8,6 +8,7 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
+#include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
 #include <LibJS/Runtime/PromiseReaction.h>
@@ -93,7 +94,7 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, 
     eval_context.realm = &eval_realm;
 
     // 15. Set evalContext's ScriptOrModule to null.
-    // FIXME: Our execution context struct currently does not track this item.
+    eval_context.script_or_module = Empty {};
 
     // 16. Set evalContext's VariableEnvironment to varEnv.
     eval_context.variable_environment = variable_environment;

@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Module.h>
+#include <LibJS/Runtime/VM.h>
 
 namespace JS {
 

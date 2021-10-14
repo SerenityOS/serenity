@@ -7,6 +7,7 @@
 #include <LibJS/AST.h>
 #include <LibJS/Lexer.h>
 #include <LibJS/Parser.h>
+#include <LibJS/Runtime/VM.h>
 #include <LibJS/Script.h>
 
 namespace JS {

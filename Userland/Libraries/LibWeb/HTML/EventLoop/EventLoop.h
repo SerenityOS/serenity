@@ -55,6 +55,14 @@ public:
 
     NonnullRefPtrVector<DOM::Document> documents_in_this_event_loop() const;
 
+    void push_onto_backup_incumbent_settings_object_stack(Badge<EnvironmentSettingsObject>, EnvironmentSettingsObject& environment_settings_object);
+    void pop_backup_incumbent_settings_object_stack(Badge<EnvironmentSettingsObject>);
+    EnvironmentSettingsObject& top_of_backup_incumbent_settings_object_stack();
+    bool is_backup_incumbent_settings_object_stack_empty() const { return m_backup_incumbent_settings_object_stack.is_empty(); }
+
+    void register_environment_settings_object(Badge<EnvironmentSettingsObject>, EnvironmentSettingsObject&);
+    void unregister_environment_settings_object(Badge<EnvironmentSettingsObject>, EnvironmentSettingsObject&);
+
 private:
     Type m_type { Type::Window };
 
@@ -72,11 +80,18 @@ private:
     bool m_performing_a_microtask_checkpoint { false };
 
     Vector<WeakPtr<DOM::Document>> m_documents;
+
+    // Used to implement step 4 of "perform a microtask checkpoint".
+    Vector<EnvironmentSettingsObject&> m_related_environment_settings_objects;
+
+    // https://html.spec.whatwg.org/multipage/webappapis.html#backup-incumbent-settings-object-stack
+    Vector<EnvironmentSettingsObject&> m_backup_incumbent_settings_object_stack;
 };
 
 EventLoop& main_thread_event_loop();
-void queue_global_task(HTML::Task::Source, DOM::Document&, Function<void()> steps);
-void queue_a_microtask(DOM::Document&, Function<void()> steps);
+void old_queue_global_task_with_document(HTML::Task::Source, DOM::Document&, Function<void()> steps);
+void queue_global_task(HTML::Task::Source, JS::GlobalObject&, Function<void()> steps);
+void queue_a_microtask(DOM::Document*, Function<void()> steps);
 void perform_a_microtask_checkpoint();
 
 }

@@ -185,7 +185,9 @@ set(SOURCES
     HTML/Parser/ListOfActiveFormattingElements.cpp
     HTML/Parser/StackOfOpenElements.cpp
     HTML/Scripting/ClassicScript.cpp
+    HTML/Scripting/Environments.cpp
     HTML/Scripting/Script.cpp
+    HTML/Scripting/WindowEnvironmentSettingsObject.cpp
     HTML/SyntaxHighlighter/SyntaxHighlighter.cpp
     HTML/TagNames.cpp
     HTML/WebSocket.cpp

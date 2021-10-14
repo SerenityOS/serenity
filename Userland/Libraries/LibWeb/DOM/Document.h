@@ -29,6 +29,7 @@
 #include <LibWeb/HTML/DocumentReadyState.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/History.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 
 namespace Web::DOM {
 
@@ -174,6 +175,7 @@ public:
     const String& source() const { return m_source; }
     void set_source(const String& source) { m_source = source; }
 
+    HTML::EnvironmentSettingsObject& relevant_settings_object();
     JS::Realm& realm();
     JS::Interpreter& interpreter();
 

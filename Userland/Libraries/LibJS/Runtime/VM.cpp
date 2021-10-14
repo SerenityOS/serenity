@@ -456,6 +456,25 @@ Reference VM::get_identifier_reference(Environment* environment, FlyString name,
         return get_identifier_reference(environment->outer_environment(), move(name), strict, hops + 1);
 }
 
+// 9.4.1 GetActiveScriptOrModule ( ), https://tc39.es/ecma262/#sec-getactivescriptormodule
+Variant<WeakPtr<Script>, WeakPtr<Module>, Empty> VM::get_active_script_or_module()
+{
+    // 1. If the execution context stack is empty, return null.
+    if (m_execution_context_stack.is_empty())
+        return {};
+
+    // 2. Let ec be the topmost execution context on the execution context stack whose ScriptOrModule component is not null.
+    auto execution_context = m_execution_context_stack.last_matching([](JS::ExecutionContext* context) {
+        return !context->script_or_module.has<Empty>();
+    });
+
+    // 3. If no such execution context exists, return null. Otherwise, return ec's ScriptOrModule.
+    if (!execution_context.has_value())
+        return {};
+
+    return execution_context.value()->script_or_module;
+}
+
 // 9.4.2 ResolveBinding ( name [ , env ] ), https://tc39.es/ecma262/#sec-resolvebinding
 Reference VM::resolve_binding(FlyString const& name, Environment* environment)
 {

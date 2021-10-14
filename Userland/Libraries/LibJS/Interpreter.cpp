@@ -65,7 +65,8 @@ void Interpreter::run(Script& script_record)
     // 4. Set the Realm of scriptContext to scriptRecord.[[Realm]].
     script_context.realm = &script_record.realm();
 
-    // FIXME: 5. Set the ScriptOrModule of scriptContext to scriptRecord.
+    // 5. Set the ScriptOrModule of scriptContext to scriptRecord.
+    script_context.script_or_module = script_record.make_weak_ptr();
 
     // 6. Set the VariableEnvironment of scriptContext to globalEnv.
     script_context.variable_environment = &global_environment;

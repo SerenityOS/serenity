@@ -74,6 +74,11 @@ public:
     // Equivalent to absence of [[Construct]]
     virtual bool has_constructor() const override { return !(m_is_arrow_function || m_kind == FunctionKind::Generator); }
 
+    // This unfortunately cannot be a reference as this must be accessible from FunctionObject, which is the base class of other function types such as BoundFunction,
+    // which don't have a [[ScriptOrModule]] internal slot. Because of this, the base script_or_module must return a newly constructed Empty.
+    virtual Variant<WeakPtr<Script>, WeakPtr<Module>, Empty> script_or_module() const override { return m_script_or_module; }
+    void set_script_or_module(Variant<WeakPtr<Script>, WeakPtr<Module>, Empty> value) { m_script_or_module = move(value); }
+
 protected:
     virtual bool is_strict_mode() const final { return m_strict; }
 
@@ -87,16 +92,17 @@ private:
     ThrowCompletionOr<void> function_declaration_instantiation(Interpreter*);
 
     // Internal Slots of ECMAScript Function Objects, https://tc39.es/ecma262/#table-internal-slots-of-ecmascript-function-objects
-    Environment* m_environment { nullptr };                       // [[Environment]]
-    Vector<FunctionNode::Parameter> const m_formal_parameters;    // [[FormalParameters]]
-    NonnullRefPtr<Statement> m_ecmascript_code;                   // [[ECMAScriptCode]]
-    ConstructorKind m_constructor_kind { ConstructorKind::Base }; // [[ConstructorKind]]
-    Realm* m_realm { nullptr };                                   // [[Realm]]
-    ThisMode m_this_mode { ThisMode::Global };                    // [[ThisMode]]
-    bool m_strict { false };                                      // [[Strict]]
-    Object* m_home_object { nullptr };                            // [[HomeObject]]
-    Vector<InstanceField> m_fields;                               // [[Fields]]
-    bool m_is_class_constructor { false };                        // [[IsClassConstructor]]
+    Environment* m_environment { nullptr };                                 // [[Environment]]
+    Vector<FunctionNode::Parameter> const m_formal_parameters;              // [[FormalParameters]]
+    NonnullRefPtr<Statement> m_ecmascript_code;                             // [[ECMAScriptCode]]
+    ConstructorKind m_constructor_kind { ConstructorKind::Base };           // [[ConstructorKind]]
+    Realm* m_realm { nullptr };                                             // [[Realm]]
+    Variant<WeakPtr<Script>, WeakPtr<Module>, Empty> m_script_or_module {}; // [[ScriptOrModule]]
+    ThisMode m_this_mode { ThisMode::Global };                              // [[ThisMode]]
+    bool m_strict { false };                                                // [[Strict]]
+    Object* m_home_object { nullptr };                                      // [[HomeObject]]
+    Vector<InstanceField> m_fields;                                         // [[Fields]]
+    bool m_is_class_constructor { false };                                  // [[IsClassConstructor]]
 
     FlyString m_name;
     Optional<Bytecode::Executable> m_bytecode_executable;

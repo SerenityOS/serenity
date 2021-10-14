@@ -166,9 +166,10 @@ void Window::timer_did_fire(Badge<Timer>, Timer& timer)
         m_timers.remove(timer.id());
     }
 
-    HTML::queue_global_task(HTML::Task::Source::TimerTask, associated_document(), [this, strong_this = NonnullRefPtr(*this), strong_timer = NonnullRefPtr(timer)]() mutable {
-        // We should not be here if there's no JS wrapper for the Window object.
-        VERIFY(wrapper());
+    // We should not be here if there's no JS wrapper for the Window object.
+    VERIFY(wrapper());
+
+    HTML::queue_global_task(HTML::Task::Source::TimerTask, *wrapper(), [this, strong_this = NonnullRefPtr(*this), strong_timer = NonnullRefPtr(timer)]() mutable {
         auto& vm = wrapper()->vm();
 
         [[maybe_unused]] auto rc = vm.call(strong_timer->callback(), wrapper());
@@ -374,7 +375,7 @@ void Window::fire_a_page_transition_event(FlyString const& event_name, bool pers
 void Window::queue_microtask(JS::FunctionObject& callback)
 {
     // The queueMicrotask(callback) method must queue a microtask to invoke callback,
-    HTML::queue_a_microtask(associated_document(), [&callback, handle = JS::make_handle(&callback)]() {
+    HTML::queue_a_microtask(&associated_document(), [&callback, handle = JS::make_handle(&callback)]() {
         auto& vm = callback.vm();
         [[maybe_unused]] auto rc = vm.call(callback, JS::js_null());
         // FIXME: ...and if callback throws an exception, report the exception.

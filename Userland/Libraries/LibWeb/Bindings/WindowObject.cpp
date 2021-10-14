@@ -40,6 +40,7 @@
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/Page.h>
@@ -245,7 +246,8 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
         // using a NativeFunction for the latter is a workaround so that we can reuse the
         // DOM::Timer API unaltered (always expects a JS::FunctionObject).
         callback = JS::NativeFunction::create(global_object, "", [impl, script_source = move(script_source)](auto&, auto&) mutable {
-            auto script = HTML::ClassicScript::create(impl->associated_document().url().to_string(), script_source, impl->associated_document().realm(), AK::URL());
+            auto& settings_object = verify_cast<HTML::EnvironmentSettingsObject>(*impl->associated_document().realm().custom_data());
+            auto script = HTML::ClassicScript::create(impl->associated_document().url().to_string(), script_source, settings_object, AK::URL());
             return script->run();
         });
     }
@@ -284,7 +286,8 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
         // using a NativeFunction for the latter is a workaround so that we can reuse the
         // DOM::Timer API unaltered (always expects a JS::FunctionObject).
         callback = JS::NativeFunction::create(global_object, "", [impl, script_source = move(script_source)](auto&, auto&) mutable {
-            auto script = HTML::ClassicScript::create(impl->associated_document().url().to_string(), script_source, impl->associated_document().realm(), AK::URL());
+            auto& settings_object = verify_cast<HTML::EnvironmentSettingsObject>(*impl->associated_document().realm().custom_data());
+            auto script = HTML::ClassicScript::create(impl->associated_document().url().to_string(), script_source, settings_object, AK::URL());
             return script->run();
         });
     }

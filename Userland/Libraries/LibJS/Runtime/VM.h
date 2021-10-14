@@ -192,6 +192,7 @@ public:
     ScopeType unwind_until() const { return m_unwind_until; }
     FlyString unwind_until_label() const { return m_unwind_until_label; }
 
+    Variant<WeakPtr<Script>, WeakPtr<Module>, Empty> get_active_script_or_module();
     Reference resolve_binding(FlyString const&, Environment* = nullptr);
     Reference get_identifier_reference(Environment*, FlyString, bool strict, size_t hops = 0);
 
