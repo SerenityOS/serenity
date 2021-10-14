@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/FormAssociatedElement.h>
 
 namespace Web::HTML {
 
-class HTMLFieldSetElement final : public HTMLElement {
+class HTMLFieldSetElement final : public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLFieldSetElementWrapper;
 
