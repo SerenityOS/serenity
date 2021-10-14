@@ -56,6 +56,8 @@
 #include <LibWeb/Bindings/DocumentTypePrototype.h>
 #include <LibWeb/Bindings/ElementConstructor.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
+#include <LibWeb/Bindings/ErrorEventConstructor.h>
+#include <LibWeb/Bindings/ErrorEventPrototype.h>
 #include <LibWeb/Bindings/EventConstructor.h>
 #include <LibWeb/Bindings/EventPrototype.h>
 #include <LibWeb/Bindings/EventTargetConstructor.h>
@@ -325,6 +327,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(DOMRectReadOnly)           \
     ADD_WINDOW_OBJECT_INTERFACE(DOMStringMap)              \
     ADD_WINDOW_OBJECT_INTERFACE(Element)                   \
+    ADD_WINDOW_OBJECT_INTERFACE(ErrorEvent)                \
     ADD_WINDOW_OBJECT_INTERFACE(Event)                     \
     ADD_WINDOW_OBJECT_INTERFACE(EventTarget)               \
     ADD_WINDOW_OBJECT_INTERFACE(History)                   \
