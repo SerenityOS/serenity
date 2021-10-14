@@ -8,12 +8,12 @@
 
 #include <LibCore/Forward.h>
 #include <LibGfx/Forward.h>
-#include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/Loader/ImageLoader.h>
 
 namespace Web::HTML {
 
-class HTMLObjectElement final : public HTMLElement {
+class HTMLObjectElement final : public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLObjectElementWrapper;
 

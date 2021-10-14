@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/FormAssociatedElement.h>
 
 namespace Web::HTML {
 
-class HTMLTextAreaElement final : public HTMLElement {
+class HTMLTextAreaElement final : public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLTextAreaElementWrapper;
 

@@ -9,7 +9,7 @@
 namespace Web::HTML {
 
 HTMLButtonElement::HTMLButtonElement(DOM::Document& document, QualifiedName qualified_name)
-    : HTMLElement(document, move(qualified_name))
+    : FormAssociatedElement(document, move(qualified_name))
 {
 }
 
