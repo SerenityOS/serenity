@@ -40,7 +40,7 @@ protected:
     };
 
     static float tentative_width_for_replaced_element(const ReplacedBox&, const CSS::Length& width);
-    static float tentative_height_for_replaced_element(const ReplacedBox&, const CSS::Length& width);
+    static float tentative_height_for_replaced_element(const ReplacedBox&, const CSS::Length& height);
 
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box&);
 
