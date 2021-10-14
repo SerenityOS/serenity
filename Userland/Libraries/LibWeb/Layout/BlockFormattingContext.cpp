@@ -577,15 +577,19 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     layout_block_level_children(root(), layout_mode);
 
     // Compute scrollable overflow.
-    float lowest_bottom = 0;
-    icb.for_each_child_of_type<Box>([&](auto& child) {
-        lowest_bottom = max(lowest_bottom, child.absolute_rect().bottom());
+    float bottom_edge = 0;
+    float right_edge = 0;
+    icb.for_each_in_subtree_of_type<Box>([&](auto& child) {
+        auto child_rect = child.absolute_rect();
+        bottom_edge = max(bottom_edge, child_rect.bottom());
+        right_edge = max(right_edge, child_rect.right());
+        return IterationDecision::Continue;
     });
 
-    if (lowest_bottom >= viewport_rect.height()) {
+    if (bottom_edge >= viewport_rect.height() || right_edge >= viewport_rect.width()) {
         auto& overflow_data = icb.ensure_overflow_data();
         overflow_data.scrollable_overflow_rect = viewport_rect.to_type<float>();
-        overflow_data.scrollable_overflow_rect.set_height(lowest_bottom);
+        overflow_data.scrollable_overflow_rect.set_size(right_edge, bottom_edge);
     } else {
         icb.clear_overflow_data();
     }
