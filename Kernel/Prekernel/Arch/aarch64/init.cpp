@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2021, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2021, Undefine <cqundefine@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Types.h>
 #include <Kernel/Prekernel/Arch/aarch64/Mailbox.h>
+#include <Kernel/Prekernel/Arch/aarch64/Power.h>
 #include <Kernel/Prekernel/Arch/aarch64/Timer.h>
 #include <Kernel/Prekernel/Arch/aarch64/UART.h>
 
@@ -32,6 +34,8 @@ extern "C" [[noreturn]] void init()
         while ((now_musec = timer.microseconds_since_boot()) - start_musec < 1'000'000)
             ;
         start_musec = now_musec;
+        if (now_musec > 100'000'000 && now_musec < 100'100'000)
+            Prekernel::Power::the().reset();
         uart.print_str("Timer: ");
         uart.print_num(now_musec);
         uart.print_str("\r\n");
