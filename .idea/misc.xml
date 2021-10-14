@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
+  <component name="CidrRootsConfiguration">
+    <sourceRoots>
+      <file path="$PROJECT_DIR$/AK" />
+      <file path="$PROJECT_DIR$/Kernel" />
+      <file path="$PROJECT_DIR$/Tests" />
+      <file path="$PROJECT_DIR$/Userland" />
+    </sourceRoots>
+    <excludeRoots>
+      <file path="$PROJECT_DIR$/Build" />
+      <file path="$PROJECT_DIR$/Toolchain/Build" />
+      <file path="$PROJECT_DIR$/Toolchain/Local" />
+      <file path="$PROJECT_DIR$/Toolchain/Tarballs" />
+    </excludeRoots>
+  </component>
+</project>
