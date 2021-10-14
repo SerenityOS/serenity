@@ -172,10 +172,12 @@ void HTMLElement::parse_attribute(const FlyString& name, const String& value)
 {
     Element::parse_attribute(name, value);
 
+    // 1. If namespace is not null, or localName is not the name of an event handler content attribute on element, then return.
+    // FIXME: Add the namespace part once we support attribute namespaces.
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)                          \
-    if (name == HTML::AttributeNames::attribute_name) {                  \
-        set_event_handler_attribute(event_name, EventHandler { value }); \
+#define __ENUMERATE(attribute_name, event_name)                     \
+    if (name == HTML::AttributeNames::attribute_name) {             \
+        element_event_handler_attribute_changed(event_name, value); \
     }
     ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE

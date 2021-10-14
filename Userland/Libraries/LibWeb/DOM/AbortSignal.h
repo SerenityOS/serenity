@@ -27,14 +27,14 @@ public:
     using RefCounted::ref;
     using RefCounted::unref;
 
-    static NonnullRefPtr<AbortSignal> create(Document& document)
+    static NonnullRefPtr<AbortSignal> create()
     {
-        return adopt_ref(*new AbortSignal(document));
+        return adopt_ref(*new AbortSignal());
     }
 
-    static NonnullRefPtr<AbortSignal> create_with_global_object(Bindings::WindowObject& window_object)
+    static NonnullRefPtr<AbortSignal> create_with_global_object(Bindings::WindowObject&)
     {
-        return AbortSignal::create(window_object.impl().associated_document());
+        return AbortSignal::create();
     }
 
     virtual ~AbortSignal() override;
@@ -47,8 +47,8 @@ public:
 
     void signal_abort(JS::Value reason);
 
-    void set_onabort(HTML::EventHandler);
-    HTML::EventHandler onabort();
+    void set_onabort(Optional<Bindings::CallbackType>);
+    Bindings::CallbackType* onabort();
 
     // https://dom.spec.whatwg.org/#dom-abortsignal-reason
     JS::Value reason() const { return m_abort_reason; }
@@ -63,7 +63,7 @@ public:
     virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
 
 private:
-    AbortSignal(Document& document);
+    AbortSignal();
 
     // https://dom.spec.whatwg.org/#abortsignal-abort-reason
     // An AbortSignal object has an associated abort reason, which is a JavaScript value. It is undefined unless specified otherwise.

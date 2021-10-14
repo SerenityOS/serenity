@@ -48,8 +48,8 @@ public:
     void add_listener(RefPtr<DOM::EventListener> listener);
     void remove_listener(RefPtr<DOM::EventListener> listener);
 
-    void set_onchange(HTML::EventHandler);
-    HTML::EventHandler onchange();
+    void set_onchange(Optional<Bindings::CallbackType>);
+    Bindings::CallbackType* onchange();
 
 private:
     MediaQueryList(DOM::Document&, NonnullRefPtrVector<MediaQuery>&&);

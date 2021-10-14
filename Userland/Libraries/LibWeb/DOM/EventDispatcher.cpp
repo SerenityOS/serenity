@@ -12,7 +12,7 @@
 #include <LibWeb/Bindings/EventTargetWrapperFactory.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/EventWrapperFactory.h>
-#include <LibWeb/Bindings/ScriptExecutionContext.h>
+#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
@@ -52,68 +52,87 @@ static EventTarget* retarget(EventTarget* left, EventTarget* right)
 // https://dom.spec.whatwg.org/#concept-event-listener-inner-invoke
 bool EventDispatcher::inner_invoke(Event& event, Vector<EventTarget::EventListenerRegistration>& listeners, Event::Phase phase, bool invocation_target_in_shadow_tree)
 {
+    // 1. Let found be false.
     bool found = false;
 
+    // 2. For each listener in listeners, whose removed is false:
     for (auto& listener : listeners) {
         if (listener.listener->removed())
             continue;
 
+        // 1. If event’s type attribute value is not listener’s type, then continue.
         if (event.type() != listener.listener->type())
             continue;
 
+        // 2. Set found to true.
         found = true;
 
+        // 3. If phase is "capturing" and listener’s capture is false, then continue.
         if (phase == Event::Phase::CapturingPhase && !listener.listener->capture())
             continue;
 
+        // 4. If phase is "bubbling" and listener’s capture is true, then continue.
         if (phase == Event::Phase::BubblingPhase && listener.listener->capture())
             continue;
 
+        // 5. If listener’s once is true, then remove listener from event’s currentTarget attribute value’s event listener list.
         if (listener.listener->once())
             event.current_target()->remove_from_event_listener_list(listener.listener);
 
-        auto& function = listener.listener->function();
-        auto& global = function.global_object();
+        // 6. Let global be listener callback’s associated Realm’s global object.
+        auto& callback = listener.listener->callback();
+        auto& global = callback.callback.cell()->global_object();
 
+        // 7. Let currentEvent be undefined.
         RefPtr<Event> current_event;
 
+        // 8. If global is a Window object, then:
         if (is<Bindings::WindowObject>(global)) {
             auto& bindings_window_global = verify_cast<Bindings::WindowObject>(global);
             auto& window_impl = bindings_window_global.impl();
+
+            // 1. Set currentEvent to global’s current event.
             current_event = window_impl.current_event();
+
+            // 2. If invocationTargetInShadowTree is false, then set global’s current event to event.
             if (!invocation_target_in_shadow_tree)
                 window_impl.set_current_event(&event);
         }
 
+        // 9. If listener’s passive is true, then set event’s in passive listener flag.
         if (listener.listener->passive())
             event.set_in_passive_listener(true);
 
+        // 10. Call a user object’s operation with listener’s callback, "handleEvent", « event », and event’s currentTarget attribute value. If this throws an exception, then:
+        // FIXME: These should be wrapped for us in call_user_object_operation, but it currently doesn't do that.
         auto* this_value = Bindings::wrap(global, *event.current_target());
         auto* wrapped_event = Bindings::wrap(global, event);
-
-        // 10. Call a user object’s operation with listener’s callback, "handleEvent", « event », and event’s currentTarget attribute value.
-        auto result = JS::call(global, function, this_value, wrapped_event);
+        auto result = Bindings::IDL::call_user_object_operation(callback, "handleEvent", this_value, wrapped_event);
 
         // If this throws an exception, then:
         if (result.is_error()) {
             // 1. Report the exception.
-            VERIFY(result.throw_completion().value().has_value());
-            HTML::report_exception(*result.throw_completion().value());
+            HTML::report_exception(result);
 
             // FIXME: 2. Set legacyOutputDidListenersThrowFlag if given. (Only used by IndexedDB currently)
         }
 
+        // 11. Unset event’s in passive listener flag.
         event.set_in_passive_listener(false);
+
+        // 12. If global is a Window object, then set global’s current event to currentEvent.
         if (is<Bindings::WindowObject>(global)) {
             auto& bindings_window_global = verify_cast<Bindings::WindowObject>(global);
             auto& window_impl = bindings_window_global.impl();
             window_impl.set_current_event(current_event);
         }
 
+        // 13. If event’s stop immediate propagation flag is set, then return found.
         if (event.should_stop_immediate_propagation())
             return found;
     }
 
+    // 3. Return found.
     return found;
 }
 

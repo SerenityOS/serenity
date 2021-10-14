@@ -223,16 +223,16 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
     auto* impl = TRY(impl_from(vm, global_object));
     if (!vm.argument_count())
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "setInterval");
-    JS::FunctionObject* callback;
+    JS::Object* callback_object;
     if (vm.argument(0).is_function()) {
-        callback = &vm.argument(0).as_function();
+        callback_object = &vm.argument(0).as_function();
     } else {
         auto script_source = TRY(vm.argument(0).to_string(global_object));
         // FIXME: This needs more work once we have a environment settings object.
         // The spec wants us to use a task for the "run function or script string" part,
         // using a NativeFunction for the latter is a workaround so that we can reuse the
         // DOM::Timer API unaltered (always expects a JS::FunctionObject).
-        callback = JS::NativeFunction::create(global_object, "", [impl, script_source = move(script_source)](auto&, auto&) mutable {
+        callback_object = JS::NativeFunction::create(global_object, "", [impl, script_source = move(script_source)](auto&, auto&) mutable {
             auto& settings_object = verify_cast<HTML::EnvironmentSettingsObject>(*impl->associated_document().realm().host_defined());
             auto script = HTML::ClassicScript::create(impl->associated_document().url().to_string(), script_source, settings_object, AK::URL());
             return script->run();
@@ -244,8 +244,10 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
         if (interval < 0)
             interval = 0;
     }
+
+    NonnullOwnPtr<Bindings::CallbackType> callback = adopt_own(*new Bindings::CallbackType(JS::make_handle(callback_object), HTML::incumbent_settings_object()));
     // FIXME: Pass ...arguments to the callback function when it's invoked
-    auto timer_id = impl->set_interval(*callback, interval);
+    auto timer_id = impl->set_interval(move(callback), interval);
     return JS::Value(timer_id);
 }
 
@@ -257,16 +259,16 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
     auto* impl = TRY(impl_from(vm, global_object));
     if (!vm.argument_count())
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "setTimeout");
-    JS::FunctionObject* callback;
+    JS::Object* callback_object;
     if (vm.argument(0).is_function()) {
-        callback = &vm.argument(0).as_function();
+        callback_object = &vm.argument(0).as_function();
     } else {
         auto script_source = TRY(vm.argument(0).to_string(global_object));
         // FIXME: This needs more work once we have a environment settings object.
         // The spec wants us to use a task for the "run function or script string" part,
         // using a NativeFunction for the latter is a workaround so that we can reuse the
         // DOM::Timer API unaltered (always expects a JS::FunctionObject).
-        callback = JS::NativeFunction::create(global_object, "", [impl, script_source = move(script_source)](auto&, auto&) mutable {
+        callback_object = JS::NativeFunction::create(global_object, "", [impl, script_source = move(script_source)](auto&, auto&) mutable {
             auto& settings_object = verify_cast<HTML::EnvironmentSettingsObject>(*impl->associated_document().realm().host_defined());
             auto script = HTML::ClassicScript::create(impl->associated_document().url().to_string(), script_source, settings_object, AK::URL());
             return script->run();
@@ -278,8 +280,11 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
         if (interval < 0)
             interval = 0;
     }
+
+    NonnullOwnPtr<Bindings::CallbackType> callback = adopt_own(*new Bindings::CallbackType(JS::make_handle(callback_object), HTML::incumbent_settings_object()));
+
     // FIXME: Pass ...arguments to the callback function when it's invoked
-    auto timer_id = impl->set_timeout(*callback, interval);
+    auto timer_id = impl->set_timeout(move(callback), interval);
     return JS::Value(timer_id);
 }
 
@@ -311,7 +316,8 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::request_animation_frame)
     auto* callback_object = TRY(vm.argument(0).to_object(global_object));
     if (!callback_object->is_function())
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAFunctionNoParam);
-    return JS::Value(impl->request_animation_frame(*static_cast<JS::FunctionObject*>(callback_object)));
+    NonnullOwnPtr<Bindings::CallbackType> callback = adopt_own(*new Bindings::CallbackType(JS::make_handle(callback_object), HTML::incumbent_settings_object()));
+    return JS::Value(impl->request_animation_frame(move(callback)));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::cancel_animation_frame)
@@ -333,7 +339,9 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::queue_microtask)
     if (!callback_object->is_function())
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAFunctionNoParam);
 
-    impl->queue_microtask(static_cast<JS::FunctionObject&>(*callback_object));
+    auto callback = adopt_own(*new Bindings::CallbackType(JS::make_handle(callback_object), HTML::incumbent_settings_object()));
+
+    impl->queue_microtask(move(callback));
     return JS::js_undefined();
 }
 
@@ -638,31 +646,25 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_y_getter)
     return JS::Value(impl->screen_y());
 }
 
-#define __ENUMERATE(attribute, event_name)                              \
-    JS_DEFINE_NATIVE_FUNCTION(WindowObject::attribute##_getter)         \
-    {                                                                   \
-        auto* impl = TRY(impl_from(vm, global_object));                 \
-        auto retval = impl->attribute();                                \
-        if (retval.callback.is_null())                                  \
-            return JS::js_null();                                       \
-        return retval.callback.cell();                                  \
-    }                                                                   \
-    JS_DEFINE_NATIVE_FUNCTION(WindowObject::attribute##_setter)         \
-    {                                                                   \
-        auto* impl = TRY(impl_from(vm, global_object));                 \
-        auto value = vm.argument(0);                                    \
-        HTML::EventHandler cpp_value;                                   \
-        if (value.is_function()) {                                      \
-            cpp_value.callback = JS::make_handle(&value.as_function()); \
-        } else if (value.is_string()) {                                 \
-            cpp_value.string = value.as_string().string();              \
-        } else {                                                        \
-            return JS::js_undefined();                                  \
-        }                                                               \
-        TRY(throw_dom_exception_if_needed(global_object, [&] {          \
-            return impl->set_##attribute(cpp_value);                    \
-        }));                                                            \
-        return JS::js_undefined();                                      \
+#define __ENUMERATE(attribute, event_name)                                                                                 \
+    JS_DEFINE_NATIVE_FUNCTION(WindowObject::attribute##_getter)                                                            \
+    {                                                                                                                      \
+        auto* impl = TRY(impl_from(vm, global_object));                                                                    \
+        auto retval = impl->attribute();                                                                                   \
+        if (!retval)                                                                                                       \
+            return JS::js_null();                                                                                          \
+        return retval->callback.cell();                                                                                    \
+    }                                                                                                                      \
+    JS_DEFINE_NATIVE_FUNCTION(WindowObject::attribute##_setter)                                                            \
+    {                                                                                                                      \
+        auto* impl = TRY(impl_from(vm, global_object));                                                                    \
+        auto value = vm.argument(0);                                                                                       \
+        Optional<Bindings::CallbackType> cpp_value;                                                                        \
+        if (value.is_object()) {                                                                                           \
+            cpp_value = Bindings::CallbackType { JS::make_handle(&value.as_object()), HTML::incumbent_settings_object() }; \
+        }                                                                                                                  \
+        impl->set_##attribute(cpp_value);                                                                                  \
+        return JS::js_undefined();                                                                                         \
     }
 ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
