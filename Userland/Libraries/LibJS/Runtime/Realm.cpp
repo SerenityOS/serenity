@@ -14,6 +14,9 @@ void Realm::set_global_object(GlobalObject& global_object, Object* this_value)
     // NOTE: Step 1 is not supported, the global object must be allocated elsewhere.
     // 2. Assert: Type(globalObj) is Object.
 
+    // Non-standard
+    global_object.set_associated_realm({}, *this);
+
     // 3. If thisValue is undefined, set thisValue to globalObj.
     if (!this_value)
         this_value = &global_object;

@@ -23,6 +23,9 @@ public:
 
     Console& console() { return *m_console; }
 
+    Realm* associated_realm();
+    void set_associated_realm(Badge<Realm>, Realm&);
+
     Shape* empty_object_shape() { return m_empty_object_shape; }
 
     Shape* new_object_shape() { return m_new_object_shape; }
@@ -87,6 +90,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(unescape);
 
     NonnullOwnPtr<Console> m_console;
+
+    WeakPtr<Realm> m_associated_realm;
 
     Shape* m_empty_object_shape { nullptr };
     Shape* m_new_object_shape { nullptr };
