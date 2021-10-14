@@ -18,7 +18,7 @@
 namespace Web::Layout {
 
 BlockFormattingContext::BlockFormattingContext(BlockContainer& root, FormattingContext* parent)
-    : FormattingContext(root, parent)
+    : FormattingContext(Type::Block, root, parent)
 {
 }
 
