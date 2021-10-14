@@ -99,6 +99,16 @@
     } __testjs_common_run_file {};                                                          \
     ::Test::JS::IntermediateRunFileResult __TestJS_run_file::hook(__VA_ARGS__)
 
+#define TESTJS_CREATE_INTERPRETER_HOOK(...)               \
+    struct __TestJS_create_interpreter_hook {             \
+        __TestJS_create_interpreter_hook()                \
+        {                                                 \
+            ::Test::JS::g_create_interpreter_hook = hook; \
+        }                                                 \
+        static NonnullOwnPtr<JS::Interpreter> hook();     \
+    } __testjs_create_interpreter_hook {};                \
+    NonnullOwnPtr<JS::Interpreter> __TestJS_create_interpreter_hook::hook(__VA_ARGS__)
+
 namespace Test::JS {
 
 namespace JS = ::JS;
@@ -128,6 +138,7 @@ extern String g_test_root;
 extern int g_test_argc;
 extern char** g_test_argv;
 extern Function<void()> g_main_hook;
+extern Function<NonnullOwnPtr<JS::Interpreter>()> g_create_interpreter_hook;
 extern HashMap<bool*, Tuple<String, String, char>> g_extra_args;
 
 struct ParserError {

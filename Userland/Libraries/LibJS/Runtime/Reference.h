@@ -9,7 +9,6 @@
 #include <AK/String.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
-#include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/Value.h>
 
