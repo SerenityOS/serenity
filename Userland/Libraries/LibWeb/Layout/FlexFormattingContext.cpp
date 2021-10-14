@@ -23,7 +23,7 @@ static float get_pixel_size(Box const& box, CSS::Length const& length)
 }
 
 FlexFormattingContext::FlexFormattingContext(Box& flex_container, FormattingContext* parent)
-    : FormattingContext(flex_container, parent)
+    : FormattingContext(Type::Flex, flex_container, parent)
     , m_flex_direction(flex_container.computed_values().flex_direction())
 {
 }

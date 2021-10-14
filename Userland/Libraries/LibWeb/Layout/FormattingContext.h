@@ -12,6 +12,14 @@ namespace Web::Layout {
 
 class FormattingContext {
 public:
+    enum class Type {
+        Block,
+        Inline,
+        Flex,
+        Table,
+        SVG,
+    };
+
     virtual void run(Box&, LayoutMode) = 0;
 
     Box& context_box() { return *m_context_box; }
@@ -20,7 +28,9 @@ public:
     FormattingContext* parent() { return m_parent; }
     const FormattingContext* parent() const { return m_parent; }
 
-    virtual bool is_block_formatting_context() const { return false; }
+    Type type() const { return m_type; }
+    bool is_block_formatting_context() const { return type() == Type::Block; }
+
     virtual bool inhibits_floating() const { return false; }
 
     static bool creates_block_formatting_context(const Box&);
@@ -29,7 +39,7 @@ public:
     static float compute_height_for_replaced_element(const ReplacedBox&);
 
 protected:
-    FormattingContext(Box&, FormattingContext* parent = nullptr);
+    FormattingContext(Type, Box&, FormattingContext* parent = nullptr);
     virtual ~FormattingContext();
 
     void layout_inside(Box&, LayoutMode);
@@ -51,6 +61,8 @@ protected:
     void compute_height_for_absolutely_positioned_element(Box&);
     void compute_height_for_absolutely_positioned_non_replaced_element(Box&);
     void compute_height_for_absolutely_positioned_replaced_element(ReplacedBox&);
+
+    Type m_type {};
 
     FormattingContext* m_parent { nullptr };
     Box* m_context_box { nullptr };

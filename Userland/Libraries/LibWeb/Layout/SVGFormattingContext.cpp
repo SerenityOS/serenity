@@ -12,7 +12,7 @@
 namespace Web::Layout {
 
 SVGFormattingContext::SVGFormattingContext(Box& box, FormattingContext* parent)
-    : FormattingContext(box, parent)
+    : FormattingContext(Type::SVG, box, parent)
 {
 }
 
