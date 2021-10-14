@@ -244,18 +244,18 @@ static float compute_auto_height_for_block_level_element(Box const& box)
     return bottom.value_or(0) - top.value_or(0);
 }
 
-float FormattingContext::tentative_width_for_replaced_element(const ReplacedBox& box, const CSS::Length& width)
+// 10.3.2 Inline, replaced elements, https://www.w3.org/TR/CSS22/visudet.html#inline-replaced-width
+float FormattingContext::tentative_width_for_replaced_element(ReplacedBox const& box, CSS::Length const& computed_width)
 {
     auto& containing_block = *box.containing_block();
-    auto specified_height = box.computed_values().height().resolved_or_auto(box, containing_block.height());
+    auto computed_height = box.computed_values().height().resolved_or_auto(box, containing_block.height());
 
-    float used_width = width.to_px(box);
+    float used_width = computed_width.to_px(box);
 
     // If 'height' and 'width' both have computed values of 'auto' and the element also has an intrinsic width,
     // then that intrinsic width is the used value of 'width'.
-    if (specified_height.is_auto() && width.is_auto() && box.has_intrinsic_width()) {
-        used_width = box.intrinsic_width().value();
-    }
+    if (computed_height.is_auto() && computed_width.is_auto() && box.has_intrinsic_width())
+        return box.intrinsic_width().value();
 
     // If 'height' and 'width' both have computed values of 'auto' and the element has no intrinsic width,
     // but does have an intrinsic height and intrinsic ratio;
@@ -263,17 +263,24 @@ float FormattingContext::tentative_width_for_replaced_element(const ReplacedBox&
     // 'height' has some other computed value, and the element does have an intrinsic ratio; then the used value of 'width' is:
     //
     //     (used height) * (intrinsic ratio)
-    else if ((specified_height.is_auto() && width.is_auto() && !box.has_intrinsic_width() && box.has_intrinsic_height() && box.has_intrinsic_aspect_ratio()) || (width.is_auto() && box.has_intrinsic_aspect_ratio())) {
-        used_width = compute_height_for_replaced_element(box) * box.intrinsic_aspect_ratio().value();
+    if ((computed_height.is_auto() && computed_width.is_auto() && !box.has_intrinsic_width() && box.has_intrinsic_height() && box.has_intrinsic_aspect_ratio())
+        || (computed_width.is_auto() && box.has_intrinsic_aspect_ratio())) {
+        return compute_height_for_replaced_element(box) * box.intrinsic_aspect_ratio().value();
     }
 
-    else if (width.is_auto() && box.has_intrinsic_width()) {
-        used_width = box.intrinsic_width().value();
-    }
+    // If 'height' and 'width' both have computed values of 'auto' and the element has an intrinsic ratio but no intrinsic height or width,
+    // then the used value of 'width' is undefined in CSS 2.2. However, it is suggested that, if the containing block's width does not itself
+    // depend on the replaced element's width, then the used value of 'width' is calculated from the constraint equation used for block-level,
+    // non-replaced elements in normal flow.
 
-    else if (width.is_auto()) {
-        used_width = 300;
-    }
+    // Otherwise, if 'width' has a computed value of 'auto', and the element has an intrinsic width, then that intrinsic width is the used value of 'width'.
+    if (computed_width.is_auto() && box.has_intrinsic_width())
+        return box.intrinsic_width().value();
+
+    // Otherwise, if 'width' has a computed value of 'auto', but none of the conditions above are met, then the used value of 'width' becomes 300px.
+    // If 300px is too wide to fit the device, UAs should use the width of the largest rectangle that has a 2:1 ratio and fits the device instead.
+    if (computed_width.is_auto())
+        return 300;
 
     return used_width;
 }
