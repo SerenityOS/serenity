@@ -5,6 +5,7 @@
  */
 
 #include <AK/Types.h>
+#include <Kernel/KString.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Sections.h>
 
@@ -39,25 +40,44 @@ void* operator new(size_t size) { return kmalloc(size); }
 void* operator new(size_t size, std::align_val_t) { return kmalloc(size); }
 
 namespace Kernel {
+
 void dump_backtrace(PrintToScreen) { }
+
+// KString.cpp
+KResultOr<NonnullOwnPtr<KString>> KString::try_create_uninitialized(size_t, char*&) { return ENOMEM; }
+void KString::operator delete(void*) { }
+
+// SafeMem.h
+bool safe_memset(void*, int, size_t, void*&);
+bool safe_memset(void*, int, size_t, void*&) { return false; }
+
+ssize_t safe_strnlen(char const*, unsigned long, void*&);
+ssize_t safe_strnlen(char const*, unsigned long, void*&) { return 0; }
+
+bool safe_memcpy(void*, void const*, unsigned long, void*&);
+bool safe_memcpy(void*, void const*, unsigned long, void*&) { return false; }
+
+Optional<bool> safe_atomic_compare_exchange_relaxed(volatile u32*, u32&, u32);
+Optional<bool> safe_atomic_compare_exchange_relaxed(volatile u32*, u32&, u32) { return {}; }
+
+Optional<u32> safe_atomic_load_relaxed(volatile u32*);
+Optional<u32> safe_atomic_load_relaxed(volatile u32*) { return {}; }
+
+Optional<u32> safe_atomic_fetch_add_relaxed(volatile u32*, u32);
+Optional<u32> safe_atomic_fetch_add_relaxed(volatile u32*, u32) { return {}; }
+
+Optional<u32> safe_atomic_exchange_relaxed(volatile u32*, u32);
+Optional<u32> safe_atomic_exchange_relaxed(volatile u32*, u32) { return {}; }
+
+bool safe_atomic_store_relaxed(volatile u32*, u32);
+bool safe_atomic_store_relaxed(volatile u32*, u32) { return {}; }
+
 }
 
 extern "C" {
 
-// StdLib.cpp
-[[noreturn]] void __stack_chk_fail();
-[[noreturn]] void __stack_chk_fail()
-{
-    for (;;) { }
-}
+FlatPtr kernel_mapping_base;
 
-int memcmp(const void*, const void*, size_t);
-int memcmp(const void*, const void*, size_t) { return 0; }
-
-int strcmp(char const*, const char*);
-int strcmp(char const*, const char*) { return 0; }
-
-// kstdio.h
 void kernelputstr(const char*, size_t);
 void kernelputstr(const char*, size_t) { }
 
