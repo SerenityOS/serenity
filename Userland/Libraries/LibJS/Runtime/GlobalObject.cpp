@@ -65,6 +65,7 @@
 #include <LibJS/Runtime/PromiseConstructor.h>
 #include <LibJS/Runtime/PromisePrototype.h>
 #include <LibJS/Runtime/ProxyConstructor.h>
+#include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/ReflectObject.h>
 #include <LibJS/Runtime/RegExpConstructor.h>
 #include <LibJS/Runtime/RegExpPrototype.h>
@@ -316,6 +317,16 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_##snake_name##_prototype);
     JS_ENUMERATE_ITERATOR_PROTOTYPES
 #undef __JS_ENUMERATE
+}
+
+Realm* GlobalObject::associated_realm()
+{
+    return m_associated_realm;
+}
+
+void GlobalObject::set_associated_realm(Badge<Realm>, Realm& realm)
+{
+    m_associated_realm = &realm;
 }
 
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::gc)

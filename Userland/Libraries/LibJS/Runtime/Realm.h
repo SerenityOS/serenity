@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Weakable.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -13,7 +14,9 @@
 namespace JS {
 
 // 9.3 Realms, https://tc39.es/ecma262/#realm-record
-class Realm final : public Cell {
+class Realm final
+    : public Cell
+    , public Weakable<Realm> {
 public:
     Realm() = default;
 
