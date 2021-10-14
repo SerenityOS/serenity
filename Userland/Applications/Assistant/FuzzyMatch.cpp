@@ -37,24 +37,24 @@ static int calculate_score(String const& string, u8* index_points, size_t index_
     for (size_t i = 0; i < index_points_size; i++) {
         u8 current_idx = index_points[i];
 
-        if (i > 0) {
-            u8 previous_idx = index_points[i - 1];
-            if (current_idx == previous_idx)
-                out_score += SEQUENTIAL_BONUS;
-        }
-
-        if (current_idx > 0) {
-            u32 current_character = string[current_idx];
-            u32 neighbor_character = string[current_idx - 1];
-
-            if (neighbor_character != to_ascii_uppercase(neighbor_character) && current_character != to_ascii_lowercase(current_character))
-                out_score += CAMEL_BONUS;
-
-            if (neighbor_character == '_' || neighbor_character == ' ')
-                out_score += SEPARATOR_BONUS;
-        } else {
+        if (current_idx == 0)
             out_score += FIRST_LETTER_BONUS;
-        }
+
+        if (i == 0)
+            continue;
+
+        u8 previous_idx = index_points[i - 1];
+        if (current_idx == previous_idx)
+            out_score += SEQUENTIAL_BONUS;
+
+        u32 current_character = string[current_idx];
+        u32 neighbor_character = string[current_idx - 1];
+
+        if (neighbor_character != to_ascii_uppercase(neighbor_character) && current_character != to_ascii_lowercase(current_character))
+            out_score += CAMEL_BONUS;
+
+        if (neighbor_character == '_' || neighbor_character == ' ')
+            out_score += SEPARATOR_BONUS;
     }
 
     return out_score;
