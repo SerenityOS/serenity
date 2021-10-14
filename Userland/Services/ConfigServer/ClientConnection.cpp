@@ -8,6 +8,7 @@
 #include <ConfigServer/ConfigClientEndpoint.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/FileWatcher.h>
+#include <LibCore/Timer.h>
 
 namespace ConfigServer {
 
@@ -20,6 +21,7 @@ struct CachedDomain {
 };
 
 static HashMap<String, NonnullOwnPtr<CachedDomain>> s_cache;
+static constexpr int s_disk_sync_delay_ms = 5'000;
 
 static Core::ConfigFile& ensure_domain_config(String const& domain)
 {
@@ -34,7 +36,7 @@ static Core::ConfigFile& ensure_domain_config(String const& domain)
     auto result = watcher_or_error.value()->add_watch(config->filename(), Core::FileWatcherEvent::Type::ContentModified);
     VERIFY(!result.is_error());
     watcher_or_error.value()->on_change = [config, domain](auto&) {
-        auto new_config = Core::ConfigFile::open(config->filename());
+        auto new_config = Core::ConfigFile::open(config->filename(), Core::ConfigFile::AllowWriting::Yes);
         // FIXME: Detect removed keys.
         // FIXME: Detect type of keys.
         for (auto& group : new_config->groups()) {
@@ -60,6 +62,7 @@ static Core::ConfigFile& ensure_domain_config(String const& domain)
 
 ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> client_socket, int client_id)
     : IPC::ClientConnection<ConfigClientEndpoint, ConfigServerEndpoint>(*this, move(client_socket), client_id)
+    , m_sync_timer(Core::Timer::create_single_shot(s_disk_sync_delay_ms, [this]() { sync_dirty_domains_to_disk(); }))
 {
     s_connections.set(client_id, *this);
 }
@@ -71,6 +74,8 @@ ClientConnection::~ClientConnection()
 void ClientConnection::die()
 {
     s_connections.remove(client_id());
+    m_sync_timer->stop();
+    sync_dirty_domains_to_disk();
 }
 
 void ClientConnection::pledge_domains(Vector<String> const& domains)
@@ -102,6 +107,18 @@ bool ClientConnection::validate_access(String const& domain, String const& group
         return true;
     did_misbehave(String::formatted("Blocked attempt to access domain '{}', group={}, key={}", domain, group, key).characters());
     return false;
+}
+
+void ClientConnection::sync_dirty_domains_to_disk()
+{
+    if (m_dirty_domains.is_empty())
+        return;
+    auto dirty_domains = move(m_dirty_domains);
+    dbgln("Syncing {} dirty domains to disk", dirty_domains.size());
+    for (auto domain : dirty_domains) {
+        auto& config = ensure_domain_config(domain);
+        config.sync();
+    }
 }
 
 Messages::ConfigServer::ReadStringValueResponse ClientConnection::read_string_value(String const& domain, String const& group, String const& key)
@@ -137,6 +154,14 @@ Messages::ConfigServer::ReadBoolValueResponse ClientConnection::read_bool_value(
     return Optional<bool> { config.read_bool_entry(group, key) };
 }
 
+void ClientConnection::start_or_restart_sync_timer()
+{
+    if (m_sync_timer->is_active())
+        m_sync_timer->restart();
+    else
+        m_sync_timer->start();
+}
+
 void ClientConnection::write_string_value(String const& domain, String const& group, String const& key, String const& value)
 {
     if (!validate_access(domain, group, key))
@@ -148,6 +173,8 @@ void ClientConnection::write_string_value(String const& domain, String const& gr
         return;
 
     config.write_entry(group, key, value);
+    m_dirty_domains.set(domain);
+    start_or_restart_sync_timer();
 
     for (auto& it : s_connections) {
         if (it.value != this && it.value->m_monitored_domains.contains(domain))
@@ -166,6 +193,8 @@ void ClientConnection::write_i32_value(String const& domain, String const& group
         return;
 
     config.write_num_entry(group, key, value);
+    m_dirty_domains.set(domain);
+    start_or_restart_sync_timer();
 
     for (auto& it : s_connections) {
         if (it.value != this && it.value->m_monitored_domains.contains(domain))
@@ -184,6 +213,8 @@ void ClientConnection::write_bool_value(String const& domain, String const& grou
         return;
 
     config.write_bool_entry(group, key, value);
+    m_dirty_domains.set(domain);
+    start_or_restart_sync_timer();
 
     for (auto& it : s_connections) {
         if (it.value != this && it.value->m_monitored_domains.contains(domain))
