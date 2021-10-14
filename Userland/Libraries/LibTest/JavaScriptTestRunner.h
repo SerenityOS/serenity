@@ -173,7 +173,6 @@ protected:
     void print_file_result(const JSFileResult& file_result) const;
 
     String m_common_path;
-    RefPtr<JS::Script> m_test_script;
 };
 
 class TestRunnerGlobalObject final : public JS::GlobalObject {
@@ -281,6 +280,14 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
     double start_time = get_time_in_ms();
     auto interpreter = JS::Interpreter::create<TestRunnerGlobalObject>(*g_vm);
 
+    // Since g_vm is reused for each new interpreter, Interpreter::create will end up pushing multiple
+    // global execution contexts onto the VM's execution context stack. To prevent this, we immediately
+    // pop the global execution context off the execution context stack and manually handle pushing
+    // and popping it. Since the global execution context should be the only thing on the stack
+    // at interpreter creation, let's assert there is only one.
+    VERIFY(g_vm->execution_context_stack().size() == 1);
+    auto& global_execution_context = *g_vm->execution_context_stack().take_first();
+
     // FIXME: This is a hack while we're refactoring Interpreter/VM stuff.
     JS::VM::InterpreterExecutionScope scope(*interpreter);
 
@@ -325,19 +332,19 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
         }
     }
 
-    if (!m_test_script) {
-        auto result = parse_script(m_common_path, interpreter->realm());
-        if (result.is_error()) {
-            warnln("Unable to parse test-common.js");
-            warnln("{}", result.error().error.to_string());
-            warnln("{}", result.error().hint);
-            cleanup_and_exit();
-        }
-        m_test_script = result.release_value();
+    // FIXME: Since a new interpreter is created every time with a new realm, we no longer cache the test-common.js file as scripts are parsed for the current realm only.
+    //        Find a way to cache this.
+    auto result = parse_script(m_common_path, interpreter->realm());
+    if (result.is_error()) {
+        warnln("Unable to parse test-common.js");
+        warnln("{}", result.error().error.to_string());
+        warnln("{}", result.error().hint);
+        cleanup_and_exit();
     }
+    auto test_script = result.release_value();
 
     if (g_run_bytecode) {
-        auto unit = JS::Bytecode::Generator::generate(m_test_script->parse_node());
+        auto unit = JS::Bytecode::Generator::generate(test_script->parse_node());
         if (g_dump_bytecode) {
             for (auto& block : unit.basic_blocks)
                 block.dump(unit);
@@ -350,7 +357,9 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
         JS::Bytecode::Interpreter bytecode_interpreter(interpreter->global_object(), interpreter->realm());
         bytecode_interpreter.run(unit);
     } else {
-        interpreter->run(interpreter->global_object(), m_test_script->parse_node());
+        g_vm->push_execution_context(global_execution_context, interpreter->global_object());
+        interpreter->run(*test_script);
+        g_vm->pop_execution_context();
     }
 
     VERIFY(!g_vm->exception());
@@ -372,7 +381,9 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
         JS::Bytecode::Interpreter bytecode_interpreter(interpreter->global_object(), interpreter->realm());
         bytecode_interpreter.run(unit);
     } else {
-        interpreter->run(interpreter->global_object(), file_script.value()->parse_node());
+        g_vm->push_execution_context(global_execution_context, interpreter->global_object());
+        interpreter->run(file_script.value());
+        g_vm->pop_execution_context();
     }
 
     if (g_vm->exception())

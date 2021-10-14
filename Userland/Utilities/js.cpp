@@ -59,6 +59,7 @@
 #include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/SourceTextModule.h>
 #include <LibLine/Editor.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -817,13 +818,20 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView const& source
     if (s_dump_ast)
         program->dump(0);
 
-    if (parser.has_errors()) {
-        auto error = parser.errors()[0];
-        auto hint = error.source_location_hint(source);
-        if (!hint.is_empty())
-            outln("{}", hint);
-        vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
-    } else {
+    enum class ReturnEarly {
+        No,
+        Yes,
+    };
+
+    auto run_script_or_module = [&](Variant<NonnullRefPtr<JS::Script>, NonnullRefPtr<JS::SourceTextModule>> script_or_module) {
+        auto program = script_or_module.visit(
+            [](auto& visitor) -> NonnullRefPtr<JS::Program> {
+                return visitor->parse_node();
+            });
+
+        if (s_dump_ast)
+            program->dump(0);
+
         if (s_dump_bytecode || s_run_bytecode) {
             auto unit = JS::Bytecode::Generator::generate(*program);
             if (s_opt_bytecode) {
@@ -845,10 +853,43 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView const& source
                 JS::Bytecode::Interpreter bytecode_interpreter(interpreter.global_object(), interpreter.realm());
                 bytecode_interpreter.run(unit);
             } else {
-                return true;
+                return ReturnEarly::Yes;
             }
         } else {
-            interpreter.run(interpreter.global_object(), *program);
+            script_or_module.visit(
+                [&](auto& visitor) {
+                    interpreter.run(visitor);
+                });
+        }
+
+        return ReturnEarly::No;
+    };
+
+    if (!s_as_module) {
+        auto script_or_error = JS::Script::parse(source, interpreter.realm());
+        if (script_or_error.is_error()) {
+            auto error = script_or_error.error()[0];
+            auto hint = error.source_location_hint(source);
+            if (!hint.is_empty())
+                outln("{}", hint);
+            vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
+        } else {
+            auto return_early = run_script_or_module(move(script_or_error.value()));
+            if (return_early == ReturnEarly::Yes)
+                return true;
+        }
+    } else {
+        auto module_or_error = JS::SourceTextModule::parse(source, interpreter.realm());
+        if (module_or_error.is_error()) {
+            auto error = module_or_error.error()[0];
+            auto hint = error.source_location_hint(source);
+            if (!hint.is_empty())
+                outln("{}", hint);
+            vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
+        } else {
+            auto return_early = run_script_or_module(move(module_or_error.value()));
+            if (return_early == ReturnEarly::Yes)
+                return true;
         }
     }
 
@@ -907,15 +948,14 @@ static JS::Value load_file_impl(JS::VM& vm, JS::GlobalObject& global_object)
     }
     auto file_contents = file->read_all();
     auto source = StringView { file_contents };
-    auto parser = JS::Parser(JS::Lexer(source));
-    auto program = parser.parse_program();
-    if (parser.has_errors()) {
-        auto& error = parser.errors()[0];
+    auto script_or_error = JS::Script::parse(source, vm.interpreter().realm(), filename);
+    if (script_or_error.is_error()) {
+        auto& error = script_or_error.error()[0];
         vm.throw_exception<JS::SyntaxError>(global_object, error.to_string());
         return {};
     }
     // FIXME: Use eval()-like semantics and execute in current scope?
-    vm.interpreter().run(global_object, *program);
+    vm.interpreter().run(script_or_error.value());
     return JS::js_undefined();
 }
 

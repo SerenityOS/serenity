@@ -705,17 +705,19 @@ JS::Interpreter& Document::interpreter()
     return *m_interpreter;
 }
 
-JS::Value Document::run_javascript(const StringView& source, const StringView& filename)
+JS::Value Document::run_javascript(StringView const& source, StringView const& filename)
 {
-    auto parser = JS::Parser(JS::Lexer(source, filename));
-    auto program = parser.parse_program();
-    if (parser.has_errors()) {
-        parser.print_errors(false);
+    // FIXME: The only user of this function now is javascript: URLs. Refactor them to follow the spec: https://html.spec.whatwg.org/multipage/browsing-the-web.html#javascript-protocol
+    auto& interpreter = document().interpreter();
+    auto script_or_error = JS::Script::parse(source, interpreter.realm(), filename);
+    if (script_or_error.is_error()) {
+        // FIXME: Add error logging back.
         return JS::js_undefined();
     }
-    auto& interpreter = document().interpreter();
+
+    interpreter.run(script_or_error.value());
+
     auto& vm = interpreter.vm();
-    interpreter.run(interpreter.global_object(), *program);
     if (vm.exception())
         vm.clear_exception();
     return vm.last_value();

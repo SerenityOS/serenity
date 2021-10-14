@@ -108,18 +108,17 @@ void EvaluateExpressionDialog::handle_evaluation(const String& expression)
     m_output_container->remove_all_children();
     m_output_view->update();
 
-    auto parser = JS::Parser(JS::Lexer(expression));
-    auto program = parser.parse_program();
+    auto script_or_error = JS::Script::parse(expression, m_interpreter->realm());
 
     StringBuilder output_html;
-    if (parser.has_errors()) {
-        auto error = parser.errors()[0];
+    if (script_or_error.is_error()) {
+        auto error = script_or_error.error()[0];
         auto hint = error.source_location_hint(expression);
         if (!hint.is_empty())
             output_html.append(String::formatted("<pre>{}</pre>", escape_html_entities(hint)));
         m_interpreter->vm().throw_exception<JS::SyntaxError>(m_interpreter->global_object(), error.to_string());
     } else {
-        m_interpreter->run(m_interpreter->global_object(), *program);
+        m_interpreter->run(script_or_error.value());
     }
 
     if (m_interpreter->exception()) {

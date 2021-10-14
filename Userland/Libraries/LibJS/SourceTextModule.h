@@ -19,6 +19,8 @@ public:
     static Result<NonnullRefPtr<SourceTextModule>, Vector<Parser::Error>> parse(StringView source_text, Realm&, StringView filename = {});
     virtual ~SourceTextModule();
 
+    Program const& parse_node() const { return *m_ecmascript_code; }
+
 private:
     explicit SourceTextModule(Realm&, NonnullRefPtr<Program>);
 

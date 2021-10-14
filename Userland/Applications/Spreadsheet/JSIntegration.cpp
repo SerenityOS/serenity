@@ -376,8 +376,8 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_arithmetic)
     return JS::js_string(vm, new_column.release_value());
 }
 
-WorkbookObject::WorkbookObject(Workbook& workbook)
-    : JS::Object(*JS::Object::create(workbook.global_object(), workbook.global_object().object_prototype()))
+WorkbookObject::WorkbookObject(Workbook& workbook, JS::GlobalObject& global_object)
+    : JS::Object(*JS::Object::create(global_object, global_object.object_prototype()))
     , m_workbook(workbook)
 {
 }

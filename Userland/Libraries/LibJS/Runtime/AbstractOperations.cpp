@@ -528,8 +528,7 @@ ThrowCompletionOr<Value> perform_eval(Value x, GlobalObject& caller_realm, Calle
 
     auto& interpreter = vm.interpreter();
     TemporaryChange scope_change_strict(vm.running_execution_context().is_strict_mode, strict_eval);
-    // FIXME: We need to use evaluate_statements() here because Program::execute() calls global_declaration_instantiation() when it shouldn't
-    auto eval_result = program->evaluate_statements(interpreter, caller_realm);
+    auto eval_result = program->execute(interpreter, caller_realm);
 
     if (auto* exception = vm.exception())
         return throw_completion(exception->value());
