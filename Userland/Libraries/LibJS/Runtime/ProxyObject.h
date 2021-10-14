@@ -22,7 +22,7 @@ public:
     virtual ~ProxyObject() override;
 
     virtual const FlyString& name() const override;
-    virtual bool has_constructor() const override { return true; }
+    virtual bool has_constructor() const override;
 
     const Object& target() const { return m_target; }
     const Object& handler() const { return m_handler; }
