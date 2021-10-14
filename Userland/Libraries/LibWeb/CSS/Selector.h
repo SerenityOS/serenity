@@ -37,7 +37,6 @@ public:
             int step_size { 0 }; // "A"
             int offset = { 0 };  // "B"
 
-            static ANPlusBPattern parse(StringView const& args);
             String to_string() const
             {
                 return String::formatted("{}n{:+}", step_size, offset);
