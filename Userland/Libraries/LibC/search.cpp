@@ -89,4 +89,28 @@ void* tfind(const void* key, void* const* rootp, int (*comparator)(const void*, 
 
     return nullptr;
 }
+
+static void twalk_internal(const struct search_tree_node* node, void (*action)(const void*, VISIT, int), int depth)
+{
+    if (!node)
+        return;
+
+    if (!node->right && !node->left) {
+        action(node, leaf, depth);
+        return;
+    }
+
+    action(node, preorder, depth);
+    twalk_internal(node->left, action, depth + 1);
+    action(node, postorder, depth);
+    twalk_internal(node->right, action, depth + 1);
+    action(node, endorder, depth);
+}
+
+void twalk(const void* rootp, void (*action)(const void*, VISIT, int))
+{
+    auto node = static_cast<const struct search_tree_node*>(rootp);
+
+    twalk_internal(node, action, 0);
+}
 }
