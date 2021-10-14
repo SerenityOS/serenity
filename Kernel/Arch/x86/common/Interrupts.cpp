@@ -22,8 +22,8 @@
 #include <LibC/mallocdefs.h>
 
 #include <Kernel/Arch/Processor.h>
+#include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Arch/x86/ISRStubs.h>
-#include <Kernel/Arch/x86/RegisterState.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/KSyms.h>
 
