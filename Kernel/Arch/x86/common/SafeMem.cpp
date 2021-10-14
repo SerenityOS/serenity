@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Arch/Processor.h>
-#include <Kernel/Arch/x86/RegisterState.h>
+#include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Arch/x86/SafeMem.h>
 
 #define CODE_SECTION(section_name) __attribute__((section(section_name)))
