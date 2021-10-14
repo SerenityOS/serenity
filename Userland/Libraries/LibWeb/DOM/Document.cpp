@@ -54,6 +54,7 @@
 #include <LibWeb/HTML/HTMLTitleElement.h>
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
+#include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TreeBuilder.h>
@@ -618,6 +619,13 @@ Color Document::visited_link_color() const
     return page()->palette().visited_link();
 }
 
+// https://html.spec.whatwg.org/multipage/webappapis.html#relevant-settings-object
+HTML::EnvironmentSettingsObject& Document::relevant_settings_object()
+{
+    // Then, the relevant settings object for a platform object o is the environment settings object of the relevant Realm for o.
+    return verify_cast<HTML::EnvironmentSettingsObject>(*realm().host_defined());
+}
+
 JS::Realm& Document::realm()
 {
     return interpreter().realm();
@@ -626,8 +634,46 @@ JS::Realm& Document::realm()
 JS::Interpreter& Document::interpreter()
 {
     if (!m_interpreter) {
+        // FIXME: This is all ad-hoc. It loosely follows steps 6.4 to 6.9 of https://html.spec.whatwg.org/#initialise-the-document-object
         auto& vm = Bindings::main_thread_vm();
+
+        // https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-new-javascript-realm
+        // FIXME: Put all this into it's own function that can be used outside of Document.
+
+        // 1. Perform InitializeHostDefinedRealm() with the provided customizations for creating the global object and the global this binding.
+        // FIXME: Use WindowProxy as the global this value.
         m_interpreter = JS::Interpreter::create<Bindings::WindowObject>(vm, *m_window);
+
+        // 2. Let realm execution context be the running JavaScript execution context.
+        auto& realm_execution_context = vm.running_execution_context();
+
+        // 3. Remove realm execution context from the JavaScript execution context stack.
+        vm.execution_context_stack().remove_first_matching([&realm_execution_context](auto* execution_context) {
+            return execution_context == &realm_execution_context;
+        });
+
+        // FIXME: 4. Let realm be realm execution context's Realm component.
+        // FIXME: 5. Set realm's agent to agent.
+
+        // FIXME: 6. If agent's agent cluster's cross-origin isolation mode is "none", then:
+        //          1. Let global be realm's global object.
+        //          2. Let status be ! global.[[Delete]]("SharedArrayBuffer").
+        //          3. Assert: status is true.
+
+        // FIXME: 7. Return realm execution context. (Requires being in it's own function as mentioned above)
+
+        // == End of "create a JavaScript realm" ==
+
+        // FIXME: 6. Let topLevelCreationURL be creationURL.
+        // FIXME: 7. Let topLevelOrigin be navigationParams's origin.
+        // FIXME: 8. If browsingContext is not a top-level browsing context, then:
+        //          1. Let parentEnvironment be browsingContext's container's relevant settings object.
+        //          2. Set topLevelCreationURL to parentEnvironment's top-level creation URL.
+        //          3. Set topLevelOrigin to parentEnvironment's top-level origin.
+
+        // FIXME: 9. Set up a window environment settings object with creationURL, realm execution context, navigationParams's reserved environment, topLevelCreationURL, and topLevelOrigin.
+        //        (This is missing reserved environment, topLevelCreationURL and topLevelOrigin. It also assumes creationURL is the document's URL, when it's really "navigationParams's response's URL.")
+        HTML::WindowEnvironmentSettingsObject::setup(m_url, realm_execution_context);
 
         // NOTE: We must hook `on_call_stack_emptied` after the interpreter was created, as the initialization of the
         // WindowsObject can invoke some internal calls, which will eventually lead to this hook being called without

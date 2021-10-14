@@ -11,7 +11,9 @@
 #include <LibGUI/Window.h>
 #include <LibTest/JavaScriptTestRunner.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
+#include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
@@ -24,6 +26,7 @@ RefPtr<GUI::Application> g_app;
 Optional<URL> next_page_to_load;
 Vector<Function<JS::ThrowCompletionOr<void>(JS::Object&)>> after_initial_load_hooks;
 Vector<Function<JS::ThrowCompletionOr<void>(JS::Object&)>> before_initial_load_hooks;
+RefPtr<Web::DOM::Document> g_current_interpreter_document;
 
 TESTJS_MAIN_HOOK()
 {
@@ -38,7 +41,51 @@ TESTJS_MAIN_HOOK()
     g_page_view = view;
 }
 
-TESTJS_GLOBAL_FUNCTION(load_local_page, loadLocalPage)
+struct TestWebGlobalObject : public Web::Bindings::WindowObject {
+    JS_OBJECT(TestWebGlobalObject, Web::Bindings::WindowObject);
+
+public:
+    TestWebGlobalObject(Web::DOM::Window& window)
+        : Web::Bindings::WindowObject(window)
+    {
+    }
+
+    virtual ~TestWebGlobalObject() override = default;
+
+    virtual void initialize_global_object() override;
+
+    JS_DECLARE_NATIVE_FUNCTION(load_local_page);
+    JS_DECLARE_NATIVE_FUNCTION(after_initial_page_load);
+    JS_DECLARE_NATIVE_FUNCTION(before_initial_page_load);
+    JS_DECLARE_NATIVE_FUNCTION(wait_for_page_to_load);
+};
+
+void TestWebGlobalObject::initialize_global_object()
+{
+    Base::initialize_global_object();
+
+    define_native_function("loadLocalPage", load_local_page, 1, JS::default_attributes);
+    define_native_function("afterInitialPageLoad", after_initial_page_load, 1, JS::default_attributes);
+    define_native_function("beforeInitialPageLoad", before_initial_page_load, 1, JS::default_attributes);
+    define_native_function("waitForPageToLoad", wait_for_page_to_load, 0, JS::default_attributes);
+}
+
+TESTJS_CREATE_INTERPRETER_HOOK()
+{
+    // FIXME: This is a hack as the document we create needs to stay alive the entire time and we don't have insight into JavaScriptTestRUnner from here to work out the lifetime from here.
+    g_current_interpreter_document = Web::DOM::Document::create();
+
+    // FIXME: Use WindowProxy as the globalThis value.
+    auto interpreter = JS::Interpreter::create<TestWebGlobalObject>(*g_vm, g_current_interpreter_document->window());
+
+    // FIXME: Work out the creation URL.
+    AK::URL creation_url;
+
+    Web::HTML::WindowEnvironmentSettingsObject::setup(creation_url, g_vm->running_execution_context());
+    return interpreter;
+}
+
+JS_DEFINE_NATIVE_FUNCTION(TestWebGlobalObject::load_local_page)
 {
     auto name = TRY(vm.argument(0).to_string(global_object));
 
@@ -54,7 +101,7 @@ TESTJS_GLOBAL_FUNCTION(load_local_page, loadLocalPage)
     return JS::js_undefined();
 }
 
-TESTJS_GLOBAL_FUNCTION(after_initial_page_load, afterInitialPageLoad)
+JS_DEFINE_NATIVE_FUNCTION(TestWebGlobalObject::after_initial_page_load)
 {
     auto function = vm.argument(0);
     if (!function.is_function()) {
@@ -69,7 +116,7 @@ TESTJS_GLOBAL_FUNCTION(after_initial_page_load, afterInitialPageLoad)
     return JS::js_undefined();
 }
 
-TESTJS_GLOBAL_FUNCTION(before_initial_page_load, beforeInitialPageLoad)
+JS_DEFINE_NATIVE_FUNCTION(TestWebGlobalObject::before_initial_page_load)
 {
     auto function = vm.argument(0);
     if (!function.is_function()) {
@@ -84,7 +131,7 @@ TESTJS_GLOBAL_FUNCTION(before_initial_page_load, beforeInitialPageLoad)
     return JS::js_undefined();
 }
 
-TESTJS_GLOBAL_FUNCTION(wait_for_page_to_load, waitForPageToLoad)
+JS_DEFINE_NATIVE_FUNCTION(TestWebGlobalObject::wait_for_page_to_load)
 {
     // Create a new parser and immediately get its document to replace the old interpreter.
     auto document = Web::DOM::Document::create();

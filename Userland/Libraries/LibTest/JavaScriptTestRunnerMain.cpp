@@ -23,6 +23,7 @@ bool g_run_bytecode = false;
 String g_currently_running_test;
 HashMap<String, FunctionWithLength> s_exposed_global_functions;
 Function<void()> g_main_hook;
+Function<NonnullOwnPtr<JS::Interpreter>()> g_create_interpreter_hook;
 HashMap<bool*, Tuple<String, String, char>> g_extra_args;
 IntermediateRunFileResult (*g_run_file)(const String&, JS::Interpreter&) = nullptr;
 String g_test_root;
