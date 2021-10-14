@@ -360,6 +360,7 @@ else()
     set(SOURCES
         Arch/aarch64/dummy.cpp
         ${AK_SOURCES}
+        UBSanitizer.cpp
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
