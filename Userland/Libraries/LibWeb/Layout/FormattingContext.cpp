@@ -344,25 +344,35 @@ float FormattingContext::compute_width_for_replaced_element(const ReplacedBox& b
     return used_width;
 }
 
-float FormattingContext::tentative_height_for_replaced_element(const ReplacedBox& box, const CSS::Length& height)
+// 10.6.2 Inline replaced elements, block-level replaced elements in normal flow, 'inline-block' replaced elements in normal flow and floating replaced elements
+// https://www.w3.org/TR/CSS22/visudet.html#inline-replaced-height
+float FormattingContext::tentative_height_for_replaced_element(ReplacedBox const& box, CSS::Length const& computed_height)
 {
     auto& containing_block = *box.containing_block();
-    auto specified_width = box.computed_values().width().resolved_or_auto(box, containing_block.width());
-
-    float used_height = height.to_px(box);
+    auto computed_width = box.computed_values().width().resolved_or_auto(box, containing_block.width());
 
     // If 'height' and 'width' both have computed values of 'auto' and the element also has
     // an intrinsic height, then that intrinsic height is the used value of 'height'.
-    if (specified_width.is_auto() && height.is_auto() && box.has_intrinsic_height())
-        used_height = box.intrinsic_height().value();
-    else if (height.is_auto() && box.has_intrinsic_aspect_ratio())
-        used_height = compute_width_for_replaced_element(box) / box.intrinsic_aspect_ratio().value();
-    else if (height.is_auto() && box.has_intrinsic_height())
-        used_height = box.intrinsic_height().value();
-    else if (height.is_auto())
-        used_height = 150;
+    if (computed_width.is_auto() && computed_height.is_auto() && box.has_intrinsic_height())
+        return box.intrinsic_height().value();
 
-    return used_height;
+    // Otherwise, if 'height' has a computed value of 'auto', and the element has an intrinsic ratio then the used value of 'height' is:
+    //
+    //     (used width) / (intrinsic ratio)
+    if (computed_height.is_auto() && box.has_intrinsic_aspect_ratio())
+        return compute_width_for_replaced_element(box) / box.intrinsic_aspect_ratio().value();
+
+    // Otherwise, if 'height' has a computed value of 'auto', and the element has an intrinsic height, then that intrinsic height is the used value of 'height'.
+    if (computed_height.is_auto() && box.has_intrinsic_height())
+        return box.intrinsic_height().value();
+
+    // Otherwise, if 'height' has a computed value of 'auto', but none of the conditions above are met,
+    // then the used value of 'height' must be set to the height of the largest rectangle that has a 2:1 ratio, has a height not greater than 150px,
+    // and has a width not greater than the device width.
+    if (computed_height.is_auto())
+        return 150;
+
+    return computed_height.to_px(box);
 }
 
 float FormattingContext::compute_height_for_replaced_element(const ReplacedBox& box)
