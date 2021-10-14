@@ -20,7 +20,6 @@ set(KERNEL_HEAP_SOURCES
 
 set(KERNEL_SOURCES
     AddressSanitizer.cpp
-    Arch/x86/SmapDisabler.h
     Bus/PCI/Access.cpp
     Bus/PCI/API.cpp
     Bus/PCI/Device.cpp
@@ -291,6 +290,7 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
         Arch/x86/ScopedCritical.cpp
+        Arch/x86/SmapDisabler.cpp
     )
 
     set(KERNEL_SOURCES
@@ -369,6 +369,7 @@ else()
         ${AK_SOURCES}
         
         Arch/aarch64/dummy.cpp
+        Arch/aarch64/SmapDisabler.cpp
         Arch/aarch64/ScopedCritical.cpp
         
         UBSanitizer.cpp
