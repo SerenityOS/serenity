@@ -22,32 +22,35 @@
 #include <LibCore/File.h>
 #include <LibUnicode/Locale.h>
 
+using StringIndexType = u16;
+constexpr auto s_string_index_type = "u16"sv;
+
 struct ListPatterns {
     String type;
     String style;
-    size_t start { 0 };
-    size_t middle { 0 };
-    size_t end { 0 };
-    size_t pair { 0 };
+    StringIndexType start { 0 };
+    StringIndexType middle { 0 };
+    StringIndexType end { 0 };
+    StringIndexType pair { 0 };
 };
 
 struct Locale {
     String language;
     Optional<String> territory;
     Optional<String> variant;
-    HashMap<String, size_t> languages;
-    HashMap<String, size_t> territories;
-    HashMap<String, size_t> scripts;
-    HashMap<String, size_t> currencies;
-    HashMap<String, size_t> keywords;
+    HashMap<String, StringIndexType> languages;
+    HashMap<String, StringIndexType> territories;
+    HashMap<String, StringIndexType> scripts;
+    HashMap<String, StringIndexType> currencies;
+    HashMap<String, StringIndexType> keywords;
     Vector<ListPatterns> list_patterns;
 };
 
 struct CanonicalLanguageID {
-    size_t language { 0 };
-    size_t script { 0 };
-    size_t region { 0 };
-    Vector<size_t> variants {};
+    StringIndexType language { 0 };
+    StringIndexType script { 0 };
+    StringIndexType region { 0 };
+    Vector<StringIndexType> variants {};
 };
 
 struct LanguageMapping {
@@ -57,7 +60,7 @@ struct LanguageMapping {
 
 struct UnicodeLocaleData {
     Vector<String> unique_strings;
-    HashMap<StringView, size_t> unique_string_indices;
+    HashMap<StringView, StringIndexType> unique_string_indices;
     HashMap<String, Locale> locales;
     Vector<String> languages;
     Vector<String> territories;
@@ -67,17 +70,17 @@ struct UnicodeLocaleData {
     Vector<String> keywords;
     Vector<String> list_pattern_types;
     Vector<String> list_pattern_styles;
-    HashMap<String, size_t> language_aliases;
-    HashMap<String, size_t> territory_aliases;
-    HashMap<String, size_t> script_aliases;
-    HashMap<String, size_t> variant_aliases;
-    HashMap<String, size_t> subdivision_aliases;
+    HashMap<String, StringIndexType> language_aliases;
+    HashMap<String, StringIndexType> territory_aliases;
+    HashMap<String, StringIndexType> script_aliases;
+    HashMap<String, StringIndexType> variant_aliases;
+    HashMap<String, StringIndexType> subdivision_aliases;
     Vector<LanguageMapping> complex_mappings;
     Vector<LanguageMapping> likely_subtags;
     size_t max_variant_size { 0 };
 };
 
-static size_t ensure_unique_string(UnicodeLocaleData& locale_data, String string)
+static StringIndexType ensure_unique_string(UnicodeLocaleData& locale_data, String string)
 {
     // We maintain a set of unique strings in two structures: a vector which owns the unique string,
     // and a hash map which maps that string to its index in the vector. The vector is to ensure the
@@ -92,11 +95,17 @@ static size_t ensure_unique_string(UnicodeLocaleData& locale_data, String string
     locale_data.unique_strings.append(move(string));
     size_t index = locale_data.unique_strings.size();
 
-    locale_data.unique_string_indices.set(locale_data.unique_strings.last(), index);
-    return index;
+    // There are currently on the order of 46K unique strings in UnicodeLocale.cpp.
+    // If that number reaches 2^16, bump the StringIndexType alias to a u32.
+    VERIFY(index < NumericLimits<StringIndexType>::max());
+
+    auto string_index = static_cast<StringIndexType>(index);
+    locale_data.unique_string_indices.set(locale_data.unique_strings.last(), string_index);
+
+    return string_index;
 }
 
-static StringView get_unique_string(UnicodeLocaleData& locale_data, size_t index)
+static StringView get_unique_string(UnicodeLocaleData& locale_data, StringIndexType index)
 {
     if (index == 0)
         return {};
@@ -279,7 +288,7 @@ static void parse_locale_languages(String locale_path, UnicodeLocaleData& locale
         if (!locale_data.languages.contains_slow(key))
             return;
 
-        size_t index = ensure_unique_string(locale_data, value.as_string());
+        auto index = ensure_unique_string(locale_data, value.as_string());
         locale.languages.set(key, index);
     });
 }
@@ -305,7 +314,7 @@ static void parse_locale_territories(String locale_path, UnicodeLocaleData& loca
         if (!locale_data.territories.contains_slow(key))
             return;
 
-        size_t index = ensure_unique_string(locale_data, value.as_string());
+        auto index = ensure_unique_string(locale_data, value.as_string());
         locale.territories.set(key, index);
     });
 }
@@ -328,7 +337,7 @@ static void parse_locale_scripts(String locale_path, UnicodeLocaleData& locale_d
     auto const& scripts_object = locale_display_names_object.as_object().get("scripts"sv);
 
     scripts_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
-        size_t index = ensure_unique_string(locale_data, value.as_string());
+        auto index = ensure_unique_string(locale_data, value.as_string());
         locale.scripts.set(key, index);
 
         if (!locale_data.scripts.contains_slow(key))
@@ -408,7 +417,7 @@ static void parse_locale_currencies(String numbers_path, UnicodeLocaleData& loca
     currencies_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
         auto const& display_name = value.as_object().get("displayName"sv);
 
-        size_t index = ensure_unique_string(locale_data, display_name.as_string());
+        auto index = ensure_unique_string(locale_data, display_name.as_string());
         locale.currencies.set(key, index);
 
         if (!locale_data.currencies.contains_slow(key))
@@ -660,6 +669,7 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
+    generator.set("string_index_type"sv, s_string_index_type);
     generator.set("strings_size"sv, String::number(locale_data.unique_strings.size()));
     generator.set("locales_size"sv, String::number(locale_data.locales.size()));
     generator.set("territories_size", String::number(locale_data.territories.size()));
@@ -677,10 +687,10 @@ namespace Unicode {
 struct Patterns {
     ListPatternType type;
     ListPatternStyle style;
-    size_t start { 0 };
-    size_t middle { 0 };
-    size_t end { 0 };
-    size_t pair { 0 };
+    @string_index_type@ start { 0 };
+    @string_index_type@ middle { 0 };
+    @string_index_type@ end { 0 };
+    @string_index_type@ pair { 0 };
 };
 )~~~");
 
@@ -712,7 +722,7 @@ static constexpr Array<StringView, @strings_size@ + 1> s_string_list { {
         return String::formatted(format, mapping_name);
     };
 
-    auto append_index = [&](size_t index) {
+    auto append_index = [&](auto index) {
         generator.append(String::formatted(", {}", index));
     };
 
@@ -737,7 +747,7 @@ static constexpr Array<StringView, @strings_size@ + 1> s_string_list { {
         generator.set("size", String::number(keys.size()));
 
         generator.append(R"~~~(
-static constexpr Array<size_t, @size@> @name@ { {
+static constexpr Array<@string_index_type@, @size@> @name@ { {
     )~~~");
 
         constexpr size_t max_values_per_row = 30;
@@ -827,11 +837,11 @@ static constexpr Array<Span<@type@ const>, @size@> @name@ { {
 )~~~");
     };
 
-    append_mapping("size_t"sv, "s_languages"sv, "s_languages_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.languages, value.languages); });
-    append_mapping("size_t"sv, "s_territories"sv, "s_territories_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.territories, value.territories); });
-    append_mapping("size_t"sv, "s_scripts"sv, "s_scripts_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.scripts, value.scripts); });
-    append_mapping("size_t"sv, "s_currencies"sv, "s_currencies_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.currencies, value.currencies); });
-    append_mapping("size_t"sv, "s_keywords"sv, "s_keywords_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.keywords, value.keywords); });
+    append_mapping(s_string_index_type, "s_languages"sv, "s_languages_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.languages, value.languages); });
+    append_mapping(s_string_index_type, "s_territories"sv, "s_territories_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.territories, value.territories); });
+    append_mapping(s_string_index_type, "s_scripts"sv, "s_scripts_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.scripts, value.scripts); });
+    append_mapping(s_string_index_type, "s_currencies"sv, "s_currencies_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.currencies, value.currencies); });
+    append_mapping(s_string_index_type, "s_keywords"sv, "s_keywords_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.keywords, value.keywords); });
     append_mapping("Patterns"sv, "s_list_patterns"sv, "s_list_patterns_{}", [&](auto const& name, auto const& value) { append_list_patterns(name, value.list_patterns); });
 
     generator.append(R"~~~(
@@ -866,10 +876,10 @@ struct CanonicalLanguageID {
         return true;
     };
 
-    size_t language { 0 };
-    size_t script { 0 };
-    size_t region { 0 };
-    Array<size_t, @variants_size@> variants {};
+    @string_index_type@ language { 0 };
+    @string_index_type@ script { 0 };
+    @string_index_type@ region { 0 };
+    Array<@string_index_type@, @variants_size@> variants {};
     size_t variants_size { 0 };
 
 };
@@ -1055,13 +1065,13 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     };
 
     auto append_alias_search = [&](StringView enum_snake, auto const& aliases) {
-        HashValueMap<size_t> hashes;
+        HashValueMap<StringIndexType> hashes;
         hashes.ensure_capacity(aliases.size());
 
         for (auto const& alias : aliases)
             hashes.set(alias.key.hash(), alias.value);
 
-        generate_value_from_string(generator, "resolve_{}_alias"sv, "size_t"sv, enum_snake, move(hashes), "StringView"sv, "s_string_list[{}]"sv);
+        generate_value_from_string(generator, "resolve_{}_alias"sv, s_string_index_type, enum_snake, move(hashes), "StringView"sv, "s_string_list[{}]"sv);
     };
 
     append_from_string("Locale"sv, "locale"sv, locale_data.locales.keys());
