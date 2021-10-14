@@ -107,6 +107,11 @@ void StackingContext::paint_internal(PaintContext& context)
 
 void StackingContext::paint(PaintContext& context)
 {
+    Gfx::PainterStateSaver saver(context.painter());
+    if (m_box.is_fixed_position()) {
+        context.painter().translate(context.scroll_offset());
+    }
+
     auto opacity = m_box.computed_values().opacity();
     if (opacity.has_value() && opacity.value() == 0.0f)
         return;
