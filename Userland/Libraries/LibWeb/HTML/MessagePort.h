@@ -30,9 +30,9 @@ public:
     using RefCounted::ref;
     using RefCounted::unref;
 
-    static NonnullRefPtr<MessagePort> create(Bindings::ScriptExecutionContext& context)
+    static NonnullRefPtr<MessagePort> create()
     {
-        return adopt_ref(*new MessagePort(context));
+        return adopt_ref(*new MessagePort());
     }
 
     virtual ~MessagePort() override;
@@ -53,14 +53,14 @@ public:
     void close();
 
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)    \
-    void set_##attribute_name(HTML::EventHandler); \
-    HTML::EventHandler attribute_name();
+#define __ENUMERATE(attribute_name, event_name)                  \
+    void set_##attribute_name(Optional<Bindings::CallbackType>); \
+    Bindings::CallbackType* attribute_name();
     ENUMERATE_MESSAGE_PORT_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
 
 private:
-    explicit MessagePort(Bindings::ScriptExecutionContext&);
+    MessagePort();
 
     bool is_entangled() const { return m_remote_port; }
     void disentangle();

@@ -67,7 +67,7 @@ DOM::ExceptionOr<NonnullRefPtr<WebSocket>> WebSocket::create_with_global_object(
 }
 
 WebSocket::WebSocket(DOM::Window& window, AK::URL& url)
-    : EventTarget(static_cast<Bindings::ScriptExecutionContext&>(window.associated_document()))
+    : EventTarget()
     , m_window(window)
 {
     // FIXME: Integrate properly with FETCH as per https://fetch.spec.whatwg.org/#websocket-opening-handshake
@@ -226,14 +226,14 @@ JS::Object* WebSocket::create_wrapper(JS::GlobalObject& global_object)
 }
 
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)                    \
-    void WebSocket::set_##attribute_name(HTML::EventHandler value) \
-    {                                                              \
-        set_event_handler_attribute(event_name, move(value));      \
-    }                                                              \
-    HTML::EventHandler WebSocket::attribute_name()                 \
-    {                                                              \
-        return event_handler_attribute(event_name);                \
+#define __ENUMERATE(attribute_name, event_name)                                  \
+    void WebSocket::set_##attribute_name(Optional<Bindings::CallbackType> value) \
+    {                                                                            \
+        set_event_handler_attribute(event_name, move(value));                    \
+    }                                                                            \
+    Bindings::CallbackType* WebSocket::attribute_name()                          \
+    {                                                                            \
+        return event_handler_attribute(event_name);                              \
     }
 ENUMERATE_WEBSOCKET_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE

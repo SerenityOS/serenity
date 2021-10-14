@@ -312,6 +312,7 @@ namespace Web::Bindings {
 class AbortControllerWrapper;
 class AbortSignalWrapper;
 class AttributeWrapper;
+struct CallbackType;
 class CanvasGradientWrapper;
 class CanvasRenderingContext2DWrapper;
 class CharacterDataWrapper;
@@ -438,7 +439,6 @@ class RangePrototype;
 class RangeWrapper;
 class ResizeObserverWrapper;
 class ScreenWrapper;
-class ScriptExecutionContext;
 class SelectionWrapper;
 class StyleSheetListWrapper;
 class StyleSheetWrapper;
