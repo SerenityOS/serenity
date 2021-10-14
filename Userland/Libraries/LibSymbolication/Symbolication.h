@@ -20,8 +20,13 @@ struct Symbol {
     bool operator==(Symbol const&) const = default;
 };
 
+enum class IncludeSourcePosition {
+    Yes,
+    No
+};
+
 Optional<FlatPtr> kernel_base();
-Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid);
-Optional<Symbol> symbolicate(String const& path, FlatPtr address);
+Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition = IncludeSourcePosition::Yes);
+Optional<Symbol> symbolicate(String const& path, FlatPtr address, IncludeSourcePosition = IncludeSourcePosition::Yes);
 
 }
