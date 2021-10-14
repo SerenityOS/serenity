@@ -23,14 +23,21 @@ Lstart:
   bne Lstart
   ret
 
+.global return_from_el2
+.type return_from_el2, @function
+return_from_el2:
+  adr x0, jump_to_os_start
+  msr elr_el2, x0
+  eret
+
 .global return_from_el3
 .type return_from_el3, @function
 return_from_el3:
-  adr x0, start_in_el1
+  adr x0, jump_to_os_start
   msr elr_el3, x0
   eret
 
-start_in_el1:
+jump_to_os_start:
   // Let stack start before .text for now.
   // 512 kiB (0x80000) of stack are probably not sufficient, especially once we give the other cores some stack too,
   // but for now it's ok.
