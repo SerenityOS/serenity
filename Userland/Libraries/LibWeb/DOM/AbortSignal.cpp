@@ -14,8 +14,8 @@
 
 namespace Web::DOM {
 
-AbortSignal::AbortSignal(Document& document)
-    : EventTarget(static_cast<Bindings::ScriptExecutionContext&>(document))
+AbortSignal::AbortSignal()
+    : EventTarget()
 {
 }
 
@@ -63,12 +63,12 @@ void AbortSignal::signal_abort(JS::Value reason)
     dispatch_event(Event::create(HTML::EventNames::abort));
 }
 
-void AbortSignal::set_onabort(HTML::EventHandler event_handler)
+void AbortSignal::set_onabort(Optional<Bindings::CallbackType> event_handler)
 {
-    set_event_handler_attribute(HTML::EventNames::abort, event_handler);
+    set_event_handler_attribute(HTML::EventNames::abort, move(event_handler));
 }
 
-HTML::EventHandler AbortSignal::onabort()
+Bindings::CallbackType* AbortSignal::onabort()
 {
     return event_handler_attribute(HTML::EventNames::abort);
 }

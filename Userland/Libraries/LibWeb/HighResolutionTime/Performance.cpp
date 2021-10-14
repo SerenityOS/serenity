@@ -14,7 +14,7 @@
 namespace Web::HighResolutionTime {
 
 Performance::Performance(DOM::Window& window)
-    : DOM::EventTarget(static_cast<Bindings::ScriptExecutionContext&>(window.associated_document()))
+    : DOM::EventTarget()
     , m_window(window)
     , m_timing(make<NavigationTiming::PerformanceTiming>(window))
 {
