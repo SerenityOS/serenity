@@ -616,15 +616,25 @@ Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_before(const T
 
 Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_after(const TextPosition& position) const
 {
-    for (size_t i = 0; i < m_spans.size(); ++i) {
-        if (!m_spans[i].range.contains(position))
-            continue;
-        while ((i + 1) < m_spans.size() && m_spans[i + 1].is_skippable)
-            ++i;
-        if (i >= (m_spans.size() - 1))
-            return {};
-        return m_spans[i + 1];
+    size_t i = 0;
+    // Find the first span containing the cursor
+    for (; i < m_spans.size(); ++i) {
+        if (m_spans[i].range.contains(position))
+            break;
     }
+    // Find the first span *after* the cursor
+    // TODO: For a large number of spans, binary search would be faster.
+    for (; i < m_spans.size(); ++i) {
+        if (!m_spans[i].range.contains(position))
+            break;
+    }
+    // Skip skippable spans
+    for (; i < m_spans.size(); ++i) {
+        if (m_spans[i].is_skippable)
+            break;
+    }
+    if (i < m_spans.size())
+        return m_spans[i + 1];
     return {};
 }
 
