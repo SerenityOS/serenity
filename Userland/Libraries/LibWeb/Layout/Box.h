@@ -121,6 +121,14 @@ public:
 
     Painting::BorderRadiusData normalized_border_radius_data();
 
+    virtual Optional<float> intrinsic_width() const { return {}; }
+    virtual Optional<float> intrinsic_height() const { return {}; }
+    virtual Optional<float> intrinsic_ratio() const { return {}; }
+
+    bool has_intrinsic_width() const { return intrinsic_width().has_value(); }
+    bool has_intrinsic_height() const { return intrinsic_height().has_value(); }
+    bool has_intrinsic_ratio() const { return intrinsic_ratio().has_value(); }
+
 protected:
     Box(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
         : NodeWithStyleAndBoxModelMetrics(document, node, move(style))

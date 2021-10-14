@@ -20,8 +20,6 @@ CanvasBox::~CanvasBox()
 
 void CanvasBox::prepare_for_replaced_layout()
 {
-    set_has_intrinsic_width(true);
-    set_has_intrinsic_height(true);
     set_intrinsic_width(dom_node().width());
     set_intrinsic_height(dom_node().height());
 }

@@ -27,10 +27,7 @@ ButtonBox::~ButtonBox()
 void ButtonBox::prepare_for_replaced_layout()
 {
     set_intrinsic_width(font().width(dom_node().value()) + 20);
-    set_has_intrinsic_width(true);
-
     set_intrinsic_height(20);
-    set_has_intrinsic_height(true);
 }
 
 void ButtonBox::paint(PaintContext& context, PaintPhase phase)

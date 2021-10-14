@@ -37,25 +37,20 @@ int ImageBox::preferred_height() const
 void ImageBox::prepare_for_replaced_layout()
 {
     if (!m_image_loader.has_loaded_or_failed()) {
-        set_has_intrinsic_width(true);
-        set_has_intrinsic_height(true);
         set_intrinsic_width(0);
         set_intrinsic_height(0);
     } else {
         if (m_image_loader.width()) {
-            set_has_intrinsic_width(true);
             set_intrinsic_width(m_image_loader.width());
         }
         if (m_image_loader.height()) {
-            set_has_intrinsic_height(true);
             set_intrinsic_height(m_image_loader.height());
         }
 
         if (m_image_loader.width() && m_image_loader.height()) {
-            set_has_intrinsic_ratio(true);
             set_intrinsic_ratio((float)m_image_loader.width() / (float)m_image_loader.height());
         } else {
-            set_has_intrinsic_ratio(false);
+            set_intrinsic_ratio({});
         }
     }
 

@@ -254,7 +254,7 @@ float FormattingContext::tentative_width_for_replaced_element(const ReplacedBox&
     // If 'height' and 'width' both have computed values of 'auto' and the element also has an intrinsic width,
     // then that intrinsic width is the used value of 'width'.
     if (specified_height.is_auto() && width.is_auto() && box.has_intrinsic_width()) {
-        used_width = box.intrinsic_width();
+        used_width = box.intrinsic_width().value();
     }
 
     // If 'height' and 'width' both have computed values of 'auto' and the element has no intrinsic width,
@@ -264,11 +264,11 @@ float FormattingContext::tentative_width_for_replaced_element(const ReplacedBox&
     //
     //     (used height) * (intrinsic ratio)
     else if ((specified_height.is_auto() && width.is_auto() && !box.has_intrinsic_width() && box.has_intrinsic_height() && box.has_intrinsic_ratio()) || (width.is_auto() && box.has_intrinsic_ratio())) {
-        used_width = compute_height_for_replaced_element(box) * box.intrinsic_ratio();
+        used_width = compute_height_for_replaced_element(box) * box.intrinsic_ratio().value();
     }
 
     else if (width.is_auto() && box.has_intrinsic_width()) {
-        used_width = box.intrinsic_width();
+        used_width = box.intrinsic_width().value();
     }
 
     else if (width.is_auto()) {
@@ -347,11 +347,11 @@ float FormattingContext::tentative_height_for_replaced_element(const ReplacedBox
     // If 'height' and 'width' both have computed values of 'auto' and the element also has
     // an intrinsic height, then that intrinsic height is the used value of 'height'.
     if (specified_width.is_auto() && height.is_auto() && box.has_intrinsic_height())
-        used_height = box.intrinsic_height();
+        used_height = box.intrinsic_height().value();
     else if (height.is_auto() && box.has_intrinsic_ratio())
-        used_height = compute_width_for_replaced_element(box) / box.intrinsic_ratio();
+        used_height = compute_width_for_replaced_element(box) / box.intrinsic_ratio().value();
     else if (height.is_auto() && box.has_intrinsic_height())
-        used_height = box.intrinsic_height();
+        used_height = box.intrinsic_height().value();
     else if (height.is_auto())
         used_height = 150;
 
