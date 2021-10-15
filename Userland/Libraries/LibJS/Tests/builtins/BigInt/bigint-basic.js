@@ -73,6 +73,21 @@ describe("correct behavior", () => {
         const b = 704179908449526267977309288010258n;
         expect(a == a).toBeTrue();
         expect(a == b).toBeFalse();
+
+        expect(0n == Object(0n)).toBeTrue();
+        expect(Object(0n) == 0n).toBeTrue();
+        expect(0n != Object(0n)).toBeFalse();
+        expect(Object(0n) != 0n).toBeFalse();
+
+        expect(1n == Object(1n)).toBeTrue();
+        expect(Object(1n) == 1n).toBeTrue();
+        expect(1n != Object(1n)).toBeFalse();
+        expect(Object(1n) != 1n).toBeFalse();
+
+        expect(1n == Object(2n)).toBeFalse();
+        expect(Object(2n) == 1n).toBeFalse();
+        expect(1n != Object(2n)).toBeTrue();
+        expect(Object(2n) != 1n).toBeTrue();
     });
 
     test("strong equality operators", () => {
