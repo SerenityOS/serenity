@@ -1204,7 +1204,13 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
             return rule;
         }
 
-        // how is "simple block with an associated token of <{-token>" a valid token?
+        if constexpr (IsSame<T, StyleComponentValueRule>) {
+            StyleComponentValueRule const& component_value = token;
+            if (component_value.is_block() && component_value.block().is_curly()) {
+                rule->m_block = component_value.block();
+                return rule;
+            }
+        }
 
         tokens.reconsume_current_input_token();
         auto value = consume_a_component_value(tokens);
