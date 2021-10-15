@@ -8,6 +8,9 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
+#include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/PromiseConstructor.h>
+#include <LibJS/Runtime/PromiseReaction.h>
 #include <LibJS/Runtime/ShadowRealm.h>
 #include <LibJS/Runtime/WrappedFunction.h>
 
@@ -144,6 +147,118 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, 
     return get_wrapped_value(global_object, caller_realm, result.value());
 
     // NOTE: Also see "Editor's Note" in the spec regarding the TypeError above.
+}
+
+// 3.1.2 ShadowRealmImportValue ( specifierString, exportNameString, callerRealm, evalRealm, evalContext ), https://tc39.es/proposal-shadowrealm/#sec-shadowrealmimportvalue
+ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, String specifier_string, String export_name_string, Realm& caller_realm, Realm& eval_realm, ExecutionContext& eval_context)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(specifierString) is String.
+    // 2. Assert: Type(exportNameString) is String.
+    // 3. Assert: callerRealm is a Realm Record.
+    // 4. Assert: evalRealm is a Realm Record.
+    // 5. Assert: evalContext is an execution context associated to a ShadowRealm instance's [[ExecutionContext]].
+
+    // 6. Let innerCapability be ! NewPromiseCapability(%Promise%).
+    auto inner_capability = new_promise_capability(global_object, global_object.promise_constructor());
+    VERIFY(!vm.exception());
+
+    // 7. Let runningContext be the running execution context.
+    // 8. If runningContext is not already suspended, suspend runningContext.
+    // NOTE: We don't support this concept yet.
+
+    // 9. Push evalContext onto the execution context stack; evalContext is now the running execution context.
+    vm.push_execution_context(eval_context, eval_realm.global_object());
+
+    // 10. Perform ! HostImportModuleDynamically(null, specifierString, innerCapability).
+    // FIXME: We don't have this yet. We generally have very little support for modules and imports.
+    //        So, in the meantime we just do the "Failure path" step, and pretend to call FinishDynamicImport
+    //        with the rejected promise. This should be easy to complete once those missing module AOs are added.
+
+    // HostImportModuleDynamically: At some future time, the host environment must perform
+    // FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, promise),
+    // where promise is a Promise rejected with an error representing the cause of failure.
+    auto* promise = Promise::create(global_object);
+    promise->reject(Error::create(global_object, String::formatted("Import of '{}' from '{}' failed", export_name_string, specifier_string)));
+
+    // FinishDynamicImport, 5. Perform ! PerformPromiseThen(innerPromise, onFulfilled, onRejected).
+    promise->perform_then(
+        NativeFunction::create(global_object, "", [](auto&, auto&) -> Value {
+            // Not called because we hardcoded a rejection above.
+            TODO();
+        }),
+        NativeFunction::create(global_object, "", [reject = make_handle(inner_capability.reject)](auto& vm, auto& global_object) -> Value {
+            auto error = vm.argument(0);
+
+            // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « error »).
+            MUST(call(global_object, reject.cell(), js_undefined(), error));
+
+            // b. Return undefined.
+            return js_undefined();
+        }),
+        {});
+
+    // 11. Suspend evalContext and remove it from the execution context stack.
+    // NOTE: We don't support this concept yet.
+    vm.pop_execution_context();
+
+    // 12. Resume the context that is now on the top of the execution context stack as the running execution context.
+    // NOTE: We don't support this concept yet.
+
+    // 13. Let steps be the steps of an ExportGetter function as described below.
+    // 14. Let onFulfilled be ! CreateBuiltinFunction(steps, 1, "", « [[ExportNameString]] », callerRealm).
+    // 15. Set onFulfilled.[[ExportNameString]] to exportNameString.
+    // FIXME: Support passing a realm to NativeFunction::create()
+    (void)caller_realm;
+    auto* on_fulfilled = NativeFunction::create(
+        global_object,
+        "",
+        [string = move(export_name_string)](auto& vm, auto& global_object) -> Value {
+            // 1. Assert: exports is a module namespace exotic object.
+            auto& exports = vm.argument(0).as_object();
+
+            // 2. Let f be the active function object.
+            auto* function = vm.running_execution_context().function;
+
+            // 3. Let string be f.[[ExportNameString]].
+            // 4. Assert: Type(string) is String.
+
+            // 5. Let hasOwn be ? HasOwnProperty(exports, string).
+            auto has_own = TRY_OR_DISCARD(exports.has_own_property(string));
+
+            // 6. If hasOwn is false, throw a TypeError exception.
+            if (!has_own) {
+                vm.template throw_exception<TypeError>(global_object, ErrorType::MissingRequiredProperty, string);
+                return {};
+            }
+
+            // 7. Let value be ? Get(exports, string).
+            auto value = TRY_OR_DISCARD(exports.get(string));
+
+            // 8. Let realm be f.[[Realm]].
+            auto* realm = function->realm();
+            VERIFY(realm);
+
+            // 9. Return ? GetWrappedValue(realm, value).
+            return TRY_OR_DISCARD(get_wrapped_value(global_object, *realm, value));
+        });
+    on_fulfilled->define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
+    on_fulfilled->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
+
+    // 16. Let promiseCapability be ! NewPromiseCapability(%Promise%).
+    auto promise_capability = new_promise_capability(global_object, global_object.promise_constructor());
+    VERIFY(!vm.exception());
+
+    // NOTE: Even though the spec tells us to use %ThrowTypeError%, it's not observable if we actually do.
+    // Throw a nicer TypeError forwarding the import error message instead (we know the argument is an Error object).
+    auto* throw_type_error = NativeFunction::create(global_object, {}, [](auto& vm, auto& global_object) -> Value {
+        vm.template throw_exception<TypeError>(global_object, vm.argument(0).as_object().get_without_side_effects(vm.names.message).as_string().string());
+        return {};
+    });
+
+    // 17. Return ! PerformPromiseThen(innerCapability.[[Promise]], onFulfilled, callerRealm.[[Intrinsics]].[[%ThrowTypeError%]], promiseCapability).
+    return verify_cast<Promise>(inner_capability.promise)->perform_then(on_fulfilled, throw_type_error, promise_capability);
 }
 
 // 3.1.3 GetWrappedValue ( callerRealm, value ), https://tc39.es/proposal-shadowrealm/#sec-getwrappedvalue

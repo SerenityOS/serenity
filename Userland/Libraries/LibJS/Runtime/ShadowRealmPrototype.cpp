@@ -23,6 +23,7 @@ void ShadowRealmPrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.evaluate, evaluate, 1, attr);
+    define_native_function(vm.names.importValue, import_value, 2, attr);
 
     // 3.4.3 ShadowRealm.prototype [ @@toStringTag ], https://tc39.es/proposal-shadowrealm/#sec-shadowrealm.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.ShadowRealm.as_string()), Attribute::Configurable);
@@ -53,6 +54,37 @@ JS_DEFINE_NATIVE_FUNCTION(ShadowRealmPrototype::evaluate)
 
     // 6. Return ? PerformShadowRealmEval(sourceText, callerRealm, evalRealm).
     return TRY_OR_DISCARD(perform_shadow_realm_eval(global_object, source_text.as_string().string(), *caller_realm, eval_realm));
+}
+
+// 3.4.2 ShadowRealm.prototype.importValue ( specifier, exportName ), https://tc39.es/proposal-shadowrealm/#sec-shadowrealm.prototype.importvalue
+JS_DEFINE_NATIVE_FUNCTION(ShadowRealmPrototype::import_value)
+{
+    auto specifier = vm.argument(0);
+    auto export_name = vm.argument(1);
+
+    // 1. Let O be this value.
+    // 2. Perform ? ValidateShadowRealmObject(O).
+    auto* object = typed_this_object(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let specifierString be ? ToString(specifier).
+    auto specifier_string = TRY_OR_DISCARD(specifier.to_string(global_object));
+
+    // 4. Let exportNameString be ? ToString(exportName).
+    auto export_name_string = TRY_OR_DISCARD(export_name.to_string(global_object));
+
+    // 5. Let callerRealm be the current Realm Record.
+    auto* caller_realm = vm.current_realm();
+
+    // 6. Let evalRealm be O.[[ShadowRealm]].
+    auto& eval_realm = object->shadow_realm();
+
+    // 7. Let evalContext be O.[[ExecutionContext]].
+    auto& eval_context = object->execution_context();
+
+    // 8. Return ? ShadowRealmImportValue(specifierString, exportNameString, callerRealm, evalRealm, evalContext).
+    return TRY_OR_DISCARD(shadow_realm_import_value(global_object, move(specifier_string), move(export_name_string), *caller_realm, eval_realm, eval_context));
 }
 
 }

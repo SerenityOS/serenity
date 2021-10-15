@@ -21,6 +21,7 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(evaluate);
+    JS_DECLARE_NATIVE_FUNCTION(import_value);
 };
 
 }

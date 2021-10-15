@@ -33,6 +33,7 @@ private:
 };
 
 ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject&, StringView source_text, Realm& caller_realm, Realm& eval_realm);
+ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject&, String specifier_string, String export_name_string, Realm& caller_realm, Realm& eval_realm, ExecutionContext& eval_context);
 ThrowCompletionOr<Value> get_wrapped_value(GlobalObject&, Realm& caller_realm, Value);
 
 }
