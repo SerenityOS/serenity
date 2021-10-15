@@ -37,7 +37,7 @@ public:
             int step_size { 0 }; // "A"
             int offset = { 0 };  // "B"
 
-            String to_string() const
+            String serialize() const
             {
                 return String::formatted("{}n{:+}", step_size, offset);
             }
