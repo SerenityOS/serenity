@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/CSS/CSSStyleRule.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 
 namespace Web::CSS {
 
@@ -333,14 +334,14 @@ String CSSStyleRule::selector_text() const
 // https://drafts.csswg.org/cssom/#dom-cssstylerule-selectortext
 void CSSStyleRule::set_selector_text(StringView selector_text)
 {
-    // FIXME: 1. Run the parse a group of selectors algorithm on the given value.
+    // 1. Run the parse a group of selectors algorithm on the given value.
+    auto parsed_selectors = parse_selector({}, selector_text);
 
-    // FIXME: 2. If the algorithm returns a non-null value replace the associated group of selectors with the returned value.
+    // 2. If the algorithm returns a non-null value replace the associated group of selectors with the returned value.
+    if (parsed_selectors.has_value())
+        m_selectors = parsed_selectors.release_value();
 
-    // FIXME: 3. Otherwise, if the algorithm returns a null value, do nothing.
-
-    (void)selector_text;
-    TODO();
+    // 3. Otherwise, if the algorithm returns a null value, do nothing.
 }
 
 }
