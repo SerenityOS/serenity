@@ -290,6 +290,11 @@ set(KERNEL_SOURCES
 if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
+        Arch/x86/ScopedCritical.cpp
+    )
+
+    set(KERNEL_SOURCES
+        ${KERNEL_SOURCES}
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/ASM_wrapper.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/Boot/ap_setup.S
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/InterruptEntry.cpp
@@ -361,7 +366,11 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
 else()
     set(SOURCES
         ${SOURCES}
+        ${AK_SOURCES}
+        
         Arch/aarch64/dummy.cpp
+        Arch/aarch64/ScopedCritical.cpp
+        
         UBSanitizer.cpp
     )
 
