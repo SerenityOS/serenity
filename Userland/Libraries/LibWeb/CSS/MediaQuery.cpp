@@ -227,4 +227,18 @@ bool MediaQuery::evaluate(DOM::Window const& window)
     return m_matches;
 }
 
+// https://www.w3.org/TR/cssom-1/#serialize-a-media-query-list
+String serialize_a_media_query_list(NonnullRefPtrVector<MediaQuery> const& media_queries)
+{
+    // 1. If the media query list is empty, then return the empty string.
+    if (media_queries.is_empty())
+        return "";
+
+    // 2. Serialize each media query in the list of media queries, in the same order as they
+    // appear in the media query list, and then serialize the list.
+    StringBuilder builder;
+    builder.join(", ", media_queries);
+    return builder.to_string();
+}
+
 }
