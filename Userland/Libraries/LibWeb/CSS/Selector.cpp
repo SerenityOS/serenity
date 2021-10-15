@@ -214,12 +214,11 @@ String Selector::serialize() const
                 break;
             }
         } else {
-            // 4. If this is the last part of the chain of the selector and there is a pseudo-element, append "::" followed by the name of the pseudo-element, to s.
-            // FIXME: This doesn't feel entirely correct. Our model of pseudo-elements seems off.
-            if (!compound_selector.simple_selectors.is_empty()
-                && compound_selector.simple_selectors.first().type == Selector::SimpleSelector::Type::PseudoElement) {
+            // 4. If this is the last part of the chain of the selector and there is a pseudo-element,
+            // append "::" followed by the name of the pseudo-element, to s.
+            if (compound_selector.simple_selectors.last().type == Selector::SimpleSelector::Type::PseudoElement) {
                 s.append("::");
-                s.append(pseudo_element_name(compound_selector.simple_selectors.first().pseudo_element));
+                s.append(pseudo_element_name(compound_selector.simple_selectors.last().pseudo_element));
             }
         }
     }
