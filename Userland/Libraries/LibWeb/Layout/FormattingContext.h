@@ -25,8 +25,8 @@ public:
 
     virtual void run(Box&, LayoutMode) = 0;
 
-    Box& context_box() { return *m_context_box; }
-    const Box& context_box() const { return *m_context_box; }
+    Box& context_box() { return m_context_box; }
+    const Box& context_box() const { return m_context_box; }
 
     FormattingContext* parent() { return m_parent; }
     const FormattingContext* parent() const { return m_parent; }
@@ -69,7 +69,7 @@ protected:
     Type m_type {};
 
     FormattingContext* m_parent { nullptr };
-    Box* m_context_box { nullptr };
+    Box& m_context_box;
 };
 
 }
