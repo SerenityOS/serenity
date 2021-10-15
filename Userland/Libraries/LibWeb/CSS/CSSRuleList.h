@@ -16,7 +16,7 @@
 
 namespace Web::CSS {
 
-// https://drafts.csswg.org/cssom/#the-cssrulelist-interface
+// https://www.w3.org/TR/cssom/#the-cssrulelist-interface
 class CSSRuleList
     : public RefCounted<CSSRuleList>
     , public Bindings::Wrappable {

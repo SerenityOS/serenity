@@ -737,7 +737,7 @@ bool ResolvedCSSStyleDeclaration::set_property(PropertyID, StringView)
 
 String ResolvedCSSStyleDeclaration::serialized() const
 {
-    // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-csstext
+    // https://www.w3.org/TR/cssom/#dom-cssstyledeclaration-csstext
     // If the computed flag is set, then return the empty string.
 
     // NOTE: ResolvedCSSStyleDeclaration is something you would only get from window.getComputedStyle(),

@@ -33,7 +33,7 @@ void HTMLStyleElement::removed_from(Node* old_parent)
     return HTMLElement::removed_from(old_parent);
 }
 
-// https://drafts.csswg.org/cssom/#remove-a-css-style-sheet
+// https://www.w3.org/TR/cssom/#remove-a-css-style-sheet
 static void remove_a_css_style_sheet(DOM::Document& document, NonnullRefPtr<CSS::CSSStyleSheet> sheet)
 {
     VERIFY(sheet.ptr());
@@ -47,7 +47,7 @@ static void remove_a_css_style_sheet(DOM::Document& document, NonnullRefPtr<CSS:
     sheet->set_owner_css_rule(nullptr);
 }
 
-// https://drafts.csswg.org/cssom/#add-a-css-style-sheet
+// https://www.w3.org/TR/cssom/#add-a-css-style-sheet
 static void add_a_css_style_sheet(DOM::Document& document, NonnullRefPtr<CSS::CSSStyleSheet> sheet)
 {
     // 1. Add the CSS style sheet to the list of document or shadow root CSS style sheets at the appropriate location. The remainder of these steps deal with the disabled flag.
@@ -67,7 +67,7 @@ static void add_a_css_style_sheet(DOM::Document& document, NonnullRefPtr<CSS::CS
     // FIXME: 5. Set the disabled flag.
 }
 
-// https://drafts.csswg.org/cssom/#create-a-css-style-sheet
+// https://www.w3.org/TR/cssom/#create-a-css-style-sheet
 static void create_a_css_style_sheet(DOM::Document& document, String type, DOM::Element* owner_node, String media, String title, bool alternate, bool origin_clean, void* location, CSS::CSSStyleSheet* parent_style_sheet, CSS::CSSRule* owner_rule, NonnullRefPtr<CSS::CSSStyleSheet> sheet)
 {
     // 1. Create a new CSS style sheet object and set its properties as specified.
@@ -144,7 +144,7 @@ void HTMLStyleElement::update_a_style_block()
         sheet.release_nonnull());
 }
 
-// https://drafts.csswg.org/cssom/#dom-linkstyle-sheet
+// https://www.w3.org/TR/cssom/#dom-linkstyle-sheet
 RefPtr<CSS::CSSStyleSheet> HTMLStyleElement::sheet() const
 {
     // The sheet attribute must return the associated CSS style sheet for the node or null if there is no associated CSS style sheet.

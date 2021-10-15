@@ -124,7 +124,7 @@ void CSSStyleDeclaration::set_css_text(StringView)
     TODO();
 }
 
-// https://drafts.csswg.org/cssom/#serialize-a-css-declaration
+// https://www.w3.org/TR/cssom/#serialize-a-css-declaration
 static String serialize_a_css_declaration(CSS::PropertyID property, String value, bool important)
 {
     StringBuilder builder;
@@ -150,7 +150,7 @@ static String serialize_a_css_declaration(CSS::PropertyID property, String value
     return builder.to_string();
 }
 
-// https://drafts.csswg.org/cssom/#serialize-a-css-declaration-block
+// https://www.w3.org/TR/cssom/#serialize-a-css-declaration-block
 String PropertyOwningCSSStyleDeclaration::serialized() const
 {
     // 1. Let list be an empty array.
