@@ -15,7 +15,7 @@
 static ManualSectionNode s_sections[] = {
     { "1", "User programs" },
     { "2", "System calls" },
-    { "3", "Libraries" },
+    { "3", "Library functions" },
     { "4", "Special files" },
     { "5", "File formats" },
     { "6", "Games" },
