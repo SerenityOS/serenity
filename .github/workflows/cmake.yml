@@ -89,6 +89,10 @@ jobs:
       - name: Restore or regenerate Toolchain
         run: TRY_USE_LOCAL_TOOLCHAIN=y ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildIt.sh
 
+      - name: Restore or regenerate aarch64 Toolchain
+        run: TRY_USE_LOCAL_TOOLCHAIN=y ARCH="aarch64" ${{ github.workspace }}/Toolchain/BuildIt.sh
+        if: ${{ matrix.debug-options == 'ALL_DEBUG' }}
+
       - name: ccache(1) cache
         # Pull the ccache *after* building the toolchain, in case building the Toolchain somehow interferes.
         # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
@@ -109,8 +113,8 @@ jobs:
       - name: Show ccache stats before build and configure
         run: |
           # We only have 5 GiB of cache available *in total*. Beyond that, GitHub deletes caches.
-          # Currently, we use about 130 MB for the two toolchains (i686 & x86_64), and three ccache caches:
-          # One with ALL_DEBUG (i686) and two with NORMAL_DEBUG (i686 & x86_64).
+          # Currently, we use about 190 MB for the three toolchains (aarch64, i686, x86_64), and three ccache caches:
+          # One with ALL_DEBUG (aarch64, i686) and two with NORMAL_DEBUG (i686 & x86_64).
           # Therefore, using 1.6 GB or more per cache causes disaster.
           # Building from scratch fills the ccache cache from 0 to about 0.7 GB, and after compression it comes out to
           # about 0.25 GB, so 3 GB (1GB after compression) should be plenty, all while comfortably fitting in the cache.
@@ -146,6 +150,19 @@ jobs:
             -DENABLE_PCI_IDS_DOWNLOAD=OFF \
             -DENABLE_USB_IDS_DOWNLOAD=OFF
         if: ${{ matrix.debug-options == 'ALL_DEBUG' }}
+      - name: Create aarch64 build environment
+        # Build aarch64 on the ALL_DEBUG builder for now.
+        run: |
+          cmake -S Meta/CMake/Superbuild -B Build/superbuild-aarch64 -GNinja \
+            -DSERENITY_ARCH=aarch64 \
+            -DSERENITY_TOOLCHAIN=GNU \
+            -DBUILD_LAGOM=ON \
+            -DCMAKE_C_COMPILER=gcc-10 \
+            -DCMAKE_CXX_COMPILER=g++-10 \
+            -DENABLE_ALL_DEBUG_FACILITIES=ON \
+            -DENABLE_PCI_IDS_DOWNLOAD=OFF \
+            -DENABLE_USB_IDS_DOWNLOAD=OFF
+        if: ${{ matrix.debug-options == 'ALL_DEBUG' }}
       - name: Create build environment
         working-directory: ${{ github.workspace }}
         # Note that we do not set BUILD_LAGOM for the normal debug build
@@ -166,11 +183,17 @@ jobs:
       - name: Build Serenity and Tests
         working-directory: ${{ github.workspace }}/Build/superbuild
         run: cmake --build .
+      - name: Build aarch64
+        # Build aarch64 on the ALL_DEBUG builder for now.
+        working-directory: ${{ github.workspace }}/Build/superbuild-aarch64
+        run: cmake --build .
+        if: ${{ matrix.debug-options == 'ALL_DEBUG' }}
       - name: Show ccache stats after build
         run: ccache -s
       - name: Lint (Phase 2/2)
         working-directory: ${{ github.workspace }}/Meta
         run: ./check-symbols.sh
+
 
       - name: Create Serenity Rootfs
         if: ${{ matrix.debug-options == 'NORMAL_DEBUG'}}
