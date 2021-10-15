@@ -242,6 +242,7 @@ namespace JS {
     P(id)                                    \
     P(ignoreCase)                            \
     P(imul)                                  \
+    P(importValue)                           \
     P(includes)                              \
     P(index)                                 \
     P(indexOf)                               \
