@@ -383,7 +383,7 @@ void Job::finish_up()
     VERIFY(!m_has_scheduled_finish);
     m_state = State::Finished;
     if (!m_can_stream_response) {
-        auto flattened_buffer = ByteBuffer::create_uninitialized(m_received_size).release_value(); // FIXME: Handle possible OOM situation.
+        auto flattened_buffer = ByteBuffer::create_uninitialized(m_buffered_size).release_value(); // FIXME: Handle possible OOM situation.
         u8* flat_ptr = flattened_buffer.data();
         for (auto& received_buffer : m_received_buffers) {
             memcpy(flat_ptr, received_buffer.data(), received_buffer.size());
