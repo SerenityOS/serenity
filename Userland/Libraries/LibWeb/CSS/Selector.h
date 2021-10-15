@@ -146,3 +146,15 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
 String serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selectors);
 
 }
+
+namespace AK {
+
+template<>
+struct Formatter<Web::CSS::Selector> : Formatter<StringView> {
+    void format(FormatBuilder& builder, Web::CSS::Selector const& selector)
+    {
+        Formatter<StringView>::format(builder, selector.serialize());
+    }
+};
+
+}
