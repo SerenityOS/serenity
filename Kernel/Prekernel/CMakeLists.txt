@@ -5,14 +5,15 @@ set(SOURCES
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     set(SOURCES
         ${SOURCES}
+        Arch/aarch64/Aarch64_asm_utils.S
         Arch/aarch64/GPIO.cpp
+        Arch/aarch64/Framebuffer.cpp
         Arch/aarch64/Mailbox.cpp
         Arch/aarch64/MainIdRegister.cpp
         Arch/aarch64/MMIO.cpp
         Arch/aarch64/Timer.cpp
         Arch/aarch64/UART.cpp
         Arch/aarch64/Utils.cpp
-        Arch/aarch64/Aarch64_asm_utils.S
         Arch/aarch64/boot.S
         Arch/aarch64/init.cpp
     )
