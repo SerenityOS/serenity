@@ -1036,14 +1036,23 @@ Gfx::IntRect Widget::children_clip_rect() const
     return rect();
 }
 
-void Widget::set_override_cursor(Gfx::StandardCursor cursor)
+void Widget::set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor)
 {
-    if (m_override_cursor == cursor)
+    auto const& are_cursors_the_same = [](AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const& a, AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const& b) {
+        if (a.has<Gfx::StandardCursor>() != b.has<Gfx::StandardCursor>())
+            return false;
+        if (a.has<Gfx::StandardCursor>())
+            return a.get<Gfx::StandardCursor>() == b.get<Gfx::StandardCursor>();
+        return a.get<NonnullRefPtr<Gfx::Bitmap>>().ptr() == b.get<NonnullRefPtr<Gfx::Bitmap>>().ptr();
+    };
+
+    if (are_cursors_the_same(m_override_cursor, cursor))
         return;
 
-    m_override_cursor = cursor;
-    if (auto* window = this->window())
+    m_override_cursor = move(cursor);
+    if (auto* window = this->window()) {
         window->update_cursor({});
+    }
 }
 
 bool Widget::load_from_gml(const StringView& gml_string)

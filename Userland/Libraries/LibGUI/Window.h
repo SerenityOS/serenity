@@ -9,6 +9,7 @@
 #include <AK/Function.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
+#include <AK/Variant.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibGUI/FocusSource.h>
@@ -169,7 +170,7 @@ public:
     void set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio);
 
     void set_cursor(Gfx::StandardCursor);
-    void set_cursor(const Gfx::Bitmap&);
+    void set_cursor(NonnullRefPtr<Gfx::Bitmap>);
 
     void set_icon(const Gfx::Bitmap*);
     void apply_icon();
@@ -240,6 +241,8 @@ private:
     void flip(const Vector<Gfx::IntRect, 32>& dirty_rects);
     void force_update();
 
+    bool are_cursors_the_same(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const&, AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const&) const;
+
     WeakPtr<Widget> m_previously_focused_widget;
 
     OwnPtr<WindowBackingStore> m_front_store;
@@ -248,7 +251,6 @@ private:
     NonnullRefPtr<Menubar> m_menubar;
 
     RefPtr<Gfx::Bitmap> m_icon;
-    RefPtr<Gfx::Bitmap> m_custom_cursor;
     int m_window_id { 0 };
     float m_opacity_when_windowless { 1.0f };
     float m_alpha_hit_threshold { 0.0f };
@@ -265,8 +267,8 @@ private:
     Gfx::IntSize m_base_size;
     Color m_background_color { Color::WarmGray };
     WindowType m_window_type { WindowType::Normal };
-    Gfx::StandardCursor m_cursor { Gfx::StandardCursor::None };
-    Gfx::StandardCursor m_effective_cursor { Gfx::StandardCursor::None };
+    AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_cursor { Gfx::StandardCursor::None };
+    AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_effective_cursor { Gfx::StandardCursor::None };
     bool m_is_active_input { false };
     bool m_has_alpha_channel { false };
     bool m_double_buffering_enabled { true };

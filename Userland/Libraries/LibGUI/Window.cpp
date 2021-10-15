@@ -317,21 +317,28 @@ void Window::make_window_manager(unsigned event_mask)
     GUI::WindowManagerServerConnection::the().async_set_manager_window(m_window_id);
 }
 
+bool Window::are_cursors_the_same(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const& left, AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const& right) const
+{
+    if (left.has<Gfx::StandardCursor>() != right.has<Gfx::StandardCursor>())
+        return false;
+    if (left.has<Gfx::StandardCursor>())
+        return left.get<Gfx::StandardCursor>() == right.get<Gfx::StandardCursor>();
+    return left.get<NonnullRefPtr<Gfx::Bitmap>>().ptr() == right.get<NonnullRefPtr<Gfx::Bitmap>>().ptr();
+}
+
 void Window::set_cursor(Gfx::StandardCursor cursor)
 {
-    if (m_cursor == cursor)
+    if (are_cursors_the_same(m_cursor, cursor))
         return;
     m_cursor = cursor;
-    m_custom_cursor = nullptr;
     update_cursor();
 }
 
-void Window::set_cursor(const Gfx::Bitmap& cursor)
+void Window::set_cursor(NonnullRefPtr<Gfx::Bitmap> cursor)
 {
-    if (m_custom_cursor == &cursor)
+    if (are_cursors_the_same(m_cursor, cursor))
         return;
-    m_cursor = Gfx::StandardCursor::None;
-    m_custom_cursor = &cursor;
+    m_cursor = cursor;
     update_cursor();
 }
 
@@ -1135,21 +1142,22 @@ void Window::set_progress(Optional<int> progress)
 
 void Window::update_cursor()
 {
-    Gfx::StandardCursor new_cursor;
+    auto new_cursor = m_cursor;
 
-    if (m_hovered_widget && m_hovered_widget->override_cursor() != Gfx::StandardCursor::None)
-        new_cursor = m_hovered_widget->override_cursor();
-    else
-        new_cursor = m_cursor;
+    if (m_hovered_widget) {
+        auto override_cursor = m_hovered_widget->override_cursor();
+        if (override_cursor.has<NonnullRefPtr<Gfx::Bitmap>>() || override_cursor.get<Gfx::StandardCursor>() != Gfx::StandardCursor::None)
+            new_cursor = move(override_cursor);
+    }
 
-    if (!m_custom_cursor && m_effective_cursor == new_cursor)
+    if (are_cursors_the_same(m_effective_cursor, new_cursor))
         return;
     m_effective_cursor = new_cursor;
 
-    if (m_custom_cursor)
-        WindowServerConnection::the().async_set_window_custom_cursor(m_window_id, m_custom_cursor->to_shareable_bitmap());
+    if (new_cursor.has<NonnullRefPtr<Gfx::Bitmap>>())
+        WindowServerConnection::the().async_set_window_custom_cursor(m_window_id, new_cursor.get<NonnullRefPtr<Gfx::Bitmap>>()->to_shareable_bitmap());
     else
-        WindowServerConnection::the().async_set_window_cursor(m_window_id, (u32)m_effective_cursor);
+        WindowServerConnection::the().async_set_window_cursor(m_window_id, (u32)new_cursor.get<Gfx::StandardCursor>());
 }
 
 void Window::focus_a_widget_if_possible(FocusSource source)
