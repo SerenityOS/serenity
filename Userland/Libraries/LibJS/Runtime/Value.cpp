@@ -1389,53 +1389,79 @@ bool is_loosely_equal(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
 
-    if (same_type_for_equality(lhs, rhs))
+    // 1. If Type(x) is the same as Type(y), then
+    if (same_type_for_equality(lhs, rhs)) {
+        // a. Return IsStrictlyEqual(x, y).
         return is_strictly_equal(lhs, rhs);
+    }
 
+    // 2. If x is null and y is undefined, return true.
+    // 3. If x is undefined and y is null, return true.
     if (lhs.is_nullish() && rhs.is_nullish())
         return true;
 
-    // B.3.7.2 Changes to IsLooselyEqual, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-aec
+    // 4. NOTE: This step is replaced in section B.3.6.2.
+    // B.3.6.2 Changes to IsLooselyEqual, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-aec
+    // 1. If Type(x) is Object and x has an [[IsHTMLDDA]] internal slot and y is either null or undefined, return true.
     if (lhs.is_object() && lhs.as_object().is_htmldda() && rhs.is_nullish())
         return true;
+
+    // 2. If x is either null or undefined and Type(y) is Object and y has an [[IsHTMLDDA]] internal slot, return true.
     if (lhs.is_nullish() && rhs.is_object() && rhs.as_object().is_htmldda())
         return true;
 
+    // == End of B.3.6.2 ==
+
+    // 5. If Type(x) is Number and Type(y) is String, return IsLooselyEqual(x, ! ToNumber(y)).
     if (lhs.is_number() && rhs.is_string())
         return is_loosely_equal(global_object, lhs, rhs.to_number(global_object));
 
+    // 6. If Type(x) is String and Type(y) is Number, return IsLooselyEqual(! ToNumber(x), y).
     if (lhs.is_string() && rhs.is_number())
         return is_loosely_equal(global_object, lhs.to_number(global_object), rhs);
 
+    // 7. If Type(x) is BigInt and Type(y) is String, then
     if (lhs.is_bigint() && rhs.is_string()) {
         auto& rhs_string = rhs.as_string().string();
+        // a. Let n be ! StringToBigInt(y).
+        // b. If n is NaN, return false.
         if (!is_valid_bigint_value(rhs_string))
             return false;
+        // c. Return IsLooselyEqual(x, n).
         return is_loosely_equal(global_object, lhs, js_bigint(vm, Crypto::SignedBigInteger::from_base(10, rhs_string)));
     }
 
+    // 8. If Type(x) is String and Type(y) is BigInt, return IsLooselyEqual(y, x).
     if (lhs.is_string() && rhs.is_bigint())
         return is_loosely_equal(global_object, rhs, lhs);
 
+    // 9. If Type(x) is Boolean, return IsLooselyEqual(! ToNumber(x), y).
     if (lhs.is_boolean())
         return is_loosely_equal(global_object, lhs.to_number(global_object), rhs);
 
+    // 10. If Type(y) is Boolean, return IsLooselyEqual(x, ! ToNumber(y)).
     if (rhs.is_boolean())
         return is_loosely_equal(global_object, lhs, rhs.to_number(global_object));
 
+    // 11. If Type(x) is either String, Number, BigInt, or Symbol and Type(y) is Object, return IsLooselyEqual(x, ? ToPrimitive(y)).
     if ((lhs.is_string() || lhs.is_number() || lhs.is_bigint() || lhs.is_symbol()) && rhs.is_object()) {
         auto rhs_primitive = TRY_OR_DISCARD(rhs.to_primitive(global_object));
         return is_loosely_equal(global_object, lhs, rhs_primitive);
     }
 
-    if (lhs.is_object() && (rhs.is_string() || rhs.is_number() || lhs.is_bigint() || rhs.is_symbol())) {
+    // 12. If Type(x) is Object and Type(y) is either String, Number, BigInt, or Symbol, return IsLooselyEqual(? ToPrimitive(x), y).
+    if (lhs.is_object() && (rhs.is_string() || rhs.is_number() || rhs.is_bigint() || rhs.is_symbol())) {
         auto lhs_primitive = TRY_OR_DISCARD(lhs.to_primitive(global_object));
         return is_loosely_equal(global_object, lhs_primitive, rhs);
     }
 
+    // 13. If Type(x) is BigInt and Type(y) is Number, or if Type(x) is Number and Type(y) is BigInt, then
     if ((lhs.is_bigint() && rhs.is_number()) || (lhs.is_number() && rhs.is_bigint())) {
+        // a. If x or y are any of NaN, +∞𝔽, or -∞𝔽, return false.
         if (lhs.is_nan() || lhs.is_infinity() || rhs.is_nan() || rhs.is_infinity())
             return false;
+
+        // b. If ℝ(x) = ℝ(y), return true; otherwise return false.
         if ((lhs.is_number() && !lhs.is_integral_number()) || (rhs.is_number() && !rhs.is_integral_number()))
             return false;
         if (lhs.is_number())
@@ -1444,6 +1470,7 @@ bool is_loosely_equal(GlobalObject& global_object, Value lhs, Value rhs)
             return Crypto::SignedBigInteger { rhs.to_i32(global_object) } == lhs.as_bigint().big_integer();
     }
 
+    // 14. Return false.
     return false;
 }
 
