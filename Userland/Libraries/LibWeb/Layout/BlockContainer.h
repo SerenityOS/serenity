@@ -11,7 +11,7 @@
 
 namespace Web::Layout {
 
-// https://drafts.csswg.org/css-display/#block-container
+// https://www.w3.org/TR/css-display/#block-container
 class BlockContainer : public Box {
 public:
     BlockContainer(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
