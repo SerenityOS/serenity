@@ -39,6 +39,8 @@ public:
 private:
     explicit CSSMediaRule(NonnullRefPtr<MediaList>&&, NonnullRefPtrVector<CSSRule>&&);
 
+    virtual String serialized() const override;
+
     NonnullRefPtr<MediaList> m_media;
 };
 
