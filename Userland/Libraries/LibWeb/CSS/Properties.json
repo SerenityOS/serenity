@@ -415,7 +415,10 @@
   },
   "box-shadow": {
     "inherited": false,
-    "initial": "none"
+    "initial": "none",
+    "valid-identifiers": [
+      "none"
+    ]
   },
   "box-sizing": {
     "inherited": false,
