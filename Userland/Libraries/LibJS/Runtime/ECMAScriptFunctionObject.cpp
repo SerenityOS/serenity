@@ -76,6 +76,12 @@ void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     Base::initialize(global_object);
+    // Note: The ordering of these properties must be: length, name, prototype which is the order
+    //       they are defined in the spec: https://tc39.es/ecma262/#sec-function-instances .
+    //       This is observable through something like: https://tc39.es/ecma262/#sec-ordinaryownpropertykeys
+    //       which must give the properties in chronological order which in this case is the order they
+    //       are defined in the spec.
+
     MUST(define_property_or_throw(vm.names.length, { .value = Value(m_function_length), .writable = false, .enumerable = false, .configurable = true }));
     MUST(define_property_or_throw(vm.names.name, { .value = js_string(vm, m_name.is_null() ? "" : m_name), .writable = false, .enumerable = false, .configurable = true }));
 
