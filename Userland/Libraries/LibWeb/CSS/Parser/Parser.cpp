@@ -2571,6 +2571,13 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(ParsingContext co
 
 RefPtr<StyleValue> Parser::parse_box_shadow_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
+    // "none"
+    if (component_values.size() == 1 && component_values.first().is(Token::Type::Ident)) {
+        auto ident = parse_identifier_value(context, component_values.first());
+        if (ident && ident->to_identifier() == ValueID::None)
+            return ident;
+    }
+
     // FIXME: Also support inset, spread-radius and multiple comma-separated box-shadows
     Length offset_x {};
     Length offset_y {};
