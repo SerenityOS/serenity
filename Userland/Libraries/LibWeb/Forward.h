@@ -71,6 +71,7 @@ class UnsetStyleValue;
 namespace Web::DOM {
 class AbortController;
 class AbortSignal;
+class Attribute;
 class CharacterData;
 class Comment;
 class CustomEvent;
@@ -290,6 +291,7 @@ class URLSearchParamsIterator;
 namespace Web::Bindings {
 class AbortControllerWrapper;
 class AbortSignalWrapper;
+class AttributeWrapper;
 class CanvasRenderingContext2DWrapper;
 class CharacterDataWrapper;
 class CloseEventWrapper;

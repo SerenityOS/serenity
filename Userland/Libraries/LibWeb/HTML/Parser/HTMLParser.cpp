@@ -2810,7 +2810,7 @@ void HTMLParser::handle_in_frameset(HTMLToken& token)
     }
 
     if (token.is_end_of_file()) {
-        //FIXME: If the current node is not the root html element, then this is a parse error.
+        // FIXME: If the current node is not the root html element, then this is a parse error.
 
         stop_parsing();
         return;
@@ -3162,7 +3162,7 @@ NonnullOwnPtr<HTMLParser> HTMLParser::create_with_uncertain_encoding(DOM::Docume
 {
     if (document.has_encoding())
         return make<HTMLParser>(document, input, document.encoding().value());
-    auto encoding = run_encoding_sniffing_algorithm(input);
+    auto encoding = run_encoding_sniffing_algorithm(document, input);
     dbgln("The encoding sniffing algorithm returned encoding '{}'", encoding);
     return make<HTMLParser>(document, input, encoding);
 }

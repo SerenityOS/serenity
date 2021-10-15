@@ -9,6 +9,8 @@
 #include <AK/StringView.h>
 #include <AK/Utf8View.h>
 #include <LibTextCodec/Decoder.h>
+#include <LibWeb/DOM/Attribute.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/Parser/HTMLEncodingDetection.h>
 #include <ctype.h>
 
@@ -94,7 +96,7 @@ Optional<String> extract_character_encoding_from_meta_element(String const& stri
     return TextCodec::get_standardized_encoding(encoding);
 }
 
-Optional<DOM::Attribute> prescan_get_attribute(const ByteBuffer& input, size_t& position)
+RefPtr<DOM::Attribute> prescan_get_attribute(DOM::Document& document, const ByteBuffer& input, size_t& position)
 {
     if (!prescan_skip_whitespace_and_slashes(input, position))
         return {};
@@ -109,7 +111,7 @@ Optional<DOM::Attribute> prescan_get_attribute(const ByteBuffer& input, size_t& 
         } else if (input[position] == '\t' || input[position] == '\n' || input[position] == '\f' || input[position] == '\r' || input[position] == ' ')
             goto spaces;
         else if (input[position] == '/' || input[position] == '>')
-            return DOM::Attribute(attribute_name.to_string(), "");
+            return DOM::Attribute::create(document, attribute_name.to_string(), "");
         else
             attribute_name.append_as_lowercase(input[position]);
         ++position;
@@ -121,7 +123,7 @@ spaces:
     if (!prescan_skip_whitespace_and_slashes(input, position))
         return {};
     if (input[position] != '=')
-        return DOM::Attribute(attribute_name.to_string(), "");
+        return DOM::Attribute::create(document, attribute_name.to_string(), "");
     ++position;
 
 value:
@@ -134,13 +136,13 @@ value:
         ++position;
         for (; !prescan_should_abort(input, position); ++position) {
             if (input[position] == quote_character)
-                return DOM::Attribute(attribute_name.to_string(), attribute_value.to_string());
+                return DOM::Attribute::create(document, attribute_name.to_string(), attribute_value.to_string());
             else
                 attribute_value.append_as_lowercase(input[position]);
         }
         return {};
     } else if (input[position] == '>')
-        return DOM::Attribute(attribute_name.to_string(), "");
+        return DOM::Attribute::create(document, attribute_name.to_string(), "");
     else
         attribute_value.append_as_lowercase(input[position]);
 
@@ -150,7 +152,7 @@ value:
 
     for (; !prescan_should_abort(input, position); ++position) {
         if (input[position] == '\t' || input[position] == '\n' || input[position] == '\f' || input[position] == '\r' || input[position] == ' ' || input[position] == '>')
-            return DOM::Attribute(attribute_name.to_string(), attribute_value.to_string());
+            return DOM::Attribute::create(document, attribute_name.to_string(), attribute_value.to_string());
         else
             attribute_value.append_as_lowercase(input[position]);
     }
@@ -158,7 +160,7 @@ value:
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#prescan-a-byte-stream-to-determine-its-encoding
-Optional<String> run_prescan_byte_stream_algorithm(const ByteBuffer& input)
+Optional<String> run_prescan_byte_stream_algorithm(DOM::Document& document, const ByteBuffer& input)
 {
     // https://html.spec.whatwg.org/multipage/parsing.html#prescan-a-byte-stream-to-determine-its-encoding
 
@@ -194,24 +196,24 @@ Optional<String> run_prescan_byte_stream_algorithm(const ByteBuffer& input)
             Optional<String> charset {};
 
             while (true) {
-                auto attribute = prescan_get_attribute(input, position);
-                if (!attribute.has_value())
+                auto attribute = prescan_get_attribute(document, input, position);
+                if (!attribute)
                     break;
-                if (attribute_list.contains_slow(attribute.value().name()))
+                if (attribute_list.contains_slow(attribute->name()))
                     continue;
-                auto& attribute_name = attribute.value().name();
-                attribute_list.append(attribute.value().name());
+                auto& attribute_name = attribute->name();
+                attribute_list.append(attribute->name());
 
                 if (attribute_name == "http-equiv") {
-                    got_pragma = attribute.value().value() == "content-type";
+                    got_pragma = attribute->value() == "content-type";
                 } else if (attribute_name == "content") {
-                    auto encoding = extract_character_encoding_from_meta_element(attribute.value().value());
+                    auto encoding = extract_character_encoding_from_meta_element(attribute->value());
                     if (encoding.has_value() && !charset.has_value()) {
                         charset = encoding.value();
                         need_pragma = true;
                     }
                 } else if (attribute_name == "charset") {
-                    auto maybe_charset = TextCodec::get_standardized_encoding(attribute.value().value());
+                    auto maybe_charset = TextCodec::get_standardized_encoding(attribute->value());
                     if (maybe_charset.has_value()) {
                         charset = Optional<String> { maybe_charset };
                         need_pragma = { false };
@@ -231,7 +233,7 @@ Optional<String> run_prescan_byte_stream_algorithm(const ByteBuffer& input)
             && ((input[position + 1] == '/' && isalpha(input[position + 2])) || isalpha(input[position + 1]))) {
             position += 2;
             prescan_skip_whitespace_and_slashes(input, position);
-            while (prescan_get_attribute(input, position).has_value()) { };
+            while (prescan_get_attribute(document, input, position)) { };
         } else if (!prescan_should_abort(input, position + 1) && input[position] == '<' && (input[position + 1] == '!' || input[position + 1] == '/' || input[position + 1] == '?')) {
             position += 2;
             while (input[position] != '>') {
@@ -247,7 +249,7 @@ Optional<String> run_prescan_byte_stream_algorithm(const ByteBuffer& input)
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#determining-the-character-encoding
-String run_encoding_sniffing_algorithm(const ByteBuffer& input)
+String run_encoding_sniffing_algorithm(DOM::Document& document, const ByteBuffer& input)
 {
     if (input.size() >= 2) {
         if (input[0] == 0xFE && input[1] == 0xFF) {
@@ -265,7 +267,7 @@ String run_encoding_sniffing_algorithm(const ByteBuffer& input)
     //        at any later step in this algorithm.
     // FIXME: If the transport layer specifies a character encoding, and it is supported.
 
-    auto optional_encoding = run_prescan_byte_stream_algorithm(input);
+    auto optional_encoding = run_prescan_byte_stream_algorithm(document, input);
     if (optional_encoding.has_value()) {
         return optional_encoding.value();
     }

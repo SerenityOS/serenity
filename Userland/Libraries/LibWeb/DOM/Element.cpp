@@ -49,8 +49,8 @@ Element::~Element()
 Attribute* Element::find_attribute(const FlyString& name)
 {
     for (auto& attribute : m_attributes) {
-        if (attribute.name() == name)
-            return &attribute;
+        if (attribute->name() == name)
+            return attribute;
     }
     return nullptr;
 }
@@ -58,8 +58,8 @@ Attribute* Element::find_attribute(const FlyString& name)
 const Attribute* Element::find_attribute(const FlyString& name) const
 {
     for (auto& attribute : m_attributes) {
-        if (attribute.name() == name)
-            return &attribute;
+        if (attribute->name() == name)
+            return attribute;
     }
     return nullptr;
 }
@@ -82,7 +82,7 @@ ExceptionOr<void> Element::set_attribute(const FlyString& name, const String& va
     if (auto* attribute = find_attribute(name))
         attribute->set_value(value);
     else
-        m_attributes.empend(name, value);
+        m_attributes.append(Attribute::create(document(), name, value));
 
     parse_attribute(name, value);
     return {};
@@ -92,7 +92,7 @@ void Element::remove_attribute(const FlyString& name)
 {
     CSS::StyleInvalidator style_invalidator(document());
 
-    m_attributes.remove_first_matching([&](auto& attribute) { return attribute.name() == name; });
+    m_attributes.remove_first_matching([&](auto& attribute) { return attribute->name() == name; });
 }
 
 bool Element::has_class(const FlyString& class_name, CaseSensitivity case_sensitivity) const
