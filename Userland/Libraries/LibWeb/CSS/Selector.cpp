@@ -195,18 +195,20 @@ String Selector::serialize() const
         //    single SPACE (U+0020) if the combinator was not whitespace, to s.
         if (i != compound_selectors().size() - 1) {
             s.append(' ');
-            switch (compound_selector.combinator) {
+            // Note: The combinator that appears between parts `i` and `i+1` appears with the `i+1` selector,
+            //       so we have to check that one.
+            switch (compound_selectors()[i + 1].combinator) {
             case Selector::Combinator::ImmediateChild:
-                s.append('>');
+                s.append("> ");
                 break;
             case Selector::Combinator::NextSibling:
-                s.append('+');
+                s.append("+ ");
                 break;
             case Selector::Combinator::SubsequentSibling:
-                s.append('~');
+                s.append("~ ");
                 break;
             case Selector::Combinator::Column:
-                s.append("||");
+                s.append("|| ");
                 break;
             default:
                 break;
