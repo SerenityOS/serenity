@@ -38,6 +38,8 @@ public:
 private:
     explicit CSSSupportsRule(NonnullRefPtr<Supports>&&, NonnullRefPtrVector<CSSRule>&&);
 
+    virtual String serialized() const override;
+
     NonnullRefPtr<Supports> m_supports;
 };
 
