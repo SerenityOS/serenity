@@ -53,7 +53,9 @@ Value PromiseReactionJob::call()
 
     if (!promise_capability.has_value()) {
         dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob @ {}]: Reaction has no PromiseCapability, returning empty value", this);
-        return {};
+        // TODO: This can't return an empty value at the moment, because the implicit conversion to Completion would fail.
+        //       Change it back when this is using completions (`return normal_completion({})`)
+        return js_undefined();
     }
 
     if (vm.exception()) {
