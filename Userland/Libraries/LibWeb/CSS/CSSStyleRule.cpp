@@ -19,7 +19,7 @@ CSSStyleRule::~CSSStyleRule()
 {
 }
 
-// https://drafts.csswg.org/cssom/#dom-cssstylerule-style
+// https://www.w3.org/TR/cssom/#dom-cssstylerule-style
 CSSStyleDeclaration* CSSStyleRule::style()
 {
     return m_declaration;
@@ -89,7 +89,7 @@ static StringView to_string(Selector::SimpleSelector::PseudoClass::Type pseudo_c
 
 static String serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const&);
 
-// https://drafts.csswg.org/cssom/#serialize-a-simple-selector
+// https://www.w3.org/TR/cssom/#serialize-a-simple-selector
 static String serialize_a_simple_selector(Selector::SimpleSelector const& simple_selector)
 {
     StringBuilder builder;
@@ -213,7 +213,7 @@ static String serialize_a_simple_selector(Selector::SimpleSelector const& simple
     return builder.to_string();
 }
 
-// https://drafts.csswg.org/cssom/#serialize-a-selector
+// https://www.w3.org/TR/cssom/#serialize-a-selector
 static String serialize_a_selector(Selector const& selector)
 {
     StringBuilder builder;
@@ -270,7 +270,7 @@ static String serialize_a_selector(Selector const& selector)
     return builder.to_string();
 }
 
-// https://drafts.csswg.org/cssom/#serialize-a-group-of-selectors
+// https://www.w3.org/TR/cssom/#serialize-a-group-of-selectors
 static String serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selectors)
 {
     // To serialize a group of selectors serialize each selector in the group of selectors and then serialize a comma-separated list of these serializations.
@@ -280,7 +280,7 @@ static String serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const
     return builder.to_string();
 }
 
-// https://drafts.csswg.org/cssom/#serialize-a-css-rule
+// https://www.w3.org/TR/cssom/#serialize-a-css-rule
 String CSSStyleRule::serialized() const
 {
     StringBuilder builder;
@@ -324,14 +324,14 @@ String CSSStyleRule::serialized() const
     TODO();
 }
 
-// https://drafts.csswg.org/cssom/#dom-cssstylerule-selectortext
+// https://www.w3.org/TR/cssom/#dom-cssstylerule-selectortext
 String CSSStyleRule::selector_text() const
 {
     // The selectorText attribute, on getting, must return the result of serializing the associated group of selectors.
     return serialized();
 }
 
-// https://drafts.csswg.org/cssom/#dom-cssstylerule-selectortext
+// https://www.w3.org/TR/cssom/#dom-cssstylerule-selectortext
 void CSSStyleRule::set_selector_text(StringView selector_text)
 {
     // 1. Run the parse a group of selectors algorithm on the given value.

@@ -19,7 +19,7 @@ CSSStyleSheet::~CSSStyleSheet()
 {
 }
 
-// https://drafts.csswg.org/cssom/#dom-cssstylesheet-insertrule
+// https://www.w3.org/TR/cssom/#dom-cssstylesheet-insertrule
 DOM::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsigned index)
 {
     // FIXME: 1. If the origin-clean flag is unset, throw a SecurityError exception.
@@ -39,7 +39,7 @@ DOM::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsigned 
     return m_rules->insert_a_css_rule(parsed_rule.release_nonnull(), index);
 }
 
-// https://drafts.csswg.org/cssom/#dom-cssstylesheet-deleterule
+// https://www.w3.org/TR/cssom/#dom-cssstylesheet-deleterule
 DOM::ExceptionOr<void> CSSStyleSheet::delete_rule(unsigned index)
 {
     // FIXME: 1. If the origin-clean flag is unset, throw a SecurityError exception.
@@ -50,7 +50,7 @@ DOM::ExceptionOr<void> CSSStyleSheet::delete_rule(unsigned index)
     return m_rules->remove_a_css_rule(index);
 }
 
-// https://drafts.csswg.org/cssom/#dom-cssstylesheet-removerule
+// https://www.w3.org/TR/cssom/#dom-cssstylesheet-removerule
 DOM::ExceptionOr<void> CSSStyleSheet::remove_rule(unsigned index)
 {
     // The removeRule(index) method must run the same steps as deleteRule().

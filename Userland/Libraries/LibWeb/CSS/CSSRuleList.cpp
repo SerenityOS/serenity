@@ -29,7 +29,7 @@ bool CSSRuleList::is_supported_property_index(u32 index) const
     return index < m_rules.size();
 }
 
-// https://drafts.csswg.org/cssom/#insert-a-css-rule
+// https://www.w3.org/TR/cssom/#insert-a-css-rule
 DOM::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(NonnullRefPtr<CSSRule> rule, u32 index)
 {
     // 1. Set length to the number of items in list.
@@ -54,7 +54,7 @@ DOM::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(NonnullRefPtr<CSSRule>
     return index;
 }
 
-// https://drafts.csswg.org/cssom/#remove-a-css-rule
+// https://www.w3.org/TR/cssom/#remove-a-css-rule
 DOM::ExceptionOr<void> CSSRuleList::remove_a_css_rule(u32 index)
 {
     // 1. Set length to the number of items in list.
