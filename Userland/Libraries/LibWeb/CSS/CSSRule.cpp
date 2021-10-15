@@ -12,14 +12,14 @@ CSSRule::~CSSRule()
 {
 }
 
-// https://drafts.csswg.org/cssom/#dom-cssrule-csstext
+// https://www.w3.org/TR/cssom/#dom-cssrule-csstext
 String CSSRule::css_text() const
 {
     // The cssText attribute must return a serialization of the CSS rule.
     return serialized();
 }
 
-// https://drafts.csswg.org/cssom/#dom-cssrule-csstext
+// https://www.w3.org/TR/cssom/#dom-cssrule-csstext
 void CSSRule::set_css_text(StringView)
 {
     // On setting the cssText attribute must do nothing.

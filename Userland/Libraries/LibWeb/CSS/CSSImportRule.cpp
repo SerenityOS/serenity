@@ -19,7 +19,7 @@ CSSImportRule::~CSSImportRule()
 {
 }
 
-// https://drafts.csswg.org/cssom/#serialize-a-css-rule
+// https://www.w3.org/TR/cssom/#serialize-a-css-rule
 String CSSImportRule::serialized() const
 {
     StringBuilder builder;
