@@ -172,6 +172,8 @@ GUI::ModelIndex DOMTreeModel::index_for_node(i32 node_id) const
     auto node = m_node_id_to_dom_node_map.get(node_id).value_or(nullptr);
     if (node) {
         auto* parent = get_parent(*node);
+        if (!parent)
+            return {};
         auto parent_children = get_children(*parent);
         for (size_t i = 0; i < parent_children->size(); i++) {
             if (&parent_children->at(i).as_object() == node) {
