@@ -10,7 +10,7 @@ https://cache.ruby-lang.org/pub/misc/logo/ruby-logo-kit.zip ruby-logo-kit.zip 7f
 auth_type="sha256"
 launcher_name="Ruby IRB"
 launcher_category="Development"
-launcher_command="/usr/local/bin/ruby /usr/local/bin/irb --nomultiline --nosingleline"
+launcher_command="/usr/local/bin/ruby /usr/local/bin/irb --legacy"
 launcher_run_in_terminal="true"
 icon_file="../ruby-kit/ruby.png"
 
