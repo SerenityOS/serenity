@@ -102,6 +102,8 @@ public:
             String value {};
         };
         Attribute attribute {};
+
+        String serialize() const;
     };
 
     enum class Combinator {
@@ -130,11 +132,17 @@ public:
     Vector<CompoundSelector> const& compound_selectors() const { return m_compound_selectors; }
 
     u32 specificity() const;
+    String serialize() const;
 
 private:
     explicit Selector(Vector<CompoundSelector>&&);
 
     Vector<CompoundSelector> m_compound_selectors;
 };
+
+constexpr StringView pseudo_element_name(Selector::SimpleSelector::PseudoElement);
+constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Type);
+
+String serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selectors);
 
 }
