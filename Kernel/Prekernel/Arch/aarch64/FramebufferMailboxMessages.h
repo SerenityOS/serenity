@@ -22,6 +22,7 @@ public:
         height = 0;
     }
 };
+static_assert(sizeof(FramebufferSetPhysicalSizeMboxMessage) == 20);
 
 class FramebufferSetVirtualSizeMboxMessage : public Mailbox::Message {
 public:
@@ -35,6 +36,7 @@ public:
         height = 0;
     }
 };
+static_assert(sizeof(FramebufferSetVirtualSizeMboxMessage) == 20);
 
 class FramebufferSetVirtualOffsetMboxMessage : public Mailbox::Message {
 public:
@@ -48,6 +50,7 @@ public:
         y = 0;
     }
 };
+static_assert(sizeof(FramebufferSetVirtualOffsetMboxMessage) == 20);
 
 class FramebufferSetDepthMboxMessage : public Mailbox::Message {
 public:
@@ -59,6 +62,7 @@ public:
         depth_bits = 0;
     }
 };
+static_assert(sizeof(FramebufferSetDepthMboxMessage) == 16);
 
 class FramebufferSetPixelOrderMboxMessage : public Mailbox::Message {
 public:
@@ -75,6 +79,7 @@ public:
         pixel_order = PixelOrder::BGR;
     }
 };
+static_assert(sizeof(FramebufferSetPixelOrderMboxMessage) == 16);
 
 class FramebufferAllocateBufferMboxMessage : public Mailbox::Message {
 public:
@@ -91,6 +96,7 @@ public:
         size = 0;
     }
 };
+static_assert(sizeof(FramebufferAllocateBufferMboxMessage) == 20);
 
 class FramebufferGetPithMboxMessage : public Mailbox::Message {
 public:
@@ -102,4 +108,6 @@ public:
         pitch = 0;
     }
 };
+static_assert(sizeof(FramebufferGetPithMboxMessage) == 16);
+
 }
