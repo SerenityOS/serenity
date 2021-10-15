@@ -542,7 +542,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
     }
 }
 
-// https://drafts.csswg.org/css-cascade/#cascading
+// https://www.w3.org/TR/css-cascade/#cascading
 void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element& element) const
 {
     // First, we collect all the CSS rules whose selectors match `element`:
@@ -620,7 +620,7 @@ void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM
     }
 }
 
-// https://drafts.csswg.org/css-cascade/#defaulting
+// https://www.w3.org/TR/css-cascade/#defaulting
 void StyleComputer::compute_defaulted_values(StyleProperties& style, DOM::Element const* element) const
 {
     // Walk the list of all known CSS properties and:
