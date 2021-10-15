@@ -7,9 +7,12 @@
 
 #include <AK/Types.h>
 #include <Kernel/Prekernel/Arch/aarch64/Aarch64_asm_utils.h>
+#include <Kernel/Prekernel/Arch/aarch64/BootPPMParser.h>
+#include <Kernel/Prekernel/Arch/aarch64/Framebuffer.h>
 #include <Kernel/Prekernel/Arch/aarch64/Mailbox.h>
 #include <Kernel/Prekernel/Arch/aarch64/Timer.h>
 #include <Kernel/Prekernel/Arch/aarch64/UART.h>
+#include <Kernel/Prekernel/Arch/aarch64/Utils.h>
 
 extern "C" [[noreturn]] void halt();
 extern "C" [[noreturn]] void init();
@@ -19,6 +22,7 @@ static void set_up_el1_mode();
 static void set_up_el2_mode();
 static void set_up_el3_mode();
 static void print_current_exception_level(const char* msg);
+static void draw_logo();
 static u32 query_firmware_version();
 [[noreturn]] static void jump_to_os_start_from_el2();
 [[noreturn]] static void jump_to_os_start_from_el3();
@@ -61,6 +65,11 @@ extern "C" [[noreturn]] void os_start()
     auto& uart = Prekernel::UART::the();
 
     print_current_exception_level("CPU switched to:");
+
+    auto& framebuffer = Prekernel::Framebuffer::the();
+    if (framebuffer.initialized()) {
+        draw_logo();
+    }
 
     auto& timer = Prekernel::Timer::the();
     u64 start_musec = 0;
@@ -238,4 +247,67 @@ static u32 query_firmware_version()
     }
 
     return message_queue.query_firmware_version.version;
+}
+
+extern "C" const u32 serenity_boot_logo_start;
+extern "C" const u32 serenity_boot_logo_size;
+
+static void draw_logo()
+{
+    Prekernel::BootPPMParser logo_parser(reinterpret_cast<const u8*>(&serenity_boot_logo_start), serenity_boot_logo_size);
+    if (!logo_parser.parse()) {
+        Prekernel::warnln("Invalid boot logo.");
+        return;
+    }
+
+    auto& uart = Prekernel::UART::the();
+    uart.print_str("Boot logo size: ");
+    uart.print_num(serenity_boot_logo_size);
+    uart.print_str("\r\n");
+    uart.print_str("Width: ");
+    uart.print_num(logo_parser.image.width);
+    uart.print_str("\r\n");
+    uart.print_str("Height: ");
+    uart.print_num(logo_parser.image.height);
+    uart.print_str("\r\n");
+
+    auto& framebuffer = Prekernel::Framebuffer::the();
+    auto fb_ptr = framebuffer.gpu_buffer();
+    auto image_left = (framebuffer.width() - logo_parser.image.width) / 2;
+    auto image_right = image_left + logo_parser.image.width;
+    auto image_top = (framebuffer.height() - logo_parser.image.height) / 2;
+    auto image_bottom = image_top + logo_parser.image.height;
+    auto logo_pixels = logo_parser.image.pixel_data;
+
+    for (u32 y = 0; y < framebuffer.height(); y++) {
+        for (u32 x = 0; x < framebuffer.width(); x++) {
+            if (x >= image_left && x < image_right && y >= image_top && y < image_bottom) {
+                switch (framebuffer.pixel_order()) {
+                case Prekernel::Framebuffer::PixelOrder::RGB:
+                    fb_ptr[0] = logo_pixels[0];
+                    fb_ptr[1] = logo_pixels[1];
+                    fb_ptr[2] = logo_pixels[2];
+                    break;
+                case Prekernel::Framebuffer::PixelOrder::BGR:
+                    fb_ptr[0] = logo_pixels[2];
+                    fb_ptr[1] = logo_pixels[1];
+                    fb_ptr[2] = logo_pixels[0];
+                    break;
+                default:
+                    Prekernel::warnln("Unsupported pixel format");
+                    halt();
+                }
+
+                logo_pixels += 3;
+            } else {
+                fb_ptr[0] = 0xBD;
+                fb_ptr[1] = 0xBD;
+                fb_ptr[2] = 0xBD;
+            }
+
+            fb_ptr[3] = 0xFF;
+            fb_ptr += 4;
+        }
+        fb_ptr += framebuffer.pitch() - framebuffer.width() * 4;
+    }
 }

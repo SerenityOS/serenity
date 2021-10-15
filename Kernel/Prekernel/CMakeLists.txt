@@ -66,6 +66,8 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
 endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
+    embed_resource(Prekernel serenity_boot_logo "Arch/aarch64/SerenityLogoRGB.ppm")
+
     add_custom_command(
         TARGET Prekernel POST_BUILD
         COMMAND ${CMAKE_OBJCOPY} -O binary Prekernel kernel8.img
