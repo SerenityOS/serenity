@@ -18,7 +18,7 @@ char PC;
 char* UP;
 char* BC;
 
-int tgetent([[maybe_unused]] char* bp, [[maybe_unused]] const char* name)
+int __attribute__((weak)) tgetent([[maybe_unused]] char* bp, [[maybe_unused]] const char* name)
 {
     warnln_if(TERMCAP_DEBUG, "tgetent: bp={:p}, name='{}'", bp, name);
     PC = '\0';
@@ -75,7 +75,7 @@ static void ensure_caps()
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-char* tgetstr(const char* id, char** area)
+char* __attribute__((weak)) tgetstr(const char* id, char** area)
 {
     ensure_caps();
     warnln_if(TERMCAP_DEBUG, "tgetstr: id='{}'", id);
@@ -93,7 +93,7 @@ char* tgetstr(const char* id, char** area)
 
 #pragma GCC diagnostic pop
 
-int tgetflag([[maybe_unused]] const char* id)
+int __attribute__((weak)) tgetflag([[maybe_unused]] const char* id)
 {
     warnln_if(TERMCAP_DEBUG, "tgetflag: '{}'", id);
     auto it = caps->find(id);
@@ -102,7 +102,7 @@ int tgetflag([[maybe_unused]] const char* id)
     return 0;
 }
 
-int tgetnum(const char* id)
+int __attribute__((weak)) tgetnum(const char* id)
 {
     warnln_if(TERMCAP_DEBUG, "tgetnum: '{}'", id);
     auto it = caps->find(id);
@@ -112,7 +112,7 @@ int tgetnum(const char* id)
 }
 
 static Vector<char> s_tgoto_buffer;
-char* tgoto([[maybe_unused]] const char* cap, [[maybe_unused]] int col, [[maybe_unused]] int row)
+char* __attribute__((weak)) tgoto([[maybe_unused]] const char* cap, [[maybe_unused]] int col, [[maybe_unused]] int row)
 {
     auto cap_str = StringView(cap).replace("%p1%d", String::number(col)).replace("%p2%d", String::number(row));
 
@@ -122,7 +122,7 @@ char* tgoto([[maybe_unused]] const char* cap, [[maybe_unused]] int col, [[maybe_
     return s_tgoto_buffer.data();
 }
 
-int tputs(const char* str, [[maybe_unused]] int affcnt, int (*putc)(int))
+int __attribute__((weak)) tputs(const char* str, [[maybe_unused]] int affcnt, int (*putc)(int))
 {
     size_t len = strlen(str);
     for (size_t i = 0; i < len; ++i)
