@@ -21,9 +21,7 @@ MediaList::~MediaList()
 // https://www.w3.org/TR/cssom-1/#dom-medialist-mediatext
 String MediaList::media_text() const
 {
-    StringBuilder builder;
-    builder.join(", ", m_media);
-    return builder.to_string();
+    return serialize_a_media_query_list(m_media);
 }
 
 // https://www.w3.org/TR/cssom-1/#dom-medialist-mediatext

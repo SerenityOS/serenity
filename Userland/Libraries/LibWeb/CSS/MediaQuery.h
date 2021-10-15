@@ -93,6 +93,8 @@ private:
     bool m_matches { false };
 };
 
+String serialize_a_media_query_list(NonnullRefPtrVector<MediaQuery> const&);
+
 }
 
 namespace AK {

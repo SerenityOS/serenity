@@ -29,9 +29,7 @@ MediaQueryList::~MediaQueryList()
 // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-media
 String MediaQueryList::media() const
 {
-    StringBuilder builder;
-    builder.join(", ", m_media);
-    return builder.to_string();
+    return serialize_a_media_query_list(m_media);
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-matches
