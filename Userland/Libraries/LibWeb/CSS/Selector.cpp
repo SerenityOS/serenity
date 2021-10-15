@@ -231,8 +231,7 @@ String serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selec
 {
     // To serialize a group of selectors serialize each selector in the group of selectors and then serialize a comma-separated list of these serializations.
     StringBuilder builder;
-    for (auto& selector : selectors)
-        builder.append(selector.serialize());
+    builder.join(", ", selectors);
     return builder.to_string();
 }
 
