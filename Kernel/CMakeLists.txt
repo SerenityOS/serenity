@@ -346,11 +346,13 @@ set(CRYPTO_SOURCES
     ../Userland/Libraries/LibCrypto/Hash/SHA2.cpp
 )
 
+set(SOURCES
+    ${AK_SOURCES}
+    )
 if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     set(SOURCES
         ${KERNEL_SOURCES}
         ${SOURCES}
-        ${AK_SOURCES}
         ${ELF_SOURCES}
         ${VT_SOURCES}
         ${KEYBOARD_SOURCES}
@@ -358,8 +360,8 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     )
 else()
     set(SOURCES
+        ${SOURCES}
         Arch/aarch64/dummy.cpp
-        ${AK_SOURCES}
         UBSanitizer.cpp
     )
 
