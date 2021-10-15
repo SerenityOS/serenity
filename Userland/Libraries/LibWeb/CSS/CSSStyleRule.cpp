@@ -73,7 +73,7 @@ String CSSStyleRule::serialized() const
 String CSSStyleRule::selector_text() const
 {
     // The selectorText attribute, on getting, must return the result of serializing the associated group of selectors.
-    return serialized();
+    return serialize_a_group_of_selectors(selectors());
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylerule-selectortext
