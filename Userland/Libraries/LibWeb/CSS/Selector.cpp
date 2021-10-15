@@ -5,6 +5,7 @@
  */
 
 #include "Selector.h"
+#include <LibWeb/CSS/Serialize.h>
 
 namespace Web::CSS {
 
@@ -55,8 +56,7 @@ String Selector::SimpleSelector::serialize() const
         // FIXME: 2. If the namespace prefix maps to a namespace that is the null namespace (not in a namespace) append "|" (U+007C) to s.
         // 3. If this is a type selector append the serialization of the element name as an identifier to s.
         if (type == Selector::SimpleSelector::Type::TagName) {
-            // FIXME: Use the "serialize an identifier" algorithm.
-            s.append(value);
+            serialize_an_identifier(s, value);
         }
         // 4. If this is a universal selector append "*" (U+002A) to s.
         if (type == Selector::SimpleSelector::Type::Universal)
@@ -69,8 +69,7 @@ String Selector::SimpleSelector::serialize() const
         // FIXME: 2. If the namespace prefix maps to a namespace that is not the null namespace (not in a namespace) append the serialization of the namespace prefix as an identifier, followed by a "|" (U+007C) to s.
 
         // 3. Append the serialization of the attribute name as an identifier to s.
-        // FIXME: Use the "serialize an identifier" algorithm.
-        s.append(attribute.name);
+        serialize_an_identifier(s, attribute.name);
 
         // 4. If there is an attribute value specified, append "=", "~=", "|=", "^=", "$=", or "*=" as appropriate (depending on the type of attribute selector),
         //    followed by the serialization of the attribute value as a string, to s.
@@ -97,6 +96,8 @@ String Selector::SimpleSelector::serialize() const
             default:
                 break;
             }
+
+            serialize_a_string(s, attribute.value);
         }
         // FIXME: 5. If the attribute selector has the case-sensitivity flag present, append " i" (U+0020 U+0069) to s.
 
@@ -107,15 +108,13 @@ String Selector::SimpleSelector::serialize() const
     case Selector::SimpleSelector::Type::Class:
         // Append a "." (U+002E), followed by the serialization of the class name as an identifier to s.
         s.append('.');
-        // FIXME: Use the "serialize an identifier" algorithm.
-        s.append(value);
+        serialize_an_identifier(s, value);
         break;
 
     case Selector::SimpleSelector::Type::Id:
         // Append a "#" (U+0023), followed by the serialization of the ID as an identifier to s.
         s.append('#');
-        // FIXME: Use the "serialize an identifier" algorithm.
-        s.append(value);
+        serialize_an_identifier(s, value);
         break;
 
     case Selector::SimpleSelector::Type::PseudoClass:
@@ -149,8 +148,8 @@ String Selector::SimpleSelector::serialize() const
             s.append('(');
             if (pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::NthChild
                 || pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::NthLastChild) {
-                // FIXME: The result of serializing the value using the rules to serialize an <an+b> value.
-                TODO();
+                // The result of serializing the value using the rules to serialize an <an+b> value.
+                s.append(pseudo_class.nth_child_pattern.serialize());
             } else if (pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::Not) {
                 // The result of serializing the value using the rules for serializing a group of selectors.
                 s.append(serialize_a_group_of_selectors(pseudo_class.not_selector));
