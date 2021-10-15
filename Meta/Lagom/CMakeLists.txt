@@ -111,11 +111,6 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     # Clang's default constexpr-steps limit is 1048576(2^20), GCC doesn't have one
     add_compile_options(-Wno-overloaded-virtual -Wno-user-defined-literals -fconstexpr-steps=16777216)
 
-    if (ENABLE_FUZZER_SANITIZER)
-        add_compile_options(-fsanitize=fuzzer -fno-omit-frame-pointer)
-        set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=fuzzer")
-    endif()
-
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-expansion-to-defined)
 endif()

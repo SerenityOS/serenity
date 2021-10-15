@@ -1,5 +1,6 @@
 function(add_simple_fuzzer name)
   add_executable(${name} "${name}.cpp")
+  target_compile_options(${name} PRIVATE -fsanitize=fuzzer -fno-omit-frame-pointer)
 
   if (ENABLE_OSS_FUZZ)
       target_link_libraries(${name}
