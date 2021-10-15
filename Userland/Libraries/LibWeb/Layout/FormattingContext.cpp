@@ -22,7 +22,7 @@ namespace Web::Layout {
 FormattingContext::FormattingContext(Type type, Box& context_box, FormattingContext* parent)
     : m_type(type)
     , m_parent(parent)
-    , m_context_box(&context_box)
+    , m_context_box(context_box)
 {
 }
 
