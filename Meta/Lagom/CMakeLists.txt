@@ -68,6 +68,7 @@ add_compile_options(-Wall -Wextra -Werror)
 add_compile_options(-fPIC -g)
 add_compile_options(-Wno-maybe-uninitialized)
 add_compile_options(-fno-exceptions)
+add_compile_options(-fno-semantic-interposition)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
