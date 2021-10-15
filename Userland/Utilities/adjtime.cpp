@@ -23,14 +23,7 @@ int main(int argc, char** argv)
     args_parser.add_option(delta, "Adjust system time by this many seconds", "set", 's', "delta_seconds");
     args_parser.parse(argc, argv);
 
-    if (__builtin_isnan(delta)) {
-#ifdef __serenity__
-        if (pledge("stdio", nullptr) < 0) {
-            perror("pledge");
-            return 1;
-        }
-#endif
-    } else {
+    if (!__builtin_isnan(delta)) {
         long delta_us = static_cast<long>(round(delta * 1'000'000));
         timeval delta_timeval;
         delta_timeval.tv_sec = delta_us / 1'000'000;
@@ -44,6 +37,13 @@ int main(int argc, char** argv)
             return 1;
         }
     }
+
+#ifdef __serenity__
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+#endif
 
     timeval remaining_delta_timeval;
     if (adjtime(nullptr, &remaining_delta_timeval) < 0) {
