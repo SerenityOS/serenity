@@ -926,6 +926,8 @@ static bool is_wrappable_type(IDL::Type const& type)
         return true;
     if (type.name == "Selection")
         return true;
+    if (type.name == "Attribute")
+        return true;
     return false;
 }
 
@@ -1628,6 +1630,7 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
+#include <LibWeb/Bindings/AttributeWrapper.h>
 #include <LibWeb/Bindings/CSSRuleListWrapper.h>
 #include <LibWeb/Bindings/CSSRuleWrapper.h>
 #include <LibWeb/Bindings/CSSRuleWrapperFactory.h>
@@ -2836,6 +2839,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
 #include <LibWeb/Bindings/AbortSignalWrapper.h>
+#include <LibWeb/Bindings/AttributeWrapper.h>
 #include <LibWeb/Bindings/CSSRuleListWrapper.h>
 #include <LibWeb/Bindings/CSSRuleWrapper.h>
 #include <LibWeb/Bindings/CSSRuleWrapperFactory.h>

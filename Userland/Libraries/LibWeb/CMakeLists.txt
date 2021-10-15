@@ -54,6 +54,8 @@ set(SOURCES
     Cookie/ParsedCookie.cpp
     DOM/AbortController.cpp
     DOM/AbortSignal.cpp
+    DOM/Attribute.cpp
+    DOM/Attribute.idl
     DOM/CharacterData.cpp
     DOM/CharacterData.idl
     DOM/Comment.cpp
@@ -366,6 +368,7 @@ libweb_js_wrapper(CSS/MediaQueryListEvent)
 libweb_js_wrapper(CSS/Screen)
 libweb_js_wrapper(CSS/StyleSheet)
 libweb_js_wrapper(CSS/StyleSheetList)
+libweb_js_wrapper(DOM/Attribute)
 libweb_js_wrapper(DOM/AbortController)
 libweb_js_wrapper(DOM/AbortSignal)
 libweb_js_wrapper(DOM/CharacterData)

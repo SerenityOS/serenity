@@ -67,7 +67,7 @@ public:
     void for_each_attribute(Callback callback) const
     {
         for (auto& attribute : m_attributes)
-            callback(attribute.name(), attribute.value());
+            callback(attribute->name(), attribute->value());
     }
 
     bool has_class(const FlyString&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
@@ -132,7 +132,7 @@ private:
 
     QualifiedName m_qualified_name;
     String m_html_uppercased_qualified_name;
-    Vector<Attribute> m_attributes;
+    Vector<NonnullRefPtr<Attribute>> m_attributes;
 
     RefPtr<CSS::CSSStyleDeclaration> m_inline_style;
 
