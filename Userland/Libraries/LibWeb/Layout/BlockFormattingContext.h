@@ -13,7 +13,7 @@
 
 namespace Web::Layout {
 
-// https://drafts.csswg.org/css-display/#block-formatting-context
+// https://www.w3.org/TR/css-display/#block-formatting-context
 class BlockFormattingContext : public FormattingContext {
 public:
     explicit BlockFormattingContext(BlockContainer&, FormattingContext* parent);
@@ -29,7 +29,7 @@ public:
     static float compute_theoretical_height(Box const&);
     void compute_width(Box&);
 
-    // https://drafts.csswg.org/css-display/#block-formatting-context-root
+    // https://www.w3.org/TR/css-display/#block-formatting-context-root
     BlockContainer& root() { return static_cast<BlockContainer&>(context_box()); }
     BlockContainer const& root() const { return static_cast<BlockContainer const&>(context_box()); }
 
