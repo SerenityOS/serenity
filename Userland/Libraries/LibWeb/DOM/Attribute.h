@@ -17,7 +17,7 @@ class Attribute final : public Node {
 public:
     using WrapperType = Bindings::AttributeWrapper;
 
-    static NonnullRefPtr<Attribute> create(Document&, FlyString local_name, String value);
+    static NonnullRefPtr<Attribute> create(Document&, FlyString local_name, String value, Element const* = nullptr);
 
     virtual ~Attribute() override = default;
 
@@ -38,7 +38,7 @@ public:
     constexpr bool specified() const { return true; }
 
 private:
-    Attribute(Document&, FlyString local_name, String value);
+    Attribute(Document&, FlyString local_name, String value, Element const*);
 
     QualifiedName m_qualified_name;
     String m_value;

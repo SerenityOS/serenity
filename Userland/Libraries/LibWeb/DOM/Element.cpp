@@ -82,7 +82,7 @@ ExceptionOr<void> Element::set_attribute(const FlyString& name, const String& va
     if (auto* attribute = find_attribute(name))
         attribute->set_value(value);
     else
-        m_attributes.append(Attribute::create(document(), name, value));
+        m_attributes.append(Attribute::create(document(), name, value, this));
 
     parse_attribute(name, value);
     return {};
