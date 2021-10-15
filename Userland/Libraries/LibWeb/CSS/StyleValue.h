@@ -573,7 +573,7 @@ public:
     using CalcNumberValue = Variant<float, NonnullOwnPtr<CalcNumberSum>>;
     using CalcValue = Variant<float, CSS::Length, NonnullOwnPtr<CalcSum>>;
 
-    // This represents that: https://drafts.csswg.org/css-values-3/#calc-syntax
+    // This represents that: https://www.w3.org/TR/css-values-3/#calc-syntax
     struct CalcSum {
         CalcSum(NonnullOwnPtr<CalcProduct> first_calc_product, NonnullOwnPtrVector<CalcSumPartWithOperator> additional)
             : first_calc_product(move(first_calc_product))
