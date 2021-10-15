@@ -30,12 +30,6 @@ void CSSGroupingRule::delete_rule(size_t)
     TODO();
 }
 
-// https://drafts.csswg.org/cssom/#serialize-a-css-rule
-String CSSGroupingRule::serialized() const
-{
-    TODO();
-}
-
 void CSSGroupingRule::for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const
 {
     m_rules->for_each_effective_style_rule(callback);
