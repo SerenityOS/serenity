@@ -550,4 +550,10 @@ int wmemcmp(const wchar_t* s1, const wchar_t* s2, size_t n)
     }
     return 0;
 }
+
+size_t wcsnrtombs(char*, const wchar_t**, size_t, size_t, mbstate_t*)
+{
+    dbgln("FIXME: Implement wcsnrtombs()");
+    TODO();
+}
 }
