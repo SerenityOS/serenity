@@ -2055,9 +2055,7 @@ Value UpdateExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     auto old_value = reference.get_value(global_object);
     if (interpreter.exception())
         return {};
-    old_value = old_value.to_numeric(global_object);
-    if (interpreter.exception())
-        return {};
+    old_value = TRY_OR_DISCARD(old_value.to_numeric(global_object));
 
     Value new_value;
     switch (m_op) {
