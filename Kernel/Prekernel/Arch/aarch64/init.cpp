@@ -19,6 +19,7 @@ static void set_up_el1_mode();
 static void set_up_el2_mode();
 static void set_up_el3_mode();
 static void print_current_exception_level(const char* msg);
+static u32 query_firmware_version();
 [[noreturn]] static void jump_to_os_start_from_el2();
 [[noreturn]] static void jump_to_os_start_from_el3();
 
@@ -30,7 +31,7 @@ extern "C" [[noreturn]] void init()
     uart.print_str("Imagine this being your ideal operating system.\r\n");
     uart.print_str("Observed deviations from that ideal are shortcomings of your imagination.\r\n\r\n");
 
-    u32 firmware_version = Prekernel::Mailbox::query_firmware_version();
+    auto firmware_version = query_firmware_version();
     uart.print_str("Firmware version: ");
     uart.print_num(firmware_version);
     uart.print_str("\r\n");
@@ -211,4 +212,30 @@ static void print_current_exception_level(const char* msg)
     uart.print_str(" EL");
     uart.print_num(exception_level);
     uart.print_str("\r\n");
+}
+
+class QueryFirmwareVersionMboxMessage : Prekernel::Mailbox::Message {
+public:
+    u32 version;
+
+    QueryFirmwareVersionMboxMessage()
+        : Prekernel::Mailbox::Message(0x0000'0001, 4)
+    {
+        version = 0;
+    }
+};
+
+static u32 query_firmware_version()
+{
+    struct __attribute__((aligned(16))) {
+        Prekernel::Mailbox::MessageHeader header;
+        QueryFirmwareVersionMboxMessage query_firmware_version;
+        Prekernel::Mailbox::MessageTail tail;
+    } message_queue;
+
+    if (!Prekernel::Mailbox::the().send_queue(&message_queue, sizeof(message_queue))) {
+        return 0xffff'ffff;
+    }
+
+    return message_queue.query_firmware_version.version;
 }

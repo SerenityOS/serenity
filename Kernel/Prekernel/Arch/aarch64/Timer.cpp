@@ -5,7 +5,9 @@
  */
 
 #include <Kernel/Prekernel/Arch/aarch64/MMIO.h>
+#include <Kernel/Prekernel/Arch/aarch64/Mailbox.h>
 #include <Kernel/Prekernel/Arch/aarch64/Timer.h>
+#include <Kernel/Prekernel/Arch/aarch64/Utils.h>
 
 namespace Prekernel {
 
@@ -46,6 +48,41 @@ u64 Timer::microseconds_since_boot()
         low = m_registers->counter_low;
     }
     return (static_cast<u64>(high) << 32) | low;
+}
+
+class SetClockRateMboxMessage : Prekernel::Mailbox::Message {
+public:
+    u32 clock_id;
+    u32 rate_hz;
+    u32 skip_setting_turbo;
+
+    SetClockRateMboxMessage()
+        : Prekernel::Mailbox::Message(0x0003'8002, 12)
+    {
+        clock_id = 0;
+        rate_hz = 0;
+        skip_setting_turbo = 0;
+    }
+};
+
+u32 Timer::set_clock_rate(ClockID clock_id, u32 rate_hz, bool skip_setting_turbo)
+{
+    struct __attribute__((aligned(16))) {
+        Prekernel::Mailbox::MessageHeader header;
+        SetClockRateMboxMessage set_clock_rate;
+        Prekernel::Mailbox::MessageTail tail;
+    } message_queue;
+
+    message_queue.set_clock_rate.clock_id = static_cast<u32>(clock_id);
+    message_queue.set_clock_rate.rate_hz = rate_hz;
+    message_queue.set_clock_rate.skip_setting_turbo = skip_setting_turbo ? 1 : 0;
+
+    if (!Prekernel::Mailbox::the().send_queue(&message_queue, sizeof(message_queue))) {
+        warnln("Timer::set_clock_rate() failed!");
+        return 0;
+    }
+
+    return message_queue.set_clock_rate.rate_hz;
 }
 
 }

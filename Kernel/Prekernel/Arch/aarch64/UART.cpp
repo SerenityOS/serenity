@@ -6,7 +6,7 @@
 
 #include <Kernel/Prekernel/Arch/aarch64/GPIO.h>
 #include <Kernel/Prekernel/Arch/aarch64/MMIO.h>
-#include <Kernel/Prekernel/Arch/aarch64/Mailbox.h>
+#include <Kernel/Prekernel/Arch/aarch64/Timer.h>
 #include <Kernel/Prekernel/Arch/aarch64/UART.h>
 
 namespace Prekernel {
@@ -101,7 +101,7 @@ UART::UART()
 
     // Set UART clock so that the baud rate divisor ends up as 1.0.
     // FIXME: Not sure if this is a good UART clock rate.
-    u32 rate_in_hz = Mailbox::set_clock_rate(Mailbox::ClockID::UART, 16 * baud_rate);
+    u32 rate_in_hz = Timer::the().set_clock_rate(Timer::ClockID::UART, 16 * baud_rate);
 
     // The BCM's PL011 UART is alternate function 0 on pins 14 and 15.
     auto& gpio = Prekernel::GPIO::the();
