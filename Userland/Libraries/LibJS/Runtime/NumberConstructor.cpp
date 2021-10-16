@@ -66,9 +66,7 @@ static Value get_value_from_constructor_argument(GlobalObject& global_object)
 
     Value number;
     if (vm.argument_count() > 0) {
-        auto primitive = vm.argument(0).to_numeric(global_object);
-        if (vm.exception())
-            return {};
+        auto primitive = TRY_OR_DISCARD(vm.argument(0).to_numeric(global_object));
         if (primitive.is_bigint()) {
             // FIXME: How should huge values be handled here?
             auto& big_integer = primitive.as_bigint().big_integer();
