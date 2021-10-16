@@ -4,48 +4,76 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 
-static String read_var(const String& name)
+static bool s_set_variable = false;
+
+static String get_variable(StringView const& name)
 {
-    StringBuilder builder;
-    builder.append("/proc/sys/");
-    builder.append(name);
-    auto path = builder.to_string();
-    auto f = Core::File::construct(path);
-    if (!f->open(Core::OpenMode::ReadOnly)) {
-        warnln("Failed to open {}: {}", f->name(), f->error_string());
-        exit(1);
+    auto path = String::formatted("/proc/sys/{}", name);
+    auto file = Core::File::construct(path);
+    if (!file->open(Core::OpenMode::ReadOnly)) {
+        warnln("Failed to open {}: {}", path, file->error_string());
+        return {};
     }
-    const auto& b = f->read_all();
-    if (f->error() < 0) {
-        warnln("Failed to read: {}", f->error_string());
-        exit(1);
+    auto buffer = file->read_all();
+    if (file->error() < 0) {
+        warnln("Failed to read {}: {}", path, file->error_string());
+        return {};
     }
-    return String((const char*)b.data(), b.size(), Chomp);
+    return { (char const*)buffer.data(), buffer.size(), Chomp };
 }
 
-static void write_var(const String& name, const String& value)
+static bool read_variable(StringView const& name)
 {
-    StringBuilder builder;
-    builder.append("/proc/sys/");
-    builder.append(name);
-    auto path = builder.to_string();
-    auto f = Core::File::construct(path);
-    if (!f->open(Core::OpenMode::WriteOnly)) {
-        warnln("Failed to open: {}", f->error_string());
-        exit(1);
+    auto value = get_variable(name);
+    if (value.is_null())
+        return false;
+    outln("{} = {}", name, value);
+    return true;
+}
+
+static bool write_variable(StringView const& name, StringView const& value)
+{
+    auto old_value = get_variable(name);
+    if (old_value.is_null())
+        return false;
+    auto path = String::formatted("/proc/sys/{}", name);
+    auto file = Core::File::construct(path);
+    if (!file->open(Core::OpenMode::WriteOnly)) {
+        warnln("Failed to open {}: {}", path, file->error_string());
+        return false;
     }
-    f->write(value);
-    if (f->error() < 0) {
-        warnln("Failed to write: {}", f->error_string());
-        exit(1);
+    if (!file->write(value)) {
+        warnln("Failed to write {}: {}", path, file->error_string());
+        return false;
     }
+    outln("{}: {} -> {}", name, old_value, value);
+    return true;
+}
+
+static int handle_variables(Vector<String> const& variables)
+{
+    bool success = false;
+    for (auto const& variable : variables) {
+        auto maybe_index = variable.find('=');
+        if (!maybe_index.has_value()) {
+            success = read_variable(variable);
+            continue;
+        }
+        auto equal_index = maybe_index.release_value();
+        auto name = variable.substring_view(0, equal_index);
+        auto value = variable.substring_view(equal_index + 1, variable.length() - equal_index - 1);
+        if (name.is_empty())
+            warnln("Malformed setting '{}'", variable);
+        else if (!s_set_variable)
+            warnln("Must specify '-w' to set variables");
+        else
+            success = write_variable(name, value);
+    }
+    return success ? 0 : 1;
 }
 
 static int handle_show_all()
@@ -56,52 +84,35 @@ static int handle_show_all()
         return 1;
     }
 
+    bool success = false;
     while (di.has_next()) {
-        String variable_name = di.next_path();
-        outln("{} = {}", variable_name, read_var(variable_name));
+        auto name = di.next_path();
+        success = read_variable(name);
     }
-    return 0;
-}
-
-static int handle_var(const String& var)
-{
-    String spec(var.characters(), Chomp);
-    auto parts = spec.split('=');
-    String variable_name = parts[0];
-    bool is_write = parts.size() > 1;
-
-    if (!is_write) {
-        outln("{} = {}", variable_name, read_var(variable_name));
-        return 0;
-    }
-
-    out("{} = {}", variable_name, read_var(variable_name));
-    write_var(variable_name, parts[1]);
-    outln(" -> {}", read_var(variable_name));
-    return 0;
+    return success ? 0 : 1;
 }
 
 int main(int argc, char** argv)
 {
     bool show_all = false;
-    const char* var = nullptr;
+    Vector<String> variables;
 
     Core::ArgsParser args_parser;
-    args_parser.set_general_help(
-        "Show or modify system-internal values. This requires root, and can crash your system.");
-    args_parser.add_option(show_all, "Show all variables", nullptr, 'a');
-    args_parser.add_positional_argument(var, "variable[=value]", "variable", Core::ArgsParser::Required::No);
+    args_parser.set_general_help("Show or modify system-internal values. This requires root, and can crash your system.");
+    args_parser.add_option(show_all, "Show all variables", "all", 'a');
+    args_parser.add_option(s_set_variable, "Set variables", "write", 'w');
+    args_parser.add_positional_argument(variables, "variable[=value]", "variables", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    if (var == nullptr) {
-        // Not supplied; assume `-a`.
-        show_all = true;
+    if (!show_all && variables.is_empty()) {
+        args_parser.print_usage(stdout, argv[0]);
+        return 1;
     }
 
     if (show_all) {
-        // Ignore `var`, even if it was supplied. Just like the real procps does.
+        // Ignore `variables`, even if they are supplied. Just like the real procps does.
         return handle_show_all();
     }
 
-    return handle_var(var);
+    return handle_variables(variables);
 }
