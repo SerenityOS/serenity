@@ -73,6 +73,7 @@ set(SOURCES
     DOM/EventTarget.cpp
     DOM/HTMLCollection.cpp
     DOM/LiveNodeList.cpp
+    DOM/NamedNodeMap.cpp
     DOM/Node.cpp
     DOM/ParentNode.cpp
     DOM/Position.cpp
@@ -383,6 +384,7 @@ libweb_js_wrapper(DOM/Element)
 libweb_js_wrapper(DOM/Event)
 libweb_js_wrapper(DOM/EventTarget)
 libweb_js_wrapper(DOM/HTMLCollection)
+libweb_js_wrapper(DOM/NamedNodeMap)
 libweb_js_wrapper(DOM/Node)
 libweb_js_wrapper(DOM/NodeList)
 libweb_js_wrapper(DOM/ProcessingInstruction)
