@@ -221,6 +221,10 @@ void Job::on_socket_connected()
                 // Assume that any content-encoding means that we can't decode it as a stream :(
                 dbgln_if(JOB_DEBUG, "Content-Encoding {} detected, cannot stream output :(", value);
                 m_can_stream_response = false;
+            } else if (name.equals_ignoring_case("Content-Length")) {
+                auto length = value.to_uint();
+                if (length.has_value())
+                    m_content_length = length.value();
             }
             dbgln_if(JOB_DEBUG, "Job: [{}] = '{}'", name, value);
             return;
@@ -341,19 +345,10 @@ void Job::on_socket_connected()
                 m_current_chunk_remaining_size = size;
             }
 
-            auto content_length_header = m_headers.get("Content-Length");
-            Optional<u32> content_length {};
+            deferred_invoke([this] { did_progress(m_content_length, m_received_size); });
 
-            if (content_length_header.has_value()) {
-                auto length = content_length_header.value().to_uint();
-                if (length.has_value())
-                    content_length = length.value();
-            }
-
-            deferred_invoke([this, content_length] { did_progress(content_length, m_received_size); });
-
-            if (content_length.has_value()) {
-                auto length = content_length.value();
+            if (m_content_length.has_value()) {
+                auto length = m_content_length.value();
                 if (m_received_size >= length) {
                     m_received_size = length;
                     finish_up();
