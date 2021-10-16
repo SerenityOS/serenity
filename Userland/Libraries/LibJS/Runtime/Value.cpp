@@ -546,9 +546,9 @@ ThrowCompletionOr<BigInt*> Value::to_bigint(GlobalObject& global_object) const
 }
 
 // 7.1.15 ToBigInt64 ( argument ), https://tc39.es/ecma262/multipage/abstract-operations.html#sec-tobigint64
-i64 Value::to_bigint_int64(GlobalObject& global_object) const
+ThrowCompletionOr<i64> Value::to_bigint_int64(GlobalObject& global_object) const
 {
-    auto* bigint = TRY_OR_DISCARD(to_bigint(global_object));
+    auto* bigint = TRY(to_bigint(global_object));
     return static_cast<i64>(bigint->big_integer().to_u64());
 }
 

@@ -229,7 +229,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
             break;
         case Wasm::ValueType::Kind::I64:
             if (argument.is_bigint()) {
-                auto value = argument.to_bigint_int64(global_object);
+                auto value = TRY_OR_DISCARD(argument.to_bigint_int64(global_object));
                 arguments.append(Wasm::Value(param, bit_cast<u64>(value)));
             } else {
                 arguments.append(Wasm::Value(param, static_cast<u64>(double_value)));
