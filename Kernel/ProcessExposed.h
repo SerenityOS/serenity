@@ -69,7 +69,9 @@ public:
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const { VERIFY_NOT_REACHED(); }
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
     virtual KResultOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView) { VERIFY_NOT_REACHED(); };
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*) { return KResult(EROFS); }
+    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*) { return EROFS; }
+    virtual KResult truncate(u64) { return EPERM; }
+    virtual KResult set_mtime(time_t) { return ENOTIMPL; }
 
     virtual mode_t required_mode() const { return 0444; }
     virtual UserID owner_user() const { return 0; }
@@ -182,10 +184,16 @@ protected:
         : ProcFSGlobalInformation(name)
     {
     }
-    virtual KResult try_generate(KBufferBuilder& builder) override
-    {
-        return builder.appendff("{}\n", value());
-    }
+
+private:
+    // ^ProcFSGlobalInformation
+    virtual KResult try_generate(KBufferBuilder&) override final;
+
+    // ^ProcFSExposedComponent
+    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*) override final;
+    virtual mode_t required_mode() const override final { return 0644; }
+    virtual KResult truncate(u64) override final;
+    virtual KResult set_mtime(time_t) override final;
 };
 
 }

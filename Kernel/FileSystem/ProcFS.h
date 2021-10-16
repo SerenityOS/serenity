@@ -62,7 +62,6 @@ protected:
     virtual KResult remove_child(const StringView& name) override final;
     virtual KResult chmod(mode_t) override final;
     virtual KResult chown(UserID, GroupID) override final;
-    virtual KResult truncate(u64) override final;
 };
 
 class ProcFSGlobalInode : public ProcFSInode {
@@ -84,6 +83,8 @@ protected:
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView) override;
+    virtual KResult truncate(u64) override final;
+    virtual KResult set_mtime(time_t) override final;
 
     NonnullRefPtr<ProcFSExposedComponent> m_associated_component;
 };

@@ -153,6 +153,39 @@ KResult ProcFSGlobalInformation::refresh_data(OpenFileDescription& description) 
     return KSuccess;
 }
 
+KResult ProcFSSystemBoolean::try_generate(KBufferBuilder& builder)
+{
+    return builder.appendff("{}\n", static_cast<int>(value()));
+}
+
+KResultOr<size_t> ProcFSSystemBoolean::write_bytes(off_t, size_t count, const UserOrKernelBuffer& buffer, OpenFileDescription*)
+{
+    if (count != 1)
+        return EINVAL;
+    MutexLocker locker(m_refresh_lock);
+    char value = 0;
+    TRY(buffer.read(&value, 1));
+    if (value == '0')
+        set_value(false);
+    else if (value == '1')
+        set_value(true);
+    else
+        return EINVAL;
+    return 1;
+}
+
+KResult ProcFSSystemBoolean::truncate(u64 size)
+{
+    if (size != 0)
+        return EPERM;
+    return KSuccess;
+}
+
+KResult ProcFSSystemBoolean::set_mtime(time_t)
+{
+    return KSuccess;
+}
+
 KResultOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     VERIFY(offset == 0);

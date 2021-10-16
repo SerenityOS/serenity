@@ -99,11 +99,6 @@ KResult ProcFSInode::chown(UserID, GroupID)
     return EPERM;
 }
 
-KResult ProcFSInode::truncate(u64)
-{
-    return EPERM;
-}
-
 KResultOr<NonnullRefPtr<ProcFSGlobalInode>> ProcFSGlobalInode::try_create(const ProcFS& fs, const ProcFSExposedComponent& component)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) ProcFSGlobalInode(fs, component));
@@ -149,6 +144,16 @@ KResult ProcFSGlobalInode::traverse_as_directory(Function<bool(FileSystem::Direc
 KResultOr<NonnullRefPtr<Inode>> ProcFSGlobalInode::lookup(StringView)
 {
     VERIFY_NOT_REACHED();
+}
+
+KResult ProcFSGlobalInode::truncate(u64 size)
+{
+    return m_associated_component->truncate(size);
+}
+
+KResult ProcFSGlobalInode::set_mtime(time_t time)
+{
+    return m_associated_component->set_mtime(time);
 }
 
 InodeMetadata ProcFSGlobalInode::metadata() const
