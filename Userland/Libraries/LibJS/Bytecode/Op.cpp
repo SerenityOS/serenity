@@ -201,7 +201,10 @@ void CopyObjectExcludingProperties::execute_impl(Bytecode::Interpreter& interpre
 
     for (auto& key : own_keys) {
         if (!excluded_names.contains(key)) {
-            auto property_name = PropertyName(key.to_property_key(interpreter.global_object()));
+            auto property_name_or_error = key.to_property_key(interpreter.global_object());
+            if (property_name_or_error.is_error())
+                return;
+            PropertyName property_name = property_name_or_error.release_value();
             auto property_value_or_error = from_object->get(property_name);
             if (property_value_or_error.is_error())
                 return;
@@ -443,10 +446,10 @@ void GetByValue::execute_impl(Bytecode::Interpreter& interpreter) const
     if (object_or_error.is_error())
         return;
     auto* object = object_or_error.release_value();
-    auto property_key = interpreter.accumulator().to_property_key(interpreter.global_object());
-    if (interpreter.vm().exception())
+    auto property_key_or_error = interpreter.accumulator().to_property_key(interpreter.global_object());
+    if (property_key_or_error.is_error())
         return;
-    auto value_or_error = object->get(property_key);
+    auto value_or_error = object->get(property_key_or_error.release_value());
     if (value_or_error.is_error())
         return;
     interpreter.accumulator() = value_or_error.release_value();
@@ -458,10 +461,10 @@ void PutByValue::execute_impl(Bytecode::Interpreter& interpreter) const
     if (object_or_error.is_error())
         return;
     auto* object = object_or_error.release_value();
-    auto property_key = interpreter.reg(m_property).to_property_key(interpreter.global_object());
-    if (interpreter.vm().exception())
+    auto property_key_or_error = interpreter.reg(m_property).to_property_key(interpreter.global_object());
+    if (property_key_or_error.is_error())
         return;
-    MUST(object->set(property_key, interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
+    MUST(object->set(property_key_or_error.release_value(), interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
 }
 
 void GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
