@@ -108,7 +108,7 @@ static Value set_view_value(GlobalObject& global_object, Value request_index, Va
 
     Value number_value;
     if constexpr (IsIntegral<T> && sizeof(T) == 8)
-        number_value = value.to_bigint(global_object);
+        number_value = TRY_OR_DISCARD(value.to_bigint(global_object));
     else
         number_value = value.to_number(global_object);
     if (vm.exception())

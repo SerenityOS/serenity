@@ -142,9 +142,10 @@ inline void integer_indexed_element_set(TypedArrayBase& typed_array, Value prope
 
     // 2. If O.[[ContentType]] is BigInt, let numValue be ? ToBigInt(value).
     if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt) {
-        num_value = value.to_bigint(global_object);
-        if (vm.exception())
+        auto num_value_or_error = value.to_bigint(global_object);
+        if (num_value_or_error.is_error())
             return;
+        num_value = num_value_or_error.release_value();
     }
     // 3. Otherwise, let numValue be ? ToNumber(value).
     else {

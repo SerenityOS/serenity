@@ -514,17 +514,15 @@ Value Value::to_number(GlobalObject& global_object) const
 }
 
 // 7.1.13 ToBigInt ( argument ), https://tc39.es/ecma262/#sec-tobigint
-BigInt* Value::to_bigint(GlobalObject& global_object) const
+ThrowCompletionOr<BigInt*> Value::to_bigint(GlobalObject& global_object) const
 {
     auto& vm = global_object.vm();
-    auto primitive = TRY_OR_DISCARD(to_primitive(global_object, PreferredType::Number));
+    auto primitive = TRY(to_primitive(global_object, PreferredType::Number));
     switch (primitive.type()) {
     case Type::Undefined:
-        vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "undefined", "BigInt");
-        return nullptr;
+        return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "undefined", "BigInt");
     case Type::Null:
-        vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "null", "BigInt");
-        return nullptr;
+        return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "null", "BigInt");
     case Type::Boolean: {
         auto value = primitive.as_bool() ? 1 : 0;
         return js_bigint(vm, Crypto::SignedBigInteger { value });
@@ -533,19 +531,15 @@ BigInt* Value::to_bigint(GlobalObject& global_object) const
         return &primitive.as_bigint();
     case Type::Int32:
     case Type::Double:
-        vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "number", "BigInt");
-        return {};
+        return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "number", "BigInt");
     case Type::String: {
         auto& string = primitive.as_string().string();
-        if (!is_valid_bigint_value(string)) {
-            vm.throw_exception<SyntaxError>(global_object, ErrorType::BigIntInvalidValue, string);
-            return {};
-        }
+        if (!is_valid_bigint_value(string))
+            return vm.throw_completion<SyntaxError>(global_object, ErrorType::BigIntInvalidValue, string);
         return js_bigint(vm, Crypto::SignedBigInteger::from_base(10, string.trim_whitespace()));
     }
     case Type::Symbol:
-        vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "symbol", "BigInt");
-        return {};
+        return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "symbol", "BigInt");
     default:
         VERIFY_NOT_REACHED();
     }
@@ -554,18 +548,14 @@ BigInt* Value::to_bigint(GlobalObject& global_object) const
 // 7.1.15 ToBigInt64 ( argument ), https://tc39.es/ecma262/multipage/abstract-operations.html#sec-tobigint64
 i64 Value::to_bigint_int64(GlobalObject& global_object) const
 {
-    auto* bigint = to_bigint(global_object);
-    if (global_object.vm().exception())
-        return {};
+    auto* bigint = TRY_OR_DISCARD(to_bigint(global_object));
     return static_cast<i64>(bigint->big_integer().to_u64());
 }
 
 // 7.1.16 ToBigUint64 ( argument ), https://tc39.es/ecma262/multipage/abstract-operations.html#sec-tobiguint64
 u64 Value::to_bigint_uint64(GlobalObject& global_object) const
 {
-    auto* bigint = to_bigint(global_object);
-    if (global_object.vm().exception())
-        return {};
+    auto* bigint = TRY_OR_DISCARD(to_bigint(global_object));
     return bigint->big_integer().to_u64();
 }
 
