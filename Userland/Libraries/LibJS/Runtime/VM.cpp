@@ -263,7 +263,10 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
                 auto result = expression->execute(interpreter(), global_object);
                 if (exception())
                     return;
-                name = result.to_property_key(global_object);
+                auto name_or_error = result.to_property_key(global_object);
+                if (name_or_error.is_error())
+                    return;
+                name = name_or_error.release_value();
             });
 
         if (auto* thrown_exception = exception())

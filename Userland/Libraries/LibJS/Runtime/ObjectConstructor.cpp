@@ -247,10 +247,10 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
         if (value_or_error.is_error())
             return IterationDecision::Break;
         auto value = value_or_error.release_value();
-        auto property_key = key.to_property_key(global_object);
-        if (vm.exception())
+        auto property_key_or_error = key.to_property_key(global_object);
+        if (property_key_or_error.is_error())
             return IterationDecision::Break;
-        auto result_or_error = object->create_data_property_or_throw(property_key, value);
+        auto result_or_error = object->create_data_property_or_throw(property_key_or_error.release_value(), value);
         if (result_or_error.is_error())
             return IterationDecision::Break;
         return IterationDecision::Continue;
@@ -278,9 +278,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::seal)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
 {
     auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
-    auto key = vm.argument(1).to_property_key(global_object);
-    if (vm.exception())
-        return {};
+    auto key = TRY_OR_DISCARD(vm.argument(1).to_property_key(global_object));
     auto descriptor = TRY_OR_DISCARD(object->internal_get_own_property(key));
     return from_property_descriptor(global_object, descriptor);
 }
@@ -323,9 +321,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, vm.argument(0).to_string_without_side_effects());
         return {};
     }
-    auto key = vm.argument(1).to_property_key(global_object);
-    if (vm.exception())
-        return {};
+    auto key = TRY_OR_DISCARD(vm.argument(1).to_property_key(global_object));
     auto descriptor = TRY_OR_DISCARD(to_property_descriptor(global_object, vm.argument(2)));
     TRY_OR_DISCARD(vm.argument(0).as_object().define_property_or_throw(key, descriptor));
     return vm.argument(0);
@@ -409,9 +405,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
     auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
 
     // 2. Let key be ? ToPropertyKey(P).
-    auto key = vm.argument(1).to_property_key(global_object);
-    if (vm.exception())
-        return {};
+    auto key = TRY_OR_DISCARD(vm.argument(1).to_property_key(global_object));
 
     // 3. Return ? HasOwnProperty(obj, key).
     return Value(TRY_OR_DISCARD(object->has_own_property(key)));

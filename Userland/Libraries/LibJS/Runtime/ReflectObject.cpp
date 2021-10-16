@@ -112,9 +112,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::define_property)
     }
 
     // 2. Let key be ? ToPropertyKey(propertyKey).
-    auto key = property_key.to_property_key(global_object);
-    if (vm.exception())
-        return {};
+    auto key = TRY_OR_DISCARD(property_key.to_property_key(global_object));
 
     // 3. Let desc be ? ToPropertyDescriptor(attributes).
     auto descriptor = TRY_OR_DISCARD(to_property_descriptor(global_object, attributes));
@@ -136,9 +134,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::delete_property)
     }
 
     // 2. Let key be ? ToPropertyKey(propertyKey).
-    auto key = property_key.to_property_key(global_object);
-    if (vm.exception())
-        return {};
+    auto key = TRY_OR_DISCARD(property_key.to_property_key(global_object));
 
     // 3. Return ? target.[[Delete]](key).
     return Value(TRY_OR_DISCARD(target.as_object().internal_delete(key)));
@@ -158,9 +154,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get)
     }
 
     // 2. Let key be ? ToPropertyKey(propertyKey).
-    auto key = property_key.to_property_key(global_object);
-    if (vm.exception())
-        return {};
+    auto key = TRY_OR_DISCARD(property_key.to_property_key(global_object));
 
     // 3. If receiver is not present, then
     if (vm.argument_count() < 3) {
@@ -185,9 +179,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get_own_property_descriptor)
     }
 
     // 2. Let key be ? ToPropertyKey(propertyKey).
-    auto key = property_key.to_property_key(global_object);
-    if (vm.exception())
-        return {};
+    auto key = TRY_OR_DISCARD(property_key.to_property_key(global_object));
 
     // 3. Let desc be ? target.[[GetOwnProperty]](key).
     auto descriptor = TRY_OR_DISCARD(target.as_object().internal_get_own_property(key));
@@ -224,9 +216,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::has)
     }
 
     // 2. Let key be ? ToPropertyKey(propertyKey).
-    auto key = property_key.to_property_key(global_object);
-    if (vm.exception())
-        return {};
+    auto key = TRY_OR_DISCARD(property_key.to_property_key(global_object));
 
     // 3. Return ? target.[[HasProperty]](key).
     return Value(TRY_OR_DISCARD(target.as_object().internal_has_property(key)));
@@ -295,9 +285,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::set)
     }
 
     // 2. Let key be ? ToPropertyKey(propertyKey).
-    auto key = property_key.to_property_key(global_object);
-    if (vm.exception())
-        return {};
+    auto key = TRY_OR_DISCARD(property_key.to_property_key(global_object));
 
     // 3. If receiver is not present, then
     if (vm.argument_count() < 4) {

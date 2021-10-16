@@ -673,8 +673,7 @@ ThrowCompletionOr<MarkedValueList> ProxyObject::internal_own_property_keys() con
         auto& vm = global_object.vm();
         if (!value.is_string() && !value.is_symbol())
             return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyOwnPropertyKeysNotStringOrSymbol);
-        auto property_key = value.to_property_key(global_object);
-        VERIFY(!vm.exception());
+        auto property_key = MUST(value.to_property_key(global_object));
         unique_keys.set(property_key, AK::HashSetExistingEntryBehavior::Keep);
         return {};
     }));
