@@ -13,6 +13,7 @@
 #include <LibWeb/DOM/Attribute.h>
 #include <LibWeb/DOM/ChildNode.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/DOM/NamedNodeMap.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/HTML/AttributeNames.h>
@@ -48,13 +49,13 @@ public:
     // NOTE: This is for the JS bindings
     const FlyString& namespace_uri() const { return namespace_(); }
 
-    bool has_attribute(const FlyString& name) const { return find_attribute(name) != nullptr; }
-    bool has_attributes() const { return !m_attributes.is_empty(); }
-    String attribute(const FlyString& name) const;
-    String get_attribute(const FlyString& name) const { return attribute(name); }
+    bool has_attribute(const FlyString& name) const;
+    bool has_attributes() const { return !m_attributes->is_empty(); }
+    String attribute(const FlyString& name) const { return get_attribute(name); }
+    String get_attribute(const FlyString& name) const;
     ExceptionOr<void> set_attribute(const FlyString& name, const String& value);
     void remove_attribute(const FlyString& name);
-    size_t attribute_list_size() const { return m_attributes.size(); }
+    size_t attribute_list_size() const { return m_attributes->length(); }
 
     DOM::ExceptionOr<bool> matches(StringView selectors) const;
 
@@ -66,8 +67,10 @@ public:
     template<typename Callback>
     void for_each_attribute(Callback callback) const
     {
-        for (auto& attribute : m_attributes)
+        for (size_t i = 0; i < m_attributes->length(); ++i) {
+            auto const* attribute = m_attributes->item(i);
             callback(attribute->name(), attribute->value());
+        }
     }
 
     bool has_class(const FlyString&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
@@ -125,14 +128,11 @@ protected:
     virtual void children_changed() override;
 
 private:
-    Attribute* find_attribute(const FlyString& name);
-    const Attribute* find_attribute(const FlyString& name) const;
-
     void make_html_uppercased_qualified_name();
 
     QualifiedName m_qualified_name;
     String m_html_uppercased_qualified_name;
-    Vector<NonnullRefPtr<Attribute>> m_attributes;
+    NonnullRefPtr<NamedNodeMap> m_attributes;
 
     RefPtr<CSS::CSSStyleDeclaration> m_inline_style;
 

@@ -38,6 +38,7 @@ namespace Web::DOM {
 Element::Element(Document& document, QualifiedName qualified_name)
     : ParentNode(document, NodeType::ELEMENT_NODE)
     , m_qualified_name(move(qualified_name))
+    , m_attributes(NamedNodeMap::create(*this))
 {
     make_html_uppercased_qualified_name();
 }
@@ -46,53 +47,60 @@ Element::~Element()
 {
 }
 
-Attribute* Element::find_attribute(const FlyString& name)
+// https://dom.spec.whatwg.org/#dom-element-getattribute
+String Element::get_attribute(const FlyString& name) const
 {
-    for (auto& attribute : m_attributes) {
-        if (attribute->name() == name)
-            return attribute;
-    }
-    return nullptr;
+    // 1. Let attr be the result of getting an attribute given qualifiedName and this.
+    auto const* attribute = m_attributes->get_attribute(name);
+
+    // 2. If attr is null, return null.
+    if (!attribute)
+        return {};
+
+    // 3. Return attr’s value.
+    return attribute->value();
 }
 
-const Attribute* Element::find_attribute(const FlyString& name) const
-{
-    for (auto& attribute : m_attributes) {
-        if (attribute->name() == name)
-            return attribute;
-    }
-    return nullptr;
-}
-
-String Element::attribute(const FlyString& name) const
-{
-    if (auto* attribute = find_attribute(name))
-        return attribute->value();
-    return {};
-}
-
+// https://dom.spec.whatwg.org/#dom-element-setattribute
 ExceptionOr<void> Element::set_attribute(const FlyString& name, const String& value)
 {
+    // 1. If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
     // FIXME: Proper name validation
     if (name.is_empty())
         return InvalidCharacterError::create("Attribute name must not be empty");
 
     CSS::StyleInvalidator style_invalidator(document());
 
-    if (auto* attribute = find_attribute(name))
+    // 2. If this is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
+    // 3. Let attribute be the first attribute in this’s attribute list whose qualified name is qualifiedName, and null otherwise.
+    auto* attribute = m_attributes->get_attribute(name);
+
+    // 4. If attribute is null, create an attribute whose local name is qualifiedName, value is value, and node document is this’s node document, then append this attribute to this, and then return.
+    if (!attribute) {
+        auto new_attribute = Attribute::create(document(), name, value);
+        m_attributes->append_attribute(new_attribute);
+    }
+
+    // 5. Change attribute to value.
+    else {
         attribute->set_value(value);
-    else
-        m_attributes.append(Attribute::create(document(), name, value, this));
+    }
 
     parse_attribute(name, value);
     return {};
 }
 
+// https://dom.spec.whatwg.org/#dom-element-removeattribute
 void Element::remove_attribute(const FlyString& name)
 {
     CSS::StyleInvalidator style_invalidator(document());
+    m_attributes->remove_attribute(name);
+}
 
-    m_attributes.remove_first_matching([&](auto& attribute) { return attribute->name() == name; });
+// https://dom.spec.whatwg.org/#dom-element-hasattribute
+bool Element::has_attribute(const FlyString& name) const
+{
+    return m_attributes->get_attribute(name) != nullptr;
 }
 
 bool Element::has_class(const FlyString& class_name, CaseSensitivity case_sensitivity) const
