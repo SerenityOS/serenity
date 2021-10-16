@@ -160,7 +160,7 @@ static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value,
         if constexpr (IsSigned<UnderlyingBufferDataType>)
             int_value = MUST(value.to_bigint_int64(global_object));
         else
-            int_value = value.to_bigint_uint64(global_object);
+            int_value = MUST(value.to_bigint_uint64(global_object));
 
         ReadonlyBytes { &int_value, sizeof(UnderlyingBufferDataType) }.copy_to(raw_bytes);
         flip_if_needed();
