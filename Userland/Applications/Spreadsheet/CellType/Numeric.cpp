@@ -34,7 +34,7 @@ String NumericCell::display(Cell& cell, const CellTypeMetadata& metadata) const
     if (metadata.format.is_empty())
         string = value.to_string_without_side_effects();
     else
-        string = format_double(metadata.format.characters(), value.to_double(cell.sheet().global_object()));
+        string = format_double(metadata.format.characters(), TRY_OR_DISCARD(value.to_double(cell.sheet().global_object())));
 
     if (metadata.length >= 0)
         return string.substring(0, metadata.length);

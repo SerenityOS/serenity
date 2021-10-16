@@ -41,7 +41,7 @@ String DateCell::display(Cell& cell, const CellTypeMetadata& metadata) const
 JS::Value DateCell::js_value(Cell& cell, const CellTypeMetadata&) const
 {
     auto js_data = cell.js_data();
-    auto value = js_data.to_double(cell.sheet().global_object());
+    auto value = TRY_OR_DISCARD(js_data.to_double(cell.sheet().global_object()));
     return JS::Value(value / 1000); // Turn it to seconds
 }
 
