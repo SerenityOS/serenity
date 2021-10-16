@@ -414,3 +414,28 @@ TEST_CASE(mbsrtowcs)
     EXPECT_EQ(buf[2], L'\0');
     EXPECT_EQ(src, nullptr);
 }
+
+TEST_CASE(wcslcpy)
+{
+    auto buf = static_cast<wchar_t*>(malloc(8 * sizeof(wchar_t)));
+    if (!buf) {
+        FAIL("Could not allocate space for copy target");
+        return;
+    }
+
+    size_t ret;
+
+    // If buffer is long enough, a straight-forward string copy is performed.
+    ret = wcslcpy(buf, L"abc", 8);
+    EXPECT_EQ(ret, 3ul);
+    EXPECT_EQ(wmemcmp(L"abc", buf, 4), 0);
+
+    // If buffer is (supposedly) too small, the string will be truncated.
+    ret = wcslcpy(buf, L"1234", 4);
+    EXPECT_EQ(ret, 4ul);
+    EXPECT_EQ(wmemcmp(L"123", buf, 4), 0);
+
+    // If the buffer is null, the length of the input is returned.
+    ret = wcslcpy(nullptr, L"abc", 0);
+    EXPECT_EQ(ret, 3ul);
+}
