@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,6 +37,23 @@ public:
         } while (n);
         for (i--; i >= 0; i--)
             send(buf[i]);
+    }
+
+    void print_hex(u64 n)
+    {
+        char buf[17];
+        static const char* digits = "0123456789ABCDEF";
+        int i = 0;
+        do {
+            buf[i++] = digits[n % 16];
+            n /= 16;
+        } while (n);
+        send(static_cast<u32>('0'));
+        send(static_cast<u32>('x'));
+        buf[16] = '\0';
+        for (i--; i >= 0; i--) {
+            send(buf[i]);
+        }
     }
 
 private:
