@@ -130,6 +130,7 @@ Value ArrayBuffer::get_value(size_t byte_index, [[maybe_unused]] bool is_typed_a
 template<typename T>
 static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value, bool is_little_endian)
 {
+    VERIFY(value.is_number() || value.is_bigint());
     using UnderlyingBufferDataType = Conditional<IsSame<ClampedU8, T>, u8, T>;
     ByteBuffer raw_bytes = ByteBuffer::create_uninitialized(sizeof(UnderlyingBufferDataType)).release_value(); // FIXME: Handle possible OOM situation.
     auto flip_if_needed = [&]() {
@@ -157,7 +158,7 @@ static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value,
         UnderlyingBufferDataType int_value;
 
         if constexpr (IsSigned<UnderlyingBufferDataType>)
-            int_value = value.to_bigint_int64(global_object);
+            int_value = MUST(value.to_bigint_int64(global_object));
         else
             int_value = value.to_bigint_uint64(global_object);
 
