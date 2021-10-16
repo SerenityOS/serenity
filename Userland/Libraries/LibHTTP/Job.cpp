@@ -288,6 +288,11 @@ void Job::on_socket_connected()
             } else {
                 auto transfer_encoding = m_headers.get("Transfer-Encoding");
                 if (transfer_encoding.has_value()) {
+                    // HTTP/1.1 3.3.3.3:
+                    // If a message is received with both a Transfer-Encoding and a Content-Length header field, the Transfer-Encoding overrides the Content-Length. [...]
+                    // https://httpwg.org/specs/rfc7230.html#message.body.length
+                    m_content_length = {};
+
                     // Note: Some servers add extra spaces around 'chunked', see #6302.
                     auto encoding = transfer_encoding.value().trim_whitespace();
 
