@@ -96,9 +96,7 @@ static ThrowCompletionOr<Value> atomic_read_modify_write(GlobalObject& global_ob
 
     // 4. If typedArray.[[ContentType]] is BigInt, let v be ? ToBigInt(value).
     if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt) {
-        value_to_set = value.to_bigint(global_object);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        value_to_set = TRY(value.to_bigint(global_object));
     }
     // 5. Otherwise, let v be 𝔽(? ToIntegerOrInfinity(value)).
     else {
@@ -228,14 +226,10 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(GlobalObject& globa
     // 5. If typedArray.[[ContentType]] is BigInt, then
     if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt) {
         // a. Let expected be ? ToBigInt(expectedValue).
-        expected = vm.argument(2).to_bigint(global_object);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        expected = TRY(vm.argument(2).to_bigint(global_object));
 
         // b. Let replacement be ? ToBigInt(replacementValue).
-        replacement = vm.argument(3).to_bigint(global_object);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        replacement = TRY(vm.argument(3).to_bigint(global_object));
     }
     // 6. Else,
     else {
@@ -396,9 +390,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
     auto value = vm.argument(2);
     Value value_to_set;
     if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt) {
-        value_to_set = value.to_bigint(global_object);
-        if (vm.exception())
-            return {};
+        value_to_set = TRY_OR_DISCARD(value.to_bigint(global_object));
     } else {
         value_to_set = Value(value.to_integer_or_infinity(global_object));
         if (vm.exception())

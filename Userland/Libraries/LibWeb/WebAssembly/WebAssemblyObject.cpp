@@ -388,9 +388,7 @@ Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueTyp
 
     switch (type.kind()) {
     case Wasm::ValueType::I64: {
-        auto bigint = value.to_bigint(global_object);
-        if (vm.exception())
-            return {};
+        auto bigint = TRY_OR_DISCARD(value.to_bigint(global_object));
         auto value = bigint->big_integer().divided_by(two_64).remainder;
         VERIFY(value.unsigned_value().trimmed_length() <= 2);
         i64 integer = static_cast<i64>(value.unsigned_value().to_u64());
