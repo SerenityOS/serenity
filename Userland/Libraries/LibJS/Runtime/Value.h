@@ -310,7 +310,7 @@ public:
     ThrowCompletionOr<Object*> to_object(GlobalObject&) const;
     ThrowCompletionOr<Value> to_numeric(GlobalObject&) const;
     Value to_number(GlobalObject&) const;
-    BigInt* to_bigint(GlobalObject&) const;
+    ThrowCompletionOr<BigInt*> to_bigint(GlobalObject&) const;
     i64 to_bigint_int64(GlobalObject&) const;
     u64 to_bigint_uint64(GlobalObject&) const;
     double to_double(GlobalObject&) const;

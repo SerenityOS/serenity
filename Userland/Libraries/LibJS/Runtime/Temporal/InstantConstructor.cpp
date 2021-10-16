@@ -56,9 +56,7 @@ Value InstantConstructor::construct(FunctionObject& new_target)
     auto& global_object = this->global_object();
 
     // 2. Let epochNanoseconds be ? ToBigInt(epochNanoseconds).
-    auto* epoch_nanoseconds = vm.argument(0).to_bigint(global_object);
-    if (vm.exception())
-        return {};
+    auto* epoch_nanoseconds = TRY_OR_DISCARD(vm.argument(0).to_bigint(global_object));
 
     // 3. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds)) {
@@ -141,9 +139,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_milliseconds)
 JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_microseconds)
 {
     // 1. Set epochMicroseconds to ? ToBigInt(epochMicroseconds).
-    auto* epoch_microseconds = vm.argument(0).to_bigint(global_object);
-    if (vm.exception())
-        return {};
+    auto* epoch_microseconds = TRY_OR_DISCARD(vm.argument(0).to_bigint(global_object));
 
     // 2. Let epochNanoseconds be epochMicroseconds × 1000ℤ.
     auto* epoch_nanoseconds = js_bigint(vm, epoch_microseconds->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000 }));
@@ -162,9 +158,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_microseconds)
 JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_nanoseconds)
 {
     // 1. Set epochNanoseconds to ? ToBigInt(epochNanoseconds).
-    auto* epoch_nanoseconds = vm.argument(0).to_bigint(global_object);
-    if (vm.exception())
-        return {};
+    auto* epoch_nanoseconds = TRY_OR_DISCARD(vm.argument(0).to_bigint(global_object));
 
     // 2. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds)) {

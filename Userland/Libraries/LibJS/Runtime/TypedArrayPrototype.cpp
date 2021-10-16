@@ -249,9 +249,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
 
     Value value;
     if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt) {
-        value = vm.argument(0).to_bigint(global_object);
-        if (vm.exception())
-            return {};
+        value = TRY_OR_DISCARD(vm.argument(0).to_bigint(global_object));
     } else {
         value = vm.argument(0).to_number(global_object);
         if (vm.exception())
@@ -827,7 +825,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
         while (target_byte_index < limit) {
             auto value = TRY_OR_DISCARD(src->get(k));
             if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
-                value = value.to_bigint(global_object);
+                value = TRY_OR_DISCARD(value.to_bigint(global_object));
             else
                 value = value.to_number(global_object);
             if (vm.exception())
