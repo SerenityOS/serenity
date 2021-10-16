@@ -372,6 +372,7 @@ else()
         Arch/aarch64/SmapDisabler.cpp
         Arch/aarch64/ScopedCritical.cpp
         StdLib.cpp
+        MiniStdLib.cpp
         UBSanitizer.cpp
     )
 
