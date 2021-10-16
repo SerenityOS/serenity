@@ -13,6 +13,7 @@ interface Node : EventTarget {
     readonly attribute Element? parentElement;
     readonly attribute boolean isConnected;
     readonly attribute Document? ownerDocument;
+    Node getRootNode(optional GetRootNodeOptions options = {});
 
     // FIXME: [LegacyNullToEmptyString] is not allowed on nullable types as per the Web IDL spec.
     //        However, we only apply it to setters, so this works as a stop gap.
@@ -49,4 +50,8 @@ interface Node : EventTarget {
     const unsigned short DOCUMENT_POSITION_CONTAINS = 8;
     const unsigned short DOCUMENT_POSITION_CONTAINED_BY = 16;
     const unsigned short DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 32;
+};
+
+dictionary GetRootNodeOptions {
+    boolean composed = false;
 };

@@ -35,6 +35,10 @@ enum class NodeType : u16 {
     NOTATION_NODE = 12
 };
 
+struct GetRootNodeOptions {
+    bool composed { false };
+};
+
 class Node
     : public TreeNode<Node>
     , public EventTarget
@@ -194,6 +198,8 @@ public:
 
     bool is_same_node(Node const*) const;
     bool is_equal_node(Node const*) const;
+
+    NonnullRefPtr<Node> get_root_node(GetRootNodeOptions const& options = {});
 
 protected:
     Node(Document&, NodeType);
