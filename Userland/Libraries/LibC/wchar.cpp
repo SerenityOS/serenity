@@ -331,6 +331,12 @@ int wcscoll(const wchar_t* ws1, const wchar_t* ws2)
     return wcscmp(ws1, ws2);
 }
 
+size_t wcsxfrm(wchar_t* dest, const wchar_t* src, size_t n)
+{
+    // TODO: This needs to be changed when wcscoll is not just doing wcscmp
+    return wcslcpy(dest, src, n);
+}
+
 int wctob(wint_t c)
 {
     if (c > 0x7f)
