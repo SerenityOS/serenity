@@ -6,9 +6,11 @@ This is for development purposes only - Serenity doesn't currently boot on Raspe
 
 Currently only UART output is supported, no display.
 
+64-bit only, so you need a Rasperry Pi 3 or newer.
+
 ## Running in QEMU
 
-### Step 1: Setup Serenity
+### Step 1: Set Up Serenity
 
 Please follow [build instructions](BuildInstructions.md) to download and build Serenity. Make sure everything builds successfully for x86.
 
@@ -30,6 +32,12 @@ Meta/serenity.sh run aarch64
 
 It should build Serenity and open a QEMU window, similar to the x86 version. You should see some messages in the terminal.
 
+You can also run it under gdb with:
+
+```console
+Meta/serenity.sh gdb aarch64
+```
+
 ## Running on real hardware using an SD Card
 
 ### Step 0: Download and run Raspberry Pi OS from an SD Card
@@ -40,21 +48,29 @@ This step is needed because the original firmware files need to be present on th
 
 Please follow one of the existing guides (for example [here](https://scribles.net/setting-up-serial-communication-between-raspberry-pi-and-pc)) and make sure UART is working on Raspberry Pi OS before proceeding.
 
-### Step 2: Mount SD Card and modify config.txt file on Boot/ partition
+### Step 2: Mount SD Card
 
-Add the following lines:
+If you use a Raspberry Pi 4, and your serenity kernel is called `kernel8.img`
+(the default), and you don't have any other `kernel*.img` files on your SD
+card, make sure `config.txt` is empty.
+
+If you want to use filename that isn't `kernel8.img` or if you want to keep
+other `kernel*.img` files on your SD card, put this in config.txt:
+
+```
+arm_64bit=1
+kernel=myfilename.img
+```
+
+If you use a Raspberry Pi 3, put this in config.txt:
 
 ```
 enable_uart=1
-arm_64bit=1
-# kernel=serenity.img
 ```
-
-The last line is optional and specifies which kernel to use. You can either replace the default `kernel8.img` file with the Serenity kernel or use a custom file name to be able to easily switch between kernels.
 
 ### Step 3: Copy Serenity kernel to SD Card
 
-`kernel8.img` build artifact can be found in `Build/aarch64/Kernel/Prekernel/` directory. Copy it to the main directory on `Boot/` partition, next to the `config.txt` file. You can either replace the original file or use another name (see above).
+`kernel8.img` can be found in `Build/aarch64/Kernel/Prekernel/`. Copy it to the main directory on the `Boot/` partition, next to `config.txt`. You can either replace the original file or use another name (see above).
 
 ### Step 4: Put the SD Card in the Raspberry Pi and power on
 
@@ -76,7 +92,7 @@ This is enabled by default on Raspberry Pi 3+. For the previous boards please se
 
 This directory will serve as a TFTP server, sending files to the Raspberry Pi when requested.
 
-### Step 2: Set up network interface
+### Step 2: Set up the network interface
 
 Switch the network interface to static mode (static IP) and disable the firewall.
 
