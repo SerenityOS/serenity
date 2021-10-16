@@ -60,5 +60,6 @@ int swprintf(wchar_t*, size_t, const wchar_t*, ...);
 int wcwidth(wchar_t);
 size_t wcsrtombs(char*, const wchar_t**, size_t, mbstate_t*);
 size_t mbsrtowcs(wchar_t*, const char**, size_t, mbstate_t*);
+int wmemcmp(const wchar_t*, const wchar_t*, size_t);
 
 __END_DECLS
