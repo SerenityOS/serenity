@@ -556,4 +556,10 @@ size_t wcsnrtombs(char*, const wchar_t**, size_t, size_t, mbstate_t*)
     dbgln("FIXME: Implement wcsnrtombs()");
     TODO();
 }
+
+size_t mbsnrtowcs(wchar_t*, const char**, size_t, size_t, mbstate_t*)
+{
+    dbgln("FIXME: Implement mbsnrtowcs()");
+    TODO();
+}
 }
