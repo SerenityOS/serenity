@@ -316,10 +316,26 @@ void Job::on_socket_connected()
                 }
             }
 
+            bool read_everything = false;
+            if (m_content_length.has_value()) {
+                auto length = m_content_length.value();
+                if (m_received_size + payload.size() >= length) {
+                    payload.resize(length - m_buffered_size);
+                    read_everything = true;
+                }
+            }
+
             m_received_buffers.append(payload);
             m_buffered_size += payload.size();
             m_received_size += payload.size();
             flush_received_buffers();
+
+            deferred_invoke([this] { did_progress(m_content_length, m_received_size); });
+
+            if (read_everything) {
+                finish_up();
+                return IterationDecision::Break;
+            }
 
             if (m_current_chunk_remaining_size.has_value()) {
                 auto size = m_current_chunk_remaining_size.value() - payload.size();
@@ -345,16 +361,6 @@ void Job::on_socket_connected()
                 m_current_chunk_remaining_size = size;
             }
 
-            deferred_invoke([this] { did_progress(m_content_length, m_received_size); });
-
-            if (m_content_length.has_value()) {
-                auto length = m_content_length.value();
-                if (m_received_size >= length) {
-                    m_received_size = length;
-                    finish_up();
-                    return IterationDecision::Break;
-                }
-            }
             return IterationDecision::Continue;
         });
 
