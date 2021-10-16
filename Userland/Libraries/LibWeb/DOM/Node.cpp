@@ -890,4 +890,14 @@ bool Node::in_a_document_tree() const
     return root().is_document();
 }
 
+// https://dom.spec.whatwg.org/#dom-node-getrootnode
+NonnullRefPtr<Node> Node::get_root_node(GetRootNodeOptions const& options)
+{
+    // The getRootNode(options) method steps are to return this’s shadow-including root if options["composed"] is true; otherwise this’s root.
+    if (options.composed)
+        return shadow_including_root();
+
+    return root();
+}
+
 }
