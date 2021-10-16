@@ -60,6 +60,7 @@ protected:
     size_t m_buffered_size { 0 };
     size_t m_received_size { 0 };
     bool m_sent_data { 0 };
+    Optional<u32> m_content_length;
     Optional<ssize_t> m_current_chunk_remaining_size;
     Optional<size_t> m_current_chunk_total_size;
     bool m_can_stream_response { true };
