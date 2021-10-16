@@ -86,17 +86,4 @@ void kernelcriticalputstr(const char*, size_t) { }
 
 void kernelearlyputstr(const char*, size_t);
 void kernelearlyputstr(const char*, size_t) { }
-
-// MiniStdLib.cpp
-void* memcpy(void*, const void*, size_t);
-void* memcpy(void*, const void*, size_t) { return nullptr; }
-
-void* memmove(void*, const void*, size_t);
-void* memmove(void*, const void*, size_t) { return nullptr; }
-
-void* memset(void*, int, size_t);
-void* memset(void*, int, size_t) { return nullptr; }
-
-size_t strlen(const char*);
-size_t strlen(const char*) { return 0; }
 }
