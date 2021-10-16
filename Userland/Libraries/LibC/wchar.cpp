@@ -101,7 +101,7 @@ wchar_t* wcschr(const wchar_t* str, int c)
     }
 }
 
-const wchar_t* wcsrchr(const wchar_t* str, wchar_t wc)
+wchar_t* wcsrchr(const wchar_t* str, wchar_t wc)
 {
     wchar_t* last = nullptr;
     wchar_t c;
