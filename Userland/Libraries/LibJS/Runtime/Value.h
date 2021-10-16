@@ -308,7 +308,7 @@ public:
     ThrowCompletionOr<PrimitiveString*> to_primitive_string(GlobalObject&);
     ThrowCompletionOr<Value> to_primitive(GlobalObject&, PreferredType preferred_type = PreferredType::Default) const;
     ThrowCompletionOr<Object*> to_object(GlobalObject&) const;
-    Value to_numeric(GlobalObject&) const;
+    ThrowCompletionOr<Value> to_numeric(GlobalObject&) const;
     Value to_number(GlobalObject&) const;
     BigInt* to_bigint(GlobalObject&) const;
     i64 to_bigint_int64(GlobalObject&) const;

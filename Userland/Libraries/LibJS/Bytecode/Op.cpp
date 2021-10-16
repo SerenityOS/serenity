@@ -351,9 +351,10 @@ void Return::execute_impl(Bytecode::Interpreter& interpreter) const
 
 void Increment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto old_value = interpreter.accumulator().to_numeric(interpreter.global_object());
-    if (interpreter.vm().exception())
+    auto old_value_or_error = interpreter.accumulator().to_numeric(interpreter.global_object());
+    if (old_value_or_error.is_error())
         return;
+    auto old_value = old_value_or_error.release_value();
 
     if (old_value.is_number())
         interpreter.accumulator() = Value(old_value.as_double() + 1);
@@ -363,9 +364,10 @@ void Increment::execute_impl(Bytecode::Interpreter& interpreter) const
 
 void Decrement::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto old_value = interpreter.accumulator().to_numeric(interpreter.global_object());
-    if (interpreter.vm().exception())
+    auto old_value_or_error = interpreter.accumulator().to_numeric(interpreter.global_object());
+    if (old_value_or_error.is_error())
         return;
+    auto old_value = old_value_or_error.release_value();
 
     if (old_value.is_number())
         interpreter.accumulator() = Value(old_value.as_double() - 1);

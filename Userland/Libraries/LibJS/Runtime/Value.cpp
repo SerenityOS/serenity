@@ -459,12 +459,16 @@ ThrowCompletionOr<Object*> Value::to_object(GlobalObject& global_object) const
 }
 
 // 7.1.3 ToNumeric ( value ), https://tc39.es/ecma262/#sec-tonumeric
-FLATTEN Value Value::to_numeric(GlobalObject& global_object) const
+FLATTEN ThrowCompletionOr<Value> Value::to_numeric(GlobalObject& global_object) const
 {
-    auto primitive = TRY_OR_DISCARD(to_primitive(global_object, Value::PreferredType::Number));
+    auto& vm = global_object.vm();
+    auto primitive = TRY(to_primitive(global_object, Value::PreferredType::Number));
     if (primitive.is_bigint())
         return primitive;
-    return primitive.to_number(global_object);
+    auto number = primitive.to_number(global_object);
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+    return number;
 }
 
 // 7.1.4 ToNumber ( argument ), https://tc39.es/ecma262/#sec-tonumber
@@ -853,12 +857,8 @@ Value less_than_equals(GlobalObject& global_object, Value lhs, Value rhs)
 Value bitwise_and(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
-    auto lhs_numeric = lhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
-    auto rhs_numeric = rhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
+    auto lhs_numeric = TRY_OR_DISCARD(lhs.to_numeric(global_object));
+    auto rhs_numeric = TRY_OR_DISCARD(rhs.to_numeric(global_object));
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number() || !rhs_numeric.is_finite_number())
             return Value(0);
@@ -874,12 +874,8 @@ Value bitwise_and(GlobalObject& global_object, Value lhs, Value rhs)
 Value bitwise_or(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
-    auto lhs_numeric = lhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
-    auto rhs_numeric = rhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
+    auto lhs_numeric = TRY_OR_DISCARD(lhs.to_numeric(global_object));
+    auto rhs_numeric = TRY_OR_DISCARD(rhs.to_numeric(global_object));
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number() && !rhs_numeric.is_finite_number())
             return Value(0);
@@ -899,12 +895,8 @@ Value bitwise_or(GlobalObject& global_object, Value lhs, Value rhs)
 Value bitwise_xor(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
-    auto lhs_numeric = lhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
-    auto rhs_numeric = rhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
+    auto lhs_numeric = TRY_OR_DISCARD(lhs.to_numeric(global_object));
+    auto rhs_numeric = TRY_OR_DISCARD(rhs.to_numeric(global_object));
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number() && !rhs_numeric.is_finite_number())
             return Value(0);
@@ -924,9 +916,7 @@ Value bitwise_xor(GlobalObject& global_object, Value lhs, Value rhs)
 Value bitwise_not(GlobalObject& global_object, Value lhs)
 {
     auto& vm = global_object.vm();
-    auto lhs_numeric = lhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
+    auto lhs_numeric = TRY_OR_DISCARD(lhs.to_numeric(global_object));
     if (lhs_numeric.is_number())
         return Value(~lhs_numeric.to_i32(global_object));
     auto big_integer_bitwise_not = lhs_numeric.as_bigint().big_integer();
@@ -945,9 +935,7 @@ Value unary_plus(GlobalObject& global_object, Value lhs)
 Value unary_minus(GlobalObject& global_object, Value lhs)
 {
     auto& vm = global_object.vm();
-    auto lhs_numeric = lhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
+    auto lhs_numeric = TRY_OR_DISCARD(lhs.to_numeric(global_object));
     if (lhs_numeric.is_number()) {
         if (lhs_numeric.is_nan())
             return js_nan();
@@ -964,12 +952,8 @@ Value unary_minus(GlobalObject& global_object, Value lhs)
 Value left_shift(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
-    auto lhs_numeric = lhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
-    auto rhs_numeric = rhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
+    auto lhs_numeric = TRY_OR_DISCARD(lhs.to_numeric(global_object));
+    auto rhs_numeric = TRY_OR_DISCARD(rhs.to_numeric(global_object));
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number())
             return Value(0);
@@ -995,12 +979,8 @@ Value left_shift(GlobalObject& global_object, Value lhs, Value rhs)
 Value right_shift(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
-    auto lhs_numeric = lhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
-    auto rhs_numeric = rhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
+    auto lhs_numeric = TRY_OR_DISCARD(lhs.to_numeric(global_object));
+    auto rhs_numeric = TRY_OR_DISCARD(rhs.to_numeric(global_object));
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number())
             return Value(0);
@@ -1022,12 +1002,8 @@ Value right_shift(GlobalObject& global_object, Value lhs, Value rhs)
 // 13.9.3 The Unsigned Right Shift Operator ( >>> ), https://tc39.es/ecma262/#sec-unsigned-right-shift-operator
 Value unsigned_right_shift(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(global_object);
-    if (global_object.vm().exception())
-        return {};
-    auto rhs_numeric = rhs.to_numeric(global_object);
-    if (global_object.vm().exception())
-        return {};
+    auto lhs_numeric = TRY_OR_DISCARD(lhs.to_numeric(global_object));
+    auto rhs_numeric = TRY_OR_DISCARD(rhs.to_numeric(global_object));
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number())
             return Value(0);
@@ -1083,12 +1059,8 @@ Value add(GlobalObject& global_object, Value lhs, Value rhs)
         return js_string(vm, builder.to_string());
     }
 
-    auto lhs_numeric = lhs_primitive.to_numeric(global_object);
-    if (vm.exception())
-        return {};
-    auto rhs_numeric = rhs_primitive.to_numeric(global_object);
-    if (vm.exception())
-        return {};
+    auto lhs_numeric = TRY_OR_DISCARD(lhs_primitive.to_numeric(global_object));
+    auto rhs_numeric = TRY_OR_DISCARD(rhs_primitive.to_numeric(global_object));
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() + rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
@@ -1101,12 +1073,8 @@ Value add(GlobalObject& global_object, Value lhs, Value rhs)
 Value sub(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
-    auto lhs_numeric = lhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
-    auto rhs_numeric = rhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
+    auto lhs_numeric = TRY_OR_DISCARD(lhs.to_numeric(global_object));
+    auto rhs_numeric = TRY_OR_DISCARD(rhs.to_numeric(global_object));
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() - rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
@@ -1119,12 +1087,8 @@ Value sub(GlobalObject& global_object, Value lhs, Value rhs)
 Value mul(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
-    auto lhs_numeric = lhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
-    auto rhs_numeric = rhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
+    auto lhs_numeric = TRY_OR_DISCARD(lhs.to_numeric(global_object));
+    auto rhs_numeric = TRY_OR_DISCARD(rhs.to_numeric(global_object));
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() * rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
@@ -1137,12 +1101,8 @@ Value mul(GlobalObject& global_object, Value lhs, Value rhs)
 Value div(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
-    auto lhs_numeric = lhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
-    auto rhs_numeric = rhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
+    auto lhs_numeric = TRY_OR_DISCARD(lhs.to_numeric(global_object));
+    auto rhs_numeric = TRY_OR_DISCARD(rhs.to_numeric(global_object));
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() / rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric)) {
@@ -1160,12 +1120,8 @@ Value div(GlobalObject& global_object, Value lhs, Value rhs)
 Value mod(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
-    auto lhs_numeric = lhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
-    auto rhs_numeric = rhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
+    auto lhs_numeric = TRY_OR_DISCARD(lhs.to_numeric(global_object));
+    auto rhs_numeric = TRY_OR_DISCARD(rhs.to_numeric(global_object));
     if (both_number(lhs_numeric, rhs_numeric)) {
         // 6.1.6.1.6 Number::remainder ( n, d ), https://tc39.es/ecma262/#sec-numeric-types-number-remainder
 
@@ -1214,12 +1170,8 @@ Value mod(GlobalObject& global_object, Value lhs, Value rhs)
 Value exp(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
-    auto lhs_numeric = lhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
-    auto rhs_numeric = rhs.to_numeric(global_object);
-    if (vm.exception())
-        return {};
+    auto lhs_numeric = TRY_OR_DISCARD(lhs.to_numeric(global_object));
+    auto rhs_numeric = TRY_OR_DISCARD(rhs.to_numeric(global_object));
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(pow(lhs_numeric.as_double(), rhs_numeric.as_double()));
     if (both_bigint(lhs_numeric, rhs_numeric)) {
@@ -1534,12 +1486,8 @@ TriState is_less_than(GlobalObject& global_object, bool left_first, Value lhs, V
             return TriState::False;
     }
 
-    auto x_numeric = x_primitive.to_numeric(global_object);
-    if (global_object.vm().exception())
-        return {};
-    auto y_numeric = y_primitive.to_numeric(global_object);
-    if (global_object.vm().exception())
-        return {};
+    auto x_numeric = TRY_OR_DISCARD(x_primitive.to_numeric(global_object));
+    auto y_numeric = TRY_OR_DISCARD(y_primitive.to_numeric(global_object));
 
     if (x_numeric.is_nan() || y_numeric.is_nan())
         return TriState::Unknown;
