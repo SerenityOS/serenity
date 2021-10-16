@@ -69,6 +69,18 @@ wchar_t* wcsncpy(wchar_t* dest, const wchar_t* src, size_t num)
     return original_dest;
 }
 
+size_t wcslcpy(wchar_t* dest, const wchar_t* src, size_t n)
+{
+    size_t i;
+    for (i = 0; i + 1 < n && src[i] != L'\0'; ++i)
+        dest[i] = src[i];
+    if (n)
+        dest[i] = L'\0';
+    for (; src[i] != L'\0'; ++i)
+        ; // Determine the length of src, don't copy.
+    return i;
+}
+
 int wcscmp(const wchar_t* s1, const wchar_t* s2)
 {
     while (*s1 == *s2++)
