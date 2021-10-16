@@ -928,6 +928,8 @@ static bool is_wrappable_type(IDL::Type const& type)
         return true;
     if (type.name == "Attribute")
         return true;
+    if (type.name == "NamedNodeMap")
+        return true;
     return false;
 }
 
@@ -1655,6 +1657,7 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/ImageDataWrapper.h>
 #include <LibWeb/Bindings/MessagePortWrapper.h>
+#include <LibWeb/Bindings/NamedNodeMapWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/TextWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
@@ -2867,6 +2870,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/ImageDataWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/MessagePortWrapper.h>
+#include <LibWeb/Bindings/NamedNodeMapWrapper.h>
 #include <LibWeb/Bindings/NodeListWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/PerformanceTimingWrapper.h>
