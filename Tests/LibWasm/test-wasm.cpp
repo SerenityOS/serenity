@@ -195,9 +195,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
 {
-    auto address = static_cast<unsigned long>(vm.argument(0).to_double(global_object));
-    if (vm.exception())
-        return {};
+    auto address = static_cast<unsigned long>(TRY_OR_DISCARD(vm.argument(0).to_double(global_object)));
     Wasm::FunctionAddress function_address { address };
     auto function_instance = WebAssemblyModule::machine().store().get(function_address);
     if (!function_instance) {
@@ -222,7 +220,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
         auto argument = vm.argument(index++);
         double double_value = 0;
         if (!argument.is_bigint())
-            double_value = argument.to_double(global_object);
+            double_value = TRY_OR_DISCARD(argument.to_double(global_object));
         switch (param.kind()) {
         case Wasm::ValueType::Kind::I32:
             arguments.append(Wasm::Value(param, static_cast<u64>(double_value)));

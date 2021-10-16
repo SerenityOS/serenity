@@ -1057,9 +1057,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     } else if (parameter.type->name == "double") {
         if (!optional) {
             scoped_generator.append(R"~~~(
-    double @cpp_name@ = @js_name@@js_suffix@.to_double(global_object);
-    if (vm.exception())
-        @return_statement@
+    double @cpp_name@ = TRY_OR_DISCARD(@js_name@@js_suffix@.to_double(global_object));
 )~~~");
         } else {
             if (optional_default_value.has_value()) {
@@ -1072,11 +1070,8 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
             }
             scoped_generator.append(R"~~~(
-    if (!@js_name@@js_suffix@.is_undefined()) {
-        @cpp_name@ = @js_name@@js_suffix@.to_double(global_object);
-        if (vm.exception())
-            @return_statement@
-    }
+    if (!@js_name@@js_suffix@.is_undefined())
+        @cpp_name@ = TRY_OR_DISCARD(@js_name@@js_suffix@.to_double(global_object));
 )~~~");
             if (optional_default_value.has_value()) {
                 scoped_generator.append(R"~~~(

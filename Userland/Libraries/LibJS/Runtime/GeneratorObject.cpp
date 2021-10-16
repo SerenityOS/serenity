@@ -59,8 +59,10 @@ Value GeneratorObject::next_impl(VM& vm, GlobalObject& global_object, Optional<V
     };
 
     auto generated_continuation = [&](Value value) -> Bytecode::BasicBlock const* {
-        if (value.is_object())
-            return reinterpret_cast<Bytecode::BasicBlock const*>(static_cast<u64>(TRY_OR_DISCARD(value.as_object().get("continuation")).to_double(global_object)));
+        if (value.is_object()) {
+            auto number_value = TRY_OR_DISCARD(value.as_object().get("continuation"));
+            return reinterpret_cast<Bytecode::BasicBlock const*>(static_cast<u64>(TRY_OR_DISCARD(number_value.to_double(global_object))));
+        }
         return nullptr;
     };
 

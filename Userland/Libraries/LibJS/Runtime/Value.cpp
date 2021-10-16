@@ -559,11 +559,11 @@ ThrowCompletionOr<u64> Value::to_bigint_uint64(GlobalObject& global_object) cons
     return bigint->big_integer().to_u64();
 }
 
-double Value::to_double(GlobalObject& global_object) const
+ThrowCompletionOr<double> Value::to_double(GlobalObject& global_object) const
 {
     auto number = to_number(global_object);
-    if (global_object.vm().exception())
-        return {};
+    if (auto* exception = global_object.vm().exception())
+        return throw_completion(exception->value());
     return number.as_double();
 }
 

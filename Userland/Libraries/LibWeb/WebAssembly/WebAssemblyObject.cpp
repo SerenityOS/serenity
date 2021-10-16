@@ -403,15 +403,11 @@ Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueTyp
         return Wasm::Value { static_cast<i32>(_i32) };
     }
     case Wasm::ValueType::F64: {
-        auto number = value.to_double(global_object);
-        if (vm.exception())
-            return {};
+        auto number = TRY_OR_DISCARD(value.to_double(global_object));
         return Wasm::Value { static_cast<double>(number) };
     }
     case Wasm::ValueType::F32: {
-        auto number = value.to_double(global_object);
-        if (vm.exception())
-            return {};
+        auto number = TRY_OR_DISCARD(value.to_double(global_object));
         return Wasm::Value { static_cast<float>(number) };
     }
     case Wasm::ValueType::FunctionReference:
