@@ -11,7 +11,6 @@ configopts=(
     "--with-shared"
     "--without-ada"
     "--enable-widec"
-    "--disable-lib-suffixes"
 )
 files="https://ftpmirror.gnu.org/gnu/ncurses/ncurses-${version}.tar.gz ncurses-${version}.tar.gz 30306e0c76e0f9f1f0de987cf1c82a5c21e1ce6568b9227f7da5b71cbea86c9d"
 auth_type="sha256"
@@ -21,7 +20,18 @@ pre_configure() {
 }
 
 post_install() {
-    ln -svf libncurses.so "${SERENITY_INSTALL_ROOT}/usr/local/lib/libcurses.so"
-    ln -svf libncurses.so "${SERENITY_INSTALL_ROOT}/usr/local/lib/libtic.so"
-    ln -svf libncurses.so "${SERENITY_INSTALL_ROOT}/usr/local/lib/libtinfo.so"
+    # Compatibility symlinks for merged libraries.
+    for lib in tinfo tic curses; do
+        ln -svf libncursesw.so "${SERENITY_INSTALL_ROOT}/usr/local/lib/lib${lib}w.so"
+    done
+
+    # Compatibility symlinks for non-w libraries.
+    for lib in form menu ncurses ncurses++ panel tinfo tic curses; do
+        ln -svf lib${lib}w.so "${SERENITY_INSTALL_ROOT}/usr/local/lib/lib${lib}.so"
+    done
+
+    # Compatibility symlink for the include folder.
+    # Target folder has to be removed, otherwise we will get `/usr/local/include/ncurses/ncursesw`.
+    rm -rf "${SERENITY_INSTALL_ROOT}/usr/local/include/ncurses"
+    ln -svf ncursesw "${SERENITY_INSTALL_ROOT}/usr/local/include/ncurses"
 }
