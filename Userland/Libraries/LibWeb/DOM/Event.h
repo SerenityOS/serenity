@@ -146,6 +146,8 @@ public:
 
     void set_time_stamp(double time_stamp) { m_time_stamp = time_stamp; }
 
+    NonnullRefPtrVector<EventTarget> composed_path() const;
+
 protected:
     explicit Event(FlyString const& type)
         : m_type(type)
