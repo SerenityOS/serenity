@@ -56,6 +56,7 @@ public:
     ExceptionOr<void> set_attribute(const FlyString& name, const String& value);
     void remove_attribute(const FlyString& name);
     size_t attribute_list_size() const { return m_attributes->length(); }
+    NonnullRefPtr<NamedNodeMap> const& attributes() const { return m_attributes; }
 
     DOM::ExceptionOr<bool> matches(StringView selectors) const;
 

@@ -9,6 +9,7 @@ interface Element : Node {
     undefined removeAttribute(DOMString qualifiedName);
     boolean hasAttribute(DOMString qualifiedName);
     boolean hasAttributes();
+    [SameObject] readonly attribute NamedNodeMap attributes;
 
     HTMLCollection getElementsByTagName(DOMString tagName);
     HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
