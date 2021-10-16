@@ -541,4 +541,13 @@ size_t mbsrtowcs(wchar_t* dst, const char** src, size_t len, mbstate_t* ps)
     // If we are here, we have written `len` wchars, but not reached the null byte.
     return written;
 }
+
+int wmemcmp(const wchar_t* s1, const wchar_t* s2, size_t n)
+{
+    while (n-- > 0) {
+        if (*s1++ != *s2++)
+            return s1[-1] < s2[-1] ? -1 : 1;
+    }
+    return 0;
+}
 }
