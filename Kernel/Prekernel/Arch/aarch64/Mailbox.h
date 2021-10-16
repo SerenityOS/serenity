@@ -14,28 +14,41 @@ namespace Prekernel {
 // https://github.com/raspberrypi/firmware/wiki/Mailbox-property-interface
 class Mailbox {
 public:
-    static bool call(u8 channel, u32 volatile* __attribute__((aligned(16))) data);
+    // Base class for Mailbox messages. Implemented in subsystems that use Mailbox.
+    class Message {
+    protected:
+        Message(u32 tag, u32 arguments_size);
 
-    static u32 query_firmware_version();
-
-    enum class ClockID {
-        Reserved = 0,
-        EMMC = 1,
-        UART = 2,
-        ARM = 3,
-        CORE = 4,
-        V3D = 5,
-        H264 = 6,
-        ISP = 7,
-        SDRAM = 8,
-        PIXEL = 9,
-        PWM = 10,
-        HEVC = 11,
-        EMMC2 = 12,
-        M2MC = 13,
-        PIXEL_BVB = 14,
+    private:
+        u32 m_tag;
+        u32 m_arguments_size;
+        u32 m_command_tag;
     };
-    static u32 set_clock_rate(ClockID, u32 rate_hz, bool skip_setting_turbo = true);
+
+    // Must be at the beginning of every command message queue
+    class MessageHeader {
+    public:
+        MessageHeader();
+
+        u32 queue_size() { return m_message_queue_size; }
+        void set_queue_size(u32 size) { m_message_queue_size = size; }
+        bool success() const;
+
+    private:
+        u32 m_message_queue_size;
+        u32 m_command_tag;
+    };
+
+    // Must be at the end of every command message queue
+    class MessageTail {
+    private:
+        u32 m_empty_tag = 0;
+    };
+
+    static Mailbox& the();
+
+    // Sends message queue to VideoCore
+    bool send_queue(void* queue, u32 queue_size) const;
 };
 
 }
