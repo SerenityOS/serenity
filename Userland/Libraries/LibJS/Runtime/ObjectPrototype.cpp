@@ -62,9 +62,7 @@ ThrowCompletionOr<bool> ObjectPrototype::internal_set_prototype_of(Object* proto
 // 20.1.3.2 Object.prototype.hasOwnProperty ( V ), https://tc39.es/ecma262/#sec-object.prototype.hasownproperty
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::has_own_property)
 {
-    auto property_key = vm.argument(0).to_property_key(global_object);
-    if (vm.exception())
-        return {};
+    auto property_key = TRY_OR_DISCARD(vm.argument(0).to_property_key(global_object));
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     return Value(TRY_OR_DISCARD(this_object->has_own_property(property_key)));
 }
@@ -154,9 +152,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::value_of)
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::property_is_enumerable)
 {
     // 1. Let P be ? ToPropertyKey(V).
-    auto property_key = vm.argument(0).to_property_key(global_object);
-    if (vm.exception())
-        return {};
+    auto property_key = TRY_OR_DISCARD(vm.argument(0).to_property_key(global_object));
     // 2. Let O be ? ToObject(this value).
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     // 3. Let desc be ? O.[[GetOwnProperty]](P).
@@ -199,9 +195,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_getter)
 
     auto descriptor = PropertyDescriptor { .get = &getter.as_function(), .enumerable = true, .configurable = true };
 
-    auto key = vm.argument(0).to_property_key(global_object);
-    if (vm.exception())
-        return {};
+    auto key = TRY_OR_DISCARD(vm.argument(0).to_property_key(global_object));
 
     TRY_OR_DISCARD(object->define_property_or_throw(key, descriptor));
 
@@ -221,9 +215,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_setter)
 
     auto descriptor = PropertyDescriptor { .set = &setter.as_function(), .enumerable = true, .configurable = true };
 
-    auto key = vm.argument(0).to_property_key(global_object);
-    if (vm.exception())
-        return {};
+    auto key = TRY_OR_DISCARD(vm.argument(0).to_property_key(global_object));
 
     TRY_OR_DISCARD(object->define_property_or_throw(key, descriptor));
 
@@ -235,9 +227,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_getter)
 {
     auto* object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
-    auto key = vm.argument(0).to_property_key(global_object);
-    if (vm.exception())
-        return {};
+    auto key = TRY_OR_DISCARD(vm.argument(0).to_property_key(global_object));
 
     while (object) {
         auto desc = TRY_OR_DISCARD(object->internal_get_own_property(key));
@@ -257,9 +247,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_setter)
 {
     auto* object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
-    auto key = vm.argument(0).to_property_key(global_object);
-    if (vm.exception())
-        return {};
+    auto key = TRY_OR_DISCARD(vm.argument(0).to_property_key(global_object));
 
     while (object) {
         auto desc = TRY_OR_DISCARD(object->internal_get_own_property(key));

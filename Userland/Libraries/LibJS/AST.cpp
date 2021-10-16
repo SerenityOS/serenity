@@ -1043,7 +1043,7 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
             if (interpreter.exception())
                 return {};
             // 5. Let propertyKey be ? ToPropertyKey(propertyNameValue).
-            property_key = property_name_value.to_property_key(global_object);
+            property_key = TRY_OR_DISCARD(property_name_value.to_property_key(global_object));
         } else {
             // SuperProperty : super . IdentifierName
 
@@ -1273,9 +1273,7 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
         if (auto* exception = interpreter.exception())
             return throw_completion(exception->value());
 
-        auto property_key = key.to_property_key(global_object);
-        if (auto* exception = interpreter.exception())
-            return throw_completion(exception->value());
+        auto property_key = TRY(key.to_property_key(global_object));
 
         auto& target = method.is_static() ? *class_constructor : class_prototype.as_object();
         method_function.set_home_object(&target);
@@ -1302,9 +1300,7 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
         if (auto* exception = interpreter.exception())
             return throw_completion(exception->value());
 
-        auto property_key = key.to_property_key(global_object);
-        if (auto* exception = interpreter.exception())
-            return throw_completion(exception->value());
+        auto property_key = TRY(key.to_property_key(global_object));
 
         ECMAScriptFunctionObject* initializer = nullptr;
         if (field.initializer()) {

@@ -568,12 +568,12 @@ ThrowCompletionOr<double> Value::to_double(GlobalObject& global_object) const
 }
 
 // 7.1.19 ToPropertyKey ( argument ), https://tc39.es/ecma262/#sec-topropertykey
-StringOrSymbol Value::to_property_key(GlobalObject& global_object) const
+ThrowCompletionOr<StringOrSymbol> Value::to_property_key(GlobalObject& global_object) const
 {
-    auto key = TRY_OR_DISCARD(to_primitive(global_object, PreferredType::String));
+    auto key = TRY(to_primitive(global_object, PreferredType::String));
     if (key.is_symbol())
-        return &key.as_symbol();
-    return TRY_OR_DISCARD(key.to_string(global_object));
+        return StringOrSymbol { &key.as_symbol() };
+    return StringOrSymbol { TRY(key.to_string(global_object)) };
 }
 
 i32 Value::to_i32_slow_case(GlobalObject& global_object) const
@@ -1181,9 +1181,7 @@ Value in(GlobalObject& global_object, Value lhs, Value rhs)
         global_object.vm().throw_exception<TypeError>(global_object, ErrorType::InOperatorWithObject);
         return {};
     }
-    auto lhs_property_key = lhs.to_property_key(global_object);
-    if (global_object.vm().exception())
-        return {};
+    auto lhs_property_key = TRY_OR_DISCARD(lhs.to_property_key(global_object));
     return Value(TRY_OR_DISCARD(rhs.as_object().has_property(lhs_property_key)));
 }
 
