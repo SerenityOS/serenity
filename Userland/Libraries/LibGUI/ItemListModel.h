@@ -85,7 +85,7 @@ public:
             for (auto it = m_data.begin(); it != m_data.end(); ++it) {
                 for (auto it2d = (*it).begin(); it2d != (*it).end(); ++it2d) {
                     GUI::ModelIndex index = this->index(it.index(), it2d.index());
-                    if (!string_matches(data(index, ModelRole::Display).as_string(), searching, flags))
+                    if (!string_matches(data(index, ModelRole::Display).to_string(), searching, flags))
                         continue;
 
                     found_indices.append(index);
@@ -96,7 +96,7 @@ public:
         } else {
             for (auto it = m_data.begin(); it != m_data.end(); ++it) {
                 GUI::ModelIndex index = this->index(it.index());
-                if (!string_matches(data(index, ModelRole::Display).as_string(), searching, flags))
+                if (!string_matches(data(index, ModelRole::Display).to_string(), searching, flags))
                     continue;
 
                 found_indices.append(index);
