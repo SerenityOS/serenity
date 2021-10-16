@@ -5,7 +5,7 @@ sysctl - configure kernel parameters at runtime
 ## Synopsis
 
 ```**sh
-# sysctl [-a] [variable[=value]]
+# sysctl [-a] [-w] [variable[=value]...]
 ```
 
 ## Description
@@ -16,12 +16,13 @@ Available parameters are listed under /proc/sys/.
 
 ## Options
 
-* `-a`: Display all kernel parameters and associated values
+* `-a`: Display all kernel parameters and associated values.
+* `-w`: Set kernel parameters to the specified values.
 
 ## Arguments
 
-* `variable`: Retrieve the specified parameter
-* `variable=value`: Set the specified parameter to the specified value
+* `variable`: Retrieve the specified parameter.
+* `variable=value`: Set the specified parameter to the specified value. The option `-w` has to be specified.
 
 ## Files
 
@@ -43,8 +44,10 @@ ubsan_is_deadly = 1
 ```
 
 Set `ubsan_is_deadly` parameter to zero (disabled):
+(Note: This requires root privileges)
 
 ```sh
-# sysctl ubsan_is_deadly=0
-ubsan_is_deadly = 1 -> 0
+# su
+# sysctl -w ubsan_is_deadly=0
+ubsan_is_deadly: 1 -> 0
 ```
