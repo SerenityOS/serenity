@@ -141,13 +141,13 @@ static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value,
             swap(raw_bytes[i], raw_bytes[sizeof(UnderlyingBufferDataType) - 1 - i]);
     };
     if constexpr (IsSame<UnderlyingBufferDataType, float>) {
-        float raw_value = value.to_double(global_object);
+        float raw_value = MUST(value.to_double(global_object));
         ReadonlyBytes { &raw_value, sizeof(float) }.copy_to(raw_bytes);
         flip_if_needed();
         return raw_bytes;
     }
     if constexpr (IsSame<UnderlyingBufferDataType, double>) {
-        double raw_value = value.to_double(global_object);
+        double raw_value = MUST(value.to_double(global_object));
         ReadonlyBytes { &raw_value, sizeof(double) }.copy_to(raw_bytes);
         flip_if_needed();
         return raw_bytes;

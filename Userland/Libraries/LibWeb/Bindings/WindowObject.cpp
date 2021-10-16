@@ -641,14 +641,10 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll)
 
     ScrollBehavior behavior = (behavior_string == "smooth") ? ScrollBehavior::Smooth : ScrollBehavior::Auto;
 
-    double x = x_value.to_double(global_object);
-    if (vm.exception())
-        return {};
+    double x = TRY_OR_DISCARD(x_value.to_double(global_object));
     x = JS::Value(x).is_finite_number() ? x : 0.0;
 
-    double y = y_value.to_double(global_object);
-    if (vm.exception())
-        return {};
+    double y = TRY_OR_DISCARD(y_value.to_double(global_object));
     y = JS::Value(y).is_finite_number() ? y : 0.0;
 
     // FIXME: Are we calculating the viewport in the way this function expects?
@@ -683,14 +679,10 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_by)
     }
 
     auto left_value = TRY_OR_DISCARD(options->get("left"));
-    auto left = left_value.to_double(global_object);
-    if (vm.exception())
-        return {};
+    auto left = TRY_OR_DISCARD(left_value.to_double(global_object));
 
     auto top_value = TRY_OR_DISCARD(options->get("top"));
-    auto top = top_value.to_double(global_object);
-    if (vm.exception())
-        return {};
+    auto top = TRY_OR_DISCARD(top_value.to_double(global_object));
 
     left = JS::Value(left).is_finite_number() ? left : 0.0;
     top = JS::Value(top).is_finite_number() ? top : 0.0;
