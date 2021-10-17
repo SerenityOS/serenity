@@ -52,7 +52,7 @@ void CloneTool::draw_line(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::Int
     BrushTool::draw_line(bitmap, color, start, end);
 }
 
-Gfx::StandardCursor CloneTool::cursor()
+Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> CloneTool::cursor()
 {
     if (m_is_selecting_location)
         return Gfx::StandardCursor::Eyedropper;

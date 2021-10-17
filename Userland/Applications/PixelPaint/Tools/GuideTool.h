@@ -26,7 +26,7 @@ public:
     virtual void on_tool_activation() override;
 
     virtual GUI::Widget* get_properties_widget() override;
-    virtual Gfx::StandardCursor cursor() override { return Gfx::StandardCursor::Crosshair; }
+    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return Gfx::StandardCursor::Crosshair; }
 
 private:
     RefPtr<Guide> closest_guide(Gfx::IntPoint const&);
