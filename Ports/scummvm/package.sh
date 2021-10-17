@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=scummvm
 useconfigure="true"
-version="2.2.0"
-files="https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.gz scummvm-${version}.tar.gz 6ec5bd63b73861c10ca9869f27a74989a9ad6013bad30a1ef70de6ec146c2cb5"
+version="2.5.0"
+files="https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz scummvm-${version}.tar.xz b47ee4b195828d2c358e38a4088eda49886dc37a04f1cc17b981345a59e0d623"
 auth_type=sha256
 depends=("freetype" "libiconv" "libjpeg" "libpng" "libtheora" "SDL2")
 configopts=(
@@ -18,4 +18,4 @@ launcher_command=/usr/local/bin/scummvm
 icon_file=icons/scummvm.ico
 
 export FREETYPE2_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/freetype2"
-export FREETYPE2_LIBS="-lfreetype"
+export SDL_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2"
