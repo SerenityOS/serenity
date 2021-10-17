@@ -766,9 +766,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
     auto string_length = string.length_in_code_units();
     auto search_length = search_string.length_in_code_units();
 
-    auto position = vm.argument(1).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto position = TRY_OR_DISCARD(vm.argument(1).to_number(global_object));
     double pos = position.is_nan() ? static_cast<double>(INFINITY) : position.to_integer_or_infinity(global_object);
     if (vm.exception())
         return {};

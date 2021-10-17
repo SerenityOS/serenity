@@ -81,9 +81,7 @@ MathObject::~MathObject()
 // 21.3.2.1 Math.abs ( x ), https://tc39.es/ecma262/#sec-math.abs
 JS_DEFINE_NATIVE_FUNCTION(MathObject::abs)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_nan())
         return js_nan();
     if (number.is_negative_zero())
@@ -103,9 +101,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::random)
 // 21.3.2.32 Math.sqrt ( x ), https://tc39.es/ecma262/#sec-math.sqrt
 JS_DEFINE_NATIVE_FUNCTION(MathObject::sqrt)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_nan())
         return js_nan();
     return Value(::sqrt(number.as_double()));
@@ -114,9 +110,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::sqrt)
 // 21.3.2.16 Math.floor ( x ), https://tc39.es/ecma262/#sec-math.floor
 JS_DEFINE_NATIVE_FUNCTION(MathObject::floor)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_nan())
         return js_nan();
     return Value(::floor(number.as_double()));
@@ -125,9 +119,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::floor)
 // 21.3.2.10 Math.ceil ( x ), https://tc39.es/ecma262/#sec-math.ceil
 JS_DEFINE_NATIVE_FUNCTION(MathObject::ceil)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_nan())
         return js_nan();
     auto number_double = number.as_double();
@@ -139,10 +131,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::ceil)
 // 21.3.2.28 Math.round ( x ), https://tc39.es/ecma262/#sec-math.round
 JS_DEFINE_NATIVE_FUNCTION(MathObject::round)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    auto value = number.as_double();
+    auto value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object)).as_double();
     double integer = ::ceil(value);
     if (integer - 0.5 > value)
         integer--;
@@ -153,12 +142,8 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::round)
 JS_DEFINE_NATIVE_FUNCTION(MathObject::max)
 {
     Vector<Value> coerced;
-    for (size_t i = 0; i < vm.argument_count(); ++i) {
-        auto number = vm.argument(i).to_number(global_object);
-        if (vm.exception())
-            return {};
-        coerced.append(number);
-    }
+    for (size_t i = 0; i < vm.argument_count(); ++i)
+        coerced.append(TRY_OR_DISCARD(vm.argument(i).to_number(global_object)));
 
     auto highest = js_negative_infinity();
     for (auto& number : coerced) {
@@ -174,12 +159,8 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::max)
 JS_DEFINE_NATIVE_FUNCTION(MathObject::min)
 {
     Vector<Value> coerced;
-    for (size_t i = 0; i < vm.argument_count(); ++i) {
-        auto number = vm.argument(i).to_number(global_object);
-        if (vm.exception())
-            return {};
-        coerced.append(number);
-    }
+    for (size_t i = 0; i < vm.argument_count(); ++i)
+        coerced.append(TRY_OR_DISCARD(vm.argument(i).to_number(global_object)));
 
     auto lowest = js_infinity();
     for (auto& number : coerced) {
@@ -194,9 +175,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::min)
 // 21.3.2.35 Math.trunc ( x ), https://tc39.es/ecma262/#sec-math.trunc
 JS_DEFINE_NATIVE_FUNCTION(MathObject::trunc)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_nan())
         return js_nan();
     if (number.as_double() < 0)
@@ -207,9 +186,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::trunc)
 // 21.3.2.30 Math.sin ( x ), https://tc39.es/ecma262/#sec-math.sin
 JS_DEFINE_NATIVE_FUNCTION(MathObject::sin)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_nan())
         return js_nan();
     return Value(::sin(number.as_double()));
@@ -218,9 +195,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::sin)
 // 21.3.2.12 Math.cos ( x ), https://tc39.es/ecma262/#sec-math.cos
 JS_DEFINE_NATIVE_FUNCTION(MathObject::cos)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_nan())
         return js_nan();
     return Value(::cos(number.as_double()));
@@ -229,9 +204,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::cos)
 // 21.3.2.33 Math.tan ( x ), https://tc39.es/ecma262/#sec-math.tan
 JS_DEFINE_NATIVE_FUNCTION(MathObject::tan)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_nan())
         return js_nan();
     return Value(::tan(number.as_double()));
@@ -240,12 +213,8 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::tan)
 // 21.3.2.26 Math.pow ( base, exponent ), https://tc39.es/ecma262/#sec-math.pow
 JS_DEFINE_NATIVE_FUNCTION(MathObject::pow)
 {
-    auto base = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    auto exponent = vm.argument(1).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto base = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
+    auto exponent = TRY_OR_DISCARD(vm.argument(1).to_number(global_object));
     if (exponent.is_nan())
         return js_nan();
     if (exponent.is_positive_zero() || exponent.is_negative_zero())
@@ -298,9 +267,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::pow)
 // 21.3.2.14 Math.exp ( x ), https://tc39.es/ecma262/#sec-math.exp
 JS_DEFINE_NATIVE_FUNCTION(MathObject::exp)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_nan())
         return js_nan();
     return Value(::exp(number.as_double()));
@@ -309,9 +276,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::exp)
 // 21.3.2.15 Math.expm1 ( x ), https://tc39.es/ecma262/#sec-math.expm1
 JS_DEFINE_NATIVE_FUNCTION(MathObject::expm1)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_nan())
         return js_nan();
     return Value(::expm1(number.as_double()));
@@ -320,9 +285,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::expm1)
 // 21.3.2.29 Math.sign ( x ), https://tc39.es/ecma262/#sec-math.sign
 JS_DEFINE_NATIVE_FUNCTION(MathObject::sign)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_positive_zero())
         return Value(0);
     if (number.is_negative_zero())
@@ -348,9 +311,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::clz32)
 // 21.3.2.2 Math.acos ( x ), https://tc39.es/ecma262/#sec-math.acos
 JS_DEFINE_NATIVE_FUNCTION(MathObject::acos)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_nan() || number.as_double() > 1 || number.as_double() < -1)
         return js_nan();
     if (number.as_double() == 1)
@@ -361,20 +322,16 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::acos)
 // 21.3.2.3 Math.acosh ( x ), https://tc39.es/ecma262/#sec-math.acosh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::acosh)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    if (number.as_double() < 1)
+    auto value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object)).as_double();
+    if (value < 1)
         return js_nan();
-    return Value(::acosh(number.as_double()));
+    return Value(::acosh(value));
 }
 
 // 21.3.2.4 Math.asin ( x ), https://tc39.es/ecma262/#sec-math.asin
 JS_DEFINE_NATIVE_FUNCTION(MathObject::asin)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_nan() || number.is_positive_zero() || number.is_negative_zero())
         return number;
     return Value(::asin(number.as_double()));
@@ -383,18 +340,13 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::asin)
 // 21.3.2.5 Math.asinh ( x ), https://tc39.es/ecma262/#sec-math.asinh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::asinh)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    return Value(::asinh(number.as_double()));
+    return Value(::asinh(TRY_OR_DISCARD(vm.argument(0).to_number(global_object)).as_double()));
 }
 
 // 21.3.2.6 Math.atan ( x ), https://tc39.es/ecma262/#sec-math.atan
 JS_DEFINE_NATIVE_FUNCTION(MathObject::atan)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_nan() || number.is_positive_zero() || number.is_negative_zero())
         return number;
     if (number.is_positive_infinity())
@@ -407,32 +359,25 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::atan)
 // 21.3.2.7 Math.atanh ( x ), https://tc39.es/ecma262/#sec-math.atanh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::atanh)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    if (number.as_double() > 1 || number.as_double() < -1)
+    auto value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object)).as_double();
+    if (value > 1 || value < -1)
         return js_nan();
-    return Value(::atanh(number.as_double()));
+    return Value(::atanh(value));
 }
 
 // 21.3.2.21 Math.log1p ( x ), https://tc39.es/ecma262/#sec-math.log1p
 JS_DEFINE_NATIVE_FUNCTION(MathObject::log1p)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    if (number.as_double() < -1)
+    auto value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object)).as_double();
+    if (value < -1)
         return js_nan();
-    return Value(::log1p(number.as_double()));
+    return Value(::log1p(value));
 }
 
 // 21.3.2.9 Math.cbrt ( x ), https://tc39.es/ecma262/#sec-math.cbrt
 JS_DEFINE_NATIVE_FUNCTION(MathObject::cbrt)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    return Value(::cbrt(number.as_double()));
+    return Value(::cbrt(TRY_OR_DISCARD(vm.argument(0).to_number(global_object)).as_double()));
 }
 
 // 21.3.2.8 Math.atan2 ( y, x ), https://tc39.es/ecma262/#sec-math.atan2
@@ -440,12 +385,8 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::atan2)
 {
     auto constexpr three_quarters_pi = M_PI_4 + M_PI_2;
 
-    auto y = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    auto x = vm.argument(1).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto y = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
+    auto x = TRY_OR_DISCARD(vm.argument(1).to_number(global_object));
 
     if (y.is_nan() || x.is_nan())
         return js_nan();
@@ -501,9 +442,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::atan2)
 // 21.3.2.17 Math.fround ( x ), https://tc39.es/ecma262/#sec-math.fround
 JS_DEFINE_NATIVE_FUNCTION(MathObject::fround)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_nan())
         return js_nan();
     return Value((float)number.as_double());
@@ -513,12 +452,8 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::fround)
 JS_DEFINE_NATIVE_FUNCTION(MathObject::hypot)
 {
     Vector<Value> coerced;
-    for (size_t i = 0; i < vm.argument_count(); ++i) {
-        auto number = vm.argument(i).to_number(global_object);
-        if (vm.exception())
-            return {};
-        coerced.append(number);
-    }
+    for (size_t i = 0; i < vm.argument_count(); ++i)
+        coerced.append(TRY_OR_DISCARD(vm.argument(i).to_number(global_object)));
 
     for (auto& number : coerced) {
         if (number.is_positive_infinity() || number.is_negative_infinity())
@@ -556,42 +491,34 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::imul)
 // 21.3.2.20 Math.log ( x ), https://tc39.es/ecma262/#sec-math.log
 JS_DEFINE_NATIVE_FUNCTION(MathObject::log)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    if (number.as_double() < 0)
+    auto value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object)).as_double();
+    if (value < 0)
         return js_nan();
-    return Value(::log(number.as_double()));
+    return Value(::log(value));
 }
 
 // 21.3.2.23 Math.log2 ( x ), https://tc39.es/ecma262/#sec-math.log2
 JS_DEFINE_NATIVE_FUNCTION(MathObject::log2)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    if (number.as_double() < 0)
+    auto value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object)).as_double();
+    if (value < 0)
         return js_nan();
-    return Value(::log2(number.as_double()));
+    return Value(::log2(value));
 }
 
 // 21.3.2.22 Math.log10 ( x ), https://tc39.es/ecma262/#sec-math.log10
 JS_DEFINE_NATIVE_FUNCTION(MathObject::log10)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    if (number.as_double() < 0)
+    auto value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object)).as_double();
+    if (value < 0)
         return js_nan();
-    return Value(::log10(number.as_double()));
+    return Value(::log10(value));
 }
 
 // 21.3.2.31 Math.sinh ( x ), https://tc39.es/ecma262/#sec-math.sinh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::sinh)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_nan())
         return js_nan();
     return Value(::sinh(number.as_double()));
@@ -600,9 +527,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::sinh)
 // 21.3.2.13 Math.cosh ( x ), https://tc39.es/ecma262/#sec-math.cosh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::cosh)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_nan())
         return js_nan();
     return Value(::cosh(number.as_double()));
@@ -611,9 +536,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::cosh)
 // 21.3.2.34 Math.tanh ( x ), https://tc39.es/ecma262/#sec-math.tanh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::tanh)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (number.is_nan())
         return js_nan();
     if (number.is_positive_infinity())

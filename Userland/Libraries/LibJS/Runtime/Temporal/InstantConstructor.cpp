@@ -87,9 +87,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from)
 JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_seconds)
 {
     // 1. Set epochSeconds to ? ToNumber(epochSeconds).
-    auto epoch_seconds_value = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto epoch_seconds_value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
 
     // 2. Set epochSeconds to ? NumberToBigInt(epochSeconds).
     auto* epoch_seconds = number_to_bigint(global_object, epoch_seconds_value);
@@ -113,9 +111,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_seconds)
 JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_milliseconds)
 {
     // 1. Set epochMilliseconds to ? ToNumber(epochMilliseconds).
-    auto epoch_milliseconds_value = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto epoch_milliseconds_value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
 
     // 2. Set epochMilliseconds to ? NumberToBigInt(epochMilliseconds).
     auto* epoch_milliseconds = number_to_bigint(global_object, epoch_milliseconds_value);

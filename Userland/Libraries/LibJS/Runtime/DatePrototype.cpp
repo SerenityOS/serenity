@@ -114,9 +114,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_date)
 
     auto& datetime = this_object->datetime();
 
-    auto new_date_value = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto new_date_value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (!new_date_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
@@ -168,29 +166,25 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
 
     auto& datetime = this_object->datetime();
 
-    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) { return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback); };
+    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) -> ThrowCompletionOr<Value> {
+        return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback);
+    };
 
-    auto new_year_value = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto new_year_value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (!new_year_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
     }
     auto new_year = new_year_value.as_i32();
 
-    auto new_month_value = arg_or(1, datetime.month() - 1);
-    if (vm.exception())
-        return {};
+    auto new_month_value = TRY_OR_DISCARD(arg_or(1, datetime.month() - 1));
     if (!new_month_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
     }
     auto new_month = new_month_value.as_i32() + 1; // JS Months: 0 - 11, DateTime months: 1-12
 
-    auto new_day_value = arg_or(2, datetime.day());
-    if (vm.exception())
-        return {};
+    auto new_day_value = TRY_OR_DISCARD(arg_or(2, datetime.day()));
     if (!new_day_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
@@ -230,9 +224,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_year)
 
     auto& datetime = this_object->datetime();
 
-    auto new_year_value = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto new_year_value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (!new_year_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
@@ -272,40 +264,34 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_hours)
     if (!this_object)
         return {};
 
-    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) { return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback); };
+    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) -> ThrowCompletionOr<Value> {
+        return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback);
+    };
 
     auto& datetime = this_object->datetime();
 
-    auto new_hours_value = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto new_hours_value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (!new_hours_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
     }
     auto new_hours = new_hours_value.as_i32();
 
-    auto new_minutes_value = arg_or(1, datetime.minute());
-    if (vm.exception())
-        return {};
+    auto new_minutes_value = TRY_OR_DISCARD(arg_or(1, datetime.minute()));
     if (!new_minutes_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
     }
     auto new_minutes = new_minutes_value.as_i32();
 
-    auto new_seconds_value = arg_or(2, datetime.second());
-    if (vm.exception())
-        return {};
+    auto new_seconds_value = TRY_OR_DISCARD(arg_or(2, datetime.second()));
     if (!new_seconds_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
     }
     auto new_seconds = new_seconds_value.as_i32();
 
-    auto new_milliseconds_value = arg_or(3, this_object->milliseconds());
-    if (vm.exception())
-        return {};
+    auto new_milliseconds_value = TRY_OR_DISCARD(arg_or(3, this_object->milliseconds()));
     if (!new_milliseconds_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
@@ -345,9 +331,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_milliseconds)
     if (!this_object)
         return {};
 
-    auto new_milliseconds_value = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto new_milliseconds_value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
 
     if (!new_milliseconds_value.is_finite_number()) {
         this_object->set_is_invalid(true);
@@ -394,31 +378,27 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_minutes)
     if (!this_object)
         return {};
 
-    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) { return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback); };
+    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) -> ThrowCompletionOr<Value> {
+        return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback);
+    };
 
     auto& datetime = this_object->datetime();
 
-    auto new_minutes_value = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto new_minutes_value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (!new_minutes_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
     }
     auto new_minutes = new_minutes_value.as_i32();
 
-    auto new_seconds_value = arg_or(1, datetime.second());
-    if (vm.exception())
-        return {};
+    auto new_seconds_value = TRY_OR_DISCARD(arg_or(1, datetime.second()));
     if (!new_seconds_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
     }
     auto new_seconds = new_seconds_value.as_i32();
 
-    auto new_milliseconds_value = arg_or(2, this_object->milliseconds());
-    if (vm.exception())
-        return {};
+    auto new_milliseconds_value = TRY_OR_DISCARD(arg_or(2, this_object->milliseconds()));
     if (!new_milliseconds_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
@@ -458,22 +438,20 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_month)
     if (!this_object)
         return {};
 
-    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) { return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback); };
+    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) -> ThrowCompletionOr<Value> {
+        return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback);
+    };
 
     auto& datetime = this_object->datetime();
 
-    auto new_month_value = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto new_month_value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (!new_month_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
     }
     auto new_month = new_month_value.as_i32() + 1; // JS Months: 0 - 11, DateTime months: 1-12
 
-    auto new_date_value = arg_or(1, this_object->date());
-    if (vm.exception())
-        return {};
+    auto new_date_value = TRY_OR_DISCARD(arg_or(1, this_object->date()));
     if (!new_date_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
@@ -510,22 +488,20 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_seconds)
     if (!this_object)
         return {};
 
-    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) { return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback); };
+    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) -> ThrowCompletionOr<Value> {
+        return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback);
+    };
 
     auto& datetime = this_object->datetime();
 
-    auto new_seconds_value = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto new_seconds_value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (!new_seconds_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
     }
     auto new_seconds = new_seconds_value.as_i32();
 
-    auto new_milliseconds_value = arg_or(1, this_object->milliseconds());
-    if (vm.exception())
-        return {};
+    auto new_milliseconds_value = TRY_OR_DISCARD(arg_or(1, this_object->milliseconds()));
     if (!new_milliseconds_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
@@ -565,9 +541,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_time)
     if (!this_object)
         return {};
 
-    auto new_time_value = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto new_time_value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (!new_time_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();

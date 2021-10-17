@@ -352,9 +352,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_arithmetic)
 
     auto& column_name_str = column_name.as_string().string();
 
-    auto offset = vm.argument(1).to_number(global_object);
-    if (!offset.is_number())
-        return {};
+    auto offset = TRY_OR_DISCARD(vm.argument(1).to_number(global_object));
 
     auto offset_number = offset.as_i32();
 

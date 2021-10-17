@@ -461,18 +461,14 @@ ThrowCompletionOr<Object*> Value::to_object(GlobalObject& global_object) const
 // 7.1.3 ToNumeric ( value ), https://tc39.es/ecma262/#sec-tonumeric
 FLATTEN ThrowCompletionOr<Value> Value::to_numeric(GlobalObject& global_object) const
 {
-    auto& vm = global_object.vm();
     auto primitive = TRY(to_primitive(global_object, Value::PreferredType::Number));
     if (primitive.is_bigint())
         return primitive;
-    auto number = primitive.to_number(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return number;
+    return primitive.to_number(global_object);
 }
 
 // 7.1.4 ToNumber ( argument ), https://tc39.es/ecma262/#sec-tonumber
-Value Value::to_number(GlobalObject& global_object) const
+ThrowCompletionOr<Value> Value::to_number(GlobalObject& global_object) const
 {
     switch (m_type) {
     case Type::Undefined:
@@ -499,13 +495,11 @@ Value Value::to_number(GlobalObject& global_object) const
         return Value(parsed_double);
     }
     case Type::Symbol:
-        global_object.vm().throw_exception<TypeError>(global_object, ErrorType::Convert, "symbol", "number");
-        return {};
+        return global_object.vm().throw_completion<TypeError>(global_object, ErrorType::Convert, "symbol", "number");
     case Type::BigInt:
-        global_object.vm().throw_exception<TypeError>(global_object, ErrorType::Convert, "BigInt", "number");
-        return {};
+        return global_object.vm().throw_completion<TypeError>(global_object, ErrorType::Convert, "BigInt", "number");
     case Type::Object: {
-        auto primitive = TRY_OR_DISCARD(to_primitive(global_object, PreferredType::Number));
+        auto primitive = TRY(to_primitive(global_object, PreferredType::Number));
         return primitive.to_number(global_object);
     }
     default:
@@ -561,10 +555,7 @@ ThrowCompletionOr<u64> Value::to_bigint_uint64(GlobalObject& global_object) cons
 
 ThrowCompletionOr<double> Value::to_double(GlobalObject& global_object) const
 {
-    auto number = to_number(global_object);
-    if (auto* exception = global_object.vm().exception())
-        return throw_completion(exception->value());
-    return number.as_double();
+    return TRY(to_number(global_object)).as_double();
 }
 
 // 7.1.19 ToPropertyKey ( argument ), https://tc39.es/ecma262/#sec-topropertykey
@@ -579,10 +570,7 @@ ThrowCompletionOr<StringOrSymbol> Value::to_property_key(GlobalObject& global_ob
 i32 Value::to_i32_slow_case(GlobalObject& global_object) const
 {
     VERIFY(type() != Type::Int32);
-    auto number = to_number(global_object);
-    if (global_object.vm().exception())
-        return {};
-    double value = number.as_double();
+    double value = TRY_OR_DISCARD(to_number(global_object)).as_double();
     if (!isfinite(value) || value == 0)
         return 0;
     auto abs = fabs(value);
@@ -599,10 +587,7 @@ i32 Value::to_i32_slow_case(GlobalObject& global_object) const
 // 7.1.7 ToUint32 ( argument ), https://tc39.es/ecma262/#sec-touint32
 u32 Value::to_u32(GlobalObject& global_object) const
 {
-    auto number = to_number(global_object);
-    if (global_object.vm().exception())
-        return {};
-    double value = number.as_double();
+    double value = TRY_OR_DISCARD(to_number(global_object)).as_double();
     if (!isfinite(value) || value == 0)
         return 0;
     auto int_val = floor(fabs(value));
@@ -617,10 +602,7 @@ u32 Value::to_u32(GlobalObject& global_object) const
 // 7.1.8 ToInt16 ( argument ), https://tc39.es/ecma262/#sec-toint16
 i16 Value::to_i16(GlobalObject& global_object) const
 {
-    auto number = to_number(global_object);
-    if (global_object.vm().exception())
-        return {};
-    double value = number.as_double();
+    double value = TRY_OR_DISCARD(to_number(global_object)).as_double();
     if (!isfinite(value) || value == 0)
         return 0;
     auto abs = fabs(value);
@@ -637,10 +619,7 @@ i16 Value::to_i16(GlobalObject& global_object) const
 // 7.1.9 ToUint16 ( argument ), https://tc39.es/ecma262/#sec-touint16
 u16 Value::to_u16(GlobalObject& global_object) const
 {
-    auto number = to_number(global_object);
-    if (global_object.vm().exception())
-        return {};
-    double value = number.as_double();
+    double value = TRY_OR_DISCARD(to_number(global_object)).as_double();
     if (!isfinite(value) || value == 0)
         return 0;
     auto int_val = floor(fabs(value));
@@ -655,10 +634,7 @@ u16 Value::to_u16(GlobalObject& global_object) const
 // 7.1.10 ToInt8 ( argument ), https://tc39.es/ecma262/#sec-toint8
 i8 Value::to_i8(GlobalObject& global_object) const
 {
-    auto number = to_number(global_object);
-    if (global_object.vm().exception())
-        return {};
-    double value = number.as_double();
+    double value = TRY_OR_DISCARD(to_number(global_object)).as_double();
     if (!isfinite(value) || value == 0)
         return 0;
     auto abs = fabs(value);
@@ -675,10 +651,7 @@ i8 Value::to_i8(GlobalObject& global_object) const
 // 7.1.11 ToUint8 ( argument ), https://tc39.es/ecma262/#sec-touint8
 u8 Value::to_u8(GlobalObject& global_object) const
 {
-    auto number = to_number(global_object);
-    if (global_object.vm().exception())
-        return {};
-    double value = number.as_double();
+    double value = TRY_OR_DISCARD(to_number(global_object)).as_double();
     if (!isfinite(value) || value == 0)
         return 0;
     auto int_val = floor(fabs(value));
@@ -693,9 +666,7 @@ u8 Value::to_u8(GlobalObject& global_object) const
 // 7.1.12 ToUint8Clamp ( argument ), https://tc39.es/ecma262/#sec-touint8clamp
 u8 Value::to_u8_clamp(GlobalObject& global_object) const
 {
-    auto number = to_number(global_object);
-    if (global_object.vm().exception())
-        return {};
+    auto number = TRY_OR_DISCARD(to_number(global_object));
     if (number.is_nan())
         return 0;
     double value = number.as_double();
@@ -754,11 +725,7 @@ size_t Value::to_index(GlobalObject& global_object) const
 // 7.1.5 ToIntegerOrInfinity ( argument ), https://tc39.es/ecma262/#sec-tointegerorinfinity
 double Value::to_integer_or_infinity(GlobalObject& global_object) const
 {
-    auto& vm = global_object.vm();
-
-    auto number = to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(to_number(global_object));
     if (number.is_nan() || number.as_double() == 0)
         return 0;
     if (number.is_infinity())
@@ -918,7 +885,7 @@ Value bitwise_not(GlobalObject& global_object, Value lhs)
 // 13.5.4 Unary + Operator, https://tc39.es/ecma262/#sec-unary-plus-operator
 Value unary_plus(GlobalObject& global_object, Value lhs)
 {
-    return lhs.to_number(global_object);
+    return TRY_OR_DISCARD(lhs.to_number(global_object));
 }
 
 // 13.5.5 Unary - Operator, https://tc39.es/ecma262/#sec-unary-minus-operator
@@ -1354,11 +1321,11 @@ bool is_loosely_equal(GlobalObject& global_object, Value lhs, Value rhs)
 
     // 5. If Type(x) is Number and Type(y) is String, return IsLooselyEqual(x, ! ToNumber(y)).
     if (lhs.is_number() && rhs.is_string())
-        return is_loosely_equal(global_object, lhs, rhs.to_number(global_object));
+        return is_loosely_equal(global_object, lhs, MUST(rhs.to_number(global_object)));
 
     // 6. If Type(x) is String and Type(y) is Number, return IsLooselyEqual(! ToNumber(x), y).
     if (lhs.is_string() && rhs.is_number())
-        return is_loosely_equal(global_object, lhs.to_number(global_object), rhs);
+        return is_loosely_equal(global_object, MUST(lhs.to_number(global_object)), rhs);
 
     // 7. If Type(x) is BigInt and Type(y) is String, then
     if (lhs.is_bigint() && rhs.is_string()) {
@@ -1377,11 +1344,11 @@ bool is_loosely_equal(GlobalObject& global_object, Value lhs, Value rhs)
 
     // 9. If Type(x) is Boolean, return IsLooselyEqual(! ToNumber(x), y).
     if (lhs.is_boolean())
-        return is_loosely_equal(global_object, lhs.to_number(global_object), rhs);
+        return is_loosely_equal(global_object, MUST(lhs.to_number(global_object)), rhs);
 
     // 10. If Type(y) is Boolean, return IsLooselyEqual(x, ! ToNumber(y)).
     if (rhs.is_boolean())
-        return is_loosely_equal(global_object, lhs, rhs.to_number(global_object));
+        return is_loosely_equal(global_object, lhs, MUST(rhs.to_number(global_object)));
 
     // 11. If Type(x) is either String, Number, BigInt, or Symbol and Type(y) is Object, return IsLooselyEqual(x, ? ToPrimitive(y)).
     if ((lhs.is_string() || lhs.is_number() || lhs.is_bigint() || lhs.is_symbol()) && rhs.is_object()) {

@@ -139,9 +139,7 @@ ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& o
     // 8. Else if type is Number, then
     else if (type == OptionType::Number) {
         // a. Set value to ? ToNumber(value).
-        value = value.to_number(global_object);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        value = TRY(value.to_number(global_object));
 
         // b. If value is NaN, throw a RangeError exception.
         if (value.is_nan())

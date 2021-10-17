@@ -209,10 +209,7 @@ Value DateConstructor::construct(FunctionObject& new_target)
         if (value.is_string())
             value = parse_date_string(value.as_string().string());
         else
-            value = value.to_number(global_object);
-
-        if (vm.exception())
-            return {};
+            value = TRY_OR_DISCARD(value.to_number(global_object));
 
         if (!value.is_finite_number()) {
             return create_invalid_date();
@@ -228,61 +225,47 @@ Value DateConstructor::construct(FunctionObject& new_target)
     }
 
     // A date/time in components, in local time.
-    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) {
+    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) -> ThrowCompletionOr<Value> {
         return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback);
     };
 
-    auto year_value = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto year_value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (!year_value.is_finite_number()) {
         return create_invalid_date();
     }
     auto year = year_value.as_i32();
 
-    auto month_index_value = vm.argument(1).to_number(global_object);
-    if (vm.exception())
-        return {};
+    auto month_index_value = TRY_OR_DISCARD(vm.argument(1).to_number(global_object));
     if (!month_index_value.is_finite_number()) {
         return create_invalid_date();
     }
     auto month_index = month_index_value.as_i32();
 
-    auto day_value = arg_or(2, 1);
-    if (vm.exception())
-        return {};
+    auto day_value = TRY_OR_DISCARD(arg_or(2, 1));
     if (!day_value.is_finite_number()) {
         return create_invalid_date();
     }
     auto day = day_value.as_i32();
 
-    auto hours_value = arg_or(3, 0);
-    if (vm.exception())
-        return {};
+    auto hours_value = TRY_OR_DISCARD(arg_or(3, 0));
     if (!hours_value.is_finite_number()) {
         return create_invalid_date();
     }
     auto hours = hours_value.as_i32();
 
-    auto minutes_value = arg_or(4, 0);
-    if (vm.exception())
-        return {};
+    auto minutes_value = TRY_OR_DISCARD(arg_or(4, 0));
     if (!minutes_value.is_finite_number()) {
         return create_invalid_date();
     }
     auto minutes = minutes_value.as_i32();
 
-    auto seconds_value = arg_or(5, 0);
-    if (vm.exception())
-        return {};
+    auto seconds_value = TRY_OR_DISCARD(arg_or(5, 0));
     if (!seconds_value.is_finite_number()) {
         return create_invalid_date();
     }
     auto seconds = seconds_value.as_i32();
 
-    auto milliseconds_value = arg_or(6, 0);
-    if (vm.exception())
-        return {};
+    auto milliseconds_value = TRY_OR_DISCARD(arg_or(6, 0));
     if (!milliseconds_value.is_finite_number()) {
         return create_invalid_date();
     }

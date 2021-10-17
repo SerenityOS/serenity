@@ -960,9 +960,10 @@ static void array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject
                 return;
             auto call_result = call_result_or_error.release_value();
 
-            auto number = call_result.to_number(global_object);
-            if (vm.exception())
+            auto number_or_error = call_result.to_number(global_object);
+            if (number_or_error.is_error())
                 return;
+            auto number = number_or_error.release_value();
 
             if (number.is_nan())
                 comparison_result = 0;

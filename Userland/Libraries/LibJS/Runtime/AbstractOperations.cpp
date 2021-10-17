@@ -870,7 +870,7 @@ Value canonical_numeric_index_string(GlobalObject& global_object, PropertyName c
         return Value(-0.0);
 
     // 3. Let n be ! ToNumber(argument).
-    auto n = argument.to_number(global_object);
+    auto n = MUST(argument.to_number(global_object));
 
     // 4. If SameValue(! ToString(n), argument) is false, return undefined.
     if (!same_value(MUST(n.to_primitive_string(global_object)), argument))

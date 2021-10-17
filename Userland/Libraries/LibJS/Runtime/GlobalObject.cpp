@@ -341,19 +341,13 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::gc)
 // 19.2.3 isNaN ( number ), https://tc39.es/ecma262/#sec-isnan-number
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::is_nan)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    return Value(number.is_nan());
+    return Value(TRY_OR_DISCARD(vm.argument(0).to_number(global_object)).is_nan());
 }
 
 // 19.2.2 isFinite ( number ), https://tc39.es/ecma262/#sec-isfinite-number
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::is_finite)
 {
-    auto number = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    return Value(number.is_finite_number());
+    return Value(TRY_OR_DISCARD(vm.argument(0).to_number(global_object)).is_finite_number());
 }
 
 // 19.2.4 parseFloat ( string ), https://tc39.es/ecma262/#sec-parsefloat-string
@@ -364,8 +358,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
     auto input_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto trimmed_string = input_string.trim_whitespace(TrimMode::Left);
     for (size_t length = trimmed_string.length(); length > 0; --length) {
-        // This can't throw, so no exception check is fine.
-        auto number = Value(js_string(vm, trimmed_string.substring(0, length))).to_number(global_object);
+        auto number = MUST(Value(js_string(vm, trimmed_string.substring(0, length))).to_number(global_object));
         if (!number.is_nan())
             return number;
     }
