@@ -567,10 +567,10 @@ ThrowCompletionOr<StringOrSymbol> Value::to_property_key(GlobalObject& global_ob
     return StringOrSymbol { TRY(key.to_string(global_object)) };
 }
 
-i32 Value::to_i32_slow_case(GlobalObject& global_object) const
+ThrowCompletionOr<i32> Value::to_i32_slow_case(GlobalObject& global_object) const
 {
     VERIFY(type() != Type::Int32);
-    double value = TRY_OR_DISCARD(to_number(global_object)).as_double();
+    double value = TRY(to_number(global_object)).as_double();
     if (!isfinite(value) || value == 0)
         return 0;
     auto abs = fabs(value);
@@ -582,6 +582,13 @@ i32 Value::to_i32_slow_case(GlobalObject& global_object) const
     if (int32bit >= 2147483648.0)
         int32bit -= 4294967296.0;
     return static_cast<i32>(int32bit);
+}
+
+ThrowCompletionOr<i32> Value::to_i32(GlobalObject& global_object) const
+{
+    if (m_type == Type::Int32)
+        return m_value.as_i32;
+    return to_i32_slow_case(global_object);
 }
 
 // 7.1.7 ToUint32 ( argument ), https://tc39.es/ecma262/#sec-touint32
@@ -819,7 +826,7 @@ Value bitwise_and(GlobalObject& global_object, Value lhs, Value rhs)
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number() || !rhs_numeric.is_finite_number())
             return Value(0);
-        return Value(lhs_numeric.to_i32(global_object) & rhs_numeric.to_i32(global_object));
+        return Value(TRY_OR_DISCARD(lhs_numeric.to_i32(global_object)) & TRY_OR_DISCARD(rhs_numeric.to_i32(global_object)));
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(vm, lhs_numeric.as_bigint().big_integer().bitwise_and(rhs_numeric.as_bigint().big_integer()));
@@ -840,7 +847,7 @@ Value bitwise_or(GlobalObject& global_object, Value lhs, Value rhs)
             return rhs_numeric;
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        return Value(lhs_numeric.to_i32(global_object) | rhs_numeric.to_i32(global_object));
+        return Value(TRY_OR_DISCARD(lhs_numeric.to_i32(global_object)) | TRY_OR_DISCARD(rhs_numeric.to_i32(global_object)));
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(vm, lhs_numeric.as_bigint().big_integer().bitwise_or(rhs_numeric.as_bigint().big_integer()));
@@ -861,7 +868,7 @@ Value bitwise_xor(GlobalObject& global_object, Value lhs, Value rhs)
             return rhs_numeric;
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        return Value(lhs_numeric.to_i32(global_object) ^ rhs_numeric.to_i32(global_object));
+        return Value(TRY_OR_DISCARD(lhs_numeric.to_i32(global_object)) ^ TRY_OR_DISCARD(rhs_numeric.to_i32(global_object)));
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(vm, lhs_numeric.as_bigint().big_integer().bitwise_xor(rhs_numeric.as_bigint().big_integer()));
@@ -875,7 +882,7 @@ Value bitwise_not(GlobalObject& global_object, Value lhs)
     auto& vm = global_object.vm();
     auto lhs_numeric = TRY_OR_DISCARD(lhs.to_numeric(global_object));
     if (lhs_numeric.is_number())
-        return Value(~lhs_numeric.to_i32(global_object));
+        return Value(~TRY_OR_DISCARD(lhs_numeric.to_i32(global_object)));
     auto big_integer_bitwise_not = lhs_numeric.as_bigint().big_integer();
     big_integer_bitwise_not = big_integer_bitwise_not.plus(Crypto::SignedBigInteger { 1 });
     big_integer_bitwise_not.negate();
@@ -917,7 +924,7 @@ Value left_shift(GlobalObject& global_object, Value lhs, Value rhs)
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
         // Ok, so this performs toNumber() again but that "can't" throw
-        auto lhs_i32 = lhs_numeric.to_i32(global_object);
+        auto lhs_i32 = MUST(lhs_numeric.to_i32(global_object));
         auto rhs_u32 = rhs_numeric.to_u32(global_object) % 32;
         return Value(lhs_i32 << rhs_u32);
     }
@@ -943,7 +950,7 @@ Value right_shift(GlobalObject& global_object, Value lhs, Value rhs)
             return Value(0);
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        auto lhs_i32 = lhs_numeric.to_i32(global_object);
+        auto lhs_i32 = MUST(lhs_numeric.to_i32(global_object));
         auto rhs_u32 = rhs_numeric.to_u32(global_object) % 32;
         return Value(lhs_i32 >> rhs_u32);
     }
@@ -981,8 +988,8 @@ Value add(GlobalObject& global_object, Value lhs, Value rhs)
     if (both_number(lhs, rhs)) {
         if (lhs.type() == Value::Type::Int32 && rhs.type() == Value::Type::Int32) {
             Checked<i32> result;
-            result = lhs.to_i32(global_object);
-            result += rhs.to_i32(global_object);
+            result = MUST(lhs.to_i32(global_object));
+            result += MUST(rhs.to_i32(global_object));
             if (!result.has_overflow())
                 return Value(result.value());
         }
@@ -1372,9 +1379,9 @@ bool is_loosely_equal(GlobalObject& global_object, Value lhs, Value rhs)
         if ((lhs.is_number() && !lhs.is_integral_number()) || (rhs.is_number() && !rhs.is_integral_number()))
             return false;
         if (lhs.is_number())
-            return Crypto::SignedBigInteger { lhs.to_i32(global_object) } == rhs.as_bigint().big_integer();
+            return Crypto::SignedBigInteger { MUST(lhs.to_i32(global_object)) } == rhs.as_bigint().big_integer();
         else
-            return Crypto::SignedBigInteger { rhs.to_i32(global_object) } == lhs.as_bigint().big_integer();
+            return Crypto::SignedBigInteger { MUST(rhs.to_i32(global_object)) } == lhs.as_bigint().big_integer();
     }
 
     // 14. Return false.
@@ -1472,12 +1479,12 @@ TriState is_less_than(GlobalObject& global_object, bool left_first, Value lhs, V
     bool x_lower_than_y;
     if (x_numeric.is_number()) {
         x_lower_than_y = x_numeric.is_integral_number()
-            ? Crypto::SignedBigInteger { x_numeric.to_i32(global_object) } < y_numeric.as_bigint().big_integer()
-            : (Crypto::SignedBigInteger { x_numeric.to_i32(global_object) } < y_numeric.as_bigint().big_integer() || Crypto::SignedBigInteger { x_numeric.to_i32(global_object) + 1 } < y_numeric.as_bigint().big_integer());
+            ? Crypto::SignedBigInteger { MUST(x_numeric.to_i32(global_object)) } < y_numeric.as_bigint().big_integer()
+            : (Crypto::SignedBigInteger { MUST(x_numeric.to_i32(global_object)) } < y_numeric.as_bigint().big_integer() || Crypto::SignedBigInteger { MUST(x_numeric.to_i32(global_object)) + 1 } < y_numeric.as_bigint().big_integer());
     } else {
         x_lower_than_y = y_numeric.is_integral_number()
-            ? x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object) }
-            : (x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object) } || x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object) + 1 });
+            ? x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { MUST(y_numeric.to_i32(global_object)) }
+            : (x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { MUST(y_numeric.to_i32(global_object)) } || x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { MUST(y_numeric.to_i32(global_object)) + 1 });
     }
     if (x_lower_than_y)
         return TriState::True;

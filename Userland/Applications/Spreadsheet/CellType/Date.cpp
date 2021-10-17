@@ -30,7 +30,7 @@ String DateCell::display(Cell& cell, const CellTypeMetadata& metadata) const
         }
     } };
     auto timestamp = js_value(cell, metadata);
-    auto string = Core::DateTime::from_timestamp(timestamp.to_i32(cell.sheet().global_object())).to_string(metadata.format.is_empty() ? "%Y-%m-%d %H:%M:%S" : metadata.format.characters());
+    auto string = Core::DateTime::from_timestamp(TRY_OR_DISCARD(timestamp.to_i32(cell.sheet().global_object()))).to_string(metadata.format.is_empty() ? "%Y-%m-%d %H:%M:%S" : metadata.format.characters());
 
     if (metadata.length >= 0)
         return string.substring(0, metadata.length);

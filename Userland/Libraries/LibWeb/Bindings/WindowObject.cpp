@@ -251,9 +251,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
     }
     i32 interval = 0;
     if (vm.argument_count() >= 2) {
-        interval = vm.argument(1).to_i32(global_object);
-        if (vm.exception())
-            return {};
+        interval = TRY_OR_DISCARD(vm.argument(1).to_i32(global_object));
         if (interval < 0)
             interval = 0;
     }
@@ -290,9 +288,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
     }
     i32 interval = 0;
     if (vm.argument_count() >= 2) {
-        interval = vm.argument(1).to_i32(global_object);
-        if (vm.exception())
-            return {};
+        interval = TRY_OR_DISCARD(vm.argument(1).to_i32(global_object));
         if (interval < 0)
             interval = 0;
     }
@@ -310,9 +306,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::clear_timeout)
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "clearTimeout");
         return {};
     }
-    i32 timer_id = vm.argument(0).to_i32(global_object);
-    if (vm.exception())
-        return {};
+    i32 timer_id = TRY_OR_DISCARD(vm.argument(0).to_i32(global_object));
     impl->clear_timeout(timer_id);
     return JS::js_undefined();
 }
@@ -326,9 +320,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::clear_interval)
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "clearInterval");
         return {};
     }
-    i32 timer_id = vm.argument(0).to_i32(global_object);
-    if (vm.exception())
-        return {};
+    i32 timer_id = TRY_OR_DISCARD(vm.argument(0).to_i32(global_object));
     impl->clear_interval(timer_id);
     return JS::js_undefined();
 }
@@ -359,9 +351,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::cancel_animation_frame)
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountOne, "cancelAnimationFrame");
         return {};
     }
-    auto id = vm.argument(0).to_i32(global_object);
-    if (vm.exception())
-        return {};
+    auto id = TRY_OR_DISCARD(vm.argument(0).to_i32(global_object));
     impl->cancel_animation_frame(id);
     return JS::js_undefined();
 }

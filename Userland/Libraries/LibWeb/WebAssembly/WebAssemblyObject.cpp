@@ -397,9 +397,7 @@ Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueTyp
         return Wasm::Value { integer };
     }
     case Wasm::ValueType::I32: {
-        auto _i32 = value.to_i32(global_object);
-        if (vm.exception())
-            return {};
+        auto _i32 = TRY_OR_DISCARD(value.to_i32(global_object));
         return Wasm::Value { static_cast<i32>(_i32) };
     }
     case Wasm::ValueType::F64: {

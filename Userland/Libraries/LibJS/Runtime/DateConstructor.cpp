@@ -310,21 +310,23 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
 // 21.4.3.4 Date.UTC ( year [ , month [ , date [ , hours [ , minutes [ , seconds [ , ms ] ] ] ] ] ] ), https://tc39.es/ecma262/#sec-date.utc
 JS_DEFINE_NATIVE_FUNCTION(DateConstructor::utc)
 {
-    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) { return vm.argument_count() > i ? vm.argument(i).to_i32(global_object) : fallback; };
-    int year = vm.argument(0).to_i32(global_object);
+    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) -> ThrowCompletionOr<i32> {
+        return vm.argument_count() > i ? vm.argument(i).to_i32(global_object) : fallback;
+    };
+    int year = TRY_OR_DISCARD(vm.argument(0).to_i32(global_object));
     if (year >= 0 && year <= 99)
         year += 1900;
 
     struct tm tm = {};
     tm.tm_year = year - 1900;
-    tm.tm_mon = arg_or(1, 0); // 0-based in both tm and JavaScript
-    tm.tm_mday = arg_or(2, 1);
-    tm.tm_hour = arg_or(3, 0);
-    tm.tm_min = arg_or(4, 0);
-    tm.tm_sec = arg_or(5, 0);
+    tm.tm_mon = TRY_OR_DISCARD(arg_or(1, 0)); // 0-based in both tm and JavaScript
+    tm.tm_mday = TRY_OR_DISCARD(arg_or(2, 1));
+    tm.tm_hour = TRY_OR_DISCARD(arg_or(3, 0));
+    tm.tm_min = TRY_OR_DISCARD(arg_or(4, 0));
+    tm.tm_sec = TRY_OR_DISCARD(arg_or(5, 0));
     // timegm() doesn't read tm.tm_wday and tm.tm_yday, no need to fill them in.
 
-    int milliseconds = arg_or(6, 0);
+    int milliseconds = TRY_OR_DISCARD(arg_or(6, 0));
     return Value(1000.0 * timegm(&tm) + milliseconds);
 }
 

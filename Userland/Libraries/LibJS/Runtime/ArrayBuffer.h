@@ -169,7 +169,7 @@ static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value,
         UnderlyingBufferDataType int_value;
         if constexpr (IsSigned<UnderlyingBufferDataType>) {
             if constexpr (sizeof(UnderlyingBufferDataType) == 4)
-                int_value = value.to_i32(global_object);
+                int_value = MUST(value.to_i32(global_object));
             else if constexpr (sizeof(UnderlyingBufferDataType) == 2)
                 int_value = value.to_i16(global_object);
             else

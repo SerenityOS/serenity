@@ -378,9 +378,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
     if (!s.is_empty() && (s[0] == '+' || s[0] == '-'))
         s = s.substring(1, s.length() - 1);
 
-    auto radix = vm.argument(1).to_i32(global_object);
-    if (vm.exception())
-        return {};
+    auto radix = TRY_OR_DISCARD(vm.argument(1).to_i32(global_object));
 
     bool strip_prefix = true;
     if (radix != 0) {
