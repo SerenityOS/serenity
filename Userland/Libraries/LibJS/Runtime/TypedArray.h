@@ -133,7 +133,6 @@ template<typename T>
 inline void integer_indexed_element_set(TypedArrayBase& typed_array, Value property_index, Value value)
 {
     VERIFY(!value.is_empty());
-    auto& vm = typed_array.vm();
     auto& global_object = typed_array.global_object();
 
     // 1. Assert: O is an Integer-Indexed exotic object.
@@ -149,9 +148,10 @@ inline void integer_indexed_element_set(TypedArrayBase& typed_array, Value prope
     }
     // 3. Otherwise, let numValue be ? ToNumber(value).
     else {
-        num_value = value.to_number(global_object);
-        if (vm.exception())
+        auto num_value_or_error = value.to_number(global_object);
+        if (num_value_or_error.is_error())
             return;
+        num_value = num_value_or_error.release_value();
     }
 
     // 4. If ! IsValidIntegerIndex(O, index) is true, then

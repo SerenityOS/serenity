@@ -309,7 +309,7 @@ public:
     ThrowCompletionOr<Value> to_primitive(GlobalObject&, PreferredType preferred_type = PreferredType::Default) const;
     ThrowCompletionOr<Object*> to_object(GlobalObject&) const;
     ThrowCompletionOr<Value> to_numeric(GlobalObject&) const;
-    Value to_number(GlobalObject&) const;
+    ThrowCompletionOr<Value> to_number(GlobalObject&) const;
     ThrowCompletionOr<BigInt*> to_bigint(GlobalObject&) const;
     ThrowCompletionOr<i64> to_bigint_int64(GlobalObject&) const;
     ThrowCompletionOr<u64> to_bigint_uint64(GlobalObject&) const;

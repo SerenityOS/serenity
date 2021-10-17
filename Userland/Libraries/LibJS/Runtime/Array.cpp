@@ -76,9 +76,7 @@ bool Array::set_length(PropertyDescriptor const& property_descriptor)
         if (vm.exception())
             return {};
         // 4. Let numberLen be ? ToNumber(Desc.[[Value]]).
-        auto number_length = property_descriptor.value->to_number(global_object);
-        if (vm.exception())
-            return {};
+        auto number_length = TRY_OR_DISCARD(property_descriptor.value->to_number(global_object));
         // 5. If newLen is not the same value as numberLen, throw a RangeError exception.
         if (new_length != number_length.as_double()) {
             vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "array");

@@ -964,10 +964,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::exit_interpreter)
 {
     if (!vm.argument_count())
         exit(0);
-    auto exit_code = vm.argument(0).to_number(global_object);
-    if (::vm->exception())
-        return {};
-    exit(exit_code.as_double());
+    exit(TRY_OR_DISCARD(vm.argument(0).to_number(global_object)).as_double());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::repl_help)

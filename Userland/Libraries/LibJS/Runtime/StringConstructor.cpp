@@ -122,9 +122,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
     string.ensure_capacity(vm.argument_count()); // This will be an under-estimate if any code point is > 0xffff.
 
     for (size_t i = 0; i < vm.argument_count(); ++i) {
-        auto next_code_point = vm.argument(i).to_number(global_object);
-        if (vm.exception())
-            return {};
+        auto next_code_point = TRY_OR_DISCARD(vm.argument(i).to_number(global_object));
         if (!next_code_point.is_integral_number()) {
             vm.throw_exception<RangeError>(global_object, ErrorType::InvalidCodePoint, next_code_point.to_string_without_side_effects());
             return {};

@@ -110,9 +110,7 @@ static Value set_view_value(GlobalObject& global_object, Value request_index, Va
     if constexpr (IsIntegral<T> && sizeof(T) == 8)
         number_value = TRY_OR_DISCARD(value.to_bigint(global_object));
     else
-        number_value = value.to_number(global_object);
-    if (vm.exception())
-        return {};
+        number_value = TRY_OR_DISCARD(value.to_number(global_object));
 
     auto little_endian = is_little_endian.to_boolean();
 

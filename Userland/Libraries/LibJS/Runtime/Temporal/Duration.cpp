@@ -98,9 +98,7 @@ ThrowCompletionOr<TemporalDuration> to_temporal_duration_record(GlobalObject& gl
             any = true;
 
             // ii. Let val be ? ToNumber(val).
-            value = value.to_number(global_object);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
+            value = TRY(value.to_number(global_object));
 
             // iii. If ! IsIntegralNumber(val) is false, then
             if (!value.is_integral_number()) {
@@ -196,9 +194,7 @@ ThrowCompletionOr<PartialDuration> to_partial_duration(GlobalObject& global_obje
             any = true;
 
             // ii. Set value to ? ToNumber(value).
-            value = value.to_number(global_object);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
+            value = TRY(value.to_number(global_object));
 
             // iii. If ! IsIntegralNumber(value) is false, then
             if (!value.is_integral_number()) {
