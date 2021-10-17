@@ -34,26 +34,6 @@ Image::~Image()
 {
 }
 
-#if ELF_IMAGE_DEBUG
-static const char* object_file_type_to_string(ElfW(Half) type)
-{
-    switch (type) {
-    case ET_NONE:
-        return "None";
-    case ET_REL:
-        return "Relocatable";
-    case ET_EXEC:
-        return "Executable";
-    case ET_DYN:
-        return "Shared object";
-    case ET_CORE:
-        return "Core";
-    default:
-        return "(?)";
-    }
-}
-#endif
-
 StringView Image::section_index_to_string(unsigned index) const
 {
     VERIFY(m_valid);
@@ -83,7 +63,7 @@ void Image::dump() const
         return;
     }
 
-    dbgln("    type:    {}", object_file_type_to_string(header().e_type));
+    dbgln("    type:    {}", ELF::Image::object_file_type_to_string(header().e_type).value_or("(?)"));
     dbgln("    machine: {}", header().e_machine);
     dbgln("    entry:   {:x}", header().e_entry);
     dbgln("    shoff:   {}", header().e_shoff);
@@ -281,6 +261,90 @@ Optional<Image::Section> Image::lookup_section(const StringView& name) const
             return section;
     }
     return {};
+}
+
+Optional<StringView> Image::object_file_type_to_string(ElfW(Half) type)
+{
+    switch (type) {
+    case ET_NONE:
+        return "None"sv;
+    case ET_REL:
+        return "Relocatable"sv;
+    case ET_EXEC:
+        return "Executable"sv;
+    case ET_DYN:
+        return "Shared object"sv;
+    case ET_CORE:
+        return "Core"sv;
+    default:
+        return {};
+    }
+}
+
+Optional<StringView> Image::object_machine_type_to_string(ElfW(Half) type)
+{
+    switch (type) {
+    case ET_NONE:
+        return "None"sv;
+    case EM_M32:
+        return "AT&T WE 32100"sv;
+    case EM_SPARC:
+        return "SPARC"sv;
+    case EM_386:
+        return "Intel 80386"sv;
+    case EM_68K:
+        return "Motorola 68000"sv;
+    case EM_88K:
+        return "Motorola 88000"sv;
+    case EM_486:
+        return "Intel 80486"sv;
+    case EM_860:
+        return "Intel 80860"sv;
+    case EM_MIPS:
+        return "MIPS R3000 Big-Endian only"sv;
+    case EM_X86_64:
+        return "Advanced Micro Devices X86-64"sv;
+    default:
+        return {};
+    }
+}
+
+Optional<StringView> Image::object_abi_type_to_string(Elf_Byte type)
+{
+    switch (type) {
+    case ELFOSABI_SYSV:
+        return "SYSV"sv;
+    case ELFOSABI_HPUX:
+        return "HP-UX"sv;
+    case ELFOSABI_NETBSD:
+        return "NetBSD"sv;
+    case ELFOSABI_LINUX:
+        return "Linux"sv;
+    case ELFOSABI_HURD:
+        return "GNU Hurd"sv;
+    case ELFOSABI_86OPEN:
+        return "86Open"sv;
+    case ELFOSABI_SOLARIS:
+        return "Solaris"sv;
+    case ELFOSABI_MONTEREY:
+        return "AIX"sv;
+    case ELFOSABI_IRIX:
+        return "IRIX"sv;
+    case ELFOSABI_FREEBSD:
+        return "FreeBSD"sv;
+    case ELFOSABI_TRU64:
+        return "Tru64"sv;
+    case ELFOSABI_MODESTO:
+        return "Novell Modesto"sv;
+    case ELFOSABI_OPENBSD:
+        return "OpenBSD"sv;
+    case ELFOSABI_ARM:
+        return "ARM"sv;
+    case ELFOSABI_STANDALONE:
+        return "Standalone"sv;
+    default:
+        return {};
+    }
 }
 
 StringView Image::Symbol::raw_data() const

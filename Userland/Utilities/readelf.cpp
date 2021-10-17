@@ -19,52 +19,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static const char* object_file_type_to_string(ElfW(Half) type)
-{
-    switch (type) {
-    case ET_NONE:
-        return "None";
-    case ET_REL:
-        return "Relocatable";
-    case ET_EXEC:
-        return "Executable";
-    case ET_DYN:
-        return "Shared object";
-    case ET_CORE:
-        return "Core";
-    default:
-        return "(?)";
-    }
-}
-
-static const char* object_machine_type_to_string(ElfW(Half) type)
-{
-    switch (type) {
-    case ET_NONE:
-        return "None";
-    case EM_M32:
-        return "AT&T WE 32100";
-    case EM_SPARC:
-        return "SPARC";
-    case EM_386:
-        return "Intel 80386";
-    case EM_68K:
-        return "Motorola 68000";
-    case EM_88K:
-        return "Motorola 88000";
-    case EM_486:
-        return "Intel 80486";
-    case EM_860:
-        return "Intel 80860";
-    case EM_MIPS:
-        return "MIPS R3000 Big-Endian only";
-    case EM_X86_64:
-        return "Advanced Micro Devices X86-64";
-    default:
-        return "(?)";
-    }
-}
-
 static const char* object_program_header_type_to_string(ElfW(Word) type)
 {
     switch (type) {
@@ -414,8 +368,8 @@ int main(int argc, char** argv)
         }
         outln();
 
-        outln("  Type:                              {} ({})", header.e_type, object_file_type_to_string(header.e_type));
-        outln("  Machine:                           {} ({})", header.e_machine, object_machine_type_to_string(header.e_machine));
+        outln("  Type:                              {} ({})", header.e_type, ELF::Image::object_file_type_to_string(header.e_type).value_or("(?)"));
+        outln("  Machine:                           {} ({})", header.e_machine, ELF::Image::object_machine_type_to_string(header.e_machine).value_or("(?)"));
         outln("  Version:                           {:#x}", header.e_version);
         outln("  Entry point address:               {:#x}", header.e_entry);
         outln("  Start of program headers:          {} (bytes into file)", header.e_phoff);
@@ -463,7 +417,7 @@ int main(int argc, char** argv)
 
     if (display_program_headers) {
         if (!display_all) {
-            outln("ELF file type is {} ({})", header.e_type, object_file_type_to_string(header.e_type));
+            outln("ELF file type is {} ({})", header.e_type, ELF::Image::object_file_type_to_string(header.e_type).value_or("(?)"));
             outln("Entry point {:#x}\n", header.e_entry);
             outln("There are {} program headers, starting at offset {}", header.e_phnum, header.e_phoff);
             outln();
@@ -586,7 +540,7 @@ int main(int argc, char** argv)
 
     if (display_unwind_info) {
         // TODO: Unwind info
-        outln("Decoding of unwind sections for machine type {} is not supported.", object_machine_type_to_string(header.e_machine));
+        outln("Decoding of unwind sections for machine type {} is not supported.", ELF::Image::object_machine_type_to_string(header.e_machine).value_or("?"));
         outln();
     }
 
