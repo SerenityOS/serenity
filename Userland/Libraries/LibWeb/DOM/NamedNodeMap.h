@@ -10,6 +10,7 @@
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <AK/WeakPtr.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Forward.h>
@@ -50,7 +51,7 @@ public:
 private:
     explicit NamedNodeMap(Element const& associated_element);
 
-    Element const& m_associated_element;
+    WeakPtr<Element> m_associated_element;
     NonnullRefPtrVector<Attribute> m_attributes;
 };
 

@@ -19,6 +19,8 @@ NonnullRefPtr<NamedNodeMap> NamedNodeMap::create(Element const& associated_eleme
 NamedNodeMap::NamedNodeMap(Element const& associated_element)
     : m_associated_element(associated_element)
 {
+    // Note: To avoid a reference cycle between Element, NamedNodeMap, and Attribute, do not store a
+    // strong reference to the associated element.
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dfn-supported-property-indices%E2%91%A3
@@ -30,6 +32,10 @@ bool NamedNodeMap::is_supported_property_index(u32 index) const
 // https://dom.spec.whatwg.org/#ref-for-dfn-supported-property-names%E2%91%A0
 Vector<String> NamedNodeMap::supported_property_names() const
 {
+    auto associated_element = m_associated_element.strong_ref();
+    if (!associated_element)
+        return {};
+
     // 1. Let names be the qualified names of the attributes in this NamedNodeMap object’s attribute list, with duplicates omitted, in order.
     Vector<String> names;
     names.ensure_capacity(m_attributes.size());
@@ -41,7 +47,7 @@ Vector<String> NamedNodeMap::supported_property_names() const
 
     // 2. If this NamedNodeMap object’s element is in the HTML namespace and its node document is an HTML document, then for each name in names:
     // FIXME: Handle the second condition, assume it is an HTML document for now.
-    if (m_associated_element.namespace_uri() == Namespace::HTML) {
+    if (associated_element->namespace_uri() == Namespace::HTML) {
         // 1. Let lowercaseName be name, in ASCII lowercase.
         // 2. If lowercaseName is not equal to name, remove name from names.
         names.remove_all_matching([](auto const& name) { return name != name.to_lowercase(); });
@@ -97,13 +103,17 @@ Attribute* NamedNodeMap::get_attribute(StringView qualified_name, size_t* item_i
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-by-name
 Attribute const* NamedNodeMap::get_attribute(StringView qualified_name, size_t* item_index) const
 {
+    auto associated_element = m_associated_element.strong_ref();
+    if (!associated_element)
+        return nullptr;
+
     if (item_index)
         *item_index = 0;
 
     // 1. If element is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
     // FIXME: Handle the second condition, assume it is an HTML document for now.
     Optional<String> qualified_name_lowercase;
-    if (m_associated_element.namespace_uri() == Namespace::HTML) {
+    if (associated_element->namespace_uri() == Namespace::HTML) {
         qualified_name_lowercase = qualified_name.to_lowercase_string();
         qualified_name = qualified_name_lowercase->view();
     }
@@ -122,8 +132,12 @@ Attribute const* NamedNodeMap::get_attribute(StringView qualified_name, size_t* 
 // https://dom.spec.whatwg.org/#concept-element-attributes-set
 ExceptionOr<Attribute const*> NamedNodeMap::set_attribute(Attribute& attribute)
 {
+    auto associated_element = m_associated_element.strong_ref();
+    if (!associated_element)
+        return nullptr;
+
     // 1. If attr’s element is neither null nor element, throw an "InUseAttributeError" DOMException.
-    if ((attribute.owner_element() != nullptr) && (attribute.owner_element() != &m_associated_element))
+    if ((attribute.owner_element() != nullptr) && (attribute.owner_element() != associated_element))
         return InUseAttributeError::create("Attribute must not already be in use"sv);
 
     // 2. Let oldAttr be the result of getting an attribute given attr’s namespace, attr’s local name, and element.
@@ -177,7 +191,7 @@ void NamedNodeMap::append_attribute(Attribute& attribute)
     m_attributes.append(attribute);
 
     // 3. Set attribute’s element to element.
-    attribute.set_owner_element(&m_associated_element);
+    attribute.set_owner_element(m_associated_element);
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-remove-by-name
