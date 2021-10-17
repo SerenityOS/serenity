@@ -50,7 +50,7 @@ JS::Value NumericCell::js_value(Cell& cell, const CellTypeMetadata&) const
             cell.set_exception(exc);
         }
     } };
-    return cell.js_data().to_number(cell.sheet().global_object());
+    return TRY_OR_DISCARD(cell.js_data().to_number(cell.sheet().global_object()));
 }
 
 }

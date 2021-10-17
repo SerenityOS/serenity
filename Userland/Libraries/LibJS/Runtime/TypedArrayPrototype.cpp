@@ -248,13 +248,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
     auto length = typed_array->array_length();
 
     Value value;
-    if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt) {
+    if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
         value = TRY_OR_DISCARD(vm.argument(0).to_bigint(global_object));
-    } else {
-        value = vm.argument(0).to_number(global_object);
-        if (vm.exception())
-            return {};
-    }
+    else
+        value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
 
     auto relative_start = vm.argument(1).to_integer_or_infinity(global_object);
     if (vm.exception())
@@ -827,9 +824,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
             if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
                 value = TRY_OR_DISCARD(value.to_bigint(global_object));
             else
-                value = value.to_number(global_object);
-            if (vm.exception())
-                return {};
+                value = TRY_OR_DISCARD(value.to_number(global_object));
 
             if (target_buffer->is_detached()) {
                 vm.throw_exception<JS::TypeError>(global_object, ErrorType::DetachedArrayBuffer);
@@ -978,9 +973,10 @@ static void typed_array_merge_sort(GlobalObject& global_object, FunctionObject* 
                 return;
             auto result = result_or_error.release_value();
 
-            auto value = result.to_number(global_object);
-            if (vm.exception())
+            auto value_or_error = result.to_number(global_object);
+            if (value_or_error.is_error())
                 return;
+            auto value = value_or_error.release_value();
 
             if (buffer.is_detached()) {
                 vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);

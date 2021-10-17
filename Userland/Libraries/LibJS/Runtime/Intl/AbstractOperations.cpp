@@ -651,9 +651,7 @@ ThrowCompletionOr<Optional<int>> default_number_option(GlobalObject& global_obje
         return fallback;
 
     // 2. Let value be ? ToNumber(value).
-    value = value.to_number(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    value = TRY(value.to_number(global_object));
 
     // 3. If value is NaN or less than minimum or greater than maximum, throw a RangeError exception.
     if (value.is_nan() || (value.as_double() < minimum) || (value.as_double() > maximum))

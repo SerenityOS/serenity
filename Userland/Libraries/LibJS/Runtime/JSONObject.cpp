@@ -82,13 +82,10 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
 
     if (space.is_object()) {
         auto& space_object = space.as_object();
-        if (is<NumberObject>(space_object)) {
-            space = space.to_number(global_object);
-            if (vm.exception())
-                return {};
-        } else if (is<StringObject>(space_object)) {
+        if (is<NumberObject>(space_object))
+            space = TRY_OR_DISCARD(space.to_number(global_object));
+        else if (is<StringObject>(space_object))
             space = TRY_OR_DISCARD(space.to_primitive_string(global_object));
-        }
     }
 
     if (space.is_number()) {
@@ -148,17 +145,14 @@ String JSONObject::serialize_json_property(GlobalObject& global_object, Stringif
 
     if (value.is_object()) {
         auto& value_object = value.as_object();
-        if (is<NumberObject>(value_object)) {
-            value = value.to_number(global_object);
-            if (vm.exception())
-                return {};
-        } else if (is<StringObject>(value_object)) {
+        if (is<NumberObject>(value_object))
+            value = TRY_OR_DISCARD(value.to_number(global_object));
+        else if (is<StringObject>(value_object))
             value = TRY_OR_DISCARD(value.to_primitive_string(global_object));
-        } else if (is<BooleanObject>(value_object)) {
+        else if (is<BooleanObject>(value_object))
             value = static_cast<BooleanObject&>(value_object).value_of();
-        } else if (is<BigIntObject>(value_object)) {
+        else if (is<BigIntObject>(value_object))
             value = static_cast<BigIntObject&>(value_object).value_of();
-        }
     }
 
     if (value.is_null())
