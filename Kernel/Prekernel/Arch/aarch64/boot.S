@@ -18,6 +18,7 @@ start:
   // Let stack start before .text for now.
   // 512 kiB (0x80000) of stack are probably not sufficient, especially once we give the other cores some stack too,
   // but for now it's ok.
+  msr SPSel, #0   //Use the same SP as we descend into EL1
   ldr x14, =start
   mov sp, x14
 
