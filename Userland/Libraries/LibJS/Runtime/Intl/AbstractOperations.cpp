@@ -212,9 +212,8 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_
     }
 
     // 5. Let len be ? ToLength(? Get(O, "length")).
-    auto length = TRY(object->get(vm.names.length)).to_length(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto length_value = TRY(object->get(vm.names.length));
+    auto length = TRY(length_value.to_length(global_object));
 
     // 6. Let k be 0.
     // 7. Repeat, while k < len,
