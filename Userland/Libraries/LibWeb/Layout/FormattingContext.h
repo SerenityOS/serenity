@@ -12,6 +12,8 @@ namespace Web::Layout {
 
 class FormattingContext {
 public:
+    virtual ~FormattingContext();
+
     enum class Type {
         Block,
         Inline,
@@ -38,11 +40,12 @@ public:
     static float compute_width_for_replaced_element(const ReplacedBox&);
     static float compute_height_for_replaced_element(const ReplacedBox&);
 
+    OwnPtr<FormattingContext> create_independent_formatting_context_if_needed(Box& child_box);
+
 protected:
     FormattingContext(Type, Box&, FormattingContext* parent = nullptr);
-    virtual ~FormattingContext();
 
-    void layout_inside(Box&, LayoutMode);
+    OwnPtr<FormattingContext> layout_inside(Box&, LayoutMode);
 
     struct ShrinkToFitResult {
         float preferred_width { 0 };

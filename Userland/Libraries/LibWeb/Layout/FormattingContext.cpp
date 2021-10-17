@@ -75,47 +75,48 @@ bool FormattingContext::creates_block_formatting_context(const Box& box)
     return false;
 }
 
-void FormattingContext::layout_inside(Box& child_box, LayoutMode layout_mode)
+OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_context_if_needed(Box& child_box)
 {
     if (!child_box.can_have_children())
-        return;
-
-    if (is<SVGSVGBox>(child_box)) {
-        SVGFormattingContext context(child_box, this);
-        context.run(child_box, layout_mode);
-        return;
-    }
+        return {};
 
     auto child_display = child_box.computed_values().display();
 
-    if (child_display.is_flex_inside()) {
-        FlexFormattingContext context(child_box, this);
-        context.run(child_box, layout_mode);
-        return;
-    }
+    if (is<SVGSVGBox>(child_box))
+        return make<SVGFormattingContext>(child_box, this);
 
-    if (creates_block_formatting_context(child_box)) {
-        BlockFormattingContext context(verify_cast<BlockContainer>(child_box), this);
-        context.run(child_box, layout_mode);
-        return;
-    }
+    if (child_display.is_flex_inside())
+        return make<FlexFormattingContext>(child_box, this);
 
-    if (child_display.is_table_inside()) {
-        TableFormattingContext context(verify_cast<TableBox>(child_box), this);
-        context.run(child_box, layout_mode);
-        return;
-    }
+    if (creates_block_formatting_context(child_box))
+        return make<BlockFormattingContext>(verify_cast<BlockContainer>(child_box), this);
+
+    if (child_display.is_table_inside())
+        return make<TableFormattingContext>(verify_cast<TableBox>(child_box), this);
 
     VERIFY(is_block_formatting_context());
+    if (child_box.children_are_inline())
+        return make<InlineFormattingContext>(verify_cast<BlockContainer>(child_box), this);
 
-    if (child_box.children_are_inline()) {
-        InlineFormattingContext context(verify_cast<BlockContainer>(child_box), this);
-        context.run(child_box, layout_mode);
-        return;
-    }
-
+    // The child box is a block container that doesn't create its own BFC.
+    // It will be formatted by this BFC.
     VERIFY(child_display.is_flow_inside());
-    run(child_box, layout_mode);
+    VERIFY(child_box.is_block_container());
+    return {};
+}
+
+OwnPtr<FormattingContext> FormattingContext::layout_inside(Box& child_box, LayoutMode layout_mode)
+{
+    if (!child_box.can_have_children())
+        return {};
+
+    auto independent_formatting_context = create_independent_formatting_context_if_needed(child_box);
+    if (independent_formatting_context)
+        independent_formatting_context->run(child_box, layout_mode);
+    else
+        run(child_box, layout_mode);
+
+    return independent_formatting_context;
 }
 
 static float greatest_child_width(Box const& box)
