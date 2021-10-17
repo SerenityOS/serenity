@@ -12,6 +12,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
+#include <Kernel/Locking/Mutex.h>
 #include <Kernel/Memory/Region.h>
 
 namespace Kernel {
@@ -25,6 +26,8 @@ public:
     static NetworkingManagement& the();
     static bool is_initialized();
     bool initialize();
+
+    static KResultOr<NonnullOwnPtr<KString>> generate_interface_name_from_pci_address(PCI::DeviceIdentifier const&);
 
     NetworkingManagement();
 

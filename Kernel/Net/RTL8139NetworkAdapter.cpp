@@ -8,6 +8,7 @@
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/Sections.h>
 
@@ -112,13 +113,17 @@ namespace Kernel {
 #define RX_BUFFER_SIZE 32768
 #define TX_BUFFER_SIZE PACKET_SIZE_MAX
 
-UNMAP_AFTER_INIT RefPtr<RTL8139NetworkAdapter> RTL8139NetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<KString> interface_name)
+UNMAP_AFTER_INIT RefPtr<RTL8139NetworkAdapter> RTL8139NetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     constexpr PCI::HardwareID rtl8139_id = { 0x10EC, 0x8139 };
     if (pci_device_identifier.hardware_id() != rtl8139_id)
         return {};
     u8 irq = pci_device_identifier.interrupt_line().value();
-    return adopt_ref_if_nonnull(new (nothrow) RTL8139NetworkAdapter(pci_device_identifier.address(), irq, move(interface_name)));
+    // FIXME: Better propagate errors here
+    auto interface_name_or_error = NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier);
+    if (interface_name_or_error.is_error())
+        return {};
+    return adopt_ref_if_nonnull(new (nothrow) RTL8139NetworkAdapter(pci_device_identifier.address(), irq, interface_name_or_error.release_value()));
 }
 
 UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<KString> interface_name)

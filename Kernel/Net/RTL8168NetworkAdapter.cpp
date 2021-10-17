@@ -8,6 +8,7 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/RTL8168NetworkAdapter.h>
 #include <Kernel/Sections.h>
 
@@ -181,14 +182,18 @@ namespace Kernel {
 #define TX_BUFFER_SIZE 0x1FF8
 #define RX_BUFFER_SIZE 0x1FF8 // FIXME: this should be increased (0x3FFF)
 
-UNMAP_AFTER_INIT RefPtr<RTL8168NetworkAdapter> RTL8168NetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<KString> interface_name)
+UNMAP_AFTER_INIT RefPtr<RTL8168NetworkAdapter> RTL8168NetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     if (pci_device_identifier.hardware_id().vendor_id != PCI::VendorID::Realtek)
         return {};
     if (pci_device_identifier.hardware_id().device_id != 0x8168)
         return {};
     u8 irq = pci_device_identifier.interrupt_line().value();
-    return adopt_ref_if_nonnull(new (nothrow) RTL8168NetworkAdapter(pci_device_identifier.address(), irq, move(interface_name)));
+    // FIXME: Better propagate errors here
+    auto interface_name_or_error = NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier);
+    if (interface_name_or_error.is_error())
+        return {};
+    return adopt_ref_if_nonnull(new (nothrow) RTL8168NetworkAdapter(pci_device_identifier.address(), irq, interface_name_or_error.release_value()));
 }
 
 bool RTL8168NetworkAdapter::determine_supported_version() const
