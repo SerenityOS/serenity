@@ -1,0 +1,23 @@
+diff -ur a/src/main-sdl2.c b/src/main-sdl2.c
+--- a/src/main-sdl2.c	2021-08-01 01:29:20.000000000 +0200
++++ b/src/main-sdl2.c	2021-10-31 20:38:37.012720467 +0100
+@@ -4863,7 +4863,7 @@
+ 
+ 	if (window->config == NULL) {
+ 		window->renderer = SDL_CreateRenderer(window->window,
+-				-1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
++				-1, SDL_RENDERER_SOFTWARE | SDL_RENDERER_TARGETTEXTURE);
+ 	} else {
+ 		/* this is necessary for subwindows to have their own textures */
+ 		window->config->renderer_flags |= SDL_RENDERER_TARGETTEXTURE;
+@@ -5875,9 +5875,7 @@
+ 	WINDOW_INIT_OK;
+ 	const char *type = parser_getsym(parser, "type");
+ 
+-	if (streq(type, "hardware")) {
+-		window->config->renderer_flags = SDL_RENDERER_ACCELERATED;
+-	} else if (streq(type, "software")) {
++	if (streq(type, "software")) {
+ 		window->config->renderer_flags = SDL_RENDERER_SOFTWARE;
+ 	} else {
+ 		return PARSE_ERROR_INVALID_VALUE;
