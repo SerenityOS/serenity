@@ -639,9 +639,9 @@ ThrowCompletionOr<u16> Value::to_u16(GlobalObject& global_object) const
 }
 
 // 7.1.10 ToInt8 ( argument ), https://tc39.es/ecma262/#sec-toint8
-i8 Value::to_i8(GlobalObject& global_object) const
+ThrowCompletionOr<i8> Value::to_i8(GlobalObject& global_object) const
 {
-    double value = TRY_OR_DISCARD(to_number(global_object)).as_double();
+    double value = TRY(to_number(global_object)).as_double();
     if (!isfinite(value) || value == 0)
         return 0;
     auto abs = fabs(value);
