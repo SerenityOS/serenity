@@ -17,5 +17,14 @@ launcher_category=Games
 launcher_command=/usr/local/bin/scummvm
 icon_file=icons/scummvm.ico
 
-export FREETYPE2_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/freetype2"
-export SDL_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2"
+function pre_configure() {
+    export CPPFLAGS="-fvisibility=hidden"
+    export FREETYPE2_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/freetype2"
+    export SDL_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2"
+}
+
+function post_configure() {
+    unset CPPFLAGS
+    unset FREETYPE2_CFLAGS
+    unset SDL_CFLAGS
+}
