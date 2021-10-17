@@ -671,9 +671,9 @@ ThrowCompletionOr<u8> Value::to_u8(GlobalObject& global_object) const
 }
 
 // 7.1.12 ToUint8Clamp ( argument ), https://tc39.es/ecma262/#sec-touint8clamp
-u8 Value::to_u8_clamp(GlobalObject& global_object) const
+ThrowCompletionOr<u8> Value::to_u8_clamp(GlobalObject& global_object) const
 {
-    auto number = TRY_OR_DISCARD(to_number(global_object));
+    auto number = TRY(to_number(global_object));
     if (number.is_nan())
         return 0;
     double value = number.as_double();
