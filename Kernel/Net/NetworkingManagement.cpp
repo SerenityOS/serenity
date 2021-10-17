@@ -74,26 +74,27 @@ RefPtr<NetworkAdapter> NetworkingManagement::lookup_by_name(const StringView& na
     return found_adapter;
 }
 
-UNMAP_AFTER_INIT RefPtr<NetworkAdapter> NetworkingManagement::determine_network_device(PCI::DeviceIdentifier const& device_identifier) const
+KResultOr<NonnullOwnPtr<KString>> NetworkingManagement::generate_interface_name_from_pci_address(PCI::DeviceIdentifier const& device_identifier)
 {
+    VERIFY(device_identifier.class_code().value() == 0x2);
     // Note: This stands for e - "Ethernet", p - "Port" as for PCI bus, "s" for slot as for PCI slot
     auto name = String::formatted("ep{}s{}", device_identifier.address().bus(), device_identifier.address().device());
     VERIFY(!NetworkingManagement::the().lookup_by_name(name));
-
     // TODO: We need some way to to format data into a `KString`.
-    auto interface_name_or_error = KString::try_create(name.view());
-    if (interface_name_or_error.is_error())
-        return {};
-    auto interface_name = interface_name_or_error.release_value();
-    if (auto candidate = E1000NetworkAdapter::try_to_initialize(device_identifier, move(interface_name)); !candidate.is_null())
+    return KString::try_create(name.view());
+}
+
+UNMAP_AFTER_INIT RefPtr<NetworkAdapter> NetworkingManagement::determine_network_device(PCI::DeviceIdentifier const& device_identifier) const
+{
+    if (auto candidate = E1000NetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
         return candidate;
-    if (auto candidate = E1000ENetworkAdapter::try_to_initialize(device_identifier, move(interface_name)); !candidate.is_null())
+    if (auto candidate = E1000ENetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
         return candidate;
-    if (auto candidate = RTL8139NetworkAdapter::try_to_initialize(device_identifier, move(interface_name)); !candidate.is_null())
+    if (auto candidate = RTL8139NetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
         return candidate;
-    if (auto candidate = RTL8168NetworkAdapter::try_to_initialize(device_identifier, move(interface_name)); !candidate.is_null())
+    if (auto candidate = RTL8168NetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
         return candidate;
-    if (auto candidate = NE2000NetworkAdapter::try_to_initialize(device_identifier, move(interface_name)); !candidate.is_null())
+    if (auto candidate = NE2000NetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
         return candidate;
     return {};
 }

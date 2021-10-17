@@ -8,6 +8,7 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Net/E1000ENetworkAdapter.h>
+#include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
@@ -180,14 +181,18 @@ static bool is_valid_device_id(u16 device_id)
     }
 }
 
-UNMAP_AFTER_INIT RefPtr<E1000ENetworkAdapter> E1000ENetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<KString> interface_name)
+UNMAP_AFTER_INIT RefPtr<E1000ENetworkAdapter> E1000ENetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     if (pci_device_identifier.hardware_id().vendor_id != PCI::VendorID::Intel)
         return {};
     if (!is_valid_device_id(pci_device_identifier.hardware_id().device_id))
         return {};
     u8 irq = pci_device_identifier.interrupt_line().value();
-    auto adapter = adopt_ref_if_nonnull(new (nothrow) E1000ENetworkAdapter(pci_device_identifier.address(), irq, move(interface_name)));
+    // FIXME: Better propagate errors here
+    auto interface_name_or_error = NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier);
+    if (interface_name_or_error.is_error())
+        return {};
+    auto adapter = adopt_ref_if_nonnull(new (nothrow) E1000ENetworkAdapter(pci_device_identifier.address(), irq, interface_name_or_error.release_value()));
     if (!adapter)
         return {};
     if (adapter->initialize())
