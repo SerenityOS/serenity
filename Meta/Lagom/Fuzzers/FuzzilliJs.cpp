@@ -143,9 +143,7 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::fuzzilli)
 
     auto operation = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     if (operation == "FUZZILLI_CRASH") {
-        auto type = vm.argument(1).to_i32(global_object);
-        if (vm.exception())
-            return {};
+        auto type = TRY_OR_DISCARD(vm.argument(1).to_i32(global_object));
         switch (type) {
         case 0:
             *((int*)0x41414141) = 0x1337;

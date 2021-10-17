@@ -315,12 +315,7 @@ public:
     ThrowCompletionOr<u64> to_bigint_uint64(GlobalObject&) const;
     ThrowCompletionOr<double> to_double(GlobalObject&) const;
     ThrowCompletionOr<StringOrSymbol> to_property_key(GlobalObject&) const;
-    i32 to_i32(GlobalObject& global_object) const
-    {
-        if (m_type == Type::Int32)
-            return m_value.as_i32;
-        return to_i32_slow_case(global_object);
-    }
+    ThrowCompletionOr<i32> to_i32(GlobalObject& global_object) const;
     u32 to_u32(GlobalObject&) const;
     i16 to_i16(GlobalObject&) const;
     u16 to_u16(GlobalObject&) const;
@@ -356,7 +351,7 @@ private:
 
     [[nodiscard]] ThrowCompletionOr<Value> invoke_internal(GlobalObject& global_object, PropertyName const&, Optional<MarkedValueList> arguments);
 
-    i32 to_i32_slow_case(GlobalObject&) const;
+    ThrowCompletionOr<i32> to_i32_slow_case(GlobalObject&) const;
 
     union {
         bool as_bool;
