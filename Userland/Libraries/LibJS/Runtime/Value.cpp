@@ -707,24 +707,20 @@ ThrowCompletionOr<size_t> Value::to_length(GlobalObject& global_object) const
 }
 
 // 7.1.22 ToIndex ( argument ), https://tc39.es/ecma262/#sec-toindex
-size_t Value::to_index(GlobalObject& global_object) const
+ThrowCompletionOr<size_t> Value::to_index(GlobalObject& global_object) const
 {
     auto& vm = global_object.vm();
 
     if (is_undefined())
         return 0;
     auto integer_index = to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
-    if (integer_index < 0) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidIndex);
-        return {};
-    }
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+    if (integer_index < 0)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidIndex);
     auto index = MUST(Value(integer_index).to_length(global_object));
-    if (integer_index != index) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidIndex);
-        return {};
-    }
+    if (integer_index != index)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidIndex);
     return index;
 }
 

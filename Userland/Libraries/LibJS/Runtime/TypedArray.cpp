@@ -62,9 +62,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(GlobalOb
     auto element_size = typed_array.element_size();
 
     // 3. Let offset be ? ToIndex(byteOffset).
-    auto offset = byte_offset.to_index(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto offset = TRY(byte_offset.to_index(global_object));
 
     // 4. If offset modulo elementSize ≠ 0, throw a RangeError exception.
     if (offset % element_size != 0)
@@ -75,9 +73,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(GlobalOb
     // 5. If length is not undefined, then
     if (!length.is_undefined()) {
         // a. Let newLength be ? ToIndex(length).
-        new_length = length.to_index(global_object);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        new_length = TRY(length.to_index(global_object));
     }
 
     // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
@@ -482,15 +478,17 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
             return typed_array;                                                                                                        \
         }                                                                                                                              \
                                                                                                                                        \
-        auto array_length = first_argument.to_index(global_object());                                                                  \
-        if (vm.exception()) {                                                                                                          \
-            if (vm.exception()->value().is_object() && is<RangeError>(vm.exception()->value().as_object())) {                          \
+        auto array_length_or_error = first_argument.to_index(global_object());                                                         \
+        if (array_length_or_error.is_error()) {                                                                                        \
+            auto error = array_length_or_error.release_error();                                                                        \
+            if (error.value().is_object() && is<RangeError>(error.value().as_object())) {                                              \
                 /* Re-throw more specific RangeError */                                                                                \
                 vm.clear_exception();                                                                                                  \
                 vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                              \
             }                                                                                                                          \
             return {};                                                                                                                 \
         }                                                                                                                              \
+        auto array_length = array_length_or_error.release_value();                                                                     \
         if (array_length > NumericLimits<i32>::max() / sizeof(Type)) {                                                                 \
             vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                                  \
             return {};                                                                                                                 \

@@ -58,9 +58,7 @@ static ThrowCompletionOr<size_t> validate_atomic_access(GlobalObject& global_obj
     auto length = typed_array.array_length();
 
     // 2. Let accessIndex be ? ToIndex(requestIndex).
-    auto access_index = request_index.to_index(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto access_index = TRY(request_index.to_index(global_object));
 
     // 3. Assert: accessIndex ≥ 0.
 

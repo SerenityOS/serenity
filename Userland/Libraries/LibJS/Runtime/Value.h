@@ -323,7 +323,7 @@ public:
     ThrowCompletionOr<u8> to_u8(GlobalObject&) const;
     ThrowCompletionOr<u8> to_u8_clamp(GlobalObject&) const;
     ThrowCompletionOr<size_t> to_length(GlobalObject&) const;
-    size_t to_index(GlobalObject&) const;
+    ThrowCompletionOr<size_t> to_index(GlobalObject&) const;
     double to_integer_or_infinity(GlobalObject&) const;
     bool to_boolean() const;
 
