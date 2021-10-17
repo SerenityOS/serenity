@@ -409,10 +409,8 @@ void WindowManager::greet_window_manager(WMClientConnection& conn)
 
     for_each_window_stack([&](auto& window_stack) {
         window_stack.for_each_window([&](Window& other_window) {
-            //if (conn.window_id() != other_window.window_id()) {
             tell_wm_about_window(conn, other_window);
             tell_wm_about_window_icon(conn, other_window);
-            //}
             return IterationDecision::Continue;
         });
         return IterationDecision::Continue;
