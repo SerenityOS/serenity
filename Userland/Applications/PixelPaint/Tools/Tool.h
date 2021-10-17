@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Variant.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/ValueSlider.h>
@@ -60,7 +61,7 @@ public:
     virtual void on_keyup(GUI::KeyEvent&) { }
     virtual void on_tool_activation() { }
     virtual GUI::Widget* get_properties_widget() { return nullptr; }
-    virtual Gfx::StandardCursor cursor() { return Gfx::StandardCursor::None; }
+    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() { return Gfx::StandardCursor::None; }
 
     void clear() { m_editor = nullptr; }
     void setup(ImageEditor&);

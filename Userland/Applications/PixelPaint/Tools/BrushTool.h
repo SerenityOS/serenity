@@ -20,7 +20,7 @@ public:
     virtual void on_mousemove(Layer*, MouseEvent&) override;
     virtual void on_mouseup(Layer*, MouseEvent&) override;
     virtual GUI::Widget* get_properties_widget() override;
-    virtual Gfx::StandardCursor cursor() override { return Gfx::StandardCursor::Crosshair; }
+    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return Gfx::StandardCursor::Crosshair; }
 
     void set_size(int size) { m_size = size; }
     int size() const { return m_size; }

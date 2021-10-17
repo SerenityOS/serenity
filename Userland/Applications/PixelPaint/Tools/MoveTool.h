@@ -19,7 +19,7 @@ public:
     virtual void on_mousemove(Layer*, MouseEvent&) override;
     virtual void on_mouseup(Layer*, MouseEvent&) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
-    virtual Gfx::StandardCursor cursor() override { return Gfx::StandardCursor::Move; }
+    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return Gfx::StandardCursor::Move; }
 
 private:
     RefPtr<Layer> m_layer_being_moved;
