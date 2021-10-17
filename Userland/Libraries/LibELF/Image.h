@@ -227,6 +227,10 @@ public:
     FlatPtr base_address() const { return (FlatPtr)m_buffer; }
     size_t size() const { return m_size; }
 
+    static Optional<StringView> object_file_type_to_string(ElfW(Half) type);
+    static Optional<StringView> object_machine_type_to_string(ElfW(Half) type);
+    static Optional<StringView> object_abi_type_to_string(Elf_Byte type);
+
     bool has_symbols() const { return symbol_count(); }
 #ifndef KERNEL
     Optional<Symbol> find_demangled_function(const StringView& name) const;
