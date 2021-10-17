@@ -318,7 +318,7 @@ public:
     ThrowCompletionOr<i32> to_i32(GlobalObject& global_object) const;
     ThrowCompletionOr<u32> to_u32(GlobalObject&) const;
     ThrowCompletionOr<i16> to_i16(GlobalObject&) const;
-    u16 to_u16(GlobalObject&) const;
+    ThrowCompletionOr<u16> to_u16(GlobalObject&) const;
     i8 to_i8(GlobalObject&) const;
     u8 to_u8(GlobalObject&) const;
     u8 to_u8_clamp(GlobalObject&) const;
