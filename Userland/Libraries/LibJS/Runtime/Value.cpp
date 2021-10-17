@@ -592,9 +592,9 @@ ThrowCompletionOr<i32> Value::to_i32(GlobalObject& global_object) const
 }
 
 // 7.1.7 ToUint32 ( argument ), https://tc39.es/ecma262/#sec-touint32
-u32 Value::to_u32(GlobalObject& global_object) const
+ThrowCompletionOr<u32> Value::to_u32(GlobalObject& global_object) const
 {
-    double value = TRY_OR_DISCARD(to_number(global_object)).as_double();
+    double value = TRY(to_number(global_object)).as_double();
     if (!isfinite(value) || value == 0)
         return 0;
     auto int_val = floor(fabs(value));
@@ -925,7 +925,7 @@ Value left_shift(GlobalObject& global_object, Value lhs, Value rhs)
             return lhs_numeric;
         // Ok, so this performs toNumber() again but that "can't" throw
         auto lhs_i32 = MUST(lhs_numeric.to_i32(global_object));
-        auto rhs_u32 = rhs_numeric.to_u32(global_object) % 32;
+        auto rhs_u32 = MUST(rhs_numeric.to_u32(global_object)) % 32;
         return Value(lhs_i32 << rhs_u32);
     }
     if (both_bigint(lhs_numeric, rhs_numeric)) {
@@ -951,7 +951,7 @@ Value right_shift(GlobalObject& global_object, Value lhs, Value rhs)
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
         auto lhs_i32 = MUST(lhs_numeric.to_i32(global_object));
-        auto rhs_u32 = rhs_numeric.to_u32(global_object) % 32;
+        auto rhs_u32 = MUST(rhs_numeric.to_u32(global_object)) % 32;
         return Value(lhs_i32 >> rhs_u32);
     }
     if (both_bigint(lhs_numeric, rhs_numeric)) {
@@ -974,8 +974,8 @@ Value unsigned_right_shift(GlobalObject& global_object, Value lhs, Value rhs)
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
         // Ok, so this performs toNumber() again but that "can't" throw
-        auto lhs_u32 = lhs_numeric.to_u32(global_object);
-        auto rhs_u32 = rhs_numeric.to_u32(global_object) % 32;
+        auto lhs_u32 = MUST(lhs_numeric.to_u32(global_object));
+        auto rhs_u32 = MUST(rhs_numeric.to_u32(global_object)) % 32;
         return Value(lhs_u32 >> rhs_u32);
     }
     global_object.vm().throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperator, "unsigned right-shift");

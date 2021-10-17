@@ -68,7 +68,7 @@ Value ArrayConstructor::construct(FunctionObject& new_target)
             MUST(array->create_data_property_or_throw(0, length));
             int_length = 1;
         } else {
-            int_length = length.to_u32(global_object());
+            int_length = MUST(length.to_u32(global_object()));
             if (int_length != length.as_double()) {
                 vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "array");
                 return {};

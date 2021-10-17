@@ -56,17 +56,12 @@ JS::Value WebAssemblyTableConstructor::construct(FunctionObject&)
     auto initial_value = TRY_OR_DISCARD(descriptor->get("initial"));
     auto maximum_value = TRY_OR_DISCARD(descriptor->get("maximum"));
 
-    auto initial = initial_value.to_u32(global_object);
-    if (vm.exception())
-        return {};
+    auto initial = TRY_OR_DISCARD(initial_value.to_u32(global_object));
 
     Optional<u32> maximum;
 
-    if (!maximum_value.is_undefined()) {
-        maximum = maximum_value.to_u32(global_object);
-        if (vm.exception())
-            return {};
-    }
+    if (!maximum_value.is_undefined())
+        maximum = TRY_OR_DISCARD(maximum_value.to_u32(global_object));
 
     if (maximum.has_value() && maximum.value() < initial) {
         vm.throw_exception<JS::RangeError>(global_object, "maximum should be larger than or equal to initial");
