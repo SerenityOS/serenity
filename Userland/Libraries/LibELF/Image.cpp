@@ -303,7 +303,7 @@ Optional<StringView> Image::object_machine_type_to_string(ElfW(Half) type)
     case EM_MIPS:
         return "MIPS R3000 Big-Endian only"sv;
     case EM_X86_64:
-        return "Advanced Micro Devices X86-64"sv;
+        return "x86_64"sv;
     default:
         return {};
     }
