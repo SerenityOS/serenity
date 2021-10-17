@@ -182,7 +182,7 @@ static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value,
             else if constexpr (!IsSame<T, ClampedU8>)
                 int_value = MUST(value.to_u8(global_object));
             else
-                int_value = value.to_u8_clamp(global_object);
+                int_value = MUST(value.to_u8_clamp(global_object));
         }
         ReadonlyBytes { &int_value, sizeof(UnderlyingBufferDataType) }.copy_to(raw_bytes);
         if constexpr (sizeof(UnderlyingBufferDataType) % 2 == 0)

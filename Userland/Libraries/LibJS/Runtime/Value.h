@@ -321,7 +321,7 @@ public:
     ThrowCompletionOr<u16> to_u16(GlobalObject&) const;
     ThrowCompletionOr<i8> to_i8(GlobalObject&) const;
     ThrowCompletionOr<u8> to_u8(GlobalObject&) const;
-    u8 to_u8_clamp(GlobalObject&) const;
+    ThrowCompletionOr<u8> to_u8_clamp(GlobalObject&) const;
     size_t to_length(GlobalObject&) const;
     size_t to_index(GlobalObject&) const;
     double to_integer_or_infinity(GlobalObject&) const;
