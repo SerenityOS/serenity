@@ -6,6 +6,7 @@
 
 #include <LibWeb/DOM/Attribute.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Element.h>
 
 namespace Web::DOM {
 
@@ -20,6 +21,16 @@ Attribute::Attribute(Document& document, FlyString local_name, String value, Ele
     , m_value(move(value))
     , m_owner_element(owner_element)
 {
+}
+
+Element const* Attribute::owner_element() const
+{
+    return m_owner_element;
+}
+
+void Attribute::set_owner_element(Element const* owner_element)
+{
+    m_owner_element = owner_element;
 }
 
 }

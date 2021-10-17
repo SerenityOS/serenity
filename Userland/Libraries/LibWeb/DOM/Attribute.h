@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <AK/WeakPtr.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/QualifiedName.h>
 
@@ -31,8 +32,8 @@ public:
     String const& value() const { return m_value; }
     void set_value(String value) { m_value = move(value); }
 
-    Element const* owner_element() const { return m_owner_element; }
-    void set_owner_element(Element const* owner_element) { m_owner_element = owner_element; }
+    Element const* owner_element() const;
+    void set_owner_element(Element const* owner_element);
 
     // Always returns true: https://dom.spec.whatwg.org/#dom-attr-specified
     constexpr bool specified() const { return true; }
@@ -42,7 +43,7 @@ private:
 
     QualifiedName m_qualified_name;
     String m_value;
-    Element const* m_owner_element { nullptr };
+    WeakPtr<Element> m_owner_element;
 };
 
 }
