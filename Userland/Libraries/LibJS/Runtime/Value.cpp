@@ -624,9 +624,9 @@ ThrowCompletionOr<i16> Value::to_i16(GlobalObject& global_object) const
 }
 
 // 7.1.9 ToUint16 ( argument ), https://tc39.es/ecma262/#sec-touint16
-u16 Value::to_u16(GlobalObject& global_object) const
+ThrowCompletionOr<u16> Value::to_u16(GlobalObject& global_object) const
 {
-    double value = TRY_OR_DISCARD(to_number(global_object)).as_double();
+    double value = TRY(to_number(global_object)).as_double();
     if (!isfinite(value) || value == 0)
         return 0;
     auto int_val = floor(fabs(value));
