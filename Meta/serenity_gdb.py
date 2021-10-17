@@ -12,11 +12,13 @@ def handler_class_for_type(type, re=re.compile('^([^<]+)(<.*>)?$')):
 
     match = re.match(typename)
     if not match:
-        return None
+        return UnhandledType
 
     klass = match.group(1)
 
-    if klass == 'AK::Atomic':
+    if klass == 'AK::Array':
+        return AKArray
+    elif klass == 'AK::Atomic':
         return AKAtomic
     elif klass == 'AK::DistinctNumeric':
         return AKDistinctNumeric
@@ -255,6 +257,29 @@ class AKVector:
     def prettyprint_type(cls, type):
         template_type = type.template_argument(0)
         return f'AK::Vector<{handler_class_for_type(template_type).prettyprint_type(template_type)}>'
+
+
+class AKArray:
+    def __init__(self, val):
+        self.val = val
+        self.storage_type = self.val.type.template_argument(0)
+        self.array_size = self.val.type.template_argument(1)
+
+    def to_string(self):
+        return AKArray.prettyprint_type(self.val.type)
+
+    def children(self):
+        data_array = self.val["__data"]
+        storage_type_ptr = self.storage_type.pointer()
+        elements = data_array.cast(storage_type_ptr)
+
+        return [(f"[{i}]", elements[i]) for i in range(self.array_size)]
+
+    @classmethod
+    def prettyprint_type(cls, type):
+        template_type = type.template_argument(0)
+        template_size = type.template_argument(1)
+        return f'AK::Array<{template_type}, {template_size}>'
 
 
 class AKHashMapPrettyPrinter:
