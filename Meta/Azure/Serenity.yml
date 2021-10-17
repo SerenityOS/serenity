@@ -8,10 +8,6 @@ jobs:
     variables:
     - name: SERENITY_CCACHE_DIR
       value: $(Build.SourcesDirectory)/.ccache
-    - name: LLVM_CCACHE_DIR
-      value: $(Build.SourcesDirectory)/Toolchain/.ccache
-    - name: LLVM_CCACHE_MAXSIZE
-      value: 20GB
 
     pool:
       vmImage: ubuntu-20.04
@@ -27,14 +23,11 @@ jobs:
         toolchain: 'clang'
         build_directory: 'Build/${{ parameters.arch }}clang'
         serenity_ccache_path: '$(SERENITY_CCACHE_DIR)'
-        toolchain_ccache_path: '$(LLVM_CCACHE_DIR)'
-        toolchain_ccache_size: '$(LLVM_CCACHE_MAXSIZE)'
 
-    - script: ./Toolchain/BuildClang.sh --ci
-      displayName: Build Toolchain
+    - script: ./Toolchain/BuildClang.sh
+      displayName: Extract Toolchain
       env:
         TRY_USE_LOCAL_TOOLCHAIN: 'y'
-        ARCH: '${{ parameters.arch }}'
 
     - script: |
         mkdir -p Build/superbuild
