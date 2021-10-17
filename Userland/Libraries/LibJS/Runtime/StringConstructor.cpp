@@ -127,7 +127,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
             vm.throw_exception<RangeError>(global_object, ErrorType::InvalidCodePoint, next_code_point.to_string_without_side_effects());
             return {};
         }
-        auto code_point = next_code_point.to_i32(global_object);
+        auto code_point = TRY_OR_DISCARD(next_code_point.to_i32(global_object));
         if (code_point < 0 || code_point > 0x10FFFF) {
             vm.throw_exception<RangeError>(global_object, ErrorType::InvalidCodePoint, next_code_point.to_string_without_side_effects());
             return {};
