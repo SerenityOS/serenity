@@ -371,6 +371,7 @@ GLAPI void glVertex4sv(const GLshort* v);
 GLAPI void glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
 GLAPI void glEnable(GLenum cap);
 GLAPI void glDisable(GLenum cap);
+GLAPI GLboolean glIsEnabled(GLenum cap);
 GLAPI void glCullFace(GLenum mode);
 GLAPI void glFrontFace(GLenum mode);
 GLAPI GLuint glGenLists(GLsizei range);

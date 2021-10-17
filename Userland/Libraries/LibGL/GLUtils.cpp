@@ -20,6 +20,11 @@ void glDisable(GLenum cap)
     g_gl_context->gl_disable(cap);
 }
 
+GLboolean glIsEnabled(GLenum cap)
+{
+    return g_gl_context->gl_is_enabled(cap);
+}
+
 void glFrontFace(GLenum mode)
 {
     g_gl_context->gl_front_face(mode);
