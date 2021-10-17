@@ -51,16 +51,17 @@ Value ArrayBufferConstructor::call()
 Value ArrayBufferConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto byte_length = vm.argument(0).to_index(global_object());
-    if (vm.exception()) {
-        if (vm.exception()->value().is_object() && is<RangeError>(vm.exception()->value().as_object())) {
+    auto byte_length_or_error = vm.argument(0).to_index(global_object());
+    if (byte_length_or_error.is_error()) {
+        auto error = byte_length_or_error.release_error();
+        if (error.value().is_object() && is<RangeError>(error.value().as_object())) {
             // Re-throw more specific RangeError
             vm.clear_exception();
             vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "array buffer");
         }
         return {};
     }
-    return TRY_OR_DISCARD(allocate_array_buffer(global_object(), new_target, byte_length));
+    return TRY_OR_DISCARD(allocate_array_buffer(global_object(), new_target, byte_length_or_error.release_value()));
 }
 
 // 25.1.4.1 ArrayBuffer.isView ( arg ), https://tc39.es/ecma262/#sec-arraybuffer.isview

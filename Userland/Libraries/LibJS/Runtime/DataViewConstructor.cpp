@@ -53,9 +53,7 @@ Value DataViewConstructor::construct(FunctionObject& new_target)
     }
     auto& array_buffer = static_cast<ArrayBuffer&>(buffer.as_object());
 
-    auto offset = vm.argument(1).to_index(global_object);
-    if (vm.exception())
-        return {};
+    auto offset = TRY_OR_DISCARD(vm.argument(1).to_index(global_object));
 
     if (array_buffer.is_detached()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
@@ -72,9 +70,7 @@ Value DataViewConstructor::construct(FunctionObject& new_target)
     if (vm.argument(2).is_undefined()) {
         view_byte_length = buffer_byte_length - offset;
     } else {
-        view_byte_length = vm.argument(2).to_index(global_object);
-        if (vm.exception())
-            return {};
+        view_byte_length = TRY_OR_DISCARD(vm.argument(2).to_index(global_object));
         if (offset + view_byte_length > buffer_byte_length) {
             vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, vm.names.DataView);
             return {};
