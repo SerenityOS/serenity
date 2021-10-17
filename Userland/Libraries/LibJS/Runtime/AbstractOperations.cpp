@@ -79,10 +79,7 @@ ThrowCompletionOr<size_t> length_of_array_like(GlobalObject& global_object, Obje
 {
     auto& vm = global_object.vm();
     auto result = TRY(object.get(vm.names.length));
-    auto length = result.to_length(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return length;
+    return result.to_length(global_object);
 }
 
 // 7.3.19 CreateListFromArrayLike ( obj [ , elementTypes ] ), https://tc39.es/ecma262/#sec-createlistfromarraylike

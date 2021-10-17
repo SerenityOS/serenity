@@ -425,9 +425,7 @@ JS_DEFINE_NATIVE_FUNCTION(WorkbookObject::sheet)
                 return JS::Value(&sheet.global_object());
         }
     } else {
-        auto index = name_value.to_length(global_object);
-        if (vm.exception())
-            return {};
+        auto index = TRY_OR_DISCARD(name_value.to_length(global_object));
         if (index < workbook.sheets().size())
             return JS::Value(&workbook.sheets()[index].global_object());
     }
