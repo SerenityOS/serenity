@@ -10,6 +10,8 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/FileStream.h>
 #include <LibCore/MimeData.h>
+#include <LibELF/Image.h>
+#include <LibELF/Validation.h>
 #include <LibGfx/ImageDecoder.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -52,6 +54,40 @@ static Optional<String> gzip_details(String description, const String& path)
     return String::formatted("{}, {}", description, gzip_details.value());
 }
 
+static Optional<String> elf_details(String description, const String& path)
+{
+    auto file_or_error = MappedFile::map(path);
+    if (file_or_error.is_error())
+        return {};
+    auto& mapped_file = *file_or_error.value();
+    auto elf_data = mapped_file.bytes();
+    ELF::Image elf_image(elf_data);
+    if (!elf_image.is_valid())
+        return {};
+
+    String interpreter_path;
+    if (!ELF::validate_program_headers(*(const ElfW(Ehdr)*)elf_data.data(), elf_data.size(), (const u8*)elf_data.data(), elf_data.size(), &interpreter_path))
+        return {};
+
+    auto& header = *reinterpret_cast<const ElfW(Ehdr)*>(elf_data.data());
+
+    auto bitness = header.e_ident[EI_CLASS] == ELFCLASS64 ? "64" : "32";
+    auto byteorder = header.e_ident[EI_DATA] == ELFDATA2LSB ? "LSB" : "MSB";
+
+    bool is_dynamically_linked = !interpreter_path.is_empty();
+    String dynamic_section = String::formatted(", dynamically linked, interpreter {}", interpreter_path);
+
+    return String::formatted("{} {}-bit {} {}, {}, version {} ({}){}",
+        description,
+        bitness,
+        byteorder,
+        ELF::Image::object_file_type_to_string(header.e_type).value_or("(?)"),
+        ELF::Image::object_machine_type_to_string(header.e_machine).value_or("(?)"),
+        header.e_ident[EI_ABIVERSION],
+        ELF::Image::object_abi_type_to_string(header.e_ident[EI_OSABI]).value_or("(?)"),
+        is_dynamically_linked ? dynamic_section : "");
+}
+
 #define ENUMERATE_MIME_TYPE_DESCRIPTIONS                                                                            \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/gzip", "gzip compressed data", gzip_details)                     \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/javascript", "JavaScript source", description_only)              \
@@ -63,6 +99,7 @@ static Optional<String> gzip_details(String description, const String& path)
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/x-7z-compressed", "7-Zip archive", description_only)             \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/midi", "MIDI sound", description_only)                                 \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/blender", "Blender project file", description_only)                    \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/elf", "ELF", elf_details)                                              \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/ext", "ext filesystem", description_only)                              \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/flac", "FLAC audio", description_only)                                 \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/iso-9660", "ISO 9660 CD/DVD image", description_only)                  \
