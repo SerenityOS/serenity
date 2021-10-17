@@ -28,8 +28,8 @@ extern "C" {
 #define GL_NONE 0
 
 // Matrix Modes
-#define GL_MODELVIEW 0x0050
-#define GL_PROJECTION 0x0051
+#define GL_MODELVIEW 0x1700
+#define GL_PROJECTION 0x1701
 
 // glBegin/glEnd primitive types
 #define GL_TRIANGLES 0x0100
