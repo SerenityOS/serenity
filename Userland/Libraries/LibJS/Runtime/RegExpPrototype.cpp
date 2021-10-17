@@ -639,11 +639,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     size_t array_length = 0;
 
     auto limit = NumericLimits<u32>::max();
-    if (!vm.argument(1).is_undefined()) {
-        limit = vm.argument(1).to_u32(global_object);
-        if (vm.exception())
-            return {};
-    }
+    if (!vm.argument(1).is_undefined())
+        limit = TRY_OR_DISCARD(vm.argument(1).to_u32(global_object));
 
     if (limit == 0)
         return array;

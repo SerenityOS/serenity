@@ -1117,13 +1117,11 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         }
     } else if (parameter.type->name == "unsigned long") {
         scoped_generator.append(R"~~~(
-    auto @cpp_name@ = @js_name@@js_suffix@.to_u32(global_object);
-    if (vm.exception())
-        @return_statement@
+    auto @cpp_name@ = TRY_OR_DISCARD(@js_name@@js_suffix@.to_u32(global_object));
 )~~~");
     } else if (parameter.type->name == "unsigned short") {
         scoped_generator.append(R"~~~(
-    auto @cpp_name@ = (u16)@js_name@@js_suffix@.to_u32(global_object);
+    auto @cpp_name@ = @js_name@@js_suffix@.to_u16(global_object);
     if (vm.exception())
         @return_statement@
 )~~~");

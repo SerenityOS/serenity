@@ -706,11 +706,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     size_t array_length = 0;
 
     auto limit = NumericLimits<u32>::max();
-    if (!limit_argument.is_undefined()) {
-        limit = limit_argument.to_u32(global_object);
-        if (vm.exception())
-            return {};
-    }
+    if (!limit_argument.is_undefined())
+        limit = TRY_OR_DISCARD(limit_argument.to_u32(global_object));
 
     auto separator = TRY_OR_DISCARD(separator_argument.to_utf16_string(global_object));
 

@@ -21,9 +21,8 @@ void WebAssemblyTablePrototype::initialize(JS::GlobalObject& global_object)
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::grow)
 {
-    auto delta = vm.argument(0).to_u32(global_object);
-    if (vm.exception())
-        return {};
+    auto delta = TRY_OR_DISCARD(vm.argument(0).to_u32(global_object));
+
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     if (!is<WebAssemblyTableObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
@@ -59,9 +58,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::grow)
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::get)
 {
-    auto index = vm.argument(0).to_u32(global_object);
-    if (vm.exception())
-        return {};
+    auto index = TRY_OR_DISCARD(vm.argument(0).to_u32(global_object));
 
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     if (!is<WebAssemblyTableObject>(this_object)) {
@@ -89,9 +86,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::get)
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::set)
 {
-    auto index = vm.argument(0).to_u32(global_object);
-    if (vm.exception())
-        return {};
+    auto index = TRY_OR_DISCARD(vm.argument(0).to_u32(global_object));
 
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     if (!is<WebAssemblyTableObject>(this_object)) {

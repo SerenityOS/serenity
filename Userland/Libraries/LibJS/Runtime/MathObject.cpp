@@ -300,9 +300,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::sign)
 // 21.3.2.11 Math.clz32 ( x ), https://tc39.es/ecma262/#sec-math.clz32
 JS_DEFINE_NATIVE_FUNCTION(MathObject::clz32)
 {
-    auto number = vm.argument(0).to_u32(global_object);
-    if (vm.exception())
-        return {};
+    auto number = TRY_OR_DISCARD(vm.argument(0).to_u32(global_object));
     if (number == 0)
         return Value(32);
     return Value(__builtin_clz(number));
@@ -479,12 +477,8 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::hypot)
 // 21.3.2.19 Math.imul ( x, y ), https://tc39.es/ecma262/#sec-math.imul
 JS_DEFINE_NATIVE_FUNCTION(MathObject::imul)
 {
-    auto a = vm.argument(0).to_u32(global_object);
-    if (vm.exception())
-        return {};
-    auto b = vm.argument(1).to_u32(global_object);
-    if (vm.exception())
-        return {};
+    auto a = TRY_OR_DISCARD(vm.argument(0).to_u32(global_object));
+    auto b = TRY_OR_DISCARD(vm.argument(1).to_u32(global_object));
     return Value(static_cast<i32>(a * b));
 }
 

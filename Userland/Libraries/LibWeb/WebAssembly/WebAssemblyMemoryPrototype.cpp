@@ -19,9 +19,7 @@ void WebAssemblyMemoryPrototype::initialize(JS::GlobalObject& global_object)
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::grow)
 {
-    auto page_count = vm.argument(0).to_u32(global_object);
-    if (vm.exception())
-        return {};
+    auto page_count = TRY_OR_DISCARD(vm.argument(0).to_u32(global_object));
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     if (!is<WebAssemblyMemoryObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Memory");
