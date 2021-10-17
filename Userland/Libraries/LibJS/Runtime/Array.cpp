@@ -72,9 +72,7 @@ bool Array::set_length(PropertyDescriptor const& property_descriptor)
     size_t new_length = indexed_properties().array_like_size();
     if (property_descriptor.value.has_value()) {
         // 3. Let newLen be ? ToUint32(Desc.[[Value]]).
-        new_length = property_descriptor.value->to_u32(global_object);
-        if (vm.exception())
-            return {};
+        new_length = TRY_OR_DISCARD(property_descriptor.value->to_u32(global_object));
         // 4. Let numberLen be ? ToNumber(Desc.[[Value]]).
         auto number_length = TRY_OR_DISCARD(property_descriptor.value->to_number(global_object));
         // 5. If newLen is not the same value as numberLen, throw a RangeError exception.

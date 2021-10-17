@@ -41,17 +41,12 @@ JS::Value WebAssemblyMemoryConstructor::construct(FunctionObject&)
         return {};
     }
 
-    auto initial = initial_value.to_u32(global_object);
-    if (vm.exception())
-        return {};
+    auto initial = TRY_OR_DISCARD(initial_value.to_u32(global_object));
 
     Optional<u32> maximum;
 
-    if (!maximum_value.is_empty()) {
-        maximum = maximum_value.to_u32(global_object);
-        if (vm.exception())
-            return {};
-    }
+    if (!maximum_value.is_empty())
+        maximum = TRY_OR_DISCARD(maximum_value.to_u32(global_object));
 
     auto address = WebAssemblyObject::s_abstract_machine.store().allocate(Wasm::MemoryType { Wasm::Limits { initial, maximum } });
     if (!address.has_value()) {

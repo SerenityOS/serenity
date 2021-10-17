@@ -47,16 +47,12 @@ JS::Value ImageConstructor::construct(FunctionObject&)
     auto image_element = DOM::create_element(document, HTML::TagNames::img, Namespace::HTML);
 
     if (vm().argument_count() > 0) {
-        u32 width = vm().argument(0).to_u32(global_object());
-        if (vm().exception())
-            return {};
+        u32 width = TRY_OR_DISCARD(vm().argument(0).to_u32(global_object()));
         image_element->set_attribute(HTML::AttributeNames::width, String::formatted("{}", width));
     }
 
     if (vm().argument_count() > 1) {
-        u32 height = vm().argument(1).to_u32(global_object());
-        if (vm().exception())
-            return {};
+        u32 height = TRY_OR_DISCARD(vm().argument(1).to_u32(global_object()));
         image_element->set_attribute(HTML::AttributeNames::height, String::formatted("{}", height));
     }
 
