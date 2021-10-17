@@ -63,9 +63,7 @@ static Value get_view_value(GlobalObject& global_object, Value request_index, Va
     if (!view)
         return {};
 
-    auto get_index = request_index.to_index(global_object);
-    if (vm.exception())
-        return {};
+    auto get_index = TRY_OR_DISCARD(request_index.to_index(global_object));
     auto little_endian = is_little_endian.to_boolean();
 
     auto buffer = view->viewed_array_buffer();
@@ -102,9 +100,7 @@ static Value set_view_value(GlobalObject& global_object, Value request_index, Va
     if (!view)
         return {};
 
-    auto get_index = request_index.to_index(global_object);
-    if (vm.exception())
-        return {};
+    auto get_index = TRY_OR_DISCARD(request_index.to_index(global_object));
 
     Value number_value;
     if constexpr (IsIntegral<T> && sizeof(T) == 8)
