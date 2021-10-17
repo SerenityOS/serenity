@@ -105,12 +105,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_char_code)
     Vector<u16, 1> string;
     string.ensure_capacity(vm.argument_count());
 
-    for (size_t i = 0; i < vm.argument_count(); ++i) {
-        auto code_unit = vm.argument(i).to_u16(global_object);
-        if (vm.exception())
-            return {};
-        string.append(code_unit);
-    }
+    for (size_t i = 0; i < vm.argument_count(); ++i)
+        string.append(TRY_OR_DISCARD(vm.argument(i).to_u16(global_object)));
 
     return js_string(vm, Utf16String(move(string)));
 }
