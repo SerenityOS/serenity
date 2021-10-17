@@ -1,0 +1,34 @@
+jobs:
+  - job: 'Serenity_Clang_Toolchain'
+    timeoutInMinutes: 0 # Setting to 0 means the maximum allowed timeout is used.
+
+    variables:
+    - name: LLVM_CCACHE_DIR
+      value: $(Build.SourcesDirectory)/Toolchain/.ccache
+    - name: LLVM_CCACHE_MAXSIZE
+      value: 20GB
+
+    pool:
+      vmImage: ubuntu-20.04
+
+    steps:
+    - template: Setup.yml
+      parameters:
+        os: 'Serenity'
+
+    - template: Caches.yml
+      parameters:
+        toolchain: 'clang'
+        toolchain_ccache_path: '$(LLVM_CCACHE_DIR)'
+        toolchain_ccache_size: '$(LLVM_CCACHE_MAXSIZE)'
+        with_unicode_caches: false
+
+    - script: ./Toolchain/BuildClang.sh --ci
+      displayName: Build Toolchain
+      env:
+        TRY_USE_LOCAL_TOOLCHAIN: 'y'
+
+    - script: |
+        echo "##[section]Toolchain Cache"
+        CCACHE_DIR='$(LLVM_CCACHE_DIR)' ccache -s
+      displayName: 'Cache Stats'
