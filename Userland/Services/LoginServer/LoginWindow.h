@@ -31,5 +31,5 @@ private:
     RefPtr<GUI::ImageWidget> m_banner;
     RefPtr<GUI::TextBox> m_username;
     RefPtr<GUI::PasswordBox> m_password;
-    RefPtr<GUI::Button> m_ok_button;
+    RefPtr<GUI::Button> m_log_in_button;
 };

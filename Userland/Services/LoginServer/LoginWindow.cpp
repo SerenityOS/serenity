@@ -12,7 +12,7 @@
 LoginWindow::LoginWindow(GUI::Window* parent)
     : GUI::Window(parent)
 {
-    set_title("Login to SerenityOS");
+    set_title("Log in to SerenityOS");
     resize(413, 170);
     center_on_screen();
     set_resizable(false);
@@ -28,8 +28,8 @@ LoginWindow::LoginWindow(GUI::Window* parent)
     m_username->set_focus(true);
     m_password = *widget.find_descendant_of_type_named<GUI::PasswordBox>("password");
 
-    m_ok_button = *widget.find_descendant_of_type_named<GUI::Button>("ok");
-    m_ok_button->on_click = [&](auto) {
+    m_log_in_button = *widget.find_descendant_of_type_named<GUI::Button>("log_in");
+    m_log_in_button->on_click = [&](auto) {
         if (on_submit)
             on_submit();
     };

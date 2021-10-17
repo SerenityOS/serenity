@@ -29,8 +29,8 @@
             @GUI::Widget
 
             @GUI::Button {
-                name: "ok"
-                text: "Ok"
+                name: "log_in"
+                text: "Log in"
                 fixed_width: 60
             }
         }
