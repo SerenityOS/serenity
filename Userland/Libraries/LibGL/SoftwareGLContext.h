@@ -52,6 +52,7 @@ public:
     virtual void gl_viewport(GLint x, GLint y, GLsizei width, GLsizei height) override;
     virtual void gl_enable(GLenum) override;
     virtual void gl_disable(GLenum) override;
+    virtual GLboolean gl_is_enabled(GLenum) override;
     virtual void gl_front_face(GLenum) override;
     virtual void gl_cull_face(GLenum) override;
     virtual GLuint gl_gen_lists(GLsizei range) override;

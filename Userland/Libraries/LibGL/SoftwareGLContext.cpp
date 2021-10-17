@@ -597,6 +597,28 @@ void SoftwareGLContext::gl_disable(GLenum capability)
         m_rasterizer.set_options(rasterizer_options);
 }
 
+GLboolean SoftwareGLContext::gl_is_enabled(GLenum capability)
+{
+    RETURN_VALUE_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION, 0);
+
+    auto rasterizer_options = m_rasterizer.options();
+
+    switch (capability) {
+    case GL_CULL_FACE:
+        return m_cull_faces;
+    case GL_DEPTH_TEST:
+        return m_depth_test_enabled;
+    case GL_BLEND:
+        return m_blend_enabled;
+    case GL_ALPHA_TEST:
+        return m_alpha_test_enabled;
+    case GL_FOG:
+        return rasterizer_options.fog_enabled;
+    }
+
+    RETURN_VALUE_WITH_ERROR_IF(true, GL_INVALID_ENUM, 0);
+}
+
 void SoftwareGLContext::gl_gen_textures(GLsizei n, GLuint* textures)
 {
     RETURN_WITH_ERROR_IF(n < 0, GL_INVALID_VALUE);
