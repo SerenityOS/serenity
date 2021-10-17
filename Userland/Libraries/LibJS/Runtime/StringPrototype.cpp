@@ -468,9 +468,7 @@ static Value pad_string(GlobalObject& global_object, Utf16String string, PadPlac
     auto& vm = global_object.vm();
     auto string_length = string.length_in_code_units();
 
-    auto max_length = vm.argument(0).to_length(global_object);
-    if (vm.exception())
-        return {};
+    auto max_length = TRY_OR_DISCARD(vm.argument(0).to_length(global_object));
     if (max_length <= string_length)
         return js_string(vm, move(string));
 

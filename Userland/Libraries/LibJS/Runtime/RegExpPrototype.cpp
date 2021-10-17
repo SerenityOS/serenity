@@ -72,9 +72,8 @@ static ThrowCompletionOr<void> increment_last_index(GlobalObject& global_object,
 {
     auto& vm = global_object.vm();
 
-    auto last_index = TRY(regexp_object.get(vm.names.lastIndex)).to_length(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto last_index_value = TRY(regexp_object.get(vm.names.lastIndex));
+    auto last_index = TRY(last_index_value.to_length(global_object));
 
     last_index = advance_string_index(string, last_index, unicode);
     TRY(regexp_object.set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes));
@@ -154,9 +153,8 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     // FIXME: This should try using internal slots [[RegExpMatcher]], [[OriginalFlags]], etc.
     auto& vm = global_object.vm();
 
-    auto last_index = TRY_OR_DISCARD(regexp_object.get(vm.names.lastIndex)).to_length(global_object);
-    if (vm.exception())
-        return {};
+    auto last_index_value = TRY_OR_DISCARD(regexp_object.get(vm.names.lastIndex));
+    auto last_index = TRY_OR_DISCARD(last_index_value.to_length(global_object));
 
     auto& regex = regexp_object.regex();
     bool global = regex.options().has_flag_set(ECMAScriptFlags::Global);
@@ -457,9 +455,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     if (vm.exception())
         return {};
     auto* matcher = TRY_OR_DISCARD(matcher_value.to_object(global_object));
-    auto last_index = TRY_OR_DISCARD(regexp_object->get(vm.names.lastIndex)).to_length(global_object);
-    if (vm.exception())
-        return {};
+    auto last_index_value = TRY_OR_DISCARD(regexp_object->get(vm.names.lastIndex));
+    auto last_index = TRY_OR_DISCARD(last_index_value.to_length(global_object));
 
     TRY_OR_DISCARD(matcher->set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes));
 
@@ -668,9 +665,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
             continue;
         }
 
-        auto last_index = TRY_OR_DISCARD(splitter->get(vm.names.lastIndex)).to_length(global_object); // 'e' in the spec.
-        if (vm.exception())
-            return {};
+        auto last_index_value = TRY_OR_DISCARD(splitter->get(vm.names.lastIndex));
+        auto last_index = TRY_OR_DISCARD(last_index_value.to_length(global_object)); // 'e' in the spec.
         last_index = min(last_index, string_view.length_in_code_units());
 
         if (last_index == last_match_end) {
