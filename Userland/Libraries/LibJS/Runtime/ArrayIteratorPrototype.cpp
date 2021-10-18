@@ -38,10 +38,7 @@ ArrayIteratorPrototype::~ArrayIteratorPrototype()
 // FIXME: This seems to be CreateArrayIterator (https://tc39.es/ecma262/#sec-createarrayiterator) instead of %ArrayIteratorPrototype%.next.
 JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
 {
-    auto* iterator = typed_this_value(global_object);
-    if (vm.exception())
-        return {};
-
+    auto* iterator = TRY_OR_DISCARD(typed_this_value(global_object));
     auto target_array = iterator->array();
     if (target_array.is_undefined())
         return create_iterator_result_object(global_object, js_undefined(), true);

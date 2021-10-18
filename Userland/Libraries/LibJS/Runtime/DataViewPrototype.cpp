@@ -59,10 +59,7 @@ template<typename T>
 static Value get_view_value(GlobalObject& global_object, Value request_index, Value is_little_endian)
 {
     auto& vm = global_object.vm();
-    auto* view = DataViewPrototype::typed_this_value(global_object);
-    if (!view)
-        return {};
-
+    auto* view = TRY_OR_DISCARD(DataViewPrototype::typed_this_value(global_object));
     auto get_index = TRY_OR_DISCARD(request_index.to_index(global_object));
     auto little_endian = is_little_endian.to_boolean();
 
@@ -96,10 +93,7 @@ template<typename T>
 static Value set_view_value(GlobalObject& global_object, Value request_index, Value is_little_endian, Value value)
 {
     auto& vm = global_object.vm();
-    auto* view = DataViewPrototype::typed_this_value(global_object);
-    if (!view)
-        return {};
-
+    auto* view = TRY_OR_DISCARD(DataViewPrototype::typed_this_value(global_object));
     auto get_index = TRY_OR_DISCARD(request_index.to_index(global_object));
 
     Value number_value;
@@ -249,18 +243,14 @@ JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::set_uint_32)
 // 25.3.4.1 get DataView.prototype.buffer, https://tc39.es/ecma262/#sec-get-dataview.prototype.buffer
 JS_DEFINE_NATIVE_GETTER(DataViewPrototype::buffer_getter)
 {
-    auto* data_view = typed_this_value(global_object);
-    if (!data_view)
-        return {};
+    auto* data_view = TRY_OR_DISCARD(typed_this_value(global_object));
     return data_view->viewed_array_buffer();
 }
 
 // 25.3.4.2 get DataView.prototype.byteLength, https://tc39.es/ecma262/#sec-get-dataview.prototype.bytelength
 JS_DEFINE_NATIVE_GETTER(DataViewPrototype::byte_length_getter)
 {
-    auto* data_view = typed_this_value(global_object);
-    if (!data_view)
-        return {};
+    auto* data_view = TRY_OR_DISCARD(typed_this_value(global_object));
     if (data_view->viewed_array_buffer()->is_detached()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
         return {};
@@ -271,9 +261,7 @@ JS_DEFINE_NATIVE_GETTER(DataViewPrototype::byte_length_getter)
 // 25.3.4.3 get DataView.prototype.byteOffset, https://tc39.es/ecma262/#sec-get-dataview.prototype.byteoffset
 JS_DEFINE_NATIVE_GETTER(DataViewPrototype::byte_offset_getter)
 {
-    auto* data_view = typed_this_value(global_object);
-    if (!data_view)
-        return {};
+    auto* data_view = TRY_OR_DISCARD(typed_this_value(global_object));
     if (data_view->viewed_array_buffer()->is_detached()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
         return {};

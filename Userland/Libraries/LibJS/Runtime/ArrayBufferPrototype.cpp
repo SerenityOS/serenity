@@ -37,10 +37,7 @@ ArrayBufferPrototype::~ArrayBufferPrototype()
 // 25.1.5.3 ArrayBuffer.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice
 JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 {
-    auto array_buffer_object = typed_this_value(global_object);
-    if (!array_buffer_object)
-        return {};
-
+    auto* array_buffer_object = TRY_OR_DISCARD(typed_this_value(global_object));
     // FIXME: Check for shared buffer
     if (array_buffer_object->is_detached()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
@@ -108,10 +105,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 // 25.1.5.1 get ArrayBuffer.prototype.byteLength, https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength
 JS_DEFINE_NATIVE_GETTER(ArrayBufferPrototype::byte_length_getter)
 {
-    auto array_buffer_object = typed_this_value(global_object);
-    if (!array_buffer_object)
-        return {};
-
+    auto* array_buffer_object = TRY_OR_DISCARD(typed_this_value(global_object));
     // FIXME: Check for shared buffer
     if (array_buffer_object->is_detached())
         return Value(0);
