@@ -56,7 +56,6 @@ bool FormattingContext::creates_block_formatting_context(const Box& box)
     if (display.is_flow_root_inside())
         return true;
 
-    // FIXME: inline-flex as well
     if (box.parent()) {
         auto parent_display = box.parent()->computed_values().display();
         if (parent_display.is_flex_inside()) {
