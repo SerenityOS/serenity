@@ -2704,6 +2704,11 @@ void OptionalChain::dump(int indent) const
                 print_indent(indent + 1);
                 outln("MemberReference({})", ref.mode == Mode::Optional ? "Optional" : "Not Optional");
                 ref.identifier->dump(indent + 2);
+            },
+            [&](PrivateMemberReference const& ref) {
+                print_indent(indent + 1);
+                outln("PrivateMemberReference({})", ref.mode == Mode::Optional ? "Optional" : "Not Optional");
+                ref.private_identifier->dump(indent + 2);
             });
     }
 }
@@ -2737,6 +2742,12 @@ Optional<OptionalChain::ReferenceAndValue> OptionalChain::to_reference_and_value
                 return create_ast_node<MemberExpression>(source_range(),
                     create_ast_node<SyntheticReferenceExpression>(source_range(), *base_reference, base),
                     ref.identifier,
+                    false);
+            },
+            [&](PrivateMemberReference const& ref) -> NonnullRefPtr<Expression> {
+                return create_ast_node<MemberExpression>(source_range(),
+                    create_ast_node<SyntheticReferenceExpression>(source_range(), *base_reference, base),
+                    ref.private_identifier,
                     false);
             });
         if (is<CallExpression>(*expression)) {

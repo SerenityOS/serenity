@@ -1590,8 +1590,12 @@ public:
         NonnullRefPtr<Identifier> identifier;
         Mode mode;
     };
+    struct PrivateMemberReference {
+        NonnullRefPtr<PrivateIdentifier> private_identifier;
+        Mode mode;
+    };
 
-    using Reference = Variant<Call, ComputedReference, MemberReference>;
+    using Reference = Variant<Call, ComputedReference, MemberReference, PrivateMemberReference>;
 
     OptionalChain(SourceRange source_range, NonnullRefPtr<Expression> base, Vector<Reference> references)
         : Expression(source_range)
