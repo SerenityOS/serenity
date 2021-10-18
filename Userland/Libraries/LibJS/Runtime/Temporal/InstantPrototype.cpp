@@ -141,8 +141,6 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::add)
 
     // 4. Let ns be ? AddInstant(instant.[[Nanoseconds]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]]).
     auto* ns = TRY_OR_DISCARD(add_instant(global_object, instant->nanoseconds(), duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, duration.nanoseconds));
-    if (vm.exception())
-        return {};
 
     // 5. Return ! CreateTemporalInstant(ns).
     return MUST(create_temporal_instant(global_object, *ns));

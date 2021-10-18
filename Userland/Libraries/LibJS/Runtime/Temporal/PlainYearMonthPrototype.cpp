@@ -245,8 +245,6 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_string)
 
     // 3. Set options to ? GetOptionsObject(options).
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(0)));
-    if (vm.exception())
-        return {};
 
     // 4. Let showCalendar be ? ToShowCalendarOption(options).
     auto show_calendar = TRY_OR_DISCARD(to_show_calendar_option(global_object, *options));

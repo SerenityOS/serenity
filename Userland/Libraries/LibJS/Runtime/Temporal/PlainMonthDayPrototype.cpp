@@ -192,8 +192,6 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_plain_date)
 
     // 5. Let receiverFieldNames be ? CalendarFields(calendar, « "day", "monthCode" »).
     auto receiver_field_names = TRY_OR_DISCARD(calendar_fields(global_object, calendar, { "day"sv, "monthCode"sv }));
-    if (vm.exception())
-        return {};
 
     // 6. Let fields be ? PrepareTemporalFields(monthDay, receiverFieldNames, «»).
     auto* fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, *month_day, receiver_field_names, {}));

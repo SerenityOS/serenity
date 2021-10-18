@@ -432,8 +432,6 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with_calendar)
 
     // 3. Let calendar be ? ToTemporalCalendar(calendar).
     auto* calendar = TRY_OR_DISCARD(to_temporal_calendar(global_object, vm.argument(0)));
-    if (vm.exception())
-        return {};
 
     // 4. Return ? CreateTemporalDateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], calendar).
     return TRY_OR_DISCARD(create_temporal_date_time(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), *calendar));

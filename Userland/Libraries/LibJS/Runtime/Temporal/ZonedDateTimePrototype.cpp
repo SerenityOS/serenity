@@ -849,8 +849,6 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_month_day)
 
     // 7. Let fieldNames be ? CalendarFields(calendar, « "day", "monthCode" »).
     auto field_names = TRY_OR_DISCARD(calendar_fields(global_object, calendar, { "day"sv, "monthCode"sv }));
-    if (vm.exception())
-        return {};
 
     // 8. Let fields be ? PrepareTemporalFields(temporalDateTime, fieldNames, «»).
     auto* fields = TRY_OR_DISCARD(prepare_temporal_fields(global_object, *temporal_date_time, field_names, {}));
