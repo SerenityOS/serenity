@@ -8,6 +8,7 @@
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/BigIntObject.h>
 #include <LibJS/Runtime/BigIntPrototype.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
@@ -36,23 +37,20 @@ BigIntPrototype::~BigIntPrototype()
 }
 
 // thisBigIntValue ( value ), https://tc39.es/ecma262/#thisbigintvalue
-static Value this_bigint_value(GlobalObject& global_object, Value value)
+static ThrowCompletionOr<BigInt*> this_bigint_value(GlobalObject& global_object, Value value)
 {
     if (value.is_bigint())
-        return value;
+        return &value.as_bigint();
     if (value.is_object() && is<BigIntObject>(value.as_object()))
         return &static_cast<BigIntObject&>(value.as_object()).bigint();
     auto& vm = global_object.vm();
-    vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "BigInt");
-    return {};
+    return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "BigInt");
 }
 
 // 21.2.3.3 BigInt.prototype.toString ( [ radix ] ), https://tc39.es/ecma262/#sec-bigint.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
 {
-    auto bigint_value = this_bigint_value(global_object, vm.this_value(global_object));
-    if (vm.exception())
-        return {};
+    auto* bigint = TRY_OR_DISCARD(this_bigint_value(global_object, vm.this_value(global_object)));
     double radix = 10;
     if (!vm.argument(0).is_undefined()) {
         radix = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
@@ -61,7 +59,7 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
             return {};
         }
     }
-    return js_string(vm, bigint_value.as_bigint().big_integer().to_base(radix));
+    return js_string(vm, bigint->big_integer().to_base(radix));
 }
 
 // 21.2.3.2 BigInt.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring
@@ -73,7 +71,7 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_locale_string)
 // 21.2.3.4 BigInt.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-bigint.prototype.valueof
 JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::value_of)
 {
-    return this_bigint_value(global_object, vm.this_value(global_object));
+    return TRY_OR_DISCARD(this_bigint_value(global_object, vm.this_value(global_object)));
 }
 
 }
