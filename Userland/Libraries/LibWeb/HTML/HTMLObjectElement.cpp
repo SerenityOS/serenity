@@ -20,12 +20,12 @@ HTMLObjectElement::HTMLObjectElement(DOM::Document& document, QualifiedName qual
 {
     m_image_loader.on_load = [this] {
         m_should_show_fallback_content = false;
-        this->document().force_layout();
+        set_needs_style_update(true);
     };
 
     m_image_loader.on_fail = [this] {
         m_should_show_fallback_content = true;
-        this->document().force_layout();
+        set_needs_style_update(true);
     };
 }
 
