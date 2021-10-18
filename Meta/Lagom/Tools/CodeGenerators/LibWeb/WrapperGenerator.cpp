@@ -75,7 +75,7 @@ static size_t get_function_length(FunctionType& function)
 {
     size_t length = 0;
     for (auto& parameter : function.parameters) {
-        if (!parameter.optional)
+        if (!parameter.optional && !parameter.variadic)
             length++;
     }
     return length;
@@ -117,6 +117,7 @@ struct Parameter {
     bool optional { false };
     Optional<String> optional_default_value;
     HashMap<String, String> extended_attributes;
+    bool variadic { false };
 };
 
 struct Function {
@@ -375,12 +376,18 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
             if (optional)
                 consume_whitespace();
             auto type = parse_type();
+            bool variadic = lexer.consume_specific("..."sv);
             consume_whitespace();
             auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ',' || ch == ')' || ch == '='; });
-            Parameter parameter = { move(type), move(name), optional, {}, extended_attributes };
+            Parameter parameter = { move(type), move(name), optional, {}, extended_attributes, variadic };
             consume_whitespace();
+            if (variadic) {
+                // Variadic parameters must be last and do not have default values.
+                parameters.append(move(parameter));
+                break;
+            }
             if (lexer.next_is(')')) {
-                parameters.append(parameter);
+                parameters.append(move(parameter));
                 break;
             }
             if (lexer.next_is('=') && optional) {
@@ -389,7 +396,7 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
                 auto default_value = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ',' || ch == ')'; });
                 parameter.optional_default_value = default_value;
             }
-            parameters.append(parameter);
+            parameters.append(move(parameter));
             if (lexer.next_is(')'))
                 break;
             assert_specific(',');
@@ -934,7 +941,7 @@ static bool is_wrappable_type(IDL::Type const& type)
 }
 
 template<typename ParameterType>
-static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, String const& js_name, String const& js_suffix, String const& cpp_name, HashMap<String, IDL::Dictionary> const& dictionaries, bool return_void = false, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {})
+static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, String const& js_name, String const& js_suffix, String const& cpp_name, HashMap<String, IDL::Dictionary> const& dictionaries, bool return_void = false, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {}, bool variadic = false)
 {
     auto scoped_generator = generator.fork();
     scoped_generator.set("cpp_name", make_input_acceptable_cpp(cpp_name));
@@ -955,9 +962,21 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     else
         scoped_generator.set("return_statement", "return {};");
 
-    // FIXME: Add support for optional, nullable and default values to all types
+    // FIXME: Add support for optional, variadic, nullable and default values to all types
     if (parameter.type->is_string()) {
-        if (!optional) {
+        if (variadic) {
+            scoped_generator.append(R"~~~(
+    Vector<String> @cpp_name@;
+    @cpp_name@.ensure_capacity(vm.argument_count() - @js_suffix@);
+
+    for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
+        auto to_string_result = vm.argument(i).to_string(global_object);
+        if (to_string_result.is_error())
+            @return_statement@
+        @cpp_name@.append(to_string_result.release_value());
+    }
+)~~~");
+        } else if (!optional) {
             if (!parameter.type->nullable) {
                 scoped_generator.append(R"~~~(
     String @cpp_name@;
@@ -1266,13 +1285,16 @@ static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter
     size_t argument_index = 0;
     for (auto& parameter : parameters) {
         parameter_names.append(make_input_acceptable_cpp(parameter.name.to_snakecase()));
-        arguments_generator.set("argument.index", String::number(argument_index));
 
-        arguments_generator.append(R"~~~(
+        if (!parameter.variadic) {
+            arguments_generator.set("argument.index", String::number(argument_index));
+            arguments_generator.append(R"~~~(
     auto arg@argument.index@ = vm.argument(@argument.index@);
 )~~~");
+        }
+
         bool legacy_null_to_empty_string = parameter.extended_attributes.contains("LegacyNullToEmptyString");
-        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), dictionaries, return_void, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value);
+        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), dictionaries, return_void, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value, parameter.variadic);
         ++argument_index;
     }
 
