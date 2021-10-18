@@ -207,6 +207,11 @@ void OutOfProcessWebView::notify_server_did_paint(Badge<WebContentClient>, i32 b
         // We don't need the backup bitmap anymore, so drop it.
         m_backup_bitmap = nullptr;
         update();
+
+        if (m_client_state.got_repaint_requests_while_painting) {
+            m_client_state.got_repaint_requests_while_painting = false;
+            request_repaint();
+        }
     }
 }
 
@@ -399,8 +404,10 @@ void OutOfProcessWebView::request_repaint()
     if (!m_client_state.back_bitmap.bitmap)
         return;
     // Don't request a repaint until pending paint requests have finished.
-    if (m_client_state.back_bitmap.pending_paints)
+    if (m_client_state.back_bitmap.pending_paints) {
+        m_client_state.got_repaint_requests_while_painting = true;
         return;
+    }
     m_client_state.back_bitmap.pending_paints++;
     client().async_paint(m_client_state.back_bitmap.bitmap->rect().translated(horizontal_scrollbar().value(), vertical_scrollbar().value()), m_client_state.back_bitmap.id);
 }
