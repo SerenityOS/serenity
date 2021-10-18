@@ -7,10 +7,12 @@
 #include "WelcomeWidget.h"
 #include <AK/Random.h>
 #include <Applications/Welcome/WelcomeWindowGML.h>
+#include <LibConfig/Client.h>
 #include <LibCore/File.h>
 #include <LibCore/Process.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/BitmapFont.h>
@@ -64,6 +66,13 @@ WelcomeWidget::WelcomeWidget()
     m_close_button = *find_descendant_of_type_named<GUI::Button>("close_button");
     m_close_button->on_click = [](auto) {
         GUI::Application::the()->quit();
+    };
+
+    auto exec_path = Config::read_string("SystemServer", "Welcome", "Executable", {});
+    m_startup_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("startup_checkbox");
+    m_startup_checkbox->set_checked(!exec_path.is_empty());
+    m_startup_checkbox->on_checked = [](bool is_checked) {
+        Config::write_string("SystemServer", "Welcome", "Executable", is_checked ? "/bin/Welcome" : "");
     };
 
     open_and_parse_readme_file();
