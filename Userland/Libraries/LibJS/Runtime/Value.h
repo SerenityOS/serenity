@@ -327,7 +327,7 @@ public:
     ThrowCompletionOr<double> to_integer_or_infinity(GlobalObject&) const;
     bool to_boolean() const;
 
-    Value get(GlobalObject&, PropertyName const&) const;
+    ThrowCompletionOr<Value> get(GlobalObject&, PropertyName const&) const;
     ThrowCompletionOr<FunctionObject*> get_method(GlobalObject&, PropertyName const&) const;
 
     String to_string_without_side_effects() const;
