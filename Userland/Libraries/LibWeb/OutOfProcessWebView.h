@@ -125,6 +125,7 @@ private:
         SharedBitmap back_bitmap;
         i32 next_bitmap_id { 0 };
         bool has_usable_bitmap { false };
+        bool got_repaint_requests_while_painting { false };
     } m_client_state;
 
     RefPtr<Gfx::Bitmap> m_backup_bitmap;
