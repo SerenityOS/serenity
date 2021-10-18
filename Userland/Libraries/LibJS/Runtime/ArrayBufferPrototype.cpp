@@ -49,9 +49,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 
     auto length = array_buffer_object->byte_length();
 
-    auto relative_start = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto relative_start = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
 
     double first;
     if (relative_start < 0)
@@ -59,9 +57,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
     else
         first = min(relative_start, (double)length);
 
-    auto relative_end = vm.argument(1).is_undefined() ? length : vm.argument(1).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto relative_end = vm.argument(1).is_undefined() ? length : TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
 
     double final;
     if (relative_end < 0)

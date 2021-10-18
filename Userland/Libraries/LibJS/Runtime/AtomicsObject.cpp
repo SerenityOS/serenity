@@ -93,15 +93,11 @@ static ThrowCompletionOr<Value> atomic_read_modify_write(GlobalObject& global_ob
     Value value_to_set;
 
     // 4. If typedArray.[[ContentType]] is BigInt, let v be ? ToBigInt(value).
-    if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt) {
+    if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt)
         value_to_set = TRY(value.to_bigint(global_object));
-    }
     // 5. Otherwise, let v be 𝔽(? ToIntegerOrInfinity(value)).
-    else {
-        value_to_set = Value(value.to_integer_or_infinity(global_object));
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
-    }
+    else
+        value_to_set = Value(TRY(value.to_integer_or_infinity(global_object)));
 
     // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (buffer->is_detached())
@@ -232,14 +228,10 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(GlobalObject& globa
     // 6. Else,
     else {
         // a. Let expected be 𝔽(? ToIntegerOrInfinity(expectedValue)).
-        expected = Value(vm.argument(2).to_integer_or_infinity(global_object));
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        expected = Value(TRY(vm.argument(2).to_integer_or_infinity(global_object)));
 
         // b. Let replacement be 𝔽(? ToIntegerOrInfinity(replacementValue)).
-        replacement = Value(vm.argument(3).to_integer_or_infinity(global_object));
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        replacement = Value(TRY(vm.argument(3).to_integer_or_infinity(global_object)));
     }
 
     // 7. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
@@ -322,10 +314,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::exchange)
 // 25.4.7 Atomics.isLockFree ( size ), https://tc39.es/ecma262/#sec-atomics.islockfree
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::is_lock_free)
 {
-    auto size = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
-
+    auto size = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
     if (size == 1)
         return Value(AK::atomic_is_lock_free<u8>());
     if (size == 2)
@@ -387,13 +376,10 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
 
     auto value = vm.argument(2);
     Value value_to_set;
-    if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt) {
+    if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
         value_to_set = TRY_OR_DISCARD(value.to_bigint(global_object));
-    } else {
-        value_to_set = Value(value.to_integer_or_infinity(global_object));
-        if (vm.exception())
-            return {};
-    }
+    else
+        value_to_set = Value(TRY_OR_DISCARD(value.to_integer_or_infinity(global_object)));
 
     if (typed_array->viewed_array_buffer()->is_detached()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);

@@ -711,7 +711,7 @@ ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object 
     auto number_part = month_code_string.substring(1);
 
     // 8. Set numberPart to ! ToIntegerOrInfinity(numberPart).
-    auto number_part_integer = Value(js_string(vm, move(number_part))).to_integer_or_infinity(global_object);
+    auto number_part_integer = MUST(Value(js_string(vm, move(number_part))).to_integer_or_infinity(global_object));
 
     // 9. If numberPart < 1 or numberPart > 12, throw a RangeError exception.
     if (number_part_integer < 1 || number_part_integer > 12)

@@ -324,7 +324,7 @@ public:
     ThrowCompletionOr<u8> to_u8_clamp(GlobalObject&) const;
     ThrowCompletionOr<size_t> to_length(GlobalObject&) const;
     ThrowCompletionOr<size_t> to_index(GlobalObject&) const;
-    double to_integer_or_infinity(GlobalObject&) const;
+    ThrowCompletionOr<double> to_integer_or_infinity(GlobalObject&) const;
     bool to_boolean() const;
 
     Value get(GlobalObject&, PropertyName const&) const;

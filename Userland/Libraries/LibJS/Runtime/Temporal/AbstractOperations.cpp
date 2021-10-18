@@ -751,7 +751,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
         normalized_year = year_part.value_or("");
 
     // 5. Set year to ! ToIntegerOrInfinity(year).
-    i32 year = Value(js_string(vm, normalized_year)).to_integer_or_infinity(global_object);
+    i32 year = MUST(Value(js_string(vm, normalized_year)).to_integer_or_infinity(global_object));
 
     u8 month;
     // 6. If month is undefined, then
@@ -984,7 +984,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
         VERIFY(sign_part.has_value());
 
         // b. Set hours to ! ToIntegerOrInfinity(hours).
-        u8 hours = Value(js_string(vm, *hours_part)).to_integer_or_infinity(global_object);
+        u8 hours = MUST(Value(js_string(vm, *hours_part)).to_integer_or_infinity(global_object));
 
         u8 sign;
         // c. If sign is the code unit 0x002D (HYPHEN-MINUS) or the code unit 0x2212 (MINUS SIGN), then
@@ -999,10 +999,10 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
         }
 
         // e. Set minutes to ! ToIntegerOrInfinity(minutes).
-        u8 minutes = Value(js_string(vm, minutes_part.value_or(""sv))).to_integer_or_infinity(global_object);
+        u8 minutes = MUST(Value(js_string(vm, minutes_part.value_or(""sv))).to_integer_or_infinity(global_object));
 
         // f. Set seconds to ! ToIntegerOrInfinity(seconds).
-        u8 seconds = Value(js_string(vm, seconds_part.value_or(""sv))).to_integer_or_infinity(global_object);
+        u8 seconds = MUST(Value(js_string(vm, seconds_part.value_or(""sv))).to_integer_or_infinity(global_object));
 
         i32 nanoseconds;
         // g. If fraction is not undefined, then
@@ -1011,7 +1011,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
             auto fraction = String::formatted("{}000000000", *fraction_part);
             // ii. Let nanoseconds be the String value equal to the substring of fraction from 0 to 9.
             // iii. Set nanoseconds to ! ToIntegerOrInfinity(nanoseconds).
-            nanoseconds = Value(js_string(vm, fraction.substring(0, 9))).to_integer_or_infinity(global_object);
+            nanoseconds = MUST(Value(js_string(vm, fraction.substring(0, 9))).to_integer_or_infinity(global_object));
         }
         // h. Else,
         else {
