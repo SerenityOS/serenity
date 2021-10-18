@@ -799,33 +799,40 @@ float FlexFormattingContext::determine_hypothetical_cross_size_of_item(Box& box)
 // https://www.w3.org/TR/css-flexbox-1/#algo-cross-line
 void FlexFormattingContext::calculate_cross_size_of_each_flex_line(float const cross_min_size, float const cross_max_size)
 {
-    if (m_flex_lines.size() == 1 && has_definite_cross_size(flex_container())) {
+    // If the flex container is single-line and has a definite cross size, the cross size of the flex line is the flex container’s inner cross size.
+    if (is_single_line() && has_definite_cross_size(flex_container())) {
         m_flex_lines[0].cross_size = specified_cross_size(flex_container());
-    } else {
-        for (auto& flex_line : m_flex_lines) {
-            // FIXME: Implement 8.1
-
-            // FIXME: This isn't spec but makes sense here
-            if (has_definite_cross_size(flex_container()) && flex_container().computed_values().align_items() == CSS::AlignItems::Stretch) {
-                flex_line.cross_size = specified_cross_size(flex_container()) / m_flex_lines.size();
-                continue;
-            }
-
-            // 8.2
-            float largest_hypothetical_cross_size = 0;
-            for (auto& flex_item : flex_line.items) {
-                if (largest_hypothetical_cross_size < flex_item->hypothetical_cross_size_with_margins())
-                    largest_hypothetical_cross_size = flex_item->hypothetical_cross_size_with_margins();
-            }
-
-            // 8.3
-            flex_line.cross_size = max(0.0f, largest_hypothetical_cross_size);
-        }
-
-        if (m_flex_lines.size() == 1) {
-            clamp(m_flex_lines[0].cross_size, cross_min_size, cross_max_size);
-        }
+        return;
     }
+
+    // Otherwise, for each flex line:
+    for (auto& flex_line : m_flex_lines) {
+        // FIXME: 1. Collect all the flex items whose inline-axis is parallel to the main-axis, whose align-self is baseline,
+        //           and whose cross-axis margins are both non-auto. Find the largest of the distances between each item’s baseline
+        //           and its hypothetical outer cross-start edge, and the largest of the distances between each item’s baseline
+        //           and its hypothetical outer cross-end edge, and sum these two values.
+
+        // FIXME: This isn't spec but makes sense here
+        if (has_definite_cross_size(flex_container()) && flex_container().computed_values().align_items() == CSS::AlignItems::Stretch) {
+            flex_line.cross_size = specified_cross_size(flex_container()) / m_flex_lines.size();
+            continue;
+        }
+
+        // 2. Among all the items not collected by the previous step, find the largest outer hypothetical cross size.
+        float largest_hypothetical_cross_size = 0;
+        for (auto& flex_item : flex_line.items) {
+            if (largest_hypothetical_cross_size < flex_item->hypothetical_cross_size_with_margins())
+                largest_hypothetical_cross_size = flex_item->hypothetical_cross_size_with_margins();
+        }
+
+        // 3. The used cross-size of the flex line is the largest of the numbers found in the previous two steps and zero.
+        flex_line.cross_size = max(0.0f, largest_hypothetical_cross_size);
+    }
+
+    // If the flex container is single-line, then clamp the line’s cross-size to be within the container’s computed min and max cross sizes.
+    // Note that if CSS 2.1’s definition of min/max-width/height applied more generally, this behavior would fall out automatically.
+    if (is_single_line())
+        clamp(m_flex_lines[0].cross_size, cross_min_size, cross_max_size);
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-stretch
