@@ -54,9 +54,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::calendar_getter)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
-    auto* year_month = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* year_month = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Return yearMonth.[[Calendar]].
     return Value(&year_month->calendar());
@@ -67,9 +65,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::year_getter)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
-    auto* year_month = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* year_month = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Let calendar be yearMonth.[[Calendar]].
     auto& calendar = year_month->calendar();
@@ -83,9 +79,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::month_getter)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
-    auto* year_month = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* year_month = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Let calendar be yearMonth.[[Calendar]].
     auto& calendar = year_month->calendar();
@@ -99,9 +93,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::month_code_getter)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
-    auto* year_month = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* year_month = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Let calendar be yearMonth.[[Calendar]].
     auto& calendar = year_month->calendar();
@@ -115,9 +107,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::days_in_year_getter)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
-    auto* year_month = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* year_month = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Let calendar be yearMonth.[[Calendar]].
     auto& calendar = year_month->calendar();
@@ -131,9 +121,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::days_in_month_getter)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
-    auto* year_month = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* year_month = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Let calendar be yearMonth.[[Calendar]].
     auto& calendar = year_month->calendar();
@@ -147,9 +135,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::months_in_year_getter)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
-    auto* year_month = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* year_month = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Let calendar be yearMonth.[[Calendar]].
     auto& calendar = year_month->calendar();
@@ -163,9 +149,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::in_leap_year_getter)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
-    auto* year_month = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* year_month = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Let calendar be yearMonth.[[Calendar]].
     auto& calendar = year_month->calendar();
@@ -179,9 +163,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::era_getter)
 {
     // 1. Let plainYearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(plainYearMonth, [[InitializedTemporalYearMonth]]).
-    auto* plain_year_month = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* plain_year_month = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Let calendar be plainYearMonth.[[Calendar]].
     auto& calendar = plain_year_month->calendar();
@@ -195,9 +177,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::era_year_getter)
 {
     // 1. Let plainYearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(plainYearMonth, [[InitializedTemporalYearMonth]]).
-    auto* plain_year_month = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* plain_year_month = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Let calendar be plainYearMonth.[[Calendar]].
     auto& calendar = plain_year_month->calendar();
@@ -211,9 +191,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::equals)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
-    auto* year_month = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* year_month = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Set other to ? ToTemporalYearMonth(other).
     auto* other = TRY_OR_DISCARD(to_temporal_year_month(global_object, vm.argument(0)));
@@ -239,9 +217,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_string)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
-    auto* year_month = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* year_month = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Set options to ? GetOptionsObject(options).
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(0)));
@@ -259,9 +235,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_locale_string)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
-    auto* year_month = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* year_month = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Return ? TemporalYearMonthToString(yearMonth, "auto").
     return js_string(vm, TRY_OR_DISCARD(temporal_year_month_to_string(global_object, *year_month, "auto"sv)));
@@ -272,9 +246,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_json)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
-    auto* year_month = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* year_month = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Return ? TemporalYearMonthToString(yearMonth, "auto").
     return js_string(vm, TRY_OR_DISCARD(temporal_year_month_to_string(global_object, *year_month, "auto"sv)));
@@ -295,9 +267,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_plain_date)
 
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
-    auto* year_month = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* year_month = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. If Type(item) is not Object, then
     if (!item.is_object()) {
@@ -353,9 +323,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::get_iso_fields)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
-    auto* year_month = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* year_month = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Let fields be ! OrdinaryObjectCreate(%Object.prototype%).
     auto* fields = Object::create(global_object, global_object.object_prototype());

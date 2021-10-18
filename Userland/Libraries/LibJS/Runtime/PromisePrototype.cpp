@@ -38,9 +38,7 @@ void PromisePrototype::initialize(GlobalObject& global_object)
 // 27.2.5.4 Promise.prototype.then ( onFulfilled, onRejected ), https://tc39.es/ecma262/#sec-promise.prototype.then
 JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::then)
 {
-    auto* promise = typed_this_object(global_object);
-    if (!promise)
-        return {};
+    auto* promise = TRY_OR_DISCARD(typed_this_object(global_object));
     auto on_fulfilled = vm.argument(0);
     auto on_rejected = vm.argument(1);
     auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, *promise, *global_object.promise_constructor()));

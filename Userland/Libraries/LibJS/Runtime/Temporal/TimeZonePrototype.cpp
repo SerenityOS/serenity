@@ -53,9 +53,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_nanoseconds_for)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
-    auto* time_zone = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* time_zone = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Set instant to ? ToTemporalInstant(instant).
     auto* instant = TRY_OR_DISCARD(to_temporal_instant(global_object, vm.argument(0)));
@@ -73,9 +71,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_string_for)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
-    auto* time_zone = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* time_zone = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Set instant to ? ToTemporalInstant(instant).
     auto* instant = TRY_OR_DISCARD(to_temporal_instant(global_object, vm.argument(0)));
@@ -106,9 +102,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::to_string)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
-    auto* time_zone = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* time_zone = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Return timeZone.[[Identifier]].
     return js_string(vm, time_zone->identifier());

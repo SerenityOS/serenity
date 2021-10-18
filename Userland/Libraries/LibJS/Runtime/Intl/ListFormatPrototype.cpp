@@ -40,9 +40,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format)
 
     // 1. Let lf be the this value.
     // 2. Perform ? RequireInternalSlot(lf, [[InitializedListFormat]]).
-    auto* list_format = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* list_format = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Let stringList be ? StringListFromIterable(list).
     auto string_list = TRY_OR_DISCARD(string_list_from_iterable(global_object, list));
@@ -59,9 +57,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format_to_parts)
 
     // 1. Let lf be the this value.
     // 2. Perform ? RequireInternalSlot(lf, [[InitializedListFormat]]).
-    auto* list_format = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* list_format = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Let stringList be ? StringListFromIterable(list).
     auto string_list = TRY_OR_DISCARD(string_list_from_iterable(global_object, list));
@@ -75,9 +71,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::resolved_options)
 {
     // 1. Let lf be the this value.
     // 2. Perform ? RequireInternalSlot(lf, [[InitializedListFormat]]).
-    auto* list_format = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* list_format = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Let options be ! OrdinaryObjectCreate(%Object.prototype%).
     auto* options = Object::create(global_object, global_object.object_prototype());

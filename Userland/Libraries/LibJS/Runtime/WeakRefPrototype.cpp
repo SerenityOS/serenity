@@ -31,9 +31,7 @@ WeakRefPrototype::~WeakRefPrototype()
 // 26.1.3.2 WeakRef.prototype.deref ( ), https://tc39.es/ecma262/#sec-weak-ref.prototype.deref
 JS_DEFINE_NATIVE_FUNCTION(WeakRefPrototype::deref)
 {
-    auto* weak_ref = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* weak_ref = TRY_OR_DISCARD(typed_this_object(global_object));
 
     weak_ref->update_execution_generation();
     return weak_ref->value() ?: js_undefined();

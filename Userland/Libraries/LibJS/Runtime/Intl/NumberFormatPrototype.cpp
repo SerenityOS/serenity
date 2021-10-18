@@ -37,9 +37,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
     // 2. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Set nf to ? UnwrapNumberFormat(nf).
     // 3. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
-    auto* number_format = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* number_format = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 4. Let options be ! OrdinaryObjectCreate(%Object.prototype%).
     auto* options = Object::create(global_object, global_object.object_prototype());
