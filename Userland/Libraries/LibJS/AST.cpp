@@ -925,9 +925,9 @@ Value BinaryExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     case BinaryOp::StrictlyInequals:
         return Value(!is_strictly_equal(lhs_result, rhs_result));
     case BinaryOp::LooselyEquals:
-        return Value(is_loosely_equal(global_object, lhs_result, rhs_result));
+        return Value(TRY_OR_DISCARD(is_loosely_equal(global_object, lhs_result, rhs_result)));
     case BinaryOp::LooselyInequals:
-        return Value(!is_loosely_equal(global_object, lhs_result, rhs_result));
+        return Value(!TRY_OR_DISCARD(is_loosely_equal(global_object, lhs_result, rhs_result)));
     case BinaryOp::GreaterThan:
         return greater_than(global_object, lhs_result, rhs_result);
     case BinaryOp::GreaterThanEquals:
