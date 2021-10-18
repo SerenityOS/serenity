@@ -21,6 +21,12 @@ public:
 
     virtual void before_children_paint(PaintContext& context, PaintPhase phase) override;
     virtual void after_children_paint(PaintContext& context, PaintPhase phase) override;
+
+private:
+    virtual bool is_svg_box() const final { return true; }
 };
+
+template<>
+inline bool Node::fast_is<SVGBox>() const { return is_svg_box(); }
 
 }
