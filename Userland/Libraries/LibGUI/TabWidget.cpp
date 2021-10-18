@@ -56,10 +56,17 @@ void TabWidget::add_widget(const StringView& title, Widget& widget)
 void TabWidget::remove_widget(Widget& widget)
 {
     VERIFY(widget.parent() == this);
-    if (active_widget() == &widget)
-        activate_next_tab();
-    m_tabs.remove_first_matching([&widget](auto& entry) { return &widget == entry.widget; });
+    auto tab_index = m_tabs.find_if([&widget](auto& entry) { return &widget == entry.widget; }).index();
+
+    auto is_active = active_widget() == &widget;
+    m_tabs.remove(tab_index);
     remove_child(widget);
+
+    if (is_active && m_tabs.size() > 0) {
+        auto next_tab_index = tab_index >= m_tabs.size() ? m_tabs.size() - 1 : tab_index;
+        set_tab_index(next_tab_index);
+    }
+
     update_focus_policy();
     if (on_tab_count_change)
         on_tab_count_change(m_tabs.size());
